@@ -2,6 +2,7 @@ package com.hubspot.singularity;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.inject.name.Names.named;
+
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.Collections;

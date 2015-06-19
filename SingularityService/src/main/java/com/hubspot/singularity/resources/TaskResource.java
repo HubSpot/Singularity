@@ -90,6 +90,22 @@ public class TaskResource {
     this.uiConfiguration = uiConfiguration;
   }
 
+  @GET
+  @PropertyFiltering
+  @Path("/scheduled")
+  @ApiOperation("Retrieve list of scheduled tasks.")
+  public List<SingularityTaskRequest> getScheduledTasks() {
+    return taskRequestManager.getTaskRequests(authHelper.filterByAuthorizedRequests(user, taskManager.getPendingTasks(), SingularityTransformHelpers.PENDING_TASK_TO_REQUEST_ID));
+  }
+
+  @GET
+  @PropertyFiltering
+  @Path("/scheduled/ids")
+  @ApiOperation("Retrieve list of scheduled task IDs.")
+  public List<SingularityPendingTaskId> getScheduledTaskIds() {
+    return authHelper.filterByAuthorizedRequests(user, taskManager.getPendingTaskIds(), SingularityTransformHelpers.PENDING_TASK_ID_TO_REQUEST_ID);
+  }
+
   private SingularityPendingTaskId getPendingTaskIdFromStr(String pendingTaskIdStr) {
     try {
       return SingularityPendingTaskId.valueOf(pendingTaskIdStr);
@@ -122,24 +138,6 @@ public class TaskResource {
     validator.checkForAuthorization(taskRequestList.get(0).getRequest(), Optional.<SingularityRequest>absent(), user);
 
     return taskRequestList.get(0);
-  }
-
-  @GET
-  @PropertyFiltering
-  @Path("/scheduled/ids")
-  @ApiOperation("Retrieve list of scheduled task IDs.")
-  public List<SingularityPendingTaskId> getScheduledTaskIds() {
-    return taskManager.getPendingTaskIds();
-  }
-
-  @GET
-  @PropertyFiltering
-  @Path("/scheduled")
-  @ApiOperation("Retrieve list of scheduled tasks.")
-  public List<SingularityTaskRequest> getScheduledTasks() {
-    final List<SingularityPendingTask> tasks = taskManager.getPendingTasks();
-
-    return taskRequestManager.getTaskRequests(tasks);
   }
 
   @GET

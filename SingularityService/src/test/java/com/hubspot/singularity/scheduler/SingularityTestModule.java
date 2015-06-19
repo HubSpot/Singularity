@@ -80,6 +80,13 @@ import io.dropwizard.jackson.Jackson;
 import io.dropwizard.lifecycle.Managed;
 import net.kencochrane.raven.Raven;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import io.dropwizard.jackson.Jackson;
+import io.dropwizard.lifecycle.Managed;
+import net.kencochrane.raven.Raven;
+
 public class SingularityTestModule implements Module {
   private final TestingServer ts;
   private final GuiceBundle.DropwizardModule dropwizardModule;

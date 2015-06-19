@@ -6,12 +6,14 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.client.SingularityClientCredentials;
 import com.hubspot.singularity.client.SingularityClientModule;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
@@ -50,6 +52,10 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
 
   @JsonProperty
   private boolean runDockerCleanup = false;
+
+  @NotNull
+  @JsonProperty
+  private Optional<SingularityClientCredentials> singularityClientCredentials = Optional.absent();
 
   public SingularityExecutorCleanupConfiguration() {
     super(Optional.of("singularity-executor-cleanup.log"));
@@ -111,6 +117,14 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
     this.runDockerCleanup = runDockerCleanup;
   }
 
+  public Optional<SingularityClientCredentials> getSingularityClientCredentials() {
+    return singularityClientCredentials;
+  }
+
+  public void setSingularityClientCredentials(Optional<SingularityClientCredentials> singularityClientCredentials) {
+    this.singularityClientCredentials = singularityClientCredentials;
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorCleanupConfiguration[" +
@@ -120,7 +134,8 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
             ", cleanupAppDirectoryOfFailedTasksAfterMillis=" + cleanupAppDirectoryOfFailedTasksAfterMillis +
             ", singularityHosts=" + singularityHosts +
             ", singularityContextPath='" + singularityContextPath + '\'' +
-            ", runDockerCleanup='" + runDockerCleanup + '\'' +
+            ", runDockerCleanup=" + runDockerCleanup +
+            ", singularityClientCredentials=" + singularityClientCredentials +
             ']';
   }
 
