@@ -44,7 +44,7 @@ class RequestFormEdit extends RequestFormBaseView
 
     setTooltips: ->
         @$("[data-tooltip='cannot-change']").tooltip
-            title: 'Setting cannot be altered after creation'
+            title: 'Option cannot be altered after creation'
             placement: 'top'
 
     saveRequest: ->
