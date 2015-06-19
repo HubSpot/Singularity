@@ -1,7 +1,7 @@
 Row = ReactBootstrap.Row
 Col = ReactBootstrap.Col
 
-Helpers = require '../helpers'
+Helpers = require '../utils/helpers'
 
 
 PageHeader = React.createClass
