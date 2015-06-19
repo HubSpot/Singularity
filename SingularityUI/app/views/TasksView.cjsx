@@ -9,14 +9,12 @@ View = require './ReactBaseView'
 class TasksView extends View
 
   initialize: =>
-    console.log 'init'
+    @renderReact()
     @refresh()
 
   refresh: =>
-    ## TO DO: show a loader
     # $.when( @collections.tasks.fetch(), @collections.slaves.fetch() ).done =>
     @collections.tasks.fetch().done =>
-      console.log 'refresh done: ', @collections.tasks.toJSON().length
       @renderReact()
 
   renderReact: ->
