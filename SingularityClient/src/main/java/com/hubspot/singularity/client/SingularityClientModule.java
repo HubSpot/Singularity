@@ -15,6 +15,7 @@ import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpConfig;
 import com.hubspot.horizon.ning.NingHttpClient;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityClientCredentials;
 
 public class SingularityClientModule extends AbstractModule {
 

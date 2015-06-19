@@ -29,6 +29,7 @@ import com.hubspot.horizon.HttpRequest.Method;
 import com.hubspot.horizon.HttpResponse;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.SingularityClientCredentials;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
