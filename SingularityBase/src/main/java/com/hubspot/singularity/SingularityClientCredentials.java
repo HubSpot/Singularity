@@ -1,14 +1,17 @@
-package com.hubspot.singularity.client;
+package com.hubspot.singularity;
 
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.hubspot.mesos.JavaUtils;
 
 public class SingularityClientCredentials {
   private final String headerName;
   private final String token;
 
-  public SingularityClientCredentials(String headerName, String token) {
+  @JsonCreator
+  public SingularityClientCredentials(@JsonProperty("headerName") String headerName, @JsonProperty("token") String token) {
     this.headerName = headerName;
     this.token = token;
   }
