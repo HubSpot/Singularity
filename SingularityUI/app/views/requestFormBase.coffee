@@ -14,8 +14,17 @@ class RequestFormNew extends FormBaseView
         type = @model?.get('request')?.requestType || @requestType
         racks = _.pluck @racks.toJSON(), 'id'
         [
-            { name: 'owners', selector: '#owners', tags: true }
-            { name: 'rackAffinity', selector: "#rackAffinity-#{type}", tags: racks  }
+            { 
+                name: 'owners', selector: '#owners'
+                options:
+                    tags: true
+                    containerCssClass: 'select-owners hide-select2-spinner'
+                    dropdownCssClass: 'hidden'
+            }
+            { 
+                name: 'rackAffinity', selector: "#rackAffinity-#{type}"
+                options: tags: racks
+            }
         ]
 
     events: ->
@@ -30,9 +39,10 @@ class RequestFormNew extends FormBaseView
 
     renderFormElements: ->
         for input in @taggables()
-            @[input.name] = @$("#{input.selector}").select2
-                tags: input.tags
-                tokenSeparators: [',',' ','\n','\t']
+            options = $.extend({}, {tokenSeparators: [',',' ']}, input.options)
+            @[input.name] = @$("#{input.selector}").select2 options
+
+        @scheduleSelect = @generateSelectBox '#schedule-type', {containerCssClass : "select2-select-box select-box-small"}
 
     # Expands a given request type form fields
     changeType: (event) ->
@@ -56,7 +66,7 @@ class RequestFormNew extends FormBaseView
         requestObject.requestType = @$('#type .active').data 'type'
         type = requestObject.requestType
 
-        requestObject.owners = @taggableList '#owners'
+        requestObject.owners = @select2Val '#owners'
 
         slavePlacement = @$('#slavePlacement').val()
         if slavePlacement.length > 0
@@ -73,7 +83,7 @@ class RequestFormNew extends FormBaseView
 
             requestObject.rackSensitive = @$("#rack-sensitive-#{ type }").is ':checked'
             
-            requestObject.rackAffinity = @taggableList "#rackAffinity-#{ type }"
+            requestObject.rackAffinity = @select2Val "#rackAffinity-#{ type }"
 
         if type in ['SCHEDULED', 'ON_DEMAND', 'RUN_ONCE']
             killOld = parseInt @$("#killOldNRL-#{ type }").val()

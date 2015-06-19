@@ -25,6 +25,11 @@ class RequestFormEdit extends RequestFormBaseView
             @$("#instances-#{request.type}").val request.instances
             @$("#rack-sensitive-#{request.type}").prop 'checked', request.request.rackSensitive
             @$("#load-balanced").prop 'checked', request.request.loadBalanced
+           
+        if request.type in ['SCHEDULED','ON_DEMAND','RUN_ONCE']
+            @$("#killOldNRL-#{request.type}").val request.request.killOldNonLongRunningTasksAfterMillis
+
+        if request.type is 'WORKER'
             @$("#waitAtLeast-#{request.type}").val request.request.waitAtLeastMillisAfterTaskFinishesForReschedule
 
         if request.type is 'SCHEDULED'
@@ -32,17 +37,14 @@ class RequestFormEdit extends RequestFormBaseView
             @$("#retries-on-failure").val request.request.numRetriesOnFailure
             @$("#scheduled-expected-runtime").val request.request.scheduledExpectedRuntimeMillis
 
-        if request.type in ['SCHEDULED','ON_DEMAND','RUN_ONCE']
-            @$("#killOldNRL-#{request.type}").val request.request.killOldNonLongRunningTasksAfterMillis
-
         typeButtons = @$('#type .btn').prop('disabled', true)
         @$("[data-type='#{request.type}']").prop('disabled', false)
         @setTooltips()
         app.$page.show()
 
     setTooltips: ->
-        @$("[data-tooltip='rack-sensitive']").tooltip
-            title: 'Changes will only affect new tasks.'
+        @$("[data-tooltip='cannot-change']").tooltip
+            title: 'Setting cannot be altered after creation'
             placement: 'top'
 
     saveRequest: ->

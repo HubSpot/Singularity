@@ -138,8 +138,11 @@ class FormBaseView extends View
 
         return if _.isEmpty output then undefined else output
 
-    # gets value from select2 taggable inputs
-    taggableList: (selector) ->
+    generateSelectBox: (selector, options={}) ->
+        @$(selector).select2(options)
+
+    # gets value from select2 inputs
+    select2Val: (selector) ->
         @$(selector).select2("val")
 
     # renders select2 taggable list
