@@ -13,7 +13,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.client.SingularityClientCredentials;
+import com.hubspot.singularity.SingularityClientCredentials;
 import com.hubspot.singularity.client.SingularityClientModule;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;

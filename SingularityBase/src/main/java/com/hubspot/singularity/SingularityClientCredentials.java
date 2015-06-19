@@ -1,4 +1,4 @@
-package com.hubspot.singularity.client;
+package com.hubspot.singularity;
 
 import java.util.Objects;
 

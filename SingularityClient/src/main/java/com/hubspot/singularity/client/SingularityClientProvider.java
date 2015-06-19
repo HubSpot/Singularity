@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.horizon.HttpClient;
+import com.hubspot.singularity.SingularityClientCredentials;
 
 @Singleton
 public class SingularityClientProvider implements Provider<SingularityClient> {
