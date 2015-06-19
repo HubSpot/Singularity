@@ -14,10 +14,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import com.hubspot.singularity.executor.config.SingularityExecutorModule;
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.messages.Container;
-import com.spotify.docker.client.messages.ContainerInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +29,7 @@ import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.client.SingularityClient;
 import com.hubspot.singularity.client.SingularityClientException;
+import com.hubspot.singularity.client.SingularityClientProvider;
 import com.hubspot.singularity.executor.SingularityExecutorCleanupStatistics;
 import com.hubspot.singularity.executor.SingularityExecutorCleanupStatistics.SingularityExecutorCleanupStatisticsBuilder;
 import com.hubspot.singularity.executor.TemplateManager;
@@ -46,6 +43,9 @@ import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
 import com.hubspot.singularity.runner.base.shared.ProcessUtils;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
+import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.messages.Container;
+import com.spotify.docker.client.messages.ContainerInfo;
 
 public class SingularityExecutorCleanup {
 
@@ -62,12 +62,12 @@ public class SingularityExecutorCleanup {
   private final DockerClient dockerClient;
 
   @Inject
-  public SingularityExecutorCleanup(SingularityClient singularityClient, JsonObjectFileHelper jsonObjectFileHelper, SingularityRunnerBaseConfiguration baseConfiguration, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager, MesosClient mesosClient, DockerClient dockerClient) {
+  public SingularityExecutorCleanup(SingularityClientProvider singularityClientProvider, JsonObjectFileHelper jsonObjectFileHelper, SingularityRunnerBaseConfiguration baseConfiguration, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager, MesosClient mesosClient, DockerClient dockerClient) {
     this.jsonObjectFileHelper = jsonObjectFileHelper;
     this.baseConfiguration = baseConfiguration;
     this.executorConfiguration = executorConfiguration;
     this.cleanupConfiguration = cleanupConfiguration;
-    this.singularityClient = singularityClient;
+    this.singularityClient = singularityClientProvider.get(cleanupConfiguration.getSingularityClientCredentials());
     this.templateManager = templateManager;
     this.mesosClient = mesosClient;
     this.processUtils = new ProcessUtils(LOG);
