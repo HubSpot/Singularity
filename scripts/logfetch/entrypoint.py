@@ -87,7 +87,6 @@ def fetch():
   conf_parser = argparse.ArgumentParser(version=VERSION, description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter, add_help=False)
   conf_parser.add_argument("-f", "--conf-folder", dest='conf_folder', help="specify a folder for config files to live")
   conf_parser.add_argument("-c", "--conf-file", dest='conf_file', help="Specify config file within the conf folder", metavar="FILE")
-  conf_parser.add_argument("--headers", dest='headers', help='Request headers for Singularity')
   args, remaining_argv = conf_parser.parse_known_args()
   conf_dir = args.conf_folder if args.conf_folder else DEFAULT_CONF_DIR
   conf_file = os.path.expanduser(conf_dir + '/' + args.conf_file) if args.conf_file else os.path.expanduser(conf_dir + '/' + DEFAULT_CONF_FILE)
@@ -139,9 +138,10 @@ def fetch():
 
   args.dest = os.path.expanduser(args.dest)
   try:
-    args.headers = dict(config.items("Request Headers"))
+    setattr(args, 'headers', dict(config.items("Request Headers")))
   except:
     sys.stderr.write('No additional request headers found\n')
+    setattr(args, 'headers', {})
 
   fetch_logs(args)
 
@@ -149,7 +149,6 @@ def cat():
   conf_parser = argparse.ArgumentParser(version=VERSION, description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter, add_help=False)
   conf_parser.add_argument("-f", "--conf-folder", dest="conf_folder", help="specify a folder for config files to live")
   conf_parser.add_argument("-c", "--conf-file", dest="conf_file", help="Specify config file within the conf folder", metavar="FILE")
-  conf_parser.add_argument("--headers", dest='headers', help='Request headers for Singularity')
   args, remaining_argv = conf_parser.parse_known_args()
   conf_dir = args.conf_folder if args.conf_folder else DEFAULT_CONF_DIR
   conf_file = os.path.expanduser(conf_dir + '/' + args.conf_file) if args.conf_file else os.path.expanduser(conf_dir + '/' + DEFAULT_CONF_FILE)
@@ -200,9 +199,10 @@ def cat():
 
   args.dest = os.path.expanduser(args.dest)
   try:
-    args.headers = dict(config.items("Request Headers"))
+    setattr(args, 'headers', dict(config.items("Request Headers")))
   except:
     sys.stderr.write('No additional request headers found\n')
+    setattr(args, 'headers', {})
 
 
   cat_logs(args)
@@ -211,7 +211,6 @@ def tail():
   conf_parser = argparse.ArgumentParser(version=VERSION, description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter, add_help=False)
   conf_parser.add_argument("-f", "--conf-folder", dest="conf_folder", help="specify a folder for config files to live")
   conf_parser.add_argument("-c", "--conf-file", dest="conf_file", help="Specify config file within the conf folder", metavar="FILE")
-  conf_parser.add_argument("--headers", dest='headers', help='Request headers for Singularity')
   args, remaining_argv = conf_parser.parse_known_args()
   conf_dir = args.conf_folder if args.conf_folder else DEFAULT_CONF_DIR
   conf_file = os.path.expanduser(conf_dir + '/' + args.conf_file) if args.conf_file else os.path.expanduser(conf_dir + '/' + DEFAULT_CONF_FILE)
@@ -246,9 +245,10 @@ def tail():
 
   args.dest = os.path.expanduser(args.dest)
   try:
-    args.headers = dict(config.items("Request Headers"))
+    setattr(args, 'headers', dict(config.items("Request Headers")))
   except:
     sys.stderr.write('No additional request headers found\n')
+    setattr(args, 'headers', {})
 
 
   tail_logs(args)
