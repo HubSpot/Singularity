@@ -41,7 +41,7 @@ if [[ ! -d {{{ logDir }}} ]]; then
     mkdir -p {{{ logDir }}}
 fi
 
-echo "Ensuring {{{ logDir }} is owned by {{{ user }} with 0750"
+echo "Ensuring {{{ logDir }}} is owned by {{{ user }}} with 0750"
 sudo chown -R {{{ user }}} {{{ logDir }}}
 sudo chmod -R 0750 {{{ logDir }}}
 
