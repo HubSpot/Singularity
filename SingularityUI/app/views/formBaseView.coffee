@@ -57,9 +57,9 @@ class FormBaseView extends View
                 placement: 'right'
             
     alert: (message, success = true) ->
-        @$('.alert').remove()
+        @$("[data-alert-location='form']").remove()
         alertClass = if success then 'alert-success' else 'alert-danger'
-        @$('form').append "<p class='alert #{ alertClass }'>#{ message }<p>"
+        @$('form').append "<p data-alert-location='form' class='alert #{ alertClass }'>#{ message }<p>"
 
     checkMultiInputs: ->
         for $container in @$el.find '.multi-input'

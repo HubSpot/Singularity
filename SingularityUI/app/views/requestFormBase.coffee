@@ -57,7 +57,7 @@ class RequestFormBase extends FormBaseView
         event.preventDefault()
 
         return if @$('button[type="submit"]').attr 'disabled'
-        @$('.alert').remove()
+        @$("[data-alert-location='form']").remove()
 
         requestObject = {}
 
