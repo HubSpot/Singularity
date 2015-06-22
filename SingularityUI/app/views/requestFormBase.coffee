@@ -66,7 +66,7 @@ class RequestFormBase extends FormBaseView
         requestObject.requestType = @$('#type .active').data 'type'
         type = requestObject.requestType
 
-        requestObject.owners = @select2Val '#owners'
+        requestObject.owners = @getSelect2Val '#owners'
 
         slavePlacement = @$('#slavePlacement').val()
         if slavePlacement.length > 0
@@ -83,7 +83,7 @@ class RequestFormBase extends FormBaseView
 
             requestObject.rackSensitive = @$("#rack-sensitive-#{ type }").is ':checked'
             
-            requestObject.rackAffinity = @select2Val "#rackAffinity-#{ type }"
+            requestObject.rackAffinity = @getSelect2Val "#rackAffinity-#{ type }"
 
         if type in ['SCHEDULED', 'ON_DEMAND', 'RUN_ONCE']
             killOld = parseInt @$("#killOldNRL-#{ type }").val()

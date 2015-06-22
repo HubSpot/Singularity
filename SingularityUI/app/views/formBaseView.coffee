@@ -141,8 +141,10 @@ class FormBaseView extends View
     generateSelectBox: (selector, options={}) ->
         @$(selector).select2(options)
 
-    # gets value from select2 inputs
-    select2Val: (selector) ->
+    setSelect2Val: (selector, value) =>
+        @$(selector).select2("val", value)
+
+    getSelect2Val: (selector) =>
         @$(selector).select2("val")
 
     # renders select2 taggable list
