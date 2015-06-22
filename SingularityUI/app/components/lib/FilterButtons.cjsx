@@ -3,7 +3,7 @@ Col = ReactBootstrap.Col
 
 PillsNav = require '../lib/PillsNav'
 NavItem = ReactBootstrap.NavItem
-BaseMixins = require '../utils/mixins/BaseMixins'
+Helpers = require '../utils/helpers'
 
 FilterButtons = React.createClass
 
@@ -14,8 +14,6 @@ FilterButtons = React.createClass
     buttons: React.PropTypes.array.isRequired
     md: React.PropTypes.number
 
-  mixins: [BaseMixins]
-
   getInitialState: ->
     { activeFilter: @props.data.initialFilterState }
 
@@ -25,7 +23,7 @@ FilterButtons = React.createClass
       classes = 'active' if @state.activeFilter is button.id
 
       return(
-        <NavItem key={button.label} id={button.id} href={link} className={classes} onClick={@routeLink}>
+        <NavItem key={button.label} id={button.id} href={link} className={classes} onClick={Helpers.routeLink}>
           {button.label}
         </NavItem>
       )
