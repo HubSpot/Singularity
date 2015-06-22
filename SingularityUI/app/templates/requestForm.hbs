@@ -122,14 +122,14 @@
       </div>
 
       <div id="SCHEDULED-expandable" class="expandable hide">
-        <div class="form-group required">
+        <div class="form-group">
           <label for="schedule">Schedule</label>
-          <div class="input-group">          
+          <div class="required input-group">          
             <input type="text" id="schedule" class="form-control" placeholder="eg: */5 * * * *">
             <div class="input-group-addon input-group-addon--select">
               <select id="schedule-type" class="form-control">
-                  <option>Cron</option>
-                  <option>Quartz</option>
+                  <option value="schedule">Cron</option>
+                  <option value="quartzSchedule">Quartz</option>
               </select>
             </div>
           </div>

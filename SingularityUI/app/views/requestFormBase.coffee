@@ -94,10 +94,11 @@ class RequestFormBase extends FormBaseView
 
         if type is 'SCHEDULED'
             schedule = @$('#schedule').val()
+            scheduleType = @$('#schedule-type').val()
             retries  = parseInt @$('#retries-on-failure').val()
             expectedRuntime = parseInt @$('#scheduled-expected-runtime').val()
 
-            requestObject.schedule = schedule if schedule
+            requestObject[scheduleType] = schedule if schedule
             requestObject.numRetriesOnFailure = retries if retries
             requestObject.scheduledExpectedRuntimeMillis = expectedRuntime if expectedRuntime
 
