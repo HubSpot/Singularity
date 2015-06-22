@@ -5,7 +5,7 @@ FormBaseView = require './formBaseView'
 
 Request = require '../models/Request'
 
-class RequestFormNew extends FormBaseView
+class RequestFormBase extends FormBaseView
 
     template: require '../templates/requestForm'
 
@@ -122,4 +122,4 @@ class RequestFormNew extends FormBaseView
         @renderFormElements()
 
 
-module.exports = RequestFormNew
+module.exports = RequestFormBase
