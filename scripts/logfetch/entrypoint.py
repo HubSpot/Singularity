@@ -87,10 +87,12 @@ def fetch():
   conf_parser = argparse.ArgumentParser(version=VERSION, description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter, add_help=False)
   conf_parser.add_argument("-f", "--conf-folder", dest='conf_folder', help="specify a folder for config files to live")
   conf_parser.add_argument("-c", "--conf-file", dest='conf_file', help="Specify config file within the conf folder", metavar="FILE")
+  conf_parser.add_argument("--headers", dest='headers', help='Request headers for Singularity')
   args, remaining_argv = conf_parser.parse_known_args()
   conf_dir = args.conf_folder if args.conf_folder else DEFAULT_CONF_DIR
   conf_file = os.path.expanduser(conf_dir + '/' + args.conf_file) if args.conf_file else os.path.expanduser(conf_dir + '/' + DEFAULT_CONF_FILE)
   config = ConfigParser.SafeConfigParser()
+  config.optionxform = str
 
   defaults = {
     "num_parallel_fetches" : DEFAULT_PARALLEL_FETCHES,
@@ -136,6 +138,10 @@ def fetch():
   args.end_days = convert_to_date(args, args.end_days)
 
   args.dest = os.path.expanduser(args.dest)
+  try:
+    args.headers = dict(config.items("Request Headers"))
+  except:
+    sys.stderr.write('No additional request headers found\n')
 
   fetch_logs(args)
 
@@ -143,10 +149,12 @@ def cat():
   conf_parser = argparse.ArgumentParser(version=VERSION, description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter, add_help=False)
   conf_parser.add_argument("-f", "--conf-folder", dest="conf_folder", help="specify a folder for config files to live")
   conf_parser.add_argument("-c", "--conf-file", dest="conf_file", help="Specify config file within the conf folder", metavar="FILE")
+  conf_parser.add_argument("--headers", dest='headers', help='Request headers for Singularity')
   args, remaining_argv = conf_parser.parse_known_args()
   conf_dir = args.conf_folder if args.conf_folder else DEFAULT_CONF_DIR
   conf_file = os.path.expanduser(conf_dir + '/' + args.conf_file) if args.conf_file else os.path.expanduser(conf_dir + '/' + DEFAULT_CONF_FILE)
   config = ConfigParser.SafeConfigParser()
+  config.optionxform = str
 
   defaults = {
     "num_parallel_fetches" : DEFAULT_PARALLEL_FETCHES,
@@ -191,6 +199,11 @@ def cat():
   args.end_days = convert_to_date(args, args.end_days)
 
   args.dest = os.path.expanduser(args.dest)
+  try:
+    args.headers = dict(config.items("Request Headers"))
+  except:
+    sys.stderr.write('No additional request headers found\n')
+
 
   cat_logs(args)
 
@@ -198,10 +211,12 @@ def tail():
   conf_parser = argparse.ArgumentParser(version=VERSION, description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter, add_help=False)
   conf_parser.add_argument("-f", "--conf-folder", dest="conf_folder", help="specify a folder for config files to live")
   conf_parser.add_argument("-c", "--conf-file", dest="conf_file", help="Specify config file within the conf folder", metavar="FILE")
+  conf_parser.add_argument("--headers", dest='headers', help='Request headers for Singularity')
   args, remaining_argv = conf_parser.parse_known_args()
   conf_dir = args.conf_folder if args.conf_folder else DEFAULT_CONF_DIR
   conf_file = os.path.expanduser(conf_dir + '/' + args.conf_file) if args.conf_file else os.path.expanduser(conf_dir + '/' + DEFAULT_CONF_FILE)
   config = ConfigParser.SafeConfigParser()
+  config.optionxform = str
 
   defaults = {'verbose': False}
 
@@ -230,5 +245,10 @@ def tail():
   check_args(args)
 
   args.dest = os.path.expanduser(args.dest)
+  try:
+    args.headers = dict(config.items("Request Headers"))
+  except:
+    sys.stderr.write('No additional request headers found\n')
+
 
   tail_logs(args)
