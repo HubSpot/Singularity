@@ -31,7 +31,7 @@ if [[ ! -d ./tmp ]]; then
   mkdir ./tmp
 fi
 
-echo "Ensuring ./tmp is owned by {{{ user }} with 0750"
+echo "Ensuring ./tmp is owned by {{{ user }}} with 0750"
 sudo chown -R {{{ user }}} ./tmp
 sudo chmod -R 0750 ./tmp
 
