@@ -6,6 +6,14 @@ class RequestFormEdit extends RequestFormBaseView
         super
         app.$page.hide()
 
+    events: ->
+        _.extend super,
+            'change #schedule-type': 'handleScheduleTypeChange'
+
+    handleScheduleTypeChange: (e) ->
+        scheduleType = $(e.currentTarget).val()
+        @$("#schedule").val @model.get('request')[scheduleType]
+
     renderEditForm: ->
         request = @model.toJSON()
 
@@ -33,7 +41,9 @@ class RequestFormEdit extends RequestFormBaseView
             @$("#waitAtLeast-#{request.type}").val request.request.waitAtLeastMillisAfterTaskFinishesForReschedule
 
         if request.type is 'SCHEDULED'
-            @$("#schedule").val request.request.schedule
+            @$("#schedule").val request.request.quartzSchedule
+            @setSelect2Val '#schedule-type', 'quartzSchedule'
+
             @$("#retries-on-failure").val request.request.numRetriesOnFailure
             @$("#scheduled-expected-runtime").val request.request.scheduledExpectedRuntimeMillis
 
