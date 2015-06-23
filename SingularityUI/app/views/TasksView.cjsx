@@ -8,13 +8,15 @@ View = require './ReactBaseView'
 
 class TasksView extends View
 
+  synced: false
+
   initialize: =>
     @renderReact()
     @refresh()
 
   refresh: =>
-    # $.when( @collections.tasks.fetch(), @collections.slaves.fetch() ).done =>
-    @collections.tasks.fetch().done =>
+    $.when( @collections.tasks.fetch(), @collections.slaves.fetch() ).done =>
+      @synced = true
       @renderReact()
 
   renderReact: ->
@@ -30,9 +32,11 @@ class TasksView extends View
   ##
   getRenderData: ->
     tasks: @collections.tasks.toJSON()
+    slaves: @collections.slaves.toJSON()
     searchFilter: @options.searchFilter
     initialFilterState: @options.state
     filterState: @filterState || ''
+    synced: @synced
 
   ##
   ## Actions
