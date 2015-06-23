@@ -1,4 +1,4 @@
-BuildAdminTable = require './BuildAdminTable'
+AdminTable = require './AdminTable'
 
 Helpers       = require '../utils/helpers'  
 Table         = ReactBootstrap.Table
@@ -54,5 +54,5 @@ SlavesTable = React.createClass
       </Table>
     )
 
-buildSlavesTable = BuildAdminTable(SlavesTable)
+buildSlavesTable = AdminTable(SlavesTable)
 module.exports = buildSlavesTable
