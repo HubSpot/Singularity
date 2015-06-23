@@ -1,19 +1,16 @@
+BuildAdminTable = require './BuildAdminTable'
+
 Helpers       = require '../utils/helpers'  
 Table         = ReactBootstrap.Table
 EmptyTableMsg = require '../lib/EmptyTableMsg'
-AdminTable    = require '../utils/mixins/AdminTable'
 
 SlavesTable = React.createClass
   
   displayName: 'Slaves Table'
-  mixins: [AdminTable]
 
-  ##
-  ## Build Table
-  ##
   render: ->
   
-    if @isTableEmpty()
+    if @props.isTableEmpty()
       return <EmptyTableMsg msg='No items' />
 
     tbody = @props.items.map (item) =>
@@ -21,7 +18,7 @@ SlavesTable = React.createClass
       return(
         <tr key={item.id}>
           <td>
-            <a href={@generateLink(item)}>{ item.id }</a>
+            <a href={@props.generateLink(item)}>{ item.id }</a>
           </td> 
           <td>{ item.state }</td>
           <td>{ Helpers.timestampFormatted item.currentState.timestamp }</td>
@@ -30,9 +27,9 @@ SlavesTable = React.createClass
           <td className="hidden-xs" data-value="{ item.uptime }">
               { Helpers.timestampDuration item.uptime }
           </td>
-          { @getUsername(item) }
+          { @props.getUsername(item) }
           <td className="actions-column">
-            { @getActionButtons(item) }
+            { @props.getActionButtons(item) }
           </td>
         </tr>
       )
@@ -47,7 +44,7 @@ SlavesTable = React.createClass
             <th>Rack</th>
             <th>Host</th>
             <th className="hidden-xs">Uptime</th>
-            { @getStateBy() }
+            { @props.getStateBy() }
             <th data-sortable="false"></th>
           </tr>
         </thead>
@@ -57,4 +54,5 @@ SlavesTable = React.createClass
       </Table>
     )
 
-module.exports = SlavesTable
+buildSlavesTable = BuildAdminTable(SlavesTable)
+module.exports = buildSlavesTable
