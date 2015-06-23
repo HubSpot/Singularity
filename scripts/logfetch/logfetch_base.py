@@ -2,7 +2,7 @@ import os
 import sys
 import gzip
 import fnmatch
-from datetime import datetime
+from datetime import datetime, timedelta
 from termcolor import colored
 from singularity_request import get_json_response
 
@@ -54,6 +54,9 @@ def tasks_for_requests(args):
         tasks = [task["taskId"]["id"] for task in all_tasks_for_request(args, request)]
         tasks = tasks[0:args.task_count] if hasattr(args, 'task_count') else tasks
     all_tasks = all_tasks + tasks
+  if not all_tasks:
+    sys.stderr.write(colored('No tasks found, check that the request/task you are searching for exists...', 'red'))
+    exit(1)
   return all_tasks
 
 def log_matches(inputString, pattern):
@@ -61,10 +64,10 @@ def log_matches(inputString, pattern):
 
 def all_tasks_for_request(args, request):
   uri = '{0}{1}'.format(base_uri(args), ACTIVE_TASKS_FORMAT.format(request))
-  active_tasks = get_json_response(uri)
+  active_tasks = get_json_response(uri, args)
   if hasattr(args, 'start_days'):
     uri = '{0}{1}'.format(base_uri(args), REQUEST_TASKS_FORMAT.format(request))
-    historical_tasks = get_json_response(uri)
+    historical_tasks = get_json_response(uri, args)
     if len(historical_tasks) == 0:
       return active_tasks
     elif len(active_tasks) == 0:
@@ -76,7 +79,7 @@ def all_tasks_for_request(args, request):
 
 def all_requests(args):
   uri = '{0}{1}'.format(base_uri(args),  ALL_REQUESTS)
-  requests = get_json_response(uri)
+  requests = get_json_response(uri, args)
   included_requests = []
   for request in requests:
     if fnmatch.fnmatch(request['request']['id'], args.requestId):
