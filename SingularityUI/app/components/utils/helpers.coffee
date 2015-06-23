@@ -20,10 +20,24 @@ module.exports =
   timestampDuration: (timestamp) ->
     return '' if not timestamp
     moment.duration(timestamp).humanize()
+    
+  isTimestampInPast: (timestamp, options) ->
+    return true if not timestamp
+    timeObject = moment timestamp
+    now = moment()
+    if timeObject.isBefore(now)
+        return true
+    false
 
   titleCase: (str) ->
     str.replace /\w\S*/g, (txt) ->
       txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+
+  isInSubFilter: (needle, haystack, options) ->
+    return true if haystack is 'all'
+    if haystack.indexOf(needle) isnt -1
+      return true
+    false
 
   routeLink: (e) =>
     $link = $(e.target)
