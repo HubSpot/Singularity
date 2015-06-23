@@ -1,9 +1,8 @@
-## Higher Order Component for
 Glyphicon = ReactBootstrap.Glyphicon
 
-BuildAdminTable = (Component) ->
+AdminTable = (Component) ->
 
-  AdminTable = React.createClass
+  Table = React.createClass
 
     ##
     ## Default State/Props
@@ -87,4 +86,4 @@ BuildAdminTable = (Component) ->
       />
 
 
-module.exports = BuildAdminTable
+module.exports = AdminTable
