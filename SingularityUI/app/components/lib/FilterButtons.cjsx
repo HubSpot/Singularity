@@ -1,6 +1,3 @@
-Row = ReactBootstrap.Row
-Col = ReactBootstrap.Col
-
 PillsNav = require '../lib/PillsNav'
 NavItem = ReactBootstrap.NavItem
 Helpers = require '../utils/helpers'
@@ -12,7 +9,6 @@ FilterButtons = React.createClass
   propTypes:
     data: React.PropTypes.object.isRequired
     buttons: React.PropTypes.array.isRequired
-    md: React.PropTypes.number
 
   getInitialState: ->
     { activeFilter: @props.data.initialFilterState }
@@ -28,16 +24,8 @@ FilterButtons = React.createClass
         </NavItem>
       )
 
-    if @props.md
-      Nav =
-        <Row>
-          <Col md={@props.md}>
-            <PillsNav>
-              {buttons}
-            </PillsNav>
-          </Col>
-        </Row>
-
-    return Nav
+    <PillsNav> 
+      {buttons} 
+    </PillsNav>
 
 module.exports = FilterButtons

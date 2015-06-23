@@ -1,3 +1,5 @@
+Row = ReactBootstrap.Row
+Col = ReactBootstrap.Col
 
 FilterButtons = require '../lib/FilterButtons'
 FilterSearch = require '../lib/FilterSearch'
@@ -13,23 +15,30 @@ TasksMain = React.createClass
 
   render: ->
     <div>
-      <FilterButtons
-        md={12}
-        data={@props.data}
-        buttons= {[
-          { label: 'Active', id: 'active', nolink: true }
-          { label: 'Scheduled', id: 'scheduled' }
-          { label: 'Cleaning', id: 'cleaning' }
-          { label: 'LB Cleaning', id: 'lbcleanup' }
-          { label: 'Decommissioning', id: 'decommissioning' }
-        ]}
-      />
+
+      <Row>
+        <Col md=12>
+          <FilterButtons
+            data={@props.data}
+            buttons= {[
+              { label: 'Active', id: 'active', nolink: true }
+              { label: 'Scheduled', id: 'scheduled' }
+              { label: 'Cleaning', id: 'cleaning' }
+              { label: 'LB Cleaning', id: 'lbcleanup' }
+              { label: 'Decommissioning', id: 'decommissioning' }
+            ]}
+          />
+        </Col>
+      </Row>
+
+
 
       <FilterSearch />
       <TasksTable
         data={@props.data}
         actions={@props.actions}
       />
+    
     </div>
 
 module.exports = TasksMain
