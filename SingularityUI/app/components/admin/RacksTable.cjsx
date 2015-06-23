@@ -1,19 +1,16 @@
-Helpers       = require '../utils/helpers'  
-Table         = ReactBootstrap.Table
-EmptyTableMsg = require '../lib/EmptyTableMsg'
-AdminTable    = require '../utils/mixins/AdminTable'
+BuildAdminTable = require './BuildAdminTable'
+
+Helpers        = require '../utils/helpers'  
+Table          = ReactBootstrap.Table
+EmptyTableMsg  = require '../lib/EmptyTableMsg'
+
 
 RacksTable = React.createClass
   
-  displayName: 'Racks Table'
-  mixins: [AdminTable]
+  displayName: 'RacksTable'
 
-  ##
-  ## Build Table
-  ##
   render: ->
-  
-    if @isTableEmpty()
+    if @props.isTableEmpty()
       return <EmptyTableMsg msg='No items' />
 
     tbody = @props.items.map (item) =>
@@ -27,9 +24,9 @@ RacksTable = React.createClass
           <td className="hidden-xs" data-value="{ item.uptime }">
               { Helpers.timestampDuration item.uptime }
           </td>
-          { @getUsername(item) }
+          { @props.getUsername(item) }
           <td className="actions-column">
-            { @getActionButtons(item) }
+            { @props.getActionButtons(item) }
           </td>
         </tr>
       )
@@ -41,7 +38,7 @@ RacksTable = React.createClass
             <th>ID</th>
             <th>State</th>
             <th className="hidden-xs">Uptime</th>
-            { @getStateBy() }
+            { @props.getStateBy() }
             <th data-sortable="false"></th>
           </tr>
         </thead>
@@ -51,4 +48,5 @@ RacksTable = React.createClass
       </Table>
     )
 
-module.exports = RacksTable
+buildRacksTable = BuildAdminTable(RacksTable)
+module.exports = buildRacksTable
