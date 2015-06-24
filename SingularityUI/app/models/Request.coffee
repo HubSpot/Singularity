@@ -11,6 +11,7 @@ class Request extends Model
 
     # When we show the JSON dialog, we will ignore these attributes
     ignoreAttributes: ['id', 'paused', 'deleted', 'hasActiveDeploy', 'canBeRunNow', 'canBeBounced', 'starred']
+    localStorageCommandLineInputKeyPrefix: 'runRequestCommandLineInput::'
 
     url: => "#{ config.apiRoot }/requests/request/#{ @get('id') }"
 
@@ -122,14 +123,39 @@ class Request extends Model
 
     promptRun: (callback) =>
         vex.dialog.prompt
-            message: runTemplate id: @get "id"
+            message: ""
+            input: runTemplate id: @get "id"
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.YES), text: 'Run now'
                 vex.dialog.buttons.NO
             ]
+
+            beforeClose: =>
+                return if @data is false
+                
+                fileName = @data.filename.trim()
+                commandLineInput = @data.commandLineInput.trim()
+
+                if fileName.length is 0 and @data.autoTail is 'on'
+                    $(window.noFilenameError).removeClass('hide')
+                    return false
+
+                else
+                    localStorage.setItem(@localStorageCommandLineInputKeyPrefix + @id, commandLineInput) if commandLineInput?
+                    localStorage.setItem('taskRunRedirectFilename', fileName) if filename?
+                    localStorage.setItem('taskRunAutoTail', @data.autoTail)
+                    @data.id = @get 'id'
+
+                    @run( @data.commandLineInput ).done callback( @data )
+                    return true
+
+            afterOpen: => 
+                $('#filename').val localStorage.getItem('taskRunRedirectFilename')
+                $('#commandLineInput').val localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
+                $('#autoTail').prop 'checked', (localStorage.getItem('taskRunAutoTail') is 'on')
+
             callback: (data) =>
-                return if data is false
-                @run(data).done callback
+                @data = data
 
     promptRemove: (callback) =>
         vex.dialog.confirm

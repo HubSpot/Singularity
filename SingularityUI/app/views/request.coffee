@@ -1,6 +1,9 @@
 View = require './view'
 
 Deploy = require '../models/Deploy'
+TaskFiles = require '../collections/TaskFiles'
+
+AutoTailer = require './AutoTailer'
 
 class RequestView extends View
 
@@ -26,32 +29,26 @@ class RequestView extends View
 
     render: ->
         @$el.html @template
-          config: config
+            config: config
 
         # Attach subview elements
-        @$('#header').html           @subviews.header.$el
-        @$('#stats').html            @subviews.stats.$el
-        @$('#active-tasks').html     @subviews.activeTasks.$el
-        @$('#scheduled-tasks').html  @subviews.scheduledTasks.$el
-        @$('#task-history').html     @subviews.taskHistory.$el
-        @$('#deploy-history').html   @subviews.deployHistory.$el
-        @$('#request-history').html  @subviews.requestHistory.$el
+        @$('#header').html              @subviews.header.$el
+        @$('#request-history-msg').html @subviews.requestHistoryMsg.$el
+        @$('#stats').html               @subviews.stats.$el
+        @$('#active-tasks').html        @subviews.activeTasks.$el
+        @$('#scheduled-tasks').html     @subviews.scheduledTasks.$el
+        @$('#task-history').html        @subviews.taskHistory.$el
+        @$('#deploy-history').html      @subviews.deployHistory.$el
+        @$('#request-history').html     @subviews.requestHistory.$el
 
     viewJson: (e) =>
         $target = $(e.currentTarget).parents 'tr'
         id = $target.data 'id'
         collectionName = $target.data 'collection'
 
-        if collectionName is 'deployHistory'
-            deploy = new Deploy {},
-                requestId: @model.id
-                deployId:  id
-
-            utils.viewJSON deploy
-        else
-            # Need to reach into subviews to get the necessary data
-            collection = @subviews[collectionName].collection
-            utils.viewJSON collection.get id
+        # Need to reach into subviews to get the necessary data
+        collection = @subviews[collectionName].collection
+        utils.viewJSON collection.get id
 
     viewObjectJson: (e) =>
         utils.viewJSON @model
@@ -61,11 +58,20 @@ class RequestView extends View
             app.router.navigate 'requests', trigger: true
 
     runRequest: (e) =>
-        @model.promptRun =>
-            @trigger 'refreshrequest'
-            setTimeout =>
+        @model.promptRun (data) =>   
+            # If user wants to redirect to a file after the task starts
+            if data.autoTail is 'on'
+                autoTailer = new AutoTailer({
+                    requestId: @requestId
+                    autoTailFilename: data.filename
+                    autoTailTimestamp: +new Date()
+                })
+
+                autoTailer.startAutoTailPolling()
+
+            else
                 @trigger 'refreshrequest'
-            , 2500
+                setTimeout ( => @trigger 'refreshrequest'), 2500
 
     scaleRequest: (e) =>
         @model.promptScale =>
@@ -88,8 +94,7 @@ class RequestView extends View
 
         @model.promptRun =>
             @subviews.scheduledTasks.collection.remove id
-            @subviews.scheduledTasks.render()
-
+            @subviews.scheduledTasks.render()            
             setTimeout =>
                 @trigger 'refreshrequest'
             , 3000

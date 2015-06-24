@@ -62,6 +62,7 @@
     <curator.version>2.4.2</curator.version>
     <dropwizard.version>0.7.1</dropwizard.version>
     <jets3t.version>0.9.0</jets3t.version>
+    <guava.retry.version>1.0.7</guava.retry.version>
     <mesos.version>0.21.0</mesos.version>
     <ning.async.version>1.8.12</ning.async.version>
     <snappy.version>0.3</snappy.version>
@@ -175,6 +176,30 @@
             <groupId>org.eclipse.jetty.orbit</groupId>
             <artifactId>javax.servlet</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>io.dropwizard</groupId>
+        <artifactId>dropwizard-configuration</artifactId>
+        <version>${dropwizard.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>io.dropwizard</groupId>
+        <artifactId>dropwizard-validation</artifactId>
+        <version>${dropwizard.version}</version>
+        <exclusions>
           <exclusion>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
@@ -321,6 +346,30 @@
       </dependency>
 
       <dependency>
+        <groupId>com.spotify</groupId>
+        <artifactId>docker-client</artifactId>
+        <version>2.7.20</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>aopalliance</groupId>
+            <artifactId>aopalliance</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.glassfish.hk2.external</groupId>
+            <artifactId>javax.inject</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.glassfish.hk2.external</groupId>
+            <artifactId>aopalliance-repackaged</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
         <groupId>org.apache.mesos</groupId>
         <artifactId>mesos</artifactId>
         <version>${mesos.version}</version>
@@ -346,6 +395,18 @@
           <exclusion>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>com.github.rholder</groupId>
+        <artifactId>guava-retrying</artifactId>
+        <version>${guava.retry.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -414,6 +475,24 @@
             <artifactId>slf4j-log4j12</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>4.4</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpcore</artifactId>
+        <version>4.4</version>
       </dependency>
 
       <dependency>
@@ -536,6 +615,12 @@
       </dependency>
 
       <dependency>
+        <groupId>com.fasterxml.jackson.dataformat</groupId>
+        <artifactId>jackson-dataformat-yaml</artifactId>
+        <version>${dep.jackson.version}</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.iq80.snappy</groupId>
         <artifactId>snappy</artifactId>
         <version>${snappy.version}</version>
@@ -579,9 +664,18 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <groupId>pl.project13.maven</groupId>
+          <artifactId>git-commit-id-plugin</artifactId>
+          <configuration>
+            <gitDescribe>
+              <match>Singularity*</match>  <!-- logfetch tags exist too... don't use those -->
+            </gitDescribe>
+          </configuration>
+        </plugin>
+        <plugin>
           <groupId>com.github.eirslett</groupId>
           <artifactId>frontend-maven-plugin</artifactId>
-          <version>0.0.16</version>
+          <version>0.0.23</version>
         </plugin>
         <plugin>
           <groupId>com.github.kongchen</groupId>

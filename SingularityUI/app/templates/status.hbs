@@ -111,7 +111,7 @@
                 <h2>Tasks</h2>
             </div>
             <div class="row">
-                <div class="col-md-3">
+                <div class="col-md-2 col-md-1-5">
                     <a class="big-number-link" href="{{appRoot}}/tasks">
                         <div class="well">
                             <div class="big-number">
@@ -121,7 +121,7 @@
                         </div>
                     </a>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2 col-md-1-5">
                     <a class="big-number-link" href="{{appRoot}}/tasks/scheduled">
                         <div class="well">
                             <div class="big-number">
@@ -131,7 +131,7 @@
                         </div>
                     </a>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2 col-md-1-5">
                     <a class="big-number-link" href="{{appRoot}}/tasks/scheduled">
                         <div class="well">
                             <div class="big-number">
@@ -141,12 +141,22 @@
                         </div>
                     </a>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2 col-md-1-5">
                     <a class="big-number-link" href="{{appRoot}}/tasks/cleaning">
                         <div class="well">
                             <div class="big-number">
                                 <div class="number" data-state-attribute="cleaningTasks">{{ state.cleaningTasks }}</div>
                                 <div class="number-label">Cleaning</div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-2 col-md-1-5">
+                    <a class="big-number-link" href="{{appRoot}}/tasks/lbcleanup">
+                        <div class="well">
+                            <div class="big-number">
+                                <div class="number" data-state-attribute="lbCleaningTasks">{{ state.lbCleanupTasks }}</div>
+                                <div class="number-label">LB Cleaning</div>
                             </div>
                         </div>
                     </a>

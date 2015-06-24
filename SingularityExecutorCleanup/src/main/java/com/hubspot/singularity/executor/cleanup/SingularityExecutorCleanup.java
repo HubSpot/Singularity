@@ -8,11 +8,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import com.hubspot.singularity.executor.config.SingularityExecutorModule;
+import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.messages.Container;
+import com.spotify.docker.client.messages.ContainerInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,11 +37,11 @@ import com.hubspot.singularity.executor.SingularityExecutorCleanupStatistics;
 import com.hubspot.singularity.executor.SingularityExecutorCleanupStatistics.SingularityExecutorCleanupStatisticsBuilder;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.cleanup.config.SingularityExecutorCleanupConfiguration;
-import com.hubspot.singularity.executor.cleanup.config.SingularityExecutorCleanupConfigurationLoader;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskCleanup;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskLogManager;
+import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
 import com.hubspot.singularity.runner.base.shared.ProcessUtils;
@@ -47,22 +52,26 @@ public class SingularityExecutorCleanup {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityExecutorCleanup.class);
 
   private final JsonObjectFileHelper jsonObjectFileHelper;
+  private final SingularityRunnerBaseConfiguration baseConfiguration;
   private final SingularityExecutorConfiguration executorConfiguration;
   private final SingularityClient singularityClient;
   private final TemplateManager templateManager;
   private final SingularityExecutorCleanupConfiguration cleanupConfiguration;
   private final MesosClient mesosClient;
   private final ProcessUtils processUtils;
+  private final DockerClient dockerClient;
 
   @Inject
-  public SingularityExecutorCleanup(SingularityClient singularityClient, JsonObjectFileHelper jsonObjectFileHelper, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager, MesosClient mesosClient) {
+  public SingularityExecutorCleanup(SingularityClient singularityClient, JsonObjectFileHelper jsonObjectFileHelper, SingularityRunnerBaseConfiguration baseConfiguration, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager, MesosClient mesosClient, DockerClient dockerClient) {
     this.jsonObjectFileHelper = jsonObjectFileHelper;
+    this.baseConfiguration = baseConfiguration;
     this.executorConfiguration = executorConfiguration;
     this.cleanupConfiguration = cleanupConfiguration;
     this.singularityClient = singularityClient;
     this.templateManager = templateManager;
     this.mesosClient = mesosClient;
     this.processUtils = new ProcessUtils(LOG);
+    this.dockerClient = dockerClient;
   }
 
   public SingularityExecutorCleanupStatistics clean() {
@@ -85,13 +94,17 @@ public class SingularityExecutorCleanup {
 
     if (runningTaskIds.isEmpty()) {
       if (cleanupConfiguration.isSafeModeWontRunWithNoTasks()) {
-        final String errorMessage = String.format("Running in safe mode (%s) and found 0 running tasks - aborting cleanup", SingularityExecutorCleanupConfigurationLoader.SAFE_MODE_WONT_RUN_WITH_NO_TASKS);
+        final String errorMessage = String.format("Running in safe mode and found 0 running tasks - aborting cleanup");
         LOG.error(errorMessage);
         statisticsBldr.setErrorMessage(errorMessage);
         return statisticsBldr.build();
       } else {
-        LOG.warn("Found 0 running tasks - proceeding with cleanup as we are not in safe mode ({})", SingularityExecutorCleanupConfigurationLoader.SAFE_MODE_WONT_RUN_WITH_NO_TASKS);
+        LOG.warn("Found 0 running tasks - proceeding with cleanup as we are not in safe mode");
       }
+    }
+
+    if (cleanupConfiguration.isRunDockerCleanup()) {
+      cleanDocker(runningTaskIds);
     }
 
     for (Path file : JavaUtils.iterable(directory)) {
@@ -173,9 +186,9 @@ public class SingularityExecutorCleanup {
   }
 
   private boolean cleanTask(SingularityExecutorTaskDefinition taskDefinition, Optional<SingularityTaskHistory> taskHistory) {
-    SingularityExecutorTaskLogManager logManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, executorConfiguration, LOG, jsonObjectFileHelper);
+    SingularityExecutorTaskLogManager logManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, baseConfiguration, executorConfiguration, LOG, jsonObjectFileHelper);
 
-    SingularityExecutorTaskCleanup taskCleanup = new SingularityExecutorTaskCleanup(logManager, executorConfiguration, taskDefinition, LOG);
+    SingularityExecutorTaskCleanup taskCleanup = new SingularityExecutorTaskCleanup(logManager, executorConfiguration, taskDefinition, LOG, dockerClient);
 
     boolean cleanupTaskAppDirectory = true;
 
@@ -195,12 +208,19 @@ public class SingularityExecutorCleanup {
 
     checkForUncompressedLogrotatedFile(taskDefinition);
 
-    return taskCleanup.cleanup(cleanupTaskAppDirectory);
+    boolean isDocker = (taskHistory.get().getTask().getMesosTask().hasContainer() && taskHistory.get().getTask().getMesosTask().getContainer().hasDocker());
+
+    return taskCleanup.cleanup(cleanupTaskAppDirectory, isDocker);
   }
 
   private Iterator<Path> getUncompressedLogrotatedFileIterator(SingularityExecutorTaskDefinition taskDefinition) {
     final Path serviceLogOutPath = taskDefinition.getServiceLogOutPath();
     final Path logrotateToPath = taskDefinition.getServiceLogOutPath().getParent().resolve(executorConfiguration.getLogrotateToDirectory());
+
+    if (!logrotateToPath.toFile().exists() || !logrotateToPath.toFile().isDirectory()) {
+      LOG.warn("Skipping uncompressed logrotated file cleanup for {} -- {} does not exist or is not a directory (task sandbox was probably garbage collected by Mesos)", taskDefinition.getTaskId(), logrotateToPath);
+      return Collections.emptyIterator();
+    }
 
     try {
       DirectoryStream<Path> dirStream = Files.newDirectoryStream(logrotateToPath, String.format("%s-*", serviceLogOutPath.getFileName()));
@@ -251,5 +271,33 @@ public class SingularityExecutorCleanup {
     }
   }
 
-
+  private void cleanDocker(Set<String> runningTaskIds) {
+    try {
+      for (Container container : dockerClient.listContainers()) {
+        boolean isStoppedTaskContainer = false;
+        for (String name : container.names()) {
+          if (name.startsWith(executorConfiguration.getDockerPrefix())) {
+            if (!runningTaskIds.contains(name.substring(executorConfiguration.getDockerPrefix().length()))) {
+              isStoppedTaskContainer = true;
+            }
+          }
+        }
+        if (isStoppedTaskContainer) {
+          try {
+            ContainerInfo containerInfo = dockerClient.inspectContainer(container.id());
+            if (containerInfo.state().running()) {
+              dockerClient.stopContainer(container.id(), executorConfiguration.getDockerStopTimeout());
+              LOG.debug(String.format("Forcefully stopped container %s", container.names()));
+            }
+            dockerClient.removeContainer(container.id(), true);
+            LOG.debug(String.format("Removed container %s", container.names()));
+          } catch (Exception e) {
+            LOG.error("Failed to remove contianer {}", container.names(), e);
+          }
+        }
+      }
+    } catch (Exception e) {
+      LOG.error("Could not get list of containers", e);
+    }
+  }
 }

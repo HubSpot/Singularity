@@ -41,6 +41,7 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestParent;
+import com.hubspot.singularity.SingularityS3Log;
 import com.hubspot.singularity.SingularitySandbox;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityState;
@@ -79,6 +80,7 @@ public class SingularityClient {
 
   private static final String HISTORY_FORMAT = "http://%s/%s/history";
   private static final String TASK_HISTORY_FORMAT = HISTORY_FORMAT + "/task/%s";
+  private static final String REQUEST_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/requests";
   private static final String REQUEST_ACTIVE_TASKS_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/tasks/active";
   private static final String REQUEST_INACTIVE_TASKS_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/tasks";
   private static final String REQUEST_DEPLOY_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/deploy/%s";
@@ -110,7 +112,12 @@ public class SingularityClient {
   private static final String SANDBOX_BROWSE_FORMAT = SANDBOX_FORMAT + "/%s/browse";
   private static final String SANDBOX_READ_FILE_FORMAT = SANDBOX_FORMAT + "/%s/read";
 
-  private static final TypeReference<Collection<SingularityRequest>> REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequest>>() {};
+  private static final String S3_LOG_FORMAT = "http://%s/%s/logs";
+  private static final String S3_LOG_GET_TASK_LOGS = S3_LOG_FORMAT + "/task/%s";
+  private static final String S3_LOG_GET_REQUEST_LOGS = S3_LOG_FORMAT + "/request/%s";
+  private static final String S3_LOG_GET_DEPLOY_LOGS = S3_LOG_FORMAT + "/request/%s/deploy/%s";
+
+  private static final TypeReference<Collection<SingularityRequestParent>> REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestParent>>() {};
   private static final TypeReference<Collection<SingularityPendingRequest>> PENDING_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityPendingRequest>>() {};
   private static final TypeReference<Collection<SingularityRequestCleanup>> CLEANUP_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestCleanup>>() {};
   private static final TypeReference<Collection<SingularityTask>> TASKS_COLLECTION = new TypeReference<Collection<SingularityTask>>() {};
@@ -122,6 +129,8 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityRequestHistory>> REQUEST_UPDATES_COLLECTION = new TypeReference<Collection<SingularityRequestHistory>>() {};
   private static final TypeReference<Collection<SingularityTaskHistoryUpdate>> TASK_UPDATES_COLLECTION = new TypeReference<Collection<SingularityTaskHistoryUpdate>>() {};
   private static final TypeReference<Collection<SingularityTaskRequest>> TASKS_REQUEST_COLLECTION = new TypeReference<Collection<SingularityTaskRequest>>() {};
+  private static final TypeReference<Collection<SingularityS3Log>> S3_LOG_COLLECTION = new TypeReference<Collection<SingularityS3Log>>() {};
+  private static final TypeReference<Collection<SingularityRequestHistory>> REQUEST_HISTORY_COLLECTION = new TypeReference<Collection<SingularityRequestHistory>>() {};
 
   private final Random random;
   private final Provider<List<String>> hostsProvider;
@@ -465,10 +474,10 @@ public class SingularityClient {
    * {@link SingularityClient#getCoolDownSingularityRequests()} respectively to get only the ACTIVE, PAUSED or COOLDOWN requests.
    *
    * @return
-   *    returns all the [ACTIVE, PAUSED, COOLDOWN] {@link SingularityRequest} instances.
+   *    returns all the [ACTIVE, PAUSED, COOLDOWN] {@link SingularityRequestParent} instances.
    *
    */
-  public Collection<SingularityRequest> getSingularityRequests() {
+  public Collection<SingularityRequestParent> getSingularityRequests() {
     final String requestUri = String.format(REQUESTS_FORMAT, getHost(), contextPath);
 
     return getCollection(requestUri, "[ACTIVE, PAUSED, COOLDOWN] requests", REQUESTS_COLLECTION);
@@ -478,9 +487,9 @@ public class SingularityClient {
    * Get all requests that their state is ACTIVE
    *
    * @return
-   *    All ACTIVE {@link SingularityRequest} instances
+   *    All ACTIVE {@link SingularityRequestParent} instances
    */
-  public Collection<SingularityRequest> getActiveSingularityRequests() {
+  public Collection<SingularityRequestParent> getActiveSingularityRequests() {
     final String requestUri = String.format(REQUESTS_GET_ACTIVE_FORMAT, getHost(), contextPath);
 
     return getCollection(requestUri, "ACTIVE requests", REQUESTS_COLLECTION);
@@ -491,9 +500,9 @@ public class SingularityClient {
    * ACTIVE requests are paused by users, which is equivalent to stop their tasks from running without undeploying them
    *
    * @return
-   *    All PAUSED {@link SingularityRequest} instances
+   *    All PAUSED {@link SingularityRequestParent} instances
    */
-  public Collection<SingularityRequest> getPausedSingularityRequests() {
+  public Collection<SingularityRequestParent> getPausedSingularityRequests() {
     final String requestUri = String.format(REQUESTS_GET_PAUSED_FORMAT, getHost(), contextPath);
 
     return getCollection(requestUri, "PAUSED requests", REQUESTS_COLLECTION);
@@ -503,9 +512,9 @@ public class SingularityClient {
    * Get all requests that has been set to a COOLDOWN state by singularity
    *
    * @return
-   *    All {@link SingularityRequest} instances that their state is COOLDOWN
+   *    All {@link SingularityRequestParent} instances that their state is COOLDOWN
    */
-  public Collection<SingularityRequest> getCoolDownSingularityRequests() {
+  public Collection<SingularityRequestParent> getCoolDownSingularityRequests() {
     final String requestUri = String.format(REQUESTS_GET_COOLDOWN_FORMAT, getHost(), contextPath);
 
     return getCollection(requestUri, "COOLDOWN requests", REQUESTS_COLLECTION);
@@ -682,6 +691,45 @@ public class SingularityClient {
   }
 
   //
+  // REQUEST HISTORY
+  //
+
+  /**
+   * Retrieve a paged list of updates for a particular {@link SingularityRequest}
+   *
+   * @param requestId
+   *    Request ID to look up
+   * @param count
+   *    Number of items to return per page
+   * @param page
+   *    Which page of items to return
+   * @return
+   *    A list of {@link SingularityRequestHistory}
+   */
+  public Collection<SingularityRequestHistory> getHistoryForRequest(String requestId,  Optional<Integer> count, Optional<Integer> page) {
+    final String requestUri = String.format(REQUEST_HISTORY_FORMAT, getHost(), contextPath, requestId);
+
+    Optional<Map<String, Object>> maybeQueryParams = Optional.<Map<String, Object>>absent();
+
+    ImmutableMap.Builder<String, Object> queryParamsBuilder = ImmutableMap.<String, Object>builder();
+
+    if (count.isPresent() ) {
+      queryParamsBuilder.put("count", count.get());
+    }
+
+    if (page.isPresent()) {
+      queryParamsBuilder.put("page", page.get());
+    }
+
+    Map<String, Object> queryParams = queryParamsBuilder.build();
+    if (!queryParams.isEmpty()) {
+      maybeQueryParams = Optional.of(queryParams);
+    }
+
+    return getCollectionWithParams(requestUri, "request history", maybeQueryParams, REQUEST_HISTORY_COLLECTION);
+  }
+
+  //
   // TASK HISTORY
   //
 
@@ -807,6 +855,63 @@ public class SingularityClient {
     }
 
     return getSingleWithParams(requestUrl, "Read sandbox file for task", taskId, Optional.<Map<String, Object>>of(queryParamBuider.build()), MesosFileChunkObject.class);
+  }
+
+  //
+  // S3 LOGS
+  //
+
+  /**
+   * Retrieve the list of logs stored in S3 for a specific task
+   *
+   * @param taskId
+   *    The task ID to search for
+   *
+   * @return
+   *    A collection of {@link SingularityS3Log}
+   */
+  public Collection<SingularityS3Log> getTaskLogs(String taskId) {
+    final String requestUri = String.format(S3_LOG_GET_TASK_LOGS, getHost(), contextPath, taskId);
+
+    final String type = String.format("S3 logs for task %s", taskId);
+
+    return getCollection(requestUri, type, S3_LOG_COLLECTION);
+  }
+
+  /**
+   * Retrieve the list of logs stored in S3 for a specific request
+   *
+   * @param requestId
+   *    The request ID to search for
+   *
+   * @return
+   *     A collection of {@link SingularityS3Log}
+   */
+  public Collection<SingularityS3Log> getRequestLogs(String requestId) {
+    final String requestUri = String.format(S3_LOG_GET_REQUEST_LOGS, getHost(), contextPath, requestId);
+
+    final String type = String.format("S3 logs for request %s", requestId);
+
+    return getCollection(requestUri, type, S3_LOG_COLLECTION);
+  }
+
+  /**
+   * Retrieve the list of logs stored in S3 for a specific deploy if a singularity request
+   *
+   * @param requestId
+   *    The request ID to search for
+   * @param deployId
+   *    The deploy ID (within the specified request) to search for
+   *
+   * @return
+   *    A collection of {@link SingularityS3Log}
+   */
+  public Collection<SingularityS3Log> getDeployLogs(String requestId, String deployId) {
+    final String requestUri = String.format(S3_LOG_GET_DEPLOY_LOGS, getHost(), contextPath, requestId, deployId);
+
+    final String type = String.format("S3 logs for deploy %s of request %s", deployId, requestId);
+
+    return getCollection(requestUri, type, S3_LOG_COLLECTION);
   }
 
 }

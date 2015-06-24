@@ -1,0 +1,136 @@
+#!/bin/bash
+#
+# This script was automatically generated.
+# Task ID: {{{ runContext.taskId }}}
+#
+
+set -e
+
+STOP_TIME={{{ stopTimeout }}} # Max time to wait for container to stop before killing
+
+CONTAINER_NAME="{{{ prefix }}}{{{ runContext.taskId }}}"
+
+CURRENT_DIR=`pwd`
+CGROUPS_GUID=${CURRENT_DIR##*runs/}
+CGROUPS_GUID=${CGROUPS_GUID%/*}
+
+function check_contianer_running {
+  status=`sudo -E -u {{{ runContext.user }}} docker inspect -f \{{.State.Running}} $1`
+  if [ "$status" = "false" ] ; then
+    echo "container is no longer running..."
+    running=0
+  else
+    running=1
+  fi
+}
+
+function setup_signals {
+  cid="$1"; shift
+  handler="$1"; shift
+  for sig; do
+    trap "$handler '$cid' '$sig'" "$sig"
+  done
+}
+
+function handle_signal {
+  echo "Received $2"
+  echo "Stopping via sudo -E -u {{{ runContext.user }}} docker stop -t $STOP_TIME $1"
+  sudo -E -u {{{ runContext.user }}} docker stop -t $STOP_TIME "$1"
+  exit_code=`sudo -E -u {{{ runContext.user }}} docker wait "$cid"`
+  echo "Attempting to remove container"
+  sudo -E -u {{{ runContext.user }}} docker rm $1
+  exit "$exit_code"
+}
+
+function enable_cgroup_hierarchy {
+  if [ -d "/cgroup/memory/mesos" ] ;then
+    CGROUPS_DIR="/cgroup"
+  else
+    if [ -d "/sys/fs/cgroup/memory/mesos" ] ; then
+      CGROUPS_DIR="/sys/fs/cgroup"
+    else
+      echo "Couldn't find cgroups directory, memory/cpu reporting may be inaccurate for this task"
+      return 0
+    fi
+  fi
+  echo 1 > $CGROUPS_DIR/memory/mesos/$CGROUPS_GUID/memory.use_hierarchy
+}
+
+DOCKER_IMAGE={{{ envContext.dockerInfo.image }}}
+
+DOCKER_ENV=""
+
+# load env vars
+{{#each envContext.env}}
+DOCKER_ENV="$DOCKER_ENV -e {{{name}}}={{{bashEscaped value}}}"
+{{/each}}
+
+# Create log directory for logrotate runs
+if [[ ! -d {{{ runContext.logDir }}} ]]; then
+  echo "Creating log directory ({{{ runContext.logDir }}})..."
+  mkdir -p {{{ runContext.logDir }}}
+  sudo chown -R {{{ runContext.user }}} {{{ runContext.logDir }}}
+fi
+
+# load artifact's profile.d
+if [[ -d .profile.d ]]; then
+  for FILE in $(ls .profile.d/*); do
+    while read -r line; do
+      DOCKER_ENV="$DOCKER_ENV -e $line"
+    done <<< $FILE
+  done
+else
+  echo "No deploy-specific profile.d"
+fi
+
+# set up port mappings
+{{#each envContext.dockerInfo.portMappingsList}}DOCKER_PORTS="$DOCKER_PORTS -p {{{ hostPort }}}:{{{ containerPort }}}"
+{{/each}}
+
+# set up attached volumes
+DOCKER_VOLUMES="-v $CURRENT_DIR:/mnt/mesos/sandbox"
+DOCKER_ENV="$DOCKER_ENV -e MESOS_SANDBOX=/mnt/mesos/sandbox"
+DOCKER_ENV="$DOCKER_ENV -e LOG_HOME=/mnt/mesos/sandbox/logs"
+DOCKER_ENV="$DOCKER_ENV -e MESOS_TASK_ID={{{bashEscaped runContext.taskId}}}"
+{{#each envContext.containerVolumes}}
+{{#if mode}}raw_mode{{@index}}={{{ mode }}}{{/if}}
+DOCKER_VOLUMES="$DOCKER_VOLUMES -v {{{ hostPath }}}:{{{ containerPath }}}{{#if mode}}:${raw_mode{{@index}},,}{{/if}}"
+{{/each}}
+
+# set up network config
+{{#if envContext.dockerInfo.network}}
+raw_network={{envContext.dockerInfo.network}}
+DOCKER_NETWORK="--net=${raw_network,,}"
+{{else}}
+DOCKER_NETWORK="--net=host"
+{{/if}}
+
+DOCKER_WORKDIR="/mnt/mesos/sandbox/{{{ runContext.taskAppDirectory }}}"
+
+DOCKER_OPTIONS="--name=$CONTAINER_NAME --cgroup-parent=mesos/$CGROUPS_GUID -w $DOCKER_WORKDIR $DOCKER_NETWORK $DOCKER_ENV $DOCKER_VOLUMES $DOCKER_PORTS"
+
+echo "Ensuring {{{ runContext.taskAppDirectory }}} is owned by {{{ runContext.user }}}"
+mkdir -p {{{ runContext.taskAppDirectory }}}
+sudo chown -R {{{ runContext.user }}} {{{ runContext.taskAppDirectory }}}
+
+enable_cgroup_hierarchy || true
+
+# Start up the container
+echo "Creating continer with: sudo -E -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS $DOCKER_IMAGE {{{ runContext.cmd }}}"
+cid=`sudo -E -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS $DOCKER_IMAGE {{{runContext.cmd }}}`
+sudo -E -u {{{ runContext.user }}} docker start -a $cid >> {{{ runContext.logFile }}} 2>&1 &
+running=1
+
+setup_signals "$cid" "handle_signal" SIGINT SIGTERM
+
+while true; do
+  if [ "$running" = "1" ]; then
+    sleep 10
+    check_contianer_running "$cid"
+  else
+    break
+  fi
+done
+
+exit_code=`sudo -E -u {{{ runContext.user }}} docker wait "$cid"`
+exit "$exit_code"

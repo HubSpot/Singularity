@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseLogging;
+
+import static com.hubspot.singularity.runner.base.jackson.ObfuscateAnnotationIntrospector.ObfuscateSerializer.obfuscateValue;
 
 /**
  *
@@ -21,6 +22,8 @@ import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseLogging;
  * %m - adds month
  * %d - adds day of the month
  * %s - adds milliseconds
+ * %guid - adds a guid
+ * %host - adds the hostname
  * %index - adds the index of the file uploaded at this moment (to preserve uniqueness)
  *
  * For example, if the s3KeyFormat was: %filename-%Y and the file name on local disk was "file1.txt" the S3 key would be : s3Bucket/file1.txt-2015 (assuming current year is 2015)
@@ -146,18 +149,10 @@ public class S3UploadMetadata {
     return finishedAfterMillisWithoutNewFile;
   }
 
-  private String obfuscateValue(Optional<String> optional) {
-    if (!optional.isPresent()) {
-      return optional.toString();
-    }
-
-    return SingularityRunnerBaseLogging.obfuscateValue(optional.get());
-  }
-
   @Override
   public String toString() {
     return "S3UploadMetadata [directory=" + directory + ", fileGlob=" + fileGlob + ", s3Bucket=" + s3Bucket + ", s3KeyFormat=" + s3KeyFormat + ", finished=" + finished + ", onFinishGlob="
-        + onFinishGlob + ", pid=" + pid + ", s3AccessKey=" + obfuscateValue(s3AccessKey) + ", s3Secret=" + obfuscateValue(s3SecretKey) + ", finishedAfterMillisWithoutNewFile=" + finishedAfterMillisWithoutNewFile + "]";
+        + onFinishGlob + ", pid=" + pid + ", s3AccessKey=" + obfuscateValue(s3AccessKey.orNull()) + ", s3Secret=" + obfuscateValue(s3SecretKey.orNull()) + ", finishedAfterMillisWithoutNewFile=" + finishedAfterMillisWithoutNewFile + "]";
   }
 
 }

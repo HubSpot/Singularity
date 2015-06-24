@@ -7,6 +7,9 @@ Handlebars.registerHelper 'apiDocs', ->
 Handlebars.registerHelper 'ifEqual', (v1, v2, options) ->
     if v1 is v2 then options.fn @ else options.inverse @
 
+Handlebars.registerHelper 'ifNotEqual', (v1, v2, options) ->
+    if v1 isnt v2 then options.fn @ else options.inverse @
+
 Handlebars.registerHelper 'ifLT', (v1, v2, options) ->
     if v1 < v2 then options.fn @ else options.inverse @
 
@@ -73,6 +76,11 @@ Handlebars.registerHelper 'timestampFormatted', (timestamp) ->
     timeObject = moment timestamp
     timeObject.format 'lll'
 
+Handlebars.registerHelper 'timestampFormattedWithSeconds', (timestamp) ->
+    return '' if not timestamp
+    timeObject = moment timestamp
+    timeObject.format 'lll:ss'
+
 # 'DRIVER_NOT_RUNNING' => 'Driver not running'
 Handlebars.registerHelper 'humanizeText', (text) ->
     return '' if not text
@@ -95,3 +103,6 @@ Handlebars.registerHelper 'humanizeFileSize', (bytes) ->
 Handlebars.registerHelper 'usernameFromEmail', (email) ->
     return '' if not email
     email.split('@')[0]
+
+Handlebars.registerHelper 'substituteTaskId', (value, taskId) ->
+    value.replace('$TASK_ID', taskId)
