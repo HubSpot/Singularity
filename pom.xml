@@ -67,7 +67,7 @@
     <ning.async.version>1.8.12</ning.async.version>
     <snappy.version>0.3</snappy.version>
     <sentry.version>5.0</sentry.version>
-    <horizon.version>0.0.10</horizon.version>
+    <horizon.version>0.0.13</horizon.version>
   </properties>
 
   <modules>
