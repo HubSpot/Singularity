@@ -40,6 +40,11 @@
       <artifactId>BaragonCore</artifactId>
     </dependency>
 
+      <dependency>
+          <groupId>com.hubspot</groupId>
+          <artifactId>BaragonClient</artifactId>
+      </dependency>
+
     <dependency>
       <groupId>com.google.inject</groupId>
       <artifactId>guice</artifactId>
@@ -334,6 +339,11 @@
     <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>HorizonCore</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.hubspot</groupId>
+      <artifactId>HorizonNing</artifactId>
     </dependency>
 
     <dependency>

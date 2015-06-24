@@ -2,6 +2,7 @@ package com.hubspot.singularity;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
@@ -45,7 +46,7 @@ public class SingularityDeployBuilder {
   private Optional<Long> considerHealthyAfterRunningForSeconds;
 
   private Optional<String> serviceBasePath;
-  private Optional<List<String>> loadBalancerGroups;
+  private Optional<Set<String>> loadBalancerGroups;
   private Optional<Map<String, Object>> loadBalancerOptions;
 
   public SingularityDeployBuilder(String requestId, String id) {
@@ -285,11 +286,11 @@ public class SingularityDeployBuilder {
     return this;
   }
 
-  public Optional<List<String>> getLoadBalancerGroups() {
+  public Optional<Set<String>> getLoadBalancerGroups() {
     return loadBalancerGroups;
   }
 
-  public SingularityDeployBuilder setLoadBalancerGroups(Optional<List<String>> loadBalancerGroups) {
+  public SingularityDeployBuilder setLoadBalancerGroups(Optional<Set<String>> loadBalancerGroups) {
     this.loadBalancerGroups = loadBalancerGroups;
     return this;
   }

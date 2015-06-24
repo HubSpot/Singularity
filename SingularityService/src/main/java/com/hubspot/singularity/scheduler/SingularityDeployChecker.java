@@ -274,7 +274,7 @@ public class SingularityDeployChecker {
   }
 
   private SingularityDeployResult enqueueSwitchLoadBalancer(SingularityRequest request, SingularityDeploy deploy, SingularityPendingDeploy pendingDeploy, Collection<SingularityTaskId> deployTasks, Collection<SingularityTaskId> allOtherTasks) {
-    if (configuration.getLoadBalancerUri() == null) {
+    if (configuration.getLoadBalancerUri() == null && !configuration.getLoadBalancerConfig().isPresent()) {
       LOG.warn("Deploy {} required a load balancer URI but it wasn't set", pendingDeploy);
       return new SingularityDeployResult(DeployState.FAILED, "No valid load balancer URI was present");
     }
