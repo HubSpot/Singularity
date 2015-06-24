@@ -51,7 +51,12 @@ public class BaragonProvider {
 
   private String parseHost(String url) throws URISyntaxException {
     URI uri = new URI(url);
-    return String.format("%s:%s",uri.getHost(), uri.getPort());
+    int port = uri.getPort();
+    if (port == -1) {
+      port = 80;
+    }
+
+    return String.format("%s:%s",uri.getHost(), port);
   }
 
   private String parseContextPath(String url) throws URISyntaxException {
