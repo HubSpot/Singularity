@@ -50,6 +50,7 @@ module.exports =
     if e.metaKey or e.ctrlKey or e.shiftKey
         return
 
+  routeComponentLink: (e, route) =>
     e.preventDefault()
-    url = url.replace(config.appRoot, '')
-    app.router.navigate url, trigger: true
+    url = route.replace(config.appRoot, '')
+    app.router.navigate url, trigger: false
