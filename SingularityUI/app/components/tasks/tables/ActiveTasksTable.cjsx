@@ -1,3 +1,4 @@
+TaskTableContainer = require './TaskTableContainer'
 InfiniteScroll  = require '../../utils/mixins/InfiniteScroll'
 Helpers         = require '../../utils/helpers'  
 TableRowAction  = require '../../lib/TableRowAction'
@@ -16,33 +17,21 @@ ActiveTasksTable = React.createClass
 
   propTypes:
     tasks: React.PropTypes.array.isRequired
-    # renderAtOnce: React.PropTypes.number.isRequired
-    # actions: React.PropTypes.func.isRequired
+    decommissioning_hosts: React.PropTypes.array.isRequired
 
   mixins: [InfiniteScroll]
 
   render: ->
     @tasksToRender = @props.tasks.slice(@state.lastRender, @state.renderProgress)
 
-    pendingTask = (task) ->
-      if task.pendingTask?
-        if Helpers.isTimestampInPast task.pendingTask.pendingTaskId.nextRunAt
-          <Label bsStyle='danger'>OVERDUE</Label>
-
-    decommTask = (task, decommissioning_hosts) ->
-      if Helpers.isInSubFilter task.host, decommissioning_hosts
-        <Label bsStyle='warning'>DECOM</Label>
-
     tbody = @tasksToRender.map (task) =>
+
       taskLink = "#{config.appRoot}/task/#{task.taskId.id }"
 
-      ## TO DO: 
-      decommissioning_hosts = "damp-sound"  ## NEED TO ADD SLAVES CHECK...
-
       return (
-        <tr key={task.taskId.id} data-task-id="{ task.taskId.id }" data-task-host="{ task.host }">
+        <tr key={_.uniqueId('taskrow_')} data-task-id={ task.taskId.id } data-task-host={ task.host }>
             <td className='keep-in-check'>
-                <a title="{ taskId.id }" href={taskLink}>
+                <a title={ task.taskId.id } href={taskLink}>
                     {task.taskId.id}
                 </a>
             </td>
@@ -51,7 +40,7 @@ ActiveTasksTable = React.createClass
             </td>
             <td className="hidden-xs">
                 { task.host }
-                { decommTask(task, decommissioning_hosts) }
+                { if Helpers.isInSubFilter(task.host, @props.decommissioning_hosts) then <Label bsStyle='warning'>DECOM</Label> }
             </td>
             <td className="visible-lg">
                 { task.taskId.rackId }
@@ -63,7 +52,7 @@ ActiveTasksTable = React.createClass
                 { task.memoryMb } MB
             </td>
             <td>
-                { pendingTask(task) }
+                { @props.pendingTask(task) }
             </td>
             <td className="actions-column hidden-xs">
                 <TableRowAction id={ task.taskId.id } action='remove' glyph='remove' title='Kill task' />
@@ -73,12 +62,12 @@ ActiveTasksTable = React.createClass
       )
     
     ## cache new rows
-    @tasksRowsCache = @tasksRowsCache.concat tbody
+    @tableBodyRows = @tableBodyRows.concat tbody
 
     return(
       <Row>
-        <Col md={12} className="table-staged">
-          <Table striped>
+        <Col md={12}>
+          <Table striped className='table-staged'>
             <thead>
                 <tr>
                   <th data-sort-attribute="taskId.id">
@@ -106,11 +95,11 @@ ActiveTasksTable = React.createClass
                 </tr>
             </thead>
             <tbody>
-              {@tasksRowsCache}
+              {@tableBodyRows}
             </tbody>
           </Table>
         </Col>
       </Row>
     )
 
-module.exports = ActiveTasksTable
+module.exports = TaskTableContainer(ActiveTasksTable)

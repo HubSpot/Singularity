@@ -9,19 +9,28 @@ FilterButtons = React.createClass
   propTypes:
     data: React.PropTypes.object.isRequired
     buttons: React.PropTypes.array.isRequired
+    changeTable: React.PropTypes.func.isRequired
+
+  handleButtonClick: (e) ->
+    filter = e.currentTarget.getAttribute('id')
+    target = e.currentTarget.getAttribute('href')
+    Helpers.routeComponentLink(e, target)
+
+    @setState { activeFilter: filter}
+    @props.changeTable filter
 
   getInitialState: ->
     { activeFilter: @props.data.initialFilterState }
 
   render: ->
     buttons = @props.buttons.map (button) =>
-      link = "#{window.config.appRoot}/tasks/#{button.id}"
-      classes = 'active' if @state.activeFilter is button.id
+      currentFilter = @state.activeFilter || @props.data.initialFilterState
+      classes = 'active' if currentFilter is button.id
 
       return(
-        <NavItem key={button.label} id={button.id} href={link} className={classes} onClick={Helpers.routeLink}>
-          {button.label}
-        </NavItem>
+        <li key={button.label} className={classes}>
+          <a href={button.link} onClick={@handleButtonClick} id={button.id}>{button.label}</a>
+        </li>
       )
 
     <PillsNav> 

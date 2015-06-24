@@ -13,7 +13,7 @@ InfiniteScroll =
     }
 
   componentWillMount: ->
-    @tasksRowsCache = []
+    @tableBodyRows = []
 
   componentDidMount: ->
     @attachScrollListener()

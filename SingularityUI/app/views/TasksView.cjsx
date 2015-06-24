@@ -1,8 +1,4 @@
 
-# Request = require '../models/Request'
-# Slaves = require '../collections/Slaves'
-
-
 TasksMain = require '../components/tasks/TasksMain'
 View = require './ReactBaseView'
 
@@ -11,11 +7,13 @@ class TasksView extends View
   synced: false
 
   initialize: =>
+    @activeTable = @options.state
     @renderReact()
     @refresh()
 
   refresh: =>
-    $.when( @collections.tasks.fetch(), @collections.slaves.fetch() ).done =>
+    $.when( @collections.tasks.fetch({reset: true}), @collections.slaves.fetch() ).done =>
+      @decommissioning_hosts = @collections.slaves.decommissioning_hosts()
       @synced = true
       @renderReact()
 
@@ -32,9 +30,10 @@ class TasksView extends View
   ##
   getRenderData: ->
     tasks: @collections.tasks.toJSON()
-    slaves: @collections.slaves.toJSON()
+    decommissioning_hosts: @decommissioning_hosts
     searchFilter: @options.searchFilter
     initialFilterState: @options.state
+    activeTable: @activeTable
     filterState: @filterState || ''
     synced: @synced
 
@@ -42,6 +41,12 @@ class TasksView extends View
   ## Actions
   ##
   actions: =>
+    changeTable: @changeTable
 
+  changeTable: (filterState) =>
+    ## To do: handle decommissioning table
+    @collections.tasks.setState filterState
+    @filterState = filterState
+    @refresh()
 
 module.exports = TasksView
