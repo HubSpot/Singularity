@@ -26,7 +26,7 @@ class RequestFormEdit extends RequestFormBaseView
         @$('#slavePlacement').val request.request.slavePlacement
         
         if @requestType is 'SERVICE' or 'WORKER'
-            @$("#instances-#{@requestType}").val request.instances
+            @$("#instances-#{@requestType}").val request.request.instances
             @$("#rack-sensitive-#{@requestType}").prop 'checked', request.request.rackSensitive
             @$("#load-balanced").prop 'checked', request.request.loadBalanced
            
