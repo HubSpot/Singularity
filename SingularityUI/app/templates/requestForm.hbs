@@ -16,7 +16,7 @@
         {{/unless}}
       </div>
       <div class="form-group">
-        <label for="owner">Owners <span class='form-label-tip'>comma separate values</span></label>
+        <label for="owner">Owners <span class='form-label-tip'>separate multiple owners with commas</span></label>
         <input id="owners" class="tagging-input">
       </div>
       <div class="form-group">
@@ -84,7 +84,7 @@
           </div>
         </div>
         <div class="form-group">
-          <label for="rackAffinity-SERVICE">Rack Affinity <span class='form-label-tip'>comma separate values</span></label>
+          <label for="rackAffinity-SERVICE">Rack Affinity <span class='form-label-tip'>separate multiple racks with commas</span></label>
           <input data-type='rack-affinity' type="text" id="rackAffinity-SERVICE" class="tagging-input">
         </div>
       </div>
@@ -116,7 +116,7 @@
           </div>
         </div>
         <div class="form-group">
-          <label for="rackAffinity-SERVICE">Rack Affinity <span class='form-label-tip'>comma separate values</span></label>
+          <label for="rackAffinity-SERVICE">Rack Affinity <span class='form-label-tip'>separate multiple racks with commas</span></label>
           <input data-type='rack-affinity' type="text" id="rackAffinity-WORKER" class="tagging-input">
         </div>
       </div>
@@ -128,8 +128,8 @@
             <input type="text" id="schedule" class="form-control" placeholder="eg: */5 * * * *">
             <div class="input-group-addon input-group-addon--select">
               <select id="schedule-type" class="form-control">
-                  <option value="schedule">Cron</option>
-                  <option value="quartzSchedule">Quartz</option>
+                  <option value="schedule">Cron Schedule</option>
+                  <option value="quartzSchedule">Quartz Schedule</option>
               </select>
             </div>
           </div>
