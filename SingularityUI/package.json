@@ -17,7 +17,7 @@
   },
   "scripts": {
     "start": "brunch watch --server",
-    "postinstall": "bower install --allow-root && cp bower_components/select2/select2.png bower_components/select2/select2x2.png bower_components/select2/select2-spinner.gif app/assets/static/css/ && brunch build --production"
+    "postinstall": "bower install --allow-root && brunch build --production"
   },
   "dependencies": {
     "bower": "^1.3.8",
