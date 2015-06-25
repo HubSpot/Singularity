@@ -118,13 +118,11 @@ class RequestFormBase extends FormBaseView
         if type is 'SERVICE'
             requestObject.loadBalanced  = @$('#load-balanced').is ':checked'
 
+        @request = new Request requestObject
+        @request.raw = true
+        @request.url = "#{ config.apiRoot }/requests?user=#{ app.getUsername() }"
+        @request.isNew = -> true
 
-        request = new Request requestObject
-        request.url = "#{ config.apiRoot }/requests?user=#{ app.getUsername() }"
-        
-        request.isNew = -> true
-
-        @request = request
         @requestObject = requestObject
 
         @lockdown = true

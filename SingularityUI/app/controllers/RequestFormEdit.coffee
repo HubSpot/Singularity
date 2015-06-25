@@ -8,6 +8,7 @@ class RequestFormEditController extends Controller
     initialize: ({@requestId}) ->
 
         @models.request = new Request id: @requestId
+        @models.request.raw = true
         @collections.racks    = new Racks []
 
         @setView new RequestFormEditView

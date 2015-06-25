@@ -13,9 +13,8 @@ class RequestFormEdit extends RequestFormBaseView
 
     renderEditForm: ->
         request = @model.toJSON()
+        @requestType = request.request.requestType
 
-        @requestType = request.type
-        # render our request models info
         @render()
         # expand appropriate form fields
         @changeType()
@@ -26,18 +25,18 @@ class RequestFormEdit extends RequestFormBaseView
         
         @$('#slavePlacement').val request.request.slavePlacement
         
-        if request.type is 'SERVICE' or 'WORKER'
-            @$("#instances-#{request.type}").val request.instances
-            @$("#rack-sensitive-#{request.type}").prop 'checked', request.request.rackSensitive
+        if @requestType is 'SERVICE' or 'WORKER'
+            @$("#instances-#{@requestType}").val request.instances
+            @$("#rack-sensitive-#{@requestType}").prop 'checked', request.request.rackSensitive
             @$("#load-balanced").prop 'checked', request.request.loadBalanced
            
-        if request.type in ['SCHEDULED','ON_DEMAND','RUN_ONCE']
-            @$("#killOldNRL-#{request.type}").val request.request.killOldNonLongRunningTasksAfterMillis
+        if @requestType in ['SCHEDULED','ON_DEMAND','RUN_ONCE']
+            @$("#killOldNRL-#{@requestType}").val request.request.killOldNonLongRunningTasksAfterMillis
 
-        if request.type is 'WORKER'
-            @$("#waitAtLeast-#{request.type}").val request.request.waitAtLeastMillisAfterTaskFinishesForReschedule
+        if @requestType is 'WORKER'
+            @$("#waitAtLeast-#{@requestType}").val request.request.waitAtLeastMillisAfterTaskFinishesForReschedule
 
-        if request.type is 'SCHEDULED'
+        if @requestType is 'SCHEDULED'
             @$("#schedule").val request.request.quartzSchedule
             @setSelect2Val '#schedule-type', 'quartzSchedule'
 
@@ -45,7 +44,7 @@ class RequestFormEdit extends RequestFormBaseView
             @$("#scheduled-expected-runtime").val request.request.scheduledExpectedRuntimeMillis
 
         typeButtons = @$('#type .btn').prop('disabled', true)
-        @$("[data-type='#{request.type}']").prop('disabled', false)
+        @$("[data-type='#{@requestType}']").prop('disabled', false)
         @setTooltips()
         app.$page.show()
 
@@ -55,9 +54,7 @@ class RequestFormEdit extends RequestFormBaseView
             placement: 'top'
 
     saveRequest: ->
-        request = @model.toJSON()
-
-        if _.contains ['RUN_ONCE', 'ON_DEMAND'], request.type
+        if _.contains ['RUN_ONCE', 'ON_DEMAND'], @requestType
             @model.unset 'instances'
         
         @model.url = "#{ config.apiRoot }/requests?user=#{ app.getUsername() }"
