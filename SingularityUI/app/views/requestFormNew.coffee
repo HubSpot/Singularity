@@ -3,6 +3,7 @@ RequestFormBaseView = require './requestFormBase'
 class RequestFormNew extends RequestFormBaseView
 
     handleChangeType: (event) ->
+        event.preventDefault() if event
         @requestType = $(event.currentTarget).data 'type'
         @changeType()
         @renderFormElements()

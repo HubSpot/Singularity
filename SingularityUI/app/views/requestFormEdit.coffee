@@ -6,11 +6,8 @@ class RequestFormEdit extends RequestFormBaseView
         super
         app.$page.hide()
 
-    events: ->
-        _.extend super,
-            'change #schedule-type': 'handleScheduleTypeChange'
-
     handleScheduleTypeChange: (e) ->
+        super
         scheduleType = $(e.currentTarget).val()
         @$("#schedule").val @model.get('request')[scheduleType]
 

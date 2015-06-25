@@ -30,9 +30,7 @@ class RequestFormBase extends FormBaseView
     events: ->
         _.extend super,
             'click #type .btn': 'handleChangeType'
-
-    handleChangeType: (event) ->
-        event.preventDefault() if event
+            'change #schedule-type': 'handleScheduleTypeChange'
 
     initialize: ({@requestId, @racks}) ->
         super
@@ -44,7 +42,19 @@ class RequestFormBase extends FormBaseView
 
         @scheduleSelect = @generateSelectBox '#schedule-type', {containerCssClass : "select2-select-box select-box-small"}
 
-    # Expands a given request type form fields
+    handleChangeType: (event) ->
+        event.preventDefault() if event
+
+    handleScheduleTypeChange: (event) ->
+        placeholderText =
+            schedule: "eg: */5 * * * *"
+            quartzSchedule: "eg: 0 */5 * * * ?"
+        
+        type = @$('#schedule-type').val()
+
+        @$('#schedule').attr("placeholder", placeholderText[type])
+
+    # Expands a given request type's form fields
     changeType: (event) ->
         event.preventDefault() if event
         @$('#type .btn').removeClass 'active'
