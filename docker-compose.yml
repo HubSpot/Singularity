@@ -38,14 +38,14 @@ scheduler:
     - LOAD_BALANCER_URI=http://localhost:8080/baragon/v2/request
 
 baragonservice:
-  image: hubspot/baragonservice:0.1.7
+  image: hubspot/baragonservice:0.1.8
   net: host
   environment:
     BARAGON_TYPE: service
     BARAGON_PORT: 8080
 
 baragonagent:
-  image: hubspot/baragonagent:0.1.7
+  image: hubspot/baragonagent:0.1.8
   net: host
   environment:
     BARAGON_TYPE: agent
