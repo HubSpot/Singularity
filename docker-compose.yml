@@ -17,7 +17,7 @@ master:
     MESOS_WORK_DIR: /var/lib/mesos
 
 slave:
-  image: mesosphere/mesos-slave:0.21.1-1.1.ubuntu1404
+  image: hubspot/singularity
   entrypoint: mesos-slave
   net: host
   environment:
