@@ -109,6 +109,9 @@ class RequestFormBase extends FormBaseView
             expectedRuntime = parseInt @$('#scheduled-expected-runtime').val()
 
             requestObject[scheduleType] = schedule if schedule
+            if scheduleType is 'quartzSchedule'
+                requestObject.schedule = ''
+
             requestObject.numRetriesOnFailure = retries if retries
             requestObject.scheduledExpectedRuntimeMillis = expectedRuntime if expectedRuntime
 
