@@ -16,11 +16,10 @@ AdminTable = (Component) ->
     ## Event Handlers
     ##
     handleRowAction: (e) ->
-      $target = $(e.currentTarget)
-      id = $target.data('item-id')
-      state = $target.data('state')
-      host = $target.data('item-host')
-      action = $target.data('action')
+      id = e.currentTarget.getAttribute('data-item-id')
+      state = e.currentTarget.getAttribute('data-state')
+      host = e.currentTarget.getAttribute('data-item-host')
+      action = e.currentTarget.getAttribute('data-action')
 
       @props.actions().changeItemState
         id: id
