@@ -21,6 +21,9 @@ ActiveTasksTable = React.createClass
 
   mixins: [InfiniteScroll]
 
+  componentWillReceiveProps: ->
+    @tableBodyRows = []
+
   render: ->
     @tasksToRender = @props.tasks.slice(@state.lastRender, @state.renderProgress)
 
