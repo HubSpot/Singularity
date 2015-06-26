@@ -1,5 +1,6 @@
-UserInfo = require './UserInfo'
-Requests = require './Requests'
+UserInfo        = require './UserInfo'
+RequestsTotals  = require './RequestsTotals'
+StarredRequests = require './StarredRequests'
 
 DashboardMain = React.createClass
 
@@ -13,7 +14,11 @@ DashboardMain = React.createClass
     return (
       <div>
         <UserInfo data={@props.data} />
-        <Requests 
+        <RequestsTotals
+          data={@props.data} 
+          actions={@props.actions}
+        />
+        <StarredRequests 
           data={@props.data} 
           actions={@props.actions}
         />

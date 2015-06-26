@@ -54,5 +54,4 @@ SlavesTable = React.createClass
       </Table>
     )
 
-buildSlavesTable = AdminTable(SlavesTable)
-module.exports = buildSlavesTable
+module.exports = AdminTable(SlavesTable)

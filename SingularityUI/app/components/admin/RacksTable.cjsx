@@ -48,5 +48,4 @@ RacksTable = React.createClass
       </Table>
     )
 
-buildRacksTable = AdminTable(RacksTable)
-module.exports = buildRacksTable
+module.exports = AdminTable(RacksTable)

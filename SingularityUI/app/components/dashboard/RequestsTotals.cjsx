@@ -34,16 +34,6 @@ Requests = React.createClass
         <Row>
           {boxes}
         </Row>
-        <Row>
-          <Col md={12}>
-            <SectionHeader title='Starred requests' />
-            <StarredRequestsTable
-              data={@props.data}
-              unstar={@props.actions().unstar}
-              sortStarredRequests={@props.actions().sortStarredRequests}
-            />
-          </Col>
-        </Row>
       </div>
     )
 

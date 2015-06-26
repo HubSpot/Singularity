@@ -1,20 +1,14 @@
 DashboardMain = require '../components/dashboard/DashboardMain'
-View = require './ReactBaseView'
+ReactBaseView = require './ReactBaseView'
 
-class DashboardView extends View
+class DashboardView extends ReactBaseView
 
-  # Set this view as app.currentView so app.globalRefresh
-  # can trigger this view to refresh().
-  # Listen to events and kick off the initial fetch.
   initialize:  =>        
     @listenTo @collection, 'change', @renderReact
     @listenTo app.user, 'change', @renderReact
 
     @refresh()
 
-  ## Fetch data and then pass it to components as
-  ## as plain objects. This keeps backbone's business
-  ## out of react's business.
   refresh: =>
     @collection.fetch().done =>
       @renderReact()
@@ -28,37 +22,32 @@ class DashboardView extends View
         app.pageEl
       )
 
-  ##
-  ## Render Data
-  ##
   getRenderData: ->
     totals: @collection.getUserRequestsTotals(app.user.get('deployUser'))
-    starredRequests: @starredRequests()
+    starredItems: @starredItems()
     user: app.user
     username: app.user.get('deployUser')
     refresh: @refresh
     sortedAsc: @collection.sortAscending
 
-  starredRequests: ->
-    if @collection.isSorted
-      @sortedRequests
+  starredItems: ->
+    if @collection.isSorted and not @hasUnstarred
+      @sortedItems
     else
       _.pluck @collection.getStarredOnly(), "attributes"
 
-  ##
-  ## Actions
-  ##
-  actions: =>
-    unstar: @unstar
-    sortStarredRequests: @sortStarredRequests
-
   unstar: (id) =>
+    @hasUnstarred = true
     @collection.toggleStar id
     @renderReact()
+    @hasUnstarred = false
 
-  sortStarredRequests: (attribute) =>
-    @sortedRequests = @collection.sortCollection attribute
+  sortTable: (attribute) =>
+    @sortedItems = @collection.sortCollection attribute
     @renderReact()
 
+  actions: =>
+    unstar: @unstar
+    sortTable: @sortTable
 
 module.exports = DashboardView
