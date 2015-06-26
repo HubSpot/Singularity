@@ -3,7 +3,7 @@ Col = ReactBootstrap.Col
 
 SectionHeader = require '../lib/SectionHeader'
 StarredRequestsTable   = require './StarredRequestsTable'
-requestsTotal = require './RequestsTotal'
+TotalsWell = require '../lib/TotalsWell'
 
 Requests = React.createClass
   
@@ -11,12 +11,16 @@ Requests = React.createClass
 
   render: ->
 
+    user = app.user.get('deployUser')
+
     boxes = @props.data.totals.map (item) =>
       return(
         <Col md={2} key={item.label}>
-          <requestsTotal 
-            item=item 
-          /> 
+          <TotalsWell
+            link={config.appRoot + "/requests/active/#{item.linkName}/" + user }
+            number={item.total}
+            label={item.label}
+          />
         </Col>
       )
     
