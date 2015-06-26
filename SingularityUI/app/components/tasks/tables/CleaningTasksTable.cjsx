@@ -1,3 +1,5 @@
+EmptyTableMsg = require '../../lib/EmptyTableMsg'
+
 CleaningTasksTable = React.createClass
 
   displayName: 'CleaningTasksTable'
@@ -10,8 +12,14 @@ CleaningTasksTable = React.createClass
     console.log 'CleaningTasksTable will mount'
 
   render: ->
-    <div>
-      CleaningTasksTable
-    </div>
+
+    if @props.tasks.length is 0
+      return <EmptyTableMsg msg='No cleaning tasks' />
+
+    return (
+      <div>
+        CleaningTasksTable
+      </div>
+    )
 
 module.exports = CleaningTasksTable

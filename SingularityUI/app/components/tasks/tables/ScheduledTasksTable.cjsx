@@ -2,6 +2,7 @@ TaskTableContainer = require './TaskTableContainer'
 InfiniteScroll  = require '../../utils/mixins/InfiniteScroll'
 Helpers         = require '../../utils/helpers'  
 TableRowAction  = require '../../lib/TableRowAction'
+EmptyTableMsg = require '../../lib/EmptyTableMsg'
 
 Table       = ReactBootstrap.Table
 Row         = ReactBootstrap.Row
@@ -20,6 +21,9 @@ ScheduledTasksTable = React.createClass
   render: ->
     @tasksToRender = @props.tasks.slice(@state.lastRender, @state.renderProgress)
 
+    if @props.tasks.length is 0
+      return <EmptyTableMsg msg='No scheduled tasks' />
+
     tbody = @tasksToRender.map (task) =>
       return (
         <tr key={_.uniqueId('taskrow_')}>
@@ -31,13 +35,13 @@ ScheduledTasksTable = React.createClass
               { @props.pendingTask(task) }
             </td>
             <td className="actions-column hidden-xs">
-                <TableRowAction id={ task.id } action='remove' glyph='remove' title='Kill task' />
+                <TableRowAction id={ task.id } action='run' glyph='flash' title='Run now' />
                 <TableRowAction id={ task.id } action='viewJSON' title='JSON' symbol='code' />
             </td>
         </tr>
       )
     
-    ## cache new rows
+    ## cache rows as user scrolls
     @tableBodyRows = @tableBodyRows.concat tbody
 
     return(
