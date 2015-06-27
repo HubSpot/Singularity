@@ -12,6 +12,14 @@ class TasksView extends View
     @refresh()
 
   refresh: =>
+    
+    # Don't refresh if user is scrolled down, viewing the table (arbitrary value)
+    return if $(window).scrollTop() > 200
+
+    # To Do
+    # Don't refresh if the table is sorted
+    # return if @view.isSorted
+
     $.when( @collections.tasks.fetch({reset: true}), @collections.slaves.fetch() ).done =>
       @decommissioning_hosts = @collections.slaves.decommissioning_hosts()
       @synced = true
