@@ -1,8 +1,8 @@
 class View extends Backbone.View
 
   constructor: (@options) ->
-    @collections = @options.collections
-    @models = @options.models
+    @collections = @options?.collections || {}
+    @models = @options?.models || {}
     super
     app.bootstrapReactView @
 

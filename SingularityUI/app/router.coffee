@@ -5,7 +5,7 @@ StatusController    = require 'controllers/Status'
 NewRequestController = require 'controllers/NewRequest'
 NewDeployController  = require 'controllers/NewDeploy'
 
-RequestDetailController = require 'controllers/RequestDetail'
+RequestController = require 'controllers/Request'
 RequestsTableController = require 'controllers/RequestsTable'
 
 TasksController = require 'controllers/Tasks'
@@ -30,7 +30,7 @@ class Router extends Backbone.Router
         'requests/:state(/)': 'requestsTable'
         'requests(/)': 'requestsTable'
 
-        'request/:requestId(/)': 'requestDetail'
+        'request/:requestId(/)': 'request'
 
         'request/:requestId/deploy(/)': 'newDeploy'
 
@@ -62,8 +62,8 @@ class Router extends Backbone.Router
     requestsTable: (state = 'all', subFilter = 'all', searchFilter = '') ->
         app.bootstrapController new RequestsTableController {state, subFilter, searchFilter}
 
-    requestDetail: (requestId) ->
-        app.bootstrapController new RequestDetailController {requestId}
+    request: (requestId) ->
+        app.bootstrapController new RequestController {requestId}
 
     newDeploy: (requestId) ->
         app.bootstrapController new NewDeployController {requestId}
