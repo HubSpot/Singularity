@@ -13,7 +13,9 @@ RequestMain = React.createClass
 
   render: ->
     <div>
-      <RequestHeader />
+      <RequestHeader
+        data={@props.data}
+      />
       <RequestRunningInstances />
       <RequestTaskHistory />
       <RequestDeployHistory />

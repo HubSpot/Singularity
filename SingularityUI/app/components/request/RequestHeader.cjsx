@@ -16,15 +16,21 @@ RequestHeader = React.createClass
     <header className='detail-header'>
       <Row>
         <Col md={8}>
-          <RequestHeaderStatus />     
+          <RequestHeaderStatus 
+            data={@props.data}
+          />     
         </Col>
         <Col md={4}>
-          <RequestHeaderButtons />
+          <RequestHeaderButtons 
+            data={@props.data}
+          />
         </Col>
       </Row>
       <Row>
         <Col md={12}>
-          <RequestHeaderDeploy />
+          <RequestHeaderDeploy 
+            data={@props.data}
+          />
         </Col>
       </Row>
     </header>

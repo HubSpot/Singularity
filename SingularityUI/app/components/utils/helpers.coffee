@@ -29,6 +29,13 @@ module.exports =
         return true
     false
 
+  # 'DRIVER_NOT_RUNNING' => 'Driver not running'
+  humanizeText: (text) ->
+    return '' if not text
+    text = text.replace /_/g, ' '
+    text = text.toLowerCase()
+    text = text[0].toUpperCase() + text.substr 1
+
   titleCase: (str) ->
     str.replace /\w\S*/g, (txt) ->
       txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
