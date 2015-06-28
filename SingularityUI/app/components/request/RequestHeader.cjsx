@@ -27,7 +27,7 @@ RequestHeader = React.createClass
             type={@props.data.request.type}
           />     
         </Col>
-        <Col md={4}>
+        <Col md={4} className='button-container'>
           <RequestHeaderButtons 
             data={@props.data}
           />
