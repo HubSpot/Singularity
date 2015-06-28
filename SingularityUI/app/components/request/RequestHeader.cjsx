@@ -10,14 +10,21 @@ RequestHeader = React.createClass
 
   displayName: 'RequestHeader'
 
-  # propTypes:
+  propTypes:
+    data: React.PropTypes.object.isRequired
 
   render: ->
+    
+    if @props.data.request.state is undefined
+      return (<div></div>)
+
     <header className='detail-header'>
       <Row>
         <Col md={8}>
           <RequestHeaderStatus 
-            data={@props.data}
+            id={@props.data.request.id}
+            state={@props.data.request.state}
+            type={@props.data.request.type}
           />     
         </Col>
         <Col md={4}>

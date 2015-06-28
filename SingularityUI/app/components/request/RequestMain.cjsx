@@ -9,7 +9,9 @@ RequestMain = React.createClass
 
   displayName: 'RequestMain'
 
-  # propTypes:
+  propTypes:
+    data: React.PropTypes.object.isRequired
+    actions:  React.PropTypes.func.isRequired
 
   render: ->
     <div>

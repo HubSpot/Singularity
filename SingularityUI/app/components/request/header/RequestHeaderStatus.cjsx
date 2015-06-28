@@ -4,14 +4,16 @@ RequestHeaderStatus = React.createClass
 
   displayName: 'RequestHeaderStatus'
 
-  # propTypes:
+  propTypes:
+    state: React.PropTypes.string.isRequired
+    id: React.PropTypes.string.isRequired
+    type: React.PropTypes.string.isRequired
 
   render: ->
-
-    id = @props.data.request.id
-    state = @props.data.request.state
-    stateHumanized = Helpers.humanizeText @props.data.request.state
-    typeHumanized = Helpers.humanizeText @props.data.request.type
+    id = @props.id
+    state = @props.state
+    stateHumanized = Helpers.humanizeText @props.state
+    typeHumanized = Helpers.humanizeText @props.type
 
     return (
       <div>
@@ -23,11 +25,9 @@ RequestHeaderStatus = React.createClass
               {typeHumanized}
           </span>
         </h4>    
-
         <h2>
-             {id}
+          {id}
         </h2> 
-
       </div>
     )
 
