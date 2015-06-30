@@ -1,0 +1,38 @@
+server:
+  type: simple
+  applicationContextPath: /singularity
+  connector:
+    type: http
+    port: 7099
+  requestLog:
+    appenders:
+      - type: file
+        currentLogFilename: ../logs/access.log
+        archivedLogFilenamePattern: ../logs/access-%d.log.gz
+
+mesos:
+  master: zk://localhost:2181/mesos
+  defaultCpus: 1
+  defaultMemory: 128
+  frameworkName: Singularity
+  frameworkId: Singularity
+  frameworkFailoverTimeout: 1000000
+  useNativeCode: false
+
+zookeeper:
+  quorum: localhost:2181
+  zkNamespace: singularity
+  sessionTimeoutMillis: 60000
+  connectTimeoutMillis: 5000
+  retryBaseSleepTimeMilliseconds: 1000
+  retryMaxTries: 3
+
+ui:
+  title: Singularity (docker)
+  baseUrl: http://localhost:7099/singularity
+
+logging:
+  loggers:
+    "com.hubspot.singularity" : TRACE
+
+enableCorsFilter: true

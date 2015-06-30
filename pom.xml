@@ -64,10 +64,12 @@
     <jets3t.version>0.9.0</jets3t.version>
     <guava.retry.version>1.0.7</guava.retry.version>
     <mesos.version>0.21.0</mesos.version>
+    <mesos.docker.tag>0.21.1-1.1.ubuntu1404</mesos.docker.tag> <!-- 0.21.0-1.0.ubuntu1404 is missing for mesos-slave -->
     <ning.async.version>1.8.12</ning.async.version>
     <snappy.version>0.3</snappy.version>
     <sentry.version>5.0</sentry.version>
     <horizon.version>0.0.10</horizon.version>
+    <jukito.version>1.4.1</jukito.version>
   </properties>
 
   <modules>
@@ -85,6 +87,7 @@
     <module>SingularityOOMKiller</module>
     <module>SingularitySwagger</module>
     <module>EmbedSingularityExample</module>
+    <module>SingularityServiceIntegrationTests</module>
   </modules>
 
   <dependencyManagement>
@@ -122,6 +125,12 @@
       <dependency>
         <groupId>com.hubspot</groupId>
         <artifactId>SingularityService</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.hubspot</groupId>
+        <artifactId>SingularityServiceIntegrationTests</artifactId>
         <version>${project.version}</version>
       </dependency>
 
@@ -651,12 +660,28 @@
           </exclusion>
         </exclusions>
       </dependency>
+
+      <dependency>
+        <groupId>org.jukito</groupId>
+        <artifactId>jukito</artifactId>
+        <version>${jukito.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
   <build>
     <pluginManagement>
       <plugins>
+        <plugin>
+          <groupId>org.jolokia</groupId>
+          <artifactId>docker-maven-plugin</artifactId>
+          <version>0.12.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <version>2.18.1</version>
+        </plugin>
         <plugin>
           <groupId>pl.project13.maven</groupId>
           <artifactId>git-commit-id-plugin</artifactId>

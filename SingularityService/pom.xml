@@ -524,6 +524,75 @@
       </plugins>
     </build>
     </profile>
+    <profile>
+      <id>build-docker-image</id>
+      <activation>
+        <property>
+          <name>env.DOCKER_HOST</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jolokia</groupId>
+            <artifactId>docker-maven-plugin</artifactId>
+            <configuration>
+              <images>
+                <image>
+                  <name>hubspot/singularityservice:${project.version}</name>
+                  <build>
+                    <from>java:8u45-jre</from>
+                    <maintainer>tpetr@hubspot.com</maintainer>
+                    <ports>
+                      <port>7099</port>
+                    </ports>
+                    <entryPoint>
+                      <exec>
+                        <arg>/start-${project.name}.sh</arg>
+                      </exec>
+                    </entryPoint>
+                    <cmd>
+                      <exec>
+                        <args>server</args>
+                        <args>/etc/singularity.yaml</args>
+                      </exec>
+                    </cmd>
+                    <assembly>
+                      <mode>dir</mode>
+                      <basedir>/</basedir>
+                      <inline>
+                        <fileSets>
+                          <fileSet>
+                            <directory>${project.basedir}/src/main/docker</directory>
+                            <outputDirectory>/</outputDirectory>
+                          </fileSet>
+                        </fileSets>
+                        <files>
+                          <file>
+                            <source>${project.basedir}/target/${project.name}-${project.version}-shaded.jar</source>
+                            <destName>${project.name}.jar</destName>
+                            <outputDirectory>/</outputDirectory>
+                          </file>
+                        </files>
+                      </inline>
+                    </assembly>
+                  </build>
+                </image>
+              </images>
+            </configuration>
+            <executions>
+              <execution>
+                <id>build</id>
+                <phase>pre-integration-test</phase>
+                <goals>
+                  <goal>build</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 </project>
 
