@@ -31,4 +31,8 @@ ui:
   title: Singularity (docker)
   baseUrl: http://localhost:7099/singularity
 
+logging:
+  loggers:
+    "com.hubspot.singularity" : TRACE
+
 enableCorsFilter: true
