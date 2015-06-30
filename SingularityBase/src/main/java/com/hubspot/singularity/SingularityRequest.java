@@ -222,8 +222,12 @@ public class SingularityRequest {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     SingularityRequest request = (SingularityRequest) o;
     return Objects.equals(id, request.id) &&
             Objects.equals(requestType, request.requestType) &&
