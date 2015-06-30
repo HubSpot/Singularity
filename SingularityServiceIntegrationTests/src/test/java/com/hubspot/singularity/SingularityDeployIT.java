@@ -3,16 +3,12 @@ package com.hubspot.singularity;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.List;
-
 import org.jukito.JukitoModule;
 import org.jukito.JukitoRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.hubspot.singularity.client.SingularityClient;
 
 @RunWith(JukitoRunner.class)
@@ -41,7 +37,7 @@ public class SingularityDeployIT {
     assertEquals(request, requestParent.get().getRequest());
 
     final SingularityDeploy deploy = new SingularityDeployBuilder(REQUEST_ID, deployId)
-            .setCommand(Optional.of("(echo hello && sleep 10) > test.txt"))
+            .setCommand(Optional.of("sleep 10"))
             .build();
 
     singularityClient.createDeployForSingularityRequest(REQUEST_ID, deploy, Optional.<Boolean>absent(), Optional.<String>absent());
@@ -61,19 +57,5 @@ public class SingularityDeployIT {
     }
 
     assertEquals(Optional.of(DeployState.SUCCEEDED), deployState);
-
-    final List<SingularityTaskIdHistory> tasks = ImmutableList.copyOf(Iterables.concat(singularityClient.getActiveTaskHistoryForRequest(REQUEST_ID), singularityClient.getInactiveTaskHistoryForRequest(REQUEST_ID)));
-
-    Optional<SingularityTaskId> taskId = Optional.absent();
-
-    for (SingularityTaskIdHistory taskIdHistory : tasks) {
-      if (taskIdHistory.getTaskId().getRequestId().equals(REQUEST_ID) && taskIdHistory.getTaskId().getDeployId().equals(deployId)) {
-        taskId = Optional.of(taskIdHistory.getTaskId());
-      }
-    }
-
-    assertTrue(taskId.isPresent());
-
-    System.out.println(singularityClient.readSandBoxFile(taskId.get().getId(), "test.txt", Optional.<String>absent(), Optional.of(0L), Optional.of(100L)));
   }
 }
