@@ -99,6 +99,7 @@ public class SingularityClient {
   private static final String REQUEST_DELETE_PAUSED_FORMAT = REQUESTS_FORMAT + "/request/%s/paused";
   private static final String REQUEST_BOUNCE_FORMAT = REQUESTS_FORMAT + "/request/%s/bounce";
   private static final String REQUEST_PAUSE_FORMAT = REQUESTS_FORMAT + "/request/%s/pause";
+  private static final String REQUEST_EXIT_COOLDOWN_FORMAT = REQUESTS_FORMAT + "/request/%s/exit-cooldown";
 
   private static final String DEPLOYS_FORMAT = "http://%s/%s/deploys";
   private static final String DELETE_DEPLOY_FORMAT = DEPLOYS_FORMAT + "/deploy/%s/request/%s";
@@ -439,6 +440,12 @@ public class SingularityClient {
     final String requestUri = String.format(REQUEST_BOUNCE_FORMAT, getHost(), contextPath, requestId);
 
     post(requestUri, String.format("bounce of request %s", requestId), Optional.absent(), user);
+  }
+
+  public void exitCooldown(String requestId, Optional<String> user) {
+    final String requestUri = String.format(REQUEST_EXIT_COOLDOWN_FORMAT, getHost(), contextPath, requestId);
+
+    post(requestUri, String.format("exit cooldown of request %s", requestId), Optional.absent(), user);
   }
 
   //
