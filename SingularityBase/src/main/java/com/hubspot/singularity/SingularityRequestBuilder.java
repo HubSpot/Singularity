@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.google.common.base.Optional;
 
@@ -51,6 +52,7 @@ public class SingularityRequestBuilder {
     this.slavePlacement = Optional.absent();
     this.scheduledExpectedRuntimeMillis = Optional.absent();
     this.daemon = Optional.absent();
+    this.waitAtLeastMillisAfterTaskFinishesForReschedule = Optional.absent();
     this.group = Optional.absent();
   }
 
@@ -212,4 +214,35 @@ public class SingularityRequestBuilder {
         + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", rackAffinity=" + rackAffinity + ", slavePlacement=" + slavePlacement + ", loadBalanced=" + loadBalanced + ", group=" + group + "]";
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    SingularityRequestBuilder that = (SingularityRequestBuilder) o;
+    return Objects.equals(id, that.id) &&
+            Objects.equals(requestType, that.requestType) &&
+            Objects.equals(owners, that.owners) &&
+            Objects.equals(numRetriesOnFailure, that.numRetriesOnFailure) &&
+            Objects.equals(schedule, that.schedule) &&
+            Objects.equals(quartzSchedule, that.quartzSchedule) &&
+            Objects.equals(scheduleType, that.scheduleType) &&
+            Objects.equals(killOldNonLongRunningTasksAfterMillis, that.killOldNonLongRunningTasksAfterMillis) &&
+            Objects.equals(scheduledExpectedRuntimeMillis, that.scheduledExpectedRuntimeMillis) &&
+            Objects.equals(waitAtLeastMillisAfterTaskFinishesForReschedule, that.waitAtLeastMillisAfterTaskFinishesForReschedule) &&
+            Objects.equals(instances, that.instances) &&
+            Objects.equals(rackSensitive, that.rackSensitive) &&
+            Objects.equals(rackAffinity, that.rackAffinity) &&
+            Objects.equals(slavePlacement, that.slavePlacement) &&
+            Objects.equals(loadBalanced, that.loadBalanced) &&
+            Objects.equals(group, that.group);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, loadBalanced, group);
+  }
 }
