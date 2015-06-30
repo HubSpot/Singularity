@@ -17,7 +17,7 @@ master:
     MESOS_WORK_DIR: /var/lib/mesos
 
 slave:
-  image: mesosphere/mesos-slave:0.21.1-1.1.ubuntu1404
+  image: hubspot/singularity
   entrypoint: mesos-slave
   net: host
   environment:
@@ -38,14 +38,14 @@ scheduler:
     - LOAD_BALANCER_URI=http://localhost:8080/baragon/v2/request
 
 baragonservice:
-  image: hubspot/baragonservice:0.1.7
+  image: hubspot/baragonservice:0.1.8
   net: host
   environment:
     BARAGON_TYPE: service
     BARAGON_PORT: 8080
 
 baragonagent:
-  image: hubspot/baragonagent:0.1.7
+  image: hubspot/baragonagent:0.1.8
   net: host
   environment:
     BARAGON_TYPE: agent

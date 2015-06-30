@@ -20,8 +20,12 @@ RUN apt-get update && \
 
 ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
 
-COPY SingularityService/target/SingularityService-0.4.2-SNAPSHOT-shaded.jar /etc/singularity/singularity.jar
-COPY docker /etc
+COPY SingularityService/target/SingularityService-0.4.3-SNAPSHOT-shaded.jar /etc/singularity/singularity.jar
+COPY SingularityExecutor/target/SingularityExecutor-0.4.3-SNAPSHOT-shaded.jar /etc/singularity/executor.jar
+
+COPY docker/singularity /etc/singularity
+COPY docker/executor/singularity-executor /usr/local/bin/singularity-executor
+RUN chmod 755 /usr/local/bin/singularity-executor
 
 CMD '/etc/singularity/start.sh'
 

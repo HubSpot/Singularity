@@ -27,7 +27,8 @@ def download_live_logs(args):
           async_requests.append(
             grequests.AsyncRequest('GET',uri ,
               callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size, args.verbose),
-              params={'path' : '{0}/{1}/{2}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)}
+              params={'path' : '{0}/{1}/{2}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)},
+              headers=args.headers
             )
           )
           if logfile_name.endswith('.gz'):
@@ -45,7 +46,8 @@ def download_live_logs(args):
           async_requests.append(
             grequests.AsyncRequest('GET',uri ,
               callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size, args.verbose),
-              params={'path' : '{0}/{1}/logs/{2}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)}
+              params={'path' : '{0}/{1}/logs/{2}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)},
+              headers=args.headers
             )
           )
           if logfile_name.endswith('.gz'):
@@ -71,11 +73,11 @@ def tasks_to_check(args):
 
 def files_json(args, task):
   uri = BROWSE_FOLDER_FORMAT.format(logfetch_base.base_uri(args), task)
-  return get_json_response(uri)
+  return get_json_response(uri, args)
 
 def logs_folder_files(args, task):
   uri = BROWSE_FOLDER_FORMAT.format(logfetch_base.base_uri(args), task)
-  files_json = get_json_response(uri, {'path' : '{0}/logs'.format(task)})
+  files_json = get_json_response(uri, args, {'path' : '{0}/logs'.format(task)})
   if 'files' in files_json:
     files = files_json['files']
     return [f['name'] for f in files if logfetch_base.is_in_date_range(args, f['mtime'])]
