@@ -10,7 +10,7 @@
 
   <groupId>com.hubspot</groupId>
   <artifactId>Singularity</artifactId>
-  <version>0.4.2-SNAPSHOT</version>
+  <version>0.4.3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <scm>
