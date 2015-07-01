@@ -229,6 +229,7 @@
                     <env>
                       <SINGULARITY_MESOS_MASTER>zk://singularity-test-zk:2181/mesos</SINGULARITY_MESOS_MASTER>
                       <SINGULARITY_ZK>singularity-test-zk:2181</SINGULARITY_ZK>
+                      <SINGULARITY_URI_BASE>/singularity</SINGULARITY_URI_BASE>
                     </env>
                     <wait>
                       <log>SingularityStartup: Finished startup</log>
@@ -242,14 +243,14 @@
                  in pre-integration-test and stop it in post-integration-test. -->
             <executions>
               <execution>
-                <id>start</id>
+                <id>start-docker-images</id>
                 <phase>pre-integration-test</phase>
                 <goals>
                   <goal>start</goal>
                 </goals>
               </execution>
               <execution>
-                <id>stop</id>
+                <id>stop-docker-images</id>
                 <phase>post-integration-test</phase>
                 <goals>
                   <goal>stop</goal>
