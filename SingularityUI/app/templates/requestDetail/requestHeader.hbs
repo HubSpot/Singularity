@@ -39,6 +39,12 @@
                 {{/unless}}
             {{/if}}
 
+            {{#if data.inCooldown}}
+                <a class="btn btn-primary" data-request-id="{{ data.id }}" data-request-type="{{ data.type }}" data-action="exit-cooldown">
+                    Exit Cooldown
+                </a>
+            {{/if}}
+
             {{#if data.canBeScaled}}
                 <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="scale">
                     Scale

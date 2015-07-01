@@ -1,11 +1,11 @@
 package com.hubspot.singularity.resources;
 
-import java.util.Collections;
 import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -290,6 +290,26 @@ public class RequestResource extends AbstractRequestResource {
     }
 
     return fillEntireRequest(new SingularityRequestWithState(requestWithState.getRequest(), RequestState.ACTIVE, now));
+  }
+
+  @POST
+  @Path("/request/{requestId}/exit-cooldown")
+  public SingularityRequestParent exitCooldown(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> user) {
+    final SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
+
+    checkConflict(requestWithState.getState() == RequestState.SYSTEM_COOLDOWN, "Request %s is not in SYSTEM_COOLDOWN state, it is in %s", requestId, requestWithState.getState());
+
+    final Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
+
+    final long now = System.currentTimeMillis();
+
+    requestManager.exitCooldown(requestWithState.getRequest(), now, user);
+
+    if (maybeDeployId.isPresent() && !requestWithState.getRequest().isOneOff()) {
+      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), now, user, PendingType.IMMEDIATE, Collections.<String>emptyList()));
+    }
+
+    return fillEntireRequest(requestWithState);
   }
 
   @GET
