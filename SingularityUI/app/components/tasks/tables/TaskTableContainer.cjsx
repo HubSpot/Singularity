@@ -7,6 +7,29 @@ TaskTableContainer = (Component) ->
 
   Table = React.createClass
 
+    componentDidMount: ->
+      @attachScrollListener()
+
+    componentDidUpdate: ->
+      @attachScrollListener()
+
+    componentWillUnmount: ->
+      @detachScrollListener()
+
+    attachScrollListener: ->
+      window.addEventListener 'scroll', @scrollListener
+      window.addEventListener 'resize', @scrollListener
+      if @props.tasks.length > 0
+        @scrollListener()
+
+    detachScrollListener: ->
+      window.removeEventListener 'scroll', @scrollListener
+      window.removeEventListener 'resize', @scrollListener
+
+    scrollListener: ->
+      if (window.innerHeight + window.scrollY) >= document.body.offsetHeight
+        @props.renderMore()
+
     pendingTask: (task) ->
       if task.pendingTask?
         if Helpers.isTimestampInPast task.pendingTask.pendingTaskId.nextRunAt

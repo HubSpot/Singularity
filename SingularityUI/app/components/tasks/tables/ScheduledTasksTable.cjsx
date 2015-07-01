@@ -1,5 +1,4 @@
 TaskTableContainer = require './TaskTableContainer'
-InfiniteScroll  = require '../../utils/mixins/InfiniteScroll'
 Helpers         = require '../../utils/helpers'  
 TableRowAction  = require '../../lib/TableRowAction'
 EmptyTableMsg = require '../../lib/EmptyTableMsg'
@@ -16,15 +15,12 @@ ScheduledTasksTable = React.createClass
 
   displayName: 'ScheduledTasksTable'
 
-  mixins: [InfiniteScroll]
-
   render: ->
-    @tasksToRender = @props.tasks.slice(@state.lastRender, @state.renderProgress)
 
     if @props.tasks.length is 0
       return <EmptyTableMsg msg='No scheduled tasks' />
 
-    tbody = @tasksToRender.map (task) =>
+    tbody = @props.tasks.map (task) =>
       return (
         <tr key={_.uniqueId('taskrow_')}>
             <td className='keep-in-check'>
@@ -40,9 +36,6 @@ ScheduledTasksTable = React.createClass
             </td>
         </tr>
       )
-    
-    ## cache rows as user scrolls
-    @tableBodyRows = @tableBodyRows.concat tbody
 
     return(
       <Row>
@@ -61,7 +54,7 @@ ScheduledTasksTable = React.createClass
                 </tr>
             </thead>
             <tbody>
-              {@tableBodyRows}
+              {tbody}
             </tbody>
           </Table>
         </Col>

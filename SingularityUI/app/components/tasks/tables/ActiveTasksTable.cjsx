@@ -1,5 +1,4 @@
 TaskTableContainer = require './TaskTableContainer'
-InfiniteScroll  = require '../../utils/mixins/InfiniteScroll'
 Helpers         = require '../../utils/helpers'  
 TableRowAction  = require '../../lib/TableRowAction'
 
@@ -19,15 +18,9 @@ ActiveTasksTable = React.createClass
     tasks: React.PropTypes.array.isRequired
     decommissioning_hosts: React.PropTypes.array.isRequired
 
-  mixins: [InfiniteScroll]
-
-  componentWillReceiveProps: ->
-    @tableBodyRows = []
-
   render: ->
-    @tasksToRender = @props.tasks.slice(@state.lastRender, @state.renderProgress)
 
-    tbody = @tasksToRender.map (task) =>
+    tbody = @props.tasks.map (task) =>
 
       taskLink = "#{config.appRoot}/task/#{task.taskId.id }"
 
@@ -64,9 +57,6 @@ ActiveTasksTable = React.createClass
         </tr>
       )
     
-    ## cache new rows
-    @tableBodyRows = @tableBodyRows.concat tbody
-
     return(
       <Row>
         <Col md={12}>
@@ -98,7 +88,7 @@ ActiveTasksTable = React.createClass
                 </tr>
             </thead>
             <tbody>
-              {@tableBodyRows}
+              {tbody}
             </tbody>
           </Table>
         </Col>

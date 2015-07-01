@@ -8,7 +8,7 @@ class Tasks extends Collection
 
     comparatorMap:
         active:    (one, two) ->
-            two.get('taskId').startedAt - one.get('taskId')?.startedAt
+            two.get('taskId').startedAt - one.get('taskId').startedAt
         scheduled: (one, two) ->
             one.get('pendingTask').pendingTaskId.nextRunAt - two.get('pendingTask').pendingTaskId.nextRunAt
         cleaning:  undefined

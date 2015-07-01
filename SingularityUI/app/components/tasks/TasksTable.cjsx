@@ -34,6 +34,13 @@ TasksTable = React.createClass
     if not @state.loading and @props.data.synced and @props.data.tasks.length is 0
       return <EmptyTableMsg msg="No #{Helpers.titleCase filter} Tasks..." />
 
-    React.createElement(table, {tasks: @props.data.tasks, decommissioning_hosts: @props.data.decommissioning_hosts, loading: @state.loading} )
+    React.createElement(table, 
+      {
+        tasks: @props.data.tasks,
+        decommissioning_hosts: @props.data.decommissioning_hosts, 
+        loading: @state.loading
+        renderMore: @props.actions().renderMore
+      } 
+    )
 
 module.exports = TasksTable
