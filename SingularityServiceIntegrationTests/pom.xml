@@ -243,14 +243,14 @@
                  in pre-integration-test and stop it in post-integration-test. -->
             <executions>
               <execution>
-                <id>start</id>
+                <id>start-docker-images</id>
                 <phase>pre-integration-test</phase>
                 <goals>
                   <goal>start</goal>
                 </goals>
               </execution>
               <execution>
-                <id>stop</id>
+                <id>stop-docker-images</id>
                 <phase>post-integration-test</phase>
                 <goals>
                   <goal>stop</goal>

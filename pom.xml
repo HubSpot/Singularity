@@ -694,6 +694,18 @@
           <groupId>org.jolokia</groupId>
           <artifactId>docker-maven-plugin</artifactId>
           <version>0.12.0</version>
+          <configuration>
+            <images></images>  <!-- default to no images to allow building from parent, let submodules override -->
+          </configuration>
+          <executions>
+            <execution>
+              <id>build-docker-images</id>
+              <phase>pre-integration-test</phase>
+              <goals>
+                <goal>build</goal>
+              </goals>
+            </execution>
+          </executions>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>

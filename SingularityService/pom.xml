@@ -595,15 +595,6 @@
                 </image>
               </images>
             </configuration>
-            <executions>
-              <execution>
-                <id>build</id>
-                <phase>pre-integration-test</phase>
-                <goals>
-                  <goal>build</goal>
-                </goals>
-              </execution>
-            </executions>
           </plugin>
         </plugins>
       </build>
