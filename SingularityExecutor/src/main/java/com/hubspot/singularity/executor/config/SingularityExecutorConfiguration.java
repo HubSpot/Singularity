@@ -131,6 +131,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private long checkThreadsEveryMillis = TimeUnit.SECONDS.toMillis(5);
 
+  @JsonProperty
+  private boolean disableThreadChecker = false;
+
   @Min(0)
   @JsonProperty
   private int maxTaskMessageLength = 80;
@@ -491,6 +494,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.dockerStopTimeout = dockerStopTimeout;
   }
 
+  public boolean isDisableThreadChecker() {
+    return disableThreadChecker;
+  }
+
+  public void setDisableThreadChecker(boolean disableThreadChecker) {
+    this.disableThreadChecker = disableThreadChecker;
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration[" +
@@ -508,6 +519,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", killThreads=" + killThreads +
             ", threadCheckThreads=" + threadCheckThreads +
             ", checkThreadsEveryMillis=" + checkThreadsEveryMillis +
+            ", disableThreadChecker=" + disableThreadChecker +
             ", maxTaskMessageLength=" + maxTaskMessageLength +
             ", logrotateCommand='" + logrotateCommand + '\'' +
             ", logrotateStateFile='" + logrotateStateFile + '\'' +
