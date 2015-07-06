@@ -34,6 +34,7 @@ public class SingularityExecutorModule extends AbstractModule {
   public AsyncHttpClient providesHttpClient(SingularityExecutorConfiguration configuration) {
     AsyncHttpClientConfig.Builder configBldr = new AsyncHttpClientConfig.Builder();
     configBldr.setRequestTimeoutInMs((int) configuration.getLocalDownloadServiceTimeoutMillis());
+    configBldr.setIdleConnectionTimeoutInMs((int) configuration.getLocalDownloadServiceTimeoutMillis());
 
     return new AsyncHttpClient(configBldr.build());
   }
