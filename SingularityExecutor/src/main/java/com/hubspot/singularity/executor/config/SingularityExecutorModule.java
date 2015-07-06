@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
-import com.google.common.base.Optional;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -34,6 +33,7 @@ public class SingularityExecutorModule extends AbstractModule {
   public AsyncHttpClient providesHttpClient(SingularityExecutorConfiguration configuration) {
     AsyncHttpClientConfig.Builder configBldr = new AsyncHttpClientConfig.Builder();
     configBldr.setRequestTimeoutInMs((int) configuration.getLocalDownloadServiceTimeoutMillis());
+    configBldr.setIdleConnectionTimeoutInMs((int) configuration.getLocalDownloadServiceTimeoutMillis());
 
     return new AsyncHttpClient(configBldr.build());
   }
