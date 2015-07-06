@@ -48,7 +48,7 @@ public class SingularityExecutorThreadChecker {
       LOG.warn("Thread checker is locally disabled on this host -- not checking threads!");
       return;
     }
-    
+
     LOG.info("Starting a thread checker that will run every {}", JavaUtils.durationFromMillis(configuration.getCheckThreadsEveryMillis()));
 
     this.monitor = monitor;
