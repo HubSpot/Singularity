@@ -116,6 +116,8 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxQueuedUpdatesPerWebhook = 50;
 
+  private int maxTasksPerOffer = 0;
+
   private int maxRequestIdSize = 100;
 
   @JsonProperty("mesos")
@@ -255,6 +257,10 @@ public class SingularityConfiguration extends Configuration {
     return coreThreadpoolSize;
   }
 
+  public CustomExecutorConfiguration getCustomExecutorConfiguration() {
+    return customExecutorConfiguration;
+  }
+
   public Optional<DataSourceFactory> getDatabaseConfiguration() {
     return Optional.fromNullable(databaseConfiguration);
   }
@@ -285,6 +291,10 @@ public class SingularityConfiguration extends Configuration {
 
   public long getDeployHealthyBySeconds() {
     return deployHealthyBySeconds;
+  }
+
+  public int getDeployIdLength() {
+    return deployIdLength;
   }
 
   public long getHealthcheckIntervalSeconds() {
@@ -352,6 +362,10 @@ public class SingularityConfiguration extends Configuration {
 
   public int getMaxRequestIdSize() {
     return maxRequestIdSize;
+  }
+
+  public int getMaxTasksPerOffer() {
+    return maxTasksPerOffer;
   }
 
   public MesosConfiguration getMesosConfiguration() {
@@ -424,6 +438,10 @@ public class SingularityConfiguration extends Configuration {
 
   public boolean isCompressLargeDataObjects() {
     return compressLargeDataObjects;
+  }
+
+  public boolean isCreateDeployIds() {
+    return createDeployIds;
   }
 
   public boolean isDefaultValueForKillTasksOfPausedRequests() {
@@ -526,6 +544,14 @@ public class SingularityConfiguration extends Configuration {
     this.coreThreadpoolSize = coreThreadpoolSize;
   }
 
+  public void setCreateDeployIds(boolean createDeployIds) {
+    this.createDeployIds = createDeployIds;
+  }
+
+  public void setCustomExecutorConfiguration(CustomExecutorConfiguration customExecutorConfiguration) {
+    this.customExecutorConfiguration = customExecutorConfiguration;
+  }
+
   public void setDatabaseConfiguration(DataSourceFactory databaseConfiguration) {
     this.databaseConfiguration = databaseConfiguration;
   }
@@ -560,6 +586,10 @@ public class SingularityConfiguration extends Configuration {
 
   public void setDeployHealthyBySeconds(long deployHealthyBySeconds) {
     this.deployHealthyBySeconds = deployHealthyBySeconds;
+  }
+
+  public void setDeployIdLength(int deployIdLength) {
+    this.deployIdLength = deployIdLength;
   }
 
   public void setEnableCorsFilter(boolean enableCorsFilter) {
@@ -624,6 +654,10 @@ public class SingularityConfiguration extends Configuration {
 
   public void setMaxRequestIdSize(int maxRequestIdSize) {
     this.maxRequestIdSize = maxRequestIdSize;
+  }
+
+  public void setMaxTasksPerOffer(int maxTasksPerOffer) {
+    this.maxTasksPerOffer = maxTasksPerOffer;
   }
 
   public void setMesosConfiguration(MesosConfiguration mesosConfiguration) {
@@ -692,30 +726,6 @@ public class SingularityConfiguration extends Configuration {
 
   public void setZooKeeperConfiguration(ZooKeeperConfiguration zooKeeperConfiguration) {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
-  }
-
-  public CustomExecutorConfiguration getCustomExecutorConfiguration() {
-    return customExecutorConfiguration;
-  }
-
-  public void setCustomExecutorConfiguration(CustomExecutorConfiguration customExecutorConfiguration) {
-    this.customExecutorConfiguration = customExecutorConfiguration;
-  }
-
-  public boolean isCreateDeployIds() {
-    return createDeployIds;
-  }
-
-  public void setCreateDeployIds(boolean createDeployIds) {
-    this.createDeployIds = createDeployIds;
-  }
-
-  public int getDeployIdLength() {
-    return deployIdLength;
-  }
-
-  public void setDeployIdLength(int deployIdLength) {
-    this.deployIdLength = deployIdLength;
   }
 
   public LDAPConfiguration getLdapConfiguration() {
