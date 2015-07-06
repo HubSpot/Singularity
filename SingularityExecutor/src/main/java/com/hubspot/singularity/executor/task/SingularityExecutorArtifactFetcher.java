@@ -23,6 +23,7 @@ import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClient.BoundRequestBuilder;
 import com.ning.http.client.ListenableFuture;
+import com.ning.http.client.PerRequestConfig;
 import com.ning.http.client.Response;
 
 public class SingularityExecutorArtifactFetcher {
@@ -116,6 +117,11 @@ public class SingularityExecutorArtifactFetcher {
         task.getLog().debug("Requesting {} from {}", artifactDownloadRequest, localDownloadUri);
 
         BoundRequestBuilder postRequestBldr = localDownloadHttpClient.preparePost(localDownloadUri);
+
+        PerRequestConfig perRequestConfig = new PerRequestConfig();
+        perRequestConfig.setRequestTimeoutInMs((int) s3Configuration.getS3DownloadTimeoutMillis());
+
+        postRequestBldr.setPerRequestConfig(perRequestConfig);
 
         try {
           postRequestBldr.setBody(objectMapper.writeValueAsBytes(artifactDownloadRequest));
