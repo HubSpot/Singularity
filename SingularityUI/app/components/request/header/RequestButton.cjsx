@@ -19,7 +19,7 @@ RequestButton = React.createClass
     @props.buttonClick e
 
   render: ->
-    <Button onClick={@handleClick} data-action={@props.action} data-id={@props.id} bsStyle={@props.bsStyle} data-link={@props.link}>
+    <Button className='button-whitespace' onClick={@handleClick} data-action={@props.action} data-id={@props.id} bsStyle={@props.bsStyle} data-link={@props.link}>
       {@props.children}
     </Button> 
 

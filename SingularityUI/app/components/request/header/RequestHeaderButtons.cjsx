@@ -38,44 +38,76 @@ RequestHeaderButtons = React.createClass
         @props.refresh()
         setTimeout ( => @props.refresh() ), 2500
 
-  render: ->
+  getButtons: ->
     request = @props.data.request
     id = request.id
     deployLink = "#{config.appRoot}/request/#{request.id}/deploy"
 
-    SPACE = ' '
-    <div>
-      <RequestButton buttonClick={@viewJSON} bsStyle='default'>
+    buttonComponents = []
+
+    generateButtonKey = ->
+      buttonComponents.length + 1
+
+    buttonComponents.push(
+      <RequestButton key={generateButtonKey()} buttonClick={@viewJSON} bsStyle='default'>
         JSON
       </RequestButton>
-      {SPACE}
-      <RequestButton buttonClick={@requestAction} action='promptScale' bsStyle='primary'>
-        Scale
-      </RequestButton>
-      {SPACE}
-      <RequestButton buttonClick={@requestAction} action='promptPause' bsStyle='primary'>
-        Pause
-      </RequestButton>
-      {SPACE}
-      <RequestButton buttonClick={@requestAction} action='promptBounce' bsStyle='primary'>
-        Bounce
-      </RequestButton>
-      {SPACE}
-      <RequestButton buttonClick={@remove} bsStyle='danger'>
-        Remove
-      </RequestButton>
-      {SPACE}
-      <RequestButton bsStyle='success' id={id} link={deployLink}>
-        Deploy
-      </RequestButton>
-      {SPACE}
-      <RequestButton buttonClick={@requestAction} action='promptRun' bsStyle='primary'>
-        Run now
-      </RequestButton>
-      {SPACE}
-      <RequestButton buttonClick={@requestAction} action='promptUnpause' bsStyle='primary'>
-        Unpause
-      </RequestButton>
+    )
+
+    if not config.hideNewDeployButton
+      buttonComponents.push(
+        <RequestButton key={generateButtonKey()} bsStyle='success' id={id} link={deployLink}>
+          Deploy
+        </RequestButton>
+      )
+
+    if request.canBeRunNow and not request.deleted
+      buttonComponents.push(
+        <RequestButton key={generateButtonKey()} buttonClick={@requestAction} action='promptRun' bsStyle='primary'>
+          Run now
+        </RequestButton>
+      )
+
+    if request.canBeScaled
+      buttonComponents.push(
+        <RequestButton key={generateButtonKey()} buttonClick={@requestAction} action='promptScale' bsStyle='primary'>
+          Scale 
+        </RequestButton>
+      )
+
+    unless request.deleted and data.paused
+      buttonComponents.push(
+        <RequestButton key={generateButtonKey()} buttonClick={@requestAction} action='promptUnpause' bsStyle='primary'>
+          Unpause
+        </RequestButton>
+      )
+
+    unless request.deleted and not data.paused
+      buttonComponents.push(
+        <RequestButton key={generateButtonKey()} buttonClick={@requestAction} action='promptPause' bsStyle='primary'>
+          Pause
+        </RequestButton>
+      )
+    
+    if request.canBeBounced
+      buttonComponents.push(
+        <RequestButton key={generateButtonKey()} buttonClick={@requestAction} action='promptBounce' bsStyle='primary'>
+          Bounce
+        </RequestButton>
+      )
+      
+    unless request.deleted
+      buttonComponents.push(
+        <RequestButton key={generateButtonKey()} buttonClick={@remove} bsStyle='danger'>
+          Remove
+        </RequestButton>
+      )
+
+    return buttonComponents
+
+  render: ->
+    <div>
+      {@getButtons()}
     </div>
 
 module.exports = RequestHeaderButtons
