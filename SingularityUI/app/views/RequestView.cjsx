@@ -18,7 +18,6 @@ class RequestView extends View
           @renderReact()
 
   refresh: ->
-
     @models.request.fetch()
       .done => @renderReact()
       .error =>
@@ -68,10 +67,12 @@ class RequestView extends View
 
   getRenderData: ->
     synced: @synced
+    requestModel: @models.request
     request: @models.request.toJSON()
     activeDeployStats: @models.activeDeployStats.toJSON()
 
   actions: =>
-    
+    refresh: @refresh.bind(@)
+    AutoTailer: require('./AutoTailer')
 
 module.exports = RequestView

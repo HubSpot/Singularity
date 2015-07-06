@@ -12,9 +12,9 @@ RequestHeader = React.createClass
 
   propTypes:
     data: React.PropTypes.object.isRequired
+    actions: React.PropTypes.func.isRequired
 
   render: ->
-    
     if @props.data.request.state is undefined
       return (<div></div>)
 
@@ -30,6 +30,8 @@ RequestHeader = React.createClass
         <Col md={4} className='button-container'>
           <RequestHeaderButtons 
             data={@props.data}
+            AutoTailer={@props.actions().AutoTailer}
+            refresh={@props.actions().refresh}
           />
         </Col>
       </Row>

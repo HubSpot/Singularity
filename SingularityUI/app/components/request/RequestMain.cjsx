@@ -17,6 +17,7 @@ RequestMain = React.createClass
     <div>
       <RequestHeader
         data={@props.data}
+        actions={@props.actions}
       />
       <RequestRunningInstances />
       <RequestTaskHistory />
