@@ -1,4 +1,4 @@
-RequestHeader = require './RequestHeader'
+RequestHeader = require './header/RequestHeader'
 RequestRunningInstances = require './RequestRunningInstances'
 RequestTaskHistory = require './RequestTaskHistory'
 RequestDeployHistory = require './RequestDeployHistory'

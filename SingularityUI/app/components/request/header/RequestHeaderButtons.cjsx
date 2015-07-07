@@ -1,5 +1,5 @@
 Helpers = require '../../utils/helpers'
-RequestButton = require './RequestButton'
+RequestHeaderButton = require './RequestHeaderButton'
 
 
 RequestHeaderButtons = React.createClass
@@ -49,58 +49,58 @@ RequestHeaderButtons = React.createClass
       buttonComponents.length + 1
 
     buttonComponents.push(
-      <RequestButton key={generateButtonKey()} buttonClick={@viewJSON} bsStyle='default'>
+      <RequestHeaderButton key={generateButtonKey()} buttonClick={@viewJSON} bsStyle='default'>
         JSON
-      </RequestButton>
+      </RequestHeaderButton>
     )
 
     if not config.hideNewDeployButton
       buttonComponents.push(
-        <RequestButton key={generateButtonKey()} bsStyle='success' id={id} link={deployLink}>
+        <RequestHeaderButton key={generateButtonKey()} bsStyle='success' id={id} link={deployLink}>
           Deploy
-        </RequestButton>
+        </RequestHeaderButton>
       )
 
     if request.canBeRunNow and not request.deleted
       buttonComponents.push(
-        <RequestButton key={generateButtonKey()} buttonClick={@requestAction} action='promptRun' bsStyle='primary'>
+        <RequestHeaderButton key={generateButtonKey()} buttonClick={@requestAction} action='promptRun' bsStyle='primary'>
           Run now
-        </RequestButton>
+        </RequestHeaderButton>
       )
 
     if request.canBeScaled
       buttonComponents.push(
-        <RequestButton key={generateButtonKey()} buttonClick={@requestAction} action='promptScale' bsStyle='primary'>
+        <RequestHeaderButton key={generateButtonKey()} buttonClick={@requestAction} action='promptScale' bsStyle='primary'>
           Scale 
-        </RequestButton>
+        </RequestHeaderButton>
       )
 
     unless request.deleted and data.paused
       buttonComponents.push(
-        <RequestButton key={generateButtonKey()} buttonClick={@requestAction} action='promptUnpause' bsStyle='primary'>
+        <RequestHeaderButton key={generateButtonKey()} buttonClick={@requestAction} action='promptUnpause' bsStyle='primary'>
           Unpause
-        </RequestButton>
+        </RequestHeaderButton>
       )
 
     unless request.deleted and not data.paused
       buttonComponents.push(
-        <RequestButton key={generateButtonKey()} buttonClick={@requestAction} action='promptPause' bsStyle='primary'>
+        <RequestHeaderButton key={generateButtonKey()} buttonClick={@requestAction} action='promptPause' bsStyle='primary'>
           Pause
-        </RequestButton>
+        </RequestHeaderButton>
       )
     
     if request.canBeBounced
       buttonComponents.push(
-        <RequestButton key={generateButtonKey()} buttonClick={@requestAction} action='promptBounce' bsStyle='primary'>
+        <RequestHeaderButton key={generateButtonKey()} buttonClick={@requestAction} action='promptBounce' bsStyle='primary'>
           Bounce
-        </RequestButton>
+        </RequestHeaderButton>
       )
       
     unless request.deleted
       buttonComponents.push(
-        <RequestButton key={generateButtonKey()} buttonClick={@remove} bsStyle='danger'>
+        <RequestHeaderButton key={generateButtonKey()} buttonClick={@remove} bsStyle='danger'>
           Remove
-        </RequestButton>
+        </RequestHeaderButton>
       )
 
     return buttonComponents

@@ -1,6 +1,6 @@
-RequestHeaderStatus = require './header/RequestHeaderStatus'
-RequestHeaderButtons = require './header/RequestHeaderButtons'
-RequestHeaderDeploy = require './header/RequestHeaderDeploy'
+RequestHeaderStatus = require './RequestHeaderStatus'
+RequestHeaderButtons = require './RequestHeaderButtons'
+RequestHeaderDeploy = require './RequestHeaderDeploy'
 
 Row = ReactBootstrap.Row
 Col = ReactBootstrap.Col
