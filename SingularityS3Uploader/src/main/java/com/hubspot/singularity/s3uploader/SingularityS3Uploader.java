@@ -28,6 +28,7 @@ import org.jets3t.service.ServiceException;
 import org.jets3t.service.impl.rest.httpclient.RestS3Service;
 import org.jets3t.service.model.S3Bucket;
 import org.jets3t.service.model.S3Object;
+import org.jets3t.service.model.StorageObject;
 import org.jets3t.service.security.AWSCredentials;
 import org.jets3t.service.utils.MultipartUtils;
 import org.slf4j.Logger;
@@ -255,7 +256,7 @@ public class SingularityS3Uploader implements Closeable {
 
   private void multipartUpload(S3Object object) throws Exception {
 
-    List objectsToUploadAsMultipart = Arrays.asList(object);
+    List<StorageObject> objectsToUploadAsMultipart = Arrays.<StorageObject>asList(object);
 
     MultipartUtils mpUtils = new MultipartUtils(configuration.getUploadPartSize());
     mpUtils.uploadObjects(s3Bucket.getName(), s3Service, objectsToUploadAsMultipart, null);

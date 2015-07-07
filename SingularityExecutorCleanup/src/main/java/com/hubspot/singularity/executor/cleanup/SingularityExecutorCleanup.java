@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import com.hubspot.singularity.executor.config.SingularityExecutorModule;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ContainerInfo;

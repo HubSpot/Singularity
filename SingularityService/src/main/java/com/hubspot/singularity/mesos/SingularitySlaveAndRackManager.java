@@ -365,7 +365,7 @@ class SingularitySlaveAndRackManager {
         if (maybeTask.isPresent() && slaveId.equals(maybeTask.get().getOffer().getSlaveId().getValue())) {
           return true;
         }
-      };
+      }
     }
 
     return false;
