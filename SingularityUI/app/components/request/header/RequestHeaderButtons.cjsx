@@ -71,31 +71,31 @@ RequestHeaderButtons = React.createClass
     if request.canBeScaled
       buttonComponents.push(
         <RequestHeaderButton key={generateButtonKey()} buttonClick={@requestAction} action='promptScale' bsStyle='primary'>
-          Scale 
+          Scale
         </RequestHeaderButton>
       )
 
-    unless request.deleted and data.paused
+    if request.paused
       buttonComponents.push(
         <RequestHeaderButton key={generateButtonKey()} buttonClick={@requestAction} action='promptUnpause' bsStyle='primary'>
           Unpause
         </RequestHeaderButton>
       )
 
-    unless request.deleted and not data.paused
+    unless request.paused
       buttonComponents.push(
         <RequestHeaderButton key={generateButtonKey()} buttonClick={@requestAction} action='promptPause' bsStyle='primary'>
           Pause
         </RequestHeaderButton>
       )
-    
+
     if request.canBeBounced
       buttonComponents.push(
         <RequestHeaderButton key={generateButtonKey()} buttonClick={@requestAction} action='promptBounce' bsStyle='primary'>
           Bounce
         </RequestHeaderButton>
       )
-      
+
     unless request.deleted
       buttonComponents.push(
         <RequestHeaderButton key={generateButtonKey()} buttonClick={@remove} bsStyle='danger'>
