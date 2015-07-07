@@ -7,7 +7,7 @@ RequestDeployHistory = React.createClass
   # propTypes:
 
   render: ->
-    <div>
+    <div className='page-section'>
       <SectionHeader title='Deploy History' />
     </div>
 

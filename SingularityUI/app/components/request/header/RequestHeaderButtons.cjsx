@@ -11,15 +11,15 @@ RequestHeaderButtons = React.createClass
     refresh: React.PropTypes.func.isRequired
 
   viewJSON: (e) ->
-    utils.viewJSON @props.data.requestModel
+    @props.viewRequestJSON()
 
   requestAction: (e) ->
     method = e.currentTarget.getAttribute('data-action')
-    @props.data.requestModel[method] =>
+    @props.callModelMethod('request', method) =>
       @props.refresh()
 
-  remove: (e) ->
-    @props.data.requestModel.promptRemove =>
+  remove: ->
+    @props.callModelMethod('request', 'promptRemove') =>
       Helpers.routeComponentLink null, 'requests', true
 
   run: (e) ->

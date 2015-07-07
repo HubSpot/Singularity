@@ -7,7 +7,7 @@ RequestHistory = React.createClass
   # propTypes:
 
   render: ->
-    <div>
+    <div className='page-section'>
       <SectionHeader title='Request History' />
     </div>
 

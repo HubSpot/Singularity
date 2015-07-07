@@ -21,23 +21,24 @@ RequestHeader = React.createClass
     <header className='detail-header'>
       <Row>
         <Col md={8}>
-          <RequestHeaderStatus 
+          <RequestHeaderStatus
             id={@props.data.request.id}
             state={@props.data.request.state}
             type={@props.data.request.type}
-          />     
+          />
         </Col>
         <Col md={4} className='button-container'>
-          <RequestHeaderButtons 
+          <RequestHeaderButtons
             data={@props.data}
-            AutoTailer={@props.actions().AutoTailer}
             refresh={@props.actions().refresh}
+            viewRequestJSON={@props.actions().viewRequestJSON}
+            callModelMethod={@props.actions().callModelMethod}
           />
         </Col>
       </Row>
       <Row>
         <Col md={12}>
-          <RequestHeaderDeploy 
+          <RequestHeaderDeploy
             data={@props.data}
           />
         </Col>

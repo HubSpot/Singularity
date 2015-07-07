@@ -6,6 +6,7 @@ class RequestView extends View
   synced: false
 
   initialize: =>
+    _.bindAll(@, 'refresh', 'getModel', 'callModelMethod', 'viewRequestJSON')
     @renderReact()
     @refresh()
 
@@ -38,7 +39,7 @@ class RequestView extends View
     @collections.scheduledTasks.fetch()
       .done => @renderReact()
       .error @ignore404
-    
+
     if @collections.requestHistory.currentPage is 1
       @collections.requestHistory.fetch()
         .done =>
@@ -50,7 +51,8 @@ class RequestView extends View
 
     if @collections.taskHistory.currentPage is 1
       @collections.taskHistory.fetch()
-        .done => @renderReact()
+        .done =>
+          @renderReact()
         .error    @ignore404
     if @collections.deployHistory.currentPage is 1
       @collections.deployHistory.fetch()
@@ -67,12 +69,25 @@ class RequestView extends View
 
   getRenderData: ->
     synced: @synced
-    requestModel: @models.request
     request: @models.request.toJSON()
     activeDeployStats: @models.activeDeployStats.toJSON()
+    activeTasks: @collections.activeTasks.toJSON()
+    taskHistory: @collections.taskHistory.toJSON()
+
+  getModel: (collection, id) ->
+    model = @collections[collection].get id
+
+  callModelMethod: (model, method) ->
+    @models[model][method]
+
+  viewRequestJSON: ->
+    utils.viewJSON @models.request
 
   actions: =>
-    refresh: @refresh.bind(@)
+    refresh: @refresh
     AutoTailer: require('./AutoTailer')
+    getModel: @getModel
+    callModelMethod: @callModelMethod
+    viewRequestJSON: @viewRequestJSON
 
 module.exports = RequestView

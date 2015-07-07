@@ -20,7 +20,7 @@ module.exports =
   timestampDuration: (timestamp) ->
     return '' if not timestamp
     moment.duration(timestamp).humanize()
-    
+
   isTimestampInPast: (timestamp, options) ->
     return true if not timestamp
     timeObject = moment timestamp
@@ -45,6 +45,9 @@ module.exports =
     if haystack.indexOf(needle) isnt -1
       return true
     false
+
+  substituteTaskID: (value, taskId) ->
+    value.replace('$TASK_ID', taskId)
 
   routeLink: (e) =>
     $link = $(e.target)
