@@ -1,7 +1,7 @@
 package com.hubspot.singularity.s3downloader.server;
 
 import java.io.IOException;
-import java.util.Map;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -12,13 +12,16 @@ import org.eclipse.jetty.continuation.Continuation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.s3.base.ArtifactDownloadRequest;
 import com.hubspot.singularity.s3.base.ArtifactManager;
 import com.hubspot.singularity.s3downloader.SingularityS3DownloaderMetrics;
 import com.hubspot.singularity.s3downloader.config.SingularityS3DownloaderConfiguration;
+import com.hubspot.singularity.s3downloader.config.SingularityS3DownloaderModule;
 
 public class SingularityS3DownloaderCoordinator {
 
@@ -27,19 +30,20 @@ public class SingularityS3DownloaderCoordinator {
   private final SingularityS3DownloaderConfiguration configuration;
   private final SingularityS3DownloaderMetrics metrics;
   private final Provider<ArtifactManager> artifactManagerProvider;
-  private final Map<ArtifactDownloadRequest, SingularityS3DownloaderAsyncHandler> downloadRequestToHandler;
+  private final ConcurrentMap<ArtifactDownloadRequest, SingularityS3DownloaderAsyncHandler> downloadRequestToHandler;
   private final ScheduledExecutorService downloadJoinerService;
   private final ExecutorService downloadService;
 
   @Inject
   public SingularityS3DownloaderCoordinator(SingularityS3DownloaderConfiguration configuration, SingularityS3DownloaderMetrics metrics, Provider<ArtifactManager> artifactManagerProvider,
-      Map<ArtifactDownloadRequest, SingularityS3DownloaderAsyncHandler> downloadRequestToHandler, ScheduledExecutorService downloadJoinerService, ExecutorService downloadService) {
+      @Named(SingularityS3DownloaderModule.ENQUEUE_EXECUTOR_SERVICE) ScheduledExecutorService downloadJoinerService,
+      @Named(SingularityS3DownloaderModule.DOWNLOAD_EXECUTOR_SERVICE) ExecutorService downloadService) {
     this.configuration = configuration;
     this.metrics = metrics;
     this.artifactManagerProvider = artifactManagerProvider;
-    this.downloadRequestToHandler = downloadRequestToHandler;
     this.downloadJoinerService = downloadJoinerService;
     this.downloadService = downloadService;
+    this.downloadRequestToHandler = Maps.newConcurrentMap();
   }
 
   public void register(final Continuation continuation, final ArtifactDownloadRequest artifactDownloadRequest) {
