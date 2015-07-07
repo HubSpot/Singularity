@@ -3,7 +3,9 @@ package com.hubspot.singularity.s3downloader.server;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletResponse;
@@ -13,6 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
@@ -31,19 +36,23 @@ public class SingularityS3DownloaderCoordinator {
   private final SingularityS3DownloaderMetrics metrics;
   private final Provider<ArtifactManager> artifactManagerProvider;
   private final ConcurrentMap<ArtifactDownloadRequest, SingularityS3DownloaderAsyncHandler> downloadRequestToHandler;
-  private final ScheduledExecutorService downloadJoinerService;
-  private final ExecutorService downloadService;
+  private final ScheduledThreadPoolExecutor downloadJoinerService;
+  private final ThreadPoolExecutor downloadService;
+  private final ListeningExecutorService listeningDownloadWrapper;
+  private final ExecutorService listeningResponseExecutorService;
 
   @Inject
   public SingularityS3DownloaderCoordinator(SingularityS3DownloaderConfiguration configuration, SingularityS3DownloaderMetrics metrics, Provider<ArtifactManager> artifactManagerProvider,
-      @Named(SingularityS3DownloaderModule.ENQUEUE_EXECUTOR_SERVICE) ScheduledExecutorService downloadJoinerService,
-      @Named(SingularityS3DownloaderModule.DOWNLOAD_EXECUTOR_SERVICE) ExecutorService downloadService) {
+      @Named(SingularityS3DownloaderModule.ENQUEUE_EXECUTOR_SERVICE) ScheduledThreadPoolExecutor downloadJoinerService,
+      @Named(SingularityS3DownloaderModule.DOWNLOAD_EXECUTOR_SERVICE) ThreadPoolExecutor downloadService) {
     this.configuration = configuration;
     this.metrics = metrics;
     this.artifactManagerProvider = artifactManagerProvider;
     this.downloadJoinerService = downloadJoinerService;
     this.downloadService = downloadService;
     this.downloadRequestToHandler = Maps.newConcurrentMap();
+    this.listeningDownloadWrapper = MoreExecutors.listeningDecorator(downloadService);
+    this.listeningResponseExecutorService = Executors.newCachedThreadPool();
   }
 
   public void register(final Continuation continuation, final ArtifactDownloadRequest artifactDownloadRequest) {
@@ -75,6 +84,9 @@ public class SingularityS3DownloaderCoordinator {
     }
 
     private void reEnqueue() {
+      LOG.info("Re-enqueueing request for {}, waiting {}, ({} active, {} queue, {} max)", artifactDownloadRequest, JavaUtils.durationFromMillis(configuration.getMillisToWaitForReEnqueue()),
+          downloadJoinerService.getActiveCount(), downloadJoinerService.getQueue().size(), configuration.getNumEnqueueThreads());
+
       downloadJoinerService.schedule(this, configuration.getMillisToWaitForReEnqueue(), TimeUnit.MILLISECONDS);
     }
 
@@ -92,7 +104,17 @@ public class SingularityS3DownloaderCoordinator {
       if (existingHandler != null) {
         return addContinuation(existingHandler);
       } else {
-        downloadService.submit(newHandler);
+        LOG.info("Queing new downloader for {} ({} handlers, {} active threads, {} queue size, {} max)", artifactDownloadRequest, downloadRequestToHandler.size(),
+            downloadService.getActiveCount(), downloadService.getQueue().size(), configuration.getNumDownloaderThreads());
+
+        ListenableFuture<?> future = listeningDownloadWrapper.submit(newHandler);
+
+        future.addListener(new Runnable() {
+          @Override
+          public void run() {
+            downloadRequestToHandler.remove(artifactDownloadRequest);
+          }
+        }, listeningResponseExecutorService);
       }
 
       return true;

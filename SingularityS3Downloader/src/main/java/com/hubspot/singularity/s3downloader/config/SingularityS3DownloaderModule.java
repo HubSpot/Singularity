@@ -1,7 +1,7 @@
 package com.hubspot.singularity.s3downloader.config;
 
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -34,8 +34,8 @@ public class SingularityS3DownloaderModule extends AbstractModule {
   @Provides
   @Singleton
   @Named(ENQUEUE_EXECUTOR_SERVICE)
-  public ScheduledExecutorService getEnqueueService(SingularityS3DownloaderConfiguration configuration) {
-    return Executors.newScheduledThreadPool(configuration.getNumEnqueueThreads(), new ThreadFactoryBuilder().setDaemon(true).setNameFormat("EnqueueDownloadThread-%d").build());
+  public ScheduledThreadPoolExecutor getEnqueueService(SingularityS3DownloaderConfiguration configuration) {
+    return (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(configuration.getNumEnqueueThreads(), new ThreadFactoryBuilder().setDaemon(true).setNameFormat("EnqueueDownloadThread-%d").build());
   }
 
 }
