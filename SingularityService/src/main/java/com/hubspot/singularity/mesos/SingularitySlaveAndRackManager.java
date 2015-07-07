@@ -131,18 +131,26 @@ class SingularitySlaveAndRackManager {
     double numOnRack = 0;
     double numOnSlave = 0;
     double numCleaningOnSlave = 0;
+    double numOtherDeploysOnSlave = 0;
 
     Collection<SingularityTaskId> cleaningTasks = stateCache.getCleaningTasks();
 
-    for (SingularityTaskId taskId : SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), taskRequest.getRequest().getId(), taskRequest.getDeploy().getId(), Collections.<SingularityTaskId>emptyList())) {
+    for (SingularityTaskId taskId : SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), taskRequest.getRequest().getId(), Collections.<SingularityTaskId>emptyList())) {
       // TODO consider using executorIds
       LOG.trace("Task host is {} and rack is {} offer host is {} and rack is {}", taskId.getHost(), taskId.getRackId(), host, rackId);
       if (taskId.getHost().equals(host)) {
-        if (cleaningTasks.contains(taskId)) {
-          numCleaningOnSlave++;
+        if (taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
+          if (cleaningTasks.contains(taskId)) {
+            numCleaningOnSlave++;
+          } else {
+            numOnSlave++;
+          }
         } else {
-          numOnSlave++;
+          numOtherDeploysOnSlave++;
         }
+      }
+      if (taskId.getRackId().equals(rackId) && !cleaningTasks.contains(taskId) && taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
+        numOnRack++;
       }
       if (taskId.getRackId().equals(rackId) && !cleaningTasks.contains(taskId)) {
         numOnRack++;
@@ -166,8 +174,8 @@ class SingularitySlaveAndRackManager {
 
     switch (slavePlacement) {
       case SEPARATE:
-        if (numOnSlave > 0 || numCleaningOnSlave > 0) {
-          LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave);
+        if (numOnSlave > 0 || numCleaningOnSlave > 0 || numOtherDeploysOnSlave > 0) {
+          LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {} numCleaningOnSlave {} numOtherDeploysOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave, numOtherDeploysOnSlave);
           return SlaveMatchState.SLAVE_SATURATED;
         }
         break;
