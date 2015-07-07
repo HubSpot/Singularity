@@ -174,6 +174,13 @@ class SingularitySlaveAndRackManager {
 
     switch (slavePlacement) {
       case SEPARATE:
+      case SEPARATE_BY_DEPLOY:
+        if (numOnSlave > 0 || numCleaningOnSlave > 0) {
+          LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {} numCleaningOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave);
+          return SlaveMatchState.SLAVE_SATURATED;
+        }
+        break;
+      case SEPARATE_BY_REQUEST:
         if (numOnSlave > 0 || numCleaningOnSlave > 0 || numOtherDeploysOnSlave > 0) {
           LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {} numCleaningOnSlave {} numOtherDeploysOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave, numOtherDeploysOnSlave);
           return SlaveMatchState.SLAVE_SATURATED;
