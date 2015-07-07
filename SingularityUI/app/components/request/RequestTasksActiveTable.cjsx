@@ -6,16 +6,16 @@ RequestTasksActiveTable = React.createClass
   displayName: 'RequestTasksActiveTable'
 
   propTypes:
-    activeTasks: React.PropTypes.array.isRequired
-    getModel: React.PropTypes.func.isRequired
+    actions: React.PropTypes.func.isRequired
+    data: React.PropTypes.array.isRequired
 
   ## To do: move this out to a container component
   handleShowJSON: (e) ->
     id = e.currentTarget.getAttribute('data-id')
-    utils.viewJSON @props.getModel 'activeTasks', id
+    utils.viewJSON @props.actions().getModel 'activeTasks', id
 
   render: ->
-    tbody = @props.activeTasks.map (request) =>
+    tbody = @props.data.map (request) =>
       requestLink = "#{config.appRoot}/task/#{request.id}"
       logLink = "#{config.appRoot}/task/#{request.id}/tail/#{Helpers.substituteTaskID(config.runningTaskLogPath, request.taskId.id)}"
       return(

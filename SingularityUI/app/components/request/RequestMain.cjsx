@@ -1,8 +1,11 @@
 RequestHeader = require './header/RequestHeader'
-RequestTasksActive = require './RequestTasksActive'
 RequestTaskHistory = require './RequestTaskHistory'
 RequestDeployHistory = require './RequestDeployHistory'
 RequestHistory = require './RequestHistory'
+TableBase = require '../lib/TableBase'
+
+## tables
+RequestTasksActiveTable = require './RequestTasksActiveTable'
 
 
 RequestMain = React.createClass
@@ -19,13 +22,21 @@ RequestMain = React.createClass
         data={@props.data}
         actions={@props.actions}
       />
-      <RequestTasksActive
-        activeTasks={@props.data.activeTasks}
+
+      <TableBase
+        headline="Running instances"
+        data={@props.data.activeTasks}
         actions={@props.actions}
+        table={RequestTasksActiveTable}
       />
-      <RequestTaskHistory
-        taskHistory={@props.data.taskHistory}
+
+      <TableBase
+        headline="Task history"
+        data={@props.data.taskHistory}
+        actions={@props.actions}
+        table={RequestTaskHistory}
       />
+
       <RequestDeployHistory />
       <RequestHistory />
     </div>
