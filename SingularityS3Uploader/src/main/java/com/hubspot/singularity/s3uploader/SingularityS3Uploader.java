@@ -9,6 +9,7 @@ import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -198,8 +199,8 @@ public class SingularityS3Uploader implements Closeable {
   }
 
   class Uploader implements Callable<Boolean> {
-    private int sequence;
-    private Path file;
+    private final int sequence;
+    private final Path file;
 
     public Uploader(int sequence, Path file) {
       this.file = file;
@@ -210,7 +211,7 @@ public class SingularityS3Uploader implements Closeable {
     public Boolean call() throws Exception {
       final long start = System.currentTimeMillis();
 
-      final String key = SingularityS3FormatHelper.getKey(uploadMetadata.getS3KeyFormat(), sequence, Files.getLastModifiedTime(file).toMillis(), file.getFileName().toString(), Optional.of(hostname));
+      final String key = SingularityS3FormatHelper.getKey(uploadMetadata.getS3KeyFormat(), sequence, Files.getLastModifiedTime(file).toMillis(), Objects.toString(file.getFileName()), Optional.of(hostname));
 
       long fileSizeBytes = Files.size(file);
       LOG.info("{} Uploading {} to {}/{} (size {})", logIdentifier, file, s3Bucket.getName(), key, fileSizeBytes);
