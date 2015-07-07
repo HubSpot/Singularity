@@ -151,9 +151,6 @@ class SingularitySlaveAndRackManager {
       if (taskId.getRackId().equals(rackId) && !cleaningTasks.contains(taskId) && taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
         numOnRack++;
       }
-      if (taskId.getRackId().equals(rackId) && !cleaningTasks.contains(taskId)) {
-        numOnRack++;
-      }
     }
 
     if (taskRequest.getRequest().isRackSensitive()) {
