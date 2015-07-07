@@ -36,23 +36,30 @@ public class S3Artifact extends RemoteArtifact {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
+    if (this == obj) {
       return true;
-    if (!super.equals(obj))
+    }
+    if (!super.equals(obj)) {
       return false;
-    if (getClass() != obj.getClass())
+    }
+    if (getClass() != obj.getClass()) {
       return false;
+    }
     S3Artifact other = (S3Artifact) obj;
     if (s3Bucket == null) {
-      if (other.s3Bucket != null)
+      if (other.s3Bucket != null) {
         return false;
-    } else if (!s3Bucket.equals(other.s3Bucket))
+      }
+    } else if (!s3Bucket.equals(other.s3Bucket)) {
       return false;
+    }
     if (s3ObjectKey == null) {
-      if (other.s3ObjectKey != null)
+      if (other.s3ObjectKey != null) {
         return false;
-    } else if (!s3ObjectKey.equals(other.s3ObjectKey))
+      }
+    } else if (!s3ObjectKey.equals(other.s3ObjectKey)) {
       return false;
+    }
     return true;
   }
 

@@ -38,23 +38,30 @@ public class ArtifactDownloadRequest {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
+    if (this == obj) {
       return true;
-    if (obj == null)
+    }
+    if (obj == null) {
       return false;
-    if (getClass() != obj.getClass())
+    }
+    if (getClass() != obj.getClass()) {
       return false;
+    }
     ArtifactDownloadRequest other = (ArtifactDownloadRequest) obj;
     if (s3Artifact == null) {
-      if (other.s3Artifact != null)
+      if (other.s3Artifact != null) {
         return false;
-    } else if (!s3Artifact.equals(other.s3Artifact))
+      }
+    } else if (!s3Artifact.equals(other.s3Artifact)) {
       return false;
+    }
     if (targetDirectory == null) {
-      if (other.targetDirectory != null)
+      if (other.targetDirectory != null) {
         return false;
-    } else if (!targetDirectory.equals(other.targetDirectory))
+      }
+    } else if (!targetDirectory.equals(other.targetDirectory)) {
       return false;
+    }
     return true;
   }
 

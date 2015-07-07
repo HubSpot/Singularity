@@ -40,28 +40,37 @@ public abstract class Artifact {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
+    if (this == obj) {
       return true;
-    if (obj == null)
+    }
+    if (obj == null) {
       return false;
-    if (getClass() != obj.getClass())
+    }
+    if (getClass() != obj.getClass()) {
       return false;
+    }
     Artifact other = (Artifact) obj;
     if (filename == null) {
-      if (other.filename != null)
+      if (other.filename != null) {
         return false;
-    } else if (!filename.equals(other.filename))
+      }
+    } else if (!filename.equals(other.filename)) {
       return false;
+    }
     if (md5sum == null) {
-      if (other.md5sum != null)
+      if (other.md5sum != null) {
         return false;
-    } else if (!md5sum.equals(other.md5sum))
+      }
+    } else if (!md5sum.equals(other.md5sum)) {
       return false;
+    }
     if (name == null) {
-      if (other.name != null)
+      if (other.name != null) {
         return false;
-    } else if (!name.equals(other.name))
+      }
+    } else if (!name.equals(other.name)) {
       return false;
+    }
     return true;
   }
 
