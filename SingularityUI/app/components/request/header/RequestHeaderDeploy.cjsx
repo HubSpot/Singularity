@@ -16,21 +16,23 @@ RequestHeaderDeploy = React.createClass
       timestamp = Helpers.timestampFromNow activeDeploy.timestamp
       deployedBy = Helpers.usernameFromEmail(activeDeploy.metadata.deployedBy)
 
-      return (
-        <div className="well">
-          Active deploy <code>{id}</code>&nbsp; 
+      deployStatus = 
+        <div>
+          Active deploy <code>{id}</code>
           { if deployedBy then <span> by <strong>{deployedBy}</strong> </span> }
           { if timestamp then <span>&mdash; {timestamp}</span> }
           <a onClick={@handleDeployHistory} className="pull-right">
             Deploy history
           </a>
         </div>
-      )
 
     else
-      return (
-        <span className='text-danger'> No active deploy </span>
-      )
+      deployStatus = <span className='text-danger'> No active deploy </span>
 
+    return (
+      <div className="well">
+        {deployStatus}
+      </div>
+    )
 
 module.exports = RequestHeaderDeploy
