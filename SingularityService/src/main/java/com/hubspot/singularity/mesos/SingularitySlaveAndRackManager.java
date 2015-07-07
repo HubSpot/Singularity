@@ -159,6 +159,10 @@ class SingularitySlaveAndRackManager {
       }
     }
 
+    LOG.trace("Request {}", taskRequest.getRequest().getId());
+    LOG.trace("{} on slave, {} on rack {} cleaning", numOnSlave, numOnRack, numCleaningOnSlave);
+    LOG.trace("Slave placement is {}", slavePlacement);
+
     switch (slavePlacement) {
       case SEPARATE:
         if (numOnSlave > 0 || numCleaningOnSlave > 0) {
