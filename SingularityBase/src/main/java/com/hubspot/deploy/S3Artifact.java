@@ -26,6 +26,37 @@ public class S3Artifact extends RemoteArtifact {
   }
 
   @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = super.hashCode();
+    result = prime * result + ((s3Bucket == null) ? 0 : s3Bucket.hashCode());
+    result = prime * result + ((s3ObjectKey == null) ? 0 : s3ObjectKey.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (!super.equals(obj))
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    S3Artifact other = (S3Artifact) obj;
+    if (s3Bucket == null) {
+      if (other.s3Bucket != null)
+        return false;
+    } else if (!s3Bucket.equals(other.s3Bucket))
+      return false;
+    if (s3ObjectKey == null) {
+      if (other.s3ObjectKey != null)
+        return false;
+    } else if (!s3ObjectKey.equals(other.s3ObjectKey))
+      return false;
+    return true;
+  }
+
+  @Override
   public String toString() {
     return "S3Artifact [s3Bucket=" + s3Bucket + ", s3ObjectKey=" + s3ObjectKey + ", getFilesize()=" + getFilesize() + ", getName()=" + getName() + ", getFilename()=" + getFilename()
         + ", getMd5sum()=" + getMd5sum() + "]";
