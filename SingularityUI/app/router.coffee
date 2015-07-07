@@ -1,13 +1,14 @@
-DashboardController = require 'controllers/Dashboard'
+ReactDashboardController    = require 'controllers/Dashboard'
+
 StatusController    = require 'controllers/Status'
 
 NewRequestController = require 'controllers/NewRequest'
 NewDeployController  = require 'controllers/NewDeploy'
 
-RequestDetailController = require 'controllers/RequestDetail'
+RequestController = require 'controllers/Request'
 RequestsTableController = require 'controllers/RequestsTable'
 
-TasksTableController = require 'controllers/TasksTable'
+TasksController = require 'controllers/Tasks'
 TaskDetailController = require 'controllers/TaskDetail'
 TailController = require 'controllers/Tail'
 
@@ -19,7 +20,7 @@ NotFoundController = require 'controllers/NotFound'
 class Router extends Backbone.Router
 
     routes:
-        '(/)': 'dashboard'
+        '(/)': 'reactDashboard'
         'status(/)': 'status'
 
         'requests/new(/)': 'newRequest'
@@ -29,13 +30,13 @@ class Router extends Backbone.Router
         'requests/:state(/)': 'requestsTable'
         'requests(/)': 'requestsTable'
 
-        'request/:requestId(/)': 'requestDetail'
+        'request/:requestId(/)': 'request'
 
         'request/:requestId/deploy(/)': 'newDeploy'
 
-        'tasks/:state/:searchFilter(/)': 'tasksTable'
-        'tasks/:state(/)': 'tasksTable'
-        'tasks(/)': 'tasksTable'
+        'tasks/:state/:searchFilter(/)': 'tasks'
+        'tasks/:state(/)': 'tasks'
+        'tasks(/)': 'tasks'
 
         'task/:taskId(/)': 'taskDetail'
         'task/:taskId/files(/)*path': 'taskFileBrowser'
@@ -49,6 +50,9 @@ class Router extends Backbone.Router
     dashboard: ->
         app.bootstrapController new DashboardController
 
+    reactDashboard: ->
+        app.bootstrapController new ReactDashboardController        
+
     status: ->
         app.bootstrapController new StatusController
 
@@ -58,14 +62,14 @@ class Router extends Backbone.Router
     requestsTable: (state = 'all', subFilter = 'all', searchFilter = '') ->
         app.bootstrapController new RequestsTableController {state, subFilter, searchFilter}
 
-    requestDetail: (requestId) ->
-        app.bootstrapController new RequestDetailController {requestId}
+    request: (requestId) ->
+        app.bootstrapController new RequestController {requestId}
 
     newDeploy: (requestId) ->
         app.bootstrapController new NewDeployController {requestId}
 
-    tasksTable: (state = 'active', searchFilter = '') ->
-        app.bootstrapController new TasksTableController {state, searchFilter}
+    tasks: (state = 'active', searchFilter = '') ->
+        app.bootstrapController new TasksController {state, searchFilter}
 
     taskDetail: (taskId) ->
         app.bootstrapController new TaskDetailController {taskId, filePath:null}

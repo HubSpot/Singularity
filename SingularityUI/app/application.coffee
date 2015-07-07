@@ -28,6 +28,10 @@ class Application
 
         $body = $ 'body'
 
+        # for rendering react components
+        @pageEl = document.getElementById 'page'
+
+
         @views.nav = new NavView
         @views.nav.render()
         $body.prepend @views.nav.$el
@@ -71,6 +75,8 @@ class Application
             clearInterval @globalRefreshInterval
             return
         @currentController.refresh()
+
+        @currentView?.refresh()
 
     caughtError: ->
         # Ghetto try-catch
@@ -136,6 +142,11 @@ class Application
 
     bootstrapController: (controller) ->
         @currentController = controller
+
+    # So we can refetch a collection/model
+    # from within a React view
+    bootstrapReactView: (view) ->
+        @currentView = view
 
     # Called by Controllers when their views are ready to take over
     showView: (view) ->

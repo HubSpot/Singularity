@@ -5,6 +5,8 @@ class View extends Backbone.View
 
     constructor: (params = {}) ->
         @subviews = params.subviews if params.subviews?
+        # Let react know this isnt a `react` associated view
+        app.bootstrapReactView undefined
         super params
 
     events: ->

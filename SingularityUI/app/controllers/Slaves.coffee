@@ -1,23 +1,19 @@
-Controller = require './Controller'
+Controller = require './ReactController'
 
+SlavesView = require '../views/SlavesView'
+
+Slave = require '../models/Slave'
 Slaves = require '../collections/Slaves'
-
-SlavesView = require '../views/slaves'
-SimpleSubview = require '../views/simpleSubview'
 
 class SlavesController extends Controller
 
     initialize: ->
+    
         app.showPageLoader()
-        @collections.slaves         = new Slaves []
-        @setView new SlavesView
-            collection: @collections.slaves
+        @slavesCollection = new Slaves []
 
-        app.showView @view
-
-        @refresh()
-
-    refresh: ->
-        @collections.slaves.fetch reset: true
+        new SlavesView
+            collection: @slavesCollection
+            model: Slave
 
 module.exports = SlavesController

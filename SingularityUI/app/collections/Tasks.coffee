@@ -8,7 +8,7 @@ class Tasks extends Collection
 
     comparatorMap:
         active:    (one, two) ->
-            one.get('taskId').startedAt - two.get('taskId').startedAt
+            two.get('taskId').startedAt - one.get('taskId').startedAt
         scheduled: (one, two) ->
             one.get('pendingTask').pendingTaskId.nextRunAt - two.get('pendingTask').pendingTaskId.nextRunAt
         cleaning:  undefined
@@ -20,6 +20,10 @@ class Tasks extends Collection
         requestFilter = if @requestId? then "/request/#{ @requestId }" else ''
         propertyString = $.param 'property': @propertyFilterMap[@state] or [], true
         "#{ config.apiRoot }/tasks/#{ @state }#{ requestFilter }?#{ propertyString }"
+
+    setState: (state) ->
+        @state = state
+        @comparator = @comparatorMap[@state]
 
     initialize: (models = [], {@state, @requestId}) ->
         @comparator = @comparatorMap[@state]

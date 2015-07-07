@@ -30,6 +30,59 @@ class Requests extends Collection
 
         JSON.parse jsonRequests
 
+
+    getUserRequests: (user) ->
+        
+        @.filter (model) ->
+            request = model.get('request')
+            deployUserTrimmed = user.split("@")[0]
+            return false if not request.owners
+            for owner in request.owners
+                ownerTrimmed = owner.split("@")[0]
+                return true if deployUserTrimmed == ownerTrimmed
+            return false
+
+
+
+    getUserRequestsTotals: (user) ->
+
+        userRequests = @getUserRequests user
+
+        userRequestTotals =
+            all: userRequests.length
+            onDemand: 0
+            worker: 0
+            scheduled: 0
+            runOnce: 0
+            service: 0
+
+        for request in userRequests
+            
+            continue if request.get('state') isnt 'ACTIVE'
+
+            if request.get('type') == 'ON_DEMAND'  then userRequestTotals.onDemand  += 1
+            if request.get('type') == 'SCHEDULED'  then userRequestTotals.scheduled += 1
+            if request.get('type') == 'WORKER'     then userRequestTotals.worker    += 1
+            if request.get('type') == 'RUN_ONCE'   then userRequestTotals.runOnce   += 1
+            if request.get('type') == 'SERVICE'    then userRequestTotals.service   += 1
+
+        data = [
+            { linkName: "all",        label: 'total',     total: userRequestTotals.all }
+            { linkName: "ON_DEMAND",  label: 'On Demand', total: userRequestTotals.onDemand }    
+            { linkName: "SCHEDULED",  label: 'Scheduled', total: userRequestTotals.scheduled }
+            { linkName: "WORKER",     label: 'Worker',    total: userRequestTotals.worker }
+            { linkName: "RUN_ONCE",   label: 'Run Once',  total: userRequestTotals.runOnce }
+            { linkName: "SERVICE",    label: 'Service',   total: userRequestTotals.service }
+        ]
+
+        for request in data
+            request.link = "#{config.appRoot}/requests/active/#{name}/all/#{user}"
+
+        return data
+
+
+
+
     isStarred: (id) ->
         starredRequests = @getStarredRequests()
         id in starredRequests
@@ -49,5 +102,39 @@ class Requests extends Collection
             starredRequests.push requestId
 
         localStorage.setItem 'starredRequests', JSON.stringify starredRequests
+
+
+    sortCollection: (newSortAttribute) ->
+        @isSorted = true
+
+        if newSortAttribute is @sortAttribute and @sortAscending?
+            @sortAscending = not @sortAscending
+        else
+            # timestamp should be DESC by default
+            @sortAscending = if newSortAttribute is "timestamp" then false else true
+        
+        @sortAttribute = newSortAttribute
+        requests = _.pluck @getStarredOnly(), "attributes"
+        
+        # Sort the table if the user clicked on the table heading things
+        if @sortAttribute?
+            requests = _.sortBy requests, (request) =>
+
+                # Traverse through the properties to find what we're after
+                attributes = @sortAttribute.split '.'
+                value = request
+                for attribute in attributes
+                    value = value[attribute]                
+                    value = '' if not value?
+                return value
+
+            if not @sortAscending
+                requests = requests.reverse()
+        else
+            requests.reverse()
+
+        return requests
+    
+       
 
 module.exports = Requests
