@@ -80,4 +80,5 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
       continuation.complete();
     }
   }
+
 }
