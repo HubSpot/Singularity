@@ -12,6 +12,7 @@ import com.hubspot.singularity.runner.base.configuration.Configuration;
 
 @Configuration("/etc/singularity.s3downloader.yaml")
 public class SingularityS3DownloaderConfiguration extends BaseRunnerConfiguration {
+
   public static final String NUM_DOWNLOADER_THREADS = "s3downloader.downloader.threads";
 
   public static final String HTTP_SERVER_TIMEOUT = "s3downloader.http.timeout";
@@ -22,10 +23,34 @@ public class SingularityS3DownloaderConfiguration extends BaseRunnerConfiguratio
 
   @Min(1)
   @JsonProperty
-  private int numDownloaderThreads = 25;
+  private int numEnqueueThreads = 10;
+
+  @Min(1)
+  @JsonProperty
+  private long millisToWaitForReEnqueue = TimeUnit.SECONDS.toMillis(1);
+
+  @Min(1)
+  @JsonProperty
+  private int numDownloaderThreads = 5;
 
   public SingularityS3DownloaderConfiguration() {
     super(Optional.of("singularity-s3downloader.log"));
+  }
+
+  public int getNumEnqueueThreads() {
+    return numEnqueueThreads;
+  }
+
+  public void setNumEnqueueThreads(int numEnqueueThreads) {
+    this.numEnqueueThreads = numEnqueueThreads;
+  }
+
+  public long getMillisToWaitForReEnqueue() {
+    return millisToWaitForReEnqueue;
+  }
+
+  public void setMillisToWaitForReEnqueue(long millisToWaitForReEnqueue) {
+    this.millisToWaitForReEnqueue = millisToWaitForReEnqueue;
   }
 
   public long getHttpServerTimeout() {
@@ -46,10 +71,8 @@ public class SingularityS3DownloaderConfiguration extends BaseRunnerConfiguratio
 
   @Override
   public String toString() {
-    return "SingularityS3DownloaderConfiguration[" +
-            "httpServerTimeout=" + httpServerTimeout +
-            ", numDownloaderThreads=" + numDownloaderThreads +
-            ']';
+    return "SingularityS3DownloaderConfiguration [httpServerTimeout=" + httpServerTimeout + ", numEnqueueThreads=" + numEnqueueThreads + ", millisToWaitForReEnqueue=" + millisToWaitForReEnqueue
+        + ", numDownloaderThreads=" + numDownloaderThreads + "]";
   }
 
   @Override
