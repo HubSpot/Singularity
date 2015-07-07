@@ -136,6 +136,7 @@ class SingularitySlaveAndRackManager {
 
     for (SingularityTaskId taskId : SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), taskRequest.getRequest().getId(), taskRequest.getDeploy().getId(), Collections.<SingularityTaskId>emptyList())) {
       // TODO consider using executorIds
+      LOG.trace("Task host is {} and rack is {} offer host is {} and rack is {}", taskId.getHost(), taskId.getRackId(), host, rackId);
       if (taskId.getHost().equals(host)) {
         if (cleaningTasks.contains(taskId)) {
           numCleaningOnSlave++;
