@@ -44,6 +44,10 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
     changeState(objectId, MachineState.STARTING_DECOMMISSION, user);
   }
 
+  protected void freeze(String objectId, Optional<String> user) {
+    changeState(objectId, MachineState.FROZEN, user);
+  }
+
   protected void activate(String objectId, Optional<String> user) {
     changeState(objectId, MachineState.ACTIVE, user);
   }
