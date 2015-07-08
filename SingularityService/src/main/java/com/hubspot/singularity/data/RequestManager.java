@@ -181,8 +181,8 @@ public class RequestManager extends CuratorAsyncManager {
     return activate(request, RequestHistoryType.UNPAUSED, timestamp, user);
   }
 
-  public SingularityCreateResult exitCooldown(SingularityRequest request, long timestamp) {
-    return activate(request, RequestHistoryType.EXITED_COOLDOWN, timestamp, Optional.<String> absent());
+  public SingularityCreateResult exitCooldown(SingularityRequest request, long timestamp, Optional<String> user) {
+    return activate(request, RequestHistoryType.EXITED_COOLDOWN, timestamp, user);
   }
 
   public SingularityCreateResult deployToUnpause(SingularityRequest request, long timestamp, Optional<String> user) {
