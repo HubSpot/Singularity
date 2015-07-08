@@ -49,11 +49,11 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
 
   @Min(1)
   @JsonProperty
-  private long s3DownloadTimeoutMillis = TimeUnit.MINUTES.toMillis(1);
+  private long s3DownloadTimeoutMillis = TimeUnit.MINUTES.toMillis(2);
 
   @Min(1)
   @JsonProperty
-  private long s3ChunkDownloadTimeoutMillis = TimeUnit.SECONDS.toMillis(16);
+  private long s3ChunkDownloadTimeoutMillis = TimeUnit.SECONDS.toMillis(30);
 
   @Min(1)
   @JsonProperty

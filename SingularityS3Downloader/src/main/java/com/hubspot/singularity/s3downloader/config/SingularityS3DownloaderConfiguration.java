@@ -27,7 +27,7 @@ public class SingularityS3DownloaderConfiguration extends BaseRunnerConfiguratio
 
   @Min(1)
   @JsonProperty
-  private long millisToWaitForReEnqueue = TimeUnit.SECONDS.toMillis(1);
+  private long millisToWaitForReEnqueue = TimeUnit.SECONDS.toMillis(5);
 
   @Min(1)
   @JsonProperty
