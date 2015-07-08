@@ -24,6 +24,12 @@ public enum ExtendedTaskState {
         map.put(extendedTaskState.toTaskState().get(), extendedTaskState);
       }
     }
+
+    for (TaskState t : TaskState.values()) {
+      if (map.get(t) == null) {
+        throw new IllegalStateException("No ExtendedTaskState provided for TaskState " + t);
+      }
+    }
   }
 
   private final String displayName;
@@ -58,7 +64,7 @@ public enum ExtendedTaskState {
 
   public static ExtendedTaskState fromTaskState(TaskState taskState) {
     ExtendedTaskState extendedTaskState = map.get(taskState);
-    Preconditions.checkArgument(extendedTaskState != null);
+    Preconditions.checkArgument(extendedTaskState != null, "No ExtendedTaskState for TaskState %s", taskState);
     return extendedTaskState;
   }
 
