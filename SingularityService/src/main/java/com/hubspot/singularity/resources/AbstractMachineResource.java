@@ -57,4 +57,10 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
     changeState(objectId, MachineState.ACTIVE, queryUser);
   }
 
+  protected void freeze(String objectId, Optional<String> queryUser) {
+    validator.checkForAdminAuthorization(user);
+    changeState(objectId, MachineState.FROZEN, queryUser);
+  }
+
+
 }
