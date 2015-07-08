@@ -2,17 +2,21 @@ package com.hubspot.singularity;
 
 public enum MachineState {
 
-  MISSING_ON_STARTUP(false), ACTIVE(false), STARTING_DECOMMISSION(true), DECOMMISSIONING(true), DECOMMISSIONED(true), DEAD(false);
+  MISSING_ON_STARTUP(false, false), ACTIVE(false, false), STARTING_DECOMMISSION(true, true), DECOMMISSIONING(true, true), DECOMMISSIONED(true, true), DEAD(false, false), FROZEN(false, true);
 
-  private final boolean isDecommissioning;
+  private final boolean decommissioning;
+  private final boolean frozen;
 
-  private MachineState(boolean isDecommissioning) {
-    this.isDecommissioning = isDecommissioning;
+  MachineState(boolean decommissioning, boolean frozen) {
+    this.decommissioning = decommissioning;
+    this.frozen = frozen;
   }
 
   public boolean isDecommissioning() {
-    return isDecommissioning;
+    return decommissioning;
   }
 
-
+  public boolean isFrozen() {
+    return frozen;
+  }
 }
