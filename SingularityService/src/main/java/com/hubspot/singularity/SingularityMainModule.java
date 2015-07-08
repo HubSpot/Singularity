@@ -3,6 +3,10 @@ package com.hubspot.singularity;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.inject.name.Names.named;
 
+import com.hubspot.baragon.client.BaragonServiceClient;
+import com.hubspot.horizon.HttpClient;
+import com.hubspot.horizon.HttpConfig;
+import com.hubspot.horizon.ning.NingHttpClient;
 import io.dropwizard.jetty.HttpConnectorFactory;
 import io.dropwizard.server.SimpleServerFactory;
 
@@ -62,9 +66,13 @@ import com.ning.http.client.AsyncHttpClient;
 import de.neuland.jade4j.parser.Parser;
 import de.neuland.jade4j.parser.node.Node;
 import de.neuland.jade4j.template.JadeTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class SingularityMainModule implements Module {
+
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityMainModule.class);
 
   public static final String HOSTNAME_PROPERTY = "singularity.hostname";
   public static final String HTTP_PORT_PROPERTY = "singularity.http.port";
@@ -86,6 +94,8 @@ public class SingularityMainModule implements Module {
 
   public static final String NEW_TASK_THREADPOOL_NAME = "_new_task_threadpool";
   public static final Named NEW_TASK_THREADPOOL_NAMED = Names.named(NEW_TASK_THREADPOOL_NAME);
+
+  public static final String BARAGON_HTTP_CLIENT = "baragon.http.client";
 
   private final SingularityConfiguration configuration;
 
@@ -114,6 +124,7 @@ public class SingularityMainModule implements Module {
     binder.bind(SingularityExceptionNotifier.class).in(Scopes.SINGLETON);
     binder.bind(LoadBalancerClient.class).to(LoadBalancerClientImpl.class).in(Scopes.SINGLETON);
     binder.bind(SingularityMailRecordCleaner.class).in(Scopes.SINGLETON);
+    binder.bind(BaragonProvider.class).in(Scopes.SINGLETON);
 
     binder.bind(SingularityWebhookPoller.class).in(Scopes.SINGLETON);
 
@@ -189,6 +200,30 @@ public class SingularityMainModule implements Module {
   @Singleton
   public Optional<SentryConfiguration> sentryConfiguration(final SingularityConfiguration config) {
     return config.getSentryConfiguration();
+  }
+
+  @Provides
+  @Singleton
+  public Optional<BaragonServiceClient> baragonServiceClient(final SingularityConfiguration config, BaragonProvider baragonProvider) {
+    if (config.getLoadBalancerConfig().isPresent() || config.getLoadBalancerUri() != null) {
+      return Optional.of(baragonProvider.create());
+    } else {
+      return Optional.absent();
+    }
+  }
+
+  @Provides
+  @Named(BARAGON_HTTP_CLIENT)
+  public HttpClient baragonHttpClient(final SingularityConfiguration config, ObjectMapper objectMapper) {
+    HttpConfig.Builder httpBuilder = HttpConfig.newBuilder().setObjectMapper(objectMapper);
+
+    if (config.getLoadBalancerConfig().isPresent()) {
+      httpBuilder.setRequestTimeoutSeconds(config.getLoadBalancerConfig().get().getRequestTimeoutMs());
+    } else {
+      httpBuilder.setRequestTimeoutSeconds((config.getLoadBalancerRequestTimeoutMillis()));
+      LOG.info("Setting loadBalancerRequestTimeoutMillis is deprecated, please specify the baragon => requestTimeoutMs instead");
+    }
+    return new NingHttpClient(httpBuilder.build());
   }
 
   @Provides

@@ -62,7 +62,7 @@ ui:
   title: Singularity (vagrant)
   baseUrl: http://vagrant-singularity:7099/singularity
 
-loadBalancerUri: http://vagrant-singularity:8080/baragon/v2/request
+loadBalancerUri: http://vagrant-singularity:8080/baragon/v2
 
 enableCorsFilter: true
 
