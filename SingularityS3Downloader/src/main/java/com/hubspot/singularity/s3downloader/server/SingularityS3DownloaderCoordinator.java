@@ -75,7 +75,7 @@ public class SingularityS3DownloaderCoordinator {
     }
 
     private void reEnqueue() {
-      LOG.info("Re-enqueueing request for {}, waiting {}, ({} active, {} queue, {} max), total time {}", artifactDownloadRequest.getTargetDirectory(), JavaUtils.durationFromMillis(configuration.getMillisToWaitForReEnqueue()),
+      LOG.debug("Re-enqueueing request for {}, waiting {}, ({} active, {} queue, {} max), total time {}", artifactDownloadRequest.getTargetDirectory(), JavaUtils.durationFromMillis(configuration.getMillisToWaitForReEnqueue()),
           downloadJoinerService.getActiveCount(), downloadJoinerService.getQueue().size(), configuration.getNumEnqueueThreads(), JavaUtils.duration(start));
 
       downloadJoinerService.schedule(this, configuration.getMillisToWaitForReEnqueue(), TimeUnit.MILLISECONDS);
