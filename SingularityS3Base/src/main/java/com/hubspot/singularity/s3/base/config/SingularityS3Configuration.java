@@ -53,6 +53,14 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
   @JsonProperty
   private long s3DownloadTimeoutMillis = TimeUnit.MINUTES.toMillis(1);
 
+  @Min(1)
+  @JsonProperty
+  private long s3ChunkDownloadTimeoutMillis = TimeUnit.SECONDS.toMillis(16);
+
+  @Min(1)
+  @JsonProperty
+  private long s3ChunkRetries = 3;
+
   @Min(0)
   @JsonProperty
   private int localDownloadHttpPort = 7070;
@@ -89,6 +97,14 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
     this.s3SecretKey = s3SecretKey;
   }
 
+  public long getS3ChunkRetries() {
+    return s3ChunkRetries;
+  }
+
+  public void setS3ChunkRetries(long s3ChunkRetries) {
+    this.s3ChunkRetries = s3ChunkRetries;
+  }
+
   public long getS3ChunkSize() {
     return s3ChunkSize;
   }
@@ -121,17 +137,19 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
     this.localDownloadPath = localDownloadPath;
   }
 
+  public long getS3ChunkDownloadTimeoutMillis() {
+    return s3ChunkDownloadTimeoutMillis;
+  }
+
+  public void setS3ChunkDownloadTimeoutMillis(long s3ChunkDownloadTimeoutMillis) {
+    this.s3ChunkDownloadTimeoutMillis = s3ChunkDownloadTimeoutMillis;
+  }
+
   @Override
   public String toString() {
-    return "SingularityS3Configuration[" +
-            "artifactCacheDirectory='" + artifactCacheDirectory + '\'' +
-            ", s3AccessKey='" + obfuscateValue(s3AccessKey) + '\'' +
-            ", s3SecretKey='" + obfuscateValue(s3SecretKey) + '\'' +
-            ", s3ChunkSize=" + s3ChunkSize +
-            ", s3DownloadTimeoutMillis=" + s3DownloadTimeoutMillis +
-            ", localDownloadHttpPort=" + localDownloadHttpPort +
-            ", localDownloadPath='" + localDownloadPath + '\'' +
-            ']';
+    return "SingularityS3Configuration [artifactCacheDirectory=" + artifactCacheDirectory + ", s3AccessKey=" + s3AccessKey + ", s3SecretKey=" + s3SecretKey + ", s3ChunkSize=" + s3ChunkSize
+        + ", s3DownloadTimeoutMillis=" + s3DownloadTimeoutMillis + ", s3ChunkDownloadTimeoutMillis=" + s3ChunkDownloadTimeoutMillis + ", s3ChunkRetries=" + s3ChunkRetries + ", localDownloadHttpPort="
+        + localDownloadHttpPort + ", localDownloadPath=" + localDownloadPath + "]";
   }
 
   @Override
