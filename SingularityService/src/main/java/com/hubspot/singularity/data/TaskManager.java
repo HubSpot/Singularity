@@ -1,5 +1,20 @@
 package com.hubspot.singularity.data;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
+import org.apache.curator.utils.ZKPaths;
+import org.apache.mesos.Protos.TaskStatus;
+import org.apache.zookeeper.KeeperException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -33,20 +48,6 @@ import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.event.SingularityEventListener;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
-import org.apache.curator.utils.ZKPaths;
-import org.apache.mesos.Protos.TaskStatus;
-import org.apache.zookeeper.KeeperException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Singleton
 public class TaskManager extends CuratorAsyncManager {
@@ -314,6 +315,10 @@ public class TaskManager extends CuratorAsyncManager {
     }
 
     return map;
+  }
+
+  public int getNumHealthchecks(SingularityTaskId taskId) {
+    return getNumChildren(getHealthcheckParentPath(taskId));
   }
 
   public List<SingularityTaskHealthcheckResult> getHealthcheckResults(SingularityTaskId taskId) {

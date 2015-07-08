@@ -39,6 +39,9 @@ public class SingularityDeployBuilder {
   private Optional<Boolean> skipHealthchecksOnDeploy;
   private Optional<HealthcheckProtocol> healthcheckProtocol;
 
+  private Optional<Integer> healthcheckMaxRetries;
+  private Optional<Long> healthcheckMaxTotalTimeoutSeconds;
+
   private Optional<Long> deployHealthTimeoutSeconds;
 
   private Optional<Long> considerHealthyAfterRunningForSeconds;
@@ -70,6 +73,8 @@ public class SingularityDeployBuilder {
     this.skipHealthchecksOnDeploy = Optional.absent();
     this.deployHealthTimeoutSeconds = Optional.absent();
     this.healthcheckProtocol = Optional.absent();
+    this.healthcheckMaxTotalTimeoutSeconds = Optional.absent();
+    this.healthcheckMaxRetries = Optional.absent();
     this.considerHealthyAfterRunningForSeconds = Optional.absent();
     this.serviceBasePath = Optional.absent();
     this.loadBalancerGroups = Optional.absent();
@@ -77,8 +82,9 @@ public class SingularityDeployBuilder {
   }
 
   public SingularityDeploy build() {
-    return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, resources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds,
-        healthcheckTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy, healthcheckProtocol);
+    return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, resources, env,
+        uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckMaxRetries,
+        healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy, healthcheckProtocol);
   }
 
   public String getRequestId() {
@@ -310,35 +316,33 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<Integer> getHealthcheckMaxRetries() {
+    return healthcheckMaxRetries;
+  }
+
+  public Optional<Long> getHealthcheckMaxTotalTimeoutSeconds() {
+    return healthcheckMaxTotalTimeoutSeconds;
+  }
+
+  public SingularityDeployBuilder setHealthcheckMaxRetries(Optional<Integer> healthcheckMaxRetries) {
+    this.healthcheckMaxRetries = healthcheckMaxRetries;
+    return this;
+  }
+
+  public SingularityDeployBuilder setHealthcheckMaxTotalTimeoutSeconds(Optional<Long> healthcheckMaxTotalTimeoutSeconds) {
+    this.healthcheckMaxTotalTimeoutSeconds = healthcheckMaxTotalTimeoutSeconds;
+    return this;
+  }
+
   @Override
   public String toString() {
-    return "SingularityDeployBuilder [" +
-        "requestId='" + requestId + '\'' +
-        ", id='" + id + '\'' +
-        ", version=" + version +
-        ", timestamp=" + timestamp +
-        ", metadata=" + metadata +
-        ", containerInfo=" + containerInfo +
-        ", customExecutorCmd=" + customExecutorCmd +
-        ", customExecutorId=" + customExecutorId +
-        ", customExecutorSource=" + customExecutorSource +
-        ", customExecutorResources=" + customExecutorResources +
-        ", resources=" + resources +
-        ", command=" + command +
-        ", arguments=" + arguments +
-        ", env=" + env +
-        ", uris=" + uris +
-        ", executorData=" + executorData +
-        ", healthcheckUri=" + healthcheckUri +
-        ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
-        ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +
-        ", skipHealthchecksOnDeploy=" + skipHealthchecksOnDeploy +
-        ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds +
-        ", considerHealthyAfterRunningForSeconds=" + considerHealthyAfterRunningForSeconds +
-        ", healthcheckProtocol=" + healthcheckProtocol +
-        ", serviceBasePath=" + serviceBasePath +
-        ", loadBalancerGroups=" + loadBalancerGroups +
-        ", loadBalancerOptions=" + loadBalancerOptions +
-        ']';
+    return "SingularityDeployBuilder [requestId=" + requestId + ", id=" + id + ", version=" + version + ", timestamp=" + timestamp + ", metadata=" + metadata + ", containerInfo=" + containerInfo
+        + ", customExecutorCmd=" + customExecutorCmd + ", customExecutorId=" + customExecutorId + ", customExecutorSource=" + customExecutorSource + ", customExecutorResources="
+        + customExecutorResources + ", resources=" + resources + ", command=" + command + ", arguments=" + arguments + ", env=" + env + ", uris=" + uris + ", executorData=" + executorData
+        + ", healthcheckUri=" + healthcheckUri + ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds + ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds
+        + ", skipHealthchecksOnDeploy=" + skipHealthchecksOnDeploy + ", healthcheckProtocol=" + healthcheckProtocol + ", healthcheckMaxRetries=" + healthcheckMaxRetries
+        + ", healthcheckMaxTotalTimeoutSeconds=" + healthcheckMaxTotalTimeoutSeconds + ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds + ", considerHealthyAfterRunningForSeconds="
+        + considerHealthyAfterRunningForSeconds + ", serviceBasePath=" + serviceBasePath + ", loadBalancerGroups=" + loadBalancerGroups + ", loadBalancerOptions=" + loadBalancerOptions + "]";
   }
+
 }
