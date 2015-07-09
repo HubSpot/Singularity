@@ -110,7 +110,7 @@ class SingularitySlaveAndRackManager {
 
     final MachineState currentSlaveState = stateCache.getSlave(slaveId).get().getCurrentState().getState();
 
-    if (currentSlaveState.isFrozen()) {
+    if (currentSlaveState == MachineState.FROZEN) {
       return SlaveMatchState.SLAVE_FROZEN;
     }
 
@@ -120,7 +120,7 @@ class SingularitySlaveAndRackManager {
 
     final MachineState currentRackState = stateCache.getRack(rackId).get().getCurrentState().getState();
 
-    if (currentRackState.isFrozen()) {
+    if (currentRackState == MachineState.FROZEN) {
       return SlaveMatchState.RACK_FROZEN;
     }
 
