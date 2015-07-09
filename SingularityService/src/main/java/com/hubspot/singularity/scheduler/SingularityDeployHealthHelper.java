@@ -44,7 +44,7 @@ public class SingularityDeployHealthHelper {
     if (!deploy.isPresent() || !deploy.get().getHealthcheckUri().isPresent() || (isDeployPending && deploy.get().getSkipHealthchecksOnDeploy().or(false))) {
       return getNoHealthcheckDeployHealth(deploy, activeTasks);
     } else {
-      return getHealthcheckDeployState(deploy.get(), activeTasks);
+      return getHealthcheckDeployState(deploy.get(), activeTasks, isDeployPending);
     }
   }
 
@@ -86,7 +86,7 @@ public class SingularityDeployHealthHelper {
     return DeployHealth.HEALTHY;
   }
 
-  private DeployHealth getHealthcheckDeployState(final SingularityDeploy deploy, final Collection<SingularityTaskId> matchingActiveTasks) {
+  private DeployHealth getHealthcheckDeployState(final SingularityDeploy deploy, final Collection<SingularityTaskId> matchingActiveTasks, final boolean isDeployPending) {
     Map<SingularityTaskId, SingularityTaskHealthcheckResult> healthcheckResults = taskManager.getLastHealthcheck(matchingActiveTasks);
 
     for (SingularityTaskId taskId : matchingActiveTasks) {
@@ -101,6 +101,29 @@ public class SingularityDeployHealthHelper {
         if (deploy.getHealthcheckMaxRetries().isPresent() && taskManager.getNumHealthchecks(taskId) > deploy.getHealthcheckMaxRetries().get()) {
           LOG.debug("{} failed {} healthchecks, the max for the deploy", taskId, deploy.getHealthcheckMaxRetries().get());
           return DeployHealth.UNHEALTHY;
+        }
+
+        if (isDeployPending && deploy.getHealthcheckMaxTotalTimeoutSeconds().isPresent()) {
+          Collection<SingularityTaskHistoryUpdate> updates = taskManager.getTaskHistoryUpdates(taskId);
+
+          long runningAt = 0;
+
+          for (SingularityTaskHistoryUpdate update : updates) {
+            if (update.getTaskState() == ExtendedTaskState.TASK_RUNNING) {
+              runningAt = update.getTimestamp();
+              break;
+            }
+          }
+
+          if (runningAt > 0) {
+            final long durationSinceRunning = System.currentTimeMillis() - runningAt;
+
+            if (durationSinceRunning > TimeUnit.SECONDS.toMillis(deploy.getHealthcheckMaxTotalTimeoutSeconds().get())) {
+              LOG.debug("{} has been running for {} and has yet to pass healthchecks, failing deploy", taskId, JavaUtils.durationFromMillis(durationSinceRunning));
+
+              return DeployHealth.UNHEALTHY;
+            }
+          }
         }
 
         return DeployHealth.WAITING;
