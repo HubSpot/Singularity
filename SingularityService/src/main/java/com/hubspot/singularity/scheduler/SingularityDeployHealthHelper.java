@@ -44,7 +44,7 @@ public class SingularityDeployHealthHelper {
     if (!deploy.isPresent() || !deploy.get().getHealthcheckUri().isPresent() || (isDeployPending && deploy.get().getSkipHealthchecksOnDeploy().or(false))) {
       return getNoHealthcheckDeployHealth(deploy, activeTasks);
     } else {
-      return getHealthcheckDeployState(activeTasks);
+      return getHealthcheckDeployState(deploy.get(), activeTasks);
     }
   }
 
@@ -86,7 +86,7 @@ public class SingularityDeployHealthHelper {
     return DeployHealth.HEALTHY;
   }
 
-  private DeployHealth getHealthcheckDeployState(final Collection<SingularityTaskId> matchingActiveTasks) {
+  private DeployHealth getHealthcheckDeployState(final SingularityDeploy deploy, final Collection<SingularityTaskId> matchingActiveTasks) {
     Map<SingularityTaskId, SingularityTaskHealthcheckResult> healthcheckResults = taskManager.getLastHealthcheck(matchingActiveTasks);
 
     for (SingularityTaskId taskId : matchingActiveTasks) {
@@ -97,6 +97,12 @@ public class SingularityDeployHealthHelper {
         return DeployHealth.WAITING;
       } else if (healthcheckResult.isFailed()) {
         LOG.debug("Found a failed healthcheck: {}", healthcheckResult);
+
+        if (deploy.getHealthcheckMaxRetries().isPresent() && taskManager.getNumHealthchecks(taskId) > deploy.getHealthcheckMaxRetries().get()) {
+          LOG.debug("{} failed {} healthchecks, the max for the deploy", taskId, deploy.getHealthcheckMaxRetries().get());
+          return DeployHealth.UNHEALTHY;
+        }
+
         return DeployHealth.WAITING;
       }
     }
