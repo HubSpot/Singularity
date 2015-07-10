@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -24,15 +23,14 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
   private final SingularityNewTaskChecker newTaskChecker;
   private final SingularityTask task;
   private final TaskManager taskManager;
-  private final SingularityAbort abort;
   private final int maxHealthcheckResponseBodyBytes;
 
-  public SingularityHealthcheckAsyncHandler(SingularityExceptionNotifier exceptionNotifier, SingularityConfiguration configuration, SingularityHealthchecker healthchecker, SingularityNewTaskChecker newTaskChecker, TaskManager taskManager, SingularityAbort abort, SingularityTask task) {
+  public SingularityHealthcheckAsyncHandler(SingularityExceptionNotifier exceptionNotifier, SingularityConfiguration configuration, SingularityHealthchecker healthchecker,
+      SingularityNewTaskChecker newTaskChecker, TaskManager taskManager, SingularityTask task) {
     this.exceptionNotifier = exceptionNotifier;
     this.taskManager = taskManager;
     this.newTaskChecker = newTaskChecker;
     this.healthchecker = healthchecker;
-    this.abort = abort;
     this.task = task;
     this.maxHealthcheckResponseBodyBytes = configuration.getMaxHealthcheckResponseBodyBytes();
 

@@ -356,6 +356,10 @@ public class TaskManager extends CuratorAsyncManager {
     return map;
   }
 
+  public int getNumHealthchecks(SingularityTaskId taskId) {
+    return getNumChildren(getHealthcheckParentPath(taskId));
+  }
+
   public List<SingularityTaskHealthcheckResult> getHealthcheckResults(SingularityTaskId taskId) {
     List<SingularityTaskHealthcheckResult> healthcheckResults = getAsyncChildren(getHealthcheckParentPath(taskId), healthcheckResultTranscoder);
     Collections.sort(healthcheckResults);
