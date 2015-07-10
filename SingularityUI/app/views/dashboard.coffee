@@ -18,7 +18,7 @@ class DashboardView extends View
     render: =>
         deployUser = app.user.get 'deployUser'
 
-        partials = 
+        partials =
             partials:
                 requestsBody: @templateRequestsTable
 
@@ -97,7 +97,7 @@ class DashboardView extends View
         $row = $target.parents 'tr'
 
         id = $row.data 'request-id'
-        
+
         @collection.toggleStar id
 
         $row.remove()
