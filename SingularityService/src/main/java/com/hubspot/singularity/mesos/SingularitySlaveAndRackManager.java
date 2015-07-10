@@ -93,7 +93,7 @@ class SingularitySlaveAndRackManager {
         hostname = hostname.substring(0, hostname.length() - configuration.getCommonHostnameSuffixToOmit().get().length());
       }
     }
-    return getSafeString(hostname);
+    return hostname;
   }
 
   public String getSlaveHost(Offer offer) {
@@ -218,7 +218,8 @@ class SingularitySlaveAndRackManager {
     for (MesosMasterSlaveObject slaveJsonObject : state.getSlaves()) {
       Optional<String> maybeRackId = Optional.fromNullable(slaveJsonObject.getAttributes().get(rackIdAttributeKey));
       String slaveId = slaveJsonObject.getId();
-      String rackId = getSafeString(maybeRackId.or(defaultRackId));
+      String rackName = maybeRackId.or(defaultRackId);
+      String rackId = getSafeString(rackName);
       String host = getHost(slaveJsonObject.getHostname());
 
       if (activeSlavesById.containsKey(slaveId)) {
@@ -234,7 +235,7 @@ class SingularitySlaveAndRackManager {
       if (activeRacksById.containsKey(rackId)) {
         remainingActiveRacks.remove(rackId);
       } else {
-        SingularityRack rack = new SingularityRack(rackId);
+        SingularityRack rack = new SingularityRack(rackId, rackName);
 
         if (check(rack, rackManager) == CheckResult.NEW) {
           racks++;
@@ -253,17 +254,21 @@ class SingularitySlaveAndRackManager {
     LOG.info("Found {} new racks ({} missing) and {} new slaves ({} missing)", racks, remainingActiveRacks.size(), slaves, activeSlavesById.size());
   }
 
-  public String getRackId(Offer offer) {
+  private String getRackName(Offer offer) {
     for (Attribute attribute : offer.getAttributesList()) {
       if (attribute.getName().equals(rackIdAttributeKey)) {
-        return getSafeString(attribute.getText().getValue());
+        return attribute.getText().getValue();
       }
     }
 
     return defaultRackId;
   }
 
-  private String getSafeString(String string) {
+  public String getRackId(Offer offer) {
+    return getSafeString(getRackName(offer));
+  }
+
+  public String getSafeString(String string) {
     return string.replace("-", "_");
   }
 
@@ -300,6 +305,7 @@ class SingularitySlaveAndRackManager {
 
   public void checkOffer(Offer offer) {
     final String slaveId = offer.getSlaveId().getValue();
+    final String rackName = getRackName(offer);
     final String rackId = getRackId(offer);
     final String host = getSlaveHost(offer);
 
@@ -309,7 +315,7 @@ class SingularitySlaveAndRackManager {
       LOG.info("Offer revealed a new slave {}", slave);
     }
 
-    final SingularityRack rack = new SingularityRack(rackId);
+    final SingularityRack rack = new SingularityRack(rackId, rackName);
 
     if (check(rack, rackManager) == CheckResult.NEW) {
       LOG.info("Offer revealed a new rack {}", rack);
