@@ -16,14 +16,16 @@
                     {{/each}}
                 </ul>
             </div>
-            <div class="col-md-3 hidden-xs tail-buttons">
-                <a class="btn btn-default tail-top-button">
-                    To top
-                </a>
-                <a class="btn btn-default tail-bottom-button">
-                    To bottom
-                </a>
-            </div>
+            {{#unless isImage}}
+                <div class="col-md-3 hidden-xs tail-buttons">
+                    <a class="btn btn-default tail-top-button">
+                        To top
+                    </a>
+                    <a class="btn btn-default tail-bottom-button">
+                        To bottom
+                    </a>
+                </div>
+            {{/unless}}
         </div>
     </div>
 </div>

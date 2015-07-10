@@ -106,3 +106,5 @@ Handlebars.registerHelper 'usernameFromEmail', (email) ->
 
 Handlebars.registerHelper 'substituteTaskId', (value, taskId) ->
     value.replace('$TASK_ID', taskId)
+
+Handlebars.logger.level = 0;

@@ -82,6 +82,11 @@ class LogLines extends Collection
             offset: offset - 1
             done: => @trigger 'initialOffsetData'
 
+    fetchMagicString: =>
+        @fetch data:
+            offset: 0
+            length: 10
+
     # Overwrite default fetch
     fetch: (params = {}) ->
         defaultParams =
@@ -139,17 +144,18 @@ class LogLines extends Collection
         # split on newlines
         lines = result.data.split @delimiter
 
-        # always omit last element (either it's blank or an incomplete line)
-        lines = _.initial(lines) unless not @state.get('moreToFetch')
+        if lines.length > 1
+            # always omit last element (either it's blank or an incomplete line)
+            lines = _.initial(lines) unless not @state.get('moreToFetch')
 
-        # omit the first (incomplete) element unless we're at the beginning of the file
-        if offset > 0 and lines.length > 0
-            offset += lines[0].length + 1
-            lines = _.rest lines
+            # omit the first (incomplete) element unless we're at the beginning of the file
+            if offset > 0 and lines.length > 0
+                offset += lines[0].length + 1
+                lines = _.rest lines
 
-        # remove last line if empty, or if it only has whitespace
-        if lines[lines.length - 1].match whiteSpace or not lines[lines.length - 1]
-            lines = _.initial lines
+            # remove last line if empty, or if it only has whitespace
+            if lines[lines.length - 1].match whiteSpace or not lines[lines.length - 1]
+                lines = _.initial lines
 
         # create the objects for LogLine models
         lines.map (data) ->
