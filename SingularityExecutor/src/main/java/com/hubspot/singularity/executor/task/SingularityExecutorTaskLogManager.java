@@ -7,8 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.slf4j.Logger;
+import java.util.Objects;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -23,6 +22,8 @@ import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.runner.base.shared.TailMetadata;
+
+import org.slf4j.Logger;
 
 public class SingularityExecutorTaskLogManager {
 
@@ -162,7 +163,7 @@ public class SingularityExecutorTaskLogManager {
    */
   private String getS3Glob() {
     List<String> fileNames = new ArrayList<>(configuration.getS3UploaderAdditionalFiles());
-    fileNames.add(taskDefinition.getServiceLogOutPath().getFileName().toString());
+    fileNames.add(Objects.toString(taskDefinition.getServiceLogOutPath().getFileName()));
 
     return String.format("{%s}*.gz*", Joiner.on(",").join(fileNames));
   }
@@ -184,7 +185,12 @@ public class SingularityExecutorTaskLogManager {
   }
 
   private boolean writeS3MetadataFile(boolean finished) {
-    Path logrotateDirectory = taskDefinition.getServiceLogOutPath().getParent().resolve(configuration.getLogrotateToDirectory());
+    final Path serviceLogOutPath = taskDefinition.getServiceLogOutPath();
+    final Path parent = serviceLogOutPath.getParent();
+    if (parent == null) {
+      throw new IllegalStateException("S3 metadata file " + serviceLogOutPath + " has no parent");
+    }
+    final Path logrotateDirectory = parent.resolve(configuration.getLogrotateToDirectory());
 
     final String s3UploaderBucket = taskDefinition.getExecutorData().getLoggingS3Bucket().or(configuration.getS3UploaderBucket());
 

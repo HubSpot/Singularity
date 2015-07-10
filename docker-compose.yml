@@ -18,7 +18,7 @@ master:
 
 slave:
   image: hubspot/singularity
-  entrypoint: mesos-slave
+  command: mesos-slave
   net: host
   environment:
     MESOS_MASTER: zk://localhost:2181/mesos
