@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.introspect.Annotated;
 import com.google.common.base.Optional;
 
 public class ObfuscateAnnotationIntrospector extends AnnotationIntrospector {
+  private static final long serialVersionUID = 1L;
   private static final ObfuscateSerializer OBFUSCATE_SERIALIZER = new ObfuscateSerializer();
 
   @Override
@@ -34,8 +35,8 @@ public class ObfuscateAnnotationIntrospector extends AnnotationIntrospector {
     @Override
     public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
       if (value instanceof Optional) {
-        if (((Optional)value).isPresent()) {
-          jgen.writeString(obfuscateValue(((Optional)value).get().toString()));
+        if (((Optional<?>)value).isPresent()) {
+          jgen.writeString(obfuscateValue(((Optional<?>)value).get().toString()));
         } else {
           jgen.writeNull();
         }

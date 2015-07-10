@@ -2,11 +2,6 @@ package com.hubspot.singularity.config;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
-import java.util.Arrays;
-import java.util.List;
-
-import javax.validation.constraints.NotNull;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SentryConfiguration {

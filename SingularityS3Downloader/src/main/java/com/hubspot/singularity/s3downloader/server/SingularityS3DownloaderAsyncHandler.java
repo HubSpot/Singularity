@@ -2,6 +2,7 @@ package com.hubspot.singularity.s3downloader.server;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -49,7 +50,7 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
       return;
     }
 
-    if (fetched.getFileName().toString().endsWith(".tar.gz")) {
+    if (Objects.toString(fetched.getFileName()).endsWith(".tar.gz")) {
       artifactManager.untar(fetched, targetDirectory);
     } else {
       artifactManager.copy(fetched, targetDirectory);

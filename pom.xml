@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.basepom</groupId>
     <artifactId>basepom-standard-oss</artifactId>
-    <version>9</version>
+    <version>12</version>
   </parent>
 
   <groupId>com.hubspot</groupId>
@@ -576,6 +576,12 @@
       </dependency>
 
       <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm</artifactId>
+        <version>5.0.4</version>
+      </dependency>
+
+      <dependency>
         <groupId>mysql</groupId>
         <artifactId>mysql-connector-java</artifactId>
         <version>5.1.29</version>
@@ -684,6 +690,12 @@
         <artifactId>jukito</artifactId>
         <version>${jukito.version}</version>
       </dependency>
+
+      <dependency>
+        <groupId>javax.ws.rs</groupId>
+        <artifactId>jsr311-api</artifactId>
+        <version>1.1.1</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -693,7 +705,7 @@
         <plugin>
           <groupId>org.jolokia</groupId>
           <artifactId>docker-maven-plugin</artifactId>
-          <version>0.12.0</version>
+          <version>0.13.0</version>
           <configuration>
             <images></images>  <!-- default to no images to allow building from parent, let submodules override -->
           </configuration>
