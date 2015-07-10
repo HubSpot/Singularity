@@ -62,3 +62,10 @@ ALTER TABLE `taskHistory`
   DROP KEY `requestId_3`;
 
 DROP TABLE `taskUpdates`;
+
+--changeset tpetr:4 dbms:mysql
+ALTER TABLE `deployHistory` ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
+
+ALTER TABLE `requestHistory` ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
+
+ALTER TABLE `taskHistory` ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
