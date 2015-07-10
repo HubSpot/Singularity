@@ -234,6 +234,9 @@ public class StateManager extends CuratorManager {
         case DECOMMISSIONING:
           decommissioningRacks++;
           break;
+        default:
+          unknownRacks++;
+          break;
       }
     }
 
@@ -259,6 +262,9 @@ public class StateManager extends CuratorManager {
         case STARTING_DECOMMISSION:
         case DECOMMISSIONING:
           decommissioningSlaves++;
+          break;
+        default:
+          unknownSlaves++;
           break;
       }
     }
