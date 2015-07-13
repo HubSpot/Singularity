@@ -65,7 +65,7 @@ public class SingularityDeployBuilder {
     this.env = Optional.absent();
     this.uris = Optional.absent();
     this.executorData = Optional.absent();
-    this.labels = labels;
+    this.labels = Optional.absent();
     this.healthcheckUri = Optional.absent();
     this.healthcheckIntervalSeconds = Optional.absent();
     this.healthcheckTimeoutSeconds = Optional.absent();
