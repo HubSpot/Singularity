@@ -17,6 +17,7 @@ args+=( -Xmx${SINGULARITY_MAX_HEAP:-512m} )
 args+=( -Djava.net.preferIPv4Stack=true )
 args+=( -Ddw.mesos.master="${SINGULARITY_MESOS_MASTER:=zk://localhost:2181/mesos}" )
 args+=( -Ddw.zookeeper.quorum="${SINGULARITY_ZK:=localhost:2181}" )
+args+=( -Ddw.zookeeper.zkNamespace="${SINGULARITY_ZK_NAMESPACE:=singularity}" )
 args+=( -Ddw.ui.baseUrl="${SINGULARITY_URI_BASE:=$DEFAULT_URI_BASE}" )
 
 echo "Running: java ${args[@]} -jar /SingularityService.jar $*"
