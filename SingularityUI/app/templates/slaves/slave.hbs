@@ -21,7 +21,7 @@
             {{#each data}}
                 <tr>
                     <td>
-                        <a href="{{appRoot}}/tasks/active/{{sanitizeTaskIdField host}}">{{ id }}</a>
+                        <a href="{{appRoot}}/tasks/active/{{ host }}">{{ id }}</a>
                     </td>
                     <td>{{ state }}</td>
                     <td>{{timestampFormatted currentState.timestamp }}</td>

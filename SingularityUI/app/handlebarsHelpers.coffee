@@ -106,6 +106,3 @@ Handlebars.registerHelper 'usernameFromEmail', (email) ->
 
 Handlebars.registerHelper 'substituteTaskId', (value, taskId) ->
     value.replace('$TASK_ID', taskId)
-
-Handlebars.registerHelper 'sanitizeTaskIdField', (value) ->
-    value.replace /-/g, '_'
