@@ -12,7 +12,7 @@
                     <th data-sort-attribute="host" class="hidden-xs">
                         Host
                     </th>
-                    <th data-sort-attribute="taskId.rackId" class="hidden-xs">
+                    <th data-sort-attribute="taskId.sanitizedRackId" class="hidden-xs">
                         Rack
                     </th>
                     <th data-sort-attribute="cpus" class="visible-lg">
@@ -46,7 +46,7 @@
                         {{/ifInSubFilter}}
                     </td>
                     <td class="visible-lg">
-                        {{ taskId.rackId }}
+                        {{ taskId.sanitizedRackId }}
                     </td>
                     <td class="visible-lg">
                         {{ cpus }}
