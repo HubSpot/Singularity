@@ -56,14 +56,12 @@ function enable_cgroup_hierarchy {
   echo 1 > $CGROUPS_DIR/memory/mesos/$CGROUPS_GUID/memory.use_hierarchy
 }
 
-function join { local IFS="$1"; shift; echo "$*"; }
-
 DOCKER_IMAGE={{{ envContext.dockerInfo.image }}}
 
 # load env vars
 touch docker.env
 {{#each envContext.env}}
-export {{{name}}}={{{bashEscaped value}}}
+{{{name}}}={{{bashEscaped value}}}
 echo "{{{name}}}={{{value}}}" >> docker.env
 {{/each}}
 
