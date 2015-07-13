@@ -2,6 +2,7 @@ package com.hubspot.singularity.mesos;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.inject.Singleton;
@@ -165,10 +166,10 @@ class SingularityMesosTaskBuilder {
     }
 
     return Optional.of(DockerInfo.PortMapping.newBuilder()
-        .setContainerPort(containerPort)
-        .setHostPort(hostPort)
-        .setProtocol(singularityDockerPortMapping.getProtocol())
-        .build());
+      .setContainerPort(containerPort)
+      .setHostPort(hostPort)
+      .setProtocol(singularityDockerPortMapping.getProtocol())
+      .build());
   }
 
   private String fillInTaskIdValues(String string, SingularityTaskId taskId) {
@@ -210,6 +211,19 @@ class SingularityMesosTaskBuilder {
       }
 
       dockerInfoBuilder.setPrivileged(dockerInfo.get().isPrivileged());
+
+      dockerInfoBuilder.setForcePullImage(dockerInfo.get().isForcePullImage());
+
+      if (!dockerInfo.get().getParameters().isEmpty()) {
+        Protos.Parameter.Builder dockerParamsBuilder = Protos.Parameter.newBuilder();
+        int index = 0;
+        for (Map.Entry<String, String> entry : dockerInfo.get().getParameters().entrySet()) {
+          dockerParamsBuilder.clear();
+          dockerParamsBuilder.setKey(entry.getKey());
+          dockerParamsBuilder.setValue(entry.getValue());
+          dockerInfoBuilder.setParameters(index, dockerParamsBuilder.clone());
+        }
+      }
 
       containerBuilder.setDocker(dockerInfoBuilder);
     }
