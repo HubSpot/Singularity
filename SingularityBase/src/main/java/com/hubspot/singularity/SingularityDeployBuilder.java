@@ -32,6 +32,7 @@ public class SingularityDeployBuilder {
   private Optional<Map<String, String>> env;
   private Optional<List<String>> uris;
   private Optional<ExecutorData> executorData;
+  private Optional<Map<String, String>> labels;
 
   private Optional<String> healthcheckUri;
   private Optional<Long> healthcheckIntervalSeconds;
@@ -64,6 +65,7 @@ public class SingularityDeployBuilder {
     this.env = Optional.absent();
     this.uris = Optional.absent();
     this.executorData = Optional.absent();
+    this.labels = labels;
     this.healthcheckUri = Optional.absent();
     this.healthcheckIntervalSeconds = Optional.absent();
     this.healthcheckTimeoutSeconds = Optional.absent();
@@ -77,7 +79,7 @@ public class SingularityDeployBuilder {
   }
 
   public SingularityDeploy build() {
-    return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, resources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds,
+    return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, resources, env, uris, metadata, executorData, labels, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds,
         healthcheckTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy, healthcheckProtocol);
   }
 
@@ -238,6 +240,15 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<Map<String, String>> getLabels() {
+    return labels;
+  }
+
+  public SingularityDeployBuilder setLabels(Optional<Map<String, String>> labels) {
+    this.labels = labels;
+    return this;
+  }
+
   public Optional<String> getHealthcheckUri() {
     return healthcheckUri;
   }
@@ -329,6 +340,7 @@ public class SingularityDeployBuilder {
         ", env=" + env +
         ", uris=" + uris +
         ", executorData=" + executorData +
+        ", labels=" + labels +
         ", healthcheckUri=" + healthcheckUri +
         ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
         ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +

@@ -52,6 +52,7 @@ public class SingularityDeploy {
   private final Optional<String> serviceBasePath;
   private final Optional<List<String>> loadBalancerGroups;
   private final Optional<Map<String, Object>> loadBalancerOptions;
+  private final Optional<Map<String, String>> labels;
 
   public static SingularityDeployBuilder newBuilder(String requestId, String id) {
     return new SingularityDeployBuilder(requestId, id);
@@ -72,6 +73,7 @@ public class SingularityDeploy {
       @JsonProperty("uris") Optional<List<String>> uris,
       @JsonProperty("metadata") Optional<Map<String, String>> metadata,
       @JsonProperty("executorData") Optional<ExecutorData> executorData,
+      @JsonProperty("labels") Optional<Map<String, String>> labels,
       @JsonProperty("version") Optional<String> version,
       @JsonProperty("timestamp") Optional<Long> timestamp,
       @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
@@ -104,6 +106,7 @@ public class SingularityDeploy {
     this.env = env;
     this.uris = uris;
     this.executorData = executorData;
+    this.labels = labels;
 
     this.healthcheckUri = healthcheckUri;
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
@@ -147,7 +150,9 @@ public class SingularityDeploy {
     .setTimestamp(timestamp)
     .setEnv(copyOfMap(env))
     .setUris(copyOfList(uris))
-    .setExecutorData(executorData);
+    .setExecutorData(executorData)
+    .setLabels(labels);
+
   }
 
   @ApiModelProperty(required=false, value="Number of seconds that singularity waits for this service to become healthy.")
@@ -233,6 +238,11 @@ public class SingularityDeploy {
     return executorData;
   }
 
+  @ApiModelProperty(required=false, value="Labels for tasks associated with this deploy")
+  public Optional<Map<String, String>> getLabels() {
+    return labels;
+  }
+
   @ApiModelProperty(required=false, value="Deployment Healthcheck URI.")
   public Optional<String> getHealthcheckUri() {
     return healthcheckUri;
@@ -297,6 +307,7 @@ public class SingularityDeploy {
         ", env=" + env +
         ", uris=" + uris +
         ", executorData=" + executorData +
+        ", labels=" + labels +
         ", healthcheckUri=" + healthcheckUri +
         ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
         ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +

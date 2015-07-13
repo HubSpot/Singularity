@@ -100,6 +100,19 @@ class SingularityMesosTaskBuilder {
 
     bldr.setSlaveId(offer.getSlaveId());
 
+    if (taskRequest.getDeploy().getLabels().isPresent()) {
+      Protos.Labels.Builder labelsBuilder = Protos.Labels.newBuilder();
+      Protos.Label.Builder labelBuilder = Protos.Label.newBuilder();
+      for (Map.Entry<String, String> entry : taskRequest.getDeploy().getLabels().get().entrySet()) {
+        labelBuilder.clear();
+        labelBuilder.setKey(entry.getKey());
+        labelBuilder.setValue(entry.getValue());
+        Protos.Label label = labelBuilder.build();
+        labelsBuilder.addLabels(label);
+      }
+      bldr.setLabels(labelsBuilder);
+    }
+
     bldr.setName(taskRequest.getRequest().getId());
 
     TaskInfo task = bldr.build();
