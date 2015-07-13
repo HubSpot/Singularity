@@ -83,7 +83,7 @@ class SingularitySlaveAndRackManager {
 
   public SlaveMatchState doesOfferMatch(Protos.Offer offer, SingularityTaskRequest taskRequest, SingularitySchedulerStateCache stateCache) {
     final String host = offer.getHostname();
-    final String rackId = slaveAndRackHelper.getRackId(offer);
+    final String rackId = slaveAndRackHelper.getRackIdOrDefault(offer);
     final String slaveId = offer.getSlaveId().getValue();
 
     if (stateCache.getSlave(slaveId).get().getCurrentState().getState().isDecommissioning()) {
@@ -269,7 +269,7 @@ class SingularitySlaveAndRackManager {
 
   public void checkOffer(Offer offer) {
     final String slaveId = offer.getSlaveId().getValue();
-    final String rackId = slaveAndRackHelper.getRackId(offer);
+    final String rackId = slaveAndRackHelper.getRackIdOrDefault(offer);
     final String host = slaveAndRackHelper.getMaybeTruncatedHost(offer);
 
     final SingularitySlave slave = new SingularitySlave(slaveId, host, rackId);

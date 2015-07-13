@@ -62,7 +62,7 @@ class SingularityMesosTaskBuilder {
   }
 
   public SingularityTask buildTask(Protos.Offer offer, List<Resource> availableResources, SingularityTaskRequest taskRequest, Resources desiredTaskResources, Resources desiredExecutorResources) {
-    final String sanitizedRackId = JavaUtils.getReplaceHyphensWithUnderscores(slaveAndRackHelper.getRackId(offer));
+    final String sanitizedRackId = JavaUtils.getReplaceHyphensWithUnderscores(slaveAndRackHelper.getRackIdOrDefault(offer));
     final String sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(slaveAndRackHelper.getMaybeTruncatedHost(offer));
 
     final SingularityTaskId taskId = new SingularityTaskId(taskRequest.getPendingTask().getPendingTaskId().getRequestId(), taskRequest.getDeploy().getId(), System.currentTimeMillis(),
@@ -103,7 +103,7 @@ class SingularityMesosTaskBuilder {
 
     TaskInfo task = bldr.build();
 
-    return new SingularityTask(taskRequest, taskId, offer, task);
+    return new SingularityTask(taskRequest, taskId, offer, task, slaveAndRackHelper.getRackId(offer));
   }
 
   private void setEnv(Environment.Builder envBldr, String key, Object value) {
@@ -178,7 +178,7 @@ class SingularityMesosTaskBuilder {
               .replace("${TASK_STARTED_AT}", Long.toString(taskId.getStartedAt()))
               .replace("${TASK_INSTANCE_NO}", Integer.toString(taskId.getInstanceNo()))
               .replace("${TASK_HOST}", offer.getHostname())
-              .replace("${TASK_RACK_ID}", slaveAndRackHelper.getRackId(offer))
+              .replace("${TASK_RACK_ID}", slaveAndRackHelper.getRackIdOrDefault(offer))
               .replace("${TASK_ID}", taskId.toString());
     }
 

@@ -71,7 +71,7 @@ public class SingularityMesosTaskBuilderTest {
         .build();
 
     when(slaveAndRackHelper.getMaybeTruncatedHost(offer)).thenReturn("host");
-    when(slaveAndRackHelper.getRackId(offer)).thenReturn("DEFAULT");
+    when(slaveAndRackHelper.getRackIdOrDefault(offer)).thenReturn("DEFAULT");
   }
 
   @Test

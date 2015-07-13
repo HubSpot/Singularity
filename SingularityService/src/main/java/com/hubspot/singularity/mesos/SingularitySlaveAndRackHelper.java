@@ -7,6 +7,7 @@ import javax.inject.Singleton;
 import org.apache.mesos.Protos.Attribute;
 import org.apache.mesos.Protos.Offer;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -52,14 +53,18 @@ public class SingularitySlaveAndRackHelper {
     return defaultRackId;
   }
 
-  public String getRackId(Offer offer) {
+  public Optional<String> getRackId(Offer offer) {
     for (Attribute attribute : offer.getAttributesList()) {
       if (attribute.getName().equals(rackIdAttributeKey)) {
-        return attribute.getText().getValue();
+        return Optional.of(attribute.getText().getValue());
       }
     }
 
-    return defaultRackId;
+    return Optional.absent();
+  }
+
+  public String getRackIdOrDefault(Offer offer) {
+    return getRackId(offer).or(defaultRackId);
   }
 
 }
