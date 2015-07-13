@@ -39,7 +39,7 @@ public class StateManager extends CuratorManager {
   private static final Logger LOG = LoggerFactory.getLogger(StateManager.class);
 
   private static final String ROOT_PATH = "/hosts";
-  private static final String STATE_PATH = "STATE";
+  private static final String STATE_PATH = "/STATE";
 
   private final RequestManager requestManager;
   private final TaskManager taskManager;
