@@ -1,13 +1,9 @@
 package com.hubspot.singularity.data;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
-import static com.hubspot.singularity.WebExceptions.checkForbidden;
-import static com.hubspot.singularity.WebExceptions.checkUnauthorized;
 
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.inject.Singleton;
@@ -17,22 +13,17 @@ import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.common.hash.Hashing;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityPortMappingType;
-import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
@@ -40,7 +31,6 @@ import com.hubspot.singularity.data.history.DeployHistoryHelper;
 @Singleton
 public class SingularityValidator {
   private static final Joiner JOINER = Joiner.on(" ");
-  private static final Joiner COMMA_JOINER = Joiner.on(", ");
 
   private final int maxDeployIdSize;
   private final int maxRequestIdSize;
@@ -55,11 +45,7 @@ public class SingularityValidator {
   private final boolean createDeployIds;
   private final int deployIdLength;
   private final DeployHistoryHelper deployHistoryHelper;
-  private final RequestManager requestManager;
   private final Resources defaultResources;
-  private final boolean ldapEnabled;
-  private final ImmutableSet<String> ldapRequiredGroups;
-  private final ImmutableSet<String> ldapAdminGroups;
 
   @Inject
   public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, RequestManager requestManager) {
@@ -69,7 +55,6 @@ public class SingularityValidator {
     this.createDeployIds = configuration.isCreateDeployIds();
     this.deployIdLength = configuration.getDeployIdLength();
     this.deployHistoryHelper = deployHistoryHelper;
-    this.requestManager = requestManager;
 
     this.defaultCpus = configuration.getMesosConfiguration().getDefaultCpus();
     this.defaultMemoryMb = configuration.getMesosConfiguration().getDefaultMemory();
@@ -81,106 +66,13 @@ public class SingularityValidator {
     this.maxMemoryMbPerInstance = configuration.getMesosConfiguration().getMaxMemoryMbPerInstance();
     this.maxMemoryMbPerRequest = configuration.getMesosConfiguration().getMaxMemoryMbPerRequest();
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
-
-    this.ldapEnabled = configuration.getLdapConfiguration().isEnabled();
-    this.ldapRequiredGroups = ImmutableSet.copyOf(configuration.getLdapConfiguration().getRequiredGroups());
-    this.ldapAdminGroups = ImmutableSet.copyOf(configuration.getLdapConfiguration().getAdminGroups());
   }
 
-  public void checkForAuthorizationByTaskId(String taskId, Optional<SingularityUser> user) {
-    try {
-      final SingularityTaskId taskIdObj = SingularityTaskId.valueOf(taskId);
-      final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(taskIdObj.getRequestId());
 
-      if (maybeRequest.isPresent()) {
-        checkForAuthorization(maybeRequest.get().getRequest(), Optional.<SingularityRequest>absent(), user);
-      }
-    } catch (InvalidSingularityTaskIdException e) {
-      badRequest(e.getMessage());
-    }
-  }
 
-  public void checkForAuthorizationByRequestId(String requestId, Optional<SingularityUser> user) {
-    final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(requestId);
 
-    if (maybeRequest.isPresent()) {
-      checkForAuthorization(maybeRequest.get().getRequest(), Optional.<SingularityRequest>absent(), user);
-    }
-  }
 
-  public boolean isAuthorizedForRequest(SingularityRequest request, Optional<SingularityUser> user) {
-    // auth disabled == everyone is authorized
-    if (!ldapEnabled) {
-      return true;
-    }
 
-    // not authenticated == no authorization
-    if (!user.isPresent()) {
-      return false;
-    }
-
-    // check admin groups
-    if (!Sets.intersection(user.get().getGroups(), ldapAdminGroups).isEmpty()) {
-      return true;
-    }
-
-    // check required groups
-    if (!ldapRequiredGroups.isEmpty() && Sets.intersection(user.get().getGroups(), ldapRequiredGroups).isEmpty()) {
-      return false;
-    }
-
-    // check request groups
-    if (request.getGroup().isPresent()) {
-      return user.get().getGroups().contains(request.getGroup().get());
-    }
-
-    return true;
-  }
-
-  public void checkForAuthorization(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityUser> user) {
-    if (ldapEnabled) {
-      checkUnauthorized(user.isPresent(), "user must be present");
-
-      final Set<String> groups = user.get().getGroups();
-
-      // check for required group membership...
-      if (!ldapRequiredGroups.isEmpty()) {
-        checkForbidden(!Sets.intersection(groups, ldapRequiredGroups).isEmpty(), "User %s must be part of one or more required groups: %s", user.get().getUsername(), COMMA_JOINER.join(ldapRequiredGroups));
-      }
-
-      // if user isn't part of an admin group...
-      if (Sets.intersection(groups, ldapAdminGroups).isEmpty()) {
-        // if changing groups, check for group membership of old group
-        if (existingRequest.isPresent() && existingRequest.get().getGroup().isPresent() && !request.getGroup().equals(existingRequest.get().getGroup())) {
-          checkForbidden(groups.contains(existingRequest.get().getGroup().get()), "User %s must be part of old group %s", user.get().getUsername(), existingRequest.get().getGroup().get());
-        }
-
-        // check for group membership of current / new group
-        if (request.getGroup().isPresent()) {
-          checkForbidden(groups.contains(request.getGroup().get()), "User %s must be part of group %s", user.get().getUsername(), request.getGroup().get());
-        }
-      }
-    }
-  }
-
-  public boolean hasAdminAuthorization(Optional<SingularityUser> user) {
-    if (!ldapEnabled) {
-      return true;
-    }
-
-    if (!user.isPresent() || user.get().getGroups().isEmpty() || ldapAdminGroups.isEmpty()) {
-      return false;
-    }
-
-    return !Sets.intersection(user.get().getGroups(), ldapAdminGroups).isEmpty();
-  }
-
-  public void checkForAdminAuthorization(Optional<SingularityUser> user) {
-    if (ldapEnabled) {
-      checkUnauthorized(user.isPresent(), "User must be present");
-      checkForbidden(hasAdminAuthorization(user), "User must be part of an admin group");
-    }
-  }
 
   private void checkForIllegalChanges(SingularityRequest request, SingularityRequest existingRequest) {
     checkBadRequest(request.getRequestType() == existingRequest.getRequestType(), String.format("Request can not change requestType from %s to %s", existingRequest.getRequestType(), request.getRequestType()));
@@ -207,7 +99,6 @@ public class SingularityValidator {
 
   public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityDeploy> activeDeploy,
       Optional<SingularityDeploy> pendingDeploy, Optional<SingularityUser> user) {
-    checkForAuthorization(request, existingRequest, user);
 
     checkBadRequest(request.getId() != null && !request.getId().contains("/"), "Id can not be null or contain / characters");
 
@@ -279,8 +170,6 @@ public class SingularityValidator {
   public SingularityDeploy checkDeploy(SingularityRequest request, SingularityDeploy deploy, Optional<SingularityUser> user) {
     checkNotNull(request, "request is null");
     checkNotNull(deploy, "deploy is null");
-
-    checkForAuthorization(request, Optional.<SingularityRequest>absent(), user);
 
     String deployId = deploy.getId();
 

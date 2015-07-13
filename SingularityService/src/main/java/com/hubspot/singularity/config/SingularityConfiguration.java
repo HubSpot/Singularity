@@ -171,8 +171,12 @@ public class SingularityConfiguration extends Configuration {
   private ZooKeeperConfiguration zooKeeperConfiguration;
 
   @JsonProperty("ldap")
+  @Valid
+  private LDAPConfiguration ldapConfiguration = null;
+
+  @JsonProperty("auth")
   @NotNull
-  private LDAPConfiguration ldapConfiguration = LDAPConfiguration.disabled();
+  private AuthConfiguration authConfiguration = new AuthConfiguration();
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -698,11 +702,19 @@ public class SingularityConfiguration extends Configuration {
     this.deployIdLength = deployIdLength;
   }
 
-  public LDAPConfiguration getLdapConfiguration() {
-    return ldapConfiguration;
+  public Optional<LDAPConfiguration> getLdapConfiguration() {
+    return Optional.fromNullable(ldapConfiguration);
   }
 
   public void setLdapConfiguration(LDAPConfiguration ldapConfiguration) {
     this.ldapConfiguration = ldapConfiguration;
+  }
+
+  public AuthConfiguration getAuthConfiguration() {
+    return authConfiguration;
+  }
+
+  public void setAuthConfiguration(AuthConfiguration authConfiguration) {
+    this.authConfiguration = authConfiguration;
   }
 }

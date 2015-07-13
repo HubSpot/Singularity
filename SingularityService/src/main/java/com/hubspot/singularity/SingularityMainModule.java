@@ -149,7 +149,9 @@ public class SingularityMainModule implements Module {
         configuration.getThreadpoolShutdownDelayInSeconds(),
         "check-new-task")).in(Scopes.SINGLETON);
 
-    binder.bind(ScheduledExecutorService.class).annotatedWith(LDAP_REFRESH_THREADPOOL_NAMED).toProvider(new SingularityManagedScheduledExecutorServiceProvider(configuration.getLdapConfiguration().getCacheThreads(), configuration.getThreadpoolShutdownDelayInSeconds(), "ldap-cache")).in(Scopes.SINGLETON);
+    if (configuration.getLdapConfiguration().isPresent()) {
+      binder.bind(ScheduledExecutorService.class).annotatedWith(LDAP_REFRESH_THREADPOOL_NAMED).toProvider(new SingularityManagedScheduledExecutorServiceProvider(configuration.getLdapConfiguration().get().getCacheThreads(), configuration.getThreadpoolShutdownDelayInSeconds(), "ldap-cache")).in(Scopes.SINGLETON);
+    }
 
     try {
       binder.bindConstant().annotatedWith(Names.named(HOST_ADDRESS_PROPERTY)).to(JavaUtils.getHostAddress());

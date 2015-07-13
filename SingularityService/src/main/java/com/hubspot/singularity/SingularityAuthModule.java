@@ -1,15 +1,13 @@
 package com.hubspot.singularity;
 
-import javax.servlet.http.HttpServletRequest;
-
 import com.google.common.base.Optional;
-import com.google.common.base.Strings;
 import com.google.inject.Binder;
 import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.servlet.RequestScoped;
+import com.google.inject.TypeLiteral;
+import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
+import com.hubspot.singularity.auth.authenticator.SingularityAuthenticator;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.auth.SingularityLDAPManager;
 
 public class SingularityAuthModule implements Module {
   private final SingularityConfiguration configuration;
@@ -20,18 +18,9 @@ public class SingularityAuthModule implements Module {
 
   @Override
   public void configure(Binder binder) {
-
-  }
-
-  @Provides
-  @RequestScoped
-  public Optional<SingularityUser> providesUsername(HttpServletRequest request, SingularityLDAPManager ldapManager) {
-    final Optional<String> maybeUsername = Optional.fromNullable(Strings.emptyToNull(request.getHeader(configuration.getLdapConfiguration().getRequestUserHeaderName())));
-
-    if (!maybeUsername.isPresent()) {
-      return Optional.absent();
-    }
-
-    return Optional.of(new SingularityUser(maybeUsername.get(), ldapManager.getGroupsForUser(maybeUsername.get())));
+    binder.bind(SingularityAuthenticator.class).to(configuration.getAuthConfiguration().getAuthenticator().getAuthenticatorClass());
+    binder.bind(SingularityAuthDatastore.class).to(configuration.getAuthConfiguration().getDatastore().getAuthDatastoreClass());
+    binder.bind(new TypeLiteral<Optional<SingularityUser>>() {}).toProvider(SingularityAuthenticator.class);
+    binder.bind(SingularityAuthorizationHelper.class);
   }
 }

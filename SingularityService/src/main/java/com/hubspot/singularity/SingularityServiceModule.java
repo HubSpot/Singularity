@@ -32,6 +32,5 @@ public class SingularityServiceModule extends ConfigurationAwareModule<Singulari
     binder.install(new SingularityEventModule(configuration));
 
     binder.install(new SingularityAuthModule(configuration));
-    binder.install(new SingularityLDAPModule(configuration));
   }
 }

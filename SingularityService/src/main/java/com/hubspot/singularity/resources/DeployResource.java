@@ -53,13 +53,9 @@ import com.wordnik.swagger.annotations.ApiResponses;
 public class DeployResource extends AbstractRequestResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/deploys";
 
-  private final SingularityAuthorizationHelper authHelper;
-
   @Inject
-  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authHelper, Optional<SingularityUser> user) {
-    super(requestManager, deployManager, user, validator);
-
-    this.authHelper = authHelper;
+  public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user) {
+    super(requestManager, deployManager, user, validator, authorizationHelper);
   }
 
   @GET
@@ -67,7 +63,9 @@ public class DeployResource extends AbstractRequestResource {
   @Path("/pending")
   @ApiOperation(response=SingularityPendingDeploy.class, responseContainer="List", value="Retrieve the list of current pending deploys")
   public List<SingularityPendingDeploy> getPendingDeploys() {
-    return authHelper.filterByAuthorizedRequests(user, deployManager.getPendingDeploys(), SingularityTransformHelpers.PENDING_DEPLOY_TO_REQUEST_ID);
+    authorizationHelper.checkRequiredAuthorization(user);
+
+    return authorizationHelper.filterByAuthorizedRequests(user, deployManager.getPendingDeploys(), SingularityTransformHelpers.PENDING_DEPLOY_TO_REQUEST_ID);
   }
 
   @POST
@@ -88,7 +86,7 @@ public class DeployResource extends AbstractRequestResource {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
     SingularityRequest request = requestWithState.getRequest();
 
-    validator.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user);
+    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user);
 
     if (!deployRequest.isUnpauseOnSuccessfulDeploy()) {
       checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to deploy (it must be manually unpaused first)", requestWithState.getRequest().getId());
@@ -129,7 +127,7 @@ public class DeployResource extends AbstractRequestResource {
       @ApiParam(required=false, value="The user which executes the delete request.") @QueryParam("user") Optional<String> queryUser) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
-    validator.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user);
+    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user);
 
     Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestWithState.getRequest().getId());
 

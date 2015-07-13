@@ -30,11 +30,11 @@ import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.SandboxManager;
 import com.hubspot.singularity.data.SandboxManager.SlaveNotFoundException;
-import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
@@ -54,8 +54,8 @@ public class SandboxResource extends AbstractHistoryResource {
 
   @Inject
   public SandboxResource(HistoryManager historyManager, TaskManager taskManager, SandboxManager sandboxManager, DeployManager deployManager, SingularityLogSupport logSupport,
-      SingularityConfiguration configuration, SingularityValidator validator, Optional<SingularityUser> user) {
-    super(historyManager, taskManager, deployManager, validator, user);
+      SingularityConfiguration configuration, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user) {
+    super(historyManager, taskManager, deployManager, authorizationHelper, user);
 
     this.configuration = configuration;
     this.sandboxManager = sandboxManager;
@@ -90,7 +90,7 @@ public class SandboxResource extends AbstractHistoryResource {
   @ApiOperation("Retrieve information about a specific task's sandbox.")
   public SingularitySandbox browse(@ApiParam("The task ID to browse") @PathParam("taskId") String taskId,
       @ApiParam("The path to browse from") @QueryParam("path") String path) {
-    validator.checkForAuthorizationByTaskId(taskId, user);
+    authorizationHelper.checkForAuthorizationByTaskId(taskId, user);
 
     final String currentDirectory = getCurrentDirectory(taskId, path);
     final SingularityTaskHistory history = checkHistory(taskId);
@@ -126,7 +126,7 @@ public class SandboxResource extends AbstractHistoryResource {
       @ApiParam("Optional string to grep for") @QueryParam("grep") Optional<String> grep,
       @ApiParam("Byte offset to start reading from") @QueryParam("offset") Optional<Long> offset,
       @ApiParam("Maximum number of bytes to read") @QueryParam("length") Optional<Long> length) {
-    validator.checkForAuthorizationByTaskId(taskId, user);
+    authorizationHelper.checkForAuthorizationByTaskId(taskId, user);
 
     final SingularityTaskHistory history = checkHistory(taskId);
 

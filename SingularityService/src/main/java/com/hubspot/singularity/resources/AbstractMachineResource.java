@@ -7,9 +7,9 @@ import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.AbstractMachineManager;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
-import com.hubspot.singularity.data.SingularityValidator;
 import com.sun.jersey.api.ConflictException;
 import com.sun.jersey.api.NotFoundException;
 
@@ -17,16 +17,17 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
 
   protected final AbstractMachineManager<T> manager;
   protected final Optional<SingularityUser> user;
-  protected final SingularityValidator validator;
 
-  public AbstractMachineResource(AbstractMachineManager<T> manager, SingularityValidator validator, Optional<SingularityUser> user) {
+  protected final SingularityAuthorizationHelper authorizationHelper;
+
+  public AbstractMachineResource(AbstractMachineManager<T> manager, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user) {
     this.manager = manager;
-    this.validator = validator;
+    this.authorizationHelper = authorizationHelper;
     this.user = user;
   }
 
   protected void remove(String objectId) {
-    validator.checkForAdminAuthorization(user);
+    authorizationHelper.checkAdminAuthorization(user);
     checkNotFound(manager.deleteObject(objectId) == SingularityDeleteResult.DELETED, "Couldn't find dead %s with id %s", getObjectTypeString(), objectId);
   }
 
@@ -48,12 +49,12 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
   }
 
   protected void decommission(String objectId, Optional<String> queryUser) {
-    validator.checkForAdminAuthorization(user);
+    authorizationHelper.checkAdminAuthorization(user);
     changeState(objectId, MachineState.STARTING_DECOMMISSION, queryUser);
   }
 
   protected void activate(String objectId, Optional<String> queryUser) {
-    validator.checkForAdminAuthorization(user);
+    authorizationHelper.checkAdminAuthorization(user);
     changeState(objectId, MachineState.ACTIVE, queryUser);
   }
 
