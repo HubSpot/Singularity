@@ -6,31 +6,25 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SingularityRack extends SingularityMachineAbstraction<SingularityRack> {
 
-  private final String name;
-
-  public SingularityRack(String rackId, String name) {
+  public SingularityRack(String rackId) {
     super(rackId);
-
-    this.name = name;
   }
 
   @JsonCreator
   public SingularityRack(@JsonProperty("rackId") String rackId, @JsonProperty("firstSeenAt") long firstSeenAt,
-      @JsonProperty("currentState") SingularityMachineStateHistoryUpdate currentState, @JsonProperty("name") String name) {
+      @JsonProperty("currentState") SingularityMachineStateHistoryUpdate currentState) {
     super(rackId, firstSeenAt, currentState);
-
-    this.name = name;
   }
 
   @Override
   public SingularityRack changeState(SingularityMachineStateHistoryUpdate newState) {
-    return new SingularityRack(getId(), getFirstSeenAt(), newState, getName());
+    return new SingularityRack(getId(), getFirstSeenAt(), newState);
   }
 
   @JsonIgnore
   @Override
   public String getName() {
-    return name;
+    return getId();
   }
 
   @JsonIgnore
@@ -41,7 +35,7 @@ public class SingularityRack extends SingularityMachineAbstraction<SingularityRa
 
   @Override
   public String toString() {
-    return "SingularityRack [name=" + name + ", getId()=" + getId() + ", getFirstSeenAt()=" + getFirstSeenAt() + ", getCurrentState()=" + getCurrentState() + "]";
+    return "SingularityRack [getId()=" + getId() + ", getFirstSeenAt()=" + getFirstSeenAt() + ", getCurrentState()=" + getCurrentState() + "]";
   }
 
 }

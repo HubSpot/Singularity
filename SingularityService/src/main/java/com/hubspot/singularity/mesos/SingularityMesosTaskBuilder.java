@@ -33,6 +33,7 @@ import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.ExecutorDataBuilder;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
@@ -50,22 +51,22 @@ class SingularityMesosTaskBuilder {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosTaskBuilder.class);
 
   private final ObjectMapper objectMapper;
-  private final SingularitySlaveAndRackManager slaveAndRackManager;
+  private final SingularitySlaveAndRackHelper slaveAndRackHelper;
   private final ExecutorIdGenerator idGenerator;
 
   @Inject
-  SingularityMesosTaskBuilder(ObjectMapper objectMapper, SingularitySlaveAndRackManager slaveAndRackManager, ExecutorIdGenerator idGenerator) {
+  SingularityMesosTaskBuilder(ObjectMapper objectMapper, SingularitySlaveAndRackHelper slaveAndRackHelper, ExecutorIdGenerator idGenerator) {
     this.objectMapper = objectMapper;
-    this.slaveAndRackManager = slaveAndRackManager;
+    this.slaveAndRackHelper = slaveAndRackHelper;
     this.idGenerator = idGenerator;
   }
 
   public SingularityTask buildTask(Protos.Offer offer, List<Resource> availableResources, SingularityTaskRequest taskRequest, Resources desiredTaskResources, Resources desiredExecutorResources) {
-    final String rackId = slaveAndRackManager.getRackId(offer);
-    final String host = slaveAndRackManager.getSafeString(slaveAndRackManager.getSlaveHost(offer));
+    final String sanitizedRackId = JavaUtils.getReplaceHyphensWithUnderscores(slaveAndRackHelper.getRackId(offer));
+    final String sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(slaveAndRackHelper.getMaybeTruncatedHost(offer));
 
     final SingularityTaskId taskId = new SingularityTaskId(taskRequest.getPendingTask().getPendingTaskId().getRequestId(), taskRequest.getDeploy().getId(), System.currentTimeMillis(),
-        taskRequest.getPendingTask().getPendingTaskId().getInstanceNo(), host, rackId);
+        taskRequest.getPendingTask().getPendingTaskId().getInstanceNo(), sanitizedHost, sanitizedRackId);
 
     final TaskInfo.Builder bldr = TaskInfo.newBuilder()
         .setTaskId(TaskID.newBuilder().setValue(taskId.toString()));
@@ -176,8 +177,8 @@ class SingularityMesosTaskBuilder {
               .replace("${TASK_DEPLOY_ID}", taskId.getDeployId())
               .replace("${TASK_STARTED_AT}", Long.toString(taskId.getStartedAt()))
               .replace("${TASK_INSTANCE_NO}", Integer.toString(taskId.getInstanceNo()))
-              .replace("${TASK_HOST}", taskId.getHost())
-              .replace("${TASK_RACK_ID}", taskId.getRackId())
+              .replace("${TASK_HOST}", offer.getHostname())
+              .replace("${TASK_RACK_ID}", slaveAndRackHelper.getRackId(offer))
               .replace("${TASK_ID}", taskId.toString());
     }
 
