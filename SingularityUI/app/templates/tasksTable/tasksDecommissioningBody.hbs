@@ -12,7 +12,7 @@
                     <th data-sort-attribute="host" class="hidden-xs">
                         Host
                     </th>
-                    <th data-sort-attribute="taskId.sanitizedRackId" class="hidden-xs">
+                    <th data-sort-attribute="rackId" class="hidden-xs">
                         Rack
                     </th>
                     <th data-sort-attribute="cpus" class="visible-lg">
@@ -45,7 +45,7 @@
                             <span class='label label-warning'>DECOMMISSIONING</span>
                         </td>
                         <td class="visible-lg">
-                            {{ taskId.sanitizedRackId }}
+                            {{ rackId }}
                         </td>
                         <td class="visible-lg">
                             {{ cpus }}
