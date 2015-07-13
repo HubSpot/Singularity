@@ -1,7 +1,8 @@
 class Utils
     
-    @viewJSON: (model) ->
+    @viewJSON: (model, callback) ->
         if not model?
+            callback?({error: 'Invalid model given'})
             console.error 'Invalid model given'
             return
         
