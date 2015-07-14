@@ -40,7 +40,6 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskRequest;
-import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
 
 public class SingularityMesosTaskBuilderTest {
@@ -54,12 +53,12 @@ public class SingularityMesosTaskBuilderTest {
   public void createMocks() {
     pendingTask = new SingularityPendingTask(new SingularityPendingTaskId("test", "1", 0, 1, PendingType.IMMEDIATE, 0), Collections.<String> emptyList(), Optional.<String> absent());
 
-    final SingularitySlaveAndRackManager slaveAndRackManager = mock(SingularitySlaveAndRackManager.class);
+    final SingularitySlaveAndRackHelper slaveAndRackHelper = mock(SingularitySlaveAndRackHelper.class);
     final ExecutorIdGenerator idGenerator = mock(ExecutorIdGenerator.class);
 
     when(idGenerator.getNextExecutorId()).then(new CreateFakeId());
 
-    builder = new SingularityMesosTaskBuilder(new ObjectMapper(), slaveAndRackManager, idGenerator, new SingularityConfiguration());
+    builder = new SingularityMesosTaskBuilder(new ObjectMapper(), slaveAndRackHelper, idGenerator);
 
     taskResources = new Resources(1, 1, 0);
     executorResources = new Resources(0.1, 1, 0);
@@ -71,8 +70,8 @@ public class SingularityMesosTaskBuilderTest {
         .setHostname("test")
         .build();
 
-    when(slaveAndRackManager.getSlaveHost(offer)).thenReturn("host");
-    when(slaveAndRackManager.getRackId(offer)).thenReturn("DEFAULT");
+    when(slaveAndRackHelper.getMaybeTruncatedHost(offer)).thenReturn("host");
+    when(slaveAndRackHelper.getRackIdOrDefault(offer)).thenReturn("DEFAULT");
   }
 
   @Test

@@ -15,6 +15,7 @@ import org.apache.mesos.Protos.Environment;
 import org.apache.mesos.Protos.Environment.Variable;
 import org.apache.mesos.Protos.ExecutorID;
 import org.apache.mesos.Protos.ExecutorInfo;
+import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskInfo;
@@ -32,6 +33,7 @@ import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.ExecutorDataBuilder;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
@@ -41,7 +43,6 @@ import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
-import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
 
 @Singleton
@@ -50,23 +51,22 @@ class SingularityMesosTaskBuilder {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosTaskBuilder.class);
 
   private final ObjectMapper objectMapper;
-  private final SingularitySlaveAndRackManager slaveAndRackManager;
+  private final SingularitySlaveAndRackHelper slaveAndRackHelper;
   private final ExecutorIdGenerator idGenerator;
-  private final SingularityConfiguration configuration;
 
   @Inject
-  SingularityMesosTaskBuilder(ObjectMapper objectMapper, SingularitySlaveAndRackManager slaveAndRackManager, ExecutorIdGenerator idGenerator, SingularityConfiguration configuration) {
+  SingularityMesosTaskBuilder(ObjectMapper objectMapper, SingularitySlaveAndRackHelper slaveAndRackHelper, ExecutorIdGenerator idGenerator) {
     this.objectMapper = objectMapper;
-    this.slaveAndRackManager = slaveAndRackManager;
+    this.slaveAndRackHelper = slaveAndRackHelper;
     this.idGenerator = idGenerator;
-    this.configuration = configuration;
   }
 
   public SingularityTask buildTask(Protos.Offer offer, List<Resource> availableResources, SingularityTaskRequest taskRequest, Resources desiredTaskResources, Resources desiredExecutorResources) {
-    final String rackId = slaveAndRackManager.getRackId(offer);
-    final String host = slaveAndRackManager.getSlaveHost(offer);
+    final String sanitizedRackId = JavaUtils.getReplaceHyphensWithUnderscores(slaveAndRackHelper.getRackIdOrDefault(offer));
+    final String sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(slaveAndRackHelper.getMaybeTruncatedHost(offer));
 
-    final SingularityTaskId taskId = new SingularityTaskId(taskRequest.getPendingTask().getPendingTaskId().getRequestId(), taskRequest.getDeploy().getId(), System.currentTimeMillis(), taskRequest.getPendingTask().getPendingTaskId().getInstanceNo(), host, rackId);
+    final SingularityTaskId taskId = new SingularityTaskId(taskRequest.getPendingTask().getPendingTaskId().getRequestId(), taskRequest.getDeploy().getId(), System.currentTimeMillis(),
+        taskRequest.getPendingTask().getPendingTaskId().getInstanceNo(), sanitizedHost, sanitizedRackId);
 
     final TaskInfo.Builder bldr = TaskInfo.newBuilder()
         .setTaskId(TaskID.newBuilder().setValue(taskId.toString()));
@@ -81,7 +81,7 @@ class SingularityMesosTaskBuilder {
 
     final Optional<SingularityContainerInfo> containerInfo = taskRequest.getDeploy().getContainerInfo();
     if (containerInfo.isPresent()) {
-      prepareContainerInfo(taskId, bldr, containerInfo.get(), ports);
+      prepareContainerInfo(offer, taskId, bldr, containerInfo.get(), ports);
     }
 
     if (taskRequest.getDeploy().getCustomExecutorCmd().isPresent()) {
@@ -103,7 +103,7 @@ class SingularityMesosTaskBuilder {
 
     TaskInfo task = bldr.build();
 
-    return new SingularityTask(taskRequest, taskId, offer, task);
+    return new SingularityTask(taskRequest, taskId, offer, task, slaveAndRackHelper.getRackId(offer));
   }
 
   private void setEnv(Environment.Builder envBldr, String key, Object value) {
@@ -171,21 +171,21 @@ class SingularityMesosTaskBuilder {
         .build());
   }
 
-  private String fillInTaskIdValues(String string, SingularityTaskId taskId) {
+  private String fillInTaskIdValues(String string, Offer offer, SingularityTaskId taskId) {
     if (!Strings.isNullOrEmpty(string)) {
       string = string.replace("${TASK_REQUEST_ID}", taskId.getRequestId())
               .replace("${TASK_DEPLOY_ID}", taskId.getDeployId())
               .replace("${TASK_STARTED_AT}", Long.toString(taskId.getStartedAt()))
               .replace("${TASK_INSTANCE_NO}", Integer.toString(taskId.getInstanceNo()))
-              .replace("${TASK_HOST}", taskId.getHost())
-              .replace("${TASK_RACK_ID}", taskId.getRackId())
+              .replace("${TASK_HOST}", offer.getHostname())
+              .replace("${TASK_RACK_ID}", slaveAndRackHelper.getRackIdOrDefault(offer))
               .replace("${TASK_ID}", taskId.toString());
     }
 
     return string;
   }
 
-  private void prepareContainerInfo(final SingularityTaskId taskId, final TaskInfo.Builder bldr, final SingularityContainerInfo containerInfo, final Optional<long[]> ports) {
+  private void prepareContainerInfo(final Offer offer, final SingularityTaskId taskId, final TaskInfo.Builder bldr, final SingularityContainerInfo containerInfo, final Optional<long[]> ports) {
     ContainerInfo.Builder containerBuilder = ContainerInfo.newBuilder();
     containerBuilder.setType(containerInfo.getType());
 
@@ -216,9 +216,9 @@ class SingularityMesosTaskBuilder {
 
     for (SingularityVolume volumeInfo : containerInfo.getVolumes().or(Collections.<SingularityVolume>emptyList())) {
       final Volume.Builder volumeBuilder = Volume.newBuilder();
-      volumeBuilder.setContainerPath(fillInTaskIdValues(volumeInfo.getContainerPath(), taskId));
+      volumeBuilder.setContainerPath(fillInTaskIdValues(volumeInfo.getContainerPath(), offer, taskId));
       if (volumeInfo.getHostPath().isPresent()) {
-        volumeBuilder.setHostPath(fillInTaskIdValues(volumeInfo.getHostPath().get(), taskId));
+        volumeBuilder.setHostPath(fillInTaskIdValues(volumeInfo.getHostPath().get(), offer, taskId));
       }
       if (volumeInfo.getMode().isPresent()) {
         volumeBuilder.setMode(volumeInfo.getMode().get());

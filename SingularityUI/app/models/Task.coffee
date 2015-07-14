@@ -15,6 +15,9 @@ class Task extends Model
         else
             task.host = task.host?.split('.')[0]
 
+        unless task.rackId
+            task.rackId = task.taskId.sanitizedRackId
+
         if task.mesosTask?
             task.cpus     = _.find(task.mesosTask.resources, (resource) -> resource.name is 'cpus')?.scalar?.value ? ''
             task.memoryMb = _.find(task.mesosTask.resources, (resource) -> resource.name is 'mem')?.scalar?.value ? ''

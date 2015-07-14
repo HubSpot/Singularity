@@ -418,7 +418,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
 
-    Assert.assertEquals("host1", taskManager.getActiveTaskIds().get(0).getHost());
+    Assert.assertEquals("host1", taskManager.getActiveTaskIds().get(0).getSanitizedHost());
 
     Assert.assertEquals(StateChangeResult.SUCCESS, slaveManager.changeState("slave1", MachineState.STARTING_DECOMMISSION, Optional.of("user1")));
 
@@ -432,7 +432,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     // task should not move!
     Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
-    Assert.assertEquals("host1", taskManager.getActiveTaskIds().get(0).getHost());
+    Assert.assertEquals("host1", taskManager.getActiveTaskIds().get(0).getSanitizedHost());
     Assert.assertTrue(taskManager.getKilledTaskIdRecords().isEmpty());
     Assert.assertTrue(taskManager.getCleanupTaskIds().size() == 1);
   }
