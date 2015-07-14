@@ -234,7 +234,7 @@ class SingularityMesosTaskBuilder {
           dockerParamsBuilder.clear();
           dockerParamsBuilder.setKey(entry.getKey());
           dockerParamsBuilder.setValue(entry.getValue());
-          dockerInfoBuilder.setParameters(index, dockerParamsBuilder.clone());
+          dockerInfoBuilder.addParameters(index, dockerParamsBuilder.clone());
         }
       }
 

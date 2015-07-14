@@ -8,8 +8,10 @@ import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.google.common.collect.ImmutableMap;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.ContainerInfo.Type;
 import org.apache.mesos.Protos.FrameworkID;
@@ -126,7 +128,7 @@ public class SingularityMesosTaskBuilderTest {
         Optional.of(Arrays.asList(
                 new SingularityVolume("/container", Optional.of("/host"), Optional.of(Mode.RW)),
                 new SingularityVolume("/container/${TASK_REQUEST_ID}/${TASK_DEPLOY_ID}", Optional.of("/host/${TASK_ID}"), Optional.of(Mode.RO)))),
-        Optional.of(new SingularityDockerInfo("docker-image", true, Optional.of(Protos.ContainerInfo.DockerInfo.Network.BRIDGE), Optional.of(Arrays.asList(literalMapping, offerMapping)), false, Collections.<String, String>emptyMap())));
+        Optional.of(new SingularityDockerInfo("docker-image", true, Optional.of(Protos.ContainerInfo.DockerInfo.Network.BRIDGE), Optional.of(Arrays.asList(literalMapping, offerMapping)), false, Optional.<Map<String, String>>of(ImmutableMap.of("env", "var=value")) )));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
     .setContainerInfo(Optional.of(containerInfo))
     .setCommand(Optional.of("/bin/echo"))
