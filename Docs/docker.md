@@ -27,6 +27,12 @@ Singularity uses the docker-maven-plugin for building its images. There are a fe
 - `hubspot/singularityexecutorslave` - A mesos slave with java/logrotate and the custom SingularityExecutor installed
 - `hubspot/singularityexecutorslavebase` - A base image for `singularityexecutorslave` that takes care of installing java/logrotate on top of the mesos slave image (not built with maven plugin)
 
+### Logs and Entering Containers
+
+If you are not attached to the docker-compose process, you can check the output of your containers using `docekr logs`. Start by checking `docker ps` to see what containers are running. Generally they will have names like `singularity_(service)`. From there you can run `docker logs (name)` to see th stdout for that container.
+
+Need to see more than stdout? You can also get a shell inside the container and poke around. Once you know the name of your container, you can run `docker exec -it (name) /bin/bash` to get am interactive shell inside the running container.
+
 ### Integration Tests
 
 The SingularityServiceIntegrationTests module will run tests on a cluster consisting of a singularity scheduler, sk instance, mesos master, and three mesos slaves. These will run during the `integration-test` lifecycle phase.
