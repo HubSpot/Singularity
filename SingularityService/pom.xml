@@ -548,19 +548,19 @@
                   <name>hubspot/singularityservice:${project.version}</name>
                   <build>
                     <from>java:8u45-jre</from>
-                    <maintainer>tpetr@hubspot.com</maintainer>
+                    <maintainer>platform-infrastructure-groups@hubspot.com</maintainer>
                     <ports>
                       <port>7099</port>
                     </ports>
                     <entryPoint>
                       <exec>
-                        <arg>/start-${project.name}.sh</arg>
+                        <arg>/etc/singularity/start.sh</arg>
                       </exec>
                     </entryPoint>
                     <cmd>
                       <exec>
                         <args>server</args>
-                        <args>/etc/singularity.yaml</args>
+                        <args>/etc/singularity/singularity.yaml</args>
                       </exec>
                     </cmd>
                     <assembly>
@@ -570,7 +570,7 @@
                         <fileSets>
                           <fileSet>
                             <directory>${project.basedir}/src/main/docker</directory>
-                            <outputDirectory>/</outputDirectory>
+                            <outputDirectory>/etc/singularity</outputDirectory>
                           </fileSet>
                         </fileSets>
                         <files>

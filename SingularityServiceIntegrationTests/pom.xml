@@ -93,6 +93,7 @@
                   <name>bobrik/zookeeper</name>
                   <alias>singularity-test-zk</alias>
                   <run>
+                    <namingStrategy>alias</namingStrategy>
                     <ports>
                       <port>zk.port:2181</port>
                     </ports>
@@ -106,6 +107,7 @@
                   <name>mesosphere/mesos-master:${mesos.docker.tag}</name>
                   <alias>singularity-test-master</alias>
                   <run>
+                    <namingStrategy>alias</namingStrategy>
                     <links>
                       <link>singularity-test-zk</link>
                     </links>
@@ -126,9 +128,11 @@
                   </run>
                 </image>
                 <image>
-                  <name>mesosphere/mesos-slave:${mesos.docker.tag}</name>
+                  <name>hubspot/singularityexecutorslave:${project.version}</name>
                   <alias>singularity-test-slave1</alias>
                   <run>
+                    <namingStrategy>alias</namingStrategy>
+                    <privileged>true</privileged>
                     <links>
                       <link>singularity-test-zk</link>
                       <link>singularity-test-master</link>
@@ -156,9 +160,11 @@
                   </run>
                 </image>
                 <image>
-                  <name>mesosphere/mesos-slave:${mesos.docker.tag}</name>
+                  <name>hubspot/singularityexecutorslave:${project.version}</name>
                   <alias>singularity-test-slave2</alias>
                   <run>
+                    <namingStrategy>alias</namingStrategy>
+                    <privileged>true</privileged>
                     <links>
                       <link>singularity-test-zk</link>
                       <link>singularity-test-master</link>
@@ -186,9 +192,11 @@
                   </run>
                 </image>
                 <image>
-                  <name>mesosphere/mesos-slave:${mesos.docker.tag}</name>
+                  <name>hubspot/singularityexecutorslave:${project.version}</name>
                   <alias>singularity-test-slave3</alias>
                   <run>
+                    <namingStrategy>alias</namingStrategy>
+                    <privileged>true</privileged>
                     <links>
                       <link>singularity-test-zk</link>
                       <link>singularity-test-master</link>
@@ -211,7 +219,7 @@
                     </volumes>
                     <wait>
                       <log>Registered with master</log>
-                      <time>10000</time>
+                      <time>15000</time>
                     </wait>
                   </run>
                 </image>
@@ -219,6 +227,7 @@
                   <name>hubspot/singularityservice:${project.version}</name>
                   <alias>singularity-service</alias>
                   <run>
+                    <namingStrategy>alias</namingStrategy>
                     <links>
                       <link>singularity-test-zk</link>
                       <link>singularity-test-master</link>
