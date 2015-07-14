@@ -35,4 +35,35 @@ public class SingularityVolume {
   public String toString() {
     return String.format("Volume [containerPath=%s, hostPath=%s, mode=%s]", containerPath, hostPath, mode);
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    SingularityVolume that = (SingularityVolume) o;
+
+    if (!containerPath.equals(that.containerPath)) {
+      return false;
+    }
+    if (!hostPath.equals(that.hostPath)) {
+      return false;
+    }
+    if (!mode.equals(that.mode)) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = containerPath.hashCode();
+    result = 31 * result + hostPath.hashCode();
+    result = 31 * result + mode.hashCode();
+    return result;
+  }
 }
