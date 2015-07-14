@@ -43,6 +43,7 @@ import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
 
 @Singleton
@@ -53,9 +54,11 @@ class SingularityMesosTaskBuilder {
   private final ObjectMapper objectMapper;
   private final SingularitySlaveAndRackHelper slaveAndRackHelper;
   private final ExecutorIdGenerator idGenerator;
+  private final SingularityConfiguration configuration;
 
   @Inject
-  SingularityMesosTaskBuilder(ObjectMapper objectMapper, SingularitySlaveAndRackHelper slaveAndRackHelper, ExecutorIdGenerator idGenerator) {
+  SingularityMesosTaskBuilder(SingularityConfiguration configuration, ObjectMapper objectMapper, SingularitySlaveAndRackHelper slaveAndRackHelper, ExecutorIdGenerator idGenerator) {
+    this.configuration = configuration;
     this.objectMapper = objectMapper;
     this.slaveAndRackHelper = slaveAndRackHelper;
     this.idGenerator = idGenerator;
