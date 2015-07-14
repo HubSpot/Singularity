@@ -5,8 +5,6 @@ import java.util.Collections;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import com.hubspot.singularity.event.SingularityEventListener;
-import com.hubspot.singularity.data.zkmigrations.ZkDataMigrationRunner;
 import org.apache.mesos.Protos.Attribute;
 import org.apache.mesos.Protos.FrameworkID;
 import org.apache.mesos.Protos.Offer;
@@ -42,7 +40,7 @@ import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.event.SingularityEventListener;
+import com.hubspot.singularity.data.zkmigrations.ZkDataMigrationRunner;
 import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.resources.DeployResource;

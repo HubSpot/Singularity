@@ -118,6 +118,13 @@ class SingularityMesosTaskBuilder {
 
     setEnv(envBldr, "INSTANCE_NO", task.getPendingTask().getPendingTaskId().getInstanceNo());
     setEnv(envBldr, "TASK_HOST", offer.getHostname());
+
+    Optional<String> rack = slaveAndRackHelper.getRackId(offer);
+
+    if (rack.isPresent()) {
+      setEnv(envBldr, "TASK_RACK_ID", rack.get());
+    }
+
     setEnv(envBldr, "TASK_REQUEST_ID", task.getPendingTask().getPendingTaskId().getRequestId());
     setEnv(envBldr, "TASK_DEPLOY_ID", taskId.getDeployId());
     setEnv(envBldr, "ESTIMATED_INSTANCE_COUNT", task.getRequest().getInstancesSafe());
@@ -179,7 +186,7 @@ class SingularityMesosTaskBuilder {
               .replace("${TASK_INSTANCE_NO}", Integer.toString(taskId.getInstanceNo()))
               .replace("${TASK_HOST}", offer.getHostname())
               .replace("${TASK_RACK_ID}", slaveAndRackHelper.getRackIdOrDefault(offer))
-              .replace("${TASK_ID}", taskId.toString());
+              .replace("${TASK_ID}", taskId.getId());
     }
 
     return string;
@@ -243,7 +250,8 @@ class SingularityMesosTaskBuilder {
     return builder.build();
   }
 
-  private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Protos.Offer offer, final Optional<long[]> ports, final Resources desiredExecutorResources) {
+  private void prepareCustomExecutor(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Protos.Offer offer,
+      final Optional<long[]> ports, final Resources desiredExecutorResources) {
     CommandInfo.Builder commandBuilder = CommandInfo.newBuilder().setValue(task.getDeploy().getCustomExecutorCmd().get());
 
     prepareEnvironment(task, taskId, commandBuilder, offer, ports);
