@@ -1,7 +1,5 @@
 package com.hubspot.mesos;
 
-import org.apache.mesos.Protos.Volume.Mode;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -9,13 +7,13 @@ import com.google.common.base.Optional;
 public class SingularityVolume {
   private final String containerPath;
   private final Optional<String> hostPath;
-  private final Optional<Mode> mode;
+  private final Optional<SingularityDockerVolumeMode> mode;
 
   @JsonCreator
   public SingularityVolume(
       @JsonProperty("containerPath") String containerPath,
       @JsonProperty("hostPath") Optional<String> hostPath,
-      @JsonProperty("mode") Optional<Mode> mode) {
+      @JsonProperty("mode") Optional<SingularityDockerVolumeMode> mode) {
     this.containerPath = containerPath;
     this.hostPath = hostPath;
     this.mode = mode;
@@ -29,7 +27,7 @@ public class SingularityVolume {
     return hostPath;
   }
 
-  public Optional<Mode> getMode() {
+  public Optional<SingularityDockerVolumeMode> getMode() {
     return mode;
   }
 
