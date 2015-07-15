@@ -22,7 +22,7 @@ public class SingularityDockerInfo {
                                @JsonProperty("portMappings") Optional<List<SingularityDockerPortMapping>> portMappings) {
     this.image = image;
     this.privileged = privileged;
-    this.network = Optional.fromNullable(Objects.firstNonNull(network, null));
+    this.network = Optional.fromNullable(network);
     this.portMappings = portMappings.or(Collections.<SingularityDockerPortMapping>emptyList());
   }
 

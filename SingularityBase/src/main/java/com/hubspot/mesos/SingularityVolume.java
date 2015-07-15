@@ -18,7 +18,7 @@ public class SingularityVolume {
       @JsonProperty("mode") SingularityDockerVolumeMode mode) {
     this.containerPath = containerPath;
     this.hostPath = hostPath;
-    this.mode = Optional.fromNullable(Objects.firstNonNull(mode, null));
+    this.mode = Optional.fromNullable(mode);
   }
 
   @Deprecated
