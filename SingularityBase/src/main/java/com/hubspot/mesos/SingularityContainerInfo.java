@@ -2,6 +2,8 @@ package com.hubspot.mesos;
 
 import java.util.List;
 
+import org.apache.mesos.Protos.ContainerInfo.Type;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -19,6 +21,11 @@ public class SingularityContainerInfo {
     this.type = type;
     this.volumes = volumes;
     this.docker = docker;
+  }
+
+  @Deprecated
+  public SingularityContainerInfo(Type type, Optional<List<SingularityVolume>> volumes, Optional<SingularityDockerInfo> docker) {
+    this(SingularityContainerType.valueOf(type.toString()), volumes, docker);
   }
 
   public SingularityContainerType getType() {

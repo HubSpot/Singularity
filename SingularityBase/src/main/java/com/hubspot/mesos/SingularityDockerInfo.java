@@ -2,7 +2,9 @@ package com.hubspot.mesos;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
+import org.apache.mesos.Protos;
 
 import java.util.Collections;
 import java.util.List;
@@ -16,12 +18,25 @@ public class SingularityDockerInfo {
   @JsonCreator
   public SingularityDockerInfo(@JsonProperty("image") String image,
                                @JsonProperty("privileged") boolean privileged,
-                               @JsonProperty("network") Optional<SingularityDockerNetworkType> network,
+                               @JsonProperty("network") SingularityDockerNetworkType network,
                                @JsonProperty("portMappings") Optional<List<SingularityDockerPortMapping>> portMappings) {
     this.image = image;
     this.privileged = privileged;
-    this.network = network;
+    this.network = Optional.fromNullable(Objects.firstNonNull(network, null));
     this.portMappings = portMappings.or(Collections.<SingularityDockerPortMapping>emptyList());
+  }
+
+  @Deprecated
+  public SingularityDockerInfo(String image, boolean privileged, Optional<Protos.ContainerInfo.DockerInfo.Network> network, Optional<List<SingularityDockerPortMapping>> portMappings) {
+    this(image, privileged, convertedNetworkType(network), portMappings);
+  }
+
+  private static SingularityDockerNetworkType convertedNetworkType(Optional<Protos.ContainerInfo.DockerInfo.Network> network) {
+    if (network.isPresent()) {
+      return SingularityDockerNetworkType.valueOf(network.get().toString());
+    } else {
+      return null;
+    }
   }
 
   public String getImage() {

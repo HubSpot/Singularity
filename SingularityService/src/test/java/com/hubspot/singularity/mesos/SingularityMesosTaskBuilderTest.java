@@ -127,9 +127,9 @@ public class SingularityMesosTaskBuilderTest {
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
       SingularityContainerType.DOCKER,
         Optional.of(Arrays.asList(
-                new SingularityVolume("/container", Optional.of("/host"), Optional.of(SingularityDockerVolumeMode.RW)),
-                new SingularityVolume("/container/${TASK_REQUEST_ID}/${TASK_DEPLOY_ID}", Optional.of("/host/${TASK_ID}"), Optional.of(SingularityDockerVolumeMode.RO)))),
-        Optional.of(new SingularityDockerInfo("docker-image", true, Optional.of(SingularityDockerNetworkType.BRIDGE), Optional.of(Arrays.asList(literalMapping, offerMapping)))));
+                new SingularityVolume("/container", Optional.of("/host"), SingularityDockerVolumeMode.RW),
+                new SingularityVolume("/container/${TASK_REQUEST_ID}/${TASK_DEPLOY_ID}", Optional.of("/host/${TASK_ID}"), SingularityDockerVolumeMode.RO))),
+        Optional.of(new SingularityDockerInfo("docker-image", true, SingularityDockerNetworkType.BRIDGE, Optional.of(Arrays.asList(literalMapping, offerMapping)))));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
     .setContainerInfo(Optional.of(containerInfo))
     .setCommand(Optional.of("/bin/echo"))
