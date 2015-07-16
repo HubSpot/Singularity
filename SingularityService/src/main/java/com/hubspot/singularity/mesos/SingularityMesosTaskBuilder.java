@@ -197,7 +197,7 @@ class SingularityMesosTaskBuilder {
 
   private void prepareContainerInfo(final Offer offer, final SingularityTaskId taskId, final TaskInfo.Builder bldr, final SingularityContainerInfo containerInfo, final Optional<long[]> ports) {
     ContainerInfo.Builder containerBuilder = ContainerInfo.newBuilder();
-    containerBuilder.setType(containerInfo.getType());
+    containerBuilder.setType(ContainerInfo.Type.valueOf(containerInfo.getType().toString()));
 
     final Optional<SingularityDockerInfo> dockerInfo = containerInfo.getDocker();
 
@@ -215,7 +215,7 @@ class SingularityMesosTaskBuilder {
         }
 
         if (dockerInfo.get().getNetwork().isPresent()) {
-          dockerInfoBuilder.setNetwork(dockerInfo.get().getNetwork().get());
+          dockerInfoBuilder.setNetwork(DockerInfo.Network.valueOf(dockerInfo.get().getNetwork().get().toString()));
         }
       }
 
@@ -231,7 +231,7 @@ class SingularityMesosTaskBuilder {
         volumeBuilder.setHostPath(fillInTaskIdValues(volumeInfo.getHostPath().get(), offer, taskId));
       }
       if (volumeInfo.getMode().isPresent()) {
-        volumeBuilder.setMode(volumeInfo.getMode().get());
+        volumeBuilder.setMode(Volume.Mode.valueOf(volumeInfo.getMode().get().toString()));
       }
       containerBuilder.addVolumes(volumeBuilder);
     }

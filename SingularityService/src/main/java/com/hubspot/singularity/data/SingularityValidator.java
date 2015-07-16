@@ -12,6 +12,8 @@ import java.util.UUID;
 
 import javax.inject.Singleton;
 
+import com.hubspot.mesos.SingularityContainerType;
+import com.hubspot.mesos.SingularityDockerNetworkType;
 import org.apache.mesos.Protos;
 import org.quartz.CronExpression;
 
@@ -309,7 +311,7 @@ public class SingularityValidator {
 
     checkBadRequest(!deploy.getContainerInfo().isPresent() || deploy.getContainerInfo().get().getType() != null, "Container type must not be null");
 
-    if (deploy.getContainerInfo().isPresent() && deploy.getContainerInfo().get().getType() == Protos.ContainerInfo.Type.DOCKER) {
+    if (deploy.getContainerInfo().isPresent() && deploy.getContainerInfo().get().getType() == SingularityContainerType.DOCKER) {
       checkDocker(deploy);
     }
 
@@ -330,7 +332,7 @@ public class SingularityValidator {
       final int numPorts = deploy.getResources().get().getNumPorts();
 
       if (!dockerInfo.getPortMappings().isEmpty()) {
-        checkBadRequest(dockerInfo.getNetwork().or(Protos.ContainerInfo.DockerInfo.Network.HOST) == Protos.ContainerInfo.DockerInfo.Network.BRIDGE,
+        checkBadRequest(dockerInfo.getNetwork().or(SingularityDockerNetworkType.HOST) == SingularityDockerNetworkType.BRIDGE,
             "Docker networking type must be BRIDGE if port mappings are set");
       }
 
