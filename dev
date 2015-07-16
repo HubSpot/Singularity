@@ -1,0 +1,79 @@
+#!/bin/bash
+
+DOCKER_IP=`echo "$DOCKER_HOST" | awk -F/ '{print $3}' | awk -F: '{print $1}'`
+
+function remove {
+  echo "Removing old containers"
+  docker-compose rm
+}
+
+function build {
+  echo "Building new images"
+  mvn clean package docker:build -DskipTests
+}
+
+function stop {
+  echo "Stopping old containers with docker-compose $1"
+  docker-compose $1
+  if [ "$1" == "kill" ]; then
+    echo "Yep... Good and dead..."
+  fi
+}
+
+function start {
+  if [ "$1" == "attach" ]; then
+    echo "Starting and attaching to docker-compose up"
+    docker-compose up
+  else
+    echo "Starting via docker-compose up"
+    docker-compose up &> /dev/null &
+  fi
+}
+
+function help {
+  echo "usage:
+    start   -> start mesos clsuter in background
+    attach  -> start mesos cluster and watch output in console
+    restart -> stop all containers and restart in background
+    rebuild -> stop all containers, rebuild Singularity and docker images, then start in background
+        - rebuild attach -> rebuild and watch output when started
+    remove  -> remove stopped containers
+    stop    -> stop all containers
+    kill    -> kill all containers (ungraceful term)
+"
+}
+case $1 in
+  start)
+    start
+    echo "It may take a few moments while Singularity starts up..."
+    echo "Singularity UI will be available at $DOCKER_IP:7099/singularity"
+    echo "Baragon UI will be available at $DOCKER_IP:8080/baragon/v2/ui"
+    ;;
+  attach)
+    start "attach"
+    ;;
+  restart)
+    stop "stop"
+    remove
+    start
+    ;;
+  rebuild)
+    stop "stop"
+    stop "kill"
+    remove
+    build
+    start $2
+    ;;
+  remove)
+    remove
+    ;;
+  stop)
+    stop "stop"
+    ;;
+  kill)
+    stop "kill"
+    ;;
+  help)
+    help
+    ;;
+esac

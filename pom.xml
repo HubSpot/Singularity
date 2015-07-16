@@ -3,12 +3,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.basepom</groupId>
-    <artifactId>basepom-standard-oss</artifactId>
-    <version>9</version>
+    <groupId>com.hubspot</groupId>
+    <artifactId>basepom</artifactId>
+    <version>12.2</version>
   </parent>
 
-  <groupId>com.hubspot</groupId>
   <artifactId>Singularity</artifactId>
   <version>0.4.3-SNAPSHOT</version>
   <packaging>pom</packaging>
@@ -32,44 +31,12 @@
   </developers>
 
   <properties>
-    <project.jdk7.home>${env.JAVA7_HOME}</project.jdk7.home>
-    <project.build.targetJdk>1.7</project.build.targetJdk>
-    <basepom.check.skip-license>true</basepom.check.skip-license>
-
-    <basepom.test.timeout>120</basepom.test.timeout>
-
     <!-- build the docs for releases -->
     <basepom.release.profiles>oss-release,build-swagger-documentation</basepom.release.profiles>
 
-    <!-- hubspot jackson and dropwizard dep use 2.3.x -->
-    <dep.jackson.version>2.3.3</dep.jackson.version>
-
-    <!-- guava 18.0 is problematic, keep 17 for a while -->
-    <dep.guava.version>17.0</dep.guava.version>
-
-    <!-- dropwizard uses jetty 9.0.x -->
-    <dep.jetty.version>9.0.7.v20131107</dep.jetty.version>
-
-    <dep.metrics.version>3.0.2</dep.metrics.version>
-    <dep.zookeeper.version>3.4.5</dep.zookeeper.version>
-
-    <dep.jesos.version>1.1</dep.jesos.version>
-
-    <dep.swagger.version>1.3.12</dep.swagger.version>
-    <dep.swagger-plugin.version>2.3.2</dep.swagger-plugin.version>
-
     <baragon.version>0.1.4</baragon.version>
-    <curator.version>2.4.2</curator.version>
-    <dropwizard.version>0.7.1</dropwizard.version>
-    <jets3t.version>0.9.0</jets3t.version>
-    <guava.retry.version>1.0.7</guava.retry.version>
-    <mesos.version>0.21.0</mesos.version>
     <mesos.docker.tag>0.21.1-1.1.ubuntu1404</mesos.docker.tag> <!-- 0.21.0-1.0.ubuntu1404 is missing for mesos-slave -->
-    <ning.async.version>1.8.12</ning.async.version>
-    <snappy.version>0.3</snappy.version>
-    <sentry.version>5.0</sentry.version>
     <horizon.version>0.0.10</horizon.version>
-    <jukito.version>1.4.1</jukito.version>
   </properties>
 
   <modules>
@@ -149,203 +116,19 @@
       <dependency>
         <groupId>com.hubspot.jackson</groupId>
         <artifactId>jackson-datatype-protobuf</artifactId>
-        <version>0.4.0</version>
+        <version>0.8.0</version>
       </dependency>
 
       <dependency>
         <groupId>com.hubspot.jackson</groupId>
         <artifactId>jackson-jaxrs-propertyfiltering</artifactId>
-        <version>0.5.0</version>
+        <version>0.7.0</version>
       </dependency>
 
       <dependency>
         <groupId>com.hubspot</groupId>
         <artifactId>BaragonCore</artifactId>
         <version>${baragon.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.sun.mail</groupId>
-        <artifactId>javax.mail</artifactId>
-        <version>1.5.2</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.dropwizard</groupId>
-        <artifactId>dropwizard-core</artifactId>
-        <version>${dropwizard.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.eclipse.jetty.orbit</groupId>
-            <artifactId>javax.servlet</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>io.dropwizard</groupId>
-        <artifactId>dropwizard-configuration</artifactId>
-        <version>${dropwizard.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>io.dropwizard</groupId>
-        <artifactId>dropwizard-validation</artifactId>
-        <version>${dropwizard.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>io.dropwizard</groupId>
-        <artifactId>dropwizard-jdbi</artifactId>
-        <version>${dropwizard.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.dropwizard</groupId>
-        <artifactId>dropwizard-migrations</artifactId>
-        <version>${dropwizard.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.dropwizard</groupId>
-        <artifactId>dropwizard-assets</artifactId>
-        <version>${dropwizard.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.eclipse.jetty.orbit</groupId>
-            <artifactId>javax.servlet</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>io.dropwizard</groupId>
-        <artifactId>dropwizard-views-mustache</artifactId>
-        <version>${dropwizard.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.dropwizard</groupId>
-        <artifactId>dropwizard-db</artifactId>
-        <version>${dropwizard.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.dropwizard</groupId>
-        <artifactId>dropwizard-jackson</artifactId>
-        <version>${dropwizard.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.dropwizard</groupId>
-        <artifactId>dropwizard-jersey</artifactId>
-        <version>${dropwizard.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.eclipse.jetty.orbit</groupId>
-            <artifactId>javax.servlet</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>io.dropwizard</groupId>
-        <artifactId>dropwizard-jetty</artifactId>
-        <version>${dropwizard.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.dropwizard</groupId>
-        <artifactId>dropwizard-lifecycle</artifactId>
-        <version>${dropwizard.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>io.dropwizard</groupId>
-        <artifactId>dropwizard-servlets</artifactId>
-        <version>${dropwizard.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.eclipse.jetty.orbit</groupId>
-            <artifactId>javax.servlet</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>io.dropwizard</groupId>
-        <artifactId>dropwizard-views</artifactId>
-        <version>${dropwizard.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.codahale.metrics</groupId>
-        <artifactId>metrics-core</artifactId>
-        <version>${dep.metrics.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.codahale.metrics</groupId>
-        <artifactId>metrics-healthchecks</artifactId>
-        <version>${dep.metrics.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.codahale.metrics</groupId>
-        <artifactId>metrics-jvm</artifactId>
-        <version>${dep.metrics.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.codahale.metrics</groupId>
-        <artifactId>metrics-servlets</artifactId>
-        <version>${dep.metrics.version}</version>
-        <exclusions>
-          <!-- metrics servlets wants jackson core 2.2.x. However, everything else wants 2.3.x. -->
-          <!-- exclude dep here and pray that this still works ... -->
-          <exclusion>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>org.hibernate</groupId>
-        <artifactId>hibernate-validator</artifactId>
-        <version>5.1.1.Final</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.jdbi</groupId>
-        <artifactId>jdbi</artifactId>
-        <version>2.55</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.github.jknack</groupId>
-        <artifactId>handlebars</artifactId>
-        <version>1.3.1</version>
       </dependency>
 
       <dependency>
@@ -373,161 +156,6 @@
       </dependency>
 
       <dependency>
-        <groupId>org.apache.mesos</groupId>
-        <artifactId>mesos</artifactId>
-        <version>${mesos.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.groupon.mesos</groupId>
-        <artifactId>jesos</artifactId>
-        <version>${dep.jesos.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.jboss.logging</groupId>
-        <artifactId>jboss-logging</artifactId>
-        <version>3.1.4.GA</version>
-      </dependency>
-
-      <dependency>
-        <groupId>net.java.dev.jets3t</groupId>
-        <artifactId>jets3t</artifactId>
-        <version>${jets3t.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>com.github.rholder</groupId>
-        <artifactId>guava-retrying</artifactId>
-        <version>${guava.retry.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-continuation</artifactId>
-        <version>${dep.jetty.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.ning</groupId>
-        <artifactId>async-http-client</artifactId>
-        <version>${ning.async.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.curator</groupId>
-        <artifactId>curator-client</artifactId>
-        <version>${curator.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.curator</groupId>
-        <artifactId>curator-framework</artifactId>
-        <version>${curator.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.curator</groupId>
-        <artifactId>curator-recipes</artifactId>
-        <version>${curator.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.curator</groupId>
-        <artifactId>curator-test</artifactId>
-        <version>${curator.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpclient</artifactId>
-        <version>4.4</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.httpcomponents</groupId>
-        <artifactId>httpcore</artifactId>
-        <version>4.4</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.apache.zookeeper</groupId>
-        <artifactId>zookeeper</artifactId>
-        <version>${dep.zookeeper.version}</version>
-        <exclusions>
-          <exclusion>
-            <artifactId>junit</artifactId>
-            <groupId>junit</groupId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-          </exclusion>
-          <exclusion>
-            <artifactId>log4j</artifactId>
-            <groupId>log4j</groupId>
-          </exclusion>
-          <exclusion>
-            <artifactId>jline</artifactId>
-            <groupId>jline</groupId>
-          </exclusion>
-          <!-- Replaced by io.netty:netty; clashes with ning async-http-client -->
-          <exclusion>
-            <groupId>org.jboss.netty</groupId>
-            <artifactId>netty</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
         <groupId>com.hubspot</groupId>
         <artifactId>HorizonCore</artifactId>
         <version>${horizon.version}</version>
@@ -538,134 +166,6 @@
         <artifactId>HorizonNing</artifactId>
         <version>${horizon.version}</version>
       </dependency>
-
-      <dependency>
-        <groupId>com.google.protobuf</groupId>
-        <artifactId>protobuf-java</artifactId>
-        <version>2.5.0</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.javassist</groupId>
-        <artifactId>javassist</artifactId>
-        <version>3.18.2-GA</version>
-      </dependency>
-
-      <dependency>
-        <groupId>de.neuland-bfi</groupId>
-        <artifactId>jade4j</artifactId>
-        <version>0.4.0</version>
-        <exclusions>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>aopalliance</groupId>
-        <artifactId>aopalliance</artifactId>
-        <version>1.0</version>
-      </dependency>
-
-      <dependency>
-        <groupId>mysql</groupId>
-        <artifactId>mysql-connector-java</artifactId>
-        <version>5.1.29</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.antlr</groupId>
-        <artifactId>stringtemplate</artifactId>
-        <version>3.2.1</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.quartz-scheduler</groupId>
-        <artifactId>quartz</artifactId>
-        <version>2.2.1</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.fluentd</groupId>
-        <artifactId>fluent-logger</artifactId>
-        <version>0.2.11</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.wordnik</groupId>
-        <artifactId>swagger-annotations</artifactId>
-        <version>${dep.swagger.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>net.kencochrane.raven</groupId>
-        <artifactId>raven</artifactId>
-        <version>${sentry.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-          </exclusion>
-          <!-- sentry wants jackson core 2.4.x. However, everything else wants 2.3.x. -->
-          <!-- exclude dep here and pray that this still works ... -->
-          <exclusion>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>com.fasterxml.jackson.dataformat</groupId>
-        <artifactId>jackson-dataformat-yaml</artifactId>
-        <version>${dep.jackson.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.iq80.snappy</groupId>
-        <artifactId>snappy</artifactId>
-        <version>${snappy.version}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>com.github.kongchen</groupId>
-        <artifactId>swagger-maven-plugin</artifactId>
-        <version>${dep.swagger-plugin.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-plugin-api</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-project</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-model</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-core</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.wordnik</groupId>
-            <artifactId>swagger-jaxrs_2.10</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>com.wordnik</groupId>
-            <artifactId>swagger-jersey-jaxrs_2.10</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-
-      <dependency>
-        <groupId>org.jukito</groupId>
-        <artifactId>jukito</artifactId>
-        <version>${jukito.version}</version>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -675,7 +175,7 @@
         <plugin>
           <groupId>org.jolokia</groupId>
           <artifactId>docker-maven-plugin</artifactId>
-          <version>0.12.0</version>
+          <version>0.13.0</version>
           <configuration>
             <images></images>  <!-- default to no images to allow building from parent, let submodules override -->
           </configuration>
@@ -733,48 +233,6 @@
       </plugins>
     </pluginManagement>
   </build>
-
-  <profiles>
-    <profile>
-      <id>travis</id>
-      <activation>
-        <property>
-          <name>env.TRAVIS</name>
-        </property>
-      </activation>
-      <properties>
-        <project.jdk7.home>${env.JAVA_HOME}</project.jdk7.home>
-        <basepom.test.reuse-vm>false</basepom.test.reuse-vm>
-        <basepom.test.fork-count>1</basepom.test.fork-count>
-      </properties>
-    </profile>
-    <profile>
-      <id>cross-compile</id>
-      <activation>
-        <jdk>(1.7,]</jdk>
-      </activation>
-      <build>
-        <pluginManagement>
-          <plugins>
-            <plugin>
-              <artifactId>maven-compiler-plugin</artifactId>
-              <configuration>
-                <compilerArguments children.combine="append">
-                  <bootclasspath>${project.jdk7.home}/jre/lib/rt.jar:${project.jdk7.home}/jre/lib/jce.jar:${project.jdk7.home}/../classes/classes.jar</bootclasspath>
-                </compilerArguments>
-              </configuration>
-            </plugin>
-            <plugin>
-              <artifactId>maven-javadoc-plugin</artifactId>
-              <configuration>
-                <bootclasspath>${project.jdk7.home}/jre/lib/rt.jar:${project.jdk7.home}/jre/lib/jce.jar:${project.jdk7.home}/../classes/classes.jar</bootclasspath>
-              </configuration>
-            </plugin>
-          </plugins>
-        </pluginManagement>
-      </build>
-    </profile>
-  </profiles>
 </project>
 
 <!-- Local Variables: -->

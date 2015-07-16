@@ -2,6 +2,7 @@ package com.hubspot.singularity.data.history;
 
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
@@ -78,7 +79,7 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
 
   @Override
   protected long getMaxAgeInMillisOfItem() {
-    return configuration.getDeleteTasksFromZkWhenNoDatabaseAfterHours();
+    return TimeUnit.HOURS.toMillis(configuration.getDeleteTasksFromZkWhenNoDatabaseAfterHours());
   }
 
   @Override
