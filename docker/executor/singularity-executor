@@ -1,2 +1,0 @@
-#!/bin/bash
-exec java -Djava.library.path=/usr/local/lib -jar /etc/singularity/executor.jar

@@ -1,0 +1,3 @@
+loggingDirectory: /etc/singularity
+logWatcherMetadataDirectory: /usr/share/mesos/logwatcher
+s3UploaderMetadataDirectory: /usr/share/mesos/s3
