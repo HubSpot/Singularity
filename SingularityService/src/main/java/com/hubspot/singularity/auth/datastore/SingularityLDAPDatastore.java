@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.directory.api.ldap.model.cursor.EntryCursor;
 import org.apache.directory.api.ldap.model.entry.Entry;
+import org.apache.directory.api.ldap.model.exception.LdapException;
 import org.apache.directory.api.ldap.model.message.SearchScope;
 import org.apache.directory.ldap.client.api.DefaultPoolableLdapConnectionFactory;
 import org.apache.directory.ldap.client.api.LdapConnection;
@@ -122,8 +123,8 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
       } finally {
         connectionPool.releaseConnection(connection);
       }
-    } catch (Exception e) {
-
+    } catch (LdapException e) {
+      LOG.warn("LdapException caught when checking health", e);
     }
     return Optional.of(false);
   }
