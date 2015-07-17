@@ -175,7 +175,7 @@
         <plugin>
           <groupId>org.jolokia</groupId>
           <artifactId>docker-maven-plugin</artifactId>
-          <version>0.13.0</version>
+          <version>0.13.2</version>
           <configuration>
             <images></images>  <!-- default to no images to allow building from parent, let submodules override -->
           </configuration>
