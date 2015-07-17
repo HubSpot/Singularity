@@ -47,6 +47,8 @@ class RacksView extends View
 
         @$('.actions-column a[title]').tooltip()
 
+        super.afterRender()
+
     removeRack: (event) ->
         $target = $(event.currentTarget)
         state = $target.data 'state'

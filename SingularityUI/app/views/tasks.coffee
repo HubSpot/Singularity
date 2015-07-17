@@ -109,6 +109,8 @@ class TasksView extends View
 
         @renderTable()
 
+        super.afterRender()
+
     # Prepares the staged rendering and triggers the first one
     renderTable: =>
         return if not @$('table').length

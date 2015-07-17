@@ -1,12 +1,12 @@
 {{#unless rowsOnly}}
     {{#if haveTasks}}
-        <table class="table table-striped">
+        <table class="table table-striped sortable-theme-bootstrap" data-sortable>
             <thead>
                 <tr>
-                    <th data-sort-attribute="name">
+                    <th>
                         Name
                     </th>
-                    <th data-sort-attribute="cleanupTypeHuman">
+                    <th>
                         Cleanup type
                     </th>
                     <th class="hidden-xs">
