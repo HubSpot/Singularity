@@ -32,7 +32,8 @@
     "messenger": "~1.4.1",
     "typeahead.js": "~0.10.4",
     "backbone.localStorage": "~1.1.9",
-    "underscore": "~1.8.0"
+    "underscore": "~1.8.0",
+    "sortable": "~0.6.0"
   },
   "resolutions": {
     "backbone": "~1.1.2"
