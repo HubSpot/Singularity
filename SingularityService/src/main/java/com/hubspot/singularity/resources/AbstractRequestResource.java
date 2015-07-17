@@ -11,6 +11,7 @@ import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
@@ -21,12 +22,14 @@ public class AbstractRequestResource {
   protected final DeployManager deployManager;
   protected final Optional<SingularityUser> user;
   protected final SingularityValidator validator;
+  protected final SingularityAuthorizationHelper authorizationHelper;
 
-  public AbstractRequestResource(RequestManager requestManager, DeployManager deployManager, Optional<SingularityUser> user, SingularityValidator validator) {
+  public AbstractRequestResource(RequestManager requestManager, DeployManager deployManager, Optional<SingularityUser> user, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper) {
     this.requestManager = requestManager;
     this.deployManager = deployManager;
     this.user = user;
     this.validator = validator;
+    this.authorizationHelper = authorizationHelper;
   }
 
   protected SingularityRequestWithState fetchRequestWithState(String requestId) {
@@ -34,7 +37,7 @@ public class AbstractRequestResource {
 
     checkNotFound(request.isPresent(), "Couldn't find request with id %s", requestId);
 
-    validator.checkForAuthorization(request.get().getRequest(), Optional.<SingularityRequest>absent(), user);
+    authorizationHelper.checkForAuthorization(request.get().getRequest(), Optional.<SingularityRequest>absent(), user);
 
     return request.get();
   }

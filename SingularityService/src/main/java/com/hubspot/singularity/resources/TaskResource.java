@@ -62,18 +62,18 @@ public class TaskResource {
   private final TaskRequestManager taskRequestManager;
   private final MesosClient mesosClient;
   private final SingularityValidator validator;
-  private final SingularityAuthorizationHelper authHelper;
+  private final SingularityAuthorizationHelper authorizationHelper;
   private final Optional<SingularityUser> user;
 
   @Inject
   public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient,
-                      SingularityValidator validator, SingularityAuthorizationHelper authHelper, Optional<SingularityUser> user) {
+                      SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user) {
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
     this.slaveManager = slaveManager;
     this.mesosClient = mesosClient;
     this.validator = validator;
-    this.authHelper = authHelper;
+    this.authorizationHelper = authorizationHelper;
     this.user = user;
   }
 
@@ -82,7 +82,7 @@ public class TaskResource {
   @Path("/scheduled")
   @ApiOperation("Retrieve list of scheduled tasks.")
   public List<SingularityTaskRequest> getScheduledTasks() {
-    return taskRequestManager.getTaskRequests(authHelper.filterByAuthorizedRequests(user, taskManager.getPendingTasks(), SingularityTransformHelpers.PENDING_TASK_TO_REQUEST_ID));
+    return taskRequestManager.getTaskRequests(authorizationHelper.filterByAuthorizedRequests(user, taskManager.getPendingTasks(), SingularityTransformHelpers.PENDING_TASK_TO_REQUEST_ID));
   }
 
   @GET
@@ -90,7 +90,7 @@ public class TaskResource {
   @Path("/scheduled/ids")
   @ApiOperation("Retrieve list of scheduled task IDs.")
   public List<SingularityPendingTaskId> getScheduledTaskIds() {
-    return authHelper.filterByAuthorizedRequests(user, taskManager.getPendingTaskIds(), SingularityTransformHelpers.PENDING_TASK_ID_TO_REQUEST_ID);
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getPendingTaskIds(), SingularityTransformHelpers.PENDING_TASK_ID_TO_REQUEST_ID);
   }
 
   private SingularityPendingTaskId getPendingTaskIdFromStr(String pendingTaskIdStr) {
@@ -122,7 +122,7 @@ public class TaskResource {
 
     checkNotFound(!taskRequestList.isEmpty(), "Couldn't find: " + pendingTaskIdStr);
 
-    validator.checkForAuthorization(taskRequestList.get(0).getRequest(), Optional.<SingularityRequest>absent(), user);
+    authorizationHelper.checkForAuthorization(taskRequestList.get(0).getRequest(), Optional.<SingularityRequest>absent(), user);
 
     return taskRequestList.get(0);
   }
@@ -132,7 +132,7 @@ public class TaskResource {
   @Path("/scheduled/request/{requestId}")
   @ApiOperation("Retrieve list of scheduled tasks for a specific request.")
   public List<SingularityTaskRequest> getScheduledTasksForRequest(@PathParam("requestId") String requestId) {
-    validator.checkForAuthorizationByRequestId(requestId, user);
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user);
 
     final List<SingularityPendingTask> tasks = Lists.newArrayList(Iterables.filter(taskManager.getPendingTasks(), SingularityPendingTask.matchingRequest(requestId)));
 
@@ -147,7 +147,7 @@ public class TaskResource {
 
     checkNotFound(maybeSlave.isPresent(), "Couldn't find a slave in any state with id %s", slaveId);
 
-    return authHelper.filterByAuthorizedRequests(user, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), maybeSlave.get()), SingularityTransformHelpers.TASK_TO_REQUEST_ID);
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), maybeSlave.get()), SingularityTransformHelpers.TASK_TO_REQUEST_ID);
   }
 
   @GET
@@ -155,7 +155,7 @@ public class TaskResource {
   @Path("/active")
   @ApiOperation("Retrieve the list of active tasks.")
   public List<SingularityTask> getActiveTasks() {
-    return authHelper.filterByAuthorizedRequests(user, taskManager.getActiveTasks(), SingularityTransformHelpers.TASK_TO_REQUEST_ID);
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getActiveTasks(), SingularityTransformHelpers.TASK_TO_REQUEST_ID);
   }
 
   @GET
@@ -163,7 +163,7 @@ public class TaskResource {
   @Path("/cleaning")
   @ApiOperation("Retrieve the list of cleaning tasks.")
   public List<SingularityTaskCleanup> getCleaningTasks() {
-    return authHelper.filterByAuthorizedRequests(user, taskManager.getCleanupTasks(), SingularityTransformHelpers.TASK_CLEANUP_TO_REQUEST_ID);
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getCleanupTasks(), SingularityTransformHelpers.TASK_CLEANUP_TO_REQUEST_ID);
   }
 
   @GET
@@ -171,7 +171,7 @@ public class TaskResource {
   @Path("/lbcleanup")
   @ApiOperation("Retrieve the list of tasks being cleaned from load balancers.")
   public List<SingularityTaskId> getLbCleanupTasks() {
-    return authHelper.filterByAuthorizedRequests(user, taskManager.getLBCleanupTasks(), SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID);
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getLBCleanupTasks(), SingularityTransformHelpers.TASK_ID_TO_REQUEST_ID);
   }
 
   private SingularityTask checkActiveTask(String taskId) {
@@ -182,7 +182,7 @@ public class TaskResource {
     checkNotFound(task.isPresent() && taskManager.isActiveTask(taskId), "No active task with id %s", taskId);
 
     if (task.isPresent()) {
-      validator.checkForAuthorizationByRequestId(task.get().getTaskId().getRequestId(), user);
+      authorizationHelper.checkForAuthorizationByRequestId(task.get().getTaskId().getRequestId(), user);
     }
 
     return task.get();
@@ -222,7 +222,7 @@ public class TaskResource {
   @Path("/task/{taskId}/cleanup")
   @ApiOperation("Get the cleanup object for the task, if it exists")
   public Optional<SingularityTaskCleanup> getTaskCleanup(@PathParam("taskId") String taskId) {
-    validator.checkForAuthorizationByTaskId(taskId, user);
+    authorizationHelper.checkForAuthorizationByTaskId(taskId, user);
 
     return taskManager.getTaskCleanup(taskId);
   }
