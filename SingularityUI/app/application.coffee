@@ -158,6 +158,9 @@ class Application
         @user.fetch() # Syncronous because it uses localStorage
 
     getUsername: =>
-        @user.get 'username'
+        if @user.get('authenticated')
+            @user.get('user').id
+        else
+            ''
 
 module.exports = new Application
