@@ -97,7 +97,6 @@ public class SingularityTaskId extends SingularityId implements SingularityHisto
   /**
    * @Deprecated use getSanitizedRackId() or matchesOriginalRackId() instead
    */
-  @JsonIgnore
   public String getRackId() {
     return getSanitizedRackId();
   }
@@ -118,7 +117,6 @@ public class SingularityTaskId extends SingularityId implements SingularityHisto
   /**
    * @Deprecated use getSanitizedHost() or matchesOriginalHost() instead
    */
-  @JsonIgnore
   public String getHost() {
     return getSanitizedHost();
   }
