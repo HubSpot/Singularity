@@ -221,7 +221,7 @@ public class SingularityState {
     return unknownRacks;
   }
 
-  public Optional<Boolean> isAuthDatastoreHealthy() {
+  public Optional<Boolean> getAuthDatastoreHealthy() {
     return authDatastoreHealthy;
   }
 

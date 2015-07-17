@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import static com.google.common.collect.ImmutableSet.copyOf;
+
 import java.util.Objects;
 import java.util.Set;
 
@@ -18,7 +20,7 @@ public class SingularityUser {
     this.id = id;
     this.name = name;
     this.email = email;
-    this.groups = groups;
+    this.groups = copyOf(groups);
   }
 
   public String getId() {
