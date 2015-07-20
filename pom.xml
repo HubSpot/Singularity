@@ -116,7 +116,7 @@
       <dependency>
         <groupId>com.hubspot.jackson</groupId>
         <artifactId>jackson-datatype-protobuf</artifactId>
-        <version>0.8.0</version>
+        <version>0.4.0</version>
       </dependency>
 
       <dependency>
@@ -175,7 +175,7 @@
         <plugin>
           <groupId>org.jolokia</groupId>
           <artifactId>docker-maven-plugin</artifactId>
-          <version>0.13.0</version>
+          <version>0.13.2</version>
           <configuration>
             <images></images>  <!-- default to no images to allow building from parent, let submodules override -->
           </configuration>
