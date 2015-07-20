@@ -2,7 +2,6 @@ View = require './view'
 
 Deploy = require '../models/Deploy'
 
-
 class DeployView extends View
 
     template: require '../templates/deployDetail/deployBase'
@@ -20,8 +19,8 @@ class DeployView extends View
 
         # Attach subview elements
         @$('#header').html              @subviews.header.$el
-        #@$('#info').html                @subviews.info.$el
-        #@$('#tasks').html               @subviews.tasks.$el
+        @$('#info').html                @subviews.info.$el
+        @$('#tasks').html               @subviews.tasks.$el
 
     viewJson: (e) =>
         $target = $(e.currentTarget).parents 'tr'

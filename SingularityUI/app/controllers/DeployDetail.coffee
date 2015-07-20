@@ -12,7 +12,7 @@ class DeployDetailController extends Controller
   templates:
     header:             require '../templates/deployDetail/deployHeader'
     info:               require '../templates/deployDetail/deployInfo'
-    #tasks:              require '../templates/deployDetail/deployTasks'
+    tasks:              require '../templates/deployDetail/deployTasks'
 
   initialize: ({@requestId, @deployId}) ->
     #
@@ -36,7 +36,7 @@ class DeployDetailController extends Controller
     @subviews.info = new SimpleSubview
       model:      @models.deploy
       template:   @templates.info
-    @subviews.tasks = new SimpleSubview
+    @subviews.tasks = new ExpandableTableSubview
       collection: @collections.deployTasks
       template:   @templates.tasks
 
@@ -51,8 +51,7 @@ class DeployDetailController extends Controller
 
     app.showView @view
 
-    refresh: ->
-      requestFetch = @models.deploy.fetch()
-
+  refresh: ->
+    requestFetch = @models.deploy.fetch()
 
 module.exports = DeployDetailController
