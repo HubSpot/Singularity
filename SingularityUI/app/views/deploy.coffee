@@ -27,8 +27,6 @@ class DeployView extends View
         id = $target.data 'id'
         collectionName = $target.data 'collection'
 
-        console.log collectionName
-
         # Need to reach into subviews to get the necessary data
         collection = @subviews[collectionName].collection
         utils.viewJSON collection.get id
