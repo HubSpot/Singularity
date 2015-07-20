@@ -19,7 +19,9 @@
                 {{#each data}}
                     <tr data-id="{{ deployMarker.deployId }}" data-collection="deployHistory">
                         <td>
+                          <a href="{{appRoot}}/deploy/{{ deployMarker.deployId }}">
                             {{ deployMarker.deployId }}
+                          </a>
                         </td>
                         <td>
                             {{humanizeText deployResult.deployState}}
