@@ -12,9 +12,10 @@ class DeployDetailController extends Controller
   templates:
     header:             require '../templates/deployDetail/deployHeader'
     info:               require '../templates/deployDetail/deployInfo'
-    tasks:              require '../templates/deployDetail/deployTasks'
+    #tasks:              require '../templates/deployDetail/deployTasks'
 
     initialize: ({@requestId, @deployId}) ->
+      console.log('hi1')
       #
       # Data stuff
       #
@@ -22,10 +23,10 @@ class DeployDetailController extends Controller
         deployId: @deployId
         requestId: @requestId
 
-      @collections.deployTasks = new Tasks [],
-        requestId: @requestId
+      #@collections.deployTasks = new Tasks [],
+      #  requestId: @requestId
 
-      @collections.deployTasks = @collections.deployTasks.where({deployId: @deployId})
+      #@collections.deployTasks = @collections.deployTasks.where({deployId: @deployId})
 
       #
       # Subviews
@@ -36,9 +37,9 @@ class DeployDetailController extends Controller
       @subviews.info = new SimpleSubview
         model:      @models.deploy
         template:   @templates.info
-      @subviews.tasks = new SimpleSubview
-        model:      @collections.deployTasks
-        template:   @templates.tasks
+      #@subviews.tasks = new SimpleSubview
+      #  collection:      @collections.deployTasks
+      #  template:   @templates.tasks
 
 
       #
@@ -55,4 +56,4 @@ class DeployDetailController extends Controller
         requestFetch = @models.deploy.fetch()
 
 
-        module.exports = DeployDetailController
+module.exports = DeployDetailController
