@@ -9,44 +9,50 @@ SimpleSubview          = require '../views/simpleSubview'
 
 class DeployDetailController extends Controller
 
-    templates:
-        header:             require '../templates/deployDetail/deployHeader'
-
-        # Subview templates
+  templates:
+    header:             require '../templates/deployDetail/deployHeader'
+    info:               require '../templates/deployDetail/deployInfo'
+    tasks:              require '../templates/deployDetail/deployTasks'
 
     initialize: ({@requestId, @deployId}) ->
-        #
-        # Data stuff
-        #
-        @models.deploy = new RequestDeployStatus
-            deployId: @deployId
-            requestId: @requestId
+      #
+      # Data stuff
+      #
+      @models.deploy = new RequestDeployStatus
+        deployId: @deployId
+        requestId: @requestId
 
-        #
-        # Subviews
-        #
-        @subviews.header = new SimpleSubview
-            model:      @models.deploy
-            template:   @templates.header
+      @collections.deployTasks = new Tasks [],
+        requestId: @requestId
+
+      @collections.deployTasks = @collections.deployTasks.where({deployId: @deployId})
+
+      #
+      # Subviews
+      #
+      @subviews.header = new SimpleSubview
+        model:      @models.deploy
+        template:   @templates.header
+      @subviews.info = new SimpleSubview
+        model:      @models.deploy
+        template:   @templates.info
+      @subviews.tasks = new SimpleSubview
+        model:      @collections.deployTasks
+        template:   @templates.tasks
 
 
-        #
-        # Main view & stuff
-        #
-        @setView new DeployDetailView _.extend {@requestId, @deployId, @subviews},
-            model: @models.deploy
+      #
+      # Main view & stuff
+      #
+      @setView new DeployDetailView _.extend {@requestId, @deployId, @subviews},
+        model: @models.deploy
 
-        @refresh()
+      @refresh()
 
-        app.showView @view
+      app.showView @view
 
-    refresh: ->
+      refresh: ->
         requestFetch = @models.deploy.fetch()
 
-        requestFetch.error =>
-            # ignore 404 so we can still display info about
-            # deleted requests (show in `requestHistoryMsg`)
-            @ignore404
-            app.caughtError()
 
-module.exports = DeployDetailController
+        module.exports = DeployDetailController
