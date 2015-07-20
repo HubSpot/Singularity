@@ -8,7 +8,7 @@ class HistoricalTasks extends PaginableCollection
 
     url: -> "#{ config.apiRoot }/history/request/#{ @requestId }/tasks"
 
-    initialize: (models, {@requestId}) ->
+    initialize: (models, {@requestId, @deployId}) ->
 
     comparator: (task0, task1) =>
         -(task0.get("updatedAt") - task1.get("updatedAt"))

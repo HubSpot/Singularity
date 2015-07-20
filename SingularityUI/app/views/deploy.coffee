@@ -19,10 +19,11 @@ class DeployView extends View
 
         # Attach subview elements
         @$('#header').html              @subviews.header.$el
-        @$('#info').html                @subviews.info.$el
         @$('#tasks').html               @subviews.tasks.$el
+        @$('#info').html                @subviews.info.$el
 
     viewJson: (e) =>
+        console.log 'json'
         $target = $(e.currentTarget).parents 'tr'
         id = $target.data 'id'
         collectionName = $target.data 'collection'

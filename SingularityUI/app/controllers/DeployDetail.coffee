@@ -1,7 +1,7 @@
 Controller = require './Controller'
 
 RequestDeployStatus    = require '../models/RequestDeployStatus'
-Tasks                  = require '../collections/Tasks'
+RequestHistoricalTasks = require '../collections/RequestHistoricalTasks'
 
 DeployDetailView       = require '../views/deploy'
 ExpandableTableSubview = require '../views/expandableTableSubview'
@@ -22,10 +22,8 @@ class DeployDetailController extends Controller
       deployId: @deployId
       requestId: @requestId
 
-    @collections.deployTasks = new Tasks [],
-      requestId: @requestId
-
-    #@collections.deployTasks = @collections.deployTasks.where({deployId: @deployId})
+    @collections.deployTasks = new RequestHistoricalTasks [], {@requestId}
+  
 
     #
     # Subviews
@@ -40,7 +38,6 @@ class DeployDetailController extends Controller
       collection: @collections.deployTasks
       template:   @templates.tasks
 
-
     #
     # Main view & stuff
     #
@@ -53,5 +50,7 @@ class DeployDetailController extends Controller
 
   refresh: ->
     requestFetch = @models.deploy.fetch()
+    if @collections.deployTasks.currentPage is 1
+      @collections.deployTasks.fetch().error    @ignore404
 
 module.exports = DeployDetailController

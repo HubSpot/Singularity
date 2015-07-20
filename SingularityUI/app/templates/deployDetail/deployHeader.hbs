@@ -8,23 +8,21 @@
                 </span>
             </h5>
         </div>
+        {{! Right side, buttons }}
+        <div class="col-md-4 button-container">
+            <a class="btn btn-default" data-request-id="{{ data.id }}" data-action="viewObjectJSON">
+                JSON
+            </a>
+        </div>
     </div>
 
     <div class="row">
-        {{! Left side, info }}
         <div class="col-md-8">
             <h3>
                 <span>
                     {{ data.deployId }}
                 </span>
             </h3>
-        </div>
-
-        {{! Right side, buttons }}
-        <div class="col-md-4 button-container">
-            <a class="btn btn-default" data-request-id="{{ data.id }}" data-action="viewObjectJSON">
-                JSON
-            </a>
         </div>
     </div>
 </header>
