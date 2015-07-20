@@ -1,8 +1,5 @@
 package com.hubspot.singularity.config;
 
-import io.dropwizard.Configuration;
-import io.dropwizard.db.DataSourceFactory;
-
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -16,6 +13,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.hubspot.singularity.SlavePlacement;
+
+import io.dropwizard.Configuration;
+import io.dropwizard.db.DataSourceFactory;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityConfiguration extends Configuration {
@@ -69,6 +69,8 @@ public class SingularityConfiguration extends Configuration {
   private boolean defaultValueForKillTasksOfPausedRequests = true;
 
   private long deleteDeploysFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
+
+  private long deleteDeadSlavesAfterHours = TimeUnit.DAYS.toHours(7);
 
   private long deleteStaleRequestsFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
 
@@ -298,6 +300,14 @@ public class SingularityConfiguration extends Configuration {
     return killNonLongRunningTasksInCleanupAfterSeconds;
   }
 
+  public long getDeleteDeadSlavesAfterHours() {
+    return deleteDeadSlavesAfterHours;
+  }
+
+  public void setDeleteDeadSlavesAfterHours(long deleteDeadSlavesAfterHours) {
+    this.deleteDeadSlavesAfterHours = deleteDeadSlavesAfterHours;
+  }
+
   public int getListenerThreadpoolSize() {
     return listenerThreadpoolSize;
   }
@@ -372,6 +382,10 @@ public class SingularityConfiguration extends Configuration {
 
   public long getThreadpoolShutdownDelayInSeconds() {
     return threadpoolShutdownDelayInSeconds;
+  }
+
+  public void setThreadpoolShutdownDelayInSeconds(long threadpoolShutdownDelayInSeconds) {
+    this.threadpoolShutdownDelayInSeconds = threadpoolShutdownDelayInSeconds;
   }
 
   public UIConfiguration getUiConfiguration() {
@@ -693,4 +707,5 @@ public class SingularityConfiguration extends Configuration {
   public void setDeployIdLength(int deployIdLength) {
     this.deployIdLength = deployIdLength;
   }
+
 }
