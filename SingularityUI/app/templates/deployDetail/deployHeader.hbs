@@ -1,0 +1,29 @@
+{{! Part of requestBase }}
+<header class='detail-header'>
+    <div class="row">
+        {{! Left side, info }}
+        <div class="col-md-8">
+            <h4>
+                <span class="request-state" data-state="{{ data.state }}">
+                    {{humanizeText data.state}}
+                </span>
+
+                <span class="request-type">
+                    {{humanizeText data.type}}
+                </span>
+
+            </h4>
+
+            <h2>
+                {{ data.id }}
+            </h2>
+        </div>
+
+        {{! Right side, buttons }}
+        <div class="col-md-4 button-container">
+            <a class="btn btn-default" data-request-id="{{ data.id }}" data-action="viewObjectJSON">
+                JSON
+            </a>
+        </div>
+    </div>
+</header>
