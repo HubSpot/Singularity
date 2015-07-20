@@ -6,8 +6,41 @@
     <ul class="list-unstyled horizontal-description-list">
         <li class="col-md-4">
             <div>
-                <h4>Timestamp<a data-clipboard-text="{{ data.id }}">Copy</a></h4>
-                <p>{{ data.id }}</p>
+                <h4>Initiated<a data-clipboard-text="{{ timestampFromNow data.deployMarker.timestamp }}">Copy</a></h4>
+                <p>{{ timestampFromNow data.deployMarker.timestamp }}</p>
+            </div>
+        </li>
+        <li class="col-md-4">
+            <div>
+                <h4>Status<a data-clipboard-text="{{ humanizeText data.deployResult.deployState }}">Copy</a></h4>
+                <p>{{ humanizeText data.deployResult.deployState }}</p>
+            </div>
+        </li>
+        <li class="col-md-4">
+            <div>
+                <h4>Message<a data-clipboard-text="{{ humanizeText data.deployResult.message }}">Copy</a></h4>
+                <p>{{ humanizeText data.deployResult.message }}</p>
+            </div>
+        </li>
+        <li class="col-md-4">
+            <div>
+                <h4>Completed<a data-clipboard-text="{{ timestampFromNow data.deployResult.timestamp }}">Copy</a></h4>
+                <p>{{ timestampFromNow data.deployResult.timestamp }}</p>
+            </div>
+        </li>
+        <li class="col-md-4">
+            <div>
+                <h4>Command<a data-clipboard-text="{{ timestampFromNow data.deploy.command }}">Copy</a></h4>
+                <p>{{ data.deploy.command }}</p>
+            </div>
+        </li>
+        <li class="col-md-4">
+            <div>
+                <h4>Resources<a data-clipboard-text="CPUs: {{ data.deploy.resources.cpus }} |
+                Memory (Mb): {{ data.deploy.resources.memoryMb }} |
+                Ports: {{ data.deploy.resources.numPorts }}">Copy</a></h4>
+                <p>CPUs: {{ data.deploy.resources.cpus }} | Memory (Mb): {{ data.deploy.resources.memoryMb }} | Ports: {{ data.deploy.resources.numPorts }}
+                </p>
             </div>
         </li>
     </ul>

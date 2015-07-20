@@ -1,6 +1,6 @@
 Controller = require './Controller'
 
-RequestDeployStatus    = require '../models/RequestDeployStatus'
+DeployDetails          = require '../models/DeployDetails'
 RequestHistoricalTasks = require '../collections/RequestHistoricalTasks'
 
 DeployDetailView       = require '../views/deploy'
@@ -18,12 +18,11 @@ class DeployDetailController extends Controller
     #
     # Data stuff
     #
-    @models.deploy = new RequestDeployStatus
+    @models.deploy = new DeployDetails
       deployId: @deployId
       requestId: @requestId
 
-    @collections.deployTasks = new RequestHistoricalTasks [], {@requestId}
-  
+    @collections.deployTasks = new RequestHistoricalTasks([], {@requestId})
 
     #
     # Subviews
@@ -35,6 +34,7 @@ class DeployDetailController extends Controller
       model:      @models.deploy
       template:   @templates.info
     @subviews.tasks = new ExpandableTableSubview
+      model:      @models.deploy
       collection: @collections.deployTasks
       template:   @templates.tasks
 
