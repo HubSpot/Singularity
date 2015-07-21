@@ -28,11 +28,13 @@
             </h3>
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-12">
-            <div class="well text-muted">
-                {{ data.deployResult.message }}
+    {{#if data.deployResult.message}}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="well text-muted">
+                    {{ data.deployResult.message }}
+                </div>
             </div>
         </div>
-    </div>
+    {{/if}}
 </header>
