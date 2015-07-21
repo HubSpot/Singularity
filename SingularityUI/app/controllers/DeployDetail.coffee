@@ -2,6 +2,7 @@ Controller = require './Controller'
 
 DeployDetails          = require '../models/DeployDetails'
 RequestHistoricalTasks = require '../collections/RequestHistoricalTasks'
+RequestTasks           = require '../collections/RequestTasks'
 
 DeployDetailView       = require '../views/deploy'
 ExpandableTableSubview = require '../views/expandableTableSubview'
@@ -12,7 +13,8 @@ class DeployDetailController extends Controller
   templates:
     header:             require '../templates/deployDetail/deployHeader'
     info:               require '../templates/deployDetail/deployInfo'
-    tasks:              require '../templates/deployDetail/deployTasks'
+    taskHistory:        require '../templates/deployDetail/deployTasks'
+    activeTasks:        require '../templates/deployDetail/activeTasks'
 
   initialize: ({@requestId, @deployId}) ->
     #
@@ -22,7 +24,12 @@ class DeployDetailController extends Controller
       deployId: @deployId
       requestId: @requestId
 
-    @collections.deployTasks = new RequestHistoricalTasks([], {@requestId})
+    @collections.taskHistory = new RequestHistoricalTasks [],
+      requestId: @requestId
+
+    @collections.activeTasks = new RequestTasks [],
+      requestId: @requestId
+      state:    'active'
 
     #
     # Subviews
@@ -30,13 +37,18 @@ class DeployDetailController extends Controller
     @subviews.header = new SimpleSubview
       model:      @models.deploy
       template:   @templates.header
+
     @subviews.info = new SimpleSubview
       model:      @models.deploy
       template:   @templates.info
+
     @subviews.taskHistory = new ExpandableTableSubview
-      model:      @models.deploy
-      collection: @collections.deployTasks
-      template:   @templates.tasks
+      collection: @collections.taskHistory
+      template:   @templates.taskHistory
+
+    @subviews.activeTasks = new ExpandableTableSubview
+      collection: @collections.activeTasks
+      template:   @templates.activeTasks
 
     #
     # Main view & stuff
@@ -50,7 +62,9 @@ class DeployDetailController extends Controller
 
   refresh: ->
     requestFetch = @models.deploy.fetch()
-    if @collections.deployTasks.currentPage is 1
-      @collections.deployTasks.fetch().error    @ignore404
+    if @collections.taskHistory.currentPage is 1
+      @collections.taskHistory.fetch().error    @ignore404
+    if @collections.activeTasks.currentPage is 1
+      @collections.activeTasks.fetch().error    @ignore404
 
 module.exports = DeployDetailController

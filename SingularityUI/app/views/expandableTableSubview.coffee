@@ -44,7 +44,7 @@ class ExpandableTableSubview extends View
 
             @collection.currentPage -= 1
             return undefined
-        
+
         # For after the render
         haveButtons = @$('.table-subview-buttons').length
 
@@ -121,7 +121,7 @@ class ExpandableTableSubview extends View
         # - 1 just in case
         @collection.atATime = canFit - 1
         @collection.currentPage = 1
-        
+
         @collection.fetch()
 
     startShrink: =>
@@ -130,7 +130,7 @@ class ExpandableTableSubview extends View
 
     shrink: =>
         @expanded = false
-        
+
         @$('.table-container').css 'min-height', '0px'
         @containerMinHeight = 0
 

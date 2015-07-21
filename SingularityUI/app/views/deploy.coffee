@@ -19,6 +19,7 @@ class DeployView extends View
 
         # Attach subview elements
         @$('#header').html              @subviews.header.$el
+        @$('#activeTasks').html         @subviews.activeTasks.$el
         @$('#tasks').html               @subviews.taskHistory.$el
         @$('#info').html                @subviews.info.$el
 

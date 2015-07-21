@@ -78,13 +78,22 @@
         &[data-state='SUCCEEDED']
             color #519D3D
 
-        &[data-state='PAUSED']
+        &[data-state='WAITING']
             color #3374CD
+
+        &[data-state='CANCELING']
+            color #F1ED00
 
         &[data-state='OVERDUE']
             color #BF5D36
 
+        &[data-state='CANCELED']
+            color #BF5D36
+
         &[data-state='FAILED']
+            color #ff0000
+
+        &[data-state='FAILED_INTERNAL_STATE']
             color #ff0000
 
         &:empty
