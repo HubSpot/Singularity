@@ -290,7 +290,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
     final boolean isActiveTask = taskManager.isActiveTask(taskId);
 
-    if (isActiveTask && !taskState.isDone()) {
+    if (task.isPresent() && isActiveTask && !taskState.isDone()) {
       final Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
 
       if (taskState == ExtendedTaskState.TASK_RUNNING) {
@@ -308,7 +308,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
     logSupport.checkDirectory(taskIdObj);
 
-    if (taskState.isDone()) {
+    if (taskState.isDone() || !task.isPresent()) {
       healthchecker.cancelHealthcheck(taskId);
       newTaskChecker.cancelNewTaskCheck(taskId);
 
