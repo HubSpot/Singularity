@@ -1,13 +1,14 @@
 package com.hubspot.singularity;
 
+import static com.hubspot.singularity.JsonHelpers.copyOfList;
+
 import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
-
-import static com.hubspot.singularity.JsonHelpers.copyOfList;
 
 public class SingularityRequest {
 
@@ -227,4 +228,35 @@ public class SingularityRequest {
         + ", rackSensitive=" + rackSensitive + ", rackAffinity=" + rackAffinity + ", slavePlacement=" + slavePlacement + ", loadBalanced=" + loadBalanced + ", group=" + group + "]";
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    SingularityRequest request = (SingularityRequest) o;
+    return Objects.equals(id, request.id) &&
+            Objects.equals(requestType, request.requestType) &&
+            Objects.equals(owners, request.owners) &&
+            Objects.equals(numRetriesOnFailure, request.numRetriesOnFailure) &&
+            Objects.equals(schedule, request.schedule) &&
+            Objects.equals(quartzSchedule, request.quartzSchedule) &&
+            Objects.equals(scheduleType, request.scheduleType) &&
+            Objects.equals(killOldNonLongRunningTasksAfterMillis, request.killOldNonLongRunningTasksAfterMillis) &&
+            Objects.equals(scheduledExpectedRuntimeMillis, request.scheduledExpectedRuntimeMillis) &&
+            Objects.equals(waitAtLeastMillisAfterTaskFinishesForReschedule, request.waitAtLeastMillisAfterTaskFinishesForReschedule) &&
+            Objects.equals(instances, request.instances) &&
+            Objects.equals(rackSensitive, request.rackSensitive) &&
+            Objects.equals(rackAffinity, request.rackAffinity) &&
+            Objects.equals(slavePlacement, request.slavePlacement) &&
+            Objects.equals(loadBalanced, request.loadBalanced) &&
+            Objects.equals(group, request.group);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, loadBalanced, group);
+  }
 }
