@@ -371,7 +371,7 @@ public class RequestResource extends AbstractRequestResource {
   @PropertyFiltering
   @Path("/queued/pending")
   @ApiOperation(value="Retrieve the list of pending requests", response=SingularityPendingRequest.class, responseContainer="List")
-  public List<SingularityPendingRequest> getPendingRequests() {
+  public Iterable<SingularityPendingRequest> getPendingRequests() {
     return authorizationHelper.filterByAuthorizedRequests(user, requestManager.getPendingRequests(), SingularityTransformHelpers.PENDING_REQUEST_TO_REQUEST_ID);
   }
 

@@ -14,7 +14,6 @@ import javax.annotation.Nonnull;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -166,7 +165,7 @@ public class SingularityAuthorizationHelper {
     }
   }
 
-  public <T> List<T> filterByAuthorizedRequests(final Optional<SingularityUser> user, List<T> objects, final Function<T, String> requestIdFunction) {
+  public <T> Iterable<T> filterByAuthorizedRequests(final Optional<SingularityUser> user, List<T> objects, final Function<T, String> requestIdFunction) {
     if (hasAdminAuthorization(user)) {
       return objects;
     }
@@ -185,16 +184,16 @@ public class SingularityAuthorizationHelper {
       }
     });
 
-    return ImmutableList.copyOf(Iterables.filter(objects, new Predicate<T>() {
+    return Iterables.filter(objects, new Predicate<T>() {
       @Override
       public boolean apply(@Nonnull T input) {
         final String requestId = requestIdFunction.apply(input);
         return requestMap.containsKey(requestId) && isAuthorizedForRequest(requestMap.get(requestId).getRequest(), user);
       }
-    }));
+    });
   }
 
-  public List<String> filterAuthorizedRequestIds(final Optional<SingularityUser> user, List<String> requestIds) {
+  public Iterable<String> filterAuthorizedRequestIds(final Optional<SingularityUser> user, List<String> requestIds) {
     if (hasAdminAuthorization(user)) {
       return requestIds;
     }
@@ -206,11 +205,11 @@ public class SingularityAuthorizationHelper {
       }
     });
 
-    return ImmutableList.copyOf(Iterables.filter(requestIds, new Predicate<String>() {
+    return Iterables.filter(requestIds, new Predicate<String>() {
       @Override
       public boolean apply(@Nonnull String input) {
         return requestMap.containsKey(input) && isAuthorizedForRequest(requestMap.get(input).getRequest(), user);
       }
-    }));
+    });
   }
 }
