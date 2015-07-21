@@ -15,6 +15,7 @@ import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpConfig;
 import com.hubspot.horizon.ning.NingHttpClient;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityClientCredentials;
 
 public class SingularityClientModule extends AbstractModule {
 
@@ -28,6 +29,8 @@ public class SingularityClientModule extends AbstractModule {
 
   // bind this to provide the path for singularity eg: singularity/v2/api
   public static final String CONTEXT_PATH = "singularity.context.path";
+
+  public static final String CREDENTIALS_PROPERTY_NAME = "singularity.client.credentials";
 
   private final List<String> hosts;
 
@@ -63,5 +66,9 @@ public class SingularityClientModule extends AbstractModule {
 
   public static LinkedBindingBuilder<CuratorFramework> bindCurator(Binder binder) {
     return binder.bind(CuratorFramework.class).annotatedWith(Names.named(CURATOR_NAME));
+  }
+
+  public static LinkedBindingBuilder<SingularityClientCredentials> bindCredentials(Binder binder) {
+    return binder.bind(SingularityClientCredentials.class).annotatedWith(Names.named(CREDENTIALS_PROPERTY_NAME));
   }
 }

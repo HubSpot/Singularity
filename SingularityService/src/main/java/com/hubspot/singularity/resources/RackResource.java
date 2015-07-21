@@ -17,6 +17,8 @@ import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityService;
+import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.RackManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -28,12 +30,10 @@ import com.wordnik.swagger.annotations.ApiParam;
 public class RackResource extends AbstractMachineResource<SingularityRack> {
   public static final String PATH = SingularityService.API_BASE_PATH + "/racks";
 
-  private final RackManager rackManager;
 
   @Inject
-  public RackResource(RackManager rackManager) {
-    super(rackManager);
-    this.rackManager = rackManager;
+  public RackResource(RackManager rackManager, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user) {
+    super(rackManager, authorizationHelper, user);
   }
 
   @Override
@@ -45,20 +45,20 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   @Path("/")
   @ApiOperation("Retrieve the list of all known racks, optionally filtering by a particular state")
   public List<SingularityRack> getRacks(@ApiParam("Optionally specify a particular state to filter racks by") @QueryParam("state") Optional<MachineState> filterState) {
-    return rackManager.getObjectsFiltered(filterState);
+    return manager.getObjectsFiltered(filterState);
   }
 
   @GET
   @Path("/rack/{rackId}")
   @ApiOperation("Retrieve the history of a given rack")
   public List<SingularityMachineStateHistoryUpdate> getRackHistory(@ApiParam("Rack ID") @PathParam("rackId") String rackId) {
-    return rackManager.getHistory(rackId);
+    return manager.getHistory(rackId);
   }
 
   @DELETE
   @Path("/rack/{rackId}")
   @ApiOperation("Remove a known rack, erasing history. This operation will cancel decomissioning of racks")
-  public void removeRack(@ApiParam("Rack ID") @PathParam("rackId") String rackId) {
+  public void removeRack(@ApiParam("Rack ID") @PathParam("rackId") String rackId, @QueryParam("user") Optional<String> queryUser) {
     super.remove(rackId);
   }
 
@@ -66,24 +66,24 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   @Path("/rack/{rackId}/decomission")
   @Deprecated
   public void decomissionRack(@ApiParam("Active rack ID") @PathParam("rackId") String rackId,
-      @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> user) {
-    super.decommission(rackId, user);
+      @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> queryUser) {
+    super.decommission(rackId, queryUser);
   }
 
   @POST
   @Path("/rack/{rackId}/decommission")
   @ApiOperation("Begin decommissioning a specific active rack")
   public void decommissionRack(@ApiParam("Active rack ID") @PathParam("rackId") String rackId,
-      @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> user) {
-    super.decommission(rackId, user);
+      @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> queryUser) {
+    super.decommission(rackId, queryUser);
   }
 
   @POST
   @Path("/rack/{rackId}/activate")
   @ApiOperation("Activate a decomissioning rack, canceling decomission without erasing history")
   public void activateSlave(@ApiParam("Active rackId") @PathParam("rackId") String rackId,
-      @ApiParam("User requesting the activate") @QueryParam("user") Optional<String> user) {
-    super.activate(rackId, user);
+      @ApiParam("User requesting the activate") @QueryParam("user") Optional<String> queryUser) {
+    super.activate(rackId, queryUser);
   }
 
 }
