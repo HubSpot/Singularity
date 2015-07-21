@@ -12,18 +12,6 @@
         </li>
         <li class="col-md-4">
             <div>
-                <h4>Status<a data-clipboard-text="{{ humanizeText data.deployResult.deployState }}">Copy</a></h4>
-                <p>{{ humanizeText data.deployResult.deployState }}</p>
-            </div>
-        </li>
-        <li class="col-md-4">
-            <div>
-                <h4>Message<a data-clipboard-text="{{ humanizeText data.deployResult.message }}">Copy</a></h4>
-                <p>{{ humanizeText data.deployResult.message }}</p>
-            </div>
-        </li>
-        <li class="col-md-4">
-            <div>
                 <h4>Completed<a data-clipboard-text="{{ timestampFromNow data.deployResult.timestamp }}">Copy</a></h4>
                 <p>{{ timestampFromNow data.deployResult.timestamp }}</p>
             </div>
@@ -41,6 +29,30 @@
                 Ports: {{ data.deploy.resources.numPorts }}">Copy</a></h4>
                 <p>CPUs: {{ data.deploy.resources.cpus }} | Memory (Mb): {{ data.deploy.resources.memoryMb }} | Ports: {{ data.deploy.resources.numPorts }}
                 </p>
+            </div>
+        </li>
+        <li class="col-md-4">
+            <div>
+                <h4>Number of Tasks<a data-clipboard-text="{{ data.deployStatistics.numTasks }}">Copy</a></h4>
+                <p>{{ data.deployStatistics.numTasks }}</p>
+            </div>
+        </li>
+        <li class="col-md-4">
+            <div>
+                <h4>Last Task State<a data-clipboard-text="{{ humanizeText data.deployStatistics.lastTaskState }}">Copy</a></h4>
+                <p>{{ humanizeText data.deployStatistics.lastTaskState }}</p>
+            </div>
+        </li>
+        <li class="col-md-4">
+            <div>
+                <h4>Sequential Retries<a data-clipboard-text="{{ data.deployStatistics.numSequentialRetries }}">Copy</a></h4>
+                <p>{{ data.deployStatistics.numSequentialRetries }}</p>
+            </div>
+        </li>
+        <li class="col-md-4">
+            <div>
+                <h4>Average Runtime Milliseconds<a data-clipboard-text="{{ data.deployStatistics.averageRuntimeMillis }}">Copy</a></h4>
+                <p>{{ data.deployStatistics.averageRuntimeMillis }}</p>
             </div>
         </li>
     </ul>

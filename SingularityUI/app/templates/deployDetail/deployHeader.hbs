@@ -22,7 +22,17 @@
                 <span>
                     {{ data.deployId }}
                 </span>
+                <span class="deploy-state" data-state="{{ data.deployResult.deployState }}">
+                    {{ data.deployResult.deployState }}
+                </span>
             </h3>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <div class="well text-muted">
+                {{ data.deployResult.message }}
+            </div>
         </div>
     </div>
 </header>
