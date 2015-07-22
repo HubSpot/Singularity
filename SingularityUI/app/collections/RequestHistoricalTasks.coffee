@@ -18,4 +18,10 @@ class HistoricalTasks extends PaginableCollection
             task.id = task.taskId.id
         data
 
+    getTasksForDeploy: (deployId) ->
+        @filter((task) =>
+            task.get('taskId').deployId == deployId)
+
+        #new HistoricalTasks(filtered, @requestId)
+
 module.exports = HistoricalTasks

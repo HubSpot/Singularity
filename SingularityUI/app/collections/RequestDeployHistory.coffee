@@ -3,7 +3,7 @@ PaginableCollection = require './PaginableCollection'
 class DeployHistory extends PaginableCollection
 
     url: -> "#{ config.apiRoot }/history/request/#{ @requestId }/deploys"
-        
+
     comparator: undefined
 
     initialize: (models, { @requestId }) =>

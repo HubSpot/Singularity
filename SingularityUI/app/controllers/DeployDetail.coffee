@@ -28,8 +28,8 @@ class DeployDetailController extends Controller
       requestId: @requestId
 
     @collections.activeTasks = new RequestTasks [],
-      requestId: @requestId
-      state:    'active'
+        requestId: @requestId
+        state:    'active'
 
     #
     # Subviews
@@ -46,25 +46,33 @@ class DeployDetailController extends Controller
       collection: @collections.taskHistory
       template:   @templates.taskHistory
 
+    @collections.taskHistory.getTasksForDeploy(@deployId)
     @subviews.activeTasks = new SimpleSubview
       collection: @collections.activeTasks
       template:   @templates.activeTasks
 
-    #
-    # Main view & stuff
-    #
-    @setView new DeployDetailView _.extend {@requestId, @deployId, @subviews},
-      model: @models.deploy
 
-    @refresh()
+    @collections.taskHistory.fetch().done =>
+        @refresh()
+        @setView new DeployDetailView _.extend {@requestId, @deployId, @subviews},
+          model: @models.deploy
 
-    app.showView @view
+        app.showView @view
 
   refresh: ->
     requestFetch = @models.deploy.fetch()
-    if @collections.taskHistory.currentPage is 1
-      @collections.taskHistory.fetch().error    @ignore404
-    if @collections.activeTasks.currentPage is 1
-      @collections.activeTasks.fetch().error    @ignore404
+    promise = @collections.taskHistory.fetch()
+    promise.error =>
+        @ignore404
+    promise.done =>
+        filtered = @collections.taskHistory.getTasksForDeploy(@deployId)
+        # @collections.taskHistory.reset(filtered)
+
+        @collections.taskHistory = new RequestHistoricalTasks filtered, @requestId
+        console.log @collections.taskHistory.getTasksForDeploy(@deployId)
+
+    promise = @collections.activeTasks.fetch()
+    promise.error =>
+        @ignore404
 
 module.exports = DeployDetailController
