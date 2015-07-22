@@ -22,8 +22,8 @@ class SimpleSubview extends View
         for eventName in ['sync', 'add', 'remove', 'change', 'reset']
             @listenTo @data, eventName, @render
 
-        @listenTo @data, 'reset', =>
-            @$el.empty()
+        #@listenTo @data, 'reset', =>
+        #    @$el.empty()
 
     render: ->
         return if not @data.synced and @data.isEmpty?()

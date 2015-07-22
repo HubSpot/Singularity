@@ -46,18 +46,16 @@ class DeployDetailController extends Controller
       collection: @collections.taskHistory
       template:   @templates.taskHistory
 
-    @collections.taskHistory.getTasksForDeploy(@deployId)
     @subviews.activeTasks = new SimpleSubview
       collection: @collections.activeTasks
       template:   @templates.activeTasks
 
 
-    @collections.taskHistory.fetch().done =>
-        @refresh()
-        @setView new DeployDetailView _.extend {@requestId, @deployId, @subviews},
-          model: @models.deploy
+    @refresh()
+    @setView new DeployDetailView _.extend {@requestId, @deployId, @subviews},
+      model: @models.deploy
 
-        app.showView @view
+    app.showView @view
 
   refresh: ->
     requestFetch = @models.deploy.fetch()
@@ -66,10 +64,7 @@ class DeployDetailController extends Controller
         @ignore404
     promise.done =>
         filtered = @collections.taskHistory.getTasksForDeploy(@deployId)
-        # @collections.taskHistory.reset(filtered)
-
-        @collections.taskHistory = new RequestHistoricalTasks filtered, @requestId
-        console.log @collections.taskHistory.getTasksForDeploy(@deployId)
+        @collections.taskHistory.reset(filtered)
 
     promise = @collections.activeTasks.fetch()
     promise.error =>
