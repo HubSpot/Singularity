@@ -26,6 +26,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingDeploy;
@@ -40,12 +41,14 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
+import com.hubspot.singularity.data.transcoders.SingularityTranscoderException;
 import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager.SlaveMatchState;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
 import com.hubspot.singularity.scheduler.SingularitySchedulerPriority;
 import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 @Singleton
 public class SingularityMesosScheduler implements Scheduler {
@@ -65,6 +68,8 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SingularitySchedulerPriority schedulerPriority;
   private final SingularityLogSupport logSupport;
 
+  private final SingularityExceptionNotifier exceptionNotifier;
+
   private final Provider<SingularitySchedulerStateCache> stateCacheProvider;
   private final String serverId;
   private final SchedulerDriverSupplier schedulerDriverSupplier;
@@ -74,7 +79,7 @@ public class SingularityMesosScheduler implements Scheduler {
   @Inject
   SingularityMesosScheduler(MesosConfiguration mesosConfiguration, SingularityConfiguration configuration, TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager,
       SingularitySchedulerPriority schedulerPriority, SingularityNewTaskChecker newTaskChecker, SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport,
-      Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager,
+      Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager, SingularityExceptionNotifier exceptionNotifier,
       @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier, final IdTranscoder<SingularityTaskId> taskIdTranscoder, CustomExecutorConfiguration customExecutorConfiguration) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0);
@@ -91,6 +96,7 @@ public class SingularityMesosScheduler implements Scheduler {
     this.serverId = serverId;
     this.schedulerDriverSupplier = schedulerDriverSupplier;
     this.taskIdTranscoder = taskIdTranscoder;
+    this.exceptionNotifier = exceptionNotifier;
     this.configuration = configuration;
   }
 
@@ -270,6 +276,16 @@ public class SingularityMesosScheduler implements Scheduler {
     }
   }
 
+  private Optional<SingularityTaskId> getTaskId(String taskId) {
+    try {
+      return Optional.of(taskIdTranscoder.fromString(taskId));
+    } catch (InvalidSingularityTaskIdException | SingularityTranscoderException e) {
+      exceptionNotifier.notify(e, Collections.<String, String>emptyMap());
+      LOG.error("Unexpected taskId {} ", taskId, e);
+      return Optional.absent();
+    }
+  }
+
   @Override
   public void statusUpdate(SchedulerDriver driver, Protos.TaskStatus status) {
     final String taskId = status.getTaskId().getValue();
@@ -282,7 +298,13 @@ public class SingularityMesosScheduler implements Scheduler {
 
     LOG.debug("Task {} is now {} ({}) at {} ", taskId, status.getState(), status.getMessage(), timestamp);
 
-    final SingularityTaskId taskIdObj = taskIdTranscoder.fromString(taskId);
+    final Optional<SingularityTaskId> maybeTaskId = getTaskId(taskId);
+
+    if (!maybeTaskId.isPresent()) {
+      return;
+    }
+
+    final SingularityTaskId taskIdObj = maybeTaskId.get();
 
     final SingularityTaskStatusHolder newTaskStatusHolder = new SingularityTaskStatusHolder(taskIdObj, Optional.of(status), System.currentTimeMillis(), serverId, Optional.<String>absent());
     final Optional<SingularityTaskStatusHolder> previousTaskStatusHolder = taskManager.getLastActiveTaskStatus(taskIdObj);
@@ -299,14 +321,20 @@ public class SingularityMesosScheduler implements Scheduler {
     final boolean isActiveTask = taskManager.isActiveTask(taskId);
 
     if (isActiveTask && !taskState.isDone()) {
-      final Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
+      if (task.isPresent()) {
+        final Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
 
-      if (taskState == ExtendedTaskState.TASK_RUNNING) {
-        healthchecker.enqueueHealthcheck(task.get(), pendingDeploy);
-      }
+        if (taskState == ExtendedTaskState.TASK_RUNNING) {
+          healthchecker.enqueueHealthcheck(task.get(), pendingDeploy);
+        }
 
-      if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
-        newTaskChecker.enqueueNewTaskCheck(task.get());
+        if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
+          newTaskChecker.enqueueNewTaskCheck(task.get());
+        }
+      } else {
+        final String message = String.format("Task %s is active but is missing task data", taskId);
+        exceptionNotifier.notify(message, Collections.<String, String>emptyMap());
+        LOG.error(message);
       }
     }
 
