@@ -27,7 +27,8 @@ class SimpleSubview extends View
 
     render: ->
         return if not @data.synced and @data.isEmpty?()
-
+        #if @collection?
+            #console.log @data
         @$el.html @template(@renderData())
 
         @$('.actions-column a[title]').tooltip()

@@ -11,4 +11,8 @@ class RequestTasks extends Collection
             task.id = task.taskId.id
         data
 
+    getTasksForDeploy: (deployId) ->
+        @filter((task) =>
+            task.get('taskId').deployId == deployId)
+
 module.exports = RequestTasks

@@ -42,14 +42,13 @@ class DeployDetailController extends Controller
       model:      @models.deploy
       template:   @templates.info
 
-    @subviews.taskHistory = new SimpleSubview
+    @subviews.taskHistory = new ExpandableTableSubview
       collection: @collections.taskHistory
       template:   @templates.taskHistory
 
-    @subviews.activeTasks = new SimpleSubview
+    @subviews.activeTasks = new ExpandableTableSubview
       collection: @collections.activeTasks
       template:   @templates.activeTasks
-
 
     @refresh()
     @setView new DeployDetailView _.extend {@requestId, @deployId, @subviews},
@@ -59,15 +58,33 @@ class DeployDetailController extends Controller
 
   refresh: ->
     requestFetch = @models.deploy.fetch()
+
+    @collections.taskHistory.atATime = 999999
     promise = @collections.taskHistory.fetch()
     promise.error =>
         @ignore404
     promise.done =>
         filtered = @collections.taskHistory.getTasksForDeploy(@deployId)
-        @collections.taskHistory.reset(filtered)
+        @collections.taskHistory.atATime = 5
+        if filtered.length
+            @collections.taskHistory.reset(filtered)
+        else
+            @collections.taskHistory.reset()
 
+    @collections.taskHistory.atATime = 999999
     promise = @collections.activeTasks.fetch()
     promise.error =>
         @ignore404
+    promise.done =>
+        console.log @collections.activeTasks
+        filtered = @collections.activeTasks.getTasksForDeploy(@deployId)
+        console.log filtered
+        @collections.taskHistory.atATime = 5
+        if filtered.length
+            @collections.activeTasks.reset(filtered)
+        else
+            @collections.activeTasks.reset()
+            console.log @collections.activeTasks
+
 
 module.exports = DeployDetailController

@@ -25,6 +25,7 @@ class ExpandableTableSubview extends View
 
     initialize: ({@collection, @template}) ->
         @listenTo @collection, 'sync', @render
+        @listenTo @collection, 'reset', @render
 
     render: ->
         # If we've already rendered stuff and now we're trying to render
