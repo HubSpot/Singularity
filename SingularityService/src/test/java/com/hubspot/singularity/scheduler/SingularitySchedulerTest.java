@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.SlaveID;
+import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Protos.TaskStatus;
 import org.junit.Assert;
@@ -1154,6 +1155,34 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(rackManager.getObject("rack2").get().getCurrentState().getState() == MachineState.DECOMMISSIONED);
 
+  }
+
+  @Test
+  public void testTaskOddities() {
+    // test unparseable status update
+    TaskStatus.Builder bldr = TaskStatus.newBuilder()
+        .setTaskId(TaskID.newBuilder().setValue("task"))
+        .setSlaveId(SlaveID.newBuilder().setValue("slave1"))
+        .setState(TaskState.TASK_RUNNING);
+
+    // should not throw exception:
+    sms.statusUpdate(driver, bldr.build());
+
+    initRequest();
+    initFirstDeploy();
+
+    SingularityTask taskOne = launchTask(request, firstDeploy, 1, TaskState.TASK_STARTING);
+
+    taskManager.deleteTaskHistory(taskOne.getTaskId());
+
+    Assert.assertTrue(taskManager.isActiveTask(taskOne.getTaskId().getId()));
+
+    statusUpdate(taskOne, TaskState.TASK_RUNNING);
+    statusUpdate(taskOne, TaskState.TASK_FAILED);
+
+    Assert.assertTrue(!taskManager.isActiveTask(taskOne.getTaskId().getId()));
+
+    Assert.assertEquals(2, taskManager.getTaskHistoryUpdates(taskOne.getTaskId()).size());
   }
 
   @Test
