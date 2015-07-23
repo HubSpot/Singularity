@@ -24,8 +24,8 @@ class ExpandableTableSubview extends View
             'click [data-action="shrink"]': 'startShrink'
 
     initialize: ({@collection, @template}) ->
-        @listenTo @collection, 'sync', @render
-        @listenTo @collection, 'reset', @render
+        for eventName in ['sync', 'reset']
+            @listenTo @collection, eventName, @render
 
     render: ->
         # If we've already rendered stuff and now we're trying to render
