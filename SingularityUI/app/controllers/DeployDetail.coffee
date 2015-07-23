@@ -66,25 +66,16 @@ class DeployDetailController extends Controller
     promise.done =>
         filtered = @collections.taskHistory.getTasksForDeploy(@deployId)
         @collections.taskHistory.atATime = 5
-        if filtered.length
-            @collections.taskHistory.reset(filtered)
-        else
-            @collections.taskHistory.reset()
+        @collections.taskHistory.reset(filtered)
 
     @collections.taskHistory.atATime = 999999
     promise = @collections.activeTasks.fetch()
     promise.error =>
         @ignore404
     promise.done =>
-        console.log @collections.activeTasks
         filtered = @collections.activeTasks.getTasksForDeploy(@deployId)
-        console.log filtered
         @collections.taskHistory.atATime = 5
-        if filtered.length
-            @collections.activeTasks.reset(filtered)
-        else
-            @collections.activeTasks.reset()
-            console.log @collections.activeTasks
+        @collections.activeTasks.reset(filtered)
 
 
 module.exports = DeployDetailController

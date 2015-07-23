@@ -27,7 +27,7 @@ class ExpandableTableSubview extends View
         @listenTo @collection, 'sync', @render
         @listenTo @collection, 'reset', @render
 
-    render: ->
+    render: () ->
         # If we've already rendered stuff and now we're trying to render
         # an empty collection (`next` returned an empty list)
         if not @collection.length and @collection.currentPage isnt 1

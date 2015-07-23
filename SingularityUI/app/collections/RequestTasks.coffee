@@ -1,6 +1,7 @@
 Collection = require './collection'
+PaginableCollection = require './PaginableCollection'
 
-class RequestTasks extends Collection
+class RequestTasks extends PaginableCollection
 
     url: => "#{ config.apiRoot }/history/request/#{ @requestId }/tasks/#{ @state }"
 
