@@ -1,18 +1,12 @@
 {{! Part of deployBase }}
 <header class='detail-header'>
     <div class="row">
-        <div class="col-md-8">
-            <h5>
-                <span>
+        <div class="col-md-12">
+            <ul class="breadcrumb">
+                <li>
                     Request <a href="{{appRoot}}/request/{{ data.requestId }}">{{ data.requestId }}</a>
-                </span>
-            </h5>
-        </div>
-        {{! Right side, buttons }}
-        <div class="col-md-4 button-container">
-            <a class="btn btn-default" data-request-id="{{ data.id }}" data-action="viewObjectJSON">
-                JSON
-            </a>
+                </li>
+            </ul>
         </div>
     </div>
 
@@ -32,6 +26,12 @@
                         </span>
                     {{/if}}
             </h3>
+        </div>
+        {{! Right side, buttons }}
+        <div class="col-md-4 button-container">
+            <a class="btn btn-default" data-request-id="{{ data.id }}" data-action="viewObjectJSON">
+                JSON
+            </a>
         </div>
     </div>
     {{#if data.deployResult.message}}
