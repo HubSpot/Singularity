@@ -22,9 +22,15 @@
                 <span>
                     {{ data.deployId }}
                 </span>
-                <span class="deploy-state" data-state="{{ data.deployResult.deployState }}">
-                    {{ data.deployResult.deployState }}
-                </span>
+                    {{#if data.deployResult.deployState}}
+                        <span class="deploy-state" data-state="{{ data.deployResult.deployState }}">
+                            {{ data.deployResult.deployState }}
+                        </span>
+                    {{else}}
+                        <span class="deploy-state" data-state="PENDING">
+                            pending
+                        </span>
+                    {{/if}}
             </h3>
         </div>
     </div>
