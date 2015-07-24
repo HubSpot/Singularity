@@ -1,5 +1,7 @@
 View = require './view'
 
+TERMINAL_TASK_STATES = ['TASK_KILLED', 'TASK_LOST', 'TASK_FAILED', 'TASK_FINISHED']
+
 class TailView extends View
 
     pollingTimeout: 3000
@@ -183,7 +185,8 @@ class TailView extends View
         @$el.addClass 'tailing'
 
     stopTailing: ->
-        return if @isTailing isnt true
+        task = @model.get('taskUpdates')[..].pop()
+        return if @isTailing isnt true and task.taskState in TERMINAL_TASK_STATES
 
         @isTailing = false
         clearInterval @tailInterval
