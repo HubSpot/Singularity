@@ -85,14 +85,6 @@ class Utils
 
             totalWidth = $table.width()
             sortable = $table.attr('data-sortable') != undefined
-            #debugger
-            # if sortable
-            #     debugger
-            #     for $heading in $headings
-            #         $heading = $ $heading
-            #         width = parseInt($heading.css("width")) + 22
-            #         $heading.css "width", "#{ width }px"
-            # else
             if not sortable
                 for $heading in $headings
                     $heading = $ $heading
