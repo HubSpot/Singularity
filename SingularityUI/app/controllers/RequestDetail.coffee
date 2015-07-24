@@ -123,6 +123,7 @@ class RequestDetailController extends Controller
 
         @collections.activeTasks.fetch().error    @ignore404
         @collections.scheduledTasks.fetch().error @ignore404
+        @collections.scheduledTasks.fetch({reset: true}).error @ignore404
         
         if @collections.requestHistory.currentPage is 1
             requestHistoryFetch = @collections.requestHistory.fetch()
