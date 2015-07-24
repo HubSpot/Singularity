@@ -10,11 +10,7 @@ class HealthCheckResult extends Model
     parse: (task) ->
         latest =  _.last(task.healthcheckResults)
         if latest
-            # @id = latest.taskId.id
-            # @hasData = true
-            latest.hasData = true
-            latest
-        else
-            latest.hasData = false
+            @id = latest.taskId.id
+        latest
 
 module.exports = HealthCheckResult
