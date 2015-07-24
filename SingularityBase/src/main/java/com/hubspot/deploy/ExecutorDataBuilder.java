@@ -19,10 +19,11 @@ public class ExecutorDataBuilder {
   private Map<String, String> loggingExtraFields;
   private Optional<Long> sigKillProcessesAfterMillis;
   private Optional<Integer> maxTaskThreads;
+  private Optional<Boolean> preserveTaskSandboxAfterFinish;
   private Optional<String> loggingS3Bucket;
 
   public ExecutorDataBuilder(String cmd, List<EmbeddedArtifact> embeddedArtifacts, List<ExternalArtifact> externalArtifacts, List<S3Artifact> s3Artifacts, List<Integer> successfulExitCodes, Optional<String> runningSentinel,
-      Optional<String> user, List<String> extraCmdLineArgs, Optional<String> loggingTag, Map<String, String> loggingExtraFields, Optional<Long> sigKillProcessesAfterMillis, Optional<Integer> maxTaskThreads, Optional<String> loggingS3Bucket) {
+      Optional<String> user, List<String> extraCmdLineArgs, Optional<String> loggingTag, Map<String, String> loggingExtraFields, Optional<Long> sigKillProcessesAfterMillis, Optional<Integer> maxTaskThreads, Optional<Boolean> preserveTaskSandboxAfterFinish, Optional<String> loggingS3Bucket) {
     this.cmd = cmd;
     this.embeddedArtifacts = embeddedArtifacts;
     this.externalArtifacts = externalArtifacts;
@@ -35,6 +36,7 @@ public class ExecutorDataBuilder {
     this.loggingExtraFields = loggingExtraFields;
     this.sigKillProcessesAfterMillis = sigKillProcessesAfterMillis;
     this.maxTaskThreads = maxTaskThreads;
+    this.preserveTaskSandboxAfterFinish = preserveTaskSandboxAfterFinish;
     this.loggingS3Bucket = loggingS3Bucket;
   }
 
@@ -43,7 +45,7 @@ public class ExecutorDataBuilder {
   }
 
   public ExecutorData build() {
-    return new ExecutorData(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields, sigKillProcessesAfterMillis, maxTaskThreads, loggingS3Bucket);
+    return new ExecutorData(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields, sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, loggingS3Bucket);
   }
 
   public Optional<String> getLoggingTag() {
@@ -154,6 +156,15 @@ public class ExecutorDataBuilder {
     return this;
   }
 
+  public Optional<Boolean> getPreserveTaskSandboxAfterFinish() {
+    return preserveTaskSandboxAfterFinish;
+  }
+
+  public ExecutorDataBuilder setPreserveTaskSandboxAfterFinish(Optional<Boolean> preserveTaskSandboxAfterFinish) {
+    this.preserveTaskSandboxAfterFinish = preserveTaskSandboxAfterFinish;
+    return this;
+  }
+
   public Optional<String> getLoggingS3Bucket() {
     return loggingS3Bucket;
   }
@@ -178,6 +189,7 @@ public class ExecutorDataBuilder {
             ", loggingExtraFields=" + loggingExtraFields +
             ", sigKillProcessesAfterMillis=" + sigKillProcessesAfterMillis +
             ", maxTaskThreads=" + maxTaskThreads +
+            ", preserveTaskSandboxAfterFinish=" + preserveTaskSandboxAfterFinish +
             ", loggingS3Bucket=" + loggingS3Bucket +
             ']';
   }

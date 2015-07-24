@@ -24,6 +24,7 @@ public class ExecutorData {
   private final Map<String, String> loggingExtraFields;
   private final Optional<Long> sigKillProcessesAfterMillis;
   private final Optional<Integer> maxTaskThreads;
+  private final Optional<Boolean> preserveTaskSandboxAfterFinish;
   private final Optional<String> loggingS3Bucket;
 
   @JsonCreator
@@ -31,7 +32,9 @@ public class ExecutorData {
       @JsonProperty("s3Artifacts") List<S3Artifact> s3Artifacts, @JsonProperty("successfulExitCodes") List<Integer> successfulExitCodes, @JsonProperty("user") Optional<String> user,
       @JsonProperty("runningSentinel") Optional<String> runningSentinel, @JsonProperty("extraCmdLineArgs") List<String> extraCmdLineArgs, @JsonProperty("loggingTag") Optional<String> loggingTag,
       @JsonProperty("loggingExtraFields") Map<String, String> loggingExtraFields, @JsonProperty("sigKillProcessesAfterMillis") Optional<Long> sigKillProcessesAfterMillis,
-      @JsonProperty("maxTaskThreads") Optional<Integer> maxTaskThreads, @JsonProperty("loggingS3Bucket") Optional<String> loggingS3Bucket) {
+      @JsonProperty("maxTaskThreads") Optional<Integer> maxTaskThreads,
+      @JsonProperty("preserveTaskSandboxAfterFinish") Optional<Boolean> preserveTaskSandboxAfterFinish,
+      @JsonProperty("loggingS3Bucket") Optional<String> loggingS3Bucket) {
     this.cmd = cmd;
     this.embeddedArtifacts = JavaUtils.nonNullImmutable(embeddedArtifacts);
     this.externalArtifacts = JavaUtils.nonNullImmutable(externalArtifacts);
@@ -44,11 +47,12 @@ public class ExecutorData {
     this.loggingExtraFields = JavaUtils.nonNullImmutable(loggingExtraFields);
     this.sigKillProcessesAfterMillis = sigKillProcessesAfterMillis;
     this.maxTaskThreads = maxTaskThreads;
+    this.preserveTaskSandboxAfterFinish = preserveTaskSandboxAfterFinish;
     this.loggingS3Bucket = loggingS3Bucket;
   }
 
   public ExecutorDataBuilder toBuilder() {
-    return new ExecutorDataBuilder(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, runningSentinel, user, extraCmdLineArgs, loggingTag, loggingExtraFields, sigKillProcessesAfterMillis, maxTaskThreads, loggingS3Bucket);
+    return new ExecutorDataBuilder(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, runningSentinel, user, extraCmdLineArgs, loggingTag, loggingExtraFields, sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, loggingS3Bucket);
   }
 
   public String getCmd() {
@@ -99,6 +103,10 @@ public class ExecutorData {
     return maxTaskThreads;
   }
 
+  public Optional<Boolean> getPreserveTaskSandboxAfterFinish() {
+    return preserveTaskSandboxAfterFinish;
+  }
+
   public Optional<String> getLoggingS3Bucket() {
     return loggingS3Bucket;
   }
@@ -118,6 +126,7 @@ public class ExecutorData {
             ", loggingExtraFields=" + loggingExtraFields +
             ", sigKillProcessesAfterMillis=" + sigKillProcessesAfterMillis +
             ", maxTaskThreads=" + maxTaskThreads +
+            ", preserveTaskSandboxAfterFinish=" + preserveTaskSandboxAfterFinish +
             ", loggingS3Bucket=" + loggingS3Bucket +
             ']';
   }
