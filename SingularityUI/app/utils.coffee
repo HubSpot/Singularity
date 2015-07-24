@@ -1,5 +1,9 @@
 class Utils
 
+    # Constants
+    @TERMINAL_TASK_STATES: ['TASK_KILLED', 'TASK_LOST', 'TASK_FAILED', 'TASK_FINISHED']
+    @DECOMMISION_STATES: ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'DECOMISSIONING', 'DECOMISSIONED', 'STARTING_DECOMISSION']
+
     @viewJSON: (model, callback) ->
         if not model?
             callback?({error: 'Invalid model given'})
