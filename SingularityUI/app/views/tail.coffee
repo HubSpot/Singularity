@@ -176,7 +176,7 @@ class TailView extends View
         @$el.addClass 'tailing'
 
     stopTailing: ->
-        task = @model.get('taskUpdates')[..].pop()
+        task = _.last @model.get('taskUpdates')
         return if @isTailing isnt true and task.taskState in utils.TERMINAL_TASK_STATES
 
         @isTailing = false
