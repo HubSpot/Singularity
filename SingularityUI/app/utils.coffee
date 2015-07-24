@@ -1,16 +1,16 @@
 class Utils
-    
+
     @viewJSON: (model, callback) ->
         if not model?
             callback?({error: 'Invalid model given'})
             console.error 'Invalid model given'
             return
-        
+
         # We want to fetch the model before we display it if it
         # hasn't been fetched yet
         if model.synced? and not model.synced
             vex.showLoading()
-            
+
             ajaxRequest = model.fetch()
             ajaxRequest.done  => @viewJSON model
             ajaxRequest.error =>
@@ -53,12 +53,12 @@ class Utils
                 # bounds of the body, even if it's inside the dialog
                 overlayHeight = $vexContent.parents(".vex-overlay").height()
                 $("body").css "min-height", overlayHeight + "px"
-                
+
                 $button = $vexContent.find ".copy-button"
                 $button.attr "data-clipboard-text", $vexContent.find("pre").html()
-                
+
                 zeroClipboardClient = new ZeroClipboard $button[0]
-                
+
                 zeroClipboardClient.on "ready", =>
                     zeroClipboardClient.on "aftercopy", =>
                         $button.val "Copied"
@@ -84,14 +84,24 @@ class Utils
             $headings.css "width", "auto"
 
             totalWidth = $table.width()
-            for $heading in $headings
-                $heading = $ $heading
-                percentage = $heading.width() / totalWidth * 100
-                # Set a %-width to each table heading based on current values
-                $heading.css "width", "#{ percentage }%"
+            sortable = $table.attr('data-sortable') != undefined
+            #debugger
+            # if sortable
+            #     debugger
+            #     for $heading in $headings
+            #         $heading = $ $heading
+            #         width = parseInt($heading.css("width")) + 22
+            #         $heading.css "width", "#{ width }px"
+            # else
+            if not sortable
+                for $heading in $headings
+                    $heading = $ $heading
+                    percentage = $heading.width() / totalWidth * 100
+                    # Set a %-width to each table heading based on current values
+                    $heading.css "width", "#{ percentage }%"
 
-            # Set the table layout to be fixed based on these new widths
-            $table.css "table-layout", "fixed"
+                # Set the table layout to be fixed based on these new widths
+                $table.css "table-layout", "fixed"
 
     @pathToBreadcrumbs: (path="") ->
         pathComponents = path.split '/'
