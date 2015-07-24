@@ -36,7 +36,7 @@
                             {{ taskId.id }}
                         </a>
                     </td>
-                    <td class="hidden-xs">
+                    <td class="hidden-xs" data-value="{{taskId.startedAt}}">
                         {{timestampFromNow taskId.startedAt}}
                     </td>
                     <td class="hidden-xs">
@@ -51,7 +51,7 @@
                     <td class="visible-lg">
                         {{ cpus }}
                     </td>
-                    <td class="hidden-xs">
+                    <td class="hidden-xs" data-value="{{ memoryMb }}">
                         {{ memoryMb }} MB
                     </td>
                     <td>
