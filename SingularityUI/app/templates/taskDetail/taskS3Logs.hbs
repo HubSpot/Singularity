@@ -37,24 +37,6 @@
                 </tbody>
             </table>
         </div>
-        <script type="text/javascript">
-            $(function() {
-                $('table.paginated').DataTable({
-                    ordering: false,
-                    bFilter: false,
-                    info: false,
-                    lengthChange: false,
-                    pageLength: 5,
-                    pagingType: 'simple',
-                    language: {
-                        paginate: {
-                            previous:   '<span class="glyphicon glyphicon-chevron-left"></span>',
-                            next:       '<span class="glyphicon glyphicon-chevron-right"></span>',
-                        },
-                    }
-                });
-            });
-        </script>
     {{else}}
         <div class="empty-table-message">
             No S3 logs
