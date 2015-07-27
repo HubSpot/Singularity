@@ -12,9 +12,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
-import com.hubspot.singularity.executor.config.SingularityExecutorModule;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ContainerInfo;
@@ -108,7 +108,7 @@ public class SingularityExecutorCleanup {
     }
 
     for (Path file : JavaUtils.iterable(directory)) {
-      if (!file.getFileName().toString().endsWith(executorConfiguration.getGlobalTaskDefinitionSuffix())) {
+      if (!Objects.toString(file.getFileName()).endsWith(executorConfiguration.getGlobalTaskDefinitionSuffix())) {
         LOG.debug("Ignoring file {} that doesn't have suffix {}", file, executorConfiguration.getGlobalTaskDefinitionSuffix());
         statisticsBldr.incrInvalidTasks();
         continue;
@@ -190,7 +190,7 @@ public class SingularityExecutorCleanup {
 
     SingularityExecutorTaskCleanup taskCleanup = new SingularityExecutorTaskCleanup(logManager, executorConfiguration, taskDefinition, LOG, dockerClient);
 
-    boolean cleanupTaskAppDirectory = true;
+    boolean cleanupTaskAppDirectory = !taskDefinition.getExecutorData().getPreserveTaskSandboxAfterFinish().or(Boolean.FALSE);
 
     if (taskHistory.isPresent()) {
       final Optional<SingularityTaskHistoryUpdate> lastUpdate = JavaUtils.getLast(taskHistory.get().getTaskUpdates());
@@ -215,7 +215,11 @@ public class SingularityExecutorCleanup {
 
   private Iterator<Path> getUncompressedLogrotatedFileIterator(SingularityExecutorTaskDefinition taskDefinition) {
     final Path serviceLogOutPath = taskDefinition.getServiceLogOutPath();
-    final Path logrotateToPath = taskDefinition.getServiceLogOutPath().getParent().resolve(executorConfiguration.getLogrotateToDirectory());
+    final Path parent = serviceLogOutPath.getParent();
+    if (parent == null) {
+      throw new IllegalStateException("Service log path " + serviceLogOutPath + " has no parent");
+    }
+    final Path logrotateToPath = parent.resolve(executorConfiguration.getLogrotateToDirectory());
 
     if (!logrotateToPath.toFile().exists() || !logrotateToPath.toFile().isDirectory()) {
       LOG.warn("Skipping uncompressed logrotated file cleanup for {} -- {} does not exist or is not a directory (task sandbox was probably garbage collected by Mesos)", taskDefinition.getTaskId(), logrotateToPath);
@@ -240,14 +244,13 @@ public class SingularityExecutorCleanup {
     while (iterator.hasNext()) {
       Path path = iterator.next();
 
-      if (path.getFileName().toString().endsWith(".gz")) {
+      final String fileName = Objects.toString(path.getFileName());
+      if (fileName.endsWith(".gz")) {
         try {
           if (Files.size(path) == 0) {
             Files.deleteIfExists(path);
 
-            String pathString = path.getFileName().toString();
-
-            emptyPaths.add(pathString.substring(0, pathString.length() - 3)); // removing .gz
+            emptyPaths.add(fileName.substring(0, fileName.length() - 3)); // removing .gz
           }
         } catch (IOException ioe) {
           LOG.error("Failed to handle empty gz file {}", path, ioe);
@@ -258,7 +261,7 @@ public class SingularityExecutorCleanup {
     }
 
     for (Path path : ungzippedFiles) {
-      if (emptyPaths.contains(path.getFileName().toString())) {
+      if (emptyPaths.contains(Objects.toString(path.getFileName()))) {
         LOG.info("Gzipping abandoned file {}", path);
         try {
           new SimpleProcessManager(LOG).runCommand(ImmutableList.<String> of("gzip", path.toString()));

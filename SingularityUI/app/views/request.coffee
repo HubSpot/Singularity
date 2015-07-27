@@ -20,6 +20,7 @@ class RequestView extends View
             'click [data-action="scale"]': 'scaleRequest'
             'click [data-action="unpause"]': 'unpauseRequest'
             'click [data-action="bounce"]': 'bounceRequest'
+            'click [data-action="exit-cooldown"]': 'exitCooldownRequest'
 
             'click [data-action="run-now"]': 'runTask'
 
@@ -87,6 +88,10 @@ class RequestView extends View
 
     bounceRequest: (e) =>
         @model.promptBounce =>
+            @trigger 'refreshrequest'
+
+    exitCooldownRequest: (e) =>
+        @model.promptExitCooldown =>
             @trigger 'refreshrequest'
 
     runTask: (e) =>

@@ -116,10 +116,11 @@ class Application
                     hideAfter: 20
             else
                 console.log jqxhr.responseText
+
                 try
-                    serverMessage = JSON.parse(jqxhr.responseText).message or jqxhr.responseText
+                  serverMessage = JSON.parse(jqxhr.responseText).message or jqxhr.responseText
                 catch
-                    serverMessage = jqxhr.responseText
+                  serverMessage = jqxhr.responseText
 
                 serverMessage = _.escape serverMessage
 
@@ -133,6 +134,12 @@ class Application
     # Usually called by Controllers when they're initialized. Loader is overwritten by views
     showPageLoader: ->
         @$page.html "<div class='page-loader centered cushy'></div>"
+
+    showFixedPageLoader: ->
+        @$page.append "<div class='page-loader page-loader-fixed'></div>"
+
+    hideFixedPageLoader: ->
+        @$page.find('.page-loader-fixed').remove()
 
     bootstrapController: (controller) ->
         @currentController = controller

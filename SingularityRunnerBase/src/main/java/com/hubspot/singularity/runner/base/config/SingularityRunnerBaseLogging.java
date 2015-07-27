@@ -45,7 +45,7 @@ public class SingularityRunnerBaseLogging {
 
   public Optional<String> getRootLogPath() {
     if (primaryConfiguration.getLoggingFilename().isPresent()) {
-      return Optional.of(Paths.get(primaryConfiguration.getLoggingDirectory().or(baseConfiguration.getLoggingDirectory()).or(SingularityRunnerBaseConfiguration.DEFAULT_DIRECTORY)).resolve(primaryConfiguration.getLoggingFilename().get()).toString());
+      return Optional.of(Paths.get(primaryConfiguration.getLoggingDirectory().or(baseConfiguration.getLoggingDirectory()).or(BaseRunnerConfiguration.DEFAULT_DIRECTORY)).resolve(primaryConfiguration.getLoggingFilename().get()).toString());
     } else {
       return Optional.absent();
     }
@@ -76,8 +76,8 @@ public class SingularityRunnerBaseLogging {
 
     Logger rootLogger = prepareRootLogger(context);
 
-    context.getLogger("ROOT").setLevel(Level.toLevel(SingularityRunnerBaseConfiguration.DEFAULT_ROOT_LOG_LEVEL));
-    context.getLogger("com.hubspot").setLevel(Level.toLevel(SingularityRunnerBaseConfiguration.DEFAULT_HUBSPOT_LOG_LEVEL));
+    context.getLogger("ROOT").setLevel(Level.toLevel(BaseRunnerConfiguration.DEFAULT_ROOT_LOG_LEVEL));
+    context.getLogger("com.hubspot").setLevel(Level.toLevel(BaseRunnerConfiguration.DEFAULT_HUBSPOT_LOG_LEVEL));
 
     for (Map.Entry<String, String> entry : baseConfiguration.getLoggingLevel().entrySet()) {
       context.getLogger(entry.getKey()).setLevel(Level.toLevel(entry.getValue()));

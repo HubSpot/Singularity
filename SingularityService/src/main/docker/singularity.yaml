@@ -17,6 +17,7 @@ mesos:
   frameworkName: Singularity
   frameworkId: Singularity
   frameworkFailoverTimeout: 1000000
+  useNativeCode: false
 
 zookeeper:
   quorum: localhost:2181
@@ -26,12 +27,12 @@ zookeeper:
   retryBaseSleepTimeMilliseconds: 1000
   retryMaxTries: 3
 
+ui:
+  title: Singularity (docker)
+  baseUrl: http://localhost:7099/singularity
+
 logging:
   loggers:
     "com.hubspot.singularity" : TRACE
-
-ui:
-  title: Singularity (dev)
-  baseUrl: http://localhost:7099/singularity
 
 enableCorsFilter: true

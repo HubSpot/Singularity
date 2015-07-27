@@ -91,6 +91,7 @@ def fetch():
   conf_dir = args.conf_folder if args.conf_folder else DEFAULT_CONF_DIR
   conf_file = os.path.expanduser(conf_dir + '/' + args.conf_file) if args.conf_file else os.path.expanduser(conf_dir + '/' + DEFAULT_CONF_FILE)
   config = ConfigParser.SafeConfigParser()
+  config.optionxform = str
 
   defaults = {
     "num_parallel_fetches" : DEFAULT_PARALLEL_FETCHES,
@@ -136,6 +137,11 @@ def fetch():
   args.end_days = convert_to_date(args, args.end_days)
 
   args.dest = os.path.expanduser(args.dest)
+  try:
+    setattr(args, 'headers', dict(config.items("Request Headers")))
+  except:
+    sys.stderr.write('No additional request headers found\n')
+    setattr(args, 'headers', {})
 
   fetch_logs(args)
 
@@ -147,6 +153,7 @@ def cat():
   conf_dir = args.conf_folder if args.conf_folder else DEFAULT_CONF_DIR
   conf_file = os.path.expanduser(conf_dir + '/' + args.conf_file) if args.conf_file else os.path.expanduser(conf_dir + '/' + DEFAULT_CONF_FILE)
   config = ConfigParser.SafeConfigParser()
+  config.optionxform = str
 
   defaults = {
     "num_parallel_fetches" : DEFAULT_PARALLEL_FETCHES,
@@ -191,6 +198,12 @@ def cat():
   args.end_days = convert_to_date(args, args.end_days)
 
   args.dest = os.path.expanduser(args.dest)
+  try:
+    setattr(args, 'headers', dict(config.items("Request Headers")))
+  except:
+    sys.stderr.write('No additional request headers found\n')
+    setattr(args, 'headers', {})
+
 
   cat_logs(args)
 
@@ -202,6 +215,7 @@ def tail():
   conf_dir = args.conf_folder if args.conf_folder else DEFAULT_CONF_DIR
   conf_file = os.path.expanduser(conf_dir + '/' + args.conf_file) if args.conf_file else os.path.expanduser(conf_dir + '/' + DEFAULT_CONF_FILE)
   config = ConfigParser.SafeConfigParser()
+  config.optionxform = str
 
   defaults = {'verbose': False}
 
@@ -230,5 +244,11 @@ def tail():
   check_args(args)
 
   args.dest = os.path.expanduser(args.dest)
+  try:
+    setattr(args, 'headers', dict(config.items("Request Headers")))
+  except:
+    sys.stderr.write('No additional request headers found\n')
+    setattr(args, 'headers', {})
+
 
   tail_logs(args)

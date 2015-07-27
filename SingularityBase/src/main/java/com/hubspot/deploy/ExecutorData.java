@@ -24,13 +24,15 @@ public class ExecutorData {
   private final Map<String, String> loggingExtraFields;
   private final Optional<Long> sigKillProcessesAfterMillis;
   private final Optional<Integer> maxTaskThreads;
+  private final Optional<Boolean> preserveTaskSandboxAfterFinish;
 
   @JsonCreator
   public ExecutorData(@JsonProperty("cmd") String cmd, @JsonProperty("embeddedArtifacts") List<EmbeddedArtifact> embeddedArtifacts, @JsonProperty("externalArtifacts") List<ExternalArtifact> externalArtifacts,
       @JsonProperty("s3Artifacts") List<S3Artifact> s3Artifacts, @JsonProperty("successfulExitCodes") List<Integer> successfulExitCodes, @JsonProperty("user") Optional<String> user,
       @JsonProperty("runningSentinel") Optional<String> runningSentinel, @JsonProperty("extraCmdLineArgs") List<String> extraCmdLineArgs, @JsonProperty("loggingTag") Optional<String> loggingTag,
       @JsonProperty("loggingExtraFields") Map<String, String> loggingExtraFields, @JsonProperty("sigKillProcessesAfterMillis") Optional<Long> sigKillProcessesAfterMillis,
-      @JsonProperty("maxTaskThreads") Optional<Integer> maxTaskThreads) {
+      @JsonProperty("maxTaskThreads") Optional<Integer> maxTaskThreads,
+      @JsonProperty("preserveTaskSandboxAfterFinish") Optional<Boolean> preserveTaskSandboxAfterFinish) {
     this.cmd = cmd;
     this.embeddedArtifacts = JavaUtils.nonNullImmutable(embeddedArtifacts);
     this.externalArtifacts = JavaUtils.nonNullImmutable(externalArtifacts);
@@ -43,10 +45,11 @@ public class ExecutorData {
     this.loggingExtraFields = JavaUtils.nonNullImmutable(loggingExtraFields);
     this.sigKillProcessesAfterMillis = sigKillProcessesAfterMillis;
     this.maxTaskThreads = maxTaskThreads;
+    this.preserveTaskSandboxAfterFinish = preserveTaskSandboxAfterFinish;
   }
 
   public ExecutorDataBuilder toBuilder() {
-    return new ExecutorDataBuilder(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, runningSentinel, user, extraCmdLineArgs, loggingTag, loggingExtraFields, sigKillProcessesAfterMillis, maxTaskThreads);
+    return new ExecutorDataBuilder(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, runningSentinel, user, extraCmdLineArgs, loggingTag, loggingExtraFields, sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish);
   }
 
   public String getCmd() {
@@ -97,11 +100,15 @@ public class ExecutorData {
     return maxTaskThreads;
   }
 
+  public Optional<Boolean> getPreserveTaskSandboxAfterFinish() {
+    return preserveTaskSandboxAfterFinish;
+  }
+
   @Override
   public String toString() {
     return "ExecutorData [cmd=" + cmd + ", embeddedArtifacts=" + embeddedArtifacts + ", externalArtifacts=" + externalArtifacts + ", s3Artifacts=" + s3Artifacts + ", successfulExitCodes="
         + successfulExitCodes + ", runningSentinel=" + runningSentinel + ", user=" + user + ", extraCmdLineArgs=" + extraCmdLineArgs + ", loggingTag=" + loggingTag + ", loggingExtraFields="
-        + loggingExtraFields + ", sigKillProcessesAfterMillis=" + sigKillProcessesAfterMillis + ", maxTaskThreads=" + maxTaskThreads + "]";
+        + loggingExtraFields + ", sigKillProcessesAfterMillis=" + sigKillProcessesAfterMillis + ", maxTaskThreads=" + maxTaskThreads + ", preserveTaskSandboxAfterFinish=" + preserveTaskSandboxAfterFinish + "]";
   }
 
 }

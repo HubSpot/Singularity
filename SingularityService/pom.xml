@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.4.2-SNAPSHOT</version>
+    <version>0.4.3-SNAPSHOT</version>
   </parent>
 
   <artifactId>SingularityService</artifactId>
@@ -78,6 +78,11 @@
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.ws.rs</groupId>
+      <artifactId>jsr311-api</artifactId>
     </dependency>
 
     <dependency>
@@ -345,6 +350,7 @@
     <dependency>
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-test</artifactId>
+      <scope>test</scope>
     </dependency>
 
   </dependencies>
@@ -523,6 +529,66 @@
         </plugin>
       </plugins>
     </build>
+    </profile>
+    <profile>
+      <id>build-docker-image</id>
+      <activation>
+        <property>
+          <name>env.DOCKER_HOST</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jolokia</groupId>
+            <artifactId>docker-maven-plugin</artifactId>
+            <configuration>
+              <images>
+                <image>
+                  <name>hubspot/singularityservice:${project.version}</name>
+                  <build>
+                    <from>java:8u45-jre</from>
+                    <maintainer>platform-infrastructure-groups@hubspot.com</maintainer>
+                    <ports>
+                      <port>7099</port>
+                    </ports>
+                    <entryPoint>
+                      <exec>
+                        <arg>/etc/singularity/start.sh</arg>
+                      </exec>
+                    </entryPoint>
+                    <cmd>
+                      <exec>
+                        <args>server</args>
+                        <args>/etc/singularity/singularity.yaml</args>
+                      </exec>
+                    </cmd>
+                    <assembly>
+                      <mode>dir</mode>
+                      <basedir>/</basedir>
+                      <inline>
+                        <fileSets>
+                          <fileSet>
+                            <directory>${project.basedir}/src/main/docker</directory>
+                            <outputDirectory>/etc/singularity</outputDirectory>
+                          </fileSet>
+                        </fileSets>
+                        <files>
+                          <file>
+                            <source>${project.basedir}/target/${project.name}-${project.version}-shaded.jar</source>
+                            <destName>${project.name}.jar</destName>
+                            <outputDirectory>/</outputDirectory>
+                          </file>
+                        </files>
+                      </inline>
+                    </assembly>
+                  </build>
+                </image>
+              </images>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
   </profiles>
 </project>

@@ -6,6 +6,7 @@ unpauseTemplate = require '../templates/vex/requestUnpause'
 runTemplate = require '../templates/vex/requestRun'
 removeTemplate = require '../templates/vex/requestRemove'
 bounceTemplate = require '../templates/vex/requestBounce'
+exitCooldownTemplate = require '../templates/vex/exitCooldown'
 
 class Request extends Model
 
@@ -30,6 +31,7 @@ class Request extends Model
 
         data.paused = data.state is 'PAUSED'
         data.deleted = data.state is 'DELETED'
+        data.inCooldown = data.state is 'SYSTEM_COOLDOWN'
 
         data.hasActiveDeploy = data.activeDeploy? or data.requestDeployState?.activeDeploy?
         data.canBeRunNow = data.state is 'ACTIVE' and data.type in ['SCHEDULED', 'ON_DEMAND'] and data.hasActiveDeploy
@@ -81,6 +83,11 @@ class Request extends Model
     bounce: =>
         $.ajax
             url:  "#{ @url() }/bounce?user=#{ app.getUsername() }"
+            type: "POST"
+
+    exitCooldown: =>
+        $.ajax
+            url: "#{ @url() }/exit-cooldown?user=#{ app.getUsername() }"
             type: "POST"
 
     destroy: =>
@@ -170,6 +177,13 @@ class Request extends Model
             callback: (confirmed) =>
                 return if not confirmed
                 @bounce().done callback
+
+    promptExitCooldown: (callback) =>
+        vex.dialog.confirm
+            message: exitCooldownTemplate id: @get "id"
+            callback: (confirmed) =>
+                return if not confirmed
+                @exitCooldown().done callback
 
 
 module.exports = Request

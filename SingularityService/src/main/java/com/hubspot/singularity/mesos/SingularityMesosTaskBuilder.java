@@ -281,7 +281,7 @@ class SingularityMesosTaskBuilder {
 
         bldr.setData(ByteString.copyFromUtf8(executorData.toString()));
       }
-    } else {
+    } else if (task.getDeploy().getCommand().isPresent()) {
       bldr.setData(ByteString.copyFromUtf8(task.getDeploy().getCommand().get()));
     }
   }
