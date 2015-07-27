@@ -120,3 +120,6 @@ Handlebars.registerHelper 'getLabelClass', (state) ->
             'danger'
         else
             'default'
+
+Handlebars.registerHelper 'trimS3File', (filename) ->
+    return '...' + filename.substring(filename.indexOf("service.log"));
