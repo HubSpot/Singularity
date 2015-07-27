@@ -8,8 +8,8 @@ class TaskView extends View
         _.extend super,
             'click [data-action="viewObjectJSON"]': 'viewJson'
             'click [data-action="viewJsonProperty"]': 'viewJsonProperty'
-            'click [data-action="remove"]': 'killTask'           
-    
+            'click [data-action="remove"]': 'killTask'
+
     initialize: ({@taskId}) ->
         @subviews.healthcheckNotification.on 'toggleHealthchecks', @toggleHealthchecks
 

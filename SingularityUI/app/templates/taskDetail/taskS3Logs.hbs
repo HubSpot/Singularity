@@ -4,7 +4,7 @@
     </div>
     {{#if data.length}}
         <div class="table-container">
-            <table class="table table-striped">
+            <table class="table table-striped paginated">
                 <thead>
                     <tr>
                         <th class="half-table">Log file</th>
@@ -37,6 +37,24 @@
                 </tbody>
             </table>
         </div>
+        <script type="text/javascript">
+            $(function() {
+                $('table.paginated').DataTable({
+                    ordering: false,
+                    bFilter: false,
+                    info: false,
+                    lengthChange: false,
+                    pageLength: 5,
+                    pagingType: 'simple',
+                    language: {
+                        paginate: {
+                            previous:   '<span class="glyphicon glyphicon-chevron-left"></span>',
+                            next:       '<span class="glyphicon glyphicon-chevron-right"></span>',
+                        },
+                    }
+                });
+            });
+        </script>
     {{else}}
         <div class="empty-table-message">
             No S3 logs
