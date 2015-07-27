@@ -28,6 +28,8 @@ class TaskView extends View
         @$('#resources').html                   @subviews.resourceUsage.$el
         @$('#environment').html                 @subviews.environment.$el
 
+        super.afterRender()
+
     toggleHealthchecks: =>
         @subviews.healthChecks.expandToggleIfClosed()
 

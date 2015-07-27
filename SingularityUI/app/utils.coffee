@@ -1,5 +1,9 @@
 class Utils
 
+    # Constants
+    @TERMINAL_TASK_STATES: ['TASK_KILLED', 'TASK_LOST', 'TASK_FAILED', 'TASK_FINISHED']
+    @DECOMMISION_STATES: ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'DECOMISSIONING', 'DECOMISSIONED', 'STARTING_DECOMISSION']
+
     @viewJSON: (model, callback) ->
         if not model?
             callback?({error: 'Invalid model given'})
@@ -84,14 +88,16 @@ class Utils
             $headings.css "width", "auto"
 
             totalWidth = $table.width()
-            for $heading in $headings
-                $heading = $ $heading
-                percentage = $heading.width() / totalWidth * 100
-                # Set a %-width to each table heading based on current values
-                $heading.css "width", "#{ percentage }%"
+            sortable = $table.attr('data-sortable') != undefined
+            if not sortable
+                for $heading in $headings
+                    $heading = $ $heading
+                    percentage = $heading.width() / totalWidth * 100
+                    # Set a %-width to each table heading based on current values
+                    $heading.css "width", "#{ percentage }%"
 
-            # Set the table layout to be fixed based on these new widths
-            $table.css "table-layout", "fixed"
+                # Set the table layout to be fixed based on these new widths
+                $table.css "table-layout", "fixed"
 
     @pathToBreadcrumbs: (path="") ->
         pathComponents = path.split '/'
