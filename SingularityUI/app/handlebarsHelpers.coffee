@@ -121,5 +121,6 @@ Handlebars.registerHelper 'getLabelClass', (state) ->
         else
             'default'
 
-Handlebars.registerHelper 'trimS3File', (filename) ->
-    return '...' + filename.substring(filename.indexOf("service.log"));
+Handlebars.registerHelper 'trimS3File', (filename, taskId) ->
+    console.log filename
+    return filename.replace(taskId, '...')
