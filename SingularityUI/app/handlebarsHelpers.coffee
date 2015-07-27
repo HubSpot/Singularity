@@ -122,5 +122,4 @@ Handlebars.registerHelper 'getLabelClass', (state) ->
             'default'
 
 Handlebars.registerHelper 'trimS3File', (filename, taskId) ->
-    console.log filename
     return filename.replace(taskId, '...')
