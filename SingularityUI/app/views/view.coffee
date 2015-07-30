@@ -33,4 +33,7 @@ class View extends Backbone.View
 
         app.router.navigate url, trigger: true
 
+    afterRender: ->
+      Sortable.init()
+
 module.exports = View

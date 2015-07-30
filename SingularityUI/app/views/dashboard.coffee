@@ -35,6 +35,8 @@ class DashboardView extends View
         @$el.html @templateBase context, partials
         @renderTable()
 
+        super.afterRender()
+
     renderTable: =>
         @sortCollection()
         requests = @currentRequests

@@ -54,6 +54,7 @@ class RacksView extends View
             utils.scrollTo "##{@state}"
             @initialPageLoad = false
 
+        super.afterRender()
 
     removeRack: (event) ->
         $target = $(event.currentTarget)

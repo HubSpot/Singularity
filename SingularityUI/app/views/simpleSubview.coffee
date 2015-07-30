@@ -19,11 +19,11 @@ class SimpleSubview extends View
         { @template } = @params
         @data = if @collection? then @collection else @model
 
-        for eventName in ['sync', 'add', 'remove', 'change']
+        for eventName in ['sync', 'add', 'remove', 'change', 'reset']
             @listenTo @data, eventName, @render
 
-        @listenTo @data, 'reset', =>
-            @$el.empty()
+        #@listenTo @data, 'reset', =>
+        #    @$el.empty()
 
     render: ->
         return if not @data.synced and @data.isEmpty?()
@@ -33,6 +33,8 @@ class SimpleSubview extends View
         @$('.actions-column a[title]').tooltip()
 
         utils.setupCopyLinks @$el if @$('.horizontal-description-list').length
+
+        super.afterRender()
 
     renderData: ->
         data =

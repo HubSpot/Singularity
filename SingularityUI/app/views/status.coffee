@@ -53,4 +53,6 @@ class StatusView extends View
         @$('.chart .chart__data-point[title]').tooltip(placement: 'right')
         @captureLastState()
 
+        super.afterRender()
+
 module.exports = StatusView

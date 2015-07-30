@@ -23,7 +23,8 @@ class ExpandableTableSubview extends View
             'click [data-action="shrink"]': 'startShrink'
 
     initialize: ({@collection, @template}) ->
-        @listenTo @collection, 'sync', @render
+        for eventName in ['sync', 'reset']
+            @listenTo @collection, eventName, @render
 
     render: ->
         # If we've already rendered stuff and now we're trying to render
@@ -69,6 +70,18 @@ class ExpandableTableSubview extends View
                 $header.append '<small class="hidden-xs"><a data-action="expand">more at once</a></small>'
             else if @expanded
                 $header.append '<small class="hidden-xs"><a data-action="shrink">fewer at once</a></small>'
+
+        # Paginate client side collections
+        $('table.paginated:not([id])').DataTable
+          ordering: false
+          bFilter: false
+          info: false
+          lengthChange: false
+          pageLength: 5
+          pagingType: 'simple'
+          language: paginate:
+            previous: '<span class="glyphicon glyphicon-chevron-left"></span>'
+            next: '<span class="glyphicon glyphicon-chevron-right"></span>'
 
         # Stop right here if we don't need to append the buttons
         return if not haveMore
@@ -122,7 +135,7 @@ class ExpandableTableSubview extends View
         @collection.atATime = canFit - 1
         @collection.currentPage = 1
 
-        @refreshCollection()
+        @collection.fetch()
 
     startShrink: =>
         @$el.trigger 'shrink'

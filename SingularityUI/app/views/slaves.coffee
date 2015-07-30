@@ -55,6 +55,7 @@ class SlavesView extends View
             utils.scrollTo "##{@state}"
             @initialPageLoad = false
 
+        super.afterRender()
 
     removeSlave: (event) =>
         $target = $(event.currentTarget)
@@ -85,7 +86,5 @@ class SlavesView extends View
             state: state
 
         slaveModel.promptReactivate => @trigger 'refreshrequest'
-
-
 
 module.exports = SlavesView

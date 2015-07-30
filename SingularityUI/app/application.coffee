@@ -157,6 +157,7 @@ class Application
 
         if @page.children.length
             @page.replaceChild view.el, @page.children[0]
+            Sortable.init()
         else
             @page.appendChild view.el
 
