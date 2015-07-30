@@ -91,7 +91,9 @@ class DeployDetailController extends Controller
         for task in filtered
             health = new HealthCheckResult
                 taskId: task.id
-            health.fetch()
-            @collections.healthChecks.add(health)
+            health.fetch(success: =>
+                if health.get('durationMillis')
+                    @collections.healthChecks.add(health)
+            )
 
 module.exports = DeployDetailController
