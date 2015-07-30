@@ -11,7 +11,7 @@
                 <span class="request-type">
                     {{humanizeText data.type}}
                 </span>
-                
+
             </h4>
 
             <h2>
@@ -62,13 +62,13 @@
                     </a>
                 {{/if}}
             {{/unless}}
-            
+
             {{#if data.canBeBounced}}
                 <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="bounce">
                     Bounce
                 </a>
             {{/if}}
-            
+
             {{#unless data.deleted}}
                 <a class="btn btn-danger" data-request-id="{{ data.id }}" data-action="remove">
                     Remove
@@ -80,8 +80,11 @@
     {{! Active deploy well }}
     <div class="well">
         {{#if data.activeDeploy}}
+            Active deploy
+            <code>
+                <a href="{{appRoot}}/request/{{ data.id }}/deploy/{{ data.activeDeploy.id }}">
+                  {{ data.activeDeploy.id }}</a></code>
             {{#with data.activeDeploy}}
-                Active deploy <code>{{ id }}</code>
                 {{#if metadata.deployedBy}}
                     by <strong>{{usernameFromEmail metadata.deployedBy}}</strong>
                 {{/if}}
@@ -95,7 +98,7 @@
                 No active deploy
             </span>
         {{/if}}
-        
+
         <a data-action="expand-deploy-history" class="pull-right">
             Deploy history
         </a>
