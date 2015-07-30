@@ -1,9 +1,10 @@
 View = require './view'
 
-# Reusable base view for paginable tables
-# Extended by PaginatedTableServersideView
-# and PaginatedTableClientsideView
-
+# Reusable view for paginable tables
+#
+# You feed it a (server-side paginable) collection
+# and a template and it works its magic
+#
 # If it's provided with a `.page-header h1` it can also be
 # expanded to fit the entire page and shrunk back down after
 class ExpandableTableSubview extends View
@@ -29,7 +30,6 @@ class ExpandableTableSubview extends View
     render: ->
         # If we've already rendered stuff and now we're trying to render
         # an empty collection (`next` returned an empty list)
-
         if not @collection.length and @collection.currentPage isnt 1
             # Disable the next button and don't render anything
             $nextButton = @$('[data-action="next-page"]')
@@ -47,20 +47,18 @@ class ExpandableTableSubview extends View
             return undefined
 
         # For after the render
-        @haveButtons = @$('.table-subview-buttons').length
-
-        data = @getRenderData()
+        haveButtons = @$('.table-subview-buttons').length
 
         @$el.html @template
             synced:  @collection.synced
-            data:    data
+            data:    _.pluck @collection.models, 'attributes'
             config: config
 
         @$('.actions-column a[title]').tooltip()
 
         @$('.table-container').css 'min-height', "#{ @containerMinHeight }px"
 
-        haveMore = @checkCollectionLength()
+        haveMore = not (@collection.length isnt @collection.atATime and not haveButtons)
 
         # Append expand / shrink link
         $header = @$('.page-header h1, .page-header h2, .page-header h3')
@@ -87,19 +85,21 @@ class ExpandableTableSubview extends View
         return if not haveMore
 
         # Append next / previous page buttons
-        hasNextButton = @checkHasNextButton()
         hasPrevButton = @collection.currentPage isnt 1
+        hasNextButton = @collection.length is @collection.atATime
 
         @$el.append @buttonsTemplate {hasPrevButton, hasNextButton}
 
     nextPage: ->
-        @loadNextPage()
+        @collection.currentPage += 1 unless @collection.length isnt @collection.atATime
+        @collection.fetch()
+
         # So the table doesn't shrink afterwards
         @containerMinHeight = @$('.table-container').height()
 
     previousPage: ->
         @collection.currentPage -= 1 unless @collection.currentPage is 1
-        @loadPreviousPage()
+        @collection.fetch()
 
     expand: ->
         @expanded = true
@@ -149,8 +149,7 @@ class ExpandableTableSubview extends View
 
         @collection.atATime = 5
         @collection.currentPage = 1
-
-        @refreshCollection()    
+        @collection.fetch()
 
     flash: ->
         $(window).scrollTop @$el.offset().top
