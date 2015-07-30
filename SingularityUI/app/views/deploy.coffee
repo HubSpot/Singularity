@@ -20,9 +20,9 @@ class DeployView extends View
         # Attach subview elements
         @$('#header').html              @subviews.header.$el
         @$('#activeTasks').html         @subviews.activeTasks.$el
-        @$('#tasks').html               @subviews.taskHistory.$el
         @$('#info').html                @subviews.info.$el
-        @$('#healthChecks').html         @subviews.healthChecks.$el
+        @$('#tasks').html               @subviews.taskHistory.$el
+        @$('#healthChecks').html        @subviews.healthChecks.$el
 
     viewJson: (e) =>
         $target = $(e.currentTarget).parents 'tr'
@@ -31,9 +31,6 @@ class DeployView extends View
 
         # Need to reach into subviews to get the necessary data
         collection = @subviews[collectionName].collection
-        console.log collection
-        console.log id
-        console.log collection.get id
         utils.viewJSON collection.get id
 
     viewObjectJson: (e) =>
