@@ -222,6 +222,8 @@ class SingularityMesosTaskBuilder {
       }
       if (volumeInfo.getMode().isPresent()) {
         volumeBuilder.setMode(Volume.Mode.valueOf(volumeInfo.getMode().get().toString()));
+      } else {
+        volumeBuilder.setMode(Volume.Mode.RO);
       }
       containerBuilder.addVolumes(volumeBuilder);
     }
