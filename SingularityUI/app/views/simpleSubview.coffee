@@ -34,6 +34,8 @@ class SimpleSubview extends View
 
         utils.setupCopyLinks @$el if @$('.horizontal-description-list').length
 
+        super.afterRender()
+
     renderData: ->
         data =
             config:    config
