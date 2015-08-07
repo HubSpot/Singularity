@@ -1,7 +1,5 @@
 package com.hubspot.singularity.scheduler;
 
-import io.dropwizard.db.DataSourceFactory;
-
 import java.util.concurrent.TimeUnit;
 
 import org.apache.mesos.Protos.TaskState;
@@ -16,6 +14,8 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.data.history.SingularityRequestHistoryPersister;
 import com.hubspot.singularity.data.history.SingularityTaskHistoryPersister;
 
+import io.dropwizard.db.DataSourceFactory;
+
 public class HistoryPersisterTest extends SingularitySchedulerTestBase {
 
   @Inject
@@ -24,6 +24,10 @@ public class HistoryPersisterTest extends SingularitySchedulerTestBase {
   protected SingularityTaskHistoryPersister taskHistoryPersister;
   @Inject
   protected SingularityCleaner cleaner;
+
+  public HistoryPersisterTest() {
+    super(false);
+  }
 
   @Test
   public void testRequestPurging() {

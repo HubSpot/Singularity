@@ -17,6 +17,10 @@ import com.hubspot.singularity.SingularityTask;
 
 public class SingularityStartupTest extends SingularitySchedulerTestBase {
 
+  public SingularityStartupTest() {
+    super(false);
+  }
+
   @Inject
   private SingularityStartup startup;
 

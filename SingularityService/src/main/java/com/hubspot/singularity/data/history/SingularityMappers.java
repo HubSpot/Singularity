@@ -2,6 +2,7 @@ package com.hubspot.singularity.data.history;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Date;
 
 import javax.inject.Inject;
 
@@ -41,6 +42,18 @@ public class SingularityMappers {
     @Override
     public byte[] map(int index, ResultSet r, StatementContext ctx) throws SQLException {
       return r.getBytes("bytes");
+    }
+
+  }
+
+  static class DateMapper implements ResultSetMapper<Date> {
+
+    @Inject
+    DateMapper() {}
+
+    @Override
+    public Date map(int index, ResultSet r, StatementContext ctx) throws SQLException {
+      return new Date(r.getTimestamp(1).getTime());
     }
 
   }
@@ -125,4 +138,42 @@ public class SingularityMappers {
       return new SingularityDeployHistory(Optional.of(deployState), marker, Optional.<SingularityDeploy>absent(), Optional.<SingularityDeployStatistics>absent());
     }
   }
+
+  static class SingularityRequestIdCountMapper implements ResultSetMapper<SingularityRequestIdCount> {
+
+    @Inject
+    SingularityRequestIdCountMapper() {}
+
+    @Override
+    public SingularityRequestIdCount map(int index, ResultSet r, StatementContext ctx) throws SQLException {
+      return new SingularityRequestIdCount(r.getString("requestId"), r.getInt("count"));
+    }
+
+  }
+
+  public static class SingularityRequestIdCount {
+
+    private final int count;
+    private final String requestId;
+
+    public SingularityRequestIdCount(String requestId, int count) {
+      this.requestId = requestId;
+      this.count = count;
+    }
+
+    public int getCount() {
+      return count;
+    }
+
+    public String getRequestId() {
+      return requestId;
+    }
+
+    @Override
+    public String toString() {
+      return "SingularityRequestIdCount [count=" + count + ", requestId=" + requestId + "]";
+    }
+
+  }
+
 }
