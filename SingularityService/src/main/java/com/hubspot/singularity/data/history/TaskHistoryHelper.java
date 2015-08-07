@@ -43,6 +43,13 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
 
     return histories;
   }
+  
+  public List<SingularityTaskIdHistory> getHistoriesForDeploy(String requestId, String deployId) {
+    List<SingularityTaskIdHistory> histories = Lists.newArrayList();
+    
+    
+    return histories;
+  }
 
   @Override
   protected List<SingularityTaskIdHistory> getFromZk(String requestId) {
