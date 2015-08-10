@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,12 +43,21 @@ public class SingularityHistoryPurgerTest extends SingularitySchedulerTestBase {
     Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(handle.getConnection()));
 
     Liquibase liquibase = new Liquibase("singularity_test.sql", new FileSystemResourceAccessor(), database);
-    liquibase.update(null);
+    liquibase.update((String) null);
 
     try {
       database.close();
     } catch (Throwable t) {
     }
+
+    handle.close();
+  }
+
+  @After
+  public void blowDBAway() {
+    Handle handle = dbiProvider.get().open();
+
+    handle.execute("DELETE FROM taskHistory;DELETE FROM requestHistory;DELETE FROM deployHistory;");
 
     handle.close();
   }
