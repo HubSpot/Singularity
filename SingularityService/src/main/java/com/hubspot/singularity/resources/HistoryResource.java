@@ -110,17 +110,29 @@ public class HistoryResource extends AbstractHistoryResource {
   }
 
   @GET
-  @Path("/request/{requestId}/deploy/{deployId}/tasks")
+  @Path("/request/{requestId}/deploy/{deployId}/tasks/active")
   @ApiOperation("Retrieve the task history for a specific deploy.")
-  public List<SingularityTaskIdHistory> getDeployTasks(
+  public List<SingularityTaskIdHistory> getActiveDeployTasks(
       @ApiParam("Request ID for deploy") @PathParam("requestId") String requestId,
       @ApiParam("Deploy ID") @PathParam("deployId") String deployId) {
+    
     List<SingularityTaskId> taskIds = new ArrayList<SingularityTaskId>();
     for (SingularityTaskId id : taskManager.getActiveTaskIdsForRequest(requestId)) {
       if (id.getDeployId().equals(deployId)) {
         taskIds.add(id);
       }
     }
+    return taskHistoryHelper.getHistoriesFor(taskIds);
+  }
+  
+  @GET
+  @Path("/request/{requestId}/deploy/{deployId}/tasks/inactive")
+  @ApiOperation("Retrieve the task history for a specific deploy.")
+  public List<SingularityTaskIdHistory> getInactiveDeployTasks(
+      @ApiParam("Request ID for deploy") @PathParam("requestId") String requestId,
+      @ApiParam("Deploy ID") @PathParam("deployId") String deployId) {
+    
+    List<SingularityTaskId> taskIds = new ArrayList<SingularityTaskId>();
     for (SingularityTaskId id : taskManager.getInactiveTaskIdsForRequest(requestId)) {  
       if (id.getDeployId().equals(deployId)) {
         taskIds.add(id);
