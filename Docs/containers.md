@@ -20,7 +20,7 @@ To use Singularity with the Docker containerizer, add a `containerInfo` to the S
     "portMappings": [
       {
         "containerPortType": "FROM_OFFER", # FROM_OFFER or LITERAL
-        "contianerPort": 0, # If type is FROM_OFFER this is the index of the port assigned by Mesos. (ie 0 -> $PORT0)
+        "containerPort": 0, # If type is FROM_OFFER this is the index of the port assigned by Mesos. (ie 0 -> $PORT0)
         "hostPortType": "FROM_OFFER",
         "hostPort": 0
       }
