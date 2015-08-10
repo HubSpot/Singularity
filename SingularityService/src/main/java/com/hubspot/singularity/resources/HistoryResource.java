@@ -115,7 +115,7 @@ public class HistoryResource extends AbstractHistoryResource {
   public List<SingularityTaskIdHistory> getActiveDeployTasks(
       @ApiParam("Request ID for deploy") @PathParam("requestId") String requestId,
       @ApiParam("Deploy ID") @PathParam("deployId") String deployId) {
-    
+
     List<SingularityTaskId> taskIds = new ArrayList<SingularityTaskId>();
     for (SingularityTaskId id : taskManager.getActiveTaskIdsForRequest(requestId)) {
       if (id.getDeployId().equals(deployId)) {
@@ -124,14 +124,14 @@ public class HistoryResource extends AbstractHistoryResource {
     }
     return taskHistoryHelper.getHistoriesFor(taskIds);
   }
-  
+
   @GET
   @Path("/request/{requestId}/deploy/{deployId}/tasks/inactive")
   @ApiOperation("Retrieve the task history for a specific deploy.")
   public List<SingularityTaskIdHistory> getInactiveDeployTasks(
       @ApiParam("Request ID for deploy") @PathParam("requestId") String requestId,
       @ApiParam("Deploy ID") @PathParam("deployId") String deployId) {
-    
+
     List<SingularityTaskId> taskIds = new ArrayList<SingularityTaskId>();
     for (SingularityTaskId id : taskManager.getInactiveTaskIdsForRequest(requestId)) {  
       if (id.getDeployId().equals(deployId)) {
