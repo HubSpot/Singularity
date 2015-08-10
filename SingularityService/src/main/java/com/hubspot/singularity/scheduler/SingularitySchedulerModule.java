@@ -2,6 +2,7 @@ package com.hubspot.singularity.scheduler;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.hubspot.singularity.data.history.SingularityHistoryPurger;
 
 public class SingularitySchedulerModule extends AbstractModule {
 
@@ -10,6 +11,7 @@ public class SingularitySchedulerModule extends AbstractModule {
     bind(SingularityHealthchecker.class).in(Scopes.SINGLETON);
     bind(SingularityNewTaskChecker.class).in(Scopes.SINGLETON);
     bind(SingularityCleanupPoller.class).in(Scopes.SINGLETON);
+    bind(SingularityHistoryPurger.class).in(Scopes.SINGLETON);
     bind(SingularityDeadSlavePoller.class).in(Scopes.SINGLETON);
     bind(SingularityCooldownPoller.class).in(Scopes.SINGLETON);
     bind(SingularityDeployPoller.class).in(Scopes.SINGLETON);

@@ -53,6 +53,10 @@ import com.hubspot.singularity.scheduler.SingularityTaskReconciliation.Reconcili
 
 public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
+  public SingularitySchedulerTest() {
+    super(false);
+  }
+
   @Test
   public void testSchedulerIsolatesPendingTasksBasedOnDeploy() {
     initRequest();

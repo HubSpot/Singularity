@@ -1,9 +1,6 @@
 package com.hubspot.singularity.data.history;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import io.dropwizard.db.DataSourceFactory;
-import io.dropwizard.jdbi.DBIFactory;
-import io.dropwizard.setup.Environment;
 
 import java.util.Set;
 
@@ -12,7 +9,6 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -25,6 +21,10 @@ import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.Multibinder;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
+import io.dropwizard.db.DataSourceFactory;
+import io.dropwizard.jdbi.DBIFactory;
+import io.dropwizard.setup.Environment;
+
 public class SingularityHistoryModule extends AbstractModule {
 
   private final Optional<DataSourceFactory> configuration;
@@ -34,14 +34,8 @@ public class SingularityHistoryModule extends AbstractModule {
     this.configuration = configuration.getDatabaseConfiguration();
   }
 
-  @VisibleForTesting
-  public SingularityHistoryModule() {
-    this.configuration = Optional.absent();
-  }
-
   @Override
   public void configure() {
-
     Multibinder<ResultSetMapper<?>> resultSetMappers = Multibinder.newSetBinder(binder(), new TypeLiteral<ResultSetMapper<?>>() {});
 
     resultSetMappers.addBinding().to(SingularityMappers.SingularityBytesMapper.class).in(Scopes.SINGLETON);
@@ -49,6 +43,8 @@ public class SingularityHistoryModule extends AbstractModule {
     resultSetMappers.addBinding().to(SingularityMappers.SingularityRequestHistoryMapper.class).in(Scopes.SINGLETON);
     resultSetMappers.addBinding().to(SingularityMappers.SingularityTaskIdHistoryMapper.class).in(Scopes.SINGLETON);
     resultSetMappers.addBinding().to(SingularityMappers.SingularityDeployHistoryLiteMapper.class).in(Scopes.SINGLETON);
+    resultSetMappers.addBinding().to(SingularityMappers.SingularityRequestIdCountMapper.class).in(Scopes.SINGLETON);
+    resultSetMappers.addBinding().to(SingularityMappers.DateMapper.class).in(Scopes.SINGLETON);
 
     bind(TaskHistoryHelper.class).in(Scopes.SINGLETON);
     bind(RequestHistoryHelper.class).in(Scopes.SINGLETON);
