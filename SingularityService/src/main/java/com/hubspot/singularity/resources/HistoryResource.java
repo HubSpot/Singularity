@@ -1,5 +1,6 @@
 package com.hubspot.singularity.resources;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -30,9 +31,9 @@ import com.wordnik.swagger.annotations.ApiParam;
 
 @Path(HistoryResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api(description="Manages historical data for tasks, requests, and deploys.", value=HistoryResource.PATH)
+@Api(description = "Manages historical data for tasks, requests, and deploys.", value = HistoryResource.PATH)
 public class HistoryResource extends AbstractHistoryResource {
-  public static final String PATH = SingularityService.API_BASE_PATH +  "/history";
+  public static final String PATH = SingularityService.API_BASE_PATH + "/history";
 
   private final HistoryManager historyManager;
   private final TaskManager taskManager;
@@ -41,7 +42,8 @@ public class HistoryResource extends AbstractHistoryResource {
   private final RequestHistoryHelper requestHistoryHelper;
 
   @Inject
-  public HistoryResource(HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, DeployHistoryHelper deployHistoryHelper, TaskHistoryHelper taskHistoryHelper,
+  public HistoryResource(HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager,
+      DeployHistoryHelper deployHistoryHelper, TaskHistoryHelper taskHistoryHelper,
       RequestHistoryHelper requestHistoryHelper) {
     super(historyManager, taskManager, deployManager);
 
@@ -92,7 +94,8 @@ public class HistoryResource extends AbstractHistoryResource {
   @GET
   @Path("/request/{requestId}/tasks/active")
   @ApiOperation("Retrieve the history for all active tasks of a specific request.")
-  public List<SingularityTaskIdHistory> getTaskHistoryForRequest(@ApiParam("Request ID to look up") @PathParam("requestId") String requestId) {
+  public List<SingularityTaskIdHistory> getTaskHistoryForRequest(
+      @ApiParam("Request ID to look up") @PathParam("requestId") String requestId) {
     List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForRequest(requestId);
 
     return taskHistoryHelper.getHistoriesFor(activeTaskIds);
@@ -107,9 +110,30 @@ public class HistoryResource extends AbstractHistoryResource {
   }
 
   @GET
+  @Path("/request/{requestId}/deploy/{deployId}/tasks")
+  @ApiOperation("Retrieve the task history for a specific deploy.")
+  public List<SingularityTaskIdHistory> getDeployTasks(
+      @ApiParam("Request ID for deploy") @PathParam("requestId") String requestId,
+      @ApiParam("Deploy ID") @PathParam("deployId") String deployId) {
+    List<SingularityTaskId> taskIds = new ArrayList<SingularityTaskId>();
+    for (SingularityTaskId id : taskManager.getActiveTaskIdsForRequest(requestId)) {
+      if (id.getDeployId().equals(deployId)) {
+        taskIds.add(id);
+      }
+    }
+    for (SingularityTaskId id : taskManager.getInactiveTaskIdsForRequest(requestId)) {  
+      if (id.getDeployId().equals(deployId)) {
+        taskIds.add(id);
+      }
+    }
+    return taskHistoryHelper.getHistoriesFor(taskIds);
+  }
+
+  @GET
   @Path("/request/{requestId}/tasks")
   @ApiOperation("Retrieve the history for all tasks of a specific request.")
-  public List<SingularityTaskIdHistory> getTaskHistoryForRequest(@ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
+  public List<SingularityTaskIdHistory> getTaskHistoryForRequest(
+      @ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
       @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
       @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     final Integer limitCount = getLimitCount(count);
@@ -121,7 +145,8 @@ public class HistoryResource extends AbstractHistoryResource {
   @GET
   @Path("/request/{requestId}/deploys")
   @ApiOperation("")
-  public List<SingularityDeployHistory> getDeploys(@ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
+  public List<SingularityDeployHistory> getDeploys(
+      @ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
       @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
       @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     final Integer limitCount = getLimitCount(count);
@@ -133,7 +158,8 @@ public class HistoryResource extends AbstractHistoryResource {
   @GET
   @Path("/request/{requestId}/requests")
   @ApiOperation("")
-  public List<SingularityRequestHistory> getRequestHistoryForRequest(@ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
+  public List<SingularityRequestHistory> getRequestHistoryForRequest(
+      @ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
       @ApiParam("Naximum number of items to return") @QueryParam("count") Integer count,
       @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     final Integer limitCount = getLimitCount(count);
@@ -145,7 +171,8 @@ public class HistoryResource extends AbstractHistoryResource {
   @GET
   @Path("/requests/search")
   @ApiOperation("Search for requests.")
-  public List<String> getRequestHistoryForRequestLike(@ApiParam("Request ID prefix to search for") @QueryParam("requestIdLike") String requestIdLike,
+  public List<String> getRequestHistoryForRequestLike(
+      @ApiParam("Request ID prefix to search for") @QueryParam("requestIdLike") String requestIdLike,
       @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
       @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     final Integer limitCount = getLimitCount(count);

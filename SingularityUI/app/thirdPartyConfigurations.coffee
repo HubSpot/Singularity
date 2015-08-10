@@ -36,7 +36,7 @@ Messenger.options =
 # ZeroClipboard options
 ZeroClipboard.config
     debug: false
-    swfPath: "#{ config.appRoot }/static/swf/ZeroClipboard.swf"
+    swfPath: "#{ config.staticRoot }/swf/ZeroClipboard.swf"
 
 # Overwrite Handlebars logging
 Handlebars.logger.log = (stuff...) =>
