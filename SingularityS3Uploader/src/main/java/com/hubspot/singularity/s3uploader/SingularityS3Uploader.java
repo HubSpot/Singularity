@@ -13,15 +13,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-import com.github.rholder.retry.Retryer;
-import com.github.rholder.retry.RetryerBuilder;
-import com.github.rholder.retry.StopStrategies;
-import com.github.rholder.retry.WaitStrategies;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
-import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
-import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
 import org.jets3t.service.S3Service;
 import org.jets3t.service.S3ServiceException;
 import org.jets3t.service.ServiceException;
@@ -35,12 +27,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer.Context;
+import com.github.rholder.retry.Retryer;
+import com.github.rholder.retry.RetryerBuilder;
+import com.github.rholder.retry.StopStrategies;
+import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
+import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
+import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
 
 public class SingularityS3Uploader implements Closeable {
 

@@ -4,12 +4,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.spotify.docker.client.DockerClient;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskState;
-
-import ch.qos.logback.classic.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.deploy.ExecutorData;
@@ -19,6 +16,9 @@ import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
+import com.spotify.docker.client.DockerClient;
+
+import ch.qos.logback.classic.Logger;
 
 public class SingularityExecutorTask {
 

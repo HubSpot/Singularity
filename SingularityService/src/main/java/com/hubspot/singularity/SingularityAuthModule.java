@@ -5,8 +5,8 @@ import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
-import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.auth.authenticator.SingularityAuthenticator;
+import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 public class SingularityAuthModule implements Module {

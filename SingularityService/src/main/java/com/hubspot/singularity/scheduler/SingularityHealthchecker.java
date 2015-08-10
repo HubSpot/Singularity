@@ -7,8 +7,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
-import com.hubspot.singularity.HealthcheckProtocol;
-import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,10 +16,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.hubspot.singularity.HealthcheckProtocol;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;

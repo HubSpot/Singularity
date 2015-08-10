@@ -1,13 +1,13 @@
 package com.hubspot.mesos;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Objects;
-import com.google.common.base.Optional;
-import org.apache.mesos.Protos;
-
 import java.util.Collections;
 import java.util.List;
+
+import org.apache.mesos.Protos;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 
 public class SingularityDockerInfo {
   private final String image;
