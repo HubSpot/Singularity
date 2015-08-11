@@ -1,7 +1,7 @@
 RequestTasks = require './RequestTasks'
-Collection = require './collection'
+PaginableCollection = require './PaginableCollection'
 
-class DeployActiveTasks extends Collection
+class DeployActiveTasks extends PaginableCollection
 
     model: class TaskHistoryItem extends Backbone.Model
       ignoreAttributes: ['id']

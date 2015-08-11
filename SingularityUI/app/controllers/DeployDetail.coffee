@@ -48,11 +48,11 @@ class DeployDetailController extends Controller
       model:      @models.deploy
       template:   @templates.info
 
-    @subviews.taskHistory = new SimpleSubview
+    @subviews.taskHistory = new ExpandableTableSubview
       collection: @collections.taskHistory
       template:   @templates.taskHistory
 
-    @subviews.activeTasks = new SimpleSubview
+    @subviews.activeTasks = new ExpandableTableSubview
       collection: @collections.activeTasks
       template:   @templates.activeTasks
 
