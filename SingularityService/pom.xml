@@ -547,7 +547,7 @@
                 <image>
                   <name>hubspot/singularityservice:${project.version}</name>
                   <build>
-                    <from>java:8u45-jre</from>
+                    <from>hubspot/singularitybase:${mesos.docker.tag}</from>
                     <maintainer>platform-infrastructure-groups@hubspot.com</maintainer>
                     <ports>
                       <port>7099</port>

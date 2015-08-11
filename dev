@@ -14,7 +14,7 @@ function build {
 
 function stop {
   echo "Stopping old containers with docker-compose $1"
-  docker-compose $1
+  docker-compose ${1:="stop"}
   if [ "$1" == "kill" ]; then
     echo "Yep... Good and dead..."
   fi
@@ -53,7 +53,7 @@ case $1 in
     start "attach"
     ;;
   restart)
-    stop "stop"
+    stop $2
     remove
     start
     ;;
@@ -63,6 +63,9 @@ case $1 in
     remove
     build
     start $2
+    ;;
+  build)
+    build
     ;;
   remove)
     remove

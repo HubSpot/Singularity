@@ -14,7 +14,7 @@ public enum ExtendedTaskState {
   TASK_STARTING("starting", false, Optional.of(TaskState.TASK_STARTING)), TASK_RUNNING("running", false, Optional.of(TaskState.TASK_RUNNING)),
   TASK_CLEANING("cleaning", false, Optional.<TaskState> absent()), TASK_FINISHED("finished", true, Optional.of(TaskState.TASK_FINISHED)),
   TASK_FAILED("failed", true, Optional.of(TaskState.TASK_FAILED)), TASK_KILLED("killed", true, Optional.of(TaskState.TASK_KILLED)),
-  TASK_LOST("lost", true, Optional.of(TaskState.TASK_LOST)), TASK_LOST_WHILE_DOWN("lost", true, Optional.<TaskState> absent());
+  TASK_LOST("lost", true, Optional.of(TaskState.TASK_LOST)), TASK_LOST_WHILE_DOWN("lost", true, Optional.<TaskState> absent()), TASK_ERROR("error", true, Optional.of(TaskState.TASK_ERROR));
 
   private static final Map<TaskState, ExtendedTaskState> map;
   static {
@@ -24,13 +24,19 @@ public enum ExtendedTaskState {
         map.put(extendedTaskState.toTaskState().get(), extendedTaskState);
       }
     }
+
+    for (TaskState t : TaskState.values()) {
+      if (map.get(t) == null) {
+        throw new IllegalStateException("No ExtendedTaskState provided for TaskState " + t);
+      }
+    }
   }
 
   private final String displayName;
   private final boolean isDone;
   private final Optional<TaskState> taskState;
 
-  private ExtendedTaskState(String displayName, boolean isDone, Optional<TaskState> taskState) {
+  ExtendedTaskState(String displayName, boolean isDone, Optional<TaskState> taskState) {
     this.displayName = displayName;
     this.isDone = isDone;
     this.taskState = taskState;
@@ -58,7 +64,7 @@ public enum ExtendedTaskState {
 
   public static ExtendedTaskState fromTaskState(TaskState taskState) {
     ExtendedTaskState extendedTaskState = map.get(taskState);
-    Preconditions.checkArgument(extendedTaskState != null);
+    Preconditions.checkArgument(extendedTaskState != null, "No ExtendedTaskState for TaskState %s", taskState);
     return extendedTaskState;
   }
 
