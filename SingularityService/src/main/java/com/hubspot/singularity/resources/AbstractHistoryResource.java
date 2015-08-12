@@ -8,20 +8,26 @@ import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 
 public abstract class AbstractHistoryResource {
 
-  private final HistoryManager historyManager;
-  private final TaskManager taskManager;
-  private final DeployManager deployManager;
+  protected final HistoryManager historyManager;
+  protected final TaskManager taskManager;
+  protected final DeployManager deployManager;
+  protected final SingularityAuthorizationHelper authorizationHelper;
+  protected final Optional<SingularityUser> user;
 
-  public AbstractHistoryResource(HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager) {
+  public AbstractHistoryResource(HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user) {
     this.historyManager = historyManager;
     this.taskManager = taskManager;
     this.deployManager = deployManager;
+    this.authorizationHelper = authorizationHelper;
+    this.user = user;
   }
 
   protected SingularityTaskId getTaskIdObject(String taskId) {
@@ -33,6 +39,8 @@ public abstract class AbstractHistoryResource {
   }
 
   protected SingularityTaskHistory getTaskHistory(SingularityTaskId taskId) {
+    authorizationHelper.checkForAuthorizationByRequestId(taskId.getRequestId(), user);
+
     Optional<SingularityTaskHistory> history = taskManager.getTaskHistory(taskId);
 
     if (!history.isPresent()) {
@@ -45,6 +53,8 @@ public abstract class AbstractHistoryResource {
   }
 
   protected SingularityDeployHistory getDeployHistory(String requestId, String deployId) {
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user);
+
     Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(requestId, deployId, true);
 
     if (deployHistory.isPresent()) {

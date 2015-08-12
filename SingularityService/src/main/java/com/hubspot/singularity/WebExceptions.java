@@ -38,6 +38,12 @@ public final class WebExceptions {
     }
   }
 
+  public static void checkUnauthorized(boolean condition, String message, Object... args) {
+    if (!condition) {
+      unauthorized(message, args);
+    }
+  }
+
   public static <T> T checkNotNullBadRequest(T value, String message, Object... args) {
     if (value == null) {
       badRequest(message, args);
@@ -69,6 +75,10 @@ public final class WebExceptions {
 
   public static WebApplicationException forbidden(String message, Object... args) {
     return webException(Status.FORBIDDEN.getStatusCode(), message, args);
+  }
+
+  public static WebApplicationException unauthorized(String message, Object... args) {
+    return webException(Status.UNAUTHORIZED.getStatusCode(), message, args);
   }
 
   private static WebApplicationException webException(int statusCode, String message, Object... formatArgs) {

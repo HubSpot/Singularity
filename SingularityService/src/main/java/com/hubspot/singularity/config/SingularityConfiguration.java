@@ -1,8 +1,5 @@
 package com.hubspot.singularity.config;
 
-import io.dropwizard.Configuration;
-import io.dropwizard.db.DataSourceFactory;
-
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -16,6 +13,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.hubspot.singularity.SlavePlacement;
+
+import io.dropwizard.Configuration;
+import io.dropwizard.db.DataSourceFactory;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityConfiguration extends Configuration {
@@ -169,6 +169,14 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("zookeeper")
   @Valid
   private ZooKeeperConfiguration zooKeeperConfiguration;
+
+  @JsonProperty("ldap")
+  @Valid
+  private LDAPConfiguration ldapConfiguration = null;
+
+  @JsonProperty("auth")
+  @NotNull
+  private AuthConfiguration authConfiguration = new AuthConfiguration();
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -692,5 +700,21 @@ public class SingularityConfiguration extends Configuration {
 
   public void setDeployIdLength(int deployIdLength) {
     this.deployIdLength = deployIdLength;
+  }
+
+  public Optional<LDAPConfiguration> getLdapConfiguration() {
+    return Optional.fromNullable(ldapConfiguration);
+  }
+
+  public void setLdapConfiguration(LDAPConfiguration ldapConfiguration) {
+    this.ldapConfiguration = ldapConfiguration;
+  }
+
+  public AuthConfiguration getAuthConfiguration() {
+    return authConfiguration;
+  }
+
+  public void setAuthConfiguration(AuthConfiguration authConfiguration) {
+    this.authConfiguration = authConfiguration;
   }
 }

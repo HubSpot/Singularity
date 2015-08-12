@@ -30,6 +30,7 @@ public class SingularityDeploy {
   private final Optional<String> customExecutorId;
   private final Optional<String> customExecutorSource;
   private final Optional<Resources> customExecutorResources;
+  private final Optional<String> customExecutorUser;
 
   private final Optional<Resources> resources;
 
@@ -67,6 +68,7 @@ public class SingularityDeploy {
       @JsonProperty("customExecutorId") Optional<String> customExecutorId,
       @JsonProperty("customExecutorSource") Optional<String> customExecutorSource,
       @JsonProperty("customExecutorResources") Optional<Resources> customExecutorResources,
+      @JsonProperty("customExecutorUser") Optional<String> customExecutorUser,
       @JsonProperty("resources") Optional<Resources> resources,
       @JsonProperty("env") Optional<Map<String, String>> env,
       @JsonProperty("uris") Optional<List<String>> uris,
@@ -96,6 +98,7 @@ public class SingularityDeploy {
     this.customExecutorId = customExecutorId;
     this.customExecutorSource = customExecutorSource;
     this.customExecutorResources = customExecutorResources;
+    this.customExecutorUser = customExecutorUser;
 
     this.metadata = metadata;
     this.version = version;
@@ -203,6 +206,11 @@ public class SingularityDeploy {
     return customExecutorResources;
   }
 
+  @ApiModelProperty(required=false, value="User to run custom executor as")
+  public Optional<String> getCustomExecutorUser() {
+    return customExecutorUser;
+  }
+
   @ApiModelProperty(required=false, value="Resources required for this deploy.", dataType="com.hubspot.mesos.Resources")
   public Optional<Resources> getResources() {
     return resources;
@@ -291,6 +299,7 @@ public class SingularityDeploy {
         ", customExecutorId=" + customExecutorId +
         ", customExecutorSource=" + customExecutorSource +
         ", customExecutorResources=" + customExecutorResources +
+        ", customExecutorUser=" + customExecutorUser +
         ", resources=" + resources +
         ", command=" + command +
         ", arguments=" + arguments +
