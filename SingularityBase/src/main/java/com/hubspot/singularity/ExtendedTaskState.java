@@ -27,7 +27,7 @@ public enum ExtendedTaskState {
 
     for (TaskState t : TaskState.values()) {
       if (map.get(t) == null) {
-        throw new IllegalStateException("No ExtendedTaskState provided for TaskState " + t);
+        throw new IllegalStateException("No ExtendedTaskState provided for TaskState " + t + ", you probably have incompatible versions of Mesos and Singularity.");
       }
     }
   }
