@@ -131,6 +131,16 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
       return StateChangeResult.FAILURE_ILLEGAL_TRANSITION;
     }
 
+    // can't jump from FROZEN to DECOMMISSIONING or DECOMMISSIONED
+    if (((newState == MachineState.DECOMMISSIONING) || (newState == MachineState.DECOMMISSIONED)) && (object.getCurrentState().getState() == MachineState.FROZEN)) {
+      return StateChangeResult.FAILURE_ILLEGAL_TRANSITION;
+    }
+
+    // can't jump from a decommissioning state to FROZEN
+    if ((newState == MachineState.FROZEN) && object.getCurrentState().getState().isDecommissioning()) {
+      return StateChangeResult.FAILURE_ILLEGAL_TRANSITION;
+    }
+
     SingularityMachineStateHistoryUpdate newStateUpdate = new SingularityMachineStateHistoryUpdate(object.getId(), newState, System.currentTimeMillis(), user);
 
     LOG.debug("{} changing state from {} to {} by {}", object.getId(), object.getCurrentState().getState(), newState, user);
