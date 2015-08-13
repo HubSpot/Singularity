@@ -70,6 +70,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long deleteDeploysFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
 
+  private long deleteDeadSlavesAfterHours = TimeUnit.DAYS.toHours(7);
+
   private long deleteStaleRequestsFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
 
   private long deleteTasksFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(7);
@@ -316,6 +318,14 @@ public class SingularityConfiguration extends Configuration {
     return killNonLongRunningTasksInCleanupAfterSeconds;
   }
 
+  public long getDeleteDeadSlavesAfterHours() {
+    return deleteDeadSlavesAfterHours;
+  }
+
+  public void setDeleteDeadSlavesAfterHours(long deleteDeadSlavesAfterHours) {
+    this.deleteDeadSlavesAfterHours = deleteDeadSlavesAfterHours;
+  }
+
   public int getListenerThreadpoolSize() {
     return listenerThreadpoolSize;
   }
@@ -394,6 +404,10 @@ public class SingularityConfiguration extends Configuration {
 
   public long getThreadpoolShutdownDelayInSeconds() {
     return threadpoolShutdownDelayInSeconds;
+  }
+
+  public void setThreadpoolShutdownDelayInSeconds(long threadpoolShutdownDelayInSeconds) {
+    this.threadpoolShutdownDelayInSeconds = threadpoolShutdownDelayInSeconds;
   }
 
   public UIConfiguration getUiConfiguration() {
@@ -727,4 +741,5 @@ public class SingularityConfiguration extends Configuration {
   public void setAuthConfiguration(AuthConfiguration authConfiguration) {
     this.authConfiguration = authConfiguration;
   }
+
 }
