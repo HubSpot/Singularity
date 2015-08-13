@@ -13,6 +13,7 @@ import javax.ws.rs.core.Response.Status;
 
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDeployHistory;
+import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTaskHistory;
@@ -21,6 +22,7 @@ import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
+import com.hubspot.singularity.data.history.DeployTaskHistoryHelper;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
@@ -39,11 +41,13 @@ public class HistoryResource extends AbstractHistoryResource {
   private final DeployHistoryHelper deployHistoryHelper;
   private final TaskHistoryHelper taskHistoryHelper;
   private final RequestHistoryHelper requestHistoryHelper;
+  private final DeployTaskHistoryHelper deployTaskHistoryHelper;
 
   @Inject
   public HistoryResource(HistoryManager historyManager, TaskManager taskManager, DeployManager deployManager,
       DeployHistoryHelper deployHistoryHelper, TaskHistoryHelper taskHistoryHelper,
-      RequestHistoryHelper requestHistoryHelper) {
+      RequestHistoryHelper requestHistoryHelper,
+      DeployTaskHistoryHelper deployTaskHistoryHelper) {
     super(historyManager, taskManager, deployManager);
 
     this.taskManager = taskManager;
@@ -51,6 +55,7 @@ public class HistoryResource extends AbstractHistoryResource {
     this.deployHistoryHelper = deployHistoryHelper;
     this.historyManager = historyManager;
     this.taskHistoryHelper = taskHistoryHelper;
+    this.deployTaskHistoryHelper = deployTaskHistoryHelper;
   }
 
   @GET
@@ -118,8 +123,10 @@ public class HistoryResource extends AbstractHistoryResource {
       @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
+    
+    SingularityDeployKey key = new SingularityDeployKey(requestId, deployId);
 
-    return taskHistoryHelper.getDeployTasks(requestId, deployId, true, limitCount, limitStart);
+    return deployTaskHistoryHelper.getActiveDeployTasks(key, limitCount, limitStart);
   }
 
   @GET
@@ -133,7 +140,9 @@ public class HistoryResource extends AbstractHistoryResource {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
-    return taskHistoryHelper.getDeployTasks(requestId, deployId, false, limitCount, limitStart);
+    SingularityDeployKey key = new SingularityDeployKey(requestId, deployId);
+
+    return deployTaskHistoryHelper.getInactiveDeployTasks(key, limitCount, limitStart);
   }
 
   @GET
