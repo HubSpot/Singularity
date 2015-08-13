@@ -37,7 +37,7 @@ public class SingularityS3FormatHelper {
   public static String getS3KeyFormat(String s3KeyFormat, SingularityTaskId taskId, Optional<String> loggingTag) {
     s3KeyFormat = getS3KeyFormat(s3KeyFormat, taskId.getRequestId(), taskId.getDeployId(), loggingTag);
 
-    s3KeyFormat = s3KeyFormat.replace("%host", taskId.getHost());
+    s3KeyFormat = s3KeyFormat.replace("%host", taskId.getSanitizedHost());
     s3KeyFormat = s3KeyFormat.replace("%taskId", taskId.toString());
 
     return s3KeyFormat;

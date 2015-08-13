@@ -228,4 +228,9 @@ public final class JavaUtils {
     return threadPoolExecutor;
   }
 
+  public static String getReplaceHyphensWithUnderscores(String string) {
+    return string.replace("-", "_");
+  }
+
+
 }

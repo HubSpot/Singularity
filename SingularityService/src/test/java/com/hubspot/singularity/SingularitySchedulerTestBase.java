@@ -200,7 +200,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
         .setName("name")
         .build();
 
-    SingularityTask task = new SingularityTask(taskRequest, taskId, offer, taskInfo);
+    SingularityTask task = new SingularityTask(taskRequest, taskId, offer, taskInfo, Optional.of("rack1"));
 
     taskManager.savePendingTask(pendingTask);
 
