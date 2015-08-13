@@ -136,7 +136,7 @@
                 <image>
                   <name>hubspot/singularityexecutorslave:${project.version}</name>
                   <build>
-                    <from>hubspot/singularityexecutorslavebase:${mesos.docker.tag}</from>
+                    <from>hubspot/singularitybase:${mesos.docker.tag}</from>
                     <maintainer>platform-infrastructure-groups@hubspot.com</maintainer>
                     <cmd>
                       <exec>

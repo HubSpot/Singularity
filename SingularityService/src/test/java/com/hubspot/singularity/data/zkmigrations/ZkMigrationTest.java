@@ -9,18 +9,18 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityCuratorTestBase;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityTestBaseNoDb;
 import com.hubspot.singularity.data.MetadataManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
 import com.hubspot.singularity.data.zkmigrations.SingularityCmdLineArgsMigration.SingularityPendingRequestPrevious;
 
-public class ZkMigrationTest extends SingularityCuratorTestBase {
+public class ZkMigrationTest extends SingularityTestBaseNoDb {
 
   @Inject
   private ZkDataMigrationRunner migrationRunner;

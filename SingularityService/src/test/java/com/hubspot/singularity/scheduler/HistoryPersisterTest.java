@@ -25,6 +25,10 @@ public class HistoryPersisterTest extends SingularitySchedulerTestBase {
   @Inject
   protected SingularityCleaner cleaner;
 
+  public HistoryPersisterTest() {
+    super(false);
+  }
+
   @Test
   public void testRequestPurging() {
     initRequest();

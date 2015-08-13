@@ -9,7 +9,6 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.skife.jdbi.v2.DBI;
 import org.skife.jdbi.v2.tweak.ResultSetMapper;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -35,14 +34,8 @@ public class SingularityHistoryModule extends AbstractModule {
     this.configuration = configuration.getDatabaseConfiguration();
   }
 
-  @VisibleForTesting
-  public SingularityHistoryModule() {
-    this.configuration = Optional.absent();
-  }
-
   @Override
   public void configure() {
-
     Multibinder<ResultSetMapper<?>> resultSetMappers = Multibinder.newSetBinder(binder(), new TypeLiteral<ResultSetMapper<?>>() {});
 
     resultSetMappers.addBinding().to(SingularityMappers.SingularityBytesMapper.class).in(Scopes.SINGLETON);
@@ -50,6 +43,8 @@ public class SingularityHistoryModule extends AbstractModule {
     resultSetMappers.addBinding().to(SingularityMappers.SingularityRequestHistoryMapper.class).in(Scopes.SINGLETON);
     resultSetMappers.addBinding().to(SingularityMappers.SingularityTaskIdHistoryMapper.class).in(Scopes.SINGLETON);
     resultSetMappers.addBinding().to(SingularityMappers.SingularityDeployHistoryLiteMapper.class).in(Scopes.SINGLETON);
+    resultSetMappers.addBinding().to(SingularityMappers.SingularityRequestIdCountMapper.class).in(Scopes.SINGLETON);
+    resultSetMappers.addBinding().to(SingularityMappers.DateMapper.class).in(Scopes.SINGLETON);
 
     bind(TaskHistoryHelper.class).in(Scopes.SINGLETON);
     bind(RequestHistoryHelper.class).in(Scopes.SINGLETON);

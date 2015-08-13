@@ -131,6 +131,10 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected Optional<String> user = Optional.absent();
 
+  public SingularitySchedulerTestBase(boolean useDBTests) {
+    super(useDBTests);
+  }
+
   @After
   public void teardown() throws Exception {
     if (httpClient != null) {
