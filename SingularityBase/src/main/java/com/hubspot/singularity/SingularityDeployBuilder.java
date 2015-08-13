@@ -84,10 +84,7 @@ public class SingularityDeployBuilder {
   }
 
   public SingularityDeploy build() {
-    return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources,
-        customExecutorUser, customExecutorResources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds,
-        healthcheckTimeoutSeconds, healthcheckMaxRetries, healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds,
-        loadBalancerOptions, skipHealthchecksOnDeploy, healthcheckProtocol);
+
   }
 
   public String getRequestId() {

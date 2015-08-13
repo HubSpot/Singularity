@@ -222,10 +222,25 @@ public class SingularityRequest {
 
   @Override
   public String toString() {
-    return "SingularityRequest [id=" + id + ", requestType=" + requestType + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule + ", quartzSchedule="
-        + quartzSchedule + ", scheduleType=" + scheduleType + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis + ", scheduledExpectedRuntimeMillis="
-        + scheduledExpectedRuntimeMillis + ", waitAtLeastMillisAfterTaskFinishesForReschedule=" + waitAtLeastMillisAfterTaskFinishesForReschedule + ", daemon=" + daemon + ", instances=" + instances
-        + ", rackSensitive=" + rackSensitive + ", rackAffinity=" + rackAffinity + ", slavePlacement=" + slavePlacement + ", loadBalanced=" + loadBalanced + ", group=" + group + "]";
+    return "SingularityRequest[" +
+            "id='" + id + '\'' +
+            ", requestType=" + requestType +
+            ", owners=" + owners +
+            ", numRetriesOnFailure=" + numRetriesOnFailure +
+            ", schedule=" + schedule +
+            ", quartzSchedule=" + quartzSchedule +
+            ", scheduleType=" + scheduleType +
+            ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis +
+            ", scheduledExpectedRuntimeMillis=" + scheduledExpectedRuntimeMillis +
+            ", waitAtLeastMillisAfterTaskFinishesForReschedule=" + waitAtLeastMillisAfterTaskFinishesForReschedule +
+            ", daemon=" + daemon +
+            ", instances=" + instances +
+            ", rackSensitive=" + rackSensitive +
+            ", rackAffinity=" + rackAffinity +
+            ", slavePlacement=" + slavePlacement +
+            ", loadBalanced=" + loadBalanced +
+            ", group=" + group +
+            ']';
   }
 
   @Override

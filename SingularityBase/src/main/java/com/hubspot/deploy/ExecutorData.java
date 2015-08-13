@@ -32,7 +32,7 @@ public class ExecutorData {
       @JsonProperty("s3Artifacts") List<S3Artifact> s3Artifacts, @JsonProperty("successfulExitCodes") List<Integer> successfulExitCodes, @JsonProperty("user") Optional<String> user,
       @JsonProperty("runningSentinel") Optional<String> runningSentinel, @JsonProperty("extraCmdLineArgs") List<String> extraCmdLineArgs, @JsonProperty("loggingTag") Optional<String> loggingTag,
       @JsonProperty("loggingExtraFields") Map<String, String> loggingExtraFields, @JsonProperty("sigKillProcessesAfterMillis") Optional<Long> sigKillProcessesAfterMillis,
-      @JsonProperty("maxTaskThreads") Optional<Integer> maxTaskThreads,
+      @JsonProperty("maxTaskThreads") Optional<Integer> maxTaskThreads, @JsonProperty("preserveTaskSandboxAfterFinish") Optional<Boolean> preserveTaskSandboxAfterFinish,
       @JsonProperty("preserveTaskSandboxAfterFinish") Optional<Boolean> preserveTaskSandboxAfterFinish,
       @JsonProperty("loggingS3Bucket") Optional<String> loggingS3Bucket) {
     this.cmd = cmd;
