@@ -1,9 +1,9 @@
 package com.hubspot.mesos;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Resources {
   public static Resources add(Resources a, Resources b) {

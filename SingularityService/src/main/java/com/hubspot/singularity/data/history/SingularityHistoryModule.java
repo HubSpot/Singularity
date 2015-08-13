@@ -1,9 +1,6 @@
 package com.hubspot.singularity.data.history;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import io.dropwizard.db.DataSourceFactory;
-import io.dropwizard.jdbi.DBIFactory;
-import io.dropwizard.setup.Environment;
 
 import java.util.Set;
 
@@ -24,6 +21,10 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.Multibinder;
 import com.hubspot.singularity.config.SingularityConfiguration;
+
+import io.dropwizard.db.DataSourceFactory;
+import io.dropwizard.jdbi.DBIFactory;
+import io.dropwizard.setup.Environment;
 
 public class SingularityHistoryModule extends AbstractModule {
 

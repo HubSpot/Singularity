@@ -1,7 +1,6 @@
 package com.hubspot.singularity.guice;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import io.dropwizard.setup.Environment;
 
 import java.util.Map;
 
@@ -14,6 +13,7 @@ import com.sun.jersey.guice.spi.container.servlet.GuiceContainer;
 import com.sun.jersey.spi.container.servlet.WebConfig;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.dropwizard.setup.Environment;
 
 /**
  * A Guice based Jersey container that can pull resources out of the dropwizard environment.

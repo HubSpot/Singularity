@@ -84,6 +84,10 @@ public class SingularityDeployBuilder {
   }
 
   public SingularityDeploy build() {
+    return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources,
+        customExecutorUser, customExecutorResources, env, uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds,
+        healthcheckTimeoutSeconds, healthcheckMaxRetries, healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds,
+        loadBalancerOptions, skipHealthchecksOnDeploy, healthcheckProtocol);
   }
 
   public String getRequestId() {
@@ -342,5 +346,15 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  @Override
+  public String toString() {
+    return "SingularityDeployBuilder [requestId=" + requestId + ", id=" + id + ", version=" + version + ", timestamp=" + timestamp + ", metadata=" + metadata + ", containerInfo=" + containerInfo
+        + ", customExecutorCmd=" + customExecutorCmd + ", customExecutorId=" + customExecutorId + ", customExecutorSource=" + customExecutorSource + ", customExecutorResources="
+        + customExecutorResources + ", customExecutorUser=" + customExecutorUser + ", resources=" + resources + ", command=" + command + ", arguments=" + arguments + ", env=" + env + ", uris=" + uris
+        + ", executorData=" + executorData + ", healthcheckUri=" + healthcheckUri + ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds + ", healthcheckTimeoutSeconds="
+        + healthcheckTimeoutSeconds + ", skipHealthchecksOnDeploy=" + skipHealthchecksOnDeploy + ", healthcheckProtocol=" + healthcheckProtocol + ", healthcheckMaxRetries=" + healthcheckMaxRetries
+        + ", healthcheckMaxTotalTimeoutSeconds=" + healthcheckMaxTotalTimeoutSeconds + ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds + ", considerHealthyAfterRunningForSeconds="
+        + considerHealthyAfterRunningForSeconds + ", serviceBasePath=" + serviceBasePath + ", loadBalancerGroups=" + loadBalancerGroups + ", loadBalancerOptions=" + loadBalancerOptions + "]";
+  }
 
 }

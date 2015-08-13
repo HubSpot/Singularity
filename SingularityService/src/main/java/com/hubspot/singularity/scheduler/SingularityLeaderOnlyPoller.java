@@ -1,7 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import io.dropwizard.lifecycle.Managed;
 
 import java.util.Collections;
 import java.util.concurrent.ScheduledExecutorService;
@@ -20,6 +19,8 @@ import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.mesos.SingularityMesosSchedulerDelegator;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
+
+import io.dropwizard.lifecycle.Managed;
 
 public abstract class SingularityLeaderOnlyPoller implements Managed {
 

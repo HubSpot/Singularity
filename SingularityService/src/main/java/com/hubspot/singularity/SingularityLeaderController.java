@@ -1,7 +1,5 @@
 package com.hubspot.singularity;
 
-import io.dropwizard.lifecycle.Managed;
-
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.util.Collections;
@@ -27,6 +25,8 @@ import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.StateManager;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
+
+import io.dropwizard.lifecycle.Managed;
 
 @Singleton
 public class SingularityLeaderController implements Managed, LeaderLatchListener {

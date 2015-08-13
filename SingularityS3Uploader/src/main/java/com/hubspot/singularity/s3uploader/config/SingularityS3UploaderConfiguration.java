@@ -1,7 +1,5 @@
 package com.hubspot.singularity.s3uploader.config;
 
-import static com.hubspot.mesos.JavaUtils.obfuscateValue;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;

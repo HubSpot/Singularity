@@ -1,7 +1,5 @@
 package com.hubspot.singularity;
 
-import io.dropwizard.lifecycle.Managed;
-
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -18,6 +16,8 @@ import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SingularityDriver;
+
+import io.dropwizard.lifecycle.Managed;
 
 @Singleton
 public class SingularityDriverManager implements Managed {

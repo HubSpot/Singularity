@@ -8,9 +8,6 @@ import java.util.UUID;
 
 import javax.inject.Singleton;
 
-import com.hubspot.mesos.SingularityContainerType;
-import com.hubspot.mesos.SingularityDockerNetworkType;
-import org.apache.mesos.Protos;
 import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
@@ -19,7 +16,9 @@ import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityContainerType;
 import com.hubspot.mesos.SingularityDockerInfo;
+import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.singularity.ScheduleType;

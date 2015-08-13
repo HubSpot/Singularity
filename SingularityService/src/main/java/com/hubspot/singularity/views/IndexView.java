@@ -2,10 +2,10 @@ package com.hubspot.singularity.views;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import io.dropwizard.views.View;
-
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.config.SingularityConfiguration;
+
+import io.dropwizard.views.View;
 
 public class IndexView extends View {
 

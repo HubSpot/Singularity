@@ -2,12 +2,12 @@ package com.hubspot.singularity.executor.config;
 
 import org.slf4j.LoggerFactory;
 
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseLogging;
+
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
 
 @Singleton
 public class SingularityExecutorLogging {
