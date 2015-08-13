@@ -119,7 +119,7 @@ public class SingularityExecutorMonitor {
     processKiller.getExecutorService().shutdown();
 
     exitChecker.shutdown();
-    
+
     JavaUtils.awaitTerminationWithLatch(latch, "threadChecker", threadChecker.getExecutorService(), configuration.getShutdownTimeoutWaitMillis());
     JavaUtils.awaitTerminationWithLatch(latch, "processBuilder", processBuilderPool, configuration.getShutdownTimeoutWaitMillis());
     JavaUtils.awaitTerminationWithLatch(latch, "runningProcess", runningProcessPool, configuration.getShutdownTimeoutWaitMillis());
