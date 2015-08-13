@@ -17,6 +17,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.jets3t.service.Constants;
+import org.jets3t.service.Jets3tProperties;
 import org.jets3t.service.S3Service;
 import org.jets3t.service.impl.rest.httpclient.RestS3Service;
 import org.jets3t.service.model.S3Object;
@@ -88,7 +90,10 @@ public class S3ArtifactDownloader {
   private void downloadThrows(final S3Artifact s3Artifact, final Path downloadTo) throws Exception {
     log.info("Downloading {}", s3Artifact);
 
-    final S3Service s3 = new RestS3Service(new AWSCredentials(configuration.getS3AccessKey(), configuration.getS3SecretKey()));
+    Jets3tProperties jets3tProperties = Jets3tProperties.getInstance(Constants.JETS3T_PROPERTIES_FILENAME);
+    jets3tProperties.setProperty("httpclient.socket-timeout-ms", Long.toString(configuration.getS3DownloadTimeoutMillis()));
+
+    final S3Service s3 = new RestS3Service(new AWSCredentials(configuration.getS3AccessKey(), configuration.getS3SecretKey()), null, null, jets3tProperties);
 
     long length = 0;
 
