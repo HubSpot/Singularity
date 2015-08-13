@@ -321,6 +321,14 @@ public class RequestResource extends AbstractRequestResource {
     return fillEntireRequest(requestWithState);
   }
 
+  @GET
+  @PropertyFiltering
+  @Path("/active")
+  @ApiOperation(value="Retrieve the list of active requests", response=SingularityRequestParent.class, responseContainer="List")
+  public List<SingularityRequestParent> getActiveRequests() {
+    return getRequestsWithDeployState(requestManager.getActiveRequests());
+  }
+
   private List<SingularityRequestParent> getRequestsWithDeployState(Iterable<SingularityRequestWithState> requests) {
     if (!authorizationHelper.hasAdminAuthorization(user)) {
       requests = Iterables.filter(requests, new Predicate<SingularityRequestWithState>() {
@@ -346,14 +354,6 @@ public class RequestResource extends AbstractRequestResource {
     }
 
     return parents;
-  }
-
-  @GET
-  @PropertyFiltering
-  @Path("/active")
-  @ApiOperation(value="Retrieve the list of active requests", response=SingularityRequestParent.class, responseContainer="List")
-  public List<SingularityRequestParent> getActiveRequests() {
-    return getRequestsWithDeployState(requestManager.getActiveRequests());
   }
 
   @GET
