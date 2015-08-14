@@ -52,7 +52,7 @@ class DeployDetailController extends Controller
       collection: @collections.taskHistory
       template:   @templates.taskHistory
 
-    @subviews.activeTasks = new ExpandableTableSubview
+    @subviews.activeTasks = new SimpleSubview
       collection: @collections.activeTasks
       template:   @templates.activeTasks
 
