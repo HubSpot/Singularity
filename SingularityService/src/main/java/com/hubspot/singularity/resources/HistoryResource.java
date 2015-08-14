@@ -118,15 +118,10 @@ public class HistoryResource extends AbstractHistoryResource {
   @ApiOperation("Retrieve the task history for a specific deploy.")
   public List<SingularityTaskIdHistory> getActiveDeployTasks(
       @ApiParam("Request ID for deploy") @PathParam("requestId") String requestId,
-      @ApiParam("Deploy ID") @PathParam("deployId") String deployId,
-      @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
-      @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
-    final Integer limitCount = getLimitCount(count);
-    final Integer limitStart = getLimitStart(limitCount, page);
-    
+      @ApiParam("Deploy ID") @PathParam("deployId") String deployId) {
     SingularityDeployKey key = new SingularityDeployKey(requestId, deployId);
 
-    return deployTaskHistoryHelper.getActiveDeployTasks(key, limitCount, limitStart);
+    return deployTaskHistoryHelper.getActiveDeployTasks(key);
   }
 
   @GET

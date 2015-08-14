@@ -2,10 +2,12 @@ package com.hubspot.singularity.data.history;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -44,49 +46,57 @@ public class DeployTaskHistoryHelper extends BlendedHistoryHelper<SingularityTas
   }
 
   @Override
-  protected List<SingularityTaskIdHistory> getFromZk(SingularityDeployKey deployKey) {
-    List<SingularityTaskId> activeTaskIds = taskManager.getTaskIdsForRequest(deployKey.getRequestId());
-    Iterator<SingularityTaskId> it = activeTaskIds.iterator();
-    while(it.hasNext()) {
-      if (!it.next().getDeployId().equals(deployKey.getDeployId())) {
-        it.remove();
+  protected List<SingularityTaskIdHistory> getFromZk(final SingularityDeployKey deployKey) {
+    List<SingularityTaskId> requestTaskIds = taskManager.getTaskIdsForRequest(deployKey.getRequestId());
+
+    final Iterable<SingularityTaskId> deployTaskIds = Iterables.filter(requestTaskIds, new Predicate<SingularityTaskId>() {
+      @Override
+      public boolean apply(SingularityTaskId input) {
+        return input.getDeployId().equals(deployKey.getDeployId());
       }
-    }
-    return getHistoriesFor(activeTaskIds);
+    });
+
+    return getHistoriesFor(ImmutableList.copyOf(deployTaskIds));
   }
 
   @Override
-  protected List<SingularityTaskIdHistory> getFromHistory(SingularityDeployKey deployKey, int historyStart, int numFromHistory) {
-    List<SingularityTaskIdHistory> histories = historyManager.getTaskHistoryForRequest(deployKey.getRequestId(), historyStart, numFromHistory);
-    Iterator<SingularityTaskIdHistory> it = histories.iterator();
-    while(it.hasNext()) {
-      if (!it.next().getTaskId().getDeployId().equals(deployKey.getDeployId())) {
-        it.remove();
+  protected List<SingularityTaskIdHistory> getFromHistory(final SingularityDeployKey deployKey, int historyStart, int numFromHistory) {
+    List<SingularityTaskIdHistory> requestHistories = historyManager.getTaskHistoryForRequest(deployKey.getRequestId(), historyStart, numFromHistory);
+
+    final Iterable<SingularityTaskIdHistory> deployHistories = Iterables.filter(requestHistories, new Predicate<SingularityTaskIdHistory>() {
+      @Override
+      public boolean apply(SingularityTaskIdHistory input) {
+        return input.getTaskId().getDeployId().equals(deployKey.getDeployId());
       }
-    }
-    return histories;
+    });
+
+    return ImmutableList.copyOf(deployHistories);
   }
 
-  public List<SingularityTaskIdHistory> getActiveDeployTasks(SingularityDeployKey key, Integer limitCount, Integer limitStart) {
-    List<SingularityTaskIdHistory> histories = this.getBlendedHistory(key, limitStart, limitCount);
-    Iterator<SingularityTaskIdHistory> it = histories.iterator();
-    while(it.hasNext()) {
-      if (it.next().getLastTaskState().get().isDone()) {
-        it.remove();
+  public List<SingularityTaskIdHistory> getActiveDeployTasks(SingularityDeployKey key) {
+    List<SingularityTaskIdHistory> histories = this.getFromZk(key);
+
+    final Iterable<SingularityTaskIdHistory> activeHistories = Iterables.filter(histories, new Predicate<SingularityTaskIdHistory>() {
+      @Override
+      public boolean apply(SingularityTaskIdHistory input) {
+        return !input.getLastTaskState().get().isDone();
       }
-    }
-    return histories;
+    });
+
+    return ImmutableList.copyOf(activeHistories);
   }
 
   public List<SingularityTaskIdHistory> getInactiveDeployTasks(SingularityDeployKey key, Integer limitCount, Integer limitStart) {
     List<SingularityTaskIdHistory> histories = this.getBlendedHistory(key, limitStart, limitCount);
-    Iterator<SingularityTaskIdHistory> it = histories.iterator();
-    while(it.hasNext()) {
-      if (!it.next().getLastTaskState().get().isDone()) {
-        it.remove();
+
+    final Iterable<SingularityTaskIdHistory> inactiveHistories = Iterables.filter(histories, new Predicate<SingularityTaskIdHistory>() {
+      @Override
+      public boolean apply(SingularityTaskIdHistory input) {
+        return input.getLastTaskState().get().isDone();
       }
-    }
-    return histories;
+    });
+
+    return ImmutableList.copyOf(inactiveHistories);
   }
 
 }
