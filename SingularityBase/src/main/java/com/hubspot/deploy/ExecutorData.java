@@ -33,7 +33,6 @@ public class ExecutorData {
       @JsonProperty("runningSentinel") Optional<String> runningSentinel, @JsonProperty("extraCmdLineArgs") List<String> extraCmdLineArgs, @JsonProperty("loggingTag") Optional<String> loggingTag,
       @JsonProperty("loggingExtraFields") Map<String, String> loggingExtraFields, @JsonProperty("sigKillProcessesAfterMillis") Optional<Long> sigKillProcessesAfterMillis,
       @JsonProperty("maxTaskThreads") Optional<Integer> maxTaskThreads, @JsonProperty("preserveTaskSandboxAfterFinish") Optional<Boolean> preserveTaskSandboxAfterFinish,
-      @JsonProperty("maxTaskThreads") Optional<Integer> maxTaskThreads,
       @JsonProperty("loggingS3Bucket") Optional<String> loggingS3Bucket) {
     this.cmd = cmd;
     this.embeddedArtifacts = JavaUtils.nonNullImmutable(embeddedArtifacts);

@@ -963,7 +963,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     statusUpdate(firstTask, TaskState.TASK_FINISHED);
 
-    Optional<SingularityDeployStatistics> deployStatistics = deployMan>ager.getDeployStatistics(requestId, firstDeployId);
+    Optional<SingularityDeployStatistics> deployStatistics = deployManager.getDeployStatistics(requestId, firstDeployId);
 
     long oldAvg = deployStatistics.get().getAverageRuntimeMillis().get();
 
