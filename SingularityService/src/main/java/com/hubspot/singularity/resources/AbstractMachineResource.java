@@ -53,6 +53,11 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
     changeState(objectId, MachineState.STARTING_DECOMMISSION, queryUser);
   }
 
+  protected void freeze(String objectId, Optional<String> queryUser) {
+    authorizationHelper.checkAdminAuthorization(user);
+    changeState(objectId, MachineState.FROZEN, queryUser);
+  }
+
   protected void activate(String objectId, Optional<String> queryUser) {
     authorizationHelper.checkAdminAuthorization(user);
     changeState(objectId, MachineState.ACTIVE, queryUser);

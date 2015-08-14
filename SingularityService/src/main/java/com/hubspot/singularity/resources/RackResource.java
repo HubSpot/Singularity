@@ -80,6 +80,14 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   }
 
   @POST
+  @Path("/rack/{rackId}/freeze")
+  @ApiOperation("Freeze a specific rack")
+  public void freezeRack(@ApiParam("Rack ID") @PathParam("rackId") String rackId,
+                               @ApiParam("User requesting the freeze") @QueryParam("user") Optional<String> user) {
+    super.freeze(rackId, user);
+  }
+
+  @POST
   @Path("/rack/{rackId}/activate")
   @ApiOperation("Activate a decomissioning rack, canceling decomission without erasing history")
   public void activateSlave(@ApiParam("Active rackId") @PathParam("rackId") String rackId,
