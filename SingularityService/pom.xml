@@ -364,6 +364,11 @@
       <artifactId>liquibase-core</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.directory.api</groupId>
+      <artifactId>api-all</artifactId>
+    </dependency>
+
   </dependencies>
 
   <build>

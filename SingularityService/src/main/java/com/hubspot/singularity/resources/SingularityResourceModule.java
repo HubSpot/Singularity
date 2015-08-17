@@ -1,9 +1,9 @@
 package com.hubspot.singularity.resources;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -36,6 +36,7 @@ public class SingularityResourceModule extends AbstractModule {
     bind(TaskResource.class);
     bind(TestResource.class);
     bind(WebhookResource.class);
+    bind(AuthResource.class);
 
     switch (uiConfiguration.getRootUrlMode()) {
     case UI_REDIRECT: {

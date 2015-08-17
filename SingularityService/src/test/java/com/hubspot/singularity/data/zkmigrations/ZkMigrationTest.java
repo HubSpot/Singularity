@@ -37,9 +37,9 @@ public class ZkMigrationTest extends SingularityTestBaseNoDb {
 
   @Test
   public void testMigrationRunner() {
-    Assert.assertTrue(migrationRunner.checkMigrations() == 5);
+    Assert.assertTrue(migrationRunner.checkMigrations() == 6);
 
-    Assert.assertTrue(metadataManager.getZkDataVersion().isPresent() && metadataManager.getZkDataVersion().get().equals("5"));
+    Assert.assertTrue(metadataManager.getZkDataVersion().isPresent() && metadataManager.getZkDataVersion().get().equals("6"));
 
     Assert.assertTrue(migrationRunner.checkMigrations() == 0);
   }
