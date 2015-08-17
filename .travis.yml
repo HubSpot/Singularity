@@ -10,3 +10,7 @@ git:
   depth: 100
 
 sudo: false
+
+cache:
+  directories:
+  - $HOME/.m2
