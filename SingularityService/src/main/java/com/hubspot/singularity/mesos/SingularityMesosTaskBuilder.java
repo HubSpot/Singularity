@@ -6,7 +6,6 @@ import java.util.Map.Entry;
 
 import javax.inject.Singleton;
 
-import com.hubspot.singularity.config.SingularityConfiguration;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.CommandInfo;
 import org.apache.mesos.Protos.CommandInfo.URI;
