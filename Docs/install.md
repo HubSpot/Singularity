@@ -1,6 +1,6 @@
 ## Installing Singularity
 
-*If you just want to test out Singularity, consider using our [vagrant](vagrant.md) box instead.*
+*If you just want to test out Singularity, consider using our [docker](development/docker.md) setup instead.*
 
 ### 1. Set up a Zookeeper cluster
 
