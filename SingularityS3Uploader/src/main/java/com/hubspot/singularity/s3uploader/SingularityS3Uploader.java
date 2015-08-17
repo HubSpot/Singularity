@@ -196,7 +196,7 @@ public class SingularityS3Uploader implements Closeable {
       .withWaitStrategy(WaitStrategies.fixedWait(configuration.getRetryWaitMs(), TimeUnit.MILLISECONDS))
       .withStopStrategy(StopStrategies.stopAfterAttempt(configuration.getRetryCount()))
       .build();
-      retryer.call(uploader);
+    retryer.call(uploader);
   }
 
   class Uploader implements Callable<Boolean> {

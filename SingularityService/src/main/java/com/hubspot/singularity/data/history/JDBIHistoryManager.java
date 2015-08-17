@@ -126,11 +126,11 @@ public class JDBIHistoryManager implements HistoryManager {
       Date beforeBasedOnLimit = history.getMinUpdatedAtWithLimitForRequest(requestId, limit.get());
 
       if (deleteRowInsteadOfUpdate) {
-        LOG.info("Deleting task history for {} above {} items (before {})", requestId, limit.get(), beforeBasedOnLimit);
+        LOG.debug("Deleting task history for {} above {} items (before {})", requestId, limit.get(), beforeBasedOnLimit);
 
         history.deleteTaskHistoryForRequestBefore(requestId, beforeBasedOnLimit);
       } else {
-        LOG.info("Purging task history bytes for {} above {} items (before {})", requestId, limit.get(), beforeBasedOnLimit);
+        LOG.debug("Purging task history bytes for {} above {} items (before {})", requestId, limit.get(), beforeBasedOnLimit);
 
         history.updateTaskHistoryNullBytesForRequestBefore(requestId, beforeBasedOnLimit);
       }
@@ -138,11 +138,11 @@ public class JDBIHistoryManager implements HistoryManager {
 
     if (purgeBefore.isPresent()) {
       if (deleteRowInsteadOfUpdate) {
-        LOG.info("Deleting task history for {} before {}", requestId, purgeBefore.get());
+        LOG.debug("Deleting task history for {} before {}", requestId, purgeBefore.get());
 
         history.deleteTaskHistoryForRequestBefore(requestId, purgeBefore.get());
       } else {
-        LOG.info("Purging task history bytes for {} before {}", requestId, purgeBefore.get());
+        LOG.debug("Purging task history bytes for {} before {}", requestId, purgeBefore.get());
 
         history.updateTaskHistoryNullBytesForRequestBefore(requestId, purgeBefore.get());
       }
