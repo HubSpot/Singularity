@@ -46,6 +46,9 @@ public class SingularityDeploy {
   private final Optional<Boolean> skipHealthchecksOnDeploy;
   private final Optional<HealthcheckProtocol> healthcheckProtocol;
 
+  private final Optional<Integer> healthcheckMaxRetries;
+  private final Optional<Long> healthcheckMaxTotalTimeoutSeconds;
+
   private final Optional<Long> deployHealthTimeoutSeconds;
 
   private final Optional<Long> considerHealthyAfterRunningForSeconds;
@@ -80,6 +83,8 @@ public class SingularityDeploy {
       @JsonProperty("healthcheckUri") Optional<String> healthcheckUri,
       @JsonProperty("healthcheckIntervalSeconds") Optional<Long> healthcheckIntervalSeconds,
       @JsonProperty("healthcheckTimeoutSeconds") Optional<Long> healthcheckTimeoutSeconds,
+      @JsonProperty("healthcheckMaxRetries") Optional<Integer> healthcheckMaxRetries,
+      @JsonProperty("healthcheckMaxTotalTimeoutSeconds") Optional<Long> healthcheckMaxTotalTimeoutSeconds,
       @JsonProperty("serviceBasePath") Optional<String> serviceBasePath,
       @JsonProperty("loadBalancerGroups") Optional<List<String>> loadBalancerGroups,
       @JsonProperty("considerHealthyAfterRunningForSeconds") Optional<Long> considerHealthyAfterRunningForSeconds,
@@ -114,6 +119,9 @@ public class SingularityDeploy {
     this.skipHealthchecksOnDeploy = skipHealthchecksOnDeploy;
     this.healthcheckProtocol = healthcheckProtocol;
 
+    this.healthcheckMaxRetries = healthcheckMaxRetries;
+    this.healthcheckMaxTotalTimeoutSeconds = healthcheckMaxTotalTimeoutSeconds;
+
     this.considerHealthyAfterRunningForSeconds = considerHealthyAfterRunningForSeconds;
 
     this.deployHealthTimeoutSeconds = deployHealthTimeoutSeconds;
@@ -139,6 +147,9 @@ public class SingularityDeploy {
     .setSkipHealthchecksOnDeploy(skipHealthchecksOnDeploy)
     .setHealthcheckProtocol(healthcheckProtocol)
 
+    .setHealthcheckMaxRetries(healthcheckMaxRetries)
+    .setHealthcheckMaxTotalTimeoutSeconds(healthcheckMaxTotalTimeoutSeconds)
+
     .setConsiderHealthyAfterRunningForSeconds(considerHealthyAfterRunningForSeconds)
     .setDeployHealthTimeoutSeconds(deployHealthTimeoutSeconds)
     .setServiceBasePath(serviceBasePath)
@@ -153,7 +164,7 @@ public class SingularityDeploy {
     .setExecutorData(executorData);
   }
 
-  @ApiModelProperty(required=false, value="Number of seconds that singularity waits for this service to become healthy.")
+  @ApiModelProperty(required=false, value="Number of seconds that Singularity waits for this service to become healthy (for it to download artifacts, start running, and optionally pass healthchecks.)")
   public Optional<Long> getDeployHealthTimeoutSeconds() {
     return deployHealthTimeoutSeconds;
   }
@@ -241,22 +252,22 @@ public class SingularityDeploy {
     return executorData;
   }
 
-  @ApiModelProperty(required=false, value="Deployment Healthcheck URI.")
+  @ApiModelProperty(required=false, value="Deployment Healthcheck URI, if specified will be called after TASK_RUNNING.")
   public Optional<String> getHealthcheckUri() {
     return healthcheckUri;
   }
 
-  @ApiModelProperty(required=false, value="Healthcheck protocol")
+  @ApiModelProperty(required=false, value="Healthcheck protocol - HTTP or HTTPS")
   public Optional<HealthcheckProtocol> getHealthcheckProtocol() {
     return healthcheckProtocol;
   }
 
-  @ApiModelProperty(required=false, value="Health check interval in seconds.")
+  @ApiModelProperty(required=false, value="Time to wait after a failed healthcheck to try again in seconds.")
   public Optional<Long> getHealthcheckIntervalSeconds() {
     return healthcheckIntervalSeconds;
   }
 
-  @ApiModelProperty(required=false, value="Health check timeout in seconds.")
+  @ApiModelProperty(required=false, value="Single healthcheck HTTP timeout in seconds.")
   public Optional<Long> getHealthcheckTimeoutSeconds() {
     return healthcheckTimeoutSeconds;
   }
@@ -286,36 +297,50 @@ public class SingularityDeploy {
     return skipHealthchecksOnDeploy;
   }
 
+  @ApiModelProperty(required=false, value="Maximum number of times to retry an individual healthcheck before failing the deploy.")
+  public Optional<Integer> getHealthcheckMaxRetries() {
+    return healthcheckMaxRetries;
+  }
+
+  @ApiModelProperty(required=false, value="Maximum amount of time to wait before failing a deploy for healthchecks to pass.")
+  public Optional<Long> getHealthcheckMaxTotalTimeoutSeconds() {
+    return healthcheckMaxTotalTimeoutSeconds;
+  }
+
   @Override
   public String toString() {
-    return "SingularityDeploy [" +
-        "requestId='" + requestId + '\'' +
-        ", id='" + id + '\'' +
-        ", version=" + version +
-        ", timestamp=" + timestamp +
-        ", metadata=" + metadata +
-        ", containerInfo=" + containerInfo +
-        ", customExecutorCmd=" + customExecutorCmd +
-        ", customExecutorId=" + customExecutorId +
-        ", customExecutorSource=" + customExecutorSource +
-        ", customExecutorResources=" + customExecutorResources +
-        ", customExecutorUser=" + customExecutorUser +
-        ", resources=" + resources +
-        ", command=" + command +
-        ", arguments=" + arguments +
-        ", env=" + env +
-        ", uris=" + uris +
-        ", executorData=" + executorData +
-        ", healthcheckUri=" + healthcheckUri +
-        ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
-        ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +
-        ", skipHealthchecksOnDeploy=" + skipHealthchecksOnDeploy +
-        ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds +
-        ", considerHealthyAfterRunningForSeconds=" + considerHealthyAfterRunningForSeconds +
-        ", healthcheckProtocol=" + healthcheckProtocol +
-        ", serviceBasePath=" + serviceBasePath +
-        ", loadBalancerGroups=" + loadBalancerGroups +
-        ", loadBalancerOptions=" + loadBalancerOptions +
-        ']';
+    return "SingularityDeploy{" +
+      "requestId='" + requestId + '\'' +
+      ", id='" + id + '\'' +
+      ", version=" + version +
+      ", timestamp=" + timestamp +
+      ", metadata=" + metadata +
+      ", containerInfo=" + containerInfo +
+      ", customExecutorCmd=" + customExecutorCmd +
+      ", customExecutorId=" + customExecutorId +
+      ", customExecutorSource=" + customExecutorSource +
+      ", customExecutorResources=" + customExecutorResources +
+      ", customExecutorUser=" + customExecutorUser +
+      ", resources=" + resources +
+      ", command=" + command +
+      ", arguments=" + arguments +
+      ", env=" + env +
+      ", uris=" + uris +
+      ", executorData=" + executorData +
+      ", healthcheckUri=" + healthcheckUri +
+      ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
+      ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +
+      ", skipHealthchecksOnDeploy=" + skipHealthchecksOnDeploy +
+      ", healthcheckProtocol=" + healthcheckProtocol +
+      ", healthcheckMaxRetries=" + healthcheckMaxRetries +
+      ", healthcheckMaxTotalTimeoutSeconds=" + healthcheckMaxTotalTimeoutSeconds +
+      ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds +
+      ", considerHealthyAfterRunningForSeconds=" + considerHealthyAfterRunningForSeconds +
+      ", serviceBasePath=" + serviceBasePath +
+      ", loadBalancerGroups=" + loadBalancerGroups +
+      ", loadBalancerOptions=" + loadBalancerOptions +
+      '}';
   }
+
+
 }

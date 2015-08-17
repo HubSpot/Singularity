@@ -42,6 +42,7 @@ import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestInstances;
 import com.hubspot.singularity.SingularitySchedulerTestBase;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SlavePlacement;
@@ -1247,6 +1248,128 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(taskManager.getPendingTaskIds().get(0).getNextRunAt() - System.currentTimeMillis() > 1000L);
     Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+  }
+
+  @Test
+  public void testDeployTimesOut() {
+    initRequest();
+
+    final long hourAgo = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1);
+
+    final String deployId = "timeout_test";
+
+    SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId);
+    db.setDeployHealthTimeoutSeconds(Optional.of(TimeUnit.MINUTES.toSeconds(1)));
+
+    initDeploy(db, hourAgo);
+
+    deployChecker.checkDeploys();
+
+    Assert.assertEquals(DeployState.OVERDUE, deployManager.getDeployResult(requestId, deployId).get().getDeployState());
+  }
+
+  @Test
+  public void testHealthchecksTimeout() {
+    initRequest();
+
+    final long hourAgo = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1);
+
+    final String deployId = "timeout_test";
+
+    SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId);
+    db.setHealthcheckMaxTotalTimeoutSeconds(Optional.of(30L));
+    db.setHealthcheckUri(Optional.of("http://uri"));
+    db.setDeployHealthTimeoutSeconds(Optional.of(TimeUnit.DAYS.toMillis(1)));
+
+    SingularityDeploy deploy = initDeploy(db, hourAgo);
+
+    deployChecker.checkDeploys();
+
+    Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
+
+    SingularityTask task = launchTask(request, deploy, hourAgo, hourAgo + 1, 1, TaskState.TASK_RUNNING);
+
+    deployChecker.checkDeploys();
+
+    Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
+
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(500), Optional.of(1000L), hourAgo + 1, Optional.<String> absent(), Optional.<String> absent(), task.getTaskId()));
+
+    deployChecker.checkDeploys();
+
+    Assert.assertEquals(DeployState.FAILED, deployManager.getDeployResult(requestId, deployId).get().getDeployState());
+  }
+
+  @Test
+  public void testMaxHealthcheckRetries() {
+    initRequest();
+
+    final String deployId = "retry_test";
+
+    SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId);
+    db.setHealthcheckMaxRetries(Optional.of(2));
+    db.setHealthcheckUri(Optional.of("http://uri"));
+
+    SingularityDeploy deploy = initDeploy(db, System.currentTimeMillis());
+
+    deployChecker.checkDeploys();
+
+    Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
+
+    SingularityTask task = launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_RUNNING);
+
+    deployChecker.checkDeploys();
+
+    Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
+
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(500), Optional.of(1000L), System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent(), task.getTaskId()));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(500), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.<String> absent(), Optional.<String> absent(), task.getTaskId()));
+
+    deployChecker.checkDeploys();
+
+    Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
+
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(500), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.<String> absent(), Optional.<String> absent(), task.getTaskId()));
+
+    deployChecker.checkDeploys();
+
+    Assert.assertEquals(DeployState.FAILED, deployManager.getDeployResult(requestId, deployId).get().getDeployState());
+  }
+
+  @Test
+  public void testHealthchecksSuccess() {
+    initRequest();
+
+    final String deployId = "hc_test";
+
+    SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId);
+    db.setHealthcheckMaxRetries(Optional.of(2));
+    db.setHealthcheckMaxTotalTimeoutSeconds(Optional.of(30L));
+    db.setHealthcheckUri(Optional.of("http://uri"));
+
+    SingularityDeploy deploy = initDeploy(db, System.currentTimeMillis());
+
+    deployChecker.checkDeploys();
+
+    Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
+
+    SingularityTask task = launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_RUNNING);
+
+    deployChecker.checkDeploys();
+
+    Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
+
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(500), Optional.of(1000L), System.currentTimeMillis(), Optional.<String>absent(), Optional.<String>absent(), task.getTaskId()));
+
+    deployChecker.checkDeploys();
+
+    Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
+
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.<String>absent(), Optional.<String>absent(), task.getTaskId()));
+
+    deployChecker.checkDeploys();
+
+    Assert.assertEquals(DeployState.SUCCEEDED, deployManager.getDeployResult(requestId, deployId).get().getDeployState());
   }
 
   @Test
