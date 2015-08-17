@@ -158,7 +158,6 @@
                     <volumes>
                       <bind>
                         <volume>/sys/fs/cgroup:/sys/fs/cgroup</volume>
-                        <volume>/usr/bin/docker:/usr/bin/docker</volume>
                         <volume>/usr/local/bin/docker:/usr/local/bin/docker</volume>
                         <volume>/var/run/docker.sock:/var/run/docker.sock</volume>
                       </bind>

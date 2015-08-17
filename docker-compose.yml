@@ -26,8 +26,7 @@ slave:
     MESOS_IP: 127.0.0.1
     MESOS_CONTAINERIZERS: docker,mesos
   volumes:
-    - /sys/fs/cgroup:/sys/fs/cgroup
-    - /usr/local/bin/docker:/usr/bin/docker
+    - /sys/:/sys/
     - /var/run/docker.sock:/var/run/docker.sock
 
 scheduler:
