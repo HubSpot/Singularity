@@ -4,12 +4,8 @@ import static com.google.inject.name.Names.named;
 import static com.hubspot.singularity.SingularityMainModule.HTTP_HOST_AND_PORT;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import io.dropwizard.jackson.Jackson;
-import io.dropwizard.lifecycle.Managed;
 
 import java.util.Set;
-
-import net.kencochrane.raven.Raven;
 
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos.MasterInfo;
@@ -17,10 +13,6 @@ import org.apache.mesos.Protos.Status;
 import org.apache.mesos.SchedulerDriver;
 import org.mockito.Matchers;
 import org.slf4j.LoggerFactory;
-
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -39,6 +31,7 @@ import com.google.inject.util.Modules;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.mesos.client.SingularityMesosClientModule;
 import com.hubspot.singularity.SingularityAbort;
+import com.hubspot.singularity.SingularityAuthModule;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.MesosConfiguration;
@@ -63,6 +56,13 @@ import com.hubspot.singularity.resources.RequestResource;
 import com.hubspot.singularity.resources.SlaveResource;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.LoggerContext;
+import io.dropwizard.jackson.Jackson;
+import io.dropwizard.lifecycle.Managed;
+import net.kencochrane.raven.Raven;
 
 public class SingularityTestModule implements Module {
   private final TestingServer ts;
@@ -110,33 +110,35 @@ public class SingularityTestModule implements Module {
     mainBinder.bind(SingularityConfiguration.class).toInstance(configuration);
 
     mainBinder.install(Modules.override(new SingularityMainModule(configuration))
-        .with(new Module() {
+            .with(new Module() {
 
-          @Override
-          public void configure(Binder binder) {
-            binder.bind(SingularityExceptionNotifier.class).toInstance(mock(SingularityExceptionNotifier.class));
+              @Override
+              public void configure(Binder binder) {
+                binder.bind(SingularityExceptionNotifier.class).toInstance(mock(SingularityExceptionNotifier.class));
 
-            SingularityAbort abort = mock(SingularityAbort.class);
-            SingularityMailer mailer = mock(SingularityMailer.class);
+                SingularityAbort abort = mock(SingularityAbort.class);
+                SingularityMailer mailer = mock(SingularityMailer.class);
 
-            binder.bind(SingularityMailer.class).toInstance(mailer);
-            binder.bind(SingularityAbort.class).toInstance(abort);
+                binder.bind(SingularityMailer.class).toInstance(mailer);
+                binder.bind(SingularityAbort.class).toInstance(abort);
 
-            TestingLoadBalancerClient tlbc = new TestingLoadBalancerClient();
-            binder.bind(LoadBalancerClient.class).toInstance(tlbc);
-            binder.bind(TestingLoadBalancerClient.class).toInstance(tlbc);
+                TestingLoadBalancerClient tlbc = new TestingLoadBalancerClient();
+                binder.bind(LoadBalancerClient.class).toInstance(tlbc);
+                binder.bind(TestingLoadBalancerClient.class).toInstance(tlbc);
 
-            binder.bind(ObjectMapper.class).toInstance(Jackson.newObjectMapper()
-                .setSerializationInclusion(Include.NON_NULL)
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                .registerModule(new ProtobufModule()));
+                binder.bind(ObjectMapper.class).toInstance(Jackson.newObjectMapper()
+                        .setSerializationInclusion(Include.NON_NULL)
+                        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                        .registerModule(new ProtobufModule()));
 
-            binder.bind(HostAndPort.class).annotatedWith(named(HTTP_HOST_AND_PORT)).toInstance(HostAndPort.fromString("localhost:8080"));
+                binder.bind(HostAndPort.class).annotatedWith(named(HTTP_HOST_AND_PORT)).toInstance(HostAndPort.fromString("localhost:8080"));
 
-            binder.bind(new TypeLiteral<Optional<Raven>>() {}).toInstance(Optional.<Raven> absent());
-            binder.bind(new TypeLiteral<Optional<SentryConfiguration>>() {}).toInstance(Optional.<SentryConfiguration> absent());
-          }
-        }));
+                binder.bind(new TypeLiteral<Optional<Raven>>() {
+                }).toInstance(Optional.<Raven>absent());
+                binder.bind(new TypeLiteral<Optional<SentryConfiguration>>() {
+                }).toInstance(Optional.<SentryConfiguration>absent());
+              }
+            }));
 
     mainBinder.install(Modules.override(new SingularityMesosModule())
         .with(new Module() {
@@ -148,7 +150,7 @@ public class SingularityTestModule implements Module {
 
             SingularityDriver mock = mock(SingularityDriver.class);
             when(mock.kill((SingularityTaskId) Matchers.any())).thenReturn(Status.DRIVER_RUNNING);
-            when(mock.getMaster()).thenReturn(Optional.<MasterInfo> absent());
+            when(mock.getMaster()).thenReturn(Optional.<MasterInfo>absent());
             when(mock.start()).thenReturn(Status.DRIVER_RUNNING);
             when(mock.getLastOfferTimestamp()).thenReturn(Optional.<Long>absent());
             binder.bind(SingularityDriver.class).toInstance(mock);
@@ -171,6 +173,7 @@ public class SingularityTestModule implements Module {
     mainBinder.install(new SingularityZkMigrationsModule());
     mainBinder.install(new SingularityMesosClientModule());
     mainBinder.install(new SingularityEventModule(configuration));
+    mainBinder.install(new SingularityAuthModule(configuration));
 
     mainBinder.bind(DeployResource.class);
     mainBinder.bind(RequestResource.class);
@@ -197,4 +200,5 @@ public class SingularityTestModule implements Module {
 
     return config;
   }
+
 }

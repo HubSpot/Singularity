@@ -1,5 +1,20 @@
 package com.hubspot.singularity.data;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
+import org.apache.curator.utils.ZKPaths;
+import org.apache.mesos.Protos.TaskStatus;
+import org.apache.zookeeper.KeeperException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -10,6 +25,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -33,20 +49,6 @@ import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.event.SingularityEventListener;
-import org.apache.curator.framework.CuratorFramework;
-import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
-import org.apache.curator.utils.ZKPaths;
-import org.apache.mesos.Protos.TaskStatus;
-import org.apache.zookeeper.KeeperException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Singleton
 public class TaskManager extends CuratorAsyncManager {
@@ -286,10 +288,11 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public List<SingularityTask> getTasksOnSlave(Collection<SingularityTaskId> activeTaskIds, SingularitySlave slave) {
-    List<SingularityTask> tasks = Lists.newArrayList();
+    final List<SingularityTask> tasks = Lists.newArrayList();
+    final String sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(slave.getHost());
 
     for (SingularityTaskId activeTaskId : activeTaskIds) {
-      if (activeTaskId.getHost().equals(slave.getHost())) {
+      if (activeTaskId.getSanitizedHost().equals(sanitizedHost)) {
         Optional<SingularityTask> maybeTask = getTask(activeTaskId);
         if (maybeTask.isPresent() && slave.getId().equals(maybeTask.get().getOffer().getSlaveId().getValue())) {
           tasks.add(maybeTask.get());
@@ -314,6 +317,10 @@ public class TaskManager extends CuratorAsyncManager {
     }
 
     return map;
+  }
+
+  public int getNumHealthchecks(SingularityTaskId taskId) {
+    return getNumChildren(getHealthcheckParentPath(taskId));
   }
 
   public List<SingularityTaskHealthcheckResult> getHealthcheckResults(SingularityTaskId taskId) {

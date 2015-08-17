@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -7,7 +8,6 @@ import java.util.Map;
 import javax.inject.Singleton;
 
 import org.apache.mesos.Protos;
-import org.apache.mesos.Protos.Attribute;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.SlaveID;
 import org.slf4j.Logger;
@@ -17,6 +17,7 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.json.MesosMasterSlaveObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.singularity.MachineState;
@@ -27,7 +28,6 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SlavePlacement;
-import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.AbstractMachineManager;
 import com.hubspot.singularity.data.RackManager;
@@ -41,25 +41,20 @@ class SingularitySlaveAndRackManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularitySlaveAndRackManager.class);
 
-  private final String rackIdAttributeKey;
-  private final String defaultRackId;
-
   private final SingularityConfiguration configuration;
 
   private final SingularityExceptionNotifier exceptionNotifier;
   private final RackManager rackManager;
   private final SlaveManager slaveManager;
   private final TaskManager taskManager;
+  private final SingularitySlaveAndRackHelper slaveAndRackHelper;
 
   @Inject
-  SingularitySlaveAndRackManager(SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier, RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager) {
+  SingularitySlaveAndRackManager(SingularitySlaveAndRackHelper slaveAndRackHelper, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier, RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager) {
     this.configuration = configuration;
 
-    MesosConfiguration mesosConfiguration = configuration.getMesosConfiguration();
-
     this.exceptionNotifier = exceptionNotifier;
-    this.rackIdAttributeKey = mesosConfiguration.getRackIdAttributeKey();
-    this.defaultRackId = mesosConfiguration.getDefaultRackId();
+    this.slaveAndRackHelper = slaveAndRackHelper;
 
     this.rackManager = rackManager;
     this.slaveManager = slaveManager;
@@ -87,22 +82,9 @@ class SingularitySlaveAndRackManager {
 
   }
 
-  private String getHost(String hostname) {
-    if (configuration.getCommonHostnameSuffixToOmit().isPresent()) {
-      if (hostname.endsWith(configuration.getCommonHostnameSuffixToOmit().get())) {
-        hostname = hostname.substring(0, hostname.length() - configuration.getCommonHostnameSuffixToOmit().get().length());
-      }
-    }
-    return getSafeString(hostname);
-  }
-
-  public String getSlaveHost(Offer offer) {
-    return getHost(offer.getHostname());
-  }
-
   public SlaveMatchState doesOfferMatch(Protos.Offer offer, SingularityTaskRequest taskRequest, SingularitySchedulerStateCache stateCache) {
-    final String host = getSlaveHost(offer);
-    final String rackId = getRackId(offer);
+    final String host = offer.getHostname();
+    final String rackId = slaveAndRackHelper.getRackIdOrDefault(offer);
     final String slaveId = offer.getSlaveId().getValue();
 
     if (stateCache.getSlave(slaveId).get().getCurrentState().getState().isDecommissioning()) {
@@ -129,13 +111,27 @@ class SingularitySlaveAndRackManager {
     final int numDesiredInstances = taskRequest.getRequest().getInstancesSafe();
     double numOnRack = 0;
     double numOnSlave = 0;
+    double numCleaningOnSlave = 0;
+    double numOtherDeploysOnSlave = 0;
 
-    for (SingularityTaskId taskId : SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), taskRequest.getRequest().getId(), taskRequest.getDeploy().getId(), stateCache.getCleaningTasks())) {
+    final String sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(host);
+    final String sanitizedRackId = JavaUtils.getReplaceHyphensWithUnderscores(rackId);
+    Collection<SingularityTaskId> cleaningTasks = stateCache.getCleaningTasks();
+
+    for (SingularityTaskId taskId : SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), taskRequest.getRequest().getId(), Collections.<SingularityTaskId>emptyList())) {
       // TODO consider using executorIds
-      if (taskId.getHost().equals(host)) {
-        numOnSlave++;
+      if (taskId.getSanitizedHost().equals(sanitizedHost)) {
+        if (taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
+          if (cleaningTasks.contains(taskId)) {
+            numCleaningOnSlave++;
+          } else {
+            numOnSlave++;
+          }
+        } else {
+          numOtherDeploysOnSlave++;
+        }
       }
-      if (taskId.getRackId().equals(rackId)) {
+      if (taskId.getSanitizedRackId().equals(sanitizedRackId) && !cleaningTasks.contains(taskId) && taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
         numOnRack++;
       }
     }
@@ -146,15 +142,22 @@ class SingularitySlaveAndRackManager {
       final boolean isRackOk = numOnRack < numPerRack;
 
       if (!isRackOk) {
-        LOG.trace("Rejecting RackSensitive task {} from slave {} ({}) due to numOnRack {}", taskRequest.getRequest().getId(), slaveId, host, numOnRack);
+        LOG.trace("Rejecting RackSensitive task {} from slave {} ({}) due to numOnRack {} and cleaningOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnRack, numCleaningOnSlave);
         return SlaveMatchState.RACK_SATURATED;
       }
     }
 
     switch (slavePlacement) {
       case SEPARATE:
-        if (numOnSlave > 0) {
-          LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave);
+      case SEPARATE_BY_DEPLOY:
+        if (numOnSlave > 0 || numCleaningOnSlave > 0) {
+          LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {} numCleaningOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave);
+          return SlaveMatchState.SLAVE_SATURATED;
+        }
+        break;
+      case SEPARATE_BY_REQUEST:
+        if (numOnSlave > 0 || numCleaningOnSlave > 0 || numOtherDeploysOnSlave > 0) {
+          LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {} numCleaningOnSlave {} numOtherDeploysOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave, numOtherDeploysOnSlave);
           return SlaveMatchState.SLAVE_SATURATED;
         }
         break;
@@ -216,10 +219,9 @@ class SingularitySlaveAndRackManager {
     int racks = 0;
 
     for (MesosMasterSlaveObject slaveJsonObject : state.getSlaves()) {
-      Optional<String> maybeRackId = Optional.fromNullable(slaveJsonObject.getAttributes().get(rackIdAttributeKey));
       String slaveId = slaveJsonObject.getId();
-      String rackId = getSafeString(maybeRackId.or(defaultRackId));
-      String host = getHost(slaveJsonObject.getHostname());
+      String rackId = slaveAndRackHelper.getRackId(slaveJsonObject.getAttributes());
+      String host = slaveAndRackHelper.getMaybeTruncatedHost(slaveJsonObject.getHostname());
 
       if (activeSlavesById.containsKey(slaveId)) {
         activeSlavesById.remove(slaveId);
@@ -251,20 +253,6 @@ class SingularitySlaveAndRackManager {
     }
 
     LOG.info("Found {} new racks ({} missing) and {} new slaves ({} missing)", racks, remainingActiveRacks.size(), slaves, activeSlavesById.size());
-  }
-
-  public String getRackId(Offer offer) {
-    for (Attribute attribute : offer.getAttributesList()) {
-      if (attribute.getName().equals(rackIdAttributeKey)) {
-        return getSafeString(attribute.getText().getValue());
-      }
-    }
-
-    return defaultRackId;
-  }
-
-  private String getSafeString(String string) {
-    return string.replace("-", "_");
   }
 
   private enum CheckResult {
@@ -300,8 +288,8 @@ class SingularitySlaveAndRackManager {
 
   public void checkOffer(Offer offer) {
     final String slaveId = offer.getSlaveId().getValue();
-    final String rackId = getRackId(offer);
-    final String host = getSlaveHost(offer);
+    final String rackId = slaveAndRackHelper.getRackIdOrDefault(offer);
+    final String host = slaveAndRackHelper.getMaybeTruncatedHost(offer);
 
     final SingularitySlave slave = new SingularitySlave(slaveId, host, rackId);
 
@@ -332,12 +320,12 @@ class SingularitySlaveAndRackManager {
       }
     }
 
-    Optional<SingularityRack> rack = rackManager.getObject(taskId.getRackId());
+    Optional<SingularityRack> rack = rackManager.getObject(slave.get().getRackId());
 
     if (!rack.isPresent()) {
-      final String message = String.format("Couldn't find rack with id %s for task %s", taskId.getRackId(), taskId);
+      final String message = String.format("Couldn't find rack with id %s for task %s", slave.get().getRackId(), taskId);
       LOG.warn(message);
-      exceptionNotifier.notify(message, ImmutableMap.of("rackId", taskId.getRackId(), "taskId", taskId.toString()));
+      exceptionNotifier.notify(message, ImmutableMap.of("rackId", slave.get().getRackId(), "taskId", taskId.toString()));
       return;
     }
 
@@ -350,7 +338,7 @@ class SingularitySlaveAndRackManager {
 
   private boolean hasTaskLeftOnRack(SingularityTaskId taskId, SingularitySchedulerStateCache stateCache) {
     for (SingularityTaskId activeTaskId : stateCache.getActiveTaskIds()) {
-      if (!activeTaskId.equals(taskId) && activeTaskId.getRackId().equals(taskId.getRackId())) {
+      if (!activeTaskId.equals(taskId) && activeTaskId.getSanitizedRackId().equals(taskId.getSanitizedRackId())) {
         return true;
       }
     }
@@ -360,7 +348,7 @@ class SingularitySlaveAndRackManager {
 
   private boolean hasTaskLeftOnSlave(SingularityTaskId taskId, String slaveId, SingularitySchedulerStateCache stateCache) {
     for (SingularityTaskId activeTaskId : stateCache.getActiveTaskIds()) {
-      if (!activeTaskId.equals(taskId) && activeTaskId.getHost().equals(taskId.getHost())) {
+      if (!activeTaskId.equals(taskId) && activeTaskId.getSanitizedHost().equals(taskId.getSanitizedHost())) {
         Optional<SingularityTask> maybeTask = taskManager.getTask(activeTaskId);
         if (maybeTask.isPresent() && slaveId.equals(maybeTask.get().getOffer().getSlaveId().getValue())) {
           return true;
