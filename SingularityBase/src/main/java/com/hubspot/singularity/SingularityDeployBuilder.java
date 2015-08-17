@@ -50,6 +50,7 @@ public class SingularityDeployBuilder {
   private Optional<String> serviceBasePath;
   private Optional<List<String>> loadBalancerGroups;
   private Optional<Map<String, Object>> loadBalancerOptions;
+  private Optional<Map<String, String>> labels;
 
   public SingularityDeployBuilder(String requestId, String id) {
     this.requestId = requestId;
@@ -81,12 +82,13 @@ public class SingularityDeployBuilder {
     this.serviceBasePath = Optional.absent();
     this.loadBalancerGroups = Optional.absent();
     this.loadBalancerOptions = Optional.absent();
+    this.labels = Optional.absent();
   }
 
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, customExecutorUser, resources, env,
         uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckMaxRetries,
-        healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy, healthcheckProtocol);
+        healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, labels, skipHealthchecksOnDeploy, healthcheckProtocol);
   }
 
   public String getRequestId() {
@@ -309,6 +311,15 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<Map<String, String>> getLabels() {
+    return labels;
+  }
+
+  public SingularityDeployBuilder setLabels(Optional<Map<String, String>> labels) {
+    this.labels = labels;
+    return this;
+  }
+
   public Optional<Boolean> getSkipHealthchecksOnDeploy() {
     return skipHealthchecksOnDeploy;
   }
@@ -377,6 +388,7 @@ public class SingularityDeployBuilder {
       ", serviceBasePath=" + serviceBasePath +
       ", loadBalancerGroups=" + loadBalancerGroups +
       ", loadBalancerOptions=" + loadBalancerOptions +
+      ", labels=" + labels +
       '}';
   }
 

@@ -56,6 +56,7 @@ public class SingularityDeploy {
   private final Optional<String> serviceBasePath;
   private final Optional<List<String>> loadBalancerGroups;
   private final Optional<Map<String, Object>> loadBalancerOptions;
+  private final Optional<Map<String, String>> labels;
 
   public static SingularityDeployBuilder newBuilder(String requestId, String id) {
     return new SingularityDeployBuilder(requestId, id);
@@ -89,6 +90,7 @@ public class SingularityDeploy {
       @JsonProperty("loadBalancerGroups") Optional<List<String>> loadBalancerGroups,
       @JsonProperty("considerHealthyAfterRunningForSeconds") Optional<Long> considerHealthyAfterRunningForSeconds,
       @JsonProperty("loadBalancerOptions") Optional<Map<String, Object>> loadBalancerOptions,
+      @JsonProperty("labels") Optional<Map<String, String>> labels,
       @JsonProperty("skipHealthchecksOnDeploy") Optional<Boolean> skipHealthchecksOnDeploy,
       @JsonProperty("healthCheckProtocol") Optional<HealthcheckProtocol> healthcheckProtocol) {
     this.requestId = requestId;
@@ -129,6 +131,7 @@ public class SingularityDeploy {
     this.serviceBasePath = serviceBasePath;
     this.loadBalancerGroups = loadBalancerGroups;
     this.loadBalancerOptions = loadBalancerOptions;
+    this.labels = labels;
   }
 
   public SingularityDeployBuilder toBuilder() {
@@ -161,7 +164,8 @@ public class SingularityDeploy {
     .setTimestamp(timestamp)
     .setEnv(copyOfMap(env))
     .setUris(copyOfList(uris))
-    .setExecutorData(executorData);
+    .setExecutorData(executorData)
+    .setLabels(labels);
   }
 
   @ApiModelProperty(required=false, value="Number of seconds that Singularity waits for this service to become healthy (for it to download artifacts, start running, and optionally pass healthchecks.)")
@@ -292,6 +296,11 @@ public class SingularityDeploy {
     return loadBalancerOptions;
   }
 
+  @ApiModelProperty(required=false, value="Labels for tasks associated with this deploy")
+  public Optional<Map<String, String>> getLabels() {
+    return labels;
+  }
+
   @ApiModelProperty(required=false, value="Allows skipping of health checks when deploying.")
   public Optional<Boolean> getSkipHealthchecksOnDeploy() {
     return skipHealthchecksOnDeploy;
@@ -339,6 +348,7 @@ public class SingularityDeploy {
       ", serviceBasePath=" + serviceBasePath +
       ", loadBalancerGroups=" + loadBalancerGroups +
       ", loadBalancerOptions=" + loadBalancerOptions +
+      ", labels=" + labels +
       '}';
   }
 

@@ -12,7 +12,6 @@
 
   <properties>
     <basepom.shaded.main-class>com.hubspot.singularity.executor.SingularityExecutorRunner</basepom.shaded.main-class>
-    <singularitybase.image.revision>1</singularitybase.image.revision>
   </properties>
 
   <dependencies>
