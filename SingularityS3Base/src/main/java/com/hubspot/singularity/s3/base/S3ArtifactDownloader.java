@@ -1,25 +1,22 @@
 package com.hubspot.singularity.s3.base;
 
-import java.io.InputStream;
 import java.nio.channels.FileChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.jets3t.service.Constants;
+import org.jets3t.service.Jets3tProperties;
 import org.jets3t.service.S3Service;
 import org.jets3t.service.impl.rest.httpclient.RestS3Service;
-import org.jets3t.service.model.S3Object;
 import org.jets3t.service.model.StorageObject;
 import org.jets3t.service.security.AWSCredentials;
 import org.slf4j.Logger;
@@ -56,39 +53,13 @@ public class S3ArtifactDownloader {
     }
   }
 
-  private Callable<Path> buildChunkDownloader(final S3Service s3, final S3Artifact s3Artifact, final Path downloadTo, final int chunk, final long chunkSize, final long length) {
-    return new Callable<Path>() {
-
-      @Override
-      public Path call() throws Exception {
-        final Path chunkPath = (chunk == 0) ? downloadTo : Paths.get(downloadTo + "_" + chunk);
-        chunkPath.toFile().deleteOnExit();
-
-        final long startTime = System.currentTimeMillis();
-
-        final long byteRangeStart = chunk * chunkSize;
-        final long byteRangeEnd = Math.min((chunk + 1) * chunkSize - 1, length);
-
-        log.info("Downloading chunk {} ({}-{}) to {}", chunk, byteRangeStart, byteRangeEnd, chunkPath);
-
-        S3Object fetchedObject = s3.getObject(s3Artifact.getS3Bucket(), s3Artifact.getS3ObjectKey(), null, null, null, null, byteRangeStart, byteRangeEnd);
-
-        try (InputStream is = fetchedObject.getDataInputStream()) {
-          Files.copy(is, chunkPath, StandardCopyOption.REPLACE_EXISTING);
-        }
-
-        log.info("Finished downloading chunk {} ({} bytes) in {}", chunk, byteRangeEnd - byteRangeStart, JavaUtils.duration(startTime));
-
-        return chunkPath;
-      }
-
-    };
-  }
-
   private void downloadThrows(final S3Artifact s3Artifact, final Path downloadTo) throws Exception {
     log.info("Downloading {}", s3Artifact);
 
-    final S3Service s3 = new RestS3Service(new AWSCredentials(configuration.getS3AccessKey(), configuration.getS3SecretKey()));
+    Jets3tProperties jets3tProperties = Jets3tProperties.getInstance(Constants.JETS3T_PROPERTIES_FILENAME);
+    jets3tProperties.setProperty("httpclient.socket-timeout-ms", Long.toString(configuration.getS3ChunkDownloadTimeoutMillis()));
+
+    final S3Service s3 = new RestS3Service(new AWSCredentials(configuration.getS3AccessKey(), configuration.getS3SecretKey()), null, null, jets3tProperties);
 
     long length = 0;
 
@@ -115,10 +86,8 @@ public class S3ArtifactDownloader {
     final ExecutorService chunkExecutorService = Executors.newFixedThreadPool(numChunks, new ThreadFactoryBuilder().setDaemon(true).setNameFormat("S3ArtifactDownloaderChunkThread-%d").build());
     final List<Future<Path>> futures = Lists.newArrayListWithCapacity(numChunks);
 
-    for (int i = 0; i < numChunks; i++) {
-      final int chunk = i;
-
-      futures.add(chunkExecutorService.submit(buildChunkDownloader(s3, s3Artifact, downloadTo, chunk, chunkSize, length)));
+    for (int chunk = 0; chunk < numChunks; chunk++) {
+      futures.add(chunkExecutorService.submit(new S3ArtifactChunkDownloader(configuration, log, s3, s3Artifact, downloadTo, chunk, chunkSize, length)));
     }
 
     long remainingMillis = configuration.getS3DownloadTimeoutMillis();
@@ -134,19 +103,19 @@ public class S3ArtifactDownloader {
 
       final long start = System.currentTimeMillis();
 
-      if (!handleChunk(future, downloadTo, chunk, start, remainingMillis)) {
+      if (!handleChunk(s3Artifact, future, downloadTo, chunk, start, remainingMillis)) {
         failed = true;
       }
 
       remainingMillis -= (System.currentTimeMillis() - start);
     }
 
-    chunkExecutorService.shutdown();
+    chunkExecutorService.shutdownNow();
 
     Preconditions.checkState(!failed, "Downloading %s/%s failed", s3Artifact.getS3Bucket(), s3Artifact.getS3ObjectKey());
   }
 
-  private boolean handleChunk(Future<Path> future, Path downloadTo, int chunk, long start, long remainingMillis) {
+  private boolean handleChunk(S3Artifact s3Artifact, Future<Path> future, Path downloadTo, int chunk, long start, long remainingMillis) {
     if (remainingMillis <= 0) {
       remainingMillis = 1;
     }
@@ -160,13 +129,11 @@ public class S3ArtifactDownloader {
 
       return true;
     } catch (TimeoutException te) {
-      log.error("Chunk {} timed out after {} - had {} remaining", chunk, JavaUtils.duration(start), JavaUtils.durationFromMillis(remainingMillis));
+      log.error("Chunk {} for {} timed out after {} - had {} remaining", chunk, s3Artifact.getFilename(), JavaUtils.duration(start), JavaUtils.durationFromMillis(remainingMillis));
 
       future.cancel(true);
-    } catch (InterruptedException ie) {
-      log.warn("Chunk {} interrupted", chunk);
     } catch (Throwable t) {
-      log.error("Error while downloading chunk {}", chunk, t);
+      log.error("Error while handling chunk {} for {}", chunk, s3Artifact.getFilename(), t);
     }
 
     return false;

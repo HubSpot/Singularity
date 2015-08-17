@@ -6,6 +6,8 @@ import com.google.common.base.Optional;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityMachineAbstraction;
+import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.AbstractMachineManager;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
 import com.sun.jersey.api.ConflictException;
@@ -13,13 +15,19 @@ import com.sun.jersey.api.NotFoundException;
 
 public abstract class AbstractMachineResource<T extends SingularityMachineAbstraction<T>> {
 
-  private final AbstractMachineManager<T> manager;
+  protected final AbstractMachineManager<T> manager;
+  protected final Optional<SingularityUser> user;
 
-  public AbstractMachineResource(AbstractMachineManager<T> manager) {
+  protected final SingularityAuthorizationHelper authorizationHelper;
+
+  public AbstractMachineResource(AbstractMachineManager<T> manager, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user) {
     this.manager = manager;
+    this.authorizationHelper = authorizationHelper;
+    this.user = user;
   }
 
   protected void remove(String objectId) {
+    authorizationHelper.checkAdminAuthorization(user);
     checkNotFound(manager.deleteObject(objectId) == SingularityDeleteResult.DELETED, "Couldn't find dead %s with id %s", getObjectTypeString(), objectId);
   }
 
@@ -40,12 +48,14 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
 
   }
 
-  protected void decommission(String objectId, Optional<String> user) {
-    changeState(objectId, MachineState.STARTING_DECOMMISSION, user);
+  protected void decommission(String objectId, Optional<String> queryUser) {
+    authorizationHelper.checkAdminAuthorization(user);
+    changeState(objectId, MachineState.STARTING_DECOMMISSION, queryUser);
   }
 
-  protected void activate(String objectId, Optional<String> user) {
-    changeState(objectId, MachineState.ACTIVE, user);
+  protected void activate(String objectId, Optional<String> queryUser) {
+    authorizationHelper.checkAdminAuthorization(user);
+    changeState(objectId, MachineState.ACTIVE, queryUser);
   }
 
 }

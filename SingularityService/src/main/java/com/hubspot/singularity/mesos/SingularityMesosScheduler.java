@@ -36,6 +36,7 @@ import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
@@ -56,6 +57,7 @@ public class SingularityMesosScheduler implements Scheduler {
   private final TaskManager taskManager;
   private final DeployManager deployManager;
   private final SingularityScheduler scheduler;
+  private final SingularityConfiguration configuration;
   private final SingularityMesosTaskBuilder mesosTaskBuilder;
   private final SingularityHealthchecker healthchecker;
   private final SingularityNewTaskChecker newTaskChecker;
@@ -70,7 +72,7 @@ public class SingularityMesosScheduler implements Scheduler {
   private final IdTranscoder<SingularityTaskId> taskIdTranscoder;
 
   @Inject
-  SingularityMesosScheduler(MesosConfiguration mesosConfiguration, TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager,
+  SingularityMesosScheduler(MesosConfiguration mesosConfiguration, SingularityConfiguration configuration, TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager,
       SingularitySchedulerPriority schedulerPriority, SingularityNewTaskChecker newTaskChecker, SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport,
       Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager,
       @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier, final IdTranscoder<SingularityTaskId> taskIdTranscoder, CustomExecutorConfiguration customExecutorConfiguration) {
@@ -89,6 +91,7 @@ public class SingularityMesosScheduler implements Scheduler {
     this.serverId = serverId;
     this.schedulerDriverSupplier = schedulerDriverSupplier;
     this.taskIdTranscoder = taskIdTranscoder;
+    this.configuration = configuration;
   }
 
   @Override
@@ -150,6 +153,11 @@ public class SingularityMesosScheduler implements Scheduler {
         Collections.shuffle(offerHolders);
 
         for (SingularityOfferHolder offerHolder : offerHolders) {
+          if (configuration.getMaxTasksPerOffer() > 0 && offerHolder.getAcceptedTasks().size() >= configuration.getMaxTasksPerOffer()) {
+            LOG.trace("Offer {} is full ({}) - skipping", offerHolder.getOffer(), offerHolder.getAcceptedTasks().size());
+            continue;
+          }
+
           Optional<SingularityTask> accepted = match(taskRequests, stateCache, offerHolder);
           if (accepted.isPresent()) {
             offerHolder.addMatchedTask(accepted.get());

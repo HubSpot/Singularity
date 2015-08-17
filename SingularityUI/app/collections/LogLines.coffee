@@ -36,7 +36,7 @@ class LogLines extends Collection
 
     url: => "#{ config.apiRoot }/sandbox/#{ @taskId }/read"
 
-    initialize: (models, {@taskId, @path}) ->
+    initialize: (models, {@taskId, @path, @ajaxError}) ->
 
     getMinOffset: =>
         if @length > 0 then @first().getStartOffset() else 0
@@ -57,6 +57,7 @@ class LogLines extends Collection
         .done (response) =>
             offset = response.offset - @baseRequestLength
             offset = orZero offset
+            @ajaxError.set present: false
 
             request = @fetch data:
                 path: @path
@@ -64,7 +65,13 @@ class LogLines extends Collection
                 length: @initialRequestLength
 
             @trigger 'initialdata'
-
+        .error (response) =>
+            # If we get a 400, the file has likely not been generated
+            # yet, so we'll pass a message to the view
+            if response.status in [400, 404, 500]
+                app.caughtError()
+                @ajaxError.setFromErrorResponse response
+    
     fetchPrevious: ->
         @fetch data:
             offset: orZero @getMinOffset() - @state.get('currentRequestLength')

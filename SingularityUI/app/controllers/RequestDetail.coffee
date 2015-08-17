@@ -110,7 +110,9 @@ class RequestDetailController extends Controller
         app.showView @view
 
     refresh: ->
-        @models.request.fetch().error =>
+        requestFetch = @models.request.fetch()
+
+        requestFetch.error =>
             # ignore 404 so we can still display info about
             # deleted requests (show in `requestHistoryMsg`)
             @ignore404
@@ -121,15 +123,15 @@ class RequestDetailController extends Controller
 
         @collections.activeTasks.fetch().error    @ignore404
         @collections.scheduledTasks.fetch().error @ignore404
+        @collections.scheduledTasks.fetch({reset: true}).error @ignore404
         
         if @collections.requestHistory.currentPage is 1
-            @collections.requestHistory.fetch()
-                .done =>
-                    # Request never existed
+            requestHistoryFetch = @collections.requestHistory.fetch()
+            requestHistoryFetch.error => @ignore404
+            requestFetch.error =>
+                requestHistoryFetch.done =>
                     if @collections.requestHistory.length is 0
                         app.router.notFound()
-                .error =>
-                    @ignore404
 
         if @collections.taskHistory.currentPage is 1
             @collections.taskHistory.fetch().error    @ignore404

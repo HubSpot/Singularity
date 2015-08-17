@@ -50,4 +50,52 @@ class Requests extends Collection
 
         localStorage.setItem 'starredRequests', JSON.stringify starredRequests
 
+    getUserRequests: (user) ->
+        @filter (model) ->
+            request = model.get('request')
+
+            deployUserTrimmed = user.split("@")[0]
+            
+            activeDeployUser = model.get('requestDeployState')?.activeDeploy?.user
+            
+            if activeDeployUser
+                activeDeployUserTrimmed = activeDeployUser.split('@')[0]
+                if deployUserTrimmed is activeDeployUserTrimmed
+                    return true
+
+            if not request.owners
+                return false
+
+            for owner in request.owners
+                ownerTrimmed = owner.split("@")[0]
+                if deployUserTrimmed is ownerTrimmed
+                    return true
+            return false
+
+    # Get `active` request type totals by user
+    getUserRequestTotals: (user) ->        
+        userRequests = @getUserRequests user
+
+        userRequestTotals =
+            all: userRequests.length
+            onDemand: 0
+            worker: 0
+            scheduled: 0
+            runOnce: 0
+            service: 0
+
+        for request in userRequests
+
+            type = request.get 'type'
+            
+            continue if request.get('state') isnt 'ACTIVE'
+
+            if type is 'ON_DEMAND'  then userRequestTotals.onDemand  += 1
+            if type is 'SCHEDULED'  then userRequestTotals.scheduled += 1
+            if type is 'WORKER'     then userRequestTotals.worker    += 1
+            if type is 'RUN_ONCE'   then userRequestTotals.runOnce   += 1
+            if type is 'SERVICE'    then userRequestTotals.service   += 1
+
+        userRequestTotals
+
 module.exports = Requests

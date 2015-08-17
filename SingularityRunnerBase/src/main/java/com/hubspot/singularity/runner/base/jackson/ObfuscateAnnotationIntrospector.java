@@ -1,5 +1,7 @@
 package com.hubspot.singularity.runner.base.jackson;
 
+import static com.hubspot.mesos.JavaUtils.obfuscateValue;
+
 import java.io.IOException;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -12,6 +14,7 @@ import com.fasterxml.jackson.databind.introspect.Annotated;
 import com.google.common.base.Optional;
 
 public class ObfuscateAnnotationIntrospector extends AnnotationIntrospector {
+  private static final long serialVersionUID = 1L;
   private static final ObfuscateSerializer OBFUSCATE_SERIALIZER = new ObfuscateSerializer();
 
   @Override
@@ -29,23 +32,11 @@ public class ObfuscateAnnotationIntrospector extends AnnotationIntrospector {
   }
 
   public static class ObfuscateSerializer extends JsonSerializer<Object> {
-    public static String obfuscateValue(String value) {
-      if (value == null) {
-        return value;
-      }
-
-      if (value.length() > 4) {
-        return String.format("***************%s", value.substring(value.length() - 4, value.length()));
-      } else {
-        return "(OMITTED)";
-      }
-    }
-
     @Override
     public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
       if (value instanceof Optional) {
-        if (((Optional)value).isPresent()) {
-          jgen.writeString(obfuscateValue(((Optional)value).get().toString()));
+        if (((Optional<?>)value).isPresent()) {
+          jgen.writeString(obfuscateValue(((Optional<?>)value).get().toString()));
         } else {
           jgen.writeNull();
         }

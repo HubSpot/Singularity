@@ -25,6 +25,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -287,10 +288,11 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public List<SingularityTask> getTasksOnSlave(Collection<SingularityTaskId> activeTaskIds, SingularitySlave slave) {
-    List<SingularityTask> tasks = Lists.newArrayList();
+    final List<SingularityTask> tasks = Lists.newArrayList();
+    final String sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(slave.getHost());
 
     for (SingularityTaskId activeTaskId : activeTaskIds) {
-      if (activeTaskId.getHost().equals(slave.getHost())) {
+      if (activeTaskId.getSanitizedHost().equals(sanitizedHost)) {
         Optional<SingularityTask> maybeTask = getTask(activeTaskId);
         if (maybeTask.isPresent() && slave.getId().equals(maybeTask.get().getOffer().getSlaveId().getValue())) {
           tasks.add(maybeTask.get());

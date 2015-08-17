@@ -17,8 +17,8 @@ master:
     MESOS_WORK_DIR: /var/lib/mesos
 
 slave:
-  image: hubspot/singularity
-  entrypoint: mesos-slave
+  image: hubspot/singularityexecutorslave:0.4.3-SNAPSHOT
+  command: mesos-slave
   net: host
   environment:
     MESOS_MASTER: zk://localhost:2181/mesos
@@ -31,7 +31,7 @@ slave:
     - /var/run/docker.sock:/var/run/docker.sock
 
 scheduler:
-  image: hubspot/singularity
+  image: hubspot/singularityservice:0.4.3-SNAPSHOT
   net: host
   environment:
     - DOCKER_HOST

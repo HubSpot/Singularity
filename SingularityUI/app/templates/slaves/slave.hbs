@@ -23,7 +23,7 @@
                     <td>
                         <a href="{{appRoot}}/tasks/active/{{ host }}">{{ id }}</a>
                     </td>
-                    <td>{{ state }}</td>
+                    <td>{{humanizeText state }}</td>
                     <td>{{timestampFormatted currentState.timestamp }}</td>
                     <td>{{ rackId }}</td>
                     <td>{{ host }}</td>
