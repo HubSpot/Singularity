@@ -1249,4 +1249,29 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
   }
 
+  @Test
+  public void testMaxTasksPerOffer() {
+    configuration.setMaxTasksPerOffer(3);
+
+    initRequest();
+    initFirstDeploy();
+
+    requestResource.submit(request.toBuilder().setInstances(Optional.of(20)).build(), Optional.<String> absent());
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(36, 12024)));
+
+    Assert.assertTrue(taskManager.getActiveTasks().size() == 3);
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1"), createOffer(20, 20000, "slave2", "host2")));
+
+    Assert.assertTrue(taskManager.getActiveTasks().size() == 9);
+
+    configuration.setMaxTasksPerOffer(0);
+
+    resourceOffers();
+
+    Assert.assertTrue(taskManager.getActiveTasks().size() == 20);
+  }
+
 }
