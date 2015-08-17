@@ -309,13 +309,37 @@ public class SingularityDeploy {
 
   @Override
   public String toString() {
-    return "SingularityDeploy [requestId=" + requestId + ", id=" + id + ", version=" + version + ", timestamp=" + timestamp + ", metadata=" + metadata + ", containerInfo=" + containerInfo
-        + ", customExecutorCmd=" + customExecutorCmd + ", customExecutorId=" + customExecutorId + ", customExecutorSource=" + customExecutorSource + ", customExecutorResources="
-        + customExecutorResources + ", customExecutorUser=" + customExecutorUser + ", resources=" + resources + ", command=" + command + ", arguments=" + arguments + ", env=" + env + ", uris=" + uris
-        + ", executorData=" + executorData + ", healthcheckUri=" + healthcheckUri + ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds + ", healthcheckTimeoutSeconds="
-        + healthcheckTimeoutSeconds + ", skipHealthchecksOnDeploy=" + skipHealthchecksOnDeploy + ", healthcheckProtocol=" + healthcheckProtocol + ", healthcheckMaxRetries=" + healthcheckMaxRetries
-        + ", healthcheckMaxTotalTimeoutSeconds=" + healthcheckMaxTotalTimeoutSeconds + ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds + ", considerHealthyAfterRunningForSeconds="
-        + considerHealthyAfterRunningForSeconds + ", serviceBasePath=" + serviceBasePath + ", loadBalancerGroups=" + loadBalancerGroups + ", loadBalancerOptions=" + loadBalancerOptions + "]";
+    return "SingularityDeploy{" +
+      "requestId='" + requestId + '\'' +
+      ", id='" + id + '\'' +
+      ", version=" + version +
+      ", timestamp=" + timestamp +
+      ", metadata=" + metadata +
+      ", containerInfo=" + containerInfo +
+      ", customExecutorCmd=" + customExecutorCmd +
+      ", customExecutorId=" + customExecutorId +
+      ", customExecutorSource=" + customExecutorSource +
+      ", customExecutorResources=" + customExecutorResources +
+      ", customExecutorUser=" + customExecutorUser +
+      ", resources=" + resources +
+      ", command=" + command +
+      ", arguments=" + arguments +
+      ", env=" + env +
+      ", uris=" + uris +
+      ", executorData=" + executorData +
+      ", healthcheckUri=" + healthcheckUri +
+      ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
+      ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +
+      ", skipHealthchecksOnDeploy=" + skipHealthchecksOnDeploy +
+      ", healthcheckProtocol=" + healthcheckProtocol +
+      ", healthcheckMaxRetries=" + healthcheckMaxRetries +
+      ", healthcheckMaxTotalTimeoutSeconds=" + healthcheckMaxTotalTimeoutSeconds +
+      ", deployHealthTimeoutSeconds=" + deployHealthTimeoutSeconds +
+      ", considerHealthyAfterRunningForSeconds=" + considerHealthyAfterRunningForSeconds +
+      ", serviceBasePath=" + serviceBasePath +
+      ", loadBalancerGroups=" + loadBalancerGroups +
+      ", loadBalancerOptions=" + loadBalancerOptions +
+      '}';
   }
 
 }

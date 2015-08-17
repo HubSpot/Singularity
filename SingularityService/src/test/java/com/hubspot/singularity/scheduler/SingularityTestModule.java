@@ -139,9 +139,9 @@ public class SingularityTestModule implements Module {
             binder.bind(TestingLoadBalancerClient.class).toInstance(tlbc);
 
             ObjectMapper om = Jackson.newObjectMapper()
-                .setSerializationInclusion(Include.NON_NULL)
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                .registerModule(new ProtobufModule());
+              .setSerializationInclusion(Include.NON_NULL)
+              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+              .registerModule(new ProtobufModule());
 
             binder.bind(ObjectMapper.class).toInstance(om);
 
