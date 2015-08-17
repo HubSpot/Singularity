@@ -10,6 +10,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.hubspot.mesos.SingularityContainerType;
+import com.hubspot.mesos.SingularityDockerNetworkType;
+import com.hubspot.mesos.SingularityDockerVolumeMode;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.ContainerInfo.Type;
 import org.apache.mesos.Protos.FrameworkID;
@@ -40,7 +44,6 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskRequest;
-import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.ExecutorIdGenerator;
 
 public class SingularityMesosTaskBuilderTest {
@@ -54,12 +57,12 @@ public class SingularityMesosTaskBuilderTest {
   public void createMocks() {
     pendingTask = new SingularityPendingTask(new SingularityPendingTaskId("test", "1", 0, 1, PendingType.IMMEDIATE, 0), Collections.<String> emptyList(), Optional.<String> absent());
 
-    final SingularitySlaveAndRackManager slaveAndRackManager = mock(SingularitySlaveAndRackManager.class);
+    final SingularitySlaveAndRackHelper slaveAndRackHelper = mock(SingularitySlaveAndRackHelper.class);
     final ExecutorIdGenerator idGenerator = mock(ExecutorIdGenerator.class);
 
     when(idGenerator.getNextExecutorId()).then(new CreateFakeId());
 
-    builder = new SingularityMesosTaskBuilder(new ObjectMapper(), slaveAndRackManager, idGenerator, new SingularityConfiguration());
+    builder = new SingularityMesosTaskBuilder(new ObjectMapper(), slaveAndRackHelper, idGenerator, new SingularityConfiguration());
 
     taskResources = new Resources(1, 1, 0);
     executorResources = new Resources(0.1, 1, 0);
@@ -71,8 +74,9 @@ public class SingularityMesosTaskBuilderTest {
         .setHostname("test")
         .build();
 
-    when(slaveAndRackManager.getSlaveHost(offer)).thenReturn("host");
-    when(slaveAndRackManager.getRackId(offer)).thenReturn("DEFAULT");
+    when(slaveAndRackHelper.getRackId(offer)).thenReturn(Optional.<String> absent());
+    when(slaveAndRackHelper.getMaybeTruncatedHost(offer)).thenReturn("host");
+    when(slaveAndRackHelper.getRackIdOrDefault(offer)).thenReturn("DEFAULT");
   }
 
   @Test
@@ -122,11 +126,11 @@ public class SingularityMesosTaskBuilderTest {
 
     final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER).build();
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
-        Type.DOCKER,
+      SingularityContainerType.DOCKER,
         Optional.of(Arrays.asList(
-                new SingularityVolume("/container", Optional.of("/host"), Optional.of(Mode.RW)),
-                new SingularityVolume("/container/${TASK_REQUEST_ID}/${TASK_DEPLOY_ID}", Optional.of("/host/${TASK_ID}"), Optional.of(Mode.RO)))),
-        Optional.of(new SingularityDockerInfo("docker-image", true, Optional.of(Protos.ContainerInfo.DockerInfo.Network.BRIDGE), Optional.of(Arrays.asList(literalMapping, offerMapping)))));
+                new SingularityVolume("/container", Optional.of("/host"), SingularityDockerVolumeMode.RW),
+                new SingularityVolume("/container/${TASK_REQUEST_ID}/${TASK_DEPLOY_ID}", Optional.of("/host/${TASK_ID}"), SingularityDockerVolumeMode.RO))),
+        Optional.of(new SingularityDockerInfo("docker-image", true, SingularityDockerNetworkType.BRIDGE, Optional.of(Arrays.asList(literalMapping, offerMapping)))));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
     .setContainerInfo(Optional.of(containerInfo))
     .setCommand(Optional.of("/bin/echo"))

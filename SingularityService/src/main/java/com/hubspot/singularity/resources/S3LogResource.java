@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -38,8 +39,10 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeployHistory;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
+import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.SingularityS3Log;
 import com.hubspot.singularity.SingularityService;
@@ -47,8 +50,11 @@ import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.S3Configuration;
 import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
@@ -64,10 +70,11 @@ public class S3LogResource extends AbstractHistoryResource {
 
   private static final Logger LOG = LoggerFactory.getLogger(S3LogResource.class);
 
-  private final Optional<S3Service> s3;
+  private final Optional<S3Service> s3ServiceDefault;
+  private final Map<String, S3Service> s3GroupOverride;
   private final Optional<S3Configuration> configuration;
-  private final DeployManager deployManager;
   private final RequestHistoryHelper requestHistoryHelper;
+  private final RequestManager requestManager;
 
   private static final Comparator<SingularityS3Log> LOG_COMPARATOR = new Comparator<SingularityS3Log>() {
 
@@ -79,13 +86,14 @@ public class S3LogResource extends AbstractHistoryResource {
   };
 
   @Inject
-  public S3LogResource(HistoryManager historyManager, RequestHistoryHelper requestHistoryHelper, TaskManager taskManager, DeployManager deployManager, Optional<S3Service> s3,
-      Optional<S3Configuration> configuration) {
-    super(historyManager, taskManager, deployManager);
-    this.s3 = s3;
-    this.deployManager = deployManager;
+  public S3LogResource(RequestManager requestManager, HistoryManager historyManager, RequestHistoryHelper requestHistoryHelper, TaskManager taskManager, DeployManager deployManager, Optional<S3Service> s3ServiceDefault,
+      Optional<S3Configuration> configuration, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, Map<String, S3Service> s3GroupOverride) {
+    super(historyManager, taskManager, deployManager, authorizationHelper, user);
+    this.requestManager = requestManager;
+    this.s3ServiceDefault = s3ServiceDefault;
     this.configuration = configuration;
     this.requestHistoryHelper = requestHistoryHelper;
+    this.s3GroupOverride = s3GroupOverride;
   }
 
   private Collection<String> getS3PrefixesForTask(SingularityTaskId taskId) {
@@ -158,15 +166,19 @@ public class S3LogResource extends AbstractHistoryResource {
     return prefixes;
   }
 
-  private List<SingularityS3Log> getS3LogsWithExecutorService(ListeningExecutorService executorService, Collection<String> prefixes) throws InterruptedException, ExecutionException, TimeoutException {
+  private List<SingularityS3Log> getS3LogsWithExecutorService(Optional<String> group, ListeningExecutorService executorService, Collection<String> prefixes) throws InterruptedException, ExecutionException, TimeoutException {
     List<ListenableFuture<S3Object[]>> futures = Lists.newArrayListWithCapacity(prefixes.size());
+
+    final String s3Bucket = (group.isPresent() && configuration.get().getGroupOverrides().containsKey(group.get())) ? configuration.get().getGroupOverrides().get(group.get()).getS3Bucket() : configuration.get().getS3Bucket();
+
+    final S3Service s3Service = (group.isPresent() && s3GroupOverride.containsKey(group.get())) ? s3GroupOverride.get(group.get()) : s3ServiceDefault.get();
 
     for (final String s3Prefix : prefixes) {
       futures.add(executorService.submit(new Callable<S3Object[]>() {
 
         @Override
         public S3Object[] call() throws Exception {
-          return s3.get().listObjects(configuration.get().getS3Bucket(), s3Prefix, null);
+          return s3Service.listObjects(s3Bucket, s3Prefix, null);
         }
       }));
     }
@@ -192,7 +204,7 @@ public class S3LogResource extends AbstractHistoryResource {
 
         @Override
         public SingularityS3Log call() throws Exception {
-          String getUrl = s3.get().createSignedGetUrl(configuration.get().getS3Bucket(), s3Object.getKey(), expireAt);
+          String getUrl = s3Service.createSignedGetUrl(s3Bucket, s3Object.getKey(), expireAt);
 
           return new SingularityS3Log(getUrl, s3Object.getKey(), s3Object.getLastModifiedDate().getTime(), s3Object.getContentLength());
         }
@@ -203,12 +215,12 @@ public class S3LogResource extends AbstractHistoryResource {
     return Futures.allAsList(logFutures).get(configuration.get().getWaitForS3LinksSeconds(), TimeUnit.SECONDS);
   }
 
-  private List<SingularityS3Log> getS3Logs(Collection<String> prefixes) throws InterruptedException, ExecutionException, TimeoutException {
+  private List<SingularityS3Log> getS3Logs(Optional<String> group, Collection<String> prefixes) throws InterruptedException, ExecutionException, TimeoutException {
     ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(Math.min(prefixes.size(), configuration.get().getMaxS3Threads()),
         new ThreadFactoryBuilder().setNameFormat("S3LogFetcher-%d").build()));
 
     try {
-      List<SingularityS3Log> logs = Lists.newArrayList(getS3LogsWithExecutorService(executorService, prefixes));
+      List<SingularityS3Log> logs = Lists.newArrayList(getS3LogsWithExecutorService(group, executorService, prefixes));
       Collections.sort(logs, LOG_COMPARATOR);
       return logs;
     } finally {
@@ -217,7 +229,7 @@ public class S3LogResource extends AbstractHistoryResource {
   }
 
   private void checkS3() {
-    checkNotFound(s3.isPresent(), "S3 configuration was absent");
+    checkNotFound(s3ServiceDefault.isPresent(), "S3 configuration was absent");
   }
 
   @GET
@@ -229,7 +241,10 @@ public class S3LogResource extends AbstractHistoryResource {
     SingularityTaskId taskIdObject = getTaskIdObject(taskId);
 
     try {
-      return getS3Logs(getS3PrefixesForTask(taskIdObject));
+      final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(taskIdObject.getRequestId());
+      checkNotFound(maybeRequest.isPresent(), "Request ID %s does not exist", taskIdObject.getRequestId());
+      authorizationHelper.checkForAuthorization(maybeRequest.get().getRequest(), Optional.<SingularityRequest>absent(), user);
+      return getS3Logs(maybeRequest.get().getRequest().getGroup(), getS3PrefixesForTask(taskIdObject));
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", taskId);
     } catch (Throwable t) {
@@ -244,7 +259,10 @@ public class S3LogResource extends AbstractHistoryResource {
     checkS3();
 
     try {
-      return getS3Logs(getS3PrefixesForRequest(requestId));
+      final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(requestId);
+      checkNotFound(maybeRequest.isPresent(), "Request ID %s does not exist", requestId);
+      authorizationHelper.checkForAuthorization(maybeRequest.get().getRequest(), Optional.<SingularityRequest>absent(), user);
+      return getS3Logs(maybeRequest.get().getRequest().getGroup(), getS3PrefixesForRequest(requestId));
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", requestId);
     } catch (Throwable t) {
@@ -260,7 +278,10 @@ public class S3LogResource extends AbstractHistoryResource {
     checkS3();
 
     try {
-      return getS3Logs(getS3PrefixesForDeploy(requestId, deployId));
+      final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(requestId);
+      checkNotFound(maybeRequest.isPresent(), "Request ID %s does not exist", requestId);
+      authorizationHelper.checkForAuthorization(maybeRequest.get().getRequest(), Optional.<SingularityRequest>absent(), user);
+      return getS3Logs(maybeRequest.get().getRequest().getGroup(), getS3PrefixesForDeploy(requestId, deployId));
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s-%s", requestId, deployId);
     } catch (Throwable t) {

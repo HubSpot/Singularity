@@ -116,7 +116,7 @@
       <dependency>
         <groupId>com.hubspot.jackson</groupId>
         <artifactId>jackson-datatype-protobuf</artifactId>
-        <version>0.8.0</version>
+        <version>0.4.0</version>
       </dependency>
 
       <dependency>
@@ -165,6 +165,18 @@
         <groupId>com.hubspot</groupId>
         <artifactId>HorizonNing</artifactId>
         <version>${horizon.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.directory.api</groupId>
+        <artifactId>api-all</artifactId>
+        <version>1.0.0-M28</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.antlr</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>

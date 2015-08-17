@@ -11,7 +11,8 @@ public class SingularityRack extends SingularityMachineAbstraction<SingularityRa
   }
 
   @JsonCreator
-  public SingularityRack(@JsonProperty("rackId") String rackId, @JsonProperty("firstSeenAt") long firstSeenAt, @JsonProperty("currentState") SingularityMachineStateHistoryUpdate currentState) {
+  public SingularityRack(@JsonProperty("rackId") String rackId, @JsonProperty("firstSeenAt") long firstSeenAt,
+      @JsonProperty("currentState") SingularityMachineStateHistoryUpdate currentState) {
     super(rackId, firstSeenAt, currentState);
   }
 

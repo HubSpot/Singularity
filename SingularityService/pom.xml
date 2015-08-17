@@ -353,6 +353,11 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.directory.api</groupId>
+      <artifactId>api-all</artifactId>
+    </dependency>
+
   </dependencies>
 
   <build>

@@ -1,8 +1,5 @@
 package com.hubspot.singularity.config;
 
-import io.dropwizard.Configuration;
-import io.dropwizard.db.DataSourceFactory;
-
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -16,6 +13,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.hubspot.singularity.SlavePlacement;
+
+import io.dropwizard.Configuration;
+import io.dropwizard.db.DataSourceFactory;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityConfiguration extends Configuration {
@@ -70,6 +70,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long deleteDeploysFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
 
+  private long deleteDeadSlavesAfterHours = TimeUnit.DAYS.toHours(7);
+
   private long deleteStaleRequestsFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
 
   private long deleteTasksFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(7);
@@ -110,6 +112,8 @@ public class SingularityConfiguration extends Configuration {
   private int maxHealthcheckResponseBodyBytes = 8192;
 
   private int maxQueuedUpdatesPerWebhook = 50;
+
+  private int maxTasksPerOffer = 0;
 
   private int maxRequestIdSize = 100;
 
@@ -169,6 +173,14 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("zookeeper")
   @Valid
   private ZooKeeperConfiguration zooKeeperConfiguration;
+
+  @JsonProperty("ldap")
+  @Valid
+  private LDAPConfiguration ldapConfiguration = null;
+
+  @JsonProperty("auth")
+  @NotNull
+  private AuthConfiguration authConfiguration = new AuthConfiguration();
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -242,6 +254,10 @@ public class SingularityConfiguration extends Configuration {
     return coreThreadpoolSize;
   }
 
+  public CustomExecutorConfiguration getCustomExecutorConfiguration() {
+    return customExecutorConfiguration;
+  }
+
   public Optional<DataSourceFactory> getDatabaseConfiguration() {
     return Optional.fromNullable(databaseConfiguration);
   }
@@ -274,6 +290,10 @@ public class SingularityConfiguration extends Configuration {
     return deployHealthyBySeconds;
   }
 
+  public int getDeployIdLength() {
+    return deployIdLength;
+  }
+
   public long getHealthcheckIntervalSeconds() {
     return healthcheckIntervalSeconds;
   }
@@ -296,6 +316,14 @@ public class SingularityConfiguration extends Configuration {
 
   public long getKillNonLongRunningTasksInCleanupAfterSeconds() {
     return killNonLongRunningTasksInCleanupAfterSeconds;
+  }
+
+  public long getDeleteDeadSlavesAfterHours() {
+    return deleteDeadSlavesAfterHours;
+  }
+
+  public void setDeleteDeadSlavesAfterHours(long deleteDeadSlavesAfterHours) {
+    this.deleteDeadSlavesAfterHours = deleteDeadSlavesAfterHours;
   }
 
   public int getListenerThreadpoolSize() {
@@ -332,6 +360,10 @@ public class SingularityConfiguration extends Configuration {
 
   public int getMaxRequestIdSize() {
     return maxRequestIdSize;
+  }
+
+  public int getMaxTasksPerOffer() {
+    return maxTasksPerOffer;
   }
 
   public MesosConfiguration getMesosConfiguration() {
@@ -374,6 +406,10 @@ public class SingularityConfiguration extends Configuration {
     return threadpoolShutdownDelayInSeconds;
   }
 
+  public void setThreadpoolShutdownDelayInSeconds(long threadpoolShutdownDelayInSeconds) {
+    this.threadpoolShutdownDelayInSeconds = threadpoolShutdownDelayInSeconds;
+  }
+
   public UIConfiguration getUiConfiguration() {
     return uiConfiguration;
   }
@@ -404,6 +440,10 @@ public class SingularityConfiguration extends Configuration {
 
   public boolean isCompressLargeDataObjects() {
     return compressLargeDataObjects;
+  }
+
+  public boolean isCreateDeployIds() {
+    return createDeployIds;
   }
 
   public boolean isDefaultValueForKillTasksOfPausedRequests() {
@@ -506,6 +546,14 @@ public class SingularityConfiguration extends Configuration {
     this.coreThreadpoolSize = coreThreadpoolSize;
   }
 
+  public void setCreateDeployIds(boolean createDeployIds) {
+    this.createDeployIds = createDeployIds;
+  }
+
+  public void setCustomExecutorConfiguration(CustomExecutorConfiguration customExecutorConfiguration) {
+    this.customExecutorConfiguration = customExecutorConfiguration;
+  }
+
   public void setDatabaseConfiguration(DataSourceFactory databaseConfiguration) {
     this.databaseConfiguration = databaseConfiguration;
   }
@@ -540,6 +588,10 @@ public class SingularityConfiguration extends Configuration {
 
   public void setDeployHealthyBySeconds(long deployHealthyBySeconds) {
     this.deployHealthyBySeconds = deployHealthyBySeconds;
+  }
+
+  public void setDeployIdLength(int deployIdLength) {
+    this.deployIdLength = deployIdLength;
   }
 
   public void setEnableCorsFilter(boolean enableCorsFilter) {
@@ -606,6 +658,10 @@ public class SingularityConfiguration extends Configuration {
     this.maxRequestIdSize = maxRequestIdSize;
   }
 
+  public void setMaxTasksPerOffer(int maxTasksPerOffer) {
+    this.maxTasksPerOffer = maxTasksPerOffer;
+  }
+
   public void setMesosConfiguration(MesosConfiguration mesosConfiguration) {
     this.mesosConfiguration = mesosConfiguration;
   }
@@ -670,27 +726,20 @@ public class SingularityConfiguration extends Configuration {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
   }
 
-  public CustomExecutorConfiguration getCustomExecutorConfiguration() {
-    return customExecutorConfiguration;
+  public Optional<LDAPConfiguration> getLdapConfiguration() {
+    return Optional.fromNullable(ldapConfiguration);
   }
 
-  public void setCustomExecutorConfiguration(CustomExecutorConfiguration customExecutorConfiguration) {
-    this.customExecutorConfiguration = customExecutorConfiguration;
+  public void setLdapConfiguration(LDAPConfiguration ldapConfiguration) {
+    this.ldapConfiguration = ldapConfiguration;
   }
 
-  public boolean isCreateDeployIds() {
-    return createDeployIds;
+  public AuthConfiguration getAuthConfiguration() {
+    return authConfiguration;
   }
 
-  public void setCreateDeployIds(boolean createDeployIds) {
-    this.createDeployIds = createDeployIds;
+  public void setAuthConfiguration(AuthConfiguration authConfiguration) {
+    this.authConfiguration = authConfiguration;
   }
 
-  public int getDeployIdLength() {
-    return deployIdLength;
-  }
-
-  public void setDeployIdLength(int deployIdLength) {
-    this.deployIdLength = deployIdLength;
-  }
 }
