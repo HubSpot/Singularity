@@ -24,10 +24,10 @@ slave:
     MESOS_MASTER: zk://localhost:2181/mesos
     MESOS_HOSTNAME: localhost
     MESOS_IP: 127.0.0.1
-    MESOS_CONTAINERIZERS: docker,mesos
+    MESOS_CONTAINERIZERS: mesos
   volumes:
-    - /sys/:/sys/
     - /var/run/docker.sock:/var/run/docker.sock
+    - /sys:/sys
 
 scheduler:
   image: hubspot/singularityservice:0.4.3-SNAPSHOT

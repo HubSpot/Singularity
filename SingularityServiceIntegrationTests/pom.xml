@@ -151,15 +151,14 @@
                     </ports>
                     <env>
                       <MESOS_MASTER>zk://singularity-test-zk:2181/mesos</MESOS_MASTER>
-                      <MESOS_CONTAINERIZERS>docker,mesos</MESOS_CONTAINERIZERS>
+                      <MESOS_CONTAINERIZERS>mesos</MESOS_CONTAINERIZERS>
                       <MESOS_HOSTNAME>${mesos.slave1.hostname}</MESOS_HOSTNAME>
                       <MESOS_PORT>5051</MESOS_PORT>
                     </env>
                     <volumes>
                       <bind>
-                        <volume>/sys/fs/cgroup:/sys/fs/cgroup</volume>
-                        <volume>/usr/local/bin/docker:/usr/local/bin/docker</volume>
                         <volume>/var/run/docker.sock:/var/run/docker.sock</volume>
+                        <volume>/sys:/sys</volume>
                       </bind>
                     </volumes>
                     <wait>
