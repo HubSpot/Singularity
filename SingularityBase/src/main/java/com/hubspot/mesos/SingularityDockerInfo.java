@@ -1,14 +1,12 @@
 package com.hubspot.mesos;
 
-import org.apache.mesos.Protos;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 public class SingularityDockerInfo {
   private final String image;
@@ -60,6 +58,41 @@ public class SingularityDockerInfo {
 
   @Override
   public String toString() {
-    return String.format("DockerInfo [image=%s, network=%s, portMappings=%s, privileged=%s, forcePullImage=%s, parameters=%s]", image, network, portMappings, privileged, forcePullImage, parameters);
+    return "SingularityDockerInfo{" +
+      "image='" + image + '\'' +
+      ", privileged=" + privileged +
+      ", network=" + network +
+      ", portMappings=" + portMappings +
+      ", forcePullImage=" + forcePullImage +
+      ", parameters=" + parameters +
+      '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    SingularityDockerInfo that = (SingularityDockerInfo) o;
+
+    if (forcePullImage != that.forcePullImage) return false;
+    if (privileged != that.privileged) return false;
+    if (image != null ? !image.equals(that.image) : that.image != null) return false;
+    if (network != null ? !network.equals(that.network) : that.network != null) return false;
+    if (parameters != null ? !parameters.equals(that.parameters) : that.parameters != null) return false;
+    if (portMappings != null ? !portMappings.equals(that.portMappings) : that.portMappings != null) return false;
+
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = image != null ? image.hashCode() : 0;
+    result = 31 * result + (privileged ? 1 : 0);
+    result = 31 * result + (network != null ? network.hashCode() : 0);
+    result = 31 * result + (portMappings != null ? portMappings.hashCode() : 0);
+    result = 31 * result + (forcePullImage ? 1 : 0);
+    result = 31 * result + (parameters != null ? parameters.hashCode() : 0);
+    return result;
   }
 }
