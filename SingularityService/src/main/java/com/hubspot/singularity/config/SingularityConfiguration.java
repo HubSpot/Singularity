@@ -746,7 +746,6 @@ public class SingularityConfiguration extends Configuration {
     this.authConfiguration = authConfiguration;
   }
 
-
   public HistoryPurgingConfiguration getHistoryPurgingConfiguration() {
     return historyPurgingConfiguration;
   }

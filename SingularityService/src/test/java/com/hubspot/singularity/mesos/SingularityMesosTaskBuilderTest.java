@@ -62,7 +62,7 @@ public class SingularityMesosTaskBuilderTest {
 
     when(idGenerator.getNextExecutorId()).then(new CreateFakeId());
 
-    builder = new SingularityMesosTaskBuilder(new SingularityConfiguration(), new ObjectMapper(), slaveAndRackHelper, idGenerator);
+    builder = new SingularityMesosTaskBuilder(new ObjectMapper(), slaveAndRackHelper, idGenerator, new SingularityConfiguration());
 
     taskResources = new Resources(1, 1, 0);
     executorResources = new Resources(0.1, 1, 0);

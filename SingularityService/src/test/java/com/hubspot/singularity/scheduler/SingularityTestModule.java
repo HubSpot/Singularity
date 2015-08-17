@@ -63,11 +63,8 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.jackson.Jackson;
-import io.dropwizard.jackson.Jackson;
-import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.setup.Environment;
-import net.kencochrane.raven.Raven;
 import net.kencochrane.raven.Raven;
 
 public class SingularityTestModule implements Module {
@@ -142,9 +139,9 @@ public class SingularityTestModule implements Module {
             binder.bind(TestingLoadBalancerClient.class).toInstance(tlbc);
 
             ObjectMapper om = Jackson.newObjectMapper()
-                .setSerializationInclusion(Include.NON_NULL)
-                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                .registerModule(new ProtobufModule());
+              .setSerializationInclusion(Include.NON_NULL)
+              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+              .registerModule(new ProtobufModule());
 
             binder.bind(ObjectMapper.class).toInstance(om);
 

@@ -65,6 +65,11 @@ public class SingularityHealthchecker {
   }
 
   public void enqueueHealthcheck(SingularityTask task) {
+    if (task.getTaskRequest().getDeploy().getHealthcheckMaxRetries().isPresent() && taskManager.getNumHealthchecks(task.getTaskId()) > task.getTaskRequest().getDeploy().getHealthcheckMaxRetries().get()) {
+      LOG.info("Not enqueuing new healthcheck for {}, it has already attempted {} times", task.getTaskId(), task.getTaskRequest().getDeploy().getHealthcheckMaxRetries());
+      return;
+    }
+
     ScheduledFuture<?> future = enqueueHealthcheckWithDelay(task, task.getTaskRequest().getDeploy().getHealthcheckIntervalSeconds().or(configuration.getHealthcheckIntervalSeconds()));
 
     ScheduledFuture<?> existing = taskIdToHealthcheck.put(task.getTaskId().getId(), future);
@@ -179,7 +184,7 @@ public class SingularityHealthchecker {
   }
 
   private void asyncHealthcheck(final SingularityTask task) {
-    final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(exceptionNotifier, configuration, this, newTaskChecker, taskManager, abort, task);
+    final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(exceptionNotifier, configuration, this, newTaskChecker, taskManager, task);
     final Optional<String> uri = getHealthcheckUri(task);
 
     if (!uri.isPresent()) {

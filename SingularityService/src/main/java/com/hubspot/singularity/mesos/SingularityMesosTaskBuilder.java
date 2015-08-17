@@ -6,6 +6,7 @@ import java.util.Map.Entry;
 
 import javax.inject.Singleton;
 
+import com.hubspot.singularity.config.SingularityConfiguration;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.CommandInfo;
 import org.apache.mesos.Protos.CommandInfo.URI;
@@ -57,11 +58,11 @@ class SingularityMesosTaskBuilder {
   private final SingularityConfiguration configuration;
 
   @Inject
-  SingularityMesosTaskBuilder(SingularityConfiguration configuration, ObjectMapper objectMapper, SingularitySlaveAndRackHelper slaveAndRackHelper, ExecutorIdGenerator idGenerator) {
-    this.configuration = configuration;
+  SingularityMesosTaskBuilder(ObjectMapper objectMapper, SingularitySlaveAndRackHelper slaveAndRackHelper, ExecutorIdGenerator idGenerator, SingularityConfiguration configuration) {
     this.objectMapper = objectMapper;
     this.slaveAndRackHelper = slaveAndRackHelper;
     this.idGenerator = idGenerator;
+    this.configuration = configuration;
   }
 
   public SingularityTask buildTask(Protos.Offer offer, List<Resource> availableResources, SingularityTaskRequest taskRequest, Resources desiredTaskResources, Resources desiredExecutorResources) {
