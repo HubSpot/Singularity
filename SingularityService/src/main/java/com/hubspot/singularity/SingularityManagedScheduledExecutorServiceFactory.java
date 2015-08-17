@@ -1,7 +1,6 @@
 package com.hubspot.singularity;
 
 import static com.google.common.base.Preconditions.checkState;
-import io.dropwizard.lifecycle.Managed;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +13,8 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.config.SingularityConfiguration;
+
+import io.dropwizard.lifecycle.Managed;
 
 @Singleton
 public class SingularityManagedScheduledExecutorServiceFactory implements Managed {

@@ -1,13 +1,13 @@
 package com.hubspot.singularity;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Module;
+import com.hubspot.singularity.config.SingularityConfiguration;
+
 import io.dropwizard.Bundle;
 import io.dropwizard.ConfiguredBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Module;
-import com.hubspot.singularity.config.SingularityConfiguration;
 
 /**
  * Example on how to embed Singularity into another piece of code or how to extend Singularity with additional

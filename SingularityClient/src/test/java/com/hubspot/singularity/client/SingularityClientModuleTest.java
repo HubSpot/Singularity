@@ -2,13 +2,13 @@ package com.hubspot.singularity.client;
 
 import java.util.Collections;
 
+import org.junit.Test;
+
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
-
-import org.junit.Test;
 
 public class SingularityClientModuleTest {
 

@@ -48,11 +48,13 @@ public class SingularityHistoryPurger extends SingularityLeaderOnlyPoller {
       if (!historyPurgingConfiguration.getDeleteTaskHistoryAfterTasksPerRequest().isPresent()) {
         checkBefore = purgeBefore.get();
       }
+
+      LOG.debug("Purging taskHistory before {}", purgeBefore.get());
     }
 
     final long start = System.currentTimeMillis();
 
-    LOG.info("Finding taskHistory counts before {}", checkBefore);
+    LOG.info("Finding taskHistory counts before {} (purging tasks over limit of {})", checkBefore, historyPurgingConfiguration.getDeleteTaskHistoryAfterTasksPerRequest());
 
     final List<SingularityRequestIdCount> requestIdCounts = historyManager.getRequestIdCounts(checkBefore);
 

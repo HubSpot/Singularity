@@ -1,7 +1,6 @@
 package com.hubspot.singularity.data;
 
 import static com.google.common.base.Preconditions.checkState;
-import io.dropwizard.lifecycle.Managed;
 
 import javax.inject.Singleton;
 
@@ -13,6 +12,8 @@ import org.apache.curator.retry.RetryOneTime;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
+
+import io.dropwizard.lifecycle.Managed;
 
 @Singleton
 public class ExecutorIdGenerator implements Managed {

@@ -54,7 +54,7 @@ public class HistoryPurgingConfiguration {
   }
 
   public boolean isEnabledAndValid() {
-    return enabled && checkTaskHistoryEveryHours > 1 && (getDeleteTaskHistoryAfterDays().isPresent() || getDeleteTaskHistoryAfterTasksPerRequest().isPresent());
+    return enabled && checkTaskHistoryEveryHours > 0 && (getDeleteTaskHistoryAfterDays().isPresent() || getDeleteTaskHistoryAfterTasksPerRequest().isPresent());
   }
 
   public void setEnabled(boolean enabled) {
