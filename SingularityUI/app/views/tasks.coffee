@@ -51,8 +51,8 @@ class TasksView extends View
         # Only show tasks that match the search query
         if @searchFilter
             tasks = _.filter tasks, (task) =>
-                searchField = "#{ task.id }#{ task.host }"
-                searchField.toLowerCase().indexOf(@searchFilter.toLowerCase()) isnt -1
+                searchField = "#{ task.id }#{ task.host }".toLowerCase().replace(/-/g, '_')
+                searchField.indexOf(@searchFilter.toLowerCase().replace(/-/g, '_')) isnt -1
         
         # Sort the table if the user clicked on the table heading things
         if @sortAttribute?
@@ -213,8 +213,16 @@ class TasksView extends View
         app.router.navigate "/tasks/#{ @state }/#{ @searchFilter }", { replace: true }
 
     viewJson: (e) ->
-        id = $(e.target).parents('tr').data 'task-id'
-        utils.viewJSON @collection.get id
+        task =
+            taskId: $(e.target).data 'task-id'
+            requestId: $(e.target).data 'request-id'
+            nextRunAt: $(e.target).data 'nextrunat'
+
+        # need to make a fetch for scheduled tasks
+        if task.nextRunAt
+            @trigger 'getPendingTask', task
+        else
+            utils.viewJSON @collection.get task.taskId
 
     removeTask: (e) ->
         $row = $(e.target).parents 'tr'

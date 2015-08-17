@@ -15,65 +15,67 @@
 
 ### 1. Create base property config files.
 
-`/etc/singularity.base.properties` -- properties used by all Singularity slave helpers.
+`/etc/singularity.base.yaml` -- properties used by all Singularity slave helpers.
 
-```
+```yaml
 # Metadata folder for SingularityS3Uploader
-s3uploader.metadata.directory=path/to/s3/metadata
+s3UploaderMetadataDirectory: path/to/s3/metadata
 
 # Metadata folder for SingularityLogWatcher
-logwatcher.metadata.directory=path/to/logwatcher/metadata
+logWatcherMetadataDirectory: path/to/logwatcher/metadata
 
-# Path to write singularity-executor.log, 
-root.log.directory=path/to/logs
+# Path to write singularity-executor.log
+loggingDirectory: path/to/logs
 
 # Desired logging level
-hubspot.log.level=DEBUG
+loggingLevel: DEBUG
 ```
 
 ---
 
-`/etc/singularity.s3base.properties` -- properties used by jobs that hit S3.
+`/etc/singularity.s3base.yaml` -- properties used by jobs that hit S3.
 
-```
+```yaml
 # AWS S3 access key
-s3.access.key=blah
+s3AccessKey: blah
 
 # AWS S3 secret key
-s3.secret.key=secret
+s3SecretKey: secret
 
 # Folder to cache downloaded artifacts in
-artifact.cache.directory=path/to/slugs
+artifactCacheDirectory: path/to/slugs
 ```
 
 ### 2. Install SingularityExecutor
 
-#### 2a. Create a `/etc/singularity.executor.properties` file on each slave:
+#### 2a. Create a `/etc/singularity.executor.yaml` file on each slave:
 
-```
+```yaml
 # Folder to store task metadata in (used by SingularityExecutorCleanup)
-executor.global.task.definition.directory=path/to/tasks
+globalTaskDefinitionDirectory: path/to/tasks
 
 # Default user to run tasks as
-executor.default.user=root
+defaultRunAsUser: root
 
 # Folder to store rotated logs
-executor.logrotate.to.directory=logs
+logrotateToDirectory: logs
 
 # AWS S3 bucket name
-executor.s3.uplaoder.bucket=bucket-name
+s3UploaderBucket: bucket-name
 
 # Filename format to use when uploading logs to S3
-executor.s3.uploader.pattern=%requestId/%Y/%m/%taskId_%index-%s%fileext
+s3UploaderKeyPattern: %requestId/%Y/%m/%taskId_%index-%s%fileext
 
 # Additional files to logrotate
-executor.logrotate.extras.files=logs/access.log,logs/gc.log
+logrotateAdditionalFiles:
+- logs/access.log
+- logs/gc.log
 
 # Path to logrotate command
-executor.logrotate.command=/usr/sbin/logrotate
+logrotateCommand: /usr/sbin/logrotate
 
 # Whether or not to use the SingularityS3Downloader service to download artifacts
-executor.use.local.download.service=true
+useLocalDownloadService: true
 ```
 
 #### 2b. Store the SingularityExecutor JAR in a well-known place on each slave.
@@ -104,17 +106,19 @@ This snippet will make Singularity launch tasks with an additional `128 MB` of m
 
 ### 3. Install SingularityExecutorCleanup (optional)
 
-#### 3a. Create an `/etc/singularity.executor.cleanup.properties` file on each slave.
+#### 3a. Create an `/etc/singularity.executor.cleanup.yaml` file on each slave.
 
-```
+```yaml
 # Path to store executor cleanup results
-executor.cleanup.results.directory=path/to/cleanup
+executorCleanupResultsDirectory: path/to/cleanup
 
 # Singularity connection string
-singularity.hosts=host:port,host:port
+singularityHosts:
+- host:port
+- host:port
 
 # URL path to singularity API
-singularity.context.path=singularity/api
+singularityContextPath: singularity/api
 ```
 
 #### 3b. Store the SingularityExecutorCleanup JAR in a well-known place on each slave.
@@ -155,16 +159,16 @@ Consider using a tool like monit, supervisor, or systemd to ensure the service s
 
 ### 5. Install SingularityS3Uploader (optional)
 
-#### 5a. Create an `/etc/singularity.s3uploader.properties` file on each slave.
+#### 5a. Create an `/etc/singularity.s3uploader.yaml` file on each slave.
 
-**Note**: This file only needed if you need to override the access/secret keys from `singularity.s3base.properties`.
+**Note**: This file only needed if you need to override the access/secret keys from `singularity.s3base.yaml`.
 
-```
+```yaml
 # AWS S3 access key
-s3.access.key=blah
+s3AccessKey: blah
 
 # AWS S3 secret key
-s3.secret.key=secret
+s3SecretKey: secret
 ```
 
 #### 5b. Store the SingularityS3Uploader JAR in a well-known place on each slave.

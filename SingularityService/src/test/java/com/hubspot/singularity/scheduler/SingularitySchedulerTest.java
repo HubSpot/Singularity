@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.SlaveID;
 import org.apache.mesos.Protos.TaskState;
@@ -416,7 +418,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
 
-    Assert.assertEquals("host1", taskManager.getActiveTaskIds().get(0).getHost());
+    Assert.assertEquals("host1", taskManager.getActiveTaskIds().get(0).getSanitizedHost());
 
     Assert.assertEquals(StateChangeResult.SUCCESS, slaveManager.changeState("slave1", MachineState.STARTING_DECOMMISSION, Optional.of("user1")));
 
@@ -430,7 +432,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     // task should not move!
     Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
-    Assert.assertEquals("host1", taskManager.getActiveTaskIds().get(0).getHost());
+    Assert.assertEquals("host1", taskManager.getActiveTaskIds().get(0).getSanitizedHost());
     Assert.assertTrue(taskManager.getKilledTaskIdRecords().isEmpty());
     Assert.assertTrue(taskManager.getCleanupTaskIds().size() == 1);
   }
@@ -633,6 +635,13 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(taskManager.getPendingTaskIds().size() == 1);
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 1);
 
+    eventListener.taskHistoryUpdateEvent(new SingularityTaskHistoryUpdate(taskManager.getActiveTaskIds().get(0), System.currentTimeMillis(), ExtendedTaskState.TASK_CLEANING, Optional.<String>absent()));
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1")));
+
+    Assert.assertTrue(taskManager.getPendingTaskIds().size() == 1);
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 1);
+
     sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave2", "host2")));
 
     Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
@@ -658,6 +667,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave2", "host2")));
 
+    eventListener.taskHistoryUpdateEvent(new SingularityTaskHistoryUpdate(taskManager.getActiveTaskIds().get(0), System.currentTimeMillis(), ExtendedTaskState.TASK_CLEANING, Optional.<String>absent()));
+
     Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 3);
   }
@@ -670,6 +681,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     saveAndSchedule(request.toBuilder().setInstances(Optional.of(3)).setSlavePlacement(Optional.of(SlavePlacement.OPTIMISTIC)));
 
     sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1"), createOffer(20, 20000, "slave2", "host2")));
+
+    eventListener.taskHistoryUpdateEvent(new SingularityTaskHistoryUpdate(taskManager.getActiveTaskIds().get(0), System.currentTimeMillis(), ExtendedTaskState.TASK_CLEANING, Optional.<String>absent()));
 
     Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 3);

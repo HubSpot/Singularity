@@ -47,5 +47,4 @@ public class StateResource {
   public List<String> getOverProvisionedRequestIds(@QueryParam("skipCache") boolean skipCache) {
     return stateManager.getState(skipCache, true).getOverProvisionedRequestIds();
   }
-
 }

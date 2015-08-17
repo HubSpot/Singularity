@@ -14,17 +14,18 @@ import com.hubspot.mesos.MesosUtils;
 public class SingularityTask extends SingularityTaskIdHolder {
 
   private final SingularityTaskRequest taskRequest;
-  private final SingularityTaskId taskId;
   private final Offer offer;
   private final TaskInfo mesosTask;
+  private final Optional<String> rackId;
 
   @JsonCreator
-  public SingularityTask(@JsonProperty("taskRequest") SingularityTaskRequest taskRequest, @JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("offer") Offer offer, @JsonProperty("mesosTask") TaskInfo task) {
+  public SingularityTask(@JsonProperty("taskRequest") SingularityTaskRequest taskRequest, @JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("offer") Offer offer,
+      @JsonProperty("mesosTask") TaskInfo task, @JsonProperty("rackId") Optional<String> rackId) {
     super(taskId);
     this.taskRequest = taskRequest;
     this.offer = offer;
     this.mesosTask = task;
-    this.taskId = taskId;
+    this.rackId = rackId;
   }
 
   public SingularityTaskRequest getTaskRequest() {
@@ -37,6 +38,10 @@ public class SingularityTask extends SingularityTaskIdHolder {
 
   public TaskInfo getMesosTask() {
     return mesosTask;
+  }
+
+  public Optional<String> getRackId() {
+    return rackId;
   }
 
   @JsonIgnore
@@ -54,7 +59,7 @@ public class SingularityTask extends SingularityTaskIdHolder {
 
   @Override
   public String toString() {
-    return "SingularityTask [taskRequest=" + taskRequest + ", taskId=" + taskId + ", offer=" + offer + ", task=" + mesosTask + "]";
+    return "SingularityTask [taskRequest=" + taskRequest + ", offer=" + offer + ", mesosTask=" + mesosTask + ", rackId=" + rackId + "]";
   }
 
 }

@@ -8,3 +8,5 @@ script: mvn -B -fae verify
 
 git:
   depth: 100
+
+sudo: false

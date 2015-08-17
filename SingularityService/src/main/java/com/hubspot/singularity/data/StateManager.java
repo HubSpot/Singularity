@@ -30,6 +30,7 @@ import com.hubspot.singularity.SingularityScheduledTasksInfo;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 
@@ -39,7 +40,7 @@ public class StateManager extends CuratorManager {
   private static final Logger LOG = LoggerFactory.getLogger(StateManager.class);
 
   private static final String ROOT_PATH = "/hosts";
-  private static final String STATE_PATH = "STATE";
+  private static final String STATE_PATH = "/STATE";
 
   private final RequestManager requestManager;
   private final TaskManager taskManager;
@@ -49,10 +50,11 @@ public class StateManager extends CuratorManager {
   private final Transcoder<SingularityState> stateTranscoder;
   private final Transcoder<SingularityHostState> hostStateTranscoder;
   private final SingularityConfiguration singularityConfiguration;
+  private final SingularityAuthDatastore authDatastore;
 
   @Inject
   public StateManager(CuratorFramework curatorFramework, RequestManager requestManager, TaskManager taskManager, DeployManager deployManager, SlaveManager slaveManager, RackManager rackManager,
-      Transcoder<SingularityState> stateTranscoder, Transcoder<SingularityHostState> hostStateTranscoder, SingularityConfiguration singularityConfiguration) {
+      Transcoder<SingularityState> stateTranscoder, Transcoder<SingularityHostState> hostStateTranscoder, SingularityConfiguration singularityConfiguration, SingularityAuthDatastore authDatastore) {
     super(curatorFramework);
 
     this.requestManager = requestManager;
@@ -63,6 +65,7 @@ public class StateManager extends CuratorManager {
     this.rackManager = rackManager;
     this.deployManager = deployManager;
     this.singularityConfiguration = singularityConfiguration;
+    this.authDatastore = authDatastore;
   }
 
   public void save(SingularityHostState hostState) throws InterruptedException {
@@ -234,6 +237,9 @@ public class StateManager extends CuratorManager {
         case DECOMMISSIONING:
           decommissioningRacks++;
           break;
+        default:
+          unknownRacks++;
+          break;
       }
     }
 
@@ -260,6 +266,9 @@ public class StateManager extends CuratorManager {
         case DECOMMISSIONING:
           decommissioningSlaves++;
           break;
+        default:
+          unknownSlaves++;
+          break;
       }
     }
 
@@ -277,10 +286,12 @@ public class StateManager extends CuratorManager {
       numDeploys++;
     }
 
+    final Optional<Boolean> authDatastoreHealthy = authDatastore.isHealthy();
+
     return new SingularityState(activeTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, cleaningRequests, activeSlaves,
         deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, scheduledTasksInfo.getNumLateTasks(),
         scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
-            includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves);
+            includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy);
   }
 
 }

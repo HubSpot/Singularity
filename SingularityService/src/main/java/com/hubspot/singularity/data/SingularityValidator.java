@@ -8,6 +8,8 @@ import java.util.UUID;
 
 import javax.inject.Singleton;
 
+import com.hubspot.mesos.SingularityContainerType;
+import com.hubspot.mesos.SingularityDockerNetworkType;
 import org.apache.mesos.Protos;
 import org.quartz.CronExpression;
 
@@ -24,12 +26,12 @@ import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
 
 @Singleton
 public class SingularityValidator {
-
   private static final Joiner JOINER = Joiner.on(" ");
 
   private final int maxDeployIdSize;
@@ -48,7 +50,7 @@ public class SingularityValidator {
   private final Resources defaultResources;
 
   @Inject
-  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper) {
+  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, RequestManager requestManager) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
@@ -67,6 +69,12 @@ public class SingularityValidator {
     this.maxMemoryMbPerRequest = configuration.getMesosConfiguration().getMaxMemoryMbPerRequest();
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
   }
+
+
+
+
+
+
 
   private void checkForIllegalChanges(SingularityRequest request, SingularityRequest existingRequest) {
     checkBadRequest(request.getRequestType() == existingRequest.getRequestType(), String.format("Request can not change requestType from %s to %s", existingRequest.getRequestType(), request.getRequestType()));
@@ -92,7 +100,8 @@ public class SingularityValidator {
   }
 
   public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityDeploy> activeDeploy,
-      Optional<SingularityDeploy> pendingDeploy) {
+      Optional<SingularityDeploy> pendingDeploy, Optional<SingularityUser> user) {
+
     checkBadRequest(request.getId() != null && !request.getId().contains("/"), "Id can not be null or contain / characters");
 
     if (!allowRequestsWithoutOwners) {
@@ -160,7 +169,7 @@ public class SingularityValidator {
     return request.toBuilder().setQuartzSchedule(Optional.fromNullable(quartzSchedule)).build();
   }
 
-  public SingularityDeploy checkDeploy(SingularityRequest request, SingularityDeploy deploy) {
+  public SingularityDeploy checkDeploy(SingularityRequest request, SingularityDeploy deploy, Optional<SingularityUser> user) {
     checkNotNull(request, "request is null");
     checkNotNull(deploy, "deploy is null");
 
@@ -191,7 +200,7 @@ public class SingularityValidator {
 
     checkBadRequest(!deploy.getContainerInfo().isPresent() || deploy.getContainerInfo().get().getType() != null, "Container type must not be null");
 
-    if (deploy.getContainerInfo().isPresent() && deploy.getContainerInfo().get().getType() == Protos.ContainerInfo.Type.DOCKER) {
+    if (deploy.getContainerInfo().isPresent() && deploy.getContainerInfo().get().getType() == SingularityContainerType.DOCKER) {
       checkDocker(deploy);
     }
 
@@ -212,7 +221,7 @@ public class SingularityValidator {
       final int numPorts = deploy.getResources().get().getNumPorts();
 
       if (!dockerInfo.getPortMappings().isEmpty()) {
-        checkBadRequest(dockerInfo.getNetwork().or(Protos.ContainerInfo.DockerInfo.Network.HOST) == Protos.ContainerInfo.DockerInfo.Network.BRIDGE,
+        checkBadRequest(dockerInfo.getNetwork().or(SingularityDockerNetworkType.HOST) == SingularityDockerNetworkType.BRIDGE,
             "Docker networking type must be BRIDGE if port mappings are set");
       }
 
@@ -315,5 +324,4 @@ public class SingularityValidator {
       return false;
     }
   }
-
 }

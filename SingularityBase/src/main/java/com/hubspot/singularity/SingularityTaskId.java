@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
@@ -22,8 +23,8 @@ public class SingularityTaskId extends SingularityId implements SingularityHisto
   private final String deployId;
   private final long startedAt;
   private final int instanceNo;
-  private final String host;
-  private final String rackId;
+  private final String sanitizedHost;
+  private final String sanitizedRackId;
 
   public static Predicate<SingularityTaskId> matchingRequest(final String requestId) {
     return new Predicate<SingularityTaskId>() {
@@ -77,26 +78,56 @@ public class SingularityTaskId extends SingularityId implements SingularityHisto
     return Lists.newArrayList(Iterables.filter(taskIds, Predicates.and(matchingRequest(requestId), notIn(exclude))));
   }
 
-  @JsonCreator
-  public SingularityTaskId(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("nextRunAt") long startedAt, @JsonProperty("instanceNo") int instanceNo, @JsonProperty("host") String host, @JsonProperty("rackId") String rackId) {
+  public SingularityTaskId(String requestId, String deployId, long startedAt, int instanceNo, String sanitizedHost, String sanitizedRackId) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.startedAt = startedAt;
     this.instanceNo = instanceNo;
-    this.rackId = rackId;
-    this.host = host;
+    this.sanitizedHost = sanitizedHost;
+    this.sanitizedRackId = sanitizedRackId;
   }
 
+  @JsonCreator
+  public SingularityTaskId(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("nextRunAt") Long nextRunAt, @JsonProperty("startedAt") Long startedAt,
+      @JsonProperty("instanceNo") int instanceNo, @JsonProperty("host") String host, @JsonProperty("sanitizedHost") String sanitizedHost,
+      @JsonProperty("sanitizedRackId") String sanitizedRackId, @JsonProperty("rackId") String rackId) {
+    this(requestId, deployId, Objects.firstNonNull(startedAt, nextRunAt), instanceNo, Objects.firstNonNull(sanitizedHost, host), Objects.firstNonNull(sanitizedRackId, rackId));
+  }
+
+  /**
+   * @Deprecated use getSanitizedRackId() or matchesOriginalRackId() instead
+   */
   public String getRackId() {
-    return rackId;
+    return getSanitizedRackId();
+  }
+
+  public String getSanitizedRackId() {
+    return sanitizedRackId;
+  }
+
+  @JsonIgnore
+  public boolean matchesOriginalRackId(String unsanitizedRackId) {
+    return sanitizedRackId.equals(JavaUtils.getReplaceHyphensWithUnderscores(unsanitizedRackId));
   }
 
   public String getDeployId() {
     return deployId;
   }
 
+  /**
+   * @Deprecated use getSanitizedHost() or matchesOriginalHost() instead
+   */
   public String getHost() {
-    return host;
+    return getSanitizedHost();
+  }
+
+  public String getSanitizedHost() {
+    return sanitizedHost;
+  }
+
+  @JsonIgnore
+  public boolean matchesOriginalHost(String unsanitizedHost) {
+    return sanitizedHost.equals(JavaUtils.getReplaceHyphensWithUnderscores(unsanitizedHost));
   }
 
   public String getRequestId() {
@@ -142,7 +173,7 @@ public class SingularityTaskId extends SingularityId implements SingularityHisto
 
   @Override
   public String getId() {
-    return String.format("%s-%s-%s-%s-%s-%s", getRequestId(), getDeployId(), getStartedAt(), getInstanceNo(), getHost(), getRackId());
+    return String.format("%s-%s-%s-%s-%s-%s", getRequestId(), getDeployId(), getStartedAt(), getInstanceNo(), getSanitizedHost(), getSanitizedRackId());
   }
 
   @Override

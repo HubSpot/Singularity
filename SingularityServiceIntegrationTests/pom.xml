@@ -56,6 +56,12 @@
           <name>env.DOCKER_HOST</name>
         </property>
       </activation>
+      <properties>
+        <mesos.slave1.hostname>singularity-test-slave1</mesos.slave1.hostname>
+        <mesos.slave2.hostname>singularity-test-slave2</mesos.slave2.hostname>
+        <mesos.slave3.hostname>singularity-test-slave3</mesos.slave3.hostname>
+        <mesos.master.hostname>singularity-test-master</mesos.master.hostname>
+      </properties>
       <build>
         <plugins>
           <plugin>
@@ -80,6 +86,9 @@
                      Maven, you little sneaky beast ... -->
                 <zk.port>${zk.port}</zk.port>
                 <mesos.master.port>${mesos.master.port}</mesos.master.port>
+                <mesos.slave1.port>${mesos.slave.1.port}</mesos.slave1.port>
+                <mesos.slave2.port>${mesos.slave.2.port}</mesos.slave2.port>
+                <mesos.slave3.port>${mesos.slave.3.port}</mesos.slave3.port>
                 <singularity.port>${singularity.port}</singularity.port>
               </systemPropertyVariables>
             </configuration>
@@ -93,6 +102,7 @@
                   <name>bobrik/zookeeper</name>
                   <alias>singularity-test-zk</alias>
                   <run>
+                    <namingStrategy>alias</namingStrategy>
                     <ports>
                       <port>zk.port:2181</port>
                     </ports>
@@ -106,6 +116,7 @@
                   <name>mesosphere/mesos-master:${mesos.docker.tag}</name>
                   <alias>singularity-test-master</alias>
                   <run>
+                    <namingStrategy>alias</namingStrategy>
                     <links>
                       <link>singularity-test-zk</link>
                     </links>
@@ -117,7 +128,7 @@
                       <MESOS_QUORUM>1</MESOS_QUORUM>
                       <MESOS_CLUSTER>singularity-integration-test</MESOS_CLUSTER>
                       <MESOS_WORK_DIR>/var/lib/mesos</MESOS_WORK_DIR>
-                      <MESOS_HOSTNAME>singularity-test-master</MESOS_HOSTNAME>
+                      <MESOS_HOSTNAME>${mesos.master.hostname}</MESOS_HOSTNAME>
                     </env>
                     <wait>
                       <log>Elected as the leading master</log>
@@ -126,9 +137,11 @@
                   </run>
                 </image>
                 <image>
-                  <name>mesosphere/mesos-slave:${mesos.docker.tag}</name>
+                  <name>hubspot/singularityexecutorslave:${project.version}</name>
                   <alias>singularity-test-slave1</alias>
                   <run>
+                    <namingStrategy>alias</namingStrategy>
+                    <privileged>true</privileged>
                     <links>
                       <link>singularity-test-zk</link>
                       <link>singularity-test-master</link>
@@ -139,12 +152,14 @@
                     <env>
                       <MESOS_MASTER>zk://singularity-test-zk:2181/mesos</MESOS_MASTER>
                       <MESOS_CONTAINERIZERS>docker,mesos</MESOS_CONTAINERIZERS>
-                      <MESOS_HOSTNAME>singularity-test-slave1</MESOS_HOSTNAME>
+                      <MESOS_HOSTNAME>${mesos.slave1.hostname}</MESOS_HOSTNAME>
+                      <MESOS_PORT>5051</MESOS_PORT>
                     </env>
                     <volumes>
                       <bind>
                         <volume>/sys/fs/cgroup:/sys/fs/cgroup</volume>
-                        <volume>/usr/local/bin/docker:/usr/bin/docker</volume>
+                        <volume>/usr/bin/docker:/usr/bin/docker</volume>
+                        <volume>/usr/local/bin/docker:/usr/local/bin/docker</volume>
                         <volume>/var/run/docker.sock:/var/run/docker.sock</volume>
                       </bind>
                     </volumes>
@@ -155,25 +170,29 @@
                   </run>
                 </image>
                 <image>
-                  <name>mesosphere/mesos-slave:${mesos.docker.tag}</name>
+                  <name>hubspot/singularityexecutorslave:${project.version}</name>
                   <alias>singularity-test-slave2</alias>
                   <run>
+                    <namingStrategy>alias</namingStrategy>
+                    <privileged>true</privileged>
                     <links>
                       <link>singularity-test-zk</link>
                       <link>singularity-test-master</link>
                     </links>
                     <ports>
-                      <port>mesos.slave2.port:5051</port>
+                      <port>mesos.slave2.port:5052</port>
                     </ports>
                     <env>
                       <MESOS_MASTER>zk://singularity-test-zk:2181/mesos</MESOS_MASTER>
                       <MESOS_CONTAINERIZERS>docker,mesos</MESOS_CONTAINERIZERS>
-                      <MESOS_HOSTNAME>singularity-test-slave2</MESOS_HOSTNAME>
+                      <MESOS_HOSTNAME>${mesos.slave2.hostname}</MESOS_HOSTNAME>
+                      <MESOS_PORT>5052</MESOS_PORT>
                     </env>
                     <volumes>
                       <bind>
                         <volume>/sys/fs/cgroup:/sys/fs/cgroup</volume>
-                        <volume>/usr/local/bin/docker:/usr/bin/docker</volume>
+                        <volume>/usr/bin/docker:/usr/bin/docker</volume>
+                        <volume>/usr/local/bin/docker:/usr/local/bin/docker</volume>
                         <volume>/var/run/docker.sock:/var/run/docker.sock</volume>
                       </bind>
                     </volumes>
@@ -184,31 +203,35 @@
                   </run>
                 </image>
                 <image>
-                  <name>mesosphere/mesos-slave:${mesos.docker.tag}</name>
+                  <name>hubspot/singularityexecutorslave:${project.version}</name>
                   <alias>singularity-test-slave3</alias>
                   <run>
+                    <namingStrategy>alias</namingStrategy>
+                    <privileged>true</privileged>
                     <links>
                       <link>singularity-test-zk</link>
                       <link>singularity-test-master</link>
                     </links>
                     <ports>
-                      <port>mesos.slave3.port:5051</port>
+                      <port>mesos.slave3.port:5053</port>
                     </ports>
                     <env>
                       <MESOS_MASTER>zk://singularity-test-zk:2181/mesos</MESOS_MASTER>
                       <MESOS_CONTAINERIZERS>docker,mesos</MESOS_CONTAINERIZERS>
-                      <MESOS_HOSTNAME>singularity-test-slave3</MESOS_HOSTNAME>
+                      <MESOS_HOSTNAME>${mesos.slave3.hostname}</MESOS_HOSTNAME>
+                      <MESOS_PORT>5053</MESOS_PORT>
                     </env>
                     <volumes>
                       <bind>
                         <volume>/sys/fs/cgroup:/sys/fs/cgroup</volume>
-                        <volume>/usr/local/bin/docker:/usr/bin/docker</volume>
+                        <volume>/usr/bin/docker:/usr/bin/docker</volume>
+                        <volume>/usr/local/bin/docker:/usr/local/bin/docker</volume>
                         <volume>/var/run/docker.sock:/var/run/docker.sock</volume>
                       </bind>
                     </volumes>
                     <wait>
                       <log>Registered with master</log>
-                      <time>10000</time>
+                      <time>15000</time>
                     </wait>
                   </run>
                 </image>
@@ -216,6 +239,7 @@
                   <name>hubspot/singularityservice:${project.version}</name>
                   <alias>singularity-service</alias>
                   <run>
+                    <namingStrategy>alias</namingStrategy>
                     <links>
                       <link>singularity-test-zk</link>
                       <link>singularity-test-master</link>
