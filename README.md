@@ -15,7 +15,7 @@ For a more thorough explanation of the concepts behind Singularity and Mesos cli
  - [Native Docker Support](Docs/containers.md)
  - [JSON REST API and Java Client](Docs/reference/api.md)
  - [Fully featured web application (replaces and improves Mesos Master UI)](Docs/ui.md)
- - Rich load balancer integration with Baragon
+ - Rich load balancer integration with [Baragon](https://github.com/HubSpot/Baragon)
  - Deployments, automatic rollbacks, and healthchecks
  - [Webhooks for third party integrations](Docs/webhooks.md)
  - Configurable email alerts to service owners
@@ -42,7 +42,7 @@ Then simply run `docker-compose up` to start containers for...
 - Singularity UI => http://localhost:7099/singularity
 - Baragon UI => http://localhost:8080/baragon/v2/ui
 
-*if using [boot2docker](http://boot2docker.io/) replace localhost with your `boot2docker ip`*
+*if using [boot2docker](http://boot2docker.io/) or another vm, replace localhost with the ip of your vm*
 
 ----------
 
@@ -59,14 +59,13 @@ Then simply run `docker-compose up` to start containers for...
 - [singularity-users@googlegroups.com](mailto:singularity-users@googlegroups.com) // [singularity-users](https://groups.google.com/forum/#!topic/singularity-users/)
 - \#singularity-framework on freenode
 
-### Install ###
-
-- [Installation Instructions](Docs/install.md)
-- [Local Testing with Vagrant](Docs/vagrant.md)
-
 ----------
 
 ## Reference ##
+
+#### Install ####
+
+ - [Installation Instructions](Docs/install.md)
 
 #### Deployment ####
 
@@ -77,7 +76,7 @@ Then simply run `docker-compose up` to start containers for...
 
 #### Development ####
 
-- [Local Development with Vagrant](Docs/development/vagrant.md)
+- [Local Development with Docker](Docs/development/docker.md)
 - [Hacking on the UI](Docs/development/ui.md)
 - [Understanding the basepom / Maven structure](Docs/development/basepom.md)
 - [Third-party load balancer API design requirements](Docs/development/lbs.md)
