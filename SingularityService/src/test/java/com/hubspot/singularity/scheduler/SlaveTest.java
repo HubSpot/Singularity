@@ -26,6 +26,10 @@ public class SlaveTest extends SingularityCuratorTestBase {
   @Inject
   protected SingularityDeadSlavePoller deadSlavePoller;
 
+  public SlaveTest() {
+    super(false);
+  }
+
   @Test
   public void testDeadSlavesArePurged() {
     SingularitySlave liveSlave = new SingularitySlave("1", "h1", "r1");

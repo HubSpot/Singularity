@@ -38,6 +38,7 @@ import com.google.inject.name.Names;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
+import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.S3Configuration;
 import com.hubspot.singularity.config.S3GroupOverrideConfiguration;
@@ -249,6 +250,12 @@ public class SingularityMainModule implements Module {
   @Singleton
   public Optional<S3Configuration> s3Configuration(final SingularityConfiguration config) {
     return config.getS3Configuration();
+  }
+
+  @Provides
+  @Singleton
+  public HistoryPurgingConfiguration historyPurgingConfiguration(final SingularityConfiguration config) {
+    return config.getHistoryPurgingConfiguration();
   }
 
   private JadeTemplate getJadeTemplate(String name) throws IOException {

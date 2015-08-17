@@ -117,6 +117,10 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxRequestIdSize = 100;
 
+  @JsonProperty("historyPurging")
+  @Valid
+  private HistoryPurgingConfiguration historyPurgingConfiguration = new HistoryPurgingConfiguration();
+
   @JsonProperty("mesos")
   @Valid
   private MesosConfiguration mesosConfiguration;
@@ -740,6 +744,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setAuthConfiguration(AuthConfiguration authConfiguration) {
     this.authConfiguration = authConfiguration;
+  }
+
+  public HistoryPurgingConfiguration getHistoryPurgingConfiguration() {
+    return historyPurgingConfiguration;
+  }
+
+  public void setHistoryPurgingConfiguration(HistoryPurgingConfiguration historyPurgingConfiguration) {
+    this.historyPurgingConfiguration = historyPurgingConfiguration;
   }
 
 }
