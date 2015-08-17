@@ -10,11 +10,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.Sets;
 
 public class SimpleProcessManager extends SafeProcessManager {
 
@@ -49,11 +49,15 @@ public class SimpleProcessManager extends SafeProcessManager {
 
     Optional<OutputReader> reader = Optional.absent();
 
+    String processToString = getCurrentProcessToString();
+
     try {
       processBuilder.redirectError(Redirect.INHERIT);
       processBuilder.redirectOutput(redirectOutput);
 
       final Process process = startProcess(processBuilder);
+
+      processToString = getCurrentProcessToString();
 
       if (redirectOutput == Redirect.PIPE) {
         reader = Optional.of(new OutputReader(process.getInputStream()));
@@ -75,7 +79,7 @@ public class SimpleProcessManager extends SafeProcessManager {
 
       throw ie;
     } catch (Throwable t) {
-      getLog().error("Unexpected exception while running {}", getCurrentProcessToString(), t);
+      getLog().error("Unexpected exception while running {}", processToString, t);
 
       signalKillToProcessIfActive();
 
@@ -85,7 +89,7 @@ public class SimpleProcessManager extends SafeProcessManager {
     }
 
     if (exitCode.isPresent() && !acceptableExitCodes.contains(exitCode.get())) {
-      throw new ProcessFailedException(String.format("Got unacceptable exit code %s while running %s", exitCode, getCurrentProcessToString()));
+      throw new ProcessFailedException(String.format("Got unacceptable exit code %s while running %s", exitCode, processToString));
     }
 
     if (!reader.isPresent()) {

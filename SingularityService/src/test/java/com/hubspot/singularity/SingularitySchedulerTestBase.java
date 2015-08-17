@@ -41,6 +41,7 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.zkmigrations.ZkDataMigrationRunner;
+import com.hubspot.singularity.event.SingularityEventListener;
 import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.resources.DeployResource;
@@ -110,6 +111,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityScheduledJobPoller scheduledJobPoller;
   @Inject
   protected ZkDataMigrationRunner migrationRunner;
+  @Inject
+  protected SingularityEventListener eventListener;
 
   @Inject
   @Named(SingularityMainModule.SERVER_ID_PROPERTY)

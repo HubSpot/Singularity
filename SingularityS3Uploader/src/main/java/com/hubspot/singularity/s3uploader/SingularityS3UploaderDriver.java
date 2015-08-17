@@ -333,7 +333,13 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     try {
       metrics.getUploaderCounter().inc();
 
-      SingularityS3Uploader uploader = new SingularityS3Uploader(defaultCredentials, metadata, fileSystem, metrics, filename, configuration);
+      Optional<AWSCredentials> bucketCreds = Optional.absent();
+
+      if (configuration.getS3BucketCredentials().containsKey(metadata.getS3Bucket())) {
+        bucketCreds = Optional.of(configuration.getS3BucketCredentials().get(metadata.getS3Bucket()).toAWSCredentials());
+      }
+
+      SingularityS3Uploader uploader = new SingularityS3Uploader(bucketCreds.or(defaultCredentials), metadata, fileSystem, metrics, filename, configuration);
 
       if (metadata.isFinished()) {
         expiring.add(uploader);

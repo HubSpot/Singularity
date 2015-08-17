@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -110,16 +111,27 @@ class SingularitySlaveAndRackManager {
     final int numDesiredInstances = taskRequest.getRequest().getInstancesSafe();
     double numOnRack = 0;
     double numOnSlave = 0;
+    double numCleaningOnSlave = 0;
+    double numOtherDeploysOnSlave = 0;
 
     final String sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(host);
     final String sanitizedRackId = JavaUtils.getReplaceHyphensWithUnderscores(rackId);
+    Collection<SingularityTaskId> cleaningTasks = stateCache.getCleaningTasks();
 
-    for (SingularityTaskId taskId : SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), taskRequest.getRequest().getId(), taskRequest.getDeploy().getId(), stateCache.getCleaningTasks())) {
+    for (SingularityTaskId taskId : SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), taskRequest.getRequest().getId(), Collections.<SingularityTaskId>emptyList())) {
       // TODO consider using executorIds
       if (taskId.getSanitizedHost().equals(sanitizedHost)) {
-        numOnSlave++;
+        if (taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
+          if (cleaningTasks.contains(taskId)) {
+            numCleaningOnSlave++;
+          } else {
+            numOnSlave++;
+          }
+        } else {
+          numOtherDeploysOnSlave++;
+        }
       }
-      if (taskId.getSanitizedRackId().equals(sanitizedRackId)) {
+      if (taskId.getSanitizedRackId().equals(sanitizedRackId) && !cleaningTasks.contains(taskId) && taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
         numOnRack++;
       }
     }
@@ -130,15 +142,22 @@ class SingularitySlaveAndRackManager {
       final boolean isRackOk = numOnRack < numPerRack;
 
       if (!isRackOk) {
-        LOG.trace("Rejecting RackSensitive task {} from slave {} ({}) due to numOnRack {}", taskRequest.getRequest().getId(), slaveId, host, numOnRack);
+        LOG.trace("Rejecting RackSensitive task {} from slave {} ({}) due to numOnRack {} and cleaningOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnRack, numCleaningOnSlave);
         return SlaveMatchState.RACK_SATURATED;
       }
     }
 
     switch (slavePlacement) {
       case SEPARATE:
-        if (numOnSlave > 0) {
-          LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave);
+      case SEPARATE_BY_DEPLOY:
+        if (numOnSlave > 0 || numCleaningOnSlave > 0) {
+          LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {} numCleaningOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave);
+          return SlaveMatchState.SLAVE_SATURATED;
+        }
+        break;
+      case SEPARATE_BY_REQUEST:
+        if (numOnSlave > 0 || numCleaningOnSlave > 0 || numOtherDeploysOnSlave > 0) {
+          LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {} numCleaningOnSlave {} numOtherDeploysOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave, numOtherDeploysOnSlave);
           return SlaveMatchState.SLAVE_SATURATED;
         }
         break;

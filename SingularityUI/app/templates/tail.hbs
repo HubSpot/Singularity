@@ -38,10 +38,16 @@
     <div class="tail-fetching-start">
         fetching more lines <div class="page-loader small"></div>
     </div>
-    <div class="lines-wrapper"></div>
-
+    <div class="lines-wrapper">
+        {{#if ajaxError.present}}
+        <div class="lines-wrapper">
+            <div class="empty-table-message">
+                <p>{{ajaxError.message}}</p>
+            </div>
+        </div>
+        {{/if}}
+    </div>
     <div class="tail-fetching-end">
         fetching more lines <div class="page-loader small"></div>
     </div>
 </div>
-
