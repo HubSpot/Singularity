@@ -4,7 +4,7 @@ These examples assume you have [installed singularity](../install.md).
 
 The services deployed will be a [build](https://github.com/micktwomey/docker-sample-dropwizard-service) of the [Dropwizard getting started example](https://dropwizard.github.io/dropwizard/getting-started.html) and a [simple python service](https://github.com/micktwomey/docker-sample-web-service).
 
-*For this walkthrough we will assume you are using the [docker-compose example cluster](Docs/development/docker.md) and that Singularity is running at `http://192.168.59.103:7099/singularity` (default when using boot2docker). For your own case you can replace 192.168.59.103 with whatever host Singularity is running on in your setup*
+*For this walkthrough we will assume you are using the [docker-compose example cluster](../development/docker.md) and that Singularity is running at `http://192.168.59.103:7099/singularity` (default when using boot2docker). For your own case you can replace 192.168.59.103 with whatever host Singularity is running on in your setup*
 
 ## Creating the Request
 
@@ -34,7 +34,7 @@ You can POST this JSON (saved in request.json) using curl:
 
 ```sh
 curl -i -X POST -H "Content-Type: application/json" -d@request.json \
-http://$SINGULARITY_HOST/singularity/api/requests
+http://192.168.59.103:7099/singularity/api/requests
 ```
 
 ## Basic Service Using the Mesos Executor

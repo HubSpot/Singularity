@@ -22,8 +22,6 @@ Then simply run `docker-compose up` to start containers for...
 
 ## Developing With Docker
 
-For developing with Docker, you will need to install [docker](https://docs.docker.com/installation/) and [docker-compose](https://docs.docker.com/compose/#installation-and-set-up).
-
 ### `dev`
 
 In the root of this project is a `dev` wrapper script to make developing easier. You can do the following:
