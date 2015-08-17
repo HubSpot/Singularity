@@ -237,11 +237,12 @@ public class SingularityRequestBuilder {
             Objects.equals(rackSensitive, that.rackSensitive) &&
             Objects.equals(rackAffinity, that.rackAffinity) &&
             Objects.equals(slavePlacement, that.slavePlacement) &&
-            Objects.equals(loadBalanced, that.loadBalanced);
+            Objects.equals(loadBalanced, that.loadBalanced) &&
+            Objects.equals(group, that.group);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, loadBalanced);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, loadBalanced, group);
   }
 }

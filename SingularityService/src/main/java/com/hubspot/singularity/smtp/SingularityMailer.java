@@ -1,7 +1,5 @@
 package com.hubspot.singularity.smtp;
 
-import io.dropwizard.lifecycle.Managed;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -41,6 +39,7 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 import de.neuland.jade4j.Jade4J;
 import de.neuland.jade4j.template.JadeTemplate;
+import io.dropwizard.lifecycle.Managed;
 
 public class SingularityMailer implements Managed {
 

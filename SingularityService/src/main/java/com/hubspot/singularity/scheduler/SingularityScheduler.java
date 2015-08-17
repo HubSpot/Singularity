@@ -138,10 +138,12 @@ public class SingularityScheduler {
     final Map<SingularityRack, MachineState> racks = getDefaultMap(rackManager.getObjectsFiltered(MachineState.STARTING_DECOMMISSION));
 
     for (SingularityRack rack : racks.keySet()) {
+      final String sanitizedRackId = JavaUtils.getReplaceHyphensWithUnderscores(rack.getId());
+
       boolean foundTask = false;
 
       for (SingularityTaskId activeTaskId : activeTaskIds) {
-        if (rack.getId().equals(activeTaskId.getRackId())) {
+        if (sanitizedRackId.equals(activeTaskId.getSanitizedRackId())) {
           foundTask = true;
         }
 
@@ -149,7 +151,7 @@ public class SingularityScheduler {
           continue;
         }
 
-        if (rack.getId().equals(activeTaskId.getRackId())) {
+        if (sanitizedRackId.equals(activeTaskId.getSanitizedRackId())) {
           Optional<SingularityTask> maybeTask = taskManager.getTask(activeTaskId);
           cleanupTaskDueToDecomission(requestIdsToReschedule, matchingTaskIds, maybeTask.get(), rack);
         }

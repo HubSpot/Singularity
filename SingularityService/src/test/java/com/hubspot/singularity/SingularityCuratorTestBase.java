@@ -23,12 +23,18 @@ public class SingularityCuratorTestBase {
 
   private SingularityTestModule singularityTestModule;
 
+  private final boolean useDBTests;
+
   @Before
   public final void curatorSetup() throws Exception {
-    singularityTestModule = new SingularityTestModule();
+    singularityTestModule = new SingularityTestModule(useDBTests);
 
     singularityTestModule.getInjector().injectMembers(this);
     singularityTestModule.start();
+  }
+
+  public SingularityCuratorTestBase(boolean useDBTests) {
+    this.useDBTests = useDBTests;
   }
 
   @After

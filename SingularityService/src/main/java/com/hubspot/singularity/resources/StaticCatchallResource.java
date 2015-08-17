@@ -1,5 +1,7 @@
 package com.hubspot.singularity.resources;
 
+import static com.hubspot.singularity.SingularityMainModule.SINGULARITY_URI_BASE;
+
 import javax.inject.Singleton;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -10,8 +12,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.views.IndexView;
-
-import static com.hubspot.singularity.SingularityMainModule.SINGULARITY_URI_BASE;
 
 @Singleton
 @Path("/{uiPath:.*}")

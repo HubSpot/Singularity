@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.slf4j.Logger;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -22,8 +24,6 @@ import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.runner.base.shared.TailMetadata;
-
-import org.slf4j.Logger;
 
 public class SingularityExecutorTaskLogManager {
 
