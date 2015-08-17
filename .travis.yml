@@ -4,7 +4,7 @@ jdk:
   - openjdk7
   - oraclejdk8
 install: mvn -Pbuild-swagger-documentation -DskipTests=true -B -fae install
-script: mvn -B -fae verify
+script: mvn -Dbasepom.check.skip-findbugs=true -B -fae verify
 
 git:
   depth: 100
