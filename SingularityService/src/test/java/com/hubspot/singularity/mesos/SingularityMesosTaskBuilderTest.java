@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.hubspot.mesos.SingularityContainerType;
 import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerVolumeMode;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.ContainerInfo.Type;
 import org.apache.mesos.Protos.FrameworkID;
@@ -61,7 +62,7 @@ public class SingularityMesosTaskBuilderTest {
 
     when(idGenerator.getNextExecutorId()).then(new CreateFakeId());
 
-    builder = new SingularityMesosTaskBuilder(new ObjectMapper(), slaveAndRackHelper, idGenerator);
+    builder = new SingularityMesosTaskBuilder(new ObjectMapper(), slaveAndRackHelper, idGenerator, new SingularityConfiguration());
 
     taskResources = new Resources(1, 1, 0);
     executorResources = new Resources(0.1, 1, 0);
