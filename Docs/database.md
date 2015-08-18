@@ -39,3 +39,16 @@ INFO  [2013-12-23 18:42:10,327] liquibase: ChangeSet migrations.sql::1::tpetr ra
 ```
 
 More information about `db` tasks can be found in the dropwizard-migrations [docs](http://dropwizard.io/manual/migrations), and more information about the migration file syntax can be found in the liquibase [docs](http://www.liquibase.org/documentation/yaml_format.html).
+
+### Purging Old Tasks
+
+You can optionally purge old task data from the db by specifying `historyPurging` configuration. In the configuration for SingularityService, you can have a section similar to the following (default values shown):
+
+```
+historyPurging:
+  deleteTaskHistoryAfterDays: 365                  # purge tasks older than this
+  deleteTaskHistoryAfterTasksPerRequest: 1000      # How many tasks for one request before we starting purging
+  deleteTaskHistoryBytesInsteadOfEntireRow: true   # Keep the row, just delete data to save space
+  checkTaskHistoryEveryHours: 24                   # how often to check for tasks to purge
+  enabled: false                                   # determines if we should run the purge
+```
