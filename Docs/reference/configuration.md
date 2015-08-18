@@ -225,12 +225,12 @@ These settings live under the "smtp" field in teh root config.
 | port | 25 | Port for smtp session | int |
 | from | "singularity-no-reply@example.com" | Send emails form this address | String |
 | mailMaxThreads | 3 | max threads for email sending process | int |
-| admins | [] | List of admin user emails | List<String\> |
+| admins | [] | List of admin user emails | List\<String\> |
 | rateLimitAfterNotifications | 5 | Rate limit email sending after this many notifications have been sent in `rateLimitPeriodMillis` | int |
 | rateLimitPeriodMillis | 60000 (10 mins) | time period for `rateLimitAfterNotifications` | long |
 | rateLimitCooldownMillis | 3600000 (1 hour) | Cooldown time before rate limiting is removed | long |
 | taskEmailTailFiles | [stdout, stderr] | Send the tail of these files in messages about tasks | List\<String\> |
-| emails | See below | See below | Map<EmailType, List<EmailDestination\>\> |
+| emails | See below | See below | Map\<EmailType, List\<EmailDestination\>\> |
 
 #### Emails List ####
 
