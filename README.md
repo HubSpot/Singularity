@@ -16,7 +16,7 @@ For a more thorough explanation of the concepts behind Singularity and Mesos cli
  - [JSON REST API and Java Client](Docs/reference/api.md)
  - [Fully featured web application (replaces and improves Mesos Master UI)](Docs/ui.md)
  - Rich load balancer integration with [Baragon](https://github.com/HubSpot/Baragon)
- - [Deployments, automatic rollbacks, and healthchecks](details.md#deploys)
+ - [Deployments, automatic rollbacks, and healthchecks](Docs/details.md#deploys)
  - [Webhooks for third party integrations](Docs/webhooks.md)
  - Configurable email alerts to service owners
  - [Historical deployment and task data](Docs/database.md)
