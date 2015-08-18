@@ -2,24 +2,31 @@
 
 Singularity (Service) is configured by DropWizard via a YAML file referenced on the command line. Top-level configuration elements reside at the root of the configuration file alongside [DropWizard configuration](https://dropwizard.github.io/dropwizard/manual/configuration.html). 
 
-- [Root Configuration](#root-configuration)
-  - [Common Configuration](#common-configuration)
-    - [General](#general)
-    - [Healthchecks and New Task Checks](#healthchecks-and-new-task-checks)
-    - [Limits](#limits)
-    - [Cooldown](#cooldown)
-    - [Load Balancer API](#load-balancer-api)
-    - [User Interface](#user-interface)
-  - [Internal Scheduler Configuration](#internal-scheduler-configuration)
-    - [Pollers](#pollers)
-    - [Mesos](#mesos)
-    - [Thread Pools](#thread-pools)
-    - [Operational](#operational)
-- [Mesos Configuration](#mesos-configuration)
- - [Framework](#framework)
- - [Resource Limits](#resource-limits)
- - [Racks](#racks)
- - [Slaves](#slaves)
+- [SingularityService Configuration](#root-configuration)
+  - [Root Configuration](#root-configuration)
+    - [Common Configuration](#common-configuration)
+      - [General](#general)
+      - [Healthchecks and New Task Checks](#healthchecks-and-new-task-checks)
+      - [Limits](#limits)
+      - [Cooldown](#cooldown)
+      - [Load Balancer API](#load-balancer-api)
+      - [User Interface](#user-interface)
+    - [Internal Scheduler Configuration](#internal-scheduler-configuration)
+      - [Pollers](#pollers)
+      - [Mesos](#mesos)
+      - [Thread Pools](#thread-pools)
+      - [Operational](#operational)
+  - [Mesos Configuration](#mesos-configuration)
+    - [Framework](#framework)
+    - [Resource Limits](#resource-limits)
+    - [Racks](#racks)
+    - [Slaves](#slaves)
+  - [Database](#database)
+    - [History Purging](#history-purging)
+  - [S3](#s3)
+  - [Sentry](#sentry)
+  - [Email/SMTP](#smtp)
+  - [UI Configuration](#ui-configuration)
 
 ## Root Configuration ##
 
@@ -32,7 +39,7 @@ These are settings that are more likely to be altered.
 |-----------|---------|-------------|------|
 | allowRequestsWithoutOwners | true | If false, submitting a request without at least one owner will return a 400 | boolean |
 | commonHostnameSuffixToOmit | null | If specified, will remove this hostname suffix from all taskIds | string |
-| defaultSlavePlacement | GREEDY | The slavePlacement strategy when not specified in a request. GREEDY uses whatever slaves are available, SEPARATE_BY_DEPLOY (same as SEPARATE) ensures no 2 instances / tasks of the same request and deploy id are ever placed on the same slave, SEPARATE_BY_REQUEST ensures no two tasks belonging to the same request (regardless if deploy id) are placed on the same host, and OPTIMISTIC attempts to spread out tasks but may schedule some on the same slave | enum / string [GREEDY, OPTIMISTIC, SEPARATE (deprecated), SEPARATE_BY_DEPLOY, SEPARATE_BY_REQUEST]
+| defaultSlavePlacement | GREEDY | See [Slave Placement](../details.md#user-content-placement) | enum / string [GREEDY, OPTIMISTIC, SEPARATE (deprecated), SEPARATE_BY_DEPLOY, SEPARATE_BY_REQUEST]
 | defaultValueForKillTasksOfPausedRequests | true | When a task is paused, the API allows for the tasks of that request to optionally not be killed. If that parameter is not set in the pause request, this value is used | boolean |
 | deltaAfterWhichTasksAreLateMillis | 30000 (30 seconds) | The amount of time after a task's schedule time that Singularity will classify it (in state API and dashboard) as a late task | long | 
 | deployHealthyBySeconds | 120 | Default amount of time to allow pending deploys to run for before transitioning them into active deploys. If more than this time passes before a deploy can be considered healthy (all of its tasks either make it to TASK_RUNNING or pass healthchecks), then the deploy will be rejected | long |
@@ -88,6 +95,7 @@ These settings are less likely to be changed, but were included in the configura
 | cleanupEverySeconds | 5 | Will cleanup request, task, and other queues on this interval | long | 
 | persistHistoryEverySeconds | 3600 (1 hour) | Moves stale historical task data from ZooKeeper into MySQL, setting to 0 will disable history persistence | long |
 | saveStateEverySeconds | 60 | State about this Singularity instance is saved (available over API) on this interval | long |
+| checkScheduledJobsEveryMillis | 600000 (10 mins) | Check for new scheduled jobs and those running into the next scheduled time on this interval | long |
 
 #### Mesos ####
 | Parameter | Default | Description | Type |
@@ -115,6 +123,14 @@ These settings are less likely to be changed, but were included in the configura
 | sandboxHttpTimeoutMillis | 5000 (5 seconds) | Sandbox HTTP calls will timeout after this amount of time (fetching logs for emails / UI)
 | newTaskCheckerBaseDelaySeconds | 1 | Added to the the amount of deploy to wait before checking a new task | long | 
 | allowTestResourceCalls | false | If true, allows calls to be made to the test resource, which can test internal methods | boolean |
+| deleteDeploysFromZkWhenNoDatabaseAfterHours | 336 (14 days) | Delete deploys from zk when they are older than this if we are not using a database | long |
+| deleteStaleRequestsFromZkWhenNoDatabaseAfterHours | 336 (14 days) | Delete stale requests after this amount of time if we are not using a database | long |
+| deleteTasksFromZkWhenNoDatabaseAfterHours | 168 (7 days) | Delete old tasks from zk after this amount of time if we are not using a database | long |
+| deleteDeadSlavesAfterHours | 168 (7 days) | Remove dead slaves from the list after this amount of time | long |
+| deleteUndeliverableWebhooksAfterHours | 168 (7 days) | Delete (and stop retrying) failed webhooks after this amount of time | long |
+| waitForListeners | true | If true, the event system waits for all listeners having processed an event. | boolean |
+| warnIfScheduledJobIsRunningForAtLeastMillis | 86400000 (1 day) | Warn if a scheduled job has been running for this long | long |
+| warnIfScheduledJobIsRunningPastNextRunPct | 200 | Warn if a scheduled job has run this much past its next scheduled run time (e.g. 200 => ran through next two run times) | int |
 
 ## Mesos Configuration ##
 
@@ -153,3 +169,101 @@ These settings should live under the "mesos" field inside the root configuration
 | slaveHttpPort | 5051 | The port to talk to slaves on | int |
 | slaveHttpsPort | absent | The HTTPS port to talk to slaves on | Integer (Optional) | 
 
+## Database ##
+
+| Parameter | Default | Description | Type |
+|-----------|---------|-------------|------|
+| database | | The database connection for SingularityService follows the [dropwizard DataSourceFactory format](http://www.dropwizard.io/0.7.0/dropwizard-db/apidocs/io/dropwizard/db/DataSourceFactory.html) | [DataSourceFactory](http://www.dropwizard.io/0.7.0/dropwizard-db/apidocs/io/dropwizard/db/DataSourceFactory.html) |
+
+#### History Purging ####
+
+These settings live under the "historyPuring" field in the root configuration
+
+| Parameter | Default | Description | Type |
+|-----------|---------|-------------|------|
+| deleteTaskHistoryAfterDays | 365 | Purge tasks older than this many days | int |
+| deleteTaskHistoryAfterTasksPerRequest | 10000 | Purge oldest tasks when there are more than this many associated with a single request | int |
+| deleteTaskHistoryBytesInsteadOfEntireRow | true | Only delete the taskHistoryBytes instead of the entire record of the task (e.g. to save space)| boolean |
+| checkTaskHistoryEveryHours | 24 | Run the purge every x hours | int |
+| enabled | false | Should we run the database purge | boolean |
+
+## S3 ##
+
+These settings live under the "s3" field in the root configuration. If using the SingularityS3Uploader, this section will need to be provided in order to view lists of and download s3 logs from the SingularityUI.
+
+| Parameter | Default | Description | Type |
+|-----------|---------|-------------|------|
+| maxS3Thread | 3 | Max threads to run for fetching logs from s3 | int |
+| waitForS3ListSeconds | 5 | Timeout in seconds for fetching list of s3 logs | int |
+| waitForS3LinksSeconds | 1 | Timeout in seconds for creating new s3 links | int |
+| expireS3LinksAfterMillis | 86400000 (1 day) | Expire generated s3 log links after this amount of time | long |
+| s3Bucket | | S3 bucket to search for logs | String |
+| groupOverrides | | Extra s3 configurations provided such that individual requests may use separate s3 buckets. Each S3GroupOverrideConfiguration has a name specified by the Map key and consists of an s3Bueckt, s3AccessKey, and s3SecretKey |Map<String, S3GroupOverrideConfiguration> |
+| s3KeyFormat | | Search for logs with keys in this format, should be the same as the key format set in the SingularityS3Uploader | String |
+| s3AccessKey | | aws access key for the specified s3 bucket | String |
+| s3SecretKey | | aws secret key for the specified s3 bucket | String |
+
+## Sentry ##
+
+These settings live under the "sentry" field in the root config and enable Singularity error reporting to [sentry](https://getsentry.com/welcome/).
+
+| Parameter | Default | Description | Type |
+|-----------|---------|-------------|------|
+| dsn | | Sentry DSN (Data Source Name) | String |
+| prefix| "" | Prefix string for event culprit naming and messages | String |
+
+## SMTP ##
+
+These settings live under the "smtp" field in teh root config.
+
+| Parameter | Default | Description | Type |
+|-----------|---------|-------------|------|
+| username | | smtp username | String |
+| password | | smtp password | String |
+| taskLogLength | 512 | Send this many lines of a tasks log in emails | int |
+| host | localhost | Host for smtp session | String |
+| port | 25 | Port for smtp session | int |
+| from | "singularity-no-reply@example.com" | Send emails form this address | String |
+| mailMaxThreads | 3 | max threads for email sending process | int |
+| admins | [] | List of admin user emails | List\<String\> |
+| rateLimitAfterNotifications | 5 | Rate limit email sending after this many notifications have been sent in `rateLimitPeriodMillis` | int |
+| rateLimitPeriodMillis | 60000 (10 mins) | time period for `rateLimitAfterNotifications` | long |
+| rateLimitCooldownMillis | 3600000 (1 hour) | Cooldown time before rate limiting is removed | long |
+| taskEmailTailFiles | [stdout, stderr] | Send the tail of these files in messages about tasks | List\<String\> |
+| emails | See below | See below | Map\<EmailType, List\<EmailDestination\>\> |
+
+#### Emails List ####
+
+The emails list determines what emails to send notifications to and for what events. You can specify a map of [`EmailType`](https://github.com/HubSpot/Singularity/blob/master/SingularityService/src/main/java/com/hubspot/singularity/config/EmailConfigurationEnums.java) to a list of [`EmailDestination`s](https://github.com/HubSpot/Singularity/blob/master/SingularityService/src/main/java/com/hubspot/singularity/config/EmailConfigurationEnums.java)
+
+`EmailType` corressponds to different events that could trigger emails such as `TASK_LOST` or `TASK_FAILED`
+
+`EmailDestination` corressponds to one of `OWNERS` (as listed on the Singularity Request), `ACTION_TAKER` (user who triggered the action causing the email update), or `ADMINS` (specified in config as seen above)
+
+## UI Configuration ##
+
+These settings live under the "ui" field in the root config.
+
+| Parameter | Default | Description | Type |
+|-----------|---------|-------------|------|
+| title | "Singularity" | Title shown in the left of the menu bar in ui | String |
+| navColor | "" | Color for nav bar | String |
+| baseUrl | | Base url where the ui will be hosted (e.g. http://localhost:7099/singularity) | String |
+| runningTaskLogPath | stdout | Generate link to this log for running tasks on the request page | String |
+| finishedTaskLogPath | stdout | Generate link to this log for finished tasks on the request page | String |
+| hideNewDeployButton | false | Don't show the 'New Deploy' button | boolean |
+| hideNewRequestButton | false | Don't show the 'New Request' button | boolean |
+| rootUrlMode | INDEX_CATCHALL | `INDEX_CATCHALL`: UI is served off of / using a catchall resource. `UI_REDIRECT`: UI is served off of /ui, path and index redirects there. `DISABLED`: UI is served off of /ui and the root resource is not served at all | enum / String `INDEX_CATCHALL`, `UI_REDIRECT`, `DISABLED` |
+
+## Zookeeper ##
+
+These settings live under the "zookeeper" field in the root config.
+
+| Parameter | Default | Description | Type |
+|-----------|---------|-------------|------|
+| quorum | | Comma separated host:port list of zk hosts | String |
+| sessionTimeoutMillis | 600_000 | zookeeper session timeout | int |
+| connectTimeoutMillis | 60_000 | Connect to zookeeper timeout | int |
+| retryBaseSleepTimeMilliseconds | 1_000 | Wait time between zookeeper connection retries | int |
+| retryMaxTries | 3 | Max retries to obtain a zookeeper connection before aborting | int |
+| zkNamespace | | Path under which to store Singularity data in zk (e.g. /singularity) | String |

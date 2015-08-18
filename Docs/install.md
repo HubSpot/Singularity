@@ -6,12 +6,13 @@
 
 Singularity uses Zookeeper as its primary datastore -- it cannot run without it.
 
-Chef recipe: https://supermarket.chef.io/cookbooks/zookeeper
-Puppet module: https://forge.puppetlabs.com/deric/zookeeper
+Chef recipe: [https://supermarket.chef.io/cookbooks/zookeeper](https://supermarket.chef.io/cookbooks/zookeeper)
 
-More info on how to manually set up a Zookeeper cluster lives here: https://zookeeper.apache.org/doc/r3.3.3/zookeeperAdmin.html#sc_zkMulitServerSetup
+Puppet module: [https://forge.puppetlabs.com/deric/zookeeper](https://forge.puppetlabs.com/deric/zookeeper)
 
-For testing or local development purposes, a single-node cluster running on your local machine is fine.
+More info on how to manually set up a Zookeeper cluster lives [here](https://zookeeper.apache.org/doc/r3.3.3/zookeeperAdmin.html#sc_zkMulitServerSetup)
+
+For testing or local development purposes, a single-node cluster running on your local machine is fine. If using the [docker testing/development setup](development/docker.md), this will already be present.
 
 ### 2. Set up MySQL (optional)
 
@@ -19,7 +20,7 @@ Singularity can be configured to move stale data from Zookeeper to MySQL after a
 
 ### 3. Set up a Mesos cluster
 
-Mesosphere provides a good tutorial for setting up a Mesos cluster: http://mesosphere.com/docs/getting-started/datacenter/install/. Don't bother setting up Marathon, it isn't necessary for Singularity.
+Mesosphere provides a good tutorial for setting up a Mesos cluster: http://mesosphere.com/docs/getting-started/datacenter/install/. You can skip the section on setting up Marathon since Singularity will be our framework instead.
 
 ### 4. Build or download the Singularity JAR
 
@@ -31,7 +32,7 @@ Run `mvn clean package` in the root of the Singularity repository. The Singulari
 
 #### Downloading a precompiled JAR
 
-Singularity JARs are published to Maven Central for each release. You can view the list of SingularityService (the executable piece of Singularity) here: http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.hubspot%22%20AND%20a%3A%22SingularityService%22
+Singularity JARs are published to Maven Central for each release. You can view the list of SingularityService (the executable piece of Singularity) JARs [here](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22com.hubspot%22%20AND%20a%3A%22SingularityService%22)
 
 Be sure to only use the `shaded.jar` links -- the other JARs won't work.
 
@@ -40,6 +41,8 @@ Be sure to only use the `shaded.jar` links -- the other JARs won't work.
 Singularity requires a YAML file with some configuration values in order to start up. Here's an example:
 
 ```yaml
+
+# Run SingularityService on port 7099 and log to /var/log/singularity-access.log
 server:
   type: simple
   applicationContextPath: /singularity
@@ -49,8 +52,8 @@ server:
   requestLog:
     appenders:
       - type: file
-        currentLogFilename: ../logs/access.log
-        archivedLogFilenamePattern: ../logs/access-%d.log.gz
+        currentLogFilename: /var/log/singularity-access.log
+        archivedLogFilenamePattern: /var/log/singularity-access-%d.log.gz
 
 database:  # omit this entirely if not using MySQL
   driverClass: com.mysql.jdbc.Driver

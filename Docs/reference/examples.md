@@ -1,5 +1,14 @@
 # Singularity Deploy Examples
 
+- [Creating A Request](#creating-a-request)
+- [Basic Service Using the Mesos Executor](#basic-service-using-the-mesos-executor)
+- [Basic Service USing Allocated Ports](#basic-service-using-allocated-ports)
+- [Basic Load Balanced Service with Allocated Ports](#basic-load-balanced-service-with-allocated-ports)
+- [Scaling Up Services](#scaling-up)
+- [Docker Service with Host Networking](#docker-service-with-host-networking)
+- [Docker Service with Bridge Networking](#docker-service-with-bridge-networking)
+- [Load Balanced Docker Service Using The SingularityExecutor](#load-balanced-docker-service-using-the-singularityexecutor)
+
 These examples assume you have [installed singularity](../install.md).
 
 The services deployed will be a [build](https://github.com/micktwomey/docker-sample-dropwizard-service) of the [Dropwizard getting started example](https://dropwizard.github.io/dropwizard/getting-started.html) and a [simple python service](https://github.com/micktwomey/docker-sample-web-service).
@@ -324,3 +333,27 @@ To deploy this service instead change the Docker image being used:
     }
 }
 ```
+
+## Load Balanced Docker Service Using The SingularityExecutor
+
+As we saw above we can add the `loadBalancerGroups` and `serviceBasePath` fields to our deploy and have our service be load balanced.
+
+Now, we also want to add in the SingularityExecutor. The SingularityExecutor [also has docker support](../containers.md) (separate form the mesos docekr containerizer). We can instead use the SingularityExecutor by adding the following to our deploy JSON:
+
+```json
+"customExecutorCmd": "/usr/local/bin/singularity-executor", # as configured in the example cluster
+# Extra settings the SingularityExecutor can use if needed
+"executorData": {
+    "cmd":"",
+    "embeddedArtifacts":[],
+    "externalArtifacts": [],
+    "s3Artifacts": [],
+    "successfulExitCodes": [0],
+    "user": "root",
+    "extraCmdLineArgs": [],
+    "loggingExtraFields": {},
+    "maxTaskThreads": 2048
+}
+```
+
+`POST`ing this to Singularity we now have a docker container with mapped ports connected to a load balancer and running via the SingularityExecutor.
