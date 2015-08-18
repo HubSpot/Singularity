@@ -3,12 +3,12 @@
 DOCKER_IP=`echo "$DOCKER_HOST" | awk -F/ '{print $3}' | awk -F: '{print $1}'`
 
 function pull {
-  docker-compose pull
+  docker-compose -f compose-dev.yml pull
 }
 
 function remove {
   echo "Removing old containers"
-  docker-compose rm
+  docker-compose -f compose-dev.yml rm
 }
 
 function build {
@@ -18,7 +18,7 @@ function build {
 
 function stop {
   echo "Stopping old containers with docker-compose $1"
-  docker-compose $1
+  docker-compose -f compose-dev.yml $1
   if [ "$1" == "kill" ]; then
     echo "Yep... Good and dead..."
   fi
@@ -27,15 +27,16 @@ function stop {
 function start {
   if [ "$1" == "attach" ]; then
     echo "Starting and attaching to docker-compose up"
-    docker-compose up
+    docker-compose -f compose-dev.yml up
   else
     echo "Starting via docker-compose up"
-    docker-compose up &> /dev/null &
+    docker-compose -f compose-dev.yml up &> /dev/null &
   fi
 }
 
 function help {
   echo "usage:
+    pull    -> grab needed images for docker hub
     start   -> start mesos clsuter in background
     attach  -> start mesos cluster and watch output in console
     restart -> stop all containers and restart in background
