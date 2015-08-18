@@ -70,17 +70,33 @@ public class SingularityDockerInfo {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
 
     SingularityDockerInfo that = (SingularityDockerInfo) o;
 
-    if (forcePullImage != that.forcePullImage) return false;
-    if (privileged != that.privileged) return false;
-    if (image != null ? !image.equals(that.image) : that.image != null) return false;
-    if (network != null ? !network.equals(that.network) : that.network != null) return false;
-    if (parameters != null ? !parameters.equals(that.parameters) : that.parameters != null) return false;
-    if (portMappings != null ? !portMappings.equals(that.portMappings) : that.portMappings != null) return false;
+    if (forcePullImage != that.forcePullImage) {
+      return false;
+    }
+    if (privileged != that.privileged) {
+      return false;
+    }
+    if (image != null ? !image.equals(that.image) : that.image != null) {
+      return false;
+    }
+    if (network != null ? !network.equals(that.network) : that.network != null) {
+      return false;
+    }
+    if (parameters != null ? !parameters.equals(that.parameters) : that.parameters != null) {
+      return false;
+    }
+    if (portMappings != null ? !portMappings.equals(that.portMappings) : that.portMappings != null) {
+      return false;
+    }
 
     return true;
   }
