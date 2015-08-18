@@ -340,7 +340,7 @@ As we saw above we can add the `loadBalancerGroups` and `serviceBasePath` fields
 
 Now, we also want to add in the SingularityExecutor. The SingularityExecutor [also has docker support](../containers.md) (separate form the mesos docekr containerizer). We can instead use the SingularityExecutor by adding the following to our deploy JSON:
 
-```
+```json
 "customExecutorCmd": "/usr/local/bin/singularity-executor", # as configured in the example cluster
 # Extra settings the SingularityExecutor can use if needed
 "executorData": {
