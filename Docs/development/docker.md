@@ -20,11 +20,13 @@ Then simply run `docker-compose up` and it will start containers for...
 
 *if using [boot2docker](http://boot2docker.io/) or another vm, replace localhost with the ip of your vm*
 
+The docker-compose example clsuter will always run off of the most recent release tag.
+
 ## Developing With Docker
 
 ### `dev`
 
-In the root of this project is a `dev` wrapper script to make developing easier. You can do the following:
+In the root of this project is a `dev` wrapper script to make developing easier. It will run using images from the current snapshot version. You can do the following:
 
 ```
 ./dev pull           # Get the latest images from docker hub
