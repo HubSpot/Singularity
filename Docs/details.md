@@ -54,6 +54,7 @@ The [*Singularity UI*](ui.md) is a single page static web application served fro
 
 It is a fully-featured application which provides historical as well as active task information. It allows users to view task logs and interact directly with tasks and deploy requests.
 
+<a name="optional-components">
 ### Optional Slave Components
 
 #### Singularity Executor

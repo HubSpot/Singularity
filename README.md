@@ -20,7 +20,7 @@ For a more thorough explanation of the concepts behind Singularity and Mesos cli
  - [Webhooks for third party integrations](Docs/webhooks.md)
  - Configurable email alerts to service owners
  - [Historical deployment and task data](Docs/database.md)
- - [Custom executor with extended log features](Docs/details.md#optional-slave-components)
+ - [Custom executor with extended log features](Docs/details.md#optional-components)
 
 ----------
 
@@ -72,7 +72,7 @@ Then simply run `docker-compose up` and it will start containers for...
  - [API](Docs/reference/api.md)
  - [Configuration](Docs/reference/configuration.md)
  - [Examples](Docs/reference/examples.md)
- - [Custom Executor Components](Docs/details.md#optional-slave-components)
+ - [Custom Executor Components](Docs/details.md#optional-components)
 
 #### Development ####
 
