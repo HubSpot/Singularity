@@ -47,7 +47,7 @@ You can optionally purge old task data from the db by specifying `historyPurging
 ```
 historyPurging:
   deleteTaskHistoryAfterDays: 365                  # purge tasks older than this
-  deleteTaskHistoryAfterTasksPerRequest: 1000      # How many tasks for one request before we starting purging
+  deleteTaskHistoryAfterTasksPerRequest: 1000      # How many tasks per request before purge
   deleteTaskHistoryBytesInsteadOfEntireRow: true   # Keep the row, just delete data to save space
   checkTaskHistoryEveryHours: 24                   # how often to check for tasks to purge
   enabled: false                                   # determines if we should run the purge
