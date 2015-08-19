@@ -38,8 +38,10 @@ def fetch_logs(args):
   try:
     check_dest(args)
     all_logs = []
-    all_logs += download_s3_logs(args)
-    all_logs += download_live_logs(args)
+    if not args.skip_s3:
+      all_logs += download_s3_logs(args)
+    if not args.skip_live:
+      all_logs += download_live_logs(args)
     grep_files(args, all_logs)
   except KeyboardInterrupt:
     exit('Stopping logfetch...', 'magenta')
@@ -48,8 +50,10 @@ def cat_logs(args):
   try:
     check_dest(args)
     all_logs = []
-    all_logs += download_s3_logs(args)
-    all_logs += download_live_logs(args)
+    if not args.skip_s3:
+      all_logs += download_s3_logs(args)
+    if not args.skip_live:
+      all_logs += download_live_logs(args)
     cat_files(args, all_logs)
   except KeyboardInterrupt:
     exit('Stopping logcat...', 'magenta')
@@ -115,19 +119,21 @@ def fetch():
   parser.set_defaults(**defaults)
   parser.add_argument("-t", "--task-id", dest="taskId", help="TaskId of task to fetch logs for")
   parser.add_argument("-r", "--request-id", dest="requestId", help="RequestId of request to fetch logs for (can be a glob)")
-  parser.add_argument("-tc","--task-count", dest="task_count", help="Number of recent tasks per request to fetch logs from")
+  parser.add_argument("-T","--task-count", dest="task_count", help="Number of recent tasks per request to fetch logs from", type=int)
   parser.add_argument("-d", "--deploy-id", dest="deployId", help="DeployId of task to fetch logs for (can be a glob)")
   parser.add_argument("-o", "--dest", dest="dest", help="Destination directory")
   parser.add_argument("-n", "--num-parallel-fetches", dest="num_parallel_fetches", help="Number of fetches to make at once", type=int)
-  parser.add_argument("-cs", "--chunk-size", dest="chunk_size", help="Chunk size for writing from response to filesystem", type=int)
+  parser.add_argument("-C", "--chunk-size", dest="chunk_size", help="Chunk size for writing from response to filesystem", type=int)
   parser.add_argument("-u", "--singularity-uri-base", dest="singularity_uri_base", help="The base for singularity (eg. http://localhost:8080/singularity/v1)")
   parser.add_argument("-s", "--start", dest="start", help="Search for logs no older than this, can be an integer number of days or date in format '%%Y-%%m-%%d %%H:%%M:%%S' or '%%Y-%%m-%%d'")
   parser.add_argument("-e", "--end", dest="end", help="Search for logs no newer than this, can be an integer number of days or date in format '%%Y-%%m-%%d %%H:%%M:%%S' or '%%Y-%%m-%%d' (defaults to None/now)")
   parser.add_argument("-l", "--log-type", dest="logtype", help="Logfile type to downlaod (ie 'access.log'), can be a glob (ie *.log)")
   parser.add_argument("-p", "--file-pattern", dest="file_pattern", help="S3 uploader file pattern")
-  parser.add_argument("-nn", "--no-name-fetch-off", dest="no_name_fetch_off", help="If a logtype matcher is specified, but the s3 log pattern does not include file name, don't download any s3 files", action="store_true")
+  parser.add_argument("-N", "--no-name-fetch-off", dest="no_name_fetch_off", help="If a logtype matcher is specified, but the s3 log pattern does not include file name, don't download any s3 files", action="store_true")
   parser.add_argument("-g", "--grep", dest="grep", help="Regex to grep for (normal grep syntax) or a full grep command")
   parser.add_argument("-z", "--local-zone", dest="zone", help="If specified, input times in the local time zone and convert to UTC, if not specified inputs are assumed to be UTC", action="store_true")
+  parser.add_argument("-S", "--skip-s3", dest="skip_s3", help="Don't download/search s3 logs", action='store_true')
+  parser.add_argument("-L", "--skip-live", dest="skip_live", help="Don't download/search live logs", action='store_true')
   parser.add_argument("-V", "--verbose", dest="verbose", help="Print more verbose output", action='store_true')
 
   args = parser.parse_args(remaining_argv)
@@ -177,18 +183,20 @@ def cat():
   parser.set_defaults(**defaults)
   parser.add_argument("-t", "--task-id", dest="taskId", help="TaskId of task to fetch logs for")
   parser.add_argument("-r", "--request-id", dest="requestId", help="RequestId of request to fetch logs for (can be a glob)")
-  parser.add_argument("-tc","--task-count", dest="taskCount", help="Number of recent tasks per request to fetch logs from")
+  parser.add_argument("-T","--task-count", dest="taskCount", help="Number of recent tasks per request to fetch logs from", type=int)
   parser.add_argument("-d", "--deploy-id", dest="deployId", help="DeployId of tasks to fetch logs for (can be a glob)")
   parser.add_argument("-o", "--dest", dest="dest", help="Destination directory")
   parser.add_argument("-n", "--num-parallel-fetches", dest="num_parallel_fetches", help="Number of fetches to make at once", type=int)
-  parser.add_argument("-cs", "--chunk-size", dest="chunk_size", help="Chunk size for writing from response to filesystem", type=int)
+  parser.add_argument("-C", "--chunk-size", dest="chunk_size", help="Chunk size for writing from response to filesystem", type=int)
   parser.add_argument("-u", "--singularity-uri-base", dest="singularity_uri_base", help="The base for singularity (eg. http://localhost:8080/singularity/v1)")
-  parser.add_argument("-s", "--start-days", dest="start", help="Search for logs no older than this, can be an integer number of days or date in format '%%Y-%%m-%%d %%H:%%M:%%S' or '%%Y-%%m-%%d'")
-  parser.add_argument("-e", "--end-days", dest="end", help="Search for logs no newer than this, can be an integer number of days or date in format '%%Y-%%m-%%d %%H:%%M:%%S' or '%%Y-%%m-%%d' (defaults to None/now)")
+  parser.add_argument("-s", "--start", dest="start", help="Search for logs no older than this, can be an integer number of days or date in format '%%Y-%%m-%%d %%H:%%M:%%S' or '%%Y-%%m-%%d'")
+  parser.add_argument("-e", "--end", dest="end", help="Search for logs no newer than this, can be an integer number of days or date in format '%%Y-%%m-%%d %%H:%%M:%%S' or '%%Y-%%m-%%d' (defaults to None/now)")
   parser.add_argument("-l", "--logtype", dest="logtype", help="Logfile type to downlaod (ie 'access.log'), can be a glob (ie *.log)")
   parser.add_argument("-p", "--file-pattern", dest="file_pattern", help="S3 uploader file pattern")
-  parser.add_argument("-nn", "--no-name-fetch-off", dest="no_name_fetch_off", help="If a logtype matcher is specified, but the s3 log pattern does not include file name, don't download any s3 files", action="store_true")
+  parser.add_argument("-N", "--no-name-fetch-off", dest="no_name_fetch_off", help="If a logtype matcher is specified, but the s3 log pattern does not include file name, don't download any s3 files", action="store_true")
   parser.add_argument("-z", "--local-zone", dest="zone", help="If specified, input times in the local time zone and convert to UTC, if not specified inputs are assumed to be UTC", action="store_true")
+  parser.add_argument("-S", "--skip-s3", dest="skip_s3", help="Don't download/search s3 logs", action='store_true')
+  parser.add_argument("-L", "--skip-live", dest="skip_live", help="Don't download/search live logs", action='store_true')
   parser.add_argument("-V", "--verbose", dest="verbose", help="Print more verbose output", action='store_true')
 
   args = parser.parse_args(remaining_argv)
