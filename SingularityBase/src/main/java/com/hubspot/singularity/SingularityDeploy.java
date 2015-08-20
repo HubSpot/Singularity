@@ -31,6 +31,7 @@ public class SingularityDeploy {
   private final Optional<String> customExecutorSource;
   private final Optional<Resources> customExecutorResources;
   private final Optional<String> customExecutorUser;
+  private final Optional<String> user;
 
   private final Optional<Resources> resources;
 
@@ -39,6 +40,7 @@ public class SingularityDeploy {
   private final Optional<Map<String, String>> env;
   private final Optional<List<String>> uris;
   private final Optional<ExecutorData> executorData;
+  private final Optional<Map<String, String>> labels;
 
   private final Optional<String> healthcheckUri;
   private final Optional<Long> healthcheckIntervalSeconds;
@@ -56,7 +58,6 @@ public class SingularityDeploy {
   private final Optional<String> serviceBasePath;
   private final Optional<List<String>> loadBalancerGroups;
   private final Optional<Map<String, Object>> loadBalancerOptions;
-  private final Optional<Map<String, String>> labels;
 
   public static SingularityDeployBuilder newBuilder(String requestId, String id) {
     return new SingularityDeployBuilder(requestId, id);
@@ -73,6 +74,7 @@ public class SingularityDeploy {
       @JsonProperty("customExecutorSource") Optional<String> customExecutorSource,
       @JsonProperty("customExecutorResources") Optional<Resources> customExecutorResources,
       @JsonProperty("customExecutorUser") Optional<String> customExecutorUser,
+      @JsonProperty("user") Optional<String> user,
       @JsonProperty("resources") Optional<Resources> resources,
       @JsonProperty("env") Optional<Map<String, String>> env,
       @JsonProperty("uris") Optional<List<String>> uris,
@@ -80,6 +82,7 @@ public class SingularityDeploy {
       @JsonProperty("executorData") Optional<ExecutorData> executorData,
       @JsonProperty("version") Optional<String> version,
       @JsonProperty("timestamp") Optional<Long> timestamp,
+      @JsonProperty("labels") Optional<Map<String, String>> labels,
       @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
       @JsonProperty("healthcheckUri") Optional<String> healthcheckUri,
       @JsonProperty("healthcheckIntervalSeconds") Optional<Long> healthcheckIntervalSeconds,
@@ -90,7 +93,6 @@ public class SingularityDeploy {
       @JsonProperty("loadBalancerGroups") Optional<List<String>> loadBalancerGroups,
       @JsonProperty("considerHealthyAfterRunningForSeconds") Optional<Long> considerHealthyAfterRunningForSeconds,
       @JsonProperty("loadBalancerOptions") Optional<Map<String, Object>> loadBalancerOptions,
-      @JsonProperty("labels") Optional<Map<String, String>> labels,
       @JsonProperty("skipHealthchecksOnDeploy") Optional<Boolean> skipHealthchecksOnDeploy,
       @JsonProperty("healthCheckProtocol") Optional<HealthcheckProtocol> healthcheckProtocol) {
     this.requestId = requestId;
@@ -106,6 +108,7 @@ public class SingularityDeploy {
     this.customExecutorSource = customExecutorSource;
     this.customExecutorResources = customExecutorResources;
     this.customExecutorUser = customExecutorUser;
+    this.user = user;
 
     this.metadata = metadata;
     this.version = version;
@@ -114,6 +117,7 @@ public class SingularityDeploy {
     this.env = env;
     this.uris = uris;
     this.executorData = executorData;
+    this.labels = labels;
 
     this.healthcheckUri = healthcheckUri;
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
@@ -131,7 +135,6 @@ public class SingularityDeploy {
     this.serviceBasePath = serviceBasePath;
     this.loadBalancerGroups = loadBalancerGroups;
     this.loadBalancerOptions = loadBalancerOptions;
-    this.labels = labels;
   }
 
   public SingularityDeployBuilder toBuilder() {
@@ -143,6 +146,9 @@ public class SingularityDeploy {
     .setCustomExecutorCmd(customExecutorCmd)
     .setCustomExecutorId(customExecutorId)
     .setCustomExecutorSource(customExecutorSource)
+    .setCustomExecutorResources(customExecutorResources)
+    .setCustomExecutorUser(customExecutorUser)
+    .setUser(user)
 
     .setHealthcheckUri(healthcheckUri)
     .setHealthcheckIntervalSeconds(healthcheckIntervalSeconds)
@@ -221,9 +227,15 @@ public class SingularityDeploy {
     return customExecutorResources;
   }
 
-  @ApiModelProperty(required=false, value="User to run custom executor as")
+  @Deprecated
+  @ApiModelProperty(required=false, value="User to run custom executor as (Deprecated, use 'user' instead")
   public Optional<String> getCustomExecutorUser() {
     return customExecutorUser;
+  }
+
+  @ApiModelProperty(required=false, value="User to run tasks as")
+  public Optional<String> getUser() {
+    return user;
   }
 
   @ApiModelProperty(required=false, value="Resources required for this deploy.", dataType="com.hubspot.mesos.Resources")

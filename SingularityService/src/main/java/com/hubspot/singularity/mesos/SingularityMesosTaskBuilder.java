@@ -288,8 +288,8 @@ class SingularityMesosTaskBuilder {
 
     prepareEnvironment(task, taskId, commandBuilder, offer, ports);
 
-    if (task.getDeploy().getCustomExecutorUser().isPresent()) {
-      commandBuilder.setUser(task.getDeploy().getCustomExecutorUser().get());
+    if (task.getDeploy().getUser().isPresent()) {
+      commandBuilder.setUser(task.getDeploy().getCustomExecutorUser().or(task.getDeploy().getUser().get()));
     }
 
     bldr.setExecutor(ExecutorInfo.newBuilder()
@@ -359,6 +359,10 @@ class SingularityMesosTaskBuilder {
 
     for (String uri : task.getDeploy().getUris().or(Collections.<String> emptyList())) {
       commandBldr.addUris(URI.newBuilder().setValue(uri).build());
+    }
+
+    if (task.getDeploy().getUser().isPresent()) {
+      commandBldr.setUser(task.getDeploy().getCustomExecutorUser().or(task.getDeploy().getUser().get()));
     }
 
     prepareEnvironment(task, taskId, commandBldr, offer, ports);
