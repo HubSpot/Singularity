@@ -34,6 +34,7 @@ class Request extends Model
         data.inCooldown = data.state is 'SYSTEM_COOLDOWN'
 
         data.hasActiveDeploy = data.activeDeploy? or data.requestDeployState?.activeDeploy?
+        data.daemon = data.type in ['WORKER', 'SERVICE']
         data.canBeRunNow = data.state is 'ACTIVE' and data.type in ['SCHEDULED', 'ON_DEMAND'] and data.hasActiveDeploy
         data.canBeBounced = data.state in ['ACTIVE', 'SYSTEM_COOLDOWN'] and data.type in ['WORKER', 'SERVICE']
         data.canBeScaled = data.state in ['ACTIVE', 'SYSTEM_COOLDOWN'] and data.hasActiveDeploy and data.type in ['WORKER', 'SERVICE']
