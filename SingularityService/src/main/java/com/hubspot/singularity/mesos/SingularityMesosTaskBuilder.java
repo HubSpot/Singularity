@@ -7,6 +7,9 @@ import java.util.Map.Entry;
 
 import javax.inject.Singleton;
 
+import com.hubspot.mesos.SingularityContainerType;
+import com.hubspot.singularity.SingularityRuncConfig;
+import com.hubspot.singularity.SingularityRuncMount;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.CommandInfo;
 import org.apache.mesos.Protos.CommandInfo.URI;
@@ -308,6 +311,14 @@ class SingularityMesosTaskBuilder {
           final Optional<String> loggingS3Bucket = Optional.of(configuration.getS3Configuration().get().getGroupOverrides().get(task.getRequest().getGroup().get()).getS3Bucket());
           LOG.trace("Setting loggingS3Bucket to {} for task {} executorData", loggingS3Bucket, taskId.getId());
           executorDataBldr.setLoggingS3Bucket(loggingS3Bucket);
+        }
+      }
+
+      if (task.getDeploy().getContainerInfo().isPresent() && task.getDeploy().getContainerInfo().get().getType().equals(SingularityContainerType.RUNC)) {
+        if (task.getDeploy().getExecutorData().get().getRuncConfig().isPresent()) {
+          executorDataBldr.setRuncConfig(task.getDeploy().getExecutorData().get().getRuncConfig());
+        } else {
+          executorDataBldr.setRuncConfig(Optional.of(SingularityRuncConfig.defaultConfig()));
         }
       }
 

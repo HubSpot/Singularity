@@ -18,6 +18,10 @@ public class SingularityRuncConfig {
     this.terminal = Objects.firstNonNull(terminal, true);
   }
 
+  public static SingularityRuncConfig defaultConfig() {
+    return new SingularityRuncConfig(Collections.<SingularityRuncMount>emptyList(), true);
+  }
+
   public List<SingularityRuncMount> getMounts() {
     return mounts;
   }
@@ -29,7 +33,7 @@ public class SingularityRuncConfig {
   @Override
   public String toString() {
     return "SingularityRuncConfig{" +
-      "mounts=" + mounts +
+      ", mounts=" + mounts +
       ", terminal=" + terminal +
       '}';
   }
