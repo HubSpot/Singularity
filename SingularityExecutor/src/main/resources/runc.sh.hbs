@@ -1,0 +1,54 @@
+#!/bin/bash
+#
+# This script was automatically generated.
+# Task ID: {{{ runContext.taskId }}}
+#
+
+set -e
+
+CURRENT_DIR=`pwd`
+CONTAINER_NAME="{{{ runContext.taskId }}}"
+
+function setup_signals {
+  handler="$1"; shift
+  for sig; do
+    trap "$handler '$sig'" "$sig"
+  done
+}
+
+function handle_signal {
+  echo "Received $1"
+  echo "Stopping container"
+  runc kill $1 # TODO - how to send signal to container?
+  exit_code=$?
+  echo "Cleanig up container"
+  # TODO - where to do cleanup of old containers?
+  # TODO - capture run state and exit events in file for viewing later? ie. `runc events >> stats.log`???
+  exit "$exit_code"
+}
+
+if [ -d "/cgroup/memory/mesos" ] ;then
+  CGROUPS_DIR="/cgroup"
+else
+  if [ -d "/sys/fs/cgroup/memory/mesos" ] ; then
+    CGROUPS_DIR="/sys/fs/cgroup"
+  else
+    echo "Couldn't find cgroups directory"
+  fi
+fi
+
+# TODO - stick all evaluated env vars into config.json
+
+# TODO get current uid and gid to put in config.json
+# TDOD get current os/arch to stick in config.json
+
+# Create log directory for logrotate runs
+if [[ ! -d {{{ runContext.logDir }}} ]]; then
+  echo "Creating log directory ({{{ runContext.logDir }}})..."
+  mkdir -p {{{ runContext.logDir }}}
+fi
+
+setup_signals "handle_signal" SIGINT SIGTERM
+
+# TODO - do signals propogate to container pid 1 properly?
+exec runc --id $CONTAINER_NAME

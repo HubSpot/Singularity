@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import com.hubspot.singularity.executor.models.RuncContext;
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskState;
 
@@ -114,6 +115,11 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
       task.getLog().info("Writing a runner script to execute {} in docker container", cmd);
 
       templateManager.writeDockerScript(getPath("runner.sh"), new DockerContext(environmentContext, runnerContext, configuration.getDockerPrefix(), configuration.getDockerStopTimeout()));
+    } else if (executorData.getRuncConfig().isPresent()) {
+      task.getLog().info("Writing runc configuration file and runner script to execute {} in runc container", cmd);
+      RuncContext runcContext = new RuncContext(environmentContext, runnerContext, executorData.getRuncConfig().get());
+      templateManager.writeRuncConfig(getPath("config.json"), runcContext);
+      templateManager.writeRuncScript(getPath("runner.sh"), runcContext);
     } else {
       templateManager.writeEnvironmentScript(getPath("deploy.env"), environmentContext);
 

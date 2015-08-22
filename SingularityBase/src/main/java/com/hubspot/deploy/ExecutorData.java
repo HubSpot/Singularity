@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityRuncConfig;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ExecutorData {
@@ -26,6 +27,7 @@ public class ExecutorData {
   private final Optional<Integer> maxTaskThreads;
   private final Optional<Boolean> preserveTaskSandboxAfterFinish;
   private final Optional<String> loggingS3Bucket;
+  private final Optional<SingularityRuncConfig> runc;
 
   @JsonCreator
   public ExecutorData(@JsonProperty("cmd") String cmd, @JsonProperty("embeddedArtifacts") List<EmbeddedArtifact> embeddedArtifacts, @JsonProperty("externalArtifacts") List<ExternalArtifact> externalArtifacts,
@@ -33,7 +35,7 @@ public class ExecutorData {
       @JsonProperty("runningSentinel") Optional<String> runningSentinel, @JsonProperty("extraCmdLineArgs") List<String> extraCmdLineArgs, @JsonProperty("loggingTag") Optional<String> loggingTag,
       @JsonProperty("loggingExtraFields") Map<String, String> loggingExtraFields, @JsonProperty("sigKillProcessesAfterMillis") Optional<Long> sigKillProcessesAfterMillis,
       @JsonProperty("maxTaskThreads") Optional<Integer> maxTaskThreads, @JsonProperty("preserveTaskSandboxAfterFinish") Optional<Boolean> preserveTaskSandboxAfterFinish,
-      @JsonProperty("loggingS3Bucket") Optional<String> loggingS3Bucket) {
+      @JsonProperty("loggingS3Bucket") Optional<String> loggingS3Bucket, @JsonProperty("runc") Optional<SingularityRuncConfig> runc) {
     this.cmd = cmd;
     this.embeddedArtifacts = JavaUtils.nonNullImmutable(embeddedArtifacts);
     this.externalArtifacts = JavaUtils.nonNullImmutable(externalArtifacts);
@@ -48,6 +50,7 @@ public class ExecutorData {
     this.maxTaskThreads = maxTaskThreads;
     this.preserveTaskSandboxAfterFinish = preserveTaskSandboxAfterFinish;
     this.loggingS3Bucket = loggingS3Bucket;
+    this.runc = runc;
   }
 
   public ExecutorDataBuilder toBuilder() {
@@ -110,6 +113,10 @@ public class ExecutorData {
     return loggingS3Bucket;
   }
 
+  public Optional<SingularityRuncConfig> getRuncConfig() {
+    return runc;
+  }
+
   @Override
   public String toString() {
     return "ExecutorData[" +
@@ -127,6 +134,7 @@ public class ExecutorData {
             ", maxTaskThreads=" + maxTaskThreads +
             ", preserveTaskSandboxAfterFinish=" + preserveTaskSandboxAfterFinish +
             ", loggingS3Bucket=" + loggingS3Bucket +
+            ", runc=" + runc +
             ']';
   }
 }
