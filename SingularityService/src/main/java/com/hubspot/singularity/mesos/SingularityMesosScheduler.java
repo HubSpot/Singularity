@@ -2,13 +2,13 @@ package com.hubspot.singularity.mesos;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 import javax.inject.Singleton;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Scheduler;
@@ -24,7 +24,6 @@ import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
-import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -35,14 +34,10 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
-import com.hubspot.singularity.config.CustomExecutorConfiguration;
-import com.hubspot.singularity.config.MesosConfiguration;
-import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderException;
-import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager.SlaveMatchState;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
@@ -55,16 +50,13 @@ public class SingularityMesosScheduler implements Scheduler {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosScheduler.class);
 
-  private final Resources defaultResources;
-  private final Resources defaultCustomExecutorResources;
   private final TaskManager taskManager;
   private final DeployManager deployManager;
   private final SingularityScheduler scheduler;
-  private final SingularityConfiguration configuration;
-  private final SingularityMesosTaskBuilder mesosTaskBuilder;
   private final SingularityHealthchecker healthchecker;
   private final SingularityNewTaskChecker newTaskChecker;
   private final SingularitySlaveAndRackManager slaveAndRackManager;
+  private final SingularityResourceScheduler resourceScheduler;
   private final SingularitySchedulerPriority schedulerPriority;
   private final SingularityLogSupport logSupport;
 
@@ -77,19 +69,18 @@ public class SingularityMesosScheduler implements Scheduler {
   private final IdTranscoder<SingularityTaskId> taskIdTranscoder;
 
   @Inject
-  SingularityMesosScheduler(MesosConfiguration mesosConfiguration, SingularityConfiguration configuration, TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager,
-      SingularitySchedulerPriority schedulerPriority, SingularityNewTaskChecker newTaskChecker, SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport,
+  SingularityMesosScheduler(TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager, SingularityResourceScheduler resourceScheduler,
+      SingularitySchedulerPriority schedulerPriority, SingularityNewTaskChecker newTaskChecker, SingularityLogSupport logSupport,
       Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager, SingularityExceptionNotifier exceptionNotifier,
-      @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier, final IdTranscoder<SingularityTaskId> taskIdTranscoder, CustomExecutorConfiguration customExecutorConfiguration) {
-    this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
-    this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0);
+      @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier, final IdTranscoder<SingularityTaskId> taskIdTranscoder) {
+
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.schedulerPriority = schedulerPriority;
     this.newTaskChecker = newTaskChecker;
     this.slaveAndRackManager = slaveAndRackManager;
+    this.resourceScheduler = resourceScheduler;
     this.scheduler = scheduler;
-    this.mesosTaskBuilder = mesosTaskBuilder;
     this.logSupport = logSupport;
     this.stateCacheProvider = stateCacheProvider;
     this.healthchecker = healthchecker;
@@ -97,7 +88,6 @@ public class SingularityMesosScheduler implements Scheduler {
     this.schedulerDriverSupplier = schedulerDriverSupplier;
     this.taskIdTranscoder = taskIdTranscoder;
     this.exceptionNotifier = exceptionNotifier;
-    this.configuration = configuration;
   }
 
   @Override
@@ -121,72 +111,34 @@ public class SingularityMesosScheduler implements Scheduler {
           MesosUtils.getNumPorts(offer));
     }
 
+    final Set<Protos.OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offers.size());
     final long start = System.currentTimeMillis();
-
     final SingularitySchedulerStateCache stateCache = stateCacheProvider.get();
+    int numDueTasks = 0;
 
     scheduler.checkForDecomissions(stateCache);
     scheduler.drainPendingQueue(stateCache);
-
-    final Set<Protos.OfferID> acceptedOffers = Sets.newHashSetWithExpectedSize(offers.size());
 
     for (Protos.Offer offer : offers) {
       slaveAndRackManager.checkOffer(offer);
     }
 
-    int numDueTasks = 0;
-
     try {
       final List<SingularityTaskRequest> taskRequests = scheduler.getDueTasks();
       schedulerPriority.sortTaskRequestsInPriorityOrder(taskRequests);
-
-      for (SingularityTaskRequest taskRequest : taskRequests) {
-        LOG.trace("Task {} is due", taskRequest.getPendingTask().getPendingTaskId());
-      }
-
       numDueTasks = taskRequests.size();
 
-      final List<SingularityOfferHolder> offerHolders = Lists.newArrayListWithCapacity(offers.size());
-
-      for (Protos.Offer offer : offers) {
-        offerHolders.add(new SingularityOfferHolder(offer, numDueTasks));
-      }
-
-      boolean addedTaskInLastLoop = true;
-
-      while (!taskRequests.isEmpty() && addedTaskInLastLoop) {
-        addedTaskInLastLoop = false;
-        Collections.shuffle(offerHolders);
-
-        for (SingularityOfferHolder offerHolder : offerHolders) {
-          if (configuration.getMaxTasksPerOffer() > 0 && offerHolder.getAcceptedTasks().size() >= configuration.getMaxTasksPerOffer()) {
-            LOG.trace("Offer {} is full ({}) - skipping", offerHolder.getOffer(), offerHolder.getAcceptedTasks().size());
-            continue;
-          }
-
-          Optional<SingularityTask> accepted = match(taskRequests, stateCache, offerHolder);
-          if (accepted.isPresent()) {
-            offerHolder.addMatchedTask(accepted.get());
-            addedTaskInLastLoop = true;
-            taskRequests.remove(accepted.get().getTaskRequest());
-          }
-
-          if (taskRequests.isEmpty()) {
-            break;
-          }
-        }
-      }
+      List<SingularityOfferHolder> offerHolders = resourceScheduler.processOffers(stateCache, taskRequests, driver, offers);
 
       for (SingularityOfferHolder offerHolder : offerHolders) {
         if (!offerHolder.getAcceptedTasks().isEmpty()) {
-          offerHolder.launchTasks(driver);
-
+          launchTasks(stateCache, driver, offerHolder.getAcceptedTasks(), offerHolder.getOffer());
+          numDueTasks -= offerHolder.getAcceptedTasks().size();
           acceptedOffers.add(offerHolder.getOffer().getId());
         } else {
           driver.declineOffer(offerHolder.getOffer().getId());
         }
       }
-
     } catch (Throwable t) {
       LOG.error("Received fatal error while accepting offers - will decline all available offers", t);
 
@@ -202,46 +154,25 @@ public class SingularityMesosScheduler implements Scheduler {
     }
 
     LOG.info("Finished handling {} offer(s) ({}), {} accepted, {} declined, {} outstanding tasks", offers.size(), JavaUtils.duration(start), acceptedOffers.size(),
-        offers.size() - acceptedOffers.size(), numDueTasks - acceptedOffers.size());
+      offers.size() - acceptedOffers.size(), numDueTasks - acceptedOffers.size());
   }
 
-  private Optional<SingularityTask> match(Collection<SingularityTaskRequest> taskRequests, SingularitySchedulerStateCache stateCache, SingularityOfferHolder offerHolder) {
+  private void launchTasks(SingularitySchedulerStateCache stateCache, SchedulerDriver driver, List<SingularityTask> tasks, Offer offer) {
+    final List<Protos.TaskInfo> toLaunch = Lists.newArrayListWithCapacity(tasks.size());
+    final List<SingularityTaskId> taskIds = Lists.newArrayListWithCapacity(tasks.size());
 
-    for (SingularityTaskRequest taskRequest : taskRequests) {
-      final Resources taskResources = taskRequest.getDeploy().getResources().or(defaultResources);
-
-      // only factor in executor resources if we're running a custom executor
-      final Resources executorResources = taskRequest.getDeploy().getCustomExecutorCmd().isPresent() ? taskRequest.getDeploy().getCustomExecutorResources().or(defaultCustomExecutorResources) : Resources.EMPTY_RESOURCES;
-
-      final Resources totalResources = Resources.add(taskResources, executorResources);
-
-      LOG.trace("Attempting to match task {} resources {} ({} for task + {} for executor) with remaining offer resources {}", taskRequest.getPendingTask().getPendingTaskId(), totalResources, taskResources, executorResources, offerHolder.getCurrentResources());
-
-      final boolean matchesResources = MesosUtils.doesOfferMatchResources(totalResources, offerHolder.getCurrentResources());
-      final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder.getOffer(), taskRequest, stateCache);
-
-      if (matchesResources && slaveMatchState.isMatchAllowed()) {
-        final SingularityTask task = mesosTaskBuilder.buildTask(offerHolder.getOffer(), offerHolder.getCurrentResources(), taskRequest, taskResources, executorResources);
-
-        LOG.trace("Accepted and built task {}", task);
-
-        LOG.info("Launching task {} slot on slave {} ({})", task.getTaskId(), offerHolder.getOffer().getSlaveId().getValue(), offerHolder.getOffer().getHostname());
-
-        taskManager.createTaskAndDeletePendingTask(task);
-
-        schedulerPriority.notifyTaskLaunched(task.getTaskId());
-
-        stateCache.getActiveTaskIds().add(task.getTaskId());
-        stateCache.getScheduledTasks().remove(taskRequest.getPendingTask());
-
-        return Optional.of(task);
-      } else {
-        LOG.trace("Ignoring offer {} on {} for task {}; matched resources: {}, slave match state: {}", offerHolder.getOffer().getId(), offerHolder.getOffer().getHostname(), taskRequest
-            .getPendingTask().getPendingTaskId(), matchesResources, slaveMatchState);
-      }
+    for (SingularityTask task : tasks) {
+      taskManager.createTaskAndDeletePendingTask(task);
+      schedulerPriority.notifyTaskLaunched(task.getTaskId());
+      stateCache.getActiveTaskIds().add(task.getTaskId());
+      stateCache.getScheduledTasks().remove(task.getTaskRequest().getPendingTask());
+      taskIds.add(task.getTaskId());
+      toLaunch.add(task.getMesosTask());
+      LOG.trace("Launching {} mesos task: {}", task.getTaskId(), task.getMesosTask());
     }
 
-    return Optional.absent();
+    Protos.Status initialStatus = driver.launchTasks(ImmutableList.of(offer.getId()), toLaunch);
+    LOG.info("{} tasks ({}) launched with status {}", taskIds.size(), taskIds, initialStatus);
   }
 
   @Override
