@@ -209,6 +209,11 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  public SingularityRequestBuilder setRequiredSlaveAttributes(Optional<Map<String, String>> requiredSlaveAttributes) {
+    this.requiredSlaveAttributes = requiredSlaveAttributes;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityRequestBuilder [id=" + id + ", requestType=" + requestType + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule

@@ -103,23 +103,23 @@ class SingularitySlaveAndRackManager {
       }
     }
 
-    final SlavePlacement slavePlacement = taskRequest.getRequest().getSlavePlacement().or(configuration.getDefaultSlavePlacement());
-
-    if (!taskRequest.getRequest().isRackSensitive() && slavePlacement == SlavePlacement.GREEDY) {
-      return SlaveMatchState.NOT_RACK_OR_SLAVE_PARTICULAR;
-    }
-
     Map<String, String> reservedSlaveAttributes = slaveAndRackHelper.reservedSlaveAttributes(offer);
     if (!reservedSlaveAttributes.isEmpty()) {
       if (!taskRequest.getRequest().getRequiredSlaveAttributes().isPresent() ||
         !slaveAndRackHelper.hasRequiredAttributes(taskRequest.getRequest().getRequiredSlaveAttributes().get(), reservedSlaveAttributes)) {
-          return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
+        return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
       }
     }
 
     if (taskRequest.getRequest().getRequiredSlaveAttributes().isPresent()
       && !slaveAndRackHelper.hasRequiredAttributes(slaveAndRackHelper.getTextAttributes(offer), taskRequest.getRequest().getRequiredSlaveAttributes().get())) {
       return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
+    }
+
+    final SlavePlacement slavePlacement = taskRequest.getRequest().getSlavePlacement().or(configuration.getDefaultSlavePlacement());
+
+    if (!taskRequest.getRequest().isRackSensitive() && slavePlacement == SlavePlacement.GREEDY) {
+      return SlaveMatchState.NOT_RACK_OR_SLAVE_PARTICULAR;
     }
 
     final int numDesiredInstances = taskRequest.getRequest().getInstancesSafe();

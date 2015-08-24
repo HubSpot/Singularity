@@ -90,6 +90,7 @@ public class SingularityRequest {
     .setRackAffinity(copyOfList(rackAffinity))
     .setWaitAtLeastMillisAfterTaskFinishesForReschedule(waitAtLeastMillisAfterTaskFinishesForReschedule)
     .setSlavePlacement(slavePlacement)
+    .setRequiredSlaveAttributes(requiredSlaveAttributes)
     .setScheduledExpectedRuntimeMillis(scheduledExpectedRuntimeMillis)
     .setGroup(group);
   }
@@ -153,6 +154,10 @@ public class SingularityRequest {
 
   public Optional<Long> getScheduledExpectedRuntimeMillis() {
     return scheduledExpectedRuntimeMillis;
+  }
+
+  public Optional<Map<String, String>> getRequiredSlaveAttributes() {
+    return requiredSlaveAttributes;
   }
 
   @JsonIgnore
@@ -221,10 +226,6 @@ public class SingularityRequest {
 
   public Optional<String> getGroup() {
     return group;
-  }
-
-  public Optional<Map<String, String>> getRequiredSlaveAttributes() {
-    return requiredSlaveAttributes;
   }
 
   @Override
