@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Optional;
+import com.hubspot.singularity.SingularityRuncConfig;
 
 public class ExecutorDataBuilder {
 
@@ -21,9 +22,11 @@ public class ExecutorDataBuilder {
   private Optional<Integer> maxTaskThreads;
   private Optional<Boolean> preserveTaskSandboxAfterFinish;
   private Optional<String> loggingS3Bucket;
+  private Optional<SingularityRuncConfig> runcConfig;
 
   public ExecutorDataBuilder(String cmd, List<EmbeddedArtifact> embeddedArtifacts, List<ExternalArtifact> externalArtifacts, List<S3Artifact> s3Artifacts, List<Integer> successfulExitCodes, Optional<String> runningSentinel,
-      Optional<String> user, List<String> extraCmdLineArgs, Optional<String> loggingTag, Map<String, String> loggingExtraFields, Optional<Long> sigKillProcessesAfterMillis, Optional<Integer> maxTaskThreads, Optional<Boolean> preserveTaskSandboxAfterFinish, Optional<String> loggingS3Bucket) {
+      Optional<String> user, List<String> extraCmdLineArgs, Optional<String> loggingTag, Map<String, String> loggingExtraFields, Optional<Long> sigKillProcessesAfterMillis, Optional<Integer> maxTaskThreads,
+      Optional<Boolean> preserveTaskSandboxAfterFinish, Optional<String> loggingS3Bucket, Optional<SingularityRuncConfig> runcConfig) {
     this.cmd = cmd;
     this.embeddedArtifacts = embeddedArtifacts;
     this.externalArtifacts = externalArtifacts;
@@ -38,6 +41,7 @@ public class ExecutorDataBuilder {
     this.maxTaskThreads = maxTaskThreads;
     this.preserveTaskSandboxAfterFinish = preserveTaskSandboxAfterFinish;
     this.loggingS3Bucket = loggingS3Bucket;
+    this.runcConfig = runcConfig;
   }
 
   public ExecutorDataBuilder() {
@@ -45,7 +49,7 @@ public class ExecutorDataBuilder {
   }
 
   public ExecutorData build() {
-    return new ExecutorData(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields, sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, loggingS3Bucket);
+    return new ExecutorData(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields, sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, loggingS3Bucket, runcConfig);
   }
 
   public Optional<String> getLoggingTag() {
@@ -174,6 +178,15 @@ public class ExecutorDataBuilder {
     return this;
   }
 
+  public Optional<SingularityRuncConfig> getRuncConfig() {
+    return runcConfig;
+  }
+
+  public ExecutorDataBuilder setRuncConfig(Optional<SingularityRuncConfig> runcConfig) {
+    this.runcConfig = runcConfig;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "ExecutorDataBuilder[" +
@@ -191,6 +204,7 @@ public class ExecutorDataBuilder {
             ", maxTaskThreads=" + maxTaskThreads +
             ", preserveTaskSandboxAfterFinish=" + preserveTaskSandboxAfterFinish +
             ", loggingS3Bucket=" + loggingS3Bucket +
+            ", runcConfig=" + runcConfig +
             ']';
   }
 }

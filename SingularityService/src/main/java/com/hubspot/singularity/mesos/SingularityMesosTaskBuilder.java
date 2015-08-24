@@ -2,10 +2,14 @@ package com.hubspot.singularity.mesos;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.inject.Singleton;
 
+import com.hubspot.mesos.SingularityContainerType;
+import com.hubspot.singularity.SingularityRuncConfig;
+import com.hubspot.singularity.SingularityRuncMount;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.CommandInfo;
 import org.apache.mesos.Protos.CommandInfo.URI;
@@ -101,6 +105,19 @@ class SingularityMesosTaskBuilder {
     bldr.addResources(MesosUtils.getMemoryResource(desiredTaskResources.getMemoryMb()));
 
     bldr.setSlaveId(offer.getSlaveId());
+
+    if (taskRequest.getDeploy().getLabels().isPresent()) {
+      Protos.Labels.Builder labelsBuilder = Protos.Labels.newBuilder();
+      Protos.Label.Builder labelBuilder = Protos.Label.newBuilder();
+      for (Map.Entry<String, String> entry : taskRequest.getDeploy().getLabels().get().entrySet()) {
+        labelBuilder.clear();
+        labelBuilder.setKey(entry.getKey());
+        labelBuilder.setValue(entry.getValue());
+        Protos.Label label = labelBuilder.build();
+        labelsBuilder.addLabels(label);
+      }
+      bldr.setLabels(labelsBuilder);
+    }
 
     bldr.setName(taskRequest.getRequest().getId());
 
@@ -221,6 +238,19 @@ class SingularityMesosTaskBuilder {
 
       dockerInfoBuilder.setPrivileged(dockerInfo.get().isPrivileged());
 
+      dockerInfoBuilder.setForcePullImage(dockerInfo.get().isForcePullImage());
+
+      if (!dockerInfo.get().getParameters().isEmpty()) {
+        Protos.Parameter.Builder dockerParamsBuilder = Protos.Parameter.newBuilder();
+        int index = 0;
+        for (Map.Entry<String, String> entry : dockerInfo.get().getParameters().entrySet()) {
+          dockerParamsBuilder.clear();
+          dockerParamsBuilder.setKey(entry.getKey());
+          dockerParamsBuilder.setValue(entry.getValue());
+          dockerInfoBuilder.addParameters(index, dockerParamsBuilder.clone());
+        }
+      }
+
       containerBuilder.setDocker(dockerInfoBuilder);
     }
 
@@ -261,8 +291,8 @@ class SingularityMesosTaskBuilder {
 
     prepareEnvironment(task, taskId, commandBuilder, offer, ports);
 
-    if (task.getDeploy().getCustomExecutorUser().isPresent()) {
-      commandBuilder.setUser(task.getDeploy().getCustomExecutorUser().get());
+    if (task.getDeploy().getUser().isPresent()) {
+      commandBuilder.setUser(task.getDeploy().getCustomExecutorUser().or(task.getDeploy().getUser().get()));
     }
 
     bldr.setExecutor(ExecutorInfo.newBuilder()
@@ -281,6 +311,14 @@ class SingularityMesosTaskBuilder {
           final Optional<String> loggingS3Bucket = Optional.of(configuration.getS3Configuration().get().getGroupOverrides().get(task.getRequest().getGroup().get()).getS3Bucket());
           LOG.trace("Setting loggingS3Bucket to {} for task {} executorData", loggingS3Bucket, taskId.getId());
           executorDataBldr.setLoggingS3Bucket(loggingS3Bucket);
+        }
+      }
+
+      if (task.getDeploy().getContainerInfo().isPresent() && task.getDeploy().getContainerInfo().get().getType().equals(SingularityContainerType.RUNC)) {
+        if (task.getDeploy().getExecutorData().get().getRuncConfig().isPresent()) {
+          executorDataBldr.setRuncConfig(task.getDeploy().getExecutorData().get().getRuncConfig());
+        } else {
+          executorDataBldr.setRuncConfig(Optional.of(SingularityRuncConfig.defaultConfig()));
         }
       }
 
@@ -332,6 +370,10 @@ class SingularityMesosTaskBuilder {
 
     for (String uri : task.getDeploy().getUris().or(Collections.<String> emptyList())) {
       commandBldr.addUris(URI.newBuilder().setValue(uri).build());
+    }
+
+    if (task.getDeploy().getUser().isPresent()) {
+      commandBldr.setUser(task.getDeploy().getCustomExecutorUser().or(task.getDeploy().getUser().get()));
     }
 
     prepareEnvironment(task, taskId, commandBldr, offer, ports);

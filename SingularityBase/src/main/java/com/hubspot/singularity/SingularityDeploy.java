@@ -31,6 +31,7 @@ public class SingularityDeploy {
   private final Optional<String> customExecutorSource;
   private final Optional<Resources> customExecutorResources;
   private final Optional<String> customExecutorUser;
+  private final Optional<String> user;
 
   private final Optional<Resources> resources;
 
@@ -39,6 +40,7 @@ public class SingularityDeploy {
   private final Optional<Map<String, String>> env;
   private final Optional<List<String>> uris;
   private final Optional<ExecutorData> executorData;
+  private final Optional<Map<String, String>> labels;
 
   private final Optional<String> healthcheckUri;
   private final Optional<Long> healthcheckIntervalSeconds;
@@ -72,6 +74,7 @@ public class SingularityDeploy {
       @JsonProperty("customExecutorSource") Optional<String> customExecutorSource,
       @JsonProperty("customExecutorResources") Optional<Resources> customExecutorResources,
       @JsonProperty("customExecutorUser") Optional<String> customExecutorUser,
+      @JsonProperty("user") Optional<String> user,
       @JsonProperty("resources") Optional<Resources> resources,
       @JsonProperty("env") Optional<Map<String, String>> env,
       @JsonProperty("uris") Optional<List<String>> uris,
@@ -79,6 +82,7 @@ public class SingularityDeploy {
       @JsonProperty("executorData") Optional<ExecutorData> executorData,
       @JsonProperty("version") Optional<String> version,
       @JsonProperty("timestamp") Optional<Long> timestamp,
+      @JsonProperty("labels") Optional<Map<String, String>> labels,
       @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
       @JsonProperty("healthcheckUri") Optional<String> healthcheckUri,
       @JsonProperty("healthcheckIntervalSeconds") Optional<Long> healthcheckIntervalSeconds,
@@ -104,6 +108,7 @@ public class SingularityDeploy {
     this.customExecutorSource = customExecutorSource;
     this.customExecutorResources = customExecutorResources;
     this.customExecutorUser = customExecutorUser;
+    this.user = user;
 
     this.metadata = metadata;
     this.version = version;
@@ -112,6 +117,7 @@ public class SingularityDeploy {
     this.env = env;
     this.uris = uris;
     this.executorData = executorData;
+    this.labels = labels;
 
     this.healthcheckUri = healthcheckUri;
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
@@ -140,6 +146,9 @@ public class SingularityDeploy {
     .setCustomExecutorCmd(customExecutorCmd)
     .setCustomExecutorId(customExecutorId)
     .setCustomExecutorSource(customExecutorSource)
+    .setCustomExecutorResources(customExecutorResources)
+    .setCustomExecutorUser(customExecutorUser)
+    .setUser(user)
 
     .setHealthcheckUri(healthcheckUri)
     .setHealthcheckIntervalSeconds(healthcheckIntervalSeconds)
@@ -161,7 +170,8 @@ public class SingularityDeploy {
     .setTimestamp(timestamp)
     .setEnv(copyOfMap(env))
     .setUris(copyOfList(uris))
-    .setExecutorData(executorData);
+    .setExecutorData(executorData)
+    .setLabels(labels);
   }
 
   @ApiModelProperty(required=false, value="Number of seconds that Singularity waits for this service to become healthy (for it to download artifacts, start running, and optionally pass healthchecks.)")
@@ -217,9 +227,15 @@ public class SingularityDeploy {
     return customExecutorResources;
   }
 
-  @ApiModelProperty(required=false, value="User to run custom executor as")
+  @Deprecated
+  @ApiModelProperty(required=false, value="User to run custom executor as (Deprecated, use 'user' instead")
   public Optional<String> getCustomExecutorUser() {
     return customExecutorUser;
+  }
+
+  @ApiModelProperty(required=false, value="User to run tasks as")
+  public Optional<String> getUser() {
+    return user;
   }
 
   @ApiModelProperty(required=false, value="Resources required for this deploy.", dataType="com.hubspot.mesos.Resources")
@@ -292,6 +308,11 @@ public class SingularityDeploy {
     return loadBalancerOptions;
   }
 
+  @ApiModelProperty(required=false, value="Labels for tasks associated with this deploy")
+  public Optional<Map<String, String>> getLabels() {
+    return labels;
+  }
+
   @ApiModelProperty(required=false, value="Allows skipping of health checks when deploying.")
   public Optional<Boolean> getSkipHealthchecksOnDeploy() {
     return skipHealthchecksOnDeploy;
@@ -339,6 +360,7 @@ public class SingularityDeploy {
       ", serviceBasePath=" + serviceBasePath +
       ", loadBalancerGroups=" + loadBalancerGroups +
       ", loadBalancerOptions=" + loadBalancerOptions +
+      ", labels=" + labels +
       '}';
   }
 

@@ -22,6 +22,10 @@ public class EnvironmentContext {
     return taskInfo.getContainer().getDocker();
   }
 
+  public List<Protos.Parameter> getDockerParameters() {
+    return taskInfo.getContainer().getDocker().getParametersList();
+  }
+
   public List<Protos.Volume> getContainerVolumes() {
     return taskInfo.getContainer().getVolumesList();
   }

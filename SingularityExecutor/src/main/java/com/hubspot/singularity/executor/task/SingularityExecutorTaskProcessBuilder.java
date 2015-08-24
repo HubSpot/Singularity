@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import com.hubspot.singularity.executor.models.RuncContext;
 import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskState;
 
@@ -105,16 +106,20 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
       cmd,
       configuration.getTaskAppDirectory(),
       configuration.getLogrotateToDirectory(),
-      executorData.getUser().or(configuration.getDefaultRunAsUser()),
       configuration.getServiceLog(),
       task.getTaskId(),
-      executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads()),
-      !getExecutorUser().equals(executorData.getUser().or(configuration.getDefaultRunAsUser())));
+      executorData.getMaxTaskThreads().or(configuration.getMaxTaskThreads()));
+
     EnvironmentContext environmentContext = new EnvironmentContext(taskInfo);
     if (taskInfo.hasContainer() && taskInfo.getContainer().hasDocker()) {
       task.getLog().info("Writing a runner script to execute {} in docker container", cmd);
 
       templateManager.writeDockerScript(getPath("runner.sh"), new DockerContext(environmentContext, runnerContext, configuration.getDockerPrefix(), configuration.getDockerStopTimeout()));
+    } else if (executorData.getRuncConfig().isPresent()) {
+      task.getLog().info("Writing runc configuration file and runner script to execute {} in runc container", cmd);
+      RuncContext runcContext = new RuncContext(environmentContext, runnerContext, executorData.getRuncConfig().get());
+      templateManager.writeRuncConfig(getPath("config.json"), runcContext);
+      templateManager.writeRuncScript(getPath("runner.sh"), runcContext);
     } else {
       templateManager.writeEnvironmentScript(getPath("deploy.env"), environmentContext);
 

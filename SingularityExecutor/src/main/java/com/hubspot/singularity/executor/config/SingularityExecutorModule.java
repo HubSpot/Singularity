@@ -20,6 +20,8 @@ public class SingularityExecutorModule extends AbstractModule {
   public static final String ENVIRONMENT_TEMPLATE = "deploy.env";
   public static final String LOGROTATE_TEMPLATE = "logrotate.conf";
   public static final String DOCKER_TEMPLATE = "docker.sh";
+  public static final String RUNC_CONFIG_TEMPLATE = "config.json";
+  public static final String RUNC_TEMPLATE = "runc.sh";
   public static final String LOCAL_DOWNLOAD_HTTP_CLIENT = "SingularityExecutorModule.local.download.http.client";
 
   @Override
@@ -64,6 +66,20 @@ public class SingularityExecutorModule extends AbstractModule {
   @Named(DOCKER_TEMPLATE)
   public Template providesDockerTempalte(Handlebars handlebars) throws IOException {
     return handlebars.compile(DOCKER_TEMPLATE);
+  }
+
+  @Provides
+  @Singleton
+  @Named(RUNC_CONFIG_TEMPLATE)
+  public Template providesRuncConfigTempalte(Handlebars handlebars) throws IOException {
+    return handlebars.compile(RUNC_CONFIG_TEMPLATE);
+  }
+
+  @Provides
+  @Singleton
+  @Named(RUNC_TEMPLATE)
+  public Template providesRuncTempalte(Handlebars handlebars) throws IOException {
+    return handlebars.compile(RUNC_TEMPLATE);
   }
 
   @Provides
