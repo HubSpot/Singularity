@@ -68,7 +68,8 @@ class SingularitySlaveAndRackManager {
     SLAVE_SATURATED(false),
     SLAVE_DECOMMISSIONING(false),
     RACK_DECOMMISSIONING(false),
-    RACK_AFFINITY_NOT_MATCHING(false);
+    RACK_AFFINITY_NOT_MATCHING(false),
+    SLAVE_ATTRIBUTES_DO_NOT_MATCH(false);
 
     private final boolean isMatchAllowed;
 
@@ -106,6 +107,19 @@ class SingularitySlaveAndRackManager {
 
     if (!taskRequest.getRequest().isRackSensitive() && slavePlacement == SlavePlacement.GREEDY) {
       return SlaveMatchState.NOT_RACK_OR_SLAVE_PARTICULAR;
+    }
+
+    Map<String, String> reservedSlaveAttributes = slaveAndRackHelper.reservedSlaveAttributes(offer);
+    if (!reservedSlaveAttributes.isEmpty()) {
+      if (!taskRequest.getRequest().getRequiredSlaveAttributes().isPresent() ||
+        !slaveAndRackHelper.hasRequiredAttributes(taskRequest.getRequest().getRequiredSlaveAttributes().get(), reservedSlaveAttributes)) {
+          return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
+      }
+    }
+
+    if (taskRequest.getRequest().getRequiredSlaveAttributes().isPresent()
+      && !slaveAndRackHelper.hasRequiredAttributes(slaveAndRackHelper.getTextAttributes(offer), taskRequest.getRequest().getRequiredSlaveAttributes().get())) {
+      return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
     }
 
     final int numDesiredInstances = taskRequest.getRequest().getInstancesSafe();
@@ -221,12 +235,13 @@ class SingularitySlaveAndRackManager {
     for (MesosMasterSlaveObject slaveJsonObject : state.getSlaves()) {
       String slaveId = slaveJsonObject.getId();
       String rackId = slaveAndRackHelper.getRackId(slaveJsonObject.getAttributes());
+      Map<String, String> textAttributes = slaveAndRackHelper.getTextAttributes(slaveJsonObject.getAttributes());
       String host = slaveAndRackHelper.getMaybeTruncatedHost(slaveJsonObject.getHostname());
 
       if (activeSlavesById.containsKey(slaveId)) {
         activeSlavesById.remove(slaveId);
       } else {
-        SingularitySlave newSlave = new SingularitySlave(slaveId, host, rackId);
+        SingularitySlave newSlave = new SingularitySlave(slaveId, host, rackId, textAttributes);
 
         if (check(newSlave, slaveManager) == CheckResult.NEW) {
           slaves++;
@@ -290,8 +305,9 @@ class SingularitySlaveAndRackManager {
     final String slaveId = offer.getSlaveId().getValue();
     final String rackId = slaveAndRackHelper.getRackIdOrDefault(offer);
     final String host = slaveAndRackHelper.getMaybeTruncatedHost(offer);
+    final Map<String, String> textAttributes = slaveAndRackHelper.getTextAttributes(offer);
 
-    final SingularitySlave slave = new SingularitySlave(slaveId, host, rackId);
+    final SingularitySlave slave = new SingularitySlave(slaveId, host, rackId, textAttributes);
 
     if (check(slave, slaveManager) == CheckResult.NEW) {
       LOG.info("Offer revealed a new slave {}", slave);
