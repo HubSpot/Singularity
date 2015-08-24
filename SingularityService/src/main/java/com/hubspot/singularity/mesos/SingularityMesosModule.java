@@ -8,6 +8,9 @@ import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.hubspot.singularity.config.CustomExecutorConfiguration;
+import com.hubspot.singularity.config.MesosConfiguration;
+import com.hubspot.singularity.config.SingularityConfiguration;
 
 public class SingularityMesosModule extends AbstractModule {
 
@@ -31,5 +34,17 @@ public class SingularityMesosModule extends AbstractModule {
   @Singleton
   public Lock getSchedulerLock() {
     return new ReentrantLock();
+  }
+
+  @Provides
+  @Singleton
+  public SingularityResourceScheduler providesResourceScheduler(SingularityConfiguration configuration, SingularityMesosTaskBuilder mesosTaskBuilder, SingularitySlaveAndRackHelper slaveAndRackHelper) {
+    switch(configuration.getResourceSchedulerType()) {
+      case SINGULARITY:
+        return new SingularityServiceResourceScheduler(configuration, mesosTaskBuilder, slaveAndRackHelper);
+      default:
+        throw new RuntimeException(String.format("Cannot create resource scheduler of type %s", configuration.getResourceSchedulerType()));
+    }
+
   }
 }

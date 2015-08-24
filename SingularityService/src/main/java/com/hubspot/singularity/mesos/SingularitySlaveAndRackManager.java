@@ -41,8 +41,6 @@ class SingularitySlaveAndRackManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularitySlaveAndRackManager.class);
 
-  private final SingularityConfiguration configuration;
-
   private final SingularityExceptionNotifier exceptionNotifier;
   private final RackManager rackManager;
   private final SlaveManager slaveManager;
@@ -50,131 +48,13 @@ class SingularitySlaveAndRackManager {
   private final SingularitySlaveAndRackHelper slaveAndRackHelper;
 
   @Inject
-  SingularitySlaveAndRackManager(SingularitySlaveAndRackHelper slaveAndRackHelper, SingularityConfiguration configuration, SingularityExceptionNotifier exceptionNotifier, RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager) {
-    this.configuration = configuration;
-
+  SingularitySlaveAndRackManager(SingularitySlaveAndRackHelper slaveAndRackHelper, SingularityExceptionNotifier exceptionNotifier, RackManager rackManager, SlaveManager slaveManager, TaskManager taskManager) {
     this.exceptionNotifier = exceptionNotifier;
     this.slaveAndRackHelper = slaveAndRackHelper;
 
     this.rackManager = rackManager;
     this.slaveManager = slaveManager;
     this.taskManager = taskManager;
-  }
-
-  public enum SlaveMatchState {
-    OK(true),
-    NOT_RACK_OR_SLAVE_PARTICULAR(true),
-    RACK_SATURATED(false),
-    SLAVE_SATURATED(false),
-    SLAVE_DECOMMISSIONING(false),
-    RACK_DECOMMISSIONING(false),
-    RACK_AFFINITY_NOT_MATCHING(false);
-
-    private final boolean isMatchAllowed;
-
-    private SlaveMatchState(boolean isMatchAllowed) {
-      this.isMatchAllowed = isMatchAllowed;
-    }
-
-    public boolean isMatchAllowed() {
-      return isMatchAllowed;
-    }
-
-  }
-
-  public SlaveMatchState doesOfferMatch(Protos.Offer offer, SingularityTaskRequest taskRequest, SingularitySchedulerStateCache stateCache) {
-    final String host = offer.getHostname();
-    final String rackId = slaveAndRackHelper.getRackIdOrDefault(offer);
-    final String slaveId = offer.getSlaveId().getValue();
-
-    if (stateCache.getSlave(slaveId).get().getCurrentState().getState().isDecommissioning()) {
-      return SlaveMatchState.SLAVE_DECOMMISSIONING;
-    }
-
-    if (stateCache.getRack(rackId).get().getCurrentState().getState().isDecommissioning()) {
-      return SlaveMatchState.RACK_DECOMMISSIONING;
-    }
-
-    if (!taskRequest.getRequest().getRackAffinity().or(Collections.<String> emptyList()).isEmpty()) {
-      if (!taskRequest.getRequest().getRackAffinity().get().contains(rackId)) {
-        LOG.trace("Task {} requires a rack in {} (current rack {})", taskRequest.getPendingTask().getPendingTaskId(), taskRequest.getRequest().getRackAffinity().get(), rackId);
-        return SlaveMatchState.RACK_AFFINITY_NOT_MATCHING;
-      }
-    }
-
-    final SlavePlacement slavePlacement = taskRequest.getRequest().getSlavePlacement().or(configuration.getDefaultSlavePlacement());
-
-    if (!taskRequest.getRequest().isRackSensitive() && slavePlacement == SlavePlacement.GREEDY) {
-      return SlaveMatchState.NOT_RACK_OR_SLAVE_PARTICULAR;
-    }
-
-    final int numDesiredInstances = taskRequest.getRequest().getInstancesSafe();
-    double numOnRack = 0;
-    double numOnSlave = 0;
-    double numCleaningOnSlave = 0;
-    double numOtherDeploysOnSlave = 0;
-
-    final String sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(host);
-    final String sanitizedRackId = JavaUtils.getReplaceHyphensWithUnderscores(rackId);
-    Collection<SingularityTaskId> cleaningTasks = stateCache.getCleaningTasks();
-
-    for (SingularityTaskId taskId : SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), taskRequest.getRequest().getId(), Collections.<SingularityTaskId>emptyList())) {
-      // TODO consider using executorIds
-      if (taskId.getSanitizedHost().equals(sanitizedHost)) {
-        if (taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
-          if (cleaningTasks.contains(taskId)) {
-            numCleaningOnSlave++;
-          } else {
-            numOnSlave++;
-          }
-        } else {
-          numOtherDeploysOnSlave++;
-        }
-      }
-      if (taskId.getSanitizedRackId().equals(sanitizedRackId) && !cleaningTasks.contains(taskId) && taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
-        numOnRack++;
-      }
-    }
-
-    if (taskRequest.getRequest().isRackSensitive()) {
-      final double numPerRack = numDesiredInstances / (double) stateCache.getNumActiveRacks();
-
-      final boolean isRackOk = numOnRack < numPerRack;
-
-      if (!isRackOk) {
-        LOG.trace("Rejecting RackSensitive task {} from slave {} ({}) due to numOnRack {} and cleaningOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnRack, numCleaningOnSlave);
-        return SlaveMatchState.RACK_SATURATED;
-      }
-    }
-
-    switch (slavePlacement) {
-      case SEPARATE:
-      case SEPARATE_BY_DEPLOY:
-        if (numOnSlave > 0 || numCleaningOnSlave > 0) {
-          LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {} numCleaningOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave);
-          return SlaveMatchState.SLAVE_SATURATED;
-        }
-        break;
-      case SEPARATE_BY_REQUEST:
-        if (numOnSlave > 0 || numCleaningOnSlave > 0 || numOtherDeploysOnSlave > 0) {
-          LOG.trace("Rejecting SEPARATE task {} from slave {} ({}) due to numOnSlave {} numCleaningOnSlave {} numOtherDeploysOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave, numOtherDeploysOnSlave);
-          return SlaveMatchState.SLAVE_SATURATED;
-        }
-        break;
-      case OPTIMISTIC:
-        final double numPerSlave = numDesiredInstances / (double) stateCache.getNumActiveSlaves();
-
-        final boolean isSlaveOk = numOnSlave < numPerSlave;
-
-        if (!isSlaveOk) {
-          LOG.trace("Rejecting OPTIMISTIC task {} from slave {} ({}) due to numOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnSlave);
-          return SlaveMatchState.SLAVE_SATURATED;
-        }
-        break;
-      case GREEDY:
-    }
-
-    return SlaveMatchState.OK;
   }
 
   public void slaveLost(SlaveID slaveIdObj) {

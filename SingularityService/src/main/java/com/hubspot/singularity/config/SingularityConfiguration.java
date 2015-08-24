@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.hubspot.singularity.ResourceSchedulerType;
 import com.hubspot.singularity.SlavePlacement;
 
 import io.dropwizard.Configuration;
@@ -64,6 +65,7 @@ public class SingularityConfiguration extends Configuration {
   private DataSourceFactory databaseConfiguration;
 
   @NotNull
+  @Deprecated
   private SlavePlacement defaultSlavePlacement = SlavePlacement.GREEDY;
 
   private boolean defaultValueForKillTasksOfPausedRequests = true;
@@ -113,6 +115,7 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxQueuedUpdatesPerWebhook = 50;
 
+  @Deprecated
   private int maxTasksPerOffer = 0;
 
   private int maxRequestIdSize = 100;
@@ -185,6 +188,9 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("auth")
   @NotNull
   private AuthConfiguration authConfiguration = new AuthConfiguration();
+
+  @JsonProperty("scheduler")
+  private ResourceSchedulerConfiguration resourceSchedulerConfiguration = new ResourceSchedulerConfiguration();
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -464,6 +470,10 @@ public class SingularityConfiguration extends Configuration {
 
   public boolean isWaitForListeners() {
     return waitForListeners;
+  }
+
+  public ResourceSchedulerConfiguration getResourceSchedulerConfiguration() {
+    return resourceSchedulerConfiguration;
   }
 
   public void setAllowRequestsWithoutOwners(boolean allowRequestsWithoutOwners) {
@@ -752,6 +762,10 @@ public class SingularityConfiguration extends Configuration {
 
   public void setHistoryPurgingConfiguration(HistoryPurgingConfiguration historyPurgingConfiguration) {
     this.historyPurgingConfiguration = historyPurgingConfiguration;
+  }
+
+  public void setResourceSchedulerConfiguration(ResourceSchedulerConfiguration resourceSchedulerConfiguration) {
+    this.resourceSchedulerConfiguration =  resourceSchedulerConfiguration;
   }
 
 }

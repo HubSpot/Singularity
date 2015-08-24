@@ -42,21 +42,6 @@ public class SingularityOfferHolder {
     }
   }
 
-  public void launchTasks(SchedulerDriver driver) {
-    final List<TaskInfo> toLaunch = Lists.newArrayListWithCapacity(acceptedTasks.size());
-    final List<SingularityTaskId> taskIds = Lists.newArrayListWithCapacity(acceptedTasks.size());
-
-    for (SingularityTask task : acceptedTasks) {
-      taskIds.add(task.getTaskId());
-      toLaunch.add(task.getMesosTask());
-      LOG.trace("Launching {} mesos task: {}", task.getTaskId(), task.getMesosTask());
-    }
-
-    Status initialStatus = driver.launchTasks(ImmutableList.of(offer.getId()), toLaunch);
-
-    LOG.info("{} tasks ({}) launched with status {}", taskIds.size(), taskIds, initialStatus);
-  }
-
   public List<SingularityTask> getAcceptedTasks() {
     return acceptedTasks;
   }
