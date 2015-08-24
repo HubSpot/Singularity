@@ -49,7 +49,7 @@ public class SingularityRequest {
       @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive, @JsonProperty("loadBalanced") Optional<Boolean> loadBalanced,
       @JsonProperty("killOldNonLongRunningTasksAfterMillis") Optional<Long> killOldNonLongRunningTasksAfterMillis, @JsonProperty("scheduleType") Optional<ScheduleType> scheduleType,
       @JsonProperty("quartzSchedule") Optional<String> quartzSchedule, @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity,
-      @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement, @JsonProperty("requiredSlaveAttrbiutes") Optional<Map<String, String>> requiredSlaveAttributes, @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis,
+      @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement, @JsonProperty("requiredSlaveAttributes") Optional<Map<String, String>> requiredSlaveAttributes, @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis,
       @JsonProperty("waitAtLeastMillisAfterTaskFinishesForReschedule") Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule, @JsonProperty("group") Optional<String> group) {
     this.id = id;
     this.owners = owners;
@@ -245,7 +245,7 @@ public class SingularityRequest {
             ", rackSensitive=" + rackSensitive +
             ", rackAffinity=" + rackAffinity +
             ", slavePlacement=" + slavePlacement +
-            ", requiredSlaveAttrbiutes=" + requiredSlaveAttributes +
+            ", requiredSlaveAttributes=" + requiredSlaveAttributes +
             ", loadBalanced=" + loadBalanced +
             ", group=" + group +
             ']';
