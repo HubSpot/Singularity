@@ -93,7 +93,7 @@ public class JDBIHistoryManager implements HistoryManager {
       return;
     }
 
-    SingularityTaskIdHistory taskIdHistory = SingularityTaskIdHistory.fromTaskIdAndUpdates(taskHistory.getTask().getTaskId(), taskHistory.getTaskUpdates());
+    SingularityTaskIdHistory taskIdHistory = SingularityTaskIdHistory.fromTaskIdAndTaskAndUpdates(taskHistory.getTask().getTaskId(), taskHistory.getTask(), taskHistory.getTaskUpdates());
 
     String lastTaskStatus = null;
     if (taskIdHistory.getLastTaskState().isPresent()) {
@@ -101,7 +101,7 @@ public class JDBIHistoryManager implements HistoryManager {
     }
 
     history.insertTaskHistory(taskIdHistory.getTaskId().getRequestId(), taskIdHistory.getTaskId().getId(), taskHistoryTranscoder.toBytes(taskHistory), new Date(taskIdHistory.getUpdatedAt()),
-        lastTaskStatus);
+        lastTaskStatus, taskHistory.getTask().getTaskRequest().getPendingTask().getRunId().orNull());
   }
 
   @Override

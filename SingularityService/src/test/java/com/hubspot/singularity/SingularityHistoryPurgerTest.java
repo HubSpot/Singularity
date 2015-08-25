@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.mesos.Protos.TaskState;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -17,6 +18,7 @@ import com.google.inject.Provider;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.SingularityHistoryPurger;
+import com.hubspot.singularity.data.history.SingularityTaskHistoryPersister;
 
 import liquibase.Liquibase;
 import liquibase.database.Database;
@@ -31,6 +33,9 @@ public class SingularityHistoryPurgerTest extends SingularitySchedulerTestBase {
 
   @Inject
   protected HistoryManager historyManager;
+
+  @Inject
+  protected SingularityTaskHistoryPersister taskHistoryPersister;
 
   public SingularityHistoryPurgerTest() {
     super(true);
@@ -149,6 +154,38 @@ public class SingularityHistoryPurgerTest extends SingularitySchedulerTestBase {
     purger.runActionOnPoll();
 
     Assert.assertEquals(1, historyManager.getTaskHistoryForRequest(requestId, 0, 10).size());
+  }
+
+  @Test
+  public void testRunId() {
+    initScheduledRequest();
+    initFirstDeploy();
+
+    String runId = "my-run-id";
+    String user = "my-user";
+
+    SingularityPendingRequestParent parent = requestResource.scheduleImmediately(requestId, Optional.of(user), Optional.of(runId), Collections.<String> emptyList());
+
+    Assert.assertEquals(runId, parent.getPendingRequest().getRunId().get());
+    Assert.assertEquals(user, parent.getPendingRequest().getUser().get());
+
+    resourceOffers();
+
+    Assert.assertEquals(runId, taskManager.getActiveTasks().get(0).getTaskRequest().getPendingTask().getRunId().get());
+    Assert.assertEquals(user, taskManager.getActiveTasks().get(0).getTaskRequest().getPendingTask().getUser().get());
+
+    SingularityTaskId taskId = taskManager.getActiveTaskIds().get(0);
+
+    statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_FINISHED);
+
+    taskHistoryPersister.runActionOnPoll();
+
+    Assert.assertEquals(runId, historyManager.getTaskHistory(taskId.getId()).get().getTask().getTaskRequest().getPendingTask().getRunId().get());
+    Assert.assertEquals(runId, historyManager.getTaskHistoryForRequest(requestId, 0, 10).get(0).getRunId().get());
+
+    parent = requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Optional.<String> absent(), Collections.<String> emptyList());
+
+    Assert.assertTrue(parent.getPendingRequest().getRunId().isPresent());
   }
 
 }
