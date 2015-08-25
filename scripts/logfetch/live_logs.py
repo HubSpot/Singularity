@@ -75,10 +75,12 @@ def tasks_to_check(args):
   else:
     return logfetch_base.tasks_for_requests(args)
 
-def task_still_running(args, task):
+def task_history(args, task):
+  uri = TASK_HISTORY_FORMAT.format(logfetch_base.base_uri(args), task)
+  return get_json_response(uri, args)
+
+def task_still_running(args, task, history):
   try:
-    uri = TASK_HISTORY_FORMAT.format(logfetch_base.base_uri(args), task)
-    history = get_json_response(uri, args)
     last_state = history['taskUpdates'][-1]['taskState']
     return last_state in ['TASK_RUNNING', 'TASK_STARTING', 'TASK_LAUNCHED', 'TASK_CLEANING']
   except:
@@ -119,10 +121,15 @@ def should_download(args, filename, task):
     if args.verbose:
       sys.stderr.write(colored('Using cached version of file {0}, zipped file has not changed\n'.format(filename), 'magenta'))
     return False
-  if not task_still_running(args, task) and already_downloaded(args, filename):
+  history = task_history(args, task)
+  if not task_still_running(args, task, history) and already_downloaded(args, filename) and file_not_too_old(args, history, filename):
     if args.verbose :
-      sys.stderr.write(colored('Using cached version of file {0}, task finished, file has not changed\n'.format(filename), 'magenta'))
+      sys.stderr.write(colored('Using cached version of file {0}, {1}, file has not changed\n'.format(filename, history['taskUpdates'][-1]['taskState']), 'magenta'))
   return True
+
+def file_not_too_old(args, history, filename):
+  state_updated_at = int(str(history['taskUpdates'][-1]['timestamp'])[0:-3])
+  return int(os.path.getmtime('{0}/{1}'.format(args.dest, filename))) > state_updated_at
 
 def already_downloaded(args, filename):
   have_file = (os.path.isfile('{0}/{1}'.format(args.dest, filename.replace('.gz', '.log'))) or os.path.isfile('{0}/{1}'.format(args.dest, filename)))
