@@ -8,6 +8,7 @@ import org.apache.mesos.Protos;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 public class SingularityDockerInfo {
   private final String image;
@@ -20,6 +21,8 @@ public class SingularityDockerInfo {
                                @JsonProperty("privileged") boolean privileged,
                                @JsonProperty("network") SingularityDockerNetworkType network,
                                @JsonProperty("portMappings") Optional<List<SingularityDockerPortMapping>> portMappings) {
+    Preconditions.checkArgument(image != null, "SingularityDockerInfo.image may not be null");
+
     this.image = image;
     this.privileged = privileged;
     this.network = Optional.fromNullable(network);

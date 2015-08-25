@@ -7,6 +7,7 @@ import org.apache.mesos.Protos.ContainerInfo.Type;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 public class SingularityContainerInfo {
   private final SingularityContainerType type;
@@ -18,6 +19,8 @@ public class SingularityContainerInfo {
       @JsonProperty("type") SingularityContainerType type,
       @JsonProperty("volumes") Optional<List<SingularityVolume>> volumes,
       @JsonProperty("docker") Optional<SingularityDockerInfo> docker) {
+    Preconditions.checkArgument(type != null, "SingularityContainerInfo.type may not be null");
+
     this.type = type;
     this.volumes = volumes;
     this.docker = docker;
