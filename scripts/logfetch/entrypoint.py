@@ -143,6 +143,7 @@ def fetch():
   parser.add_argument("-S", "--skip-s3", dest="skip_s3", help="Don't download/search s3 logs", action='store_true')
   parser.add_argument("-L", "--skip-live", dest="skip_live", help="Don't download/search live logs", action='store_true')
   parser.add_argument("-U", "--use-cache", dest="use_cache", help="Use cache for live logs, don't re-download them", action='store_true')
+  parser.add_argument("--search", dest="search", help="run logsearch on the local cache of downloaded files", action='store_true')
   parser.add_argument("-V", "--verbose", dest="verbose", help="Print more verbose output", action='store_true')
 
   args = parser.parse_args(remaining_argv)
@@ -158,7 +159,10 @@ def fetch():
     sys.stderr.write('No additional request headers found\n')
     setattr(args, 'headers', {})
 
-  fetch_logs(args)
+  if args.search:
+    search_logs(args)
+  else:
+    fetch_logs(args)
 
 def search():
   conf_parser = argparse.ArgumentParser(version=VERSION, description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter, add_help=False)

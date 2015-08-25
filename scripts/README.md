@@ -44,6 +44,7 @@ Two commands exist for downloading logs.
 |-S, --skip-s3|Don't search/download s3 logs|false|
 |-L, --skip-live|Don't search/download live logs|false|
 |-U, --use-cache|Don't redownload live logs, prefer the cached version|false|
+|--search|Run logsearch on the cache of local files (no downloading)|false|
 |-V, --verbose|More verbose output|false|
 
 ##Grep and Log Files
