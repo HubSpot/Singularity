@@ -8,6 +8,7 @@ DEFAULT_GREP_COMMAND = 'grep --color=always \'{0}\''
 def grep_files(args, all_logs):
   if args.grep:
     if all_logs:
+      all_logs.sort()
       for log in all_logs:
         command = grep_command(args, log)
         output = os.popen(command).read()
