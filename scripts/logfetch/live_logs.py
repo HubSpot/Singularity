@@ -127,7 +127,7 @@ def should_download(args, filename, task):
       sys.stderr.write(colored('Using cached version of file {0}, {1}, file has not changed\n'.format(filename, history['taskUpdates'][-1]['taskState']), 'magenta'))
   else:
     if args.verbose:
-      sys.stderr.write(colored('Will download file {0}, version on the server is newer than cached version'.format(filename), 'magenta'))
+      sys.stderr.write(colored('Will download file {0}, version on the server is newer than cached version\n'.format(filename), 'magenta'))
 
   return True
 
