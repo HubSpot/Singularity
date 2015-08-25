@@ -9,6 +9,7 @@ import logfetch_base
 
 DOWNLOAD_FILE_FORMAT = 'http://{0}:5051/files/download.json'
 BROWSE_FOLDER_FORMAT = '{0}/sandbox/{1}/browse'
+TASK_HISTORY_FORMAT = '{0}/history/task/{1}'
 
 def download_live_logs(args):
   tasks = tasks_to_check(args)
@@ -25,7 +26,7 @@ def download_live_logs(args):
       for log_file in base_directory_files(args, task, metadata):
         logfile_name = '{0}-{1}'.format(task, log_file)
         if not args.logtype or (args.logtype and logfetch_base.log_matches(log_file, args.logtype.replace('logs/', ''))):
-          if not args.use_cache or not already_downloaded(args, logfile_name):
+          if should_download(args, logfile_name, task):
             async_requests.append(
               grequests.AsyncRequest('GET',uri ,
                 callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size, args.verbose),
@@ -45,7 +46,7 @@ def download_live_logs(args):
       for log_file in logs_folder_files(args, task):
         logfile_name = '{0}-{1}'.format(task, log_file)
         if not args.logtype or (args.logtype and logfetch_base.log_matches(log_file, args.logtype.replace('logs/', ''))):
-          if not args.use_cache or not already_downloaded(args, logfile_name):
+          if should_download(args, logfile_name, task):
             async_requests.append(
               grequests.AsyncRequest('GET',uri ,
                 callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size, args.verbose),
@@ -74,6 +75,15 @@ def tasks_to_check(args):
   else:
     return logfetch_base.tasks_for_requests(args)
 
+def task_still_running(args, task):
+  try:
+    uri = TASK_HISTORY_FORMAT.format(logfetch_base.base_uri(args), task)
+    history = get_json_response(uri, args)
+    last_state = history['taskUpdates'][-1]['taskState']
+    return last_state in ['TASK_RUNNING', 'TASK_STARTING', 'TASK_LAUNCHED', 'TASK_CLEANING']
+  except:
+    return True
+
 def files_json(args, task):
   uri = BROWSE_FOLDER_FORMAT.format(logfetch_base.base_uri(args), task)
   return get_json_response(uri, args)
@@ -100,10 +110,22 @@ def valid_logfile(args, fileData):
     is_a_logfile = fnmatch.fnmatch(fileData['name'], '*.log') or fnmatch.fnmatch(fileData['name'], '*.out') or fnmatch.fnmatch(fileData['name'], '*.err')
     return is_in_range and not_a_directory and is_a_logfile
 
+def should_download(args, filename, task):
+  if args.use_cache and already_downloaded(args, filename):
+    if args.verbose:
+      sys.stderr.write(colored('Using cached version of file {0}\n'.format(filename), 'magenta'))
+    return False
+  if filename.endswith('.gz') and already_downloaded(args, filename):
+    if args.verbose:
+      sys.stderr.write(colored('Using cached version of file {0}, zipped file has not changed\n'.format(filename), 'magenta'))
+    return False
+  if not task_still_running(args, task) and already_downloaded(args, filename):
+    if args.verbose :
+      sys.stderr.write(colored('Using cached version of file {0}, task finished, file has not changed\n'.format(filename), 'magenta'))
+  return True
+
 def already_downloaded(args, filename):
   have_file = (os.path.isfile('{0}/{1}'.format(args.dest, filename.replace('.gz', '.log'))) or os.path.isfile('{0}/{1}'.format(args.dest, filename)))
-  if args.verbose and args.use_cache and have_file:
-    sys.stderr.write(colored('Using cached version of file {0}\n'.format(filename), 'magenta'))
   return have_file
 
 
