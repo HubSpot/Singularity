@@ -1,3 +1,4 @@
+import os
 import sys
 import fnmatch
 import grequests
@@ -24,13 +25,14 @@ def download_live_logs(args):
       for log_file in base_directory_files(args, task, metadata):
         logfile_name = '{0}-{1}'.format(task, log_file)
         if not args.logtype or (args.logtype and logfetch_base.log_matches(log_file, args.logtype.replace('logs/', ''))):
-          async_requests.append(
-            grequests.AsyncRequest('GET',uri ,
-              callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size, args.verbose),
-              params={'path' : '{0}/{1}/{2}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)},
-              headers=args.headers
+          if not args.use_cache or not already_downloaded(args, logfile_name):
+            async_requests.append(
+              grequests.AsyncRequest('GET',uri ,
+                callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size, args.verbose),
+                params={'path' : '{0}/{1}/{2}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)},
+                headers=args.headers
+              )
             )
-          )
           if logfile_name.endswith('.gz'):
             zipped_files.append('{0}/{1}'.format(args.dest, logfile_name))
           else:
@@ -43,13 +45,14 @@ def download_live_logs(args):
       for log_file in logs_folder_files(args, task):
         logfile_name = '{0}-{1}'.format(task, log_file)
         if not args.logtype or (args.logtype and logfetch_base.log_matches(log_file, args.logtype.replace('logs/', ''))):
-          async_requests.append(
-            grequests.AsyncRequest('GET',uri ,
-              callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size, args.verbose),
-              params={'path' : '{0}/{1}/logs/{2}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)},
-              headers=args.headers
+          if not args.use_cache or not already_downloaded(args, logfile_name):
+            async_requests.append(
+              grequests.AsyncRequest('GET',uri ,
+                callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size, args.verbose),
+                params={'path' : '{0}/{1}/logs/{2}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)},
+                headers=args.headers
+              )
             )
-          )
           if logfile_name.endswith('.gz'):
             zipped_files.append('{0}/{1}'.format(args.dest, logfile_name))
           else:
@@ -96,4 +99,11 @@ def valid_logfile(args, fileData):
     not_a_directory = not fileData['mode'].startswith('d')
     is_a_logfile = fnmatch.fnmatch(fileData['name'], '*.log') or fnmatch.fnmatch(fileData['name'], '*.out') or fnmatch.fnmatch(fileData['name'], '*.err')
     return is_in_range and not_a_directory and is_a_logfile
+
+def already_downloaded(args, filename):
+  have_file = (os.path.isfile('{0}/{1}'.format(args.dest, filename.replace('.gz', '.log'))) or os.path.isfile('{0}/{1}'.format(args.dest, filename)))
+  if args.verbose and args.use_cache and have_file:
+    sys.stderr.write(colored('Using cached version of file {0}\n'.format(filename), 'magenta'))
+  return have_file
+
 
