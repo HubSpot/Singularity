@@ -65,9 +65,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initFirstDeploy();
     initSecondDeploy();
 
-    SingularityPendingTask p1 = new SingularityPendingTask(new SingularityPendingTaskId(requestId, firstDeployId, System.currentTimeMillis(), 1, PendingType.ONEOFF, System.currentTimeMillis()), Collections.<String> emptyList(), Optional.<String> absent());
-    SingularityPendingTask p2 = new SingularityPendingTask(new SingularityPendingTaskId(requestId, firstDeployId, System.currentTimeMillis(), 1, PendingType.TASK_DONE, System.currentTimeMillis()), Collections.<String> emptyList(), Optional.<String> absent());
-    SingularityPendingTask p3 = new SingularityPendingTask(new SingularityPendingTaskId(requestId, secondDeployId, System.currentTimeMillis(), 1, PendingType.TASK_DONE, System.currentTimeMillis()),Collections.<String> emptyList(), Optional.<String> absent());
+    SingularityPendingTask p1 = new SingularityPendingTask(new SingularityPendingTaskId(requestId, firstDeployId, System.currentTimeMillis(), 1, PendingType.ONEOFF, System.currentTimeMillis()), Collections.<String> emptyList(), Optional.<String> absent(), Optional.<String> absent());
+    SingularityPendingTask p2 = new SingularityPendingTask(new SingularityPendingTaskId(requestId, firstDeployId, System.currentTimeMillis(), 1, PendingType.TASK_DONE, System.currentTimeMillis()), Collections.<String> emptyList(), Optional.<String> absent(), Optional.<String> absent());
+    SingularityPendingTask p3 = new SingularityPendingTask(new SingularityPendingTaskId(requestId, secondDeployId, System.currentTimeMillis(), 1, PendingType.TASK_DONE, System.currentTimeMillis()),Collections.<String> emptyList(), Optional.<String> absent(), Optional.<String> absent());
 
     taskManager.savePendingTask(p1);
     taskManager.savePendingTask(p2);
@@ -136,16 +136,16 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initSecondDeploy();
 
     SingularityPendingTaskId taskIdOne = new SingularityPendingTaskId(requestId, firstDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(3), 1, PendingType.IMMEDIATE, System.currentTimeMillis());
-    SingularityPendingTask taskOne = new SingularityPendingTask(taskIdOne, Collections.<String> emptyList(), Optional.<String> absent());
+    SingularityPendingTask taskOne = new SingularityPendingTask(taskIdOne, Collections.<String> emptyList(), Optional.<String> absent(), Optional.<String> absent());
 
     SingularityPendingTaskId taskIdTwo = new SingularityPendingTaskId(requestId, firstDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1), 2, PendingType.IMMEDIATE, System.currentTimeMillis());
-    SingularityPendingTask taskTwo = new SingularityPendingTask(taskIdTwo, Collections.<String> emptyList(), Optional.<String> absent());
+    SingularityPendingTask taskTwo = new SingularityPendingTask(taskIdTwo, Collections.<String> emptyList(), Optional.<String> absent(), Optional.<String> absent());
 
     SingularityPendingTaskId taskIdThree = new SingularityPendingTaskId(requestId, secondDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(3), 1, PendingType.IMMEDIATE, System.currentTimeMillis());
-    SingularityPendingTask taskThree = new SingularityPendingTask(taskIdThree, Collections.<String> emptyList(), Optional.<String> absent());
+    SingularityPendingTask taskThree = new SingularityPendingTask(taskIdThree, Collections.<String> emptyList(), Optional.<String> absent(), Optional.<String> absent());
 
     SingularityPendingTaskId taskIdFour = new SingularityPendingTaskId(requestId + "hi", firstDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(3), 5, PendingType.IMMEDIATE, System.currentTimeMillis());
-    SingularityPendingTask taskFour = new SingularityPendingTask(taskIdFour,Collections.<String> emptyList(), Optional.<String> absent());
+    SingularityPendingTask taskFour = new SingularityPendingTask(taskIdFour,Collections.<String> emptyList(), Optional.<String> absent(), Optional.<String> absent());
 
     taskManager.savePendingTask(taskOne);
     taskManager.savePendingTask(taskTwo);
@@ -383,7 +383,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
 
-    requestResource.scheduleImmediately(requestId, user, Collections.<String> emptyList());
+    requestResource.scheduleImmediately(requestId, user, Optional.<String> absent(), Collections.<String> emptyList());
 
     resourceOffers();
 
@@ -395,7 +395,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(0, taskManager.getActiveTaskIds().size());
     Assert.assertEquals(0, taskManager.getPendingTaskIds().size());
 
-    requestResource.scheduleImmediately(requestId, user, Collections.<String> emptyList());
+    requestResource.scheduleImmediately(requestId, user, Optional.<String> absent(), Collections.<String> emptyList());
 
     resourceOffers();
 
@@ -414,7 +414,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.submit(bldr.build(), Optional.<String> absent());
     deploy("d2");
 
-    requestResource.scheduleImmediately(requestId, user, Collections.<String> emptyList());
+    requestResource.scheduleImmediately(requestId, user, Optional.<String> absent(), Collections.<String> emptyList());
 
     validateTaskDoesntMoveDuringDecommission();
   }
