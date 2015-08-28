@@ -9,7 +9,9 @@ TaskCleanups = require '../collections/TaskCleanups'
 Deploys = require '../collections/Deploys'
 
 FileBrowserSubview = require '../views/fileBrowserSubview'
-ExpandableTableSubview = require '../views/expandableTableSubview'
+
+PaginatedTableClientsideView = require '../views/paginatedTableClientsideView'
+
 OverviewSubview = require '../views/taskOverviewSubview'
 HealthcheckNotification = require '../views/taskHealthcheckNotificationSubview'
 SimpleSubview = require '../views/simpleSubview'
@@ -71,9 +73,9 @@ class TaskDetailController extends Controller
             # If we've been given a path we want the files, so scroll directly to it
             scrollWhenReady: @filePath isnt null
 
-        @subviews.s3Logs = new ExpandableTableSubview
-            collection: @collections.s3Logs
-            template:   @templates.logs
+        @subviews.s3Logs = new PaginatedTableClientsideView
+            collection:     @collections.s3Logs
+            template:       @templates.logs
 
         @subviews.lbUpdates = new SimpleSubview
             model:    @models.task
