@@ -5,11 +5,11 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>basepom</artifactId>
-    <version>12.2</version>
+    <version>12.3</version>
   </parent>
 
   <artifactId>Singularity</artifactId>
-  <version>0.4.3-SNAPSHOT</version>
+  <version>0.4.4-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <scm>
@@ -124,7 +124,25 @@
         <artifactId>jackson-jaxrs-propertyfiltering</artifactId>
         <version>0.7.0</version>
       </dependency>
+    
+      <dependency>
+        <groupId>com.h2database</groupId>
+        <artifactId>h2</artifactId>
+        <version>1.4.187</version>
+      </dependency>
 
+      <dependency>
+        <groupId>org.liquibase</groupId>
+        <artifactId>liquibase-core</artifactId>
+        <version>3.1.1</version>
+      </dependency>
+    
+      <dependency>
+        <groupId>org.yaml</groupId>
+        <artifactId>snakeyaml</artifactId>
+        <version>1.13</version>
+      </dependency>
+        
       <dependency>
         <groupId>com.hubspot</groupId>
         <artifactId>BaragonCore</artifactId>
@@ -166,6 +184,18 @@
         <artifactId>HorizonNing</artifactId>
         <version>${horizon.version}</version>
       </dependency>
+
+      <dependency>
+        <groupId>org.apache.directory.api</groupId>
+        <artifactId>api-all</artifactId>
+        <version>1.0.0-M28</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.servicemix.bundles</groupId>
+            <artifactId>org.apache.servicemix.bundles.antlr</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -177,7 +207,7 @@
           <artifactId>docker-maven-plugin</artifactId>
           <version>0.13.2</version>
           <configuration>
-            <images></images>  <!-- default to no images to allow building from parent, let submodules override -->
+            <images />  <!-- default to no images to allow building from parent, let submodules override -->
           </configuration>
           <executions>
             <execution>

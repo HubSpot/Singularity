@@ -38,7 +38,7 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
     LOG.info("Beginning download {} after {}", artifactDownloadRequest, JavaUtils.duration(start));
 
     if (continuation.isExpired()) {
-      LOG.info("Continuation expired for {}, aborting...", artifactDownloadRequest);
+      LOG.info("Continuation expired for {}, aborting...", artifactDownloadRequest.getTargetDirectory());
       return;
     }
 
@@ -46,7 +46,7 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
     final Path targetDirectory = Paths.get(artifactDownloadRequest.getTargetDirectory());
 
     if (continuation.isExpired()) {
-      LOG.info("Continuation expired for {} after download, aborting...", artifactDownloadRequest);
+      LOG.info("Continuation expired for {} after download, aborting...", artifactDownloadRequest.getTargetDirectory());
       return;
     }
 
@@ -56,7 +56,7 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
       artifactManager.copy(fetched, targetDirectory);
     }
 
-    LOG.info("Finishing request {} after {}", artifactDownloadRequest, JavaUtils.duration(start));
+    LOG.info("Finishing request {} after {}", artifactDownloadRequest.getTargetDirectory(), JavaUtils.duration(start));
 
     getResponse().getOutputStream().close();
   }
@@ -71,14 +71,15 @@ public class SingularityS3DownloaderAsyncHandler implements Runnable {
       download();
     } catch (Throwable t) {
       metrics.getServerErrorsMeter().mark();
-      LOG.error("While handling {}", artifactDownloadRequest, t);
+      LOG.error("While handling {}", artifactDownloadRequest.getTargetDirectory(), t);
       try {
         getResponse().sendError(500);
       } catch (Throwable t2) {
-        LOG.error("While sending error", t2);
+        LOG.error("While sending error for {}", artifactDownloadRequest.getTargetDirectory(), t2);
       }
     } finally {
       continuation.complete();
     }
   }
+
 }

@@ -65,7 +65,7 @@ def log_matches(inputString, pattern):
 def all_tasks_for_request(args, request):
   uri = '{0}{1}'.format(base_uri(args), ACTIVE_TASKS_FORMAT.format(request))
   active_tasks = get_json_response(uri, args)
-  if hasattr(args, 'start_days'):
+  if hasattr(args, 'start'):
     uri = '{0}{1}'.format(base_uri(args), REQUEST_TASKS_FORMAT.format(request))
     historical_tasks = get_json_response(uri, args)
     if len(historical_tasks) == 0:
@@ -88,7 +88,7 @@ def all_requests(args):
 
 def is_in_date_range(args, timestamp):
   timstamp_datetime = datetime.utcfromtimestamp(timestamp)
-  if args.end_days:
-    return False if (timstamp_datetime < args.start_days or timstamp_datetime > args.end_days) else True
+  if args.end:
+    return False if (timstamp_datetime < args.start or timstamp_datetime > args.end) else True
   else:
-    return False if timedelta.days < args.start_days else True
+    return False if timedelta.days < args.start else True

@@ -1,7 +1,5 @@
 package com.hubspot.singularity.mesos;
 
-import io.dropwizard.lifecycle.Managed;
-
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -24,6 +22,8 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
+
+import io.dropwizard.lifecycle.Managed;
 
 @Singleton
 public class SingularityLogSupport implements Managed {

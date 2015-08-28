@@ -57,4 +57,40 @@ public class SingularityDockerPortMapping {
             ", protocol=" + protocol +
             ']';
   }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    SingularityDockerPortMapping that = (SingularityDockerPortMapping) o;
+
+    if (!containerPortType.equals(that.containerPortType)) {
+      return false;
+    }
+    if (containerPort != that.containerPort) {
+      return false;
+    }
+    if (!hostPortType.equals(that.hostPortType)) {
+      return false;
+    }
+    if (!protocol.equals(that.protocol)) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = containerPortType.hashCode();
+    result = 31 * result + hostPortType.hashCode();
+    result = 31 * result + containerPort;
+    result = 31 * result + hostPort;
+    result = 31 * result + protocol.hashCode();
+    return result;
+  }
 }

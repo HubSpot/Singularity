@@ -1,5 +1,7 @@
 package com.hubspot.singularity.s3uploader.config;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -12,8 +14,7 @@ import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.jackson.Obfuscate;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
-
-import static com.hubspot.singularity.runner.base.jackson.ObfuscateAnnotationIntrospector.ObfuscateSerializer.obfuscateValue;
+import com.hubspot.singularity.s3.base.config.SingularityS3Credentials;
 
 @Configuration("/etc/singularity.s3uploader.yaml")
 public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration {
@@ -24,10 +25,10 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
 
   public static final String EXECUTOR_MAX_UPLOAD_THREADS = "s3uploader.max.upload.threads";
 
-  public static final String RETRY_WAIT_MS = "s3uploader.retry.wait.ms";
-  public static final String RETRY_COUNT = "s3uploader.retry.count";
   public static final String MAX_SINGLE_UPLOAD_BYTES = "s3uploader.max.single.upload.size";
   public static final String UPLOAD_PART_SIZE = "s3uploader.upload.part.size";
+  public static final String RETRY_WAIT_MS = "s3uploader.retry.wait.ms";
+  public static final String RETRY_COUNT = "s3uploader.retry.count";
 
   public static final String CHECK_FOR_OPEN_FILES = "s3uploader.check.for.open.files";
 
@@ -58,19 +59,23 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
   private Optional<String> s3SecretKey = Optional.absent();
 
   @JsonProperty
-  private int retryWaitMs = 1000;
-
-  @JsonProperty
-  private int retryCount = 2;
-
-  @JsonProperty
   private long maxSingleUploadSizeBytes = 5368709120L;
 
   @JsonProperty
   private long uploadPartSize = 20971520L;
 
   @JsonProperty
+  private int retryWaitMs = 1000;
+
+  @JsonProperty
+  private int retryCount = 2;
+
+  @JsonProperty
   private boolean checkForOpenFiles = true;
+
+  @NotNull
+  @JsonProperty
+  private Map<String, SingularityS3Credentials> s3BucketCredentials = new HashMap<>();
 
   public SingularityS3UploaderConfiguration() {
     super(Optional.of("singularity-s3uploader.log"));
@@ -124,22 +129,6 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     this.s3SecretKey = s3SecretKey;
   }
 
-  public int getRetryCount() {
-    return retryCount;
-  }
-
-  public void setRetryCount(int retryCount) {
-    this.retryCount = retryCount;
-  }
-
-  public int getRetryWaitMs() {
-    return retryWaitMs;
-  }
-
-  public void setRetryWaitMs(int retryWaitMs) {
-    this.retryWaitMs = retryWaitMs;
-  }
-
   public long getMaxSingleUploadSizeBytes() {
     return maxSingleUploadSizeBytes;
   }
@@ -156,12 +145,36 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     this.uploadPartSize = uploadPartSize;
   }
 
+  public int getRetryCount() {
+    return retryCount;
+  }
+
+  public void setRetryCount(int retryCount) {
+    this.retryCount = retryCount;
+  }
+
+  public int getRetryWaitMs() {
+    return retryWaitMs;
+  }
+
+  public void setRetryWaitMs(int retryWaitMs) {
+    this.retryWaitMs = retryWaitMs;
+  }
+
   public boolean isCheckForOpenFiles() {
     return checkForOpenFiles;
   }
 
   public void setCheckForOpenFiles(boolean checkForOpenFiles) {
     this.checkForOpenFiles = checkForOpenFiles;
+  }
+
+  public Map<String, SingularityS3Credentials> getS3BucketCredentials() {
+    return s3BucketCredentials;
+  }
+
+  public void setS3BucketCredentials(Map<String, SingularityS3Credentials> s3BucketCredentials) {
+    this.s3BucketCredentials = s3BucketCredentials;
   }
 
   @Override
@@ -171,13 +184,14 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
             ", executorMaxUploadThreads=" + executorMaxUploadThreads +
             ", checkUploadsEverySeconds=" + checkUploadsEverySeconds +
             ", stopCheckingAfterMillisWithoutNewFile=" + stopCheckingAfterMillisWithoutNewFile +
-            ", s3AccessKey=" + (s3AccessKey.isPresent() ? obfuscateValue(s3AccessKey.get()) : "(blank)") +
-            ", s3SecretKey=" + (s3SecretKey.isPresent() ? obfuscateValue(s3SecretKey.get()) : "(blank)") +
-            ", retryWaitMs=" + retryWaitMs +
-            ", retryCount=" + retryCount +
+            ", s3AccessKey=" + s3AccessKey +
+            ", s3SecretKey=" + s3SecretKey +
             ", maxSingleUploadSizeBytes=" + maxSingleUploadSizeBytes +
             ", uploadPartSize=" + uploadPartSize +
-            ", chkecForOpenFiles=" + checkForOpenFiles +
+            ", retryWaitMs=" + retryWaitMs +
+            ", retryCount=" + retryCount +
+            ", checkForOpenFiles=" + checkForOpenFiles +
+            ", s3BucketCredentials=" + s3BucketCredentials +
             ']';
   }
 
@@ -206,17 +220,17 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     if (properties.containsKey(SingularityS3Configuration.S3_SECRET_KEY)) {
       setS3SecretKey(Optional.of(properties.getProperty(SingularityS3Configuration.S3_SECRET_KEY)));
     }
-    if (properties.containsKey(RETRY_COUNT)) {
-      setRetryCount(Integer.parseInt(properties.getProperty(RETRY_COUNT)));
-    }
-    if (properties.containsKey(RETRY_WAIT_MS)) {
-      setRetryWaitMs(Integer.parseInt(RETRY_WAIT_MS));
-    }
     if (properties.containsKey(MAX_SINGLE_UPLOAD_BYTES)) {
       setMaxSingleUploadSizeBytes(Long.parseLong(properties.getProperty(MAX_SINGLE_UPLOAD_BYTES)));
     }
     if (properties.containsKey(UPLOAD_PART_SIZE)) {
       setUploadPartSize(Long.parseLong(properties.getProperty(UPLOAD_PART_SIZE)));
+    }
+    if (properties.containsKey(RETRY_COUNT)) {
+      setRetryCount(Integer.parseInt(properties.getProperty(RETRY_COUNT)));
+    }
+    if (properties.containsKey(RETRY_WAIT_MS)) {
+      setRetryWaitMs(Integer.parseInt(RETRY_WAIT_MS));
     }
     if (properties.containsKey(CHECK_FOR_OPEN_FILES)) {
       setCheckForOpenFiles(Boolean.parseBoolean(properties.getProperty(CHECK_FOR_OPEN_FILES)));

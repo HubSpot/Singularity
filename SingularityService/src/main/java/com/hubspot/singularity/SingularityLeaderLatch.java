@@ -1,7 +1,6 @@
 package com.hubspot.singularity;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import io.dropwizard.lifecycle.Managed;
 
 import java.util.Set;
 
@@ -13,6 +12,8 @@ import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.apache.curator.framework.recipes.leader.LeaderLatchListener;
 
 import com.google.common.net.HostAndPort;
+
+import io.dropwizard.lifecycle.Managed;
 
 public class SingularityLeaderLatch extends LeaderLatch implements Managed {
 

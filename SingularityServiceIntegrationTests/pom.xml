@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.4.3-SNAPSHOT</version>
+    <version>0.4.4-SNAPSHOT</version>
   </parent>
 
   <artifactId>SingularityServiceIntegrationTests</artifactId>
@@ -157,10 +157,8 @@
                     </env>
                     <volumes>
                       <bind>
-                        <volume>/sys/fs/cgroup:/sys/fs/cgroup</volume>
-                        <volume>/usr/bin/docker:/usr/bin/docker</volume>
-                        <volume>/usr/local/bin/docker:/usr/local/bin/docker</volume>
                         <volume>/var/run/docker.sock:/var/run/docker.sock</volume>
+                        <volume>/sys:/sys</volume>
                       </bind>
                     </volumes>
                     <wait>
@@ -190,9 +188,7 @@
                     </env>
                     <volumes>
                       <bind>
-                        <volume>/sys/fs/cgroup:/sys/fs/cgroup</volume>
-                        <volume>/usr/bin/docker:/usr/bin/docker</volume>
-                        <volume>/usr/local/bin/docker:/usr/local/bin/docker</volume>
+                        <volume>/sys:/sys</volume>
                         <volume>/var/run/docker.sock:/var/run/docker.sock</volume>
                       </bind>
                     </volumes>
@@ -223,9 +219,7 @@
                     </env>
                     <volumes>
                       <bind>
-                        <volume>/sys/fs/cgroup:/sys/fs/cgroup</volume>
-                        <volume>/usr/bin/docker:/usr/bin/docker</volume>
-                        <volume>/usr/local/bin/docker:/usr/local/bin/docker</volume>
+                        <volume>/sys:/sys</volume>
                         <volume>/var/run/docker.sock:/var/run/docker.sock</volume>
                       </bind>
                     </volumes>

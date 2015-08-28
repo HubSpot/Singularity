@@ -2,11 +2,11 @@ package com.hubspot.singularity.client;
 
 import java.util.List;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.zookeeper.KeeperException;
+
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 public class SingularityClusterManager {
 
