@@ -91,7 +91,7 @@ public class DeployTaskHistoryHelper extends BlendedHistoryHelper<SingularityTas
 
   public List<SingularityTaskIdHistory> getInactiveDeployTasks(SingularityDeployKey key, Integer limitCount, Integer limitStart) {
     // We don't know our limits yet before filtering task state
-    Integer limit = singularityConfiguration.getHistoryPurgingConfiguration().getDeleteTaskHistoryAfterTasksPerRequest().or(10000);
+    Integer limit = (int) (singularityConfiguration.getHistoryPurgingConfiguration().getDeleteTaskHistoryAfterTasksPerRequest().or(10000) * 1.2);
     List<SingularityTaskIdHistory> histories = this.getBlendedHistory(key, 0, limit);
 
     final Iterable<SingularityTaskIdHistory> inactiveHistories = Iterables.filter(histories, new Predicate<SingularityTaskIdHistory>() {
