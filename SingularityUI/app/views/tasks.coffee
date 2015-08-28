@@ -51,10 +51,8 @@ class TasksView extends View
         # Only show tasks that match the search query
         if @searchFilter
             tasks = _.filter tasks, (task) =>
-
                 searchField = "#{ task.id }#{ task.host }".toLowerCase().replace(/-/g, '_')
                 searchField.toLowerCase().indexOf(@searchFilter.toLowerCase().replace(/-/g, '_')) isnt -1
-
         # Sort the table if the user clicked on the table heading things
         if @sortAttribute?
             tasks = _.sortBy tasks, (task) =>

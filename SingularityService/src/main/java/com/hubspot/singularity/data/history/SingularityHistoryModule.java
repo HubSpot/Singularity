@@ -49,6 +49,7 @@ public class SingularityHistoryModule extends AbstractModule {
     bind(TaskHistoryHelper.class).in(Scopes.SINGLETON);
     bind(RequestHistoryHelper.class).in(Scopes.SINGLETON);
     bind(DeployHistoryHelper.class).in(Scopes.SINGLETON);
+    bind(DeployTaskHistoryHelper.class).in(Scopes.SINGLETON);
     bind(SingularityRequestHistoryPersister.class).in(Scopes.SINGLETON);
     bind(SingularityDeployHistoryPersister.class).in(Scopes.SINGLETON);
     bind(SingularityTaskHistoryPersister.class).in(Scopes.SINGLETON);

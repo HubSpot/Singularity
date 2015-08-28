@@ -1,8 +1,8 @@
 Controller = require './Controller'
 
 DeployDetails           = require '../models/DeployDetails'
-RequestHistoricalTasks  = require '../collections/RequestHistoricalTasks'
-RequestTasks            = require '../collections/RequestTasks'
+DeployHistoricalTasks   = require '../collections/DeployHistoricalTasks'
+DeployActiveTasks   = require '../collections/DeployActiveTasks'
 HealthCheckResult       = require '../models/HealthCheckResult'
 DeployTasksHealthChecks = require '../collections/DeployTasksHealthChecks'
 
@@ -27,12 +27,13 @@ class DeployDetailController extends Controller
       deployId: @deployId
       requestId: @requestId
 
-    @collections.taskHistory = new RequestHistoricalTasks [],
+    @collections.taskHistory = new DeployHistoricalTasks [],
       requestId: @requestId
+      deployId: @deployId
 
-    @collections.activeTasks = new RequestTasks [],
-        requestId: @requestId
-        state:    'active'
+    @collections.activeTasks = new DeployActiveTasks [],
+      requestId: @requestId
+      deployId: @deployId
 
     @collections.healthChecks = new DeployTasksHealthChecks []
 
@@ -51,13 +52,13 @@ class DeployDetailController extends Controller
       collection: @collections.taskHistory
       template:   @templates.taskHistory
 
-    @subviews.activeTasks = new ExpandableTableSubview
+    @subviews.activeTasks = new SimpleSubview
       collection: @collections.activeTasks
       template:   @templates.activeTasks
 
     @subviews.healthChecks = new SimpleSubview
-        collection: @collections.healthChecks
-        template:   @templates.healthChecks
+      collection: @collections.healthChecks
+      template:   @templates.healthChecks
 
     @refresh()
     @setView new DeployDetailView _.extend {@requestId, @deployId, @subviews},
@@ -68,32 +69,22 @@ class DeployDetailController extends Controller
   refresh: ->
     requestFetch = @models.deploy.fetch()
 
-    @collections.taskHistory.atATime = 999999
     promise = @collections.taskHistory.fetch()
     promise.error =>
-        @ignore404
-    promise.done =>
-        filtered = @collections.taskHistory.getTasksForDeploy(@deployId)
-        @collections.taskHistory.atATime = 5
-        @collections.taskHistory.reset(filtered)
+      @ignore404
 
-    @collections.taskHistory.atATime = 999999
     promise = @collections.activeTasks.fetch()
     promise.error =>
-        @ignore404
+      @ignore404
     promise.done =>
-        filtered = @collections.activeTasks.getTasksForDeploy(@deployId)
-        @collections.taskHistory.atATime = 5
-        @collections.activeTasks.reset(filtered)
-
-        # Get the latest health check for each active task
-        @collections.healthChecks.reset()
-        for task in filtered
-            health = new HealthCheckResult
-                taskId: task.id
-            health.fetch(success: =>
-                if health.get('durationMillis')
-                    @collections.healthChecks.add(health)
-            )
+      # Get the latest health check for each active task
+      @collections.healthChecks.reset()
+      for task in @collections.activeTasks.models
+          health = new HealthCheckResult
+              taskId: task.id
+          health.fetch(success: =>
+              if health.get('durationMillis')
+                  @collections.healthChecks.add(health)
+          )
 
 module.exports = DeployDetailController

@@ -12,7 +12,7 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
 
 @Singleton
-public class RequestHistoryHelper extends BlendedHistoryHelper<SingularityRequestHistory> {
+public class RequestHistoryHelper extends BlendedHistoryHelper<SingularityRequestHistory, String> {
 
   private final RequestManager requestManager;
   private final HistoryManager historyManager;
