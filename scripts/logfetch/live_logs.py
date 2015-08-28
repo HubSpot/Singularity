@@ -1,3 +1,4 @@
+import os
 import sys
 import fnmatch
 import grequests
@@ -8,6 +9,7 @@ import logfetch_base
 
 DOWNLOAD_FILE_FORMAT = 'http://{0}:5051/files/download.json'
 BROWSE_FOLDER_FORMAT = '{0}/sandbox/{1}/browse'
+TASK_HISTORY_FORMAT = '{0}/history/task/{1}'
 
 def download_live_logs(args):
   tasks = tasks_to_check(args)
@@ -24,13 +26,14 @@ def download_live_logs(args):
       for log_file in base_directory_files(args, task, metadata):
         logfile_name = '{0}-{1}'.format(task, log_file)
         if not args.logtype or (args.logtype and logfetch_base.log_matches(log_file, args.logtype.replace('logs/', ''))):
-          async_requests.append(
-            grequests.AsyncRequest('GET',uri ,
-              callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size, args.verbose),
-              params={'path' : '{0}/{1}/{2}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)},
-              headers=args.headers
+          if should_download(args, logfile_name, task):
+            async_requests.append(
+              grequests.AsyncRequest('GET',uri ,
+                callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size, args.verbose),
+                params={'path' : '{0}/{1}/{2}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)},
+                headers=args.headers
+              )
             )
-          )
           if logfile_name.endswith('.gz'):
             zipped_files.append('{0}/{1}'.format(args.dest, logfile_name))
           else:
@@ -43,13 +46,14 @@ def download_live_logs(args):
       for log_file in logs_folder_files(args, task):
         logfile_name = '{0}-{1}'.format(task, log_file)
         if not args.logtype or (args.logtype and logfetch_base.log_matches(log_file, args.logtype.replace('logs/', ''))):
-          async_requests.append(
-            grequests.AsyncRequest('GET',uri ,
-              callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size, args.verbose),
-              params={'path' : '{0}/{1}/logs/{2}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)},
-              headers=args.headers
+          if should_download(args, logfile_name, task):
+            async_requests.append(
+              grequests.AsyncRequest('GET',uri ,
+                callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size, args.verbose),
+                params={'path' : '{0}/{1}/logs/{2}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)},
+                headers=args.headers
+              )
             )
-          )
           if logfile_name.endswith('.gz'):
             zipped_files.append('{0}/{1}'.format(args.dest, logfile_name))
           else:
@@ -70,6 +74,17 @@ def tasks_to_check(args):
     return [args.taskId]
   else:
     return logfetch_base.tasks_for_requests(args)
+
+def task_history(args, task):
+  uri = TASK_HISTORY_FORMAT.format(logfetch_base.base_uri(args), task)
+  return get_json_response(uri, args)
+
+def task_still_running(args, task, history):
+  try:
+    last_state = history['taskUpdates'][-1]['taskState']
+    return last_state in ['TASK_RUNNING', 'TASK_STARTING', 'TASK_LAUNCHED', 'TASK_CLEANING']
+  except:
+    return True
 
 def files_json(args, task):
   uri = BROWSE_FOLDER_FORMAT.format(logfetch_base.base_uri(args), task)
@@ -96,4 +111,32 @@ def valid_logfile(args, fileData):
     not_a_directory = not fileData['mode'].startswith('d')
     is_a_logfile = fnmatch.fnmatch(fileData['name'], '*.log') or fnmatch.fnmatch(fileData['name'], '*.out') or fnmatch.fnmatch(fileData['name'], '*.err')
     return is_in_range and not_a_directory and is_a_logfile
+
+def should_download(args, filename, task):
+  if args.use_cache and already_downloaded(args, filename):
+    if args.verbose:
+      sys.stderr.write(colored('Using cached version of file {0}\n'.format(filename), 'magenta'))
+    return False
+  if filename.endswith('.gz') and already_downloaded(args, filename):
+    if args.verbose:
+      sys.stderr.write(colored('Using cached version of file {0}, zipped file has not changed\n'.format(filename), 'magenta'))
+    return False
+  history = task_history(args, task)
+  if not task_still_running(args, task, history) and already_downloaded(args, filename) and file_not_too_old(args, history, filename):
+    if args.verbose:
+      sys.stderr.write(colored('Using cached version of file {0}, {1}, file has not changed\n'.format(filename, history['taskUpdates'][-1]['taskState']), 'magenta'))
+  else:
+    if args.verbose:
+      sys.stderr.write(colored('Will download file {0}, version on the server is newer than cached version\n'.format(filename), 'magenta'))
+
+  return True
+
+def file_not_too_old(args, history, filename):
+  state_updated_at = int(str(history['taskUpdates'][-1]['timestamp'])[0:-3])
+  return int(os.path.getmtime('{0}/{1}'.format(args.dest, filename))) > state_updated_at
+
+def already_downloaded(args, filename):
+  have_file = (os.path.isfile('{0}/{1}'.format(args.dest, filename.replace('.gz', '.log'))) or os.path.isfile('{0}/{1}'.format(args.dest, filename)))
+  return have_file
+
 
