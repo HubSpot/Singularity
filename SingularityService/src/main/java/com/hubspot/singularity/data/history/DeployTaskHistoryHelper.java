@@ -15,6 +15,7 @@ import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 
 @Singleton
@@ -22,11 +23,13 @@ public class DeployTaskHistoryHelper extends BlendedHistoryHelper<SingularityTas
 
   private final TaskManager taskManager;
   private final HistoryManager historyManager;
+  private final SingularityConfiguration singularityConfiguration;
 
   @Inject
-  public DeployTaskHistoryHelper(TaskManager taskManager, HistoryManager historyManager) {
+  public DeployTaskHistoryHelper(TaskManager taskManager, HistoryManager historyManager, SingularityConfiguration singularityConfiguration) {
     this.taskManager = taskManager;
     this.historyManager = historyManager;
+    this.singularityConfiguration = singularityConfiguration;
   }
 
   public List<SingularityTaskIdHistory> getHistoriesFor(Collection<SingularityTaskId> taskIds) {
@@ -88,7 +91,8 @@ public class DeployTaskHistoryHelper extends BlendedHistoryHelper<SingularityTas
 
   public List<SingularityTaskIdHistory> getInactiveDeployTasks(SingularityDeployKey key, Integer limitCount, Integer limitStart) {
     // We don't know our limits yet before filtering task state
-    List<SingularityTaskIdHistory> histories = this.getBlendedHistory(key, 0, Integer.MAX_VALUE);
+    Integer limit = singularityConfiguration.getHistoryPurgingConfiguration().getDeleteTaskHistoryAfterTasksPerRequest().or(10000);
+    List<SingularityTaskIdHistory> histories = this.getBlendedHistory(key, 0, limit);
 
     final Iterable<SingularityTaskIdHistory> inactiveHistories = Iterables.filter(histories, new Predicate<SingularityTaskIdHistory>() {
       @Override
