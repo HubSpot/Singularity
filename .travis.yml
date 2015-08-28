@@ -3,10 +3,16 @@ jdk:
   - oraclejdk7
   - openjdk7
   - oraclejdk8
-install: mvn -Pbuild-swagger-documentation -DskipTests=true -B -fae install
-script: mvn -B -fae verify
+
+script: mvn -Pbuild-swagger-documentation -B -fae verify
 
 git:
   depth: 100
 
 sudo: false
+
+cache:
+  directories:
+  - $HOME/.m2
+  - SingularityUI/bower_components
+  - SingularityUI/node_modules
