@@ -1,5 +1,5 @@
 <div class="page-header">
-    <h2>Task history</h2>
+    <h2>Task History</h2>
 </div>
 {{#if data.length}}
     <div class="table-container">
@@ -40,7 +40,9 @@
                             </span>
                         </td>
                         <td class="hidden-sm hidden-xs">
-                            <span class="label label-{{getLabelClass lastTaskState}}">{{humanizeText lastTaskState}}</span>
+                            <span class="label label-{{getLabelClass lastTaskState}}">
+                                {{humanizeText lastTaskState}}
+                            </span>
                         </td>
                         <td class="hidden-sm hidden-xs">
                             {{ taskId.deployId }}
@@ -51,6 +53,7 @@
                         <td class="hidden-xs">
                             {{timestampFromNow updatedAt}}
                         </td>
+                        {{log ../../config.finishedTaskLogPath}}
                         <td class="hidden-xs actions-column">
                             <a href="{{ appRoot }}/task/{{ taskId.id }}/tail/{{ substituteTaskId ../../config.finishedTaskLogPath taskId.id }}" title="Log">
                                 ...
