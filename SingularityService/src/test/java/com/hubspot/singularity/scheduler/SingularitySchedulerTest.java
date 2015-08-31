@@ -42,8 +42,8 @@ import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestInstances;
 import com.hubspot.singularity.SingularitySchedulerTestBase;
 import com.hubspot.singularity.SingularityTask;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
@@ -1211,21 +1211,21 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     deploy("d2");
     deployChecker.checkDeploys();
 
-    requestResource.scheduleImmediately(requestId, user, Collections.<String> emptyList());
+    requestResource.scheduleImmediately(requestId, user, Optional.<String> absent(), Collections.<String> emptyList());
 
     resourceOffers();
 
-    requestResource.scheduleImmediately(requestId, user, Collections.<String> emptyList());
+    requestResource.scheduleImmediately(requestId, user, Optional.<String> absent(), Collections.<String> emptyList());
 
     resourceOffers();
 
     Assert.assertEquals(2, taskManager.getActiveTaskIds().size());
 
-    requestResource.scheduleImmediately(requestId, user, Collections.<String> emptyList());
+    requestResource.scheduleImmediately(requestId, user, Optional.<String> absent(), Collections.<String> emptyList());
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
-    requestResource.scheduleImmediately(requestId, user, Collections.<String> emptyList());
+    requestResource.scheduleImmediately(requestId, user, Optional.<String> absent(), Collections.<String> emptyList());
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
