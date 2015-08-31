@@ -3,6 +3,9 @@ package com.hubspot.singularity.data.history;
 import java.util.Date;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.DeployState;
@@ -11,16 +14,17 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdCount;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 
 public class JDBIHistoryManager implements HistoryManager {
+
+  private static final Logger LOG = LoggerFactory.getLogger(JDBIHistoryManager.class);
 
   private final HistoryJDBI history;
   private final Transcoder<SingularityTaskHistory> taskHistoryTranscoder;
   private final Transcoder<SingularityDeployHistory> deployHistoryTranscoder;
   private final Transcoder<SingularityRequest> singularityRequestTranscoder;
-
-  // TODO jdbi timeouts / exceptions
 
   @Inject
   public JDBIHistoryManager(HistoryJDBI history, Transcoder<SingularityTaskHistory> taskHistoryTranscoder, Transcoder<SingularityDeployHistory> deployHistoryTranscoder,
@@ -109,6 +113,40 @@ public class JDBIHistoryManager implements HistoryManager {
     }
 
     return Optional.of(taskHistoryTranscoder.fromBytes(historyBytes));
+  }
+
+  @Override
+  public List<SingularityRequestIdCount> getRequestIdCounts(Date before) {
+    return history.getRequestIdCounts(before);
+  }
+
+  @Override
+  public void purgeTaskHistory(String requestId, int count, Optional<Integer> limit, Optional<Date> purgeBefore, boolean deleteRowInsteadOfUpdate) {
+    if (limit.isPresent() && count > limit.get()) {
+      Date beforeBasedOnLimit = history.getMinUpdatedAtWithLimitForRequest(requestId, limit.get());
+
+      if (deleteRowInsteadOfUpdate) {
+        LOG.debug("Deleting task history for {} above {} items (before {})", requestId, limit.get(), beforeBasedOnLimit);
+
+        history.deleteTaskHistoryForRequestBefore(requestId, beforeBasedOnLimit);
+      } else {
+        LOG.debug("Purging task history bytes for {} above {} items (before {})", requestId, limit.get(), beforeBasedOnLimit);
+
+        history.updateTaskHistoryNullBytesForRequestBefore(requestId, beforeBasedOnLimit);
+      }
+    }
+
+    if (purgeBefore.isPresent()) {
+      if (deleteRowInsteadOfUpdate) {
+        LOG.debug("Deleting task history for {} before {}", requestId, purgeBefore.get());
+
+        history.deleteTaskHistoryForRequestBefore(requestId, purgeBefore.get());
+      } else {
+        LOG.debug("Purging task history bytes for {} before {}", requestId, purgeBefore.get());
+
+        history.updateTaskHistoryNullBytesForRequestBefore(requestId, purgeBefore.get());
+      }
+    }
   }
 
 }

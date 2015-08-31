@@ -2,12 +2,9 @@ package com.hubspot.singularity.executor.config;
 
 import java.nio.file.Path;
 
-import com.spotify.docker.client.DockerClient;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskInfo;
-
-import ch.qos.logback.classic.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -22,9 +19,12 @@ import com.hubspot.singularity.executor.task.SingularityExecutorArtifactFetcher;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
-import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
+import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
+import com.spotify.docker.client.DockerClient;
+
+import ch.qos.logback.classic.Logger;
 
 @Singleton
 public class SingularityExecutorTaskBuilder {

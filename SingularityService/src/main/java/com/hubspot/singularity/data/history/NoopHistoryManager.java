@@ -1,6 +1,7 @@
 package com.hubspot.singularity.data.history;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -10,6 +11,7 @@ import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdCount;
 
 public class NoopHistoryManager implements HistoryManager {
 
@@ -60,6 +62,16 @@ public class NoopHistoryManager implements HistoryManager {
   @Override
   public List<String> getRequestHistoryLike(String requestIdLike, Integer limitStart, Integer limitCount) {
     return Collections.emptyList();
+  }
+
+  @Override
+  public List<SingularityRequestIdCount> getRequestIdCounts(Date before) {
+    return Collections.emptyList();
+  }
+
+  @Override
+  public void purgeTaskHistory(String requestId, int count, Optional<Integer> limit, Optional<Date> purgeBefore, boolean deleteRowInsteadOfUpdate) {
+    throw new UnsupportedOperationException("NoopHistoryManager can not update/delete");
   }
 
 }

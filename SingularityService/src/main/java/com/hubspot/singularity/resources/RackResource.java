@@ -28,6 +28,7 @@ import com.wordnik.swagger.annotations.ApiParam;
 @Produces({ MediaType.APPLICATION_JSON })
 @Api( description="Manages Singularity racks.", value=RackResource.PATH )
 public class RackResource extends AbstractMachineResource<SingularityRack> {
+
   public static final String PATH = SingularityService.API_BASE_PATH + "/racks";
 
 

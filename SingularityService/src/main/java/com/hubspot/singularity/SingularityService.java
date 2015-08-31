@@ -2,16 +2,6 @@ package com.hubspot.singularity;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import io.dropwizard.Application;
-import io.dropwizard.Bundle;
-import io.dropwizard.ConfiguredBundle;
-import io.dropwizard.assets.AssetsBundle;
-import io.dropwizard.db.DataSourceFactory;
-import io.dropwizard.migrations.MigrationsBundle;
-import io.dropwizard.setup.Bootstrap;
-import io.dropwizard.setup.Environment;
-import io.dropwizard.views.ViewBundle;
-
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
@@ -21,6 +11,16 @@ import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.singularity.bundles.CorsBundle;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.guice.GuiceBundle;
+
+import io.dropwizard.Application;
+import io.dropwizard.Bundle;
+import io.dropwizard.ConfiguredBundle;
+import io.dropwizard.assets.AssetsBundle;
+import io.dropwizard.db.DataSourceFactory;
+import io.dropwizard.migrations.MigrationsBundle;
+import io.dropwizard.setup.Bootstrap;
+import io.dropwizard.setup.Environment;
+import io.dropwizard.views.ViewBundle;
 
 public class SingularityService<T extends SingularityConfiguration> extends Application<T> {
 

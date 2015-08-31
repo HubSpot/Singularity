@@ -12,6 +12,7 @@ import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLoc
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdCount;
 
 @UseStringTemplate3StatementLocator
 public interface HistoryJDBI {
@@ -43,5 +44,18 @@ public interface HistoryJDBI {
   @SqlQuery("SELECT DISTINCT requestId FROM requestHistory WHERE requestId LIKE CONCAT(:requestIdLike, '%') LIMIT :limitStart, :limitCount")
   List<String> getRequestHistoryLike(@Bind("requestIdLike") String requestIdLike, @Bind("limitStart") Integer limitStart, @Bind("limitCount") Integer limitCount);
 
+  @SqlQuery("SELECT requestId, COUNT(*) as count FROM taskHistory WHERE updatedAt \\< :updatedAt GROUP BY requestId")
+  List<SingularityRequestIdCount> getRequestIdCounts(@Bind("updatedAt") Date updatedAt);
+
+  @SqlQuery("SELECT MIN(updatedAt) from (SELECT updatedAt FROM taskHistory WHERE requestId = :requestId ORDER BY updatedAt DESC LIMIT :limit) as alias")
+  Date getMinUpdatedAtWithLimitForRequest(@Bind("requestId") String requestId, @Bind("limit") Integer limit);
+
+  @SqlUpdate("UPDATE taskHistory SET bytes = '' WHERE requestId = :requestId AND updatedAt \\< :updatedAtBefore")
+  void updateTaskHistoryNullBytesForRequestBefore(@Bind("requestId") String requestId, @Bind("updatedAtBefore") Date updatedAtBefore);
+
+  @SqlUpdate("DELETE FROM taskHistory WHERE requestId = :requestId AND updatedAt \\< :updatedAtBefore")
+  void deleteTaskHistoryForRequestBefore(@Bind("requestId") String requestId, @Bind("updatedAtBefore") Date updatedAtBefore);
+
   void close();
+
 }

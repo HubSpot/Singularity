@@ -14,6 +14,7 @@ import org.apache.mesos.SchedulerDriver;
 import org.mockito.Matchers;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -60,15 +61,21 @@ import com.hubspot.singularity.smtp.SingularityMailer;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
+import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.lifecycle.Managed;
+import io.dropwizard.setup.Environment;
 import net.kencochrane.raven.Raven;
 
 public class SingularityTestModule implements Module {
   private final TestingServer ts;
   private final GuiceBundle.DropwizardModule dropwizardModule;
 
-  public SingularityTestModule() throws Exception {
+  private final boolean useDBTests;
+
+  public SingularityTestModule(boolean useDbTests) throws Exception {
+    this.useDBTests = useDbTests;
+
     dropwizardModule = new GuiceBundle.DropwizardModule();
 
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -107,38 +114,46 @@ public class SingularityTestModule implements Module {
 
     mainBinder.bind(TestingServer.class).toInstance(ts);
     final SingularityConfiguration configuration = getSingularityConfigurationForTestingServer(ts);
+
+    if (useDBTests) {
+      configuration.setDatabaseConfiguration(getDataSourceFactory());
+    }
+
     mainBinder.bind(SingularityConfiguration.class).toInstance(configuration);
 
     mainBinder.install(Modules.override(new SingularityMainModule(configuration))
-            .with(new Module() {
+        .with(new Module() {
 
-              @Override
-              public void configure(Binder binder) {
-                binder.bind(SingularityExceptionNotifier.class).toInstance(mock(SingularityExceptionNotifier.class));
+          @Override
+          public void configure(Binder binder) {
+            binder.bind(SingularityExceptionNotifier.class).toInstance(mock(SingularityExceptionNotifier.class));
 
-                SingularityAbort abort = mock(SingularityAbort.class);
-                SingularityMailer mailer = mock(SingularityMailer.class);
+            SingularityAbort abort = mock(SingularityAbort.class);
+            SingularityMailer mailer = mock(SingularityMailer.class);
 
-                binder.bind(SingularityMailer.class).toInstance(mailer);
-                binder.bind(SingularityAbort.class).toInstance(abort);
+            binder.bind(SingularityMailer.class).toInstance(mailer);
+            binder.bind(SingularityAbort.class).toInstance(abort);
 
-                TestingLoadBalancerClient tlbc = new TestingLoadBalancerClient();
-                binder.bind(LoadBalancerClient.class).toInstance(tlbc);
-                binder.bind(TestingLoadBalancerClient.class).toInstance(tlbc);
+            TestingLoadBalancerClient tlbc = new TestingLoadBalancerClient();
+            binder.bind(LoadBalancerClient.class).toInstance(tlbc);
+            binder.bind(TestingLoadBalancerClient.class).toInstance(tlbc);
 
-                binder.bind(ObjectMapper.class).toInstance(Jackson.newObjectMapper()
-                        .setSerializationInclusion(Include.NON_NULL)
-                        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-                        .registerModule(new ProtobufModule()));
+            ObjectMapper om = Jackson.newObjectMapper()
+              .setSerializationInclusion(Include.NON_NULL)
+              .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+              .registerModule(new ProtobufModule());
 
-                binder.bind(HostAndPort.class).annotatedWith(named(HTTP_HOST_AND_PORT)).toInstance(HostAndPort.fromString("localhost:8080"));
+            binder.bind(ObjectMapper.class).toInstance(om);
 
-                binder.bind(new TypeLiteral<Optional<Raven>>() {
-                }).toInstance(Optional.<Raven>absent());
-                binder.bind(new TypeLiteral<Optional<SentryConfiguration>>() {
-                }).toInstance(Optional.<SentryConfiguration>absent());
-              }
-            }));
+            Environment environment = new Environment("test-env", om, null, new MetricRegistry(), null);
+            binder.bind(Environment.class).toInstance(environment);
+
+            binder.bind(HostAndPort.class).annotatedWith(named(HTTP_HOST_AND_PORT)).toInstance(HostAndPort.fromString("localhost:8080"));
+
+            binder.bind(new TypeLiteral<Optional<Raven>>() {}).toInstance(Optional.<Raven>absent());
+            binder.bind(new TypeLiteral<Optional<SentryConfiguration>>() {}).toInstance(Optional.<SentryConfiguration>absent());
+          }
+        }));
 
     mainBinder.install(Modules.override(new SingularityMesosModule())
         .with(new Module() {
@@ -169,7 +184,7 @@ public class SingularityTestModule implements Module {
     mainBinder.install(new SingularityDataModule());
     mainBinder.install(new SingularitySchedulerModule());
     mainBinder.install(new SingularityTranscoderModule());
-    mainBinder.install(new SingularityHistoryModule());
+    mainBinder.install(new SingularityHistoryModule(configuration));
     mainBinder.install(new SingularityZkMigrationsModule());
     mainBinder.install(new SingularityMesosClientModule());
     mainBinder.install(new SingularityEventModule(configuration));
@@ -179,6 +194,16 @@ public class SingularityTestModule implements Module {
     mainBinder.bind(RequestResource.class);
     mainBinder.bind(SlaveResource.class);
     mainBinder.bind(RackResource.class);
+  }
+
+  private DataSourceFactory getDataSourceFactory() {
+    DataSourceFactory dataSourceFactory = new DataSourceFactory();
+    dataSourceFactory.setDriverClass("org.h2.Driver");
+    dataSourceFactory.setUrl("jdbc:h2:mem:singularity;DB_CLOSE_DELAY=-1");
+    dataSourceFactory.setUser("user");
+    dataSourceFactory.setPassword("password");
+
+    return dataSourceFactory;
   }
 
   private static SingularityConfiguration getSingularityConfigurationForTestingServer(final TestingServer ts) {
