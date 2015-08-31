@@ -70,6 +70,8 @@ ALTER TABLE `requestHistory` ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
 
 ALTER TABLE `taskHistory` ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
 
---changeset wsorenson:5 dbms:mysql
-ALTER TABLE `taskHistory` ADD COLUMN runId VARCHAR(100) NULL;
+--changeset ssalinas:5 dbms:mysql
+ALTER TABLE `taskHistory` MODIFY `bytes` MEDIUMBLOB NOT NULL;
 
+--changeset wsorenson:6 dbms:mysql
+ALTER TABLE `taskHistory` ADD COLUMN runId VARCHAR(100) NULL;
