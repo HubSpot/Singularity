@@ -30,6 +30,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployStatistics;
@@ -342,7 +343,9 @@ public class SingularityScheduler {
 
   private int scheduleTasks(SingularitySchedulerStateCache stateCache, SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics,
       SingularityPendingRequest pendingRequest, List<SingularityTaskId> matchingTaskIds) {
-    deleteScheduledTasks(stateCache.getScheduledTasks(), pendingRequest);
+    if (request.getRequestType() != RequestType.ON_DEMAND) {
+      deleteScheduledTasks(stateCache.getScheduledTasks(), pendingRequest);
+    }
 
     final int numMissingInstances = getNumMissingInstances(matchingTaskIds, request, pendingRequest);
 
