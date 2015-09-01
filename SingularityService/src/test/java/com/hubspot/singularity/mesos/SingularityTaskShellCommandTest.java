@@ -42,6 +42,10 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
   @Inject
   private UIConfiguration uiConfiguration;
 
+  public SingularityTaskShellCommandTest() {
+    super(false);
+  }
+
   @Test
   public void testTaskShellCommandPersistence() {
     initRequest();

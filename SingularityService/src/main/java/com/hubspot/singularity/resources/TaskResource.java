@@ -22,8 +22,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -45,11 +45,11 @@ import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
-import com.hubspot.singularity.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
@@ -68,9 +68,8 @@ import com.wordnik.swagger.annotations.ApiResponses;
 public class TaskResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/tasks";
 
-  private final MesosClient mesosClient;
-  private final SlaveManager slaveManager;
   private final TaskManager taskManager;
+  private final SlaveManager slaveManager;
   private final TaskRequestManager taskRequestManager;
   private final MesosClient mesosClient;
   private final SingularityAuthorizationHelper authorizationHelper;
@@ -78,26 +77,15 @@ public class TaskResource {
   private final UIConfiguration uiConfiguration;
 
   @Inject
-  public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient, UIConfiguration uiConfiguration,
-                      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user) {
+  public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient,
+                      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, UIConfiguration uiConfiguration) {
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
     this.slaveManager = slaveManager;
     this.mesosClient = mesosClient;
     this.authorizationHelper = authorizationHelper;
     this.user = user;
-
     this.uiConfiguration = uiConfiguration;
-  }
-
-  private SingularityTask checkActiveTask(String taskId) {
-    SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
-
-    Optional<SingularityTask> task = taskManager.getTask(taskIdObj);
-
-    checkNotFound(task.isPresent() && taskManager.isActiveTask(taskId), "No active task with id %s", taskId);
-
-    return task.get();
   }
 
   @GET
@@ -133,37 +121,6 @@ public class TaskResource {
   }
 
   @GET
-  @Path("/task/{taskId}")
-  @ApiOperation("Retrieve information about a specific active task.")
-  public SingularityTask getActiveTask(@PathParam("taskId") String taskId) {
-    return checkActiveTask(taskId);
-  }
-
-  @GET
-  @PropertyFiltering
-  @Path("/active")
-  @ApiOperation("Retrieve the list of active tasks.")
-  public List<SingularityTask> getActiveTasks() {
-    return taskManager.getActiveTasks();
-  }
-
-  @GET
-  @PropertyFiltering
-  @Path("/cleaning")
-  @ApiOperation("Retrieve the list of cleaning tasks.")
-  public List<SingularityTaskCleanup> getCleaningTasks() {
-    return taskManager.getCleanupTasks();
-  }
-
-  @GET
-  @PropertyFiltering
-  @Path("/lbcleanup")
-  @ApiOperation("Retrieve the list of tasks being cleaned from load balancers.")
-  public List<SingularityTaskId> getLbCleanupTasks() {
-    return taskManager.getLBCleanupTasks();
-  }
-
-  @GET
   @PropertyFiltering
   @Path("/scheduled/task/{pendingTaskId}")
   @ApiOperation("Retrieve information about a pending task.")
@@ -183,24 +140,6 @@ public class TaskResource {
 
   @GET
   @PropertyFiltering
-  @Path("/scheduled/ids")
-  @ApiOperation("Retrieve list of scheduled task IDs.")
-  public List<SingularityPendingTaskId> getScheduledTaskIds() {
-    return taskManager.getPendingTaskIds();
-  }
-
-  @GET
-  @PropertyFiltering
-  @Path("/scheduled")
-  @ApiOperation("Retrieve list of scheduled tasks.")
-  public List<SingularityTaskRequest> getScheduledTasks() {
-    final List<SingularityPendingTask> tasks = taskManager.getPendingTasks();
-
-    return taskRequestManager.getTaskRequests(tasks);
-  }
-
-  @GET
-  @PropertyFiltering
   @Path("/scheduled/request/{requestId}")
   @ApiOperation("Retrieve list of scheduled tasks for a specific request.")
   public List<SingularityTaskRequest> getScheduledTasksForRequest(@PathParam("requestId") String requestId) {
@@ -209,13 +148,6 @@ public class TaskResource {
     final List<SingularityPendingTask> tasks = Lists.newArrayList(Iterables.filter(taskManager.getPendingTasks(), SingularityPendingTask.matchingRequest(requestId)));
 
     return taskRequestManager.getTaskRequests(tasks);
-  }
-
-  @GET
-  @Path("/task/{taskId}/cleanup")
-  @ApiOperation("Get the cleanup object for the task, if it exists")
-  public Optional<SingularityTaskCleanup> getTaskCleanup(@PathParam("taskId") String taskId) {
-    return taskManager.getTaskCleanup(taskId);
   }
 
   @GET
@@ -302,7 +234,40 @@ public class TaskResource {
   @ApiOperation("Get the cleanup object for the task, if it exists")
   public Optional<SingularityTaskCleanup> getTaskCleanup(@PathParam("taskId") String taskId) {
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user);
+
+    return taskManager.getTaskCleanup(taskId);
   }
+
+  @DELETE
+  @Path("/task/{taskId}")
+  @ApiOperation(value="Attempt to kill task, optionally overriding an existing cleanup request (that may be waiting for replacement tasks to become healthy)", response=SingularityTaskCleanup.class)
+  @ApiResponses({
+    @ApiResponse(code=409, message="Task already has a cleanup request (can be overridden with override=true)")
+  })
+  public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> queryUser, @ApiParam("Pass true to save over any existing cleanup requests") @QueryParam("override") Optional<Boolean> override) {
+    final SingularityTask task = checkActiveTask(taskId);
+
+    final SingularityTaskCleanup taskCleanup = new SingularityTaskCleanup(queryUser, TaskCleanupType.USER_REQUESTED, System.currentTimeMillis(), task.getTaskId(), Optional.<String> absent());
+
+    if (override.isPresent() && override.get().booleanValue()) {
+      taskManager.saveTaskCleanup(taskCleanup);
+    } else {
+      SingularityCreateResult result = taskManager.createTaskCleanup(taskCleanup);
+
+      while (result == SingularityCreateResult.EXISTED) {
+        Optional<SingularityTaskCleanup> cleanup = taskManager.getTaskCleanup(taskId);
+
+        if (cleanup.isPresent()) {
+          throw new WebApplicationException(Response.status(Status.CONFLICT).entity(cleanup.get()).type(MediaType.APPLICATION_JSON).build());
+        }
+
+        result = taskManager.createTaskCleanup(taskCleanup);
+      }
+    }
+
+    return taskCleanup;
+  }
+
 
   @Path("/commands/queued")
   @ApiOperation(value="Retrieve a list of all the shell commands queued for execution")
@@ -353,36 +318,6 @@ public class TaskResource {
     taskManager.saveTaskShellCommandRequestToQueue(shellRequest);
 
     return shellRequest;
-  }
-
-  @DELETE
-  @Path("/task/{taskId}")
-  @ApiOperation(value="Attempt to kill task, optionally overriding an existing cleanup request (that may be waiting for replacement tasks to become healthy)", response=SingularityTaskCleanup.class)
-  @ApiResponses({
-    @ApiResponse(code=409, message="Task already has a cleanup request (can be overridden with override=true)")
-  })
-  public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> queryUser, @ApiParam("Pass true to save over any existing cleanup requests") @QueryParam("override") Optional<Boolean> override) {
-    final SingularityTask task = checkActiveTask(taskId);
-
-    final SingularityTaskCleanup taskCleanup = new SingularityTaskCleanup(queryUser, TaskCleanupType.USER_REQUESTED, System.currentTimeMillis(), task.getTaskId(), Optional.<String> absent());
-
-    if (override.isPresent() && override.get().booleanValue()) {
-      taskManager.saveTaskCleanup(taskCleanup);
-    } else {
-      SingularityCreateResult result = taskManager.createTaskCleanup(taskCleanup);
-
-      while (result == SingularityCreateResult.EXISTED) {
-        Optional<SingularityTaskCleanup> cleanup = taskManager.getTaskCleanup(taskId);
-
-        if (cleanup.isPresent()) {
-          throw new WebApplicationException(Response.status(Status.CONFLICT).entity(cleanup.get()).type(MediaType.APPLICATION_JSON).build());
-        }
-
-        result = taskManager.createTaskCleanup(taskCleanup);
-      }
-    }
-
-    return taskCleanup;
   }
 
 }
