@@ -16,22 +16,25 @@ import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.data.AuthManager;
+import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.scheduler.SingularityLeaderOnlyPoller;
 
 @Singleton
-public class SingularityAuthorizationUpdater extends SingularityLeaderOnlyPoller {
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityAuthorizationUpdater.class);
+public class SingularityAuthUpdater extends SingularityLeaderOnlyPoller {
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityAuthUpdater.class);
 
   private final AuthManager authManager;
   private final AuthConfiguration authConfiguration;
   private final SingularityAuthDatastore datastore;
+  private final SingularityValidator validator;
 
   @Inject
-  public SingularityAuthorizationUpdater(AuthConfiguration authConfiguration, AuthManager authManager, SingularityAuthDatastore datastore) {
+  public SingularityAuthUpdater(AuthConfiguration authConfiguration, AuthManager authManager, SingularityAuthDatastore datastore, SingularityValidator validator) {
     super(authConfiguration.getUpdateUsersEveryMinutes(), TimeUnit.MINUTES);
     this.authManager = authManager;
     this.datastore = datastore;
     this.authConfiguration = authConfiguration;
+    this.validator = validator;
   }
 
   @Override
@@ -56,6 +59,11 @@ public class SingularityAuthorizationUpdater extends SingularityLeaderOnlyPoller
     final long updateUserStart = System.currentTimeMillis();
     int newUsers = 0;
     for (SingularityUser user : users) {
+      if (!validator.isUserValid(user)) {
+        LOG.warn("{} is invalid -- not persisting to ZK!");
+        continue;
+      }
+
       authManager.updateUser(user);
 
       if (!existingUserIds.contains(user.getId())) {
