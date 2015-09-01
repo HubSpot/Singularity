@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.directory.api.ldap.model.cursor.CursorException;
 import org.apache.directory.api.ldap.model.cursor.EntryCursor;
 import org.apache.directory.api.ldap.model.entry.Attribute;
 import org.apache.directory.api.ldap.model.entry.Entry;
@@ -152,7 +153,7 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
       } finally {
         connectionPool.releaseConnection(connection);
       }
-    } catch (Exception e) {
+    } catch (LdapException | CursorException e) {
       throw Throwables.propagate(e);
     }
 
@@ -202,7 +203,7 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
       } finally {
         connectionPool.releaseConnection(connection);
       }
-    } catch (Exception e) {
+    } catch (LdapException | CursorException e) {
       throw Throwables.propagate(e);
     }
   }

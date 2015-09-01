@@ -16,6 +16,7 @@ import com.hubspot.singularity.TestingAuthDatastore;
 import com.hubspot.singularity.auth.SingularityAuthUpdater;
 import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.data.AuthManager;
+import com.hubspot.singularity.data.SingularityValidator;
 
 public class AuthUpdaterTest extends SingularitySchedulerTestBase {
   private static final String TEST_USER_ID1 = "test1";
@@ -24,6 +25,9 @@ public class AuthUpdaterTest extends SingularitySchedulerTestBase {
 
   @Inject
   private AuthManager authManager;
+
+  @Inject
+  private SingularityValidator validator;
 
   private final TestingAuthDatastore authDatastore;
 
@@ -37,7 +41,7 @@ public class AuthUpdaterTest extends SingularitySchedulerTestBase {
   public void testUserUpdate() {
     authDatastore.clearUsers();
 
-    final SingularityAuthUpdater authUpdater = new SingularityAuthUpdater(new AuthConfiguration(), authManager, authDatastore);
+    final SingularityAuthUpdater authUpdater = new SingularityAuthUpdater(new AuthConfiguration(), authManager, authDatastore, validator);
 
     final long now = System.currentTimeMillis();
 
@@ -73,7 +77,7 @@ public class AuthUpdaterTest extends SingularitySchedulerTestBase {
   public void testUserPurge() {
     authDatastore.clearUsers();
 
-    final SingularityAuthUpdater authUpdater = new SingularityAuthUpdater(new AuthConfiguration(), authManager, authDatastore);
+    final SingularityAuthUpdater authUpdater = new SingularityAuthUpdater(new AuthConfiguration(), authManager, authDatastore, validator);
 
     final SingularityUser userYesterday = new SingularityUserBuilder(TEST_USER_ID1)
             .setLastUpdatedAt(Optional.of(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(1)))
