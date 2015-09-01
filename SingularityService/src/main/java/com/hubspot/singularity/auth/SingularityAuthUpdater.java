@@ -58,19 +58,26 @@ public class SingularityAuthUpdater extends SingularityLeaderOnlyPoller {
 
     final long updateUserStart = System.currentTimeMillis();
     int newUsers = 0;
+    int updatedUsers = 0;
+
     for (SingularityUser user : users) {
       if (!validator.isUserValid(user)) {
         LOG.warn("{} is invalid -- not persisting to ZK!");
         continue;
       }
 
-      authManager.updateUser(user);
+      final Optional<SingularityUser> maybeExistingUser = authManager.getUser(user.getId());
 
-      if (!existingUserIds.contains(user.getId())) {
-        newUsers++;
-      } else {
-        existingUserIds.remove(user.getId());
+      if (!maybeExistingUser.isPresent() || !(maybeExistingUser.get().getEmail().equals(user.getEmail()) && maybeExistingUser.get().getGroups().equals(user.getGroups()) && maybeExistingUser.get().getName().equals(user.getName()))) {
+        authManager.updateUser(user);
+        if (maybeExistingUser.isPresent()) {
+          updatedUsers++;
+        } else {
+          newUsers++;
+        }
       }
+
+      existingUserIds.remove(user.getId());
     }
 
     int purgedUsers = 0;
@@ -89,7 +96,7 @@ public class SingularityAuthUpdater extends SingularityLeaderOnlyPoller {
       }
     }
 
-    LOG.info("Updated {} users in {}ms: {} users added, {} stale users, {} users purged", users.size(), System.currentTimeMillis() - updateUserStart, newUsers, existingUserIds.size(), purgedUsers);
+    LOG.info("Updated {} users in {}ms: {} users added, {} users updated, {} stale users, {} users purged", users.size(), System.currentTimeMillis() - updateUserStart, newUsers, updatedUsers, existingUserIds.size(), purgedUsers);
 
     authManager.setAuthState(new SingularityAuthState(Optional.of(System.currentTimeMillis())));
   }

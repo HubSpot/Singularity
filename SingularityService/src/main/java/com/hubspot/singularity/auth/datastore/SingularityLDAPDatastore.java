@@ -12,8 +12,8 @@ import java.util.Set;
 
 import org.apache.directory.api.ldap.model.cursor.CursorException;
 import org.apache.directory.api.ldap.model.cursor.EntryCursor;
-import org.apache.directory.api.ldap.model.entry.Attribute;
 import org.apache.directory.api.ldap.model.entry.Entry;
+import org.apache.directory.api.ldap.model.entry.Value;
 import org.apache.directory.api.ldap.model.exception.LdapException;
 import org.apache.directory.api.ldap.model.message.SearchScope;
 import org.apache.directory.ldap.client.api.DefaultPoolableLdapConnectionFactory;
@@ -122,21 +122,21 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
         connection.bind();
 
         try {
-          final EntryCursor groupCursor = connection.search(configuration.getGroupBaseDN(), configuration.getValidGroupFilter(), SearchScope.SUBTREE, configuration.getGroupNameAttribute(), "memberUid");
+          final EntryCursor groupCursor = connection.search(configuration.getGroupBaseDN(), configuration.getValidGroupFilter(), SearchScope.SUBTREE, configuration.getGroupNameAttribute(), configuration.getGroupMemberAttribute());
 
           while (groupCursor.next()) {
             final Entry groupEntry = groupCursor.get();
 
             final String groupName = groupEntry.get(configuration.getGroupNameAttribute()).getString();
 
-            for (Attribute attribute : groupEntry.getAttributes()) {
-              if (attribute.getId().equals(configuration.getGroupMemberAttribute())) {
-                userToGroup.put(attribute.getString(), groupName);
+            if (groupEntry.containsAttribute(configuration.getGroupMemberAttribute())) {
+              for (Value<?> userId : groupEntry.get(configuration.getGroupMemberAttribute())) {
+                userToGroup.put(userId.getString(), groupName);
               }
             }
           }
 
-          final EntryCursor userCursor = connection.search(configuration.getUserBaseDN(), configuration.getValidUserFilter(), SearchScope.ONELEVEL, configuration.getUserNameAttribute(), configuration.getUserEmailAttribute());
+          final EntryCursor userCursor = connection.search(configuration.getUserBaseDN(), configuration.getValidUserFilter(), SearchScope.ONELEVEL, configuration.getUserIdAttribute(), configuration.getUserNameAttribute(), configuration.getUserEmailAttribute());
 
           while (userCursor.next()) {
             final Entry userEntry = userCursor.get();

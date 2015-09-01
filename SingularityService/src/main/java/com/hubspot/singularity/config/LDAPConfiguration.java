@@ -55,7 +55,7 @@ public class LDAPConfiguration {
 
   @JsonProperty
   @NotEmpty
-  private String validUserFilter = "(objectClass=posixUser)";
+  private String validUserFilter = "(objectClass=posixAccount)";
 
   //
   // LDAP GROUP LOOKUP
