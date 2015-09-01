@@ -12,6 +12,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityDeployKey;
+import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
@@ -33,14 +34,16 @@ public class DeployTaskHistoryHelper extends BlendedHistoryHelper<SingularityTas
   }
 
   public List<SingularityTaskIdHistory> getHistoriesFor(Collection<SingularityTaskId> taskIds) {
+    Map<SingularityTaskId, SingularityTask> tasks = taskManager.getTasks(taskIds);
     Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> map = taskManager.getTaskHistoryUpdates(taskIds);
 
     List<SingularityTaskIdHistory> histories = Lists.newArrayListWithCapacity(taskIds.size());
 
     for (SingularityTaskId taskId : taskIds) {
       List<SingularityTaskHistoryUpdate> historyUpdates = map.get(taskId);
+      SingularityTask task = tasks.get(taskId);
 
-      histories.add(SingularityTaskIdHistory.fromTaskIdAndUpdates(taskId, historyUpdates));
+      histories.add(SingularityTaskIdHistory.fromTaskIdAndTaskAndUpdates(taskId, task, historyUpdates));
     }
 
     Collections.sort(histories);
