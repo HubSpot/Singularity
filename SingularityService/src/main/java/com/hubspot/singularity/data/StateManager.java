@@ -20,6 +20,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.mesos.CounterMap;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityAuthState;
 import com.hubspot.singularity.SingularityHostState;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingTaskId;
@@ -51,10 +52,11 @@ public class StateManager extends CuratorManager {
   private final Transcoder<SingularityHostState> hostStateTranscoder;
   private final SingularityConfiguration singularityConfiguration;
   private final SingularityAuthDatastore authDatastore;
+  private final AuthManager authManager;
 
   @Inject
   public StateManager(CuratorFramework curatorFramework, RequestManager requestManager, TaskManager taskManager, DeployManager deployManager, SlaveManager slaveManager, RackManager rackManager,
-      Transcoder<SingularityState> stateTranscoder, Transcoder<SingularityHostState> hostStateTranscoder, SingularityConfiguration singularityConfiguration, SingularityAuthDatastore authDatastore) {
+      Transcoder<SingularityState> stateTranscoder, Transcoder<SingularityHostState> hostStateTranscoder, SingularityConfiguration singularityConfiguration, SingularityAuthDatastore authDatastore, AuthManager authManager) {
     super(curatorFramework);
 
     this.requestManager = requestManager;
@@ -66,6 +68,7 @@ public class StateManager extends CuratorManager {
     this.deployManager = deployManager;
     this.singularityConfiguration = singularityConfiguration;
     this.authDatastore = authDatastore;
+    this.authManager = authManager;
   }
 
   public void save(SingularityHostState hostState) throws InterruptedException {
@@ -288,10 +291,13 @@ public class StateManager extends CuratorManager {
 
     final Optional<Boolean> authDatastoreHealthy = authDatastore.isHealthy();
 
+    final Optional<SingularityAuthState> maybeAuthState = authManager.getAuthState();
+    final Optional<Long> authLastUpdatedAt = maybeAuthState.isPresent() ? maybeAuthState.get().getLastUpdatedAt() : Optional.<Long>absent();
+
     return new SingularityState(activeTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, cleaningRequests, activeSlaves,
         deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, scheduledTasksInfo.getNumLateTasks(),
         scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
-            includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy);
+            includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, authLastUpdatedAt);
   }
 
 }

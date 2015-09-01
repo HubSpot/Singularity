@@ -48,6 +48,7 @@ public class SingularityState {
   private final int underProvisionedRequests;
 
   private final Optional<Boolean> authDatastoreHealthy;
+  private final Optional<Long> authLastUpdatedAt;
 
   @JsonCreator
   public SingularityState(@JsonProperty("activeTasks") int activeTasks, @JsonProperty("activeRequests") int activeRequests, @JsonProperty("cooldownRequests") int cooldownRequests,
@@ -58,7 +59,7 @@ public class SingularityState {
       @JsonProperty("lateTasks") int lateTasks, @JsonProperty("futureTasks") int futureTasks, @JsonProperty("maxTaskLag") long maxTaskLag, @JsonProperty("generatedAt") long generatedAt,
       @JsonProperty("overProvisionedRequestIds") List<String> overProvisionedRequestIds, @JsonProperty("underProvisionedRequestIds") List<String> underProvisionedRequestIds,
       @JsonProperty("overProvisionedRequests") int overProvisionedRequests, @JsonProperty("underProvisionedRequests") int underProvisionedRequests, @JsonProperty("finishedRequests") int finishedRequests,
-      @JsonProperty("unknownRacks") int unknownRacks, @JsonProperty("unknownSlaves") int unknownSlaves, @JsonProperty("authDatastoreHealthy") Optional<Boolean> authDatastoreHealthy) {
+      @JsonProperty("unknownRacks") int unknownRacks, @JsonProperty("unknownSlaves") int unknownSlaves, @JsonProperty("authDatastoreHealthy") Optional<Boolean> authDatastoreHealthy, @JsonProperty("authLastUpdatedAt") Optional<Long> authLastUpdatedAt) {
     this.activeTasks = activeTasks;
     this.activeRequests = activeRequests;
     this.pausedRequests = pausedRequests;
@@ -89,6 +90,7 @@ public class SingularityState {
     this.overProvisionedRequestIds = overProvisionedRequestIds;
     this.underProvisionedRequestIds = underProvisionedRequestIds;
     this.authDatastoreHealthy = authDatastoreHealthy;
+    this.authLastUpdatedAt = authLastUpdatedAt;
   }
 
   public int getFinishedRequests() {
@@ -225,15 +227,44 @@ public class SingularityState {
     return authDatastoreHealthy;
   }
 
-  @Override
-  public String toString() {
-    return "SingularityState [activeTasks=" + activeTasks + ", pausedRequests=" + pausedRequests + ", activeRequests=" + activeRequests + ", cooldownRequests=" + cooldownRequests
-        + ", scheduledTasks=" + scheduledTasks + ", lateTasks=" + lateTasks + ", futureTasks=" + futureTasks + ", cleaningTasks=" + cleaningTasks + ", lbCleanupTasks=" + lbCleanupTasks
-        + ", maxTaskLag=" + maxTaskLag + ", pendingRequests=" + pendingRequests + ", cleaningRequests=" + cleaningRequests + ", finishedRequests=" + finishedRequests + ", activeSlaves="
-        + activeSlaves + ", deadSlaves=" + deadSlaves + ", decommissioningSlaves=" + decommissioningSlaves + ", unknownSlaves=" + unknownSlaves + ", activeRacks=" + activeRacks + ", deadRacks="
-        + deadRacks + ", decommissioningRacks=" + decommissioningRacks + ", unknownRacks=" + unknownRacks + ", oldestDeploy=" + oldestDeploy + ", numDeploys=" + numDeploys + ", generatedAt="
-        + generatedAt + ", hostStates=" + hostStates + ", overProvisionedRequestIds=" + overProvisionedRequestIds + ", underProvisionedRequestIds=" + underProvisionedRequestIds
-        + ", overProvisionedRequests=" + overProvisionedRequests + ", underProvisionedRequests=" + underProvisionedRequests + ", authDatastoreHealthy=" + authDatastoreHealthy + "]";
+  public Optional<Long> getAuthLastUpdatedAt() {
+    return authLastUpdatedAt;
   }
 
+  @Override
+  public String toString() {
+    return "SingularityState[" +
+            "activeTasks=" + activeTasks +
+            ", pausedRequests=" + pausedRequests +
+            ", activeRequests=" + activeRequests +
+            ", cooldownRequests=" + cooldownRequests +
+            ", scheduledTasks=" + scheduledTasks +
+            ", lateTasks=" + lateTasks +
+            ", futureTasks=" + futureTasks +
+            ", cleaningTasks=" + cleaningTasks +
+            ", lbCleanupTasks=" + lbCleanupTasks +
+            ", maxTaskLag=" + maxTaskLag +
+            ", pendingRequests=" + pendingRequests +
+            ", cleaningRequests=" + cleaningRequests +
+            ", finishedRequests=" + finishedRequests +
+            ", activeSlaves=" + activeSlaves +
+            ", deadSlaves=" + deadSlaves +
+            ", decommissioningSlaves=" + decommissioningSlaves +
+            ", unknownSlaves=" + unknownSlaves +
+            ", activeRacks=" + activeRacks +
+            ", deadRacks=" + deadRacks +
+            ", decommissioningRacks=" + decommissioningRacks +
+            ", unknownRacks=" + unknownRacks +
+            ", oldestDeploy=" + oldestDeploy +
+            ", numDeploys=" + numDeploys +
+            ", generatedAt=" + generatedAt +
+            ", hostStates=" + hostStates +
+            ", overProvisionedRequestIds=" + overProvisionedRequestIds +
+            ", underProvisionedRequestIds=" + underProvisionedRequestIds +
+            ", overProvisionedRequests=" + overProvisionedRequests +
+            ", underProvisionedRequests=" + underProvisionedRequests +
+            ", authDatastoreHealthy=" + authDatastoreHealthy +
+            ", authLastUpdatedAt=" + authLastUpdatedAt +
+            ']';
+  }
 }

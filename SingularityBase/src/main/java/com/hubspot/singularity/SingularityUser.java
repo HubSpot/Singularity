@@ -14,13 +14,15 @@ public class SingularityUser {
   private final Optional<String> name;
   private final Optional<String> email;
   private final Set<String> groups;
+  private final Optional<Long> lastUpdatedAt;
 
   @JsonCreator
-  public SingularityUser(@JsonProperty("id") String id, @JsonProperty("name") Optional<String> name, @JsonProperty("email") Optional<String> email, @JsonProperty("groups") Set<String> groups) {
+  public SingularityUser(@JsonProperty("id") String id, @JsonProperty("name") Optional<String> name, @JsonProperty("email") Optional<String> email, @JsonProperty("groups") Set<String> groups, @JsonProperty("lastUpdated") Optional<Long> lastUpdatedAt) {
     this.id = id;
     this.name = name;
     this.email = email;
     this.groups = copyOf(groups);
+    this.lastUpdatedAt = lastUpdatedAt;
   }
 
   public String getId() {
@@ -39,6 +41,10 @@ public class SingularityUser {
     return groups;
   }
 
+  public Optional<Long> getLastUpdatedAt() {
+    return lastUpdatedAt;
+  }
+
   @Override
   public String toString() {
     return "SingularityUser[" +
@@ -46,6 +52,7 @@ public class SingularityUser {
             ", name=" + name +
             ", email=" + email +
             ", groups=" + groups +
+            ", lastUpdatedAt=" + lastUpdatedAt +
             ']';
   }
 
@@ -61,11 +68,12 @@ public class SingularityUser {
     return Objects.equals(id, that.id) &&
             Objects.equals(name, that.name) &&
             Objects.equals(email, that.email) &&
-            Objects.equals(groups, that.groups);
+            Objects.equals(groups, that.groups) &&
+            Objects.equals(lastUpdatedAt, that.lastUpdatedAt);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, name, email, groups);
+    return Objects.hash(id, name, email, groups, lastUpdatedAt);
   }
 }

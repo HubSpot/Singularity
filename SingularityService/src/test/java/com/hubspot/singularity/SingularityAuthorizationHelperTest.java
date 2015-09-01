@@ -57,10 +57,10 @@ public class SingularityAuthorizationHelperTest {
   public static final SingularityRequest REQUEST_WITH_GROUP_B = new SingularityRequestBuilder("test_b", RequestType.SERVICE).setGroup(Optional.of("b")).build();
 
   public static final Optional<SingularityUser> NOT_LOGGED_IN = Optional.absent();
-  public static final Optional<SingularityUser> USER_GROUP_A = Optional.of(new SingularityUser("test1", Optional.of("test user1"), Optional.of("test1@test.com"), ImmutableSet.of("a")));
-  public static final Optional<SingularityUser> USER_GROUP_AB = Optional.of(new SingularityUser("test2", Optional.of("test user2"), Optional.of("test2@test.com"), ImmutableSet.of("a", "b")));
-  public static final Optional<SingularityUser> USER_GROUP_B = Optional.of(new SingularityUser("test3", Optional.of("test user3"), Optional.of("test3@test.com"), ImmutableSet.of("b")));
-  public static final Optional<SingularityUser> USER_GROUP_ADMIN = Optional.of(new SingularityUser("admin", Optional.of("admin user"), Optional.of("admin@test.com"), ImmutableSet.of("admin")));
+  public static final Optional<SingularityUser> USER_GROUP_A = Optional.of(new SingularityUser("test1", Optional.of("test user1"), Optional.of("test1@test.com"), ImmutableSet.of("a"), Optional.<Long>absent()));
+  public static final Optional<SingularityUser> USER_GROUP_AB = Optional.of(new SingularityUser("test2", Optional.of("test user2"), Optional.of("test2@test.com"), ImmutableSet.of("a", "b"), Optional.<Long>absent()));
+  public static final Optional<SingularityUser> USER_GROUP_B = Optional.of(new SingularityUser("test3", Optional.of("test user3"), Optional.of("test3@test.com"), ImmutableSet.of("b"), Optional.<Long>absent()));
+  public static final Optional<SingularityUser> USER_GROUP_ADMIN = Optional.of(new SingularityUser("admin", Optional.of("admin user"), Optional.of("admin@test.com"), ImmutableSet.of("admin"), Optional.<Long>absent()));
 
   private SingularityAuthorizationHelper buildAuthorizationHelper(SingularityConfiguration configuration) {
     return new SingularityAuthorizationHelper(requestManager, configuration);

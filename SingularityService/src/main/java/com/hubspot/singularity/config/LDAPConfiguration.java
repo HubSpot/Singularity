@@ -1,7 +1,5 @@
 package com.hubspot.singularity.config;
 
-import java.util.concurrent.TimeUnit;
-
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
@@ -51,6 +49,14 @@ public class LDAPConfiguration {
   @NotEmpty
   private String userEmailAttribute = "mail";
 
+  @JsonProperty
+  @NotEmpty
+  private String userIdAttribute = "uid";
+
+  @JsonProperty
+  @NotEmpty
+  private String validUserFilter = "(objectClass=posixUser)";
+
   //
   // LDAP GROUP LOOKUP
   //
@@ -66,24 +72,13 @@ public class LDAPConfiguration {
   @NotEmpty
   private String groupNameAttribute = "cn";
 
-  //
-  // CACHING CONFIGURATION
-  //
   @JsonProperty
-  @Min(1)
-  private int cacheInitialCapacity = 40;
+  @NotEmpty
+  private String validGroupFilter = "(objectClass=posixGroup)";
 
   @JsonProperty
-  @Min(1)
-  private int cacheConcurrencyLevel = 4;
-
-  @JsonProperty
-  @Min(0)
-  private long cacheMaximumSize = 200;  // 0 == no caching
-
-  @JsonProperty
-  @Min(1)
-  private long cacheExpirationMs = TimeUnit.MINUTES.toMillis(5);
+  @NotEmpty
+  private String groupMemberAttribute = "memberUid";
 
   //
   // LDAP CONNECTION POOL
@@ -210,38 +205,6 @@ public class LDAPConfiguration {
     this.groupNameAttribute = groupNameAttribute;
   }
 
-  public int getCacheInitialCapacity() {
-    return cacheInitialCapacity;
-  }
-
-  public void setCacheInitialCapacity(int cacheInitialCapacity) {
-    this.cacheInitialCapacity = cacheInitialCapacity;
-  }
-
-  public int getCacheConcurrencyLevel() {
-    return cacheConcurrencyLevel;
-  }
-
-  public void setCacheConcurrencyLevel(int cacheConcurrencyLevel) {
-    this.cacheConcurrencyLevel = cacheConcurrencyLevel;
-  }
-
-  public long getCacheMaximumSize() {
-    return cacheMaximumSize;
-  }
-
-  public void setCacheMaximumSize(long cacheMaximumSize) {
-    this.cacheMaximumSize = cacheMaximumSize;
-  }
-
-  public long getCacheExpirationMs() {
-    return cacheExpirationMs;
-  }
-
-  public void setCacheExpirationMs(long cacheExpirationMs) {
-    this.cacheExpirationMs = cacheExpirationMs;
-  }
-
   public boolean isPoolTestOnBorrow() {
     return poolTestOnBorrow;
   }
@@ -320,6 +283,38 @@ public class LDAPConfiguration {
 
   public void setStripUserEmailDomain(boolean stripUserEmailDomain) {
     this.stripUserEmailDomain = stripUserEmailDomain;
+  }
+
+  public String getValidGroupFilter() {
+    return validGroupFilter;
+  }
+
+  public void setValidGroupFilter(String validGroupFilter) {
+    this.validGroupFilter = validGroupFilter;
+  }
+
+  public String getGroupMemberAttribute() {
+    return groupMemberAttribute;
+  }
+
+  public void setGroupMemberAttribute(String groupMemberAttribute) {
+    this.groupMemberAttribute = groupMemberAttribute;
+  }
+
+  public String getValidUserFilter() {
+    return validUserFilter;
+  }
+
+  public void setValidUserFilter(String validUserFilter) {
+    this.validUserFilter = validUserFilter;
+  }
+
+  public String getUserIdAttribute() {
+    return userIdAttribute;
+  }
+
+  public void setUserIdAttribute(String userIdAttribute) {
+    this.userIdAttribute = userIdAttribute;
   }
 
   public enum LdapPoolWhenExhaustedAction {
