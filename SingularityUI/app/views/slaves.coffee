@@ -54,6 +54,8 @@ class SlavesView extends View
 
         @$('.actions-column a[title]').tooltip()
 
+        super.afterRender()
+
     removeSlave: (event) =>
         $target = $(event.currentTarget)
         state = $target.data 'state'
@@ -93,7 +95,5 @@ class SlavesView extends View
             state: state
 
         slaveModel.promptReactivate => @trigger 'refreshrequest'
-
-
 
 module.exports = SlavesView

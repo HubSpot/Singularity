@@ -47,3 +47,23 @@
 .tooltip-inner
     max-width: 250px
     white-space: pre-wrap
+
+table[data-sortable] th:after
+    margin-left 0 !important
+
+div.dataTables_paginate li.next a:after
+    display: none !important
+
+div.dataTables_paginate li.previous a:before
+    display: none !important
+
+div.dataTables_paginate li.next a
+    padding-right: 12px !important
+
+div.dataTables_paginate li.previous a
+    padding-left: 12px !important
+
+ul.pagination
+    position: absolute
+    left: -40px
+    z-index: 99

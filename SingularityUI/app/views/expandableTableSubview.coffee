@@ -24,12 +24,14 @@ class ExpandableTableSubview extends View
             'click [data-action="shrink"]': 'startShrink'
 
     initialize: ({@collection, @template}) ->
-        @listenTo @collection, 'sync', @render
+        for eventName in ['sync', 'reset']
+            @listenTo @collection, eventName, @render
 
     render: ->
         # If we've already rendered stuff and now we're trying to render
         # an empty collection (`next` returned an empty list)
         if not @collection.length and @collection.currentPage isnt 1
+            console.log @collection.currentPage
             # Disable the next button and don't render anything
             $nextButton = @$('[data-action="next-page"]')
             $nextButton.attr 'disabled', true
@@ -44,7 +46,7 @@ class ExpandableTableSubview extends View
 
             @collection.currentPage -= 1
             return undefined
-        
+
         # For after the render
         haveButtons = @$('.table-subview-buttons').length
 
@@ -67,6 +69,18 @@ class ExpandableTableSubview extends View
                 $header.append '<small class="hidden-xs"><a data-action="expand">more at once</a></small>'
             else if @expanded
                 $header.append '<small class="hidden-xs"><a data-action="shrink">fewer at once</a></small>'
+
+        # Paginate client side collections
+        $('table.paginated:not([id])').DataTable
+          ordering: false
+          bFilter: false
+          info: false
+          lengthChange: false
+          pageLength: 5
+          pagingType: 'simple'
+          language: paginate:
+            previous: '<span class="glyphicon glyphicon-chevron-left"></span>'
+            next: '<span class="glyphicon glyphicon-chevron-right"></span>'
 
         # Stop right here if we don't need to append the buttons
         return if not haveMore
@@ -121,7 +135,7 @@ class ExpandableTableSubview extends View
         # - 1 just in case
         @collection.atATime = canFit - 1
         @collection.currentPage = 1
-        
+
         @collection.fetch()
 
     startShrink: =>
@@ -130,7 +144,7 @@ class ExpandableTableSubview extends View
 
     shrink: =>
         @expanded = false
-        
+
         @$('.table-container').css 'min-height', '0px'
         @containerMinHeight = 0
 

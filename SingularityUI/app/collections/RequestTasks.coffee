@@ -1,6 +1,7 @@
 Collection = require './collection'
+PaginableCollection = require './PaginableCollection'
 
-class RequestTasks extends Collection
+class RequestTasks extends PaginableCollection
 
     url: => "#{ config.apiRoot }/history/request/#{ @requestId }/tasks/#{ @state }"
 
@@ -10,5 +11,9 @@ class RequestTasks extends Collection
         for task in data
             task.id = task.taskId.id
         data
+
+    getTasksForDeploy: (deployId) ->
+        @filter((task) =>
+            task.get('taskId').deployId == deployId)
 
 module.exports = RequestTasks
