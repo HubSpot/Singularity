@@ -190,6 +190,7 @@ public class SingularityValidator {
 
     if (request.isLoadBalanced()) {
       checkBadRequest(deploy.getServiceBasePath().isPresent(), "Deploy for loadBalanced request must include serviceBasePath");
+      checkBadRequest(deploy.getLoadBalancerGroups().isPresent() && !deploy.getLoadBalancerGroups().get().isEmpty(), "Deploy for a loadBalanced request must include at least one load balacner group");
     }
 
     checkForIllegalResources(request, deploy);
