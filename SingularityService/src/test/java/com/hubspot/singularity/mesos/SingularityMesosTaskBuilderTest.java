@@ -11,11 +11,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.google.common.collect.ImmutableMap;
-import com.hubspot.mesos.SingularityContainerType;
-import com.hubspot.mesos.SingularityDockerNetworkType;
-import com.hubspot.mesos.SingularityDockerVolumeMode;
-import com.hubspot.singularity.config.SingularityConfiguration;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.ContainerInfo.Type;
 import org.apache.mesos.Protos.FrameworkID;
@@ -29,6 +24,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
@@ -61,7 +57,8 @@ public class SingularityMesosTaskBuilderTest {
 
   @Before
   public void createMocks() {
-    pendingTask = new SingularityPendingTask(new SingularityPendingTaskId("test", "1", 0, 1, PendingType.IMMEDIATE, 0), Collections.<String> emptyList(), Optional.<String> absent());
+    pendingTask = new SingularityPendingTask(new SingularityPendingTaskId("test", "1", 0, 1, PendingType.IMMEDIATE, 0), Collections.<String> emptyList(),
+        Optional.<String> absent(), Optional.<String> absent());
 
     final SingularitySlaveAndRackHelper slaveAndRackHelper = mock(SingularitySlaveAndRackHelper.class);
     final ExecutorIdGenerator idGenerator = mock(ExecutorIdGenerator.class);

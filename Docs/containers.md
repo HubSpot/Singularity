@@ -3,12 +3,12 @@
 Singularity supports containers in a few different contexts:
 
 ###Mesos Containerizer
-The default Mesos containerizer for processes which sets resource limits/etc. Enabled by adding `mesos` to the `--containerizers` argument when running `mesos-slave`. If this is enabled, commands with no `containerInfo` definition will run under this containerizer.
+The default [mesos containerizer](http://mesos.apache.org/documentation/latest/mesos-containerizer/) for processes which sets resource limits/etc. Enabled by adding `mesos` to the `--containerizers` argument when running `mesos-slave`. The mesos containerizer can isolate the task via cpu, memory or other parameters specified using the `--isolation` flag when starting the mesos slave. Deploys with no `containerInfo` definition will try to run under this containerizer by default.
 
 ###Mesos Docker Containerizer
-The [built-in docker containerizer](https://mesos.apache.org/documentation/latest/docker-containerizer/) which comes with Mesos. This will manage the starting and stopping of your docker container as well as mapping ports, adding environment variables, and mapping volumes in the container to the Mesos sandbox for that task. Enable this containerizer by adding `docker` to the arguments of `--containerizers` when running `mesos-slave`.
+The [docker containerizer](https://mesos.apache.org/documentation/latest/docker-containerizer/) that ships with Mesos, will manage the starting and stopping of your docker container as well as mapping ports, adding environment variables, and mapping volumes in the container to the Mesos sandbox for that task. You can enable this containerizer by adding `docker` to the arguments of `--containerizers` when running `mesos-slave`.
 
-To use Singularity with the Docker containerizer, add a `containerInfo` to the SingularityDeploy object when creating a deploy (without specifying a `customExecutorCmd`). The Singularity deploy object's `containerInfo` field mirrors the Mesos `containerInfo` definition:
+To use Singularity with the Docker containerizer, add a [`containerInfo` field](reference/api.md#model-SingularityContainerInfo) with a `type` of `DOCKER` to the [SingularityDeploy](reference/api.md#model-SingularityDeploy) object when creating a deploy (without specifying a `customExecutorCmd`). The Singularity deploy object's [`containerInfo` field](reference/api.md#model-SingularityContainerInfo) mirrors the Mesos `containerInfo` definition:
 
 ```
 {
@@ -20,13 +20,13 @@ To use Singularity with the Docker containerizer, add a `containerInfo` to the S
     "portMappings": [
       {
         "containerPortType": "FROM_OFFER", # FROM_OFFER or LITERAL
-        "containerPort": 0, # If type is FROM_OFFER this is the index of the port assigned by Mesos. (ie 0 -> $PORT0)
+        "containerPort": 0, # If type is FROM_OFFER this is the index of the port assigned by Mesos. (ie 0 -> first assigned port)
         "hostPortType": "FROM_OFFER",
         "hostPort": 0
       }
     ]
   },
-  "volumes": [
+  "volumes": [ # The sandbox for the task will always be added as a volume at /mnt/mesos/sandbox within the container
     {
       "containerPath": "/etc/example",
       "hostPath": "/etc/example"
@@ -49,17 +49,18 @@ When the SingularityExecutor is given a task with `containerInfo` of type `DOCKE
 - map all specified environment variables to the container
 - assign and map ports and specified volumes
 - map the Mesos sandbox task directory to `/mnt/mesos/sandbox` in the container
-- create and start the container, directing output to the configured `runContext.logFile`
+- create and start the container, directing output to the configured `logFile`
 - run a `docker stop` when receiving a `SIGTERM`, try to remove the stopped container, and exit with the container's exit code
 
-A few special notes and variables that are set:
-- `MESOS_SANDBOX`: The Mesos sandbox directory as seen inside the container (generally `/mnt/mesos/sandbox`)
-- `LOG_DIR`: The log directory that SingularityExecutor will use for logrotating/uploading/etc, generally mapped to `/mnt/mesos/sandbox/logs` in the container
+A few special notes and environment variables that are set:
+- Environment variables:
+  - `MESOS_SANDBOX`: The Mesos sandbox directory as seen inside the container (generally `/mnt/mesos/sandbox`)
+  - `LOG_DIR`: The log directory that SingularityExecutor will use for logrotating/uploading/etc, generally mapped to `/mnt/mesos/sandbox/logs` in the container
 - The Docker working directory will be set to the `taskAppDirectory` in the Mesos sandbox
-- The container name will be the task id
+- The container name will be a configured prefix (`se-` by default) and the the task id (`SingularityExcutorCleanup` uses this to optionally clean up old contaienrs that are managed by Singularity)
 - SingularityExecutor will explicitly try to pull the image (ie, must be from a repository reachable by the slave)
 
-Here is an example deploy to get you started:
+Here is an example deploy you can use with the [docker-compose](development/docker.md) setup to get you started:
 
 ```
 {

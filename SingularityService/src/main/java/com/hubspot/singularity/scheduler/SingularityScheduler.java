@@ -589,7 +589,7 @@ public class SingularityScheduler {
       }
 
       newTasks.add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt.get(), nextInstanceNumber, pendingRequest.getPendingType(), pendingRequest.getTimestamp()),
-          pendingRequest.getCmdLineArgsList(), pendingRequest.getUser()));
+          pendingRequest.getCmdLineArgsList(), pendingRequest.getUser(), pendingRequest.getRunId()));
 
       nextInstanceNumber++;
     }

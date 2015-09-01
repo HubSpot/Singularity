@@ -78,6 +78,14 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   }
 
   @POST
+  @Path("/slave/{slaveId}/freeze")
+  @ApiOperation("Freeze tasks on a specific slave")
+  public void freezeSlave(@ApiParam("Slave ID") @PathParam("slaveId") String slaveId,
+                          @ApiParam("User requesting the freeze") @QueryParam("user") Optional<String> user) {
+    super.freeze(slaveId, user);
+  }
+
+  @POST
   @Path("/slave/{slaveId}/activate")
   @ApiOperation("Activate a decomissioning slave, canceling decomission without erasing history")
   public void activateSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId,

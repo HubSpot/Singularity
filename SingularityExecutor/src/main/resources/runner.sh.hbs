@@ -31,11 +31,15 @@ if [[ ! -d ./tmp ]]; then
   mkdir ./tmp
 fi
 
+chmod -R 0750 ./tmp
+
 # Create log directory for logrotate runs
 if [[ ! -d {{{ logDir }}} ]]; then
     echo "Creating log directory ({{{ logDir }}})"
     mkdir -p {{{ logDir }}}
 fi
+
+chmod -R 0750 {{{ logDir }}}
 
 cd {{{ taskAppDirectory }}}/
 
