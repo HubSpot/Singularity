@@ -1,28 +1,24 @@
 package com.hubspot.singularity;
 
-import static com.google.common.collect.ImmutableSet.copyOf;
-
+import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
-public class SingularityUser {
+public class SingularityUserBuilder {
   private final String id;
-  private final Optional<String> name;
-  private final Optional<String> email;
-  private final Set<String> groups;
-  private final Optional<Long> lastUpdatedAt;
+  private Optional<String> name;
+  private Optional<String> email;
+  private Set<String> groups;
+  private Optional<Long> lastUpdatedAt;
 
-  @JsonCreator
-  public SingularityUser(@JsonProperty("id") String id, @JsonProperty("name") Optional<String> name, @JsonProperty("email") Optional<String> email, @JsonProperty("groups") Set<String> groups, @JsonProperty("lastUpdated") Optional<Long> lastUpdatedAt) {
+  public SingularityUserBuilder(String id) {
     this.id = id;
-    this.name = name;
-    this.email = email;
-    this.groups = copyOf(groups);
-    this.lastUpdatedAt = lastUpdatedAt;
+    this.name = Optional.absent();
+    this.email = Optional.absent();
+    this.groups = Collections.emptySet();
+    this.lastUpdatedAt = Optional.absent();
   }
 
   public String getId() {
@@ -33,21 +29,45 @@ public class SingularityUser {
     return name;
   }
 
+  public SingularityUserBuilder setName(Optional<String> name) {
+    this.name = name;
+    return this;
+  }
+
   public Optional<String> getEmail() {
     return email;
+  }
+
+  public SingularityUserBuilder setEmail(Optional<String> email) {
+    this.email = email;
+    return this;
   }
 
   public Set<String> getGroups() {
     return groups;
   }
 
+  public SingularityUserBuilder setGroups(Set<String> groups) {
+    this.groups = groups;
+    return this;
+  }
+
   public Optional<Long> getLastUpdatedAt() {
     return lastUpdatedAt;
   }
 
+  public SingularityUserBuilder setLastUpdatedAt(Optional<Long> lastUpdatedAt) {
+    this.lastUpdatedAt = lastUpdatedAt;
+    return this;
+  }
+
+  public SingularityUser build() {
+    return new SingularityUser(id, name, email, groups, lastUpdatedAt);
+  }
+
   @Override
   public String toString() {
-    return "SingularityUser[" +
+    return "SingularityUserBuilder[" +
             "id='" + id + '\'' +
             ", name=" + name +
             ", email=" + email +
@@ -64,7 +84,7 @@ public class SingularityUser {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    SingularityUser that = (SingularityUser) o;
+    SingularityUserBuilder that = (SingularityUserBuilder) o;
     return Objects.equals(id, that.id) &&
             Objects.equals(name, that.name) &&
             Objects.equals(email, that.email) &&
@@ -75,13 +95,5 @@ public class SingularityUser {
   @Override
   public int hashCode() {
     return Objects.hash(id, name, email, groups, lastUpdatedAt);
-  }
-
-  public SingularityUserBuilder toBuilder() {
-    return new SingularityUserBuilder(id)
-            .setName(name)
-            .setEmail(email)
-            .setGroups(groups)
-            .setLastUpdatedAt(lastUpdatedAt);
   }
 }
