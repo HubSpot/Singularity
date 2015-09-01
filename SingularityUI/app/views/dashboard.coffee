@@ -16,40 +16,14 @@ class DashboardView extends View
         @listenTo @collection, 'sync', @render
 
     render: =>
-        deployUser = app.user.get 'deployUser'
+        deployUser = app.getUsername()
 
         partials =
             partials:
                 requestsBody: @templateRequestsTable
 
         # Count up the Requests for the clicky boxes
-        if deployUser
-            deployUserTrimmed = deployUser.split("@")[0]
-            userRequests = @collection.filter (model) ->
-                request = model.get 'request'
-
-                return false unless request.owners
-
-                for owner in request.owners
-                    ownerTrimmed = owner.split("@")[0]
-                    return true if deployUserTrimmed is ownerTrimmed
-
-                return false
-
-            userRequestTotals =
-                all: userRequests.length
-                onDemand: 0
-                worker: 0
-                scheduled: 0
-                runOnce: 0
-                service: 0
-
-            _.each userRequests, (request) =>
-                if request.type is 'ON_DEMAND'  then userRequestTotals.onDemand  += 1
-                if request.type is 'SCHEDULED'  then userRequestTotals.scheduled += 1
-                if request.type is 'WORKER'     then userRequestTotals.worker    += 1
-                if request.type is 'RUN_ONCE'   then userRequestTotals.runOnce   += 1
-                if request.type is 'SERVICE'    then userRequestTotals.service   += 1
+        userRequestTotals = @collection.getUserRequestTotals deployUser
 
         context =
             deployUser: deployUser
@@ -59,6 +33,8 @@ class DashboardView extends View
 
         @$el.html @templateBase context, partials
         @renderTable()
+
+        super.afterRender()
 
     renderTable: =>
         @sortCollection()

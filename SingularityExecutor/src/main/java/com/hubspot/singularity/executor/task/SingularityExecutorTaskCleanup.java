@@ -6,14 +6,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-import com.spotify.docker.client.ContainerNotFoundException;
-import com.spotify.docker.client.DockerClient;
-import com.spotify.docker.client.messages.ContainerInfo;
 import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
+import com.spotify.docker.client.ContainerNotFoundException;
+import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.messages.ContainerInfo;
 
 public class SingularityExecutorTaskCleanup {
 

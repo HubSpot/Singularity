@@ -95,9 +95,10 @@ exec java -Djava.library.path=/usr/local/lib -jar /singularity/SingularityExecut
 EOF
   chmod 755 /usr/local/bin/singularity-executor
 }
+
 function build_singularity {
   cd /singularity
-  sudo -u vagrant HOME=/home/vagrant mvn clean package -DskipTests
+  sudo -u vagrant HOME=/home/vagrant /usr/share/apache-maven-3.3.3/bin/mvn clean package -DskipTests
 }
 
 function install_singularity {
@@ -143,7 +144,19 @@ function start_singularity {
   service singularity start
 }
 
+function docker_upgrades {
+  version=`docker -v`
+  if [[ $version == *"1.6"* ]]
+  then
+    echo "Docker up to date"
+  else
+    wget -qO- https://get.docker.com/ | sh
+  fi
+  echo "ISOLATION=cgroups/cpu,cgroups/mem" >> /etc/default/mesos-slave
+}
+
 stop_singularity
+docker_upgrades
 install_singularity_config
 build_singularity
 install_singularity

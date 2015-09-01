@@ -179,9 +179,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
       if (maybeFirstPort.isPresent()) {
         String upstream = String.format("%s:%d", task.getOffer().getHostname(), maybeFirstPort.get());
-        String rackId = task.getTaskId().getRackId();
-
-        upstreams.add(new UpstreamInfo(upstream, Optional.of(requestId), Optional.fromNullable(rackId)));
+        upstreams.add(new UpstreamInfo(upstream, Optional.of(requestId), task.getRackId()));
       } else {
         LOG.warn("Task {} is missing port but is being passed to LB  ({})", task.getTaskId(), task);
       }

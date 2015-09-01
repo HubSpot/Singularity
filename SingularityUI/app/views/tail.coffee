@@ -19,7 +19,6 @@ class TailView extends View
 
         @listenTo @collection, 'reset',       @dumpContents
         @listenTo @collection, 'sync',        @renderLines
-        @listenTo @collection, 'initialdata', @afterInitialData
         @listenTo @collection, 'initialOffsetData', @afterInitialOffsetData
 
         @listenTo @collection.state, 'change:moreToFetch', @showOrHideMoreToFetchSpinners
@@ -33,6 +32,8 @@ class TailView extends View
 
         @listenTo @model, 'change:isStillRunning', => @stopTailing() unless @model.get 'isStillRunning'
 
+        @listenTo @model, 'change:isStillRunning', => @stopTailing() unless @model.get 'isStillRunning'
+
         @collectionRefreshInterval = null
 
         @listenTo @ajaxError, 'change:present', @render
@@ -42,7 +43,7 @@ class TailView extends View
                     @collection.fetchInitialData()
                 , 2000
 
-        
+
     render: =>
         breadcrumbs = utils.pathToBreadcrumbs @path
         @$el.html @template {@taskId, @filename, breadcrumbs, ajaxError: @ajaxError.toJSON()}
@@ -54,7 +55,7 @@ class TailView extends View
         @$contents.on 'scroll, mousewheel', @handleScroll
         # FireFox support
         @$contents.on 'DOMMouseScroll', @handleScroll
-        
+
 
         # Some stuff in the app can change this stuff. We wanna reset it
         $('html, body').css 'min-height', '0px'
@@ -68,7 +69,7 @@ class TailView extends View
         # If starting fresh
         if $firstLine.length is 0
 
-            @$linesWrapper.html @linesTemplate 
+            @$linesWrapper.html @linesTemplate
                 lines: @collection.toJSON()
         else
             firstLineOffset = parseInt $firstLine.data 'offset'
@@ -77,7 +78,7 @@ class TailView extends View
             if @collection.getMinOffset() < firstLineOffset
                 # Get only the new lines
                 lines = @collection.filter (line) => line.get('offset') < firstLineOffset
-                @$linesWrapper.prepend @linesTemplate 
+                @$linesWrapper.prepend @linesTemplate
                     lines: _.pluck lines, 'attributes'
 
                 # Gonna need to scroll back to the previous `firstLine` after otherwise
@@ -87,7 +88,7 @@ class TailView extends View
             else if @collection.getStartOffsetOfLastLine() > lastLineOffset
                 # Get only the new lines
                 lines = @collection.filter (line) => line.get('offset') > lastLineOffset
-                @$linesWrapper.append @linesTemplate 
+                @$linesWrapper.append @linesTemplate
                     lines: _.pluck lines, 'attributes'
 
     scrollToTop:    => @$contents.scrollTop 0
@@ -167,7 +168,7 @@ class TailView extends View
 
     startTailing: =>
         return if @isTailing or not @model.get 'isStillRunning'
-    
+
         @isTailing = true
         @scrollToBottom()
 
@@ -184,7 +185,8 @@ class TailView extends View
         @$el.addClass 'tailing'
 
     stopTailing: ->
-        return if @isTailing isnt true
+        task = _.last @model.get('taskUpdates')
+        return if @isTailing isnt true and task.taskState in utils.TERMINAL_TASK_STATES
 
         @isTailing = false
         clearInterval @tailInterval

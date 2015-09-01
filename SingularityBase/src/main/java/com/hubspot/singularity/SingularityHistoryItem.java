@@ -5,6 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public interface SingularityHistoryItem {
 
   @JsonIgnore
-  public long getCreateTimestampForCalculatingHistoryAge();
+  long getCreateTimestampForCalculatingHistoryAge();
 
 }

@@ -17,6 +17,10 @@ import com.hubspot.singularity.SingularityTask;
 
 public class SingularityStartupTest extends SingularitySchedulerTestBase {
 
+  public SingularityStartupTest() {
+    super(false);
+  }
+
   @Inject
   private SingularityStartup startup;
 
@@ -107,7 +111,7 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
     boolean caughtException = false;
 
     try {
-      requestResource.scheduleImmediately(requestId, Optional.<String> absent(), null);
+      requestResource.scheduleImmediately(requestId,  Optional.<String> absent(), Optional.<String> absent(), null);
     } catch (Exception e) {
       caughtException = true;
     }

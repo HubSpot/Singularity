@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -17,7 +16,7 @@ import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.TaskManager;
 
 @Singleton
-public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHistory> {
+public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHistory, String> {
 
   private final TaskManager taskManager;
   private final HistoryManager historyManager;
@@ -29,14 +28,16 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
   }
 
   public List<SingularityTaskIdHistory> getHistoriesFor(Collection<SingularityTaskId> taskIds) {
-    Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> map = taskManager.getTaskHistoryUpdates(taskIds);
+    Map<SingularityTaskId, SingularityTask> tasks = taskManager.getTasks(taskIds);
+    Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> history = taskManager.getTaskHistoryUpdates(taskIds);
 
     List<SingularityTaskIdHistory> histories = Lists.newArrayListWithCapacity(taskIds.size());
 
     for (SingularityTaskId taskId : taskIds) {
-      List<SingularityTaskHistoryUpdate> historyUpdates = map.get(taskId);
+      List<SingularityTaskHistoryUpdate> historyUpdates = history.get(taskId);
+      SingularityTask task = tasks.get(taskId);
 
-      histories.add(SingularityTaskIdHistory.fromTaskIdAndUpdates(taskId, historyUpdates));
+      histories.add(SingularityTaskIdHistory.fromTaskIdAndTaskAndUpdates(taskId, task, historyUpdates));
     }
 
     Collections.sort(histories);

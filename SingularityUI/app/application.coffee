@@ -135,6 +135,12 @@ class Application
     showPageLoader: ->
         @$page.html "<div class='page-loader centered cushy'></div>"
 
+    showFixedPageLoader: ->
+        @$page.append "<div class='page-loader page-loader-fixed'></div>"
+
+    hideFixedPageLoader: ->
+        @$page.find('.page-loader-fixed').remove()
+
     bootstrapController: (controller) ->
         @currentController = controller
 
@@ -151,6 +157,7 @@ class Application
 
         if @page.children.length
             @page.replaceChild view.el, @page.children[0]
+            Sortable.init()
         else
             @page.appendChild view.el
 
@@ -158,21 +165,10 @@ class Application
         @user = new User
         @user.fetch() # Syncronous because it uses localStorage
 
-        if not @user.get('deployUser')
-            Backbone.history.once 'route', =>
-                setTimeout (=> @deployUserPrompt()), 1000
-
     getUsername: =>
-        @user.get "deployUser" or "Unknown"
-
-    deployUserPrompt: (welcome) ->
-        vex.dialog.prompt
-            message: require('templates/vex/usernamePrompt')()
-            value: @user.get('deployUser')
-            placeholder: 'user'
-            callback: (user) =>
-                if _.isString(user) and user isnt ''
-                    @user.set('deployUser', @user.deployUser = user)
-                    @user.save()
+        if @user.get('authenticated')
+            @user.get('user').id
+        else
+            ''
 
 module.exports = new Application

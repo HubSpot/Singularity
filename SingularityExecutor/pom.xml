@@ -5,13 +5,14 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.4.2-SNAPSHOT</version>
+    <version>0.4.4-SNAPSHOT</version>
   </parent>
 
   <artifactId>SingularityExecutor</artifactId>
 
   <properties>
     <basepom.shaded.main-class>com.hubspot.singularity.executor.SingularityExecutorRunner</basepom.shaded.main-class>
+    <singularitybase.image.revision>1</singularitybase.image.revision>
   </properties>
 
   <dependencies>
@@ -118,6 +119,63 @@
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>build-docker-image</id>
+      <activation>
+        <property>
+          <name>env.DOCKER_HOST</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jolokia</groupId>
+            <artifactId>docker-maven-plugin</artifactId>
+            <configuration>
+              <images>
+                <image>
+                  <name>hubspot/singularityexecutorslave:${project.version}</name>
+                  <build>
+                    <from>hubspot/singularitybase:${mesos.docker.tag}-${singularitybase.image.revision}</from>
+                    <maintainer>platform-infrastructure-groups@hubspot.com</maintainer>
+                    <cmd>
+                      <exec>
+                        <arg>mesos-slave</arg>
+                      </exec>
+                    </cmd>
+                    <assembly>
+                      <mode>dir</mode>
+                      <basedir>/</basedir>
+                      <inline>
+                        <fileSets>
+                          <fileSet>
+                            <directory>${project.basedir}/src/main/docker/config</directory>
+                            <outputDirectory>/etc</outputDirectory>
+                          </fileSet>
+                          <fileSet>
+                            <directory>${project.basedir}/src/main/docker/executable</directory>
+                            <outputDirectory>/usr/local/bin</outputDirectory>
+                          </fileSet>
+                        </fileSets>
+                        <files>
+                          <file>
+                            <source>${project.basedir}/target/${project.name}-${project.version}-shaded.jar</source>
+                            <destName>${project.name}.jar</destName>
+                            <outputDirectory>/etc/singularity</outputDirectory>
+                          </file>
+                        </files>
+                      </inline>
+                    </assembly>
+                  </build>
+                </image>
+              </images>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
 
 <!-- Local Variables:     -->

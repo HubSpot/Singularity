@@ -1,9 +1,5 @@
 package com.hubspot.singularity.bundles;
 
-import io.dropwizard.ConfiguredBundle;
-import io.dropwizard.setup.Bootstrap;
-import io.dropwizard.setup.Environment;
-
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Enumeration;
@@ -18,6 +14,10 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterators;
 import com.hubspot.singularity.config.SingularityConfiguration;
+
+import io.dropwizard.ConfiguredBundle;
+import io.dropwizard.setup.Bootstrap;
+import io.dropwizard.setup.Environment;
 
 /**
  * Adds a CORS filter.

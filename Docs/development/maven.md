@@ -9,6 +9,6 @@ Steps:
 - `mvn release:clean`
 - `mvn release:prepare`
 - `mvn release:perform`
-- [In staging repositories, close and release] (https://oss.sonatype.org/)
+- [In staging repositories, close and release](https://oss.sonatype.org/)
 
 If having issues releasing, run `mvn release:rollback` to undo changes.

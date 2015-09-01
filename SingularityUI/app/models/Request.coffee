@@ -6,11 +6,13 @@ unpauseTemplate = require '../templates/vex/requestUnpause'
 runTemplate = require '../templates/vex/requestRun'
 removeTemplate = require '../templates/vex/requestRemove'
 bounceTemplate = require '../templates/vex/requestBounce'
+exitCooldownTemplate = require '../templates/vex/exitCooldown'
 
 class Request extends Model
 
     # When we show the JSON dialog, we will ignore these attributes
     ignoreAttributes: ['id', 'paused', 'deleted', 'hasActiveDeploy', 'canBeRunNow', 'canBeBounced', 'starred']
+    localStorageCommandLineInputKeyPrefix: 'runRequestCommandLineInput::'
 
     url: => "#{ config.apiRoot }/requests/request/#{ @get('id') }"
 
@@ -29,8 +31,10 @@ class Request extends Model
 
         data.paused = data.state is 'PAUSED'
         data.deleted = data.state is 'DELETED'
+        data.inCooldown = data.state is 'SYSTEM_COOLDOWN'
 
         data.hasActiveDeploy = data.activeDeploy? or data.requestDeployState?.activeDeploy?
+        data.daemon = data.type in ['WORKER', 'SERVICE']
         data.canBeRunNow = data.state is 'ACTIVE' and data.type in ['SCHEDULED', 'ON_DEMAND'] and data.hasActiveDeploy
         data.canBeBounced = data.state in ['ACTIVE', 'SYSTEM_COOLDOWN'] and data.type in ['WORKER', 'SERVICE']
         data.canBeScaled = data.state in ['ACTIVE', 'SYSTEM_COOLDOWN'] and data.hasActiveDeploy and data.type in ['WORKER', 'SERVICE']
@@ -63,8 +67,11 @@ class Request extends Model
             contentType: 'application/json'
 
         if typeof confirmedOrPromptData is 'string'
+          if confirmedOrPromptData != ''
             options.data = JSON.stringify([confirmedOrPromptData])
-            options.processData = false
+          else
+            options.data = '[]'
+          options.processData = false
 
         $.ajax options
         
@@ -80,6 +87,11 @@ class Request extends Model
     bounce: =>
         $.ajax
             url:  "#{ @url() }/bounce?user=#{ app.getUsername() }"
+            type: "POST"
+
+    exitCooldown: =>
+        $.ajax
+            url: "#{ @url() }/exit-cooldown?user=#{ app.getUsername() }"
             type: "POST"
 
     destroy: =>
@@ -130,13 +142,17 @@ class Request extends Model
             ]
 
             beforeClose: =>
+                return if @data is false
+                
                 fileName = @data.filename.trim()
+                commandLineInput = @data.commandLineInput.trim()
 
                 if fileName.length is 0 and @data.autoTail is 'on'
                     $(window.noFilenameError).removeClass('hide')
                     return false
 
-                else                    
+                else
+                    localStorage.setItem(@localStorageCommandLineInputKeyPrefix + @id, commandLineInput) if commandLineInput?
                     localStorage.setItem('taskRunRedirectFilename', fileName) if filename?
                     localStorage.setItem('taskRunAutoTail', @data.autoTail)
                     @data.id = @get 'id'
@@ -144,12 +160,12 @@ class Request extends Model
                     @run( @data.commandLineInput ).done callback( @data )
                     return true
 
-            afterOpen: -> 
+            afterOpen: => 
                 $('#filename').val localStorage.getItem('taskRunRedirectFilename')
+                $('#commandLineInput').val localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
                 $('#autoTail').prop 'checked', (localStorage.getItem('taskRunAutoTail') is 'on')
 
             callback: (data) =>
-                return if data is false
                 @data = data
 
     promptRemove: (callback) =>
@@ -165,6 +181,13 @@ class Request extends Model
             callback: (confirmed) =>
                 return if not confirmed
                 @bounce().done callback
+
+    promptExitCooldown: (callback) =>
+        vex.dialog.confirm
+            message: exitCooldownTemplate id: @get "id"
+            callback: (confirmed) =>
+                return if not confirmed
+                @exitCooldown().done callback
 
 
 module.exports = Request

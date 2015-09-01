@@ -51,9 +51,8 @@ class TasksView extends View
         # Only show tasks that match the search query
         if @searchFilter
             tasks = _.filter tasks, (task) =>
-                searchField = "#{ task.id }#{ task.host }"
-                searchField.toLowerCase().indexOf(@searchFilter.toLowerCase()) isnt -1
-        
+                searchField = "#{ task.id }#{ task.host }".toLowerCase().replace(/-/g, '_')
+                searchField.toLowerCase().indexOf(@searchFilter.toLowerCase().replace(/-/g, '_')) isnt -1
         # Sort the table if the user clicked on the table heading things
         if @sortAttribute?
             tasks = _.sortBy tasks, (task) =>
@@ -70,7 +69,7 @@ class TasksView extends View
                 tasks = tasks.reverse()
         else
             tasks.reverse() unless @state is 'scheduled'
-            
+
         @currentTasks = tasks
 
     preventSearchOverwrite: ->
@@ -95,7 +94,7 @@ class TasksView extends View
             collectionSynced: @collection.synced
             haveTasks: @collection.length and @collection.synced
 
-        partials = 
+        partials =
             partials:
                 tasksBody: @bodyTemplate
 
@@ -108,6 +107,8 @@ class TasksView extends View
             @focusSearchAfterRender = false
 
         @renderTable()
+
+        super.afterRender()
 
     # Prepares the staged rendering and triggers the first one
     renderTable: =>
@@ -154,7 +155,7 @@ class TasksView extends View
             tasks: tasks
             rowsOnly: true
             decommissioning_hosts: hosts
-        
+
         $table = @$ ".table-staged table"
         $tableBody = $table.find "tbody"
 
@@ -200,7 +201,7 @@ class TasksView extends View
 
         if @animationFrameRequest?
             window.cancelAnimationFrame @animationFrameRequest
-            
+
         @animationFrameRequest = window.requestAnimationFrame =>
             $table = @$ "tbody"
             tableBottom = $table.height() + $table.offset().top
@@ -213,16 +214,24 @@ class TasksView extends View
         app.router.navigate "/tasks/#{ @state }/#{ @searchFilter }", { replace: true }
 
     viewJson: (e) ->
-        id = $(e.target).parents('tr').data 'task-id'
-        utils.viewJSON @collection.get id
+        task =
+            taskId: $(e.target).data 'task-id'
+            requestId: $(e.target).data 'request-id'
+            nextRunAt: $(e.target).data 'nextrunat'
+
+        # need to make a fetch for scheduled tasks
+        if task.nextRunAt
+            @trigger 'getPendingTask', task
+        else
+            utils.viewJSON @collection.get task.taskId
 
     removeTask: (e) ->
         $row = $(e.target).parents 'tr'
-        id = $row.data 'task-id' 
+        id = $row.data 'task-id'
 
         @promptKill id, ->
             $row.remove()
-    
+
     promptKill: (id, callback) ->
         vex.dialog.confirm
             buttons: [
@@ -232,7 +241,7 @@ class TasksView extends View
                 vex.dialog.buttons.NO
             ]
             message: killTemplate id: id
-            
+
             callback: (confirmed) =>
                 return unless confirmed
                 deleteRequest = @collection.get(id).kill()
@@ -247,7 +256,7 @@ class TasksView extends View
 
     runTask: (e) =>
         $row = $(e.target).parents 'tr'
-        id = $row.data 'task-id' 
+        id = $row.data 'task-id'
 
         model = @collection.get(id)
         model.promptRun =>

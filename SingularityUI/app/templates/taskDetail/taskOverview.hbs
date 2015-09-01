@@ -19,12 +19,20 @@
         {{! Left side }}
         <div class="col-md-12">
             {{#with data.task.taskRequest}}
-                <h5>
-                    Request
-                    <a href="{{appRoot}}/request/{{ request.id }}">
-                        {{ request.id }}
-                    </a>
-                </h5>
+                <ul class="breadcrumb">
+                    <li>
+                        Request
+                        <a href="{{appRoot}}/request/{{ request.id }}">
+                            {{ request.id }}
+                        </a>
+                    </li>
+                    <li>
+                        Deploy
+                        <a href="{{appRoot}}/request/{{ request.id }}/deploy/{{ deploy.id }}">
+                            {{ deploy.id }}
+                        </a>
+                    </li>
+                </ul>
             {{/with}}
         </div>
     </div>

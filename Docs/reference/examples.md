@@ -1,14 +1,25 @@
 # Singularity Deploy Examples
 
+- [Creating A Request](#creating-a-request)
+- [Basic Service Using the Mesos Executor](#basic-service-using-the-mesos-executor)
+- [Basic Service USing Allocated Ports](#basic-service-using-allocated-ports)
+- [Basic Load Balanced Service with Allocated Ports](#basic-load-balanced-service-with-allocated-ports)
+- [Scaling Up Services](#scaling-up)
+- [Docker Service with Host Networking](#docker-service-with-host-networking)
+- [Docker Service with Bridge Networking](#docker-service-with-bridge-networking)
+- [Load Balanced Docker Service Using The SingularityExecutor](#load-balanced-docker-service-using-the-singularityexecutor)
+
 These examples assume you have [installed singularity](../install.md).
 
 The services deployed will be a [build](https://github.com/micktwomey/docker-sample-dropwizard-service) of the [Dropwizard getting started example](https://dropwizard.github.io/dropwizard/getting-started.html) and a [simple python service](https://github.com/micktwomey/docker-sample-web-service).
+
+*For this walkthrough we will assume you are using the [docker-compose example cluster](../development/docker.md) and that Singularity is running at `http://192.168.59.103:7099/singularity` (default when using boot2docker). For your own case you can replace 192.168.59.103 with whatever host Singularity is running on in your setup*
 
 ## Creating the Request
 
 All deployments belong to requests, before you can deploy you need to create a request. A request represents your service or scheduled job.
 
-Create a [new request](http://vagrant-singularity:7099/singularity/requests/new) and set the following:
+Create a [new request](http://192.168.59.103:7099/singularity/requests/new) and set the following:
 
 - ID: mesos-dropwizard-service
 - Owners: Your email address
@@ -20,7 +31,7 @@ You can also create the request using a JSON HTTP POST:
 {
     "id": "mesos-dropwizard-service",
     "owners": [
-        "mtwomey@example.com"
+        "you@example.com"
     ],
     "daemon": true,
     "rackSensitive": false,
@@ -32,7 +43,7 @@ You can POST this JSON (saved in request.json) using curl:
 
 ```sh
 curl -i -X POST -H "Content-Type: application/json" -d@request.json \
-http://vagrant-singularity:7099/singularity/api/requests
+http://192.168.59.103:7099/singularity/api/requests
 ```
 
 ## Basic Service Using the Mesos Executor
@@ -46,7 +57,7 @@ To deploy using the web UI:
 - Artifacts:
     - ```https://github.com/micktwomey/docker-sample-dropwizard-service/releases/download/1.0/helloworld-1.0-SNAPSHOT.jar```
     - ```https://github.com/micktwomey/docker-sample-dropwizard-service/releases/download/1.0/example.yml```
-- CPUs: 0.1 (in the default Vagrant setup there is only one CPU resource in the slave, to test multiple deployments and scaling we'll use less CPU resources.)
+- CPUs: 0.1 (in the default docker setup there is only one CPU resource in the slave, to test multiple deployments and scaling we'll use less CPU resources.)
 
 The equivalent JSON which can be used instead of the web UI:
 
@@ -59,13 +70,12 @@ The equivalent JSON which can be used instead of the web UI:
         "resources": {
             "cpus": 0.1,
             "memoryMb": 128,
-            "numPorts": 0
+            "numPorts": 2
         },
         "uris": [
             "https://github.com/micktwomey/docker-sample-dropwizard-service/releases/download/1.0/helloworld-1.0-SNAPSHOT.jar", 
             "https://github.com/micktwomey/docker-sample-dropwizard-service/releases/download/1.0/example.yml"
-        ],
-        "skipHealthchecksOnDeploy": false
+        ]
     }
 }
 ```
@@ -74,12 +84,12 @@ You can POST this JSON (saved in deploy.json) using curl:
 
 ```sh
 curl -i -X POST -H "Content-Type: application/json" -d@deploy.json \
-http://vagrant-singularity:7099/singularity/api/deploys
+http://192.168.59.103:7099/singularity/api/deploys
 ```
 
 When the task launches nothing may be visible in the Singularity UI at first, this is due to the Mesos executor fetching the artifacts first.
 
-Once the task is running you can go to [http://vagrant-singularity:8080/](http://vagrant-singularity:8080/) to see the JSON response (you can also go to [http://vagrant-singularity:8081/](http://vagrant-singularity:8081/) to see the admin resources).
+Once the task is running you can go to [http://192.168.59.103:7099/singularity/requests/mesos-dropwizard-service](http://192.168.59.103:7099/singularity/requests/mesos-dropwizard-service) to see the JSON response.
 
 ### Limitations
 
@@ -132,11 +142,50 @@ Or post the following JSON:
 }
 ```
 
-You can navigate to the running task in the UI and get the two ports. You can then access the service on those ports (for example my service got allocated 31428,31429, so I could then use ```curl http://vagrant-singularity:31429/``` to fetch the hello world JSON).
+You can navigate to the running task in the UI and get the two ports. You can then access the service on those ports (for example my service got allocated 31428,31429, so I could then use ```curl http://192.168.59.103:31429/``` to fetch the hello world JSON).
+
+## Basic Load Balanced Service with Allocated Ports
+
+If Singularity is [configured with a load balacner api](Docs/development/lbs.md) like [Baragon](https://github.com/HubSpot/Baragon), you can also have Singularity keep you load balancer up to date. When a task is started and healthy, Singularity will notify the load balacner api of the new service and the port that it is running on.
+
+We will need to add some information for the load balancer api to our JSON:
+
+```
+"serviceBasePath":"/",
+"loadBalancerGroups":["test"]
+```
+
+This allows Singularity to tell the load balacner api what groups/clusters the service should be available on, and what path on that cluster.
+
+Make another deploy request by posting the following JSON:
+```json
+{
+    "deploy": {
+        "requestId": "mesos-dropwizard-service",
+        "id": "3",
+        "command": "java -Ddw.server.applicationConnectors[0].port=$PORT1 -Ddw.server.adminConnectors[0].port=$PORT0 -jar helloworld-1.0-SNAPSHOT.jar server example.yml",
+        "resources": {
+            "cpus": 0.1,
+            "memoryMb": 128,
+            "numPorts": 2
+        },
+        "uris": [
+            "https://github.com/micktwomey/docker-sample-dropwizard-service/releases/download/1.0/helloworld-1.0-SNAPSHOT.jar", 
+            "https://github.com/micktwomey/docker-sample-dropwizard-service/releases/download/1.0/example.yml"
+        ],
+        "skipHealthchecksOnDeploy": false,
+        "healthcheckUri": "/healthcheck",
+        "serviceBasePath":"/",
+        "loadBalancerGroups":["test"]
+    }
+}
+```
+
+After the task becomes healthy you will also be able to see that the service was successfully [registered with the load balancer api](http://192.168.59.103:8080/baragon/v2/ui/services). 
 
 ## Scaling Up
 
-Scaling up is easy, navigate to your [request](http://vagrant-singularity:7099/singularity/request/mesos-dropwizard-service) and click the "Scale" button. Type in a new value (e.g. 3) and wait for the new tasks to run. Since the ports are managed by Singularity you don't have to worry about them clashing.
+Scaling up is easy, navigate to your [request](http://192.168.59.103:7099/singularity/request/mesos-dropwizard-service) and click the "Scale" button. Type in a new value (e.g. 3) and wait for the new tasks to run. Since the ports are managed by Singularity you don't have to worry about them clashing.
 
 Side note: You'll notice that each running task returns different ids in the hello world response. This is due to each being an independent process, with separate counters.
 
@@ -148,7 +197,7 @@ There is a [Docker image](https://registry.hub.docker.com/u/micktwomey/sample-dr
 
 Since we are using host networking the Docker container will bind to the host ports 8080 and 8081 again, so we will need to first scale down the current instances.
 
-To scale down go to your [request](http://vagrant-singularity:7099/singularity/request/mesos-dropwizard-service) and click the "Scale" button again. Enter in 1 to reduce the number of running tasks. You should see two of the tasks move into "Task Cleaning" states.
+To scale down go to your [request](http://192.168.59.103:7099/singularity/request/mesos-dropwizard-service) and click the "Scale" button again. Enter in 1 to reduce the number of running tasks. You should see two of the tasks move into "Task Cleaning" states.
 
 To deploy this image create another deployment, but use Docker instead of default:
 
@@ -181,7 +230,7 @@ The equivalent JSON:
 }
 ```
 
-This will pull down the Docker image from the Docker registry and start the container. The ports will be bound to the Mesos slave host, so the service will be available again at [http://vagrant-singularity:8080/](http://vagrant-singularity:8080/).
+This will pull down the Docker image from the Docker registry and start the container. The ports will be bound to the Mesos slave host, so the service will be available again at [http://192.168.59.103:8080/](http://192.168.59.103:8080/).
 
 ## Docker Service with Bridge Networking
 
@@ -231,10 +280,10 @@ Unfortunately the Singularity UI doesn't expose the bridge networking details so
 Post this using curl:
 
 ```sh
-curl -i -X POST -H "Content-Type: application/json" -d@deploy.json  http://vagrant-singularity:7099/singularity/api/deploys
+curl -i -X POST -H "Content-Type: application/json" -d@deploy.json  http://192.168.59.103:7099/singularity/api/deploys
 ```
 
-You can go back to the [request](http://vagrant-singularity:7099/singularity/request/mesos-dropwizard-service) and watch the task starting.
+You can go back to the [request](http://192.168.59.103:7099/singularity/request/mesos-dropwizard-service) and watch the task starting.
 
 You can also scale it up in a similar manner, this time you should notice the new tasks starting much faster. This is because the Docker layers are already on the machine, so the Docker pull should be virtually instant.
 
@@ -285,7 +334,26 @@ To deploy this service instead change the Docker image being used:
 }
 ```
 
-# Future Topics
+## Load Balanced Docker Service Using The SingularityExecutor
 
-- Load Balancing and Baragon
-- Using the Singularity Executor
+As we saw above we can add the `loadBalancerGroups` and `serviceBasePath` fields to our deploy and have our service be load balanced.
+
+Now, we also want to add in the SingularityExecutor. The SingularityExecutor [also has docker support](../containers.md) (separate form the mesos docekr containerizer). We can instead use the SingularityExecutor by adding the following to our deploy JSON:
+
+```json
+"customExecutorCmd": "/usr/local/bin/singularity-executor", # as configured in the example cluster
+# Extra settings the SingularityExecutor can use if needed
+"executorData": {
+    "cmd":"",
+    "embeddedArtifacts":[],
+    "externalArtifacts": [],
+    "s3Artifacts": [],
+    "successfulExitCodes": [0],
+    "user": "root",
+    "extraCmdLineArgs": [],
+    "loggingExtraFields": {},
+    "maxTaskThreads": 2048
+}
+```
+
+`POST`ing this to Singularity we now have a docker container with mapped ports connected to a load balancer and running via the SingularityExecutor.

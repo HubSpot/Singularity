@@ -2,10 +2,10 @@ package com.hubspot.singularity.views;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import io.dropwizard.views.View;
-
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.config.SingularityConfiguration;
+
+import io.dropwizard.views.View;
 
 public class IndexView extends View {
 
@@ -29,6 +29,11 @@ public class IndexView extends View {
   private final long defaultHealthcheckIntervalSeconds;
   private final long defaultHealthcheckTimeoutSeconds;
   private final long defaultDeployHealthTimeoutSeconds;
+
+  private final String runningTaskLogPath;
+  private final String finishedTaskLogPath;
+
+  private final String commonHostnameSuffixToOmit;
 
   public IndexView(String singularityUriBase, String appRoot, SingularityConfiguration configuration) {
     super("index.mustache");
@@ -58,6 +63,11 @@ public class IndexView extends View {
     this.defaultHealthcheckIntervalSeconds = configuration.getHealthcheckIntervalSeconds();
     this.defaultHealthcheckTimeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
     this.defaultDeployHealthTimeoutSeconds = configuration.getDeployHealthyBySeconds();
+
+    this.runningTaskLogPath = configuration.getUiConfiguration().getRunningTaskLogPath();
+    this.finishedTaskLogPath = configuration.getUiConfiguration().getFinishedTaskLogPath();
+
+    this.commonHostnameSuffixToOmit = configuration.getCommonHostnameSuffixToOmit().or("");
   }
 
   public String getAppRoot() {
@@ -120,11 +130,39 @@ public class IndexView extends View {
     return defaultDeployHealthTimeoutSeconds;
   }
 
-  @Override
-  public String toString() {
-    return "IndexView [appRoot=" + appRoot + ", staticRoot=" + staticRoot + ", apiRoot=" + apiRoot + ", navColor=" + navColor + ", defaultMemory=" + defaultMemory + ", defaultCpus=" + defaultCpus
-        + ", hideNewDeployButton=" + hideNewDeployButton + ", hideNewRequestButton=" + hideNewRequestButton + ", title=" + title + ", slaveHttpPort=" + slaveHttpPort + ", slaveHttpsPort="
-        + slaveHttpsPort + "]";
+  public String getRunningTaskLogPath() {
+    return runningTaskLogPath;
   }
 
+  public String getFinishedTaskLogPath() {
+    return finishedTaskLogPath;
+  }
+
+  public String getCommonHostnameSuffixToOmit() {
+    return commonHostnameSuffixToOmit;
+  }
+
+  @Override
+  public String toString() {
+    return "IndexView[" +
+            "appRoot='" + appRoot + '\'' +
+            ", apiDocs='" + apiDocs + '\'' +
+            ", staticRoot='" + staticRoot + '\'' +
+            ", apiRoot='" + apiRoot + '\'' +
+            ", navColor='" + navColor + '\'' +
+            ", defaultMemory=" + defaultMemory +
+            ", defaultCpus=" + defaultCpus +
+            ", hideNewDeployButton=" + hideNewDeployButton +
+            ", hideNewRequestButton=" + hideNewRequestButton +
+            ", title='" + title + '\'' +
+            ", slaveHttpPort=" + slaveHttpPort +
+            ", slaveHttpsPort=" + slaveHttpsPort +
+            ", defaultHealthcheckIntervalSeconds=" + defaultHealthcheckIntervalSeconds +
+            ", defaultHealthcheckTimeoutSeconds=" + defaultHealthcheckTimeoutSeconds +
+            ", defaultDeployHealthTimeoutSeconds=" + defaultDeployHealthTimeoutSeconds +
+            ", runningTaskLogPath='" + runningTaskLogPath + '\'' +
+            ", finishedTaskLogPath='" + finishedTaskLogPath + '\'' +
+            ", commonHostnameSuffixToOmit='" + commonHostnameSuffixToOmit + '\'' +
+            ']';
+  }
 }

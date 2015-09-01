@@ -19,6 +19,7 @@
     {{/navColor}}
     <script>
         window.config = {
+            staticRoot: "{{{staticRoot}}}",
             appRoot: "{{{appRoot}}}",
             apiDocs: "{{{apiDocs}}}",
             apiRoot: localStorage.getItem("apiRootOverride") || "{{{apiRoot}}}",
@@ -30,6 +31,9 @@
             defaultHealthcheckIntervalSeconds: {{{defaultHealthcheckIntervalSeconds}}},
             defaultHealthcheckTimeoutSeconds: {{{defaultHealthcheckTimeoutSeconds}}},
             defaultDeployHealthTimeoutSeconds: {{{defaultDeployHealthTimeoutSeconds}}},
+            runningTaskLogPath: "{{{ runningTaskLogPath }}}",
+            finishedTaskLogPath: "{{{ finishedTaskLogPath }}}",
+            commonHostnameSuffixToOmit: "{{{ commonHostnameSuffixToOmit }}}",
             slaveHttpPort: {{{slaveHttpPort}}},
             {{#slaveHttpsPort}}
             slaveHttpsPort: {{{slaveHttpsPort}}}

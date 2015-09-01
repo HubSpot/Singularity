@@ -138,10 +138,12 @@ public class SingularityScheduler {
     final Map<SingularityRack, MachineState> racks = getDefaultMap(rackManager.getObjectsFiltered(MachineState.STARTING_DECOMMISSION));
 
     for (SingularityRack rack : racks.keySet()) {
+      final String sanitizedRackId = JavaUtils.getReplaceHyphensWithUnderscores(rack.getId());
+
       boolean foundTask = false;
 
       for (SingularityTaskId activeTaskId : activeTaskIds) {
-        if (rack.getId().equals(activeTaskId.getRackId())) {
+        if (sanitizedRackId.equals(activeTaskId.getSanitizedRackId())) {
           foundTask = true;
         }
 
@@ -149,7 +151,7 @@ public class SingularityScheduler {
           continue;
         }
 
-        if (rack.getId().equals(activeTaskId.getRackId())) {
+        if (sanitizedRackId.equals(activeTaskId.getSanitizedRackId())) {
           Optional<SingularityTask> maybeTask = taskManager.getTask(activeTaskId);
           cleanupTaskDueToDecomission(requestIdsToReschedule, matchingTaskIds, maybeTask.get(), rack);
         }
@@ -242,7 +244,7 @@ public class SingularityScheduler {
     }
 
     if (cooldown.hasCooldownExpired(requestWithState.getRequest(), deployStatistics, Optional.<Integer> absent(), Optional.<Long> absent())) {
-      requestManager.exitCooldown(requestWithState.getRequest(), System.currentTimeMillis());
+      requestManager.exitCooldown(requestWithState.getRequest(), System.currentTimeMillis(), Optional.<String>absent());
       return RequestState.ACTIVE;
     }
 
@@ -443,7 +445,7 @@ public class SingularityScheduler {
       // TODO send not cooldown anymore email
       LOG.info("Request {} succeeded a task, removing from cooldown", request.getId());
       requestState = RequestState.ACTIVE;
-      requestManager.exitCooldown(request, System.currentTimeMillis());
+      requestManager.exitCooldown(request, System.currentTimeMillis(), Optional.<String>absent());
     }
 
     SingularityPendingRequest pendingRequest = new SingularityPendingRequest(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId(), System.currentTimeMillis(), pendingType);
@@ -587,7 +589,7 @@ public class SingularityScheduler {
       }
 
       newTasks.add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt.get(), nextInstanceNumber, pendingRequest.getPendingType(), pendingRequest.getTimestamp()),
-          pendingRequest.getCmdLineArgsList(), pendingRequest.getUser()));
+          pendingRequest.getCmdLineArgsList(), pendingRequest.getUser(), pendingRequest.getRunId()));
 
       nextInstanceNumber++;
     }

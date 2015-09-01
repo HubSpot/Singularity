@@ -1,0 +1,88 @@
+#!/bin/bash
+
+DOCKER_IP=`echo "$DOCKER_HOST" | awk -F/ '{print $3}' | awk -F: '{print $1}'`
+
+function pull {
+  docker-compose -f compose-dev.yml pull
+}
+
+function remove {
+  echo "Removing old containers"
+  docker-compose -f compose-dev.yml rm
+}
+
+function build {
+  echo "Building new images"
+  mvn clean package docker:build -DskipTests
+}
+
+function stop {
+  echo "Stopping old containers with docker-compose $1"
+  docker-compose -f compose-dev.yml $1
+  if [ "$1" == "kill" ]; then
+    echo "Yep... Good and dead..."
+  fi
+}
+
+function start {
+  if [ "$1" == "attach" ]; then
+    echo "Starting and attaching to docker-compose up"
+    docker-compose -f compose-dev.yml up
+  else
+    echo "Starting via docker-compose up"
+    docker-compose -f compose-dev.yml up &> /dev/null &
+  fi
+}
+
+function help {
+  echo "usage:
+    pull    -> grab needed images for docker hub
+    start   -> start mesos clsuter in background
+    attach  -> start mesos cluster and watch output in console
+    restart -> stop all containers and restart in background
+    rebuild -> stop all containers, rebuild Singularity and docker images, then start in background
+        - rebuild attach -> rebuild and watch output when started
+    remove  -> remove stopped containers
+    stop    -> stop all containers
+    kill    -> kill all containers (ungraceful term)
+"
+}
+case $1 in
+  pull)
+    echo "Grabbing the latest images from docker hub, this may take a few minutes"
+    pull
+    ;;
+  start)
+    start
+    echo "It may take a few moments for Singularity and mesos to start up..."
+    echo "The Singularity UI will be available at $DOCKER_IP:7099/singularity"
+    echo "The Baragon UI will be available at $DOCKER_IP:8080/baragon/v2/ui"
+    ;;
+  attach)
+    start "attach"
+    ;;
+  restart)
+    stop "stop"
+    remove
+    start
+    ;;
+  rebuild)
+    stop "stop"
+    stop "kill"
+    remove
+    build
+    start $2
+    ;;
+  remove)
+    remove
+    ;;
+  stop)
+    stop "stop"
+    ;;
+  kill)
+    stop "kill"
+    ;;
+  help)
+    help
+    ;;
+esac

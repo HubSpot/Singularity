@@ -1,31 +1,22 @@
 package com.hubspot.singularity.sentry;
 
-import java.util.Collections;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.inject.Singleton;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Optional;
+import com.google.common.base.Strings;
+import com.google.inject.Inject;
+import com.hubspot.singularity.config.SentryConfiguration;
 
 import net.kencochrane.raven.Raven;
 import net.kencochrane.raven.RavenFactory;
 import net.kencochrane.raven.event.Event;
 import net.kencochrane.raven.event.EventBuilder;
 import net.kencochrane.raven.event.interfaces.ExceptionInterface;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
-import com.hubspot.singularity.config.SentryConfiguration;
 
 @Singleton
 public class SingularityExceptionNotifier {

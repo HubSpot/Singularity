@@ -1,13 +1,19 @@
 {{#unless rowsOnly}}
     {{#if haveTasks}}
-        <table class="table table-striped">
+        <table class="table table-striped sortable-theme-bootstrap" data-sortable>
             <thead>
                 <tr>
-                    <th data-sort-attribute="id">
+                    <th >
                         Name
                     </th>
-                    <th data-sort-attribute="pendingTask.pendingTaskId.nextRunAt" class="hidden-xs">
+                    <th class="hidden-xs">
                         Next run
+                    </th>
+                    <th>
+                        Pending Type
+                    </th>
+                    <th>
+                        Deploy ID
                     </th>
                     <th class="hidden-xs">
                         {{! Actions column }}
@@ -20,9 +26,7 @@
             {{#each tasks}}
                 <tr data-task-id="{{ id }}">
                     <td>
-                        <span title="{{ id }}">
-                            {{ id }}
-                        </span>
+                        <a href="{{appRoot}}/request/{{pendingTask.pendingTaskId.requestId}}">{{ id }}</a>
                     </td>
                     <td class="hidden-xs">
                         {{timestampFromNow pendingTask.pendingTaskId.nextRunAt}}
@@ -32,11 +36,17 @@
                             {{/ifTimestampInPast}}
                         {{/if}}
                     </td>
+                    <td>
+                        {{humanizeText pendingTask.pendingTaskId.pendingType}}
+                    </td>
+                    <td>
+                        {{pendingTask.pendingTaskId.deployId}}
+                    </td>
                     <td class="actions-column hidden-xs">
                         <a data-task-id="{{ id }}" data-action="run-now" title="Run now">
                             <span class="glyphicon glyphicon-flash"></span>
                         </a>
-                        <a data-task-id="{{ id }}" data-action="viewJSON" title="JSON">
+                        <a data-task-id="{{ id }}" data-nextRunAt="{{ pendingTask.pendingTaskId.nextRunAt}}" data-request-id="{{ pendingTask.pendingTaskId.requestId }}" data-action="viewJSON" title="JSON">
                             { }
                         </a>
                     </td>

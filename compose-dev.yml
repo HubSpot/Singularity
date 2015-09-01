@@ -1,0 +1,53 @@
+zk:
+  image: bobrik/zookeeper
+  net: host
+  environment:
+    ZK_CONFIG: tickTime=2000,initLimit=10,syncLimit=5,maxClientCnxns=128,forceSync=no,clientPort=2181
+    ZK_ID: 1
+
+master:
+  image: mesosphere/mesos-master:0.21.1-1.1.ubuntu1404
+  net: host
+  environment:
+    MESOS_ZK: zk://localhost:2181/mesos
+    MESOS_HOSTNAME: localhost
+    MESOS_IP: 127.0.0.1
+    MESOS_QUORUM: 1
+    MESOS_CLUSTER: docker-compose
+    MESOS_WORK_DIR: /var/lib/mesos
+
+slave:
+  image: hubspot/singularityexecutorslave:0.4.4-SNAPSHOT
+  command: mesos-slave
+  net: host
+  environment:
+    MESOS_MASTER: zk://localhost:2181/mesos
+    MESOS_HOSTNAME: localhost
+    MESOS_IP: 127.0.0.1
+    MESOS_CONTAINERIZERS: docker,mesos
+  volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - /sys:/sys
+
+scheduler:
+  image: hubspot/singularityservice:0.4.4-SNAPSHOT
+  net: host
+  environment:
+    - DOCKER_HOST
+    - LOAD_BALANCER_URI=http://localhost:8080/baragon/v2/request
+
+baragonservice:
+  image: hubspot/baragonservice:0.1.8
+  net: host
+  environment:
+    BARAGON_TYPE: service
+    BARAGON_PORT: 8080
+
+baragonagent:
+  image: hubspot/baragonagent:0.1.8
+  net: host
+  environment:
+    BARAGON_TYPE: agent
+    NGINX_PORT: 80
+    BARAGON_PORT: 8882
+    BARAGON_AGENT_GROUP: test

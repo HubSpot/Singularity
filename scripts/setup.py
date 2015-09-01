@@ -1,16 +1,17 @@
 from setuptools import setup, find_packages
 
 requirements = [
-  'argparse==1.2.2',
+  'argparse==1.3.0',
   'ConfigParser==3.5.0b2',
   'grequests==0.2.0',
-  'requests==2.5.0',
+  'gevent==1.0.2',
+  'requests==2.7.0',
   'termcolor==1.1.0'
 ]
 
 setup(
     name='singularity-logfetch',
-    version='0.16.0',
+    version='0.20.0',
     description='Singularity log fetching and searching',
     author="HubSpot",
     author_email='singularity-users@googlegroups.com',
@@ -23,7 +24,8 @@ setup(
         'console_scripts':[
             'logfetch=logfetch.entrypoint:fetch',
             'logtail=logfetch.entrypoint:tail',
-            'logcat=logfetch.entrypoint:cat'
+            'logcat=logfetch.entrypoint:cat',
+            'logsearch=logfetch.entrypoint:search'
         ],
     }
 )

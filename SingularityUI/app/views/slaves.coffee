@@ -20,6 +20,7 @@ class SlavesView extends View
             'click [data-action="remove"]':       'removeSlave'
             'click [data-action="decommission"]': 'decommissionSlave'
             'click [data-action="reactivate"]':   'reactivateSlave'
+            'click [data-action="freeze"]':       'freezeSlave'
 
     render: ->
         return if not @collection.synced and @collection.isEmpty?()
@@ -28,6 +29,10 @@ class SlavesView extends View
         active = new Slaves(
             @collection.filter (model) ->
               model.get('state') in ['ACTIVE']
+        )
+        frozen = new Slaves(
+            @collection.filter (model) ->
+                model.get('state') in ['FROZEN']
         )
         decommission = new Slaves(
             @collection.filter (model) ->
@@ -40,12 +45,16 @@ class SlavesView extends View
 
         @$('#active').html @slaveTemplate
             data:     active.toJSON()
+        @$('#frozen').html @slaveTemplate
+            data:     frozen.toJSON()
         @$('#decommission').html @slaveTemplate
             data:     decommission.toJSON()
         @$('#inactive').html @slaveTemplate
             data:     inactive.toJSON()
 
         @$('.actions-column a[title]').tooltip()
+
+        super.afterRender()
 
     removeSlave: (event) =>
         $target = $(event.currentTarget)
@@ -56,6 +65,16 @@ class SlavesView extends View
             state: state
 
         slaveModel.promptRemove => @trigger 'refreshrequest'
+
+    freezeSlave: (event) =>
+        $target = $(event.currentTarget)
+        state = $target.data 'state'
+        slaveModel = new Slave
+            id:    $target.data 'slave-id'
+            host:  $target.data 'slave-host'
+            state: state
+
+        slaveModel.promptFreeze => @trigger 'refreshrequest'
 
     decommissionSlave: (event) =>
         $target = $(event.currentTarget)
@@ -76,7 +95,5 @@ class SlavesView extends View
             state: state
 
         slaveModel.promptReactivate => @trigger 'refreshrequest'
-
-
 
 module.exports = SlavesView

@@ -1,7 +1,5 @@
 package com.hubspot.singularity.smtp;
 
-import io.dropwizard.lifecycle.Managed;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -29,6 +27,8 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
+
+import io.dropwizard.lifecycle.Managed;
 
 @Singleton
 public class SingularitySmtpSender implements Managed {

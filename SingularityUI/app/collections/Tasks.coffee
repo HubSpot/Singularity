@@ -14,14 +14,14 @@ class Tasks extends Collection
         cleaning:  undefined
 
     propertyFilterMap:
-        active: ['offer.hostname', 'taskId', 'mesosTask.resources']
+        active: ['offer.hostname', 'taskId', 'mesosTask.resources', 'rackId']
 
     url: ->
         requestFilter = if @requestId? then "/request/#{ @requestId }" else ''
-        propertyString = $.param 'property': @propertyFilterMap[@state] or [], true
+        propertyString = $.param 'property': @propertyFilterMap[@state] or @addPropertyString || [], true
         "#{ config.apiRoot }/tasks/#{ @state }#{ requestFilter }?#{ propertyString }"
 
-    initialize: (models = [], {@state, @requestId}) ->
+    initialize: (models = [], {@state, @requestId, @addPropertyString}) ->
         @comparator = @comparatorMap[@state]
 
 module.exports = Tasks

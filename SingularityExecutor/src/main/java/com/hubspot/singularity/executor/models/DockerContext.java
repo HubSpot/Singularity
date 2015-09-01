@@ -1,7 +1,5 @@
 package com.hubspot.singularity.executor.models;
 
-import com.hubspot.singularity.executor.config.SingularityExecutorModule;
-
 public class DockerContext {
   private final EnvironmentContext envContext;
   private final RunnerContext runContext;

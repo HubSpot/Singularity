@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
 public class SingularityPendingRequestParent extends SingularityRequestParent {
+
   private final SingularityPendingRequest pendingRequest;
 
   public static SingularityPendingRequestParent fromSingularityRequestParent(SingularityRequestParent singularityRequestParent, SingularityPendingRequest pendingRequest) {
@@ -26,4 +27,5 @@ public class SingularityPendingRequestParent extends SingularityRequestParent {
     return "SingularityRequestParent [request=" + getRequest() + ", state=" + getState() + ", requestDeployState=" + getRequestDeployState() + ", activeDeploy=" + getActiveDeploy() + ", pendingDeploy=" + getPendingDeploy() + ", pendingDeployState="
             + getPendingDeployState() + ", pendingRequest=" + pendingRequest + "]";
   }
+
 }

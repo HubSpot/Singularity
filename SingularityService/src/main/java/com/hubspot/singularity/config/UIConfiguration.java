@@ -50,9 +50,23 @@ public class UIConfiguration {
   @JsonProperty
   private String baseUrl;
 
+  @NotEmpty
+  private String runningTaskLogPath = "stdout";
+
+  @NotEmpty
+  private String finishedTaskLogPath = "stdout";
+  
   @JsonProperty
   @NotNull
   private List<ShellCommandDescriptor> shellCommands = Collections.emptyList();
+
+  public String getRunningTaskLogPath() {
+    return runningTaskLogPath;
+  }
+
+  public String getFinishedTaskLogPath() {
+    return finishedTaskLogPath;
+  }
 
   private boolean hideNewDeployButton = false;
   private boolean hideNewRequestButton = false;
@@ -124,6 +138,13 @@ public class UIConfiguration {
     this.rootUrlMode = rootUrlMode;
   }
 
+  public void setRunningTaskLogPath(String runningTaskLogPath) {
+    this.runningTaskLogPath = runningTaskLogPath;
+  }
+
+  public void setFinishedTaskLogPath(String finishedTaskLogPath) {
+    this.finishedTaskLogPath = finishedTaskLogPath;
+  }
   public List<ShellCommandDescriptor> getShellCommands() {
     return shellCommands;
   }

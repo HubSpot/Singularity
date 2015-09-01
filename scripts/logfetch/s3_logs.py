@@ -1,6 +1,5 @@
 import os
 import sys
-import re
 import grequests
 import logfetch_base
 from termcolor import colored
@@ -21,11 +20,11 @@ def download_s3_logs(args):
   all_logs = []
   for log_file in logs:
     filename = log_file['key'].rsplit("/", 1)[1]
-    if logfetch_base.is_in_date_range(args, time_from_filename(filename)):
+    if logfetch_base.is_in_date_range(args, int(str(log_file['lastModified'])[0:-3])):
       if not args.logtype or log_matches(args, filename):
         if not already_downloaded(args.dest, filename):
           async_requests.append(
-            grequests.AsyncRequest('GET', log_file['getUrl'], callback=generate_callback(log_file['getUrl'], args.dest, filename, args.chunk_size, args.verbose))
+            grequests.AsyncRequest('GET', log_file['getUrl'], callback=generate_callback(log_file['getUrl'], args.dest, filename, args.chunk_size, args.verbose), headers=args.headers)
           )
         else:
           if args.verbose:
@@ -53,22 +52,18 @@ def already_downloaded(dest, filename):
 
 def logs_for_all_requests(args):
   if args.taskId:
-    return get_json_response(s3_task_logs_uri(args, args.taskId))
+    return get_json_response(s3_task_logs_uri(args, args.taskId), args)
   else:
     tasks = logfetch_base.tasks_for_requests(args)
     logs = []
     for task in tasks:
-      s3_logs = get_json_response(s3_task_logs_uri(args, task))
+      s3_logs = get_json_response(s3_task_logs_uri(args, task), args)
       logs = logs + s3_logs if s3_logs else logs
     sys.stderr.write(colored('Also searching s3 history...\n', 'cyan'))
     for request in logfetch_base.all_requests(args):
-      s3_logs = get_json_response(s3_request_logs_uri(args, request))
+      s3_logs = get_json_response(s3_request_logs_uri(args, request), args)
       logs = logs + s3_logs if s3_logs else logs
     return [dict(t) for t in set([tuple(l.items()) for l in logs])] # remove any duplicates
-
-def time_from_filename(filename):
-  time_string = re.search('(\d{13})', filename).group(1)
-  return int(time_string[0:-3])
 
 def s3_task_logs_uri(args, idString):
   return S3LOGS_URI_FORMAT.format(logfetch_base.base_uri(args), TASK_FORMAT.format(idString))

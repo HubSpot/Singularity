@@ -65,19 +65,22 @@ When you first start, run `npm install` to download all the dependencies. Once t
 
 So far you have SingularityUI with all its dependencies installed. You're able to run SingularityUI and have it served using `brunch watch --server`. What we need now is a running SingularityService to pull information from.
 
-If you don't have one already (e.g. your team might be running one you can use), you can easily run your own via [Vagrant](vagrant.md). Once the VM is up and running, the API's root is available at [`http://vagrant-singularity:7099/singularity/api`](http://vagrant-singularity:7099/singularity/api) by default.
+If you don't have one already (e.g. your team might be running one you can use), you can easily run your own via [Docker](docker.md). If running via docker, it is helpful to add the host that docker is running on to your `/etc/hosts` file as `docker` so we can reference it by hostname. If using `boot2docker` this is your `boot2docker ip`. We will reference the hostname as `docker` in the examples below.
+
+
+Once the cluster is up and running, the API's root is available at [`http://docker/singularity/api`](http://docker/singularity/api) by default.
 
 You might also be running SingularityService locally without a VM. This works too!
 
 -----
 
-From this point onwards we're assuming you have a running SingularityService you can use. We'll be using `http://example/singularity/api` as a placeholder for the root URL of the API you're using.
+From this point onwards we're assuming you have a running SingularityService you can use. We'll be using `http://docker/singularity/api` as a placeholder for the root URL of the API you're using.
 
 ### Cross-domain restrictions
 
-**If you're using the Vagrant box for your API you can go ahead and skip this section.**
+**If you're using the docker-compose setup for your API you can go ahead and skip this section.**
 
-If you're using a different API you should be aware that SingularityService has an `enableCorsFilter` option in its server config. If enabled, cross-domain restrictions won't apply. The Vagrant service has this enabled by default which is why we're not worried about it.
+If you're using a different API you should be aware that SingularityService has an `enableCorsFilter` option in its server config. If enabled, cross-domain restrictions won't apply. The docker service has this enabled by default which is why we're not worried about it.
 
 Your browser will not allow cross-domain requests if you're using a server without the CORS filter enabled. To get around this we'll use an open-source HubSpot mini-proxy called [vee](https://github.com/HubSpot/vee).
 
@@ -96,8 +99,8 @@ routes:
   ".*/static/.*": "http://localhost:3333/"
 
   # Redirect any API calls to the QA Singularity service (the slash after the domain is necessary)
-  ".*/api/.*": "http://example/"
-  ".*/login/.*": "https://example/"
+  ".*/api/.*": "http://docker/"
+  ".*/login/.*": "http://docker/"
 
   # All else to the index.html (for all other Backbone routes)
   ".*": "http://localhost:3333/singularity/"
@@ -120,7 +123,7 @@ Assuming you used the second command, you can now access SingularityUI by going 
 
 If you're confused as to what's going on here, all your requests are being processed by vee so that:
 
-* Requests to `localhost:4001/singularity/api` are sent to the server at `example`.
+* Requests to `localhost:4001/singularity/api` are sent to the server at `docker`.
 * All other requests, including static files, are sent to the Brunch server running locally.
 
 ### Connecting to the API
@@ -129,12 +132,12 @@ So far you have SingularityUI being served by Brunch, and SingularityService run
 
 Open up SingularityUI in your browser by going to [`http://localhost:3333`](http://localhost:3333).
 
-You'll be prompted to input an API root. This is the service that SingularityUI will interact with for its data. Give it your `http://example/singularity/api` URI.
+You'll be prompted to input an API root. This is the service that SingularityUI will interact with for its data. Give it your `http://docker/singularity/api` URI.
 
 You can change the value of this at any point by typing the following in your JS console:
 
 ```javascript
-localStorage.set('apiRootOverride', 'http://example/singularity/api')
+localStorage.set('apiRootOverride', 'http://docker/singularity/api')
 ```
 
 And there you go! You should at this point have SingularityUI running in your browser with it connected to SingularityService. Just let Brunch watch and compile your files as you work and try it out in your browser.

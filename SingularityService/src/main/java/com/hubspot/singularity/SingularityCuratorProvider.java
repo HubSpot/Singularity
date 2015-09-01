@@ -2,7 +2,6 @@ package com.hubspot.singularity;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import io.dropwizard.lifecycle.Managed;
 
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -20,6 +19,8 @@ import org.slf4j.LoggerFactory;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
+
+import io.dropwizard.lifecycle.Managed;
 
 public class SingularityCuratorProvider implements Managed, Provider<CuratorFramework> {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityCuratorProvider.class);

@@ -26,21 +26,26 @@ Two commands exist for downloading logs.
 |:---:|:---------|:-----:|
 |-f , --conf-folder|Folder to look for configuration files|`~/.logfetch`|
 |-c , --conf-file|configuration file to use(path relative to conf_folder)|default|
-|-t , --task-id|Task Id to fetch logs for|
-|-r , --request-id|Request Id to fetch logs for|
-|-tc, --task-count|Number of recent tasks (belonging to a request) to fetch live logs (on machine not s3)|1|
+|-t , --task-id|Task Id to fetch logs for||
+|-r , --request-id|Request Id to fetch logs for||
+|-T, --task-count|Max number of recent tasks (belonging to a request) to fetch live logs (on machine not s3)|20|
 |-d , --deploy-id|Deploy Id to fetch logs for (Must also specify requestId when using this option)|
 |-o, --dest|Destination folder for download output|`~/.logfetch_cache`|
-|-n --num-parallel-fetches|Max number of log fetches to make at once|5
-|-cs, --chunk-size|Chunk size for writing responses to file system|8192
+|-n --num-parallel-fetches|Max number of log fetches to make at once|10|
+|-C, --chunk-size|Chunk size for writing responses to file system|8192|
 |-u, --singularity-uri-base|Base url for singularity (e.g. `localhost:8080/singularity/v2/api`)| Must be set!|
-|-s , --start-days|Search for logs no older than this, can be an integer number of days or date in format ‘mm-dd-yyyy’ |7
-|-e , --end-days|Search for logs no newer than this, can be an integer number of days or date in format ‘mm-dd-yyyy’| None (today)
+|-s , --start|Search for logs no older than this, can be an integer number of days or date in format “%Y-%m-%d %H:%M:%S” or “%Y-%m-%d”, leaving off h-m-s will be inclusive for the current day (00:00:00) | 7 days ago|
+|-e , --end|Search for logs no newer than this, can be an integer number of days or date in format “%Y-%m-%d %H:%M:%S” or “%Y-%m-%d”, leaving off h-m-s will be inclusive for the current day (23:59:59)| None (now)|
+|-z , --local-zone|Specify times for `-s` and `-e` in your local time zone. If this is not set, times are assumed to be in UTC|unset/false|
 |-p, --file-pattern|Should match the executor.s3.uploader.pattern setting, determines if we can match on file name for s3 logs|`%requestId/%Y/%m/%taskId_%index-%s-%filename`|
-|-nn, --no-name-fetch-off|If a logtype matcher is specified, but the s3 log pattern does not include file name, don't download any s3 files| None (fetch all)|
-|-g, --grep|Grep string for searching log files(Only for `logfetch`)|
+|-N, --no-name-fetch-off|If a logtype matcher is specified, but the s3 log pattern does not include file name, don't download any s3 files| None (fetch all)|
+|-g, --grep|Grep string for searching log files(Only for `logfetch`)||
 |-l, --logtype|Glob matcher for type of log file to download| None (match all)|
-|-V, --verbose|More verbose output||
+|-S, --skip-s3|Don't search/download s3 logs|false|
+|-L, --skip-live|Don't search/download live logs|false|
+|-U, --use-cache|Don't redownload live logs, prefer the cached version|false|
+|--search|Run logsearch on the cache of local files (no downloading)|false|
+|-V, --verbose|More verbose output|false|
 
 ##Grep and Log Files
 When the `-g` option is set, the log fetcher will grep the downloaded files for the provided regex.
@@ -98,11 +103,38 @@ You can also provide the `-g` option which will provide the grep string to the s
 |:---:|:---------|:-----:|
 |-f , --conf-folder|Folder to look for configuration files|`~/.logfetch`|
 |-c , --conf-file|configuration file to use(path relative to conf_folder)|default|
-|-t , --task-id|Task Id to fetch logs for|
-|-r , --request-id|Request Id to fetch logs for|
-|-d , --deploy-id|Deploy Id to fetch logs for (Must also specify requestId when using this option)|
+|-t , --task-id|Task Id to fetch logs for||
+|-r , --request-id|Request Id to fetch logs for||
+|-d , --deploy-id|Deploy Id to fetch logs for (Must also specify requestId when using this option)||
 |-u, --singularity-uri-base|Base url for singularity (e.g. `localhost:8080/singularity/v2/api`)|Must be set!|
-|-g, --grep|Grep string or full command for searching output|
+|-g, --grep|Grep string or full command for searching output||
 |-l, --logfile|Log file path to tail (ie logs/access.log)|Must be set!|
 |-v, --verbose|Extra output about the task id associated with logs in the output|False|
+
+#Logsearch
+
+An offline version of `logfetch` that will aid in searching through your directory of cached files. The syntax is the same as for `logfetch` with a smaller list of options, shown below:
+
+##Options
+|Flags|Description|Default|
+|:---:|:---------|:-----:|
+|-f , --conf-folder|Folder to look for configuration files|`~/.logfetch`|
+|-c , --conf-file|configuration file to use(path relative to conf_folder)|default|
+|-t , --task-id|Task Id to fetch logs for||
+|-r , --request-id|Request Id to fetch logs for||
+|-d , --deploy-id|Deploy Id to fetch logs for (Must also specify requestId when using this option)|
+|-o, --dest|Cache folder to search|`~/.logfetch_cache`|
+|-s , --start|Search for logs no older than this, can be an integer number of days or date in format “%Y-%m-%d %H:%M:%S” or “%Y-%m-%d”, leaving off h-m-s will be inclusive for the current day (00:00:00) | 7 days ago|
+|-e , --end|Search for logs no newer than this, can be an integer number of days or date in format “%Y-%m-%d %H:%M:%S” or “%Y-%m-%d”, leaving off h-m-s will be inclusive for the current day (23:59:59)| None (now)|
+|-z , --local-zone|Specify times for `-s` and `-e` in your local time zone. If this is not set, times are assumed to be in UTC|unset/false|
+|-p, --file-pattern|Should match the executor.s3.uploader.pattern setting, determines if we can match on file name for s3 logs|`%requestId/%Y/%m/%taskId_%index-%s-%filename`|
+|-g, --grep|Grep string for searching log files(Only for `logfetch`)||
+|-l, --logtype|Glob matcher for type of log file to download| None (match all)|
+|-V, --verbose|More verbose output||
+
+example:
+
+- grep in logs matching `*.out` logs from request `My_Request_Id`
+
+`logfetch -r ‘My_Request_Id’ -l ‘*.out’ -g 'Regex_here'`
 

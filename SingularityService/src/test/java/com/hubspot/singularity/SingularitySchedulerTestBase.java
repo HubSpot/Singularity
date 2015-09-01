@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
-import com.hubspot.singularity.data.zkmigrations.ZkDataMigrationRunner;
 import org.apache.mesos.Protos.Attribute;
 import org.apache.mesos.Protos.FrameworkID;
 import org.apache.mesos.Protos.Offer;
@@ -41,6 +40,8 @@ import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.data.zkmigrations.ZkDataMigrationRunner;
+import com.hubspot.singularity.event.SingularityEventListener;
 import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.resources.DeployResource;
@@ -110,6 +111,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityScheduledJobPoller scheduledJobPoller;
   @Inject
   protected ZkDataMigrationRunner migrationRunner;
+  @Inject
+  protected SingularityEventListener eventListener;
 
   @Inject
   @Named(SingularityMainModule.SERVER_ID_PROPERTY)
@@ -127,6 +130,10 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityDeploy secondDeploy;
 
   protected Optional<String> user = Optional.absent();
+
+  public SingularitySchedulerTestBase(boolean useDBTests) {
+    super(useDBTests);
+  }
 
   @After
   public void teardown() throws Exception {
@@ -168,12 +175,16 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, int instanceNo, TaskState initialTaskState) {
-    return launchTask(request, deploy, System.currentTimeMillis(), instanceNo, initialTaskState);
+    return launchTask(request, deploy, System.currentTimeMillis() - 1, System.currentTimeMillis(), instanceNo, initialTaskState);
+  }
+
+  protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, long taskLaunch, int instanceNo, TaskState initialTaskState) {
+    return launchTask(request, deploy, taskLaunch, System.currentTimeMillis(), instanceNo, initialTaskState);
   }
 
   protected SingularityPendingTask buildPendingTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo) {
     SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, PendingType.IMMEDIATE, launchTime);
-    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Collections.<String> emptyList(), Optional.<String> absent());
+    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Collections.<String> emptyList(), Optional.<String> absent(), Optional.<String> absent());
 
     return pendingTask;
   }
@@ -193,7 +204,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
         .setName("name")
         .build();
 
-    SingularityTask task = new SingularityTask(taskRequest, taskId, offer, taskInfo);
+    SingularityTask task = new SingularityTask(taskRequest, taskId, offer, taskInfo, Optional.of("rack1"));
 
     taskManager.savePendingTask(pendingTask);
 
@@ -204,12 +215,12 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     return prepTask(request, firstDeploy, System.currentTimeMillis(), 1);
   }
 
-  protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo, TaskState initialTaskState) {
+  protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, long updateTime, int instanceNo, TaskState initialTaskState) {
     SingularityTask task = prepTask(request, deploy, launchTime, instanceNo);
 
     taskManager.createTaskAndDeletePendingTask(task);
 
-    statusUpdate(task, initialTaskState);
+    statusUpdate(task, initialTaskState, Optional.of(updateTime));
 
     return task;
   }
@@ -282,8 +293,21 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     return deploy;
   }
 
+  protected SingularityDeploy initDeploy(SingularityDeployBuilder builder, long timestamp) {
+    SingularityDeployMarker marker = new SingularityDeployMarker(requestId, builder.getId(), timestamp, Optional.<String> absent());
+    builder.setCommand(Optional.of("sleep 100"));
+
+    SingularityDeploy deploy = builder.build();
+
+    deployManager.saveDeploy(request, marker, deploy);
+
+    startDeploy(marker);
+
+    return deploy;
+  }
+
   protected void initSecondDeploy() {
-    secondDeployMarker =  new SingularityDeployMarker(requestId, secondDeployId, System.currentTimeMillis(), Optional.<String> absent());
+    secondDeployMarker = new SingularityDeployMarker(requestId, secondDeployId, System.currentTimeMillis(), Optional.<String> absent());
     secondDeploy = new SingularityDeployBuilder(requestId, secondDeployId).setCommand(Optional.of("sleep 100")).build();
 
     deployManager.saveDeploy(request, secondDeployMarker, secondDeploy);
@@ -327,7 +351,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(requestId, deployId,
         System.currentTimeMillis() + TimeUnit.DAYS.toMillis(random.nextInt(3)), random.nextInt(10), PendingType.IMMEDIATE, System.currentTimeMillis());
 
-    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Collections.<String> emptyList(), Optional.<String> absent());
+    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Collections.<String> emptyList(), Optional.<String> absent(), Optional.<String> absent());
 
     taskManager.savePendingTask(pendingTask);
 
@@ -346,7 +370,6 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
     taskManager.saveLoadBalancerState(taskId, lbrt, update);
   }
-
 
   protected void sleep(long millis) {
     try {

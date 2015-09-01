@@ -29,6 +29,7 @@ import com.hubspot.horizon.HttpRequest.Method;
 import com.hubspot.horizon.HttpResponse;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.SingularityClientCredentials;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
@@ -98,6 +99,7 @@ public class SingularityClient {
   private static final String REQUEST_DELETE_PAUSED_FORMAT = REQUESTS_FORMAT + "/request/%s/paused";
   private static final String REQUEST_BOUNCE_FORMAT = REQUESTS_FORMAT + "/request/%s/bounce";
   private static final String REQUEST_PAUSE_FORMAT = REQUESTS_FORMAT + "/request/%s/pause";
+  private static final String REQUEST_EXIT_COOLDOWN_FORMAT = REQUESTS_FORMAT + "/request/%s/exit-cooldown";
 
   private static final String DEPLOYS_FORMAT = "http://%s/%s/deploys";
   private static final String DELETE_DEPLOY_FORMAT = DEPLOYS_FORMAT + "/deploy/%s/request/%s";
@@ -117,7 +119,7 @@ public class SingularityClient {
   private static final String S3_LOG_GET_REQUEST_LOGS = S3_LOG_FORMAT + "/request/%s";
   private static final String S3_LOG_GET_DEPLOY_LOGS = S3_LOG_FORMAT + "/request/%s/deploy/%s";
 
-  private static final TypeReference<Collection<SingularityRequest>> REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequest>>() {};
+  private static final TypeReference<Collection<SingularityRequestParent>> REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestParent>>() {};
   private static final TypeReference<Collection<SingularityPendingRequest>> PENDING_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityPendingRequest>>() {};
   private static final TypeReference<Collection<SingularityRequestCleanup>> CLEANUP_REQUESTS_COLLECTION = new TypeReference<Collection<SingularityRequestCleanup>>() {};
   private static final TypeReference<Collection<SingularityTask>> TASKS_COLLECTION = new TypeReference<Collection<SingularityTask>>() {};
@@ -137,23 +139,26 @@ public class SingularityClient {
   private final String contextPath;
 
   private final HttpClient httpClient;
+  private final Optional<SingularityClientCredentials> credentials;
 
   @Inject
   @Deprecated
   public SingularityClient(@Named(SingularityClientModule.CONTEXT_PATH) String contextPath, @Named(SingularityClientModule.HTTP_CLIENT_NAME) HttpClient httpClient, @Named(SingularityClientModule.HOSTS_PROPERTY_NAME) String hosts) {
-    this(contextPath, httpClient, Arrays.asList(hosts.split(",")));
+    this(contextPath, httpClient, Arrays.asList(hosts.split(",")), Optional.<SingularityClientCredentials>absent());
   }
 
-  public SingularityClient(String contextPath, HttpClient httpClient, List<String> hosts) {
-    this(contextPath, httpClient, ProviderUtils.<List<String>>of(ImmutableList.copyOf(hosts)));
+  public SingularityClient(String contextPath, HttpClient httpClient, List<String> hosts, Optional<SingularityClientCredentials> credentials) {
+    this(contextPath, httpClient, ProviderUtils.<List<String>>of(ImmutableList.copyOf(hosts)), credentials);
   }
 
-  public SingularityClient(String contextPath, HttpClient httpClient, Provider<List<String>> hostsProvider) {
+  public SingularityClient(String contextPath, HttpClient httpClient, Provider<List<String>> hostsProvider, Optional<SingularityClientCredentials> credentials) {
     this.httpClient = httpClient;
     this.contextPath = contextPath;
 
     this.hostsProvider = hostsProvider;
     this.random = new Random();
+
+    this.credentials = credentials;
   }
 
   private String getHost() {
@@ -205,6 +210,8 @@ public class SingularityClient {
       addQueryParams(requestBuilder, queryParams.get());
     }
 
+    addCredentials(requestBuilder);
+
     HttpResponse response = httpClient.execute(requestBuilder.build());
 
     if (response.getStatusCode() == 404) {
@@ -234,6 +241,8 @@ public class SingularityClient {
       addQueryParams(requestBuilder, queryParams.get());
     }
 
+    addCredentials(requestBuilder);
+
     HttpResponse response = httpClient.execute(requestBuilder.build());
 
     if (response.getStatusCode() == 404) {
@@ -250,17 +259,23 @@ public class SingularityClient {
   private void addQueryParams(HttpRequest.Builder requestBuilder, Map<String, Object> queryParams) {
     for (Entry<String, Object> queryParamEntry : queryParams.entrySet()) {
       if (queryParamEntry.getValue() instanceof String) {
-        requestBuilder.addQueryParam(queryParamEntry.getKey(), (String) queryParamEntry.getValue());
+        requestBuilder.setQueryParam(queryParamEntry.getKey()).to((String) queryParamEntry.getValue());
       } else if (queryParamEntry.getValue() instanceof Integer) {
-        requestBuilder.addQueryParam(queryParamEntry.getKey(), (Integer) queryParamEntry.getValue());
+        requestBuilder.setQueryParam(queryParamEntry.getKey()).to((Integer) queryParamEntry.getValue());
       } else if (queryParamEntry.getValue() instanceof Long) {
-        requestBuilder.addQueryParam(queryParamEntry.getKey(), (Long) queryParamEntry.getValue());
+        requestBuilder.setQueryParam(queryParamEntry.getKey()).to((Long) queryParamEntry.getValue());
       } else if (queryParamEntry.getValue() instanceof Boolean) {
-        requestBuilder.addQueryParam(queryParamEntry.getKey(), (Boolean) queryParamEntry.getValue());
+        requestBuilder.setQueryParam(queryParamEntry.getKey()).to((Boolean) queryParamEntry.getValue());
       } else {
         throw new RuntimeException(String.format("The type '%s' of query param %s is not supported. Only String, long, int and boolean values are supported",
             queryParamEntry.getValue().getClass().getName(), queryParamEntry.getKey()));
       }
+    }
+  }
+
+  private void addCredentials(HttpRequest.Builder requestBuilder) {
+    if (credentials.isPresent()) {
+      requestBuilder.addHeader(credentials.get().getHeaderName(), credentials.get().getToken());
     }
   }
 
@@ -276,8 +291,10 @@ public class SingularityClient {
     HttpRequest.Builder request = HttpRequest.newBuilder().setUrl(uri).setMethod(Method.DELETE);
 
     if (user.isPresent()) {
-      request.addQueryParam("user", user.get());
+      request.setQueryParam("user").to(user.get());
     }
+
+    addCredentials(request);
 
     HttpResponse response = httpClient.execute(request.build());
 
@@ -319,12 +336,14 @@ public class SingularityClient {
     HttpRequest.Builder request = HttpRequest.newBuilder().setUrl(uri).setMethod(Method.POST);
 
     if (user.isPresent()) {
-      request.addQueryParam("user", user.get());
+      request.setQueryParam("user").to(user.get());
     }
 
     if (body.isPresent()) {
       request.setBody(body.get());
     }
+
+    addCredentials(request);
 
     HttpResponse response = httpClient.execute(request.build());
 
@@ -349,11 +368,13 @@ public class SingularityClient {
     HttpRequest.Builder request = HttpRequest.newBuilder().setUrl(uri);
 
     if (skipCache.isPresent()) {
-      request.addQueryParam("skipCache", skipCache.get().booleanValue());
+      request.setQueryParam("skipCache").to(skipCache.get().booleanValue());
     }
     if (includeRequestIds.isPresent()) {
-      request.addQueryParam("includeRequestIds", includeRequestIds.get().booleanValue());
+      request.setQueryParam("includeRequestIds").to(includeRequestIds.get().booleanValue());
     }
+
+    addCredentials(request);
 
     HttpResponse response = httpClient.execute(request.build());
 
@@ -421,6 +442,12 @@ public class SingularityClient {
     post(requestUri, String.format("bounce of request %s", requestId), Optional.absent(), user);
   }
 
+  public void exitCooldown(String requestId, Optional<String> user) {
+    final String requestUri = String.format(REQUEST_EXIT_COOLDOWN_FORMAT, getHost(), contextPath, requestId);
+
+    post(requestUri, String.format("exit cooldown of request %s", requestId), Optional.absent(), user);
+  }
+
   //
   // ACTIONS ON A DEPLOY FOR A SINGULARITY REQUEST
   //
@@ -474,10 +501,10 @@ public class SingularityClient {
    * {@link SingularityClient#getCoolDownSingularityRequests()} respectively to get only the ACTIVE, PAUSED or COOLDOWN requests.
    *
    * @return
-   *    returns all the [ACTIVE, PAUSED, COOLDOWN] {@link SingularityRequest} instances.
+   *    returns all the [ACTIVE, PAUSED, COOLDOWN] {@link SingularityRequestParent} instances.
    *
    */
-  public Collection<SingularityRequest> getSingularityRequests() {
+  public Collection<SingularityRequestParent> getSingularityRequests() {
     final String requestUri = String.format(REQUESTS_FORMAT, getHost(), contextPath);
 
     return getCollection(requestUri, "[ACTIVE, PAUSED, COOLDOWN] requests", REQUESTS_COLLECTION);
@@ -487,9 +514,9 @@ public class SingularityClient {
    * Get all requests that their state is ACTIVE
    *
    * @return
-   *    All ACTIVE {@link SingularityRequest} instances
+   *    All ACTIVE {@link SingularityRequestParent} instances
    */
-  public Collection<SingularityRequest> getActiveSingularityRequests() {
+  public Collection<SingularityRequestParent> getActiveSingularityRequests() {
     final String requestUri = String.format(REQUESTS_GET_ACTIVE_FORMAT, getHost(), contextPath);
 
     return getCollection(requestUri, "ACTIVE requests", REQUESTS_COLLECTION);
@@ -500,9 +527,9 @@ public class SingularityClient {
    * ACTIVE requests are paused by users, which is equivalent to stop their tasks from running without undeploying them
    *
    * @return
-   *    All PAUSED {@link SingularityRequest} instances
+   *    All PAUSED {@link SingularityRequestParent} instances
    */
-  public Collection<SingularityRequest> getPausedSingularityRequests() {
+  public Collection<SingularityRequestParent> getPausedSingularityRequests() {
     final String requestUri = String.format(REQUESTS_GET_PAUSED_FORMAT, getHost(), contextPath);
 
     return getCollection(requestUri, "PAUSED requests", REQUESTS_COLLECTION);
@@ -512,9 +539,9 @@ public class SingularityClient {
    * Get all requests that has been set to a COOLDOWN state by singularity
    *
    * @return
-   *    All {@link SingularityRequest} instances that their state is COOLDOWN
+   *    All {@link SingularityRequestParent} instances that their state is COOLDOWN
    */
-  public Collection<SingularityRequest> getCoolDownSingularityRequests() {
+  public Collection<SingularityRequestParent> getCoolDownSingularityRequests() {
     final String requestUri = String.format(REQUESTS_GET_COOLDOWN_FORMAT, getHost(), contextPath);
 
     return getCollection(requestUri, "COOLDOWN requests", REQUESTS_COLLECTION);

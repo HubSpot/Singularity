@@ -3,6 +3,7 @@ package com.hubspot.singularity.executor.task;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -151,7 +152,7 @@ public class SingularityExecutorArtifactFetcher {
     private void downloadRemoteArtifact(RemoteArtifact remoteArtifact, ArtifactManager artifactManager, SingularityExecutorTask task) {
       Path fetched = artifactManager.fetch(remoteArtifact);
 
-      if (fetched.getFileName().toString().endsWith(".tar.gz")) {
+      if (Objects.toString(fetched.getFileName()).endsWith(".tar.gz")) {
         artifactManager.untar(fetched, task.getTaskDefinition().getTaskDirectoryPath());
       } else {
         artifactManager.copy(fetched, task.getTaskDefinition().getTaskAppDirectoryPath());

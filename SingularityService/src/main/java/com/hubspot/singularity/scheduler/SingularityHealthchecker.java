@@ -7,7 +7,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
-import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,10 +16,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.hubspot.singularity.HealthcheckProtocol;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -31,6 +32,7 @@ import com.ning.http.client.RequestBuilder;
 @SuppressWarnings("deprecation")
 @Singleton
 public class SingularityHealthchecker {
+  private static final HealthcheckProtocol DEFAULT_HEALTH_CHECK_SCHEME = HealthcheckProtocol.HTTP;
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityHealthchecker.class);
 
@@ -63,6 +65,11 @@ public class SingularityHealthchecker {
   }
 
   public void enqueueHealthcheck(SingularityTask task) {
+    if (task.getTaskRequest().getDeploy().getHealthcheckMaxRetries().isPresent() && taskManager.getNumHealthchecks(task.getTaskId()) > task.getTaskRequest().getDeploy().getHealthcheckMaxRetries().get()) {
+      LOG.info("Not enqueuing new healthcheck for {}, it has already attempted {} times", task.getTaskId(), task.getTaskRequest().getDeploy().getHealthcheckMaxRetries());
+      return;
+    }
+
     ScheduledFuture<?> future = enqueueHealthcheckWithDelay(task, task.getTaskRequest().getDeploy().getHealthcheckIntervalSeconds().or(configuration.getHealthcheckIntervalSeconds()));
 
     ScheduledFuture<?> existing = taskIdToHealthcheck.put(task.getTaskId().getId(), future);
@@ -148,7 +155,9 @@ public class SingularityHealthchecker {
       uri = uri.substring(1);
     }
 
-    return Optional.of(String.format("http://%s:%d/%s", hostname, firstPort.get(), uri));
+    HealthcheckProtocol protocol = task.getTaskRequest().getDeploy().getHealthcheckProtocol().or(DEFAULT_HEALTH_CHECK_SCHEME);
+
+    return Optional.of(String.format("%s://%s:%d/%s", protocol.getProtocol(), hostname, firstPort.get(), uri));
   }
 
   private void saveFailure(SingularityHealthcheckAsyncHandler handler, String message) {
@@ -175,7 +184,7 @@ public class SingularityHealthchecker {
   }
 
   private void asyncHealthcheck(final SingularityTask task) {
-    final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(exceptionNotifier, configuration, this, newTaskChecker, taskManager, abort, task);
+    final SingularityHealthcheckAsyncHandler handler = new SingularityHealthcheckAsyncHandler(exceptionNotifier, configuration, this, newTaskChecker, taskManager, task);
     final Optional<String> uri = getHealthcheckUri(task);
 
     if (!uri.isPresent()) {
