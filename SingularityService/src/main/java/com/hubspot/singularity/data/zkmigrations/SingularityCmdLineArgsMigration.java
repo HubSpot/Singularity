@@ -114,7 +114,8 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
     try {
       for (String pendingRequest : curator.getChildren().forPath(REQUEST_PENDING_PATH)) {
         SingularityPendingRequestPrevious previous = objectMapper.readValue(curator.getData().forPath(ZKPaths.makePath(REQUEST_PENDING_PATH, pendingRequest)), SingularityPendingRequestPrevious.class);
-        SingularityPendingRequest newRequest = new SingularityPendingRequest(previous.requestId, previous.deployId, previous.timestamp, previous.user, previous.pendingType, getCmdLineArgs(previous.cmdLineArgs));
+        SingularityPendingRequest newRequest = new SingularityPendingRequest(previous.requestId, previous.deployId, previous.timestamp, previous.user, previous.pendingType,
+            getCmdLineArgs(previous.cmdLineArgs), Optional.<String> absent());
 
         LOG.info("Re-saving {}", newRequest);
 
@@ -140,7 +141,7 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
       for (SingularityPendingTaskId pendingTaskId : taskManager.getPendingTaskIds()) {
         Optional<String> cmdLineArgs = getCmdLineArgs(pendingTaskId);
 
-        SingularityCreateResult result = taskManager.savePendingTask(new SingularityPendingTask(pendingTaskId, getCmdLineArgs(cmdLineArgs), Optional.<String> absent()));
+        SingularityCreateResult result = taskManager.savePendingTask(new SingularityPendingTask(pendingTaskId, getCmdLineArgs(cmdLineArgs), Optional.<String> absent(), Optional.<String> absent()));
 
         LOG.info("Saving {} ({}) {}", pendingTaskId, cmdLineArgs, result);
       }

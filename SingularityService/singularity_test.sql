@@ -23,5 +23,6 @@ CREATE TABLE taskHistory (
   requestId VARCHAR(100) NOT NULL,
   updatedAt TIMESTAMP NOT NULL DEFAULT '1971-01-01 00:00:01',
   lastTaskStatus VARCHAR(25) NULL,
+  runId VARCHAR(100) NULL,
   bytes BLOB NOT NULL,
 );
