@@ -64,9 +64,9 @@ public class SingularityDriver {
     this.scheduler = scheduler;
 
     if (configuration.isUseNativeCode()) {
-        this.driver = new MesosSchedulerDriver(scheduler, frameworkInfo, configuration.getMaster());
+      this.driver = new MesosSchedulerDriver(scheduler, frameworkInfo, configuration.getMaster());
     } else {
-        this.driver = new JesosSchedulerDriver(scheduler, frameworkInfo, configuration.getMaster());
+      this.driver = new JesosSchedulerDriver(scheduler, frameworkInfo, configuration.getMaster());
     }
   }
 
