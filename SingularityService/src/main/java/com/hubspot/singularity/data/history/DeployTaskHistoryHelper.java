@@ -101,7 +101,7 @@ public class DeployTaskHistoryHelper extends BlendedHistoryHelper<SingularityTas
       }
     });
 
-    ImmutableList result = ImmutableList.copyOf(inactiveHistories);
+    ImmutableList<SingularityTaskIdHistory> result = ImmutableList.copyOf(inactiveHistories);
 
     return result.subList(limitStart, Math.min(result.size(), limitStart + limitCount));
   }
