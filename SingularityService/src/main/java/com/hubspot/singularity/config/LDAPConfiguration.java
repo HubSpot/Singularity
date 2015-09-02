@@ -67,7 +67,7 @@ public class LDAPConfiguration {
 
   @JsonProperty
   @NotNull
-  private SearchScope groupSearchScope = SearchScope.ONELEVEL;
+  private SearchScope groupSearchScope = SearchScope.SUBTREE;
 
   //
   // LDAP CONNECTION POOL
