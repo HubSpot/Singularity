@@ -3,10 +3,11 @@ jdk:
   - oraclejdk7
   - openjdk7
   - oraclejdk8
-install: mvn -Pbuild-swagger-documentation -DskipTests=true -B -fae install
-script: mvn -B -fae verify
+install: mvn -Pbuild-swagger-documentation -DskipTests=true -B -faeq install
+script: mvn -B -faeq verify
 
 git:
   depth: 100
 
 sudo: false
+
