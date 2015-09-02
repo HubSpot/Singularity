@@ -32,7 +32,7 @@ public class DeployTaskHistoryHelper extends BlendedHistoryHelper<SingularityTas
     this.singularityConfiguration = singularityConfiguration;
   }
 
-  public List<SingularityTaskIdHistory> getHistoriesFor(Collection<SingularityTaskId> taskIds) {
+  private List<SingularityTaskIdHistory> getHistoriesFor(Collection<SingularityTaskId> taskIds) {
     Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> map = taskManager.getTaskHistoryUpdates(taskIds);
 
     List<SingularityTaskIdHistory> histories = Lists.newArrayListWithCapacity(taskIds.size());
