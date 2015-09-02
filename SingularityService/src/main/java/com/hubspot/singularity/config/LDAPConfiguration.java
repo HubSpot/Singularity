@@ -40,7 +40,7 @@ public class LDAPConfiguration {
 
   @JsonProperty
   @NotEmpty
-  private String userFilter = "";  // ex. (uid=%s)
+  private String userFilter = "(uid=%s)";
 
   @JsonProperty
   @NotEmpty
@@ -59,7 +59,7 @@ public class LDAPConfiguration {
 
   @JsonProperty
   @NotEmpty
-  private String groupFilter = ""; // ex. (memberUid=%s)
+  private String groupFilter = "(memberUid=%s)";
 
   @JsonProperty
   @NotEmpty
@@ -92,9 +92,6 @@ public class LDAPConfiguration {
 
   @JsonProperty
   private long poolMaxWait = LdapConnectionPool.DEFAULT_MAX_WAIT;
-
-  @Min(1)
-  private int cacheThreads = 3;
 
   @JsonProperty
   @NotNull
@@ -248,14 +245,6 @@ public class LDAPConfiguration {
 
   public void setPoolMaxWait(long poolMaxWait) {
     this.poolMaxWait = poolMaxWait;
-  }
-
-  public int getCacheThreads() {
-    return cacheThreads;
-  }
-
-  public void setCacheThreads(int cacheThreads) {
-    this.cacheThreads = cacheThreads;
   }
 
   public LdapPoolWhenExhaustedAction getPoolWhenExhaustedAction() {
