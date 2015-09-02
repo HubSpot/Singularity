@@ -55,7 +55,7 @@ public class UIConfiguration {
 
   @NotEmpty
   private String finishedTaskLogPath = "stdout";
-  
+
   @JsonProperty
   @NotNull
   private List<ShellCommandDescriptor> shellCommands = Collections.emptyList();
