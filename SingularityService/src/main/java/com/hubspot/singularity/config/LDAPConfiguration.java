@@ -1,10 +1,9 @@
 package com.hubspot.singularity.config;
 
-import java.util.concurrent.TimeUnit;
-
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
+import org.apache.directory.api.ldap.model.message.SearchScope;
 import org.apache.directory.ldap.client.api.LdapConnectionPool;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -66,24 +65,9 @@ public class LDAPConfiguration {
   @NotEmpty
   private String groupNameAttribute = "cn";
 
-  //
-  // CACHING CONFIGURATION
-  //
   @JsonProperty
-  @Min(1)
-  private int cacheInitialCapacity = 40;
-
-  @JsonProperty
-  @Min(1)
-  private int cacheConcurrencyLevel = 4;
-
-  @JsonProperty
-  @Min(0)
-  private long cacheMaximumSize = 200;  // 0 == no caching
-
-  @JsonProperty
-  @Min(1)
-  private long cacheExpirationMs = TimeUnit.MINUTES.toMillis(5);
+  @NotNull
+  private SearchScope groupSearchScope = SearchScope.ONELEVEL;
 
   //
   // LDAP CONNECTION POOL
@@ -210,38 +194,6 @@ public class LDAPConfiguration {
     this.groupNameAttribute = groupNameAttribute;
   }
 
-  public int getCacheInitialCapacity() {
-    return cacheInitialCapacity;
-  }
-
-  public void setCacheInitialCapacity(int cacheInitialCapacity) {
-    this.cacheInitialCapacity = cacheInitialCapacity;
-  }
-
-  public int getCacheConcurrencyLevel() {
-    return cacheConcurrencyLevel;
-  }
-
-  public void setCacheConcurrencyLevel(int cacheConcurrencyLevel) {
-    this.cacheConcurrencyLevel = cacheConcurrencyLevel;
-  }
-
-  public long getCacheMaximumSize() {
-    return cacheMaximumSize;
-  }
-
-  public void setCacheMaximumSize(long cacheMaximumSize) {
-    this.cacheMaximumSize = cacheMaximumSize;
-  }
-
-  public long getCacheExpirationMs() {
-    return cacheExpirationMs;
-  }
-
-  public void setCacheExpirationMs(long cacheExpirationMs) {
-    this.cacheExpirationMs = cacheExpirationMs;
-  }
-
   public boolean isPoolTestOnBorrow() {
     return poolTestOnBorrow;
   }
@@ -320,6 +272,14 @@ public class LDAPConfiguration {
 
   public void setStripUserEmailDomain(boolean stripUserEmailDomain) {
     this.stripUserEmailDomain = stripUserEmailDomain;
+  }
+
+  public SearchScope getGroupSearchScope() {
+    return groupSearchScope;
+  }
+
+  public void setGroupSearchScope(SearchScope groupSearchScope) {
+    this.groupSearchScope = groupSearchScope;
   }
 
   public enum LdapPoolWhenExhaustedAction {
