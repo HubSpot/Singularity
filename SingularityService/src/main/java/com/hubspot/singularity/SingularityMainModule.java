@@ -37,6 +37,7 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.client.MesosClient;
+import com.hubspot.singularity.config.AuthConfiguration;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
@@ -256,6 +257,12 @@ public class SingularityMainModule implements Module {
   @Singleton
   public HistoryPurgingConfiguration historyPurgingConfiguration(final SingularityConfiguration config) {
     return config.getHistoryPurgingConfiguration();
+  }
+
+  @Provides
+  @Singleton
+  public AuthConfiguration authConfiguration(final SingularityConfiguration config) {
+    return config.getAuthConfiguration();
   }
 
   private JadeTemplate getJadeTemplate(String name) throws IOException {

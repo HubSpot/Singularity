@@ -323,4 +323,8 @@ public class SingularityValidator {
       return false;
     }
   }
+
+  public boolean isUserValid(SingularityUser user) {
+    return !user.getId().contains("/");
+  }
 }

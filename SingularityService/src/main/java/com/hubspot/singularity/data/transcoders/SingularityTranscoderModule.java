@@ -4,6 +4,7 @@ import static com.hubspot.singularity.data.transcoders.SingularityJsonTranscoder
 
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import com.hubspot.singularity.SingularityAuthState;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployKey;
@@ -34,6 +35,7 @@ import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
+import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SingularityWebhook;
 
 public class SingularityTranscoderModule implements Module {
@@ -63,6 +65,8 @@ public class SingularityTranscoderModule implements Module {
     bindTranscoder(binder).asJson(SingularityTaskHistoryUpdate.class);
     bindTranscoder(binder).asJson(SingularityWebhook.class);
     bindTranscoder(binder).asJson(SingularityMachineStateHistoryUpdate.class);
+    bindTranscoder(binder).asJson(SingularityUser.class);
+    bindTranscoder(binder).asJson(SingularityAuthState.class);
 
     bindTranscoder(binder).asCompressedJson(SingularityDeployHistory.class);
     bindTranscoder(binder).asCompressedJson(SingularityDeploy.class);

@@ -7,18 +7,18 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.servlet.RequestScoped;
 import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.AuthManager;
 
 @RequestScoped
 public class SingularityHeaderPassthroughAuthenticator implements SingularityAuthenticator {
-  private final SingularityAuthDatastore datastore;
+  private final AuthManager authManager;
   private final String requestUserHeaderName;
   private final HttpServletRequest request;
 
   @Inject
-  public SingularityHeaderPassthroughAuthenticator(SingularityAuthDatastore datastore, SingularityConfiguration configuration, HttpServletRequest request) {
-    this.datastore = datastore;
+  public SingularityHeaderPassthroughAuthenticator(AuthManager authManager, SingularityConfiguration configuration, HttpServletRequest request) {
+    this.authManager = authManager;
     this.requestUserHeaderName = configuration.getAuthConfiguration().getRequestUserHeaderName();
     this.request = request;
   }
@@ -31,6 +31,6 @@ public class SingularityHeaderPassthroughAuthenticator implements SingularityAut
       return Optional.absent();
     }
 
-    return datastore.getUser(maybeUsername.get());
+    return authManager.getUser(maybeUsername.get());
   }
 }

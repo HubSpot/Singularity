@@ -1,5 +1,8 @@
 package com.hubspot.singularity.auth.datastore;
 
+import java.util.Collections;
+import java.util.List;
+
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -16,12 +19,12 @@ public class SingularityDisabledAuthDatastore implements SingularityAuthDatastor
   }
 
   @Override
-  public void bustCache() {
-    // no-op
+  public Optional<Boolean> isHealthy() {
+    return Optional.absent();
   }
 
   @Override
-  public Optional<Boolean> isHealthy() {
-    return Optional.absent();
+  public List<SingularityUser> getUsers() {
+    return Collections.emptyList();
   }
 }

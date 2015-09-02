@@ -37,6 +37,12 @@ public class AuthConfiguration {
   @NotNull
   private String requestUserHeaderName = "X-Username";  // used by SingularityHeaderPassthroughAuthenticator
 
+  @JsonProperty
+  private long purgeOldUsersAfterDays = 2;
+
+  @JsonProperty
+  private long updateUsersEveryMinutes = 10;
+
   public boolean isEnabled() {
     return enabled;
   }
@@ -91,5 +97,21 @@ public class AuthConfiguration {
 
   public void setRequestUserHeaderName(String requestUserHeaderName) {
     this.requestUserHeaderName = requestUserHeaderName;
+  }
+
+  public long getPurgeOldUsersAfterDays() {
+    return purgeOldUsersAfterDays;
+  }
+
+  public void setPurgeOldUsersAfterDays(long purgeOldUsersAfterDays) {
+    this.purgeOldUsersAfterDays = purgeOldUsersAfterDays;
+  }
+
+  public long getUpdateUsersEveryMinutes() {
+    return updateUsersEveryMinutes;
+  }
+
+  public void setUpdateUsersEveryMinutes(long updateUsersEveryMinutes) {
+    this.updateUsersEveryMinutes = updateUsersEveryMinutes;
   }
 }
