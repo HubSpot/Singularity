@@ -75,5 +75,3 @@ ALTER TABLE `taskHistory` MODIFY `bytes` MEDIUMBLOB NOT NULL;
 
 --changeset wsorenson:6 dbms:mysql
 ALTER TABLE `taskHistory` ADD COLUMN runId VARCHAR(100) NULL;
-
-
