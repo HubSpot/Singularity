@@ -4,12 +4,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.directory.api.ldap.model.cursor.EntryCursor;
 import org.apache.directory.api.ldap.model.entry.Entry;
@@ -25,18 +22,12 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListenableFutureTask;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.LDAPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 @Singleton
 public class SingularityLDAPDatastore implements SingularityAuthDatastore {
@@ -44,8 +35,7 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
 
   private final LdapConnectionPool connectionPool;
   private final LDAPConfiguration configuration;
-  private final LoadingCache<String, Optional<SingularityUser>> userCache;
-  private final ExecutorService executorService;
+  private final SingularityExceptionNotifier exceptionNotifier;
 
   private static LdapConnectionPool createConnectionPool(LDAPConfiguration configuration) throws IOException {
     final LdapConnectionConfig config = new LdapConnectionConfig();
@@ -84,26 +74,13 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
   }
 
   @Inject
-  public SingularityLDAPDatastore(@Named(SingularityMainModule.LDAP_REFRESH_THREADPOOL_NAME) ScheduledExecutorService executorService,
-                                  SingularityConfiguration configuration) throws IOException {
+  public SingularityLDAPDatastore(SingularityConfiguration configuration,
+                                  SingularityExceptionNotifier exceptionNotifier) throws IOException {
     checkArgument(configuration.getLdapConfiguration().isPresent(), "LDAP configuration not present");
 
     this.connectionPool = createConnectionPool(configuration.getLdapConfiguration().get());
     this.configuration = configuration.getLdapConfiguration().get();
-    this.executorService = executorService;
-
-    this.userCache = CacheBuilder.newBuilder()
-            .recordStats()
-            .refreshAfterWrite(configuration.getLdapConfiguration().get().getCacheExpirationMs(), TimeUnit.MILLISECONDS)
-            .initialCapacity(configuration.getLdapConfiguration().get().getCacheInitialCapacity())
-            .concurrencyLevel(configuration.getLdapConfiguration().get().getCacheConcurrencyLevel())
-            .maximumSize(configuration.getLdapConfiguration().get().getCacheMaximumSize())
-            .build(new LDAPCacheLoader());
-  }
-
-  @Override
-  public void bustCache() {
-    userCache.invalidateAll();
+    this.exceptionNotifier = exceptionNotifier;
   }
 
   @Override
@@ -125,6 +102,7 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
       }
     } catch (LdapException e) {
       LOG.warn("LdapException caught when checking health", e);
+      exceptionNotifier.notify(e, Collections.<String, String>emptyMap());
     }
     return Optional.of(false);
   }
@@ -134,10 +112,7 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
     if (configuration.isStripUserEmailDomain()) {
       user = user.split("@")[0];
     }
-    return userCache.getUnchecked(user);
-  }
 
-  private Optional<SingularityUser> getUserInfoFromLDAP(String user) {
     final Set<String> groups = new HashSet<>();
 
     try {
@@ -148,6 +123,7 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
         checkState(connection.isAuthenticated(), "not authenticated");
         connection.bind();
 
+        final long startTime = System.currentTimeMillis();
         try {
           final EntryCursor userCursor = connection.search(configuration.getUserBaseDN(),
                   String.format(configuration.getUserFilter(), user),
@@ -162,7 +138,7 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
           // get group info
           final EntryCursor cursor = connection.search(configuration.getGroupBaseDN(),
                   String.format(configuration.getGroupFilter(), user),
-                  SearchScope.ONELEVEL, configuration.getGroupNameAttribute());
+                  configuration.getGroupSearchScope(), configuration.getGroupNameAttribute());
 
           while (cursor.next()) {
             groups.add(cursor.get().get(configuration.getGroupNameAttribute()).getString());
@@ -170,6 +146,7 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
 
           return Optional.of(new SingularityUser(user, Optional.fromNullable(Strings.emptyToNull(userEntry.get(configuration.getUserNameAttribute()).getString())), Optional.fromNullable(Strings.emptyToNull(userEntry.get(configuration.getUserEmailAttribute()).getString())), groups));
         } finally {
+          LOG.info("Loaded {}'s user data in {}ms", user, System.currentTimeMillis() - startTime);
           connection.unBind();
         }
       } finally {
@@ -177,31 +154,6 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
       }
     } catch (Exception e) {
       throw Throwables.propagate(e);
-    }
-  }
-
-  private class LDAPCacheLoader extends CacheLoader<String, Optional<SingularityUser>> {
-    @Override
-    public Optional<SingularityUser> load(String key) throws Exception {
-      LOG.trace("Hitting LDAP for {}'s info", key);
-      return getUserInfoFromLDAP(key);
-    }
-
-    @Override
-    public ListenableFuture<Optional<SingularityUser>> reload(final String key, Optional<SingularityUser> oldValue) throws Exception {
-      LOG.trace("Reloading data for {}", key);
-
-      final long reloadStartTime = System.currentTimeMillis();
-      final ListenableFutureTask<Optional<SingularityUser>> task = ListenableFutureTask.create(new Callable<Optional<SingularityUser>>() {
-        @Override
-        public Optional<SingularityUser> call() throws Exception {
-          final Optional<SingularityUser> user = getUserInfoFromLDAP(key);
-          LOG.trace("Reloaded {} user info in {} ms", key, System.currentTimeMillis() - reloadStartTime);
-          return user;
-        }
-      });
-      executorService.submit(task);
-      return task;
     }
   }
 }
