@@ -12,6 +12,7 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -23,6 +24,7 @@ import io.dropwizard.configuration.ConfigurationValidationException;
 
 public class SingularityRunnerConfigurationProvider<T extends BaseRunnerConfiguration> implements Provider<T> {
   private final Class<T> clazz;
+  private final Optional<String> filename;
 
   @Inject
   @Named(SingularityRunnerBaseModule.YAML)
@@ -31,15 +33,16 @@ public class SingularityRunnerConfigurationProvider<T extends BaseRunnerConfigur
   @Inject
   private Validator validator;
 
-  public SingularityRunnerConfigurationProvider(Class<T> clazz) {
+  public SingularityRunnerConfigurationProvider(Class<T> clazz, Optional<String> filename) {
     this.clazz = clazz;
+    this.filename = filename;
   }
 
   @Override
   public T get() {
     final Configuration configuration = clazz.getAnnotation(Configuration.class);
 
-    final String yamlPath = configuration.value();
+    final String yamlPath = filename.or(configuration.value());
     final String propsPath = yamlPath.replace(".yaml", ".properties");
 
     final File yamlFile = new File(yamlPath);

@@ -14,6 +14,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -28,6 +30,8 @@ public class SingularityRunnerBaseModule extends AbstractModule {
   public static final String PROCESS_NAME = "process.name";
   public static final String YAML = "yaml";
   public static final String OBFUSCATED_YAML = "obfuscated.yaml";
+
+  public static final String CONFIG_PROPERTY = "singularityConfigFilename";
 
   private final Class<? extends BaseRunnerConfiguration> primaryConfigurationClass;
   private final Set<Class<? extends BaseRunnerConfiguration>> additionalConfigurationClasses;
@@ -47,15 +51,16 @@ public class SingularityRunnerBaseModule extends AbstractModule {
     bind(MetricRegistry.class).toInstance(new MetricRegistry());
     bind(Validator.class).toInstance(Validation.buildDefaultValidatorFactory().getValidator());
 
+    final Optional<String> consolidatedConfigFilename = Optional.fromNullable(Strings.emptyToNull(System.getProperty(CONFIG_PROPERTY)));
     final ConfigurationBinder configurationBinder = ConfigurationBinder.newBinder(binder());
 
-    configurationBinder.bindPrimaryConfiguration(primaryConfigurationClass);
+    configurationBinder.bindPrimaryConfiguration(primaryConfigurationClass, consolidatedConfigFilename);
     for (Class<? extends BaseRunnerConfiguration> additionalConfigurationClass : additionalConfigurationClasses) {
-      configurationBinder.bindConfiguration(additionalConfigurationClass);
+      configurationBinder.bindConfiguration(additionalConfigurationClass, consolidatedConfigFilename);
     }
 
     if (!additionalConfigurationClasses.contains(SingularityRunnerBaseConfiguration.class)) {
-      configurationBinder.bindConfiguration(SingularityRunnerBaseConfiguration.class);
+      configurationBinder.bindConfiguration(SingularityRunnerBaseConfiguration.class, consolidatedConfigFilename);
     }
 
     bind(SingularityRunnerBaseLogging.class).asEagerSingleton();
