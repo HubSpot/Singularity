@@ -57,7 +57,7 @@ public class SingularityRunnerBaseLogging {
     for (BaseRunnerConfiguration configuration : configurations) {
       try {
         final Configuration annotation = configuration.getClass().getAnnotation(Configuration.class);
-        final String filename = consolidatedConfigFilename.or(annotation == null ? "(unknown)" : annotation.value());
+        final String filename = consolidatedConfigFilename.or(annotation == null ? "(unknown)" : annotation.filename());
         LOG.info(String.format("Loaded %s from %s:%n%s", configuration.getClass().getSimpleName(), filename, yamlMapper.writeValueAsString(configuration)));
       } catch (Exception e) {
         LOG.warn(String.format("Exception while attempting to print %s!", configuration.getClass().getName()), e);
