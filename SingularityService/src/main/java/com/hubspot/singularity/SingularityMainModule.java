@@ -91,9 +91,6 @@ public class SingularityMainModule implements Module {
   public static final String NEW_TASK_THREADPOOL_NAME = "_new_task_threadpool";
   public static final Named NEW_TASK_THREADPOOL_NAMED = Names.named(NEW_TASK_THREADPOOL_NAME);
 
-  public static final String LDAP_REFRESH_THREADPOOL_NAME = "_ldap_refresh_threadpool";
-  public static final Named LDAP_REFRESH_THREADPOOL_NAMED = Names.named(LDAP_REFRESH_THREADPOOL_NAME);
-
   private final SingularityConfiguration configuration;
 
   public SingularityMainModule(final SingularityConfiguration configuration) {
@@ -149,10 +146,6 @@ public class SingularityMainModule implements Module {
     binder.bind(ScheduledExecutorService.class).annotatedWith(NEW_TASK_THREADPOOL_NAMED).toProvider(new SingularityManagedScheduledExecutorServiceProvider(configuration.getCheckNewTasksScheduledThreads(),
         configuration.getThreadpoolShutdownDelayInSeconds(),
         "check-new-task")).in(Scopes.SINGLETON);
-
-    if (configuration.getLdapConfiguration().isPresent()) {
-      binder.bind(ScheduledExecutorService.class).annotatedWith(LDAP_REFRESH_THREADPOOL_NAMED).toProvider(new SingularityManagedScheduledExecutorServiceProvider(configuration.getLdapConfiguration().get().getCacheThreads(), configuration.getThreadpoolShutdownDelayInSeconds(), "ldap-cache")).in(Scopes.SINGLETON);
-    }
 
     try {
       binder.bindConstant().annotatedWith(Names.named(HOST_ADDRESS_PROPERTY)).to(JavaUtils.getHostAddress());
