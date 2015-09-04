@@ -2,6 +2,10 @@ package com.hubspot.singularity.views;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.google.common.base.Throwables;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
@@ -34,6 +38,8 @@ public class IndexView extends View {
   private final String finishedTaskLogPath;
 
   private final String commonHostnameSuffixToOmit;
+
+  private final String shellCommands;
 
   public IndexView(String singularityUriBase, String appRoot, SingularityConfiguration configuration) {
     super("index.mustache");
@@ -68,6 +74,15 @@ public class IndexView extends View {
     this.finishedTaskLogPath = configuration.getUiConfiguration().getFinishedTaskLogPath();
 
     this.commonHostnameSuffixToOmit = configuration.getCommonHostnameSuffixToOmit().or("");
+
+    ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+    String json = "";
+    try {
+      json = ow.writeValueAsString(configuration.getUiConfiguration().getShellCommands());
+    } catch (JsonProcessingException e) {
+      throw Throwables.propagate(e);
+    }
+    this.shellCommands = json;
   }
 
   public String getAppRoot() {
@@ -142,6 +157,10 @@ public class IndexView extends View {
     return commonHostnameSuffixToOmit;
   }
 
+  public String getShellCommands() {
+    return shellCommands;
+  }
+
   @Override
   public String toString() {
     return "IndexView[" +
@@ -162,6 +181,7 @@ public class IndexView extends View {
             ", defaultDeployHealthTimeoutSeconds=" + defaultDeployHealthTimeoutSeconds +
             ", runningTaskLogPath='" + runningTaskLogPath + '\'' +
             ", finishedTaskLogPath='" + finishedTaskLogPath + '\'' +
+            ", shellCommands='" + shellCommands + '\'' +
             ", commonHostnameSuffixToOmit='" + commonHostnameSuffixToOmit + '\'' +
             ']';
   }
