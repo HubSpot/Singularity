@@ -105,9 +105,12 @@ DOCKER_NETWORK="--net=${raw_network,,}"
 DOCKER_NETWORK="--net=host"
 {{/if}}
 
+CGROUP_PARENT="mesos/$CGROUPS_GUID"
+echo "CGROUP_PARENT=mesos/$CGROUPS_GUID" >> docker.env
+
 DOCKER_WORKDIR="/mnt/mesos/sandbox/{{{ runContext.taskAppDirectory }}}"
 
-DOCKER_OPTIONS="--name=$CONTAINER_NAME --cgroup-parent=mesos/$CGROUPS_GUID -w $DOCKER_WORKDIR $DOCKER_NETWORK --env-file=docker.env ${DOCKER_VOLUMES[@]} ${DOCKER_PORTS[@]}"
+DOCKER_OPTIONS="--name=$CONTAINER_NAME --cgroup-parent=$CGROUP_PARENT -w $DOCKER_WORKDIR $DOCKER_NETWORK --env-file=docker.env ${DOCKER_VOLUMES[@]} ${DOCKER_PORTS[@]}"
 
 echo "Ensuring {{{ runContext.taskAppDirectory }}} is owned by {{{ runContext.user }}}"
 mkdir -p {{{ runContext.taskAppDirectory }}}
