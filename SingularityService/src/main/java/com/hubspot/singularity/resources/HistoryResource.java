@@ -133,7 +133,7 @@ public class HistoryResource extends AbstractHistoryResource {
 
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user);
     SingularityDeployKey key = new SingularityDeployKey(requestId, deployId);
-    return deployTaskHistoryHelper.getBlendedHistory(key, limitCount, limitStart);
+    return deployTaskHistoryHelper.getBlendedHistory(key, limitStart, limitCount);
   }
 
   @GET
