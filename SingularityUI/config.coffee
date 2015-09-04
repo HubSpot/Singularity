@@ -53,7 +53,8 @@ exports.config =
             runningTaskLogPath:  process.env.SINGULARITY_RUNNING_TASK_LOG_PATH ? "stdout"
             finishedTaskLogPath: process.env.SINGULARITY_FINISHED_TASK_LOG_PATH ? "stdout"
             commonHostnameSuffixToOmit: process.env.SINGULARITY_COMMON_HOSTNAME_SUFFIX_TO_OMIT ? ""
-            #shellCommands: process.env.SINGULARITY_SHELL_COMMANDS ? '{}'
+            shellCommands: process.env.SINGULARITY_SHELL_COMMANDS ? "[]"
 
+        console.log templateData
         compiledTemplate = handlebars.compile(indexTemplate)(templateData)
         fs.writeFileSync destination, compiledTemplate

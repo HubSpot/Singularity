@@ -99,7 +99,7 @@ class TaskDetailController extends Controller
         @subviews.shellCommands = new SimpleSubview
             model: @models.task
             template: @templates.shellCommands
-        config.shellCommands = [{name:'cmd1'}, {name:'cmd2'}];
+
         #
         # Getting stuff in gear
         #
