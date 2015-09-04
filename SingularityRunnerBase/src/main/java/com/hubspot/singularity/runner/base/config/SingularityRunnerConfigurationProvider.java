@@ -11,8 +11,10 @@ import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -42,14 +44,24 @@ public class SingularityRunnerConfigurationProvider<T extends BaseRunnerConfigur
   public T get() {
     final Configuration configuration = clazz.getAnnotation(Configuration.class);
 
-    final String yamlPath = filename.or(configuration.value());
+    final String yamlPath = filename.or(configuration.filename());
     final String propsPath = yamlPath.replace(".yaml", ".properties");
 
     final File yamlFile = new File(yamlPath);
     final File propsFile = new File(propsPath);
 
     try {
-      final T config = yamlFile.exists() ? objectMapper.readValue(yamlFile, clazz) : clazz.newInstance();
+      JsonNode node = objectMapper.readTree(yamlFile);
+
+      if (filename.isPresent() && !Strings.isNullOrEmpty(configuration.consolidatedField())) {
+        if (node.hasNonNull(configuration.consolidatedField())) {
+          node = node.get(configuration.consolidatedField());
+        } else {
+          node = objectMapper.createObjectNode();
+        }
+      }
+
+      final T config = yamlFile.exists() ? objectMapper.treeToValue(node, clazz) : clazz.newInstance();
 
       if (propsFile.exists()) {
         final Properties properties = new Properties();
