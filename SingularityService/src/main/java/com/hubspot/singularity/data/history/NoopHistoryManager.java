@@ -50,7 +50,7 @@ public class NoopHistoryManager implements HistoryManager {
   }
 
   @Override
-  public List<SingularityTaskIdHistory> getTaskHistoryForDeploy(String deployId, Integer limitStart, Integer limitCount) {
+  public List<SingularityTaskIdHistory> getTaskHistoryForDeploy(String requestId, String deployId, Integer limitStart, Integer limitCount) {
     return Collections.emptyList();
   }
 

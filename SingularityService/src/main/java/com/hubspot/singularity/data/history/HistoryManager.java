@@ -28,7 +28,7 @@ public interface HistoryManager {
 
   List<SingularityTaskIdHistory> getTaskHistoryForRequest(String requestId, Integer limitStart, Integer limitCount);
 
-  List<SingularityTaskIdHistory> getTaskHistoryForDeploy(String deployId, Integer limitStart, Integer limitCount);
+  List<SingularityTaskIdHistory> getTaskHistoryForDeploy(String requestId, String deployId, Integer limitStart, Integer limitCount);
 
   Optional<SingularityTaskHistory> getTaskHistory(String taskId);
 

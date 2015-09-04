@@ -41,8 +41,8 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
-  public List<SingularityTaskIdHistory> getTaskHistoryForDeploy(String deployId, Integer limitStart, Integer limitCount) {
-    return history.getTaskHistoryForDeploy(deployId, limitStart, limitCount);
+  public List<SingularityTaskIdHistory> getTaskHistoryForDeploy(String requestId, String deployId, Integer limitStart, Integer limitCount) {
+    return history.getTaskHistoryForDeploy(requestId, deployId, limitStart, limitCount);
   }
 
   @Override
