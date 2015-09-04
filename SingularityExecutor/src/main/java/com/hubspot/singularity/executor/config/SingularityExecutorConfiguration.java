@@ -215,6 +215,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   public List<SingularityExecutorShellCommandDescriptor> shellCommands = Collections.emptyList();
 
   @JsonProperty
+  public String shellCommandOutFile = "executor.commands.log";
+
+  @JsonProperty
   private String pidCommandPlaceholder = "{PID}";
 
   public SingularityExecutorConfiguration() {
@@ -514,6 +517,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.shellCommands = shellCommands;
   }
 
+  public String getShellCommandOutFile() {
+    return shellCommandOutFile;
+  }
+
+  public void setShellCommandOutFile(String shellCommandOutFile) {
+    this.shellCommandOutFile = shellCommandOutFile;
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration [executorJavaLog=" + executorJavaLog + ", executorBashLog=" + executorBashLog + ", serviceLog=" + serviceLog + ", defaultRunAsUser=" + defaultRunAsUser
@@ -525,7 +536,8 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
         + logrotateDateformat + ", logrotateExtrasDateformat=" + logrotateExtrasDateformat + ", logrotateAdditionalFiles=" + logrotateAdditionalFiles + ", s3UploaderAdditionalFiles="
         + s3UploaderAdditionalFiles + ", tailLogLinesToSave=" + tailLogLinesToSave + ", serviceFinishedTailLog=" + serviceFinishedTailLog + ", s3UploaderKeyPattern=" + s3UploaderKeyPattern
         + ", s3UploaderBucket=" + s3UploaderBucket + ", useLocalDownloadService=" + useLocalDownloadService + ", localDownloadServiceTimeoutMillis=" + localDownloadServiceTimeoutMillis
-        + ", maxTaskThreads=" + maxTaskThreads + ", dockerPrefix=" + dockerPrefix + ", dockerStopTimeout=" + dockerStopTimeout + ", shellCommands=" + shellCommands + "]";
+        + ", maxTaskThreads=" + maxTaskThreads + ", dockerPrefix=" + dockerPrefix + ", dockerStopTimeout=" + dockerStopTimeout + ", shellCommands=" + shellCommands + ", shellCommandOutFile="
+        + shellCommandOutFile + ", pidCommandPlaceholder=" + pidCommandPlaceholder + "]";
   }
 
   @Override

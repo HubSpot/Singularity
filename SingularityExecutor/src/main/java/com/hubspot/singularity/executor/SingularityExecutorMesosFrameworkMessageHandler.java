@@ -44,6 +44,8 @@ public class SingularityExecutorMesosFrameworkMessageHandler {
         return;
       }
 
+      matchingTask.get().getLog().info("Received shell request {}", shellRequest);
+
       SingularityExecutorShellCommandUpdater updater = new SingularityExecutorShellCommandUpdater(objectMapper, shellRequest, matchingTask.get());
 
       Optional<SingularityExecutorTaskProcessCallable> taskProcess = monitor.getTaskProcess(shellRequest.getTaskId().getId());
@@ -57,8 +59,6 @@ public class SingularityExecutorMesosFrameworkMessageHandler {
           taskProcess.get(), monitor.createExecutorService(shellRequest.getTaskId().getId()), updater);
 
       shellRunner.start();
-
-      LOG.info("Received shell request {}", shellRequest);
     } catch (IOException e) {
       LOG.warn("Framework message {} not a shell request", new String(data, UTF_8));
     }

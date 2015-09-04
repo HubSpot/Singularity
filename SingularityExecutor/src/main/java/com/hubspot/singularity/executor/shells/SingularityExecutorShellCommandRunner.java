@@ -1,5 +1,6 @@
 package com.hubspot.singularity.executor.shells;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +12,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.SingularityTaskShellCommandUpdate.UpdateType;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
@@ -54,7 +56,14 @@ public class SingularityExecutorShellCommandRunner {
   }
 
   public ProcessBuilder buildProcessBuilder(List<String> command) {
-    return new ProcessBuilder(command);
+    ProcessBuilder builder = new ProcessBuilder(command);
+
+    File outputFile = MesosUtils.getTaskDirectoryPath(getTask().getTaskId()).resolve(executorConfiguration.getShellCommandOutFile()).toFile();
+
+    builder.redirectOutput(outputFile);
+    builder.redirectError(outputFile);
+
+    return builder;
   }
 
   public void start() {
@@ -119,9 +128,11 @@ public class SingularityExecutorShellCommandRunner {
       }
     }
 
-    for (SingularityExecutorShellCommandOptionDescriptor option : shellCommandDescriptor.getOptions()) {
-      if (shellRequest.getShellCommand().getOptions().contains(option.getName())) {
-        command.add(option.getFlag());
+    if (shellRequest.getShellCommand().getOptions().isPresent()) {
+      for (SingularityExecutorShellCommandOptionDescriptor option : shellCommandDescriptor.getOptions()) {
+        if (shellRequest.getShellCommand().getOptions().get().contains(option.getName())) {
+          command.add(option.getFlag());
+        }
       }
     }
 

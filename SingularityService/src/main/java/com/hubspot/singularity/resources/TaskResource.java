@@ -307,9 +307,11 @@ public class TaskResource {
       options.add(option.getName());
     }
 
-    for (String option : shellCommand.getOptions()) {
-      if (!options.contains(option)) {
-        throw WebExceptions.badRequest("Shell command %s does not have option %s (%s)", shellCommand.getName(), option, options);
+    if (shellCommand.getOptions().isPresent()) {
+      for (String option : shellCommand.getOptions().get()) {
+        if (!options.contains(option)) {
+          throw WebExceptions.badRequest("Shell command %s does not have option %s (%s)", shellCommand.getName(), option, options);
+        }
       }
     }
 
