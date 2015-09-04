@@ -1,7 +1,5 @@
 package com.hubspot.singularity.s3.base.config;
 
-import static com.hubspot.mesos.JavaUtils.obfuscateValue;
-
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
