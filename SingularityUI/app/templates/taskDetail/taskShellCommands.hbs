@@ -1,0 +1,31 @@
+{{#if synced}}
+  <div class="page-header">
+      <h2>
+        Run Shell Commands
+        <small><a data-action="expandToggle">
+            {{#if expanded}}
+                collapse
+            {{else}}
+                view
+            {{/if}}
+        </a></small>
+      </h2>
+  </div>
+  <div class='{{#unless expanded}}hide{{/unless}}'>
+    <h3>Execute a command</h3>
+    <form class="col-md-8 form-inline" id="runShell" action="">
+      <div class="form-group required">
+        <label for="cmd">Select command:</label>
+        <select class="form-control input-large" style="min-width: 300px" id="cmd">
+          <option value="" disabled selected></option>
+          {{#each config.shellCommands}}
+            <option value="{{name}}">{{name}}</option>
+          {{/each}}
+        </select>
+      </div>
+      <button type="submit" id="btn_exec" class="btn btn-success" type="button">Run</button>
+    </form>
+  </div>
+{{else}}
+    <div class="page-loader centered cushy"></div>
+{{/if}}

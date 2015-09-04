@@ -44,6 +44,17 @@ class Task extends Model
             url: "#{ @url() }?#{ $.param params }"
             type: "DELETE"
 
+    runShellCommand: (cmd) =>
+        params =
+            user: app.getUsername()
+
+        console.log(params)
+        $.ajax
+            url: "#{ @url() }/command?#{ $.param params }"
+            type: "POST"
+            data:
+                shellCommand:
+                    name: cmd
 
     promptRun: (callback) =>
         # We tell the Request to run

@@ -1,4 +1,5 @@
 View = require './view'
+Task = require '../models/Task'
 
 class TaskView extends View
 
@@ -9,6 +10,8 @@ class TaskView extends View
             'click [data-action="viewObjectJSON"]': 'viewJson'
             'click [data-action="viewJsonProperty"]': 'viewJsonProperty'
             'click [data-action="remove"]': 'killTask'
+            'submit form#runShell': 'executeCommand'
+
 
     initialize: ({@taskId}) ->
         @subviews.healthcheckNotification.on 'toggleHealthchecks', @toggleHealthchecks
@@ -27,6 +30,7 @@ class TaskView extends View
         @$('#info').html                        @subviews.info.$el
         @$('#resources').html                   @subviews.resourceUsage.$el
         @$('#environment').html                 @subviews.environment.$el
+        @$('#shell-commands').html              @subviews.shellCommands.$el
 
         super.afterRender()
 
@@ -59,6 +63,15 @@ class TaskView extends View
         taskModel = new Task id: @taskId
         taskModel.promptKill =>
             setTimeout (=> @trigger 'refreshrequest'), 1000
+
+
+    executeCommand: (event) ->
+        event.preventDefault()
+        cmd = $("#cmd option:selected").text();
+        return if @$('button[type="submit"]').attr 'disabled'
+        return if !cmd
+        taskModel = new Task id: @taskId
+        taskModel.runShellCommand(cmd)
 
 
 module.exports = TaskView
