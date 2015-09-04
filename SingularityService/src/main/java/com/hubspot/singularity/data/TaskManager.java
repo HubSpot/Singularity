@@ -402,7 +402,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public List<SingularityTaskId> getTaskIdsForDeploy(String requestId, final String deployId, TaskFilter taskFilter) {
-    List<SingularityTaskId> requestTaskIds =  getTaskIdsForRequest(requestId, taskFilter);
+    List<SingularityTaskId> requestTaskIds = getTaskIdsForRequest(requestId, taskFilter);
     final Iterable<SingularityTaskId> deployTaskIds = Iterables.filter(requestTaskIds, new Predicate<SingularityTaskId>() {
       @Override
       public boolean apply(SingularityTaskId input) {
