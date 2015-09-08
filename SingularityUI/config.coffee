@@ -55,6 +55,5 @@ exports.config =
             commonHostnameSuffixToOmit: process.env.SINGULARITY_COMMON_HOSTNAME_SUFFIX_TO_OMIT ? ""
             shellCommands: process.env.SINGULARITY_SHELL_COMMANDS ? "[]"
 
-        console.log templateData
         compiledTemplate = handlebars.compile(indexTemplate)(templateData)
         fs.writeFileSync destination, compiledTemplate

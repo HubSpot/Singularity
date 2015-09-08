@@ -11,6 +11,7 @@ class TaskView extends View
             'click [data-action="viewJsonProperty"]': 'viewJsonProperty'
             'click [data-action="remove"]': 'killTask'
             'submit form#runShell': 'executeCommand'
+            "change #cmd": "cmdSelected"
 
 
     initialize: ({@taskId}) ->
@@ -67,11 +68,26 @@ class TaskView extends View
 
     executeCommand: (event) ->
         event.preventDefault()
-        cmd = $("#cmd option:selected").text();
+        cmd = $("#cmd option:selected").text()
+        options = $('#cmd-option').val()
         return if @$('button[type="submit"]').attr 'disabled'
         return if !cmd
         taskModel = new Task id: @taskId
-        taskModel.runShellCommand(cmd)
+        taskModel.runShellCommand(cmd, options)
 
+    cmdSelected: (event) ->
+      cmd = config.shellCommands.filter((cmd) ->
+        return cmd.name == $("#cmd option:selected").text()
+      )[0]
+      console.log cmd
+      $('.cmd-description').text(cmd.description || '')
+      $('#btn_exec').prop("disabled", false)
+
+      options = $('#cmd-option')
+      options.empty()
+      options.append($("<option></option>").attr("value", option.name)
+      .text(option.name + (if option.description then (' (' + option.description + ')') else '')
+      )) for option in cmd.options
+      options.prop("disabled", !cmd.options)
 
 module.exports = TaskView

@@ -13,17 +13,20 @@
   </div>
   <div class='{{#unless expanded}}hide{{/unless}}'>
     <h3>Execute a command</h3>
-    <form class="col-md-8 form-inline" id="runShell" action="">
+    <form class="col-md-6" id="runShell" action="">
       <div class="form-group required">
-        <label for="cmd">Select command:</label>
-        <select class="form-control input-large" style="min-width: 300px" id="cmd">
+        <label for="cmd">Select command</label>
+        <select name="cmd" class="form-control input-large" id="cmd">
           <option value="" disabled selected></option>
           {{#each config.shellCommands}}
             <option value="{{name}}">{{name}}</option>
           {{/each}}
         </select>
+        <p class="cmd-description"></p>
+        <label for="cmd-option">Options</label>
+        <select multiple name="cmd-option" class="form-control input-large" id="cmd-option" disabled></select>
       </div>
-      <button type="submit" id="btn_exec" class="btn btn-success" type="button">Run</button>
+      <button type="submit" id="btn_exec" class="btn btn-success" type="button" disabled>Run</button>
     </form>
   </div>
 {{else}}
