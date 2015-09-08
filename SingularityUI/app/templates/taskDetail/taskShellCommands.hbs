@@ -47,25 +47,27 @@
                       </thead>
                       <tbody>
                           {{#each data.shellCommandHistory}}
+                            {{#each shellUpdates}}
                               <tr>
                                   <td data-value="{{ shellRequest.timestamp }}">
-                                      {{timestampFormatted shellRequest.timestamp}}
+                                      {{timestampFormatted timestamp}}
                                   </td>
                                   <td>
-                                      <code>{{shellRequest.shellCommand.name}}</code>
+                                      <code>{{../shellRequest.shellCommand.name}}</code>
                                   </td>
                                   <td>
-                                      {{#if shellRequest.shellCommand.options.length}}
+                                      {{#if ../shellRequest.shellCommand.options.length}}
                                           <code>{{shellRequest.shellCommand.options}}</code>
                                       {{/if}}
                                   </td>
                                   <td>
-                                      {{shellRequest.user}}
+                                      {{../shellRequest.user}}
                                   </td>
                                   <td>
-
+                                      {{humanizeText updateType}}
                                   </td>
                               </tr>
+                            {{/each}}
                           {{/each}}
                       </tbody>
                   </table>
