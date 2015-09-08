@@ -18,7 +18,6 @@
         <div class="form-group required">
           <label for="cmd">Select command</label>
           <select name="cmd" class="form-control input-large" id="cmd">
-            <option value="" disabled selected></option>
             {{#each config.shellCommands}}
               <option value="{{name}}">{{name}}</option>
             {{/each}}
@@ -27,7 +26,7 @@
           <label for="cmd-option">Options</label>
           <select multiple name="cmd-option" class="form-control input-large" id="cmd-option" disabled></select>
         </div>
-        <button type="submit" id="btn_exec" class="btn btn-success" type="button" disabled>Run</button>
+        <button type="submit" id="btn_exec" class="btn btn-success" type="button">Run</button>
       </form>
     </div>
     {{#if data.shellCommandHistory.length}}
