@@ -74,6 +74,8 @@ class TaskView extends View
         return if !cmd
         taskModel = new Task id: @taskId
         taskModel.runShellCommand(cmd, options)
+        $('#cmd-confirm').text('Command Sent')
+
 
     cmdSelected: (event) ->
       cmd = config.shellCommands.filter((cmd) ->
