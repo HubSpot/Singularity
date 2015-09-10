@@ -41,7 +41,7 @@ public class IndexView extends View {
 
   private final String shellCommands;
 
-  public IndexView(String singularityUriBase, String appRoot, SingularityConfiguration configuration) {
+  public IndexView(String singularityUriBase, String appRoot, SingularityConfiguration configuration, ObjectMapper mapper) {
     super("index.mustache");
 
     checkNotNull(singularityUriBase, "singularityUriBase is null");
@@ -75,14 +75,12 @@ public class IndexView extends View {
 
     this.commonHostnameSuffixToOmit = configuration.getCommonHostnameSuffixToOmit().or("");
 
-    ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
-    String json = "";
+    ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
     try {
-      json = ow.writeValueAsString(configuration.getUiConfiguration().getShellCommands());
+      this.shellCommands = ow.writeValueAsString(configuration.getUiConfiguration().getShellCommands());
     } catch (JsonProcessingException e) {
       throw Throwables.propagate(e);
     }
-    this.shellCommands = json;
   }
 
   public String getAppRoot() {
