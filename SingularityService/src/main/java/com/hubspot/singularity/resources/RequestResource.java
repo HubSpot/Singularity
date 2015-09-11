@@ -198,6 +198,8 @@ public class RequestResource extends AbstractRequestResource {
 
     checkConflict(createResult != SingularityCreateResult.EXISTED, "%s is already bouncing", requestId);
 
+    requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), queryUser);
+
     return fillEntireRequest(requestWithState);
   }
 
