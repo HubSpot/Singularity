@@ -15,7 +15,7 @@ public class SingularityRequestHistory implements Comparable<SingularityRequestH
   private final SingularityRequest request;
 
   public enum RequestHistoryType {
-    CREATED, UPDATED, DELETED, PAUSED, UNPAUSED, ENTERED_COOLDOWN, EXITED_COOLDOWN, FINISHED, DEPLOYED_TO_UNPAUSE;
+    CREATED, UPDATED, DELETED, PAUSED, UNPAUSED, ENTERED_COOLDOWN, EXITED_COOLDOWN, FINISHED, DEPLOYED_TO_UNPAUSE, BOUNCED;
   }
 
   @JsonCreator
