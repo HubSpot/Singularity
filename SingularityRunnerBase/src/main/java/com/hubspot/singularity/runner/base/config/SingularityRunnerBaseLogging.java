@@ -32,6 +32,11 @@ public class SingularityRunnerBaseLogging {
   private final BaseRunnerConfiguration primaryConfiguration;
   private final Set<BaseRunnerConfiguration> configurations;
 
+  public static void setRootLoggerLevel(String level) {
+    LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+    context.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).setLevel(Level.toLevel(level));
+  }
+
   @Inject
   public SingularityRunnerBaseLogging(@Named(SingularityRunnerBaseModule.OBFUSCATED_YAML) ObjectMapper yamlMapper, SingularityRunnerBaseConfiguration baseConfiguration, BaseRunnerConfiguration primaryConfiguration, Set<BaseRunnerConfiguration> configurations) {
     this.yamlMapper = yamlMapper;

@@ -16,6 +16,7 @@ import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
+import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseLogging;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
@@ -26,6 +27,7 @@ public class SingularityExecutorRunner {
 
   public static void main(String... args) {
     final long start = System.currentTimeMillis();
+    SingularityRunnerBaseLogging.setRootLoggerLevel("INFO"); // initially set root logger to INFO to silence hibernate + handlebars logging spam
 
     try {
       final Injector injector = Guice.createInjector(Stage.PRODUCTION, new SingularityRunnerBaseModule(SingularityExecutorConfiguration.class, ImmutableSet.<Class<? extends BaseRunnerConfiguration>>of(SingularityS3Configuration.class)), new SingularityExecutorModule());
