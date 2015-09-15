@@ -59,6 +59,17 @@ public class SingularityS3FormatHelper {
       }
     }
 
+    // this is necessary because logrotate will append .gz if compressing rotated logs
+    if (s3KeyFormat.contains("%file2ext")) {
+      int lastPeriod = filename.lastIndexOf(".");
+      if (lastPeriod > 0) {
+        int penultimatePeriod = filename.lastIndexOf(".", lastPeriod - 1);
+        if (penultimatePeriod > -1) {
+          s3KeyFormat = s3KeyFormat.replace("%file2ext", filename.substring(penultimatePeriod));
+        }
+      }
+    }
+
     if (s3KeyFormat.contains("%guid")) {
       s3KeyFormat = s3KeyFormat.replace("%guid", UUID.randomUUID().toString());
     }

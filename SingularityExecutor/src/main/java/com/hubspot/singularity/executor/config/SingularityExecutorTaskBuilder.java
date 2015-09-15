@@ -9,6 +9,7 @@ import org.apache.mesos.Protos.TaskInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -71,7 +72,7 @@ public class SingularityExecutorTaskBuilder {
     ExecutorData executorData = readExecutorData(jsonObjectMapper, taskInfo);
 
     SingularityExecutorTaskDefinition taskDefinition = new SingularityExecutorTaskDefinition(taskId, executorData, MesosUtils.getTaskDirectoryPath(taskId).toString(), executorPid,
-        executorConfiguration.getServiceLog(), executorConfiguration.getTaskAppDirectory(), executorConfiguration.getExecutorBashLog(), executorConfiguration.getLogrotateStateFile());
+        executorConfiguration.getServiceLog(), Files.getFileExtension(executorConfiguration.getServiceLog()), executorConfiguration.getTaskAppDirectory(), executorConfiguration.getExecutorBashLog(), executorConfiguration.getLogrotateStateFile());
 
     jsonObjectFileHelper.writeObject(taskDefinition, executorConfiguration.getTaskDefinitionPath(taskId), log);
 

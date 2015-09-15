@@ -11,6 +11,7 @@ notifempty
 {{{ logfile }}} {
   dateformat {{{ rotateDateformat }}}
   olddir {{{ rotateDirectory }}}
+  {{#if logfileExtension}}extension .{{{ logfileExtension }}}{{/if}}
 }
 
 {{#if extrasFiles}}
