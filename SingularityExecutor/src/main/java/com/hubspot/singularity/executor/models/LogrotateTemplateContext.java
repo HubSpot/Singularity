@@ -64,6 +64,10 @@ public class LogrotateTemplateContext {
     return taskDefinition.getServiceLogOut();
   }
 
+  public String getLogfileExtension() {
+    return taskDefinition.getServiceLogOutExtension();
+  }
+
   @Override
   public String toString() {
     return "LogrotateTemplateContext [taskId=" + taskDefinition.getTaskId() + "]";
