@@ -9,7 +9,7 @@ maxage {{{ maxageDays }}}
 notifempty
 
 {{{ logfile }}} {
-  dateformat {{{ rotateDateformat }}}
+  dateformat {{{ rotateDateformat }}}{{#if logfileExtension}}.{{{ logfileExtension}}}{{/if}}
   olddir {{{ rotateDirectory }}}
 }
 
