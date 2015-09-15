@@ -1,11 +1,6 @@
 package com.hubspot.singularity.runner.base.config;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Properties;
 import java.util.Set;
 
 import javax.validation.ConstraintViolation;
@@ -14,7 +9,6 @@ import javax.validation.Validator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
-import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -40,41 +34,37 @@ public class SingularityRunnerConfigurationProvider<T extends BaseRunnerConfigur
     this.filename = filename;
   }
 
+  private JsonNode loadYamlField(String filename, String field) {
+    final File yamlFile = new File(filename);
+
+    if (!yamlFile.exists()) {
+      return objectMapper.createObjectNode();
+    }
+
+    try {
+      final JsonNode baseTree = objectMapper.readTree(yamlFile);
+
+      return baseTree.hasNonNull(field) ? baseTree.get(field) : objectMapper.createObjectNode();
+    } catch (Exception e) {
+      throw Throwables.propagate(e);
+    }
+  }
+
   @Override
   public T get() {
     final Configuration configuration = clazz.getAnnotation(Configuration.class);
 
-    final String yamlPath = filename.or(configuration.filename());
-    final String propsPath = yamlPath.replace(".yaml", ".properties");
-
-    final File yamlFile = new File(yamlPath);
-    final File propsFile = new File(propsPath);
-
     try {
-      JsonNode node = objectMapper.readTree(yamlFile);
+      final File baseFile = new File(configuration.filename());
+      final T baseConfig = baseFile.exists() ? objectMapper.readValue(baseFile, clazz) : clazz.newInstance();
 
-      if (filename.isPresent() && !Strings.isNullOrEmpty(configuration.consolidatedField())) {
-        if (node.hasNonNull(configuration.consolidatedField())) {
-          node = node.get(configuration.consolidatedField());
-        } else {
-          node = objectMapper.createObjectNode();
-        }
-      }
+      final JsonNode overrideNode = filename.isPresent() ? loadYamlField(filename.get(), configuration.consolidatedField()) : objectMapper.createObjectNode();
 
-      final T config = yamlFile.exists() ? objectMapper.treeToValue(node, clazz) : clazz.newInstance();
-
-      if (propsFile.exists()) {
-        final Properties properties = new Properties();
-        try (BufferedReader br = Files.newBufferedReader(Paths.get(propsPath), Charset.defaultCharset())) {
-          properties.load(br);
-        }
-        config.updateFromProperties(properties);
-        config.updateLoggingFromProperties(properties);
-      }
+      final T config = objectMapper.readerForUpdating(baseConfig).readValue(overrideNode);
 
       final Set<ConstraintViolation<T>> violations = validator.validate(config);
       if (!violations.isEmpty()) {
-        throw new ConfigurationValidationException(yamlPath, violations);
+        throw new ConfigurationValidationException(filename.or(configuration.filename()), violations);
       }
 
       return config;
