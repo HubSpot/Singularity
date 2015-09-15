@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 
@@ -155,30 +156,16 @@ public class SingularityExecutorTaskLogManager {
     return jsonObjectFileHelper.writeObject(tailMetadata, path, log);
   }
 
-  private String convertFilenameToLogrotateGlob(String filename) {
-    if (filename.contains(".")) {
-      final String prefix = filename.substring(0, filename.lastIndexOf("."));
-      final String suffix = filename.substring(filename.lastIndexOf("."));
-      return String.format("%s-*%s", prefix, suffix);
-    } else {
-      return String.format("%s-*", filename);
-    }
-  }
-
   /**
    * Return a String for generating a PathMatcher.
    * The matching files are caught by the S3 Uploader and pushed to S3.
    * @return file glob String.
    */
   private String getS3Glob() {
-    final List<String> fileNames = new ArrayList<>(configuration.getS3UploaderAdditionalFiles().size() + 1);
+    List<String> fileNames = new ArrayList<>(configuration.getS3UploaderAdditionalFiles());
+    fileNames.add(Objects.toString(taskDefinition.getServiceLogOutPath().getFileName()));
 
-    for (String filename : configuration.getS3UploaderAdditionalFiles()) {
-      fileNames.add(convertFilenameToLogrotateGlob(filename));
-    }
-    fileNames.add(convertFilenameToLogrotateGlob(configuration.getServiceLog()));
-
-    return String.format("{%s}.gz*", Joiner.on(",").join(fileNames));
+    return String.format("{%s}*.gz*", Joiner.on(",").join(fileNames));
   }
 
   private String getS3KeyPattern() {
