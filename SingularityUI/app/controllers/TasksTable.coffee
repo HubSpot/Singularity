@@ -42,7 +42,6 @@ class TasksTableController extends Controller
                 if resp.error
                     Messenger().error
                         message:   "<p>This task is no longer pending.</p>"
-                        hideAFter: 20
                     @refresh()
             app.hideFixedPageLoader()
 

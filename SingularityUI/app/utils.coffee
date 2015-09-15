@@ -80,6 +80,17 @@ class Utils
                 $item.find("h4").append $copyLink
                 new ZeroClipboard $copyLink[0]
 
+    # Copy anything
+    @makeMeCopy: (options) =>
+        $element = $(options.selector)
+        linkText = options.linkText || 'Copy'
+        textSelector = options.textSelector || '.copy-text'
+        
+        text = $element.find(textSelector).html()
+        $copyLink = $ "<a data-clipboard-text='#{ _.escape text }'>#{linkText}</a>"
+        $(options.copyLink).html($copyLink)
+        new ZeroClipboard $copyLink[0]
+
     @fixTableColumns: ($table) =>
         $headings = $table.find "th"
         if $headings.length and $table.css('table-layout') isnt 'fixed'
