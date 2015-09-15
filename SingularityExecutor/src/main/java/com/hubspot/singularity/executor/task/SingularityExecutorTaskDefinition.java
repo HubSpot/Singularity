@@ -70,7 +70,7 @@ public class SingularityExecutorTaskDefinition {
   }
 
   public String getServiceLogOut() {
-    return serviceLogOut;
+    return getServiceLogOutPath().toString();
   }
 
   public String getServiceLogOutExtension() {
