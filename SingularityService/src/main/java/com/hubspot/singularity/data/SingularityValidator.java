@@ -10,6 +10,8 @@ import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
 
+import com.hubspot.mesos.SingularityContainerInfo;
+import com.hubspot.mesos.SingularityVolume;
 import org.quartz.CronExpression;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -184,6 +186,7 @@ public class SingularityValidator {
 
     if (request.isLoadBalanced()) {
       checkBadRequest(deploy.getServiceBasePath().isPresent(), "Deploy for loadBalanced request must include serviceBasePath");
+      checkBadRequest(deploy.getLoadBalancerGroups().isPresent() && !deploy.getLoadBalancerGroups().get().isEmpty(), "Deploy for a loadBalanced request must include at least one load balacner group");
     }
 
     checkForIllegalResources(request, deploy);
@@ -195,8 +198,17 @@ public class SingularityValidator {
 
     checkBadRequest(!deploy.getContainerInfo().isPresent() || deploy.getContainerInfo().get().getType() != null, "Container type must not be null");
 
-    if (deploy.getContainerInfo().isPresent() && deploy.getContainerInfo().get().getType() == SingularityContainerType.DOCKER) {
-      checkDocker(deploy);
+    if (deploy.getContainerInfo().isPresent()) {
+      SingularityContainerInfo containerInfo = deploy.getContainerInfo().get();
+      checkBadRequest(containerInfo.getType() != null, "container type may not be null");
+      if (containerInfo.getVolumes().isPresent() && !containerInfo.getVolumes().get().isEmpty()) {
+        for (SingularityVolume volume : containerInfo.getVolumes().get()) {
+          checkBadRequest(volume.getContainerPath() != null, "volume containerPath may not be null");
+        }
+      }
+      if (deploy.getContainerInfo().get().getType() == SingularityContainerType.DOCKER) {
+        checkDocker(deploy);
+      }
     }
 
     checkBadRequest(deployHistoryHelper.isDeployIdAvailable(request.getId(), deployId), "Can not deploy a deploy that has already been deployed");
@@ -214,6 +226,8 @@ public class SingularityValidator {
     if (deploy.getResources().isPresent() && deploy.getContainerInfo().get().getDocker().isPresent()) {
       final SingularityDockerInfo dockerInfo = deploy.getContainerInfo().get().getDocker().get();
       final int numPorts = deploy.getResources().get().getNumPorts();
+
+      checkBadRequest(dockerInfo.getImage() != null, "docker image may not be null");
 
       if (!dockerInfo.getPortMappings().isEmpty()) {
         checkBadRequest(dockerInfo.getNetwork().or(SingularityDockerNetworkType.HOST) == SingularityDockerNetworkType.BRIDGE,
