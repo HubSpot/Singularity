@@ -2,7 +2,6 @@ package com.hubspot.singularity;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.inject.name.Names.named;
-
 import java.io.IOException;
 import java.net.SocketException;
 import java.util.Collections;
@@ -45,6 +44,7 @@ import com.hubspot.singularity.config.S3GroupOverrideConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
 import com.hubspot.singularity.guice.DropwizardObjectMapperProvider;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
@@ -225,6 +225,12 @@ public class SingularityMainModule implements Module {
   @Singleton
   public MesosConfiguration mesosConfiguration(final SingularityConfiguration config) {
     return config.getMesosConfiguration();
+  }
+
+  @Provides
+  @Singleton
+  public UIConfiguration uiConfiguration(final SingularityConfiguration config) {
+    return config.getUiConfiguration();
   }
 
   @Provides

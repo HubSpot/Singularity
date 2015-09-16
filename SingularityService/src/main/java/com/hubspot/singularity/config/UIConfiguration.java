@@ -2,9 +2,12 @@ package com.hubspot.singularity.config;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -12,6 +15,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 
 public class UIConfiguration {
 
@@ -51,6 +55,10 @@ public class UIConfiguration {
 
   @NotEmpty
   private String finishedTaskLogPath = "stdout";
+
+  @JsonProperty
+  @NotNull
+  private List<ShellCommandDescriptor> shellCommands = Collections.emptyList();
 
   public String getRunningTaskLogPath() {
     return runningTaskLogPath;
@@ -137,4 +145,12 @@ public class UIConfiguration {
   public void setFinishedTaskLogPath(String finishedTaskLogPath) {
     this.finishedTaskLogPath = finishedTaskLogPath;
   }
+  public List<ShellCommandDescriptor> getShellCommands() {
+    return shellCommands;
+  }
+
+  public void setShellCommands(List<ShellCommandDescriptor> shellCommands) {
+    this.shellCommands = shellCommands;
+  }
+
 }
