@@ -1,6 +1,7 @@
 package com.hubspot.singularity.data.zkmigrations;
 
 import javax.inject.Singleton;
+import javax.ws.rs.WebApplicationException;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.slf4j.Logger;
@@ -67,7 +68,14 @@ public class ScheduleMigration extends ZkDataMigration  {
 
         String actualSchedule = schedule.get();
 
-        String newQuartzSchedule = validator.getQuartzScheduleFromCronSchedule(actualSchedule);
+        String newQuartzSchedule = null;
+
+        try {
+          newQuartzSchedule = validator.getQuartzScheduleFromCronSchedule(actualSchedule);
+        } catch (WebApplicationException e) {
+          LOG.error("Failed to convert {} due to {}", actualSchedule, e.getResponse().getEntity());
+          throw e;
+        }
 
         if (quartzSchedule.isPresent() && quartzSchedule.get().equals(newQuartzSchedule)) {
           LOG.info("Skipping {}, migration had no effect {}", requestWithState.getRequest().getId(), newQuartzSchedule);
