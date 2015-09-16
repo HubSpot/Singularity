@@ -10,7 +10,7 @@ import com.google.common.base.Optional;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 
-@Configuration("/etc/singularity.s3downloader.yaml")
+@Configuration(filename = "/etc/singularity.s3downloader.yaml", consolidatedField = "s3downloader")
 public class SingularityS3DownloaderConfiguration extends BaseRunnerConfiguration {
 
   public static final String NUM_DOWNLOADER_THREADS = "s3downloader.downloader.threads";

@@ -16,7 +16,7 @@ import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
 
-@Configuration("/etc/singularity.logwatcher.yaml")
+@Configuration(filename = "/etc/singularity.logwatcher.yaml", consolidatedField = "logwatcher")
 public class SingularityLogWatcherConfiguration extends BaseRunnerConfiguration {
   public static final String BYTE_BUFFER_CAPACITY = "logwatcher.bytebuffer.capacity";
   public static final String POLL_MILLIS = "logwatcher.poll.millis";
