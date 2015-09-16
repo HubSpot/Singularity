@@ -17,7 +17,7 @@
                 <div class="col-md-9 col-sm-9">
                     <div class="row">
                         <div class="col-md-8">
-                            <ul class="list-group list-group--links list-group--plain list-group--slim">
+                            <ul class="list-group list-group--links list-group--plain list-group--slim list-large">
                                 {{#each requests}}
                                 <li class="list-group-item">
                                     {{#if link}}
@@ -30,7 +30,7 @@
                                 </li>
                                 {{/each}}
                             </ul>
-                            <ul class='list-plain'>
+                            <ul class='list-plain list-large'>
                                 <li>
                                     <strong>{{state.overProvisionedRequests}}</strong>
                                     Over Provisioned
@@ -67,7 +67,7 @@
                         <div class="col-md-8">
 
 
-                            <ul class="list-group list-group--links list-group--plain list-group--slim">
+                            <ul class="list-group list-group--links list-group--plain list-group--slim list-large">
                                 {{#each tasks}}
                                 <li class="list-group-item">
                                     <a class='chart__legend-link {{#unless link}}inactive-link{{/unless}}' {{#if link}}href="{{appRoot}}{{ link }}"{{/if}}>
@@ -76,7 +76,7 @@
                                 </li>
                                 {{/each}}
                             </ul>
-                            <ul class='list-plain'>
+                            <ul class='list-plain list-large'>
                                 <li>
                                     Max Task Lag:
                                     <span>
@@ -97,7 +97,7 @@
         <div>
             <h2>Racks</h2>
         </div>
-        <ul class="list-group list-group--links list-group--plain list-group--slim">
+        <ul class="list-group list-group--links list-group--plain list-group--slim list-large">
             <li class='list-group-item'>
                 <a href="{{appRoot}}/racks/active">
                     <span data-state-attribute='activeRacks'>{{state.activeRacks}}</span> 
@@ -122,7 +122,7 @@
         <div>
             <h2>Slaves</h2>
         </div>
-        <ul class="list-group list-group--links list-group--plain list-group--slim">
+        <ul class="list-group list-group--links list-group--plain list-group--slim list-large">
             <li class="list-group-item">
                 <a href="{{appRoot}}/slaves/active"> 
                     <span data-state-attribute='activeSlaves'>{{state.activeSlaves}} </span>
@@ -154,7 +154,7 @@
         <div>
             <h2>Deploys</h2>
         </div>
-        <ul class="list-group list-group--links list-group--plain list-group--slim">
+        <ul class="list-group list-group--links list-group--plain list-group--slim list-large">
             <li class="list-group-item {{#ifLT state.numDeploys 2}}text-muted{{/ifLT}}">
                 <strong data-state-attribute='numDeploys'>{{state.numDeploys}}</strong>
                 Active Deploys
