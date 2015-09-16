@@ -223,6 +223,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private String pidCommandPlaceholder = "{PID}";
 
+  @NotEmpty
+  @JsonProperty
+  private String cgroupsMesosCpuTasksFormat = "/cgroup/cpu/%s/tasks";
+
+  @NotEmpty
+  @JsonProperty
+  private String procCgroupFormat = "/proc/%s/cgroup";
+
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
   }
@@ -534,6 +542,22 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public void setShellCommandOutFile(String shellCommandOutFile) {
     this.shellCommandOutFile = shellCommandOutFile;
+  }
+
+  public String getCgroupsMesosCpuTasksFormat() {
+    return cgroupsMesosCpuTasksFormat;
+  }
+
+  public void setCgroupsMesosCpuTasksFormat(String cgroupsMesosCpuTasksFormat) {
+    this.cgroupsMesosCpuTasksFormat = cgroupsMesosCpuTasksFormat;
+  }
+
+  public String getProcCgroupFormat() {
+    return procCgroupFormat;
+  }
+
+  public void setProcCgroupFormat(String procCgroupFormat) {
+    this.procCgroupFormat = procCgroupFormat;
   }
 
   @Override
