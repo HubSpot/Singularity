@@ -73,7 +73,7 @@ public class ScheduleMigration extends ZkDataMigration  {
         try {
           newQuartzSchedule = validator.getQuartzScheduleFromCronSchedule(actualSchedule);
         } catch (WebApplicationException e) {
-          LOG.error("Failed to convert {} due to {}", actualSchedule, e.getResponse().getEntity());
+          LOG.error("Failed to convert {} ({}) due to {}", requestWithState.getRequest().getId(), actualSchedule, e.getResponse().getEntity());
           throw e;
         }
 
