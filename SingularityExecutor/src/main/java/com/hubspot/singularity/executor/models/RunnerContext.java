@@ -16,8 +16,9 @@ public class RunnerContext {
 
   private final Optional<Integer> maxTaskThreads;
   private final boolean shouldChangeUser;
+  private final Integer maxOpenFiles;
 
-  public RunnerContext(String cmd, String taskAppDirectory, String logDir, String user, String logFile, String taskId, Optional<Integer> maxTaskThreads, boolean shouldChangeUser) {
+  public RunnerContext(String cmd, String taskAppDirectory, String logDir, String user, String logFile, String taskId, Optional<Integer> maxTaskThreads, boolean shouldChangeUser, Integer maxOpenFiles) {
     this.cmd = cmd;
     this.taskAppDirectory = taskAppDirectory;
     this.logDir = logDir;
@@ -27,6 +28,7 @@ public class RunnerContext {
 
     this.maxTaskThreads = maxTaskThreads;
     this.shouldChangeUser = shouldChangeUser;
+    this.maxOpenFiles = maxOpenFiles;
   }
 
   public String getCmd() {
@@ -59,6 +61,10 @@ public class RunnerContext {
 
   public boolean isShouldChangeUser() {
     return shouldChangeUser;
+  }
+
+  public Integer getMaxOpenFiles() {
+    return maxOpenFiles;
   }
 
   @Override
