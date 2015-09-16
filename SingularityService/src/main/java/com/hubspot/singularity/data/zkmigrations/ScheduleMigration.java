@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ScheduleType;
@@ -74,7 +75,7 @@ public class ScheduleMigration extends ZkDataMigration  {
           newQuartzSchedule = validator.getQuartzScheduleFromCronSchedule(actualSchedule);
         } catch (WebApplicationException e) {
           LOG.error("Failed to convert {} ({}) due to {}", requestWithState.getRequest().getId(), actualSchedule, e.getResponse().getEntity());
-          throw e;
+          continue;
         }
 
         if (quartzSchedule.isPresent() && quartzSchedule.get().equals(newQuartzSchedule)) {
@@ -90,6 +91,7 @@ public class ScheduleMigration extends ZkDataMigration  {
           num++;
         } catch (Throwable t) {
           LOG.error("Failed to write {}", newRequest.getId(), t);
+          throw Throwables.propagate(t);
         }
       }
     }
