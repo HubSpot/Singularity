@@ -1,7 +1,13 @@
 package com.hubspot.singularity.data.zkmigrations;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
+import com.google.common.collect.Lists;
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 
@@ -18,6 +24,15 @@ public class SingularityZkMigrationsModule implements Module {
     dataMigrations.addBinding().to(SingularityCmdLineArgsMigration.class);
     dataMigrations.addBinding().to(TaskManagerRequiredParentsForTransactionsMigration.class);
     dataMigrations.addBinding().to(SlaveAndRackMigration2.class);
+    dataMigrations.addBinding().to(ScheduleMigration.class);
+  }
+
+  @Provides
+  public List<ZkDataMigration> getMigrationsInOrder(Set<ZkDataMigration> migrations) {
+    final List<ZkDataMigration> sortedMigrationList = Lists.newArrayList(migrations);
+    Collections.sort(sortedMigrationList);
+
+    return sortedMigrationList;
   }
 
 }

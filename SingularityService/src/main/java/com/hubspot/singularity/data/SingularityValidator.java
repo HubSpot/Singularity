@@ -12,7 +12,6 @@ import javax.inject.Singleton;
 
 import org.quartz.CronExpression;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
@@ -257,8 +256,7 @@ public class SingularityValidator {
    * Day-of-Week  1-7 or SUN-SAT          - * ? / L #
    * Year         (Optional), 1970-2199   - * /
    */
-  @VisibleForTesting
-  String getQuartzScheduleFromCronSchedule(String schedule) {
+  public String getQuartzScheduleFromCronSchedule(String schedule) {
     if (schedule == null) {
       return null;
     }
