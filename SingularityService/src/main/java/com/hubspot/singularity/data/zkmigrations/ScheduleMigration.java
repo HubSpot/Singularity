@@ -86,6 +86,7 @@ public class ScheduleMigration extends ZkDataMigration  {
         SingularityRequest newRequest = requestWithState.getRequest().toBuilder().setQuartzSchedule(Optional.of(newQuartzSchedule)).build();
 
         try {
+          LOG.info("Saving new schedule (quartz {} - from {}) for {}", newQuartzSchedule, actualSchedule, newRequest.getId());
           curator.setData().forPath("/requests/all/" + newRequest.getId(),
             requestTranscoder.toBytes(new SingularityRequestWithState(newRequest, requestWithState.getState(), requestWithState.getTimestamp())));
           num++;
