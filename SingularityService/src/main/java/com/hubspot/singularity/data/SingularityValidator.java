@@ -3,8 +3,10 @@ package com.hubspot.singularity.data;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
 
@@ -69,12 +71,6 @@ public class SingularityValidator {
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
   }
 
-
-
-
-
-
-
   private void checkForIllegalChanges(SingularityRequest request, SingularityRequest existingRequest) {
     checkBadRequest(request.getRequestType() == existingRequest.getRequestType(), String.format("Request can not change requestType from %s to %s", existingRequest.getRequestType(), request.getRequestType()));
     checkBadRequest(request.isLoadBalanced() == existingRequest.isLoadBalanced(), "Request can not change whether it is load balanced");
@@ -130,7 +126,6 @@ public class SingularityValidator {
       final String originalSchedule = request.getQuartzScheduleSafe();
 
       checkBadRequest(request.getQuartzSchedule().isPresent() || request.getSchedule().isPresent(), "Specify at least one of schedule or quartzSchedule");
-
 
       if (request.getQuartzSchedule().isPresent() && !request.getSchedule().isPresent()) {
         checkBadRequest(request.getScheduleType().or(ScheduleType.QUARTZ) == ScheduleType.QUARTZ, "If using quartzSchedule specify scheduleType QUARTZ or leave it blank");
@@ -242,6 +237,9 @@ public class SingularityValidator {
     return CronExpression.isValidExpression(schedule);
   }
 
+  private final Pattern DAY_RANGE_REGEXP = Pattern.compile("[0-6]-[0-6]");
+  private final Pattern COMMA_DAYS_REGEXP = Pattern.compile("([0-6],)+([0-6])?");
+
   /**
    *
    * Transforms unix cron into quartz compatible cron;
@@ -258,7 +256,7 @@ public class SingularityValidator {
    * Day-of-Week  1-7 or SUN-SAT          - * ? / L #
    * Year         (Optional), 1970-2199   - * /
    */
-  private String getQuartzScheduleFromCronSchedule(String schedule) {
+  public String getQuartzScheduleFromCronSchedule(String schedule) {
     if (schedule == null) {
       return null;
     }
@@ -295,17 +293,22 @@ public class SingularityValidator {
     // therefore, we should add 1 to any values between 0-6. 7 in a standard cron is sunday,
     // which is sat in quartz. so if we get a value of 7, we should change it to 1.
     if (isValidInteger(dayOfWeek)) {
-      int dayOfWeekValue = Integer.parseInt(dayOfWeek);
+      dayOfWeek = getNewDayOfWeekValue(schedule, Integer.parseInt(dayOfWeek));
+    } else if (DAY_RANGE_REGEXP.matcher(dayOfWeek).matches() || COMMA_DAYS_REGEXP.matcher(dayOfWeek).matches()) {
+      String separator = ",";
 
-      checkBadRequest(dayOfWeekValue >= 0 && dayOfWeekValue <= 7, "Schedule %s is invalid, day of week (%s) is not 0-7", schedule, dayOfWeekValue);
-
-      if (dayOfWeekValue == 7) {
-        dayOfWeekValue = 1;
-      } else {
-        dayOfWeekValue++;
+      if (DAY_RANGE_REGEXP.matcher(dayOfWeek).matches()) {
+        separator = "-";
       }
 
-      dayOfWeek = Integer.toString(dayOfWeekValue);
+      final String[] dayOfWeekSplit = dayOfWeek.split(separator);
+      final List<String> dayOfWeekValues = new ArrayList<>(dayOfWeekSplit.length);
+
+      for (String dayOfWeekValue : dayOfWeekSplit) {
+        dayOfWeekValues.add(getNewDayOfWeekValue(schedule, Integer.parseInt(dayOfWeekValue)));
+      }
+
+      dayOfWeek = Joiner.on(separator).join(dayOfWeekValues);
     }
 
     newSchedule.add(dayOfMonth);
@@ -313,6 +316,18 @@ public class SingularityValidator {
     newSchedule.add(dayOfWeek);
 
     return JOINER.join(newSchedule);
+  }
+
+  private String getNewDayOfWeekValue(String schedule, int dayOfWeekValue) {
+    checkBadRequest(dayOfWeekValue >= 0 && dayOfWeekValue <= 6, "Schedule %s is invalid, day of week (%s) is not 0-6", schedule, dayOfWeekValue);
+
+    if (dayOfWeekValue == 6) {
+      dayOfWeekValue = 1;
+    } else {
+      dayOfWeekValue++;
+    }
+
+    return Integer.toString(dayOfWeekValue);
   }
 
   private boolean isValidInteger(String strValue) {
