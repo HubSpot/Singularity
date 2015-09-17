@@ -52,4 +52,6 @@ class StatusView extends View
 
         @captureLastState()
 
+        super.afterRender()
+
 module.exports = StatusView

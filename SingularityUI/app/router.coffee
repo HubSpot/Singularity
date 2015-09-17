@@ -16,6 +16,8 @@ SlavesController = require 'controllers/Slaves'
 
 NotFoundController = require 'controllers/NotFound'
 
+DeployDetailController = require 'controllers/DeployDetail'
+
 class Router extends Backbone.Router
 
     routes:
@@ -30,6 +32,7 @@ class Router extends Backbone.Router
         'requests(/)': 'requestsTable'
 
         'request/:requestId(/)': 'requestDetail'
+        'request/:requestId/deploy/:deployId(/)': 'deployDetail'
 
         'request/:requestId/deploy(/)': 'newDeploy'
 
@@ -43,7 +46,7 @@ class Router extends Backbone.Router
 
         'racks(/)': 'racks'
         'slaves(/)': 'slaves'
-        
+
         '*anything': 'notFound'
 
     dashboard: ->
@@ -69,10 +72,10 @@ class Router extends Backbone.Router
 
     taskDetail: (taskId) ->
         app.bootstrapController new TaskDetailController {taskId, filePath:null}
-      
+
     taskFileBrowser: (taskId, filePath="") ->
         app.bootstrapController new TaskDetailController {taskId, filePath}
-        
+
     tail: (taskId, path = '') ->
         offset = window.location.hash.substr(1) || null
         app.bootstrapController new TailController {taskId, path, offset}
@@ -85,5 +88,8 @@ class Router extends Backbone.Router
 
     notFound: ->
         app.bootstrapController new NotFoundController
+
+    deployDetail: (requestId, deployId) ->
+        app.bootstrapController new DeployDetailController {requestId, deployId}
 
 module.exports = Router

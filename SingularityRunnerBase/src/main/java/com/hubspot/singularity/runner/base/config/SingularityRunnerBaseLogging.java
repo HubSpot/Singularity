@@ -27,10 +27,20 @@ import ch.qos.logback.core.FileAppender;
 public class SingularityRunnerBaseLogging {
   private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(SingularityRunnerBaseLogging.class);
 
+  // classes from these packages perform DEBUG logging before the loggers are properly configured...
+  private static final String[] CHATTY_LOGGERS = {"org.jboss.logging", "org.hibernate", "com.github.jknack.handlebars"};
+
   private final ObjectMapper yamlMapper;
   private final SingularityRunnerBaseConfiguration baseConfiguration;
   private final BaseRunnerConfiguration primaryConfiguration;
   private final Set<BaseRunnerConfiguration> configurations;
+
+  public static void quietEagerLogging() {
+    LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+    for (String name : CHATTY_LOGGERS) {
+      context.getLogger(name).setLevel(Level.WARN);
+    }
+  }
 
   @Inject
   public SingularityRunnerBaseLogging(@Named(SingularityRunnerBaseModule.OBFUSCATED_YAML) ObjectMapper yamlMapper, SingularityRunnerBaseConfiguration baseConfiguration, BaseRunnerConfiguration primaryConfiguration, Set<BaseRunnerConfiguration> configurations) {

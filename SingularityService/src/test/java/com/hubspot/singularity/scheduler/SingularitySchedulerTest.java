@@ -1204,6 +1204,38 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testOnDemandTasksPersist() {
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND);
+    requestResource.submit(bldr.build(), Optional.<String> absent());
+    deploy("d2");
+    deployChecker.checkDeploys();
+
+    requestResource.scheduleImmediately(requestId, user, Optional.<String> absent(), Collections.<String> emptyList());
+
+    resourceOffers();
+
+    requestResource.scheduleImmediately(requestId, user, Optional.<String> absent(), Collections.<String> emptyList());
+
+    resourceOffers();
+
+    Assert.assertEquals(2, taskManager.getActiveTaskIds().size());
+
+    requestResource.scheduleImmediately(requestId, user, Optional.<String> absent(), Collections.<String> emptyList());
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    requestResource.scheduleImmediately(requestId, user, Optional.<String> absent(), Collections.<String> emptyList());
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    Assert.assertEquals(2, taskManager.getPendingTaskIds().size());
+
+    resourceOffers();
+
+    Assert.assertEquals(4, taskManager.getActiveTaskIds().size());
+  }
+
+  @Test
   public void testEmptyDecommissioning() {
     sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
 
@@ -1255,6 +1287,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     for (SingularityKilledTaskIdRecord taskId : taskManager.getKilledTaskIdRecords()) {
       Assert.assertTrue(taskId.getTaskId().getInstanceNo() > 2);
+
+      scheduler.drainPendingQueue(stateCacheProvider.get());
     }
 
   }

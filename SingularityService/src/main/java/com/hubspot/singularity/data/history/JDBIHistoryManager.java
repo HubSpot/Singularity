@@ -41,6 +41,11 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
+  public List<SingularityTaskIdHistory> getTaskHistoryForDeploy(String requestId, String deployId, Integer limitStart, Integer limitCount) {
+    return history.getTaskHistoryForDeploy(requestId, deployId, limitStart, limitCount);
+  }
+
+  @Override
   public void saveRequestHistoryUpdate(SingularityRequestHistory requestHistory) {
     history.insertRequestHistory(requestHistory.getRequest().getId(), singularityRequestTranscoder.toBytes(requestHistory.getRequest()), new Date(requestHistory.getCreatedAt()),
         requestHistory.getEventType().name(), requestHistory.getUser().orNull());
@@ -101,7 +106,7 @@ public class JDBIHistoryManager implements HistoryManager {
     }
 
     history.insertTaskHistory(taskIdHistory.getTaskId().getRequestId(), taskIdHistory.getTaskId().getId(), taskHistoryTranscoder.toBytes(taskHistory), new Date(taskIdHistory.getUpdatedAt()),
-        lastTaskStatus, taskHistory.getTask().getTaskRequest().getPendingTask().getRunId().orNull());
+        lastTaskStatus, taskHistory.getTask().getTaskRequest().getPendingTask().getRunId().orNull(), taskIdHistory.getTaskId().getDeployId());
   }
 
   @Override

@@ -492,6 +492,12 @@
             </lifecycleMappingMetadata>
           </configuration>
         </plugin>
+        <plugin>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <configuration>
+            <forkedProcessTimeoutInSeconds>300</forkedProcessTimeoutInSeconds>
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>

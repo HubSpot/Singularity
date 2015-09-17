@@ -45,6 +45,8 @@ public class SingularityRunnerBaseModule extends AbstractModule {
   protected void configure() {
     bind(ObjectMapper.class).toInstance(JavaUtils.newObjectMapper());
     bind(MetricRegistry.class).toInstance(new MetricRegistry());
+
+    SingularityRunnerBaseLogging.quietEagerLogging();
     bind(Validator.class).toInstance(Validation.buildDefaultValidatorFactory().getValidator());
 
     final ConfigurationBinder configurationBinder = ConfigurationBinder.newBinder(binder());

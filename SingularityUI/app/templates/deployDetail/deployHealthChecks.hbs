@@ -1,0 +1,69 @@
+{{#if data.length}}
+    <div class="page-header">
+        <h2>
+            Latest Health Checks
+            <small>
+                <a data-action="expandToggle">
+                    {{#if expanded}}
+                        collapse
+                    {{else}}
+                        view
+                    {{/if}}
+                </a>
+            </small>
+        </h2>
+    </div>
+    <div class='{{#unless expanded}}hide{{/unless}}'>
+        <div class="table-container">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th>Timestamp</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Message</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each data}}
+                        {{#if durationMillis}}
+                            <tr data-id="{{ taskId.id }}" data-collection="healthChecks">
+                                <td>
+                                    <a href="{{appRoot}}/task/{{ taskId.id }}">
+                                        {{ taskId.id }}
+                                    </a>
+                                </td>
+                                <td>
+                                   {{timestampFormattedWithSeconds timestamp}}
+                                </td>
+                                <td>
+                                   {{durationMillis}}{{#if durationMillis}}ms{{/if}}
+                                </td>
+                                <td>
+                                    {{#if statusCode}}
+                                        {{#ifEqual statusCode 200}}
+                                            <span class="label label-success">HTTP {{statusCode}}</span>
+                                        {{else}}
+                                            <span class="label label-danger">HTTP {{statusCode}}</span>
+                                        {{/ifEqual}}
+                                    {{else}}
+                                        <span class="label label-warning">No Response</span>
+                                    {{/if}}
+                                </td>
+                                <td>
+                                    <pre class="healthcheck-message">{{#if errorMessage}}{{errorMessage}}{{else}}{{responseBody}}{{/if}}</pre>
+                                </td>
+                                <td class="actions-column">
+                                    <a data-action="viewJSON" title="JSON">
+                                        { }
+                                    </a>
+                                </td>
+                            </tr>
+                        {{/if}}
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{{/if}}

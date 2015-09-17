@@ -1,0 +1,76 @@
+<div class="page-header">
+    <h2>Active Tasks</h2>
+</div>
+{{#if data.length}}
+    <div class="table-container">
+        <table class="table table-striped paginated">
+            <thead>
+                <tr>
+                    <th>
+                        Name
+                    </th>
+                    <th class="hidden-sm hidden-xs">
+                        Last state
+                    </th>
+                    <th class="hidden-sm hidden-xs">
+                        Deploy
+                    </th>
+                    <th class="hidden-sm hidden-xs">
+                        Started
+                    </th>
+                    <th class="hidden-xs">
+                        Updated
+                    </th>
+                    <th class="hidden-xs">
+                        {{! Actions }}
+                    </th>
+                    <th class="hidden-xs">
+                        {{! Actions }}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each data}}
+                    <tr data-id="{{ taskId.id }}" data-collection="activeTasks">
+                        <td>
+                            <span title="{{ taskId.id }}">
+                                <a href="{{appRoot}}/task/{{ taskId.id }}">
+                                    {{ taskId.id }}
+                                </a>
+                            </span>
+                        </td>
+                        <td class="hidden-sm hidden-xs">
+                            <span class="label label-{{getLabelClass lastTaskState}}">
+                                {{humanizeText lastTaskState}}
+                            </span>
+                        </td>
+                        <td class="hidden-sm hidden-xs">
+                            {{ taskId.deployId }}
+                        </td>
+                        <td class="hidden-sm hidden-xs">
+                            {{timestampFromNow taskId.startedAt}}
+                        </td>
+                        <td class="hidden-xs">
+                            {{timestampFromNow updatedAt}}
+                        </td>
+                        {{log ../../config.finishedTaskLogPath}}
+                        <td class="hidden-xs actions-column">
+                            <a href="{{ appRoot }}/task/{{ taskId.id }}/tail/{{ substituteTaskId ../../config.finishedTaskLogPath taskId.id }}" title="Log">
+                                ...
+                            </a>
+                        </td>
+                        <td class="hidden-xs actions-column">
+                            <a data-action="viewJSON" title="JSON">
+                                { }
+                            </a>
+                        </td>
+                    </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+{{else}}
+    <div class="empty-table-message">
+        No tasks
+    </div>
+{{/if}}

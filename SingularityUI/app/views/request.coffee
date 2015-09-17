@@ -42,6 +42,8 @@ class RequestView extends View
         @$('#deploy-history').html      @subviews.deployHistory.$el
         @$('#request-history').html     @subviews.requestHistory.$el
 
+        super.afterRender()
+
     viewJson: (e) =>
         $target = $(e.currentTarget).parents 'tr'
         id = $target.data 'id'
@@ -59,7 +61,7 @@ class RequestView extends View
             app.router.navigate 'requests', trigger: true
 
     runRequest: (e) =>
-        @model.promptRun (data) =>   
+        @model.promptRun (data) =>
             # If user wants to redirect to a file after the task starts
             if data.autoTail is 'on'
                 autoTailer = new AutoTailer({
@@ -99,7 +101,7 @@ class RequestView extends View
 
         @model.promptRun =>
             @subviews.scheduledTasks.collection.remove id
-            @subviews.scheduledTasks.render()            
+            @subviews.scheduledTasks.render()
             setTimeout =>
                 @trigger 'refreshrequest'
             , 3000

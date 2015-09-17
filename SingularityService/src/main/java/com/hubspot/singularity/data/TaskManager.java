@@ -7,6 +7,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
 import org.apache.curator.utils.ZKPaths;
@@ -397,6 +399,25 @@ public class TaskManager extends CuratorAsyncManager {
     Iterables.removeAll(requestTaskIds, activeTaskIds);
 
     return requestTaskIds;
+  }
+
+  public List<SingularityTaskId> getTaskIdsForDeploy(String requestId, final String deployId, TaskFilter taskFilter) {
+    List<SingularityTaskId> requestTaskIds = getTaskIdsForRequest(requestId, taskFilter);
+    final Iterable<SingularityTaskId> deployTaskIds = Iterables.filter(requestTaskIds, new Predicate<SingularityTaskId>() {
+      @Override
+      public boolean apply(SingularityTaskId input) {
+        return input.getDeployId().equals(deployId);
+      }
+    });
+    return ImmutableList.copyOf(deployTaskIds);
+  }
+
+  public List<SingularityTaskId> getActiveTaskIdsForDeploy(String requestId, final String deployId) {
+    return getTaskIdsForDeploy(requestId, deployId, TaskFilter.ACTIVE);
+  }
+
+  public List<SingularityTaskId> getInactiveTaskIdsForDeploy(String requestId, final String deployId) {
+    return getTaskIdsForDeploy(requestId, deployId, TaskFilter.INACTIVE);
   }
 
   public Optional<SingularityTaskHistory> getTaskHistory(SingularityTaskId taskId) {

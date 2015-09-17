@@ -1,19 +1,19 @@
 {{#unless rowsOnly}}
     {{#if haveTasks}}
-        <table class="table table-striped">
+        <table class="table table-striped sortable-theme-bootstrap" data-sortable>
             <thead>
                 <tr>
-                    <th data-sort-attribute="id">
+                    <th >
                         Name
                     </th>
-                    <th data-sort-attribute="pendingTask.pendingTaskId.nextRunAt" class="hidden-xs">
+                    <th class="hidden-xs">
                         Next run
                     </th>
-                    <th data-sort-attribute="pendingTask.pendingTaskId.pendingType">
+                    <th>
                         Pending Type
                     </th>
-                    <th data-sort-attribute="pendingTask.pendingTaskId.deployId">
-                        Deploy ID 
+                    <th>
+                        Deploy ID
                     </th>
                     <th class="hidden-xs">
                         {{! Actions column }}

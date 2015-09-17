@@ -128,7 +128,7 @@ class RequestsView extends View
 
     render: =>
         @preventSearchOverwrite()
-        
+
         # Renders the base template
         # The table contents are rendered bit by bit as the user scrolls down.
         context =
@@ -140,7 +140,7 @@ class RequestsView extends View
             collectionSynced: @collection.synced
             haveRequests: @collection.length and @collection.synced
 
-        partials = 
+        partials =
             partials:
                 requestsBody: @bodyTemplate
 
@@ -148,7 +148,7 @@ class RequestsView extends View
             partials.partials.requestsFilter = @templateFilter
 
         @$el.html @templateBase context, partials
-          
+
         if @focusSearchAfterRender
             $searchBox = @$ 'input[type="search"]'
             $searchBox.focus()
@@ -171,6 +171,8 @@ class RequestsView extends View
                 @showPopover(e)
             hide: (e) ->
                 @hidePopover(e)
+
+        super.afterRender()
 
     # Prepares the staged rendering and triggers the first one
     renderTable: =>
@@ -273,7 +275,7 @@ class RequestsView extends View
 
         if @animationFrameRequest?
             window.cancelAnimationFrame @animationFrameRequest
-            
+
         @animationFrameRequest = window.requestAnimationFrame =>
             $table = @$ "tbody"
             tableBottom = $table.height() + $table.offset().top
@@ -318,7 +320,7 @@ class RequestsView extends View
 
         request = new Request id: id
 
-        request.promptRun (data) =>   
+        request.promptRun (data) =>
 
             # If user wants to redirect to a file after the task starts
             if data.autoTail is 'on'
