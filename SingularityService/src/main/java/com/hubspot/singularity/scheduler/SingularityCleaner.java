@@ -191,13 +191,14 @@ public class SingularityCleaner {
             if (isObsolete(start, requestCleanup.getTimestamp())) {
               killScheduledTasks = false;
               killActiveTasks = false;
-              if (requestWithState.isPresent() && requestWithState.get().getRequest().isLoadBalanced()) {
-                deleteFromLoadBalancer = true;
-              }
               LOG.info("Ignoring {}, because {} is {}", requestCleanup, requestCleanup.getRequestId(), requestWithState.get().getState());
             } else {
               LOG.debug("Waiting on {} (it will expire after {}), because {} is {}", requestCleanup, JavaUtils.durationFromMillis(getObsoleteExpirationTime()), requestCleanup.getRequestId(), requestWithState.get().getState());
               continue;
+            }
+          } else {
+            if (requestWithState.isPresent() && requestWithState.get().getRequest().isLoadBalanced()) {
+              deleteFromLoadBalancer = true;
             }
           }
           break;

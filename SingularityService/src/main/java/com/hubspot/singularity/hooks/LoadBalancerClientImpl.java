@@ -116,7 +116,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
   }
 
-  private SingularityLoadBalancerUpdate sendBaragonRequest(LoadBalancerRequestId loadBalancerRequestId, BaragonRequest loadBalancerRequest) {
+  private SingularityLoadBalancerUpdate sendBaragonRequest(LoadBalancerRequestId loadBalancerRequestId, BaragonRequest loadBalancerRequest, LoadBalancerMethod method) {
     try {
       LOG.trace("Preparing to send request {}", loadBalancerRequest);
 
@@ -128,9 +128,9 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
         addAllQueryParams(requestBuilder, loadBalancerQueryParams.get());
       }
 
-      return sendRequestWrapper(loadBalancerRequestId, LoadBalancerMethod.ENQUEUE, requestBuilder.build(), BaragonRequestState.FAILED);
+      return sendRequestWrapper(loadBalancerRequestId, method, requestBuilder.build(), BaragonRequestState.FAILED);
     } catch (IOException e) {
-      return new SingularityLoadBalancerUpdate(BaragonRequestState.UNKNOWN, loadBalancerRequestId, Optional.of(e.getMessage()), System.currentTimeMillis(), LoadBalancerMethod.ENQUEUE, Optional.of(loadBalancerUri));
+      return new SingularityLoadBalancerUpdate(BaragonRequestState.UNKNOWN, loadBalancerRequestId, Optional.of(e.getMessage()), System.currentTimeMillis(), method, Optional.of(loadBalancerUri));
     }
   }
 
@@ -174,7 +174,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
     final BaragonRequest loadBalancerRequest = new BaragonRequest(loadBalancerRequestId.toString(), lbService, addUpstreams, removeUpstreams);
 
-    return sendBaragonRequest(loadBalancerRequestId, loadBalancerRequest);
+    return sendBaragonRequest(loadBalancerRequestId, loadBalancerRequest, LoadBalancerMethod.ENQUEUE);
   }
 
   private List<UpstreamInfo> tasksToUpstreams(List<SingularityTask> tasks, String requestId) {
@@ -215,6 +215,6 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
     final BaragonRequest loadBalancerRequest = new BaragonRequest(loadBalancerRequestId.toString(), lbService, Collections.<UpstreamInfo>emptyList(), Collections.<UpstreamInfo>emptyList(), Collections.<UpstreamInfo>emptyList(), Optional.<String>absent(), Optional.of(RequestAction.DELETE));
 
-    return sendBaragonRequest(loadBalancerRequestId, loadBalancerRequest);
+    return sendBaragonRequest(loadBalancerRequestId, loadBalancerRequest, LoadBalancerMethod.DELETE);
   }
 }

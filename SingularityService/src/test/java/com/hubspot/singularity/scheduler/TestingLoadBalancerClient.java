@@ -43,4 +43,9 @@ public class TestingLoadBalancerClient implements LoadBalancerClient {
     return getReturnValue(loadBalancerRequestId, LoadBalancerMethod.CANCEL);
   }
 
+  @Override
+  public SingularityLoadBalancerUpdate delete(LoadBalancerRequestId loadBalancerRequestId, SingularityRequest request, SingularityDeploy deploy) {
+    return getReturnValue(loadBalancerRequestId, LoadBalancerMethod.DELETE);
+  }
+
 }
