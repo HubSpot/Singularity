@@ -33,7 +33,7 @@ public class SingularityExecutorThreadChecker {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityExecutorThreadChecker.class);
 
-  private static Pattern CGROUP_CONTAINER_REGEX = Pattern.compile("^\\d:cpu:/(.*)$");
+  private static Pattern CGROUP_CPU_REGEX = Pattern.compile("^\\d+:cpu:/(.*)$");
 
   private final SingularityExecutorConfiguration configuration;
   private final ScheduledExecutorService scheduledExecutorService;
@@ -122,14 +122,13 @@ public class SingularityExecutorThreadChecker {
     try {
       final Path procCgroupPath = Paths.get(String.format(configuration.getProcCgroupFormat(), dockerPid.or(taskProcess.getCurrentPid().get())));
       if (Files.exists(procCgroupPath)) {
-        final String cgroupsInfo = new String(Files.readAllBytes(procCgroupPath), Charsets.UTF_8);
-        final Matcher matcher = CGROUP_CONTAINER_REGEX.matcher(cgroupsInfo);
-
-        if (!matcher.matches()) {
-          throw new RuntimeException("Unable to parse cgroup container from " + procCgroupPath.toString());
+        for (String line : Files.readAllLines(procCgroupPath, Charsets.UTF_8)) {
+          final Matcher matcher = CGROUP_CPU_REGEX.matcher(line);
+          if (matcher.matches()) {
+            return Files.readAllLines(Paths.get(String.format(configuration.getCgroupsMesosCpuTasksFormat(), matcher.group(1))), Charsets.UTF_8).size();
+          }
         }
-
-        return Files.readAllLines(Paths.get(String.format(configuration.getCgroupsMesosCpuTasksFormat(), matcher.group(1))), Charsets.UTF_8).size();
+        throw new RuntimeException("Unable to parse cgroup container from " + procCgroupPath.toString());
       } else {
         throw new RuntimeException(procCgroupPath.toString() + " does not exist");
       }
