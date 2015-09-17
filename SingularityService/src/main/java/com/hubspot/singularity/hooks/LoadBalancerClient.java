@@ -2,6 +2,7 @@ package com.hubspot.singularity.hooks;
 
 import java.util.List;
 
+import com.google.common.base.Optional;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
@@ -16,4 +17,5 @@ public interface LoadBalancerClient {
 
   SingularityLoadBalancerUpdate cancel(LoadBalancerRequestId loadBalancerRequestId);
 
+  SingularityLoadBalancerUpdate delete(LoadBalancerRequestId loadBalancerRequestId, SingularityRequest request, SingularityDeploy deploy);
 }
