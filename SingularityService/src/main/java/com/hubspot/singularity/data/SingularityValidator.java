@@ -251,8 +251,8 @@ public class SingularityValidator {
     return CronExpression.isValidExpression(schedule);
   }
 
-  private final Pattern DAY_RANGE_REGEXP = Pattern.compile("[0-6]-[0-6]");
-  private final Pattern COMMA_DAYS_REGEXP = Pattern.compile("([0-6],)+([0-6])?");
+  private final Pattern DAY_RANGE_REGEXP = Pattern.compile("[0-7]-[0-7]");
+  private final Pattern COMMA_DAYS_REGEXP = Pattern.compile("([0-7],)+([0-7])?");
 
   /**
    *
@@ -303,9 +303,6 @@ public class SingularityValidator {
       dayOfMonth = "?";
     }
 
-    // standard cron is 0-6, quartz is 1-7
-    // therefore, we should add 1 to any values between 0-6. 7 in a standard cron is sunday,
-    // which is sat in quartz. so if we get a value of 7, we should change it to 1.
     if (isValidInteger(dayOfWeek)) {
       dayOfWeek = getNewDayOfWeekValue(schedule, Integer.parseInt(dayOfWeek));
     } else if (DAY_RANGE_REGEXP.matcher(dayOfWeek).matches() || COMMA_DAYS_REGEXP.matcher(dayOfWeek).matches()) {
@@ -332,10 +329,15 @@ public class SingularityValidator {
     return JOINER.join(newSchedule);
   }
 
+  /**
+   * Standard cron is 0-6, quartz is 1-7
+   * Therefore, we should add 1 to any values between 0-6.
+   * 7 in a standard cron is sunday, which is sat in quartz. so if we get a value of 7, we should change it to 1.
+   */
   private String getNewDayOfWeekValue(String schedule, int dayOfWeekValue) {
-    checkBadRequest(dayOfWeekValue >= 0 && dayOfWeekValue <= 6, "Schedule %s is invalid, day of week (%s) is not 0-6", schedule, dayOfWeekValue);
+    checkBadRequest(dayOfWeekValue >= 0 && dayOfWeekValue <= 7, "Schedule %s is invalid, day of week (%s) is not 0-7", schedule, dayOfWeekValue);
 
-    if (dayOfWeekValue == 6) {
+    if (dayOfWeekValue == 7) {
       dayOfWeekValue = 1;
     } else {
       dayOfWeekValue++;
