@@ -30,7 +30,7 @@ public class ScheduleMigration extends ZkDataMigration  {
 
   @Inject
   public ScheduleMigration(CuratorFramework curator, RequestManager requestManager, SingularityValidator validator, Transcoder<SingularityRequestWithState> requestTranscoder) {
-    super(7);
+    super(8);
 
     this.curator = curator;
     this.requestManager = requestManager;
