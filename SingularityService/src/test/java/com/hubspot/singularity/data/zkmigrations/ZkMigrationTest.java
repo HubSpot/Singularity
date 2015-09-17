@@ -49,7 +49,7 @@ public class ZkMigrationTest extends SingularityTestBaseNoDb {
       largestSeen = migration.getMigrationNumber();
     }
 
-    Assert.assertTrue(migrationRunner.checkMigrations() == largestSeen);
+    Assert.assertTrue(migrationRunner.checkMigrations() == migrations.size());
 
     Assert.assertTrue(metadataManager.getZkDataVersion().isPresent() && metadataManager.getZkDataVersion().get().equals(Integer.toString(largestSeen)));
 
