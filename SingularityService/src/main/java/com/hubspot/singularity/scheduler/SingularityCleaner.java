@@ -183,6 +183,7 @@ public class SingularityCleaner {
 
       boolean killActiveTasks = requestCleanup.getKillTasks().or(configuration.isDefaultValueForKillTasksOfPausedRequests());
       boolean killScheduledTasks = true;
+      boolean deleteFromLoadBalancer = false;
 
       switch (requestCleanup.getCleanupType()) {
         case PAUSING:
@@ -190,6 +191,9 @@ public class SingularityCleaner {
             if (isObsolete(start, requestCleanup.getTimestamp())) {
               killScheduledTasks = false;
               killActiveTasks = false;
+              if (requestWithState.isPresent() && requestWithState.get().getRequest().isLoadBalanced()) {
+                deleteFromLoadBalancer = true;
+              }
               LOG.info("Ignoring {}, because {} is {}", requestCleanup, requestCleanup.getRequestId(), requestWithState.get().getState());
             } else {
               LOG.debug("Waiting on {} (it will expire after {}), because {} is {}", requestCleanup, JavaUtils.durationFromMillis(getObsoleteExpirationTime()), requestCleanup.getRequestId(), requestWithState.get().getState());
@@ -204,6 +208,9 @@ public class SingularityCleaner {
             LOG.info("Ignoring {}, because {} still existed", requestCleanup, requestCleanup.getRequestId());
           } else {
             cleanupDeployState(requestCleanup);
+            if (requestWithState.isPresent() && requestWithState.get().getRequest().isLoadBalanced()) {
+              deleteFromLoadBalancer = true;
+            }
           }
           break;
         case BOUNCE:
@@ -449,7 +456,7 @@ public class SingularityCleaner {
         return CheckLBState.MISSING_TASK;
       }
 
-      lbRemoveUpdate = lbClient.enqueue(loadBalancerRequestId, task.get().getTaskRequest().getRequest(), task.get().getTaskRequest().getDeploy(), Collections.<SingularityTask> emptyList(), Collections.singletonList(task.get()));
+      lbRemoveUpdate = lbClient.enqueue(loadBalancerRequestId, task.get().getTaskRequest().getRequest(), task.get().getTaskRequest().getDeploy(), Collections.<SingularityTask>emptyList(), Collections.singletonList(task.get()));
 
       taskManager.saveLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE, lbRemoveUpdate);
     } else if (maybeLbRemoveUpdate.get().getLoadBalancerState() == BaragonRequestState.WAITING || maybeLbRemoveUpdate.get().getLoadBalancerState() == BaragonRequestState.CANCELING) {
