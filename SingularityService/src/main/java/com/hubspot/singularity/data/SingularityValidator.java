@@ -28,6 +28,7 @@ import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
 
@@ -237,8 +238,8 @@ public class SingularityValidator {
     return CronExpression.isValidExpression(schedule);
   }
 
-  private final Pattern DAY_RANGE_REGEXP = Pattern.compile("[0-6]-[0-6]");
-  private final Pattern COMMA_DAYS_REGEXP = Pattern.compile("([0-6],)+([0-6])?");
+  private final Pattern DAY_RANGE_REGEXP = Pattern.compile("[0-7]-[0-7]");
+  private final Pattern COMMA_DAYS_REGEXP = Pattern.compile("([0-7],)+([0-7])?");
 
   /**
    *
@@ -289,9 +290,6 @@ public class SingularityValidator {
       dayOfMonth = "?";
     }
 
-    // standard cron is 0-6, quartz is 1-7
-    // therefore, we should add 1 to any values between 0-6. 7 in a standard cron is sunday,
-    // which is sat in quartz. so if we get a value of 7, we should change it to 1.
     if (isValidInteger(dayOfWeek)) {
       dayOfWeek = getNewDayOfWeekValue(schedule, Integer.parseInt(dayOfWeek));
     } else if (DAY_RANGE_REGEXP.matcher(dayOfWeek).matches() || COMMA_DAYS_REGEXP.matcher(dayOfWeek).matches()) {
@@ -318,16 +316,44 @@ public class SingularityValidator {
     return JOINER.join(newSchedule);
   }
 
+  /**
+   * Standard cron: day of week (0 - 6) (0 to 6 are Sunday to Saturday, or use names; 7 is Sunday, the same as 0)
+   * Quartz: 1-7 or SUN-SAT
+   */
   private String getNewDayOfWeekValue(String schedule, int dayOfWeekValue) {
-    checkBadRequest(dayOfWeekValue >= 0 && dayOfWeekValue <= 6, "Schedule %s is invalid, day of week (%s) is not 0-6", schedule, dayOfWeekValue);
+    String newDayOfWeekValue = null;
 
-    if (dayOfWeekValue == 6) {
-      dayOfWeekValue = 1;
-    } else {
-      dayOfWeekValue++;
+    checkBadRequest(dayOfWeekValue >= 0 && dayOfWeekValue <= 7, "Schedule %s is invalid, day of week (%s) is not 0-7", schedule, dayOfWeekValue);
+
+    switch (dayOfWeekValue) {
+      case 7:
+      case 0:
+        newDayOfWeekValue = "SUN";
+        break;
+      case 1:
+        newDayOfWeekValue = "MON";
+        break;
+      case 2:
+        newDayOfWeekValue = "TUE";
+        break;
+      case 3:
+        newDayOfWeekValue = "WED";
+        break;
+      case 4:
+        newDayOfWeekValue = "THU";
+        break;
+      case 5:
+        newDayOfWeekValue = "FRI";
+        break;
+      case 6:
+        newDayOfWeekValue = "SAT";
+        break;
+      default:
+        WebExceptions.badRequest("Schedule %s is invalid, day of week (%s) is not 0-7", schedule, dayOfWeekValue);
+        break;
     }
 
-    return Integer.toString(dayOfWeekValue);
+    return newDayOfWeekValue;
   }
 
   private boolean isValidInteger(String strValue) {
