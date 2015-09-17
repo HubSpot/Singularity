@@ -18,11 +18,13 @@ import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityContainerType;
 import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityPortMappingType;
+import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
@@ -316,20 +318,40 @@ public class SingularityValidator {
   }
 
   /**
-   * Standard cron is 0-6, quartz is 1-7
-   * Therefore, we should add 1 to any values between 0-6.
-   * 7 in a standard cron is sunday, which is sat in quartz. so if we get a value of 7, we should change it to 1.
+   * Standard cron: day of week (0 - 6) (0 to 6 are Sunday to Saturday, or use names; 7 is Sunday, the same as 0)
+   * Quartz: 1-7 or SUN-SAT
    */
   private String getNewDayOfWeekValue(String schedule, int dayOfWeekValue) {
+    String newDayOfWeekValue = null;
+
     checkBadRequest(dayOfWeekValue >= 0 && dayOfWeekValue <= 7, "Schedule %s is invalid, day of week (%s) is not 0-7", schedule, dayOfWeekValue);
 
-    if (dayOfWeekValue == 7) {
-      dayOfWeekValue = 1;
-    } else {
-      dayOfWeekValue++;
+    switch (dayOfWeekValue) {
+      case 7:
+      case 0:
+        newDayOfWeekValue = "SUN";
+        break;
+      case 1:
+        newDayOfWeekValue = "MON";
+        break;
+      case 2:
+        newDayOfWeekValue = "TUE";
+        break;
+      case 3:
+        newDayOfWeekValue = "WED";
+        break;
+      case 4:
+        newDayOfWeekValue = "THU";
+        break;
+      case 5:
+        newDayOfWeekValue = "FRI";
+        break;
+      case 6:
+        newDayOfWeekValue = "SAT";
+        break;
     }
 
-    return Integer.toString(dayOfWeekValue);
+    return newDayOfWeekValue;
   }
 
   private boolean isValidInteger(String strValue) {
