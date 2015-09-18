@@ -308,6 +308,12 @@
     <dependency>
       <groupId>net.kencochrane.raven</groupId>
       <artifactId>raven</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.guava</groupId>
+          <artifactId>guava</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
