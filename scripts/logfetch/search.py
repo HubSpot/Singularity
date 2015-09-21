@@ -20,9 +20,9 @@ def find_cached_logs(args):
             
 
 def in_date_range(args, filename):
-    timestamps = re.findall(r"\d{13}", filename)
+    timestamps = re.findall(r"-\d{13}-", filename)
     if timestamps:
-        return logfetch_base.is_in_date_range(args, int(str(timestamps[-1])[0:-3]))
+        return logfetch_base.is_in_date_range(args, int(str(timestamps[-1]).replace("-", "")[0:-3]))
     else:
         return True
 
