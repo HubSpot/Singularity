@@ -42,6 +42,8 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   public static final String TASK_EXECUTOR_BASH_LOG_PATH = "executor.task.bash.log.path";
   public static final String TASK_SERVICE_LOG_PATH = "executor.task.service.log.path";
 
+  public static final String DEFAULT_USER = "executor.default.user";
+
   public static final String GLOBAL_TASK_DEFINITION_DIRECTORY = "executor.global.task.definition.directory";
   public static final String GLOBAL_TASK_DEFINITION_SUFFIX = "executor.global.task.definition.suffix";
 
@@ -83,6 +85,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @NotEmpty
   @JsonProperty
   private String serviceLog = "service.log";
+
+  @NotEmpty
+  @JsonProperty
+  private String defaultRunAsUser;
 
   @NotEmpty
   @JsonProperty
@@ -236,6 +242,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     return serviceLog;
   }
 
+  public String getDefaultRunAsUser() {
+    return defaultRunAsUser;
+  }
+
   public String getTaskAppDirectory() {
     return taskAppDirectory;
   }
@@ -355,6 +365,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public void setServiceLog(String serviceLog) {
     this.serviceLog = serviceLog;
+  }
+
+  public void setDefaultRunAsUser(String defaultRunAsUser) {
+    this.defaultRunAsUser = defaultRunAsUser;
   }
 
   public void setTaskAppDirectory(String taskAppDirectory) {
@@ -483,6 +497,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             "executorJavaLog='" + executorJavaLog + '\'' +
             ", executorBashLog='" + executorBashLog + '\'' +
             ", serviceLog='" + serviceLog + '\'' +
+            ", defaultRunAsUser='" + defaultRunAsUser + '\'' +
             ", taskAppDirectory='" + taskAppDirectory + '\'' +
             ", shutdownTimeoutWaitMillis=" + shutdownTimeoutWaitMillis +
             ", idleExecutorShutdownWaitMillis=" + idleExecutorShutdownWaitMillis +
@@ -566,6 +581,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
     if (properties.containsKey(TASK_SERVICE_LOG_PATH)) {
       setServiceLog(properties.getProperty(TASK_SERVICE_LOG_PATH));
+    }
+
+    if (properties.containsKey(DEFAULT_USER)) {
+      setDefaultRunAsUser(properties.getProperty(DEFAULT_USER));
     }
 
     if (properties.containsKey(GLOBAL_TASK_DEFINITION_DIRECTORY)) {

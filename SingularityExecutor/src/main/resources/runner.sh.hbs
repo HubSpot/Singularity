@@ -31,7 +31,9 @@ if [[ ! -d ./tmp ]]; then
   mkdir ./tmp
 fi
 
-chmod -R 0750 ./tmp
+echo "Ensuring ./tmp is owned by {{{ user }}} with 0750"
+sudo chown -R {{{ user }}} ./tmp
+sudo chmod -R 0750 ./tmp
 
 # Create log directory for logrotate runs
 if [[ ! -d {{{ logDir }}} ]]; then
@@ -39,7 +41,12 @@ if [[ ! -d {{{ logDir }}} ]]; then
     mkdir -p {{{ logDir }}}
 fi
 
-chmod -R 0750 {{{ logDir }}}
+echo "Ensuring {{{ logDir }}} is owned by {{{ user }}} with 0750"
+sudo chown -R {{{ user }}} {{{ logDir }}}
+sudo chmod -R 0750 {{{ logDir }}}
+
+echo "Ensuring {{{ taskAppDirectory }}} is owned by {{{ user }}}"
+sudo chown -R {{{ user }}} {{{ taskAppDirectory }}}
 
 cd {{{ taskAppDirectory }}}/
 
@@ -54,5 +61,10 @@ else
 fi
 
 # execute command
+{{#if shouldChangeUser}}
+echo "Executing: sudo -E -u {{{ user }}} {{{ cmd }}} >> ../{{{ logFile }}} 2>&1"
+exec sudo -E -u {{{ user }}} {{{ cmd }}} >> ../{{{ logFile }}} 2>&1
+{{else}}
 echo "Executing: {{{ cmd }}} >> ../{{{ logFile }}} 2>&1"
 exec {{{ cmd }}} >> ../{{{ logFile }}} 2>&1
+{{/if}}

@@ -26,7 +26,6 @@ public class SingularityDeployBuilder {
   private Optional<String> customExecutorSource;
   private Optional<Resources> customExecutorResources;
   private Optional<String> customExecutorUser;
-  private Optional<String> user;
 
   private Optional<Resources> resources;
 
@@ -66,7 +65,6 @@ public class SingularityDeployBuilder {
     this.customExecutorSource = Optional.absent();
     this.customExecutorResources = Optional.absent();
     this.customExecutorUser = Optional.absent();
-    this.user = Optional.absent();
     this.resources = Optional.absent();
     this.command = Optional.absent();
     this.arguments = Optional.absent();
@@ -89,7 +87,7 @@ public class SingularityDeployBuilder {
   }
 
   public SingularityDeploy build() {
-    return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, customExecutorUser, user, resources, env,
+    return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, customExecutorUser, resources, env,
         uris, metadata, executorData, version, timestamp, labels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckMaxRetries,
         healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy, healthcheckProtocol);
   }
@@ -194,15 +192,6 @@ public class SingularityDeployBuilder {
 
   public SingularityDeployBuilder setCustomExecutorUser(Optional<String> customExecutorUser) {
     this.customExecutorUser = customExecutorUser;
-    return this;
-  }
-
-  public Optional<String> getUser() {
-    return user;
-  }
-
-  public SingularityDeployBuilder setUser(Optional<String> user) {
-    this.user = user;
     return this;
   }
 
@@ -382,7 +371,6 @@ public class SingularityDeployBuilder {
       ", customExecutorSource=" + customExecutorSource +
       ", customExecutorResources=" + customExecutorResources +
       ", customExecutorUser=" + customExecutorUser +
-      ", user=" + user +
       ", resources=" + resources +
       ", command=" + command +
       ", arguments=" + arguments +

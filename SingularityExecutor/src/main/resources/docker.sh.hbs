@@ -15,7 +15,7 @@ CGROUPS_GUID=${CURRENT_DIR##*runs/}
 CGROUPS_GUID=${CGROUPS_GUID%/*}
 
 function check_contianer_running {
-  status=`docker inspect -f \{{.State.Running}} $1`
+  status=`sudo -E -u {{{ runContext.user }}} docker inspect -f \{{.State.Running}} $1`
   if [ "$status" = "false" ] ; then
     echo "container is no longer running..."
     running=0
@@ -34,11 +34,11 @@ function setup_signals {
 
 function handle_signal {
   echo "Received $2"
-  echo "Stopping via docker stop -t $STOP_TIME $1"
-  docker stop -t $STOP_TIME "$1"
-  exit_code=`docker wait "$cid"`
+  echo "Stopping via sudo -E -u {{{ runContext.user }}} docker stop -t $STOP_TIME $1"
+  sudo -E -u {{{ runContext.user }}} docker stop -t $STOP_TIME "$1"
+  exit_code=`sudo -E -u {{{ runContext.user }}} docker wait "$cid"`
   echo "Attempting to remove container"
-  docker rm $1
+  sudo -E -u {{{ runContext.user }}} docker rm $1
   exit "$exit_code"
 }
 
@@ -69,6 +69,7 @@ echo "{{{name}}}={{{value}}}" >> docker.env
 if [[ ! -d {{{ runContext.logDir }}} ]]; then
   echo "Creating log directory ({{{ runContext.logDir }}})..."
   mkdir -p {{{ runContext.logDir }}}
+  sudo chown -R {{{ runContext.user }}} {{{ runContext.logDir }}}
 fi
 
 # load artifact's profile.d
@@ -104,20 +105,20 @@ DOCKER_NETWORK="--net=${raw_network,,}"
 DOCKER_NETWORK="--net=host"
 {{/if}}
 
-EXTRA_DOCKER_PARAMS=()
-{{#each envContent.dockerParameters}}EXTRA_DOCKER_PARAMS+=( --{{{ key }}}={{{ value }}} )
-{{/each}}
+DOCKER_WORKDIR="/mnt/mesos/sandbox/{{{ runContext.taskAppDirectory }}}"
 
-DOCKER_OPTIONS="--name=$CONTAINER_NAME --cgroup-parent=mesos/$CGROUPS_GUID $DOCKER_NETWORK --env-file=docker.env ${DOCKER_VOLUMES[@]} ${DOCKER_PORTS[@]} ${EXTRA_DOCKER_PARAMS[@]}"
+DOCKER_OPTIONS="--name=$CONTAINER_NAME --cgroup-parent=mesos/$CGROUPS_GUID -w $DOCKER_WORKDIR $DOCKER_NETWORK --env-file=docker.env ${DOCKER_VOLUMES[@]} ${DOCKER_PORTS[@]}"
 
+echo "Ensuring {{{ runContext.taskAppDirectory }}} is owned by {{{ runContext.user }}}"
 mkdir -p {{{ runContext.taskAppDirectory }}}
+sudo chown -R {{{ runContext.user }}} {{{ runContext.taskAppDirectory }}}
 
 enable_cgroup_hierarchy || true
 
 # Start up the container
-echo "Creating continer with: docker create $DOCKER_OPTIONS $DOCKER_IMAGE {{{ runContext.cmd }}}"
-cid=`docker create $DOCKER_OPTIONS $DOCKER_IMAGE {{{runContext.cmd }}}`
-docker start -a $cid >> {{{ runContext.logFile }}} 2>&1 &
+echo "Creating continer with: sudo -E -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS $DOCKER_IMAGE {{{ runContext.cmd }}}"
+cid=`sudo -E -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS $DOCKER_IMAGE {{{runContext.cmd }}}`
+sudo -E -u {{{ runContext.user }}} docker start -a $cid >> {{{ runContext.logFile }}} 2>&1 &
 running=1
 
 setup_signals "$cid" "handle_signal" SIGINT SIGTERM
@@ -131,5 +132,5 @@ while true; do
   fi
 done
 
-exit_code=`docker wait "$cid"`
+exit_code=`sudo -E -u {{{ runContext.user }}} docker wait "$cid"`
 exit "$exit_code"
