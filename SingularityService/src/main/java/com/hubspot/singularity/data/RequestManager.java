@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.List;
 
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
-import com.hubspot.singularity.SingularityTaskId;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 import org.slf4j.Logger;
