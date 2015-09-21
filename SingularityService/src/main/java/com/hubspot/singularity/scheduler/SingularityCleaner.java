@@ -416,12 +416,12 @@ public class SingularityCleaner {
     }
   }
 
-  private boolean shouldEnqueueLbRequest(Optional<SingularityLoadBalancerUpdate> maybeLbRemoveUpdate) {
-    if (!maybeLbRemoveUpdate.isPresent()) {
+  private boolean shouldEnqueueLbRequest(Optional<SingularityLoadBalancerUpdate> maybeLbUpdate) {
+    if (!maybeLbUpdate.isPresent()) {
       return true;
     }
 
-    switch (maybeLbRemoveUpdate.get().getLoadBalancerState()) {
+    switch (maybeLbUpdate.get().getLoadBalancerState()) {
       case UNKNOWN:
       case FAILED:
       case CANCELED:
@@ -588,7 +588,7 @@ public class SingularityCleaner {
     final LoadBalancerRequestId loadBalancerRequestId = getLoadBalancerRequestId(requestId, maybeDeleteUpdate);
     SingularityLoadBalancerUpdate lbDeleteUpdate;
 
-    if (!maybeDeleteUpdate.isPresent()) {
+    if (shouldEnqueueLbRequest(maybeDeleteUpdate)) {
       Optional<String> maybeCurrentDeployId = deployManager.getInUseDeployId(requestId);
       Optional<SingularityDeploy> maybeDeploy = Optional.absent();
       if (maybeCurrentDeployId.isPresent()) {
