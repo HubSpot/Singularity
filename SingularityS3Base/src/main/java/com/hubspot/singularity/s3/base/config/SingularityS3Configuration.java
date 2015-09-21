@@ -15,7 +15,7 @@ import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
 import com.hubspot.singularity.runner.base.jackson.Obfuscate;
 
-@Configuration("/etc/singularity.s3base.yaml")
+@Configuration(filename = "/etc/singularity.s3base.yaml", consolidatedField = "s3")
 public class SingularityS3Configuration extends BaseRunnerConfiguration {
   public static final String ARTIFACT_CACHE_DIRECTORY = "artifact.cache.directory";
 
