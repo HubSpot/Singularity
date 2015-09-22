@@ -21,13 +21,13 @@ public class SingularityDockerInfo {
                                @JsonProperty("privileged") boolean privileged,
                                @JsonProperty("network") SingularityDockerNetworkType network,
                                @JsonProperty("portMappings") Optional<List<SingularityDockerPortMapping>> portMappings,
-                               @JsonProperty("forcePullImage") boolean forcePullImage,
+                               @JsonProperty("forcePullImage") Optional<Boolean> forcePullImage,
                                @JsonProperty("parameters") Optional<Map<String, String>> parameters) {
     this.image = image;
     this.privileged = privileged;
     this.network = Optional.fromNullable(network);
     this.portMappings = portMappings.or(Collections.<SingularityDockerPortMapping>emptyList());
-    this.forcePullImage = forcePullImage;
+    this.forcePullImage = forcePullImage.or(false);
     this.parameters = parameters.or(Collections.<String, String>emptyMap());
   }
 

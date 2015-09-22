@@ -221,6 +221,8 @@ class SingularityMesosTaskBuilder {
 
       dockerInfoBuilder.setPrivileged(dockerInfo.get().isPrivileged());
 
+      dockerInfoBuilder.setForcePullImage(dockerInfo.get().isForcePullImage());
+
       containerBuilder.setDocker(dockerInfoBuilder);
     }
 
