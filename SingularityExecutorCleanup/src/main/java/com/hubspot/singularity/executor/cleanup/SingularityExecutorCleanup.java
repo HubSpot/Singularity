@@ -211,7 +211,7 @@ public class SingularityExecutorCleanup {
       checkForUncompressedLogrotatedFile(taskDefinition);
     }
 
-    boolean isDocker = (taskHistory.get().getTask().getMesosTask().hasContainer() && taskHistory.get().getTask().getMesosTask().getContainer().hasDocker());
+    boolean isDocker = (taskHistory.isPresent() && taskHistory.get().getTask().getMesosTask().hasContainer() && taskHistory.get().getTask().getMesosTask().getContainer().hasDocker());
 
     return taskCleanup.cleanup(cleanupTaskAppDirectory, isDocker);
   }
