@@ -11,7 +11,7 @@ import com.google.common.base.Optional;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 
-@Configuration("/etc/singularity.oomkiller.yaml")
+@Configuration(filename = "/etc/singularity.oomkiller.yaml", consolidatedField = "oomkiller")
 public class SingularityOOMKillerConfiguration extends BaseRunnerConfiguration {
   public static final String REQUEST_KILL_THRESHOLD_RATIO = "oomkiller.request.kill.threshold.ratio";
   public static final String KILL_PROCESS_DIRECTLY_THRESHOLD_RATIO = "oomkiller.kill.process.directly.threshold.ratio";
