@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.SingularityTaskId;
@@ -25,6 +24,8 @@ import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.runner.base.shared.TailMetadata;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class SingularityExecutorTaskLogManager {
 
@@ -51,13 +52,11 @@ public class SingularityExecutorTaskLogManager {
     writeS3MetadataFileForRotatedFiles(false);
   }
 
+  @SuppressFBWarnings
   private boolean writeS3MetadataFileForRotatedFiles(boolean finished) {
     final Path serviceLogOutPath = taskDefinition.getServiceLogOutPath();
-    final Path parent = serviceLogOutPath.getParent();
-
-    Preconditions.checkState(parent != null, "S3 metadata file %s has no parent", serviceLogOutPath.toString());
-
-    final Path logrotateDirectory = parent.resolve(configuration.getLogrotateToDirectory());
+    final Path serviceLogParent = serviceLogOutPath.getParent();
+    final Path logrotateDirectory = serviceLogParent.resolve(configuration.getLogrotateToDirectory());
 
     return writeS3MetadataFile(logrotateDirectory, getS3GlobForLogRotatedFiles(), finished);
   }
@@ -67,6 +66,7 @@ public class SingularityExecutorTaskLogManager {
     templateManager.writeLogrotateFile(getLogrotateConfPath(), new LogrotateTemplateContext(configuration, taskDefinition));
   }
 
+  @SuppressFBWarnings
   public boolean teardown() {
     boolean writeTailMetadataSuccess = writeTailMetadata(true);
 
@@ -204,8 +204,7 @@ public class SingularityExecutorTaskLogManager {
     final String s3UploaderBucket = taskDefinition.getExecutorData().getLoggingS3Bucket().or(configuration.getS3UploaderBucket());
 
     S3UploadMetadata s3UploadMetadata = new S3UploadMetadata(pathToS3Directory.toString(), globForS3Files, s3UploaderBucket, getS3KeyPattern(), finished, Optional.<String> absent(),
-        Optional.<Integer> absent(), Optional.<String> absent(),
-        Optional.<String> absent(), Optional.<Long> absent());
+        Optional.<Integer> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Long> absent());
 
     String s3UploadMetadataFileName = String.format("%s%s", taskDefinition.getTaskId(), baseConfiguration.getS3UploaderMetadataSuffix());
 
