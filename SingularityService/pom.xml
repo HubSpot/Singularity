@@ -118,11 +118,6 @@
     </dependency>
 
     <dependency>
-      <groupId>com.groupon.mesos</groupId>
-      <artifactId>jesos</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
     </dependency>
@@ -569,7 +564,7 @@
                 <image>
                   <name>hubspot/singularityservice:${project.version}</name>
                   <build>
-                    <from>java:8u45-jre</from>
+                    <from>hubspot/singularitybase:${mesos.docker.tag}-${singularitybase.image.revision}</from>
                     <maintainer>platform-infrastructure-groups@hubspot.com</maintainer>
                     <ports>
                       <port>7099</port>
