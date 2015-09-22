@@ -280,30 +280,31 @@ public class SingularityExecutorCleanup {
   private void cleanDocker(Set<String> runningTaskIds) {
     try {
       for (Container container : dockerClient.listContainers()) {
-        boolean isStoppedTaskContainer = false;
         for (String name : container.names()) {
           if (name.startsWith(executorConfiguration.getDockerPrefix())) {
             if (!runningTaskIds.contains(name.substring(executorConfiguration.getDockerPrefix().length()))) {
-              isStoppedTaskContainer = true;
+              stopContainer(container);
             }
-          }
-        }
-        if (isStoppedTaskContainer) {
-          try {
-            ContainerInfo containerInfo = dockerClient.inspectContainer(container.id());
-            if (containerInfo.state().running()) {
-              dockerClient.stopContainer(container.id(), executorConfiguration.getDockerStopTimeout());
-              LOG.debug(String.format("Forcefully stopped container %s", container.names()));
-            }
-            dockerClient.removeContainer(container.id(), true);
-            LOG.debug(String.format("Removed container %s", container.names()));
-          } catch (Exception e) {
-            LOG.error("Failed to remove contianer {}", container.names(), e);
           }
         }
       }
     } catch (Exception e) {
-      LOG.error("Could not get list of containers", e);
+      LOG.error("Could not get list of Docker containers", e);
     }
   }
+
+  private void stopContainer(Container container) {
+    try {
+      ContainerInfo containerInfo = dockerClient.inspectContainer(container.id());
+      if (containerInfo.state().running()) {
+        dockerClient.stopContainer(container.id(), executorConfiguration.getDockerStopTimeout());
+        LOG.debug("Forcefully stopped container {}", container.names());
+      }
+      dockerClient.removeContainer(container.id(), true);
+      LOG.debug("Removed container {}", container.names());
+    } catch (Exception e) {
+      LOG.error("Failed to stop or remove container {}", container.names(), e);
+    }
+  }
+
 }
