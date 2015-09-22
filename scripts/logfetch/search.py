@@ -11,7 +11,7 @@ def find_cached_logs(args):
     for filename in os.listdir(args.dest):
         if fnmatch.fnmatch(filename, log_fn_match) and in_date_range(args, filename):
             if args.verbose:
-                sys.stderr.write(colored('Including log {0}\n'.format(filename), 'magenta'))
+                sys.stderr.write(colored('Including log {0}\n'.format(filename), 'blue'))
             matching_logs.append('{0}/{1}'.format(args.dest, filename))
         else:
             if args.verbose:
@@ -20,9 +20,9 @@ def find_cached_logs(args):
             
 
 def in_date_range(args, filename):
-    timestamps = re.findall(r"\d{13}", filename)
+    timestamps = re.findall(r"-\d{13}-", filename)
     if timestamps:
-        return logfetch_base.is_in_date_range(args, int(str(timestamps[-1])[0:-3]))
+        return logfetch_base.is_in_date_range(args, int(str(timestamps[-1]).replace("-", "")[0:-3]))
     else:
         return True
 
