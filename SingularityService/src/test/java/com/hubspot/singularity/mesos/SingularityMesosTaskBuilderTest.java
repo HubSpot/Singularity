@@ -180,7 +180,7 @@ public class SingularityMesosTaskBuilderTest {
       SingularityContainerType.DOCKER,
         Optional.<List<SingularityVolume>>absent(),
         Optional.of(new SingularityDockerInfo("docker-image", true, SingularityDockerNetworkType.NONE,
-            Optional.<List<SingularityDockerPortMapping>>absent(), false, Optional.<Map<String,String>>absent())));
+            Optional.<List<SingularityDockerPortMapping>>absent(), Optional.of(false), Optional.<Map<String,String>>absent())));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
       .setContainerInfo(Optional.of(containerInfo))
       .build();
