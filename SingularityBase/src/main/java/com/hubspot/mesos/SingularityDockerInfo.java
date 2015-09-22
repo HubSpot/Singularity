@@ -31,6 +31,11 @@ public class SingularityDockerInfo {
     this.parameters = parameters.or(Collections.<String, String>emptyMap());
   }
 
+  @Deprecated
+  public SingularityDockerInfo(String image, boolean privileged, SingularityDockerNetworkType network, Optional<List<SingularityDockerPortMapping>> portMappings) {
+    this(image, privileged, network, portMappings, Optional.<Boolean>absent(), Optional.<Map<String, String>>absent());
+  }
+
   public String getImage() {
     return image;
   }
