@@ -3,7 +3,8 @@ package com.hubspot.singularity;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.inject.name.Names.named;
 import java.io.IOException;
-import java.net.SocketException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
@@ -23,7 +24,6 @@ import org.jets3t.service.security.AWSCredentials;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Binder;
@@ -34,7 +34,6 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
@@ -79,7 +78,7 @@ public class SingularityMainModule implements Module {
   public static final String RATE_LIMITED_TEMPLATE = "rate.limited.template";
 
   public static final String SERVER_ID_PROPERTY = "singularity.server.id";
-  public static final String HOST_ADDRESS_PROPERTY = "singularity.host.address";
+  public static final String HOST_NAME_PROPERTY = "singularity.host.name";
 
   public static final String HTTP_HOST_AND_PORT = "http.host.and.port";
 
@@ -146,11 +145,22 @@ public class SingularityMainModule implements Module {
     binder.bind(ScheduledExecutorService.class).annotatedWith(NEW_TASK_THREADPOOL_NAMED).toProvider(new SingularityManagedScheduledExecutorServiceProvider(configuration.getCheckNewTasksScheduledThreads(),
         configuration.getThreadpoolShutdownDelayInSeconds(),
         "check-new-task")).in(Scopes.SINGLETON);
+  }
+
+  @Provides
+  @Named(HOST_NAME_PROPERTY)
+  @Singleton
+  public String getHostname(final SingularityConfiguration configuration) {
+    if (configuration.getHostname().isPresent()) {
+      return configuration.getHostname().get();
+    }
 
     try {
-      binder.bindConstant().annotatedWith(Names.named(HOST_ADDRESS_PROPERTY)).to(JavaUtils.getHostAddress());
-    } catch (SocketException e) {
-      throw Throwables.propagate(e);
+      InetAddress addr = InetAddress.getLocalHost();
+
+      return addr.getHostName();
+    } catch (UnknownHostException e) {
+      throw new RuntimeException("No local hostname found, unable to start without functioning local networking (or configured hostname)", e);
     }
   }
 
@@ -160,9 +170,9 @@ public class SingularityMainModule implements Module {
     private final int httpPort;
 
     @Inject
-    SingularityHostAndPortProvider(final SingularityConfiguration configuration, @Named(HOST_ADDRESS_PROPERTY) String hostAddress) {
+    SingularityHostAndPortProvider(final SingularityConfiguration configuration, @Named(HOST_NAME_PROPERTY) String hostname) {
       checkNotNull(configuration, "configuration is null");
-      this.hostname = configuration.getHostname().or(JavaUtils.getHostName().or(hostAddress));
+      this.hostname = configuration.getHostname().or(hostname);
 
       SimpleServerFactory simpleServerFactory = (SimpleServerFactory) configuration.getServerFactory();
       HttpConnectorFactory httpFactory = (HttpConnectorFactory) simpleServerFactory.getConnector();

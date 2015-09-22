@@ -4,10 +4,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.file.DirectoryStream;
@@ -15,7 +11,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -109,39 +104,6 @@ public final class JavaUtils {
 
   public static boolean isHttpSuccess(int statusCode) {
     return statusCode >= 200 && statusCode < 300;
-  }
-
-  public static String getHostAddress() throws SocketException {
-    Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
-    while (interfaces.hasMoreElements()) {
-      NetworkInterface current = interfaces.nextElement();
-      if (!current.isUp() || current.isLoopback() || current.isVirtual()) {
-        continue;
-      }
-      Enumeration<InetAddress> addresses = current.getInetAddresses();
-      while (addresses.hasMoreElements()) {
-        InetAddress currentAddr = addresses.nextElement();
-        if (currentAddr.isLoopbackAddress()) {
-          continue;
-        }
-        if (currentAddr instanceof Inet4Address) {
-          return currentAddr.getHostAddress();
-        }
-      }
-    }
-    throw new RuntimeException("Couldn't deduce host address");
-  }
-
-  public static Optional<String> getHostName() {
-    try {
-      InetAddress addr = InetAddress.getLocalHost();
-
-      String hostname = addr.getHostName();
-
-      return Optional.fromNullable(hostname);
-    } catch (Throwable t) {
-      return Optional.absent();
-    }
   }
 
   private static final String DURATION_FORMAT = "mm:ss.S";

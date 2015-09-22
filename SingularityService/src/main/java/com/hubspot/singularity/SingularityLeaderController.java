@@ -38,7 +38,6 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
   private final SingularityAbort abort;
   private final SingularityExceptionNotifier exceptionNotifier;
   private final HostAndPort hostAndPort;
-  private final String hostAddress;
 
   private final long saveStateEveryMs;
 
@@ -48,13 +47,12 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
 
   @Inject
   public SingularityLeaderController(StateManager stateManager, SingularityConfiguration configuration, SingularityDriverManager driverManager, SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier,
-      @Named(SingularityMainModule.HOST_ADDRESS_PROPERTY) String hostAddress, @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort) {
+      @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort) {
     this.driverManager = driverManager;
     this.stateManager = stateManager;
     this.abort = abort;
     this.exceptionNotifier = exceptionNotifier;
 
-    this.hostAddress = hostAddress;
     this.hostAndPort = hostAndPort;
     this.saveStateEveryMs = TimeUnit.SECONDS.toMillis(configuration.getSaveStateEverySeconds());
     this.statePoller = new StatePoller();
@@ -148,7 +146,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
       mesosMaster = MesosUtils.getMasterHostAndPort(mesosMasterInfo.get());
     }
 
-    return new SingularityHostState(master, uptime, driverStatus.name(), millisSinceLastOfferTimestamp, hostAddress, hostAndPort.getHostText(), mesosMaster);
+    return new SingularityHostState(master, uptime, driverStatus.name(), millisSinceLastOfferTimestamp, hostAndPort.getHostText(), hostAndPort.getHostText(), mesosMaster);
   }
 
   // This thread lives inside of this class solely so that we can instantly update the state when the leader latch changes.

@@ -1,6 +1,8 @@
 package com.hubspot.singularity.runner.base.config;
 
 import java.lang.management.ManagementFactory;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.Set;
 
@@ -32,6 +34,7 @@ public class SingularityRunnerBaseModule extends AbstractModule {
   public static final String PROCESS_NAME = "process.name";
   public static final String YAML = "yaml";
   public static final String OBFUSCATED_YAML = "obfuscated.yaml";
+  public static final String HOST_NAME_PROPERTY = "singularity.host.name";
   public static final String CONSOLIDATED_CONFIG_FILENAME = "consolidated.config.filename";
 
   public static final String CONFIG_PROPERTY = "singularityConfigFilename";
@@ -82,6 +85,23 @@ public class SingularityRunnerBaseModule extends AbstractModule {
       return name.substring(0, name.indexOf("@"));
     }
     return name;
+  }
+
+  @Provides
+  @Singleton
+  @Named(HOST_NAME_PROPERTY)
+  public String getHostname(SingularityRunnerBaseConfiguration baseConfiguration) {
+    if (baseConfiguration.getHostname().isPresent()) {
+      return baseConfiguration.getHostname().get();
+    }
+
+    try {
+      InetAddress addr = InetAddress.getLocalHost();
+
+      return addr.getHostName();
+    } catch (UnknownHostException e) {
+      throw new RuntimeException("No local hostname/address found, unable to start without functioning local networking - alternatively, hostname can be configured", e);
+    }
   }
 
   @Provides
