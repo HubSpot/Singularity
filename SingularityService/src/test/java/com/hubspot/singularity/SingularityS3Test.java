@@ -38,17 +38,17 @@ public class SingularityS3Test {
 
     final long NOV2014TUES11 = 1415724215000l;
 
-    Assert.assertEquals("wat-hostname", SingularityS3FormatHelper.getKey("wat-%host", 0, System.currentTimeMillis(), "filename", Optional.of("hostname")));
-    Assert.assertEquals("file1.txt-2", SingularityS3FormatHelper.getKey("%filename-%index", 2, System.currentTimeMillis(), "file1.txt", Optional.<String>absent()));
-    Assert.assertEquals("yo-2014-11-" + NOV2014TUES11 + "-.txt", SingularityS3FormatHelper.getKey("yo-%Y-%m-%s-%fileext", 2, NOV2014TUES11, "file1.txt", Optional.of("hostname")));
+    Assert.assertEquals("wat-hostname", SingularityS3FormatHelper.getKey("wat-%host", 0, System.currentTimeMillis(), "filename", "hostname"));
+    Assert.assertEquals("file1.txt-2", SingularityS3FormatHelper.getKey("%filename-%index", 2, System.currentTimeMillis(), "file1.txt", "hostname"));
+    Assert.assertEquals("yo-2014-11-" + NOV2014TUES11 + "-.txt", SingularityS3FormatHelper.getKey("yo-%Y-%m-%s-%fileext", 2, NOV2014TUES11, "file1.txt", "hostname"));
 
-    String guid = SingularityS3FormatHelper.getKey("yo-%guid", 2, NOV2014TUES11, "file1.txt", Optional.of("hostname"));
+    String guid = SingularityS3FormatHelper.getKey("yo-%guid", 2, NOV2014TUES11, "file1.txt", "hostname");
 
     Assert.assertTrue(guid.startsWith("yo-"));
 
     Assert.assertTrue(guid.length() > 10);
 
-    String guid2 = SingularityS3FormatHelper.getKey("yo-%guid", 2, NOV2014TUES11, "file1.txt", Optional.of("hostname"));
+    String guid2 = SingularityS3FormatHelper.getKey("yo-%guid", 2, NOV2014TUES11, "file1.txt", "hostname");
 
     Assert.assertTrue(!guid.equals(guid2));
 

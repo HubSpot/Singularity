@@ -1,7 +1,6 @@
 package com.hubspot.singularity.executor.cleanup;
 
 import java.io.IOException;
-import java.net.SocketException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,6 +22,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.SingularityTask;
@@ -39,6 +39,7 @@ import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskCleanup;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskLogManager;
+import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
@@ -61,9 +62,12 @@ public class SingularityExecutorCleanup {
   private final MesosClient mesosClient;
   private final ProcessUtils processUtils;
   private final DockerClient dockerClient;
+  private final String hostname;
 
   @Inject
-  public SingularityExecutorCleanup(SingularityClientProvider singularityClientProvider, JsonObjectFileHelper jsonObjectFileHelper, SingularityRunnerBaseConfiguration baseConfiguration, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager, MesosClient mesosClient, DockerClient dockerClient) {
+  public SingularityExecutorCleanup(SingularityClientProvider singularityClientProvider, JsonObjectFileHelper jsonObjectFileHelper, SingularityRunnerBaseConfiguration baseConfiguration,
+      SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager, MesosClient mesosClient,
+      DockerClient dockerClient, @Named(SingularityRunnerBaseModule.HOST_NAME_PROPERTY) String hostname) {
     this.jsonObjectFileHelper = jsonObjectFileHelper;
     this.baseConfiguration = baseConfiguration;
     this.executorConfiguration = executorConfiguration;
@@ -73,6 +77,7 @@ public class SingularityExecutorCleanup {
     this.mesosClient = mesosClient;
     this.processUtils = new ProcessUtils(LOG);
     this.dockerClient = dockerClient;
+    this.hostname = hostname;
   }
 
   public SingularityExecutorCleanupStatistics clean() {
@@ -159,21 +164,17 @@ public class SingularityExecutorCleanup {
   }
 
   private Set<String> getRunningTaskIds() {
-    try {
-      final String slaveId = mesosClient.getSlaveState(mesosClient.getSlaveUri(JavaUtils.getHostAddress())).getId();
+    final String slaveId = mesosClient.getSlaveState(mesosClient.getSlaveUri(hostname)).getId();
 
-      final Collection<SingularityTask> activeTasks = singularityClient.getActiveTasksOnSlave(slaveId);
+    final Collection<SingularityTask> activeTasks = singularityClient.getActiveTasksOnSlave(slaveId);
 
-      final Set<String> runningTaskIds = Sets.newHashSet();
+    final Set<String> runningTaskIds = Sets.newHashSet();
 
-      for (SingularityTask task : activeTasks) {
-        runningTaskIds.add(task.getTaskId().getId());
-      }
-
-      return runningTaskIds;
-    } catch (SocketException se) {
-      throw Throwables.propagate(se);
+    for (SingularityTask task : activeTasks) {
+      runningTaskIds.add(task.getTaskId().getId());
     }
+
+    return runningTaskIds;
   }
 
   private boolean executorStillRunning(SingularityExecutorTaskDefinition taskDefinition) {
