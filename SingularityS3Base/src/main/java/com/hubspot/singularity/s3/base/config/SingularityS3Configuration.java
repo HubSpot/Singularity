@@ -67,6 +67,23 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
   @JsonProperty
   private String localDownloadPath = "/download";
 
+  @NotEmpty
+  @JsonProperty
+  private String gpgBinaryPath = "/usr/bin/gpg";
+
+  @NotEmpty
+  @Obfuscate
+  @JsonProperty
+  private String gpgKeyPassword;
+
+  @NotEmpty
+  @JsonProperty
+  private String gpgHome;
+
+  @NotEmpty
+  @JsonProperty
+  private String gpgKeyUsername;
+
   public SingularityS3Configuration() {
     super(Optional.<String>absent());
   }
@@ -143,11 +160,41 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
     this.s3ChunkDownloadTimeoutMillis = s3ChunkDownloadTimeoutMillis;
   }
 
+  public String getGpgBinaryPath() {
+    return gpgBinaryPath;
+  }
+
+  public void setGpgBinaryPath(String gpgBinaryPath) {
+    this.gpgBinaryPath = gpgBinaryPath;
+  }
+
+  public String getGpgHome() {
+    return gpgHome;
+  }
+
+  public void setGpgHome(String gpgHome) {
+    this.gpgHome = gpgHome;
+  }
+
+  public String getGpgKeyPassword() {
+    return gpgKeyPassword;
+  }
+
+  public void setGpgKeyPassword(String gpgKeyPassword) {
+    this.gpgKeyPassword = gpgKeyPassword;
+  }
+
+  public String getGpgKeyUsername() {
+    return gpgKeyUsername;
+  }
+
+
   @Override
   public String toString() {
     return "SingularityS3Configuration [artifactCacheDirectory=" + artifactCacheDirectory + ", s3AccessKey=" + s3AccessKey + ", s3SecretKey=" + s3SecretKey + ", s3ChunkSize=" + s3ChunkSize
         + ", s3DownloadTimeoutMillis=" + s3DownloadTimeoutMillis + ", s3ChunkDownloadTimeoutMillis=" + s3ChunkDownloadTimeoutMillis + ", s3ChunkRetries=" + s3ChunkRetries + ", localDownloadHttpPort="
-        + localDownloadHttpPort + ", localDownloadPath=" + localDownloadPath + "]";
+        + localDownloadHttpPort + ", localDownloadPath=" + localDownloadPath + ", gpgBinaryPath=" + gpgBinaryPath + ", gpgKeyPassword=" + gpgKeyPassword + ", gpgHome=" + gpgHome + ", gpgKeyUsername="
+        + gpgKeyUsername + "]";
   }
 
   @Override
