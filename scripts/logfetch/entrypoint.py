@@ -77,7 +77,7 @@ def check_args(args):
   elif not args.requestId and not args.deployId and not args.taskId:
     exit('Must specify one of\n -t task-id\n -r request-id and -d deploy-id\n -r request-id')
 
-def convert_to_date(args, argument):
+def convert_to_date(args, argument, is_start):
     try:
       if isinstance(argument, datetime):
         return argument
@@ -86,13 +86,13 @@ def convert_to_date(args, argument):
     except:
       try:
         if args.zone:
-            timestring = '{0} {1}'.format(argument, datetime.now().strftime("%H:%M:%S")) if len(argument) < 11 else argument
+            timestring = '{0} {1}'.format(argument, '00:00:00' if is_start else '23:59:59') if len(argument) < 11 else argument
             val = datetime.utcfromtimestamp(time.mktime(datetime.strptime(timestring, "%Y-%m-%d %H:%M:%S").timetuple()))
         else:
-            timestring = '{0} {1}'.format(argument, datetime.utcnow().strftime("%H:%M:%S")) if len(argument) < 11 else argument
+            timestring = '{0} {1}'.format(argument, '00:00:00' if is_start else '23:59:59') if len(argument) < 11 else argument
             val = datetime.strptime('{0} UTC'.format(timestring), "%Y-%m-%d %H:%M:%S %Z")
       except:
-          exit('Start/End days value must be either a number of days or a date in format "%%Y-%%m-%%d %%H:%%M:%%S" or [M#V]"%%Y-%%m-%%d"')
+          exit('Start/End days value must be either a number of days or a date in format "%%Y-%%m-%%d %%H:%%M:%%S" or "%%Y-%%m-%%d"')
     return val
 
 def fetch():
@@ -149,8 +149,8 @@ def fetch():
   args = parser.parse_args(remaining_argv)
 
   check_args(args)
-  args.start = convert_to_date(args, args.start)
-  args.end = convert_to_date(args, args.end)
+  args.start = convert_to_date(args, args.start, True)
+  args.end = convert_to_date(args, args.end, False)
 
   args.dest = os.path.expanduser(args.dest)
   try:
@@ -209,8 +209,8 @@ def search():
     sys.stderr.write(colored('Found unknown args {0}'.format(unknown), 'magenta'))
 
   check_args(args)
-  args.start = convert_to_date(args, args.start)
-  args.end = convert_to_date(args, args.end)
+  args.start = convert_to_date(args, args.start, True)
+  args.end = convert_to_date(args, args.end, False)
 
   args.dest = os.path.expanduser(args.dest)
 
@@ -268,8 +268,8 @@ def cat():
   args = parser.parse_args(remaining_argv)
 
   check_args(args)
-  args.start = convert_to_date(args, args.start)
-  args.end = convert_to_date(args, args.end)
+  args.start = convert_to_date(args, args.start, True)
+  args.end = convert_to_date(args, args.end, False)
 
   args.dest = os.path.expanduser(args.dest)
   try:
