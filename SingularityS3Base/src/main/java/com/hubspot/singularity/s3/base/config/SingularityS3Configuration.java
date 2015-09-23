@@ -67,20 +67,21 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
   @JsonProperty
   private String localDownloadPath = "/download";
 
+
   @NotEmpty
+  @JsonProperty
+  private boolean gpgCheckingEnabled = false;
+
   @JsonProperty
   private String gpgBinaryPath = "/usr/bin/gpg";
 
-  @NotEmpty
   @Obfuscate
   @JsonProperty
   private String gpgKeyPassword;
 
-  @NotEmpty
   @JsonProperty
   private String gpgHome;
 
-  @NotEmpty
   @JsonProperty
   private String gpgKeyUsername;
 
@@ -160,6 +161,14 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
     this.s3ChunkDownloadTimeoutMillis = s3ChunkDownloadTimeoutMillis;
   }
 
+  public boolean isGpgCheckingEnabled() {
+    return gpgCheckingEnabled;
+  }
+
+  public void setGpgCheckingEnabled(boolean gpgCheckingEnabled) {
+    this.gpgCheckingEnabled = gpgCheckingEnabled;
+  }
+
   public String getGpgBinaryPath() {
     return gpgBinaryPath;
   }
@@ -188,6 +197,9 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
     return gpgKeyUsername;
   }
 
+  public void setGpgKeyUsername(String gpgKeyUsername) {
+    this.gpgKeyUsername = gpgKeyUsername;
+  }
 
   @Override
   public String toString() {

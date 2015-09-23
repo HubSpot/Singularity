@@ -1,9 +1,7 @@
 package com.hubspot.singularity.s3.base;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
@@ -12,18 +10,17 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
-import java.security.GeneralSecurityException;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.bouncycastle.openpgp.PGPException;
 import org.slf4j.Logger;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
+import com.google.common.io.ByteStreams;
 import com.hubspot.deploy.Artifact;
 import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExternalArtifact;
@@ -32,7 +29,6 @@ import com.hubspot.deploy.S3Artifact;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
-import com.hubspot.singularity.s3.base.gpg.DetachedSignatureVerifier;
 
 public class ArtifactManager extends SimpleProcessManager {
 
@@ -101,32 +97,41 @@ public class ArtifactManager extends SimpleProcessManager {
   }
 
   private void checkGpgSignature(RemoteArtifact baseArtifact, Path downloadTo) {
-    if (baseArtifact.getGpgSignatureArtifact().isPresent() && baseArtifact.getGpgSignatureArtifact().get() instanceof RemoteArtifact) {
+    Boolean gpgEnabled = configuration.isGpgCheckingEnabled();
+    Boolean gpgArtifactIsPresent = baseArtifact.getGpgSignatureArtifact().isPresent();
+    Boolean gpgArtifactIsRemote = baseArtifact.getGpgSignatureArtifact().get() instanceof RemoteArtifact;
+    if (!gpgEnabled || !gpgArtifactIsPresent || !gpgArtifactIsRemote) {
+      log.info(String.format("Not verifying gpg signature because: gpgEnabled=%s || gpgArtifactIsPresent=%s || gpgArtifactIsRemote=%s",  gpgEnabled.toString(), gpgArtifactIsPresent.toString(), gpgArtifactIsRemote.toString()));
+      return;
+    }
 
-      Path signatureArtifactPath =  fetch((RemoteArtifact) baseArtifact.getGpgSignatureArtifact().get());
+    File gpgBin = new File(configuration.getGpgBinaryPath());
+    if (!gpgBin.exists() || !gpgBin.canExecute()) {
+      throw new RuntimeException(String.format("gpg binary at %s not found or not executable", configuration.getGpgBinaryPath()));
+    }
 
-      File gpgBin = new File(configuration.getGpgBinaryPath());
-      if (!gpgBin.exists() || !gpgBin.canExecute()) {
-        throw new RuntimeException(String.format("gpg binary at %s not found or not executable", configuration.getGpgBinaryPath()));
+    Path signatureArtifactPath = fetch(baseArtifact.getGpgSignatureArtifact().get());
+
+    String verifyCmd = String.format("%s --batch --yes --passphrase-fd 0 --homedir %s -u %s --verify %s", configuration.getGpgBinaryPath(), configuration.getGpgHome(), configuration.getGpgKeyUsername(), signatureArtifactPath);
+    log.debug(String.format("Running gpg verify cmd: %s", verifyCmd));
+    try {
+      Process p = Runtime.getRuntime().exec(verifyCmd);
+
+      OutputStream stdin = p.getOutputStream();
+      stdin.write(configuration.getGpgKeyPassword().getBytes());
+
+      p.wait(TimeUnit.SECONDS.toMillis(5));
+      int returnCode = p.exitValue();
+
+      if (returnCode != 0) {
+        String stdErr = ByteStreams.toByteArray(p.getErrorStream()).toString();
+        log.error(String.format("Error running gpg. GPG stderr: %s", stdErr));
+        throw new RuntimeException(String.format("Gpg verify failed (rc: %s) could not verify signature %s for file %s", Integer.toString(returnCode), signatureArtifactPath.toString(), downloadTo.toString()));
       }
-
-      String verifyCmd = String.format("%s --batch --yes --passphrase-fd 0 --homedir %s -u %s --verify %s", configuration.getGpgBinaryPath(), configuration.getGpgHome(), configuration.getGpgKeyUsername(), signatureArtifactPath);
-      try {
-        Process p = Runtime.getRuntime().exec(verifyCmd);
-        OutputStream stdin = p.getOutputStream();
-        stdin.write(configuration.getGpgKeyPassword().getBytes());
-        p.wait(TimeUnit.SECONDS.toMillis(5));
-        int returnCode = p.exitValue();
-        if (returnCode != 0) {
-          throw new RuntimeException(String.format("Gpg verify failed (rc: %s) could not verify signature %s for file %s", Integer.toString(returnCode), signatureArtifactPath.toString(), downloadTo.toString()));
-        } else {
-          return;
-        }
-      } catch (IOException e) {
-        throw Throwables.propagate(e);
-      } catch (InterruptedException e) {
-        throw Throwables.propagate(e);
-      }
+    } catch (IOException e) {
+      throw Throwables.propagate(e);
+    } catch (InterruptedException e) {
+      throw Throwables.propagate(e);
     }
   }
 

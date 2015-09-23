@@ -5,9 +5,9 @@ import com.google.common.base.Optional;
 public abstract class RemoteArtifact extends Artifact {
 
   private final Optional<Long> filesize;
-  private final Optional<Artifact> gpgSignatureArtifact;
+  private final Optional<RemoteArtifact> gpgSignatureArtifact;
 
-  public RemoteArtifact(String name, String filename, Optional<String> md5sum, Optional<Long> filesize, Optional<Artifact> gpgSignatureArtifact) {
+  public RemoteArtifact(String name, String filename, Optional<String> md5sum, Optional<Long> filesize, Optional<RemoteArtifact> gpgSignatureArtifact) {
     super(name, filename, md5sum);
     this.filesize = filesize;
     this.gpgSignatureArtifact = gpgSignatureArtifact;
@@ -17,7 +17,7 @@ public abstract class RemoteArtifact extends Artifact {
     return filesize;
   }
 
-  public Optional<Artifact> getGpgSignatureArtifact() {
+  public Optional<RemoteArtifact> getGpgSignatureArtifact() {
     return gpgSignatureArtifact;
   }
 
