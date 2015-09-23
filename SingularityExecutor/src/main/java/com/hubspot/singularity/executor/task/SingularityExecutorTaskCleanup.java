@@ -31,7 +31,7 @@ public class SingularityExecutorTaskCleanup {
     this.dockerClient = dockerClient;
   }
 
-  public boolean cleanup(boolean cleanupTaskAppDirectory, boolean isDocker) {
+  public TaskCleanupResult cleanup(boolean cleanupTaskAppDirectory, boolean isDocker) {
     final Path taskDirectory = Paths.get(taskDefinition.getTaskDirectory());
 
     boolean dockerCleanSuccess = true;
@@ -42,23 +42,35 @@ public class SingularityExecutorTaskCleanup {
     if (!Files.exists(taskDirectory)) {
       log.info("Directory {} didn't exist for cleanup", taskDirectory);
       taskLogManager.removeLogrotateFile();
-      return (cleanTaskDefinitionFile() && dockerCleanSuccess);
+      return finishTaskCleanup(dockerCleanSuccess);
     }
 
     boolean logTearDownSuccess = taskLogManager.teardown();
-    boolean cleanupTaskAppDirectorySuccess = false;
 
-    if (cleanupTaskAppDirectory) {
-      cleanupTaskAppDirectorySuccess = cleanupTaskAppDirectory();
+    if (!cleanupTaskAppDirectory) {
+      log.info("Not finishing cleanup because taskApp directory is being preserved");
+      return TaskCleanupResult.WAITING;
     }
+
+    boolean cleanupTaskAppDirectorySuccess = cleanupTaskAppDirectory();
 
     log.info("Cleaned up logs ({}) and task app directory ({})", logTearDownSuccess, cleanupTaskAppDirectorySuccess);
 
     if (logTearDownSuccess && cleanupTaskAppDirectorySuccess) {
-      return (cleanTaskDefinitionFile() && dockerCleanSuccess);
+      return finishTaskCleanup(dockerCleanSuccess);
+    } else {
+      return TaskCleanupResult.ERROR;
+    }
+  }
+
+  private TaskCleanupResult finishTaskCleanup(boolean dockerCleanSuccess) {
+    boolean cleanTaskDefinitionFile = cleanTaskDefinitionFile();
+
+    if (cleanTaskDefinitionFile && dockerCleanSuccess) {
+      return TaskCleanupResult.SUCCESS;
     }
 
-    return false;
+    return TaskCleanupResult.ERROR;
   }
 
   public boolean cleanTaskDefinitionFile() {
