@@ -44,5 +44,13 @@
                 </div>
             </li>
         {{/if}}
+        {{#if data.task.deploy.executorData.extraCmdLineArgs }}
+            <li class="col-md-4">
+                <div>
+                    <h4>Extra Command Line Arguments</h4>
+                    <p>{{ data.task.deploy.executorData.extraCmdLineArgs }}</p>
+                </div>
+            </li>
+        {{/if}}
     </ul>
 </div>
