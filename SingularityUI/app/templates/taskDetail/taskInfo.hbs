@@ -44,11 +44,19 @@
                 </div>
             </li>
         {{/if}}
-        {{#if data.task.deploy.executorData.extraCmdLineArgs }}
+        {{#if data.task.taskRequest.deploy.executorData.extraCmdLineArgs}}
             <li class="col-md-4">
                 <div>
-                    <h4>Extra Command Line Arguments</h4>
-                    <p>{{ data.task.deploy.executorData.extraCmdLineArgs }}</p>
+                    <h4>Extra Cmd Line Arguments (from Deploy)</h4>
+                    <p>{{ data.task.taskRequest.deploy.executorData.extraCmdLineArgs }}</p>
+                </div>
+            </li>
+        {{/if}}
+        {{#if data.task.taskRequest.pendingTask.cmdLineArgsList }}
+            <li class="col-md-4">
+                <div>
+                    <h4>Extra Cmd Line Arguments (from Task)</h4>
+                    <p>{{ data.task.taskRequest.pendingTask.cmdLineArgsList }}</p>
                 </div>
             </li>
         {{/if}}
