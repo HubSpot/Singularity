@@ -3,11 +3,15 @@ package com.hubspot.singularity.data;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
 
+import com.hubspot.mesos.SingularityContainerInfo;
+import com.hubspot.mesos.SingularityVolume;
 import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
@@ -26,6 +30,7 @@ import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
 
@@ -68,12 +73,6 @@ public class SingularityValidator {
     this.maxMemoryMbPerRequest = configuration.getMesosConfiguration().getMaxMemoryMbPerRequest();
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
   }
-
-
-
-
-
-
 
   private void checkForIllegalChanges(SingularityRequest request, SingularityRequest existingRequest) {
     checkBadRequest(request.getRequestType() == existingRequest.getRequestType(), String.format("Request can not change requestType from %s to %s", existingRequest.getRequestType(), request.getRequestType()));
@@ -131,7 +130,6 @@ public class SingularityValidator {
 
       checkBadRequest(request.getQuartzSchedule().isPresent() || request.getSchedule().isPresent(), "Specify at least one of schedule or quartzSchedule");
 
-
       if (request.getQuartzSchedule().isPresent() && !request.getSchedule().isPresent()) {
         checkBadRequest(request.getScheduleType().or(ScheduleType.QUARTZ) == ScheduleType.QUARTZ, "If using quartzSchedule specify scheduleType QUARTZ or leave it blank");
       }
@@ -188,6 +186,7 @@ public class SingularityValidator {
 
     if (request.isLoadBalanced()) {
       checkBadRequest(deploy.getServiceBasePath().isPresent(), "Deploy for loadBalanced request must include serviceBasePath");
+      checkBadRequest(deploy.getLoadBalancerGroups().isPresent() && !deploy.getLoadBalancerGroups().get().isEmpty(), "Deploy for a loadBalanced request must include at least one load balacner group");
     }
 
     checkForIllegalResources(request, deploy);
@@ -199,8 +198,17 @@ public class SingularityValidator {
 
     checkBadRequest(!deploy.getContainerInfo().isPresent() || deploy.getContainerInfo().get().getType() != null, "Container type must not be null");
 
-    if (deploy.getContainerInfo().isPresent() && deploy.getContainerInfo().get().getType() == SingularityContainerType.DOCKER) {
-      checkDocker(deploy);
+    if (deploy.getContainerInfo().isPresent()) {
+      SingularityContainerInfo containerInfo = deploy.getContainerInfo().get();
+      checkBadRequest(containerInfo.getType() != null, "container type may not be null");
+      if (containerInfo.getVolumes().isPresent() && !containerInfo.getVolumes().get().isEmpty()) {
+        for (SingularityVolume volume : containerInfo.getVolumes().get()) {
+          checkBadRequest(volume.getContainerPath() != null, "volume containerPath may not be null");
+        }
+      }
+      if (deploy.getContainerInfo().get().getType() == SingularityContainerType.DOCKER) {
+        checkDocker(deploy);
+      }
     }
 
     checkBadRequest(deployHistoryHelper.isDeployIdAvailable(request.getId(), deployId), "Can not deploy a deploy that has already been deployed");
@@ -218,6 +226,8 @@ public class SingularityValidator {
     if (deploy.getResources().isPresent() && deploy.getContainerInfo().get().getDocker().isPresent()) {
       final SingularityDockerInfo dockerInfo = deploy.getContainerInfo().get().getDocker().get();
       final int numPorts = deploy.getResources().get().getNumPorts();
+
+      checkBadRequest(dockerInfo.getImage() != null, "docker image may not be null");
 
       if (!dockerInfo.getPortMappings().isEmpty()) {
         checkBadRequest(dockerInfo.getNetwork().or(SingularityDockerNetworkType.HOST) == SingularityDockerNetworkType.BRIDGE,
@@ -242,6 +252,9 @@ public class SingularityValidator {
     return CronExpression.isValidExpression(schedule);
   }
 
+  private final Pattern DAY_RANGE_REGEXP = Pattern.compile("[0-7]-[0-7]");
+  private final Pattern COMMA_DAYS_REGEXP = Pattern.compile("([0-7],)+([0-7])?");
+
   /**
    *
    * Transforms unix cron into quartz compatible cron;
@@ -258,7 +271,7 @@ public class SingularityValidator {
    * Day-of-Week  1-7 or SUN-SAT          - * ? / L #
    * Year         (Optional), 1970-2199   - * /
    */
-  private String getQuartzScheduleFromCronSchedule(String schedule) {
+  public String getQuartzScheduleFromCronSchedule(String schedule) {
     if (schedule == null) {
       return null;
     }
@@ -291,21 +304,23 @@ public class SingularityValidator {
       dayOfMonth = "?";
     }
 
-    // standard cron is 0-6, quartz is 1-7
-    // therefore, we should add 1 to any values between 0-6. 7 in a standard cron is sunday,
-    // which is sat in quartz. so if we get a value of 7, we should change it to 1.
     if (isValidInteger(dayOfWeek)) {
-      int dayOfWeekValue = Integer.parseInt(dayOfWeek);
+      dayOfWeek = getNewDayOfWeekValue(schedule, Integer.parseInt(dayOfWeek));
+    } else if (DAY_RANGE_REGEXP.matcher(dayOfWeek).matches() || COMMA_DAYS_REGEXP.matcher(dayOfWeek).matches()) {
+      String separator = ",";
 
-      checkBadRequest(dayOfWeekValue >= 0 && dayOfWeekValue <= 7, "Schedule %s is invalid, day of week (%s) is not 0-7", schedule, dayOfWeekValue);
-
-      if (dayOfWeekValue == 7) {
-        dayOfWeekValue = 1;
-      } else {
-        dayOfWeekValue++;
+      if (DAY_RANGE_REGEXP.matcher(dayOfWeek).matches()) {
+        separator = "-";
       }
 
-      dayOfWeek = Integer.toString(dayOfWeekValue);
+      final String[] dayOfWeekSplit = dayOfWeek.split(separator);
+      final List<String> dayOfWeekValues = new ArrayList<>(dayOfWeekSplit.length);
+
+      for (String dayOfWeekValue : dayOfWeekSplit) {
+        dayOfWeekValues.add(getNewDayOfWeekValue(schedule, Integer.parseInt(dayOfWeekValue)));
+      }
+
+      dayOfWeek = Joiner.on(separator).join(dayOfWeekValues);
     }
 
     newSchedule.add(dayOfMonth);
@@ -313,6 +328,46 @@ public class SingularityValidator {
     newSchedule.add(dayOfWeek);
 
     return JOINER.join(newSchedule);
+  }
+
+  /**
+   * Standard cron: day of week (0 - 6) (0 to 6 are Sunday to Saturday, or use names; 7 is Sunday, the same as 0)
+   * Quartz: 1-7 or SUN-SAT
+   */
+  private String getNewDayOfWeekValue(String schedule, int dayOfWeekValue) {
+    String newDayOfWeekValue = null;
+
+    checkBadRequest(dayOfWeekValue >= 0 && dayOfWeekValue <= 7, "Schedule %s is invalid, day of week (%s) is not 0-7", schedule, dayOfWeekValue);
+
+    switch (dayOfWeekValue) {
+      case 7:
+      case 0:
+        newDayOfWeekValue = "SUN";
+        break;
+      case 1:
+        newDayOfWeekValue = "MON";
+        break;
+      case 2:
+        newDayOfWeekValue = "TUE";
+        break;
+      case 3:
+        newDayOfWeekValue = "WED";
+        break;
+      case 4:
+        newDayOfWeekValue = "THU";
+        break;
+      case 5:
+        newDayOfWeekValue = "FRI";
+        break;
+      case 6:
+        newDayOfWeekValue = "SAT";
+        break;
+      default:
+        WebExceptions.badRequest("Schedule %s is invalid, day of week (%s) is not 0-7", schedule, dayOfWeekValue);
+        break;
+    }
+
+    return newDayOfWeekValue;
   }
 
   private boolean isValidInteger(String strValue) {

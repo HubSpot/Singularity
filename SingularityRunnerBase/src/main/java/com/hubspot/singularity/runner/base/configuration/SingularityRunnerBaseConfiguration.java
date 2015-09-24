@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
 
-@Configuration("/etc/singularity.base.yaml")
+@Configuration(filename = "/etc/singularity.base.yaml", consolidatedField = "base")
 public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration {
   public static final String ROOT_LOG_DIRECTORY = "root.log.directory";
 
