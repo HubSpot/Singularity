@@ -5,6 +5,7 @@ import org.apache.mesos.Protos;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 public class SingularityVolume {
   private final String containerPath;
@@ -16,6 +17,8 @@ public class SingularityVolume {
       @JsonProperty("containerPath") String containerPath,
       @JsonProperty("hostPath") Optional<String> hostPath,
       @JsonProperty("mode") SingularityDockerVolumeMode mode) {
+    Preconditions.checkArgument(containerPath != null, "SingularityVolume.containerPath may not be null");
+
     this.containerPath = containerPath;
     this.hostPath = hostPath;
     this.mode = Optional.fromNullable(mode);
