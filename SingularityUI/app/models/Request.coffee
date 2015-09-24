@@ -74,7 +74,7 @@ class Request extends Model
           options.processData = false
 
         $.ajax options
-        
+
     scale: (confirmedOrPromptData) =>
         $.ajax
           url: "#{ @url() }/instances?user=#{ app.getUsername() }"
@@ -83,7 +83,7 @@ class Request extends Model
           data:         JSON.stringify
               id:      @get "id"
               instances: confirmedOrPromptData
-          
+
     bounce: =>
         $.ajax
             url:  "#{ @url() }/bounce?user=#{ app.getUsername() }"
@@ -114,7 +114,7 @@ class Request extends Model
 
     promptScale: (callback) =>
         vex.dialog.prompt
-            message: scaleTemplate 
+            message: scaleTemplate
                 id: @get "id"
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.YES), text: 'Scale'
@@ -143,7 +143,7 @@ class Request extends Model
 
             beforeClose: =>
                 return if @data is false
-                
+
                 fileName = @data.filename.trim()
                 commandLineInput = @data.commandLineInput.trim()
 
@@ -160,7 +160,7 @@ class Request extends Model
                     @run( @data.commandLineInput ).done callback( @data )
                     return true
 
-            afterOpen: => 
+            afterOpen: =>
                 $('#filename').val localStorage.getItem('taskRunRedirectFilename')
                 $('#commandLineInput').val localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
                 $('#autoTail').prop 'checked', (localStorage.getItem('taskRunAutoTail') is 'on')
