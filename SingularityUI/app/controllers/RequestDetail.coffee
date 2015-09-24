@@ -140,9 +140,7 @@ class RequestDetailController extends Controller
         if @collections.taskHistory.currentPage is 1
             @collections.taskHistory.fetch
                 error:    @ignore404
-                success: () =>
-                    @addRequestInfo()
-                    console.log @collections.taskHistory
+                success:  @addRequestInfo
         if @collections.deployHistory.currentPage is 1
             @collections.deployHistory.fetch().error  @ignore404
 
