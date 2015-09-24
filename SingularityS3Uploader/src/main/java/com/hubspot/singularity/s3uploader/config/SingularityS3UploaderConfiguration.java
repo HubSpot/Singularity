@@ -16,7 +16,7 @@ import com.hubspot.singularity.runner.base.jackson.Obfuscate;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 import com.hubspot.singularity.s3.base.config.SingularityS3Credentials;
 
-@Configuration("/etc/singularity.s3uploader.yaml")
+@Configuration(filename = "/etc/singularity.s3uploader.yaml", consolidatedField = "s3uploader")
 public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration {
   public static final String POLL_MILLIS = "s3uploader.poll.for.shutdown.millis";
 

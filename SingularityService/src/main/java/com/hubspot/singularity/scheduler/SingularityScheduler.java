@@ -610,10 +610,9 @@ public class SingularityScheduler {
         LOG.info("Scheduling requested immediate run of {}", request.getId());
       } else {
         try {
-          Date scheduleFrom = new Date(now);
+          final CronExpression cronExpression = new CronExpression(request.getQuartzScheduleSafe());
 
-          CronExpression cronExpression = new CronExpression(request.getQuartzScheduleSafe());
-
+          final Date scheduleFrom = new Date(now);
           final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(scheduleFrom);
 
           if (nextRunAtDate == null) {
