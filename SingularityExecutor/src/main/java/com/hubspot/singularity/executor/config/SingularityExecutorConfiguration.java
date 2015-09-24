@@ -21,7 +21,7 @@ import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
 
-@Configuration("/etc/singularity.executor.yaml")
+@Configuration(filename = "/etc/singularity.executor.yaml", consolidatedField = "executor")
 public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   public static final String SHUTDOWN_TIMEOUT_MILLIS = "executor.shutdown.timeout.millis";
 
@@ -209,6 +209,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @JsonProperty
   private int dockerStopTimeout = 15;
+
+  @NotEmpty
+  @JsonProperty
+  private String cgroupsMesosCpuTasksFormat = "/cgroup/cpu/%s/tasks";
+
+  @NotEmpty
+  @JsonProperty
+  private String procCgroupFormat = "/proc/%s/cgroup";
 
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
@@ -489,6 +497,22 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public void setDockerStopTimeout(int dockerStopTimeout) {
     this.dockerStopTimeout = dockerStopTimeout;
+  }
+
+  public String getCgroupsMesosCpuTasksFormat() {
+    return cgroupsMesosCpuTasksFormat;
+  }
+
+  public void setCgroupsMesosCpuTasksFormat(String cgroupsMesosCpuTasksFormat) {
+    this.cgroupsMesosCpuTasksFormat = cgroupsMesosCpuTasksFormat;
+  }
+
+  public String getProcCgroupFormat() {
+    return procCgroupFormat;
+  }
+
+  public void setProcCgroupFormat(String procCgroupFormat) {
+    this.procCgroupFormat = procCgroupFormat;
   }
 
   @Override

@@ -16,10 +16,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
@@ -32,6 +36,9 @@ public class SingularityRunnerBaseModule extends AbstractModule {
   public static final String OBFUSCATED_YAML = "obfuscated.yaml";
   public static final String HOST_NAME_PROPERTY = "singularity.host.name";
   public static final String HOST_ADDRESS_PROPERTY = "singularity.host.address";
+  public static final String CONSOLIDATED_CONFIG_FILENAME = "consolidated.config.filename";
+
+  public static final String CONFIG_PROPERTY = "singularityConfigFilename";
 
   private final Class<? extends BaseRunnerConfiguration> primaryConfigurationClass;
   private final Set<Class<? extends BaseRunnerConfiguration>> additionalConfigurationClasses;
@@ -53,18 +60,21 @@ public class SingularityRunnerBaseModule extends AbstractModule {
     SingularityRunnerBaseLogging.quietEagerLogging();
     bind(Validator.class).toInstance(Validation.buildDefaultValidatorFactory().getValidator());
 
+    final Optional<String> consolidatedConfigFilename = Optional.fromNullable(Strings.emptyToNull(System.getProperty(CONFIG_PROPERTY)));
     final ConfigurationBinder configurationBinder = ConfigurationBinder.newBinder(binder());
 
-    configurationBinder.bindPrimaryConfiguration(primaryConfigurationClass);
+    configurationBinder.bindPrimaryConfiguration(primaryConfigurationClass, consolidatedConfigFilename);
     for (Class<? extends BaseRunnerConfiguration> additionalConfigurationClass : additionalConfigurationClasses) {
-      configurationBinder.bindConfiguration(additionalConfigurationClass);
+      configurationBinder.bindConfiguration(additionalConfigurationClass, consolidatedConfigFilename);
     }
 
     if (!additionalConfigurationClasses.contains(SingularityRunnerBaseConfiguration.class)) {
-      configurationBinder.bindConfiguration(SingularityRunnerBaseConfiguration.class);
+      configurationBinder.bindConfiguration(SingularityRunnerBaseConfiguration.class, consolidatedConfigFilename);
     }
 
     bind(SingularityRunnerBaseLogging.class).asEagerSingleton();
+
+    bind(new TypeLiteral<Optional<String>>(){}).annotatedWith(Names.named(CONSOLIDATED_CONFIG_FILENAME)).toInstance(consolidatedConfigFilename);
   }
 
   @Provides
