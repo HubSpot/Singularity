@@ -38,7 +38,9 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.ProcessUtils;
@@ -65,11 +67,13 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   private final JsonObjectFileHelper jsonObjectFileHelper;
   private final ProcessUtils processUtils;
   private final AWSCredentials defaultCredentials;
+  private final String hostname;
 
   private ScheduledFuture<?> future;
 
   @Inject
-  public SingularityS3UploaderDriver(SingularityRunnerBaseConfiguration baseConfiguration, SingularityS3UploaderConfiguration configuration, SingularityS3Configuration s3Configuration, SingularityS3UploaderMetrics metrics, JsonObjectFileHelper jsonObjectFileHelper) {
+  public SingularityS3UploaderDriver(SingularityRunnerBaseConfiguration baseConfiguration, SingularityS3UploaderConfiguration configuration, SingularityS3Configuration s3Configuration,
+      SingularityS3UploaderMetrics metrics, JsonObjectFileHelper jsonObjectFileHelper, @Named(SingularityRunnerBaseModule.HOST_NAME_PROPERTY) String hostname) {
     super(configuration.getPollForShutDownMillis(), Paths.get(baseConfiguration.getS3UploaderMetadataDirectory()), ImmutableList.of(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE));
 
     this.baseConfiguration = baseConfiguration;
@@ -93,6 +97,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
     this.executorService = JavaUtils.newFixedTimingOutThreadPool(configuration.getExecutorMaxUploadThreads(), TimeUnit.SECONDS.toMillis(30), "SingularityS3Uploader-%d");
     this.scheduler = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityS3Driver-%d").build());
+    this.hostname = hostname;
   }
 
   private void readInitialFiles() throws IOException {
@@ -339,7 +344,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         bucketCreds = Optional.of(configuration.getS3BucketCredentials().get(metadata.getS3Bucket()).toAWSCredentials());
       }
 
-      SingularityS3Uploader uploader = new SingularityS3Uploader(bucketCreds.or(defaultCredentials), metadata, fileSystem, metrics, filename, configuration);
+      SingularityS3Uploader uploader = new SingularityS3Uploader(bucketCreds.or(defaultCredentials), metadata, fileSystem, metrics, filename, configuration, hostname);
 
       if (metadata.isFinished()) {
         expiring.add(uploader);
