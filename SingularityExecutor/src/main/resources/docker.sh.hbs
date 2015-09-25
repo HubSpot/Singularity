@@ -15,7 +15,7 @@ CGROUPS_GUID=${CURRENT_DIR##*runs/}
 CGROUPS_GUID=${CGROUPS_GUID%/*}
 
 function check_contianer_running {
-  status=`sudo -E -u {{{ runContext.user }}} docker inspect -f \{{.State.Running}} $1`
+  status=`sudo -E -H -u {{{ runContext.user }}} docker inspect -f \{{.State.Running}} $1`
   if [ "$status" = "false" ] ; then
     echo "container is no longer running..."
     running=0
@@ -34,11 +34,11 @@ function setup_signals {
 
 function handle_signal {
   echo "Received $2"
-  echo "Stopping via sudo -E -u {{{ runContext.user }}} docker stop -t $STOP_TIME $1"
-  sudo -E -u {{{ runContext.user }}} docker stop -t $STOP_TIME "$1"
-  exit_code=`sudo -E -u {{{ runContext.user }}} docker wait "$cid"`
+  echo "Stopping via sudo -E -H -u {{{ runContext.user }}} docker stop -t $STOP_TIME $1"
+  sudo -E -H -u {{{ runContext.user }}} docker stop -t $STOP_TIME "$1"
+  exit_code=`sudo -E -H -u {{{ runContext.user }}} docker wait "$cid"`
   echo "Attempting to remove container"
-  sudo -E -u {{{ runContext.user }}} docker rm $1
+  sudo -E -H -u {{{ runContext.user }}} docker rm $1
   exit "$exit_code"
 }
 
@@ -120,9 +120,9 @@ sudo chown -R {{{ runContext.user }}} {{{ runContext.taskAppDirectory }}}
 enable_cgroup_hierarchy || true
 
 # Start up the container
-echo "Creating continer with: sudo -E -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS $DOCKER_IMAGE {{{ runContext.cmd }}}"
-cid=`sudo -E -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS $DOCKER_IMAGE {{{runContext.cmd }}}`
-sudo -E -u {{{ runContext.user }}} docker start -a $cid >> {{{ runContext.logFile }}} 2>&1 &
+echo "Creating continer with: sudo -E -H -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS $DOCKER_IMAGE {{{ runContext.cmd }}}"
+cid=`sudo -E -H -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS $DOCKER_IMAGE {{{runContext.cmd }}}`
+sudo -E -H -u {{{ runContext.user }}} docker start -a $cid >> {{{ runContext.logFile }}} 2>&1 &
 running=1
 
 setup_signals "$cid" "handle_signal" SIGINT SIGTERM
@@ -136,5 +136,5 @@ while true; do
   fi
 done
 
-exit_code=`sudo -E -u {{{ runContext.user }}} docker wait "$cid"`
+exit_code=`sudo -E -H -u {{{ runContext.user }}} docker wait "$cid"`
 exit "$exit_code"
