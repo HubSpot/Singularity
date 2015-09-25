@@ -36,6 +36,10 @@ public class LogrotateTemplateContext {
     return configuration.getLogrotateToDirectory();
   }
 
+  public boolean getShouldLogRotateLogFile() {
+    return taskDefinition.shouldLogrotateLogFile();
+  }
+
   /**
    * Extra files for logrotate to rotate. If these do not exist logrotate will continue without error.
    * @return filenames to rotate.
@@ -58,7 +62,6 @@ public class LogrotateTemplateContext {
   /**
    * Default log to logrotate, defaults to service.log.
    * This if this log doesn't exist, logrotate will return an error message.
-   * @return filename to rotate.
    */
   public String getLogfile() {
     return taskDefinition.getServiceLogOut();

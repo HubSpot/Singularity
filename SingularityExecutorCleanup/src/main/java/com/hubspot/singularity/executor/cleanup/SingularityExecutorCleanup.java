@@ -39,6 +39,7 @@ import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskCleanup;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskLogManager;
+import com.hubspot.singularity.executor.task.TaskCleanupResult;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
@@ -132,6 +133,8 @@ public class SingularityExecutorCleanup {
 
         final String taskId = taskDefinition.get().getTaskId();
 
+        LOG.info("{} - Starting possible cleanup", taskId);
+
         if (runningTaskIds.contains(taskId) || executorStillRunning(taskDefinition.get())) {
           statisticsBldr.incrRunningTasksIgnored();
           continue;
@@ -142,15 +145,27 @@ public class SingularityExecutorCleanup {
         try {
           taskHistory = singularityClient.getHistoryForTask(taskId);
         } catch (SingularityClientException sce) {
-          LOG.error("While fetching history for {}", taskId, sce);
+          LOG.error("{} - Failed fetching history", taskId, sce);
           statisticsBldr.incrErrorTasks();
           continue;
         }
 
-        if (cleanTask(taskDefinition.get(), taskHistory)) {
-          statisticsBldr.incrSuccessfullyCleanedTasks();
-        } else {
-          statisticsBldr.incrErrorTasks();
+        TaskCleanupResult result = cleanTask(taskDefinition.get(), taskHistory);
+
+        LOG.info("{} - {}", taskId, result);
+
+        switch (result) {
+          case ERROR:
+            statisticsBldr.incrErrorTasks();
+            break;
+          case SUCCESS:
+            statisticsBldr.incrSuccessfullyCleanedTasks();
+            break;
+          case WAITING:
+            statisticsBldr.incrWaitingTasks();
+            break;
+           default:
+            break;
         }
 
       } catch (IOException ioe) {
@@ -187,7 +202,7 @@ public class SingularityExecutorCleanup {
     return processUtils.doesProcessExist(executorPidSafe.get());
   }
 
-  private boolean cleanTask(SingularityExecutorTaskDefinition taskDefinition, Optional<SingularityTaskHistory> taskHistory) {
+  private TaskCleanupResult cleanTask(SingularityExecutorTaskDefinition taskDefinition, Optional<SingularityTaskHistory> taskHistory) {
     SingularityExecutorTaskLogManager logManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, baseConfiguration, executorConfiguration, LOG, jsonObjectFileHelper);
 
     SingularityExecutorTaskCleanup taskCleanup = new SingularityExecutorTaskCleanup(logManager, executorConfiguration, taskDefinition, LOG, dockerClient);
@@ -208,7 +223,9 @@ public class SingularityExecutorCleanup {
       }
     }
 
-    checkForUncompressedLogrotatedFile(taskDefinition);
+    if (taskDefinition.shouldLogrotateLogFile()) {
+      checkForUncompressedLogrotatedFile(taskDefinition);
+    }
 
     boolean isDocker = (taskHistory.get().getTask().getMesosTask().hasContainer() && taskHistory.get().getTask().getMesosTask().getContainer().hasDocker());
 
