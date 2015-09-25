@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -42,6 +43,7 @@ import com.hubspot.singularity.executor.task.SingularityExecutorTaskLogManager;
 import com.hubspot.singularity.executor.task.TaskCleanupResult;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
+import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
 import com.hubspot.singularity.runner.base.shared.ProcessUtils;
@@ -64,11 +66,12 @@ public class SingularityExecutorCleanup {
   private final ProcessUtils processUtils;
   private final DockerClient dockerClient;
   private final String hostname;
+  private final SingularityRunnerExceptionNotifier exceptionNotifier;
 
   @Inject
   public SingularityExecutorCleanup(SingularityClientProvider singularityClientProvider, JsonObjectFileHelper jsonObjectFileHelper, SingularityRunnerBaseConfiguration baseConfiguration,
       SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager, MesosClient mesosClient,
-      DockerClient dockerClient, @Named(SingularityRunnerBaseModule.HOST_NAME_PROPERTY) String hostname) {
+      DockerClient dockerClient, @Named(SingularityRunnerBaseModule.HOST_NAME_PROPERTY) String hostname, SingularityRunnerExceptionNotifier exceptionNotifier) {
     this.jsonObjectFileHelper = jsonObjectFileHelper;
     this.baseConfiguration = baseConfiguration;
     this.executorConfiguration = executorConfiguration;
@@ -79,6 +82,7 @@ public class SingularityExecutorCleanup {
     this.processUtils = new ProcessUtils(LOG);
     this.dockerClient = dockerClient;
     this.hostname = hostname;
+    this.exceptionNotifier = exceptionNotifier;
   }
 
   public SingularityExecutorCleanupStatistics clean() {
@@ -91,6 +95,7 @@ public class SingularityExecutorCleanup {
       runningTaskIds = getRunningTaskIds();
     } catch (Exception e) {
       LOG.error("While fetching running tasks from singularity", e);
+      exceptionNotifier.notify(e, Collections.<String, String>emptyMap());
       statisticsBldr.setErrorMessage(e.getMessage());
       return statisticsBldr.build();
     }
@@ -146,6 +151,7 @@ public class SingularityExecutorCleanup {
           taskHistory = singularityClient.getHistoryForTask(taskId);
         } catch (SingularityClientException sce) {
           LOG.error("{} - Failed fetching history", taskId, sce);
+          exceptionNotifier.notify(sce, Collections.<String, String>emptyMap());
           statisticsBldr.incrErrorTasks();
           continue;
         }
@@ -170,7 +176,7 @@ public class SingularityExecutorCleanup {
 
       } catch (IOException ioe) {
         LOG.error("Couldn't read file {}", file, ioe);
-
+        exceptionNotifier.notify(ioe, ImmutableMap.of("file", file.toString()));
         statisticsBldr.incrIoErrorTasks();
       }
     }
@@ -273,6 +279,7 @@ public class SingularityExecutorCleanup {
           }
         } catch (IOException ioe) {
           LOG.error("Failed to handle empty gz file {}", path, ioe);
+          exceptionNotifier.notify(ioe, ImmutableMap.of("file", path.toString()));
         }
       } else {
         ungzippedFiles.add(path);
@@ -286,6 +293,7 @@ public class SingularityExecutorCleanup {
           new SimpleProcessManager(LOG).runCommand(ImmutableList.<String> of("gzip", path.toString()));
         } catch (InterruptedException | ProcessFailedException e) {
           LOG.error("Failed to gzip {}", path, e);
+          exceptionNotifier.notify(e, ImmutableMap.of("file", path.toString()));
         }
       } else {
         LOG.debug("Didn't find matched empty gz file for {}", path);
@@ -306,6 +314,7 @@ public class SingularityExecutorCleanup {
       }
     } catch (Exception e) {
       LOG.error("Could not get list of Docker containers", e);
+      exceptionNotifier.notify(e, Collections.<String, String>emptyMap());
     }
   }
 
@@ -320,6 +329,7 @@ public class SingularityExecutorCleanup {
       LOG.debug("Removed container {}", container.names());
     } catch (Exception e) {
       LOG.error("Failed to stop or remove container {}", container.names(), e);
+      exceptionNotifier.notify(e, Collections.<String, String>emptyMap());
     }
   }
 
