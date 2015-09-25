@@ -218,6 +218,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private String procCgroupFormat = "/proc/%s/cgroup";
 
+  @NotEmpty
+  @JsonProperty
+  private String switchUserCommandFormat = "sudo -E -u %s";
+
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
   }
@@ -513,6 +517,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public void setProcCgroupFormat(String procCgroupFormat) {
     this.procCgroupFormat = procCgroupFormat;
+  }
+
+  public String getSwitchUserCommandFormat() {
+    return switchUserCommandFormat;
+  }
+
+  public void setSwitchUserCommandFormat(String switchUserCommandFormat) {
+    this.switchUserCommandFormat = switchUserCommandFormat;
   }
 
   @Override
