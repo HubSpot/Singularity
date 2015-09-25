@@ -22,6 +22,7 @@ import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExternalArtifact;
 import com.hubspot.deploy.RemoteArtifact;
 import com.hubspot.deploy.S3Artifact;
+import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
@@ -32,12 +33,12 @@ public class ArtifactManager extends SimpleProcessManager {
   private final Logger log;
   private final S3ArtifactDownloader s3ArtifactDownloader;
 
-  public ArtifactManager(SingularityS3Configuration configuration, Logger log) {
+  public ArtifactManager(SingularityS3Configuration configuration, Logger log, SingularityRunnerExceptionNotifier exceptionNotifier) {
     super(log);
 
     this.cacheDirectory = Paths.get(configuration.getArtifactCacheDirectory());
     this.log = log;
-    this.s3ArtifactDownloader = new S3ArtifactDownloader(configuration, log);
+    this.s3ArtifactDownloader = new S3ArtifactDownloader(configuration, log, exceptionNotifier);
   }
 
   private long getSize(Path path) {

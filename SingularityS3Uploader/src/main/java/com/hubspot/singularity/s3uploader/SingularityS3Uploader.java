@@ -34,10 +34,12 @@ import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityS3FormatHelper;
+import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderConfiguration;
@@ -57,9 +59,10 @@ public class SingularityS3Uploader implements Closeable {
   private final String logIdentifier;
   private final String hostname;
   private final SingularityS3UploaderConfiguration configuration;
+  private final SingularityRunnerExceptionNotifier exceptionNotifier;
 
   public SingularityS3Uploader(AWSCredentials defaultCredentials, S3UploadMetadata uploadMetadata, FileSystem fileSystem, SingularityS3UploaderMetrics metrics, Path metadataPath,
-      SingularityS3UploaderConfiguration configuration, String hostname) {
+      SingularityS3UploaderConfiguration configuration, String hostname, SingularityRunnerExceptionNotifier exceptionNotifier) {
     AWSCredentials credentials = defaultCredentials;
 
     if (uploadMetadata.getS3SecretKey().isPresent() && uploadMetadata.getS3AccessKey().isPresent()) {
@@ -88,6 +91,7 @@ public class SingularityS3Uploader implements Closeable {
     this.metadataPath = metadataPath;
     this.logIdentifier = String.format("[%s]", metadataPath.getFileName());
     this.configuration = configuration;
+    this.exceptionNotifier = exceptionNotifier;
   }
 
   public Path getMetadataPath() {
@@ -174,9 +178,11 @@ public class SingularityS3Uploader implements Closeable {
         } catch (S3ServiceException se) {
           metrics.error();
           LOG.warn("{} Couldn't upload {} due to {} ({}) - {}", logIdentifier, file, se.getErrorCode(), se.getResponseCode(), se.getErrorMessage(), se);
+          exceptionNotifier.notify(se, ImmutableMap.of("logIdentifier", logIdentifier, "file", file.toString(), "errorCode", se.getErrorCode(), "responseCode", Integer.toString(se.getResponseCode()), "errorMessage", se.getErrorMessage()));
         } catch (Exception e) {
           metrics.error();
           LOG.warn("{} Couldn't upload or delete {}", logIdentifier, file, e);
+          exceptionNotifier.notify(e, ImmutableMap.of("logIdentifier", logIdentifier, "file", file.toString()));
         } finally {
           context.stop();
         }
@@ -229,6 +235,7 @@ public class SingularityS3Uploader implements Closeable {
         }
       } catch (Exception e) {
         LOG.warn("Exception uploading {}", file, e);
+        exceptionNotifier.notify(e, ImmutableMap.of("file", file.toString()));
         throw e;
       }
 
