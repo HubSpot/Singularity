@@ -137,10 +137,11 @@ class RequestDetailController extends Controller
                     if @collections.requestHistory.length is 0
                         app.router.notFound()
 
-        if @collections.taskHistory.currentPage is 1
-            @collections.taskHistory.fetch
-                error:    @ignore404
-                success:  @addRequestInfo
+        requestFetch.done =>
+            if @collections.taskHistory.currentPage is 1
+                @collections.taskHistory.fetch
+                    error:    @ignore404
+                    success:  @addRequestInfo
         if @collections.deployHistory.currentPage is 1
             @collections.deployHistory.fetch().error  @ignore404
 
