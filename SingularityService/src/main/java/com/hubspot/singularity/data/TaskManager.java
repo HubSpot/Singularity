@@ -7,8 +7,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
 import org.apache.curator.utils.ZKPaths;
@@ -17,10 +15,13 @@ import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -208,6 +209,7 @@ public class TaskManager extends CuratorAsyncManager {
     save(getDirectoryPath(taskId), Optional.of(directory.getBytes(UTF_8)));
   }
 
+  @Timed
   public void saveLastActiveTaskStatus(SingularityTaskStatusHolder taskStatus) {
     save(getLastActiveTaskStatusPath(taskStatus.getTaskId()), taskStatus, taskStatusTranscoder);
   }
@@ -277,6 +279,7 @@ public class TaskManager extends CuratorAsyncManager {
     return getAsyncChildren(LAST_ACTIVE_TASK_STATUSES_PATH_ROOT, taskStatusTranscoder);
   }
 
+  @Timed
   public Optional<SingularityTaskStatusHolder> getLastActiveTaskStatus(SingularityTaskId taskId) {
     return getData(getLastActiveTaskStatusPath(taskId), taskStatusTranscoder);
   }
@@ -350,6 +353,7 @@ public class TaskManager extends CuratorAsyncManager {
     return exists(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()));
   }
 
+  @Timed
   public SingularityCreateResult saveTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate) {
     singularityEventListener.taskHistoryUpdateEvent(taskHistoryUpdate);
 
@@ -463,6 +467,7 @@ public class TaskManager extends CuratorAsyncManager {
     return getData(getPendingPath(pendingTaskId), pendingTaskTranscoder);
   }
 
+  @Timed
   public Optional<SingularityTask> getTask(SingularityTaskId taskId) {
     final String path = getTaskPath(taskId);
 
@@ -544,6 +549,7 @@ public class TaskManager extends CuratorAsyncManager {
     return delete(getKilledPath(taskId));
   }
 
+  @Timed
   public SingularityDeleteResult deleteLastActiveTaskStatus(SingularityTaskId taskId) {
     return delete(getLastActiveTaskStatusPath(taskId));
   }

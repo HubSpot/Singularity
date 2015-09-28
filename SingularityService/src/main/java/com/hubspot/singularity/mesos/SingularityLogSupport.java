@@ -9,6 +9,7 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
@@ -104,6 +105,7 @@ public class SingularityLogSupport implements Managed {
     LOG.trace("Updated task {} directory in {}", task.getTaskId(), JavaUtils.duration(start));
   }
 
+  @Timed
   public void checkDirectory(final SingularityTaskId taskId) {
     final Optional<String> maybeDirectory = taskManager.getDirectory(taskId);
 

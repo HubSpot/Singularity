@@ -11,6 +11,7 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -80,6 +81,7 @@ public class SingularityHealthchecker {
     }
   }
 
+  @Timed
   public boolean enqueueHealthcheck(SingularityTask task, Optional<SingularityPendingDeploy> pendingDeploy) {
     if (!shouldHealthcheck(task, pendingDeploy)) {
       return false;

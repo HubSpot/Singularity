@@ -26,6 +26,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -167,6 +168,8 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
       return;
     }
 
+    final long start = System.currentTimeMillis();
+
     lock.lock();
 
     try {
@@ -175,6 +178,8 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
       handleUncaughtSchedulerException(t);
     } finally {
       lock.unlock();
+
+      LOG.debug("Handled {} resource offers in {}", offers.size(), JavaUtils.duration(start));
     }
   }
 
@@ -198,6 +203,8 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
 
   @Override
   public void statusUpdate(SchedulerDriver driver, TaskStatus status) {
+    final long start = System.currentTimeMillis();
+
     stateLock.lock();
 
     try {
@@ -220,6 +227,8 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
       handleUncaughtSchedulerException(t);
     } finally {
       lock.unlock();
+
+      LOG.debug("Handled status update for {} in {}", status.getTaskId().getValue(), JavaUtils.duration(start));
     }
   }
 

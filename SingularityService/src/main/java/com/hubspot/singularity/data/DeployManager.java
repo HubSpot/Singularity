@@ -9,6 +9,7 @@ import org.apache.curator.utils.ZKPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
@@ -298,6 +299,7 @@ public class DeployManager extends CuratorAsyncManager {
     return save(getPendingDeployPath(pendingDeploy.getDeployMarker().getRequestId()), pendingDeploy, pendingDeployTranscoder);
   }
 
+  @Timed
   public Optional<SingularityPendingDeploy> getPendingDeploy(String requestId) {
     return getData(getPendingDeployPath(requestId), pendingDeployTranscoder);
   }
