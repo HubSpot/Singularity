@@ -183,6 +183,30 @@ class Request extends Model
                 localStorage.setItem(@localStorageCommandLineInputKeyPrefix + "historyIndex", 0);
                 localStorage.setItem(@localStorageCommandLineInputKeyPrefix + "historyLength", commands.length);
 
+                $("#commandLineInput").keydown(function(e) {
+              		var inc = 0;
+              		switch(e.which) {
+                    case 38: // up
+              				inc = 1;
+              	      break;
+                    case 40: // down
+              				inc = -1;
+              	      break;
+                    default: return;
+                  }
+            			var index = parseInt(localStorage.getItem(@localStorageCommandLineInputKeyPrefix + "historyIndex"));
+            			var length = parseInt(localStorage.getItem(@localStorageCommandLineInputKeyPrefix + "historyLength"));
+            			index += inc;
+            			if (index < 0) {
+            				index = 0
+            			} else if (index > length - 1) {
+            				index = length - 1;
+            			}
+            			localStorage.setItem(@localStorageCommandLineInputKeyPrefix + "historyIndex", index);
+            			$("#commandLineInput").val(commands[index]);
+                  e.preventDefault();
+              	});
+
             callback: (data) =>
                 @data = data
 
