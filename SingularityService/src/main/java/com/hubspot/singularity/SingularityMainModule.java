@@ -22,6 +22,7 @@ import org.jets3t.service.S3ServiceException;
 import org.jets3t.service.impl.rest.httpclient.RestS3Service;
 import org.jets3t.service.security.AWSCredentials;
 
+import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -45,6 +46,7 @@ import com.hubspot.singularity.config.SentryConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
+import com.hubspot.singularity.guice.DropwizardMetricRegistryProvider;
 import com.hubspot.singularity.guice.DropwizardObjectMapperProvider;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.hooks.LoadBalancerClientImpl;
@@ -129,6 +131,7 @@ public class SingularityMainModule implements Module {
     binder.bind(NotifyingExceptionMapper.class).in(Scopes.SINGLETON);
 
     binder.bind(ObjectMapper.class).toProvider(DropwizardObjectMapperProvider.class).in(Scopes.SINGLETON);
+    binder.bind(MetricRegistry.class).toProvider(DropwizardMetricRegistryProvider.class).in(Scopes.SINGLETON);
 
     binder.bind(AsyncHttpClient.class).to(SingularityHttpClient.class).in(Scopes.SINGLETON);
     binder.bind(ServerProvider.class).in(Scopes.SINGLETON);

@@ -16,6 +16,7 @@ import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
@@ -113,6 +114,7 @@ public class SingularityScheduler {
     return map;
   }
 
+  @Timed
   public void checkForDecomissions(SingularitySchedulerStateCache stateCache) {
     final long start = System.currentTimeMillis();
 
@@ -191,6 +193,7 @@ public class SingularityScheduler {
     }
   }
 
+  @Timed
   public void drainPendingQueue(final SingularitySchedulerStateCache stateCache) {
     final long start = System.currentTimeMillis();
 
@@ -262,6 +265,7 @@ public class SingularityScheduler {
     return isDeployInUse(maybeRequestDeployState, pendingRequest.getDeployId(), false);
   }
 
+  @Timed
   public List<SingularityTaskRequest> getDueTasks() {
     final List<SingularityPendingTask> tasks = taskManager.getPendingTasks();
 
@@ -468,6 +472,7 @@ public class SingularityScheduler {
     return new SingularityDeployStatisticsBuilder(requestId, deployId).build();
   }
 
+  @Timed
   public void handleCompletedTask(Optional<SingularityTask> task, SingularityTaskId taskId, boolean wasActive, long timestamp, ExtendedTaskState state, SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache) {
     final SingularityDeployStatistics deployStatistics = getDeployStatistics(taskId.getRequestId(), taskId.getDeployId());
 
