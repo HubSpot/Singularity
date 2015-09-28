@@ -41,6 +41,7 @@ public class SingularityGraphiteReporterManaged implements Managed {
   public void start() throws Exception {
     if (!graphiteConfiguration.isEnabled()) {
       LOG.info("Not reporting data points to graphite.");
+      return;
     }
 
     LOG.info("Reporting data points to graphite server {}:{} every {} seconds with prefix '{}' and predicates '{}'.", graphiteConfiguration.getHostname(),
