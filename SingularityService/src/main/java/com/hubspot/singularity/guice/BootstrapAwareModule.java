@@ -9,7 +9,7 @@ import com.google.inject.Module;
 import io.dropwizard.setup.Bootstrap;
 
 public abstract class BootstrapAwareModule implements Module {
-  private Bootstrap<?> bootstrap = null;
+  private volatile Bootstrap<?> bootstrap = null;
 
   @Override
   public void configure(Binder binder) {

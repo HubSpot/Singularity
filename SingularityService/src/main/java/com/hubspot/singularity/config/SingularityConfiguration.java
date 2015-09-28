@@ -8,7 +8,6 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -17,7 +16,6 @@ import com.hubspot.singularity.SlavePlacement;
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityConfiguration extends Configuration {
 
   private boolean allowRequestsWithoutOwners = true;
@@ -187,6 +185,10 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("auth")
   @NotNull
   private AuthConfiguration authConfiguration = new AuthConfiguration();
+
+  @JsonProperty("graphite")
+  @NotNull
+  private GraphiteConfiguration graphiteConfiguration = new GraphiteConfiguration();
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -764,4 +766,11 @@ public class SingularityConfiguration extends Configuration {
     this.historyPurgingConfiguration = historyPurgingConfiguration;
   }
 
+  public GraphiteConfiguration getGraphiteConfiguration() {
+    return graphiteConfiguration;
+  }
+
+  public void setGraphiteConfiguration(GraphiteConfiguration graphiteConfiguration) {
+    this.graphiteConfiguration = graphiteConfiguration;
+  }
 }
