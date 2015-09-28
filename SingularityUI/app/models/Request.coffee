@@ -136,7 +136,8 @@ class Request extends Model
     promptRun: (callback) =>
         vex.dialog.prompt
             message: "<h3>Run Task</h3>"
-            input: runTemplate id: @get "id"
+            input: runTemplate
+                id: @get "id"
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.YES), text: 'Run now'
                 vex.dialog.buttons.NO
@@ -154,11 +155,15 @@ class Request extends Model
 
                 else
                     history = localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
-                    if !!history
+
+                    if history?
+                        last = history.split(",")[history.split(",").length - 1]
                         history += ","
                     else
                         history = ""
-                    localStorage.setItem(@localStorageCommandLineInputKeyPrefix + @id, history + commandLineInput) if commandLineInput?
+
+                    if commandLineInput != last
+                        localStorage.setItem(@localStorageCommandLineInputKeyPrefix + @id, history + commandLineInput) if commandLineInput?
                     localStorage.setItem('taskRunRedirectFilename', fileName) if filename?
                     localStorage.setItem('taskRunAutoTail', @data.autoTail)
                     @data.id = @get 'id'
