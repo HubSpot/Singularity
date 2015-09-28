@@ -195,6 +195,18 @@
           </exclusion>
         </exclusions>
       </dependency>
+
+      <dependency>
+        <groupId>com.palominolabs.metrics</groupId>
+        <artifactId>metrics-guice</artifactId>
+        <version>3.1.1</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.codahale.metrics</groupId>
+        <artifactId>metrics-annotation</artifactId>
+        <version>${dep.metrics.version}</version><!-- TOOD: add this to HubSpot's basepom -->
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
