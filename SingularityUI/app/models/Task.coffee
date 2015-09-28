@@ -48,7 +48,7 @@ class Task extends Model
     promptRun: (callback) =>
         # We tell the Request to run
         requestModel = new Request id: @get('request').id
-        requestModel.promptRun => callback()
+        requestModel.promptRun "", => callback()
 
 
 

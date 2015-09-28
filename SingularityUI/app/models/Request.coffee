@@ -133,7 +133,6 @@ class Request extends Model
                 @unpause().done callback
 
     promptRun: (command = "", callback) =>
-        console.log command
         vex.dialog.prompt
             message: ""
             input: runTemplate
@@ -156,7 +155,12 @@ class Request extends Model
 
                 else
                     if command is ""
-                        localStorage.setItem(@localStorageCommandLineInputKeyPrefix + @id, commandLineInput) if commandLineInput?
+                        history = localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
+                        if !!history
+                            history += ","
+                        else
+                            history = ""
+                        localStorage.setItem(@localStorageCommandLineInputKeyPrefix + @id, history + commandLineInput) if commandLineInput?
                     localStorage.setItem('taskRunRedirectFilename', fileName) if filename?
                     localStorage.setItem('taskRunAutoTail', @data.autoTail)
                     @data.id = @get 'id'
@@ -167,7 +171,10 @@ class Request extends Model
             afterOpen: =>
                 $('#filename').val localStorage.getItem('taskRunRedirectFilename')
                 if command is ""
-                    $('#commandLineInput').val localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
+                    history = localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
+                    if !!history
+                        history = history.split(",")
+                        $('#commandLineInput').val history[history.length - 1]
                 $('#autoTail').prop 'checked', (localStorage.getItem('taskRunAutoTail') is 'on')
 
             callback: (data) =>
