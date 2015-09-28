@@ -135,7 +135,7 @@ class Request extends Model
 
     promptRun: (callback) =>
         vex.dialog.prompt
-            message: ""
+            message: "<h3>Run Task</h3>"
             input: runTemplate id: @get "id"
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.YES), text: 'Run now'
@@ -184,7 +184,7 @@ class Request extends Model
             .done =>
                 command = task.attributes.task.taskRequest.pendingTask.cmdLineArgsList
                 vex.dialog.prompt
-                    message: ""
+                    message: "<h3>Rerun Task</h3>"
                     input: runTemplate
                         id: @get "id"
                         command: command
