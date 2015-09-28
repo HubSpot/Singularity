@@ -37,8 +37,20 @@ public abstract class BaseRunnerConfiguration implements OverridableByProperty {
   @JsonProperty
   private Optional<String> loggingPattern = Optional.absent();
 
+  @NotNull
+  @JsonProperty
+  private Optional<String> hostname = Optional.absent();
+
   protected BaseRunnerConfiguration(Optional<String> loggingFilename) {
     this.loggingFilename = loggingFilename;
+  }
+
+  public Optional<String> getHostname() {
+    return hostname;
+  }
+
+  public void setHostname(Optional<String> hostname) {
+    this.hostname = hostname;
   }
 
   public Optional<String> getLoggingFilename() {

@@ -21,9 +21,13 @@ public class ExecutorDataBuilder {
   private Optional<Integer> maxTaskThreads;
   private Optional<Boolean> preserveTaskSandboxAfterFinish;
   private Optional<String> loggingS3Bucket;
+  private Optional<Integer> maxOpenFiles;
+  private Optional<Boolean> skipLogrotateAndCompress;
 
-  public ExecutorDataBuilder(String cmd, List<EmbeddedArtifact> embeddedArtifacts, List<ExternalArtifact> externalArtifacts, List<S3Artifact> s3Artifacts, List<Integer> successfulExitCodes, Optional<String> runningSentinel,
-      Optional<String> user, List<String> extraCmdLineArgs, Optional<String> loggingTag, Map<String, String> loggingExtraFields, Optional<Long> sigKillProcessesAfterMillis, Optional<Integer> maxTaskThreads, Optional<Boolean> preserveTaskSandboxAfterFinish, Optional<String> loggingS3Bucket) {
+  public ExecutorDataBuilder(String cmd, List<EmbeddedArtifact> embeddedArtifacts, List<ExternalArtifact> externalArtifacts, List<S3Artifact> s3Artifacts, List<Integer> successfulExitCodes,
+      Optional<String> runningSentinel, Optional<String> user, List<String> extraCmdLineArgs, Optional<String> loggingTag, Map<String, String> loggingExtraFields,
+      Optional<Long> sigKillProcessesAfterMillis, Optional<Integer> maxTaskThreads, Optional<Boolean> preserveTaskSandboxAfterFinish, Optional<String> loggingS3Bucket,
+      Optional<Integer> maxOpenFiles, Optional<Boolean> skipLogrotateAndCompress) {
     this.cmd = cmd;
     this.embeddedArtifacts = embeddedArtifacts;
     this.externalArtifacts = externalArtifacts;
@@ -38,6 +42,8 @@ public class ExecutorDataBuilder {
     this.maxTaskThreads = maxTaskThreads;
     this.preserveTaskSandboxAfterFinish = preserveTaskSandboxAfterFinish;
     this.loggingS3Bucket = loggingS3Bucket;
+    this.maxOpenFiles = maxOpenFiles;
+    this.skipLogrotateAndCompress = skipLogrotateAndCompress;
   }
 
   public ExecutorDataBuilder() {
@@ -45,7 +51,8 @@ public class ExecutorDataBuilder {
   }
 
   public ExecutorData build() {
-    return new ExecutorData(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields, sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, loggingS3Bucket);
+    return new ExecutorData(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields,
+        sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, loggingS3Bucket, maxOpenFiles, skipLogrotateAndCompress);
   }
 
   public Optional<String> getLoggingTag() {
@@ -174,23 +181,31 @@ public class ExecutorDataBuilder {
     return this;
   }
 
+  public Optional<Integer> getMaxOpenFiles() {
+    return maxOpenFiles;
+  }
+
+  public ExecutorDataBuilder setMaxOpenFiles(Optional<Integer> maxOpenFiles) {
+    this.maxOpenFiles = maxOpenFiles;
+    return this;
+  }
+
+  public Optional<Boolean> getSkipLogrotateAndCompress() {
+    return skipLogrotateAndCompress;
+  }
+
+  public ExecutorDataBuilder setSkipLogrotateAndCompress(Optional<Boolean> skipLogrotateAndCompress) {
+    this.skipLogrotateAndCompress = skipLogrotateAndCompress;
+    return this;
+  }
+
   @Override
   public String toString() {
-    return "ExecutorDataBuilder[" +
-            "cmd='" + cmd + '\'' +
-            ", embeddedArtifacts=" + embeddedArtifacts +
-            ", externalArtifacts=" + externalArtifacts +
-            ", s3Artifacts=" + s3Artifacts +
-            ", successfulExitCodes=" + successfulExitCodes +
-            ", runningSentinel=" + runningSentinel +
-            ", user=" + user +
-            ", extraCmdLineArgs=" + extraCmdLineArgs +
-            ", loggingTag=" + loggingTag +
-            ", loggingExtraFields=" + loggingExtraFields +
-            ", sigKillProcessesAfterMillis=" + sigKillProcessesAfterMillis +
-            ", maxTaskThreads=" + maxTaskThreads +
-            ", preserveTaskSandboxAfterFinish=" + preserveTaskSandboxAfterFinish +
-            ", loggingS3Bucket=" + loggingS3Bucket +
-            ']';
+    return "ExecutorDataBuilder [cmd=" + cmd + ", embeddedArtifacts=" + embeddedArtifacts + ", externalArtifacts=" + externalArtifacts + ", s3Artifacts=" + s3Artifacts + ", successfulExitCodes="
+        + successfulExitCodes + ", runningSentinel=" + runningSentinel + ", user=" + user + ", extraCmdLineArgs=" + extraCmdLineArgs + ", loggingTag=" + loggingTag + ", loggingExtraFields="
+        + loggingExtraFields + ", sigKillProcessesAfterMillis=" + sigKillProcessesAfterMillis + ", maxTaskThreads=" + maxTaskThreads + ", preserveTaskSandboxAfterFinish="
+        + preserveTaskSandboxAfterFinish + ", loggingS3Bucket=" + loggingS3Bucket + ", maxOpenFiles=" + maxOpenFiles + ", skipLogrotateAndCompress=" + skipLogrotateAndCompress + "]";
   }
+
+
 }

@@ -22,13 +22,15 @@ def download_s3_logs(args):
     filename = log_file['key'].rsplit("/", 1)[1]
     if logfetch_base.is_in_date_range(args, int(str(log_file['lastModified'])[0:-3])):
       if not args.logtype or log_matches(args, filename):
+        if args.verbose:
+          sys.stderr.write(colored('Including log {0}'.format(filename), 'blue') + '\n')
         if not already_downloaded(args.dest, filename):
           async_requests.append(
             grequests.AsyncRequest('GET', log_file['getUrl'], callback=generate_callback(log_file['getUrl'], args.dest, filename, args.chunk_size, args.verbose), headers=args.headers)
           )
         else:
           if args.verbose:
-            sys.stderr.write(colored('Log already downloaded {0}'.format(filename), 'magenta') + '\n')
+            sys.stderr.write(colored('Log already downloaded {0}'.format(filename), 'blue') + '\n')
           all_logs.append('{0}/{1}'.format(args.dest, filename.replace('.gz', '.log')))
         zipped_files.append('{0}/{1}'.format(args.dest, filename))
       else:

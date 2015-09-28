@@ -61,6 +61,14 @@ public class SingularityExecutorTaskDefinition {
     return taskDirectoryPath.resolve(logrotateStateFile);
   }
 
+  @JsonIgnore
+  /**
+   * Convenience method for handling skipLogrotateAndCompress
+   */
+  public boolean shouldLogrotateLogFile() {
+    return !executorData.getSkipLogrotateAndCompress().or(Boolean.FALSE).booleanValue();
+  }
+
   public String getTaskDirectory() {
     return taskDirectoryPath.toString();
   }

@@ -2,11 +2,14 @@ package com.hubspot.singularity.hooks;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import javax.ws.rs.HEAD;
 
 import com.hubspot.baragon.models.RequestAction;
 import org.slf4j.Logger;

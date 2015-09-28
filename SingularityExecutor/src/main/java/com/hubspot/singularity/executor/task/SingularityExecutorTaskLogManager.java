@@ -25,6 +25,8 @@ import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.hubspot.singularity.runner.base.shared.TailMetadata;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public class SingularityExecutorTaskLogManager {
 
   private final SingularityExecutorTaskDefinition taskDefinition;
@@ -47,7 +49,16 @@ public class SingularityExecutorTaskLogManager {
     ensureServiceOutExists();
     writeLogrotateFile();
     writeTailMetadata(false);
-    writeS3MetadataFile(false);
+    writeS3MetadataFileForRotatedFiles(false);
+  }
+
+  @SuppressFBWarnings
+  private boolean writeS3MetadataFileForRotatedFiles(boolean finished) {
+    final Path serviceLogOutPath = taskDefinition.getServiceLogOutPath();
+    final Path serviceLogParent = serviceLogOutPath.getParent();
+    final Path logrotateDirectory = serviceLogParent.resolve(configuration.getLogrotateToDirectory());
+
+    return writeS3MetadataFile("default", logrotateDirectory, getS3GlobForLogRotatedFiles(), finished);
   }
 
   private void writeLogrotateFile() {
@@ -55,17 +66,27 @@ public class SingularityExecutorTaskLogManager {
     templateManager.writeLogrotateFile(getLogrotateConfPath(), new LogrotateTemplateContext(configuration, taskDefinition));
   }
 
+  @SuppressFBWarnings
   public boolean teardown() {
     boolean writeTailMetadataSuccess = writeTailMetadata(true);
 
     ensureServiceOutExists();
-    copyLogTail();
+
+    if (taskDefinition.shouldLogrotateLogFile()) {
+      copyLogTail();
+    }
+
+    boolean writeS3MetadataForNonLogRotatedFileSuccess = true;
+
+    if (!taskDefinition.shouldLogrotateLogFile()) {
+      writeS3MetadataForNonLogRotatedFileSuccess = writeS3MetadataFile("unrotated", taskDefinition.getServiceLogOutPath().getParent(), taskDefinition.getServiceLogOutPath().getFileName().toString(), true);
+    }
 
     if (manualLogrotate()) {
       boolean removeLogRotateFileSuccess = removeLogrotateFile();
-      boolean writeS3MetadataFileSuccess = writeS3MetadataFile(true);
+      boolean writeS3MetadataForLogrotatedFilesSuccess = writeS3MetadataFileForRotatedFiles(true);
 
-      return writeTailMetadataSuccess && removeLogRotateFileSuccess && writeS3MetadataFileSuccess;
+      return writeTailMetadataSuccess && removeLogRotateFileSuccess && writeS3MetadataForLogrotatedFilesSuccess && writeS3MetadataForNonLogRotatedFileSuccess;
     } else {
       return false;
     }
@@ -156,12 +177,7 @@ public class SingularityExecutorTaskLogManager {
     return jsonObjectFileHelper.writeObject(tailMetadata, path, log);
   }
 
-  /**
-   * Return a String for generating a PathMatcher.
-   * The matching files are caught by the S3 Uploader and pushed to S3.
-   * @return file glob String.
-   */
-  private String getS3Glob() {
+  private String getS3GlobForLogRotatedFiles() {
     List<String> fileNames = new ArrayList<>(configuration.getS3UploaderAdditionalFiles());
     fileNames.add(Objects.toString(taskDefinition.getServiceLogOutPath().getFileName()));
 
@@ -184,20 +200,13 @@ public class SingularityExecutorTaskLogManager {
     return Paths.get(configuration.getLogrotateConfDirectory()).resolve(taskDefinition.getTaskId());
   }
 
-  private boolean writeS3MetadataFile(boolean finished) {
-    final Path serviceLogOutPath = taskDefinition.getServiceLogOutPath();
-    final Path parent = serviceLogOutPath.getParent();
-    if (parent == null) {
-      throw new IllegalStateException("S3 metadata file " + serviceLogOutPath + " has no parent");
-    }
-    final Path logrotateDirectory = parent.resolve(configuration.getLogrotateToDirectory());
-
+  private boolean writeS3MetadataFile(String filenameHint, Path pathToS3Directory, String globForS3Files, boolean finished) {
     final String s3UploaderBucket = taskDefinition.getExecutorData().getLoggingS3Bucket().or(configuration.getS3UploaderBucket());
 
-    S3UploadMetadata s3UploadMetadata = new S3UploadMetadata(logrotateDirectory.toString(), getS3Glob(), s3UploaderBucket, getS3KeyPattern(), finished, Optional.<String> absent(), Optional.<Integer> absent(), Optional.<String> absent(),
-        Optional.<String> absent(), Optional.<Long> absent());
+    S3UploadMetadata s3UploadMetadata = new S3UploadMetadata(pathToS3Directory.toString(), globForS3Files, s3UploaderBucket, getS3KeyPattern(), finished, Optional.<String> absent(),
+        Optional.<Integer> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Long> absent());
 
-    String s3UploadMetadataFileName = String.format("%s%s", taskDefinition.getTaskId(), baseConfiguration.getS3UploaderMetadataSuffix());
+    String s3UploadMetadataFileName = String.format("%s-%s%s", taskDefinition.getTaskId(), filenameHint, baseConfiguration.getS3UploaderMetadataSuffix());
 
     Path s3UploadMetadataPath = Paths.get(baseConfiguration.getS3UploaderMetadataDirectory()).resolve(s3UploadMetadataFileName);
 

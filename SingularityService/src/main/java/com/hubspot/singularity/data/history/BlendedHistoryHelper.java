@@ -26,7 +26,9 @@ public abstract class BlendedHistoryHelper<T, Q> {
     for (SingularityTaskId taskId : taskIds) {
       List<SingularityTaskHistoryUpdate> historyUpdates = map.get(taskId);
       SingularityTask task = tasks.get(taskId);
-      histories.add(SingularityTaskIdHistory.fromTaskIdAndTaskAndUpdates(taskId, task, historyUpdates));
+      if (task != null) {
+        histories.add(SingularityTaskIdHistory.fromTaskIdAndTaskAndUpdates(taskId, task, historyUpdates));
+      }
     }
 
     Collections.sort(histories);

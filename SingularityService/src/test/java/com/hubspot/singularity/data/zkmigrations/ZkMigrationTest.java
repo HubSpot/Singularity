@@ -1,6 +1,8 @@
 package com.hubspot.singularity.data.zkmigrations;
 
 
+import java.util.List;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 import org.junit.Assert;
@@ -34,12 +36,22 @@ public class ZkMigrationTest extends SingularityTestBaseNoDb {
   private ObjectMapper objectMapper;
   @Inject
   private CuratorFramework curator;
+  @Inject
+  private List<ZkDataMigration> migrations;
 
   @Test
   public void testMigrationRunner() {
-    Assert.assertTrue(migrationRunner.checkMigrations() == 6);
+    int largestSeen = 0;
 
-    Assert.assertTrue(metadataManager.getZkDataVersion().isPresent() && metadataManager.getZkDataVersion().get().equals("6"));
+    for (ZkDataMigration migration : migrations) {
+      Assert.assertTrue(migration.getMigrationNumber() > largestSeen);
+
+      largestSeen = migration.getMigrationNumber();
+    }
+
+    Assert.assertTrue(migrationRunner.checkMigrations() == migrations.size());
+
+    Assert.assertTrue(metadataManager.getZkDataVersion().isPresent() && metadataManager.getZkDataVersion().get().equals(Integer.toString(largestSeen)));
 
     Assert.assertTrue(migrationRunner.checkMigrations() == 0);
   }
