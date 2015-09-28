@@ -11,6 +11,7 @@ RequestDeployHistory   = require '../collections/RequestDeployHistory'
 RequestHistory         = require '../collections/RequestHistory'
 
 RequestDetailView      = require '../views/request'
+ExpandableTableSubview = require '../views/expandableTableSubview'
 PaginatedTableServersideView = require '../views/paginatedTableServersideView'
 
 SimpleSubview          = require '../views/simpleSubview'
