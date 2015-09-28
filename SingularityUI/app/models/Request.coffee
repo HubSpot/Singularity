@@ -7,6 +7,7 @@ runTemplate = require '../templates/vex/requestRun'
 removeTemplate = require '../templates/vex/requestRemove'
 bounceTemplate = require '../templates/vex/requestBounce'
 exitCooldownTemplate = require '../templates/vex/exitCooldown'
+TaskHistory = require '../models/TaskHistory'
 
 class Request extends Model
 
@@ -177,46 +178,50 @@ class Request extends Model
                 @data = data
 
 
-    promptRerun: (command, callback) =>
-        vex.dialog.prompt
-            message: ""
-            input: runTemplate
-                id: @get "id"
-                command: command
-            buttons: [
-                $.extend _.clone(vex.dialog.buttons.YES), text: 'Run now'
-                vex.dialog.buttons.NO
-            ]
+    promptRerun: (taskId, callback) =>
+        task = new TaskHistory {taskId}
+        task.fetch()
+            .done =>
+                command = task.attributes.task.taskRequest.pendingTask.cmdLineArgsList
+                vex.dialog.prompt
+                    message: ""
+                    input: runTemplate
+                        id: @get "id"
+                        command: command
+                    buttons: [
+                        $.extend _.clone(vex.dialog.buttons.YES), text: 'Run now'
+                        vex.dialog.buttons.NO
+                    ]
 
-            beforeClose: =>
-                return if @data is false
+                    beforeClose: =>
+                        return if @data is false
 
-                fileName = @data.filename.trim()
-                commandLineInput = @data.commandLineInput.trim()
+                        fileName = @data.filename.trim()
+                        commandLineInput = @data.commandLineInput.trim()
 
-                if fileName.length is 0 and @data.autoTail is 'on'
-                    $(window.noFilenameError).removeClass('hide')
-                    return false
+                        if fileName.length is 0 and @data.autoTail is 'on'
+                            $(window.noFilenameError).removeClass('hide')
+                            return false
 
-                else
-                    localStorage.setItem('taskRunRedirectFilename', fileName) if filename?
-                    localStorage.setItem('taskRunAutoTail', @data.autoTail)
-                    @data.id = @get 'id'
+                        else
+                            localStorage.setItem('taskRunRedirectFilename', fileName) if filename?
+                            localStorage.setItem('taskRunAutoTail', @data.autoTail)
+                            @data.id = @get 'id'
 
-                    @run( @data.commandLineInput ).done callback( @data )
-                    return true
+                            @run( @data.commandLineInput ).done callback( @data )
+                            return true
 
-            afterOpen: =>
-                $('#filename').val localStorage.getItem('taskRunRedirectFilename')
-                if command is ""
-                    history = localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
-                    if !!history
-                        history = history.split(",")
-                        $('#commandLineInput').val history[history.length - 1]
-                $('#autoTail').prop 'checked', (localStorage.getItem('taskRunAutoTail') is 'on')
+                    afterOpen: =>
+                        $('#filename').val localStorage.getItem('taskRunRedirectFilename')
+                        if command is ""
+                            history = localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
+                            if !!history
+                                history = history.split(",")
+                                $('#commandLineInput').val history[history.length - 1]
+                        $('#autoTail').prop 'checked', (localStorage.getItem('taskRunAutoTail') is 'on')
 
-            callback: (data) =>
-                @data = data
+                    callback: (data) =>
+                        @data = data
 
     promptRemove: (callback) =>
         vex.dialog.confirm

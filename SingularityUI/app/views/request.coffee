@@ -78,8 +78,8 @@ class RequestView extends View
                 setTimeout ( => @trigger 'refreshrequest'), 2500
 
     rerunTask: (e) =>
-        command = e.target.getAttribute 'data-command'
-        @model.promptRerun command, (data) =>
+        taskId = e.target.getAttribute 'data-taskId'
+        @model.promptRerun taskId, (data) =>
             # If user wants to redirect to a file after the task starts
             if data.autoTail is 'on'
                 autoTailer = new AutoTailer({
