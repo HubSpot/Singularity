@@ -8,7 +8,34 @@
 <hr class='border-color-light-gray'>
 
 <script>
-		
+	// Need to handle this event here since it's inside vex...
+	$("#commandLineInput").keydown(function(e) {
+		var inc = 0;
+		switch(e.which) {
+      case 38: // up
+				inc = 1;
+	      break;
+      case 40: // down
+				inc = -1;
+	      break;
+      default: return;
+    }
+		if ("{{ prefix }}" !== "") {
+			var index = parseInt(localStorage.getItem("{{ prefix }}" + "historyIndex"));
+			var length = parseInt(localStorage.getItem("{{ prefix }}" + "historyLength"));
+			index += inc;
+			if (index < 0) {
+				index = 0
+			} else if (index > length - 1) {
+				index = length - 1;
+			}
+			localStorage.setItem("{{ prefix }}" + "historyIndex", index);
+			cmdString = "{{ commands }}";
+			commands = cmdString ? cmdString.split(",").reverse() : []
+			$("#commandLineInput").val(commands[index]);
+		}
+    e.preventDefault();
+	});
 </script>
 
 <p><label class='label-light'><input id="autoTail" name="autoTail" type="checkbox"> Wait for task to start, then start tailing:</label></p>

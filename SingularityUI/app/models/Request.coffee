@@ -138,6 +138,9 @@ class Request extends Model
             message: "<h3>Run Task</h3>"
             input: runTemplate
                 id: @get "id"
+                prefix: @localStorageCommandLineInputKeyPrefix
+                commands: localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
+
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.YES), text: 'Run now'
                 vex.dialog.buttons.NO
@@ -174,10 +177,11 @@ class Request extends Model
             afterOpen: =>
                 $('#filename').val localStorage.getItem('taskRunRedirectFilename')
                 $('#autoTail').prop 'checked', (localStorage.getItem('taskRunAutoTail') is 'on')
-                history = localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
-                if !!history
-                    history = history.split(",")
-                    $('#commandLineInput').val history[history.length - 1]
+                cmdString = localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
+                commands = if cmdString then cmdString.split(",").reverse() else []
+                $('#commandLineInput').val commands[0]
+                localStorage.setItem(@localStorageCommandLineInputKeyPrefix + "historyIndex", 0);
+                localStorage.setItem(@localStorageCommandLineInputKeyPrefix + "historyLength", commands.length);
 
             callback: (data) =>
                 @data = data
