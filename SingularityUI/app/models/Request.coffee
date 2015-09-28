@@ -132,7 +132,52 @@ class Request extends Model
                 return unless confirmed
                 @unpause().done callback
 
-    promptRun: (command = "", callback) =>
+    promptRun: (callback) =>
+        vex.dialog.prompt
+            message: ""
+            input: runTemplate id: @get "id"
+            buttons: [
+                $.extend _.clone(vex.dialog.buttons.YES), text: 'Run now'
+                vex.dialog.buttons.NO
+            ]
+
+            beforeClose: =>
+                return if @data is false
+
+                fileName = @data.filename.trim()
+                commandLineInput = @data.commandLineInput.trim()
+
+                if fileName.length is 0 and @data.autoTail is 'on'
+                    $(window.noFilenameError).removeClass('hide')
+                    return false
+
+                else
+                    history = localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
+                    if !!history
+                        history += ","
+                    else
+                        history = ""
+                    localStorage.setItem(@localStorageCommandLineInputKeyPrefix + @id, history + commandLineInput) if commandLineInput?
+                    localStorage.setItem('taskRunRedirectFilename', fileName) if filename?
+                    localStorage.setItem('taskRunAutoTail', @data.autoTail)
+                    @data.id = @get 'id'
+
+                    @run( @data.commandLineInput ).done callback( @data )
+                    return true
+
+            afterOpen: =>
+                $('#filename').val localStorage.getItem('taskRunRedirectFilename')
+                $('#autoTail').prop 'checked', (localStorage.getItem('taskRunAutoTail') is 'on')
+                history = localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
+                if !!history
+                    history = history.split(",")
+                    $('#commandLineInput').val history[history.length - 1]
+
+            callback: (data) =>
+                @data = data
+
+
+    promptRerun: (command, callback) =>
         vex.dialog.prompt
             message: ""
             input: runTemplate
@@ -145,7 +190,7 @@ class Request extends Model
 
             beforeClose: =>
                 return if @data is false
-                console.log @data
+
                 fileName = @data.filename.trim()
                 commandLineInput = @data.commandLineInput.trim()
 
@@ -154,13 +199,6 @@ class Request extends Model
                     return false
 
                 else
-                    if command is ""
-                        history = localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
-                        if !!history
-                            history += ","
-                        else
-                            history = ""
-                        localStorage.setItem(@localStorageCommandLineInputKeyPrefix + @id, history + commandLineInput) if commandLineInput?
                     localStorage.setItem('taskRunRedirectFilename', fileName) if filename?
                     localStorage.setItem('taskRunAutoTail', @data.autoTail)
                     @data.id = @get 'id'
