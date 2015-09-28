@@ -8,7 +8,6 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -17,7 +16,6 @@ import com.hubspot.singularity.SlavePlacement;
 import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityConfiguration extends Configuration {
 
   private boolean allowRequestsWithoutOwners = true;
