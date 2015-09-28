@@ -61,7 +61,8 @@ class RequestView extends View
             app.router.navigate 'requests', trigger: true
 
     runRequest: (e) =>
-        @model.promptRun (data) =>
+        command = e.target.getAttribute 'data-command'
+        @model.promptRun command, (data) =>
             # If user wants to redirect to a file after the task starts
             if data.autoTail is 'on'
                 autoTailer = new AutoTailer({

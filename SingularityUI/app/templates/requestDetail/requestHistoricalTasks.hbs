@@ -56,12 +56,12 @@
                         </td>
                         <td class="hidden-xs actions-column">
                             <a href="{{ appRoot }}/task/{{ taskId.id }}/tail/{{ substituteTaskId ../../config.finishedTaskLogPath taskId.id }}" title="Log">
-                                ...
+                                ···
                             </a>
                         </td>
                         {{#if canBeRunNow}}
                             <td class="hidden-xs actions-column">
-                                <a data-action="run-request-now" title="Rerun">
+                                <a data-action="run-request-now" data-command="some command" title="Rerun">
                                     ↺
                                 </a>
                             </td>
