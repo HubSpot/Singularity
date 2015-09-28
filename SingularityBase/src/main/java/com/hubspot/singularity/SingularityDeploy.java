@@ -1,10 +1,12 @@
 package com.hubspot.singularity;
 
 import static com.hubspot.singularity.JsonHelpers.copyOfList;
+import static com.hubspot.singularity.JsonHelpers.copyOfSet;
 import static com.hubspot.singularity.JsonHelpers.copyOfMap;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -54,7 +56,7 @@ public class SingularityDeploy {
   private final Optional<Long> considerHealthyAfterRunningForSeconds;
 
   private final Optional<String> serviceBasePath;
-  private final Optional<List<String>> loadBalancerGroups;
+  private final Optional<Set<String>> loadBalancerGroups;
   private final Optional<Map<String, Object>> loadBalancerOptions;
 
   public static SingularityDeployBuilder newBuilder(String requestId, String id) {
@@ -86,7 +88,7 @@ public class SingularityDeploy {
       @JsonProperty("healthcheckMaxRetries") Optional<Integer> healthcheckMaxRetries,
       @JsonProperty("healthcheckMaxTotalTimeoutSeconds") Optional<Long> healthcheckMaxTotalTimeoutSeconds,
       @JsonProperty("serviceBasePath") Optional<String> serviceBasePath,
-      @JsonProperty("loadBalancerGroups") Optional<List<String>> loadBalancerGroups,
+      @JsonProperty("loadBalancerGroups") Optional<Set<String>> loadBalancerGroups,
       @JsonProperty("considerHealthyAfterRunningForSeconds") Optional<Long> considerHealthyAfterRunningForSeconds,
       @JsonProperty("loadBalancerOptions") Optional<Map<String, Object>> loadBalancerOptions,
       @JsonProperty("skipHealthchecksOnDeploy") Optional<Boolean> skipHealthchecksOnDeploy,
@@ -153,7 +155,7 @@ public class SingularityDeploy {
     .setConsiderHealthyAfterRunningForSeconds(considerHealthyAfterRunningForSeconds)
     .setDeployHealthTimeoutSeconds(deployHealthTimeoutSeconds)
     .setServiceBasePath(serviceBasePath)
-    .setLoadBalancerGroups(copyOfList(loadBalancerGroups))
+    .setLoadBalancerGroups(copyOfSet(loadBalancerGroups))
     .setLoadBalancerOptions(copyOfMap(loadBalancerOptions))
 
     .setMetadata(copyOfMap(metadata))
@@ -283,7 +285,7 @@ public class SingularityDeploy {
   }
 
   @ApiModelProperty(required=false, value="List of load balancer groups associated with this deployment.")
-  public Optional<List<String>> getLoadBalancerGroups() {
+  public Optional<Set<String>> getLoadBalancerGroups() {
     return loadBalancerGroups;
   }
 

@@ -3,6 +3,7 @@ package com.hubspot.singularity.data;
 import java.util.Collection;
 import java.util.List;
 
+import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 import org.slf4j.Logger;
@@ -39,6 +40,7 @@ public class RequestManager extends CuratorAsyncManager {
   private final Transcoder<SingularityPendingRequest> pendingRequestTranscoder;
   private final Transcoder<SingularityRequestCleanup> requestCleanupTranscoder;
   private final Transcoder<SingularityRequestHistory> requestHistoryTranscoder;
+  private final Transcoder<SingularityLoadBalancerUpdate> loadBalancerUpdateTranscoder;
 
   private final SingularityEventListener singularityEventListener;
 
@@ -48,10 +50,11 @@ public class RequestManager extends CuratorAsyncManager {
   private static final String PENDING_PATH_ROOT = REQUEST_ROOT + "/pending";
   private static final String CLEANUP_PATH_ROOT = REQUEST_ROOT + "/cleanup";
   private static final String HISTORY_PATH_ROOT = REQUEST_ROOT + "/history";
+  private static final String LB_CLEANUP_PATH_ROOT = REQUEST_ROOT + "/lbCleanup";
 
   @Inject
   public RequestManager(SingularityConfiguration configuration, CuratorFramework curator, SingularityEventListener singularityEventListener, Transcoder<SingularityRequestCleanup> requestCleanupTranscoder,
-      Transcoder<SingularityRequestWithState> requestTranscoder, Transcoder<SingularityPendingRequest> pendingRequestTranscoder, Transcoder<SingularityRequestHistory> requestHistoryTranscoder) {
+      Transcoder<SingularityRequestWithState> requestTranscoder, Transcoder<SingularityPendingRequest> pendingRequestTranscoder, Transcoder<SingularityRequestHistory> requestHistoryTranscoder, Transcoder<SingularityLoadBalancerUpdate> loadBalancerHistoryUpdateTranscoder) {
     super(curator, configuration.getZookeeperAsyncTimeout());
 
     this.requestTranscoder = requestTranscoder;
@@ -59,6 +62,7 @@ public class RequestManager extends CuratorAsyncManager {
     this.pendingRequestTranscoder = pendingRequestTranscoder;
     this.requestHistoryTranscoder = requestHistoryTranscoder;
     this.singularityEventListener = singularityEventListener;
+    this.loadBalancerUpdateTranscoder = loadBalancerHistoryUpdateTranscoder;
   }
 
   private String getRequestPath(String requestId) {
@@ -87,6 +91,10 @@ public class RequestManager extends CuratorAsyncManager {
 
   public int getSizeOfCleanupQueue() {
     return getNumChildren(CLEANUP_PATH_ROOT);
+  }
+
+  public int getNumLbCleanupRequests() {
+    return getNumChildren(LB_CLEANUP_PATH_ROOT);
   }
 
   public int getNumRequests() {
@@ -269,4 +277,27 @@ public class RequestManager extends CuratorAsyncManager {
     delete(getRequestPath(request.getId()));
   }
 
+  public List<String> getLBCleanupRequestIds() {
+    return getChildren(LB_CLEANUP_PATH_ROOT);
+  }
+
+  private String getLBCleanupPath(String requestId) {
+    return ZKPaths.makePath(LB_CLEANUP_PATH_ROOT, requestId);
+  }
+
+  public SingularityCreateResult createLBCleanupRequest(String requestId) {
+    return create(getLBCleanupPath(requestId));
+  }
+
+  public SingularityDeleteResult deleteLBCleanupRequest(String requestId) {
+    return delete(getLBCleanupPath(requestId));
+  }
+
+  public Optional<SingularityLoadBalancerUpdate> getLoadBalancerState(String requestId) {
+    return getData(getLBCleanupPath(requestId), loadBalancerUpdateTranscoder);
+  }
+
+  public void saveLoadBalancerState(String requestId, SingularityLoadBalancerUpdate lbUpdate) {
+    save(getLBCleanupPath(requestId), lbUpdate, loadBalancerUpdateTranscoder);
+  }
 }

@@ -877,7 +877,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   public void badPauseExpires() {
     initRequest();
 
-    requestManager.createCleanupRequest(new SingularityRequestCleanup(Optional.<String> absent(), RequestCleanupType.PAUSING, System.currentTimeMillis(), Optional.<Boolean> absent(), requestId, Optional.<String> absent()));
+    requestManager.createCleanupRequest(new SingularityRequestCleanup(Optional.<String>absent(), RequestCleanupType.PAUSING, System.currentTimeMillis(), Optional.<Boolean>absent(), requestId, Optional.<String>absent()));
 
     cleaner.drainCleanupQueue();
 
@@ -888,6 +888,39 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     cleaner.drainCleanupQueue();
 
     Assert.assertTrue(requestManager.getCleanupRequests().isEmpty());
+  }
+
+  @Test
+  public void testPauseLbCleanup() {
+    initLoadBalancedRequest();
+    initFirstDeploy();
+
+    requestManager.createLBCleanupRequest(requestId);
+
+    testingLbClient.setNextBaragonRequestState(BaragonRequestState.WAITING);
+
+    cleaner.drainCleanupQueue();
+    Assert.assertTrue(!requestManager.getLBCleanupRequestIds().isEmpty());
+
+    Optional<SingularityLoadBalancerUpdate> lbUpdate = requestManager.getLoadBalancerState(requestId);
+
+    Assert.assertTrue(lbUpdate.isPresent());
+    Assert.assertTrue(lbUpdate.get().getLoadBalancerState() == BaragonRequestState.WAITING);
+
+    testingLbClient.setNextBaragonRequestState(BaragonRequestState.FAILED);
+
+    cleaner.drainCleanupQueue();
+    Assert.assertTrue(!requestManager.getLBCleanupRequestIds().isEmpty());
+
+    lbUpdate = requestManager.getLoadBalancerState(requestId);
+
+    Assert.assertTrue(lbUpdate.isPresent());
+    Assert.assertTrue(lbUpdate.get().getLoadBalancerState() == BaragonRequestState.FAILED);
+
+    testingLbClient.setNextBaragonRequestState(BaragonRequestState.SUCCESS);
+
+    cleaner.drainCleanupQueue();
+    Assert.assertTrue(requestManager.getLBCleanupRequestIds().isEmpty());
   }
 
   @Test

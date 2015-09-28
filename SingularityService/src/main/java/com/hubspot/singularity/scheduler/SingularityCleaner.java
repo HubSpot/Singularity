@@ -183,6 +183,7 @@ public class SingularityCleaner {
 
       boolean killActiveTasks = requestCleanup.getKillTasks().or(configuration.isDefaultValueForKillTasksOfPausedRequests());
       boolean killScheduledTasks = true;
+      boolean deleteFromLoadBalancer = false;
 
       switch (requestCleanup.getCleanupType()) {
         case PAUSING:
@@ -194,6 +195,10 @@ public class SingularityCleaner {
             } else {
               LOG.debug("Waiting on {} (it will expire after {}), because {} is {}", requestCleanup, JavaUtils.durationFromMillis(getObsoleteExpirationTime()), requestCleanup.getRequestId(), requestWithState.get().getState());
               continue;
+            }
+          } else {
+            if (requestWithState.isPresent() && requestWithState.get().getRequest().isLoadBalanced()) {
+              deleteFromLoadBalancer = true;
             }
           }
           break;
@@ -233,6 +238,10 @@ public class SingularityCleaner {
         }
       }
 
+      if (deleteFromLoadBalancer) {
+        requestManager.createLBCleanupRequest(requestId);
+      }
+
       requestManager.deleteCleanRequest(requestId, requestCleanup.getCleanupType());
     }
 
@@ -264,7 +273,8 @@ public class SingularityCleaner {
   public void drainCleanupQueue() {
     drainRequestCleanupQueue();
     drainTaskCleanupQueue();
-    drainLBCleanupQueue();
+    drainLBTaskCleanupQueue();
+    drainLBRequestCleanupQueue();
     checkKilledTaskIdRecords();
   }
 
@@ -406,12 +416,12 @@ public class SingularityCleaner {
     }
   }
 
-  private boolean shouldEnqueueLbRequest(Optional<SingularityLoadBalancerUpdate> maybeLbRemoveUpdate) {
-    if (!maybeLbRemoveUpdate.isPresent()) {
+  private boolean shouldEnqueueLbRequest(Optional<SingularityLoadBalancerUpdate> maybeLbUpdate) {
+    if (!maybeLbUpdate.isPresent()) {
       return true;
     }
 
-    switch (maybeLbRemoveUpdate.get().getLoadBalancerState()) {
+    switch (maybeLbUpdate.get().getLoadBalancerState()) {
       case UNKNOWN:
       case FAILED:
       case CANCELED:
@@ -449,7 +459,7 @@ public class SingularityCleaner {
         return CheckLBState.MISSING_TASK;
       }
 
-      lbRemoveUpdate = lbClient.enqueue(loadBalancerRequestId, task.get().getTaskRequest().getRequest(), task.get().getTaskRequest().getDeploy(), Collections.<SingularityTask> emptyList(), Collections.singletonList(task.get()));
+      lbRemoveUpdate = lbClient.enqueue(loadBalancerRequestId, task.get().getTaskRequest().getRequest(), task.get().getTaskRequest().getDeploy(), Collections.<SingularityTask>emptyList(), Collections.singletonList(task.get()));
 
       taskManager.saveLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE, lbRemoveUpdate);
     } else if (maybeLbRemoveUpdate.get().getLoadBalancerState() == BaragonRequestState.WAITING || maybeLbRemoveUpdate.get().getLoadBalancerState() == BaragonRequestState.CANCELING) {
@@ -483,7 +493,7 @@ public class SingularityCleaner {
     return CheckLBState.WAITING;
   }
 
-  private void drainLBCleanupQueue() {
+  private void drainLBTaskCleanupQueue() {
     final long start = System.currentTimeMillis();
 
     final List<SingularityTaskId> lbCleanupTasks = taskManager.getLBCleanupTasks();
@@ -522,6 +532,118 @@ public class SingularityCleaner {
     }
 
     LOG.info("LB cleaned {} tasks ({} left, {} obsolete) in {}", cleanedTasks, lbCleanupTasks.size() - (ignoredTasks + cleanedTasks), ignoredTasks, JavaUtils.duration(start));
+  }
+
+  private void drainLBRequestCleanupQueue() {
+    final long start = System.currentTimeMillis();
+
+    final List<String> lbCleanupRequests = requestManager.getLBCleanupRequestIds();
+
+    if (lbCleanupRequests.isEmpty()) {
+      LOG.trace("LB request cleanup queue is empty");
+      return;
+    }
+
+    LOG.info("LB request cleanup queue had {} requests", lbCleanupRequests.size());
+
+    int cleanedRequests = 0;
+    int ignoredRequests = 0;
+
+    for (String requestId : lbCleanupRequests) {
+      final long checkStart = System.currentTimeMillis();
+
+      final CheckLBState checkLbState = checkRequestLbState(requestId);
+
+      LOG.debug("LB cleanup for request {} had state {} after {}", requestId, checkLbState, JavaUtils.duration(checkStart));
+
+      switch (checkLbState) {
+        case WAITING:
+        case RETRY:
+          continue;
+        case DONE:
+        case MISSING_TASK:
+          cleanedRequests++;
+          break;
+        case NOT_LOAD_BALANCED:
+        case LOAD_BALANCE_FAILED:
+          ignoredRequests++;
+      }
+
+      requestManager.deleteLBCleanupRequest(requestId);
+    }
+    LOG.info("LB cleaned {} requests ({} left, {} obsolete) in {}", cleanedRequests, lbCleanupRequests.size() - (ignoredRequests + cleanedRequests), ignoredRequests, JavaUtils.duration(start));
+
+  }
+
+  private CheckLBState checkRequestLbState(String requestId) {
+    Optional<SingularityLoadBalancerUpdate> maybeDeleteUpdate = requestManager.getLoadBalancerState(requestId);
+
+    Optional<SingularityRequestWithState> maybeRequestWithState = requestManager.getRequest(requestId);
+
+    if (!maybeRequestWithState.isPresent()) {
+      exceptionNotifier.notify(String.format("LB delete failed for paused request %s, request data not found", requestId), ImmutableMap.of("requestId", requestId));
+      return CheckLBState.RETRY;
+    }
+
+    final LoadBalancerRequestId loadBalancerRequestId = getLoadBalancerRequestId(requestId, maybeDeleteUpdate);
+    SingularityLoadBalancerUpdate lbDeleteUpdate;
+
+    if (shouldEnqueueLbRequest(maybeDeleteUpdate)) {
+      Optional<String> maybeCurrentDeployId = deployManager.getInUseDeployId(requestId);
+      Optional<SingularityDeploy> maybeDeploy = Optional.absent();
+      if (maybeCurrentDeployId.isPresent()) {
+        maybeDeploy = deployManager.getDeploy(requestId, maybeCurrentDeployId.get());
+      }
+      if (maybeDeploy.isPresent()) {
+        lbDeleteUpdate = lbClient.delete(loadBalancerRequestId, maybeRequestWithState.get().getRequest(), maybeDeploy.get());
+        requestManager.saveLoadBalancerState(requestId, lbDeleteUpdate);
+      } else {
+        exceptionNotifier.notify(String.format("LB delete failed for paused request %s, current deploy not found", requestId),
+          ImmutableMap.of("requestId", requestId, "currentDeployId", maybeCurrentDeployId.toString(), "currentDeploy", maybeDeploy.toString()));
+        return CheckLBState.RETRY;
+      }
+    } else if (maybeDeleteUpdate.get().getLoadBalancerState() == BaragonRequestState.WAITING || maybeDeleteUpdate.get().getLoadBalancerState() == BaragonRequestState.CANCELING) {
+      lbDeleteUpdate = lbClient.getState(loadBalancerRequestId);
+      requestManager.saveLoadBalancerState(requestId, lbDeleteUpdate);
+    } else {
+      lbDeleteUpdate = maybeDeleteUpdate.get();
+    }
+
+    switch (lbDeleteUpdate.getLoadBalancerState()) {
+      case SUCCESS:
+        return CheckLBState.DONE;
+      case FAILED:
+      case CANCELED:
+        LOG.error("LB delete request {} ({}) got unexpected response {}", lbDeleteUpdate, loadBalancerRequestId, lbDeleteUpdate.getLoadBalancerState());
+        exceptionNotifier.notify(String.format("LB delete failed for %s", lbDeleteUpdate.getLoadBalancerRequestId().toString()),
+          ImmutableMap.of("state", lbDeleteUpdate.getLoadBalancerState().name(), "loadBalancerRequestId", loadBalancerRequestId.toString(), "addUpdate", lbDeleteUpdate.toString()));
+        return CheckLBState.RETRY;
+      case UNKNOWN:
+      case CANCELING:
+      case WAITING:
+        LOG.trace("Waiting on LB delete request {} in state {}", loadBalancerRequestId, lbDeleteUpdate.getLoadBalancerState());
+        break;
+      case INVALID_REQUEST_NOOP:
+        exceptionNotifier.notify(String.format("LB delete failed for %s", lbDeleteUpdate.getLoadBalancerRequestId().toString()),
+          ImmutableMap.of("state", lbDeleteUpdate.getLoadBalancerState().name(), "loadBalancerRequestId", loadBalancerRequestId.toString(), "addUpdate", lbDeleteUpdate.toString()));
+        return CheckLBState.LOAD_BALANCE_FAILED;
+    }
+
+    return CheckLBState.WAITING;
+  }
+
+  private LoadBalancerRequestId getLoadBalancerRequestId(String requestId, Optional<SingularityLoadBalancerUpdate> lbDeleteUpdate) {
+    if (!lbDeleteUpdate.isPresent()) {
+      return new LoadBalancerRequestId(requestId, LoadBalancerRequestType.DELETE, Optional.<Integer> absent());
+    }
+
+    switch (lbDeleteUpdate.get().getLoadBalancerState()) {
+      case FAILED:
+      case CANCELED:
+        return new LoadBalancerRequestId(requestId, LoadBalancerRequestType.DELETE, Optional.of(lbDeleteUpdate.get().getLoadBalancerRequestId().getAttemptNumber() + 1));
+      default:
+        return lbDeleteUpdate.get().getLoadBalancerRequestId();
+    }
   }
 
 }
