@@ -16,7 +16,7 @@ public class RackManager extends AbstractMachineManager<SingularityRack> {
 
   @Inject
   public RackManager(CuratorFramework curator, SingularityConfiguration configuration, Transcoder<SingularityRack> rackTranscoder, Transcoder<SingularityMachineStateHistoryUpdate> stateHistoryTranscoder) {
-    super(curator, configuration.getZookeeperAsyncTimeout(), rackTranscoder, stateHistoryTranscoder);
+    super(curator, configuration, rackTranscoder, stateHistoryTranscoder);
   }
 
   @Override

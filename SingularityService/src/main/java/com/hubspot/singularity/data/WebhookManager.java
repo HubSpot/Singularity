@@ -34,9 +34,9 @@ public class WebhookManager extends CuratorAsyncManager implements SingularityEv
   private final Transcoder<SingularityDeployUpdate> deployWebhookTranscoder;
 
   @Inject
-  public WebhookManager(SingularityConfiguration configuration, CuratorFramework curator, Transcoder<SingularityWebhook> webhookTranscoder,
+  public WebhookManager(CuratorFramework curator, SingularityConfiguration configuration, Transcoder<SingularityWebhook> webhookTranscoder,
       Transcoder<SingularityRequestHistory> requestHistoryTranscoder, Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder, Transcoder<SingularityDeployUpdate> deployWebhookTranscoder) {
-    super(curator, configuration.getZookeeperAsyncTimeout());
+    super(curator, configuration);
     this.webhookTranscoder = webhookTranscoder;
     this.taskHistoryUpdateTranscoder = taskHistoryUpdateTranscoder;
     this.requestHistoryTranscoder = requestHistoryTranscoder;
