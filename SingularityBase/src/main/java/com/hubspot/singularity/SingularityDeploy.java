@@ -56,6 +56,7 @@ public class SingularityDeploy {
   private final Optional<String> serviceBasePath;
   private final Optional<List<String>> loadBalancerGroups;
   private final Optional<Map<String, Object>> loadBalancerOptions;
+  private final Optional<String> previousName;
 
   public static SingularityDeployBuilder newBuilder(String requestId, String id) {
     return new SingularityDeployBuilder(requestId, id);
@@ -90,7 +91,8 @@ public class SingularityDeploy {
       @JsonProperty("considerHealthyAfterRunningForSeconds") Optional<Long> considerHealthyAfterRunningForSeconds,
       @JsonProperty("loadBalancerOptions") Optional<Map<String, Object>> loadBalancerOptions,
       @JsonProperty("skipHealthchecksOnDeploy") Optional<Boolean> skipHealthchecksOnDeploy,
-      @JsonProperty("healthCheckProtocol") Optional<HealthcheckProtocol> healthcheckProtocol) {
+      @JsonProperty("healthCheckProtocol") Optional<HealthcheckProtocol> healthcheckProtocol,
+      @JsonProperty("previousName") Optional<String> previousName) {
     this.requestId = requestId;
 
     this.command = command;
@@ -129,6 +131,7 @@ public class SingularityDeploy {
     this.serviceBasePath = serviceBasePath;
     this.loadBalancerGroups = loadBalancerGroups;
     this.loadBalancerOptions = loadBalancerOptions;
+    this.previousName = previousName;
   }
 
   public SingularityDeployBuilder toBuilder() {
@@ -155,6 +158,7 @@ public class SingularityDeploy {
     .setServiceBasePath(serviceBasePath)
     .setLoadBalancerGroups(copyOfList(loadBalancerGroups))
     .setLoadBalancerOptions(copyOfMap(loadBalancerOptions))
+    .setPreviousName(previousName)
 
     .setMetadata(copyOfMap(metadata))
     .setVersion(version)
@@ -292,6 +296,11 @@ public class SingularityDeploy {
     return loadBalancerOptions;
   }
 
+  @ApiModelProperty(required=false, value="Name of a service to replace in the load balancer")
+  public Optional<String> getPreviousName() {
+    return previousName;
+  }
+
   @ApiModelProperty(required=false, value="Allows skipping of health checks when deploying.")
   public Optional<Boolean> getSkipHealthchecksOnDeploy() {
     return skipHealthchecksOnDeploy;
@@ -339,6 +348,7 @@ public class SingularityDeploy {
       ", serviceBasePath=" + serviceBasePath +
       ", loadBalancerGroups=" + loadBalancerGroups +
       ", loadBalancerOptions=" + loadBalancerOptions +
+      ", previousName=" + previousName +
       '}';
   }
 

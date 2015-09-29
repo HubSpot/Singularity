@@ -50,6 +50,7 @@ public class SingularityDeployBuilder {
   private Optional<String> serviceBasePath;
   private Optional<List<String>> loadBalancerGroups;
   private Optional<Map<String, Object>> loadBalancerOptions;
+  private Optional<String> previousName;
 
   public SingularityDeployBuilder(String requestId, String id) {
     this.requestId = requestId;
@@ -81,12 +82,13 @@ public class SingularityDeployBuilder {
     this.serviceBasePath = Optional.absent();
     this.loadBalancerGroups = Optional.absent();
     this.loadBalancerOptions = Optional.absent();
+    this.previousName = Optional.absent();
   }
 
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, customExecutorUser, resources, env,
         uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckMaxRetries,
-        healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy, healthcheckProtocol);
+        healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy, healthcheckProtocol, previousName);
   }
 
   public String getRequestId() {
@@ -345,6 +347,15 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<String> getPreviousName() {
+    return previousName;
+  }
+
+  public SingularityDeployBuilder setPreviousName(Optional<String> previousName) {
+    this.previousName = previousName;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeployBuilder{" +
@@ -377,6 +388,7 @@ public class SingularityDeployBuilder {
       ", serviceBasePath=" + serviceBasePath +
       ", loadBalancerGroups=" + loadBalancerGroups +
       ", loadBalancerOptions=" + loadBalancerOptions +
+      ", previousName=" + previousName +
       '}';
   }
 

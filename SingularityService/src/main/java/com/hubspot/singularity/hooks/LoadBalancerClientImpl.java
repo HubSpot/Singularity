@@ -21,6 +21,7 @@ import com.hubspot.baragon.models.BaragonRequest;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.baragon.models.BaragonResponse;
 import com.hubspot.baragon.models.BaragonService;
+import com.hubspot.baragon.models.RequestAction;
 import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
@@ -154,7 +155,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     final List<UpstreamInfo> addUpstreams = tasksToUpstreams(add, loadBalancerRequestId.toString());
     final List<UpstreamInfo> removeUpstreams = tasksToUpstreams(remove, loadBalancerRequestId.toString());
 
-    final BaragonRequest loadBalancerRequest = new BaragonRequest(loadBalancerRequestId.toString(), lbService, addUpstreams, removeUpstreams);
+    final BaragonRequest loadBalancerRequest = new BaragonRequest(loadBalancerRequestId.toString(), lbService, addUpstreams, removeUpstreams, Collections.<UpstreamInfo>emptyList(), deploy.getPreviousName(), Optional.of(RequestAction.UPDATE));
 
     try {
       LOG.trace("Deploy {} is preparing to send {}", deploy.getId(), loadBalancerRequest);
