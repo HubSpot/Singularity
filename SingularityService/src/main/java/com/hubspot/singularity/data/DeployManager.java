@@ -65,10 +65,10 @@ public class DeployManager extends CuratorAsyncManager {
   private static final String DEPLOY_RESULT_KEY = "RESULT_STATE";
 
   @Inject
-  public DeployManager(SingularityConfiguration configuration, CuratorFramework curator, SingularityEventListener singularityEventListener, Transcoder<SingularityDeploy> deployTranscoder,
+  public DeployManager(CuratorFramework curator, SingularityConfiguration configuration, SingularityEventListener singularityEventListener, Transcoder<SingularityDeploy> deployTranscoder,
       Transcoder<SingularityRequestDeployState> requestDeployStateTranscoder, Transcoder<SingularityPendingDeploy> pendingDeployTranscoder, Transcoder<SingularityDeployMarker> deployMarkerTranscoder,
       Transcoder<SingularityDeployStatistics> deployStatisticsTranscoder, Transcoder<SingularityDeployResult> deployStateTranscoder, IdTranscoder<SingularityDeployKey> deployKeyTranscoder) {
-    super(curator, configuration.getZookeeperAsyncTimeout());
+    super(curator, configuration);
 
     this.singularityEventListener = singularityEventListener;
     this.pendingDeployTranscoder = pendingDeployTranscoder;

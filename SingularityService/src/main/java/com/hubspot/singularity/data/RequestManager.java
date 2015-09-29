@@ -53,9 +53,9 @@ public class RequestManager extends CuratorAsyncManager {
   private static final String LB_CLEANUP_PATH_ROOT = REQUEST_ROOT + "/lbCleanup";
 
   @Inject
-  public RequestManager(SingularityConfiguration configuration, CuratorFramework curator, SingularityEventListener singularityEventListener, Transcoder<SingularityRequestCleanup> requestCleanupTranscoder,
+  public RequestManager(CuratorFramework curator, SingularityConfiguration configuration, SingularityEventListener singularityEventListener, Transcoder<SingularityRequestCleanup> requestCleanupTranscoder,
       Transcoder<SingularityRequestWithState> requestTranscoder, Transcoder<SingularityPendingRequest> pendingRequestTranscoder, Transcoder<SingularityRequestHistory> requestHistoryTranscoder, Transcoder<SingularityLoadBalancerUpdate> loadBalancerHistoryUpdateTranscoder) {
-    super(curator, configuration.getZookeeperAsyncTimeout());
+    super(curator, configuration);
 
     this.requestTranscoder = requestTranscoder;
     this.requestCleanupTranscoder = requestCleanupTranscoder;

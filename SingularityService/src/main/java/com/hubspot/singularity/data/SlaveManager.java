@@ -16,7 +16,7 @@ public class SlaveManager extends AbstractMachineManager<SingularitySlave> {
 
   @Inject
   public SlaveManager(CuratorFramework curator, SingularityConfiguration configuration, Transcoder<SingularitySlave> slaveTranscoder, Transcoder<SingularityMachineStateHistoryUpdate> stateHistoryTranscoder) {
-    super(curator, configuration.getZookeeperAsyncTimeout(), slaveTranscoder, stateHistoryTranscoder);
+    super(curator, configuration, slaveTranscoder, stateHistoryTranscoder);
   }
 
   @Override

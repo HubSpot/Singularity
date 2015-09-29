@@ -107,13 +107,13 @@ public class TaskManager extends CuratorAsyncManager {
   private final String serverId;
 
   @Inject
-  public TaskManager(SingularityConfiguration configuration, CuratorFramework curator, SingularityEventListener singularityEventListener, IdTranscoder<SingularityPendingTaskId> pendingTaskIdTranscoder,
+  public TaskManager(CuratorFramework curator, SingularityConfiguration configuration, SingularityEventListener singularityEventListener, IdTranscoder<SingularityPendingTaskId> pendingTaskIdTranscoder,
       IdTranscoder<SingularityTaskId> taskIdTranscoder, Transcoder<SingularityLoadBalancerUpdate> taskLoadBalancerHistoryUpdateTranscoder,
       Transcoder<SingularityTaskStatusHolder> taskStatusTranscoder, Transcoder<SingularityTaskHealthcheckResult> healthcheckResultTranscoder, Transcoder<SingularityTask> taskTranscoder,
       Transcoder<SingularityTaskCleanup> taskCleanupTranscoder, Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder, Transcoder<SingularityPendingTask> pendingTaskTranscoder,
       Transcoder<SingularityKilledTaskIdRecord> killedTaskIdRecordTranscoder, Transcoder<SingularityTaskShellCommandRequest> taskShellCommandRequestTranscoder, Transcoder<SingularityTaskShellCommandUpdate> taskShellCommandUpdateTranscoder,
       @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId) {
-    super(curator, configuration.getZookeeperAsyncTimeout());
+    super(curator, configuration);
 
     this.healthcheckResultTranscoder = healthcheckResultTranscoder;
     this.taskTranscoder = taskTranscoder;

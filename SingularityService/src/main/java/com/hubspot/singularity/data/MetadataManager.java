@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.config.EmailConfigurationEnums.EmailType;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
 
 @Singleton
@@ -24,8 +25,8 @@ public class MetadataManager extends CuratorManager {
   private static final String MAIL_IN_COOLDOWN_MARKER_KEY = "COOLDOWN_ACTIVE";
 
   @Inject
-  public MetadataManager(CuratorFramework curator) {
-    super(curator);
+  public MetadataManager(CuratorFramework curator, SingularityConfiguration configuration) {
+    super(curator, configuration);
   }
 
   private String getMailRecordPathForRequest(String requestId) {

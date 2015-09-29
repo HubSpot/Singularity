@@ -15,9 +15,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 
@@ -26,10 +26,23 @@ public abstract class CuratorManager {
   private static final Logger LOG = LoggerFactory.getLogger(CuratorManager.class);
   private static final byte[] EMPTY_BYTES = new byte[0];
 
+  protected final SingularityConfiguration configuration;
   protected final CuratorFramework curator;
 
-  public CuratorManager(CuratorFramework curator) {
+  public CuratorManager(CuratorFramework curator, SingularityConfiguration configuration) {
+    this.configuration = configuration;
     this.curator = curator;
+  }
+
+  protected void log(String type, Optional<Integer> numItems, Optional<Integer> bytes, long start, String path) {
+    final String message = String.format("%s (items: %s) (bytes: %s) in %s", type, numItems.or(1), bytes.or(0), path);
+
+    if (bytes.isPresent() && bytes.get() > configuration.getDebugCuratorCallOverBytes()
+        || System.currentTimeMillis() - start > configuration.getDebugCuratorCallOverMillis()) {
+      LOG.debug(message);
+    } else {
+      LOG.trace(message);
+    }
   }
 
   protected int getNumChildren(String path) {
@@ -77,7 +90,7 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      LOG.trace("Got {} children in {} ({})", numChildren, JavaUtils.duration(start), root);
+      log("Fetched children", Optional.of(numChildren), Optional.<Integer> absent(), start, root);
     }
   }
 
@@ -93,7 +106,7 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      LOG.trace("Deleted in {} ({})", JavaUtils.duration(start), path);
+      log("Deleted", Optional.<Integer> absent(), Optional.<Integer> absent(), start, path);
     }
   }
 
@@ -117,7 +130,7 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      LOG.trace("Created {} bytes in {} ({})", data.or(EMPTY_BYTES).length, JavaUtils.duration(start), path);
+      log("Created", Optional.<Integer> absent(), Optional.<Integer> of(data.or(EMPTY_BYTES).length), start, path);
     }
   }
 
@@ -148,7 +161,7 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      LOG.trace("Saved {} bytes in {} ({})", data.or(EMPTY_BYTES).length, JavaUtils.duration(start), path);
+      log("Saved", Optional.<Integer> absent(), Optional.<Integer> of(data.or(EMPTY_BYTES).length), start, path);
     }
   }
 
@@ -170,13 +183,13 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      LOG.trace("Set {} bytes in {} ({})", data.or(EMPTY_BYTES).length, JavaUtils.duration(start), path);
+      log("Set", Optional.<Integer> absent(), Optional.<Integer> of(data.or(EMPTY_BYTES).length), start, path);
     }
   }
 
   protected <T> Optional<T> getData(String path, Optional<Stat> stat, Transcoder<T> transcoder) {
     final long start = System.currentTimeMillis();
-    long bytes = 0;
+    int bytes = 0;
 
     try {
       GetDataBuilder bldr = curator.getData();
@@ -200,7 +213,7 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      LOG.trace("Got {} bytes in {} ({})", bytes, JavaUtils.duration(start), path);
+      log("Fetched", Optional.<Integer> absent(), Optional.<Integer> of(bytes), start, path);
     }
   }
 

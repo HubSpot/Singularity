@@ -82,6 +82,10 @@ public class SingularityConfiguration extends Configuration {
 
   private long deployHealthyBySeconds = 120;
 
+  private long debugCuratorCallOverBytes = 5000;
+
+  private long debugCuratorCallOverMillis = 1000;
+
   private int dispatchTaskShellCommandsEverySeconds = 5;
 
   private boolean enableCorsFilter = false;
@@ -250,6 +254,22 @@ public class SingularityConfiguration extends Configuration {
 
   public int getCooldownAfterFailures() {
     return cooldownAfterFailures;
+  }
+
+  public long getDebugCuratorCallOverBytes() {
+    return debugCuratorCallOverBytes;
+  }
+
+  public void setDebugCuratorCallOverBytes(long debugCuratorCallOverBytes) {
+    this.debugCuratorCallOverBytes = debugCuratorCallOverBytes;
+  }
+
+  public long getDebugCuratorCallOverMillis() {
+    return debugCuratorCallOverMillis;
+  }
+
+  public void setDebugCuratorCallOverMillis(long debugCuratorCallOverMillis) {
+    this.debugCuratorCallOverMillis = debugCuratorCallOverMillis;
   }
 
   public double getCooldownAfterPctOfInstancesFail() {

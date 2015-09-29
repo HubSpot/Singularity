@@ -53,9 +53,9 @@ public class StateManager extends CuratorManager {
   private final SingularityAuthDatastore authDatastore;
 
   @Inject
-  public StateManager(CuratorFramework curatorFramework, RequestManager requestManager, TaskManager taskManager, DeployManager deployManager, SlaveManager slaveManager, RackManager rackManager,
+  public StateManager(CuratorFramework curatorFramework, SingularityConfiguration configuration, RequestManager requestManager, TaskManager taskManager, DeployManager deployManager, SlaveManager slaveManager, RackManager rackManager,
       Transcoder<SingularityState> stateTranscoder, Transcoder<SingularityHostState> hostStateTranscoder, SingularityConfiguration singularityConfiguration, SingularityAuthDatastore authDatastore) {
-    super(curatorFramework);
+    super(curatorFramework, configuration);
 
     this.requestManager = requestManager;
     this.taskManager = taskManager;

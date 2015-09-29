@@ -16,6 +16,7 @@ import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 
 public abstract class AbstractMachineManager<T extends SingularityMachineAbstraction<T>> extends CuratorAsyncManager {
@@ -27,8 +28,8 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   private final Transcoder<T> transcoder;
   private final Transcoder<SingularityMachineStateHistoryUpdate> historyTranscoder;
 
-  public AbstractMachineManager(CuratorFramework curator, long zkAsyncTimeout, Transcoder<T> transcoder, Transcoder<SingularityMachineStateHistoryUpdate> historyTranscoder) {
-    super(curator, zkAsyncTimeout);
+  public AbstractMachineManager(CuratorFramework curator, SingularityConfiguration configuration, Transcoder<T> transcoder, Transcoder<SingularityMachineStateHistoryUpdate> historyTranscoder) {
+    super(curator, configuration);
 
     this.transcoder = transcoder;
     this.historyTranscoder = historyTranscoder;
