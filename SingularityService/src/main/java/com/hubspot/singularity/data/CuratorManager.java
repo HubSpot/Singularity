@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -35,7 +36,7 @@ public abstract class CuratorManager {
   }
 
   protected void log(String type, Optional<Integer> numItems, Optional<Integer> bytes, long start, String path) {
-    final String message = String.format("%s (items: %s) (bytes: %s) in %s", type, numItems.or(1), bytes.or(0), path);
+    final String message = String.format("%s (items: %s) (bytes: %s) in %s (%s)", type, numItems.or(1), bytes.or(0), JavaUtils.duration(start), path);
 
     if (bytes.isPresent() && bytes.get() > configuration.getDebugCuratorCallOverBytes()
         || System.currentTimeMillis() - start > configuration.getDebugCuratorCallOverMillis()) {
@@ -90,7 +91,7 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      log("Fetched children", Optional.of(numChildren), Optional.<Integer> absent(), start, root);
+      log("Fetched", Optional.of(numChildren), Optional.<Integer> absent(), start, root);
     }
   }
 
