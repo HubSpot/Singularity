@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.BackgroundCallback;
@@ -36,9 +37,6 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
   private <T> List<T> getAsyncChildrenThrows(final String parent, final Transcoder<T> transcoder) throws Exception {
     final List<String> children = getChildren(parent);
-
-    LOG.trace("Fetched {} children from path {}", children.size(), parent);
-
     final List<String> paths = Lists.newArrayListWithCapacity(children.size());
 
     for (String child : children) {
@@ -57,6 +55,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
     final CountDownLatch latch = new CountDownLatch(paths.size());
     final AtomicInteger missing = new AtomicInteger();
+    final AtomicLong bytes = new AtomicLong();
 
     final BackgroundCallback callback = new BackgroundCallback() {
 
@@ -70,6 +69,8 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
           return;
         }
+
+        bytes.getAndAdd(event.getData().length);
 
         objects.add(transcoder.fromBytes(event.getData()));
 
@@ -85,7 +86,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
     checkLatch(latch, pathNameForLogs);
 
-    LOG.trace("Fetched {} objects from {} (missing {}) in {}", objects.size(), pathNameForLogs, missing.intValue(), JavaUtils.duration(start));
+    LOG.trace("Fetched {} objects ({} bytes) in {} ({} - missing {})", objects.size(), bytes.get(), JavaUtils.duration(start), pathNameForLogs, missing.intValue());
 
     return objects;
   }
@@ -133,7 +134,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
     checkLatch(latch, pathNameforLogs);
 
-    LOG.trace("Fetched {} objects from {} (missing {}) in {}", objects.size(), pathNameforLogs, missing.intValue(), JavaUtils.duration(start));
+    LOG.trace("Fetched {} objects in {} ({} - missing {})", objects.size(), JavaUtils.duration(start), pathNameforLogs, missing.intValue());
 
     return objects;
   }
@@ -183,7 +184,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
     checkLatch(latch, pathNameforLogs);
 
-    LOG.trace("Found {} objects out of {} from {} in {}", objects.size(), paths.size(), pathNameforLogs, JavaUtils.duration(start));
+    LOG.trace("Found {} objects in {} (out of {} from {})", objects.size(), JavaUtils.duration(start), paths.size(), pathNameforLogs);
 
     return objects;
   }

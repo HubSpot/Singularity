@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
@@ -23,6 +24,7 @@ import com.hubspot.singularity.data.transcoders.Transcoder;
 public abstract class CuratorManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(CuratorManager.class);
+  private static final byte[] EMPTY_BYTES = new byte[0];
 
   protected final CuratorFramework curator;
 
@@ -63,16 +65,25 @@ public abstract class CuratorManager {
   }
 
   protected List<String> getChildren(String root) {
+    final long start = System.currentTimeMillis();
+    int numChildren = 0;
+
     try {
-      return curator.getChildren().forPath(root);
+      final List<String> children = curator.getChildren().forPath(root);
+      numChildren = children.size();
+      return children;
     } catch (NoNodeException nne) {
       return Collections.emptyList();
     } catch (Throwable t) {
       throw Throwables.propagate(t);
+    } finally {
+      LOG.trace("Got {} children in {} ({})", numChildren, JavaUtils.duration(start), root);
     }
   }
 
   protected SingularityDeleteResult delete(String path) {
+    final long start = System.currentTimeMillis();
+
     try {
       curator.delete().deletingChildrenIfNeeded().forPath(path);
       return SingularityDeleteResult.DELETED;
@@ -81,6 +92,8 @@ public abstract class CuratorManager {
       return SingularityDeleteResult.DIDNT_EXIST;
     } catch (Throwable t) {
       throw Throwables.propagate(t);
+    } finally {
+      LOG.trace("Deleted in {} ({})", JavaUtils.duration(start), path);
     }
   }
 
@@ -93,6 +106,8 @@ public abstract class CuratorManager {
   }
 
   protected SingularityCreateResult create(String path, Optional<byte[]> data) {
+    final long start = System.currentTimeMillis();
+
     try {
       privateCreate(path, data);
 
@@ -101,6 +116,8 @@ public abstract class CuratorManager {
       return SingularityCreateResult.EXISTED;
     } catch (Throwable t) {
       throw Throwables.propagate(t);
+    } finally {
+      LOG.trace("Created {} bytes in {} ({})", data.or(EMPTY_BYTES).length, JavaUtils.duration(start), path);
     }
   }
 
@@ -120,6 +137,8 @@ public abstract class CuratorManager {
   }
 
   protected SingularityCreateResult save(String path, Optional<byte[]> data) {
+    final long start = System.currentTimeMillis();
+
     try {
       privateCreate(path, data);
 
@@ -128,10 +147,14 @@ public abstract class CuratorManager {
       return set(path, data);
     } catch (Throwable t) {
       throw Throwables.propagate(t);
+    } finally {
+      LOG.trace("Saved {} bytes in {} ({})", data.or(EMPTY_BYTES).length, JavaUtils.duration(start), path);
     }
   }
 
   protected SingularityCreateResult set(String path, Optional<byte[]> data) {
+    final long start = System.currentTimeMillis();
+
     try {
       SetDataBuilder setDataBuilder = curator.setData();
 
@@ -146,10 +169,15 @@ public abstract class CuratorManager {
       return save(path, data);
     } catch (Throwable t) {
       throw Throwables.propagate(t);
+    } finally {
+      LOG.trace("Set {} bytes in {} ({})", data.or(EMPTY_BYTES).length, JavaUtils.duration(start), path);
     }
   }
 
   protected <T> Optional<T> getData(String path, Optional<Stat> stat, Transcoder<T> transcoder) {
+    final long start = System.currentTimeMillis();
+    long bytes = 0;
+
     try {
       GetDataBuilder bldr = curator.getData();
 
@@ -164,11 +192,15 @@ public abstract class CuratorManager {
         return Optional.absent();
       }
 
+      bytes = data.length;
+
       return Optional.of(transcoder.fromBytes(data));
     } catch (NoNodeException nne) {
       return Optional.absent();
     } catch (Throwable t) {
       throw Throwables.propagate(t);
+    } finally {
+      LOG.trace("Got {} bytes in {} ({})", bytes, JavaUtils.duration(start), path);
     }
   }
 

@@ -186,6 +186,10 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private AuthConfiguration authConfiguration = new AuthConfiguration();
 
+  @JsonProperty("graphite")
+  @NotNull
+  private GraphiteConfiguration graphiteConfiguration = new GraphiteConfiguration();
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -754,4 +758,11 @@ public class SingularityConfiguration extends Configuration {
     this.historyPurgingConfiguration = historyPurgingConfiguration;
   }
 
+  public GraphiteConfiguration getGraphiteConfiguration() {
+    return graphiteConfiguration;
+  }
+
+  public void setGraphiteConfiguration(GraphiteConfiguration graphiteConfiguration) {
+    this.graphiteConfiguration = graphiteConfiguration;
+  }
 }

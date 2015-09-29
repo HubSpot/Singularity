@@ -209,6 +209,12 @@
         <artifactId>metrics-annotation</artifactId>
         <version>${dep.metrics.version}</version><!-- TOOD: add this to HubSpot's basepom -->
       </dependency>
+
+      <dependency>
+        <groupId>com.codahale.metrics</groupId>
+        <artifactId>metrics-graphite</artifactId>
+        <version>${dep.metrics.version}</version><!-- TOOD: add this to HubSpot's basepom -->
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
