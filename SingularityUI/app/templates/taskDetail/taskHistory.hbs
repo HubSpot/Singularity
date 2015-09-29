@@ -24,7 +24,11 @@
                     </td>
                     <td>
                         {{#if statusMessage}}
-                            {{ statusMessage }}
+                            {{#isDecomissioningMessage statusMessage}}
+                                <span class="attention">{{ statusMessage }}</span>
+                            {{else}}
+                                {{ statusMessage }}
+                            {{/isDecomissioningMessage}}
                         {{else}}
                             &mdash;
                         {{/if}}

@@ -119,3 +119,9 @@ Handlebars.registerHelper 'getLabelClass', (state) ->
             'danger'
         else
             'default'
+
+Handlebars.registerHelper 'isDecomissioningMessage', (message, options) ->
+    if (message.toLowerCase().indexOf 'decomissioning') != -1
+        options.fn(this)
+    else
+        options.inverse(this)
