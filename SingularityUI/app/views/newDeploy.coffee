@@ -61,7 +61,7 @@ class NewDeployView extends FormBaseView
     submit: ->
         event.preventDefault()
         return if @$('button[type="submit"]').attr 'disabled'
-        @$('.alert').remove()
+        @$("[data-alert-location='form']").remove()
 
         deployObject = {}
 

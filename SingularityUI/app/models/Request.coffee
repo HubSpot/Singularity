@@ -11,6 +11,9 @@ TaskHistory = require '../models/TaskHistory'
 
 class Request extends Model
 
+    ## toggle between creating additional properties during parse
+    raw: false
+
     # When we show the JSON dialog, we will ignore these attributes
     ignoreAttributes: ['id', 'paused', 'deleted', 'hasActiveDeploy', 'canBeRunNow', 'canBeBounced', 'starred']
     localStorageCommandLineInputKeyPrefix: 'runRequestCommandLineInput::'
@@ -24,6 +27,8 @@ class Request extends Model
             return data
         else
             data.id = data.request.id
+
+        return data if @raw
 
         data.type = data.request.requestType
 
