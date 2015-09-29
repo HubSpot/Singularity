@@ -119,3 +119,10 @@ Handlebars.registerHelper 'getLabelClass', (state) ->
             'danger'
         else
             'default'
+
+Handlebars.registerHelper 'isRunningState', (list, options) ->
+    switch _.last(list).taskState
+        when 'TASK_RUNNING'
+            options.fn(this)
+        else
+            options.inverse(this)
