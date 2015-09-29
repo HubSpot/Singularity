@@ -2,8 +2,10 @@ package com.hubspot.singularity.smtp;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -22,9 +24,11 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -34,6 +38,7 @@ import com.hubspot.singularity.config.EmailConfigurationEnums.EmailType;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.MetadataManager;
+import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
@@ -44,6 +49,8 @@ import io.dropwizard.lifecycle.Managed;
 public class SingularityMailer implements Managed {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMailer.class);
+  private static final Set<MachineState> NO_EMAIL_MACHINE_STATES =
+    EnumSet.of(MachineState.STARTING_DECOMMISSION, MachineState.DECOMMISSIONING, MachineState.DECOMMISSIONED);
 
   private final SingularitySmtpSender smtpSender;
   private final SingularityConfiguration configuration;
@@ -52,6 +59,7 @@ public class SingularityMailer implements Managed {
   private final SingularityExceptionNotifier exceptionNotifier;
 
   private final TaskManager taskManager;
+  private final SlaveManager slaveManager;
 
   private final JadeTemplate taskTemplate;
   private final JadeTemplate requestInCooldownTemplate;
@@ -68,6 +76,7 @@ public class SingularityMailer implements Managed {
       SingularitySmtpSender smtpSender,
       SingularityConfiguration configuration,
       TaskManager taskManager,
+      SlaveManager slaveManager,
       MetadataManager metadataManager,
       SingularityExceptionNotifier exceptionNotifier,
       MailTemplateHelpers mailTemplateHelpers,
@@ -80,6 +89,7 @@ public class SingularityMailer implements Managed {
     this.maybeSmtpConfiguration = configuration.getSmtpConfiguration();
     this.configuration = configuration;
     this.taskManager = taskManager;
+    this.slaveManager = slaveManager;
     this.metadataManager = metadataManager;
     this.exceptionNotifier = exceptionNotifier;
     this.adminJoiner = Joiner.on(", ").skipNulls();
@@ -248,6 +258,15 @@ public class SingularityMailer implements Managed {
     if (emailDestination.isEmpty()) {
       LOG.debug("Not configured to send task mail for {}", emailType);
       return;
+    }
+
+    if (task.isPresent()) {
+      final String slaveId = task.get().getMesosTask().getSlaveId().getValue();
+      Optional<SingularitySlave> slave = slaveManager.getObject(slaveId);
+      if (slave.isPresent() && NO_EMAIL_MACHINE_STATES.contains(slave.get().getCurrentState().getState())) {
+        LOG.debug("No task mail for {} because slave is decomissioning: {}", task.get().getTaskId(), slave);
+        return;
+      }
     }
 
     final Map<String, Object> templateProperties = Maps.newHashMap();
