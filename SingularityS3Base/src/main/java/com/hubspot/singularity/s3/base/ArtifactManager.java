@@ -1,8 +1,6 @@
 package com.hubspot.singularity.s3.base;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
@@ -12,7 +10,6 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 
@@ -20,7 +17,6 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-import com.google.common.io.ByteStreams;
 import com.hubspot.deploy.Artifact;
 import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExternalArtifact;
@@ -35,7 +31,6 @@ public class ArtifactManager extends SimpleProcessManager {
   private final Path cacheDirectory;
   private final Logger log;
   private final S3ArtifactDownloader s3ArtifactDownloader;
-  private final SingularityS3Configuration configuration;
 
   public ArtifactManager(SingularityS3Configuration configuration, Logger log) {
     super(log);
@@ -43,7 +38,6 @@ public class ArtifactManager extends SimpleProcessManager {
     this.cacheDirectory = Paths.get(configuration.getArtifactCacheDirectory());
     this.log = log;
     this.s3ArtifactDownloader = new S3ArtifactDownloader(configuration, log);
-    this.configuration = configuration;
   }
 
   private long getSize(Path path) {
@@ -93,46 +87,6 @@ public class ArtifactManager extends SimpleProcessManager {
 
     checkFilesize(artifact, downloadTo);
     checkMd5(artifact, downloadTo);
-    checkGpgSignature(artifact, downloadTo);
-  }
-
-  private void checkGpgSignature(RemoteArtifact baseArtifact, Path downloadTo) {
-    Boolean gpgEnabled = configuration.isGpgCheckingEnabled();
-    Boolean gpgArtifactIsPresent = baseArtifact.getGpgSignatureArtifact().isPresent();
-    Boolean gpgArtifactIsRemote = baseArtifact.getGpgSignatureArtifact().get() instanceof RemoteArtifact;
-    if (!gpgEnabled || !gpgArtifactIsPresent || !gpgArtifactIsRemote) {
-      log.info(String.format("Not verifying gpg signature because: gpgEnabled=%s || gpgArtifactIsPresent=%s || gpgArtifactIsRemote=%s",  gpgEnabled.toString(), gpgArtifactIsPresent.toString(), gpgArtifactIsRemote.toString()));
-      return;
-    }
-
-    File gpgBin = new File(configuration.getGpgBinaryPath());
-    if (!gpgBin.exists() || !gpgBin.canExecute()) {
-      throw new RuntimeException(String.format("gpg binary at %s not found or not executable", configuration.getGpgBinaryPath()));
-    }
-
-    Path signatureArtifactPath = fetch(baseArtifact.getGpgSignatureArtifact().get());
-
-    String verifyCmd = String.format("%s --batch --yes --passphrase-fd 0 --homedir %s -u %s --verify %s", configuration.getGpgBinaryPath(), configuration.getGpgHome(), configuration.getGpgKeyUsername(), signatureArtifactPath);
-    log.debug(String.format("Running gpg verify cmd: %s", verifyCmd));
-    try {
-      Process p = Runtime.getRuntime().exec(verifyCmd);
-
-      OutputStream stdin = p.getOutputStream();
-      stdin.write(configuration.getGpgKeyPassword().getBytes());
-
-      p.wait(TimeUnit.SECONDS.toMillis(5));
-      int returnCode = p.exitValue();
-
-      if (returnCode != 0) {
-        String stdErr = ByteStreams.toByteArray(p.getErrorStream()).toString();
-        log.error(String.format("Error running gpg. GPG stderr: %s", stdErr));
-        throw new RuntimeException(String.format("Gpg verify failed (rc: %s) could not verify signature %s for file %s", Integer.toString(returnCode), signatureArtifactPath.toString(), downloadTo.toString()));
-      }
-    } catch (IOException e) {
-      throw Throwables.propagate(e);
-    } catch (InterruptedException e) {
-      throw Throwables.propagate(e);
-    }
   }
 
   public void extract(EmbeddedArtifact embeddedArtifact, Path directory) {

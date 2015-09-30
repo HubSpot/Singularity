@@ -1,5 +1,7 @@
 package com.hubspot.singularity.s3.base.config;
 
+import static com.hubspot.mesos.JavaUtils.obfuscateValue;
+
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -66,24 +68,6 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
   @NotEmpty
   @JsonProperty
   private String localDownloadPath = "/download";
-
-
-  @NotEmpty
-  @JsonProperty
-  private boolean gpgCheckingEnabled = false;
-
-  @JsonProperty
-  private String gpgBinaryPath = "/usr/bin/gpg";
-
-  @Obfuscate
-  @JsonProperty
-  private String gpgKeyPassword;
-
-  @JsonProperty
-  private String gpgHome;
-
-  @JsonProperty
-  private String gpgKeyUsername;
 
   public SingularityS3Configuration() {
     super(Optional.<String>absent());
@@ -161,52 +145,19 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
     this.s3ChunkDownloadTimeoutMillis = s3ChunkDownloadTimeoutMillis;
   }
 
-  public boolean isGpgCheckingEnabled() {
-    return gpgCheckingEnabled;
-  }
-
-  public void setGpgCheckingEnabled(boolean gpgCheckingEnabled) {
-    this.gpgCheckingEnabled = gpgCheckingEnabled;
-  }
-
-  public String getGpgBinaryPath() {
-    return gpgBinaryPath;
-  }
-
-  public void setGpgBinaryPath(String gpgBinaryPath) {
-    this.gpgBinaryPath = gpgBinaryPath;
-  }
-
-  public String getGpgHome() {
-    return gpgHome;
-  }
-
-  public void setGpgHome(String gpgHome) {
-    this.gpgHome = gpgHome;
-  }
-
-  public String getGpgKeyPassword() {
-    return gpgKeyPassword;
-  }
-
-  public void setGpgKeyPassword(String gpgKeyPassword) {
-    this.gpgKeyPassword = gpgKeyPassword;
-  }
-
-  public String getGpgKeyUsername() {
-    return gpgKeyUsername;
-  }
-
-  public void setGpgKeyUsername(String gpgKeyUsername) {
-    this.gpgKeyUsername = gpgKeyUsername;
-  }
-
   @Override
   public String toString() {
-    return "SingularityS3Configuration [artifactCacheDirectory=" + artifactCacheDirectory + ", s3AccessKey=" + s3AccessKey + ", s3SecretKey=" + s3SecretKey + ", s3ChunkSize=" + s3ChunkSize
-        + ", s3DownloadTimeoutMillis=" + s3DownloadTimeoutMillis + ", s3ChunkDownloadTimeoutMillis=" + s3ChunkDownloadTimeoutMillis + ", s3ChunkRetries=" + s3ChunkRetries + ", localDownloadHttpPort="
-        + localDownloadHttpPort + ", localDownloadPath=" + localDownloadPath + ", gpgBinaryPath=" + gpgBinaryPath + ", gpgKeyPassword=" + gpgKeyPassword + ", gpgHome=" + gpgHome + ", gpgKeyUsername="
-        + gpgKeyUsername + "]";
+    return "SingularityS3Configuration[" +
+            "artifactCacheDirectory='" + artifactCacheDirectory + '\'' +
+            ", s3AccessKey='" + obfuscateValue(s3AccessKey) + '\'' +
+            ", s3SecretKey='" + obfuscateValue(s3SecretKey) + '\'' +
+            ", s3ChunkSize=" + s3ChunkSize +
+            ", s3DownloadTimeoutMillis=" + s3DownloadTimeoutMillis +
+            ", s3ChunkDownloadTimeoutMillis=" + s3ChunkDownloadTimeoutMillis +
+            ", s3ChunkRetries=" + s3ChunkRetries +
+            ", localDownloadHttpPort=" + localDownloadHttpPort +
+            ", localDownloadPath='" + localDownloadPath + '\'' +
+            ']';
   }
 
   @Override
