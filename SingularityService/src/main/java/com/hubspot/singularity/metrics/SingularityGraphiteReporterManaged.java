@@ -46,7 +46,7 @@ public class SingularityGraphiteReporterManaged implements Managed {
       return "";
     }
 
-    final String trimmedHostname = !Strings.isNullOrEmpty(graphiteConfiguration.getHostnameOmitSuffix()) && hostname.endsWith(graphiteConfiguration.getHostnameOmitSuffix()) ? hostname.substring(hostname.length() - graphiteConfiguration.getHostnameOmitSuffix().length()) : hostname;
+    final String trimmedHostname = !Strings.isNullOrEmpty(graphiteConfiguration.getHostnameOmitSuffix()) && hostname.endsWith(graphiteConfiguration.getHostnameOmitSuffix()) ? hostname.substring(0, hostname.length() - graphiteConfiguration.getHostnameOmitSuffix().length()) : hostname;
 
     return graphiteConfiguration.getPrefix().replace("{hostname}", trimmedHostname);
   }
