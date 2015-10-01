@@ -5,9 +5,10 @@ State = require '../models/State'
 StatusView = require '../views/status'
 
 class StatusController extends Controller
-    
+
     initialize: ->
         app.showPageLoader()
+        @title 'Status'
 
         @models.state = new State
 
