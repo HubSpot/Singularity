@@ -28,12 +28,12 @@ public class SingularityExecutorArtifactVerifier {
   }
 
   public void checkSignatures() {
-    if (taskDefinition.getExecutorData().getS3ArtifactSignatures().isEmpty()) {
+    if (!taskDefinition.getExecutorData().getS3ArtifactSignatures().isPresent() || taskDefinition.getExecutorData().getS3ArtifactSignatures().get().isEmpty()) {
       log.info("No s3 artifact signatures, skipping verification.");
       return;
     }
 
-    for (S3ArtifactSignature s3ArtifactSignature : taskDefinition.getExecutorData().getS3ArtifactSignatures()) {
+    for (S3ArtifactSignature s3ArtifactSignature : taskDefinition.getExecutorData().getS3ArtifactSignatures().get()) {
       checkArtifactSignature(s3ArtifactSignature);
     }
   }
