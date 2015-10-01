@@ -28,6 +28,7 @@ public class ExecutorData {
   private final Optional<String> loggingS3Bucket;
   private final Optional<Integer> maxOpenFiles;
   private final Optional<Boolean> skipLogrotateAndCompress;
+  private final List<S3ArtifactSignature> s3ArtifactSignatures;
 
   @JsonCreator
   public ExecutorData(@JsonProperty("cmd") String cmd, @JsonProperty("embeddedArtifacts") List<EmbeddedArtifact> embeddedArtifacts, @JsonProperty("externalArtifacts") List<ExternalArtifact> externalArtifacts,
@@ -36,7 +37,7 @@ public class ExecutorData {
       @JsonProperty("loggingExtraFields") Map<String, String> loggingExtraFields, @JsonProperty("sigKillProcessesAfterMillis") Optional<Long> sigKillProcessesAfterMillis,
       @JsonProperty("maxTaskThreads") Optional<Integer> maxTaskThreads, @JsonProperty("preserveTaskSandboxAfterFinish") Optional<Boolean> preserveTaskSandboxAfterFinish,
       @JsonProperty("loggingS3Bucket") Optional<String> loggingS3Bucket, @JsonProperty("maxOpenFiles") Optional<Integer> maxOpenFiles,
-      @JsonProperty("skipLogrotateAndCompress") Optional<Boolean> skipLogrotateAndCompress) {
+      @JsonProperty("skipLogrotateAndCompress") Optional<Boolean> skipLogrotateAndCompress, @JsonProperty("s3ArtifactSignatures") List<S3ArtifactSignature> s3ArtifactSignatures) {
     this.cmd = cmd;
     this.embeddedArtifacts = JavaUtils.nonNullImmutable(embeddedArtifacts);
     this.externalArtifacts = JavaUtils.nonNullImmutable(externalArtifacts);
@@ -53,11 +54,12 @@ public class ExecutorData {
     this.loggingS3Bucket = loggingS3Bucket;
     this.maxOpenFiles = maxOpenFiles;
     this.skipLogrotateAndCompress = skipLogrotateAndCompress;
+    this.s3ArtifactSignatures = s3ArtifactSignatures;
   }
 
   public ExecutorDataBuilder toBuilder() {
     return new ExecutorDataBuilder(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, runningSentinel, user, extraCmdLineArgs, loggingTag,
-        loggingExtraFields, sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, loggingS3Bucket, maxOpenFiles, skipLogrotateAndCompress);
+        loggingExtraFields, sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, loggingS3Bucket, maxOpenFiles, skipLogrotateAndCompress, s3ArtifactSignatures);
   }
 
   public String getCmd() {
@@ -124,12 +126,30 @@ public class ExecutorData {
     return skipLogrotateAndCompress;
   }
 
-  @Override
-  public String toString() {
-    return "ExecutorData [cmd=" + cmd + ", embeddedArtifacts=" + embeddedArtifacts + ", externalArtifacts=" + externalArtifacts + ", s3Artifacts=" + s3Artifacts + ", successfulExitCodes="
-        + successfulExitCodes + ", runningSentinel=" + runningSentinel + ", user=" + user + ", extraCmdLineArgs=" + extraCmdLineArgs + ", loggingTag=" + loggingTag + ", loggingExtraFields="
-        + loggingExtraFields + ", sigKillProcessesAfterMillis=" + sigKillProcessesAfterMillis + ", maxTaskThreads=" + maxTaskThreads + ", preserveTaskSandboxAfterFinish="
-        + preserveTaskSandboxAfterFinish + ", loggingS3Bucket=" + loggingS3Bucket + ", maxOpenFiles=" + maxOpenFiles + ", skipLogrotateAndCompress=" + skipLogrotateAndCompress + "]";
+  public List<S3ArtifactSignature> getS3ArtifactSignatures() {
+    return s3ArtifactSignatures;
   }
 
+  @Override
+  public String toString() {
+    return "ExecutorData[" +
+            "cmd='" + cmd + '\'' +
+            ", embeddedArtifacts=" + embeddedArtifacts +
+            ", externalArtifacts=" + externalArtifacts +
+            ", s3Artifacts=" + s3Artifacts +
+            ", successfulExitCodes=" + successfulExitCodes +
+            ", runningSentinel=" + runningSentinel +
+            ", user=" + user +
+            ", extraCmdLineArgs=" + extraCmdLineArgs +
+            ", loggingTag=" + loggingTag +
+            ", loggingExtraFields=" + loggingExtraFields +
+            ", sigKillProcessesAfterMillis=" + sigKillProcessesAfterMillis +
+            ", maxTaskThreads=" + maxTaskThreads +
+            ", preserveTaskSandboxAfterFinish=" + preserveTaskSandboxAfterFinish +
+            ", loggingS3Bucket=" + loggingS3Bucket +
+            ", maxOpenFiles=" + maxOpenFiles +
+            ", skipLogrotateAndCompress=" + skipLogrotateAndCompress +
+            ", s3ArtifactSignatures=" + s3ArtifactSignatures +
+            ']';
+  }
 }
