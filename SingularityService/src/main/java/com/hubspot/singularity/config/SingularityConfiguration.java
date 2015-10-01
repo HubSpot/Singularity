@@ -107,6 +107,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long loadBalancerRequestTimeoutMillis = 2000;
 
+  private long loadBalancerRemovalGracePeriodMillis = TimeUnit.SECONDS.toMillis(10);
+
   private String loadBalancerUri;
 
   private int logFetchMaxThreads = 15;
@@ -344,6 +346,14 @@ public class SingularityConfiguration extends Configuration {
 
   public long getKillNonLongRunningTasksInCleanupAfterSeconds() {
     return killNonLongRunningTasksInCleanupAfterSeconds;
+  }
+
+  public long getLoadBalancerRemovalGracePeriodMillis() {
+    return loadBalancerRemovalGracePeriodMillis;
+  }
+
+  public void setLoadBalancerRemovalGracePeriodMillis(long loadBalancerRemovalGracePeriodMillis) {
+    this.loadBalancerRemovalGracePeriodMillis = loadBalancerRemovalGracePeriodMillis;
   }
 
   public long getDeleteDeadSlavesAfterHours() {
