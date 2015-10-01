@@ -23,12 +23,12 @@ public class ExecutorDataBuilder {
   private Optional<String> loggingS3Bucket;
   private Optional<Integer> maxOpenFiles;
   private Optional<Boolean> skipLogrotateAndCompress;
-  private List<S3ArtifactSignature> s3ArtifactSignatures;
+  private Optional<List<S3ArtifactSignature>> s3ArtifactSignatures;
 
   public ExecutorDataBuilder(String cmd, List<EmbeddedArtifact> embeddedArtifacts, List<ExternalArtifact> externalArtifacts, List<S3Artifact> s3Artifacts, List<Integer> successfulExitCodes,
       Optional<String> runningSentinel, Optional<String> user, List<String> extraCmdLineArgs, Optional<String> loggingTag, Map<String, String> loggingExtraFields,
       Optional<Long> sigKillProcessesAfterMillis, Optional<Integer> maxTaskThreads, Optional<Boolean> preserveTaskSandboxAfterFinish, Optional<String> loggingS3Bucket,
-      Optional<Integer> maxOpenFiles, Optional<Boolean> skipLogrotateAndCompress, List<S3ArtifactSignature> s3ArtifactSignatures) {
+      Optional<Integer> maxOpenFiles, Optional<Boolean> skipLogrotateAndCompress, Optional<List<S3ArtifactSignature>> s3ArtifactSignatures) {
     this.cmd = cmd;
     this.embeddedArtifacts = embeddedArtifacts;
     this.externalArtifacts = externalArtifacts;
@@ -201,11 +201,11 @@ public class ExecutorDataBuilder {
     return this;
   }
 
-  public List<S3ArtifactSignature> getS3ArtifactSignatures() {
+  public Optional<List<S3ArtifactSignature>> getS3ArtifactSignatures() {
     return s3ArtifactSignatures;
   }
 
-  public ExecutorDataBuilder setS3ArtifactSignatures(List<S3ArtifactSignature> s3ArtifactSignatures) {
+  public ExecutorDataBuilder setS3ArtifactSignatures(Optional<List<S3ArtifactSignature>> s3ArtifactSignatures) {
     this.s3ArtifactSignatures = s3ArtifactSignatures;
     return this;
   }
