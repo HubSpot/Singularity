@@ -2,6 +2,7 @@ package com.hubspot.singularity.executor.task;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -16,6 +17,7 @@ import com.hubspot.deploy.EmbeddedArtifact;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.deploy.RemoteArtifact;
 import com.hubspot.deploy.S3Artifact;
+import com.hubspot.deploy.S3ArtifactSignature;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
@@ -81,20 +83,20 @@ public class SingularityExecutorArtifactFetcher {
 
       final ImmutableList<S3Artifact> allS3Artifacts = ImmutableList.<S3Artifact>builder()
               .addAll(executorData.getS3Artifacts())
-              .addAll(executorData.getS3ArtifactSignatures())
+              .addAll(executorData.getS3ArtifactSignatures().or(Collections.<S3ArtifactSignature>emptyList()))
               .build();
 
       if (executorConfiguration.isUseLocalDownloadService() && (!allS3Artifacts.isEmpty())) {
         final long start = System.currentTimeMillis();
 
-        task.getLog().info("Fetching {} (S3) artifacts and {} (S3) artifact signatures from local download service", executorData.getS3Artifacts().size(), executorData.getS3ArtifactSignatures().size());
+        task.getLog().info("Fetching {} (S3) artifacts and {} (S3) artifact signatures from local download service", executorData.getS3Artifacts().size(), executorData.getS3ArtifactSignatures().isPresent() ? executorData.getS3ArtifactSignatures().get().size() : 0);
 
         try {
           downloadFilesFromLocalDownloadService(allS3Artifacts, task);
 
           fetchS3ArtifactsLocally = false;
 
-          task.getLog().info("Fetched {} (S3) artifacts and {} (S3) artifact signatures from local download service in {}", executorData.getS3Artifacts().size(), executorData.getS3ArtifactSignatures().size(), JavaUtils.duration(start));
+          task.getLog().info("Fetched {} (S3) artifacts and {} (S3) artifact signatures from local download service in {}", executorData.getS3Artifacts().size(), executorData.getS3ArtifactSignatures().isPresent() ? executorData.getS3ArtifactSignatures().get().size() : 0, JavaUtils.duration(start));
         } catch (Throwable t) {
           task.getLog().error("Failed downloading S3 artifacts from local download service - falling back to in-task fetch", t);
         }

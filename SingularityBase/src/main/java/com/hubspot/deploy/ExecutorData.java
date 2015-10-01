@@ -28,7 +28,7 @@ public class ExecutorData {
   private final Optional<String> loggingS3Bucket;
   private final Optional<Integer> maxOpenFiles;
   private final Optional<Boolean> skipLogrotateAndCompress;
-  private final List<S3ArtifactSignature> s3ArtifactSignatures;
+  private final Optional<List<S3ArtifactSignature>> s3ArtifactSignatures;
 
   @JsonCreator
   public ExecutorData(@JsonProperty("cmd") String cmd, @JsonProperty("embeddedArtifacts") List<EmbeddedArtifact> embeddedArtifacts, @JsonProperty("externalArtifacts") List<ExternalArtifact> externalArtifacts,
@@ -37,7 +37,7 @@ public class ExecutorData {
       @JsonProperty("loggingExtraFields") Map<String, String> loggingExtraFields, @JsonProperty("sigKillProcessesAfterMillis") Optional<Long> sigKillProcessesAfterMillis,
       @JsonProperty("maxTaskThreads") Optional<Integer> maxTaskThreads, @JsonProperty("preserveTaskSandboxAfterFinish") Optional<Boolean> preserveTaskSandboxAfterFinish,
       @JsonProperty("loggingS3Bucket") Optional<String> loggingS3Bucket, @JsonProperty("maxOpenFiles") Optional<Integer> maxOpenFiles,
-      @JsonProperty("skipLogrotateAndCompress") Optional<Boolean> skipLogrotateAndCompress, @JsonProperty("s3ArtifactSignatures") List<S3ArtifactSignature> s3ArtifactSignatures) {
+      @JsonProperty("skipLogrotateAndCompress") Optional<Boolean> skipLogrotateAndCompress, @JsonProperty("s3ArtifactSignatures") Optional<List<S3ArtifactSignature>> s3ArtifactSignatures) {
     this.cmd = cmd;
     this.embeddedArtifacts = JavaUtils.nonNullImmutable(embeddedArtifacts);
     this.externalArtifacts = JavaUtils.nonNullImmutable(externalArtifacts);
@@ -126,7 +126,7 @@ public class ExecutorData {
     return skipLogrotateAndCompress;
   }
 
-  public List<S3ArtifactSignature> getS3ArtifactSignatures() {
+  public Optional<List<S3ArtifactSignature>> getS3ArtifactSignatures() {
     return s3ArtifactSignatures;
   }
 
