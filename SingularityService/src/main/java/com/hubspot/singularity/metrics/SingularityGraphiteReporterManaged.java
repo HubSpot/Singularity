@@ -15,7 +15,9 @@ import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.config.GraphiteConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
@@ -29,12 +31,14 @@ public class SingularityGraphiteReporterManaged implements Managed {
   private final GraphiteConfiguration graphiteConfiguration;
   private final MetricRegistry registry;
   private Optional<GraphiteReporter> reporter;
+  private final String hostname;
 
   @Inject
-  public SingularityGraphiteReporterManaged(SingularityConfiguration configuration, MetricRegistry registry) {
+  public SingularityGraphiteReporterManaged(SingularityConfiguration configuration, MetricRegistry registry, @Named(SingularityMainModule.HOST_NAME_PROPERTY) String hostname) {
     this.graphiteConfiguration = configuration.getGraphiteConfiguration();
     this.registry = registry;
     this.reporter = Optional.absent();
+    this.hostname = hostname;
   }
 
   @Override
@@ -52,7 +56,7 @@ public class SingularityGraphiteReporterManaged implements Managed {
     final GraphiteReporter.Builder reporterBuilder = GraphiteReporter.forRegistry(registry);
 
     if (!Strings.isNullOrEmpty(graphiteConfiguration.getPrefix())) {
-      reporterBuilder.prefixedWith(graphiteConfiguration.getPrefix());
+      reporterBuilder.prefixedWith(graphiteConfiguration.getPrefix().replace("{hostname}", hostname.replace(".", "-")));
     }
 
     if (!graphiteConfiguration.getPredicates().isEmpty()) {
