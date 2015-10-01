@@ -41,6 +41,16 @@ public class SingularityGraphiteReporterManaged implements Managed {
     this.hostname = hostname;
   }
 
+  private String buildGraphitePrefix() {
+    if (Strings.isNullOrEmpty(graphiteConfiguration.getPrefix())) {
+      return "";
+    }
+
+    final String trimmedHostname = !Strings.isNullOrEmpty(graphiteConfiguration.getHostnameOmitSuffix()) && hostname.endsWith(graphiteConfiguration.getHostnameOmitSuffix()) ? hostname.substring(hostname.length() - graphiteConfiguration.getHostnameOmitSuffix().length()) : hostname;
+
+    return graphiteConfiguration.getPrefix().replace("{hostname}", trimmedHostname);
+  }
+
   @Override
   public void start() throws Exception {
     if (!graphiteConfiguration.isEnabled()) {
@@ -48,15 +58,17 @@ public class SingularityGraphiteReporterManaged implements Managed {
       return;
     }
 
+    final String prefix = buildGraphitePrefix();
+
     LOG.info("Reporting data points to graphite server {}:{} every {} seconds with prefix '{}' and predicates '{}'.", graphiteConfiguration.getHostname(),
-        graphiteConfiguration.getPort(), graphiteConfiguration.getPeriodSeconds(), graphiteConfiguration.getPrefix(), JavaUtils.COMMA_JOINER.join(graphiteConfiguration.getPredicates()));
+        graphiteConfiguration.getPort(), graphiteConfiguration.getPeriodSeconds(), prefix, JavaUtils.COMMA_JOINER.join(graphiteConfiguration.getPredicates()));
 
     final Graphite graphite = new Graphite(new InetSocketAddress(graphiteConfiguration.getHostname(), graphiteConfiguration.getPort()));
 
     final GraphiteReporter.Builder reporterBuilder = GraphiteReporter.forRegistry(registry);
 
-    if (!Strings.isNullOrEmpty(graphiteConfiguration.getPrefix())) {
-      reporterBuilder.prefixedWith(graphiteConfiguration.getPrefix().replace("{hostname}", hostname.replace(".", "-")));
+    if (!Strings.isNullOrEmpty(prefix)) {
+      reporterBuilder.prefixedWith(prefix);
     }
 
     if (!graphiteConfiguration.getPredicates().isEmpty()) {
