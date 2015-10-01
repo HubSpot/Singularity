@@ -23,6 +23,10 @@ public class GraphiteConfiguration {
   private String prefix = "";
 
   @JsonProperty
+  @NotNull
+  private String hostnameOmitSuffix = "";
+
+  @JsonProperty
   private int periodSeconds = 60;
 
   @JsonProperty
@@ -75,5 +79,13 @@ public class GraphiteConfiguration {
 
   public void setPredicates(List<String> predicates) {
     this.predicates = predicates;
+  }
+
+  public String getHostnameOmitSuffix() {
+    return hostnameOmitSuffix;
+  }
+
+  public void setHostnameOmitSuffix(String hostnameOmitSuffix) {
+    this.hostnameOmitSuffix = hostnameOmitSuffix;
   }
 }
