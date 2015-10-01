@@ -42,6 +42,7 @@ public class SingularityExecutorArtifactVerifier {
 
   private void checkArtifactSignature(S3ArtifactSignature s3ArtifactSignature) {
     final Path artifactPath = Paths.get(s3Configuration.getArtifactCacheDirectory(), s3ArtifactSignature.getArtifactFilename());
+    final Path artifactSignaturePath = Paths.get(s3Configuration.getArtifactCacheDirectory(), s3ArtifactSignature.getFilename());
 
     if (!Files.exists(artifactPath)) {
       log.warn("Artifact {} not found for signature {}", artifactPath, s3ArtifactSignature);
@@ -51,7 +52,7 @@ public class SingularityExecutorArtifactVerifier {
     final List<String> verifyCommand = new ArrayList<>(executorConfiguration.getArtifactSignatureVerificationCommand().size());
 
     for (String arg : executorConfiguration.getArtifactSignatureVerificationCommand()) {
-      verifyCommand.add(arg.replace("{artifactPath}", artifactPath.toString()));
+      verifyCommand.add(arg.replace("{artifactPath}", artifactPath.toString()).replace("{artifactSignaturePath}", artifactSignaturePath.toString()));
     }
 
     try {
