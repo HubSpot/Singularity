@@ -5,6 +5,8 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 
@@ -46,7 +48,11 @@ public class SingularityExecutorArtifactVerifier {
       return;
     }
 
-    final String verifyCommand = String.format(executorConfiguration.getArtifactSignatureVerificationCommandFormat(), artifactPath);
+    final List<String> verifyCommand = new ArrayList<>(executorConfiguration.getArtifactSignatureVerificationCommand().size());
+
+    for (String arg : executorConfiguration.getArtifactSignatureVerificationCommand()) {
+      verifyCommand.add(arg.replace("{artifactPath}", artifactPath.toString()));
+    }
 
     try {
       final ProcessBuilder processBuilder = new ProcessBuilder(verifyCommand);

@@ -2,6 +2,7 @@ package com.hubspot.singularity.executor.config;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
@@ -220,7 +221,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @JsonProperty
   @NotEmpty
-  private String artifactSignatureVerificationCommandFormat = "gpg --batch --yes --passphrase-fd 0 --verify %s";
+  private List<String> artifactSignatureVerificationCommand = Arrays.asList("/usr/bin/gpg", "--batch", "--yes", "--passphrase-fd", "0", "--verify", "{artifactPath}");
 
   @JsonProperty
   private boolean failTaskOnInvalidArtifactSignature = false;
@@ -535,12 +536,12 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.procCgroupFormat = procCgroupFormat;
   }
 
-  public String getArtifactSignatureVerificationCommandFormat() {
-    return artifactSignatureVerificationCommandFormat;
+  public List<String> getArtifactSignatureVerificationCommand() {
+    return artifactSignatureVerificationCommand;
   }
 
-  public void setArtifactSignatureVerificationCommandFormat(String artifactSignatureVerificationCommandFormat) {
-    this.artifactSignatureVerificationCommandFormat = artifactSignatureVerificationCommandFormat;
+  public void setArtifactSignatureVerificationCommand(List<String> artifactSignatureVerificationCommand) {
+    this.artifactSignatureVerificationCommand = artifactSignatureVerificationCommand;
   }
 
   public boolean isFailTaskOnInvalidArtifactSignature() {
