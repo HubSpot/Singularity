@@ -1,7 +1,6 @@
 package com.hubspot.singularity.executor.task;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -10,7 +9,6 @@ import java.util.List;
 
 import org.slf4j.Logger;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 import com.hubspot.deploy.S3ArtifactSignature;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
@@ -65,13 +63,7 @@ public class SingularityExecutorArtifactVerifier {
 
       final Process p = processBuilder.start();
 
-      if (executorConfiguration.getArtifactSignaturePassphrase().isPresent()) {
-        final PrintStream passphrasePrintStream = new PrintStream(p.getOutputStream(), true, Charsets.UTF_8.toString());
-        passphrasePrintStream.println(executorConfiguration.getArtifactSignaturePassphrase().get());
-        passphrasePrintStream.close();
-      }
-
-      p.waitFor();
+      p.waitFor();  // TODO: add some sort of timeout?
 
       if (p.exitValue() != 0) {
         log.error("Failed to validate signature {} for artifact {}", s3ArtifactSignature.getFilename(), s3ArtifactSignature.getArtifactFilename());

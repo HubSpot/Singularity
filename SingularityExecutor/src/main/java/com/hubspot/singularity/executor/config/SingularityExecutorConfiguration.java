@@ -221,14 +221,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @JsonProperty
   @NotEmpty
-  private List<String> artifactSignatureVerificationCommand = Arrays.asList("/usr/bin/gpg", "--batch", "--yes", "--passphrase-fd", "0", "--verify", "{artifactSignaturePath}");
+  private List<String> artifactSignatureVerificationCommand = Arrays.asList("/usr/bin/gpg", "--verify", "{artifactSignaturePath}");
 
   @JsonProperty
   private boolean failTaskOnInvalidArtifactSignature = false;
-
-  @JsonProperty
-  @NotNull
-  private Optional<String> artifactSignaturePassphrase = Optional.absent();
 
   @JsonProperty
   @NotEmpty
@@ -546,14 +542,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public void setFailTaskOnInvalidArtifactSignature(boolean failTaskOnInvalidArtifactSignature) {
     this.failTaskOnInvalidArtifactSignature = failTaskOnInvalidArtifactSignature;
-  }
-
-  public Optional<String> getArtifactSignaturePassphrase() {
-    return artifactSignaturePassphrase;
-  }
-
-  public void setArtifactSignaturePassphrase(Optional<String> artifactSignaturePassphrase) {
-    this.artifactSignaturePassphrase = artifactSignaturePassphrase;
   }
 
   public String getSignatureVerifyOut() {
