@@ -743,13 +743,18 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     testingLbClient.setNextBaragonRequestState(BaragonRequestState.SUCCESS);
 
     cleaner.drainCleanupQueue();
+
+    Assert.assertTrue(!taskManager.getLBCleanupTasks().isEmpty());
+
+    configuration.setLoadBalancerRemovalGracePeriodMillis(0);
+    cleaner.drainCleanupQueue();
+
     Assert.assertTrue(taskManager.getLBCleanupTasks().isEmpty());
     lbUpdate = taskManager.getLoadBalancerState(task.getTaskId(), LoadBalancerRequestType.REMOVE);
 
     Assert.assertTrue(lbUpdate.isPresent());
     Assert.assertTrue(lbUpdate.get().getLoadBalancerState() == BaragonRequestState.SUCCESS);
     Assert.assertTrue(lbUpdate.get().getLoadBalancerRequestId().getAttemptNumber() == 2);
-
   }
 
   @Test
