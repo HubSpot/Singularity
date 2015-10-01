@@ -9,6 +9,7 @@ import org.apache.curator.utils.ZKPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -65,10 +66,10 @@ public class DeployManager extends CuratorAsyncManager {
   private static final String DEPLOY_RESULT_KEY = "RESULT_STATE";
 
   @Inject
-  public DeployManager(CuratorFramework curator, SingularityConfiguration configuration, SingularityEventListener singularityEventListener, Transcoder<SingularityDeploy> deployTranscoder,
+  public DeployManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, SingularityEventListener singularityEventListener, Transcoder<SingularityDeploy> deployTranscoder,
       Transcoder<SingularityRequestDeployState> requestDeployStateTranscoder, Transcoder<SingularityPendingDeploy> pendingDeployTranscoder, Transcoder<SingularityDeployMarker> deployMarkerTranscoder,
       Transcoder<SingularityDeployStatistics> deployStatisticsTranscoder, Transcoder<SingularityDeployResult> deployStateTranscoder, IdTranscoder<SingularityDeployKey> deployKeyTranscoder) {
-    super(curator, configuration);
+    super(curator, configuration, metricRegistry);
 
     this.singularityEventListener = singularityEventListener;
     this.pendingDeployTranscoder = pendingDeployTranscoder;
@@ -95,6 +96,7 @@ public class DeployManager extends CuratorAsyncManager {
     return getChildrenAsIdsForParents(BY_REQUEST_ROOT, paths, deployKeyTranscoder);
   }
 
+  @Timed
   public Map<String, SingularityRequestDeployState> getRequestDeployStatesByRequestIds(Collection<String> requestIds) {
     final List<String> paths = Lists.newArrayListWithCapacity(requestIds.size());
 
@@ -112,6 +114,7 @@ public class DeployManager extends CuratorAsyncManager {
     });
   }
 
+  @Timed
   public Map<String, SingularityRequestDeployState> getAllRequestDeployStatesByRequestId() {
     final List<String> requestIds = getChildren(BY_REQUEST_ROOT);
 
@@ -122,6 +125,7 @@ public class DeployManager extends CuratorAsyncManager {
     return getAsyncChildren(CANCEL_ROOT, deployMarkerTranscoder);
   }
 
+  @Timed
   public List<SingularityPendingDeploy> getPendingDeploys() {
     return getAsyncChildren(PENDING_ROOT, pendingDeployTranscoder);
   }
@@ -299,7 +303,6 @@ public class DeployManager extends CuratorAsyncManager {
     return save(getPendingDeployPath(pendingDeploy.getDeployMarker().getRequestId()), pendingDeploy, pendingDeployTranscoder);
   }
 
-  @Timed
   public Optional<SingularityPendingDeploy> getPendingDeploy(String requestId) {
     return getData(getPendingDeployPath(requestId), pendingDeployTranscoder);
   }

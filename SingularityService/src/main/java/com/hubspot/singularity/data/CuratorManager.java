@@ -2,6 +2,8 @@ package com.hubspot.singularity.data;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.api.GetDataBuilder;
@@ -13,8 +15,12 @@ import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableMap;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
@@ -30,13 +36,37 @@ public abstract class CuratorManager {
   protected final SingularityConfiguration configuration;
   protected final CuratorFramework curator;
 
-  public CuratorManager(CuratorFramework curator, SingularityConfiguration configuration) {
+  private final Map<OperationType, Metrics> typeToMetrics;
+
+  public CuratorManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry) {
     this.configuration = configuration;
     this.curator = curator;
+
+    this.typeToMetrics = ImmutableMap.of(OperationType.READ, new Metrics(metricRegistry, OperationType.READ),
+        OperationType.WRITE, new Metrics(metricRegistry, OperationType.WRITE));
   }
 
-  protected void log(String type, Optional<Integer> numItems, Optional<Integer> bytes, long start, String path) {
-    final String message = String.format("%s (items: %s) (bytes: %s) in %s (%s)", type, numItems.or(1), bytes.or(0), JavaUtils.duration(start), path);
+  public enum OperationType {
+    READ, WRITE;
+  }
+
+  private class Metrics {
+
+    private final Meter bytesMeter;
+    private final Meter itemsMeter;
+    private final Timer timer;
+
+    public Metrics(MetricRegistry registry, OperationType type) {
+      this.bytesMeter = registry.meter(String.format("zk.bytes.%s", type.name().toLowerCase()));
+      this.itemsMeter = registry.meter(String.format("zk.items.%s", type.name().toLowerCase()));
+      this.timer = registry.timer(String.format("zk.%s", type.name().toLowerCase()));
+    }
+  }
+
+  protected void log(OperationType type, Optional<Integer> numItems, Optional<Integer> bytes, long start, String path) {
+    final String message = String.format("%s (items: %s) (bytes: %s) in %s (%s)", type.name(), numItems.or(1), bytes.or(0), JavaUtils.duration(start), path);
+
+    final long duration = System.currentTimeMillis() - start;
 
     if (bytes.isPresent() && bytes.get() > configuration.getDebugCuratorCallOverBytes()
         || System.currentTimeMillis() - start > configuration.getDebugCuratorCallOverMillis()) {
@@ -44,6 +74,16 @@ public abstract class CuratorManager {
     } else {
       LOG.trace(message);
     }
+
+    Metrics metrics = typeToMetrics.get(type);
+
+    if (bytes.isPresent()) {
+      metrics.bytesMeter.mark(bytes.get());
+    }
+    if (numItems.isPresent()) {
+      metrics.itemsMeter.mark(numItems.get());
+    }
+    metrics.timer.update(duration, TimeUnit.MILLISECONDS);
   }
 
   protected int getNumChildren(String path) {
@@ -91,7 +131,7 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      log("Fetched", Optional.of(numChildren), Optional.<Integer> absent(), start, root);
+      log(OperationType.READ, Optional.of(numChildren), Optional.<Integer> absent(), start, root);
     }
   }
 
@@ -107,7 +147,7 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      log("Deleted", Optional.<Integer> absent(), Optional.<Integer> absent(), start, path);
+      log(OperationType.WRITE, Optional.<Integer> absent(), Optional.<Integer> absent(), start, path);
     }
   }
 
@@ -120,8 +160,6 @@ public abstract class CuratorManager {
   }
 
   protected SingularityCreateResult create(String path, Optional<byte[]> data) {
-    final long start = System.currentTimeMillis();
-
     try {
       privateCreate(path, data);
 
@@ -130,20 +168,24 @@ public abstract class CuratorManager {
       return SingularityCreateResult.EXISTED;
     } catch (Throwable t) {
       throw Throwables.propagate(t);
-    } finally {
-      log("Created", Optional.<Integer> absent(), Optional.<Integer> of(data.or(EMPTY_BYTES).length), start, path);
     }
   }
 
   private void privateCreate(String path, Optional<byte[]> data) throws Exception {
-    ProtectACLCreateModePathAndBytesable<String> createBuilder = curator.create().creatingParentsIfNeeded();
+    final long start = System.currentTimeMillis();
 
-    if (data.isPresent()) {
-      createBuilder.forPath(path, data.get());
-    } else {
-      createBuilder.forPath(path);
+    try {
+      ProtectACLCreateModePathAndBytesable<String> createBuilder = curator.create().creatingParentsIfNeeded();
+
+
+      if (data.isPresent()) {
+        createBuilder.forPath(path, data.get());
+      } else {
+        createBuilder.forPath(path);
+      }
+    } finally {
+      log(OperationType.WRITE, Optional.<Integer> absent(), Optional.<Integer> of(data.or(EMPTY_BYTES).length), start, path);
     }
-
   }
 
   protected <T> SingularityCreateResult save(String path, T object, Transcoder<T> transcoder) {
@@ -151,8 +193,6 @@ public abstract class CuratorManager {
   }
 
   protected SingularityCreateResult save(String path, Optional<byte[]> data) {
-    final long start = System.currentTimeMillis();
-
     try {
       privateCreate(path, data);
 
@@ -161,12 +201,10 @@ public abstract class CuratorManager {
       return set(path, data);
     } catch (Throwable t) {
       throw Throwables.propagate(t);
-    } finally {
-      log("Saved", Optional.<Integer> absent(), Optional.<Integer> of(data.or(EMPTY_BYTES).length), start, path);
     }
   }
 
-  protected SingularityCreateResult set(String path, Optional<byte[]> data) {
+  private void privateSet(String path, Optional<byte[]> data) throws Exception {
     final long start = System.currentTimeMillis();
 
     try {
@@ -177,14 +215,21 @@ public abstract class CuratorManager {
       } else {
         setDataBuilder.forPath(path);
       }
+    } finally {
+
+      log(OperationType.WRITE, Optional.<Integer> absent(), Optional.<Integer> of(data.or(EMPTY_BYTES).length), start, path);
+    }
+  }
+
+  protected SingularityCreateResult set(String path, Optional<byte[]> data) {
+    try {
+      privateSet(path, data);
 
       return SingularityCreateResult.EXISTED;
     } catch (NoNodeException nne) {
       return save(path, data);
     } catch (Throwable t) {
       throw Throwables.propagate(t);
-    } finally {
-      log("Set", Optional.<Integer> absent(), Optional.<Integer> of(data.or(EMPTY_BYTES).length), start, path);
     }
   }
 
@@ -214,7 +259,7 @@ public abstract class CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     } finally {
-      log("Fetched", Optional.<Integer> absent(), Optional.<Integer> of(bytes), start, path);
+      log(OperationType.READ, Optional.<Integer> absent(), Optional.<Integer> of(bytes), start, path);
     }
   }
 
