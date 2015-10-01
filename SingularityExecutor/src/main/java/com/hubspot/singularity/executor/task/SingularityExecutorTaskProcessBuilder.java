@@ -68,6 +68,8 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     taskArtifactFetcher = Optional.of(artifactFetcher.buildTaskFetcher(executorData, task));
     taskArtifactFetcher.get().fetchFiles();
 
+    task.getArtifactVerifier().checkSignatures();
+
     ProcessBuilder processBuilder = buildProcessBuilder(task.getTaskInfo(), executorData);
 
     task.getTaskLogManager().setup();

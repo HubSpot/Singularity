@@ -8,6 +8,7 @@ import java.util.Objects;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -78,24 +79,29 @@ public class SingularityExecutorArtifactFetcher {
 
       boolean fetchS3ArtifactsLocally = true;
 
-      if (executorConfiguration.isUseLocalDownloadService() && !executorData.getS3Artifacts().isEmpty()) {
+      final ImmutableList<S3Artifact> allS3Artifacts = ImmutableList.<S3Artifact>builder()
+              .addAll(executorData.getS3Artifacts())
+              .addAll(executorData.getS3ArtifactSignatures())
+              .build();
+
+      if (executorConfiguration.isUseLocalDownloadService() && (!allS3Artifacts.isEmpty())) {
         final long start = System.currentTimeMillis();
 
-        task.getLog().info("Fetching {} (S3) artifacts from local download service", executorData.getS3Artifacts().size());
+        task.getLog().info("Fetching {} (S3) artifacts and {} (S3) artifact signatures from local download service", executorData.getS3Artifacts().size(), executorData.getS3ArtifactSignatures().size());
 
         try {
-          downloadFilesFromLocalDownloadService(executorData.getS3Artifacts(), task);
+          downloadFilesFromLocalDownloadService(allS3Artifacts, task);
 
           fetchS3ArtifactsLocally = false;
 
-          task.getLog().info("Fetched {} (S3) artifacts from local download service in {}", executorData.getS3Artifacts().size(), JavaUtils.duration(start));
+          task.getLog().info("Fetched {} (S3) artifacts and {} (S3) artifact signatures from local download service in {}", executorData.getS3Artifacts().size(), executorData.getS3ArtifactSignatures().size(), JavaUtils.duration(start));
         } catch (Throwable t) {
           task.getLog().error("Failed downloading S3 artifacts from local download service - falling back to in-task fetch", t);
         }
       }
 
       if (fetchS3ArtifactsLocally) {
-        for (RemoteArtifact s3Artifact : executorData.getS3Artifacts()) {
+        for (RemoteArtifact s3Artifact : allS3Artifacts) {
           downloadRemoteArtifact(s3Artifact, artifactManager, task);
         }
       }
@@ -111,7 +117,7 @@ public class SingularityExecutorArtifactFetcher {
       }
     }
 
-    private void downloadFilesFromLocalDownloadService(List<S3Artifact> s3Artifacts, SingularityExecutorTask task) {
+    private void downloadFilesFromLocalDownloadService(List<? extends S3Artifact> s3Artifacts, SingularityExecutorTask task) {
       final List<ListenableFuture<Response>> futures = Lists.newArrayListWithCapacity(s3Artifacts.size());
 
       for (S3Artifact s3Artifact : s3Artifacts) {

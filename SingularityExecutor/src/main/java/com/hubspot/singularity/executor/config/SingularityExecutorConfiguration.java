@@ -235,6 +235,25 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private String switchUserCommandFormat = "sudo -E -u %s";
 
+  @JsonProperty
+  @NotEmpty
+  private String artifactSignatureVerificationCommandFormat = "gpg --batch --yes --passphrase-fd 0 --verify %s";
+
+  @JsonProperty
+  private boolean failTaskOnInvalidArtifactSignature = false;
+
+  @JsonProperty
+  @NotNull
+  private Optional<String> artifactSignaturePassphrase = Optional.absent();
+
+  @JsonProperty
+  @Min(0)
+  private long artifactSignatureVerificationCommandTimeoutMs = 5000;
+
+  @JsonProperty
+  @NotEmpty
+  private String signatureVerifyOut = "executor.gpg.out";
+
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
   }
@@ -570,6 +589,46 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public void setSwitchUserCommandFormat(String switchUserCommandFormat) {
     this.switchUserCommandFormat = switchUserCommandFormat;
+  }
+
+  public String getArtifactSignatureVerificationCommandFormat() {
+    return artifactSignatureVerificationCommandFormat;
+  }
+
+  public void setArtifactSignatureVerificationCommandFormat(String artifactSignatureVerificationCommandFormat) {
+    this.artifactSignatureVerificationCommandFormat = artifactSignatureVerificationCommandFormat;
+  }
+
+  public boolean isFailTaskOnInvalidArtifactSignature() {
+    return failTaskOnInvalidArtifactSignature;
+  }
+
+  public void setFailTaskOnInvalidArtifactSignature(boolean failTaskOnInvalidArtifactSignature) {
+    this.failTaskOnInvalidArtifactSignature = failTaskOnInvalidArtifactSignature;
+  }
+
+  public Optional<String> getArtifactSignaturePassphrase() {
+    return artifactSignaturePassphrase;
+  }
+
+  public void setArtifactSignaturePassphrase(Optional<String> artifactSignaturePassphrase) {
+    this.artifactSignaturePassphrase = artifactSignaturePassphrase;
+  }
+
+  public long getArtifactSignatureVerificationCommandTimeoutMs() {
+    return artifactSignatureVerificationCommandTimeoutMs;
+  }
+
+  public void setArtifactSignatureVerificationCommandTimeoutMs(long artifactSignatureVerificationCommandTimeoutMs) {
+    this.artifactSignatureVerificationCommandTimeoutMs = artifactSignatureVerificationCommandTimeoutMs;
+  }
+
+  public String getSignatureVerifyOut() {
+    return signatureVerifyOut;
+  }
+
+  public void setSignatureVerifyOut(String signatureVerifyOut) {
+    this.signatureVerifyOut = signatureVerifyOut;
   }
 
   @Override
