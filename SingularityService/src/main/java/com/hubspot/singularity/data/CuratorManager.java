@@ -50,7 +50,7 @@ public abstract class CuratorManager {
     READ, WRITE;
   }
 
-  private class Metrics {
+  private static class Metrics {
 
     private final Meter bytesMeter;
     private final Meter itemsMeter;
