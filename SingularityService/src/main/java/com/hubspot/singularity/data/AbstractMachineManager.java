@@ -8,6 +8,7 @@ import org.apache.curator.utils.ZKPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -28,8 +29,9 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   private final Transcoder<T> transcoder;
   private final Transcoder<SingularityMachineStateHistoryUpdate> historyTranscoder;
 
-  public AbstractMachineManager(CuratorFramework curator, SingularityConfiguration configuration, Transcoder<T> transcoder, Transcoder<SingularityMachineStateHistoryUpdate> historyTranscoder) {
-    super(curator, configuration);
+  public AbstractMachineManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, Transcoder<T> transcoder,
+      Transcoder<SingularityMachineStateHistoryUpdate> historyTranscoder) {
+    super(curator, configuration, metricRegistry);
 
     this.transcoder = transcoder;
     this.historyTranscoder = historyTranscoder;

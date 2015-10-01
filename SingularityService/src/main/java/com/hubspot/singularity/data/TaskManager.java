@@ -15,6 +15,7 @@ import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -95,12 +96,12 @@ public class TaskManager extends CuratorAsyncManager {
   private final String serverId;
 
   @Inject
-  public TaskManager(CuratorFramework curator, SingularityConfiguration configuration, SingularityEventListener singularityEventListener, IdTranscoder<SingularityPendingTaskId> pendingTaskIdTranscoder,
-      IdTranscoder<SingularityTaskId> taskIdTranscoder, Transcoder<SingularityLoadBalancerUpdate> taskLoadBalancerHistoryUpdateTranscoder,
+  public TaskManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, SingularityEventListener singularityEventListener,
+      IdTranscoder<SingularityPendingTaskId> pendingTaskIdTranscoder, IdTranscoder<SingularityTaskId> taskIdTranscoder, Transcoder<SingularityLoadBalancerUpdate> taskLoadBalancerHistoryUpdateTranscoder,
       Transcoder<SingularityTaskStatusHolder> taskStatusTranscoder, Transcoder<SingularityTaskHealthcheckResult> healthcheckResultTranscoder, Transcoder<SingularityTask> taskTranscoder,
       Transcoder<SingularityTaskCleanup> taskCleanupTranscoder, Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder, Transcoder<SingularityPendingTask> pendingTaskTranscoder,
       Transcoder<SingularityKilledTaskIdRecord> killedTaskIdRecordTranscoder, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId) {
-    super(curator, configuration);
+    super(curator, configuration, metricRegistry);
 
     this.healthcheckResultTranscoder = healthcheckResultTranscoder;
     this.taskTranscoder = taskTranscoder;

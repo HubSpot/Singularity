@@ -14,6 +14,7 @@ import org.apache.curator.utils.ZKPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
@@ -27,8 +28,8 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(CuratorAsyncManager.class);
 
-  public CuratorAsyncManager(CuratorFramework curator, SingularityConfiguration configuration) {
-    super(curator, configuration);
+  public CuratorAsyncManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry) {
+    super(curator, configuration, metricRegistry);
   }
 
   private <T> List<T> getAsyncChildrenThrows(final String parent, final Transcoder<T> transcoder) throws Exception {
@@ -76,13 +77,15 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
     final long start = System.currentTimeMillis();
 
-    for (String path : paths) {
-      curator.getData().inBackground(callback).forPath(path);
+    try {
+      for (String path : paths) {
+        curator.getData().inBackground(callback).forPath(path);
+      }
+
+      checkLatch(latch, pathNameForLogs);
+    } finally {
+      log(OperationType.READ, Optional.<Integer> of(objects.size()), Optional.<Integer> of(bytes.get()), start, pathNameForLogs);
     }
-
-    checkLatch(latch, pathNameForLogs);
-
-    log("Fetched", Optional.<Integer> of(objects.size()), Optional.<Integer> of(bytes.get()), start, pathNameForLogs);
 
     return objects;
   }
@@ -124,13 +127,15 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
     final long start = System.currentTimeMillis();
 
-    for (String parent : parents) {
-      curator.getChildren().inBackground(callback).forPath(parent);
+    try {
+      for (String parent : parents) {
+        curator.getChildren().inBackground(callback).forPath(parent);
+      }
+
+      checkLatch(latch, pathNameforLogs);
+    } finally {
+      log(OperationType.READ, Optional.<Integer> of(objects.size()), Optional.<Integer> absent(), start, pathNameforLogs);
     }
-
-    checkLatch(latch, pathNameforLogs);
-
-    log("Fetched", Optional.<Integer> of(objects.size()), Optional.<Integer> absent(), start, pathNameforLogs);
 
     return objects;
   }
@@ -174,13 +179,15 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
     final long start = System.currentTimeMillis();
 
-    for (String path : paths) {
-      curator.checkExists().inBackground(callback).forPath(path);
+    try {
+      for (String path : paths) {
+        curator.checkExists().inBackground(callback).forPath(path);
+      }
+
+      checkLatch(latch, pathNameforLogs);
+    } finally {
+      log(OperationType.READ, Optional.<Integer> of(objects.size()), Optional.<Integer> absent(), start, pathNameforLogs);
     }
-
-    checkLatch(latch, pathNameforLogs);
-
-    log("Fetched", Optional.<Integer> of(objects.size()), Optional.<Integer> absent(), start, pathNameforLogs);
 
     return objects;
   }
