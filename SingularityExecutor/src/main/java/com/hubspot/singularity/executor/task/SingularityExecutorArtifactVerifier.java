@@ -65,30 +65,22 @@ public class SingularityExecutorArtifactVerifier {
 
       final Process p = processBuilder.start();
 
-      try {
-        if (executorConfiguration.getArtifactSignaturePassphrase().isPresent()) {
-          final PrintStream passphrasePrintStream = new PrintStream(p.getOutputStream(), true, Charsets.UTF_8.toString());
-          passphrasePrintStream.println(executorConfiguration.getArtifactSignaturePassphrase().get());
-          passphrasePrintStream.close();
-        }
+      if (executorConfiguration.getArtifactSignaturePassphrase().isPresent()) {
+        final PrintStream passphrasePrintStream = new PrintStream(p.getOutputStream(), true, Charsets.UTF_8.toString());
+        passphrasePrintStream.println(executorConfiguration.getArtifactSignaturePassphrase().get());
+        passphrasePrintStream.close();
+      }
 
-        p.wait(executorConfiguration.getArtifactSignatureVerificationCommandTimeoutMs());
+      p.waitFor();
 
-        if (p.exitValue() != 0) {
-          log.error("Failed to validate signature {} for artifact {}", s3ArtifactSignature.getFilename(), s3ArtifactSignature.getArtifactFilename());
-
-          if (executorConfiguration.isFailTaskOnInvalidArtifactSignature()) {
-            throw new RuntimeException(String.format("Failed to validate signature for artifact %s", artifactPath));
-          }
-        }
-      } catch (IllegalThreadStateException itse) {
-        log.warn("Signature validation command {} for artifact {} didn't complete after {}ms. Killing process.", verifyCommand, s3ArtifactSignature.getArtifactFilename(), executorConfiguration.getArtifactSignatureVerificationCommandTimeoutMs());
-
-        p.destroy();
+      if (p.exitValue() != 0) {
+        log.error("Failed to validate signature {} for artifact {}", s3ArtifactSignature.getFilename(), s3ArtifactSignature.getArtifactFilename());
 
         if (executorConfiguration.isFailTaskOnInvalidArtifactSignature()) {
-          throw new RuntimeException(String.format("Signature validation command '%s' for artifact %s didn't complete after %sms.", verifyCommand, s3ArtifactSignature.getArtifactFilename(), executorConfiguration.getArtifactSignatureVerificationCommandTimeoutMs()));
+          throw new RuntimeException(String.format("Failed to validate signature for artifact %s", artifactPath));
         }
+      } else {
+        log.info("Signature {} for artifact {} is valid!", s3ArtifactSignature.getFilename(), s3ArtifactSignature.getArtifactFilename());
       }
     } catch (InterruptedException | IOException e) {
       throw Throwables.propagate(e);

@@ -248,10 +248,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private Optional<String> artifactSignaturePassphrase = Optional.absent();
 
   @JsonProperty
-  @Min(0)
-  private long artifactSignatureVerificationCommandTimeoutMs = 5000;
-
-  @JsonProperty
   @NotEmpty
   private String signatureVerifyOut = "executor.gpg.out";
 
@@ -614,14 +610,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public void setArtifactSignaturePassphrase(Optional<String> artifactSignaturePassphrase) {
     this.artifactSignaturePassphrase = artifactSignaturePassphrase;
-  }
-
-  public long getArtifactSignatureVerificationCommandTimeoutMs() {
-    return artifactSignatureVerificationCommandTimeoutMs;
-  }
-
-  public void setArtifactSignatureVerificationCommandTimeoutMs(long artifactSignatureVerificationCommandTimeoutMs) {
-    this.artifactSignatureVerificationCommandTimeoutMs = artifactSignatureVerificationCommandTimeoutMs;
   }
 
   public String getSignatureVerifyOut() {
