@@ -224,7 +224,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private List<String> artifactSignatureVerificationCommand = Arrays.asList("/usr/bin/gpg", "--verify", "{artifactSignaturePath}");
 
   @JsonProperty
-  private boolean failTaskOnInvalidArtifactSignature = false;
+  private boolean failTaskOnInvalidArtifactSignature = true;
 
   @JsonProperty
   @NotEmpty
