@@ -7,6 +7,7 @@ import java.util.List;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -25,8 +26,8 @@ public class MetadataManager extends CuratorManager {
   private static final String MAIL_IN_COOLDOWN_MARKER_KEY = "COOLDOWN_ACTIVE";
 
   @Inject
-  public MetadataManager(CuratorFramework curator, SingularityConfiguration configuration) {
-    super(curator, configuration);
+  public MetadataManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry) {
+    super(curator, configuration, metricRegistry);
   }
 
   private String getMailRecordPathForRequest(String requestId) {

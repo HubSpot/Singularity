@@ -82,9 +82,9 @@ public class SingularityConfiguration extends Configuration {
 
   private long deployHealthyBySeconds = 120;
 
-  private long debugCuratorCallOverBytes = 5000;
+  private long debugCuratorCallOverBytes = 25000;
 
-  private long debugCuratorCallOverMillis = 1000;
+  private long debugCuratorCallOverMillis = 250;
 
   private boolean enableCorsFilter = false;
 
