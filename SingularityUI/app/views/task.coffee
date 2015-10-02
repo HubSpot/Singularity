@@ -70,7 +70,7 @@ class TaskView extends View
         event.preventDefault()
         cmd = $("#cmd option:selected").text()
         options = $('#cmd-option').val()
-        return if @$('button[type="submit"]').attr 'disabled'
+        return if @$('#btn_exec').attr 'disabled'
         return if !cmd
         taskModel = new Task id: @taskId
         taskModel.runShellCommand(cmd, options)
