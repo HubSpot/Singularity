@@ -1,7 +1,9 @@
 DashboardController = require 'controllers/Dashboard'
 StatusController    = require 'controllers/Status'
 
-NewRequestController = require 'controllers/NewRequest'
+RequestFormNewController = require 'controllers/RequestFormNew'
+RequestFormEditController = require 'controllers/RequestFormEdit'
+
 NewDeployController  = require 'controllers/NewDeploy'
 
 RequestDetailController = require 'controllers/RequestDetail'
@@ -25,6 +27,7 @@ class Router extends Backbone.Router
         'status(/)': 'status'
 
         'requests/new(/)': 'newRequest'
+        'requests/edit/:requestId': 'editRequest'
 
         'requests/:state/:subFilter/:searchFilter(/)': 'requestsTable'
         'requests/:state/:subFilter(/)': 'requestsTable'
@@ -56,7 +59,10 @@ class Router extends Backbone.Router
         app.bootstrapController new StatusController
 
     newRequest: ->
-        app.bootstrapController new NewRequestController
+        app.bootstrapController new RequestFormNewController
+
+    editRequest: (requestId = '') ->
+        app.bootstrapController new RequestFormEditController {requestId}
 
     requestsTable: (state = 'all', subFilter = 'all', searchFilter = '') ->
         app.bootstrapController new RequestsTableController {state, subFilter, searchFilter}
