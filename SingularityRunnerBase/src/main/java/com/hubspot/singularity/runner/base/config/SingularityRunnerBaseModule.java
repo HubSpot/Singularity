@@ -20,6 +20,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Named;
@@ -29,6 +30,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.jackson.ObfuscateModule;
+import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 
 public class SingularityRunnerBaseModule extends AbstractModule {
   public static final String PROCESS_NAME = "process.name";
@@ -59,6 +61,7 @@ public class SingularityRunnerBaseModule extends AbstractModule {
 
     SingularityRunnerBaseLogging.quietEagerLogging();
     bind(Validator.class).toInstance(Validation.buildDefaultValidatorFactory().getValidator());
+    bind(SingularityRunnerExceptionNotifier.class).in(Scopes.SINGLETON);
 
     final Optional<String> consolidatedConfigFilename = Optional.fromNullable(Strings.emptyToNull(System.getProperty(CONFIG_PROPERTY)));
     final ConfigurationBinder configurationBinder = ConfigurationBinder.newBinder(binder());

@@ -2,6 +2,8 @@ package com.hubspot.singularity.runner.base.configuration;
 
 import java.util.Properties;
 
+import javax.validation.constraints.NotNull;
+
 import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -33,6 +35,14 @@ public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration 
   @NotEmpty
   @JsonProperty
   private String logWatcherMetadataSuffix = ".tail.json";
+
+  @NotNull
+  @JsonProperty
+  private Optional<String> sentryDsn = Optional.absent();
+
+  @NotNull
+  @JsonProperty
+  private String sentryPrefix = "";
 
   public SingularityRunnerBaseConfiguration() {
     super(Optional.<String>absent());
@@ -69,6 +79,22 @@ public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration 
 
   public void setLogWatcherMetadataSuffix(String logWatcherMetadataSuffix) {
     this.logWatcherMetadataSuffix = logWatcherMetadataSuffix;
+  }
+
+  public Optional<String> getSentryDsn() {
+    return sentryDsn;
+  }
+
+  public void setSentryDsn(Optional<String> sentryDsn) {
+    this.sentryDsn = sentryDsn;
+  }
+
+  public String getSentryPrefix() {
+    return sentryPrefix;
+  }
+
+  public void setSentryPrefix(String sentryPrefix) {
+    this.sentryPrefix = sentryPrefix;
   }
 
   @Override
