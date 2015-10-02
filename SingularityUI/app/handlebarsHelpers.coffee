@@ -50,6 +50,12 @@ Handlebars.registerHelper 'unlessInSubFilter', (needle, haystack, options) ->
 Handlebars.registerHelper 'withLast', (list, options) ->
     options.fn _.last list
 
+# {{#withFirst [1, 2, 3]}}
+#     {{! this = 1 }}
+# {{/withFirst}}
+Handlebars.registerHelper 'withFirst', (list, options) ->
+    options.fn list[0]
+
 # 1234567890 => 20 minutes ago
 Handlebars.registerHelper 'timestampFromNow', (timestamp) ->
     return '' if not timestamp

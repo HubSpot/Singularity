@@ -24,7 +24,9 @@
                   <option value="{{name}}">{{name}}</option>
                 {{/each}}
               </select>
-              <p class="cmd-description"></p>
+              {{#withFirst config.shellCommands}}
+                <p class="cmd-description">{{description}}</p>
+              {{/withFirst}}
               <label for="cmd-option">Options</label>
               <select multiple name="cmd-option" class="form-control input-large" id="cmd-option" disabled></select>
             </div>
