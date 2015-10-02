@@ -14,6 +14,7 @@ import org.eclipse.jetty.continuation.Continuation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -23,6 +24,7 @@ import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.hubspot.deploy.S3Artifact;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.s3.base.ArtifactDownloadRequest;
 import com.hubspot.singularity.s3.base.ArtifactManager;
 import com.hubspot.singularity.s3downloader.SingularityS3DownloaderMetrics;
@@ -41,11 +43,12 @@ public class SingularityS3DownloaderCoordinator {
   private final ThreadPoolExecutor downloadService;
   private final ListeningExecutorService listeningDownloadWrapper;
   private final ExecutorService listeningResponseExecutorService;
+  private final SingularityRunnerExceptionNotifier exceptionNotifier;
 
   @Inject
   public SingularityS3DownloaderCoordinator(SingularityS3DownloaderConfiguration configuration, SingularityS3DownloaderMetrics metrics, Provider<ArtifactManager> artifactManagerProvider,
       @Named(SingularityS3DownloaderModule.ENQUEUE_EXECUTOR_SERVICE) ScheduledThreadPoolExecutor downloadJoinerService,
-      @Named(SingularityS3DownloaderModule.DOWNLOAD_EXECUTOR_SERVICE) ThreadPoolExecutor downloadService) {
+      @Named(SingularityS3DownloaderModule.DOWNLOAD_EXECUTOR_SERVICE) ThreadPoolExecutor downloadService, SingularityRunnerExceptionNotifier exceptionNotifier) {
     this.configuration = configuration;
     this.metrics = metrics;
     this.artifactManagerProvider = artifactManagerProvider;
@@ -54,6 +57,7 @@ public class SingularityS3DownloaderCoordinator {
     this.downloadRequestToHandler = Maps.newConcurrentMap();
     this.listeningDownloadWrapper = MoreExecutors.listeningDecorator(downloadService);
     this.listeningResponseExecutorService = Executors.newCachedThreadPool();
+    this.exceptionNotifier = exceptionNotifier;
   }
 
   public void register(final Continuation continuation, final ArtifactDownloadRequest artifactDownloadRequest) {
@@ -88,7 +92,7 @@ public class SingularityS3DownloaderCoordinator {
         return false;
       }
 
-      SingularityS3DownloaderAsyncHandler newHandler = new SingularityS3DownloaderAsyncHandler(artifactManagerProvider.get(), artifactDownloadRequest, continuation, metrics);
+      SingularityS3DownloaderAsyncHandler newHandler = new SingularityS3DownloaderAsyncHandler(artifactManagerProvider.get(), artifactDownloadRequest, continuation, metrics, exceptionNotifier);
 
       existingHandler = downloadRequestToHandler.putIfAbsent(artifactDownloadRequest.getS3Artifact(), newHandler);
 
@@ -119,6 +123,7 @@ public class SingularityS3DownloaderCoordinator {
         }
       } catch (Throwable t) {
         LOG.error("While trying to enqueue {}", artifactDownloadRequest.getTargetDirectory(), t);
+        exceptionNotifier.notify(t, ImmutableMap.of("targetDirectory", artifactDownloadRequest.getTargetDirectory()));
         try {
           ((HttpServletResponse) continuation.getServletResponse()).sendError(500);
         } catch (IOException e) {

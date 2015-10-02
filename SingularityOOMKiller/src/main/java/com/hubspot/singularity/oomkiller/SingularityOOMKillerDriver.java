@@ -1,5 +1,6 @@
 package com.hubspot.singularity.oomkiller;
 
+import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -13,6 +14,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.oomkiller.config.SingularityOOMKillerConfiguration;
+import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.runner.base.shared.SingularityDriver;
 
 public class SingularityOOMKillerDriver implements SingularityDriver {
@@ -22,13 +24,15 @@ public class SingularityOOMKillerDriver implements SingularityDriver {
   private final SingularityOOMKillerConfiguration configuration;
   private final ScheduledExecutorService scheduler;
   private final SingularityOOMKiller oomKiller;
+  private final SingularityRunnerExceptionNotifier exceptionNotifier;
 
   private ScheduledFuture<?> future;
 
   @Inject
-  public SingularityOOMKillerDriver(SingularityOOMKillerConfiguration configuration, SingularityOOMKiller oomKiller) {
+  public SingularityOOMKillerDriver(SingularityOOMKillerConfiguration configuration, SingularityOOMKiller oomKiller, SingularityRunnerExceptionNotifier exceptionNotifier) {
     this.configuration = configuration;
     this.oomKiller = oomKiller;
+    this.exceptionNotifier = exceptionNotifier;
 
     this.scheduler = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityOOMKillerDriver-%d").build());
   }
@@ -48,6 +52,7 @@ public class SingularityOOMKillerDriver implements SingularityDriver {
 
         } catch (Throwable t) {
           LOG.error("Uncaught exception while checking for OOMS", t);
+          exceptionNotifier.notify(t, Collections.<String, String>emptyMap());
         } finally {
           LOG.info("Finished checking OOMS after {}", JavaUtils.duration(start));
         }
@@ -59,6 +64,7 @@ public class SingularityOOMKillerDriver implements SingularityDriver {
       future.get();
     } catch (InterruptedException | ExecutionException e) {
       LOG.warn("Unexpected exception while waiting on future", e);
+      exceptionNotifier.notify(e, Collections.<String, String>emptyMap());
     }
 
   }

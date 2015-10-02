@@ -100,6 +100,11 @@
       <groupId>com.fasterxml.jackson.datatype</groupId>
       <artifactId>jackson-datatype-guava</artifactId>
     </dependency>
+
+    <dependency>
+      <groupId>net.kencochrane.raven</groupId>
+      <artifactId>raven</artifactId>
+    </dependency>
   </dependencies>
 
 
