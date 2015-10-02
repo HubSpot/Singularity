@@ -9,8 +9,8 @@
                     <thead>
                         <tr>
                             <th>Timestamp</th>
-                            <th>State</th>
                             <th>Request Type</th>
+                            <th>State</th>
                             <th>Message</th>
                             <th></th>
                         </tr>
@@ -22,10 +22,10 @@
                                    {{timestampFormatted timestamp}}
                                 </td>
                                 <td>
-                                   {{humanizeText loadBalancerState}}
+                                    {{humanizeText loadBalancerRequestId.requestType}}
                                 </td>
                                 <td>
-                                    {{humanizeText loadBalancerRequestId.requestType}}
+                                   {{humanizeText loadBalancerState}}
                                 </td>
                                 <td>
                                    {{message}}
