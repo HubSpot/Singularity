@@ -21,6 +21,7 @@ import com.hubspot.deploy.S3ArtifactSignature;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
+import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.s3.base.ArtifactDownloadRequest;
 import com.hubspot.singularity.s3.base.ArtifactManager;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
@@ -38,20 +39,22 @@ public class SingularityExecutorArtifactFetcher {
   private final SingularityExecutorConfiguration executorConfiguration;
   private final SingularityS3Configuration s3Configuration;
   private final ObjectMapper objectMapper;
+  private final SingularityRunnerExceptionNotifier exceptionNotifier;
 
   @Inject
   public SingularityExecutorArtifactFetcher(@Named(SingularityExecutorModule.LOCAL_DOWNLOAD_HTTP_CLIENT) AsyncHttpClient localDownloadHttpClient, SingularityS3Configuration s3Configuration,
-      SingularityExecutorConfiguration executorConfiguration, ObjectMapper objectMapper) {
+      SingularityExecutorConfiguration executorConfiguration, ObjectMapper objectMapper, SingularityRunnerExceptionNotifier exceptionNotifier) {
     this.localDownloadHttpClient = localDownloadHttpClient;
     this.executorConfiguration = executorConfiguration;
     this.s3Configuration = s3Configuration;
     this.objectMapper = objectMapper;
+    this.exceptionNotifier = exceptionNotifier;
 
     this.localDownloadUri = String.format(LOCAL_DOWNLOAD_STRING_FORMAT, s3Configuration.getLocalDownloadHttpPort(), s3Configuration.getLocalDownloadPath());
   }
 
   public SingularityExecutorTaskArtifactFetcher buildTaskFetcher(ExecutorData executorData, SingularityExecutorTask task) {
-    ArtifactManager artifactManager = new ArtifactManager(s3Configuration, task.getLog());
+    ArtifactManager artifactManager = new ArtifactManager(s3Configuration, task.getLog(), exceptionNotifier);
 
     return new SingularityExecutorTaskArtifactFetcher(artifactManager, executorData, task);
   }
