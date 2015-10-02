@@ -1,6 +1,10 @@
 View = require './view'
 Task = require '../models/Task'
 
+commandRedirectTemplate = require '../templates/vex/taskCommandRedirect'
+
+interval = (a, b) -> setInterval(b, a)
+
 class TaskView extends View
 
     baseTemplate: require '../templates/taskDetail/taskBase'
@@ -75,7 +79,9 @@ class TaskView extends View
         taskModel = new Task id: @taskId
         taskModel.runShellCommand(cmd, options)
         $('#cmd-confirm').text('Command Sent')
-
+        if $("#open-log").is(':checked')
+            @executeCommandRedirect()
+            @pollForCmdFile();
 
     cmdSelected: (event) ->
         cmd = config.shellCommands.filter((cmd) ->
@@ -91,5 +97,24 @@ class TaskView extends View
             for option in cmd.options
                 options.append($("<option></option>").attr("value", option.name).text(option.name + (if option.description then (' (' + option.description + ')') else '')))
         options.prop("disabled", !cmd.options)
+
+    executeCommandRedirect: ->
+        vex.open
+            message: "<h3>Waiting for command to run</h3>"
+            content: commandRedirectTemplate
+            buttons: [
+                vex.dialog.buttons.NO
+            ]
+
+            beforeClose: =>
+                return true
+
+    pollForCmdFile: =>
+        console.log @models
+        @pollInterval = interval 200, =>
+            app.router.navigate "task/#{@taskId}/tail/#{@taskId}/executor.commands.log", trigger: true
+            vex.close()
+            clearInterval @pollInterval
+
 
 module.exports = TaskView

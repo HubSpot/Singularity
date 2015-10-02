@@ -29,8 +29,12 @@
               {{/withFirst}}
               <label for="cmd-option">Options</label>
               <select multiple name="cmd-option" class="form-control input-large" id="cmd-option" disabled></select>
+              <label class="check-label">
+                <input id="open-log" type="checkbox" name="open-log" checked> Open <code>executor.commands.log</code> when started
+              </label>
             </div>
             <button type="submit" id="btn_exec" class="btn btn-success" type="button">Run</button>
+
             <span id="cmd-confirm"></span>
           </form>
         </div>
