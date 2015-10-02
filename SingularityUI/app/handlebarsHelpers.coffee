@@ -123,6 +123,6 @@ Handlebars.registerHelper 'getLabelClass', (state) ->
 Handlebars.registerHelper 'isRunningState', (list, options) ->
     switch _.last(list).taskState
         when 'TASK_RUNNING'
-            options.fn(this)
+            options.fn(@)
         else
-            options.inverse(this)
+            options.inverse(@)

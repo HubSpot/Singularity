@@ -79,17 +79,17 @@ class TaskView extends View
 
     cmdSelected: (event) ->
         cmd = config.shellCommands.filter((cmd) ->
-          return cmd.name == $("#cmd option:selected").text()
+          return cmd.name is $("#cmd option:selected").text()
         )[0]
         console.log cmd
-        $('.cmd-description').text(cmd.description || '')
+        $('.cmd-description').text(cmd.description or '')
         $('#btn_exec').prop("disabled", false)
 
         options = $('#cmd-option')
         options.empty()
-        options.append($("<option></option>").attr("value", option.name)
-        .text(option.name + (if option.description then (' (' + option.description + ')') else '')
-        )) for option in cmd.options
+        if cmd.options
+            for option in cmd.options
+                options.append($("<option></option>").attr("value", option.name).text(option.name + (if option.description then (' (' + option.description + ')') else '')))
         options.prop("disabled", !cmd.options)
 
 module.exports = TaskView
