@@ -186,7 +186,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @Min(1)
   @JsonProperty
-  private int tailLogLinesToSave = 500;
+  private int tailLogLinesToSave = 2500;
 
   @NotEmpty
   @JsonProperty
