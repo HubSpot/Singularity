@@ -10,8 +10,8 @@ class TaskView extends View
             'click [data-action="viewObjectJSON"]': 'viewJson'
             'click [data-action="viewJsonProperty"]': 'viewJsonProperty'
             'click [data-action="remove"]': 'killTask'
-            'submit form#runShell': 'executeCommand'
-            "change #cmd": "cmdSelected"
+            'submit [data-action="runShell"]': 'executeCommand'
+            'change [data-action="cmd"]': 'cmdSelected'
 
 
     initialize: ({@taskId}) ->

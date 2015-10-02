@@ -15,11 +15,11 @@
       </div>
       <div class='{{#unless expanded}}hide{{/unless}}'>
         <div class="row">
-          <form class="col-md-6" id="runShell" action="">
+          <form class="col-md-6" data-action="runShell" action="">
             <h3>Execute a command</h3>
             <div class="form-group required">
               <label for="cmd">Select command</label>
-              <select name="cmd" class="form-control input-large" id="cmd">
+              <select name="cmd" class="form-control input-large" id="cmd" data-action="cmd">
                 {{#each config.shellCommands}}
                   <option value="{{name}}">{{name}}</option>
                 {{/each}}
