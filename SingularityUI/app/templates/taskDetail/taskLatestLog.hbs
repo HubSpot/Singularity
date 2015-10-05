@@ -1,0 +1,22 @@
+<div class="page-header">
+    <h2>
+        Logs
+    </h2>
+</div>
+
+<div class="row">
+  <div class="col-md-4">
+    <h4>
+      Latest Log Output:
+      {{#if data.isStillRunning}}
+          <a href="{{ appRoot }}/task/{{ data.taskId }}/tail/{{ substituteTaskId config.runningTaskLogPath data.taskId }}" title="Log">
+              <span class="glyphicon glyphicon-file"></span> {{{config.runningTaskLogPath}}}
+          </a>
+      {{else}}
+      <a href="{{ appRoot }}/task/{{ data.taskId }}/tail/{{ substituteTaskId config.finishedTaskLogPath data.taskId }}" title="Log">
+          <span class="glyphicon glyphicon-file"></span> {{{config.finishedTaskLogPath}}}
+      </a>
+    </h4>
+    {{/if}}
+  </div>
+</div>
