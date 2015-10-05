@@ -14,10 +14,12 @@ import org.apache.curator.utils.ZKPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.MetricRegistry;
+import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
-import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityId;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.data.transcoders.Transcoders;
@@ -26,19 +28,12 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(CuratorAsyncManager.class);
 
-  private final long zkAsyncTimeout;
-
-  public CuratorAsyncManager(CuratorFramework curator, long zkAsyncTimeout) {
-    super(curator);
-
-    this.zkAsyncTimeout = zkAsyncTimeout;
+  public CuratorAsyncManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry) {
+    super(curator, configuration, metricRegistry);
   }
 
   private <T> List<T> getAsyncChildrenThrows(final String parent, final Transcoder<T> transcoder) throws Exception {
     final List<String> children = getChildren(parent);
-
-    LOG.trace("Fetched {} children from path {}", children.size(), parent);
-
     final List<String> paths = Lists.newArrayListWithCapacity(children.size());
 
     for (String child : children) {
@@ -57,6 +52,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
     final CountDownLatch latch = new CountDownLatch(paths.size());
     final AtomicInteger missing = new AtomicInteger();
+    final AtomicInteger bytes = new AtomicInteger();
 
     final BackgroundCallback callback = new BackgroundCallback() {
 
@@ -71,6 +67,8 @@ public abstract class CuratorAsyncManager extends CuratorManager {
           return;
         }
 
+        bytes.getAndAdd(event.getData().length);
+
         objects.add(transcoder.fromBytes(event.getData()));
 
         latch.countDown();
@@ -79,20 +77,22 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
     final long start = System.currentTimeMillis();
 
-    for (String path : paths) {
-      curator.getData().inBackground(callback).forPath(path);
+    try {
+      for (String path : paths) {
+        curator.getData().inBackground(callback).forPath(path);
+      }
+
+      checkLatch(latch, pathNameForLogs);
+    } finally {
+      log(OperationType.READ, Optional.<Integer> of(objects.size()), Optional.<Integer> of(bytes.get()), start, pathNameForLogs);
     }
-
-    checkLatch(latch, pathNameForLogs);
-
-    LOG.trace("Fetched {} objects from {} (missing {}) in {}", objects.size(), pathNameForLogs, missing.intValue(), JavaUtils.duration(start));
 
     return objects;
   }
 
   private void checkLatch(CountDownLatch latch, String path) throws InterruptedException {
-    if (!latch.await(zkAsyncTimeout, TimeUnit.MILLISECONDS)) {
-      throw new IllegalStateException(String.format("Timed out waiting response for objects from %s, waited %s millis", path, zkAsyncTimeout));
+    if (!latch.await(configuration.getZookeeperAsyncTimeout(), TimeUnit.MILLISECONDS)) {
+      throw new IllegalStateException(String.format("Timed out waiting response for objects from %s, waited %s millis", path, configuration.getZookeeperAsyncTimeout()));
     }
   }
 
@@ -127,13 +127,15 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
     final long start = System.currentTimeMillis();
 
-    for (String parent : parents) {
-      curator.getChildren().inBackground(callback).forPath(parent);
+    try {
+      for (String parent : parents) {
+        curator.getChildren().inBackground(callback).forPath(parent);
+      }
+
+      checkLatch(latch, pathNameforLogs);
+    } finally {
+      log(OperationType.READ, Optional.<Integer> of(objects.size()), Optional.<Integer> absent(), start, pathNameforLogs);
     }
-
-    checkLatch(latch, pathNameforLogs);
-
-    LOG.trace("Fetched {} objects from {} (missing {}) in {}", objects.size(), pathNameforLogs, missing.intValue(), JavaUtils.duration(start));
 
     return objects;
   }
@@ -177,13 +179,15 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
     final long start = System.currentTimeMillis();
 
-    for (String path : paths) {
-      curator.checkExists().inBackground(callback).forPath(path);
+    try {
+      for (String path : paths) {
+        curator.checkExists().inBackground(callback).forPath(path);
+      }
+
+      checkLatch(latch, pathNameforLogs);
+    } finally {
+      log(OperationType.READ, Optional.<Integer> of(objects.size()), Optional.<Integer> absent(), start, pathNameforLogs);
     }
-
-    checkLatch(latch, pathNameforLogs);
-
-    LOG.trace("Found {} objects out of {} from {} in {}", objects.size(), paths.size(), pathNameforLogs, JavaUtils.duration(start));
 
     return objects;
   }
