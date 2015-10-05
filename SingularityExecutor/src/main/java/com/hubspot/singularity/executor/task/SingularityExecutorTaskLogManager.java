@@ -84,6 +84,9 @@ public class SingularityExecutorTaskLogManager {
 
     if (manualLogrotate()) {
       boolean removeLogRotateFileSuccess = removeLogrotateFile();
+
+      removeEmptyServiceOut();
+
       boolean writeS3MetadataForLogrotatedFilesSuccess = writeS3MetadataFileForRotatedFiles(true);
 
       return writeTailMetadataSuccess && removeLogRotateFileSuccess && writeS3MetadataForLogrotatedFilesSuccess && writeS3MetadataForNonLogRotatedFileSuccess;
@@ -160,6 +163,16 @@ public class SingularityExecutorTaskLogManager {
       log.debug("Executor out {} already existed", taskDefinition.getServiceLogOut());
     } catch (Throwable t) {
       log.error("Failed creating executor out {}", taskDefinition.getServiceLogOut(), t);
+    }
+  }
+
+  private void removeEmptyServiceOut() {
+    try {
+      if (Files.exists(taskDefinition.getServiceLogOutPath()) && Files.size(taskDefinition.getServiceLogOutPath()) == 0) {
+        Files.deleteIfExists(taskDefinition.getServiceLogOutPath());
+      }
+    } catch (Throwable t) {
+      log.error("Failed checking/deleting executor out {}", taskDefinition.getServiceLogOut(), t);
     }
   }
 
