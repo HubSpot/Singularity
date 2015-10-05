@@ -107,19 +107,17 @@ class TaskView extends View
             buttons: [
                 vex.dialog.buttons.NO
             ]
-
             beforeClose: =>
                 return true
 
     pollForCmdFile: =>
-        console.log @models
         files = new TaskFiles [], {@taskId}
         @pollInterval = interval 1000, =>
             files.fetch().done =>
                 if @containsFile files.models, 'executor.commands.log'
-                    app.router.navigate "task/#{@taskId}/tail/#{@taskId}/executor.commands.log", trigger: true
-                    vex.close()
                     clearInterval @pollInterval
+                    vex.close()
+                    app.router.navigate "task/#{@taskId}/tail/#{@taskId}/executor.commands.log", trigger: true
 
     containsFile: (files, name) ->
         for file in files
