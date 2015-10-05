@@ -10,7 +10,7 @@
       Latest Log Output:
       {{#if data.isStillRunning}}
           <a href="{{ appRoot }}/task/{{ data.taskId }}/tail/{{ substituteTaskId config.runningTaskLogPath data.taskId }}" title="Log">
-              <span class="glyphicon glyphicon-file"></span> {{{config.runningTaskLogPath}}}
+              <span class="glyphicon glyphicon-file"></span> {{{removeTaskId config.runningTaskLogPath}}}
           </a>
       {{else}}
       <a href="{{ appRoot }}/task/{{ data.taskId }}/tail/{{ substituteTaskId config.finishedTaskLogPath data.taskId }}" title="Log">
