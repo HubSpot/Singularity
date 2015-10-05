@@ -20,6 +20,7 @@ class TaskView extends View
         @$('#overview').html                    @subviews.overview.$el
         @$('#healthcheck-notification').html    @subviews.healthcheckNotification.$el
         @$('#history').html                     @subviews.history.$el
+        @$('#latest-log').html                  @subviews.latestLog.$el
         @$('#file-browser').html                @subviews.fileBrowser.$el
         @$('#s3-logs').html                     @subviews.s3Logs.$el
         @$('#lb-updates').html                  @subviews.lbUpdates.$el

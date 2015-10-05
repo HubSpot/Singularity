@@ -28,6 +28,7 @@ class TaskDetailController extends Controller
         info:                       require '../templates/taskDetail/taskInfo'
         environment:                require '../templates/taskDetail/taskEnvironment'
         resourceUsage:              require '../templates/taskDetail/taskResourceUsage'
+        latestLog:                  require '../templates/taskDetail/taskLatestLog'
 
     initialize: ({@taskId, @filePath}) ->
         #
@@ -64,6 +65,10 @@ class TaskDetailController extends Controller
         @subviews.history = new SimpleSubview
             model:    @models.task
             template: @templates.history
+
+        @subviews.latestLog = new SimpleSubview
+            model:    @models.task
+            template: @templates.latestLog
 
         @subviews.fileBrowser = new FileBrowserSubview
             collection:      @collections.files
@@ -111,9 +116,9 @@ class TaskDetailController extends Controller
         @models.resourceUsage?.fetch()
             .done =>
                 # Store current resource usage to compare against future resource usage
-                @models.resourceUsage.setCpuUsage() if @models.resourceUsage.get('previousUsage')              
+                @models.resourceUsage.setCpuUsage() if @models.resourceUsage.get('previousUsage')
                 @models.resourceUsage.set('previousUsage', @models.resourceUsage.toJSON())
-                
+
                 if not @resourcesFetched
                     setTimeout (=> @fetchResourceUsage() ), 2000
                     @resourcesFetched = true
