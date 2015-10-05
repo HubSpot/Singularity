@@ -115,7 +115,7 @@ public class SingularityExecutorThreadChecker {
         String containerName = String.format("%s%s", configuration.getDockerPrefix(), taskProcess.getTask().getTaskId());
         int possiblePid = dockerClient.inspectContainer(containerName).state().pid();
         if (possiblePid == 0) {
-          LOG.warn(String.format("Container %s has pid 0. Running: (%s). Will not try to get threads", containerName, dockerClient.inspectContainer(containerName).state().running()));
+          LOG.warn(String.format("Container %s has pid %s (running: %s). Defaulting to 0 threads running.", containerName, possiblePid, dockerClient.inspectContainer(containerName).state().running()));
           return 0;
         } else {
           dockerPid = Optional.of(possiblePid);
