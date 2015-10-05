@@ -19,13 +19,13 @@ class taskHealthcheckNotificationSubview extends View
     renderData: =>
         requestId = @model.get('task').taskId.requestId
         deployId = @model.get('task').taskId.deployId
-        deployStatus = @pendingDeploys.find (item) -> item.get('deployMarker').requestId is requestId and item.get('deployMarker').deployId is deployId and item.get('currentDeployState') is 'WAITING'
+        deployStatus = @pendingDeploys.find (item) -> item.get('deployMarker') and item.get('deployMarker').requestId is requestId and item.get('deployMarker').deployId is deployId and item.get('currentDeployState') is 'WAITING'
 
         data:             @model.toJSON()
         isDeployPending:  !!deployStatus
         hasSuccessfulHealthcheck: @model.get('healthcheckResults')?.length > 0 and _.find(@model.get('healthcheckResults'), (item) -> item.statusCode is 200)
         synced:           @model.synced
-                   
+
     triggerToggleHealthchecks: ->
         @trigger 'toggleHealthchecks'
 

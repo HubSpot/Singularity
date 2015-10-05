@@ -1,3 +1,4 @@
+@import colors
 
 // Form helpers
 
@@ -7,7 +8,7 @@ label
 
 .select2-container-multi
   width 100%
-  
+
   // mimic bootstrap
   .select2-choices
     display: block
@@ -25,3 +26,15 @@ label
 // // temporary hack
 // .select2-results
 //   display: none!important
+	&.label-light
+		font-weight normal
+
+.cmd-description
+	margin-top 10px
+	font-style oblique
+
+.check-label
+	margin-top 15px
+
+#cmd-confirm
+	color $green
