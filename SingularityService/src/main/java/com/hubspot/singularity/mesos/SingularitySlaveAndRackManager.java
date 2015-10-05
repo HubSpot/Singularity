@@ -13,6 +13,7 @@ import org.apache.mesos.Protos.SlaveID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -301,6 +302,7 @@ class SingularitySlaveAndRackManager {
     throw new IllegalStateException(String.format("Invalid state %s for %s", currentState, object.getId()));
   }
 
+  @Timed
   public void checkOffer(Offer offer) {
     final String slaveId = offer.getSlaveId().getValue();
     final String rackId = slaveAndRackHelper.getRackIdOrDefault(offer);
@@ -319,6 +321,7 @@ class SingularitySlaveAndRackManager {
     }
   }
 
+  @Timed
   public void checkStateAfterFinishedTask(SingularityTaskId taskId, String slaveId, SingularitySchedulerStateCache stateCache) {
     Optional<SingularitySlave> slave = slaveManager.getObject(slaveId);
 
