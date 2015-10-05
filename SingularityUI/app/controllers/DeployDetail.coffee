@@ -20,7 +20,7 @@ class DeployDetailController extends Controller
     healthChecks:       require '../templates/deployDetail/deployHealthChecks'
 
   initialize: ({@requestId, @deployId}) ->
-    @title @deployId
+    @title "#{ @requestId } deploy #{ @deployId }"
 
     #
     # Data stuff
