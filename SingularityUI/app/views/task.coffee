@@ -110,7 +110,6 @@ class TaskView extends View
                 return true
 
     pollForCmdFile: =>
-        console.log @models
         files = new TaskFiles [], {@taskId}
         @pollInterval = interval 1000, =>
             files.fetch().done =>
@@ -118,7 +117,7 @@ class TaskView extends View
                     clearInterval @pollInterval
                     vex.close()
                     app.router.navigate "task/#{@taskId}/tail/#{@taskId}/executor.commands.log", trigger: true
-                    
+
     containsFile: (files, name) ->
         for file in files
             if file.id is name
