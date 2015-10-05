@@ -713,6 +713,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initLoadBalancedRequest();
     initFirstDeploy();
 
+    configuration.setLoadBalancerRemovalGracePeriodMillis(10000);
+
     SingularityTask task = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
 
     saveLoadBalancerState(BaragonRequestState.SUCCESS, task.getTaskId(), LoadBalancerRequestType.ADD);
