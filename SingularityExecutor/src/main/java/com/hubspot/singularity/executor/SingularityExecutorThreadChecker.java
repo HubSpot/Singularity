@@ -113,7 +113,13 @@ public class SingularityExecutorThreadChecker {
     if (taskProcess.getTask().getTaskInfo().hasContainer() && taskProcess.getTask().getTaskInfo().getContainer().hasDocker()) {
       try {
         String containerName = String.format("%s%s", configuration.getDockerPrefix(), taskProcess.getTask().getTaskId());
-        dockerPid = Optional.of(dockerClient.inspectContainer(containerName).state().pid());
+        int possiblePid = dockerClient.inspectContainer(containerName).state().pid();
+        if (possiblePid == 0 && !dockerClient.inspectContainer(containerName).state().running()) {
+          LOG.warn(String.format("Container %s is no longer running, will not try to get used threads", containerName));
+          return 0;
+        } else {
+          dockerPid = Optional.of(possiblePid);
+        }
       } catch (DockerException e) {
         throw new ProcessFailedException(String.format("Could not get docker root pid due to error: %s", e));
       }
