@@ -14,7 +14,7 @@
           </a>
       {{else}}
       <a href="{{ appRoot }}/task/{{ data.taskId }}/tail/{{ substituteTaskId config.finishedTaskLogPath data.taskId }}" title="Log">
-          <span class="glyphicon glyphicon-file"></span> {{{config.finishedTaskLogPath}}}
+          <span class="glyphicon glyphicon-file"></span> {{{removeTaskId config.finishedTaskLogPath}}}
       </a>
     </h4>
     {{/if}}
