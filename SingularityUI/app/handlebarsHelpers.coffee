@@ -114,7 +114,7 @@ Handlebars.registerHelper 'usernameFromEmail', (email) ->
 Handlebars.registerHelper 'substituteTaskId', (value, taskId) ->
     value.replace('$TASK_ID', taskId)
 
-Handlebars.registerHelper 'removeTaskId', (value, taskId) ->
+Handlebars.registerHelper 'removeTaskId', (value) ->
     value.replace('$TASK_ID', '')
 
 Handlebars.registerHelper 'getLabelClass', (state) ->
