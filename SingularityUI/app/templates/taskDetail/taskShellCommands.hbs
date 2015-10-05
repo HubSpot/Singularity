@@ -51,6 +51,7 @@
                                   <th>Options</th>
                                   <th>User</th>
                                   <th>Status</th>
+                                  <th>Message</th>
                               </tr>
                           </thead>
                           <tbody>
@@ -73,6 +74,9 @@
                                       </td>
                                       <td>
                                           {{humanizeText updateType}}
+                                      </td>
+                                      <td>
+                                        {{message}}
                                       </td>
                                   </tr>
                                 {{/each}}
