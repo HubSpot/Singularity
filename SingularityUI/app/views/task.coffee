@@ -1,5 +1,6 @@
 View = require './view'
 Task = require '../models/Task'
+TaskFiles = require '../collections/TaskFiles'
 
 commandRedirectTemplate = require '../templates/vex/taskCommandRedirect'
 
@@ -111,10 +112,18 @@ class TaskView extends View
 
     pollForCmdFile: =>
         console.log @models
-        @pollInterval = interval 200, =>
-            app.router.navigate "task/#{@taskId}/tail/#{@taskId}/executor.commands.log", trigger: true
-            vex.close()
-            clearInterval @pollInterval
+        files = new TaskFiles [], {@taskId}
+        @pollInterval = interval 1000, =>
+            files.fetch().done =>
+                if @containsFile files.models, 'executor.commands.log'
+                    app.router.navigate "task/#{@taskId}/tail/#{@taskId}/executor.commands.log", trigger: true
+                    vex.close()
+                    clearInterval @pollInterval
 
+    containsFile: (files, name) ->
+        for file in files
+            if file.id is name
+                return true
+        return false
 
 module.exports = TaskView
