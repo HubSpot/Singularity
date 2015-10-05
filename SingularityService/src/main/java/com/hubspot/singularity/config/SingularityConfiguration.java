@@ -107,7 +107,7 @@ public class SingularityConfiguration extends Configuration {
 
   private long loadBalancerRequestTimeoutMillis = 2000;
 
-  private long loadBalancerRemovalGracePeriodMillis = TimeUnit.SECONDS.toMillis(10);
+  private long loadBalancerRemovalGracePeriodMillis = 0;
 
   private String loadBalancerUri;
 
