@@ -239,17 +239,17 @@ public abstract class CuratorManager {
   }
 
   protected <T> Optional<T> getData(String path, Optional<Stat> stat, Transcoder<T> transcoder, Optional<ZkCache<T>> zkCache) {
+    if (!stat.isPresent() && zkCache.isPresent()) {
+      Optional<T> cachedValue = zkCache.get().get(path);
+      if (cachedValue.isPresent()) {
+        return cachedValue;
+      }
+    }
+
     final long start = System.currentTimeMillis();
     int bytes = 0;
 
     try {
-      if (!stat.isPresent() && zkCache.isPresent()) {
-        Optional<T> cachedValue = zkCache.get().get(path);
-        if (cachedValue.isPresent()) {
-          return cachedValue;
-        }
-      }
-
       GetDataBuilder bldr = curator.getData();
 
       if (stat.isPresent()) {
