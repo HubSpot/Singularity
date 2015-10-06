@@ -136,3 +136,9 @@ Handlebars.registerHelper 'isRunningState', (list, options) ->
             options.fn(@)
         else
             options.inverse(@)
+
+Handlebars.registerHelper 'isSingularityExecutor', (value, options) ->
+    if value.indexOf 'singularity-executor' != -1
+        options.fn(@)
+    else
+        options.inverse(@)
