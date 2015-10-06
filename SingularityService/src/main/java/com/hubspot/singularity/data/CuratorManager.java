@@ -135,11 +135,6 @@ public abstract class CuratorManager {
     }
   }
 
-  protected SingularityDeleteResult delete(String path, ZkCache<?> cache) {
-    cache.delete(path);
-    return delete(path);
-  }
-
   protected SingularityDeleteResult delete(String path) {
     final long start = System.currentTimeMillis();
 

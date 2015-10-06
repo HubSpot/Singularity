@@ -607,7 +607,9 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public SingularityDeleteResult deleteTaskHistory(SingularityTaskId taskId) {
-    return delete(getHistoryPath(taskId), taskCache);
+    taskCache.delete(getTaskPath(taskId));
+
+    return delete(getHistoryPath(taskId));
   }
 
 }
