@@ -54,11 +54,7 @@ class TaskHistory extends Model
 
         taskHistory.isCleaning = _.last( taskHistory.taskUpdates ).taskState is 'TASK_CLEANING'
 
-        taskHistory.alerts = [{
-          title: 'Warning',
-          message: 'Task killed due to decommissioning',
-          level: 'danger'
-        }]
+        taskHistory.alerts = []
 
         taskHistory
 

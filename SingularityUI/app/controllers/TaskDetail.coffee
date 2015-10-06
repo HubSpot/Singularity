@@ -7,6 +7,8 @@ TaskS3Logs = require '../collections/TaskS3Logs'
 TaskFiles = require '../collections/TaskFiles'
 TaskCleanups = require '../collections/TaskCleanups'
 Deploys = require '../collections/Deploys'
+RequestHistoricalTasks = require '../collections/RequestHistoricalTasks'
+Alerts = require '../collections/Alerts'
 
 FileBrowserSubview = require '../views/fileBrowserSubview'
 ExpandableTableSubview = require '../views/expandableTableSubview'
@@ -48,6 +50,8 @@ class TaskDetailController extends Controller
         @collections.taskCleanups = new TaskCleanups
 
         @collections.pendingDeploys = new Deploys state: 'pending'
+
+        @collections.alerts = new Alerts
 
         #
         # Subviews
@@ -97,7 +101,7 @@ class TaskDetailController extends Controller
             template: @templates.resourceUsage
 
         @subviews.alerts = new SimpleSubview
-            collection:    @models.task
+            collection:    @collections.alerts
             template:      @templates.alerts
 
         #
@@ -128,6 +132,25 @@ class TaskDetailController extends Controller
                 app.caughtError()
                 delete @models.resourceUsage
 
+    getAlerts: (taskHistory) =>
+        alerts = @models.task.get('alerts')
+        # Is this a scheduled task that has been running much longer than previous ones?
+        if @models.task.attributes.task.taskRequest.request.requestType == 'SCHEDULED' and @models.task.get('isStillRunning')
+            times = taskHistory.models.map (t) =>
+                return t.get('updatedAt') - t.get('taskId').startedAt
+            avg = times.reduce (p, c) ->
+                return p + c
+
+            avg = Math.round avg / times.length
+            current =  new Date().getTime() - @models.task.get('task').taskId.startedAt
+            # Alert if current uptime is longer than twice the average
+            if current > (avg * 2)
+                alerts.push
+                  title: 'Warning:',
+                  message: 'This scheduled task has been running longer than twice the average for the request and may be stuck.',
+                  level: 'warning'
+        return alerts
+
     refresh: ->
         @resourcesFetched = false
 
@@ -138,7 +161,14 @@ class TaskDetailController extends Controller
         @models.task.fetch()
             .done =>
                 @fetchResourceUsage() if @models.task.get('isStillRunning')
-                console.log @models.task
+            .success =>
+                requestId = @models.task.attributes.task.taskRequest.request.id
+                taskHistory = new RequestHistoricalTasks [], {requestId}
+                taskHistory.fetch().success =>
+                    alerts = @getAlerts taskHistory
+                    @collections.alerts.reset()
+                    for alert in alerts
+                        @collections.alerts.add alert
             .error =>
                 # If this 404s the task doesn't exist
                 app.caughtError()
