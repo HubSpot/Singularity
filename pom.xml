@@ -35,7 +35,9 @@
     <basepom.release.profiles>oss-release,build-swagger-documentation</basepom.release.profiles>
 
     <baragon.version>0.1.8</baragon.version>
-    <mesos.docker.tag>0.21.1-1.1.ubuntu1404</mesos.docker.tag> <!-- 0.21.0-1.0.ubuntu1404 is missing for mesos-slave -->
+    <mesos.docker.tag>0.23.0-1.0.ubuntu1404</mesos.docker.tag>
+    <mesos.version>0.23.0</mesos.version>
+    <singularitybase.image.revision>1</singularitybase.image.revision>
   </properties>
 
   <modules>

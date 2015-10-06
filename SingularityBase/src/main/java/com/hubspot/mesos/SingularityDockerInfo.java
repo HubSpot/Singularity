@@ -2,8 +2,7 @@ package com.hubspot.mesos;
 
 import java.util.Collections;
 import java.util.List;
-
-import org.apache.mesos.Protos;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -14,29 +13,27 @@ public class SingularityDockerInfo {
   private final boolean privileged;
   private final Optional<SingularityDockerNetworkType> network;
   private final List<SingularityDockerPortMapping> portMappings;
+  private final boolean forcePullImage;
+  private final Map<String, String> parameters;
 
   @JsonCreator
   public SingularityDockerInfo(@JsonProperty("image") String image,
                                @JsonProperty("privileged") boolean privileged,
                                @JsonProperty("network") SingularityDockerNetworkType network,
-                               @JsonProperty("portMappings") Optional<List<SingularityDockerPortMapping>> portMappings) {
+                               @JsonProperty("portMappings") Optional<List<SingularityDockerPortMapping>> portMappings,
+                               @JsonProperty("forcePullImage") Optional<Boolean> forcePullImage,
+                               @JsonProperty("parameters") Optional<Map<String, String>> parameters) {
     this.image = image;
     this.privileged = privileged;
     this.network = Optional.fromNullable(network);
     this.portMappings = portMappings.or(Collections.<SingularityDockerPortMapping>emptyList());
+    this.forcePullImage = forcePullImage.or(false);
+    this.parameters = parameters.or(Collections.<String, String>emptyMap());
   }
 
   @Deprecated
-  public SingularityDockerInfo(String image, boolean privileged, Optional<Protos.ContainerInfo.DockerInfo.Network> network, Optional<List<SingularityDockerPortMapping>> portMappings) {
-    this(image, privileged, convertedNetworkType(network), portMappings);
-  }
-
-  private static SingularityDockerNetworkType convertedNetworkType(Optional<Protos.ContainerInfo.DockerInfo.Network> network) {
-    if (network.isPresent()) {
-      return SingularityDockerNetworkType.valueOf(network.get().toString());
-    } else {
-      return null;
-    }
+  public SingularityDockerInfo(String image, boolean privileged, SingularityDockerNetworkType network, Optional<List<SingularityDockerPortMapping>> portMappings) {
+    this(image, privileged, network, portMappings, Optional.<Boolean>absent(), Optional.<Map<String, String>>absent());
   }
 
   public String getImage() {
@@ -56,9 +53,24 @@ public class SingularityDockerInfo {
     return portMappings;
   }
 
+  public boolean isForcePullImage() {
+    return forcePullImage;
+  }
+
+  public Map<String, String> getParameters() {
+    return parameters;
+  }
+
   @Override
   public String toString() {
-    return String.format("DockerInfo [image=%s, network=%s, portMappings=%s]", image, network, portMappings);
+    return "SingularityDockerInfo{" +
+      "image='" + image + '\'' +
+      ", privileged=" + privileged +
+      ", network=" + network +
+      ", portMappings=" + portMappings +
+      ", forcePullImage=" + forcePullImage +
+      ", parameters=" + parameters +
+      '}';
   }
 
   @Override
@@ -69,29 +81,39 @@ public class SingularityDockerInfo {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
+
     SingularityDockerInfo that = (SingularityDockerInfo) o;
 
-    if (!image.equals(that.image)) {
+    if (forcePullImage != that.forcePullImage) {
       return false;
     }
     if (privileged != that.privileged) {
       return false;
     }
-    if (!network.equals(that.network)) {
+    if (image != null ? !image.equals(that.image) : that.image != null) {
       return false;
     }
-    if (!portMappings.equals(that.portMappings)) {
+    if (network != null ? !network.equals(that.network) : that.network != null) {
       return false;
     }
+    if (parameters != null ? !parameters.equals(that.parameters) : that.parameters != null) {
+      return false;
+    }
+    if (portMappings != null ? !portMappings.equals(that.portMappings) : that.portMappings != null) {
+      return false;
+    }
+
     return true;
   }
 
   @Override
   public int hashCode() {
-    int result = image.hashCode();
+    int result = image != null ? image.hashCode() : 0;
     result = 31 * result + (privileged ? 1 : 0);
-    result = 31 * result + network.hashCode();
-    result = 31 * result + portMappings.hashCode();
+    result = 31 * result + (network != null ? network.hashCode() : 0);
+    result = 31 * result + (portMappings != null ? portMappings.hashCode() : 0);
+    result = 31 * result + (forcePullImage ? 1 : 0);
+    result = 31 * result + (parameters != null ? parameters.hashCode() : 0);
     return result;
   }
 }
