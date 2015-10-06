@@ -144,7 +144,7 @@ class TaskDetailController extends Controller
             avg = Math.round avg / times.length
             current =  new Date().getTime() - @models.task.get('task').taskId.startedAt
             # Alert if current uptime is longer than twice the average
-            if current < (avg * 2)
+            if current > (avg * 2)
                 alerts.push
                   title: 'Warning:',
                   message: 'This scheduled task has been running longer than twice the average for the request and may be stuck.',
