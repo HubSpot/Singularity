@@ -27,8 +27,12 @@
               {{#withFirst config.shellCommands}}
                 <p class="cmd-description">{{description}}</p>
               {{/withFirst}}
-              <label for="cmd-option">Options</label>
-              <select multiple name="cmd-option" class="form-control input-large" id="cmd-option" disabled></select>
+
+              <div id="options" class="hidden">
+                <label for="cmd-option">Options</label>
+                <select multiple name="cmd-option" class="form-control input-large" id="cmd-option" disabled></select>
+              </div>
+
               <label class="check-label">
                 <input id="open-log" type="checkbox" name="open-log" checked> Tail <code>executor.commands.log</code> when started
               </label>

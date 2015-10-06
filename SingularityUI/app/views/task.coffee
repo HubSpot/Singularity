@@ -95,8 +95,11 @@ class TaskView extends View
         options = $('#cmd-option')
         options.empty()
         if cmd.options
+            $('#options').removeClass('hidden')
             for option in cmd.options
                 options.append($("<option></option>").attr("value", option.name).text(option.name + (if option.description then (' (' + option.description + ')') else '')))
+        else
+            $('#options').addClass('hidden')
         options.prop("disabled", !cmd.options)
 
     executeCommandRedirect: ->
