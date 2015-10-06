@@ -14,6 +14,7 @@ import org.apache.zookeeper.KeeperException.NoNodeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
@@ -53,9 +54,10 @@ public class StateManager extends CuratorManager {
   private final SingularityAuthDatastore authDatastore;
 
   @Inject
-  public StateManager(CuratorFramework curatorFramework, RequestManager requestManager, TaskManager taskManager, DeployManager deployManager, SlaveManager slaveManager, RackManager rackManager,
-      Transcoder<SingularityState> stateTranscoder, Transcoder<SingularityHostState> hostStateTranscoder, SingularityConfiguration singularityConfiguration, SingularityAuthDatastore authDatastore) {
-    super(curatorFramework);
+  public StateManager(CuratorFramework curatorFramework, SingularityConfiguration configuration, MetricRegistry metricRegistry, RequestManager requestManager, TaskManager taskManager,
+      DeployManager deployManager, SlaveManager slaveManager, RackManager rackManager, Transcoder<SingularityState> stateTranscoder, Transcoder<SingularityHostState> hostStateTranscoder,
+      SingularityConfiguration singularityConfiguration, SingularityAuthDatastore authDatastore) {
+    super(curatorFramework, configuration, metricRegistry);
 
     this.requestManager = requestManager;
     this.taskManager = taskManager;

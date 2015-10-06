@@ -82,6 +82,10 @@ public class SingularityConfiguration extends Configuration {
 
   private long deployHealthyBySeconds = 120;
 
+  private long debugCuratorCallOverBytes = 25000;
+
+  private long debugCuratorCallOverMillis = 250;
+
   private boolean enableCorsFilter = false;
 
   private long healthcheckIntervalSeconds = 5;
@@ -102,6 +106,8 @@ public class SingularityConfiguration extends Configuration {
   private Map<String, String> loadBalancerQueryParams;
 
   private long loadBalancerRequestTimeoutMillis = 2000;
+
+  private long loadBalancerRemovalGracePeriodMillis = 0;
 
   private String loadBalancerUri;
 
@@ -186,6 +192,10 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private AuthConfiguration authConfiguration = new AuthConfiguration();
 
+  @JsonProperty("graphite")
+  @NotNull
+  private GraphiteConfiguration graphiteConfiguration = new GraphiteConfiguration();
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -240,6 +250,22 @@ public class SingularityConfiguration extends Configuration {
 
   public int getCooldownAfterFailures() {
     return cooldownAfterFailures;
+  }
+
+  public long getDebugCuratorCallOverBytes() {
+    return debugCuratorCallOverBytes;
+  }
+
+  public void setDebugCuratorCallOverBytes(long debugCuratorCallOverBytes) {
+    this.debugCuratorCallOverBytes = debugCuratorCallOverBytes;
+  }
+
+  public long getDebugCuratorCallOverMillis() {
+    return debugCuratorCallOverMillis;
+  }
+
+  public void setDebugCuratorCallOverMillis(long debugCuratorCallOverMillis) {
+    this.debugCuratorCallOverMillis = debugCuratorCallOverMillis;
   }
 
   public double getCooldownAfterPctOfInstancesFail() {
@@ -320,6 +346,14 @@ public class SingularityConfiguration extends Configuration {
 
   public long getKillNonLongRunningTasksInCleanupAfterSeconds() {
     return killNonLongRunningTasksInCleanupAfterSeconds;
+  }
+
+  public long getLoadBalancerRemovalGracePeriodMillis() {
+    return loadBalancerRemovalGracePeriodMillis;
+  }
+
+  public void setLoadBalancerRemovalGracePeriodMillis(long loadBalancerRemovalGracePeriodMillis) {
+    this.loadBalancerRemovalGracePeriodMillis = loadBalancerRemovalGracePeriodMillis;
   }
 
   public long getDeleteDeadSlavesAfterHours() {
@@ -754,4 +788,11 @@ public class SingularityConfiguration extends Configuration {
     this.historyPurgingConfiguration = historyPurgingConfiguration;
   }
 
+  public GraphiteConfiguration getGraphiteConfiguration() {
+    return graphiteConfiguration;
+  }
+
+  public void setGraphiteConfiguration(GraphiteConfiguration graphiteConfiguration) {
+    this.graphiteConfiguration = graphiteConfiguration;
+  }
 }

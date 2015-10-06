@@ -1,7 +1,6 @@
 package com.hubspot.singularity.executor.cleanup;
 
 import java.io.IOException;
-import java.net.SocketException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,8 +20,10 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.singularity.SingularityTask;
@@ -39,7 +40,10 @@ import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskCleanup;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskLogManager;
+import com.hubspot.singularity.executor.task.TaskCleanupResult;
+import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
+import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
 import com.hubspot.singularity.runner.base.shared.ProcessUtils;
@@ -61,9 +65,13 @@ public class SingularityExecutorCleanup {
   private final MesosClient mesosClient;
   private final ProcessUtils processUtils;
   private final DockerClient dockerClient;
+  private final String hostname;
+  private final SingularityRunnerExceptionNotifier exceptionNotifier;
 
   @Inject
-  public SingularityExecutorCleanup(SingularityClientProvider singularityClientProvider, JsonObjectFileHelper jsonObjectFileHelper, SingularityRunnerBaseConfiguration baseConfiguration, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager, MesosClient mesosClient, DockerClient dockerClient) {
+  public SingularityExecutorCleanup(SingularityClientProvider singularityClientProvider, JsonObjectFileHelper jsonObjectFileHelper, SingularityRunnerBaseConfiguration baseConfiguration,
+      SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager, MesosClient mesosClient,
+      DockerClient dockerClient, @Named(SingularityRunnerBaseModule.HOST_NAME_PROPERTY) String hostname, SingularityRunnerExceptionNotifier exceptionNotifier) {
     this.jsonObjectFileHelper = jsonObjectFileHelper;
     this.baseConfiguration = baseConfiguration;
     this.executorConfiguration = executorConfiguration;
@@ -73,6 +81,8 @@ public class SingularityExecutorCleanup {
     this.mesosClient = mesosClient;
     this.processUtils = new ProcessUtils(LOG);
     this.dockerClient = dockerClient;
+    this.hostname = hostname;
+    this.exceptionNotifier = exceptionNotifier;
   }
 
   public SingularityExecutorCleanupStatistics clean() {
@@ -85,6 +95,7 @@ public class SingularityExecutorCleanup {
       runningTaskIds = getRunningTaskIds();
     } catch (Exception e) {
       LOG.error("While fetching running tasks from singularity", e);
+      exceptionNotifier.notify(e, Collections.<String, String>emptyMap());
       statisticsBldr.setErrorMessage(e.getMessage());
       return statisticsBldr.build();
     }
@@ -127,6 +138,8 @@ public class SingularityExecutorCleanup {
 
         final String taskId = taskDefinition.get().getTaskId();
 
+        LOG.info("{} - Starting possible cleanup", taskId);
+
         if (runningTaskIds.contains(taskId) || executorStillRunning(taskDefinition.get())) {
           statisticsBldr.incrRunningTasksIgnored();
           continue;
@@ -137,20 +150,33 @@ public class SingularityExecutorCleanup {
         try {
           taskHistory = singularityClient.getHistoryForTask(taskId);
         } catch (SingularityClientException sce) {
-          LOG.error("While fetching history for {}", taskId, sce);
+          LOG.error("{} - Failed fetching history", taskId, sce);
+          exceptionNotifier.notify(sce, Collections.<String, String>emptyMap());
           statisticsBldr.incrErrorTasks();
           continue;
         }
 
-        if (cleanTask(taskDefinition.get(), taskHistory)) {
-          statisticsBldr.incrSuccessfullyCleanedTasks();
-        } else {
-          statisticsBldr.incrErrorTasks();
+        TaskCleanupResult result = cleanTask(taskDefinition.get(), taskHistory);
+
+        LOG.info("{} - {}", taskId, result);
+
+        switch (result) {
+          case ERROR:
+            statisticsBldr.incrErrorTasks();
+            break;
+          case SUCCESS:
+            statisticsBldr.incrSuccessfullyCleanedTasks();
+            break;
+          case WAITING:
+            statisticsBldr.incrWaitingTasks();
+            break;
+           default:
+            break;
         }
 
       } catch (IOException ioe) {
         LOG.error("Couldn't read file {}", file, ioe);
-
+        exceptionNotifier.notify(ioe, ImmutableMap.of("file", file.toString()));
         statisticsBldr.incrIoErrorTasks();
       }
     }
@@ -159,21 +185,17 @@ public class SingularityExecutorCleanup {
   }
 
   private Set<String> getRunningTaskIds() {
-    try {
-      final String slaveId = mesosClient.getSlaveState(mesosClient.getSlaveUri(JavaUtils.getHostAddress())).getId();
+    final String slaveId = mesosClient.getSlaveState(mesosClient.getSlaveUri(hostname)).getId();
 
-      final Collection<SingularityTask> activeTasks = singularityClient.getActiveTasksOnSlave(slaveId);
+    final Collection<SingularityTask> activeTasks = singularityClient.getActiveTasksOnSlave(slaveId);
 
-      final Set<String> runningTaskIds = Sets.newHashSet();
+    final Set<String> runningTaskIds = Sets.newHashSet();
 
-      for (SingularityTask task : activeTasks) {
-        runningTaskIds.add(task.getTaskId().getId());
-      }
-
-      return runningTaskIds;
-    } catch (SocketException se) {
-      throw Throwables.propagate(se);
+    for (SingularityTask task : activeTasks) {
+      runningTaskIds.add(task.getTaskId().getId());
     }
+
+    return runningTaskIds;
   }
 
   private boolean executorStillRunning(SingularityExecutorTaskDefinition taskDefinition) {
@@ -186,7 +208,7 @@ public class SingularityExecutorCleanup {
     return processUtils.doesProcessExist(executorPidSafe.get());
   }
 
-  private boolean cleanTask(SingularityExecutorTaskDefinition taskDefinition, Optional<SingularityTaskHistory> taskHistory) {
+  private TaskCleanupResult cleanTask(SingularityExecutorTaskDefinition taskDefinition, Optional<SingularityTaskHistory> taskHistory) {
     SingularityExecutorTaskLogManager logManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, baseConfiguration, executorConfiguration, LOG, jsonObjectFileHelper);
 
     SingularityExecutorTaskCleanup taskCleanup = new SingularityExecutorTaskCleanup(logManager, executorConfiguration, taskDefinition, LOG, dockerClient);
@@ -207,9 +229,11 @@ public class SingularityExecutorCleanup {
       }
     }
 
-    checkForUncompressedLogrotatedFile(taskDefinition);
+    if (taskDefinition.shouldLogrotateLogFile()) {
+      checkForUncompressedLogrotatedFile(taskDefinition);
+    }
 
-    boolean isDocker = (taskHistory.get().getTask().getMesosTask().hasContainer() && taskHistory.get().getTask().getMesosTask().getContainer().hasDocker());
+    boolean isDocker = (taskHistory.isPresent() && taskHistory.get().getTask().getMesosTask().hasContainer() && taskHistory.get().getTask().getMesosTask().getContainer().hasDocker());
 
     return taskCleanup.cleanup(cleanupTaskAppDirectory, isDocker);
   }
@@ -255,6 +279,7 @@ public class SingularityExecutorCleanup {
           }
         } catch (IOException ioe) {
           LOG.error("Failed to handle empty gz file {}", path, ioe);
+          exceptionNotifier.notify(ioe, ImmutableMap.of("file", path.toString()));
         }
       } else {
         ungzippedFiles.add(path);
@@ -268,6 +293,7 @@ public class SingularityExecutorCleanup {
           new SimpleProcessManager(LOG).runCommand(ImmutableList.<String> of("gzip", path.toString()));
         } catch (InterruptedException | ProcessFailedException e) {
           LOG.error("Failed to gzip {}", path, e);
+          exceptionNotifier.notify(e, ImmutableMap.of("file", path.toString()));
         }
       } else {
         LOG.debug("Didn't find matched empty gz file for {}", path);
@@ -278,30 +304,33 @@ public class SingularityExecutorCleanup {
   private void cleanDocker(Set<String> runningTaskIds) {
     try {
       for (Container container : dockerClient.listContainers()) {
-        boolean isStoppedTaskContainer = false;
         for (String name : container.names()) {
           if (name.startsWith(executorConfiguration.getDockerPrefix())) {
             if (!runningTaskIds.contains(name.substring(executorConfiguration.getDockerPrefix().length()))) {
-              isStoppedTaskContainer = true;
+              stopContainer(container);
             }
-          }
-        }
-        if (isStoppedTaskContainer) {
-          try {
-            ContainerInfo containerInfo = dockerClient.inspectContainer(container.id());
-            if (containerInfo.state().running()) {
-              dockerClient.stopContainer(container.id(), executorConfiguration.getDockerStopTimeout());
-              LOG.debug(String.format("Forcefully stopped container %s", container.names()));
-            }
-            dockerClient.removeContainer(container.id(), true);
-            LOG.debug(String.format("Removed container %s", container.names()));
-          } catch (Exception e) {
-            LOG.error("Failed to remove contianer {}", container.names(), e);
           }
         }
       }
     } catch (Exception e) {
-      LOG.error("Could not get list of containers", e);
+      LOG.error("Could not get list of Docker containers", e);
+      exceptionNotifier.notify(e, Collections.<String, String>emptyMap());
     }
   }
+
+  private void stopContainer(Container container) {
+    try {
+      ContainerInfo containerInfo = dockerClient.inspectContainer(container.id());
+      if (containerInfo.state().running()) {
+        dockerClient.stopContainer(container.id(), executorConfiguration.getDockerStopTimeout());
+        LOG.debug("Forcefully stopped container {}", container.names());
+      }
+      dockerClient.removeContainer(container.id(), true);
+      LOG.debug("Removed container {}", container.names());
+    } catch (Exception e) {
+      LOG.error("Failed to stop or remove container {}", container.names(), e);
+      exceptionNotifier.notify(e, Collections.<String, String>emptyMap());
+    }
+  }
+
 }

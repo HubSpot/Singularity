@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>basepom</artifactId>
-    <version>12.3</version>
+    <version>12.6</version>
   </parent>
 
   <artifactId>Singularity</artifactId>
@@ -34,7 +34,7 @@
     <!-- build the docs for releases -->
     <basepom.release.profiles>oss-release,build-swagger-documentation</basepom.release.profiles>
 
-    <baragon.version>0.1.4</baragon.version>
+    <baragon.version>0.1.8</baragon.version>
     <mesos.docker.tag>0.21.1-1.1.ubuntu1404</mesos.docker.tag> <!-- 0.21.0-1.0.ubuntu1404 is missing for mesos-slave -->
   </properties>
 
@@ -115,7 +115,7 @@
       <dependency>
         <groupId>com.hubspot.jackson</groupId>
         <artifactId>jackson-datatype-protobuf</artifactId>
-        <version>0.4.0</version>
+        <version>0.9.2</version>
       </dependency>
 
       <dependency>
@@ -195,6 +195,24 @@
           </exclusion>
         </exclusions>
       </dependency>
+
+      <dependency>
+        <groupId>com.palominolabs.metrics</groupId>
+        <artifactId>metrics-guice</artifactId>
+        <version>3.1.1</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.codahale.metrics</groupId>
+        <artifactId>metrics-annotation</artifactId>
+        <version>${dep.metrics.version}</version><!-- TOOD: add this to HubSpot's basepom -->
+      </dependency>
+
+      <dependency>
+        <groupId>com.codahale.metrics</groupId>
+        <artifactId>metrics-graphite</artifactId>
+        <version>${dep.metrics.version}</version><!-- TOOD: add this to HubSpot's basepom -->
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -258,6 +276,35 @@
               <version>${project.version}</version>
             </dependency>
           </dependencies>
+        </plugin>
+        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+        <plugin>
+        	<groupId>org.eclipse.m2e</groupId>
+        	<artifactId>lifecycle-mapping</artifactId>
+        	<version>1.0.0</version>
+        	<configuration>
+        		<lifecycleMappingMetadata>
+        			<pluginExecutions>
+        				<pluginExecution>
+        					<pluginExecutionFilter>
+        						<groupId>
+        							com.hubspot.maven.plugins
+        						</groupId>
+        						<artifactId>
+        							dependency-management-plugin
+        						</artifactId>
+        						<versionRange>[0.3,)</versionRange>
+        						<goals>
+        							<goal>analyze</goal>
+        						</goals>
+        					</pluginExecutionFilter>
+        					<action>
+        						<ignore></ignore>
+        					</action>
+        				</pluginExecution>
+        			</pluginExecutions>
+        		</lifecycleMappingMetadata>
+        	</configuration>
         </plugin>
       </plugins>
     </pluginManagement>
