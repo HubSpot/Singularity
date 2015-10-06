@@ -6,8 +6,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.inject.Binder;
-import com.hubspot.singularity.data.transcoders.SingularityJsonTranscoderBinder;
 
 public class ZkCache<T> {
 
@@ -15,12 +13,8 @@ public class ZkCache<T> {
   private final Meter hitMeter;
   private final Meter missMeter;
 
-  public static <U> SingularityJsonTranscoderBinder bindTranscoder(Binder binder) {
-    return new SingularityJsonTranscoderBinder(binder);
-  }
-
   public ZkCache(int maxSize, int initialSize, MetricRegistry registry, String name) {
-    cache = CacheBuilder.newBuilder().maximumSize(5000).concurrencyLevel(2).initialCapacity(100).build();
+    cache = CacheBuilder.newBuilder().maximumSize(maxSize).concurrencyLevel(2).initialCapacity(initialSize).build();
 
     this.hitMeter = registry.meter(String.format("zk.caches.%s.hits", name));
     this.missMeter = registry.meter(String.format("zk.caches.%s.miss", name));
