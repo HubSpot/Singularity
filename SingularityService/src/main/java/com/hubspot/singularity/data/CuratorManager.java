@@ -233,7 +233,14 @@ public abstract class CuratorManager {
     }
   }
 
-  protected <T> Optional<T> getData(String path, Optional<Stat> stat, Transcoder<T> transcoder) {
+  protected <T> Optional<T> getData(String path, Optional<Stat> stat, Transcoder<T> transcoder, Optional<ZkCache<T>> zkCache) {
+    if (!stat.isPresent() && zkCache.isPresent()) {
+      Optional<T> cachedValue = zkCache.get().get(path);
+      if (cachedValue.isPresent()) {
+        return cachedValue;
+      }
+    }
+
     final long start = System.currentTimeMillis();
     int bytes = 0;
 
@@ -264,11 +271,15 @@ public abstract class CuratorManager {
   }
 
   protected <T> Optional<T> getData(String path, Transcoder<T> transcoder) {
-    return getData(path, Optional.<Stat> absent(), transcoder);
+    return getData(path, Optional.<Stat> absent(), transcoder, Optional.<ZkCache<T>> absent());
+  }
+
+  protected <T> Optional<T> getData(String path, Transcoder<T> transcoder, Optional<ZkCache<T>> zkCache) {
+    return getData(path, Optional.<Stat> absent(), transcoder, zkCache);
   }
 
   protected Optional<String> getStringData(String path) {
-    return getData(path, StringTranscoder.INSTANCE);
+    return getData(path, StringTranscoder.INSTANCE, Optional.<ZkCache<String>> absent());
   }
 
 }
