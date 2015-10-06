@@ -18,6 +18,7 @@ class TaskView extends View
 
         # Plop subview contents in there. It'll take care of everything itself
         @$('#overview').html                    @subviews.overview.$el
+        @$('#alerts').html                      @subviews.alerts.$el
         @$('#healthcheck-notification').html    @subviews.healthcheckNotification.$el
         @$('#history').html                     @subviews.history.$el
         @$('#file-browser').html                @subviews.fileBrowser.$el

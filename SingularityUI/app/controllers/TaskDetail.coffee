@@ -28,6 +28,7 @@ class TaskDetailController extends Controller
         info:                       require '../templates/taskDetail/taskInfo'
         environment:                require '../templates/taskDetail/taskEnvironment'
         resourceUsage:              require '../templates/taskDetail/taskResourceUsage'
+        alerts:                     require '../templates/alerts'
 
     initialize: ({@taskId, @filePath}) ->
         #
@@ -95,6 +96,10 @@ class TaskDetailController extends Controller
             model:    @models.resourceUsage
             template: @templates.resourceUsage
 
+        @subviews.alerts = new SimpleSubview
+            collection:    @models.task
+            template:      @templates.alerts
+
         #
         # Getting stuff in gear
         #
@@ -111,9 +116,9 @@ class TaskDetailController extends Controller
         @models.resourceUsage?.fetch()
             .done =>
                 # Store current resource usage to compare against future resource usage
-                @models.resourceUsage.setCpuUsage() if @models.resourceUsage.get('previousUsage')              
+                @models.resourceUsage.setCpuUsage() if @models.resourceUsage.get('previousUsage')
                 @models.resourceUsage.set('previousUsage', @models.resourceUsage.toJSON())
-                
+
                 if not @resourcesFetched
                     setTimeout (=> @fetchResourceUsage() ), 2000
                     @resourcesFetched = true
@@ -133,6 +138,7 @@ class TaskDetailController extends Controller
         @models.task.fetch()
             .done =>
                 @fetchResourceUsage() if @models.task.get('isStillRunning')
+                console.log @models.task
             .error =>
                 # If this 404s the task doesn't exist
                 app.caughtError()
