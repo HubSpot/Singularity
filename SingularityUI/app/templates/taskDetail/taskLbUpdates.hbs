@@ -9,6 +9,7 @@
                     <thead>
                         <tr>
                             <th>Timestamp</th>
+                            <th>Request Type</th>
                             <th>State</th>
                             <th>Message</th>
                             <th></th>
@@ -19,6 +20,9 @@
                             <tr>
                                 <td>
                                    {{timestampFormatted timestamp}}
+                                </td>
+                                <td>
+                                    {{humanizeText loadBalancerRequestId.requestType}}
                                 </td>
                                 <td>
                                    {{humanizeText loadBalancerState}}

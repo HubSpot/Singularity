@@ -472,6 +472,16 @@ public class SingularityCleaner {
 
     switch (lbRemoveUpdate.getLoadBalancerState()) {
       case SUCCESS:
+        if (configuration.getLoadBalancerRemovalGracePeriodMillis() > 0) {
+          final long duration = System.currentTimeMillis() - lbRemoveUpdate.getTimestamp();
+
+          if (duration < configuration.getLoadBalancerRemovalGracePeriodMillis()) {
+            LOG.trace("LB removal for {} succeeded - waiting at least {} to kill task (current duration {})", taskId,
+                JavaUtils.durationFromMillis(configuration.getLoadBalancerRemovalGracePeriodMillis()), JavaUtils.durationFromMillis(duration));
+            return CheckLBState.WAITING;
+          }
+        }
+
         return CheckLBState.DONE;
       case FAILED:
       case CANCELED:

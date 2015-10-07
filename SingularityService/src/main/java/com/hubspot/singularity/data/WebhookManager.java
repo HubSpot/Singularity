@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
@@ -34,9 +35,10 @@ public class WebhookManager extends CuratorAsyncManager implements SingularityEv
   private final Transcoder<SingularityDeployUpdate> deployWebhookTranscoder;
 
   @Inject
-  public WebhookManager(SingularityConfiguration configuration, CuratorFramework curator, Transcoder<SingularityWebhook> webhookTranscoder,
+  public WebhookManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, Transcoder<SingularityWebhook> webhookTranscoder,
       Transcoder<SingularityRequestHistory> requestHistoryTranscoder, Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder, Transcoder<SingularityDeployUpdate> deployWebhookTranscoder) {
-    super(curator, configuration.getZookeeperAsyncTimeout());
+    super(curator, configuration, metricRegistry);
+
     this.webhookTranscoder = webhookTranscoder;
     this.taskHistoryUpdateTranscoder = taskHistoryUpdateTranscoder;
     this.requestHistoryTranscoder = requestHistoryTranscoder;

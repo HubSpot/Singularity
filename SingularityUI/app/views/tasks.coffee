@@ -72,20 +72,7 @@ class TasksView extends View
 
         @currentTasks = tasks
 
-    preventSearchOverwrite: ->
-        # If you've got a lot of tasks like we do at HubSpot, the collection
-        # behind this view will take a while to download & parse. If you type stuff
-        # in the search field before this happens, it'll all be wiped.
-        $searchBox = @$ 'input[type="search"]'
-        searchVal = $searchBox.val()
-
-        @searchFilter = searchVal if not @searchFilter
-
-        if $searchBox.is ':focus'
-            @focusSearchAfterRender = true
-
     render: =>
-        @preventSearchOverwrite()
         # Renders the base template
         # The table contents are rendered bit by bit as the user scrolls down.
         context =
@@ -100,12 +87,6 @@ class TasksView extends View
 
         @$el.html @templateBase context, partials
 
-        if @focusSearchAfterRender
-            $searchBox = @$ 'input[type="search"]'
-            $searchBox.focus()
-            $searchBox[0].setSelectionRange @searchFilter.length, @searchFilter.length
-            @focusSearchAfterRender = false
-
         @renderTable()
 
         super.afterRender()
@@ -116,6 +97,7 @@ class TasksView extends View
 
         @$('table').show()
         @$('.empty-table-message').remove()
+        @$('input[type="search"]').removeAttr('disabled').attr('placeholder','Filter tasks').focus()
 
         $(window).scrollTop 0
         @filterCollection()

@@ -2,6 +2,7 @@ package com.hubspot.singularity.data;
 
 import org.apache.curator.framework.CuratorFramework;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
@@ -15,8 +16,9 @@ public class RackManager extends AbstractMachineManager<SingularityRack> {
   private static final String RACK_ROOT = "/racks";
 
   @Inject
-  public RackManager(CuratorFramework curator, SingularityConfiguration configuration, Transcoder<SingularityRack> rackTranscoder, Transcoder<SingularityMachineStateHistoryUpdate> stateHistoryTranscoder) {
-    super(curator, configuration.getZookeeperAsyncTimeout(), rackTranscoder, stateHistoryTranscoder);
+  public RackManager(CuratorFramework curator, SingularityConfiguration configuration,  MetricRegistry metricRegistry,Transcoder<SingularityRack> rackTranscoder,
+      Transcoder<SingularityMachineStateHistoryUpdate> stateHistoryTranscoder) {
+    super(curator, configuration, metricRegistry, rackTranscoder, stateHistoryTranscoder);
   }
 
   @Override

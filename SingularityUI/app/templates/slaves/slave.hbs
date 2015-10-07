@@ -43,6 +43,8 @@
                             <a data-slave-host="{{ host }}" data-slave-id="{{ id }}" data-state="{{ state }}" data-action="freeze" title="Freeze">
                                 <span class="glyphicon glyphicon-stop"></span>
                             </a>
+                        {{/ifInSubFilter}}
+                        {{#ifInSubFilter state 'ACTIVE,FROZEN'}}
                             <a data-slave-host="{{ host }}" data-slave-id="{{ id }}" data-state="{{ state }}" data-action="decommission" title="Decommission">
                                 <span class="glyphicon glyphicon-trash"></span>
                             </a>

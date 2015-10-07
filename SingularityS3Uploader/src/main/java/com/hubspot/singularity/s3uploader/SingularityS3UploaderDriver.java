@@ -32,6 +32,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -42,6 +43,7 @@ import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
+import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.ProcessUtils;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
@@ -68,12 +70,13 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   private final ProcessUtils processUtils;
   private final AWSCredentials defaultCredentials;
   private final String hostname;
+  private final SingularityRunnerExceptionNotifier exceptionNotifier;
 
   private ScheduledFuture<?> future;
 
   @Inject
   public SingularityS3UploaderDriver(SingularityRunnerBaseConfiguration baseConfiguration, SingularityS3UploaderConfiguration configuration, SingularityS3Configuration s3Configuration,
-      SingularityS3UploaderMetrics metrics, JsonObjectFileHelper jsonObjectFileHelper, @Named(SingularityRunnerBaseModule.HOST_NAME_PROPERTY) String hostname) {
+      SingularityS3UploaderMetrics metrics, JsonObjectFileHelper jsonObjectFileHelper, @Named(SingularityRunnerBaseModule.HOST_NAME_PROPERTY) String hostname, SingularityRunnerExceptionNotifier exceptionNotifier) {
     super(configuration.getPollForShutDownMillis(), Paths.get(baseConfiguration.getS3UploaderMetadataDirectory()), ImmutableList.of(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE));
 
     this.baseConfiguration = baseConfiguration;
@@ -98,6 +101,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     this.executorService = JavaUtils.newFixedTimingOutThreadPool(configuration.getExecutorMaxUploadThreads(), TimeUnit.SECONDS.toMillis(30), "SingularityS3Uploader-%d");
     this.scheduler = Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityS3Driver-%d").build());
     this.hostname = hostname;
+    this.exceptionNotifier = exceptionNotifier;
   }
 
   private void readInitialFiles() throws IOException {
@@ -148,6 +152,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
           uploads = checkUploads();
         } catch (Throwable t) {
           LOG.error("Uncaught exception while checking {} upload(s)", uploaders, t);
+          exceptionNotifier.notify(t, Collections.<String, String>emptyMap());
         } finally {
           runLock.unlock();
           metrics.finishUploads();
@@ -211,6 +216,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
           } catch (Throwable t) {
             metrics.error();
             LOG.error("Error while processing uploader {}", uploader, t);
+            exceptionNotifier.notify(t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
           }
           return returnValue;
         }
@@ -243,6 +249,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       } catch (Throwable t) {
         metrics.error();
         LOG.error("Waiting on future", t);
+        exceptionNotifier.notify(t, ImmutableMap.of("metadataPath", uploader.getMetadataPath().toString()));
       }
     }
 
@@ -260,6 +267,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         Files.delete(expiredUploader.getMetadataPath());
       } catch (IOException e) {
         LOG.warn("Couldn't delete {}", expiredUploader.getMetadataPath(), e);
+        exceptionNotifier.notify(e, ImmutableMap.of("metadataPath", expiredUploader.getMetadataPath().toString()));
       }
     }
 
@@ -344,7 +352,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
         bucketCreds = Optional.of(configuration.getS3BucketCredentials().get(metadata.getS3Bucket()).toAWSCredentials());
       }
 
-      SingularityS3Uploader uploader = new SingularityS3Uploader(bucketCreds.or(defaultCredentials), metadata, fileSystem, metrics, filename, configuration, hostname);
+      SingularityS3Uploader uploader = new SingularityS3Uploader(bucketCreds.or(defaultCredentials), metadata, fileSystem, metrics, filename, configuration, hostname, exceptionNotifier);
 
       if (metadata.isFinished()) {
         expiring.add(uploader);
