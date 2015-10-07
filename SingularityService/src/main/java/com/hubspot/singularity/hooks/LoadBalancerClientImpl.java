@@ -9,6 +9,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import javax.ws.rs.HEAD;
+
 import com.hubspot.baragon.models.RequestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -167,7 +169,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
   public SingularityLoadBalancerUpdate enqueue(LoadBalancerRequestId loadBalancerRequestId, SingularityRequest request, SingularityDeploy deploy, List<SingularityTask> add,
       List<SingularityTask> remove) {
     final List<String> serviceOwners = request.getOwners().or(Collections.<String> emptyList());
-    final Set<String> loadBalancerGroups = deploy.getLoadBalancerGroups().or(Collections.<String>emptySet());
+    final Set<String> loadBalancerGroups = deploy.getLoadBalancerGroups().or(Collections.<String> emptySet());
     final BaragonService lbService = new BaragonService(request.getId(), serviceOwners, deploy.getServiceBasePath().get(), loadBalancerGroups, deploy.getLoadBalancerOptions().orNull());
 
     final List<UpstreamInfo> addUpstreams = tasksToUpstreams(add, loadBalancerRequestId.toString());

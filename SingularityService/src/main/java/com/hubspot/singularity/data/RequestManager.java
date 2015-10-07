@@ -55,16 +55,15 @@ public class RequestManager extends CuratorAsyncManager {
 
   @Inject
   public RequestManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, SingularityEventListener singularityEventListener,
-      Transcoder<SingularityRequestCleanup> requestCleanupTranscoder, Transcoder<SingularityRequestWithState> requestTranscoder,
-      Transcoder<SingularityPendingRequest> pendingRequestTranscoder, Transcoder<SingularityRequestHistory> requestHistoryTranscoder, Transcoder<SingularityLoadBalancerUpdate> loadBalancerHistoryUpdateTranscoder) {
+      Transcoder<SingularityRequestCleanup> requestCleanupTranscoder, Transcoder<SingularityRequestWithState> requestTranscoder, Transcoder<SingularityLoadBalancerUpdate> loadBalancerUpdateTranscoder,
+      Transcoder<SingularityPendingRequest> pendingRequestTranscoder, Transcoder<SingularityRequestHistory> requestHistoryTranscoder) {
     super(curator, configuration, metricRegistry);
-
     this.requestTranscoder = requestTranscoder;
     this.requestCleanupTranscoder = requestCleanupTranscoder;
     this.pendingRequestTranscoder = pendingRequestTranscoder;
     this.requestHistoryTranscoder = requestHistoryTranscoder;
     this.singularityEventListener = singularityEventListener;
-    this.loadBalancerUpdateTranscoder = loadBalancerHistoryUpdateTranscoder;
+    this.loadBalancerUpdateTranscoder = loadBalancerUpdateTranscoder;
   }
 
   private String getRequestPath(String requestId) {
