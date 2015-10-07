@@ -288,14 +288,6 @@
             <createDependencyReducedPom>true</createDependencyReducedPom>
             <finalName>${singularity.jar.name.format}</finalName>
           </configuration>
-          <executions>
-            <execution>
-              <phase>package</phase>
-              <goals>
-                <goal>shade</goal>
-              </goals>
-            </execution>
-          </executions>
         </plugin>
         <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
         <plugin>
