@@ -17,7 +17,6 @@ mesos:
   frameworkName: Singularity
   frameworkId: Singularity
   frameworkFailoverTimeout: 1000000
-  useNativeCode: false
 
 zookeeper:
   quorum: localhost:2181
