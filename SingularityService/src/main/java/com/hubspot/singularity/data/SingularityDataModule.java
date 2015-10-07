@@ -1,7 +1,12 @@
 package com.hubspot.singularity.data;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.inject.Singleton;
+import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.config.SingularityConfiguration;
 
 public class SingularityDataModule extends AbstractModule {
 
@@ -21,4 +26,11 @@ public class SingularityDataModule extends AbstractModule {
     bind(ExecutorIdGenerator.class).in(Scopes.SINGLETON);
     bind(WebhookManager.class).in(Scopes.SINGLETON);
   }
+
+  @Provides
+  @Singleton
+  public ZkCache<SingularityTask> taskCache(SingularityConfiguration configuration, MetricRegistry registry) {
+    return new ZkCache<SingularityTask>(configuration.getCacheTasksMaxSize(), configuration.getCacheTasksInitialSize(), registry, "tasks");
+  }
+
 }

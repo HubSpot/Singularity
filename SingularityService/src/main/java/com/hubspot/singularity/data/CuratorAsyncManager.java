@@ -1,7 +1,9 @@
 package com.hubspot.singularity.data;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -40,15 +42,27 @@ public abstract class CuratorAsyncManager extends CuratorManager {
       paths.add(ZKPaths.makePath(parent, child));
     }
 
-    return getAsyncThrows(parent, paths, transcoder);
+    return getAsyncThrows(parent, paths, transcoder, Optional.<ZkCache<T>> absent());
   }
 
-  private <T> List<T> getAsyncThrows(final String pathNameForLogs, final Collection<String> paths, final Transcoder<T> transcoder) throws Exception {
-    final List<T> objects = Lists.newArrayListWithCapacity(paths.size());
+  private <T> List<T> getAsyncThrows(final String pathNameForLogs, final Collection<String> paths, final Transcoder<T> transcoder, final Optional<ZkCache<T>> cache) throws Exception {
+    final List<T> objects = new ArrayList<>(paths.size());
+
+    if (cache.isPresent()) {
+      for (Iterator<String> itr = paths.iterator(); itr.hasNext();) {
+        Optional<T> fromCache = cache.get().get(itr.next());
+        if (fromCache.isPresent()) {
+          objects.add(fromCache.get());
+          itr.remove();
+        }
+      }
+    }
 
     if (paths.isEmpty()) {
       return objects;
     }
+
+    final List<T> synchronizedObjects = Collections.synchronizedList(objects);
 
     final CountDownLatch latch = new CountDownLatch(paths.size());
     final AtomicInteger missing = new AtomicInteger();
@@ -69,7 +83,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
         bytes.getAndAdd(event.getData().length);
 
-        objects.add(transcoder.fromBytes(event.getData()));
+        synchronizedObjects.add(transcoder.fromBytes(event.getData()));
 
         latch.countDown();
       }
@@ -102,6 +116,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     }
 
     final List<T> objects = Lists.newArrayListWithExpectedSize(parents.size());
+    final List<T> synchronizedObjects = Collections.synchronizedList(objects);
 
     final CountDownLatch latch = new CountDownLatch(parents.size());
     final AtomicInteger missing = new AtomicInteger();
@@ -119,7 +134,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
           return;
         }
 
-        objects.addAll(Lists.transform(event.getChildren(), Transcoders.getFromStringFunction(idTranscoder)));
+        synchronizedObjects.addAll(Lists.transform(event.getChildren(), Transcoders.getFromStringFunction(idTranscoder)));
 
         latch.countDown();
       }
@@ -200,9 +215,17 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     }
   }
 
+  protected <T> List<T> getAsync(final String pathNameForLogs, final Collection<String> paths, final Transcoder<T> transcoder, final ZkCache<T> cache) {
+    try {
+      return getAsyncThrows(pathNameForLogs, paths, transcoder, Optional.of(cache));
+    } catch (Throwable t) {
+      throw Throwables.propagate(t);
+    }
+  }
+
   protected <T> List<T> getAsync(final String pathNameForLogs, final Collection<String> paths, final Transcoder<T> transcoder) {
     try {
-      return getAsyncThrows(pathNameForLogs, paths, transcoder);
+      return getAsyncThrows(pathNameForLogs, paths, transcoder, Optional.<ZkCache<T>> absent());
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
