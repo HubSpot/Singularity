@@ -238,7 +238,7 @@ public class SingularityCleaner {
         }
       }
 
-      if (deleteFromLoadBalancer) {
+      if (deleteFromLoadBalancer && configuration.isDeletePausedRequestsFromLoadBalancer()) {
         requestManager.createLBCleanupRequest(requestId);
       }
 
