@@ -22,14 +22,14 @@ class RequestFormEdit extends RequestFormBaseView
         # render taggable data
         for tag in @taggables()
             @renderTaggable @[tag.name], request.request[tag.name]
-        
+
         @$('#slavePlacement').val request.request.slavePlacement
-        
+
         if @requestType is 'SERVICE' or 'WORKER'
             @$("#instances-#{@requestType}").val request.request.instances
             @$("#rack-sensitive-#{@requestType}").prop 'checked', request.request.rackSensitive
             @$("#load-balanced").prop 'checked', request.request.loadBalanced
-           
+
         if @requestType in ['SCHEDULED','ON_DEMAND','RUN_ONCE']
             @$("#killOldNRL-#{@requestType}").val request.request.killOldNonLongRunningTasksAfterMillis
 
@@ -45,6 +45,7 @@ class RequestFormEdit extends RequestFormBaseView
 
         typeButtons = @$('#type .btn').prop('disabled', true)
         @$("[data-type='#{@requestType}']").prop('disabled', false)
+        @$("[data-type='#{@requestType}']").attr('data-tooltip', 'cannot-change')
         @setTooltips()
         app.$page.show()
 
@@ -56,7 +57,7 @@ class RequestFormEdit extends RequestFormBaseView
     saveRequest: ->
         if _.contains ['RUN_ONCE', 'ON_DEMAND'], @requestType
             @model.unset 'instances'
-        
+
         @model.url = "#{ config.apiRoot }/requests?user=#{ app.getUsername() }"
         @model.isNew = -> true
 
