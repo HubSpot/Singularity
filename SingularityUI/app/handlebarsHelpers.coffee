@@ -29,6 +29,11 @@ Handlebars.registerHelper 'fixedDecimal', (value, options) ->
     if options.hash.place then place = options.hash.place else place = 2
     +(value).toFixed(place)
 
+Handlebars.registerHelper 'ifTaskInList', (list, task, options) ->
+    for t in list
+      if t.id == task
+        return options.fn @
+    return options.inverse @
 
 Handlebars.registerHelper 'ifInSubFilter', (needle, haystack, options) ->
     return options.fn @ if haystack is 'all'
