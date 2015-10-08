@@ -154,14 +154,14 @@ class TaskDetailController extends Controller
         if !task.get('isStillRunning')
             updates = task.get('taskUpdates')
             decomMessage = updates.filter (u) =>
-              return u.statusMessage?.indexOf('DECOMISSIONING') != -1 and u.taskState == 'TASK_CLEANING'
+                return u.statusMessage?.indexOf('DECOMISSIONING') != -1 and u.taskState == 'TASK_CLEANING'
             killedMessage = updates.filter (u) =>
-              return u.taskState == 'TASK_KILLED'
+                return u.taskState == 'TASK_KILLED'
             if decomMessage.length > 0 and killedMessage.length > 0
-              alerts.push
-                title: 'Alert:',
-                message: 'This task was killed due to a slave decommissioning.',
-                level: 'danger'
+                alerts.push
+                  title: 'Alert:',
+                  message: 'This task was killed due to a slave decommissioning.',
+                  level: 'danger'
         return alerts
 
     refresh: ->
