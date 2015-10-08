@@ -4,7 +4,6 @@ TaskPending = require '../models/TaskPending'
 
 Tasks = require '../collections/Tasks'
 TasksPending = require '../collections/TasksPending'
-Slaves = require '../collections/Slaves'
 TaskCleanups = require '../collections/TaskCleanups'
 
 TasksTableView = require '../views/tasks'
@@ -20,20 +19,17 @@ class TasksTableController extends Controller
 
         else
             @collections.tasks = new Tasks [], {@state}
-        @collections.slaves = new Slaves []
         @collections.taskCleanups = new TaskCleanups
 
         @setView new TasksTableView _.extend {@state, @searchFilter},
             collection: @collections.tasks
             pendingTasks: @collections.tasksPending
             attributes:
-                slaves: @collections.slaves
                 cleaning: @collections.taskCleanups
 
         # Fetch a pending task's full details
         @view.on 'getPendingTask', (task) => @getPendingTask(task)
 
-        @collections.slaves.fetch()
         @collections.tasks.fetch()
         @collections.taskCleanups.fetch()
         app.showView @view
@@ -56,7 +52,6 @@ class TasksTableController extends Controller
         # Don't refresh if the table is sorted
         return if @view.isSorted
 
-        @collections.slaves.fetch()
         @collections.taskCleanups.fetch()
         @collections.tasks.fetch reset: true
 
