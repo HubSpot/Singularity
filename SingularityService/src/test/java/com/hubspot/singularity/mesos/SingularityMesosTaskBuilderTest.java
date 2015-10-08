@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.mesos.Protos;
@@ -135,10 +136,10 @@ public class SingularityMesosTaskBuilderTest {
                 new SingularityVolume("/container/${TASK_REQUEST_ID}/${TASK_DEPLOY_ID}", Optional.of("/host/${TASK_ID}"), SingularityDockerVolumeMode.RO))),
         Optional.of(new SingularityDockerInfo("docker-image", true, SingularityDockerNetworkType.BRIDGE, Optional.of(Arrays.asList(literalMapping, offerMapping)), Optional.of(false), Optional.<Map<String, String>>of(ImmutableMap.of("env", "var=value")) )));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
-    .setContainerInfo(Optional.of(containerInfo))
-    .setCommand(Optional.of("/bin/echo"))
-    .setArguments(Optional.of(Collections.singletonList("wat")))
-    .build();
+      .setContainerInfo(Optional.of(containerInfo))
+      .setCommand(Optional.of("/bin/echo"))
+      .setArguments(Optional.of(Collections.singletonList("wat")))
+      .build();
     final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
     final SingularityTask task = builder.buildTask(offer, Collections.singletonList(portsResource), taskRequest, taskResources, executorResources);
 
@@ -168,6 +169,26 @@ public class SingularityMesosTaskBuilderTest {
     assertEquals("udp", task.getMesosTask().getContainer().getDocker().getPortMappings(1).getProtocol());
 
     assertEquals(Protos.ContainerInfo.DockerInfo.Network.BRIDGE, task.getMesosTask().getContainer().getDocker().getNetwork());
+  }
+
+  @Test
+  public void testDockerMinimalNetworking() {
+    taskResources = new Resources(1, 1, 0);
+
+    final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER).build();
+    final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
+      SingularityContainerType.DOCKER,
+        Optional.<List<SingularityVolume>>absent(),
+        Optional.of(new SingularityDockerInfo("docker-image", true, SingularityDockerNetworkType.NONE,
+            Optional.<List<SingularityDockerPortMapping>>absent())));
+    final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
+      .setContainerInfo(Optional.of(containerInfo))
+      .build();
+    final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
+    final SingularityTask task = builder.buildTask(offer, Collections.<Protos.Resource>emptyList(), taskRequest, taskResources, executorResources);
+
+    assertEquals(Type.DOCKER, task.getMesosTask().getContainer().getType());
+    assertEquals(Protos.ContainerInfo.DockerInfo.Network.NONE, task.getMesosTask().getContainer().getDocker().getNetwork());
   }
 
   private static class CreateFakeId implements Answer<String> {
