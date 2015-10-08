@@ -132,23 +132,36 @@ class TaskDetailController extends Controller
                 app.caughtError()
                 delete @models.resourceUsage
 
-    getAlerts: (taskHistory) =>
+    getAlerts: (requestTaskHistory) =>
+        task = @models.task
         alerts = []
         # Is this a scheduled task that has been running much longer than previous ones?
-        if @models.task.attributes.task.taskRequest.request.requestType == 'SCHEDULED' and @models.task.get('isStillRunning')
-            times = taskHistory.models.map (t) =>
+        if task.attributes.task.taskRequest.request.requestType == 'SCHEDULED' and task.get('isStillRunning')
+            times = requestTaskHistory.models.map (t) =>
                 return t.get('updatedAt') - t.get('taskId').startedAt
             avg = times.reduce (p, c) ->
                 return p + c
 
             avg = Math.round avg / times.length
-            current =  new Date().getTime() - @models.task.get('task').taskId.startedAt
+            current =  new Date().getTime() - task.get('task').taskId.startedAt
             # Alert if current uptime is longer than twice the average
             if current > (avg * 2)
                 alerts.push
                   title: 'Warning:',
                   message: 'This scheduled task has been running longer than twice the average for the request and may be stuck.',
                   level: 'warning'
+        # Was this task killed by a discomissioning slave?
+        if !task.get('isStillRunning')
+            updates = task.get('taskUpdates')
+            decomMessage = updates.filter (u) =>
+              return u.statusMessage?.indexOf('DECOMISSIONING') != -1 and u.taskState == 'TASK_CLEANING'
+            killedMessage = updates.filter (u) =>
+              return u.taskState == 'TASK_KILLED'
+            if decomMessage.length > 0 and killedMessage.length > 0
+              alerts.push
+                title: 'Alert:',
+                message: 'This task was killed due to a slave discomissioning.',
+                level: 'danger'
         return alerts
 
     refresh: ->
