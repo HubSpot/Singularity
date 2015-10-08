@@ -111,6 +111,8 @@ public class SingularityConfiguration extends Configuration {
 
   private String loadBalancerUri;
 
+  private boolean deletePausedRequestsFromLoadBalancer = true;
+
   private int logFetchMaxThreads = 15;
 
   private int maxDeployIdSize = 50;
@@ -794,5 +796,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setGraphiteConfiguration(GraphiteConfiguration graphiteConfiguration) {
     this.graphiteConfiguration = graphiteConfiguration;
+  }
+
+  public boolean isDeletePausedRequestsFromLoadBalancer() {
+    return deletePausedRequestsFromLoadBalancer;
+  }
+
+  public void setDeletePausedRequestsFromLoadBalancer(boolean deletePausedRequestsFromLoadBalancer) {
+    this.deletePausedRequestsFromLoadBalancer = deletePausedRequestsFromLoadBalancer;
   }
 }
