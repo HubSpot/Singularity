@@ -160,7 +160,7 @@ class TaskDetailController extends Controller
             if decomMessage.length > 0 and killedMessage.length > 0
               alerts.push
                 title: 'Alert:',
-                message: 'This task was killed due to a slave discomissioning.',
+                message: 'This task was killed due to a slave decommissioning.',
                 level: 'danger'
         return alerts
 
