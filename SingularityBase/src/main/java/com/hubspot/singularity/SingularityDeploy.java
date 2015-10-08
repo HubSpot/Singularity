@@ -41,6 +41,7 @@ public class SingularityDeploy {
   private final Optional<Map<String, String>> env;
   private final Optional<List<String>> uris;
   private final Optional<ExecutorData> executorData;
+  private final Optional<Map<String, String>> labels;
 
   private final Optional<String> healthcheckUri;
   private final Optional<Long> healthcheckIntervalSeconds;
@@ -81,6 +82,7 @@ public class SingularityDeploy {
       @JsonProperty("executorData") Optional<ExecutorData> executorData,
       @JsonProperty("version") Optional<String> version,
       @JsonProperty("timestamp") Optional<Long> timestamp,
+      @JsonProperty("labels") Optional<Map<String, String>> labels,
       @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
       @JsonProperty("healthcheckUri") Optional<String> healthcheckUri,
       @JsonProperty("healthcheckIntervalSeconds") Optional<Long> healthcheckIntervalSeconds,
@@ -114,6 +116,7 @@ public class SingularityDeploy {
     this.env = env;
     this.uris = uris;
     this.executorData = executorData;
+    this.labels = labels;
 
     this.healthcheckUri = healthcheckUri;
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
@@ -142,6 +145,8 @@ public class SingularityDeploy {
     .setCustomExecutorCmd(customExecutorCmd)
     .setCustomExecutorId(customExecutorId)
     .setCustomExecutorSource(customExecutorSource)
+    .setCustomExecutorResources(customExecutorResources)
+    .setCustomExecutorUser(customExecutorUser)
 
     .setHealthcheckUri(healthcheckUri)
     .setHealthcheckIntervalSeconds(healthcheckIntervalSeconds)
@@ -163,7 +168,8 @@ public class SingularityDeploy {
     .setTimestamp(timestamp)
     .setEnv(copyOfMap(env))
     .setUris(copyOfList(uris))
-    .setExecutorData(executorData);
+    .setExecutorData(executorData)
+    .setLabels(labels);
   }
 
   @ApiModelProperty(required=false, value="Number of seconds that Singularity waits for this service to become healthy (for it to download artifacts, start running, and optionally pass healthchecks.)")
@@ -219,6 +225,7 @@ public class SingularityDeploy {
     return customExecutorResources;
   }
 
+  @Deprecated
   @ApiModelProperty(required=false, value="User to run custom executor as")
   public Optional<String> getCustomExecutorUser() {
     return customExecutorUser;
@@ -294,6 +301,11 @@ public class SingularityDeploy {
     return loadBalancerOptions;
   }
 
+  @ApiModelProperty(required=false, value="Labels for tasks associated with this deploy")
+  public Optional<Map<String, String>> getLabels() {
+    return labels;
+  }
+
   @ApiModelProperty(required=false, value="Allows skipping of health checks when deploying.")
   public Optional<Boolean> getSkipHealthchecksOnDeploy() {
     return skipHealthchecksOnDeploy;
@@ -341,6 +353,7 @@ public class SingularityDeploy {
       ", serviceBasePath=" + serviceBasePath +
       ", loadBalancerGroups=" + loadBalancerGroups +
       ", loadBalancerOptions=" + loadBalancerOptions +
+      ", labels=" + labels +
       '}';
   }
 

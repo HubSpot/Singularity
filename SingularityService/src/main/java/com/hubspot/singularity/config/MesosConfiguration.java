@@ -2,11 +2,11 @@ package com.hubspot.singularity.config;
 
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Optional;
 
+@JsonIgnoreProperties( ignoreUnknown = true )
 public class MesosConfiguration {
-
-  private boolean useNativeCode = true;
 
   @NotNull
   private String master;
@@ -38,14 +38,6 @@ public class MesosConfiguration {
   private int maxNumCpusPerRequest = 900;
   private int maxMemoryMbPerInstance = 24000;
   private int maxMemoryMbPerRequest = 450000;
-
-  public boolean isUseNativeCode() {
-    return useNativeCode;
-  }
-
-  public void setUseNativeCode(boolean useNativeCode) {
-    this.useNativeCode = useNativeCode;
-  }
 
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;

@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>Singularity</artifactId>
-  <version>0.4.5-SNAPSHOT</version>
+  <version>0.4.6-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <scm>
@@ -31,11 +31,15 @@
   </developers>
 
   <properties>
+    <singularity.jar.name.format>${project.artifactId}-${project.version}</singularity.jar.name.format>
+
     <!-- build the docs for releases -->
     <basepom.release.profiles>oss-release,build-swagger-documentation</basepom.release.profiles>
 
     <baragon.version>0.1.8</baragon.version>
-    <mesos.docker.tag>0.21.1-1.1.ubuntu1404</mesos.docker.tag> <!-- 0.21.0-1.0.ubuntu1404 is missing for mesos-slave -->
+    <mesos.docker.tag>0.23.0-1.0.ubuntu1404</mesos.docker.tag>
+    <mesos.version>0.23.0</mesos.version>
+    <singularitybase.image.revision>1</singularitybase.image.revision>
   </properties>
 
   <modules>
@@ -151,7 +155,7 @@
       <dependency>
         <groupId>com.spotify</groupId>
         <artifactId>docker-client</artifactId>
-        <version>2.7.20</version>
+        <version>3.1.5</version>
         <exclusions>
           <exclusion>
             <groupId>commons-logging</groupId>
@@ -276,6 +280,14 @@
               <version>${project.version}</version>
             </dependency>
           </dependencies>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <configuration>
+            <createDependencyReducedPom>true</createDependencyReducedPom>
+            <finalName>${singularity.jar.name.format}</finalName>
+          </configuration>
         </plugin>
         <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
         <plugin>
