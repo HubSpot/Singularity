@@ -30,7 +30,7 @@ public class SingularityDataModule extends AbstractModule {
   @Provides
   @Singleton
   public ZkCache<SingularityTask> taskCache(SingularityConfiguration configuration, MetricRegistry registry) {
-    return new ZkCache<SingularityTask>(configuration.getCacheTasksMaxSize(), configuration.getCacheTasksInitialSize(), registry, "tasks");
+    return new ZkCache<SingularityTask>(configuration.getCacheTasksMaxSize(), configuration.getCacheTasksInitialSize(), configuration.getCacheTasksForMillis(), registry, "tasks");
   }
 
 }

@@ -1,5 +1,7 @@
 package com.hubspot.singularity.data;
 
+import java.util.concurrent.TimeUnit;
+
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
@@ -13,8 +15,13 @@ public class ZkCache<T> {
   private final Meter hitMeter;
   private final Meter missMeter;
 
-  public ZkCache(int maxSize, int initialSize, MetricRegistry registry, String name) {
-    cache = CacheBuilder.newBuilder().maximumSize(maxSize).concurrencyLevel(2).initialCapacity(initialSize).build();
+  public ZkCache(int maxSize, int initialSize, long millisToExpireAfterAccess, MetricRegistry registry, String name) {
+    cache = CacheBuilder.newBuilder()
+        .maximumSize(maxSize)
+        .concurrencyLevel(2)
+        .initialCapacity(initialSize)
+        .expireAfterAccess(millisToExpireAfterAccess, TimeUnit.MILLISECONDS)
+        .build();
 
     this.hitMeter = registry.meter(String.format("zk.caches.%s.hits", name));
     this.missMeter = registry.meter(String.format("zk.caches.%s.miss", name));
