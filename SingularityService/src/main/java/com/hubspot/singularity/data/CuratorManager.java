@@ -260,7 +260,13 @@ public abstract class CuratorManager {
 
       bytes = data.length;
 
-      return Optional.of(transcoder.fromBytes(data));
+      final T object = transcoder.fromBytes(data);
+
+      if (zkCache.isPresent()) {
+        zkCache.get().set(path, object);
+      }
+
+      return Optional.of(object);
     } catch (NoNodeException nne) {
       return Optional.absent();
     } catch (Throwable t) {

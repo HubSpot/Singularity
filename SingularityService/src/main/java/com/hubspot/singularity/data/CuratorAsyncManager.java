@@ -65,7 +65,6 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     final List<T> synchronizedObjects = Collections.synchronizedList(objects);
 
     final CountDownLatch latch = new CountDownLatch(paths.size());
-    final AtomicInteger missing = new AtomicInteger();
     final AtomicInteger bytes = new AtomicInteger();
 
     final BackgroundCallback callback = new BackgroundCallback() {
@@ -75,7 +74,6 @@ public abstract class CuratorAsyncManager extends CuratorManager {
         if (event.getData() == null || event.getData().length == 0) {
           LOG.trace("Expected active node {} but it wasn't there", event.getPath());
 
-          missing.incrementAndGet();
           latch.countDown();
 
           return;
@@ -83,7 +81,13 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
         bytes.getAndAdd(event.getData().length);
 
-        synchronizedObjects.add(transcoder.fromBytes(event.getData()));
+        final T object = transcoder.fromBytes(event.getData());
+
+        synchronizedObjects.add(object);
+
+        if (cache.isPresent()) {
+          cache.get().set(event.getPath(), object);
+        }
 
         latch.countDown();
       }
@@ -119,7 +123,6 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     final List<T> synchronizedObjects = Collections.synchronizedList(objects);
 
     final CountDownLatch latch = new CountDownLatch(parents.size());
-    final AtomicInteger missing = new AtomicInteger();
 
     final BackgroundCallback callback = new BackgroundCallback() {
 
@@ -128,7 +131,6 @@ public abstract class CuratorAsyncManager extends CuratorManager {
         if (event.getChildren() == null || event.getChildren().size() == 0) {
           LOG.trace("Expected children for node {} - but found none", event.getPath());
 
-          missing.incrementAndGet();
           latch.countDown();
 
           return;
