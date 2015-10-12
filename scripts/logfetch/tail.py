@@ -69,11 +69,6 @@ class LogStreamer(threading.Thread):
         sys.stderr.write(colored('Could not tail logs for task {0}, check that the task is still active and that the slave it runs on has not been decommissioned\n'.format(task), 'red'))
         keep_trying = False
 
-  def get_initial_offset(self, uri, path, args):
-    params = {"path" : path}
-
-    return long(requests.get(uri, params=params, headers=args.headers).json()['offset'])
-
   def fetch_new_log_data(self, uri, path, offset, args, task):
     params = {
       "path" : path,
