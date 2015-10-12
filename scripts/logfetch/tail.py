@@ -3,13 +3,16 @@ import sys
 import logfetch_base
 import requests
 import time
+import fnmatch
 import threading
 from grep import grep_command
 from termcolor import colored
+from singularity_request import get_json_response
 
 TAIL_LOG_FORMAT = '{0}/sandbox/{1}/read'
 READ_INTERVAL = 5
 THREAD_TIMEOUT = 100000
+BROWSE_FOLDER_FORMAT = '{0}/sandbox/{1}/browse'
 
 def start_tail(args):
   if args.requestId:
@@ -36,6 +39,29 @@ def start_tail(args):
     sys.stderr.write(colored('Stopping tail', 'magenta') + '\n')
     sys.exit(0)
 
+def logs_folder_files(args, task):
+  uri = BROWSE_FOLDER_FORMAT.format(logfetch_base.base_uri(args), task)
+  files_json = get_json_response(uri, args, {'path' : '{0}/logs'.format(task)})
+  if 'files' in files_json:
+    files = files_json['files']
+    return [f['name'] for f in files if valid_logfile(f)]
+  else:
+    return [f['path'].rsplit('/')[-1] for f in files_json if valid_logfile(f)]
+
+def base_directory_files(args, task):
+  uri = BROWSE_FOLDER_FORMAT.format(logfetch_base.base_uri(args), task)
+  files_json = get_json_response(uri, args)
+  if 'files' in files_json:
+    files = files_json['files']
+    return [f['name'] for f in files if valid_logfile(f)]
+  else:
+    return [f['path'].rsplit('/')[-1] for f in files_json if valid_logfile(f)]
+
+def valid_logfile(fileData):
+  not_a_directory = not fileData['mode'].startswith('d')
+  is_a_logfile = fnmatch.fnmatch(fileData['name'], '*.log') or fnmatch.fnmatch(fileData['name'], '*.out') or fnmatch.fnmatch(fileData['name'], '*.err')
+  return not_a_directory and is_a_logfile
+
 class LogStreamer(threading.Thread):
   def __init__(self, args, task):
     threading.Thread.__init__(self)
@@ -59,7 +85,8 @@ class LogStreamer(threading.Thread):
       sys.stderr.write(colored('Could get initial offset for log in task {0}, check that the task is still active and that the slave it runs on has not been decommissioned\n'.format(task), 'red'))
       keep_trying = False
     except:
-      sys.stderr.write(colored('Could not find log file at path {1} for task {0}, check your -l arg and try again\n'.format(args.logfile, task), 'red'))
+      sys.stderr.write(colored('Could not find log file at path {0} for task {1}, check your -l arg and try again\n'.format(args.logfile, task), 'red'))
+      self.show_available_files(args, task)
       keep_trying = False
     while keep_trying:
       try:
@@ -98,3 +125,14 @@ class LogStreamer(threading.Thread):
   def remove_grep_file(self, grep_file):
     if os.path.isfile(grep_file):
       os.remove(grep_file)
+
+  def show_available_files(self, args, task):
+    sys.stderr.write(colored('Available files (-l arguments):\n', 'cyan'))
+    try:
+      for f in base_directory_files(args, task):
+        sys.stderr.write(f + '\n')
+      for f in logs_folder_files(args, task):
+        sys.stderr.write('logs/' + f + '\n')
+    except:
+      sys.stderr.write(colored('Could not fetch list of files', 'red'))
+
