@@ -92,6 +92,8 @@ public class TaskManager extends CuratorAsyncManager {
   private final IdTranscoder<SingularityPendingTaskId> pendingTaskIdTranscoder;
   private final IdTranscoder<SingularityTaskId> taskIdTranscoder;
 
+  private final ZkCache<SingularityTask> taskCache;
+
   private final SingularityEventListener singularityEventListener;
   private final String serverId;
 
@@ -100,7 +102,7 @@ public class TaskManager extends CuratorAsyncManager {
       IdTranscoder<SingularityPendingTaskId> pendingTaskIdTranscoder, IdTranscoder<SingularityTaskId> taskIdTranscoder, Transcoder<SingularityLoadBalancerUpdate> taskLoadBalancerHistoryUpdateTranscoder,
       Transcoder<SingularityTaskStatusHolder> taskStatusTranscoder, Transcoder<SingularityTaskHealthcheckResult> healthcheckResultTranscoder, Transcoder<SingularityTask> taskTranscoder,
       Transcoder<SingularityTaskCleanup> taskCleanupTranscoder, Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder, Transcoder<SingularityPendingTask> pendingTaskTranscoder,
-      Transcoder<SingularityKilledTaskIdRecord> killedTaskIdRecordTranscoder, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId) {
+      Transcoder<SingularityKilledTaskIdRecord> killedTaskIdRecordTranscoder, ZkCache<SingularityTask> taskCache, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId) {
     super(curator, configuration, metricRegistry);
 
     this.healthcheckResultTranscoder = healthcheckResultTranscoder;
@@ -114,6 +116,7 @@ public class TaskManager extends CuratorAsyncManager {
     this.pendingTaskIdTranscoder = pendingTaskIdTranscoder;
     this.taskLoadBalancerUpdateTranscoder = taskLoadBalancerHistoryUpdateTranscoder;
     this.singularityEventListener = singularityEventListener;
+    this.taskCache = taskCache;
 
     this.serverId = serverId;
   }
@@ -273,7 +276,7 @@ public class TaskManager extends CuratorAsyncManager {
 
     });
 
-    return getAsync("active_tasks", children, taskTranscoder);
+    return getAsync("active_tasks", children, taskTranscoder, taskCache);
   }
 
   public List<SingularityTaskStatusHolder> getLastActiveTaskStatuses() {
@@ -472,7 +475,7 @@ public class TaskManager extends CuratorAsyncManager {
   public Optional<SingularityTask> getTask(SingularityTaskId taskId) {
     final String path = getTaskPath(taskId);
 
-    return getData(path, taskTranscoder);
+    return getData(path, taskTranscoder, Optional.of(taskCache));
   }
 
   public List<SingularityPendingTaskId> getPendingTaskIds() {
@@ -498,7 +501,7 @@ public class TaskManager extends CuratorAsyncManager {
       paths.add(getTaskPath(taskId));
     }
 
-    return Maps.uniqueIndex(getAsync("tasks_by_ids", paths, taskTranscoder), SingularityTaskIdHolder.getTaskIdFunction());
+    return Maps.uniqueIndex(getAsync("tasks_by_ids", paths, taskTranscoder, taskCache), SingularityTaskIdHolder.getTaskIdFunction());
   }
 
   private void createTaskAndDeletePendingTaskPrivate(SingularityTask task) throws Exception {
@@ -510,9 +513,13 @@ public class TaskManager extends CuratorAsyncManager {
     saveLastActiveTaskStatus(new SingularityTaskStatusHolder(task.getTaskId(), Optional.<TaskStatus>absent(), now, serverId, Optional.of(task.getOffer().getSlaveId().getValue())));
 
     try {
-      CuratorTransactionFinal transaction = curator.inTransaction().create().forPath(getTaskPath(task.getTaskId()), taskTranscoder.toBytes(task)).and();
+      final String path = getTaskPath(task.getTaskId());
+
+      CuratorTransactionFinal transaction = curator.inTransaction().create().forPath(path, taskTranscoder.toBytes(task)).and();
 
       transaction.create().forPath(getActivePath(task.getTaskId().getId())).and().commit();
+
+      taskCache.set(path, task);
     } catch (KeeperException.NodeExistsException nee) {
       LOG.error("Task or active path already existed for {}", task.getTaskId());
     }
@@ -600,6 +607,8 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public SingularityDeleteResult deleteTaskHistory(SingularityTaskId taskId) {
+    taskCache.delete(getTaskPath(taskId));
+
     return delete(getHistoryPath(taskId));
   }
 
