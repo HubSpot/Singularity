@@ -9,6 +9,9 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import javax.ws.rs.HEAD;
+
+import com.hubspot.baragon.models.RequestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,6 +119,24 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
   }
 
+  private SingularityLoadBalancerUpdate sendBaragonRequest(LoadBalancerRequestId loadBalancerRequestId, BaragonRequest loadBalancerRequest, LoadBalancerMethod method) {
+    try {
+      LOG.trace("Preparing to send request {}", loadBalancerRequest);
+
+      final BoundRequestBuilder requestBuilder = httpClient.preparePost(loadBalancerUri)
+        .addHeader(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
+        .setBody(objectMapper.writeValueAsBytes(loadBalancerRequest));
+
+      if (loadBalancerQueryParams.isPresent()) {
+        addAllQueryParams(requestBuilder, loadBalancerQueryParams.get());
+      }
+
+      return sendRequestWrapper(loadBalancerRequestId, method, requestBuilder.build(), BaragonRequestState.FAILED);
+    } catch (IOException e) {
+      return new SingularityLoadBalancerUpdate(BaragonRequestState.UNKNOWN, loadBalancerRequestId, Optional.of(e.getMessage()), System.currentTimeMillis(), method, Optional.of(loadBalancerUri));
+    }
+  }
+
   private LoadBalancerUpdateHolder sendRequest(LoadBalancerRequestId loadBalancerRequestId, Request request, BaragonRequestState onFailure) {
     try {
       LOG.trace("Sending LB {} request for {} to {}", request.getMethod(), loadBalancerRequestId, request.getUrl());
@@ -148,7 +169,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
   public SingularityLoadBalancerUpdate enqueue(LoadBalancerRequestId loadBalancerRequestId, SingularityRequest request, SingularityDeploy deploy, List<SingularityTask> add,
       List<SingularityTask> remove) {
     final List<String> serviceOwners = request.getOwners().or(Collections.<String> emptyList());
-    final Set<String> loadBalancerGroups = new HashSet<>(deploy.getLoadBalancerGroups().or(Collections.<String> emptyList()));
+    final Set<String> loadBalancerGroups = deploy.getLoadBalancerGroups().or(Collections.<String>emptySet());
     final BaragonService lbService = new BaragonService(request.getId(), serviceOwners, deploy.getServiceBasePath().get(), loadBalancerGroups, deploy.getLoadBalancerOptions().orNull());
 
     final List<UpstreamInfo> addUpstreams = tasksToUpstreams(add, loadBalancerRequestId.toString());
@@ -156,21 +177,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
     final BaragonRequest loadBalancerRequest = new BaragonRequest(loadBalancerRequestId.toString(), lbService, addUpstreams, removeUpstreams);
 
-    try {
-      LOG.trace("Deploy {} is preparing to send {}", deploy.getId(), loadBalancerRequest);
-
-      final BoundRequestBuilder requestBuilder = httpClient.preparePost(loadBalancerUri)
-          .addHeader(HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
-          .setBody(objectMapper.writeValueAsBytes(loadBalancerRequest));
-
-      if (loadBalancerQueryParams.isPresent()) {
-        addAllQueryParams(requestBuilder, loadBalancerQueryParams.get());
-      }
-
-      return sendRequestWrapper(loadBalancerRequestId, LoadBalancerMethod.ENQUEUE, requestBuilder.build(), BaragonRequestState.FAILED);
-    } catch (IOException e) {
-      return new SingularityLoadBalancerUpdate(BaragonRequestState.UNKNOWN, loadBalancerRequestId, Optional.of(e.getMessage()), System.currentTimeMillis(), LoadBalancerMethod.ENQUEUE, Optional.of(loadBalancerUri));
-    }
+    return sendBaragonRequest(loadBalancerRequestId, loadBalancerRequest, LoadBalancerMethod.ENQUEUE);
   }
 
   private List<UpstreamInfo> tasksToUpstreams(List<SingularityTask> tasks, String requestId) {
@@ -201,5 +208,16 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     }
 
     return sendRequestWrapper(loadBalancerRequestId, LoadBalancerMethod.CANCEL, requestBuilder.build(), BaragonRequestState.UNKNOWN);
+  }
+
+  @Override
+  public SingularityLoadBalancerUpdate delete(LoadBalancerRequestId loadBalancerRequestId, SingularityRequest request, SingularityDeploy deploy) {
+    final List<String> serviceOwners = request.getOwners().or(Collections.<String> emptyList());
+    final Set<String> loadBalancerGroups = deploy.getLoadBalancerGroups().or(Collections.<String> emptySet());
+    final BaragonService lbService = new BaragonService(request.getId(), serviceOwners, deploy.getServiceBasePath().get(), loadBalancerGroups, deploy.getLoadBalancerOptions().orNull());
+
+    final BaragonRequest loadBalancerRequest = new BaragonRequest(loadBalancerRequestId.toString(), lbService, Collections.<UpstreamInfo>emptyList(), Collections.<UpstreamInfo>emptyList(), Collections.<UpstreamInfo>emptyList(), Optional.<String>absent(), Optional.of(RequestAction.DELETE));
+
+    return sendBaragonRequest(loadBalancerRequestId, loadBalancerRequest, LoadBalancerMethod.DELETE);
   }
 }

@@ -476,4 +476,12 @@ public class RequestResource extends AbstractRequestResource {
     return newRequest;
   }
 
+  @GET
+  @PropertyFiltering
+  @Path("/lbcleanup")
+  @ApiOperation("Retrieve the list of tasks being cleaned from load balancers.")
+  public Iterable<String> getLbCleanupRequests() {
+    return authorizationHelper.filterAuthorizedRequestIds(user, requestManager.getLBCleanupRequestIds());
+  }
+
 }

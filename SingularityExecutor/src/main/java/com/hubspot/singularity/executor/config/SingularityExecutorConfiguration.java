@@ -2,6 +2,7 @@ package com.hubspot.singularity.executor.config;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
@@ -181,7 +182,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @Min(1)
   @JsonProperty
-  private int tailLogLinesToSave = 500;
+  private int tailLogLinesToSave = 2500;
 
   @NotEmpty
   @JsonProperty
@@ -217,6 +218,17 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @NotEmpty
   @JsonProperty
   private String procCgroupFormat = "/proc/%s/cgroup";
+
+  @JsonProperty
+  @NotEmpty
+  private List<String> artifactSignatureVerificationCommand = Arrays.asList("/usr/bin/gpg", "--verify", "{artifactSignaturePath}");
+
+  @JsonProperty
+  private boolean failTaskOnInvalidArtifactSignature = true;
+
+  @JsonProperty
+  @NotEmpty
+  private String signatureVerifyOut = "executor.gpg.out";
 
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
@@ -499,6 +511,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.dockerStopTimeout = dockerStopTimeout;
   }
 
+
   public String getCgroupsMesosCpuTasksFormat() {
     return cgroupsMesosCpuTasksFormat;
   }
@@ -513,6 +526,30 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public void setProcCgroupFormat(String procCgroupFormat) {
     this.procCgroupFormat = procCgroupFormat;
+  }
+
+  public List<String> getArtifactSignatureVerificationCommand() {
+    return artifactSignatureVerificationCommand;
+  }
+
+  public void setArtifactSignatureVerificationCommand(List<String> artifactSignatureVerificationCommand) {
+    this.artifactSignatureVerificationCommand = artifactSignatureVerificationCommand;
+  }
+
+  public boolean isFailTaskOnInvalidArtifactSignature() {
+    return failTaskOnInvalidArtifactSignature;
+  }
+
+  public void setFailTaskOnInvalidArtifactSignature(boolean failTaskOnInvalidArtifactSignature) {
+    this.failTaskOnInvalidArtifactSignature = failTaskOnInvalidArtifactSignature;
+  }
+
+  public String getSignatureVerifyOut() {
+    return signatureVerifyOut;
+  }
+
+  public void setSignatureVerifyOut(String signatureVerifyOut) {
+    this.signatureVerifyOut = signatureVerifyOut;
   }
 
   @Override

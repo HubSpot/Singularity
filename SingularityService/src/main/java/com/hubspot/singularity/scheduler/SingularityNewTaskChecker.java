@@ -13,6 +13,7 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -94,6 +95,7 @@ public class SingularityNewTaskChecker {
     return delaySeconds;
   }
 
+  @Timed
   // should only be called on tasks that are new and not part of a pending deploy.
   public void enqueueNewTaskCheck(SingularityTask task) {
     if (taskIdToCheck.containsKey(task.getTaskId().getId())) {
