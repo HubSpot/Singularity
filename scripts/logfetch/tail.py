@@ -51,9 +51,15 @@ class LogStreamer(threading.Thread):
     path = '{0}/{1}'.format(task, args.logfile)
     keep_trying = True
     try:
-      offset = self.get_initial_offset(uri, path, args)
+      params = {"path" : path}
+      logfile_response = requests.get(uri, params=params, headers=args.headers)
+      logfile_response.raise_for_status()
+      offset = long(logfile_response.json()['offset'])
     except ValueError:
-      sys.stderr.write(colored('Could not tail logs for task {0}, check that the task is still active and that the slave it runs on has not been decommissioned\n'.format(task), 'red'))
+      sys.stderr.write(colored('Could get initial offset for log in task {0}, check that the task is still active and that the slave it runs on has not been decommissioned\n'.format(task), 'red'))
+      keep_trying = False
+    except:
+      sys.stderr.write(colored('Could not find log file at path {1} for task {0}, check your -l arg and try again\n'.format(args.logfile, task), 'red'))
       keep_trying = False
     while keep_trying:
       try:
@@ -65,6 +71,7 @@ class LogStreamer(threading.Thread):
 
   def get_initial_offset(self, uri, path, args):
     params = {"path" : path}
+
     return long(requests.get(uri, params=params, headers=args.headers).json()['offset'])
 
   def fetch_new_log_data(self, uri, path, offset, args, task):
