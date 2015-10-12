@@ -27,9 +27,10 @@ def download_live_logs(args):
         logfile_name = '{0}-{1}'.format(task, log_file)
         if not args.logtype or (args.logtype and logfetch_base.log_matches(log_file, args.logtype.replace('logs/', ''))):
           if should_download(args, logfile_name, task):
+            replaced = logfetch_base.host_to_ip(uri)
             async_requests.append(
-              grequests.AsyncRequest('GET',uri ,
-                callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size, args.verbose),
+              grequests.AsyncRequest('GET',replaced ,
+                callback=generate_callback(replaced, args.dest, logfile_name, args.chunk_size, args.verbose),
                 params={'path' : '{0}/{1}/{2}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)},
                 headers=args.headers
               )
@@ -47,9 +48,10 @@ def download_live_logs(args):
         logfile_name = '{0}-{1}'.format(task, log_file)
         if not args.logtype or (args.logtype and logfetch_base.log_matches(log_file, args.logtype.replace('logs/', ''))):
           if should_download(args, logfile_name, task):
+            replaced = logfetch_base.host_to_ip(uri)
             async_requests.append(
-              grequests.AsyncRequest('GET',uri ,
-                callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size, args.verbose),
+              grequests.AsyncRequest('GET',replaced ,
+                callback=generate_callback(replaced, args.dest, logfile_name, args.chunk_size, args.verbose),
                 params={'path' : '{0}/{1}/logs/{2}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)},
                 headers=args.headers
               )

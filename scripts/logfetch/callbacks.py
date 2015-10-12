@@ -14,6 +14,7 @@ def generate_callback(request, destination, filename, chunk_size, verbose):
         sys.stderr.write(colored('Downloaded ', 'green') + colored(path, 'white') + '\n')
       else:
         sys.stderr.write(colored('.', 'green'))
+      f.close()
 
   return callback
 
