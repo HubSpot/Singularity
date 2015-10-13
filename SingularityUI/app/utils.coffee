@@ -109,6 +109,7 @@ class Utils
         results.unshift { name: "root", path: "" }
         results
 
+
     # Will make $el as tall as the page and will attach a scroll event
     # that shrinks it
     @animatedExpansion: ($el, shrinkCallback) ->
@@ -172,5 +173,15 @@ class Utils
             $(window).on 'scroll', checkForShrink
             $el.on       'shrink', shrink
         , 100
+
+
+    # Will scroll to a DOM node via a passed in jQuery selector
+    # `offset` is an optional pixel offset from the selector
+    @scrollTo: (path, offset=50) ->
+        location = $("#{path}").offset().top - offset
+        $('html, body').animate 'scrollTop' : location+'px', 1000
+
+
+
 
 module.exports = Utils

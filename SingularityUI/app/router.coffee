@@ -48,6 +48,9 @@ class Router extends Backbone.Router
         'task/:taskId/tail/*path': 'tail'
 
         'racks(/)': 'racks'
+        'racks/:state(/)': 'racks'
+
+        'slaves/:state(/)': 'slaves'
         'slaves(/)': 'slaves'
 
         '*anything': 'notFound'
@@ -86,11 +89,11 @@ class Router extends Backbone.Router
         offset = window.location.hash.substr(1) || null
         app.bootstrapController new TailController {taskId, path, offset}
 
-    racks: ->
-        app.bootstrapController new RacksController
+    racks: (state = 'all') ->
+        app.bootstrapController new RacksController {state}
 
-    slaves: ->
-        app.bootstrapController new SlavesController
+    slaves: (state = 'all') ->
+        app.bootstrapController new SlavesController {state}
 
     notFound: ->
         app.bootstrapController new NotFoundController
