@@ -35,6 +35,8 @@ public class IndexView extends View {
 
   private final String commonHostnameSuffixToOmit;
 
+  private final String taskS3LogOmitPrefix;
+
   public IndexView(String singularityUriBase, String appRoot, SingularityConfiguration configuration) {
     super("index.mustache");
 
@@ -68,6 +70,8 @@ public class IndexView extends View {
     this.finishedTaskLogPath = configuration.getUiConfiguration().getFinishedTaskLogPath();
 
     this.commonHostnameSuffixToOmit = configuration.getCommonHostnameSuffixToOmit().or("");
+
+    this.taskS3LogOmitPrefix = configuration.getUiConfiguration().getTaskS3LogOmitPrefix();
   }
 
   public String getAppRoot() {
@@ -140,6 +144,10 @@ public class IndexView extends View {
 
   public String getCommonHostnameSuffixToOmit() {
     return commonHostnameSuffixToOmit;
+  }
+
+  public String getTaskS3LogOmitPrefix() {
+    return taskS3LogOmitPrefix;
   }
 
   @Override

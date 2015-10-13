@@ -120,3 +120,11 @@ Handlebars.registerHelper 'getLabelClass', (state) ->
             'danger'
         else
             'default'
+
+Handlebars.registerHelper 'trimS3File', (filename, taskId) ->
+    unless config.taskS3LogOmitPrefix
+        return filename
+
+    finalRegex = config.taskS3LogOmitPrefix.replace('%taskId', taskId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).replace('%index', '[0-9]+').replace('%s', '[0-9]+')
+
+    return filename.replace(new RegExp(finalRegex), '')

@@ -53,6 +53,7 @@ exports.config =
             runningTaskLogPath:  process.env.SINGULARITY_RUNNING_TASK_LOG_PATH ? "stdout"
             finishedTaskLogPath: process.env.SINGULARITY_FINISHED_TASK_LOG_PATH ? "stdout"
             commonHostnameSuffixToOmit: process.env.SINGULARITY_COMMON_HOSTNAME_SUFFIX_TO_OMIT ? ""
+            taskS3LogOmitPrefix: process.env.SINGULARITY_TASK_S3_LOG_OMIT_PREFIX ? ''
 
         compiledTemplate = handlebars.compile(indexTemplate)(templateData)
         fs.writeFileSync destination, compiledTemplate
