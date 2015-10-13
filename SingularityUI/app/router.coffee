@@ -49,7 +49,7 @@ class Router extends Backbone.Router
 
         'racks(/)': 'racks'
         'racks/:state(/)': 'racks'
-    
+
         'slaves/:state(/)': 'slaves'
         'slaves(/)': 'slaves'
 

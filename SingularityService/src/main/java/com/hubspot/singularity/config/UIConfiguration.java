@@ -60,14 +60,6 @@ public class UIConfiguration {
   @NotNull
   private List<ShellCommandDescriptor> shellCommands = Collections.emptyList();
 
-  public String getRunningTaskLogPath() {
-    return runningTaskLogPath;
-  }
-
-  public String getFinishedTaskLogPath() {
-    return finishedTaskLogPath;
-  }
-
   private boolean hideNewDeployButton = false;
   private boolean hideNewRequestButton = false;
 
@@ -77,6 +69,9 @@ public class UIConfiguration {
    */
   @JsonProperty
   private String rootUrlMode = RootUrlMode.INDEX_CATCHALL.name();
+
+  @NotNull
+  private String taskS3LogOmitPrefix = "";
 
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
@@ -145,6 +140,7 @@ public class UIConfiguration {
   public void setFinishedTaskLogPath(String finishedTaskLogPath) {
     this.finishedTaskLogPath = finishedTaskLogPath;
   }
+
   public List<ShellCommandDescriptor> getShellCommands() {
     return shellCommands;
   }
@@ -153,4 +149,19 @@ public class UIConfiguration {
     this.shellCommands = shellCommands;
   }
 
+  public String getRunningTaskLogPath() {
+    return runningTaskLogPath;
+  }
+
+  public String getFinishedTaskLogPath() {
+    return finishedTaskLogPath;
+  }
+
+  public String getTaskS3LogOmitPrefix() {
+    return taskS3LogOmitPrefix;
+  }
+
+  public void setTaskS3LogOmitPrefix(String taskS3LogOmitPrefix) {
+    this.taskS3LogOmitPrefix = taskS3LogOmitPrefix;
+  }
 }

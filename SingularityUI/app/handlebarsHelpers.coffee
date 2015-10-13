@@ -142,3 +142,11 @@ Handlebars.registerHelper 'isSingularityExecutor', (value, options) ->
         options.fn(@)
     else
         options.inverse(@)
+
+Handlebars.registerHelper 'trimS3File', (filename, taskId) ->
+    unless config.taskS3LogOmitPrefix
+        return filename
+
+    finalRegex = config.taskS3LogOmitPrefix.replace('%taskId', taskId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).replace('%index', '[0-9]+').replace('%s', '[0-9]+')
+
+    return filename.replace(new RegExp(finalRegex), '')

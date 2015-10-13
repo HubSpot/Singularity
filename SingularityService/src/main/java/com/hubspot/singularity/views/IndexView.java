@@ -41,6 +41,8 @@ public class IndexView extends View {
 
   private final String shellCommands;
 
+  private final String taskS3LogOmitPrefix;
+
   public IndexView(String singularityUriBase, String appRoot, SingularityConfiguration configuration, ObjectMapper mapper) {
     super("index.mustache");
 
@@ -81,6 +83,8 @@ public class IndexView extends View {
     } catch (JsonProcessingException e) {
       throw Throwables.propagate(e);
     }
+
+    this.taskS3LogOmitPrefix = configuration.getUiConfiguration().getTaskS3LogOmitPrefix();
   }
 
   public String getAppRoot() {
@@ -157,6 +161,10 @@ public class IndexView extends View {
 
   public String getShellCommands() {
     return shellCommands;
+  }
+
+  public String getTaskS3LogOmitPrefix() {
+    return taskS3LogOmitPrefix;
   }
 
   @Override
