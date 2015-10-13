@@ -53,6 +53,7 @@ class RequestFormEdit extends RequestFormBaseView
         @$("[data-tooltip='cannot-change']").tooltip
             title: 'Option cannot be altered after creation'
             placement: 'top'
+            container: 'body'
 
     saveRequest: ->
         if _.contains ['RUN_ONCE', 'ON_DEMAND'], @requestType
