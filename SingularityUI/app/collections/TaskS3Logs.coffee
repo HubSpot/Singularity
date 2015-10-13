@@ -10,4 +10,9 @@ class TaskS3Logs extends ClientsidePaginableCollection
 
     initialize: (models, { @taskId }) =>
 
+    parse: (model) ->
+        for m in model
+            m.taskId = @taskId
+        model
+
 module.exports = TaskS3Logs

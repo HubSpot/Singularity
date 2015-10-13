@@ -40,14 +40,14 @@ baragonservice:
   image: hubspot/baragonservice:0.1.9
   net: host
   environment:
-    BARAGON_TYPE: service
-    BARAGON_PORT: 8080
+    - DOCKER_HOST
+    - BARAGON_PORT=8080
+    - BARAGON_UI_BASE=/baragon/v2
 
 baragonagent:
   image: hubspot/baragonagent:0.1.9
   net: host
   environment:
-    BARAGON_TYPE: agent
     NGINX_PORT: 80
     BARAGON_PORT: 8882
     BARAGON_AGENT_GROUP: test
