@@ -143,7 +143,7 @@ These settings should live under the "mesos" field inside the root configuration
 | frameworkName | null | | string |
 | frameworkId | null | | string |
 | frameworkFailoverTimeout | 0.0 | | double |
-| checkpoint | false | | boolean |
+| checkpoint | true | | boolean |
 
 
 #### Resource Limits ####
