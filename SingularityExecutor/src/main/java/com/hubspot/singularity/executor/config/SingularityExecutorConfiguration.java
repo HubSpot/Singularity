@@ -219,6 +219,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private String procCgroupFormat = "/proc/%s/cgroup";
 
+  @NotEmpty
+  @JsonProperty
+  private String switchUserCommandFormat = "sudo -E -u %s";
+
   @JsonProperty
   @NotEmpty
   private List<String> artifactSignatureVerificationCommand = Arrays.asList("/usr/bin/gpg", "--verify", "{artifactSignaturePath}");
@@ -528,6 +532,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.procCgroupFormat = procCgroupFormat;
   }
 
+  public String getSwitchUserCommandFormat() {
+    return switchUserCommandFormat;
+  }
+
+  public void setSwitchUserCommandFormat(String switchUserCommandFormat) {
+    this.switchUserCommandFormat = switchUserCommandFormat;
+  }
+
   public List<String> getArtifactSignatureVerificationCommand() {
     return artifactSignatureVerificationCommand;
   }
@@ -587,8 +599,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", useLocalDownloadService=" + useLocalDownloadService +
             ", localDownloadServiceTimeoutMillis=" + localDownloadServiceTimeoutMillis +
             ", maxTaskThreads=" + maxTaskThreads +
-            ", dockerPrefix=" + dockerPrefix +
+            ", dockerPrefix='" + dockerPrefix + '\'' +
             ", dockerStopTimeout=" + dockerStopTimeout +
+            ", cgroupsMesosCpuTasksFormat='" + cgroupsMesosCpuTasksFormat + '\'' +
+            ", procCgroupFormat='" + procCgroupFormat + '\'' +
+            ", switchUserCommandFormat='" + switchUserCommandFormat + '\'' +
+            ", artifactSignatureVerificationCommand=" + artifactSignatureVerificationCommand +
+            ", failTaskOnInvalidArtifactSignature=" + failTaskOnInvalidArtifactSignature +
+            ", signatureVerifyOut='" + signatureVerifyOut + '\'' +
             ']';
   }
 
