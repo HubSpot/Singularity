@@ -4,12 +4,12 @@
         <div>
             <a class='headline-link' href="{{appRoot}}/requests"><h2>Requests</h2></a>
         </div>
-        <div class="panel-body">       
+        <div class="panel-body">
             <div class="row">
                 <div class="col-md-3 col-sm-3 hidden-xs chart">
                     <div class='chart__column'>
                         {{#each requests}}
-                            <span data-state-attribute='{{ attribute }}' style='height: {{percent}}%' title="{{count}} {{label}}" class='chart__data-point chart-fill-{{ type }}'></span>
+                            <span data-type="column" data-state-attribute='{{ attribute }}' style='height: {{percent}}%' title="{{count}} {{label}}" class='chart__data-point chart-fill-{{ type }}'></span>
                         {{/each}}
                     </div>
                     <h5 class='text-center'>{{totalRequests}} Total</h5>
@@ -17,7 +17,7 @@
                 <div class="col-md-9 col-sm-9">
                     <div class="row">
                         <div class="col-md-8">
-                            <ul class="list-group list-group--links list-group--plain list-group--slim">
+                            <ul class="list-group list-group--links list-group--plain list-group--slim list-large">
                                 {{#each requests}}
                                 <li class="list-group-item">
                                     {{#if link}}
@@ -30,7 +30,7 @@
                                 </li>
                                 {{/each}}
                             </ul>
-                            <ul class='list-plain'>
+                            <ul class='list-plain list-large'>
                                 <li>
                                     <strong>{{state.overProvisionedRequests}}</strong>
                                     Over Provisioned
@@ -67,7 +67,7 @@
                         <div class="col-md-8">
 
 
-                            <ul class="list-group list-group--links list-group--plain list-group--slim">
+                            <ul class="list-group list-group--links list-group--plain list-group--slim list-large">
                                 {{#each tasks}}
                                 <li class="list-group-item">
                                     <a class='chart__legend-link {{#unless link}}inactive-link{{/unless}}' {{#if link}}href="{{appRoot}}{{ link }}"{{/if}}>
@@ -76,7 +76,7 @@
                                 </li>
                                 {{/each}}
                             </ul>
-                            <ul class='list-plain'>
+                            <ul class='list-plain list-large'>
                                 <li>
                                     Max Task Lag:
                                     <span>
@@ -97,10 +97,10 @@
         <div>
             <h2>Racks</h2>
         </div>
-        <ul class="list-group list-group--links list-group--plain list-group--slim">
+        <ul class="list-group list-group--links list-group--plain list-group--slim list-large">
             <li class='list-group-item'>
                 <a href="{{appRoot}}/racks/active">
-                    <span data-state-attribute='activeRacks'>{{state.activeRacks}}</span> 
+                    <span data-state-attribute='activeRacks'>{{state.activeRacks}}</span>
                     Active Racks
                 </a>
             </li>
@@ -122,29 +122,29 @@
         <div>
             <h2>Slaves</h2>
         </div>
-        <ul class="list-group list-group--links list-group--plain list-group--slim">
+        <ul class="list-group list-group--links list-group--plain list-group--slim list-large">
             <li class="list-group-item">
-                <a href="{{appRoot}}/slaves/active"> 
+                <a href="{{appRoot}}/slaves/active">
                     <span data-state-attribute='activeSlaves'>{{state.activeSlaves}} </span>
-                    Active Slaves 
+                    Active Slaves
                 </a>
             </li>
             <li class="list-group-item">
-                <a href="{{appRoot}}/slaves/decommission"> 
+                <a href="{{appRoot}}/slaves/decommission">
                     <span data-state-attribute='decomissioningSlaves'>{{state.decomissioningSlaves}} </span>
                     Decommissioning Slaves
                 </a>
             </li>
             <li class="list-group-item">
-                <a {{#ifGT state.deadSlaves 0}}class='color-warning'{{/ifGT}} href="{{appRoot}}/slaves/inactive"> 
+                <a {{#ifGT state.deadSlaves 0}}class='color-warning'{{/ifGT}} href="{{appRoot}}/slaves/inactive">
                     <span data-state-attribute='deadSlaves'>{{state.deadSlaves}} </span>
                     Inactive Slaves
                 </a>
             </li>
             <li class="list-group-item">
-                <a {{#ifGT state.unknownSlaves 0}}class='color-warning'{{/ifGT}} href="{{appRoot}}/slaves/inactive"> 
+                <a {{#ifGT state.unknownSlaves 0}}class='color-warning'{{/ifGT}} href="{{appRoot}}/slaves/inactive">
                     <span data-state-attribute='unknownSlaves'>{{state.unknownSlaves}} </span>
-                    Unknown Slaves 
+                    Unknown Slaves
                 </a>
             </span>
             </li>
@@ -154,7 +154,7 @@
         <div>
             <h2>Deploys</h2>
         </div>
-        <ul class="list-group list-group--links list-group--plain list-group--slim">
+        <ul class="list-group list-group--links list-group--plain list-group--slim list-large">
             <li class="list-group-item {{#ifLT state.numDeploys 2}}text-muted{{/ifLT}}">
                 <strong data-state-attribute='numDeploys'>{{state.numDeploys}}</strong>
                 Active Deploys

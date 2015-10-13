@@ -38,13 +38,13 @@ class StatusView extends View
 
             for attributeName, changes of changedNumbers
                 changeClassName = "changed-direction-#{ changes.direction }"
-                $attribute = @$el.find("""[data-state-attribute="#{ attributeName }"]""")
+                $attribute = @$el.find("""[data-state-attribute="#{ attributeName }"]""").not('[data-type="column"]')
                 $bigNumber = $attribute.closest('.list-group-item')
                 $bigNumber.find('a').addClass(changeClassName).append("<span class='changeDifference'>#{changes.difference}</span>")
                 $attribute.html @model.attributes[attributeName]
 
-                do ($bigNumber, changeClassName) -> 
-                    setTimeout (-> 
+                do ($bigNumber, changeClassName) ->
+                    setTimeout (->
                         $bigNumber.find('a').removeClass(changeClassName)
                                   .find('changeDifference').remove().end()
                                   .find('.changeDifference').fadeOut(1500)
