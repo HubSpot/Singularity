@@ -21,7 +21,7 @@ public class MesosConfiguration {
 
   private int defaultMemory = 64;
 
-  private boolean checkpoint = false;
+  private boolean checkpoint = true;
 
   @NotNull
   private String rackIdAttributeKey = "rackid";
