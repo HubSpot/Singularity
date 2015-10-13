@@ -2,14 +2,18 @@ import os
 import sys
 import gzip
 import fnmatch
+import socket
 from datetime import datetime, timedelta
 from termcolor import colored
 from singularity_request import get_json_response
+from urlparse import urlparse
 
 BASE_URI_FORMAT = '{0}{1}'
 ALL_REQUESTS = '/requests'
 REQUEST_TASKS_FORMAT = '/history/request/{0}/tasks'
 ACTIVE_TASKS_FORMAT = '/history/request/{0}/tasks/active'
+
+CACHED_ADDRS = {}
 
 def unpack_logs(args, logs):
   successful = []
@@ -92,3 +96,24 @@ def is_in_date_range(args, timestamp):
     return False if (timstamp_datetime < args.start or timstamp_datetime > args.end) else True
   else:
     return False if timedelta.days < args.start else True
+
+def host_to_ip(address):
+  parsed_url = urlparse(address)
+  ip = getIP(parsed_url.netloc)
+  if ip:
+    CACHED_ADDRS[parsed_url.netloc] = ip
+    parsed_url = parsed_url._replace(netloc=ip.replace('\'', ''))
+  print parsed_url.geturl()
+  return parsed_url.geturl()
+
+def getIP(d):
+    try:
+        if d in CACHED_ADDRS:
+          return CACHED_ADDRS[d]
+        else:
+          data = socket.gethostbyname(d)
+          ip = repr(data)
+        return ip
+    except Exception as e:
+        print e
+        return False

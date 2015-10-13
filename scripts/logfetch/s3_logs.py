@@ -25,8 +25,9 @@ def download_s3_logs(args):
         if args.verbose:
           sys.stderr.write(colored('Including log {0}'.format(filename), 'blue') + '\n')
         if not already_downloaded(args.dest, filename):
+          url = logfetch_base.host_to_ip(log_file['getUrl'])
           async_requests.append(
-            grequests.AsyncRequest('GET', log_file['getUrl'], callback=generate_callback(log_file['getUrl'], args.dest, filename, args.chunk_size, args.verbose), headers=args.headers)
+            grequests.AsyncRequest('GET', url, callback=generate_callback(url, args.dest, filename, args.chunk_size, args.verbose), headers=args.headers)
           )
         else:
           if args.verbose:
