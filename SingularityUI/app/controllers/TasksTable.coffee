@@ -11,12 +11,14 @@ TasksTableView = require '../views/tasks'
 class TasksTableController extends Controller
 
     initialize: ({@state, @searchFilter}) ->
+        @title 'Tasks'
+
         if @state is 'decommissioning'
             @collections.tasks = new Tasks [], state: 'active'
         else if @state is 'scheduled'
             @collections.tasks = new Tasks [], {state: 'scheduled', addPropertyString: 'pendingTask'}
             # @collections.tasks.setPropertyString('pendingTask')
-            
+
         else
             @collections.tasks = new Tasks [], {@state}
         @collections.slaves = new Slaves []
@@ -29,7 +31,7 @@ class TasksTableController extends Controller
 
         # Fetch a pending task's full details
         @view.on 'getPendingTask', (task) => @getPendingTask(task)
-        
+
         @collections.slaves.fetch()
         @collections.tasks.fetch()
         app.showView @view
