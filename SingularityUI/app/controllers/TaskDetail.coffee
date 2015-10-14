@@ -146,7 +146,7 @@ class TaskDetailController extends Controller
             if current > (avg * threshold)
                 alerts.push
                   title: 'Warning:',
-                  message: 'This scheduled task has been running longer than twice the average for the request and may be stuck.',
+                  message: "This scheduled task has been running longer than <code>#{threshold}</code> times average for the request and may be stuck.",
                   level: 'warning'
         # Was this task killed by a decommissioning slave?
         if !task.get('isStillRunning')
