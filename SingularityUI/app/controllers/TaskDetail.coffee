@@ -7,6 +7,8 @@ TaskS3Logs = require '../collections/TaskS3Logs'
 TaskFiles = require '../collections/TaskFiles'
 TaskCleanups = require '../collections/TaskCleanups'
 Deploys = require '../collections/Deploys'
+DeployDetails = require '../models/DeployDetails'
+Alerts = require '../collections/Alerts'
 
 FileBrowserSubview = require '../views/fileBrowserSubview'
 
@@ -32,6 +34,7 @@ class TaskDetailController extends Controller
         resourceUsage:              require '../templates/taskDetail/taskResourceUsage'
         shellCommands:              require '../templates/taskDetail/taskShellCommands'
         latestLog:                  require '../templates/taskDetail/taskLatestLog'
+        alerts:                     require '../templates/alerts'
 
     initialize: ({@taskId, @filePath}) ->
         @title @taskId
@@ -53,6 +56,8 @@ class TaskDetailController extends Controller
         @collections.taskCleanups = new TaskCleanups
 
         @collections.pendingDeploys = new Deploys state: 'pending'
+
+        @collections.alerts = new Alerts
 
         #
         # Subviews
@@ -109,6 +114,10 @@ class TaskDetailController extends Controller
             model: @models.task
             template: @templates.shellCommands
 
+        @subviews.alerts = new SimpleSubview
+            collection:    @collections.alerts
+            template:      @templates.alerts
+
         #
         # Getting stuff in gear
         #
@@ -136,6 +145,34 @@ class TaskDetailController extends Controller
                 app.caughtError()
                 delete @models.resourceUsage
 
+    getAlerts: (deployInfo) =>
+        task = @models.task
+        alerts = []
+        # Is this a scheduled task that has been running much longer than previous ones?
+        if task.attributes.task.taskRequest.request.requestType == 'SCHEDULED' and task.get('isStillRunning')
+            avg = deployInfo.get('deployStatistics')?.averageRuntimeMillis
+            current =  new Date().getTime() - task.get('task').taskId.startedAt
+            threshold = window.config.warnIfScheduledJobIsRunningPastNextRunPct / 100
+            # Alert if current uptime is longer than the average * the configurable percentage
+            if current > (avg * threshold)
+                alerts.push
+                  title: 'Warning:',
+                  message: "This scheduled task has been running longer than <code>#{threshold}</code> times average for the request and may be stuck.",
+                  level: 'warning'
+        # Was this task killed by a decommissioning slave?
+        if !task.get('isStillRunning')
+            updates = task.get('taskUpdates')
+            decomMessage = updates.filter (u) =>
+                return u.statusMessage?.indexOf('DECOMISSIONING') != -1 and u.taskState == 'TASK_CLEANING'
+            killedMessage = updates.filter (u) =>
+                return u.taskState == 'TASK_KILLED'
+            if decomMessage.length > 0 and killedMessage.length > 0
+                alerts.push
+                  title: 'Alert:',
+                  message: 'This task was killed due to a slave decommissioning.',
+                  level: 'danger'
+        return alerts
+
     refresh: ->
         @resourcesFetched = false
 
@@ -146,6 +183,17 @@ class TaskDetailController extends Controller
         @models.task.fetch()
             .done =>
                 @fetchResourceUsage() if @models.task.get('isStillRunning')
+            .success =>
+                requestId = @models.task.attributes.task.taskRequest.request.id
+                deployId = @models.task.attributes.task.taskRequest.deploy.id
+                deployInfo = new DeployDetails
+                  deployId: deployId
+                  requestId: requestId
+                deployInfo.fetch().success =>
+                    alerts = @getAlerts deployInfo
+                    @collections.alerts.reset()
+                    for alert in alerts
+                        @collections.alerts.add alert
             .error =>
                 # If this 404s the task doesn't exist
                 app.caughtError()
