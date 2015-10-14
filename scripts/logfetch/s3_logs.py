@@ -2,6 +2,7 @@ import os
 import sys
 import grequests
 import logfetch_base
+import time
 from termcolor import colored
 from callbacks import generate_callback
 from singularity_request import get_json_response
@@ -53,17 +54,18 @@ def already_downloaded(dest, filename):
   return (os.path.isfile('{0}/{1}'.format(dest, filename.replace('.gz', '.log'))) or os.path.isfile('{0}/{1}'.format(dest, filename)))
 
 def logs_for_all_requests(args):
+  s3_params = {'start': int(time.mktime(args.start.timetuple()) * 1000), 'end': int(time.mktime(args.end.timetuple()) * 1000)}
   if args.taskId:
-    return get_json_response(s3_task_logs_uri(args, args.taskId), args)
+    return get_json_response(s3_task_logs_uri(args, args.taskId), args, s3_params)
   else:
     tasks = logfetch_base.tasks_for_requests(args)
     logs = []
     for task in tasks:
-      s3_logs = get_json_response(s3_task_logs_uri(args, task), args)
+      s3_logs = get_json_response(s3_task_logs_uri(args, task), args, s3_params)
       logs = logs + s3_logs if s3_logs else logs
     sys.stderr.write(colored('Also searching s3 history...\n', 'cyan'))
     for request in logfetch_base.all_requests(args):
-      s3_logs = get_json_response(s3_request_logs_uri(args, request), args)
+      s3_logs = get_json_response(s3_request_logs_uri(args, request), args, s3_params)
       logs = logs + s3_logs if s3_logs else logs
     return [dict(t) for t in set([tuple(l.items()) for l in logs])] # remove any duplicates
 
