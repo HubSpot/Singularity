@@ -16,6 +16,7 @@ class RequestView extends View
 
             'click [data-action="remove"]': 'removeRequest'
             'click [data-action="run-request-now"]': 'runRequest'
+            'click [data-action="rerun-task"]': 'rerunTask'
             'click [data-action="pause"]': 'pauseRequest'
             'click [data-action="scale"]': 'scaleRequest'
             'click [data-action="unpause"]': 'unpauseRequest'
@@ -62,6 +63,23 @@ class RequestView extends View
 
     runRequest: (e) =>
         @model.promptRun (data) =>
+            # If user wants to redirect to a file after the task starts
+            if data.autoTail is 'on'
+                autoTailer = new AutoTailer({
+                    requestId: @requestId
+                    autoTailFilename: data.filename
+                    autoTailTimestamp: +new Date()
+                })
+
+                autoTailer.startAutoTailPolling()
+
+            else
+                @trigger 'refreshrequest'
+                setTimeout ( => @trigger 'refreshrequest'), 2500
+
+    rerunTask: (e) =>
+        taskId = e.target.getAttribute 'data-taskId'
+        @model.promptRerun taskId, (data) =>
             # If user wants to redirect to a file after the task starts
             if data.autoTail is 'on'
                 autoTailer = new AutoTailer({
