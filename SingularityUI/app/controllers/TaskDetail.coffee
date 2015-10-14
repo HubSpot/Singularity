@@ -7,7 +7,7 @@ TaskS3Logs = require '../collections/TaskS3Logs'
 TaskFiles = require '../collections/TaskFiles'
 TaskCleanups = require '../collections/TaskCleanups'
 Deploys = require '../collections/Deploys'
-RequestHistoricalTasks = require '../collections/RequestHistoricalTasks'
+DeployDetails = require '../models/DeployDetails'
 Alerts = require '../collections/Alerts'
 
 FileBrowserSubview = require '../views/fileBrowserSubview'
@@ -132,17 +132,12 @@ class TaskDetailController extends Controller
                 app.caughtError()
                 delete @models.resourceUsage
 
-    getAlerts: (requestTaskHistory) =>
+    getAlerts: (deployInfo) =>
         task = @models.task
         alerts = []
         # Is this a scheduled task that has been running much longer than previous ones?
         if task.attributes.task.taskRequest.request.requestType == 'SCHEDULED' and task.get('isStillRunning')
-            times = requestTaskHistory.models.map (t) =>
-                return t.get('updatedAt') - t.get('taskId').startedAt
-            avg = times.reduce (p, c) ->
-                return p + c
-
-            avg = Math.round avg / times.length
+            avg = deployInfo.get('deployStatistics')?.averageRuntimeMillis
             current =  new Date().getTime() - task.get('task').taskId.startedAt
             # Alert if current uptime is longer than twice the average
             if current > (avg * 2)
@@ -150,7 +145,7 @@ class TaskDetailController extends Controller
                   title: 'Warning:',
                   message: 'This scheduled task has been running longer than twice the average for the request and may be stuck.',
                   level: 'warning'
-        # Was this task killed by a discomissioning slave?
+        # Was this task killed by a decommissioning slave?
         if !task.get('isStillRunning')
             updates = task.get('taskUpdates')
             decomMessage = updates.filter (u) =>
@@ -176,9 +171,12 @@ class TaskDetailController extends Controller
                 @fetchResourceUsage() if @models.task.get('isStillRunning')
             .success =>
                 requestId = @models.task.attributes.task.taskRequest.request.id
-                taskHistory = new RequestHistoricalTasks [], {requestId}
-                taskHistory.fetch().success =>
-                    alerts = @getAlerts taskHistory
+                deployId = @models.task.attributes.task.taskRequest.deploy.id
+                deployInfo = new DeployDetails
+                  deployId: deployId
+                  requestId: requestId
+                deployInfo.fetch().success =>
+                    alerts = @getAlerts deployInfo
                     @collections.alerts.reset()
                     for alert in alerts
                         @collections.alerts.add alert
