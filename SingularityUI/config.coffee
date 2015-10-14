@@ -28,7 +28,7 @@ exports.config =
 
     # When running SingularityUI via brunch server we need to make an index.html for it
     # based on the template that's shared with SingularityService
-    # 
+    #
     # After we compile the static files, compile index.html using some required configs
     onCompile: =>
         destination = path.resolve @config.paths.public, 'index.html'
@@ -54,6 +54,7 @@ exports.config =
             finishedTaskLogPath: process.env.SINGULARITY_FINISHED_TASK_LOG_PATH ? "stdout"
             commonHostnameSuffixToOmit: process.env.SINGULARITY_COMMON_HOSTNAME_SUFFIX_TO_OMIT ? ""
             taskS3LogOmitPrefix: process.env.SINGULARITY_TASK_S3_LOG_OMIT_PREFIX ? ''
+            warnIfScheduledJobIsRunningPastNextRunPct: process.env.SINGULARITY_WARN_IF_SCHEDULED_JOB_IS_RUNNING_PAST_NEXT_RUN_PCT ? 200
 
         compiledTemplate = handlebars.compile(indexTemplate)(templateData)
         fs.writeFileSync destination, compiledTemplate
