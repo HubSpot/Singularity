@@ -122,21 +122,11 @@ class TasksView extends View
         tasks = @currentTasks.slice(@renderProgress, newProgress)
         @renderProgress = newProgress
 
-        decommissioning_hosts = new Slaves(
-            @attributes.slaves.filter (model) ->
-                model.attributes.state in ['DECOMMISSIONING','DECOMISSIONING', 'DECOMMISSIONED','DECOMISSIONED', 'STARTING_DECOMMISSION', 'STARTING_DECOMISSION']
-        ).map((model) ->
-            model.get('host')
-        )
-        if decommissioning_hosts.length is 0
-            hosts = 'none'
-        else
-            hosts = decommissioning_hosts.join().replace(/_/g, "-")
-
+        decomTasks = @attributes.cleaning.pluck('taskId')
         $contents = @bodyTemplate
             tasks: tasks
             rowsOnly: true
-            decommissioning_hosts: hosts
+            decomissioning_tasks: decomTasks
 
         $table = @$ ".table-staged table"
         $tableBody = $table.find "tbody"

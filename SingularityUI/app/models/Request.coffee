@@ -7,6 +7,7 @@ runTemplate = require '../templates/vex/requestRun'
 removeTemplate = require '../templates/vex/requestRemove'
 bounceTemplate = require '../templates/vex/requestBounce'
 exitCooldownTemplate = require '../templates/vex/exitCooldown'
+TaskHistory = require '../models/TaskHistory'
 
 class Request extends Model
 
@@ -79,7 +80,7 @@ class Request extends Model
           options.processData = false
 
         $.ajax options
-        
+
     scale: (confirmedOrPromptData) =>
         $.ajax
           url: "#{ @url() }/instances?user=#{ app.getUsername() }"
@@ -88,7 +89,7 @@ class Request extends Model
           data:         JSON.stringify
               id:      @get "id"
               instances: confirmedOrPromptData
-          
+
     bounce: =>
         $.ajax
             url:  "#{ @url() }/bounce?user=#{ app.getUsername() }"
@@ -119,7 +120,7 @@ class Request extends Model
 
     promptScale: (callback) =>
         vex.dialog.prompt
-            message: scaleTemplate 
+            message: scaleTemplate
                 id: @get "id"
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.YES), text: 'Scale'
@@ -139,8 +140,12 @@ class Request extends Model
 
     promptRun: (callback) =>
         vex.dialog.prompt
-            message: ""
-            input: runTemplate id: @get "id"
+            message: "<h3>Run Task</h3>"
+            input: runTemplate
+                id: @get "id"
+                prefix: @localStorageCommandLineInputKeyPrefix
+                commands: localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
+
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.YES), text: 'Run now'
                 vex.dialog.buttons.NO
@@ -148,7 +153,7 @@ class Request extends Model
 
             beforeClose: =>
                 return if @data is false
-                
+
                 fileName = @data.filename.trim()
                 commandLineInput = @data.commandLineInput.trim()
 
@@ -157,7 +162,16 @@ class Request extends Model
                     return false
 
                 else
-                    localStorage.setItem(@localStorageCommandLineInputKeyPrefix + @id, commandLineInput) if commandLineInput?
+                    history = localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
+
+                    if history?
+                        last = history.split(",")[history.split(",").length - 1]
+                        history += ","
+                    else
+                        history = ""
+
+                    if commandLineInput != last
+                        localStorage.setItem(@localStorageCommandLineInputKeyPrefix + @id, history + commandLineInput) if commandLineInput?
                     localStorage.setItem('taskRunRedirectFilename', fileName) if filename?
                     localStorage.setItem('taskRunAutoTail', @data.autoTail)
                     @data.id = @get 'id'
@@ -165,13 +179,63 @@ class Request extends Model
                     @run( @data.commandLineInput ).done callback( @data )
                     return true
 
-            afterOpen: => 
+            afterOpen: =>
                 $('#filename').val localStorage.getItem('taskRunRedirectFilename')
-                $('#commandLineInput').val localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
                 $('#autoTail').prop 'checked', (localStorage.getItem('taskRunAutoTail') is 'on')
+                cmdString = localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
+                commands = if cmdString then cmdString.split(",").reverse() else []
+                $('#commandLineInput').val commands[0]
+                localStorage.setItem(@localStorageCommandLineInputKeyPrefix + "historyIndex", 0);
+                localStorage.setItem(@localStorageCommandLineInputKeyPrefix + "historyLength", commands.length);
 
             callback: (data) =>
                 @data = data
+
+
+    promptRerun: (taskId, callback) =>
+        task = new TaskHistory {taskId}
+        task.fetch()
+            .done =>
+                command = task.attributes.task.taskRequest.pendingTask.cmdLineArgsList
+                vex.dialog.prompt
+                    message: "<h3>Rerun Task</h3>"
+                    input: runTemplate
+                        id: @get "id"
+                        command: command
+                    buttons: [
+                        $.extend _.clone(vex.dialog.buttons.YES), text: 'Run now'
+                        vex.dialog.buttons.NO
+                    ]
+
+                    beforeClose: =>
+                        return if @data is false
+
+                        fileName = @data.filename.trim()
+                        commandLineInput = @data.commandLineInput.trim()
+
+                        if fileName.length is 0 and @data.autoTail is 'on'
+                            $(window.noFilenameError).removeClass('hide')
+                            return false
+
+                        else
+                            localStorage.setItem('taskRunRedirectFilename', fileName) if filename?
+                            localStorage.setItem('taskRunAutoTail', @data.autoTail)
+                            @data.id = @get 'id'
+
+                            @run( @data.commandLineInput ).done callback( @data )
+                            return true
+
+                    afterOpen: =>
+                        $('#filename').val localStorage.getItem('taskRunRedirectFilename')
+                        if command is ""
+                            history = localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
+                            if !!history
+                                history = history.split(",")
+                                $('#commandLineInput').val history[history.length - 1]
+                        $('#autoTail').prop 'checked', (localStorage.getItem('taskRunAutoTail') is 'on')
+
+                    callback: (data) =>
+                        @data = data
 
     promptRemove: (callback) =>
         vex.dialog.confirm

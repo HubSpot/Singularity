@@ -53,6 +53,7 @@ exports.config =
             runningTaskLogPath:  process.env.SINGULARITY_RUNNING_TASK_LOG_PATH ? "stdout"
             finishedTaskLogPath: process.env.SINGULARITY_FINISHED_TASK_LOG_PATH ? "stdout"
             commonHostnameSuffixToOmit: process.env.SINGULARITY_COMMON_HOSTNAME_SUFFIX_TO_OMIT ? ""
+            taskS3LogOmitPrefix: process.env.SINGULARITY_TASK_S3_LOG_OMIT_PREFIX ? ''
             warnIfScheduledJobIsRunningPastNextRunPct: process.env.WARN_IF_SCHEDULED_JOB_IS_RUNNING_PAST_NEXT_RUN_PCT ? 200
 
         compiledTemplate = handlebars.compile(indexTemplate)(templateData)

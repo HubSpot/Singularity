@@ -16,4 +16,5 @@ public interface LoadBalancerClient {
 
   SingularityLoadBalancerUpdate cancel(LoadBalancerRequestId loadBalancerRequestId);
 
+  SingularityLoadBalancerUpdate delete(LoadBalancerRequestId loadBalancerRequestId, SingularityRequest request, SingularityDeploy deploy);
 }

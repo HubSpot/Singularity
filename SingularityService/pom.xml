@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.4.4-SNAPSHOT</version>
+    <version>0.4.6-SNAPSHOT</version>
   </parent>
 
   <artifactId>SingularityService</artifactId>
@@ -115,11 +115,6 @@
     <dependency>
       <groupId>org.apache.mesos</groupId>
       <artifactId>mesos</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.groupon.mesos</groupId>
-      <artifactId>jesos</artifactId>
     </dependency>
 
     <dependency>
@@ -584,7 +579,7 @@
                 <image>
                   <name>hubspot/singularityservice:${project.version}</name>
                   <build>
-                    <from>java:8u45-jre</from>
+                    <from>hubspot/singularitybase:${mesos.docker.tag}-${singularitybase.image.revision}</from>
                     <maintainer>platform-infrastructure-groups@hubspot.com</maintainer>
                     <ports>
                       <port>7099</port>

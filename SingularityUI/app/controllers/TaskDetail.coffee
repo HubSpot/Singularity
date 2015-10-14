@@ -33,6 +33,8 @@ class TaskDetailController extends Controller
         alerts:                     require '../templates/alerts'
 
     initialize: ({@taskId, @filePath}) ->
+        @title @taskId
+
         #
         # Models / collections
         #

@@ -29,6 +29,8 @@ class RequestDetailController extends Controller
         requestHistory: require '../templates/requestDetail/requestHistory'
 
     initialize: ({@requestId}) ->
+        @title @requestId
+
         #
         # Data stuff
         #
@@ -56,7 +58,7 @@ class RequestDetailController extends Controller
         @subviews.header = new SimpleSubview
             model:      @models.request
             template:   @templates.header
-        
+
         # would have used header subview for this info,
         # but header expects a request model that
         # no longer exists if a request is deleted
@@ -109,6 +111,10 @@ class RequestDetailController extends Controller
 
         app.showView @view
 
+    addRequestInfo: =>
+        for t in @collections.taskHistory.models
+            t.attributes.canBeRunNow = @models.request.attributes.canBeRunNow
+
     refresh: ->
         requestFetch = @models.request.fetch()
 
@@ -124,7 +130,7 @@ class RequestDetailController extends Controller
         @collections.activeTasks.fetch().error    @ignore404
         @collections.scheduledTasks.fetch().error @ignore404
         @collections.scheduledTasks.fetch({reset: true}).error @ignore404
-        
+
         if @collections.requestHistory.currentPage is 1
             requestHistoryFetch = @collections.requestHistory.fetch()
             requestHistoryFetch.error => @ignore404
@@ -133,8 +139,11 @@ class RequestDetailController extends Controller
                     if @collections.requestHistory.length is 0
                         app.router.notFound()
 
-        if @collections.taskHistory.currentPage is 1
-            @collections.taskHistory.fetch().error    @ignore404
+        requestFetch.done =>
+            if @collections.taskHistory.currentPage is 1
+                @collections.taskHistory.fetch
+                    error:    @ignore404
+                    success:  @addRequestInfo
         if @collections.deployHistory.currentPage is 1
             @collections.deployHistory.fetch().error  @ignore404
 

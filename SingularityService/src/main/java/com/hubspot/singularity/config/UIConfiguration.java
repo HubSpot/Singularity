@@ -53,14 +53,6 @@ public class UIConfiguration {
   @NotEmpty
   private String finishedTaskLogPath = "stdout";
 
-  public String getRunningTaskLogPath() {
-    return runningTaskLogPath;
-  }
-
-  public String getFinishedTaskLogPath() {
-    return finishedTaskLogPath;
-  }
-
   private boolean hideNewDeployButton = false;
   private boolean hideNewRequestButton = false;
 
@@ -72,6 +64,9 @@ public class UIConfiguration {
    */
   @JsonProperty
   private String rootUrlMode = RootUrlMode.INDEX_CATCHALL.name();
+
+  @NotNull
+  private String taskS3LogOmitPrefix = "";
 
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
@@ -139,6 +134,22 @@ public class UIConfiguration {
 
   public void setFinishedTaskLogPath(String finishedTaskLogPath) {
     this.finishedTaskLogPath = finishedTaskLogPath;
+  }
+
+  public String getRunningTaskLogPath() {
+    return runningTaskLogPath;
+  }
+
+  public String getFinishedTaskLogPath() {
+    return finishedTaskLogPath;
+  }
+
+  public String getTaskS3LogOmitPrefix() {
+    return taskS3LogOmitPrefix;
+  }
+
+  public void setTaskS3LogOmitPrefix(String taskS3LogOmitPrefix) {
+    this.taskS3LogOmitPrefix = taskS3LogOmitPrefix;
   }
 
   public Optional<Integer> getWarnIfScheduledJobIsRunningPastNextRunPct() {

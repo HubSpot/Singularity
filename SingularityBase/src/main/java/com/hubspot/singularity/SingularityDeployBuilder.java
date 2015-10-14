@@ -2,6 +2,7 @@ package com.hubspot.singularity;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
@@ -33,6 +34,7 @@ public class SingularityDeployBuilder {
   private Optional<Map<String, String>> env;
   private Optional<List<String>> uris;
   private Optional<ExecutorData> executorData;
+  private Optional<Map<String, String>> labels;
 
   private Optional<String> healthcheckUri;
   private Optional<Long> healthcheckIntervalSeconds;
@@ -48,7 +50,7 @@ public class SingularityDeployBuilder {
   private Optional<Long> considerHealthyAfterRunningForSeconds;
 
   private Optional<String> serviceBasePath;
-  private Optional<List<String>> loadBalancerGroups;
+  private Optional<Set<String>> loadBalancerGroups;
   private Optional<Map<String, Object>> loadBalancerOptions;
 
   public SingularityDeployBuilder(String requestId, String id) {
@@ -69,6 +71,7 @@ public class SingularityDeployBuilder {
     this.env = Optional.absent();
     this.uris = Optional.absent();
     this.executorData = Optional.absent();
+    this.labels = Optional.absent();
     this.healthcheckUri = Optional.absent();
     this.healthcheckIntervalSeconds = Optional.absent();
     this.healthcheckTimeoutSeconds = Optional.absent();
@@ -85,7 +88,7 @@ public class SingularityDeployBuilder {
 
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, customExecutorUser, resources, env,
-        uris, metadata, executorData, version, timestamp, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckMaxRetries,
+        uris, metadata, executorData, version, timestamp, labels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckMaxRetries,
         healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy, healthcheckProtocol);
   }
 
@@ -291,11 +294,11 @@ public class SingularityDeployBuilder {
     return this;
   }
 
-  public Optional<List<String>> getLoadBalancerGroups() {
+  public Optional<Set<String>> getLoadBalancerGroups() {
     return loadBalancerGroups;
   }
 
-  public SingularityDeployBuilder setLoadBalancerGroups(Optional<List<String>> loadBalancerGroups) {
+  public SingularityDeployBuilder setLoadBalancerGroups(Optional<Set<String>> loadBalancerGroups) {
     this.loadBalancerGroups = loadBalancerGroups;
     return this;
   }
@@ -306,6 +309,15 @@ public class SingularityDeployBuilder {
 
   public SingularityDeployBuilder setLoadBalancerOptions(Optional<Map<String, Object>> loadBalancerOptions) {
     this.loadBalancerOptions = loadBalancerOptions;
+    return this;
+  }
+
+  public Optional<Map<String, String>> getLabels() {
+    return labels;
+  }
+
+  public SingularityDeployBuilder setLabels(Optional<Map<String, String>> labels) {
+    this.labels = labels;
     return this;
   }
 
@@ -365,6 +377,7 @@ public class SingularityDeployBuilder {
       ", env=" + env +
       ", uris=" + uris +
       ", executorData=" + executorData +
+      ", labels=" + labels +
       ", healthcheckUri=" + healthcheckUri +
       ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
       ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +
