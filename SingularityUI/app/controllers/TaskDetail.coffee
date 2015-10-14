@@ -30,6 +30,8 @@ class TaskDetailController extends Controller
         resourceUsage:              require '../templates/taskDetail/taskResourceUsage'
 
     initialize: ({@taskId, @filePath}) ->
+        @title @taskId
+
         #
         # Models / collections
         #
@@ -111,9 +113,9 @@ class TaskDetailController extends Controller
         @models.resourceUsage?.fetch()
             .done =>
                 # Store current resource usage to compare against future resource usage
-                @models.resourceUsage.setCpuUsage() if @models.resourceUsage.get('previousUsage')              
+                @models.resourceUsage.setCpuUsage() if @models.resourceUsage.get('previousUsage')
                 @models.resourceUsage.set('previousUsage', @models.resourceUsage.toJSON())
-                
+
                 if not @resourcesFetched
                     setTimeout (=> @fetchResourceUsage() ), 2000
                     @resourcesFetched = true
