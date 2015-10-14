@@ -4,6 +4,10 @@
         {{! Left side, info }}
         <div class="col-md-7">
             <h4>
+                <a class="star" data-action="starToggle" data-starred="{{ data.starred }}" data-id="{{ data.id }}">
+                    <span class="glyphicon glyphicon-star"></span>
+                </a>
+
                 <span class="request-state" data-state="{{ data.state }}">
                     {{humanizeText data.state}}
                 </span>
@@ -11,14 +15,10 @@
                 <span class="request-type">
                     {{humanizeText data.type}}
                 </span>
-
             </h4>
 
             <h2>
                 {{ data.id }}
-                <a class="star" data-action="starToggle" data-starred="{{ data.starred }}" data-id="{{ data.id }}">
-                    <span class="glyphicon glyphicon-star"></span>
-                </a>
             </h2>
         </div>
 
