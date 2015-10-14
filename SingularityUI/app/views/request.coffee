@@ -22,6 +22,7 @@ class RequestView extends View
             'click [data-action="unpause"]': 'unpauseRequest'
             'click [data-action="bounce"]': 'bounceRequest'
             'click [data-action="exit-cooldown"]': 'exitCooldownRequest'
+            'click [data-action="starToggle"]': 'toggleStar'
 
             'click [data-action="run-now"]': 'runTask'
 
@@ -126,5 +127,16 @@ class RequestView extends View
 
     flashDeployHistory: ->
         @subviews.deployHistory.flash()
+
+    toggleStar: (e) ->
+        $target = $(e.currentTarget)
+        id = $target.attr('data-id')
+        @collection.toggleStar id
+
+        starred = $target.attr('data-starred') is "true"
+        if starred
+            $target.attr 'data-starred', 'false'
+        else
+            $target.attr 'data-starred', 'true'
 
 module.exports = RequestView
