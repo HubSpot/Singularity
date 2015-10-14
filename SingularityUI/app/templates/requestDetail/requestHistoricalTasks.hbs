@@ -27,6 +27,9 @@
                     <th class="hidden-xs">
                         {{! Actions }}
                     </th>
+                    <th class="hidden-xs">
+                        {{! Actions }}
+                    </th>
                 </tr>
             </thead>
             <tbody>
@@ -53,9 +56,18 @@
                         </td>
                         <td class="hidden-xs actions-column">
                             <a href="{{ appRoot }}/task/{{ taskId.id }}/tail/{{ substituteTaskId ../../config.finishedTaskLogPath taskId.id }}" title="Log">
-                                ...
+                                ···
                             </a>
                         </td>
+                        {{#if canBeRunNow}}
+                            <td class="hidden-xs actions-column">
+                                <a data-action="rerun-task" data-taskId="{{ id }}" title="Rerun">
+                                    ↺
+                                </a>
+                            </td>
+                        {{else}}
+                            <td class="hidden-xs actions-column"></td>
+                        {{/if}}
                         <td class="hidden-xs actions-column">
                             <a data-action="viewJSON" title="JSON">
                                 { }
