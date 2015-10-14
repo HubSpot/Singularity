@@ -139,8 +139,9 @@ class TaskDetailController extends Controller
         if task.attributes.task.taskRequest.request.requestType == 'SCHEDULED' and task.get('isStillRunning')
             avg = deployInfo.get('deployStatistics')?.averageRuntimeMillis
             current =  new Date().getTime() - task.get('task').taskId.startedAt
+            threshold = window.config.warnIfScheduledJobIsRunningPastNextRunPct / 100
             # Alert if current uptime is longer than twice the average
-            if current > (avg * 2)
+            if current > (avg * threshold)
                 alerts.push
                   title: 'Warning:',
                   message: 'This scheduled task has been running longer than twice the average for the request and may be stuck.',

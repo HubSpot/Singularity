@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Locale;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -62,6 +63,8 @@ public class UIConfiguration {
 
   private boolean hideNewDeployButton = false;
   private boolean hideNewRequestButton = false;
+
+  private Optional<Integer> warnIfScheduledJobIsRunningPastNextRunPct;
 
   /**
    * If true, the root of the server (http://.../singularity/) will open the UI. Otherwise,
@@ -136,5 +139,13 @@ public class UIConfiguration {
 
   public void setFinishedTaskLogPath(String finishedTaskLogPath) {
     this.finishedTaskLogPath = finishedTaskLogPath;
+  }
+
+  public Optional<Integer> getWarnIfScheduledJobIsRunningPastNextRunPct() {
+    return warnIfScheduledJobIsRunningPastNextRunPct;
+  }
+
+  public void setWarnIfScheduledJobIsRunningPastNextRunPct(Optional<Integer> warnIfScheduledJobIsRunningPastNextRunPct) {
+    this.warnIfScheduledJobIsRunningPastNextRunPct = warnIfScheduledJobIsRunningPastNextRunPct;
   }
 }

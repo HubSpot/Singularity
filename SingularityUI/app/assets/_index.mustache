@@ -35,8 +35,9 @@
             finishedTaskLogPath: "{{{ finishedTaskLogPath }}}",
             commonHostnameSuffixToOmit: "{{{ commonHostnameSuffixToOmit }}}",
             slaveHttpPort: {{{slaveHttpPort}}},
+            warnIfScheduledJobIsRunningPastNextRunPct: {{{warnIfScheduledJobIsRunningPastNextRunPct}}},
             {{#slaveHttpsPort}}
-            slaveHttpsPort: {{{slaveHttpsPort}}}
+            slaveHttpsPort: {{{slaveHttpsPort}}},
             {{/slaveHttpsPort}}
         };
     </script>
