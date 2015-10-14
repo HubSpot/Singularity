@@ -30,7 +30,7 @@ Messenger.options =
     maxMessages: 1
     messageDefaults:
         type: 'error'
-        hideAfter: 5
+        hideAfter: false
         showCloseButton: true
 
 # ZeroClipboard options

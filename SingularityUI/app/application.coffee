@@ -105,15 +105,12 @@ class Application
             if jqxhr.status is 502
                 Messenger().info
                     message:   "Singularity is deploying, your requests cannot be handled. Things should resolve in a few seconds so just hang tight!"
-                    hideAfter: 10
             else if jqxhr.statusText is 'timeout'
                 Messenger().error
                     message:   "<p>A <code>#{ jqxhr.statusText }</code> error occurred while accessing:</p><pre>#{ url }</pre>"
-                    hideAFter: 20
             else if jqxhr.status is 0
                 Messenger().error
                     message:   "<p>Could not reach the Singularity API. Please make sure SingularityUI is properly set up.</p><p>If running through Brunch, this might be your browser blocking cross-domain requests.</p>"
-                    hideAfter: 20
             else
                 console.log jqxhr.responseText
 
@@ -123,12 +120,22 @@ class Application
                   serverMessage = jqxhr.responseText
 
                 serverMessage = _.escape serverMessage
+                id = "message_" + Date.now()
+                selector = "##{id}"
 
                 Messenger().error
-                    message:   "<p>An uncaught error occurred with your request. The server said:</p><pre>#{ serverMessage }</pre><p>The error has been saved to your JS console.</p>"
-                    hideAfter: 20
-
+                    message:   """<div id="#{id}">
+                                    <p>An uncaught error occurred with your request. The server said:</p>
+                                    <pre class="copy-text">#{ serverMessage }</pre>
+                                    <p>The error has been saved to your JS console. <span class='copy-link'>Copy error message</span>.</p>
+                                </div>"""
                 console.error jqxhr
+                options = 
+                    selector: selector
+                    linkText: 'Copy error message'
+                    copyLink: '.copy-link'
+
+                utils.makeMeCopy(options)
                 throw new Error "AJAX Error"
 
     # Usually called by Controllers when they're initialized. Loader is overwritten by views
