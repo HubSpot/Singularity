@@ -16,6 +16,9 @@
 
             <h2>
                 {{ data.id }}
+                <a class="star" data-action="starToggle" data-starred="{{ data.starred }}" data-id="{{ data.id }}">
+                    <span class="glyphicon glyphicon-star"></span>
+                </a>
             </h2>
         </div>
 
@@ -68,7 +71,7 @@
                     Bounce
                 </a>
             {{/if}}
-            
+
             {{#unless config.hideNewRequestButton}}
                 <a class="btn btn-primary" href="{{appRoot}}/requests/edit/{{ data.id }}">
                     Edit
