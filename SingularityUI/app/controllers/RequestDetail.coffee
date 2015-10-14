@@ -8,6 +8,7 @@ RequestTasks           = require '../collections/RequestTasks'
 RequestHistoricalTasks = require '../collections/RequestHistoricalTasks'
 RequestDeployHistory   = require '../collections/RequestDeployHistory'
 RequestHistory         = require '../collections/RequestHistory'
+Requests               = require '../collections/Requests'
 
 RequestDetailView      = require '../views/request'
 ExpandableTableSubview = require '../views/expandableTableSubview'
@@ -51,6 +52,9 @@ class RequestDetailController extends Controller
         @collections.requestHistory  = new RequestHistory         [], {@requestId}
         @collections.taskHistory     = new RequestHistoricalTasks [], {@requestId}
         @collections.deployHistory   = new RequestDeployHistory   [], {@requestId}
+
+        # For starring (never fetched here)
+        @collections.requests        = new Requests               [], {}
 
         #
         # Subviews
@@ -106,6 +110,7 @@ class RequestDetailController extends Controller
         #
         @setView new RequestDetailView _.extend {@requestId, @subviews},
             model: @models.request
+            collection: @collections.requests
 
         @refresh()
 
@@ -123,6 +128,9 @@ class RequestDetailController extends Controller
             # deleted requests (show in `requestHistoryMsg`)
             @ignore404
             app.caughtError()
+
+        requestFetch.success =>
+          @models.request.set('starred', @collections.requests.isStarred(@models.request.id))
 
         if @models.activeDeployStats.deployId?
             @models.activeDeployStats.fetch().error @ignore404
