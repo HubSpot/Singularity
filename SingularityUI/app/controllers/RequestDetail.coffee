@@ -29,6 +29,8 @@ class RequestDetailController extends Controller
         requestHistory: require '../templates/requestDetail/requestHistory'
 
     initialize: ({@requestId}) ->
+        @title @requestId
+
         #
         # Data stuff
         #
@@ -56,7 +58,7 @@ class RequestDetailController extends Controller
         @subviews.header = new SimpleSubview
             model:      @models.request
             template:   @templates.header
-        
+
         # would have used header subview for this info,
         # but header expects a request model that
         # no longer exists if a request is deleted
@@ -124,7 +126,7 @@ class RequestDetailController extends Controller
         @collections.activeTasks.fetch().error    @ignore404
         @collections.scheduledTasks.fetch().error @ignore404
         @collections.scheduledTasks.fetch({reset: true}).error @ignore404
-        
+
         if @collections.requestHistory.currentPage is 1
             requestHistoryFetch = @collections.requestHistory.fetch()
             requestHistoryFetch.error => @ignore404

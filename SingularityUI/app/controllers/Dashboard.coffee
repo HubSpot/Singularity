@@ -8,7 +8,7 @@ class DashboardController extends Controller
 
     initialize: ->
         app.showPageLoader()
-
+        @title 'Dashboard'
         @collections.requests = new Requests [], state: 'all'
 
         @collections.requests.fetch().done =>

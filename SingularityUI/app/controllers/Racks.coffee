@@ -9,6 +9,7 @@ class RacksController extends Controller
 
     initialize: ({@state}) ->
         app.showPageLoader()
+        @title 'Racks'
         @collections.racks = new Racks []
         @setView new RacksView _.extend {@state},
             collection: @collections.racks
