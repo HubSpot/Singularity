@@ -9,6 +9,8 @@ class SlavesController extends Controller
 
     initialize: ({@state}) ->  
         app.showPageLoader()
+        @title 'Slaves'
+
         @collections.slaves         = new Slaves []
         @setView new SlavesView _.extend {@state}, 
             collection: @collections.slaves

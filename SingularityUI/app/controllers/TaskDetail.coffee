@@ -34,6 +34,8 @@ class TaskDetailController extends Controller
         latestLog:                  require '../templates/taskDetail/taskLatestLog'
 
     initialize: ({@taskId, @filePath}) ->
+        @title @taskId
+
         #
         # Models / collections
         #

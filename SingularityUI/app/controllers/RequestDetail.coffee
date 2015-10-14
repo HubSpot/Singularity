@@ -30,6 +30,8 @@ class RequestDetailController extends Controller
         requestHistory:     require '../templates/requestDetail/requestHistory'
 
     initialize: ({@requestId}) ->
+        @title @requestId
+
         #
         # Data stuff
         #
