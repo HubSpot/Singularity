@@ -142,7 +142,7 @@ class TaskDetailController extends Controller
             avg = deployInfo.get('deployStatistics')?.averageRuntimeMillis
             current =  new Date().getTime() - task.get('task').taskId.startedAt
             threshold = window.config.warnIfScheduledJobIsRunningPastNextRunPct / 100
-            # Alert if current uptime is longer than twice the average
+            # Alert if current uptime is longer than the average * the configurable percentage
             if current > (avg * threshold)
                 alerts.push
                   title: 'Warning:',

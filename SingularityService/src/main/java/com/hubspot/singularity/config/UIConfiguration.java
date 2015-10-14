@@ -56,8 +56,6 @@ public class UIConfiguration {
   private boolean hideNewDeployButton = false;
   private boolean hideNewRequestButton = false;
 
-  private Optional<Integer> warnIfScheduledJobIsRunningPastNextRunPct;
-
   /**
    * If true, the root of the server (http://.../singularity/) will open the UI. Otherwise,
    * the UI URI (http://.../singularity/ui/) must be used.
@@ -152,11 +150,4 @@ public class UIConfiguration {
     this.taskS3LogOmitPrefix = taskS3LogOmitPrefix;
   }
 
-  public Optional<Integer> getWarnIfScheduledJobIsRunningPastNextRunPct() {
-    return warnIfScheduledJobIsRunningPastNextRunPct;
-  }
-
-  public void setWarnIfScheduledJobIsRunningPastNextRunPct(Optional<Integer> warnIfScheduledJobIsRunningPastNextRunPct) {
-    this.warnIfScheduledJobIsRunningPastNextRunPct = warnIfScheduledJobIsRunningPastNextRunPct;
-  }
 }
