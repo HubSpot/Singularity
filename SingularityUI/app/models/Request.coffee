@@ -183,25 +183,25 @@ class Request extends Model
                 localStorage.setItem(@localStorageCommandLineInputKeyPrefix + "historyIndex", 0);
                 localStorage.setItem(@localStorageCommandLineInputKeyPrefix + "historyLength", commands.length);
 
-                $('#commandLineInput').keydown (e) =>
-                    inc = 0
-                    switch e.which
-                      when 38
-                          inc = 1 # up
-                      when 40
-                          inc = -1 # down
-                      else
-                          return
-                    index = parseInt(localStorage.getItem(@localStorageCommandLineInputKeyPrefix + 'historyIndex'))
-                    length = parseInt(localStorage.getItem(@localStorageCommandLineInputKeyPrefix + 'historyLength'))
-                    index += inc
-                    if index < 0
-                        index = 0
-                    else if index > length - 1
-                        index = length - 1
-                    localStorage.setItem @localStorageCommandLineInputKeyPrefix + 'historyIndex', index
-                    $('#commandLineInput').val commands[index]
-                    e.preventDefault()
+                # $('#commandLineInput').keydown (e) =>
+                #     inc = 0
+                #     switch e.which
+                #       when 38
+                #           inc = 1 # up
+                #       when 40
+                #           inc = -1 # down
+                #       else
+                #           return
+                #     index = parseInt(localStorage.getItem(@localStorageCommandLineInputKeyPrefix + 'historyIndex'))
+                #     length = parseInt(localStorage.getItem(@localStorageCommandLineInputKeyPrefix + 'historyLength'))
+                #     index += inc
+                #     if index < 0
+                #         index = 0
+                #     else if index > length - 1
+                #         index = length - 1
+                #     localStorage.setItem @localStorageCommandLineInputKeyPrefix + 'historyIndex', index
+                #     $('#commandLineInput').val commands[index]
+                #     e.preventDefault()
 
             callback: (data) =>
                 @data = data
