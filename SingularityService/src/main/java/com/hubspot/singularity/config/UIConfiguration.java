@@ -149,4 +149,5 @@ public class UIConfiguration {
   public void setTaskS3LogOmitPrefix(String taskS3LogOmitPrefix) {
     this.taskS3LogOmitPrefix = taskS3LogOmitPrefix;
   }
+
 }
