@@ -13,6 +13,8 @@ ACTIVE_TASKS_FORMAT = '/history/request/{0}/tasks/active'
 
 def unpack_logs(args, logs):
   successful = []
+  goal = len(logs)
+  progress = 0
   for zipped_file in logs:
     try:
       if os.path.isfile(zipped_file):
@@ -25,11 +27,15 @@ def unpack_logs(args, logs):
         file_out.close()
         file_in.close
         os.remove(zipped_file)
+        progress += 1
         if args.verbose:
-          sys.stderr.write(colored('Unpacked ', 'green') + colored(zipped_file, 'white') + '\n')
+          sys.stderr.write(colored('Unpacked log {0}/{1}'.format(progress, goal), 'green') + colored(zipped_file, 'white') + '\n')
         else:
-          sys.stderr.write(colored('.', 'green'))
+          update_progress_bar(progress, goal)
         successful.append(unzipped)
+      else:
+        progress += 1
+        update_progress_bar(progress, goal)
     except Exception as e:
       print e
       if os.path.isfile(zipped_file):
@@ -92,3 +98,19 @@ def is_in_date_range(args, timestamp):
     return False if (timstamp_datetime < args.start or timstamp_datetime > args.end) else True
   else:
     return False if timedelta.days < args.start else True
+
+def update_progress_bar(progress, goal):
+  bar_length = 30
+  percent = float(progress) / goal
+  hashes = '#' * int(round(percent * bar_length))
+  spaces = ' ' * (bar_length - len(hashes))
+  if percent > .9:
+    color = 'green'
+  elif percent > .5:
+    color = 'cyan'
+  elif percent > .25:
+    color = 'yellow'
+  else:
+    color = 'grey'
+  sys.stderr.write("\rUnpacking Progress: [" + colored("{0}".format(hashes + spaces), color) + "] {0}%".format(int(round(percent * 100))))
+  sys.stderr.flush()

@@ -4,7 +4,7 @@ import grequests
 import logfetch_base
 import time
 from termcolor import colored
-from callbacks import generate_callback
+import callbacks
 from singularity_request import get_json_response
 
 TASK_FORMAT = '/task/{0}'
@@ -13,8 +13,12 @@ REQUEST_FORMAT = '/request/{0}'
 
 FILE_REGEX="\d{13}-([^-]*)-\d{8,20}\.gz"
 
+progress = 0
+goal = 0
+
 def download_s3_logs(args):
   sys.stderr.write(colored('Checking for S3 log files', 'cyan') + '\n')
+  callbacks.progress = 0
   logs = logs_for_all_requests(args)
   async_requests = []
   zipped_files = []
@@ -27,7 +31,7 @@ def download_s3_logs(args):
           sys.stderr.write(colored('Including log {0}'.format(filename), 'blue') + '\n')
         if not already_downloaded(args.dest, filename):
           async_requests.append(
-            grequests.AsyncRequest('GET', log_file['getUrl'], callback=generate_callback(log_file['getUrl'], args.dest, filename, args.chunk_size, args.verbose), headers=args.headers)
+            grequests.AsyncRequest('GET', log_file['getUrl'], callback=callbacks.generate_callback(log_file['getUrl'], args.dest, filename, args.chunk_size, args.verbose), headers=args.headers)
           )
         else:
           if args.verbose:
@@ -41,11 +45,12 @@ def download_s3_logs(args):
       if args.verbose:
         sys.stderr.write(colored('Excluding {0}, not in date range'.format(filename), 'magenta') + '\n')
   if async_requests:
-    sys.stderr.write(colored('Starting S3 Downloads with {0} parallel fetches'.format(args.num_parallel_fetches), 'cyan'))
+    sys.stderr.write(colored('Starting {0} S3 Downloads with {1} parallel fetches\n'.format(len(async_requests), args.num_parallel_fetches), 'cyan'))
+    callbacks.goal = len(async_requests)
     grequests.map(async_requests, stream=True, size=args.num_parallel_fetches)
   else:
     sys.stderr.write(colored('No S3 logs to download', 'cyan'))
-  sys.stderr.write(colored('\nUnpacking S3 logs\n', 'cyan'))
+  sys.stderr.write(colored('\nUnpacking {0} S3 logs\n'.format(len(async_requests)), 'cyan'))
   all_logs = all_logs + logfetch_base.unpack_logs(args, zipped_files)
   sys.stderr.write(colored('All S3 logs up to date', 'cyan') + '\n')
   return all_logs
@@ -86,4 +91,3 @@ def log_matches(args, filename):
     else:
       sys.stderr.write(colored('Will fetch all s3 logs, set --no-name-fetch-off to skip s3 logs instead for this case', 'red'))
       return True
-

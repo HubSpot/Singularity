@@ -3,7 +3,7 @@ import sys
 import fnmatch
 import grequests
 from termcolor import colored
-from callbacks import generate_callback
+import callbacks
 from singularity_request import get_json_response
 import logfetch_base
 
@@ -16,6 +16,7 @@ def download_live_logs(args):
   async_requests = []
   zipped_files = []
   all_logs = []
+  callbacks.progress = 0
   sys.stderr.write(colored('Finding current live log files', 'cyan') + '\n')
   for task in tasks:
     metadata = files_json(args, task)
@@ -29,7 +30,7 @@ def download_live_logs(args):
           if should_download(args, logfile_name, task):
             async_requests.append(
               grequests.AsyncRequest('GET',uri ,
-                callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size, args.verbose),
+                callback=callbacks.generate_callback(uri, args.dest, logfile_name, args.chunk_size, args.verbose),
                 params={'path' : '{0}/{1}/{2}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)},
                 headers=args.headers
               )
@@ -49,7 +50,7 @@ def download_live_logs(args):
           if should_download(args, logfile_name, task):
             async_requests.append(
               grequests.AsyncRequest('GET',uri ,
-                callback=generate_callback(uri, args.dest, logfile_name, args.chunk_size, args.verbose),
+                callback=callbacks.generate_callback(uri, args.dest, logfile_name, args.chunk_size, args.verbose),
                 params={'path' : '{0}/{1}/logs/{2}'.format(metadata['fullPathToRoot'], metadata['currentDirectory'], log_file)},
                 headers=args.headers
               )
@@ -62,10 +63,11 @@ def download_live_logs(args):
           sys.stderr.write(colored('Excluding log {0}, doesn\'t match {1}'.format(log_file, args.logtype), 'magenta') + '\n')
 
   if async_requests:
-    sys.stderr.write(colored('Starting live logs downloads\n', 'cyan'))
+    sys.stderr.write(colored('Starting {0} live logs downloads\n'.format(len(async_requests)), 'cyan'))
+    callbacks.goal = len(async_requests)
     grequests.map(async_requests, stream=True, size=args.num_parallel_fetches)
   if zipped_files:
-    sys.stderr.write(colored('\nUnpacking logs\n', 'cyan'))
+    sys.stderr.write(colored('\nUnpacking {0} logs\n'.format(len(zipped_files)), 'cyan'))
     all_logs = all_logs + logfetch_base.unpack_logs(args, zipped_files)
   return all_logs
 
@@ -138,5 +140,3 @@ def file_not_too_old(args, history, filename):
 def already_downloaded(args, filename):
   have_file = (os.path.isfile('{0}/{1}'.format(args.dest, filename.replace('.gz', '.log'))) or os.path.isfile('{0}/{1}'.format(args.dest, filename)))
   return have_file
-
-
