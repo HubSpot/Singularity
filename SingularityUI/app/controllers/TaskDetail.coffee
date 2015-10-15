@@ -146,7 +146,7 @@ class TaskDetailController extends Controller
               deployId: deployId
               requestId: requestId
             deployPromise = deployInfo.fetch()
-            deployPromise.success =>
+            deployPromise.done =>
                 avg = deployInfo.get('deployStatistics')?.averageRuntimeMillis
                 current =  new Date().getTime() - task.get('task').taskId.startedAt
                 threshold = window.config.warnIfScheduledJobIsRunningPastNextRunPct / 100
