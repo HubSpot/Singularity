@@ -136,20 +136,28 @@ class TaskDetailController extends Controller
                 app.caughtError()
                 delete @models.resourceUsage
 
-    getAlerts: (deployInfo) =>
-        task = @models.task
+    getAlerts: =>
         alerts = []
+        task = @models.task
+        requestId = @models.task.attributes.task.taskRequest.request.id
+        deployId = @models.task.attributes.task.taskRequest.deploy.id
+
         # Is this a scheduled task that has been running much longer than previous ones?
         if task.attributes.task.taskRequest.request.requestType == 'SCHEDULED' and task.get('isStillRunning')
-            avg = deployInfo.get('deployStatistics')?.averageRuntimeMillis
-            current =  new Date().getTime() - task.get('task').taskId.startedAt
-            threshold = window.config.warnIfScheduledJobIsRunningPastNextRunPct / 100
-            # Alert if current uptime is longer than the average * the configurable percentage
-            if current > (avg * threshold)
-                alerts.push
-                  title: 'Warning:',
-                  message: "This scheduled task has been running longer than <code>#{threshold}</code> times average for the request and may be stuck.",
-                  level: 'warning'
+            deployInfo = new DeployDetails
+              deployId: deployId
+              requestId: requestId
+            deployPromise = deployInfo.fetch()
+            deployPromise.done =>
+                avg = deployInfo.get('deployStatistics')?.averageRuntimeMillis
+                current =  new Date().getTime() - task.get('task').taskId.startedAt
+                threshold = window.config.warnIfScheduledJobIsRunningPastNextRunPct / 100
+                # Alert if current uptime is longer than the average * the configurable percentage
+                if current > (avg * threshold)
+                    alerts.push
+                      title: 'Warning:',
+                      message: "This scheduled task has been running longer than <code>#{threshold}</code> times the average for the request and may be stuck.",
+                      level: 'warning'
         # Was this task killed by a decommissioning slave?
         if !task.get('isStillRunning')
             updates = task.get('taskUpdates')
@@ -162,7 +170,12 @@ class TaskDetailController extends Controller
                   title: 'Alert:',
                   message: 'This task was killed due to a slave decommissioning.',
                   level: 'danger'
-        return alerts
+
+        if deployPromise
+            deployPromise.done =>
+                @collections.alerts.reset(alerts)
+        else
+            @collections.alerts.reset(alerts)
 
     refresh: ->
         @resourcesFetched = false
@@ -175,21 +188,11 @@ class TaskDetailController extends Controller
             .done =>
                 @fetchResourceUsage() if @models.task.get('isStillRunning')
             .success =>
-                requestId = @models.task.attributes.task.taskRequest.request.id
-                deployId = @models.task.attributes.task.taskRequest.deploy.id
-                deployInfo = new DeployDetails
-                  deployId: deployId
-                  requestId: requestId
-                deployInfo.fetch().success =>
-                    alerts = @getAlerts deployInfo
-                    @collections.alerts.reset()
-                    for alert in alerts
-                        @collections.alerts.add alert
+                @getAlerts()
             .error =>
                 # If this 404s the task doesn't exist
                 app.caughtError()
                 app.router.notFound()
-
 
         if @collections.s3Logs?.currentPage is 1
             @collections.s3Logs.fetch().error =>
