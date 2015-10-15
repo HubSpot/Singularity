@@ -135,22 +135,24 @@ class TaskDetailController extends Controller
                 delete @models.resourceUsage
 
     getAlerts: =>
-        @collections.alerts.reset()
+        alerts = []
         task = @models.task
         requestId = @models.task.attributes.task.taskRequest.request.id
         deployId = @models.task.attributes.task.taskRequest.deploy.id
+
         # Is this a scheduled task that has been running much longer than previous ones?
         if task.attributes.task.taskRequest.request.requestType == 'SCHEDULED' and task.get('isStillRunning')
             deployInfo = new DeployDetails
               deployId: deployId
               requestId: requestId
-            deployInfo.fetch().success =>
+            deployPromise = deployInfo.fetch()
+            deployPromise.success =>
                 avg = deployInfo.get('deployStatistics')?.averageRuntimeMillis
                 current =  new Date().getTime() - task.get('task').taskId.startedAt
                 threshold = window.config.warnIfScheduledJobIsRunningPastNextRunPct / 100
                 # Alert if current uptime is longer than the average * the configurable percentage
                 if current > (avg * threshold)
-                    @collections.alerts.add
+                    alerts.push
                       title: 'Warning:',
                       message: "This scheduled task has been running longer than <code>#{threshold}</code> times the average for the request and may be stuck.",
                       level: 'warning'
@@ -162,10 +164,16 @@ class TaskDetailController extends Controller
             killedMessage = updates.filter (u) =>
                 return u.taskState == 'TASK_KILLED'
             if decomMessage.length > 0 and killedMessage.length > 0
-                @collections.alerts.add
+                alerts.push
                   title: 'Alert:',
                   message: 'This task was killed due to a slave decommissioning.',
                   level: 'danger'
+
+        if deployPromise
+            deployPromise.done =>
+                @collections.alerts.reset(alerts)
+        else
+            @collections.alerts.reset(alerts)
 
     refresh: ->
         @resourcesFetched = false
