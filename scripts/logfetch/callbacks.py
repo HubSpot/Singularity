@@ -12,14 +12,14 @@ def update_progress_bar(progress):
   percent = float(progress) / goal
   hashes = '#' * int(round(percent * bar_length))
   spaces = ' ' * (bar_length - len(hashes))
-  if percent > .9:
+  if percent > .8:
     color = 'green'
   elif percent > .5:
     color = 'cyan'
   elif percent > .25:
     color = 'yellow'
   else:
-    color = 'white'
+    color = 'blue'
   sys.stderr.write("\rDownload Progress: [" + colored("{0}".format(hashes + spaces), color) + "] {0}%".format(int(round(percent * 100))))
   sys.stderr.flush()
 

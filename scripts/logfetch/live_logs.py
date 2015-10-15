@@ -12,12 +12,12 @@ BROWSE_FOLDER_FORMAT = '{0}/sandbox/{1}/browse'
 TASK_HISTORY_FORMAT = '{0}/history/task/{1}'
 
 def download_live_logs(args):
+  sys.stderr.write(colored('Finding current live log files', 'cyan') + '\n')
   tasks = tasks_to_check(args)
   async_requests = []
   zipped_files = []
   all_logs = []
   callbacks.progress = 0
-  sys.stderr.write(colored('Finding current live log files', 'cyan') + '\n')
   for task in tasks:
     metadata = files_json(args, task)
     if 'slaveHostname' in metadata:
@@ -67,7 +67,7 @@ def download_live_logs(args):
     callbacks.goal = len(async_requests)
     grequests.map(async_requests, stream=True, size=args.num_parallel_fetches)
   if zipped_files:
-    sys.stderr.write(colored('\nUnpacking {0} logs\n'.format(len(zipped_files)), 'cyan'))
+    sys.stderr.write(colored('\nUnpacking {0} log(s)\n'.format(len(zipped_files)), 'cyan'))
     all_logs = all_logs + logfetch_base.unpack_logs(args, zipped_files)
   return all_logs
 
