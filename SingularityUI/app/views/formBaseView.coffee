@@ -23,9 +23,13 @@ class FormBaseView extends View
             model: @model?.toJSON()
         
         @checkForm()
+        @afterRender()
 
         # @$('#help-column').css 'height', "#{ @$('form').height() }px"
 
+    afterRender: ->
+        return
+        
     checkForm: ->
         return if @lockdown
         @checkMultiInputs()
@@ -53,9 +57,9 @@ class FormBaseView extends View
                 placement: 'right'
             
     alert: (message, success = true) ->
-        @$('.alert').remove()
+        @$("[data-alert-location='form']").remove()
         alertClass = if success then 'alert-success' else 'alert-danger'
-        @$('form').append "<p class='alert #{ alertClass }'>#{ message }<p>"
+        @$('form').append "<p data-alert-location='form' class='alert #{ alertClass }'>#{ message }<p>"
 
     checkMultiInputs: ->
         for $container in @$el.find '.multi-input'
@@ -133,6 +137,20 @@ class FormBaseView extends View
             output.push val if val
 
         return if _.isEmpty output then undefined else output
+
+    generateSelectBox: (selector, options={}) ->
+        @$(selector).select2(options)
+
+    setSelect2Val: (selector, value) =>
+        @$(selector).select2("val", value)
+
+    getSelect2Val: (selector) =>
+        @$(selector).select2("val")
+
+    # renders select2 taggable list
+    renderTaggable: (selector, data) ->
+        data = _.map data, (val) -> id: val, text: val
+        selector.select2 'data', data
 
     postSave: ->
         @lockdown = false

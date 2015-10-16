@@ -1,0 +1,198 @@
+<div class="row new-form">
+
+  <div class="col-md-5 col-md-offset-3">
+    <h3>
+      {{#if model.id}}
+        Editing <a href="{{appRoot}}/request/{{model.id}}">{{model.id}}</a>
+      {{else}}
+        New Request
+      {{/if}}
+    </h3>
+    <form>
+      <div class="form-group {{#unless model.id}}required{{/unless}}">
+        {{#unless model.id}}
+        <label for="id">ID</label>
+        <input type="text" id="id" class="form-control" placeholder="eg: my-awesome-request">
+        {{/unless}}
+      </div>
+      <div class="form-group">
+        <label for="owner">Owners <span class='form-label-tip'>separate multiple owners with commas</span></label>
+        <input id="owners" class="tagging-input">
+      </div>
+      <div class="form-group">
+        <label>Type</label>
+        <div id="type" class="btn-group">
+          <button data-type="SERVICE" class="btn btn-default">
+            Service
+          </button>
+          <button data-type="WORKER" class="btn btn-default">
+            Worker
+          </button>
+          <button data-type="SCHEDULED" class="btn btn-default">
+            Scheduled
+          </button>
+          <button data-type="ON_DEMAND" class="btn btn-default">
+            On-demand
+          </button>
+          <button data-type="RUN_ONCE" class="btn btn-default">
+            Run-once
+          </button>
+        </div>
+      </div>
+
+      {{#if model.id}}
+        <div class="alert alert-info alert-slim" role="alert">
+          <strong>Note:</strong> changes made below will only affect new tasks
+        </div>
+      {{/if}}
+
+      <div class="form-group">
+        <label for="slavePlacement">Slave Placement</label>
+        <select id="slavePlacement" class="form-control">
+          <option value="">Default</option>
+          <option value="SEPARATE">Separate</option>
+          <option value="OPTIMISTIC">Optimistic</option>
+          <option value="GREEDY">Greedy</option>
+        </select>
+      </div>
+
+      <div id="SERVICE-expandable" class="expandable hide">
+        <div class="row">
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label for="instances-SERVICE" class="col-sm-6">Instances</label>
+              <div class="col-sm-6">
+                <input type="text" id="instances-SERVICE" class="form-control" placeholder="1">
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label for="rack-sensitive-SERVICE" data-tooltip='rack-sensitive'>
+                <input type="checkbox" id="rack-sensitive-SERVICE">
+                Rack sensitive
+              </label>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label data-tooltip='cannot-change' for="load-balanced"{{#if model.id}} class="subtle"{{/if}}>
+                <input {{#if model.id}}disabled="disabled"{{/if}} type="checkbox" id="load-balanced">
+                Load balanced
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="rackAffinity-SERVICE">Rack Affinity <span class='form-label-tip'>separate multiple racks with commas</span></label>
+          <input data-type='rack-affinity' type="text" id="rackAffinity-SERVICE" class="tagging-input">
+        </div>
+      </div>
+
+      <div id="WORKER-expandable" class="expandable hide">
+        <div class='row'>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label for="instances-WORKER" class="col-sm-6">Instances</label>
+              <div class="col-sm-6">
+                <input type="text" id="instances-WORKER" class="form-control" placeholder="1">
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="form-group">
+              <label for="rack-sensitive-WORKER" data-tooltip='rack-sensitive'>
+                <input type="checkbox" id="rack-sensitive-WORKER" checked>
+                Rack sensitive
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="waitAtLeast-WORKER">Task rescheduling delay</label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="waitAtLeast-WORKER" >
+            <div class="input-group-addon">milliseconds</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="rackAffinity-SERVICE">Rack Affinity <span class='form-label-tip'>separate multiple racks with commas</span></label>
+          <input data-type='rack-affinity' type="text" id="rackAffinity-WORKER" class="tagging-input">
+        </div>
+      </div>
+
+      <div id="SCHEDULED-expandable" class="expandable hide">
+        <div class="form-group">
+          <label for="schedule">Schedule</label>
+          <div class="required input-group">
+            <input type="text" id="schedule" class="form-control" placeholder="eg: */5 * * * *">
+            <div class="input-group-addon input-group-addon--select">
+              <select id="schedule-type" class="form-control">
+                  <option value="schedule">Cron Schedule</option>
+                  <option value="quartzSchedule">Quartz Schedule</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="retries-on-failure">Number of retries on failure</label>
+          <input type="text" id="retries-on-failure" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="killOldNRL-SCHEDULED">
+            Kill cleaning task(s) after
+          </label>
+          <div class="input-group">
+            <input type="text" id="killOldNRL-SCHEDULED" class="form-control">
+            <div class="input-group-addon">milliseconds</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="scheduled-expected-runtime">
+            Maximum task duration
+          </label>
+          <div class="input-group">
+            <input type="text" id="scheduled-expected-runtime" class="form-control">
+            <div class="input-group-addon">milliseconds</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="ON_DEMAND-expandable" class="expandable hide">
+        <div class="form-group">
+          <label for="killOldNRL-ON_DEMAND">
+            Kill cleaning task(s) after
+          </label>
+          <div class="input-group">
+            <input type="text" id="killOldNRL-ON_DEMAND" class="form-control">
+            <div class="input-group-addon">milliseconds</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="RUN_ONCE-expandable" class="expandable hide">
+        <div class="form-group">
+          <label for="killOldNRL-RUN_ONCE">
+            Kill cleaning task(s) after
+          </label>
+          <div class="input-group">
+            <input type="text" id="killOldNRL-RUN_ONCE" class="form-control">
+            <div class="input-group-addon">milliseconds</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="button-row">
+        <span>
+          <button type="submit" class="btn btn-success btn-lg" disabled>
+            Save
+          </button>
+        </span>
+        <button id="reset-button" class="btn btn-default btn-lg hide">
+          Reset
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>

@@ -1,5 +1,7 @@
 package com.hubspot.singularity.s3.base.config;
 
+import static com.hubspot.mesos.JavaUtils.obfuscateValue;
+
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -15,7 +17,7 @@ import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
 import com.hubspot.singularity.runner.base.jackson.Obfuscate;
 
-@Configuration("/etc/singularity.s3base.yaml")
+@Configuration(filename = "/etc/singularity.s3base.yaml", consolidatedField = "s3")
 public class SingularityS3Configuration extends BaseRunnerConfiguration {
   public static final String ARTIFACT_CACHE_DIRECTORY = "artifact.cache.directory";
 
@@ -145,9 +147,17 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
 
   @Override
   public String toString() {
-    return "SingularityS3Configuration [artifactCacheDirectory=" + artifactCacheDirectory + ", s3AccessKey=" + s3AccessKey + ", s3SecretKey=" + s3SecretKey + ", s3ChunkSize=" + s3ChunkSize
-        + ", s3DownloadTimeoutMillis=" + s3DownloadTimeoutMillis + ", s3ChunkDownloadTimeoutMillis=" + s3ChunkDownloadTimeoutMillis + ", s3ChunkRetries=" + s3ChunkRetries + ", localDownloadHttpPort="
-        + localDownloadHttpPort + ", localDownloadPath=" + localDownloadPath + "]";
+    return "SingularityS3Configuration[" +
+            "artifactCacheDirectory='" + artifactCacheDirectory + '\'' +
+            ", s3AccessKey='" + obfuscateValue(s3AccessKey) + '\'' +
+            ", s3SecretKey='" + obfuscateValue(s3SecretKey) + '\'' +
+            ", s3ChunkSize=" + s3ChunkSize +
+            ", s3DownloadTimeoutMillis=" + s3DownloadTimeoutMillis +
+            ", s3ChunkDownloadTimeoutMillis=" + s3ChunkDownloadTimeoutMillis +
+            ", s3ChunkRetries=" + s3ChunkRetries +
+            ", localDownloadHttpPort=" + localDownloadHttpPort +
+            ", localDownloadPath='" + localDownloadPath + '\'' +
+            ']';
   }
 
   @Override

@@ -8,12 +8,15 @@ class SlavesView extends View
     template: require '../templates/slaves/base'
     slaveTemplate: require '../templates/slaves/slave'
 
-    initialize: ->
+    initialPageLoad: true
+
+    initialize: ({@state}) ->
         for eventName in ['sync', 'add', 'remove', 'change']
             @listenTo @collection, eventName, @render
 
         @listenTo @collection, 'reset', =>
             @$el.empty()
+
 
     events: =>
         _.extend super,
@@ -53,6 +56,11 @@ class SlavesView extends View
             data:     inactive.toJSON()
 
         @$('.actions-column a[title]').tooltip()
+
+        if @state and @initialPageLoad
+            return if @state is 'all'
+            utils.scrollTo "##{@state}"
+            @initialPageLoad = false
 
         super.afterRender()
 

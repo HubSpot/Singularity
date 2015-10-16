@@ -47,7 +47,7 @@
 {{/unless}}
                 {{#each requests}}
                     <tr data-request-id="{{ request.id }}">
-                        <td data-value"{{ starred }}"=>
+                        <td data-value="{{ starred }}">
                             <a class="star" data-action="starToggle" data-starred="{{ starred }}">
                                 <span class="glyphicon glyphicon-star"></span>
                             </a>
@@ -113,6 +113,11 @@
                             <a data-request-id="{{ request.id }}" data-action="viewJSON" title="JSON">
                                 { }
                             </a>
+                            {{#unless config.hideNewRequestButton}}
+                                <a href="{{appRoot}}/requests/edit/{{request.id}}" title="Edit">
+                                    <span class="glyphicon glyphicon-edit"></span>
+                                </a>
+                            {{/unless}}
                         </td>
                     </tr>
                 {{/each}}

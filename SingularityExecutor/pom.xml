@@ -5,14 +5,13 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.4.4-SNAPSHOT</version>
+    <version>0.4.6-SNAPSHOT</version>
   </parent>
 
   <artifactId>SingularityExecutor</artifactId>
 
   <properties>
     <basepom.shaded.main-class>com.hubspot.singularity.executor.SingularityExecutorRunner</basepom.shaded.main-class>
-    <singularitybase.image.revision>1</singularitybase.image.revision>
   </properties>
 
   <dependencies>

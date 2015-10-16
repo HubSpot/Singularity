@@ -4,14 +4,14 @@ requirements = [
   'argparse==1.3.0',
   'ConfigParser==3.5.0b2',
   'grequests==0.2.0',
-  'gevent==1.0.2',
-  'requests==2.7.0',
+  'gevent==1.1b5',
+  'requests==2.5.0',
   'termcolor==1.1.0'
 ]
 
 setup(
     name='singularity-logfetch',
-    version='0.20.0',
+    version='0.21.0',
     description='Singularity log fetching and searching',
     author="HubSpot",
     author_email='singularity-users@googlegroups.com',

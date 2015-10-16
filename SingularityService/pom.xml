@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.4.4-SNAPSHOT</version>
+    <version>0.4.6-SNAPSHOT</version>
   </parent>
 
   <artifactId>SingularityService</artifactId>
@@ -118,11 +118,6 @@
     </dependency>
 
     <dependency>
-      <groupId>com.groupon.mesos</groupId>
-      <artifactId>jesos</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
     </dependency>
@@ -231,6 +226,21 @@
     <dependency>
       <groupId>com.codahale.metrics</groupId>
       <artifactId>metrics-healthchecks</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.codahale.metrics</groupId>
+      <artifactId>metrics-annotation</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.codahale.metrics</groupId>
+      <artifactId>metrics-graphite</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.palominolabs.metrics</groupId>
+      <artifactId>metrics-guice</artifactId>
     </dependency>
 
     <dependency>
@@ -569,7 +579,7 @@
                 <image>
                   <name>hubspot/singularityservice:${project.version}</name>
                   <build>
-                    <from>java:8u45-jre</from>
+                    <from>hubspot/singularitybase:${mesos.docker.tag}-${singularitybase.image.revision}</from>
                     <maintainer>platform-infrastructure-groups@hubspot.com</maintainer>
                     <ports>
                       <port>7099</port>

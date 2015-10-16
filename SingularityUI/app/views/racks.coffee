@@ -7,8 +7,10 @@ class RacksView extends View
 
     template: require '../templates/racks/base'
     rackTemplate: require '../templates/racks/rack'
+    
+    initialPageLoad: true
 
-    initialize: ->
+    initialize: ({@state}) ->
         for eventName in ['sync', 'add', 'remove', 'change']
             @listenTo @collection, eventName, @render
 
@@ -46,6 +48,11 @@ class RacksView extends View
             data:     inactive.toJSON()
 
         @$('.actions-column a[title]').tooltip()
+
+        if @state and @initialPageLoad
+            return if @state is 'all'
+            utils.scrollTo "##{@state}"
+            @initialPageLoad = false
 
         super.afterRender()
 

@@ -23,20 +23,24 @@ import org.slf4j.Logger;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hubspot.deploy.S3Artifact;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 
 public class S3ArtifactDownloader {
 
   private final Logger log;
   private final SingularityS3Configuration configuration;
+  private final SingularityRunnerExceptionNotifier exceptionNotifier;
 
-  public S3ArtifactDownloader(SingularityS3Configuration configuration, Logger log) {
+  public S3ArtifactDownloader(SingularityS3Configuration configuration, Logger log, SingularityRunnerExceptionNotifier exceptionNotifier) {
     this.configuration = configuration;
     this.log = log;
+    this.exceptionNotifier = exceptionNotifier;
   }
 
   public void download(S3Artifact s3Artifact, Path downloadTo) {
@@ -87,7 +91,7 @@ public class S3ArtifactDownloader {
     final List<Future<Path>> futures = Lists.newArrayListWithCapacity(numChunks);
 
     for (int chunk = 0; chunk < numChunks; chunk++) {
-      futures.add(chunkExecutorService.submit(new S3ArtifactChunkDownloader(configuration, log, s3, s3Artifact, downloadTo, chunk, chunkSize, length)));
+      futures.add(chunkExecutorService.submit(new S3ArtifactChunkDownloader(configuration, log, s3, s3Artifact, downloadTo, chunk, chunkSize, length, exceptionNotifier)));
     }
 
     long remainingMillis = configuration.getS3DownloadTimeoutMillis();
@@ -130,10 +134,11 @@ public class S3ArtifactDownloader {
       return true;
     } catch (TimeoutException te) {
       log.error("Chunk {} for {} timed out after {} - had {} remaining", chunk, s3Artifact.getFilename(), JavaUtils.duration(start), JavaUtils.durationFromMillis(remainingMillis));
-
       future.cancel(true);
+      exceptionNotifier.notify(te, ImmutableMap.of("filename", s3Artifact.getFilename(), "chunk", Integer.toString(chunk)));
     } catch (Throwable t) {
       log.error("Error while handling chunk {} for {}", chunk, s3Artifact.getFilename(), t);
+      exceptionNotifier.notify(t, ImmutableMap.of("filename", s3Artifact.getFilename(), "chunk", Integer.toString(chunk)));
     }
 
     return false;

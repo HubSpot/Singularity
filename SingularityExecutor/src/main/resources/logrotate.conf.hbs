@@ -8,10 +8,12 @@ rotate {{{ rotateCount }}}
 maxage {{{ maxageDays }}}
 notifempty
 
+{{#if shouldLogRotateLogFile }}
 {{{ logfile }}} {
-  dateformat {{{ rotateDateformat }}}
+  dateformat {{{ rotateDateformat }}}{{#if logfileExtension}}.{{{ logfileExtension}}}{{/if}}
   olddir {{{ rotateDirectory }}}
 }
+{{/if}}
 
 {{#if extrasFiles}}
 {{#each extrasFiles}}{{{this}}} {{/each}} {

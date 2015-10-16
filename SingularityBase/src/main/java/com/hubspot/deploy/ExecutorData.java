@@ -26,6 +26,9 @@ public class ExecutorData {
   private final Optional<Integer> maxTaskThreads;
   private final Optional<Boolean> preserveTaskSandboxAfterFinish;
   private final Optional<String> loggingS3Bucket;
+  private final Optional<Integer> maxOpenFiles;
+  private final Optional<Boolean> skipLogrotateAndCompress;
+  private final Optional<List<S3ArtifactSignature>> s3ArtifactSignatures;
 
   @JsonCreator
   public ExecutorData(@JsonProperty("cmd") String cmd, @JsonProperty("embeddedArtifacts") List<EmbeddedArtifact> embeddedArtifacts, @JsonProperty("externalArtifacts") List<ExternalArtifact> externalArtifacts,
@@ -33,7 +36,8 @@ public class ExecutorData {
       @JsonProperty("runningSentinel") Optional<String> runningSentinel, @JsonProperty("extraCmdLineArgs") List<String> extraCmdLineArgs, @JsonProperty("loggingTag") Optional<String> loggingTag,
       @JsonProperty("loggingExtraFields") Map<String, String> loggingExtraFields, @JsonProperty("sigKillProcessesAfterMillis") Optional<Long> sigKillProcessesAfterMillis,
       @JsonProperty("maxTaskThreads") Optional<Integer> maxTaskThreads, @JsonProperty("preserveTaskSandboxAfterFinish") Optional<Boolean> preserveTaskSandboxAfterFinish,
-      @JsonProperty("loggingS3Bucket") Optional<String> loggingS3Bucket) {
+      @JsonProperty("loggingS3Bucket") Optional<String> loggingS3Bucket, @JsonProperty("maxOpenFiles") Optional<Integer> maxOpenFiles,
+      @JsonProperty("skipLogrotateAndCompress") Optional<Boolean> skipLogrotateAndCompress, @JsonProperty("s3ArtifactSignatures") Optional<List<S3ArtifactSignature>> s3ArtifactSignatures) {
     this.cmd = cmd;
     this.embeddedArtifacts = JavaUtils.nonNullImmutable(embeddedArtifacts);
     this.externalArtifacts = JavaUtils.nonNullImmutable(externalArtifacts);
@@ -48,10 +52,14 @@ public class ExecutorData {
     this.maxTaskThreads = maxTaskThreads;
     this.preserveTaskSandboxAfterFinish = preserveTaskSandboxAfterFinish;
     this.loggingS3Bucket = loggingS3Bucket;
+    this.maxOpenFiles = maxOpenFiles;
+    this.skipLogrotateAndCompress = skipLogrotateAndCompress;
+    this.s3ArtifactSignatures = s3ArtifactSignatures;
   }
 
   public ExecutorDataBuilder toBuilder() {
-    return new ExecutorDataBuilder(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, runningSentinel, user, extraCmdLineArgs, loggingTag, loggingExtraFields, sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, loggingS3Bucket);
+    return new ExecutorDataBuilder(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, runningSentinel, user, extraCmdLineArgs, loggingTag,
+        loggingExtraFields, sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, loggingS3Bucket, maxOpenFiles, skipLogrotateAndCompress, s3ArtifactSignatures);
   }
 
   public String getCmd() {
@@ -110,6 +118,18 @@ public class ExecutorData {
     return loggingS3Bucket;
   }
 
+  public Optional<Integer> getMaxOpenFiles() {
+    return maxOpenFiles;
+  }
+
+  public Optional<Boolean> getSkipLogrotateAndCompress() {
+    return skipLogrotateAndCompress;
+  }
+
+  public Optional<List<S3ArtifactSignature>> getS3ArtifactSignatures() {
+    return s3ArtifactSignatures;
+  }
+
   @Override
   public String toString() {
     return "ExecutorData[" +
@@ -127,6 +147,9 @@ public class ExecutorData {
             ", maxTaskThreads=" + maxTaskThreads +
             ", preserveTaskSandboxAfterFinish=" + preserveTaskSandboxAfterFinish +
             ", loggingS3Bucket=" + loggingS3Bucket +
+            ", maxOpenFiles=" + maxOpenFiles +
+            ", skipLogrotateAndCompress=" + skipLogrotateAndCompress +
+            ", s3ArtifactSignatures=" + s3ArtifactSignatures +
             ']';
   }
 }

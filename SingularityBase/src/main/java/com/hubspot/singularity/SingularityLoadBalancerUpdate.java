@@ -16,7 +16,7 @@ public class SingularityLoadBalancerUpdate {
   private final LoadBalancerRequestId loadBalancerRequestId;
 
   public enum LoadBalancerMethod {
-    PRE_ENQUEUE, ENQUEUE, CHECK_STATE, CANCEL;
+    PRE_ENQUEUE, ENQUEUE, CHECK_STATE, CANCEL, DELETE;
   }
 
   @JsonCreator

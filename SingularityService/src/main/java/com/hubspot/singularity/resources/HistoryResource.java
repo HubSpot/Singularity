@@ -98,7 +98,7 @@ public class HistoryResource extends AbstractHistoryResource {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user);
     List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForRequest(requestId);
 
-    return taskHistoryHelper.getHistoriesFor(activeTaskIds);
+    return taskHistoryHelper.getTaskHistoriesFor(taskManager, activeTaskIds);
   }
 
   @GET
@@ -115,9 +115,9 @@ public class HistoryResource extends AbstractHistoryResource {
   public List<SingularityTaskIdHistory> getActiveDeployTasks(
       @ApiParam("Request ID for deploy") @PathParam("requestId") String requestId,
       @ApiParam("Deploy ID") @PathParam("deployId") String deployId) {
-    SingularityDeployKey key = new SingularityDeployKey(requestId, deployId);
-
-    return deployTaskHistoryHelper.getActiveDeployTasks(key);
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user);
+    List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForDeploy(requestId, deployId);
+    return taskHistoryHelper.getTaskHistoriesFor(taskManager, activeTaskIds);
   }
 
   @GET
@@ -131,9 +131,9 @@ public class HistoryResource extends AbstractHistoryResource {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user);
     SingularityDeployKey key = new SingularityDeployKey(requestId, deployId);
-
-    return deployTaskHistoryHelper.getInactiveDeployTasks(key, limitCount, limitStart);
+    return deployTaskHistoryHelper.getBlendedHistory(key, limitStart, limitCount);
   }
 
   @GET

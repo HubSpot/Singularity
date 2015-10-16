@@ -7,6 +7,8 @@ TaskS3Logs = require '../collections/TaskS3Logs'
 TaskFiles = require '../collections/TaskFiles'
 TaskCleanups = require '../collections/TaskCleanups'
 Deploys = require '../collections/Deploys'
+DeployDetails = require '../models/DeployDetails'
+Alerts = require '../collections/Alerts'
 
 FileBrowserSubview = require '../views/fileBrowserSubview'
 ExpandableTableSubview = require '../views/expandableTableSubview'
@@ -28,9 +30,13 @@ class TaskDetailController extends Controller
         info:                       require '../templates/taskDetail/taskInfo'
         environment:                require '../templates/taskDetail/taskEnvironment'
         resourceUsage:              require '../templates/taskDetail/taskResourceUsage'
+        alerts:                     require '../templates/alerts'
+        latestLog:                  require '../templates/taskDetail/taskLatestLog'
         shellCommands:              require '../templates/taskDetail/taskShellCommands'
 
     initialize: ({@taskId, @filePath}) ->
+        @title @taskId
+
         #
         # Models / collections
         #
@@ -49,6 +55,8 @@ class TaskDetailController extends Controller
 
         @collections.pendingDeploys = new Deploys state: 'pending'
 
+        @collections.alerts = new Alerts
+
         #
         # Subviews
         #
@@ -65,6 +73,10 @@ class TaskDetailController extends Controller
         @subviews.history = new SimpleSubview
             model:    @models.task
             template: @templates.history
+
+        @subviews.latestLog = new SimpleSubview
+            model:    @models.task
+            template: @templates.latestLog
 
         @subviews.fileBrowser = new FileBrowserSubview
             collection:      @collections.files
@@ -95,6 +107,10 @@ class TaskDetailController extends Controller
         @subviews.resourceUsage = new SimpleSubview
             model:    @models.resourceUsage
             template: @templates.resourceUsage
+
+        @subviews.alerts = new SimpleSubview
+            collection:    @collections.alerts
+            template:      @templates.alerts
 
         @subviews.shellCommands = new SimpleSubview
             model: @models.task
@@ -127,6 +143,47 @@ class TaskDetailController extends Controller
                 app.caughtError()
                 delete @models.resourceUsage
 
+    getAlerts: =>
+        alerts = []
+        task = @models.task
+        requestId = @models.task.attributes.task.taskRequest.request.id
+        deployId = @models.task.attributes.task.taskRequest.deploy.id
+
+        # Is this a scheduled task that has been running much longer than previous ones?
+        if task.attributes.task.taskRequest.request.requestType == 'SCHEDULED' and task.get('isStillRunning')
+            deployInfo = new DeployDetails
+              deployId: deployId
+              requestId: requestId
+            deployPromise = deployInfo.fetch()
+            deployPromise.done =>
+                avg = deployInfo.get('deployStatistics')?.averageRuntimeMillis
+                current =  new Date().getTime() - task.get('task').taskId.startedAt
+                threshold = window.config.warnIfScheduledJobIsRunningPastNextRunPct / 100
+                # Alert if current uptime is longer than the average * the configurable percentage
+                if current > (avg * threshold)
+                    alerts.push
+                      title: 'Warning:',
+                      message: "This scheduled task has been running longer than <code>#{threshold}</code> times the average for the request and may be stuck.",
+                      level: 'warning'
+        # Was this task killed by a decommissioning slave?
+        if !task.get('isStillRunning')
+            updates = task.get('taskUpdates')
+            decomMessage = updates.filter (u) =>
+                return u.statusMessage?.indexOf('DECOMISSIONING') != -1 and u.taskState == 'TASK_CLEANING'
+            killedMessage = updates.filter (u) =>
+                return u.taskState == 'TASK_KILLED'
+            if decomMessage.length > 0 and killedMessage.length > 0
+                alerts.push
+                  title: 'Alert:',
+                  message: 'This task was killed due to a slave decommissioning.',
+                  level: 'danger'
+
+        if deployPromise
+            deployPromise.done =>
+                @collections.alerts.reset(alerts)
+        else
+            @collections.alerts.reset(alerts)
+
     refresh: ->
         @resourcesFetched = false
 
@@ -137,11 +194,12 @@ class TaskDetailController extends Controller
         @models.task.fetch()
             .done =>
                 @fetchResourceUsage() if @models.task.get('isStillRunning')
+            .success =>
+                @getAlerts()
             .error =>
                 # If this 404s the task doesn't exist
                 app.caughtError()
                 app.router.notFound()
-
 
         if @collections.s3Logs?.currentPage is 1
             @collections.s3Logs.fetch().error =>

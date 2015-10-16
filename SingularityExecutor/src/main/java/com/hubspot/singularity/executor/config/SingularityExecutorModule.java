@@ -11,6 +11,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.executor.handlebars.BashEscapedHelper;
 import com.hubspot.singularity.executor.handlebars.IfPresentHelper;
+import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseLogging;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 import com.spotify.docker.client.DefaultDockerClient;
@@ -72,6 +73,7 @@ public class SingularityExecutorModule extends AbstractModule {
   @Provides
   @Singleton
   public Handlebars providesHandlebars() {
+    SingularityRunnerBaseLogging.quietEagerLogging();  // handlebars emits DEBUG logs before logger is properly configured
     final Handlebars handlebars = new Handlebars();
 
     handlebars.registerHelper(BashEscapedHelper.NAME, new BashEscapedHelper());

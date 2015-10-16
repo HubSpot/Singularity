@@ -16,6 +16,7 @@ import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
@@ -30,6 +31,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployStatistics;
@@ -112,6 +114,7 @@ public class SingularityScheduler {
     return map;
   }
 
+  @Timed
   public void checkForDecomissions(SingularitySchedulerStateCache stateCache) {
     final long start = System.currentTimeMillis();
 
@@ -190,6 +193,7 @@ public class SingularityScheduler {
     }
   }
 
+  @Timed
   public void drainPendingQueue(final SingularitySchedulerStateCache stateCache) {
     final long start = System.currentTimeMillis();
 
@@ -261,6 +265,7 @@ public class SingularityScheduler {
     return isDeployInUse(maybeRequestDeployState, pendingRequest.getDeployId(), false);
   }
 
+  @Timed
   public List<SingularityTaskRequest> getDueTasks() {
     final List<SingularityPendingTask> tasks = taskManager.getPendingTasks();
 
@@ -342,7 +347,9 @@ public class SingularityScheduler {
 
   private int scheduleTasks(SingularitySchedulerStateCache stateCache, SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics,
       SingularityPendingRequest pendingRequest, List<SingularityTaskId> matchingTaskIds) {
-    deleteScheduledTasks(stateCache.getScheduledTasks(), pendingRequest);
+    if (request.getRequestType() != RequestType.ON_DEMAND) {
+      deleteScheduledTasks(stateCache.getScheduledTasks(), pendingRequest);
+    }
 
     final int numMissingInstances = getNumMissingInstances(matchingTaskIds, request, pendingRequest);
 
@@ -465,6 +472,7 @@ public class SingularityScheduler {
     return new SingularityDeployStatisticsBuilder(requestId, deployId).build();
   }
 
+  @Timed
   public void handleCompletedTask(Optional<SingularityTask> task, SingularityTaskId taskId, boolean wasActive, long timestamp, ExtendedTaskState state, SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache) {
     final SingularityDeployStatistics deployStatistics = getDeployStatistics(taskId.getRequestId(), taskId.getDeployId());
 
@@ -607,10 +615,9 @@ public class SingularityScheduler {
         LOG.info("Scheduling requested immediate run of {}", request.getId());
       } else {
         try {
-          Date scheduleFrom = new Date(now);
+          final CronExpression cronExpression = new CronExpression(request.getQuartzScheduleSafe());
 
-          CronExpression cronExpression = new CronExpression(request.getQuartzScheduleSafe());
-
+          final Date scheduleFrom = new Date(now);
           final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(scheduleFrom);
 
           if (nextRunAtDate == null) {

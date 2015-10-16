@@ -198,6 +198,8 @@ public class RequestResource extends AbstractRequestResource {
 
     checkConflict(createResult != SingularityCreateResult.EXISTED, "%s is already bouncing", requestId);
 
+    requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), queryUser);
+
     return fillEntireRequest(requestWithState);
   }
 
@@ -472,6 +474,14 @@ public class RequestResource extends AbstractRequestResource {
     checkReschedule(newRequest, maybeOldRequest, now);
 
     return newRequest;
+  }
+
+  @GET
+  @PropertyFiltering
+  @Path("/lbcleanup")
+  @ApiOperation("Retrieve the list of tasks being cleaned from load balancers.")
+  public Iterable<String> getLbCleanupRequests() {
+    return authorizationHelper.filterAuthorizedRequestIds(user, requestManager.getLBCleanupRequestIds());
   }
 
 }

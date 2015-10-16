@@ -39,6 +39,10 @@ public class IndexView extends View {
 
   private final String commonHostnameSuffixToOmit;
 
+  private final String taskS3LogOmitPrefix;
+
+  private final Integer warnIfScheduledJobIsRunningPastNextRunPct;
+
   private final String shellCommands;
 
   public IndexView(String singularityUriBase, String appRoot, SingularityConfiguration configuration, ObjectMapper mapper) {
@@ -74,6 +78,10 @@ public class IndexView extends View {
     this.finishedTaskLogPath = configuration.getUiConfiguration().getFinishedTaskLogPath();
 
     this.commonHostnameSuffixToOmit = configuration.getCommonHostnameSuffixToOmit().or("");
+
+    this.taskS3LogOmitPrefix = configuration.getUiConfiguration().getTaskS3LogOmitPrefix();
+
+    this.warnIfScheduledJobIsRunningPastNextRunPct = configuration.getWarnIfScheduledJobIsRunningPastNextRunPct();
 
     ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
     try {
@@ -155,6 +163,14 @@ public class IndexView extends View {
     return commonHostnameSuffixToOmit;
   }
 
+  public String getTaskS3LogOmitPrefix() {
+    return taskS3LogOmitPrefix;
+  }
+
+  public Integer getWarnIfScheduledJobIsRunningPastNextRunPct() {
+    return warnIfScheduledJobIsRunningPastNextRunPct;
+  }
+
   public String getShellCommands() {
     return shellCommands;
   }
@@ -179,8 +195,10 @@ public class IndexView extends View {
             ", defaultDeployHealthTimeoutSeconds=" + defaultDeployHealthTimeoutSeconds +
             ", runningTaskLogPath='" + runningTaskLogPath + '\'' +
             ", finishedTaskLogPath='" + finishedTaskLogPath + '\'' +
-            ", shellCommands='" + shellCommands + '\'' +
             ", commonHostnameSuffixToOmit='" + commonHostnameSuffixToOmit + '\'' +
+            ", taskS3LogOmitPrefix='" + taskS3LogOmitPrefix + '\'' +
+            ", warnIfScheduledJobIsRunningPastNextRunPct=" + warnIfScheduledJobIsRunningPastNextRunPct +
+            ", shellCommands='" + shellCommands + '\'' +
             ']';
   }
 }

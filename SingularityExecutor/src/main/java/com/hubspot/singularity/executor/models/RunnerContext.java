@@ -16,8 +16,10 @@ public class RunnerContext {
 
   private final Optional<Integer> maxTaskThreads;
   private final boolean shouldChangeUser;
+  private final Integer maxOpenFiles;
+  private final String switchUserCommand;
 
-  public RunnerContext(String cmd, String taskAppDirectory, String logDir, String user, String logFile, String taskId, Optional<Integer> maxTaskThreads, boolean shouldChangeUser) {
+  public RunnerContext(String cmd, String taskAppDirectory, String logDir, String user, String logFile, String taskId, Optional<Integer> maxTaskThreads, boolean shouldChangeUser, Integer maxOpenFiles, String switchUserCommand) {
     this.cmd = cmd;
     this.taskAppDirectory = taskAppDirectory;
     this.logDir = logDir;
@@ -27,6 +29,8 @@ public class RunnerContext {
 
     this.maxTaskThreads = maxTaskThreads;
     this.shouldChangeUser = shouldChangeUser;
+    this.maxOpenFiles = maxOpenFiles;
+    this.switchUserCommand = switchUserCommand;
   }
 
   public String getCmd() {
@@ -61,6 +65,14 @@ public class RunnerContext {
     return shouldChangeUser;
   }
 
+  public Integer getMaxOpenFiles() {
+    return maxOpenFiles;
+  }
+
+  public String getSwitchUserCommand() {
+    return switchUserCommand;
+  }
+
   @Override
   public String toString() {
     return "RunnerContext[" +
@@ -72,6 +84,7 @@ public class RunnerContext {
             ", taskId='" + taskId + '\'' +
             ", maxTaskThreads=" + maxTaskThreads +
             ", shouldChangeUser=" + shouldChangeUser +
+            ", switchUserCommand=" + switchUserCommand +
             ']';
   }
 }

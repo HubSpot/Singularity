@@ -80,6 +80,17 @@ class Utils
                 $item.find("h4").append $copyLink
                 new ZeroClipboard $copyLink[0]
 
+    # Copy anything
+    @makeMeCopy: (options) =>
+        $element = $(options.selector)
+        linkText = options.linkText || 'Copy'
+        textSelector = options.textSelector || '.copy-text'
+        
+        text = $element.find(textSelector).html()
+        $copyLink = $ "<a data-clipboard-text='#{ _.escape text }'>#{linkText}</a>"
+        $(options.copyLink).html($copyLink)
+        new ZeroClipboard $copyLink[0]
+
     @fixTableColumns: ($table) =>
         $headings = $table.find "th"
         if $headings.length and $table.css('table-layout') isnt 'fixed'
@@ -108,6 +119,7 @@ class Utils
             return { name: crumb, path: path.join '/' }
         results.unshift { name: "root", path: "" }
         results
+
 
     # Will make $el as tall as the page and will attach a scroll event
     # that shrinks it
@@ -172,5 +184,15 @@ class Utils
             $(window).on 'scroll', checkForShrink
             $el.on       'shrink', shrink
         , 100
+
+
+    # Will scroll to a DOM node via a passed in jQuery selector
+    # `offset` is an optional pixel offset from the selector
+    @scrollTo: (path, offset=50) ->
+        location = $("#{path}").offset().top - offset
+        $('html, body').animate 'scrollTop' : location+'px', 1000
+
+
+
 
 module.exports = Utils

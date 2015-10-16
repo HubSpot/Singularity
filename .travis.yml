@@ -11,3 +11,8 @@ git:
 
 sudo: false
 
+cache:
+  directories:
+  - $HOME/.m2
+  - SingularityUI/bower_components
+  - SingularityUI/node_modules
