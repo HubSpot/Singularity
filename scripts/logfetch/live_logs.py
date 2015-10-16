@@ -18,6 +18,8 @@ def download_live_logs(args):
   zipped_files = []
   all_logs = []
   callbacks.progress = 0
+  tasks_check_progress = 0
+  tasks_check_goal = len(tasks)
   for task in tasks:
     metadata = files_json(args, task)
     if 'slaveHostname' in metadata:
@@ -61,9 +63,11 @@ def download_live_logs(args):
             all_logs.append('{0}/{1}'.format(args.dest, logfile_name.replace('.gz', '.log')))
         elif args.logtype and args.verbose:
           sys.stderr.write(colored('Excluding log {0}, doesn\'t match {1}'.format(log_file, args.logtype), 'magenta') + '\n')
+    tasks_check_progress += 1
+    logfetch_base.update_progress_bar(tasks_check_progress, tasks_check_goal, 'Log Finder')
 
   if async_requests:
-    sys.stderr.write(colored('Starting {0} live logs downloads\n'.format(len(async_requests)), 'cyan'))
+    sys.stderr.write(colored('\nStarting {0} live logs downloads\n'.format(len(async_requests)), 'cyan'))
     callbacks.goal = len(async_requests)
     grequests.map(async_requests, stream=True, size=args.num_parallel_fetches)
   if zipped_files:
