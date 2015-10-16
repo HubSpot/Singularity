@@ -39,6 +39,7 @@ class RequestView extends View
         @$('#request-history-msg').html @subviews.requestHistoryMsg.$el
         @$('#stats').html               @subviews.stats.$el
         @$('#active-tasks').html        @subviews.activeTasks.$el
+        @$('#request-tasks-logs').html  @subviews.requestTasksLogs.$el
         @$('#scheduled-tasks').html     @subviews.scheduledTasks.$el
         @$('#task-history').html        @subviews.taskHistory.$el
         @$('#deploy-history').html      @subviews.deployHistory.$el
