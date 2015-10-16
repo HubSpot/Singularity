@@ -5,11 +5,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MesosTaskStatisticsObject {
   private final int cpusLimit;
-  private final double cpusNrPeriods;
-  private final double cpusNrThrottled;
-  private final float cpusSystemTimeSecs;
-  private final float cpusThrottledTimeSecs;
-  private final float cpusUserTimeSecs;
+  private final long cpusNrPeriods;
+  private final long cpusNrThrottled;
+  private final double cpusSystemTimeSecs;
+  private final double cpusThrottledTimeSecs;
+  private final double cpusUserTimeSecs;
   private final long memAnonBytes;
   private final long memFileBytes;
   private final long memLimitBytes;
@@ -19,11 +19,11 @@ public class MesosTaskStatisticsObject {
 
   @JsonCreator
   public MesosTaskStatisticsObject(@JsonProperty("cpus_limit") int cpusLimit,
-                                   @JsonProperty("cpus_nr_periods") double cpusNrPeriods,
-                                   @JsonProperty("cpus_nr_throttled") double cpusNrThrottled,
-                                   @JsonProperty("cpus_system_time_secs") float cpusSystemTimeSecs,
-                                   @JsonProperty("cpus_throttled_time_secs") float cpusThrottledTimeSecs,
-                                   @JsonProperty("cpus_user_time_secs") float cpusUserTimeSecs,
+                                   @JsonProperty("cpus_nr_periods") long cpusNrPeriods,
+                                   @JsonProperty("cpus_nr_throttled") long cpusNrThrottled,
+                                   @JsonProperty("cpus_system_time_secs") double cpusSystemTimeSecs,
+                                   @JsonProperty("cpus_throttled_time_secs") double cpusThrottledTimeSecs,
+                                   @JsonProperty("cpus_user_time_secs") double cpusUserTimeSecs,
                                    @JsonProperty("mem_anon_bytes") long memAnonBytes,
                                    @JsonProperty("mem_file_bytes") long memFileBytes,
                                    @JsonProperty("mem_limit_bytes") long memLimitBytes,
