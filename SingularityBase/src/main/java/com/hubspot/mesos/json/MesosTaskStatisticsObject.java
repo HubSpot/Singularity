@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MesosTaskStatisticsObject {
   private final int cpusLimit;
-  private final int cpusNrPeriods;
-  private final int cpusNrThrottled;
+  private final double cpusNrPeriods;
+  private final double cpusNrThrottled;
   private final float cpusSystemTimeSecs;
   private final float cpusThrottledTimeSecs;
   private final float cpusUserTimeSecs;
@@ -19,8 +19,8 @@ public class MesosTaskStatisticsObject {
 
   @JsonCreator
   public MesosTaskStatisticsObject(@JsonProperty("cpus_limit") int cpusLimit,
-                                   @JsonProperty("cpus_nr_periods") int cpusNrPeriods,
-                                   @JsonProperty("cpus_nr_throttled") int cpusNrThrottled,
+                                   @JsonProperty("cpus_nr_periods") double cpusNrPeriods,
+                                   @JsonProperty("cpus_nr_throttled") double cpusNrThrottled,
                                    @JsonProperty("cpus_system_time_secs") float cpusSystemTimeSecs,
                                    @JsonProperty("cpus_throttled_time_secs") float cpusThrottledTimeSecs,
                                    @JsonProperty("cpus_user_time_secs") float cpusUserTimeSecs,
@@ -48,11 +48,11 @@ public class MesosTaskStatisticsObject {
     return cpusLimit;
   }
 
-  public int getCpusNrPeriods() {
+  public double getCpusNrPeriods() {
     return cpusNrPeriods;
   }
 
-  public int getCpusNrThrottled() {
+  public double getCpusNrThrottled() {
     return cpusNrThrottled;
   }
 
