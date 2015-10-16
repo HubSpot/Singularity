@@ -28,6 +28,7 @@ class TaskDetailController extends Controller
         info:                       require '../templates/taskDetail/taskInfo'
         environment:                require '../templates/taskDetail/taskEnvironment'
         resourceUsage:              require '../templates/taskDetail/taskResourceUsage'
+        shellCommands:              require '../templates/taskDetail/taskShellCommands'
 
     initialize: ({@taskId, @filePath}) ->
         #
@@ -95,6 +96,10 @@ class TaskDetailController extends Controller
             model:    @models.resourceUsage
             template: @templates.resourceUsage
 
+        @subviews.shellCommands = new SimpleSubview
+            model: @models.task
+            template: @templates.shellCommands
+
         #
         # Getting stuff in gear
         #
@@ -106,14 +111,13 @@ class TaskDetailController extends Controller
 
         app.showView @view
 
-
     fetchResourceUsage: ->
         @models.resourceUsage?.fetch()
             .done =>
                 # Store current resource usage to compare against future resource usage
-                @models.resourceUsage.setCpuUsage() if @models.resourceUsage.get('previousUsage')              
+                @models.resourceUsage.setCpuUsage() if @models.resourceUsage.get('previousUsage')
                 @models.resourceUsage.set('previousUsage', @models.resourceUsage.toJSON())
-                
+
                 if not @resourcesFetched
                     setTimeout (=> @fetchResourceUsage() ), 2000
                     @resourcesFetched = true

@@ -1,4 +1,5 @@
 View = require './view'
+Task = require '../models/Task'
 
 class TaskView extends View
 
@@ -9,6 +10,9 @@ class TaskView extends View
             'click [data-action="viewObjectJSON"]': 'viewJson'
             'click [data-action="viewJsonProperty"]': 'viewJsonProperty'
             'click [data-action="remove"]': 'killTask'
+            'submit form#runShell': 'executeCommand'
+            "change #cmd": "cmdSelected"
+
 
     initialize: ({@taskId}) ->
         @subviews.healthcheckNotification.on 'toggleHealthchecks', @toggleHealthchecks
@@ -27,6 +31,7 @@ class TaskView extends View
         @$('#info').html                        @subviews.info.$el
         @$('#resources').html                   @subviews.resourceUsage.$el
         @$('#environment').html                 @subviews.environment.$el
+        @$('#shell-commands').html              @subviews.shellCommands.$el
 
         super.afterRender()
 
@@ -60,5 +65,31 @@ class TaskView extends View
         taskModel.promptKill =>
             setTimeout (=> @trigger 'refreshrequest'), 1000
 
+
+    executeCommand: (event) ->
+        event.preventDefault()
+        cmd = $("#cmd option:selected").text()
+        options = $('#cmd-option').val()
+        return if @$('button[type="submit"]').attr 'disabled'
+        return if !cmd
+        taskModel = new Task id: @taskId
+        taskModel.runShellCommand(cmd, options)
+        $('#cmd-confirm').text('Command Sent')
+
+
+    cmdSelected: (event) ->
+      cmd = config.shellCommands.filter((cmd) ->
+        return cmd.name == $("#cmd option:selected").text()
+      )[0]
+      console.log cmd
+      $('.cmd-description').text(cmd.description || '')
+      $('#btn_exec').prop("disabled", false)
+
+      options = $('#cmd-option')
+      options.empty()
+      options.append($("<option></option>").attr("value", option.name)
+      .text(option.name + (if option.description then (' (' + option.description + ')') else '')
+      )) for option in cmd.options
+      options.prop("disabled", !cmd.options)
 
 module.exports = TaskView
