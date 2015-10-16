@@ -114,6 +114,9 @@ Handlebars.registerHelper 'usernameFromEmail', (email) ->
 Handlebars.registerHelper 'substituteTaskId', (value, taskId) ->
     value.replace('$TASK_ID', taskId)
 
+Handlebars.registerHelper 'filename', (value) ->
+    value.substring(value.lastIndexOf('/') + 1)
+
 Handlebars.registerHelper 'getLabelClass', (state) ->
     switch state
         when 'TASK_STARTING', 'TASK_CLEANING'

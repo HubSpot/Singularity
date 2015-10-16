@@ -31,6 +31,7 @@ class TaskDetailController extends Controller
         environment:                require '../templates/taskDetail/taskEnvironment'
         resourceUsage:              require '../templates/taskDetail/taskResourceUsage'
         alerts:                     require '../templates/alerts'
+        latestLog:                  require '../templates/taskDetail/taskLatestLog'
 
     initialize: ({@taskId, @filePath}) ->
         @title @taskId
@@ -71,6 +72,10 @@ class TaskDetailController extends Controller
         @subviews.history = new SimpleSubview
             model:    @models.task
             template: @templates.history
+
+        @subviews.latestLog = new SimpleSubview
+            model:    @models.task
+            template: @templates.latestLog
 
         @subviews.fileBrowser = new FileBrowserSubview
             collection:      @collections.files
