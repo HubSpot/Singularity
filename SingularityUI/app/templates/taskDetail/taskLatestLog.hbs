@@ -9,13 +9,13 @@
     <h4>
       {{#if data.isStillRunning}}
           <a href="{{ appRoot }}/task/{{ data.taskId }}/tail/{{ substituteTaskId config.runningTaskLogPath data.taskId }}" title="Log">
-              <span class="glyphicon glyphicon-file"></span> {{{removeTaskId config.runningTaskLogPath}}}
+              <span class="glyphicon glyphicon-file"></span> {{{filename config.runningTaskLogPath}}}
           </a>
       {{else}}
-      <a href="{{ appRoot }}/task/{{ data.taskId }}/tail/{{ substituteTaskId config.finishedTaskLogPath data.taskId }}" title="Log">
-          <span class="glyphicon glyphicon-file"></span> {{{removeTaskId config.finishedTaskLogPath}}}
-      </a>
+          <a href="{{ appRoot }}/task/{{ data.taskId }}/tail/{{ substituteTaskId config.finishedTaskLogPath data.taskId }}" title="Log">
+              <span class="glyphicon glyphicon-file"></span> {{{filename config.finishedTaskLogPath}}}
+          </a>
+      {{/if}}
     </h4>
-    {{/if}}
   </div>
 </div>
