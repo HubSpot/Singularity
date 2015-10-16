@@ -50,6 +50,12 @@ Handlebars.registerHelper 'unlessInSubFilter', (needle, haystack, options) ->
 Handlebars.registerHelper 'withLast', (list, options) ->
     options.fn _.last list
 
+# {{#withFirst [1, 2, 3]}}
+#     {{! this = 1 }}
+# {{/withFirst}}
+Handlebars.registerHelper 'withFirst', (list, options) ->
+    options.fn list[0]
+
 # 1234567890 => 20 minutes ago
 Handlebars.registerHelper 'timestampFromNow', (timestamp) ->
     return '' if not timestamp
@@ -119,3 +125,16 @@ Handlebars.registerHelper 'getLabelClass', (state) ->
             'danger'
         else
             'default'
+
+Handlebars.registerHelper 'isRunningState', (list, options) ->
+    switch _.last(list).taskState
+        when 'TASK_RUNNING'
+            options.fn(@)
+        else
+            options.inverse(@)
+
+Handlebars.registerHelper 'isSingularityExecutor', (value, options) ->
+    if value.indexOf 'singularity-executor' != -1
+        options.fn(@)
+    else
+        options.inverse(@)

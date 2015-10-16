@@ -1,85 +1,105 @@
-{{#if synced}}
-  <div class="page-header">
-      <h2>
-        Run Shell Commands
-        <small><a data-action="expandToggle">
-            {{#if expanded}}
-                collapse
-            {{else}}
-                view
-            {{/if}}
-        </a></small>
-      </h2>
-  </div>
-  <div class='{{#unless expanded}}hide{{/unless}}'>
-    <div class="row">
-      <form class="col-md-6" id="runShell" action="">
-        <h3>Execute a command</h3>
-        <div class="form-group required">
-          <label for="cmd">Select command</label>
-          <select name="cmd" class="form-control input-large" id="cmd">
-            {{#each config.shellCommands}}
-              <option value="{{name}}">{{name}}</option>
-            {{/each}}
-          </select>
-          <p class="cmd-description"></p>
-          <label for="cmd-option">Options</label>
-          <select multiple name="cmd-option" class="form-control input-large" id="cmd-option" disabled></select>
+{{#if data.taskUpdates}}
+  {{#isRunningState data.taskUpdates}}
+    {{#isSingularityExecutor data.task.taskRequest.deploy.customExecutorCmd}}
+      {{#if synced}}
+        <div class="page-header">
+            <h2>
+              Run Shell Commands
+              <small><a data-action="expandToggle">
+                  {{#if expanded}}
+                      collapse
+                  {{else}}
+                      view
+                  {{/if}}
+              </a></small>
+            </h2>
         </div>
-        <button type="submit" id="btn_exec" class="btn btn-success" type="button">Run</button>
-        <span id="cmd-confirm"></span>
-      </form>
-    </div>
-    {{#if data.shellCommandHistory.length}}
-      <div class="row">
-          <div class="col-md-12">
-              <h3>Command History</h3>
-              <div class="table-container">
-                  <table class="table table-striped paginated">
-                      <thead>
-                          <tr>
-                              <th>Timestamp</th>
-                              <th>Command</th>
-                              <th>Options</th>
-                              <th>User</th>
-                              <th>Status</th>
-                          </tr>
-                      </thead>
-                      <tbody>
-                          {{#each data.shellCommandHistory}}
-                            {{#each shellUpdates}}
-                              <tr>
-                                  <td data-value="{{ shellRequest.timestamp }}">
-                                      {{timestampFormatted timestamp}}
-                                  </td>
-                                  <td>
-                                      <code>{{../shellRequest.shellCommand.name}}</code>
-                                  </td>
-                                  <td>
-                                      {{#if ../shellRequest.shellCommand.options.length}}
-                                          <code>{{shellRequest.shellCommand.options}}</code>
-                                      {{/if}}
-                                  </td>
-                                  <td>
-                                      {{../shellRequest.user}}
-                                  </td>
-                                  <td>
-                                      {{humanizeText updateType}}
-                                  </td>
-                              </tr>
-                            {{/each}}
-                          {{/each}}
-                      </tbody>
-                  </table>
+        <div class='{{#unless expanded}}hide{{/unless}}'>
+          <div class="row">
+            <form class="col-md-6" data-action="runShell" action="">
+              <h3>Execute a command</h3>
+              <div class="form-group required">
+                <label for="cmd">Select command</label>
+                <select name="cmd" class="form-control input-large" id="cmd" data-action="cmd">
+                  {{#each config.shellCommands}}
+                    <option value="{{name}}">{{name}}</option>
+                  {{/each}}
+                </select>
+                {{#withFirst config.shellCommands}}
+                  <p class="cmd-description">{{description}}</p>
+                {{/withFirst}}
+
+                <div id="options" class="hidden">
+                  <label for="cmd-option">Options</label>
+                  <select multiple name="cmd-option" class="form-control input-large" id="cmd-option" disabled></select>
+                </div>
+
+                <label class="check-label">
+                  <input id="open-log" type="checkbox" name="open-log" checked> Tail <code>executor.commands.log</code> when started
+                </label>
               </div>
+              <button type="submit" id="btn_exec" class="btn btn-success" type="button">Run</button>
+
+              <span id="cmd-confirm"></span>
+            </form>
           </div>
-      </div>
-    {{else}}
-        <div class="empty-table-message">
-            No commands run
+          {{#if data.shellCommandHistory.length}}
+            <div class="row">
+                <div class="col-md-12">
+                    <h3>Command History</h3>
+                    <div class="table-container">
+                        <table class="table table-striped paginated">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Command</th>
+                                    <th>Options</th>
+                                    <th>User</th>
+                                    <th>Status</th>
+                                    <th>Message</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{#each data.shellCommandHistory}}
+                                  {{#each shellUpdates}}
+                                    <tr>
+                                        <td data-value="{{ shellRequest.timestamp }}">
+                                            {{timestampFormatted timestamp}}
+                                        </td>
+                                        <td>
+                                            <code>{{../shellRequest.shellCommand.name}}</code>
+                                        </td>
+                                        <td>
+                                            {{#if ../shellRequest.shellCommand.options.length}}
+                                                <code>{{shellRequest.shellCommand.options}}</code>
+                                            {{/if}}
+                                        </td>
+                                        <td>
+                                            {{../shellRequest.user}}
+                                        </td>
+                                        <td>
+                                            {{humanizeText updateType}}
+                                        </td>
+                                        <td>
+                                          {{message}}
+                                        </td>
+                                    </tr>
+                                  {{/each}}
+                                {{/each}}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+          {{else}}
+              <div class="empty-table-message">
+                  No commands run
+              </div>
+          {{/if}}
         </div>
-    {{/if}}
-  </div>
+      {{/if}}
+    {{/isSingularityExecutor}}
+  {{/isRunningState}}
 {{else}}
     <div class="page-loader centered cushy"></div>
 {{/if}}
