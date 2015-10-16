@@ -4,7 +4,6 @@ Request                = require '../models/Request'
 RequestDeployStatus    = require '../models/RequestDeployStatus'
 
 Tasks                  = require '../collections/Tasks'
-RequestTasksLogs       = require '../collections/RequestTasksLogs'
 RequestTasks           = require '../collections/RequestTasks'
 RequestHistoricalTasks = require '../collections/RequestHistoricalTasks'
 RequestDeployHistory   = require '../collections/RequestDeployHistory'
@@ -23,12 +22,14 @@ class RequestDetailController extends Controller
         header:             require '../templates/requestDetail/requestHeader'
         requestHistoryMsg:  require '../templates/requestDetail/requestHistoryMsg'
         stats:              require '../templates/requestDetail/requestStats'
-        activeTasks:        require '../templates/requestDetail/requestActiveTasks'
-        logs:               require '../templates/taskDetail/taskS3Logs'
-        scheduledTasks:     require '../templates/requestDetail/requestScheduledTasks'
-        taskHistory:        require '../templates/requestDetail/requestHistoricalTasks'
-        deployHistory:      require '../templates/requestDetail/requestDeployHistory'
-        requestHistory:     require '../templates/requestDetail/requestHistory'
+
+        activeTasks:    require '../templates/requestDetail/requestActiveTasks'
+        scheduledTasks: require '../templates/requestDetail/requestScheduledTasks'
+
+        # Subview templates
+        taskHistory:    require '../templates/requestDetail/requestHistoricalTasks'
+        deployHistory:  require '../templates/requestDetail/requestDeployHistory'
+        requestHistory: require '../templates/requestDetail/requestHistory'
 
     initialize: ({@requestId}) ->
         @title @requestId
@@ -49,8 +50,6 @@ class RequestDetailController extends Controller
         @collections.scheduledTasks = new Tasks [],
             requestId: @requestId
             state:     'scheduled'
-
-        @collections.requestTasksLogs = new RequestTasksLogs [], {@requestId}
 
         @collections.requestHistory  = new RequestHistory         [], {@requestId}
         @collections.taskHistory     = new RequestHistoricalTasks [], {@requestId}
@@ -80,10 +79,6 @@ class RequestDetailController extends Controller
         @subviews.activeTasks = new SimpleSubview
             collection: @collections.activeTasks
             template:   @templates.activeTasks
-
-        @subviews.requestTasksLogs = new ExpandableTableSubview
-            collection: @collections.requestTasksLogs
-            template:   @templates.logs
 
         @subviews.scheduledTasks = new SimpleSubview
             collection:      @collections.scheduledTasks
@@ -161,11 +156,5 @@ class RequestDetailController extends Controller
                     success:  @addRequestInfo
         if @collections.deployHistory.currentPage is 1
             @collections.deployHistory.fetch().error  @ignore404
-
-        if @collections.requestTasksLogs
-            @collections.requestTasksLogs.fetch().error =>
-                # It probably means S3 logs haven't been configured
-                app.caughtError()
-                delete @collections.s3Logs
 
 module.exports = RequestDetailController
