@@ -48,23 +48,23 @@ public class MesosTaskStatisticsObject {
     return cpusLimit;
   }
 
-  public double getCpusNrPeriods() {
+  public long getCpusNrPeriods() {
     return cpusNrPeriods;
   }
 
-  public double getCpusNrThrottled() {
+  public long getCpusNrThrottled() {
     return cpusNrThrottled;
   }
 
-  public float getCpusSystemTimeSecs() {
+  public double getCpusSystemTimeSecs() {
     return cpusSystemTimeSecs;
   }
 
-  public float getCpusThrottledTimeSecs() {
+  public double getCpusThrottledTimeSecs() {
     return cpusThrottledTimeSecs;
   }
 
-  public float getCpusUserTimeSecs() {
+  public double getCpusUserTimeSecs() {
     return cpusUserTimeSecs;
   }
 
