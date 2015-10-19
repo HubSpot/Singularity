@@ -242,18 +242,29 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   public String shellCommandOutFile = "executor.commands.log";
 
   @JsonProperty
-  private String pidCommandPlaceholder = "{PID}";
+  private String shellCommandPidPlaceholder = "{PID}";
+
+  @JsonProperty
+  private String shellCommandUserPlaceholder = "{USER}";
 
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
   }
 
-  public String getPidCommandPlaceholder() {
-    return pidCommandPlaceholder;
+  public String getShellCommandPidPlaceholder() {
+    return shellCommandPidPlaceholder;
   }
 
-  public void setPidCommandPlaceholder(String pidCommandPlaceholder) {
-    this.pidCommandPlaceholder = pidCommandPlaceholder;
+  public void setShellCommandPidPlaceholder(String shellCommandPidPlaceholder) {
+    this.shellCommandPidPlaceholder = shellCommandPidPlaceholder;
+  }
+
+  public String getShellCommandUserPlaceholder() {
+    return shellCommandUserPlaceholder;
+  }
+
+  public void setShellCommandUserPlaceholder(String shellCommandUserPlaceholder) {
+    this.shellCommandUserPlaceholder = shellCommandUserPlaceholder;
   }
 
   public List<String> getLogrotateAdditionalFiles() {
@@ -641,7 +652,8 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", signatureVerifyOut='" + signatureVerifyOut + '\'' +
             ", shellCommands=" + shellCommands +
             ", shellCommandOutFile='" + shellCommandOutFile + '\'' +
-            ", pidCommandPlaceholder='" + pidCommandPlaceholder + '\'' +
+            ", shellCommandPidPlaceholder='" + shellCommandPidPlaceholder + '\'' +
+            ", shellCommandUserPlaceholder='" + shellCommandUserPlaceholder + '\'' +
             ']';
   }
 

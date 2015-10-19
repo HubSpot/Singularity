@@ -120,11 +120,13 @@ public class SingularityExecutorShellCommandRunner {
     List<String> command = new ArrayList<>(shellCommandDescriptor.getCommand());
 
     for (int i = 0; i < command.size(); i++) {
-      if (command.get(i).equals(executorConfiguration.getPidCommandPlaceholder())) {
+      if (command.get(i).equals(executorConfiguration.getShellCommandPidPlaceholder())) {
         if (!taskProcess.getCurrentPid().isPresent()) {
           throw new InvalidShellCommandException("No PID found");
         }
         command.set(i, Integer.toString(taskProcess.getCurrentPid().get()));
+      } else if (command.get(i).equals(executorConfiguration.getShellCommandUserPlaceholder())) {
+        command.set(i, taskProcess.getTask().getExecutorData().getUser().or(executorConfiguration.getDefaultRunAsUser()));
       }
     }
 
