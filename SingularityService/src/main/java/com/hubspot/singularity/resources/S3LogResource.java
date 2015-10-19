@@ -254,6 +254,13 @@ public class S3LogResource extends AbstractHistoryResource {
     checkNotFound(s3ServiceDefault.isPresent(), "S3 configuration was absent");
   }
 
+  private SingularityRequestWithState getRequest(final String requestId) {
+    final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(requestId);
+    checkNotFound(maybeRequest.isPresent(), "RequestId %s does not exist", requestId);
+    authorizationHelper.checkForAuthorization(maybeRequest.get().getRequest(), Optional.<SingularityRequest>absent(), user);
+    return maybeRequest.get();
+  }
+
   @GET
   @Path("/task/{taskId}")
   @ApiOperation("Retrieve the list of logs stored in S3 for a specific task.")
@@ -266,10 +273,7 @@ public class S3LogResource extends AbstractHistoryResource {
     SingularityTaskId taskIdObject = getTaskIdObject(taskId);
 
     try {
-      final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(taskIdObject.getRequestId());
-      checkNotFound(maybeRequest.isPresent(), "Request ID %s does not exist", taskIdObject.getRequestId());
-      authorizationHelper.checkForAuthorization(maybeRequest.get().getRequest(), Optional.<SingularityRequest>absent(), user);
-      return getS3Logs(maybeRequest.get().getRequest().getGroup(), getS3PrefixesForTask(taskIdObject, start, end));
+      return getS3Logs(getRequest(taskIdObject.getRequestId()).getRequest().getGroup(), getS3PrefixesForTask(taskIdObject, start, end));
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", taskId);
     } catch (Throwable t) {
@@ -287,10 +291,7 @@ public class S3LogResource extends AbstractHistoryResource {
     checkS3();
 
     try {
-      final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(requestId);
-      checkNotFound(maybeRequest.isPresent(), "Request ID %s does not exist", requestId);
-      authorizationHelper.checkForAuthorization(maybeRequest.get().getRequest(), Optional.<SingularityRequest>absent(), user);
-      return getS3Logs(maybeRequest.get().getRequest().getGroup(), getS3PrefixesForRequest(requestId, start, end));
+      return getS3Logs(getRequest(requestId).getRequest().getGroup(), getS3PrefixesForRequest(requestId, start, end));
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s", requestId);
     } catch (Throwable t) {
@@ -309,10 +310,7 @@ public class S3LogResource extends AbstractHistoryResource {
     checkS3();
 
     try {
-      final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(requestId);
-      checkNotFound(maybeRequest.isPresent(), "Request ID %s does not exist", requestId);
-      authorizationHelper.checkForAuthorization(maybeRequest.get().getRequest(), Optional.<SingularityRequest>absent(), user);
-      return getS3Logs(maybeRequest.get().getRequest().getGroup(), getS3PrefixesForDeploy(requestId, deployId, start, end));
+      return getS3Logs(getRequest(requestId).getRequest().getGroup(), getS3PrefixesForDeploy(requestId, deployId, start, end));
     } catch (TimeoutException te) {
       throw timeout("Timed out waiting for response from S3 for %s-%s", requestId, deployId);
     } catch (Throwable t) {
