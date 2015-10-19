@@ -55,10 +55,8 @@ public class SingularityExecutorShellCommandRunner {
     return task;
   }
 
-  public ProcessBuilder buildProcessBuilder(List<String> command) {
+  public ProcessBuilder buildProcessBuilder(List<String> command, File outputFile) {
     ProcessBuilder builder = new ProcessBuilder(command);
-
-    File outputFile = MesosUtils.getTaskDirectoryPath(getTask().getTaskId()).resolve(executorConfiguration.getShellCommandOutFile()).toFile();
 
     builder.redirectOutput(ProcessBuilder.Redirect.appendTo(outputFile));
     builder.redirectError(ProcessBuilder.Redirect.appendTo(outputFile));
@@ -78,7 +76,9 @@ public class SingularityExecutorShellCommandRunner {
 
     shellCommandUpdater.sendUpdate(UpdateType.ACKED, Optional.of(Joiner.on(" ").join(command)));
 
-    SingularityExecutorShellCommandRunnerCallable callable = new SingularityExecutorShellCommandRunnerCallable(task.getLog(), shellCommandUpdater, buildProcessBuilder(command));
+    final File outputFile = MesosUtils.getTaskDirectoryPath(getTask().getTaskId()).resolve(executorConfiguration.getShellCommandOutFile()).toFile();
+
+    SingularityExecutorShellCommandRunnerCallable callable = new SingularityExecutorShellCommandRunnerCallable(task.getLog(), shellCommandUpdater, buildProcessBuilder(command, outputFile), outputFile);
 
     ListenableFuture<Integer> shellFuture = shellCommandExecutorService.submit(callable);
 
