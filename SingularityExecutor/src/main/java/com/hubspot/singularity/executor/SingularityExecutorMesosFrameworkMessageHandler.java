@@ -56,7 +56,7 @@ public class SingularityExecutorMesosFrameworkMessageHandler {
       }
 
       SingularityExecutorShellCommandRunner shellRunner = new SingularityExecutorShellCommandRunner(shellRequest, executorConfiguration, matchingTask.get(),
-          taskProcess.get(), monitor.createExecutorService(shellRequest.getTaskId().getId()), updater);
+          taskProcess.get(), monitor.getShellCommandExecutorServiceForTask(shellRequest.getTaskId().getId()), updater);
 
       shellRunner.start();
     } catch (IOException e) {

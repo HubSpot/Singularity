@@ -39,11 +39,11 @@ public class IndexView extends View {
 
   private final String commonHostnameSuffixToOmit;
 
-  private final String shellCommands;
-
   private final String taskS3LogOmitPrefix;
 
   private final Integer warnIfScheduledJobIsRunningPastNextRunPct;
+
+  private final String shellCommands;
 
   public IndexView(String singularityUriBase, String appRoot, SingularityConfiguration configuration, ObjectMapper mapper) {
     super("index.mustache");
@@ -79,16 +79,16 @@ public class IndexView extends View {
 
     this.commonHostnameSuffixToOmit = configuration.getCommonHostnameSuffixToOmit().or("");
 
+    this.taskS3LogOmitPrefix = configuration.getUiConfiguration().getTaskS3LogOmitPrefix();
+
+    this.warnIfScheduledJobIsRunningPastNextRunPct = configuration.getWarnIfScheduledJobIsRunningPastNextRunPct();
+
     ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
     try {
       this.shellCommands = ow.writeValueAsString(configuration.getUiConfiguration().getShellCommands());
     } catch (JsonProcessingException e) {
       throw Throwables.propagate(e);
     }
-
-    this.taskS3LogOmitPrefix = configuration.getUiConfiguration().getTaskS3LogOmitPrefix();
-
-    this.warnIfScheduledJobIsRunningPastNextRunPct = configuration.getWarnIfScheduledJobIsRunningPastNextRunPct();
   }
 
   public String getAppRoot() {
@@ -163,16 +163,16 @@ public class IndexView extends View {
     return commonHostnameSuffixToOmit;
   }
 
-  public String getShellCommands() {
-    return shellCommands;
-  }
-
   public String getTaskS3LogOmitPrefix() {
     return taskS3LogOmitPrefix;
   }
 
   public Integer getWarnIfScheduledJobIsRunningPastNextRunPct() {
     return warnIfScheduledJobIsRunningPastNextRunPct;
+  }
+
+  public String getShellCommands() {
+    return shellCommands;
   }
 
   @Override
@@ -195,9 +195,10 @@ public class IndexView extends View {
             ", defaultDeployHealthTimeoutSeconds=" + defaultDeployHealthTimeoutSeconds +
             ", runningTaskLogPath='" + runningTaskLogPath + '\'' +
             ", finishedTaskLogPath='" + finishedTaskLogPath + '\'' +
-            ", shellCommands='" + shellCommands + '\'' +
             ", commonHostnameSuffixToOmit='" + commonHostnameSuffixToOmit + '\'' +
-            ", warnIfScheduledJobIsRunningPastNextRunPct='" + warnIfScheduledJobIsRunningPastNextRunPct + '\'' +
+            ", taskS3LogOmitPrefix='" + taskS3LogOmitPrefix + '\'' +
+            ", warnIfScheduledJobIsRunningPastNextRunPct=" + warnIfScheduledJobIsRunningPastNextRunPct +
+            ", shellCommands='" + shellCommands + '\'' +
             ']';
   }
 }

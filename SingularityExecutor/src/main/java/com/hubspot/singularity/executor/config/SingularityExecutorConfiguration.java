@@ -215,15 +215,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private int dockerStopTimeout = 15;
 
-  @JsonProperty
-  public List<SingularityExecutorShellCommandDescriptor> shellCommands = Collections.emptyList();
-
-  @JsonProperty
-  public String shellCommandOutFile = "executor.commands.log";
-
-  @JsonProperty
-  private String pidCommandPlaceholder = "{PID}";
-
   @NotEmpty
   @JsonProperty
   private String cgroupsMesosCpuTasksFormat = "/cgroup/cpu/%s/tasks";
@@ -246,6 +237,15 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   @NotEmpty
   private String signatureVerifyOut = "executor.gpg.out";
+
+  @JsonProperty
+  public List<SingularityExecutorShellCommandDescriptor> shellCommands = Collections.emptyList();
+
+  @JsonProperty
+  public String shellCommandOutFile = "executor.commands.log";
+
+  @JsonProperty
+  private String pidCommandPlaceholder = "{PID}";
 
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
@@ -544,22 +544,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.disableThreadChecker = disableThreadChecker;
   }
 
-  public List<SingularityExecutorShellCommandDescriptor> getShellCommands() {
-    return shellCommands;
-  }
-
-  public void setShellCommands(List<SingularityExecutorShellCommandDescriptor> shellCommands) {
-    this.shellCommands = shellCommands;
-  }
-
-  public String getShellCommandOutFile() {
-    return shellCommandOutFile;
-  }
-
-  public void setShellCommandOutFile(String shellCommandOutFile) {
-    this.shellCommandOutFile = shellCommandOutFile;
-  }
-
   public String getCgroupsMesosCpuTasksFormat() {
     return cgroupsMesosCpuTasksFormat;
   }
@@ -606,6 +590,21 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public void setSignatureVerifyOut(String signatureVerifyOut) {
     this.signatureVerifyOut = signatureVerifyOut;
+  }
+  public List<SingularityExecutorShellCommandDescriptor> getShellCommands() {
+    return shellCommands;
+  }
+
+  public void setShellCommands(List<SingularityExecutorShellCommandDescriptor> shellCommands) {
+    this.shellCommands = shellCommands;
+  }
+
+  public String getShellCommandOutFile() {
+    return shellCommandOutFile;
+  }
+
+  public void setShellCommandOutFile(String shellCommandOutFile) {
+    this.shellCommandOutFile = shellCommandOutFile;
   }
 
   @Override
@@ -655,6 +654,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", artifactSignatureVerificationCommand=" + artifactSignatureVerificationCommand +
             ", failTaskOnInvalidArtifactSignature=" + failTaskOnInvalidArtifactSignature +
             ", signatureVerifyOut='" + signatureVerifyOut + '\'' +
+            ", shellCommands=" + shellCommands +
+            ", shellCommandOutFile='" + shellCommandOutFile + '\'' +
+            ", pidCommandPlaceholder='" + pidCommandPlaceholder + '\'' +
             ']';
   }
 

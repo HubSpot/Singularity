@@ -32,9 +32,9 @@ class TaskDetailController extends Controller
         info:                       require '../templates/taskDetail/taskInfo'
         environment:                require '../templates/taskDetail/taskEnvironment'
         resourceUsage:              require '../templates/taskDetail/taskResourceUsage'
-        shellCommands:              require '../templates/taskDetail/taskShellCommands'
-        latestLog:                  require '../templates/taskDetail/taskLatestLog'
         alerts:                     require '../templates/alerts'
+        latestLog:                  require '../templates/taskDetail/taskLatestLog'
+        shellCommands:              require '../templates/taskDetail/taskShellCommands'
 
     initialize: ({@taskId, @filePath}) ->
         @title @taskId
@@ -110,13 +110,13 @@ class TaskDetailController extends Controller
             model:    @models.resourceUsage
             template: @templates.resourceUsage
 
-        @subviews.shellCommands = new SimpleSubview
-            model: @models.task
-            template: @templates.shellCommands
-
         @subviews.alerts = new SimpleSubview
             collection:    @collections.alerts
             template:      @templates.alerts
+
+        @subviews.shellCommands = new SimpleSubview
+            model: @models.task
+            template: @templates.shellCommands
 
         #
         # Getting stuff in gear
