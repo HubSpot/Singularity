@@ -31,7 +31,7 @@ public class SingularityExecutorShellCommandRunnerCallable extends SafeProcessMa
   public Integer call() throws Exception {
     try (final PrintWriter outputWriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream(outputFile, true), Charsets.UTF_8))) {
       outputWriter.println("#");
-      outputWriter.println(String.format("# %s: Launching %s", new Date(), JavaUtils.SPACE_JOINER.join(processBuilder.command())));
+      outputWriter.println(String.format("# %s -- Launching %s", new Date(), JavaUtils.SPACE_JOINER.join(processBuilder.command())));
       outputWriter.println("#");
     }
 
