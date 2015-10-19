@@ -467,7 +467,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public Optional<SingularityTaskHistory> getTaskHistory(SingularityTaskId taskId) {
-    final Optional<SingularityTask> task = getTask(taskId);
+    final Optional<SingularityTask> task = getTaskCheckCache(taskId, true);
 
     if (!task.isPresent()) {
       return Optional.absent();
@@ -522,11 +522,15 @@ public class TaskManager extends CuratorAsyncManager {
     return getData(getPendingPath(pendingTaskId), pendingTaskTranscoder);
   }
 
-  @Timed
-  public Optional<SingularityTask> getTask(SingularityTaskId taskId) {
+  private Optional<SingularityTask> getTaskCheckCache(SingularityTaskId taskId, boolean shouldCheckExists) {
     final String path = getTaskPath(taskId);
 
-    return getData(path, taskTranscoder, Optional.of(taskCache));
+    return getData(path, taskTranscoder, taskCache, shouldCheckExists);
+  }
+
+  @Timed
+  public Optional<SingularityTask> getTask(SingularityTaskId taskId) {
+    return getTaskCheckCache(taskId, false);
   }
 
   public List<SingularityPendingTaskId> getPendingTaskIds() {
