@@ -18,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
 import com.hubspot.mesos.MesosUtils;
+import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandDescriptor;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
@@ -237,8 +238,36 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @NotEmpty
   private String signatureVerifyOut = "executor.gpg.out";
 
+  @JsonProperty
+  public List<SingularityExecutorShellCommandDescriptor> shellCommands = Collections.emptyList();
+
+  @JsonProperty
+  public String shellCommandOutFile = "executor.commands.log";
+
+  @JsonProperty
+  private String shellCommandPidPlaceholder = "{PID}";
+
+  @JsonProperty
+  private String shellCommandUserPlaceholder = "{USER}";
+
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
+  }
+
+  public String getShellCommandPidPlaceholder() {
+    return shellCommandPidPlaceholder;
+  }
+
+  public void setShellCommandPidPlaceholder(String shellCommandPidPlaceholder) {
+    this.shellCommandPidPlaceholder = shellCommandPidPlaceholder;
+  }
+
+  public String getShellCommandUserPlaceholder() {
+    return shellCommandUserPlaceholder;
+  }
+
+  public void setShellCommandUserPlaceholder(String shellCommandUserPlaceholder) {
+    this.shellCommandUserPlaceholder = shellCommandUserPlaceholder;
   }
 
   public List<String> getLogrotateAdditionalFiles() {
@@ -573,6 +602,21 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   public void setSignatureVerifyOut(String signatureVerifyOut) {
     this.signatureVerifyOut = signatureVerifyOut;
   }
+  public List<SingularityExecutorShellCommandDescriptor> getShellCommands() {
+    return shellCommands;
+  }
+
+  public void setShellCommands(List<SingularityExecutorShellCommandDescriptor> shellCommands) {
+    this.shellCommands = shellCommands;
+  }
+
+  public String getShellCommandOutFile() {
+    return shellCommandOutFile;
+  }
+
+  public void setShellCommandOutFile(String shellCommandOutFile) {
+    this.shellCommandOutFile = shellCommandOutFile;
+  }
 
   @Override
   public String toString() {
@@ -618,6 +662,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", artifactSignatureVerificationCommand=" + artifactSignatureVerificationCommand +
             ", failTaskOnInvalidArtifactSignature=" + failTaskOnInvalidArtifactSignature +
             ", signatureVerifyOut='" + signatureVerifyOut + '\'' +
+            ", shellCommands=" + shellCommands +
+            ", shellCommandOutFile='" + shellCommandOutFile + '\'' +
+            ", shellCommandPidPlaceholder='" + shellCommandPidPlaceholder + '\'' +
+            ", shellCommandUserPlaceholder='" + shellCommandUserPlaceholder + '\'' +
             ']';
   }
 

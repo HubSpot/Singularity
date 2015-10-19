@@ -88,6 +88,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long deployHealthyBySeconds = 120;
 
+  private int dispatchTaskShellCommandsEverySeconds = 5;
+
   private long debugCuratorCallOverBytes = 25000;
 
   private long debugCuratorCallOverMillis = 250;
@@ -210,6 +212,10 @@ public class SingularityConfiguration extends Configuration {
 
   public long getCacheStateForMillis() {
     return cacheStateForMillis;
+  }
+
+  public long getDispatchTaskShellCommandsEverySeconds() {
+    return dispatchTaskShellCommandsEverySeconds;
   }
 
   public long getCheckDeploysEverySeconds() {
@@ -730,6 +736,10 @@ public class SingularityConfiguration extends Configuration {
 
   public void setNewTaskCheckerBaseDelaySeconds(int newTaskCheckerBaseDelaySeconds) {
     this.newTaskCheckerBaseDelaySeconds = newTaskCheckerBaseDelaySeconds;
+  }
+
+  public void setDispatchTaskShellCommandsEverySeconds(int dispatchTaskShellCommandsEverySeconds) {
+    this.dispatchTaskShellCommandsEverySeconds = dispatchTaskShellCommandsEverySeconds;
   }
 
   public void setPersistHistoryEverySeconds(long persistHistoryEverySeconds) {

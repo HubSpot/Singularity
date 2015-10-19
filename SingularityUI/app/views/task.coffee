@@ -1,4 +1,10 @@
 View = require './view'
+Task = require '../models/Task'
+TaskFiles = require '../collections/TaskFiles'
+
+commandRedirectTemplate = require '../templates/vex/taskCommandRedirect'
+
+interval = (a, b) -> setInterval(b, a)
 
 class TaskView extends View
 
@@ -9,6 +15,9 @@ class TaskView extends View
             'click [data-action="viewObjectJSON"]': 'viewJson'
             'click [data-action="viewJsonProperty"]': 'viewJsonProperty'
             'click [data-action="remove"]': 'killTask'
+            'submit [data-action="runShell"]': 'executeCommand'
+            'change [data-action="cmd"]': 'cmdSelected'
+
 
     initialize: ({@taskId}) ->
         @subviews.healthcheckNotification.on 'toggleHealthchecks', @toggleHealthchecks
@@ -29,6 +38,7 @@ class TaskView extends View
         @$('#info').html                        @subviews.info.$el
         @$('#resources').html                   @subviews.resourceUsage.$el
         @$('#environment').html                 @subviews.environment.$el
+        @$('#shell-commands').html              @subviews.shellCommands.$el
 
         super.afterRender()
 
@@ -62,5 +72,61 @@ class TaskView extends View
         taskModel.promptKill =>
             setTimeout (=> @trigger 'refreshrequest'), 1000
 
+
+    executeCommand: (event) ->
+        event.preventDefault()
+        cmd = $("#cmd option:selected").text()
+        options = $('#cmd-option').val()
+        return if @$('#btn_exec').attr 'disabled'
+        return if !cmd
+        taskModel = new Task id: @taskId
+        taskModel.runShellCommand(cmd, options)
+        $('#cmd-confirm').text('Command Sent')
+        if $("#open-log").is(':checked')
+            @executeCommandRedirect()
+            @pollForCmdFile();
+
+    cmdSelected: (event) ->
+        cmd = config.shellCommands.filter((cmd) ->
+          return cmd.name is $("#cmd option:selected").text()
+        )[0]
+        console.log cmd
+        $('.cmd-description').text(cmd.description or '')
+        $('#btn_exec').prop("disabled", false)
+
+        options = $('#cmd-option')
+        options.empty()
+        if cmd.options
+            $('#options').removeClass('hidden')
+            for option in cmd.options
+                options.append($("<option></option>").attr("value", option.name).text(option.name + (if option.description then (' (' + option.description + ')') else '')))
+        else
+            $('#options').addClass('hidden')
+        options.prop("disabled", !cmd.options)
+
+    executeCommandRedirect: ->
+        vex.open
+            message: "<h3>Waiting for command to run</h3>"
+            content: commandRedirectTemplate
+            buttons: [
+                vex.dialog.buttons.NO
+            ]
+            beforeClose: =>
+                return true
+
+    pollForCmdFile: =>
+        files = new TaskFiles [], {@taskId}
+        @pollInterval = interval 1000, =>
+            files.fetch().done =>
+                if @containsFile files.models, 'executor.commands.log'
+                    clearInterval @pollInterval
+                    vex.close()
+                    app.router.navigate "task/#{@taskId}/tail/#{@taskId}/executor.commands.log", trigger: true
+
+    containsFile: (files, name) ->
+        for file in files
+            if file.id is name
+                return true
+        return false
 
 module.exports = TaskView

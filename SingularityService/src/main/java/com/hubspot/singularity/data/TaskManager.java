@@ -2,6 +2,7 @@ package com.hubspot.singularity.data;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -47,6 +48,10 @@ import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHolder;
+import com.hubspot.singularity.SingularityTaskShellCommandHistory;
+import com.hubspot.singularity.SingularityTaskShellCommandRequest;
+import com.hubspot.singularity.SingularityTaskShellCommandRequestId;
+import com.hubspot.singularity.SingularityTaskShellCommandUpdate;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
@@ -67,6 +72,7 @@ public class TaskManager extends CuratorAsyncManager {
   private static final String CLEANUP_PATH_ROOT = TASKS_ROOT + "/cleanup";
   private static final String LB_CLEANUP_PATH_ROOT = TASKS_ROOT + "/lbcleanup";
   private static final String DRIVER_KILLED_PATH_ROOT = TASKS_ROOT + "/killed";
+  private static final String SHELL_REQUESTS_QUEUE_PATH_ROOT = TASKS_ROOT + "/shellqueue";
 
   private static final String HISTORY_PATH_ROOT = TASKS_ROOT + "/history";
 
@@ -76,6 +82,10 @@ public class TaskManager extends CuratorAsyncManager {
   private static final String NOTIFIED_OVERDUE_TO_FINISH_KEY = "NOTIFIED_OVERDUE_TO_FINISH";
 
   private static final String LOAD_BALANCER_PRE_KEY = "LOAD_BALANCER_";
+
+  private static final String SHELLS_PATH = "/shells";
+  private static final String SHELL_REQUEST_KEY = "REQUEST";
+  private static final String SHELL_UPDATES_PATH = "/updates";
 
   private static final String HEALTHCHECKS_PATH = "/healthchecks";
   private static final String UPDATES_PATH = "/updates";
@@ -88,6 +98,8 @@ public class TaskManager extends CuratorAsyncManager {
   private final Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder;
   private final Transcoder<SingularityLoadBalancerUpdate> taskLoadBalancerUpdateTranscoder;
   private final Transcoder<SingularityPendingTask> pendingTaskTranscoder;
+  private final Transcoder<SingularityTaskShellCommandRequest> taskShellCommandRequestTranscoder;
+  private final Transcoder<SingularityTaskShellCommandUpdate> taskShellCommandUpdateTranscoder;
 
   private final IdTranscoder<SingularityPendingTaskId> pendingTaskIdTranscoder;
   private final IdTranscoder<SingularityTaskId> taskIdTranscoder;
@@ -102,7 +114,7 @@ public class TaskManager extends CuratorAsyncManager {
       IdTranscoder<SingularityPendingTaskId> pendingTaskIdTranscoder, IdTranscoder<SingularityTaskId> taskIdTranscoder, Transcoder<SingularityLoadBalancerUpdate> taskLoadBalancerHistoryUpdateTranscoder,
       Transcoder<SingularityTaskStatusHolder> taskStatusTranscoder, Transcoder<SingularityTaskHealthcheckResult> healthcheckResultTranscoder, Transcoder<SingularityTask> taskTranscoder,
       Transcoder<SingularityTaskCleanup> taskCleanupTranscoder, Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder, Transcoder<SingularityPendingTask> pendingTaskTranscoder,
-      Transcoder<SingularityKilledTaskIdRecord> killedTaskIdRecordTranscoder, ZkCache<SingularityTask> taskCache, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId) {
+      Transcoder<SingularityKilledTaskIdRecord> killedTaskIdRecordTranscoder, Transcoder<SingularityTaskShellCommandRequest> taskShellCommandRequestTranscoder, Transcoder<SingularityTaskShellCommandUpdate> taskShellCommandUpdateTranscoder, ZkCache<SingularityTask> taskCache, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId) {
     super(curator, configuration, metricRegistry);
 
     this.healthcheckResultTranscoder = healthcheckResultTranscoder;
@@ -113,10 +125,12 @@ public class TaskManager extends CuratorAsyncManager {
     this.taskHistoryUpdateTranscoder = taskHistoryUpdateTranscoder;
     this.taskIdTranscoder = taskIdTranscoder;
     this.pendingTaskTranscoder = pendingTaskTranscoder;
+    this.taskShellCommandRequestTranscoder = taskShellCommandRequestTranscoder;
     this.pendingTaskIdTranscoder = pendingTaskIdTranscoder;
     this.taskLoadBalancerUpdateTranscoder = taskLoadBalancerHistoryUpdateTranscoder;
     this.singularityEventListener = singularityEventListener;
     this.taskCache = taskCache;
+    this.taskShellCommandUpdateTranscoder = taskShellCommandUpdateTranscoder;
 
     this.serverId = serverId;
   }
@@ -141,6 +155,30 @@ public class TaskManager extends CuratorAsyncManager {
 
   private String getHealthcheckPath(SingularityTaskHealthcheckResult healthcheck) {
     return ZKPaths.makePath(getHealthcheckParentPath(healthcheck.getTaskId()), Long.toString(healthcheck.getTimestamp()));
+  }
+
+  private String getShellRequestQueuePath(SingularityTaskShellCommandRequest shellRequest) {
+    return ZKPaths.makePath(SHELL_REQUESTS_QUEUE_PATH_ROOT, shellRequest.getId().getId());
+  }
+
+  private String getShellsParentPath(SingularityTaskId taskId) {
+    return ZKPaths.makePath(getHistoryPath(taskId), SHELLS_PATH);
+  }
+
+  private String getShellHistoryParentPath(SingularityTaskShellCommandRequestId shellRequestId) {
+    return ZKPaths.makePath(getShellsParentPath(shellRequestId.getTaskId()), shellRequestId.getSubIdForTaskHistory());
+  }
+
+  private String getShellHistoryRequestPath(SingularityTaskShellCommandRequestId shellRequestId) {
+    return ZKPaths.makePath(getShellHistoryParentPath(shellRequestId), SHELL_REQUEST_KEY);
+  }
+
+  private String getShellHistoryUpdateParentPath(SingularityTaskShellCommandRequestId shellRequestId) {
+    return ZKPaths.makePath(getShellHistoryParentPath(shellRequestId), SHELL_UPDATES_PATH);
+  }
+
+  private String getShellHistoryUpdatePath(SingularityTaskShellCommandUpdate shellUpdate) {
+    return ZKPaths.makePath(getShellHistoryUpdateParentPath(shellUpdate.getShellRequestId()), shellUpdate.getUpdateType().name());
   }
 
   private String getTaskPath(SingularityTaskId taskId) {
@@ -444,7 +482,20 @@ public class TaskManager extends CuratorAsyncManager {
     checkLoadBalancerHistory(loadBalancerUpdates, taskId, LoadBalancerRequestType.ADD);
     checkLoadBalancerHistory(loadBalancerUpdates, taskId, LoadBalancerRequestType.REMOVE);
 
-    return Optional.of(new SingularityTaskHistory(taskUpdates, directory, healthchecks, task.get(), loadBalancerUpdates));
+    List<SingularityTaskShellCommandHistory> shellCommandHistory = getTaskShellCommandHistory(taskId);
+
+    return Optional.of(new SingularityTaskHistory(taskUpdates, directory, healthchecks, task.get(), loadBalancerUpdates, shellCommandHistory));
+  }
+
+  private List<SingularityTaskShellCommandHistory> getTaskShellCommandHistory(SingularityTaskId taskId) {
+    List<SingularityTaskShellCommandRequest> shellRequests = getTaskShellCommandRequestsForTask(taskId);
+    List<SingularityTaskShellCommandHistory> shellCommandHistory = new ArrayList<>(shellRequests.size());
+
+    for (SingularityTaskShellCommandRequest shellRequest : shellRequests) {
+      shellCommandHistory.add(new SingularityTaskShellCommandHistory(shellRequest, getTaskShellCommandUpdates(shellRequest.getId())));
+    }
+
+    return shellCommandHistory;
   }
 
   private void checkLoadBalancerHistory(List<SingularityLoadBalancerUpdate> loadBalancerUpdates, SingularityTaskId taskId, LoadBalancerRequestType lbRequestType) {
@@ -560,6 +611,46 @@ public class TaskManager extends CuratorAsyncManager {
   @Timed
   public SingularityDeleteResult deleteLastActiveTaskStatus(SingularityTaskId taskId) {
     return delete(getLastActiveTaskStatusPath(taskId));
+  }
+
+  public SingularityCreateResult saveTaskShellCommandRequestToQueue(SingularityTaskShellCommandRequest shellRequest) {
+    return save(getShellRequestQueuePath(shellRequest), shellRequest, taskShellCommandRequestTranscoder);
+  }
+
+  public SingularityCreateResult saveTaskShellCommandRequestToTask(SingularityTaskShellCommandRequest shellRequest) {
+    return save(getShellHistoryRequestPath(shellRequest.getId()), shellRequest, taskShellCommandRequestTranscoder);
+  }
+
+  public SingularityCreateResult saveTaskShellCommandUpdate(SingularityTaskShellCommandUpdate shellUpdate) {
+    return save(getShellHistoryUpdatePath(shellUpdate), shellUpdate, taskShellCommandUpdateTranscoder);
+  }
+
+  public List<SingularityTaskShellCommandUpdate> getTaskShellCommandUpdates(SingularityTaskShellCommandRequestId shellRequestId) {
+    return getAsyncChildren(getShellHistoryUpdateParentPath(shellRequestId), taskShellCommandUpdateTranscoder);
+  }
+
+  public List<SingularityTaskShellCommandRequest> getTaskShellCommandRequestsForTask(SingularityTaskId taskId) {
+    final String parentPath = getShellsParentPath(taskId);
+    List<String> children = getChildren(parentPath);
+    List<String> paths = Lists.newArrayListWithCapacity(children.size());
+
+    for (String child : children) {
+      paths.add(ZKPaths.makePath(parentPath, ZKPaths.makePath(child, SHELL_REQUEST_KEY)));
+    }
+
+    List<SingularityTaskShellCommandRequest> shellRequests = getAsync(parentPath, paths, taskShellCommandRequestTranscoder);
+
+    Collections.sort(shellRequests);
+
+    return shellRequests;
+  }
+
+  public List<SingularityTaskShellCommandRequest> getAllQueuedTaskShellCommandRequests() {
+    return getAsyncChildren(SHELL_REQUESTS_QUEUE_PATH_ROOT, taskShellCommandRequestTranscoder);
+  }
+
+  public SingularityDeleteResult deleteTaskShellCommandRequestFromQueue(SingularityTaskShellCommandRequest shellRequest) {
+    return delete(getShellRequestQueuePath(shellRequest));
   }
 
   public SingularityCreateResult saveTaskCleanup(SingularityTaskCleanup cleanup) {

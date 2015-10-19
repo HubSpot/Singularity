@@ -80,10 +80,11 @@ public class SingularityHistoryPurgerTest extends SingularitySchedulerTestBase {
     List<SingularityTaskHealthcheckResult> hcs = Collections.emptyList();
     List<SingularityLoadBalancerUpdate> upds = Collections.emptyList();
     List<SingularityTaskHistoryUpdate> historyUpdates = Collections.emptyList();
+    List<SingularityTaskShellCommandHistory> shellHistory = Collections.emptyList();
 
     SingularityTask task = prepTask(request, firstDeploy, launchTime, 1);
 
-    SingularityTaskHistory taskHistory = new SingularityTaskHistory(historyUpdates, directory, hcs, task, upds);
+    SingularityTaskHistory taskHistory = new SingularityTaskHistory(historyUpdates, directory, hcs, task, upds, shellHistory);
 
     return taskHistory;
   }
