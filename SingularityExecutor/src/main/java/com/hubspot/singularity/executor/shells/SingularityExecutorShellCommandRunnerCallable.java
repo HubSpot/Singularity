@@ -2,12 +2,14 @@ package com.hubspot.singularity.executor.shells;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.Date;
 import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityTaskShellCommandUpdate.UpdateType;
@@ -27,7 +29,7 @@ public class SingularityExecutorShellCommandRunnerCallable extends SafeProcessMa
 
   @Override
   public Integer call() throws Exception {
-    try (final PrintWriter outputWriter = new PrintWriter(new FileOutputStream(outputFile, true))) {
+    try (final PrintWriter outputWriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream(outputFile, true), Charsets.UTF_8))) {
       outputWriter.println("#");
       outputWriter.println(String.format("# %s: Launching %s", new Date(), JavaUtils.SPACE_JOINER.join(processBuilder.command())));
       outputWriter.println("#");
