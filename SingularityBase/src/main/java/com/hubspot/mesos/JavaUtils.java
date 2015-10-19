@@ -45,6 +45,8 @@ public final class JavaUtils {
   public static final Splitter COMMA_SPLITTER = Splitter.on(',').omitEmptyStrings().trimResults();
   public static final Joiner COMMA_JOINER = Joiner.on(',');
 
+  public static final Joiner SPACE_JOINER = Joiner.on(" ");
+
   public static String obfuscateValue(String value) {
     if (value == null) {
       return value;
