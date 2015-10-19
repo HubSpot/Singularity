@@ -128,7 +128,11 @@ public class SingularityExecutor implements Executor {
 
   @Override
   public void frameworkMessage(ExecutorDriver executorDriver, byte[] bytes) {
-    messageHandler.handleMessage(bytes);
+    try {
+      messageHandler.handleMessage(bytes);
+    } catch (Throwable t) {
+      LOG.warn("Unexpected exception while handling framework message", t);
+    }
   }
 
   /**

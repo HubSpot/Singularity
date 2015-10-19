@@ -19,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -269,13 +268,13 @@ public class SingularityExecutorMonitor {
   }
 
   public ListeningExecutorService createExecutorService(String taskId) {
-    Preconditions.checkState(!taskToShellCommandPool.containsKey(taskId));
+    if (taskToShellCommandPool.containsKey(taskId)) {
+      ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat(taskId + "-shellCommandPool-%d").build()));
 
-    ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat(taskId + "-shellCommandPool-%d").build()));
+      taskToShellCommandPool.put(taskId, executorService);
+    }
 
-    taskToShellCommandPool.put(taskId, executorService);
-
-    return executorService;
+    return taskToShellCommandPool.get(taskId);
   }
 
   public void finishTask(final SingularityExecutorTask task, Protos.TaskState taskState, String message, Optional<String> errorMsg, Object... errorObjects) {
