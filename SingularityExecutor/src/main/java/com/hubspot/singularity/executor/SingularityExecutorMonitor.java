@@ -267,8 +267,8 @@ public class SingularityExecutorMonitor {
     return Optional.fromNullable(tasks.get(taskId));
   }
 
-  public ListeningExecutorService createExecutorService(String taskId) {
-    if (taskToShellCommandPool.containsKey(taskId)) {
+  public ListeningExecutorService getShellCommandExecutorServiceForTask(String taskId) {
+    if (!taskToShellCommandPool.containsKey(taskId)) {
       ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat(taskId + "-shellCommandPool-%d").build()));
 
       taskToShellCommandPool.put(taskId, executorService);
