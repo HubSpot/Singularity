@@ -60,8 +60,8 @@ public class SingularityExecutorShellCommandRunner {
 
     File outputFile = MesosUtils.getTaskDirectoryPath(getTask().getTaskId()).resolve(executorConfiguration.getShellCommandOutFile()).toFile();
 
-    builder.redirectOutput(outputFile);
-    builder.redirectError(outputFile);
+    builder.redirectOutput(ProcessBuilder.Redirect.appendTo(outputFile));
+    builder.redirectError(ProcessBuilder.Redirect.appendTo(outputFile));
 
     return builder;
   }
