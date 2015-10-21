@@ -1,6 +1,7 @@
 View = require './view'
 Task = require '../models/Task'
 TaskFiles = require '../collections/TaskFiles'
+TaskHistory = require '../models/TaskHistory'
 
 commandRedirectTemplate = require '../templates/vex/taskCommandRedirect'
 
@@ -84,7 +85,7 @@ class TaskView extends View
         $('#cmd-confirm').text('Command Sent')
         if $("#open-log").is(':checked')
             @executeCommandRedirect()
-            @pollForCmdFile();
+            @pollForCommandStarted()
 
     cmdSelected: (event) ->
         cmd = config.shellCommands.filter((cmd) ->
@@ -113,6 +114,14 @@ class TaskView extends View
             ]
             beforeClose: =>
                 return true
+
+    pollForCommandStarted: =>
+        task = new TaskHistory {@taskId}
+        @pollInterval = interval 1000, =>
+            task.fetch().done =>
+                console.log task
+                clearInterval @pollInterval
+                @pollForCmdFile()
 
     pollForCmdFile: =>
         files = new TaskFiles [], {@taskId}
