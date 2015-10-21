@@ -10,6 +10,11 @@
 
   <artifactId>SingularityServiceIntegrationTests</artifactId>
 
+  <properties>
+    <singularity.mysql.password>hellscape</singularity.mysql.password>
+    <singularity.mysql.database>Singularity</singularity.mysql.database>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>com.hubspot</groupId>
@@ -185,7 +190,7 @@
                       <MESOS_MASTER>zk://singularity-test-zk:2181/mesos</MESOS_MASTER>
                       <MESOS_CONTAINERIZERS>docker,mesos</MESOS_CONTAINERIZERS>
                       <MESOS_HOSTNAME>${mesos.slave2.hostname}</MESOS_HOSTNAME>
-                      <MESOS_PORT>5052</MESOS_PORT>
+                      <MESOS_PORT>5051</MESOS_PORT>
                       <MESOS_ATTRIBUTES>rackid:b</MESOS_ATTRIBUTES>
                     </env>
                     <volumes>
@@ -217,7 +222,7 @@
                       <MESOS_MASTER>zk://singularity-test-zk:2181/mesos</MESOS_MASTER>
                       <MESOS_CONTAINERIZERS>docker,mesos</MESOS_CONTAINERIZERS>
                       <MESOS_HOSTNAME>${mesos.slave3.hostname}</MESOS_HOSTNAME>
-                      <MESOS_PORT>5053</MESOS_PORT>
+                      <MESOS_PORT>5051</MESOS_PORT>
                       <MESOS_ATTRIBUTES>rackid:c</MESOS_ATTRIBUTES>
                     </env>
                     <volumes>
@@ -233,6 +238,23 @@
                   </run>
                 </image>
                 <image>
+                  <name>mysql:5.7</name>
+                  <alias>singularity-mysql</alias>
+                  <run>
+                    <ports>
+                      <port>mysql.port:3306</port>
+                    </ports>
+                    <env>
+                      <MYSQL_ROOT_PASSWORD>${singularity.mysql.password}</MYSQL_ROOT_PASSWORD>
+                      <MYSQL_DATABASE>${singularity.mysql.database}</MYSQL_DATABASE>
+                    </env>
+                    <wait>
+                      <log>MySQL init process done</log>
+                      <time>10000</time>
+                    </wait>
+                  </run>
+                </image>
+                <image>
                   <name>hubspot/singularityservice:${project.version}</name>
                   <alias>singularity-service</alias>
                   <run>
@@ -243,6 +265,7 @@
                       <link>singularity-test-slave1</link>
                       <link>singularity-test-slave2</link>
                       <link>singularity-test-slave3</link>
+                      <link>singularity-mysql</link>
                     </links>
                     <ports>
                       <port>singularity.port:7099</port>
@@ -251,10 +274,15 @@
                       <SINGULARITY_MESOS_MASTER>zk://singularity-test-zk:2181/mesos</SINGULARITY_MESOS_MASTER>
                       <SINGULARITY_ZK>singularity-test-zk:2181</SINGULARITY_ZK>
                       <SINGULARITY_URI_BASE>/singularity</SINGULARITY_URI_BASE>
+                      <SINGULARITY_DB_USER>root</SINGULARITY_DB_USER>
+                      <SINGULARITY_DB_PASSWORD>${singularity.mysql.password}</SINGULARITY_DB_PASSWORD>
+                      <SINGULARITY_DB_URL>jdbc:mysql://singularity-mysql:3306/${singularity.mysql.database}</SINGULARITY_DB_URL>
+                      <SINGULARITY_DB_MIGRATE>1</SINGULARITY_DB_MIGRATE>
+                      <SINGULARITY_PERSIST_HISTORY_EVERY_SECONDS>30</SINGULARITY_PERSIST_HISTORY_EVERY_SECONDS>
                     </env>
                     <wait>
                       <log>SingularityStartup: Finished startup</log>
-                      <time>10000</time>
+                      <time>20000</time>
                     </wait>
                   </run>
                 </image>
