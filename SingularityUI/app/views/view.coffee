@@ -35,6 +35,7 @@ class View extends Backbone.View
 
     afterRender: ->
       Sortable.init()
+      
       # Paginate client side collections
       $('table.paginated:not([id])').DataTable
         ordering: false
