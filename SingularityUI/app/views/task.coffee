@@ -144,7 +144,7 @@ class TaskView extends View
         for h in history
             if h.shellRequest.timestamp == timestamp
                 for u in h.shellUpdates
-                    if u.updateType == "FAILED"
+                    if u.updateType == "FAILED" or u.updateType == "INVALID"
                         return true
         return false
 
@@ -152,7 +152,7 @@ class TaskView extends View
         for h in history
             if h.shellRequest.timestamp == timestamp
                 for u in h.shellUpdates
-                    if u.updateType == "FAILED"
+                    if u.updateType == "FAILED" or u.updateType == "INVALID"
                         return u.message
         return ''
 
