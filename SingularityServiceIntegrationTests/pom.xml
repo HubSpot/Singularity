@@ -184,7 +184,7 @@
                       <link>singularity-test-master</link>
                     </links>
                     <ports>
-                      <port>mesos.slave2.port:5052</port>
+                      <port>mesos.slave2.port:5051</port>
                     </ports>
                     <env>
                       <MESOS_MASTER>zk://singularity-test-zk:2181/mesos</MESOS_MASTER>
@@ -216,7 +216,7 @@
                       <link>singularity-test-master</link>
                     </links>
                     <ports>
-                      <port>mesos.slave3.port:5053</port>
+                      <port>mesos.slave3.port:5051</port>
                     </ports>
                     <env>
                       <MESOS_MASTER>zk://singularity-test-zk:2181/mesos</MESOS_MASTER>
