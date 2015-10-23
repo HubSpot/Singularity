@@ -3,6 +3,16 @@
         <div class="row">
             <div class="col-md-9">
                 <ul class="breadcrumb">
+                    <li>
+                      <a href="{{appRoot}}/request/{{ taskHistory.task.taskId.requestId }}">
+                          Request
+                      </a>
+                    </li>
+                    <li>
+                      <a href="{{appRoot}}/task/{{ taskId }}">
+                          Task
+                      </a>
+                    </li>
                     {{#each breadcrumbs}}
                         <li>
                             {{#ifEqual name ../filename}}
