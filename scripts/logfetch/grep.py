@@ -6,6 +6,7 @@ GREP_COMMAND_FORMAT = '{0} {1}'
 DEFAULT_GREP_COMMAND = 'grep --color=always \'{0}\''
 
 def grep_files(args, all_logs):
+  sys.stderr.write('\n')
   if args.grep:
     if all_logs:
       all_logs.sort()
