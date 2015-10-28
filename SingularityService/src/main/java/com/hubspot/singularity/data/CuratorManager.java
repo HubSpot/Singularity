@@ -233,10 +233,10 @@ public abstract class CuratorManager {
     }
   }
 
-  protected <T> Optional<T> getData(String path, Optional<Stat> stat, Transcoder<T> transcoder, Optional<ZkCache<T>> zkCache) {
+  private <T> Optional<T> getData(String path, Optional<Stat> stat, Transcoder<T> transcoder, Optional<ZkCache<T>> zkCache, Optional<Boolean> shouldCheckExists) {
     if (!stat.isPresent() && zkCache.isPresent()) {
       Optional<T> cachedValue = zkCache.get().get(path);
-      if (cachedValue.isPresent()) {
+      if (cachedValue.isPresent() && (!shouldCheckExists.isPresent() || (shouldCheckExists.get().booleanValue() && checkExists(path).isPresent()))) {
         return cachedValue;
       }
     }
@@ -277,15 +277,15 @@ public abstract class CuratorManager {
   }
 
   protected <T> Optional<T> getData(String path, Transcoder<T> transcoder) {
-    return getData(path, Optional.<Stat> absent(), transcoder, Optional.<ZkCache<T>> absent());
+    return getData(path, Optional.<Stat> absent(), transcoder, Optional.<ZkCache<T>> absent(), Optional.<Boolean> absent());
   }
 
-  protected <T> Optional<T> getData(String path, Transcoder<T> transcoder, Optional<ZkCache<T>> zkCache) {
-    return getData(path, Optional.<Stat> absent(), transcoder, zkCache);
+  protected <T> Optional<T> getData(String path, Transcoder<T> transcoder, ZkCache<T> zkCache, boolean shouldCheckExists) {
+    return getData(path, Optional.<Stat> absent(), transcoder, Optional.of(zkCache), Optional.of(shouldCheckExists));
   }
 
   protected Optional<String> getStringData(String path) {
-    return getData(path, StringTranscoder.INSTANCE, Optional.<ZkCache<String>> absent());
+    return getData(path, Optional.<Stat> absent(), StringTranscoder.INSTANCE, Optional.<ZkCache<String>> absent(), Optional.<Boolean> absent());
   }
 
 }
