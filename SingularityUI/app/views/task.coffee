@@ -1,6 +1,7 @@
 View = require './view'
 Task = require '../models/Task'
 TaskFiles = require '../collections/TaskFiles'
+TaskHistory = require '../models/TaskHistory'
 
 commandRedirectTemplate = require '../templates/vex/taskCommandRedirect'
 
@@ -80,11 +81,13 @@ class TaskView extends View
         return if @$('#btn_exec').attr 'disabled'
         return if !cmd
         taskModel = new Task id: @taskId
-        taskModel.runShellCommand(cmd, options)
-        $('#cmd-confirm').text('Command Sent')
-        if $("#open-log").is(':checked')
-            @executeCommandRedirect()
-            @pollForCmdFile();
+        shellRequest = taskModel.runShellCommand(cmd, options)
+        shellRequest.success =>
+            timestamp = shellRequest.responseJSON.timestamp
+            $('#cmd-confirm').text('Command Sent')
+            if $("#open-log").is(':checked')
+                @executeCommandRedirect()
+                @pollForCommandStarted(timestamp)
 
     cmdSelected: (event) ->
         cmd = config.shellCommands.filter((cmd) ->
@@ -114,7 +117,47 @@ class TaskView extends View
             beforeClose: =>
                 return true
 
+    pollForCommandStarted: (timestamp) =>
+        $('#statusText').html('Waiting for command to start...')
+        task = new TaskHistory {@taskId}
+        @pollInterval = interval 1000, =>
+            task.fetch().done =>
+                history = task.get('shellCommandHistory');
+                if (history and @cmdRequestIsFailed(history, timestamp))
+                    clearInterval @pollInterval
+                    vex.close()
+                    message = @getCmdFailedMessage(history, timestamp)
+                    vex.dialog.alert "<h3>Command Failed</h3><p><code>#{message}</code></p>"
+                else if (history and @cmdRequestIsStarted(history, timestamp))
+                    clearInterval @pollInterval
+                    @pollForCmdFile()
+
+    cmdRequestIsStarted: (history, timestamp) ->
+        for h in history
+            if h.shellRequest.timestamp == timestamp
+                for u in h.shellUpdates
+                    if u.updateType == "STARTED"
+                        return true
+        return false
+
+    cmdRequestIsFailed: (history, timestamp) ->
+        for h in history
+            if h.shellRequest.timestamp == timestamp
+                for u in h.shellUpdates
+                    if u.updateType == "FAILED" or u.updateType == "INVALID"
+                        return true
+        return false
+
+    getCmdFailedMessage: (history, timestamp) ->
+        for h in history
+            if h.shellRequest.timestamp == timestamp
+                for u in h.shellUpdates
+                    if u.updateType == "FAILED" or u.updateType == "INVALID"
+                        return u.message
+        return ''
+
     pollForCmdFile: =>
+        $('#statusText').html('Waiting for <code>executor.commands.log</code> to exist...')
         files = new TaskFiles [], {@taskId}
         @pollInterval = interval 1000, =>
             files.fetch().done =>
