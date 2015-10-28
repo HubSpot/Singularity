@@ -1,0 +1,48 @@
+@import colors
+
+.link-list
+    padding 0
+    ul, li
+        list-style none
+
+// Simple Lists
+.list-plain
+    list-style none
+    padding-left 0
+    li
+        margin-bottom 5px
+
+// List of links in a panel
+.list-group--links
+    border none
+
+    .list-group-item
+        padding 0
+        a
+            display inline-block
+            &.inactive-link
+
+                &:hover
+                    background inherit
+                    color $base-text
+                
+    .list-group--slim
+        .list-group-item a
+            padding 5px 15px
+            
+.list-group--plain
+    .list-group-item
+        border none
+        a, li
+            margin: 5px 0
+
+.inactive-link, .inactive-link .chart__label
+    color $grey
+    text-decoration none
+    &:hover
+        text-decoration none
+        color $grey
+        cursor default
+        
+.list-large
+    font-size 18px

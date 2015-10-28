@@ -205,6 +205,10 @@ class SingularityMesosTaskBuilder {
       final DockerInfo.Builder dockerInfoBuilder = DockerInfo.newBuilder();
       dockerInfoBuilder.setImage(dockerInfo.get().getImage());
 
+      if (dockerInfo.get().getNetwork().isPresent()) {
+        dockerInfoBuilder.setNetwork(DockerInfo.Network.valueOf(dockerInfo.get().getNetwork().get().toString()));
+      }
+
       if (ports.isPresent() && !dockerInfo.get().getPortMappings().isEmpty()) {
         for (SingularityDockerPortMapping singularityDockerPortMapping : dockerInfo.get().getPortMappings()) {
           final Optional<DockerInfo.PortMapping> maybePortMapping = buildPortMapping(singularityDockerPortMapping, ports.get());
@@ -212,10 +216,6 @@ class SingularityMesosTaskBuilder {
           if (maybePortMapping.isPresent()) {
             dockerInfoBuilder.addPortMappings(maybePortMapping.get());
           }
-        }
-
-        if (dockerInfo.get().getNetwork().isPresent()) {
-          dockerInfoBuilder.setNetwork(DockerInfo.Network.valueOf(dockerInfo.get().getNetwork().get().toString()));
         }
       }
 

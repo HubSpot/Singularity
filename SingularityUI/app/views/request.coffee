@@ -16,11 +16,13 @@ class RequestView extends View
 
             'click [data-action="remove"]': 'removeRequest'
             'click [data-action="run-request-now"]': 'runRequest'
+            'click [data-action="rerun-task"]': 'rerunTask'
             'click [data-action="pause"]': 'pauseRequest'
             'click [data-action="scale"]': 'scaleRequest'
             'click [data-action="unpause"]': 'unpauseRequest'
             'click [data-action="bounce"]': 'bounceRequest'
             'click [data-action="exit-cooldown"]': 'exitCooldownRequest'
+            'click [data-action="starToggle"]': 'toggleStar'
 
             'click [data-action="run-now"]': 'runTask'
 
@@ -76,6 +78,23 @@ class RequestView extends View
                 @trigger 'refreshrequest'
                 setTimeout ( => @trigger 'refreshrequest'), 2500
 
+    rerunTask: (e) =>
+        taskId = e.target.getAttribute 'data-taskId'
+        @model.promptRerun taskId, (data) =>
+            # If user wants to redirect to a file after the task starts
+            if data.autoTail is 'on'
+                autoTailer = new AutoTailer({
+                    requestId: @requestId
+                    autoTailFilename: data.filename
+                    autoTailTimestamp: +new Date()
+                })
+
+                autoTailer.startAutoTailPolling()
+
+            else
+                @trigger 'refreshrequest'
+                setTimeout ( => @trigger 'refreshrequest'), 2500
+
     scaleRequest: (e) =>
         @model.promptScale =>
             @trigger 'refreshrequest'
@@ -108,5 +127,16 @@ class RequestView extends View
 
     flashDeployHistory: ->
         @subviews.deployHistory.flash()
+
+    toggleStar: (e) ->
+        $target = $(e.currentTarget)
+        id = $target.attr('data-id')
+        @collection.toggleStar id
+
+        starred = $target.attr('data-starred') is "true"
+        if starred
+            $target.attr 'data-starred', 'false'
+        else
+            $target.attr 'data-starred', 'true'
 
 module.exports = RequestView

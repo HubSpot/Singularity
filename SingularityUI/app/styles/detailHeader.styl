@@ -104,3 +104,21 @@
 
     .deploy-title
         color #bbb
+
+    a[data-starred]
+      margin-right 5px
+      text-decoration none
+
+    a[data-starred="true"]
+        color $linkBlue
+        opacity: 1
+
+        &:hover
+          opacity 0.9
+
+    a[data-starred="false"]
+        color $grey
+        opacity 0.2
+
+        &:hover
+          opacity 0.3

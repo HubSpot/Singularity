@@ -7,10 +7,11 @@ SimpleSubview = require '../views/simpleSubview'
 
 class RacksController extends Controller
 
-    initialize: ->
+    initialize: ({@state}) ->
         app.showPageLoader()
-        @collections.racks     = new Racks []
-        @setView new RacksView
+        @title 'Racks'
+        @collections.racks = new Racks []
+        @setView new RacksView _.extend {@state},
             collection: @collections.racks
 
         app.showView @view

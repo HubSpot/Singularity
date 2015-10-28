@@ -4,7 +4,7 @@ PaginableCollection = require './PaginableCollection'
 class HistoricalTasks extends PaginableCollection
 
     model: class TaskHistoryItem extends Backbone.Model
-        ignoreAttributes: ['id']
+        ignoreAttributes: ['id', 'canBeRunNow']
 
     url: -> "#{ config.apiRoot }/history/request/#{ @requestId }/tasks"
 

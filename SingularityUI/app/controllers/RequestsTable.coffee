@@ -7,6 +7,8 @@ RequestsTableView = require '../views/requests'
 class RequestsTableController extends Controller
 
     initialize: ({@state, @subFilter, @searchFilter}) ->
+        @title 'Requests'
+
         # We want the view to handle the page loader for this one
         @collections.requests = new Requests [], {@state}
 
@@ -14,7 +16,7 @@ class RequestsTableController extends Controller
             collection: @collections.requests
 
         @collections.requests.fetch()
-        
+
         app.showView @view
 
     refresh: ->
