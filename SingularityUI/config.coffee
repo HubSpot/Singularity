@@ -42,7 +42,7 @@ exports.config =
             apiRoot: process.env.SINGULARITY_API_URI ? ''
             slaveHttpPort: process.env.SINGULARITY_SLAVE_HTTP_PORT ? 5051
             title: process.env.SINGULARITY_TITLE ? 'Singularity (local dev)'
-            navColor: process.env.SINGULARITY_NAV_COLOR ? ''
+            navColor: process.env.SINGULARITY_NAV_COLOR
             defaultCpus: process.env.SINGUALRITY_DEFAULT_CPUS ? 1
             defaultMemory: process.env.SINGULARITY_DEFAULT_MEMORY ? 128
             defaultHealthcheckIntervalSeconds: process.env.SINGULARITY_DEFAULT_HEALTHCHECK_INTERVAL_SECONDS ? 5

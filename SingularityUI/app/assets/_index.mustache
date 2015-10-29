@@ -39,7 +39,12 @@
     <script src="{{{staticRoot}}}/js/app.js"></script>
     <script>require('initialize');</script>
 </head>
-<body class="env-color-{{{navColor}}}">
+{{#navColor}}
+<body class="env-color-{{{.}}}">
+{{/navColor}}
+{{^navColor}}
+<body>
+{{/navColor}}
     <div class="page-loader fixed"></div>
     <div id="page" class="container-fluid"></div>
     <div style="-webkit-transform: translateZ(0)"></div>
