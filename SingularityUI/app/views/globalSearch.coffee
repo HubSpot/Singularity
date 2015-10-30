@@ -1,5 +1,7 @@
 View = require './view'
 
+Requests = require '../collections/Requests'
+
 class GlobalSearchView extends View
 
     lastSearchQuery: ''
@@ -12,6 +14,8 @@ class GlobalSearchView extends View
             'click [data-action="close-global-seach"]': 'hide'
 
     initialize: ->
+        @requests = new Requests [], {'all'}
+
         $(window).on 'keydown', (event) =>
             focusBody = $(event.target).is 'body'
             focusInput = $(event.target).is @$ 'input[type="search"]'
@@ -42,18 +46,19 @@ class GlobalSearchView extends View
 
             @lastSearchQuery = query
 
-            $.ajax
-                url: "#{ config.apiRoot }/history/requests/search"
-                data: requestIdLike: query
+            fuse = new Fuse(
+                @requests.toJSON()
+                keys: ["request.id"]
+                threshold: 0.6
+                id: "request.id")
+            results = fuse.search(query)
 
-                success: (response) =>
-                    @lastResponse = response
-                    process response
+            process results.slice(0, 10)
 
         # Debounce event so we don't spam the server
         sourceFunction = _.debounce sourceFunction, 200
 
-        @$('input').typeahead 
+        @$('input').typeahead
             highlight: true
         ,
             source: sourceFunction
@@ -62,16 +67,17 @@ class GlobalSearchView extends View
         @$('input').on 'typeahead:selected', (event, requestId) =>
             @hide()
             app.router.navigate "/request/#{ requestId }", { trigger: true }
-            
+
     reset: ->
         @$('input').val ''
         @$('ul').removeClass 'dropdown-menu-hidden'
         @$('li').remove()
 
     show: ->
-        @reset()
-        @$el.parent().addClass 'global-search-active'
-        @$('input').focus()
+        @requests.fetch().done =>
+            @reset()
+            @$el.parent().addClass 'global-search-active'
+            @$('input').focus()
 
     hide: (event) ->
         if event?
