@@ -238,7 +238,7 @@ public class S3LogResource extends AbstractHistoryResource {
   }
 
   private List<SingularityS3Log> getS3Logs(Optional<String> group, Collection<String> prefixes) throws InterruptedException, ExecutionException, TimeoutException {
-    if (prefixes.size() == 0) {
+    if (prefixes.isEmpty()) {
       return Collections.emptyList();
     }
 
