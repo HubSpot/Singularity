@@ -1,5 +1,29 @@
 <div class="tail-header">
     <div class="container">
+      <div class="row">
+          <div class="col-md-12">
+                <ul class="breadcrumb">
+                    <li>
+                        Request
+                        <a href="{{appRoot}}/request/{{ taskHistory.task.taskId.requestId }}">
+                            {{ taskHistory.task.taskId.requestId }}
+                        </a>
+                    </li>
+                    <li>
+                        Deploy
+                        <a href="{{appRoot}}/request/{{ taskHistory.task.taskId.requestId }}/deploy/{{ taskHistory.task.taskId.deployId }}">
+                            {{ taskHistory.task.taskId.deployId }}
+                        </a>
+                    </li>
+                    <li>
+                      Task
+                      <a href="{{appRoot}}/task/{{ taskId }}">
+                          {{ taskId }}
+                      </a>
+                    </li>
+                </ul>
+          </div>
+      </div>
         <div class="row">
             <div class="col-md-9">
                 <ul class="breadcrumb">
