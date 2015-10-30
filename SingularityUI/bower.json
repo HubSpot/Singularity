@@ -23,6 +23,7 @@
     "tests"
   ],
   "dependencies": {
+    "backbone-react-component": "^0.9.0",
     "bootstrap": "~3.2.0",
     "backbone": "~1.1.2",
     "jquery": "~1.11.1",
@@ -36,7 +37,8 @@
     "sortable": "~0.6.0",
     "datatables": "~1.10.7",
     "datatables-bootstrap3-plugin": "~0.4.0",
-    "select2": "~3.5.2"
+    "select2": "~3.5.2",
+    "react": "~0.13.3"
   },
   "resolutions": {
     "backbone": "~1.1.2",
@@ -63,8 +65,8 @@
     },
     "sortable": {
       "main": [
-          "js/sortable.min.js",
-          "css/sortable-theme-bootstrap.css"
+        "js/sortable.min.js",
+        "css/sortable-theme-bootstrap.css"
       ]
     }
   }
