@@ -18,11 +18,6 @@ AggregateTail = React.createClass
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@);
 
-  componentDidMount: ->
-    @props.activeTasks.fetch().done =>
-      console.log @props.activeTasks
-      console.log @state
-
   render: ->
     console.log @state
     <div>
