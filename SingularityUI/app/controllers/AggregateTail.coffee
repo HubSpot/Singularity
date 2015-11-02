@@ -34,7 +34,6 @@ class AggregateTailController extends Controller
         taskId = @collections.activeTasks.toJSON()[0].id
         # Just using the first task until aggregate endpoint is available
         @collections.logLines.taskId = taskId
-        console.log taskId
         if @offset?
             @collections.logLines.fetchOffset(@offset)
         else

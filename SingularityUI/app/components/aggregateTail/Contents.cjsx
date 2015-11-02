@@ -1,3 +1,4 @@
+LogLine = require './LogLine'
 
 Contents = React.createClass
 
@@ -8,6 +9,12 @@ Contents = React.createClass
               <p>{@props.ajaxError.message}</p>
           </div>
       </div>
+
+  renderLines: ->
+    if @props.logLines
+      @props.logLines.map((l) =>
+        <LogLine content={l.data} />
+      )
 
   render: ->
     <div className="contents-container">
@@ -22,6 +29,7 @@ Contents = React.createClass
           </div>
           <div className="lines-wrapper">
               {@renderError()}
+              {@renderLines()}
           </div>
           <div className="tail-fetching-end">
               fetching more lines <div class="page-loader small"></div>
