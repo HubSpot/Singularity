@@ -6,22 +6,17 @@ class AggregateTailView extends View
 
     events: ->
 
-    initialize: ({@requestId, @path, @ajaxError, @offset}) ->
+    initialize: ({@requestId, @path, @ajaxError, @offset, @activeTasks, @logLines}) ->
 
-
-    render: =>
-      # Factory = React.createFactory(AggregateTail)
-      # root = Factory({
-      #   requestId: @requestId,
-      #   path: @path,
-      #   offset: @offset
-      #   })
+    render: ->
       React.render(
         <AggregateTail
           requestId={@requestId}
           path={@path}
           offset={@offset}
           ajaxError={@ajaxError}
+          logLines={@logLines}
+          activeTasks={@activeTasks}
         />,
         @el);
 

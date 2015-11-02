@@ -13,10 +13,11 @@ class AggregateTailController extends Controller
         @title 'Tail of ' + @path
 
         @models.ajaxError = new AjaxError
+        @collections.logLines = new LogLines [], {@taskId, @path, ajaxError: @models.ajaxError}
         @collections.activeTasks = new RequestTasks [],
             requestId: @requestId
             state:    'active'
-
+            
         @setView new AggregateTailView _.extend {@requestId, @path, @offset},
             activeTasks: @collections.activeTasks
             logLines: @collections.logLines
@@ -31,7 +32,7 @@ class AggregateTailController extends Controller
         taskId = @collections.activeTasks.toJSON()[0].id
         @collections.logLines = new LogLines [], {taskId, @path, ajaxError: @models.ajaxError}
         @collections.logLines.fetch().done =>
-          console.log @collections.logLines.toJSON()
+          # console.log @collections.logLines.toJSON()
 
 
 module.exports = AggregateTailController
