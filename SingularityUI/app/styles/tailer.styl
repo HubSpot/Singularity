@@ -48,6 +48,9 @@
     right 0
     background #f6f6f6
 
+    .empty-table-message
+      margin 20px
+
     .line
         font-family Consolas, "Liberation Mono", Courier, monospace
         min-height 1.6em // Show empty lines too
@@ -55,6 +58,7 @@
         padding 0 2em
         white-space pre
         font-size 12px
+        height 20px
 
         &:hover
             .offset-link
@@ -115,3 +119,9 @@
 
 .highlightLine
     background: #F8EEC7
+
+.infinite
+  position absolute
+  top 0
+  width 100%
+  overflow-x scroll !important
