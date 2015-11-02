@@ -2,6 +2,22 @@ LogLine = require './LogLine'
 
 Contents = React.createClass
 
+  getInitialState: ->
+    @state =
+      contentsHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0) - 180
+
+  componentWillMount: ->
+    $(window).on 'resize orientationChange', @handleResize
+
+  componentWillUnmount: ->
+    console.log 'unmount'
+    $(window).unbind 'resize orientationChange', handler: @handleResize
+
+  handleResize: ->
+    console.log 'resize'
+    @setState
+      contentsHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0) - 180
+
   renderError: ->
     if @props.ajaxError.get("present")
       <div className="lines-wrapper">
@@ -17,8 +33,7 @@ Contents = React.createClass
       )
 
   render: ->
-    h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0) - 180
-    console.log h
+    h = @state.contentsHeight
     <div className="contents-container">
       <div className="tail-indicator">
           <div className="page-loader centered"></div>

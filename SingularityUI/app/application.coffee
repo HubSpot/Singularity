@@ -130,7 +130,7 @@ class Application
                                     <p>The error has been saved to your JS console. <span class='copy-link'>Copy error message</span>.</p>
                                 </div>"""
                 console.error jqxhr
-                options = 
+                options =
                     selector: selector
                     linkText: 'Copy error message'
                     copyLink: '.copy-link'
@@ -155,6 +155,9 @@ class Application
     showView: (view) ->
         # Clean up events & stuff
         @views.current?.remove()
+
+        # Fire a view change event for manual cleanups (Unmount react components)
+        window.dispatchEvent(new Event('viewChange'));
 
         $(window).scrollTop 0
 
