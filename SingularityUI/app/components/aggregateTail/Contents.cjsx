@@ -10,11 +10,9 @@ Contents = React.createClass
     $(window).on 'resize orientationChange', @handleResize
 
   componentWillUnmount: ->
-    console.log 'unmount'
-    $(window).unbind 'resize orientationChange', handler: @handleResize
+    $(window).off 'resize orientationChange', @handleResize
 
   handleResize: ->
-    console.log 'resize'
     @setState
       contentsHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0) - 180
 
