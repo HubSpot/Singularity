@@ -7,6 +7,7 @@ AggregateTail = React.createClass
   mixins: [Backbone.React.Component.mixin]
 
   componentWillMount: ->
+    # Automatically map backbone collections and models to the state of this component
     if @props.activeTasks and @props.logLines
       Backbone.React.Component.mixin.on(@, {
         collections: {

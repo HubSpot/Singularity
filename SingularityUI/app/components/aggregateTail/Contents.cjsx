@@ -1,4 +1,3 @@
-# LazyRender = require 'react-lazy-render'
 LogLine = require './LogLine'
 
 Contents = React.createClass
@@ -18,6 +17,8 @@ Contents = React.createClass
       )
 
   render: ->
+    h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0) - 180
+    console.log h
     <div className="contents-container">
       <div className="tail-indicator">
           <div className="page-loader centered"></div>
@@ -26,14 +27,16 @@ Contents = React.createClass
 
       <div className="tail-contents">
           <div className="tail-fetching-start">
-              fetching more lines <div class="page-loader small"></div>
+              fetching more lines <div className="page-loader small"></div>
           </div>
           <div className="lines-wrapper">
               {@renderError()}
-              {@renderLines()}
+              <Infinite className="infinite" containerHeight={h} elementHeight={20}>
+                {@renderLines()}
+              </Infinite>
           </div>
           <div className="tail-fetching-end">
-              fetching more lines <div class="page-loader small"></div>
+              fetching more lines <div className="page-loader small"></div>
           </div>
       </div>
     </div>
