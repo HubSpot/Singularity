@@ -21,7 +21,8 @@ class AggregateTailView extends View
           requestId={@requestId}
           path={@path}
           offset={@offset}
-        />, 
+          ajaxError={@ajaxError}
+        />,
         @el);
 
 module.exports = AggregateTailView

@@ -2,7 +2,7 @@
 Contents = React.createClass
 
   renderError: ->
-    if @props.ajaxError
+    if @props.ajaxError.get("present")
       <div className="lines-wrapper">
           <div className="empty-table-message">
               <p>{@props.ajaxError.message}</p>
@@ -10,7 +10,7 @@ Contents = React.createClass
       </div>
 
   render: ->
-    <div>
+    <div className="contents-container">
       <div className="tail-indicator">
           <div className="page-loader centered"></div>
           <span>Tailing</span>
