@@ -22,7 +22,7 @@ AggregateTail = React.createClass
     console.log @state
     <div>
       <Header path={@props.path} requestId={@props.requestId} />
-      <Contents logLines={@state.logLines} ajaxError={@props.ajaxError} />
+      <Contents logLines={@state.logLines} ajaxError={@props.ajaxError} offset={@props.offset} />
     </div>
 
 module.exports = AggregateTail

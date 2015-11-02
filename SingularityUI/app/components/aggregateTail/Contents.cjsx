@@ -1,3 +1,4 @@
+# LazyRender = require 'react-lazy-render'
 LogLine = require './LogLine'
 
 Contents = React.createClass
@@ -13,7 +14,7 @@ Contents = React.createClass
   renderLines: ->
     if @props.logLines
       @props.logLines.map((l) =>
-        <LogLine content={l.data} />
+        <LogLine content={l.data} offset={l.offset} key={l.offset} highlighted={l.offset is parseInt @props.offset} />
       )
 
   render: ->

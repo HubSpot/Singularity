@@ -7,7 +7,7 @@ Header = React.createClass
       path = segments.slice(0, i + 1).join('/')
       if i < segments.length - 1
         return (
-          <li>
+          <li key={i}>
             <a href="#{config.appRoot}/request/#{@props.requestId}/tail/#{path}">
                 {s}
             </a>
@@ -15,7 +15,7 @@ Header = React.createClass
         )
       else
         return (
-          <li>
+          <li key={i}>
             <strong>
                 {s}
             </strong>
