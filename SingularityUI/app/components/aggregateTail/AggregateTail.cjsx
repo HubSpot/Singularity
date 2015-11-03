@@ -19,11 +19,18 @@ AggregateTail = React.createClass
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@);
 
+  fetchNext: ->
+    @props.logLines.fetchNext()
+
   render: ->
     console.log @state
     <div>
       <Header path={@props.path} requestId={@props.requestId} />
-      <Contents logLines={@state.logLines} ajaxError={@props.ajaxError} offset={@props.offset} />
+      <Contents
+        logLines={@state.logLines}
+        ajaxError={@props.ajaxError}
+        offset={@props.offset}
+        fetchNext={@fetchNext} />
     </div>
 
 module.exports = AggregateTail
