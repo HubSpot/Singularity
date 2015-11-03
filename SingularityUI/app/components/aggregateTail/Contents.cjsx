@@ -19,6 +19,9 @@ Contents = React.createClass
     @setState
       contentsHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0) - 180
 
+  handleScroll: (node) ->
+    console.log 'scroll'
+
   renderError: ->
     if @props.ajaxError.get("present")
       <div className="lines-wrapper">
@@ -33,9 +36,6 @@ Contents = React.createClass
         <LogLine content={l.data} offset={l.offset} key={l.offset} highlighted={l.offset is parseInt @props.offset} />
       )
 
-  renderLoader: ->
-    <Loader isVisable={@state.isLoading} text={@state.loadingText} />
-
   render: ->
     <div className="contents-container">
       <div className="tail-indicator">
@@ -47,14 +47,19 @@ Contents = React.createClass
               fetching more lines <div className="page-loader small"></div>
           </div>
               {@renderError()}
-              <Infinite className="infinite" containerHeight={@state.contentsHeight} elementHeight={20}>
+              <Infinite
+                className="infinite"
+                containerHeight={@state.contentsHeight}
+                elementHeight={20}
+                handleScroll={_.throttle @handleScroll, 200}
+              >
                 {@renderLines()}
               </Infinite>
           <div className="tail-fetching-end">
               fetching more lines <div className="page-loader small"></div>
           </div>
       </div>
-      {@renderLoader()}
+      <Loader isVisable={@state.isLoading} text={@state.loadingText} />
     </div>
 
 module.exports = Contents
