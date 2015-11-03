@@ -106,9 +106,9 @@ Contents = React.createClass
     $(@scrollNode).scrollTop(height);
 
   scrollToTop: ->
+    @stopTailingPoll()
     @setState
       isLoading: true
-    @stopTailingPoll()
     @props.fetchPrevious().done =>
       @setScrollHeight(0)
       @setState
