@@ -238,6 +238,10 @@ public class S3LogResource extends AbstractHistoryResource {
   }
 
   private List<SingularityS3Log> getS3Logs(Optional<String> group, Collection<String> prefixes) throws InterruptedException, ExecutionException, TimeoutException {
+    if (prefixes.isEmpty()) {
+      return Collections.emptyList();
+    }
+
     ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(Math.min(prefixes.size(), configuration.get().getMaxS3Threads()),
         new ThreadFactoryBuilder().setNameFormat("S3LogFetcher-%d").build()));
 
