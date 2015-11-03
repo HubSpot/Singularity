@@ -5,13 +5,13 @@
                 <ul class="breadcrumb">
                     <li>
                         Request
-                        <a href="{{appRoot}}/request/{{ taskHistory.task.taskId.requestId }}">
+                        <a id="request-link" href="{{appRoot}}/request/{{ taskHistory.task.taskId.requestId }}">
                             {{ taskHistory.task.taskId.requestId }}
                         </a>
                     </li>
                     <li>
                         Deploy
-                        <a href="{{appRoot}}/request/{{ taskHistory.task.taskId.requestId }}/deploy/{{ taskHistory.task.taskId.deployId }}">
+                        <a id="deploy-link" href="{{appRoot}}/request/{{ taskHistory.task.taskId.requestId }}/deploy/{{ taskHistory.task.taskId.deployId }}">
                             {{ taskHistory.task.taskId.deployId }}
                         </a>
                     </li>
