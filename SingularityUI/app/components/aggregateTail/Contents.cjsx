@@ -3,6 +3,10 @@ Loader = require './Loader'
 
 Contents = React.createClass
 
+  # ============================================================================
+  # Lifecycle Methods                                                          |
+  # ============================================================================
+
   getInitialState: ->
     @state =
       contentsHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0) - 180
@@ -15,8 +19,19 @@ Contents = React.createClass
   componentDidMount: ->
     @scrollNode = @refs.scrollContainer.getDOMNode()
 
+  componentDidUpdate: (prevProps, prevState) ->
+    # If loading without an offset, start tailing immediately
+    if !@props.offset and @props.logLines.length > 0 and prevProps.logLines.length is 0
+      @scrollToBottom()
+    else if @tailingPoll
+      @scrollToBottom()
+
   componentWillUnmount: ->
     $(window).off 'resize orientationChange', @handleResize
+
+  # ============================================================================
+  # Event Handlers                                                             |
+  # ============================================================================
 
   handleResize: ->
     @setState
@@ -35,6 +50,7 @@ Contents = React.createClass
   startTailingPoll: ->
     # Make sure there isn't one already running
     @stopTailingPoll()
+
     @setState
       isLoading: true
       loadingText: 'Tailing...'
@@ -47,6 +63,10 @@ Contents = React.createClass
       loadingText: ''
     clearInterval @tailingPoll
     @tailingPoll = null
+
+  # ============================================================================
+  # Rendering                                                                  |
+  # ============================================================================
 
   renderError: ->
     if @props.ajaxError.get("present")
@@ -78,12 +98,9 @@ Contents = React.createClass
       <Loader isVisable={@state.isLoading} text={@state.loadingText} />
     </div>
 
-  componentDidUpdate: (prevProps, prevState) ->
-    # If loading without an offset, start tailing immediately
-    if !@props.offset and @props.logLines.length > 0 and prevProps.logLines.length is 0
-      @scrollToBottom()
-    else if @tailingPoll
-      @scrollToBottom()
+  # ============================================================================
+  # Utility Methods                                                            |
+  # ============================================================================
 
   setScrollHeight: (height) ->
     $(@scrollNode).scrollTop(height);
