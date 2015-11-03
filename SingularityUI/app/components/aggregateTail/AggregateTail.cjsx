@@ -23,7 +23,7 @@ AggregateTail = React.createClass
     @props.logLines.fetchNext()
 
   render: ->
-    console.log @state
+    # console.log @state
     <div>
       <Header path={@props.path} requestId={@props.requestId} />
       <Contents
