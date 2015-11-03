@@ -24,6 +24,8 @@ class TailView extends View
         @listenTo @collection.state, 'change:moreToFetch', @showOrHideMoreToFetchSpinners
         @listenTo @collection.state, 'change:moreToFetchAtBeginning', @showOrHideMoreToFetchSpinners
 
+        @listenTo @model, 'sync', @render
+
         # For the visual loading indicator thing
         @listenTo @collection, 'request', =>
             @$el.addClass 'fetching-data'
@@ -46,7 +48,7 @@ class TailView extends View
 
     render: =>
         breadcrumbs = utils.pathToBreadcrumbs @path
-        @$el.html @template {@taskId, @filename, breadcrumbs, ajaxError: @ajaxError.toJSON()}
+        @$el.html @template {@taskId, @filename, breadcrumbs, ajaxError: @ajaxError.toJSON(), taskHistory: @model.toJSON()}
 
         @$contents = @$ '.tail-contents'
         @$linesWrapper = @$contents.children('.lines-wrapper')
