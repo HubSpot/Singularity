@@ -12,6 +12,9 @@ Contents = React.createClass
   componentWillMount: ->
     $(window).on 'resize orientationChange', @handleResize
 
+  componentDidMount: ->
+    @scrollNode = @refs.scrollContainer.getDOMNode()
+
   componentWillUnmount: ->
     $(window).off 'resize orientationChange', @handleResize
 
@@ -22,15 +25,14 @@ Contents = React.createClass
   handleScroll: (node) ->
     # Are we at the bottom?
     if $(node).scrollTop() + $(node).innerHeight() >= node.scrollHeight
-        @scrollNode = node
         @startTailingPoll(node)
     # Or the top?
     else if $(node).scrollTop() is 0
-        console.log 'top reached'
+        @props.fetchPrevious(node.scrollHeight)
     else
       @stopTailingPoll()
 
-  startTailingPoll: (scrollNode) ->
+  startTailingPoll: ->
     # Make sure there isn't one already running
     @stopTailingPoll()
     @setState
@@ -77,7 +79,25 @@ Contents = React.createClass
     </div>
 
   componentDidUpdate: (prevProps, prevState) ->
-    if @tailingPoll
-      $(@scrollNode).scrollTop(@scrollNode.scrollHeight);
+    # If loading without an offset, start tailing immediately
+    if !@props.offset and @props.logLines.length > 0 and prevProps.logLines.length is 0
+      @scrollToBottom()
+    else if @tailingPoll
+      @scrollToBottom()
+
+  setScrollHeight: (height) ->
+    $(@scrollNode).scrollTop(height);
+
+  scrollToTop: ->
+    @setState
+      isLoading: true
+    @stopTailingPoll()
+    @props.fetchPrevious().done =>
+      @setScrollHeight(0)
+      @setState
+        isLoading: false
+
+  scrollToBottom: ->
+    @setScrollHeight(@scrollNode.scrollHeight)
 
 module.exports = Contents

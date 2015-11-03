@@ -43,10 +43,10 @@ Header = React.createClass
               </ul>
           </div>
           <div className="col-md-3 hidden-xs tail-buttons">
-              <a className="btn btn-default tail-top-button">
+              <a className="btn btn-default tail-top-button" onClick={@props.scrollToTop}>
                   To top
               </a>
-              <a className="btn btn-default tail-bottom-button">
+              <a className="btn btn-default tail-bottom-button" onClick={@props.scrollToBottom}>
                   To bottom
               </a>
           </div>

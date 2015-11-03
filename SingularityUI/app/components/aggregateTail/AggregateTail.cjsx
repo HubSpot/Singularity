@@ -22,15 +22,35 @@ AggregateTail = React.createClass
   fetchNext: ->
     @props.logLines.fetchNext()
 
+  fetchPrevious: (currentScrollHeight) ->
+    console.log 'prev', currentScrollHeight
+    @props.logLines.fetchPrevious().done =>
+      # if currentScrollHeight
+      #   @setContentScroll(currentScrollHeight)
+
+  setContentScroll: (position) ->
+    @refs.contents.setScrollHeight(position)
+
+  scrollToTop: ->
+    @refs.contents.scrollToTop()
+
+  scrollToBottom: ->
+    @refs.contents.scrollToBottom()
+
   render: ->
-    # console.log @state
     <div>
-      <Header path={@props.path} requestId={@props.requestId} />
+      <Header
+        path={@props.path}
+        requestId={@props.requestId}
+        scrollToTop={@scrollToTop}
+        scrollToBottom={@scrollToBottom} />
       <Contents
+        ref="contents"
         logLines={@state.logLines}
         ajaxError={@props.ajaxError}
         offset={@props.offset}
-        fetchNext={@fetchNext} />
+        fetchNext={@fetchNext}
+        fetchPrevious={@fetchPrevious} />
     </div>
 
 module.exports = AggregateTail
