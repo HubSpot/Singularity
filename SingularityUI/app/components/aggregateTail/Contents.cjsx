@@ -19,6 +19,7 @@ Contents = React.createClass
 
   componentDidMount: ->
     @scrollNode = @refs.scrollContainer.getDOMNode()
+    @currentOffset = parseInt @props.offset
 
   componentDidUpdate: (prevProps, prevState) ->
     # If loading without an offset, start tailing immediately
@@ -53,6 +54,11 @@ Contents = React.createClass
     else
       @stopTailingPoll()
 
+  handleHighlight: (e) ->
+    @currentOffset = parseInt $(e.target).attr 'data-offset'
+    @setState
+      linesToRender: @renderLines()
+
   startTailingPoll: ->
     # Make sure there isn't one already running
     @stopTailingPoll()
@@ -85,7 +91,12 @@ Contents = React.createClass
   renderLines: ->
     if @props.logLines
       @props.logLines.map((l) =>
-        <LogLine content={l.data} offset={l.offset} key={l.offset} highlighted={l.offset is parseInt @props.offset} />
+        <LogLine
+          content={l.data}
+          offset={l.offset}
+          key={l.offset}
+          highlighted={l.offset is @currentOffset}
+          highlight={@handleHighlight} />
       )
 
   render: ->
