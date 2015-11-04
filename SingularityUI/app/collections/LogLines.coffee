@@ -71,7 +71,7 @@ class LogLines extends Collection
             if response.status in [400, 404, 500]
                 app.caughtError()
                 @ajaxError.setFromErrorResponse response
-    
+
     fetchPrevious: ->
         @fetch data:
             offset: orZero @getMinOffset() - @state.get('currentRequestLength')
@@ -85,7 +85,7 @@ class LogLines extends Collection
             offset: 0
 
     fetchOffset: (offset) =>
-        @fetch data: 
+        @fetch data:
             offset: offset - 1
             done: => @trigger 'initialOffsetData'
 

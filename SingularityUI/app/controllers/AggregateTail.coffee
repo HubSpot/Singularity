@@ -26,10 +26,10 @@ class AggregateTailController extends Controller
             logLines: @collections.logLines
             ajaxError: @models.ajaxError
 
-        @refresh()
+        @fetchCollections()
         app.showView @view
 
-    refresh: ->
+    fetchCollections: ->
       @collections.activeTasks.fetch().done =>
         taskId = @collections.activeTasks.toJSON()[0].id
         # Just using the first task until aggregate endpoint is available

@@ -7,16 +7,12 @@ class AggregateTailView extends View
     events: ->
 
     initialize: ({@requestId, @path, @ajaxError, @offset, @activeTasks, @logLines}) ->
-      window.addEventListener 'viewChange', @handleViewChange.bind(@)
+      window.addEventListener 'viewChange', @handleViewChange
 
     handleViewChange: =>
-      console.log @app
-      # if @app.views.current isnt @
-      #   return
-      console.log 'change'
-      window.removeEventListener 'viewChange', @handleViewChange
-      if @el
-        console.log 'unmounted', React.unmountComponentAtNode @el
+      unmounted = React.unmountComponentAtNode @el
+      if unmounted
+        window.removeEventListener 'viewChange', @handleViewChange
 
     render: ->
       React.render(

@@ -153,11 +153,11 @@ class Application
 
     # Called by Controllers when their views are ready to take over
     showView: (view) ->
-        # Clean up events & stuff
-        @views.current?.remove()
-
         # Fire a view change event for manual cleanups (Unmount react components)
         window.dispatchEvent(new Event('viewChange'));
+
+        # Clean up events & stuff
+        @views.current?.remove()
 
         $(window).scrollTop 0
 
