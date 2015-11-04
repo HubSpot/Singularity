@@ -12,6 +12,7 @@ Contents = React.createClass
       contentsHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0) - 180
       isLoading: false
       loadingText: ''
+      linesToRender: []
 
   componentWillMount: ->
     $(window).on 'resize orientationChange', @handleResize
@@ -21,10 +22,15 @@ Contents = React.createClass
 
   componentDidUpdate: (prevProps, prevState) ->
     # If loading without an offset, start tailing immediately
-    if !@props.offset and @props.logLines.length > 0 and prevProps.logLines.length is 0
+    if !@props.offset and @state.linesToRender.length > 0 and prevState.linesToRender.length is 0
       @scrollToBottom()
     else if @tailingPoll
       @scrollToBottom()
+
+    # Update our loglines components only if needed
+    if prevProps.logLines.length isnt @props.logLines.length
+      @setState
+        linesToRender: @renderLines()
 
   componentWillUnmount: ->
     $(window).off 'resize orientationChange', @handleResize
@@ -93,7 +99,7 @@ Contents = React.createClass
           preloadAdditionalHeight={@state.contentsHeight * 2.5}
           elementHeight={20}
           handleScroll={_.throttle @handleScroll, 200}>
-          {@renderLines()}
+          {@state.linesToRender}
         </Infinite>
       </div>
       <Loader isVisable={@state.isLoading} text={@state.loadingText} />
