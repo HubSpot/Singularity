@@ -28,6 +28,9 @@ AggregateTail = React.createClass
       # if currentScrollHeight
       #   @setContentScroll(currentScrollHeight)
 
+  fetchFromStart: ->
+    @props.logLines.fetchFromStart()
+
   setContentScroll: (position) ->
     @refs.contents.setScrollHeight(position)
 
@@ -50,7 +53,8 @@ AggregateTail = React.createClass
         ajaxError={@props.ajaxError}
         offset={@props.offset}
         fetchNext={@fetchNext}
-        fetchPrevious={@fetchPrevious} />
+        fetchPrevious={@fetchPrevious}
+        fetchFromStart={@fetchFromStart} />
     </div>
 
 module.exports = AggregateTail

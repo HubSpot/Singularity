@@ -109,7 +109,7 @@ Contents = React.createClass
     @stopTailingPoll()
     @setState
       isLoading: true
-    @props.fetchPrevious().done =>
+    @props.fetchFromStart().done =>
       @setScrollHeight(0)
       @setState
         isLoading: false
