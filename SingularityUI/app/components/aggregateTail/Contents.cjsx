@@ -69,7 +69,7 @@ Contents = React.createClass
   # ============================================================================
 
   renderError: ->
-    if @props.ajaxError.get("present")
+    if @props.ajaxError.present
       <div className="lines-wrapper">
           <div className="empty-table-message">
               <p>{@props.ajaxError.message}</p>
@@ -90,7 +90,7 @@ Contents = React.createClass
           ref="scrollContainer"
           className="infinite"
           containerHeight={@state.contentsHeight}
-          preloadAdditionalHeight={@state.contentsHeight * 3}
+          preloadAdditionalHeight={@state.contentsHeight * 2.5}
           elementHeight={20}
           handleScroll={_.throttle @handleScroll, 200}>
           {@renderLines()}

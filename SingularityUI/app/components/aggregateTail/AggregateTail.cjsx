@@ -11,8 +11,10 @@ AggregateTail = React.createClass
     if @props.activeTasks and @props.logLines
       Backbone.React.Component.mixin.on(@, {
         collections: {
-          logLines: @props.logLines,
-          taskHistory: @props.activeTasks
+          logLines: @props.logLines
+        },
+        models: {
+          ajaxError: @props.ajaxError
         }
       });
 
@@ -50,7 +52,7 @@ AggregateTail = React.createClass
       <Contents
         ref="contents"
         logLines={@state.logLines}
-        ajaxError={@props.ajaxError}
+        ajaxError={@state.ajaxError}
         offset={@props.offset}
         fetchNext={@fetchNext}
         fetchPrevious={@fetchPrevious}
