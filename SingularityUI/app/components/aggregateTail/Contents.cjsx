@@ -23,8 +23,12 @@ Contents = React.createClass
 
   componentDidUpdate: (prevProps, prevState) ->
     # Scroll to the appropriate place
-    if !@props.offset and @state.linesToRender.length > 0 and prevState.linesToRender.length is 0
-      @scrollToBottom()
+    if @state.linesToRender.length > 0 and prevState.linesToRender.length is 0
+      if !@props.offset
+        @scrollToBottom()
+      else
+        @setScrollHeight(20)
+        
     else if @tailingPoll
       @scrollToBottom()
     else if prevProps.contentScroll isnt @props.contentScroll
@@ -56,7 +60,6 @@ Contents = React.createClass
       @startTailingPoll(node)
     # Or the top?
     else if $(node).scrollTop() is 0
-      @prevNumLines = @props.logLines.length
       @props.fetchPrevious()
     else
       @stopTailingPoll()
@@ -102,6 +105,7 @@ Contents = React.createClass
           content={l.data}
           offset={l.offset}
           key={i}
+          index={i}
           highlighted={l.offset is @currentOffset}
           highlight={@handleHighlight} />
       )
