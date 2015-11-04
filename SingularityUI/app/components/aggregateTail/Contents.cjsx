@@ -22,11 +22,17 @@ Contents = React.createClass
     @currentOffset = parseInt @props.offset
 
   componentDidUpdate: (prevProps, prevState) ->
-    # If loading without an offset, start tailing immediately
+    # Scroll to the appropriate place
     if !@props.offset and @state.linesToRender.length > 0 and prevState.linesToRender.length is 0
       @scrollToBottom()
     else if @tailingPoll
       @scrollToBottom()
+    else if prevProps.contentScroll isnt @props.contentScroll
+      @setScrollHeight(@props.contentScroll)
+
+    # Start tailing automatically if we can't scroll
+    if 0 < $('.line').length * 20 <= @state.contentsHeight and !@tailingPoll
+      @startTailingPoll()
 
     # Update our loglines components only if needed
     if prevProps.logLines.length isnt @props.logLines.length
@@ -47,10 +53,11 @@ Contents = React.createClass
   handleScroll: (node) ->
     # Are we at the bottom?
     if $(node).scrollTop() + $(node).innerHeight() >= node.scrollHeight
-        @startTailingPoll(node)
+      @startTailingPoll(node)
     # Or the top?
     else if $(node).scrollTop() is 0
-        @props.fetchPrevious(node.scrollHeight)
+      @prevNumLines = @props.logLines.length
+      @props.fetchPrevious()
     else
       @stopTailingPoll()
 
@@ -90,11 +97,11 @@ Contents = React.createClass
 
   renderLines: ->
     if @props.logLines
-      @props.logLines.map((l) =>
+      @props.logLines.map((l, i) =>
         <LogLine
           content={l.data}
           offset={l.offset}
-          key={l.offset}
+          key={i}
           highlighted={l.offset is @currentOffset}
           highlight={@handleHighlight} />
       )

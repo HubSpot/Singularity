@@ -6,6 +6,9 @@ Contents = require "./Contents"
 AggregateTail = React.createClass
   mixins: [Backbone.React.Component.mixin]
 
+  getInitialState: ->
+    contentScroll: 0
+
   componentWillMount: ->
     # Automatically map backbone collections and models to the state of this component
     if @props.activeTasks and @props.logLines
@@ -24,11 +27,12 @@ AggregateTail = React.createClass
   fetchNext: ->
     @props.logLines.fetchNext()
 
-  fetchPrevious: (currentScrollHeight) ->
-    console.log 'prev', currentScrollHeight
+  fetchPrevious: ->
+    @prevLines = @props.logLines.toJSON().length
     @props.logLines.fetchPrevious().done =>
-      # if currentScrollHeight
-      #   @setContentScroll(currentScrollHeight)
+      newLines = @props.logLines.toJSON().length - @prevLines
+      console.log 'new', newLines * 20
+      @setContentScroll(newLines * 20)
 
   fetchFromStart: ->
     @props.logLines.fetchFromStart()
@@ -56,7 +60,8 @@ AggregateTail = React.createClass
         offset={@props.offset}
         fetchNext={@fetchNext}
         fetchPrevious={@fetchPrevious}
-        fetchFromStart={@fetchFromStart} />
+        fetchFromStart={@fetchFromStart}
+        contentScroll={@state.contentScroll} />
     </div>
 
 module.exports = AggregateTail
