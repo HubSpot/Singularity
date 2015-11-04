@@ -90,6 +90,7 @@ Contents = React.createClass
           ref="scrollContainer"
           className="infinite"
           containerHeight={@state.contentsHeight}
+          preloadAdditionalHeight={@state.contentsHeight * 3}
           elementHeight={20}
           handleScroll={_.throttle @handleScroll, 200}>
           {@renderLines()}
