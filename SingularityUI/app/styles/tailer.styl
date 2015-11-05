@@ -58,26 +58,34 @@
         font-family Consolas, "Liberation Mono", Courier, monospace
         min-height 1.6em // Show empty lines too
         line-height 1.6em
-        padding 0 2em
         white-space pre
         font-size 12px
         height 20px
+        margin-left 35px
 
         &:hover
             .pre-line
                 background #f6f6f6
             .offset-link
-                visibility visible
-
-        .offset-link
-            text-decoration none
-            visibility hidden
+                display block
+            .line-number
+                display none
 
         .pre-line
             position absolute
             left 0
-            padding-left: 5px
+            padding-left 5px
             background #f6f6f6
+
+        .offset-link
+            text-decoration none
+            display none
+
+        .line-number
+            color rgba(black, 0.2)
+            display block
+            text-align right
+            width 2em
 
     .first-line
         margin-top 20px

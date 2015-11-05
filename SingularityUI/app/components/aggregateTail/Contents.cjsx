@@ -28,18 +28,17 @@ Contents = React.createClass
         @scrollToBottom()
     if $(@scrollNode).scrollTop() is 0
       @setScrollHeight(20)
-
     else if @tailingPoll
       @scrollToBottom()
-    else if prevProps.contentScroll isnt @props.contentScroll
-      @setScrollHeight(@props.contentScroll)
 
     # Start tailing automatically if we can't scroll
     if 0 < $('.line').length * 20 <= @state.contentsHeight and !@tailingPoll
       @startTailingPoll()
 
     # Update our loglines components only if needed
-    if prevProps.logLines.length isnt @props.logLines.length
+    if (prevProps.logLines.length isnt @props.logLines.length) or
+       (prevProps.lineNumbers isnt @props.lineNumbers) or
+       (prevProps.lineColors isnt @props.lineColors)
       @setState
         linesToRender: @renderLines()
 
@@ -107,7 +106,8 @@ Contents = React.createClass
           key={i}
           index={i}
           highlighted={l.offset is @currentOffset}
-          highlight={@handleHighlight} />
+          highlight={@handleHighlight}
+          lineNumbers={@props.lineNumbers} />
       )
 
   render: ->

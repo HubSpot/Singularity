@@ -7,7 +7,6 @@ AggregateTail = React.createClass
   mixins: [Backbone.React.Component.mixin]
 
   getInitialState: ->
-    contentScroll: 0
     lineNumbers: false
     lineColors: true
 
@@ -60,6 +59,7 @@ AggregateTail = React.createClass
   render: ->
     <div>
       <Header
+        ref="header"
         path={@props.path}
         requestId={@props.requestId}
         scrollToTop={@scrollToTop}
@@ -76,7 +76,8 @@ AggregateTail = React.createClass
         fetchNext={@fetchNext}
         fetchPrevious={@fetchPrevious}
         fetchFromStart={@fetchFromStart}
-        contentScroll={@state.contentScroll} />
+        lineNumbers={@state.lineNumbers}
+        lineColors={@state.lineColors} />
     </div>
 
 module.exports = AggregateTail
