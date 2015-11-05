@@ -25,7 +25,7 @@ class taskHealthcheckNotificationSubview extends View
         isDeployPending:  !!deployStatus
         hasSuccessfulHealthcheck: @model.get('healthcheckResults')?.length > 0 and _.find(@model.get('healthcheckResults'), (item) -> item.statusCode is 200)
         synced:           @model.synced
-                   
+
     triggerToggleHealthchecks: ->
         @trigger 'toggleHealthchecks'
 
