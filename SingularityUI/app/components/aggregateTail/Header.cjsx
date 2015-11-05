@@ -1,6 +1,4 @@
 
-Settings = require './Settings'
-
 Header = React.createClass
 
   renderBreadcrumbs: ->
@@ -51,11 +49,6 @@ Header = React.createClass
               <a className="btn btn-default tail-bottom-button" onClick={@props.scrollToBottom}>
                   To bottom
               </a>
-              <Settings
-                toggleLineNumbers={@props.toggleLineNumbers}
-                toggleLineColors={@props.toggleLineColors}
-                lineNumbers={@props.lineNumbers}
-                lineColors={@props.lineColors} />
           </div>
       </div>
     </div>

@@ -36,9 +36,7 @@ Contents = React.createClass
       @startTailingPoll()
 
     # Update our loglines components only if needed
-    if (prevProps.logLines.length isnt @props.logLines.length) or
-       (prevProps.lineNumbers isnt @props.lineNumbers) or
-       (prevProps.lineColors isnt @props.lineColors)
+    if prevProps.logLines.length isnt @props.logLines.length
       @setState
         linesToRender: @renderLines()
 
@@ -106,8 +104,7 @@ Contents = React.createClass
           key={i}
           index={i}
           highlighted={l.offset is @currentOffset}
-          highlight={@handleHighlight}
-          lineNumbers={@props.lineNumbers} />
+          highlight={@handleHighlight} />
       )
 
   render: ->

@@ -6,10 +6,6 @@ Contents = require "./Contents"
 AggregateTail = React.createClass
   mixins: [Backbone.React.Component.mixin]
 
-  getInitialState: ->
-    lineNumbers: false
-    lineColors: true
-
   componentWillMount: ->
     # Automatically map backbone collections and models to the state of this component
     if @props.activeTasks and @props.logLines
@@ -48,26 +44,13 @@ AggregateTail = React.createClass
   scrollToBottom: ->
     @refs.contents.scrollToBottom()
 
-  toggleLineNumbers: ->
-    @setState
-      lineNumbers: !@state.lineNumbers
-
-  toggleLineColors: ->
-    @setState
-      lineColors: !@state.lineColors
-
   render: ->
     <div>
       <Header
-        ref="header"
         path={@props.path}
         requestId={@props.requestId}
         scrollToTop={@scrollToTop}
-        scrollToBottom={@scrollToBottom}
-        toggleLineNumbers={@toggleLineNumbers}
-        toggleLineColors={@toggleLineColors}
-        lineNumbers={@state.lineNumbers}
-        lineColors={@state.lineColors} />
+        scrollToBottom={@scrollToBottom} />
       <Contents
         ref="contents"
         logLines={@state.logLines}
@@ -75,9 +58,7 @@ AggregateTail = React.createClass
         offset={@props.offset}
         fetchNext={@fetchNext}
         fetchPrevious={@fetchPrevious}
-        fetchFromStart={@fetchFromStart}
-        lineNumbers={@state.lineNumbers}
-        lineColors={@state.lineColors} />
+        fetchFromStart={@fetchFromStart} />
     </div>
 
 module.exports = AggregateTail
