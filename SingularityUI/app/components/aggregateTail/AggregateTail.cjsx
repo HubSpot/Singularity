@@ -1,64 +1,24 @@
 # BackboneReact = require "backbone-react-component"
 
-Header = require "./Header"
-Contents = require "./Contents"
+IndividualTail = require './IndividualTail'
 
 AggregateTail = React.createClass
-  mixins: [Backbone.React.Component.mixin]
 
-  componentWillMount: ->
-    # Automatically map backbone collections and models to the state of this component
-    if @props.activeTasks and @props.logLines
-      Backbone.React.Component.mixin.on(@, {
-        collections: {
-          logLines: @props.logLines
-        },
-        models: {
-          ajaxError: @props.ajaxError
-        }
-      });
-
-  componentWillUnmount: ->
-    Backbone.React.Component.mixin.off(@);
-
-  fetchNext: ->
-    @props.logLines.fetchNext()
-
-  fetchPrevious: ->
-    @prevLines = @props.logLines.toJSON().length
-    @props.logLines.fetchPrevious().done =>
-      newLines = @props.logLines.toJSON().length - @prevLines
-      console.log 'new', newLines
-      if newLines > 2
-        @setContentScroll((newLines) * 20)
-
-  fetchFromStart: ->
-    @props.logLines.fetchFromStart()
-
-  setContentScroll: (position) ->
-    @refs.contents.setScrollHeight(position)
-
-  scrollToTop: ->
-    @refs.contents.scrollToTop()
-
-  scrollToBottom: ->
-    @refs.contents.scrollToBottom()
+  renderIndividualTails: ->
+    Object.keys(@props.logLines).map (taskId) =>
+      <div key={taskId} className="col-md-6 tail-column">
+        <IndividualTail
+          path={@props.path}
+          requestId={@props.requestId}
+          offset={@props.offset}
+          logLines={@props.logLines[taskId]}
+          ajaxError={@props.ajaxError[taskId]}
+          activeTasks={@props.activeTasks} />
+      </div>
 
   render: ->
-    <div>
-      <Header
-        path={@props.path}
-        requestId={@props.requestId}
-        scrollToTop={@scrollToTop}
-        scrollToBottom={@scrollToBottom} />
-      <Contents
-        ref="contents"
-        logLines={@state.logLines}
-        ajaxError={@state.ajaxError}
-        offset={@props.offset}
-        fetchNext={@fetchNext}
-        fetchPrevious={@fetchPrevious}
-        fetchFromStart={@fetchFromStart} />
+    <div className="row tail-row">
+      {@renderIndividualTails()}
     </div>
 
 module.exports = AggregateTail

@@ -4,8 +4,6 @@ AggregateTail = require '../components/aggregateTail/AggregateTail'
 
 class AggregateTailView extends View
 
-    events: ->
-
     initialize: ({@requestId, @path, @ajaxError, @offset, @activeTasks, @logLines}) ->
       window.addEventListener 'viewChange', @handleViewChange
 

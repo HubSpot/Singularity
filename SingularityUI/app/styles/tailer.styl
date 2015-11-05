@@ -1,5 +1,14 @@
 @import colors
 
+.tail-row
+    height calc(100vh - 140px)
+
+.tail-column
+    height 100%
+    padding 5px
+    overflow hidden
+    border 1px solid #ccc
+
 .tail-header
 
     .breadcrumb
@@ -45,7 +54,7 @@
 .tail-contents
     overflow scroll
     position absolute
-    top 180px
+    top 130px
     left 0
     bottom 0
     right 0
@@ -144,10 +153,10 @@
             left 5px
 
 animation-time = 1s
-size = 40px
+size = 30px
 
 .loading-spinner
-  position fixed
+  position absolute
   bottom 0
   right 0
   background-color rgba(white, 0)
@@ -159,7 +168,7 @@ size = 40px
     color #AAA
     font-weight 200
     padding-right 5px
-    padding-top 20px
+    padding-top 10px
 
   .loader
     position relative
