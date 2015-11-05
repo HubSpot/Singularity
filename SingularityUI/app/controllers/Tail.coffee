@@ -17,7 +17,7 @@ class TailController extends Controller
 
         @setView new TailView _.extend {@taskId, @path, @offset},
             collection: @collections.logLines
-            model: @models.activeTasks
+            model: @models.taskHistory
             ajaxError: @models.ajaxError
 
         app.showView @view
