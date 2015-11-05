@@ -8,6 +8,8 @@ AggregateTail = React.createClass
 
   getInitialState: ->
     contentScroll: 0
+    lineNumbers: false
+    lineColors: true
 
   componentWillMount: ->
     # Automatically map backbone collections and models to the state of this component
@@ -32,7 +34,8 @@ AggregateTail = React.createClass
     @props.logLines.fetchPrevious().done =>
       newLines = @props.logLines.toJSON().length - @prevLines
       console.log 'new', newLines
-      setContentScroll((newLines - 4) * 20)
+      if newLines > 2
+        @setContentScroll((newLines) * 20)
 
   fetchFromStart: ->
     @props.logLines.fetchFromStart()
@@ -46,13 +49,25 @@ AggregateTail = React.createClass
   scrollToBottom: ->
     @refs.contents.scrollToBottom()
 
+  toggleLineNumbers: ->
+    @setState
+      lineNumbers: !@state.lineNumbers
+
+  toggleLineColors: ->
+    @setState
+      lineColors: !@state.lineColors
+
   render: ->
     <div>
       <Header
         path={@props.path}
         requestId={@props.requestId}
         scrollToTop={@scrollToTop}
-        scrollToBottom={@scrollToBottom} />
+        scrollToBottom={@scrollToBottom}
+        toggleLineNumbers={@toggleLineNumbers}
+        toggleLineColors={@toggleLineColors}
+        lineNumbers={@state.lineNumbers}
+        lineColors={@state.lineColors} />
       <Contents
         ref="contents"
         logLines={@state.logLines}

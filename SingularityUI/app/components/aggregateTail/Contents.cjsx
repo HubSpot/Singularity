@@ -132,7 +132,7 @@ Contents = React.createClass
   # ============================================================================
 
   setScrollHeight: (height) ->
-    console.log 'set', height, arguments.callee.caller
+    # console.log 'set', height, arguments.callee.caller
     $(@scrollNode).scrollTop(height);
 
   scrollToTop: ->

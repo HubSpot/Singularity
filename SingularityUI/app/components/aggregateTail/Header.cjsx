@@ -1,4 +1,6 @@
 
+Settings = require './Settings'
+
 Header = React.createClass
 
   renderBreadcrumbs: ->
@@ -28,7 +30,7 @@ Header = React.createClass
           <div className="col-md-12">
               <ul className="breadcrumb breadcrumb-top">
                 <li>
-                  Request &nbsp;
+                  Request&nbsp;
                   <a href="#{config.appRoot}/request/#{@props.requestId}">
                       {@props.requestId}
                   </a>
@@ -49,6 +51,11 @@ Header = React.createClass
               <a className="btn btn-default tail-bottom-button" onClick={@props.scrollToBottom}>
                   To bottom
               </a>
+              <Settings
+                toggleLineNumbers={@props.toggleLineNumbers}
+                toggleLineColors={@props.toggleLineColors}
+                lineNumbers={@props.lineNumbers}
+                lineColors={@props.lineColors} />
           </div>
       </div>
     </div>
