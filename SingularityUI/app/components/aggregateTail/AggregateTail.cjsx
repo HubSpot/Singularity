@@ -31,8 +31,8 @@ AggregateTail = React.createClass
     @prevLines = @props.logLines.toJSON().length
     @props.logLines.fetchPrevious().done =>
       newLines = @props.logLines.toJSON().length - @prevLines
-      console.log 'new', newLines * 20
-      @setContentScroll(newLines * 20)
+      console.log 'new', newLines
+      setContentScroll((newLines - 4) * 20)
 
   fetchFromStart: ->
     @props.logLines.fetchFromStart()

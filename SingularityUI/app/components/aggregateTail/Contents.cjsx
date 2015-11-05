@@ -26,9 +26,9 @@ Contents = React.createClass
     if @state.linesToRender.length > 0 and prevState.linesToRender.length is 0
       if !@props.offset
         @scrollToBottom()
-      else
-        @setScrollHeight(20)
-        
+    if $(@scrollNode).scrollTop() is 0
+      @setScrollHeight(20)
+
     else if @tailingPoll
       @scrollToBottom()
     else if prevProps.contentScroll isnt @props.contentScroll
@@ -60,6 +60,7 @@ Contents = React.createClass
       @startTailingPoll(node)
     # Or the top?
     else if $(node).scrollTop() is 0
+      @stopTailingPoll()
       @props.fetchPrevious()
     else
       @stopTailingPoll()
@@ -72,7 +73,6 @@ Contents = React.createClass
   startTailingPoll: ->
     # Make sure there isn't one already running
     @stopTailingPoll()
-
     @setState
       isLoading: true
       loadingText: 'Tailing...'
@@ -132,6 +132,7 @@ Contents = React.createClass
   # ============================================================================
 
   setScrollHeight: (height) ->
+    console.log 'set', height, arguments.callee.caller
     $(@scrollNode).scrollTop(height);
 
   scrollToTop: ->
