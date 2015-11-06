@@ -6,10 +6,11 @@ AggregateTail = React.createClass
 
   renderIndividualTails: ->
     Object.keys(@props.logLines).map (taskId) =>
-      <div key={taskId} className="col-md-6 tail-column">
+      <div key={taskId} id="tail-#{taskId}" className="col-md-6 tail-column">
         <IndividualTail
           path={@props.path}
           requestId={@props.requestId}
+          taskId={taskId}
           offset={@props.offset}
           logLines={@props.logLines[taskId]}
           ajaxError={@props.ajaxError[taskId]}

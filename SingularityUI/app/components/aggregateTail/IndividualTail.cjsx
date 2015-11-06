@@ -45,13 +45,10 @@ IndividualTail = React.createClass
 
   render: ->
     <div>
-      <Header
-        path={@props.path}
-        requestId={@props.requestId}
-        scrollToTop={@scrollToTop}
-        scrollToBottom={@scrollToBottom} />
       <Contents
         ref="contents"
+        requestId={@props.requestId}
+        taskId={@props.taskId}
         logLines={@state.logLines}
         ajaxError={@state.ajaxError}
         offset={@props.offset}

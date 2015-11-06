@@ -9,7 +9,6 @@ Contents = React.createClass
 
   getInitialState: ->
     @state =
-      contentsHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0) - 180
       isLoading: false
       loadingText: ''
       linesToRender: []
@@ -20,6 +19,7 @@ Contents = React.createClass
   componentDidMount: ->
     @scrollNode = @refs.scrollContainer.getDOMNode()
     @currentOffset = parseInt @props.offset
+    @handleResize()
 
   componentDidUpdate: (prevProps, prevState) ->
     # Scroll to the appropriate place
@@ -48,8 +48,9 @@ Contents = React.createClass
   # ============================================================================
 
   handleResize: ->
+    height = $("#tail-#{@props.taskId.replace( /(:|\.|\[|\]|,)/g, "\\$1" )}").height()
     @setState
-      contentsHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0) - 180
+      contentsHeight: height
 
   handleScroll: (node) ->
     # Are we at the bottom?
@@ -114,7 +115,7 @@ Contents = React.createClass
         <Infinite
           ref="scrollContainer"
           className="infinite"
-          containerHeight={@state.contentsHeight}
+          containerHeight={@state.contentsHeight || 1}
           preloadAdditionalHeight={@state.contentsHeight * 2.5}
           elementHeight={20}
           handleScroll={_.throttle @handleScroll, 200}>
