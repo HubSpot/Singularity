@@ -9,7 +9,6 @@ Contents = React.createClass
 
   getInitialState: ->
     @state =
-      contentsHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0) - 180
       isLoading: false
       loadingText: ''
       linesToRender: []
@@ -20,19 +19,17 @@ Contents = React.createClass
   componentDidMount: ->
     @scrollNode = @refs.scrollContainer.getDOMNode()
     @currentOffset = parseInt @props.offset
+    @handleResize()
 
   componentDidUpdate: (prevProps, prevState) ->
     # Scroll to the appropriate place
     if @state.linesToRender.length > 0 and prevState.linesToRender.length is 0
       if !@props.offset
         @scrollToBottom()
-      else
-        @setScrollHeight(20)
-        
+    if $(@scrollNode).scrollTop() is 0
+      @setScrollHeight(20)
     else if @tailingPoll
       @scrollToBottom()
-    else if prevProps.contentScroll isnt @props.contentScroll
-      @setScrollHeight(@props.contentScroll)
 
     # Start tailing automatically if we can't scroll
     if 0 < $('.line').length * 20 <= @state.contentsHeight and !@tailingPoll
@@ -51,8 +48,9 @@ Contents = React.createClass
   # ============================================================================
 
   handleResize: ->
+    height = $("#tail-#{@props.taskId.replace( /(:|\.|\[|\]|,)/g, "\\$1" )}").height()
     @setState
-      contentsHeight: Math.max(document.documentElement.clientHeight, window.innerHeight || 0) - 180
+      contentsHeight: height
 
   handleScroll: (node) ->
     # Are we at the bottom?
@@ -60,6 +58,7 @@ Contents = React.createClass
       @startTailingPoll(node)
     # Or the top?
     else if $(node).scrollTop() is 0
+      @stopTailingPoll()
       @props.fetchPrevious()
     else
       @stopTailingPoll()
@@ -72,7 +71,6 @@ Contents = React.createClass
   startTailingPoll: ->
     # Make sure there isn't one already running
     @stopTailingPoll()
-
     @setState
       isLoading: true
       loadingText: 'Tailing...'
@@ -117,7 +115,7 @@ Contents = React.createClass
         <Infinite
           ref="scrollContainer"
           className="infinite"
-          containerHeight={@state.contentsHeight}
+          containerHeight={@state.contentsHeight || 1}
           preloadAdditionalHeight={@state.contentsHeight * 2.5}
           elementHeight={20}
           handleScroll={_.throttle @handleScroll, 200}>
@@ -132,6 +130,7 @@ Contents = React.createClass
   # ============================================================================
 
   setScrollHeight: (height) ->
+    # console.log 'set', height, arguments.callee.caller
     $(@scrollNode).scrollTop(height);
 
   scrollToTop: ->

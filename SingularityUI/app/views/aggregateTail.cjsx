@@ -4,8 +4,6 @@ AggregateTail = require '../components/aggregateTail/AggregateTail'
 
 class AggregateTailView extends View
 
-    events: ->
-
     initialize: ({@requestId, @path, @ajaxError, @offset, @activeTasks, @logLines}) ->
       window.addEventListener 'viewChange', @handleViewChange
 
@@ -15,6 +13,7 @@ class AggregateTailView extends View
         window.removeEventListener 'viewChange', @handleViewChange
 
     render: ->
+      $(@el).addClass("tail-root")
       React.render(
         <AggregateTail
           requestId={@requestId}

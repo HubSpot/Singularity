@@ -1,67 +1,54 @@
 # BackboneReact = require "backbone-react-component"
 
-Header = require "./Header"
-Contents = require "./Contents"
+Header = require './Header'
+IndividualTail = require './IndividualTail'
 
 AggregateTail = React.createClass
-  mixins: [Backbone.React.Component.mixin]
 
-  getInitialState: ->
-    contentScroll: 0
+  scrollAllTop: ->
+    for tail of @refs
+      @refs[tail].scrollToTop()
 
-  componentWillMount: ->
-    # Automatically map backbone collections and models to the state of this component
-    if @props.activeTasks and @props.logLines
-      Backbone.React.Component.mixin.on(@, {
-        collections: {
-          logLines: @props.logLines
-        },
-        models: {
-          ajaxError: @props.ajaxError
-        }
-      });
+  scrollAllBottom: ->
+    for tail of @refs
+      @refs[tail].scrollToBottom()
 
-  componentWillUnmount: ->
-    Backbone.React.Component.mixin.off(@);
+  getColumnWidth: ->
+    instances = Object.keys(@props.logLines).length
+    if instances is 1
+      return 12
+    else if instances in [2, 4]
+      return 6
+    else if instances in [3, 5, 6]
+      return 4
 
-  fetchNext: ->
-    @props.logLines.fetchNext()
+  getRowType: ->
+    if Object.keys(@props.logLines).length > 3 then 'tail-row-half' else 'tail-row'
 
-  fetchPrevious: ->
-    @prevLines = @props.logLines.toJSON().length
-    @props.logLines.fetchPrevious().done =>
-      newLines = @props.logLines.toJSON().length - @prevLines
-      console.log 'new', newLines * 20
-      @setContentScroll(newLines * 20)
-
-  fetchFromStart: ->
-    @props.logLines.fetchFromStart()
-
-  setContentScroll: (position) ->
-    @refs.contents.setScrollHeight(position)
-
-  scrollToTop: ->
-    @refs.contents.scrollToTop()
-
-  scrollToBottom: ->
-    @refs.contents.scrollToBottom()
+  renderIndividualTails: ->
+    Object.keys(@props.logLines).reverse().map (taskId, i) =>
+      <div key={taskId} id="tail-#{taskId}" className="col-md-#{@getColumnWidth()} tail-column">
+        <IndividualTail
+          ref="tail_#{i}"
+          path={@props.path}
+          requestId={@props.requestId}
+          taskId={taskId}
+          offset={@props.offset}
+          logLines={@props.logLines[taskId]}
+          ajaxError={@props.ajaxError[taskId]}
+          activeTasks={@props.activeTasks} />
+      </div>
 
   render: ->
     <div>
       <Header
-        path={@props.path}
-        requestId={@props.requestId}
-        scrollToTop={@scrollToTop}
-        scrollToBottom={@scrollToBottom} />
-      <Contents
-        ref="contents"
-        logLines={@state.logLines}
-        ajaxError={@state.ajaxError}
-        offset={@props.offset}
-        fetchNext={@fetchNext}
-        fetchPrevious={@fetchPrevious}
-        fetchFromStart={@fetchFromStart}
-        contentScroll={@state.contentScroll} />
+       path={@props.path}
+       requestId={@props.requestId}
+       scrollToTop={@scrollAllTop}
+       scrollToBottom={@scrollAllBottom} />
+      <div className="row #{@getRowType()}">
+        {@renderIndividualTails()}
+      </div>
     </div>
 
 module.exports = AggregateTail

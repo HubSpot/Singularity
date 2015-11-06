@@ -1,6 +1,11 @@
 {{! Part of requestBase }}
 <div class="page-header">
     <h2>Running instances</h2>
+    {{#if data}}
+      <a class="btn btn-default title-button" href="{{ appRoot }}/request/{{data.0.taskId.requestId}}/tail/{{config.runningTaskLogPath}}">
+          View Aggregate Logs
+      </a>
+    {{/if}}
 </div>
 {{#if data}}
     <table class="table table-striped">

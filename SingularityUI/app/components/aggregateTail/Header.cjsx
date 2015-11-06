@@ -25,29 +25,27 @@ Header = React.createClass
   render: ->
     <div className="tail-header">
       <div className="row">
-          <div className="col-md-12">
-              <ul className="breadcrumb breadcrumb-top">
+          <div className="col-md-3">
+              <ul className="breadcrumb breadcrumb-request">
                 <li>
-                  Request &nbsp;
+                  Request&nbsp;
                   <a href="#{config.appRoot}/request/#{@props.requestId}">
                       {@props.requestId}
                   </a>
                 </li>
               </ul>
           </div>
-      </div>
-      <div className="row">
-          <div className="col-md-9">
+          <div className="col-md-7">
               <ul className="breadcrumb">
                   {@renderBreadcrumbs()}
               </ul>
           </div>
-          <div className="col-md-3 hidden-xs tail-buttons">
+          <div className="col-md-2 hidden-xs tail-buttons">
               <a className="btn btn-default tail-top-button" onClick={@props.scrollToTop}>
-                  To top
+                  All to top
               </a>
               <a className="btn btn-default tail-bottom-button" onClick={@props.scrollToBottom}>
-                  To bottom
+                  All to bottom
               </a>
           </div>
       </div>
