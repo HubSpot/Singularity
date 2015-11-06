@@ -67,7 +67,8 @@ AggregateTail = React.createClass
        path={@props.path}
        requestId={@props.requestId}
        scrollToTop={@scrollAllTop}
-       scrollToBottom={@scrollAllBottom} />
+       scrollToBottom={@scrollAllBottom}
+       activeTasks={@state.activeTasks} />
       <div className="row #{@getRowType()}">
         {@renderIndividualTails()}
       </div>
