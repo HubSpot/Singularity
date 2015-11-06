@@ -13,9 +13,21 @@ AggregateTail = React.createClass
     for tail of @refs
       @refs[tail].scrollToBottom()
 
+  getColumnWidth: ->
+    instances = Object.keys(@props.logLines).length
+    if instances is 1
+      return 12
+    else if instances in [2, 4]
+      return 6
+    else if instances in [3, 5, 6]
+      return 4
+
+  getRowType: ->
+    if Object.keys(@props.logLines).length > 3 then 'tail-row-half' else 'tail-row'
+
   renderIndividualTails: ->
-    Object.keys(@props.logLines).map (taskId, i) =>
-      <div key={taskId} id="tail-#{taskId}" className="col-md-6 tail-column">
+    Object.keys(@props.logLines).reverse().map (taskId, i) =>
+      <div key={taskId} id="tail-#{taskId}" className="col-md-#{@getColumnWidth()} tail-column">
         <IndividualTail
           ref="tail_#{i}"
           path={@props.path}
@@ -34,7 +46,7 @@ AggregateTail = React.createClass
        requestId={@props.requestId}
        scrollToTop={@scrollAllTop}
        scrollToBottom={@scrollAllBottom} />
-      <div className="row tail-row">
+      <div className="row #{@getRowType()}">
         {@renderIndividualTails()}
       </div>
     </div>
