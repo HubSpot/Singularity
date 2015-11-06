@@ -12,7 +12,7 @@ class AggregateTailView extends View
       if unmounted
         window.removeEventListener 'viewChange', @handleViewChange
 
-    render: ->
+    render: () ->
       $(@el).addClass("tail-root")
       React.render(
         <AggregateTail

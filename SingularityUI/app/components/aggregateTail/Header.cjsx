@@ -8,9 +8,7 @@ Header = React.createClass
       if i < segments.length - 1
         return (
           <li key={i}>
-            <a href="#{config.appRoot}/request/#{@props.requestId}/tail/#{path}">
-                {s}
-            </a>
+            {s}
           </li>
         )
       else
@@ -21,6 +19,16 @@ Header = React.createClass
             </strong>
           </li>
         )
+
+  renderListItems: ->
+    @props.activeTasks.map (task) =>
+      taskId = task.id
+      <li key={taskId}>
+        <a onClick={() => @props.toggleViewingInstance(taskId)}>
+          <span className="glyphicon glyphicon-#{if taskId in @props.viewingInstances then 'check' else 'unchecked'}"></span>
+          <span> Instance {task.taskId.instanceNo}</span>
+        </a>
+      </li>
 
   render: ->
     <div className="tail-header">
@@ -35,17 +43,25 @@ Header = React.createClass
                 </li>
               </ul>
           </div>
-          <div className="col-md-7">
+          <div className="col-md-6">
               <ul className="breadcrumb">
                   {@renderBreadcrumbs()}
               </ul>
           </div>
-          <div className="col-md-2 hidden-xs tail-buttons">
-              <a className="btn btn-default tail-top-button" onClick={@props.scrollToTop}>
-                  All to top
-              </a>
+          <div className="col-md-3 hidden-xs tail-buttons">
+              <div className="btn-group">
+                <button type="button" className="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <span className="glyphicon glyphicon-cog"></span> <span className="caret"></span>
+                </button>
+                <ul className="dropdown-menu">
+                  {@renderListItems()}
+                </ul>
+              </div>
               <a className="btn btn-default tail-bottom-button" onClick={@props.scrollToBottom}>
                   All to bottom
+              </a>
+              <a className="btn btn-default tail-top-button" onClick={@props.scrollToTop}>
+                  All to top
               </a>
           </div>
       </div>

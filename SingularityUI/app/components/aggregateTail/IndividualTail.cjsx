@@ -1,5 +1,5 @@
 
-Header = require "./Header"
+IndividualHeader = require "./IndividualHeader"
 Contents = require "./Contents"
 
 IndividualTail = React.createClass
@@ -7,15 +7,14 @@ IndividualTail = React.createClass
 
   componentWillMount: ->
     # Automatically map backbone collections and models to the state of this component
-    if @props.activeTasks and @props.logLines
-      Backbone.React.Component.mixin.on(@, {
-        collections: {
-          logLines: @props.logLines
-        },
-        models: {
-          ajaxError: @props.ajaxError
-        }
-      });
+    Backbone.React.Component.mixin.on(@, {
+      collections: {
+        logLines: @props.logLines
+      },
+      models: {
+        ajaxError: @props.ajaxError
+      }
+    });
 
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@);
@@ -45,6 +44,12 @@ IndividualTail = React.createClass
 
   render: ->
     <div>
+      <IndividualHeader
+        taskId={@props.taskId}
+        instanceNumber={@props.instanceNumber}
+        scrollToTop={@scrollToTop}
+        scrollToBottom={@scrollToBottom}
+        closeTail={() => @props.closeTail(@props.taskId)} />
       <Contents
         ref="contents"
         requestId={@props.requestId}

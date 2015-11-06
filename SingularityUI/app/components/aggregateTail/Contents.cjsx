@@ -48,7 +48,7 @@ Contents = React.createClass
   # ============================================================================
 
   handleResize: ->
-    height = $("#tail-#{@props.taskId.replace( /(:|\.|\[|\]|,)/g, "\\$1" )}").height()
+    height = $("#tail-#{@props.taskId.replace( /(:|\.|\[|\]|,)/g, "\\$1" )}").height() - 20
     @setState
       contentsHeight: height
 

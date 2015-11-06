@@ -31,7 +31,7 @@ class AggregateTailController extends Controller
 
     fetchCollections: ->
       @collections.activeTasks.fetch().done =>
-        for taskId in @collections.activeTasks.pluck('id')
+        for taskId in @collections.activeTasks.pluck('id').slice(0, 6)
           @models.ajaxError[taskId] = new AjaxError
           @collections.logLines[taskId] = new LogLines [], {taskId, @path, ajaxError: @models.ajaxError[taskId]}
           if @offset?
