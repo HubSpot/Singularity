@@ -35,18 +35,26 @@ Header = React.createClass
                 </li>
               </ul>
           </div>
-          <div className="col-md-7">
+          <div className="col-md-6">
               <ul className="breadcrumb">
                   {@renderBreadcrumbs()}
               </ul>
           </div>
-          <div className="col-md-2 hidden-xs tail-buttons">
-              <a className="btn btn-default tail-top-button" onClick={@props.scrollToTop}>
-                  All to top
-              </a>
+          <div className="col-md-3 hidden-xs tail-buttons">
               <a className="btn btn-default tail-bottom-button" onClick={@props.scrollToBottom}>
                   All to bottom
               </a>
+              <a className="btn btn-default tail-top-button" onClick={@props.scrollToTop}>
+                  All to top
+              </a>
+              <div className="btn-group">
+                <button type="button" className="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <span className="glyphicon glyphicon-cog"></span> <span className="caret"></span>
+                </button>
+                <ul className="dropdown-menu">
+                  <li></li>
+                </ul>
+              </div>
           </div>
       </div>
     </div>
