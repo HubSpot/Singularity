@@ -13,6 +13,7 @@ class AggregateTailView extends View
         window.removeEventListener 'viewChange', @handleViewChange
 
     render: ->
+      $(@el).addClass("tail-root")
       React.render(
         <AggregateTail
           requestId={@requestId}
