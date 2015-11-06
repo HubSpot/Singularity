@@ -34,6 +34,20 @@
 .breadcrumb-request li
     max-width 100%
 
+.individual-header
+    position absolute
+    top 0
+    left 0
+    width 100%
+    height 30px
+    background white
+    line-height 30px
+
+    a.action-link
+        padding 10px
+        text-decoration none
+        color inherit
+
 .tail-indicator
     z-index 500
     position absolute
@@ -68,7 +82,7 @@
 .tail-contents
     overflow auto
     position absolute
-    top 0
+    top 30px
     left 0
     bottom 0
     right 0
@@ -166,14 +180,14 @@
             position absolute
             left 5px
 
-animation-time = 1s
-size = 30px
-
 .loading-spinner
   position absolute
   bottom 0
   right 0
   background-color rgba(white, 0)
+
+  animation-time = 1s
+  size = 30px
 
   &>div
     float right
