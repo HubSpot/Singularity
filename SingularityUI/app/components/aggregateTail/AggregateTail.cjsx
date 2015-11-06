@@ -6,6 +6,9 @@ IndividualTail = require './IndividualTail'
 AggregateTail = React.createClass
   mixins: [Backbone.React.Component.mixin]
 
+  getInitialState: ->
+    viewingInstances: []
+
   componentWillMount: ->
     # Automatically map backbone collections and models to the state of this component
     Backbone.React.Component.mixin.on(@, {
@@ -14,8 +17,21 @@ AggregateTail = React.createClass
       }
     });
 
+  componentDidUpdate: (prevProps, prevState) ->
+    if prevState.activeTasks.length is 0 and @state.activeTasks.length > 0
+      @setState
+        viewingInstances: _.pluck(@state.activeTasks.sort((a, b) -> a.taskId.instanceNo > b.taskId.instanceNo), 'id')
+
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@);
+
+  toggleViewingInstance: (taskId) ->
+    if taskId in @state.viewingInstances
+      viewing = _.without @state.viewingInstances, taskId
+    else
+      viewing = @state.viewingInstances.concat(taskId)
+    @setState
+      viewingInstances: viewing
 
   scrollAllTop: ->
     for tail of @refs
@@ -44,7 +60,7 @@ AggregateTail = React.createClass
 
   renderIndividualTails: ->
     if @state.activeTasks.length > 0
-      Object.keys(@props.logLines).sort((a, b) =>
+      @state.viewingInstances.sort((a, b) =>
         @getInstanceNumber(a) > @getInstanceNumber(b)
       ).map((taskId, i) =>
         <div key={taskId} id="tail-#{taskId}" className="col-md-#{@getColumnWidth()} tail-column">
@@ -68,7 +84,9 @@ AggregateTail = React.createClass
        requestId={@props.requestId}
        scrollToTop={@scrollAllTop}
        scrollToBottom={@scrollAllBottom}
-       activeTasks={@state.activeTasks} />
+       activeTasks={@state.activeTasks}
+       viewingInstances={@state.viewingInstances}
+       toggleViewingInstance={@toggleViewingInstance} />
       <div className="row #{@getRowType()}">
         {@renderIndividualTails()}
       </div>

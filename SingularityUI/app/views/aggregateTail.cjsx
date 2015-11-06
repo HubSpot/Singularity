@@ -14,7 +14,6 @@ class AggregateTailView extends View
 
     render: () ->
       $(@el).addClass("tail-root")
-      console.log @activeTasks
       React.render(
         <AggregateTail
           requestId={@requestId}
