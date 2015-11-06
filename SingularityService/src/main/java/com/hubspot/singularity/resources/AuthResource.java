@@ -1,7 +1,6 @@
 package com.hubspot.singularity.resources;
 
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -40,12 +39,5 @@ public class AuthResource {
   @Path("/user")
   public SingularityUserHolder getUser() {
     return new SingularityUserHolder(user, user.isPresent(), configuration.getAuthConfiguration().isEnabled());
-  }
-
-  @POST
-  @Path("/cache/clear")
-  public void clearAuthCache() {
-    authorizationHelper.checkAdminAuthorization(user);
-    authDatastore.bustCache();
   }
 }

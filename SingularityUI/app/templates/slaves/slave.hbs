@@ -1,5 +1,5 @@
 {{#if data.length}}
-    <table class="table table-striped">
+    <table class="table table-striped sortable-theme-bootstrap" data-sortable>
         <thead>
             <tr>
                 <th>ID</th>
@@ -34,12 +34,17 @@
                         <td>{{ user }}</td>
                     {{/ifInSubFilter}}
                     <td class="actions-column">
-                        {{#ifInSubFilter state 'DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION'}}
+                        {{#ifInSubFilter state 'DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION,FROZEN'}}
                             <a data-slave-host="{{ host }}" data-slave-id="{{ id }}" data-state="{{ state }}" data-action="reactivate" title="Reactivate">
                                 <span class="glyphicon glyphicon-new-window"></span>
                             </a>
                         {{/ifInSubFilter}}
                         {{#ifInSubFilter state 'ACTIVE'}}
+                            <a data-slave-host="{{ host }}" data-slave-id="{{ id }}" data-state="{{ state }}" data-action="freeze" title="Freeze">
+                                <span class="glyphicon glyphicon-stop"></span>
+                            </a>
+                        {{/ifInSubFilter}}
+                        {{#ifInSubFilter state 'ACTIVE,FROZEN'}}
                             <a data-slave-host="{{ host }}" data-slave-id="{{ id }}" data-state="{{ state }}" data-action="decommission" title="Decommission">
                                 <span class="glyphicon glyphicon-trash"></span>
                             </a>

@@ -8,8 +8,8 @@ class TaskView extends View
         _.extend super,
             'click [data-action="viewObjectJSON"]': 'viewJson'
             'click [data-action="viewJsonProperty"]': 'viewJsonProperty'
-            'click [data-action="remove"]': 'killTask'           
-    
+            'click [data-action="remove"]': 'killTask'
+
     initialize: ({@taskId}) ->
         @subviews.healthcheckNotification.on 'toggleHealthchecks', @toggleHealthchecks
 
@@ -18,8 +18,10 @@ class TaskView extends View
 
         # Plop subview contents in there. It'll take care of everything itself
         @$('#overview').html                    @subviews.overview.$el
+        @$('#alerts').html                      @subviews.alerts.$el
         @$('#healthcheck-notification').html    @subviews.healthcheckNotification.$el
         @$('#history').html                     @subviews.history.$el
+        @$('#latest-log').html                  @subviews.latestLog.$el
         @$('#file-browser').html                @subviews.fileBrowser.$el
         @$('#s3-logs').html                     @subviews.s3Logs.$el
         @$('#lb-updates').html                  @subviews.lbUpdates.$el
@@ -27,6 +29,8 @@ class TaskView extends View
         @$('#info').html                        @subviews.info.$el
         @$('#resources').html                   @subviews.resourceUsage.$el
         @$('#environment').html                 @subviews.environment.$el
+
+        super.afterRender()
 
     toggleHealthchecks: =>
         @subviews.healthChecks.expandToggleIfClosed()

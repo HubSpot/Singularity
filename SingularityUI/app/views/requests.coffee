@@ -114,21 +114,7 @@ class RequestsView extends View
 
         @currentRequests = requests
 
-    preventSearchOverwrite: ->
-        # If you've got a lot of requests like we do at HubSpot, the collection
-        # behind this view will take a while to download & parse. If you type stuff
-        # in the search field before this happens, it'll all be wiped.
-        $searchBox = @$ 'input[type="search"]'
-        searchVal = $searchBox.val()
-
-        @searchFilter = searchVal if not @searchFilter
-
-        if $searchBox.is ':focus'
-            @focusSearchAfterRender = true
-
     render: =>
-        @preventSearchOverwrite()
-        
         # Renders the base template
         # The table contents are rendered bit by bit as the user scrolls down.
         context =
@@ -140,7 +126,7 @@ class RequestsView extends View
             collectionSynced: @collection.synced
             haveRequests: @collection.length and @collection.synced
 
-        partials = 
+        partials =
             partials:
                 requestsBody: @bodyTemplate
 
@@ -148,12 +134,10 @@ class RequestsView extends View
             partials.partials.requestsFilter = @templateFilter
 
         @$el.html @templateBase context, partials
-          
-        if @focusSearchAfterRender
-            $searchBox = @$ 'input[type="search"]'
-            $searchBox.focus()
-            $searchBox[0].setSelectionRange @searchFilter.length, @searchFilter.length
-            @focusSearchAfterRender = false
+        @afterRender()
+
+    afterRender: =>
+        super
 
         @renderTable()
         @$('.actions-column a[title]').tooltip()
@@ -178,6 +162,7 @@ class RequestsView extends View
 
         @$('table').show()
         @$('.empty-table-message').remove()
+        @$('input[type="search"]').removeAttr('disabled').attr('placeholder','Filter requests').focus()
 
         $(window).scrollTop 0
         @filterCollection()
@@ -273,7 +258,7 @@ class RequestsView extends View
 
         if @animationFrameRequest?
             window.cancelAnimationFrame @animationFrameRequest
-            
+
         @animationFrameRequest = window.requestAnimationFrame =>
             $table = @$ "tbody"
             tableBottom = $table.height() + $table.offset().top
@@ -318,7 +303,7 @@ class RequestsView extends View
 
         request = new Request id: id
 
-        request.promptRun (data) =>   
+        request.promptRun (data) =>
 
             # If user wants to redirect to a file after the task starts
             if data.autoTail is 'on'

@@ -13,7 +13,7 @@ import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.data.DeployManager;
 
 @Singleton
-public class DeployHistoryHelper extends BlendedHistoryHelper<SingularityDeployHistory> {
+public class DeployHistoryHelper extends BlendedHistoryHelper<SingularityDeployHistory, String> {
 
   private final DeployManager deployManager;
   private final HistoryManager historyManager;

@@ -13,6 +13,7 @@ import org.apache.mesos.Protos.SlaveID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -69,7 +70,9 @@ class SingularitySlaveAndRackManager {
     SLAVE_DECOMMISSIONING(false),
     RACK_DECOMMISSIONING(false),
     RACK_AFFINITY_NOT_MATCHING(false),
-    SLAVE_ATTRIBUTES_DO_NOT_MATCH(false);
+    SLAVE_ATTRIBUTES_DO_NOT_MATCH(false),
+    SLAVE_FROZEN(false),
+    RACK_FROZEN(false);
 
     private final boolean isMatchAllowed;
 
@@ -88,11 +91,23 @@ class SingularitySlaveAndRackManager {
     final String rackId = slaveAndRackHelper.getRackIdOrDefault(offer);
     final String slaveId = offer.getSlaveId().getValue();
 
-    if (stateCache.getSlave(slaveId).get().getCurrentState().getState().isDecommissioning()) {
+    final MachineState currentSlaveState = stateCache.getSlave(slaveId).get().getCurrentState().getState();
+
+    if (currentSlaveState == MachineState.FROZEN) {
+      return SlaveMatchState.SLAVE_FROZEN;
+    }
+
+    if (currentSlaveState.isDecommissioning()) {
       return SlaveMatchState.SLAVE_DECOMMISSIONING;
     }
 
-    if (stateCache.getRack(rackId).get().getCurrentState().getState().isDecommissioning()) {
+    final MachineState currentRackState = stateCache.getRack(rackId).get().getCurrentState().getState();
+
+    if (currentRackState == MachineState.FROZEN) {
+      return SlaveMatchState.RACK_FROZEN;
+    }
+
+    if (currentRackState.isDecommissioning()) {
       return SlaveMatchState.RACK_DECOMMISSIONING;
     }
 
@@ -287,6 +302,7 @@ class SingularitySlaveAndRackManager {
 
     switch (currentState) {
       case ACTIVE:
+      case FROZEN:
         return CheckResult.ALREADY_ACTIVE;
       case DEAD:
       case MISSING_ON_STARTUP:
@@ -301,6 +317,7 @@ class SingularitySlaveAndRackManager {
     throw new IllegalStateException(String.format("Invalid state %s for %s", currentState, object.getId()));
   }
 
+  @Timed
   public void checkOffer(Offer offer) {
     final String slaveId = offer.getSlaveId().getValue();
     final String rackId = slaveAndRackHelper.getRackIdOrDefault(offer);
@@ -320,6 +337,7 @@ class SingularitySlaveAndRackManager {
     }
   }
 
+  @Timed
   public void checkStateAfterFinishedTask(SingularityTaskId taskId, String slaveId, SingularitySchedulerStateCache stateCache) {
     Optional<SingularitySlave> slave = slaveManager.getObject(slaveId);
 

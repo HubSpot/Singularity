@@ -5,9 +5,9 @@ import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -198,6 +198,8 @@ public class RequestResource extends AbstractRequestResource {
 
     checkConflict(createResult != SingularityCreateResult.EXISTED, "%s is already bouncing", requestId);
 
+    requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), queryUser);
+
     return fillEntireRequest(requestWithState);
   }
 
@@ -208,8 +210,9 @@ public class RequestResource extends AbstractRequestResource {
   @ApiResponses({
     @ApiResponse(code=400, message="Singularity Request is not scheduled or one-off"),
   })
-  public SingularityRequestParent scheduleImmediately(@ApiParam("The request ID to run") @PathParam("requestId") String requestId,
+  public SingularityPendingRequestParent scheduleImmediately(@ApiParam("The request ID to run") @PathParam("requestId") String requestId,
       @ApiParam("Username of the person requesting the execution") @QueryParam("user") Optional<String> queryUser,
+      @ApiParam("Run ID to associate with this task. If not specified, one will be generated") @QueryParam("runId") Optional<String> runId,
       @ApiParam("Additional command line arguments to append to the task") List<String> commandLineArgs) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
@@ -228,7 +231,11 @@ public class RequestResource extends AbstractRequestResource {
       throw badRequest("Can not request an immediate run of a non-scheduled / always running request (%s)", requestWithState.getRequest());
     }
 
-    final SingularityPendingRequest pendingRequest = new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(), queryUser, pendingType, commandLineArgs);
+    if (!runId.isPresent()) {
+      runId = Optional.of(UUID.randomUUID().toString());
+    }
+
+    final SingularityPendingRequest pendingRequest = new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(), queryUser, pendingType, commandLineArgs, runId);
 
     SingularityCreateResult result = requestManager.addToPendingQueue(pendingRequest);
 
@@ -295,7 +302,7 @@ public class RequestResource extends AbstractRequestResource {
     requestManager.unpause(requestWithState.getRequest(), now, queryUser);
 
     if (maybeDeployId.isPresent() && !requestWithState.getRequest().isOneOff()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), now, queryUser, PendingType.UNPAUSED, Collections.<String> emptyList()));
+      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), now, queryUser, PendingType.UNPAUSED));
     }
 
     return fillEntireRequest(new SingularityRequestWithState(requestWithState.getRequest(), RequestState.ACTIVE, now));
@@ -315,7 +322,7 @@ public class RequestResource extends AbstractRequestResource {
     requestManager.exitCooldown(requestWithState.getRequest(), now, user);
 
     if (maybeDeployId.isPresent() && !requestWithState.getRequest().isOneOff()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), now, user, PendingType.IMMEDIATE, Collections.<String>emptyList()));
+      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), now, user, PendingType.IMMEDIATE));
     }
 
     return fillEntireRequest(requestWithState);
@@ -467,6 +474,14 @@ public class RequestResource extends AbstractRequestResource {
     checkReschedule(newRequest, maybeOldRequest, now);
 
     return newRequest;
+  }
+
+  @GET
+  @PropertyFiltering
+  @Path("/lbcleanup")
+  @ApiOperation("Retrieve the list of tasks being cleaned from load balancers.")
+  public Iterable<String> getLbCleanupRequests() {
+    return authorizationHelper.filterAuthorizedRequestIds(user, requestManager.getLBCleanupRequestIds());
   }
 
 }

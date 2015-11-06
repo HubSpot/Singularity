@@ -52,8 +52,7 @@ class TasksView extends View
         if @searchFilter
             tasks = _.filter tasks, (task) =>
                 searchField = "#{ task.id }#{ task.host }".toLowerCase().replace(/-/g, '_')
-                searchField.indexOf(@searchFilter.toLowerCase().replace(/-/g, '_')) isnt -1
-        
+                searchField.toLowerCase().indexOf(@searchFilter.toLowerCase().replace(/-/g, '_')) isnt -1
         # Sort the table if the user clicked on the table heading things
         if @sortAttribute?
             tasks = _.sortBy tasks, (task) =>
@@ -70,23 +69,10 @@ class TasksView extends View
                 tasks = tasks.reverse()
         else
             tasks.reverse() unless @state is 'scheduled'
-            
+
         @currentTasks = tasks
 
-    preventSearchOverwrite: ->
-        # If you've got a lot of tasks like we do at HubSpot, the collection
-        # behind this view will take a while to download & parse. If you type stuff
-        # in the search field before this happens, it'll all be wiped.
-        $searchBox = @$ 'input[type="search"]'
-        searchVal = $searchBox.val()
-
-        @searchFilter = searchVal if not @searchFilter
-
-        if $searchBox.is ':focus'
-            @focusSearchAfterRender = true
-
     render: =>
-        @preventSearchOverwrite()
         # Renders the base template
         # The table contents are rendered bit by bit as the user scrolls down.
         context =
@@ -95,19 +81,15 @@ class TasksView extends View
             collectionSynced: @collection.synced
             haveTasks: @collection.length and @collection.synced
 
-        partials = 
+        partials =
             partials:
                 tasksBody: @bodyTemplate
 
         @$el.html @templateBase context, partials
 
-        if @focusSearchAfterRender
-            $searchBox = @$ 'input[type="search"]'
-            $searchBox.focus()
-            $searchBox[0].setSelectionRange @searchFilter.length, @searchFilter.length
-            @focusSearchAfterRender = false
-
         @renderTable()
+
+        super.afterRender()
 
     # Prepares the staged rendering and triggers the first one
     renderTable: =>
@@ -115,6 +97,7 @@ class TasksView extends View
 
         @$('table').show()
         @$('.empty-table-message').remove()
+        @$('input[type="search"]').removeAttr('disabled').attr('placeholder','Filter tasks').focus()
 
         $(window).scrollTop 0
         @filterCollection()
@@ -139,22 +122,12 @@ class TasksView extends View
         tasks = @currentTasks.slice(@renderProgress, newProgress)
         @renderProgress = newProgress
 
-        decommissioning_hosts = new Slaves(
-            @attributes.slaves.filter (model) ->
-                model.attributes.state in ['DECOMMISSIONING','DECOMISSIONING', 'DECOMMISSIONED','DECOMISSIONED', 'STARTING_DECOMMISSION', 'STARTING_DECOMISSION']
-        ).map((model) ->
-            model.get('host')
-        )
-        if decommissioning_hosts.length is 0
-            hosts = 'none'
-        else
-            hosts = decommissioning_hosts.join().replace(/_/g, "-")
-
+        decomTasks = @attributes.cleaning.pluck('taskId')
         $contents = @bodyTemplate
             tasks: tasks
             rowsOnly: true
-            decommissioning_hosts: hosts
-        
+            decomissioning_tasks: decomTasks
+
         $table = @$ ".table-staged table"
         $tableBody = $table.find "tbody"
 
@@ -200,7 +173,7 @@ class TasksView extends View
 
         if @animationFrameRequest?
             window.cancelAnimationFrame @animationFrameRequest
-            
+
         @animationFrameRequest = window.requestAnimationFrame =>
             $table = @$ "tbody"
             tableBottom = $table.height() + $table.offset().top
@@ -226,11 +199,11 @@ class TasksView extends View
 
     removeTask: (e) ->
         $row = $(e.target).parents 'tr'
-        id = $row.data 'task-id' 
+        id = $row.data 'task-id'
 
         @promptKill id, ->
             $row.remove()
-    
+
     promptKill: (id, callback) ->
         vex.dialog.confirm
             buttons: [
@@ -240,7 +213,7 @@ class TasksView extends View
                 vex.dialog.buttons.NO
             ]
             message: killTemplate id: id
-            
+
             callback: (confirmed) =>
                 return unless confirmed
                 deleteRequest = @collection.get(id).kill()
@@ -255,7 +228,7 @@ class TasksView extends View
 
     runTask: (e) =>
         $row = $(e.target).parents 'tr'
-        id = $row.data 'task-id' 
+        id = $row.data 'task-id'
 
         model = @collection.get(id)
         model.promptRun =>

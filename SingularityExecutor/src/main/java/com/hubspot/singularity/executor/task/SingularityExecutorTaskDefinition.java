@@ -16,13 +16,15 @@ public class SingularityExecutorTaskDefinition {
   private final Path taskDirectoryPath;
   private final String executorBashOut;
   private final String serviceLogOut;
+  private final String serviceLogOutExtension;
   private final String taskAppDirectory;
   private final String logrotateStateFile;
   private final String executorPid;
+  private final String signatureVerifyOut;
 
   @JsonCreator
   public SingularityExecutorTaskDefinition(@JsonProperty("taskId") String taskId, @JsonProperty("executorData") ExecutorData executorData, @JsonProperty("taskDirectory") String taskDirectory, @JsonProperty("executorPid") String executorPid,
-      @JsonProperty("serviceLogOut") String serviceLogOut, @JsonProperty("taskAppDirectory") String taskAppDirectory, @JsonProperty("executorBashOut") String executorBashOut, @JsonProperty("logrotateStateFilePath") String logrotateStateFile) {
+      @JsonProperty("serviceLogOut") String serviceLogOut, @JsonProperty("serviceLogOutExtension") String serviceLogOutExtension, @JsonProperty("taskAppDirectory") String taskAppDirectory, @JsonProperty("executorBashOut") String executorBashOut, @JsonProperty("logrotateStateFilePath") String logrotateStateFile, @JsonProperty("signatureVerifyOut") String signatureVerifyOut) {
     this.executorData = executorData;
     this.taskId = taskId;
     this.taskDirectoryPath = Paths.get(taskDirectory);
@@ -30,8 +32,10 @@ public class SingularityExecutorTaskDefinition {
     this.executorPid = executorPid;
     this.executorBashOut = executorBashOut;
     this.serviceLogOut = serviceLogOut;
+    this.serviceLogOutExtension = serviceLogOutExtension;
     this.taskAppDirectory = taskAppDirectory;
     this.logrotateStateFile = logrotateStateFile;
+    this.signatureVerifyOut = signatureVerifyOut;
   }
 
   @JsonIgnore
@@ -59,6 +63,17 @@ public class SingularityExecutorTaskDefinition {
     return taskDirectoryPath.resolve(logrotateStateFile);
   }
 
+  @JsonIgnore
+  /**
+   * Convenience method for handling skipLogrotateAndCompress
+   */
+  public boolean shouldLogrotateLogFile() {
+    return !executorData.getSkipLogrotateAndCompress().or(Boolean.FALSE).booleanValue();
+  }
+
+  @JsonIgnore
+  public Path getSignatureVerifyOutPath() { return taskDirectoryPath.resolve(signatureVerifyOut); }
+
   public String getTaskDirectory() {
     return taskDirectoryPath.toString();
   }
@@ -69,6 +84,10 @@ public class SingularityExecutorTaskDefinition {
 
   public String getServiceLogOut() {
     return getServiceLogOutPath().toString();
+  }
+
+  public String getServiceLogOutExtension() {
+    return serviceLogOutExtension;
   }
 
   public String getTaskAppDirectory() {
@@ -89,6 +108,10 @@ public class SingularityExecutorTaskDefinition {
 
   public String getExecutorPid() {
     return executorPid;
+  }
+
+  public String getSignatureVerifyOut() {
+    return signatureVerifyOut;
   }
 
   @JsonIgnore

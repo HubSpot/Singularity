@@ -11,7 +11,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-import com.hubspot.mesos.JavaUtils;
 
 public class SingularityS3FormatHelper {
 
@@ -43,7 +42,7 @@ public class SingularityS3FormatHelper {
     return s3KeyFormat;
   }
 
-  public static String getKey(String s3KeyFormat, int sequence, long timestamp, String filename, Optional<String> hostname) {
+  public static String getKey(String s3KeyFormat, int sequence, long timestamp, String filename, String hostname) {
     final Calendar calendar = Calendar.getInstance();
     calendar.setTimeInMillis(timestamp);
 
@@ -64,7 +63,7 @@ public class SingularityS3FormatHelper {
     }
 
     if (s3KeyFormat.contains("%host")) {
-      s3KeyFormat = s3KeyFormat.replace("%host", hostname.or(JavaUtils.getHostName().or("unknownhost")));
+      s3KeyFormat = s3KeyFormat.replace("%host", hostname);
     }
 
     if (s3KeyFormat.contains("%Y")) {

@@ -17,6 +17,9 @@ class ServerItem extends Model
     decommissionTemplate:
         require '../templates/vex/serverDecomission'
 
+    freezeTemplate:
+        require '../templates/vex/serverFreeze'
+
     reactivateTemplate:
         require '../templates/vex/slaveReactivate'
 
@@ -43,6 +46,11 @@ class ServerItem extends Model
         $.ajax
             url: "#{ @url() }?user=#{ app.getUsername() }"
             type: "DELETE"
+
+    freeze: =>
+        $.ajax
+            url: "#{ @url() }/freeze?user=#{ app.getUsername() }"
+            type: "POST"
 
     decommission: =>
         $.ajax
@@ -75,6 +83,21 @@ class ServerItem extends Model
             callback: (confirmed) =>
                 return unless confirmed
                 @remove().done callback
+
+    promptFreeze: (callback) =>
+        state = @get 'state'
+        vex.dialog.confirm
+            message: @freezeTemplate {@id, @host, @type}
+            buttons: [
+                $.extend {}, vex.dialog.buttons.YES,
+                    text: 'Freeze',
+                    className: 'vex-dialog-button-primary'
+                vex.dialog.buttons.NO
+            ]
+
+            callback: (confirmed) =>
+                return unless confirmed
+                @freeze().done callback
 
     promptDecommission: (callback) =>
         state = @get 'state'

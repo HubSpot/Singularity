@@ -15,10 +15,14 @@ import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -88,16 +92,18 @@ public class TaskManager extends CuratorAsyncManager {
   private final IdTranscoder<SingularityPendingTaskId> pendingTaskIdTranscoder;
   private final IdTranscoder<SingularityTaskId> taskIdTranscoder;
 
+  private final ZkCache<SingularityTask> taskCache;
+
   private final SingularityEventListener singularityEventListener;
   private final String serverId;
 
   @Inject
-  public TaskManager(SingularityConfiguration configuration, CuratorFramework curator, SingularityEventListener singularityEventListener, IdTranscoder<SingularityPendingTaskId> pendingTaskIdTranscoder,
-      IdTranscoder<SingularityTaskId> taskIdTranscoder, Transcoder<SingularityLoadBalancerUpdate> taskLoadBalancerHistoryUpdateTranscoder,
+  public TaskManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, SingularityEventListener singularityEventListener,
+      IdTranscoder<SingularityPendingTaskId> pendingTaskIdTranscoder, IdTranscoder<SingularityTaskId> taskIdTranscoder, Transcoder<SingularityLoadBalancerUpdate> taskLoadBalancerHistoryUpdateTranscoder,
       Transcoder<SingularityTaskStatusHolder> taskStatusTranscoder, Transcoder<SingularityTaskHealthcheckResult> healthcheckResultTranscoder, Transcoder<SingularityTask> taskTranscoder,
       Transcoder<SingularityTaskCleanup> taskCleanupTranscoder, Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder, Transcoder<SingularityPendingTask> pendingTaskTranscoder,
-      Transcoder<SingularityKilledTaskIdRecord> killedTaskIdRecordTranscoder, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId) {
-    super(curator, configuration.getZookeeperAsyncTimeout());
+      Transcoder<SingularityKilledTaskIdRecord> killedTaskIdRecordTranscoder, ZkCache<SingularityTask> taskCache, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId) {
+    super(curator, configuration, metricRegistry);
 
     this.healthcheckResultTranscoder = healthcheckResultTranscoder;
     this.taskTranscoder = taskTranscoder;
@@ -110,6 +116,7 @@ public class TaskManager extends CuratorAsyncManager {
     this.pendingTaskIdTranscoder = pendingTaskIdTranscoder;
     this.taskLoadBalancerUpdateTranscoder = taskLoadBalancerHistoryUpdateTranscoder;
     this.singularityEventListener = singularityEventListener;
+    this.taskCache = taskCache;
 
     this.serverId = serverId;
   }
@@ -206,6 +213,7 @@ public class TaskManager extends CuratorAsyncManager {
     save(getDirectoryPath(taskId), Optional.of(directory.getBytes(UTF_8)));
   }
 
+  @Timed
   public void saveLastActiveTaskStatus(SingularityTaskStatusHolder taskStatus) {
     save(getLastActiveTaskStatusPath(taskStatus.getTaskId()), taskStatus, taskStatusTranscoder);
   }
@@ -268,13 +276,14 @@ public class TaskManager extends CuratorAsyncManager {
 
     });
 
-    return getAsync("active_tasks", children, taskTranscoder);
+    return getAsync("active_tasks", children, taskTranscoder, taskCache);
   }
 
   public List<SingularityTaskStatusHolder> getLastActiveTaskStatuses() {
     return getAsyncChildren(LAST_ACTIVE_TASK_STATUSES_PATH_ROOT, taskStatusTranscoder);
   }
 
+  @Timed
   public Optional<SingularityTaskStatusHolder> getLastActiveTaskStatus(SingularityTaskId taskId) {
     return getData(getLastActiveTaskStatusPath(taskId), taskStatusTranscoder);
   }
@@ -348,6 +357,7 @@ public class TaskManager extends CuratorAsyncManager {
     return exists(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()));
   }
 
+  @Timed
   public SingularityCreateResult saveTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate) {
     singularityEventListener.taskHistoryUpdateEvent(taskHistoryUpdate);
 
@@ -399,8 +409,27 @@ public class TaskManager extends CuratorAsyncManager {
     return requestTaskIds;
   }
 
+  public List<SingularityTaskId> getTaskIdsForDeploy(String requestId, final String deployId, TaskFilter taskFilter) {
+    List<SingularityTaskId> requestTaskIds = getTaskIdsForRequest(requestId, taskFilter);
+    final Iterable<SingularityTaskId> deployTaskIds = Iterables.filter(requestTaskIds, new Predicate<SingularityTaskId>() {
+      @Override
+      public boolean apply(SingularityTaskId input) {
+        return input.getDeployId().equals(deployId);
+      }
+    });
+    return ImmutableList.copyOf(deployTaskIds);
+  }
+
+  public List<SingularityTaskId> getActiveTaskIdsForDeploy(String requestId, final String deployId) {
+    return getTaskIdsForDeploy(requestId, deployId, TaskFilter.ACTIVE);
+  }
+
+  public List<SingularityTaskId> getInactiveTaskIdsForDeploy(String requestId, final String deployId) {
+    return getTaskIdsForDeploy(requestId, deployId, TaskFilter.INACTIVE);
+  }
+
   public Optional<SingularityTaskHistory> getTaskHistory(SingularityTaskId taskId) {
-    final Optional<SingularityTask> task = getTask(taskId);
+    final Optional<SingularityTask> task = getTaskCheckCache(taskId, true);
 
     if (!task.isPresent()) {
       return Optional.absent();
@@ -442,10 +471,15 @@ public class TaskManager extends CuratorAsyncManager {
     return getData(getPendingPath(pendingTaskId), pendingTaskTranscoder);
   }
 
-  public Optional<SingularityTask> getTask(SingularityTaskId taskId) {
+  private Optional<SingularityTask> getTaskCheckCache(SingularityTaskId taskId, boolean shouldCheckExists) {
     final String path = getTaskPath(taskId);
 
-    return getData(path, taskTranscoder);
+    return getData(path, taskTranscoder, taskCache, shouldCheckExists);
+  }
+
+  @Timed
+  public Optional<SingularityTask> getTask(SingularityTaskId taskId) {
+    return getTaskCheckCache(taskId, false);
   }
 
   public List<SingularityPendingTaskId> getPendingTaskIds() {
@@ -471,7 +505,7 @@ public class TaskManager extends CuratorAsyncManager {
       paths.add(getTaskPath(taskId));
     }
 
-    return Maps.uniqueIndex(getAsync("tasks_by_ids", paths, taskTranscoder), SingularityTaskIdHolder.getTaskIdFunction());
+    return Maps.uniqueIndex(getAsync("tasks_by_ids", paths, taskTranscoder, taskCache), SingularityTaskIdHolder.getTaskIdFunction());
   }
 
   private void createTaskAndDeletePendingTaskPrivate(SingularityTask task) throws Exception {
@@ -483,9 +517,13 @@ public class TaskManager extends CuratorAsyncManager {
     saveLastActiveTaskStatus(new SingularityTaskStatusHolder(task.getTaskId(), Optional.<TaskStatus>absent(), now, serverId, Optional.of(task.getOffer().getSlaveId().getValue())));
 
     try {
-      CuratorTransactionFinal transaction = curator.inTransaction().create().forPath(getTaskPath(task.getTaskId()), taskTranscoder.toBytes(task)).and();
+      final String path = getTaskPath(task.getTaskId());
+
+      CuratorTransactionFinal transaction = curator.inTransaction().create().forPath(path, taskTranscoder.toBytes(task)).and();
 
       transaction.create().forPath(getActivePath(task.getTaskId().getId())).and().commit();
+
+      taskCache.set(path, task);
     } catch (KeeperException.NodeExistsException nee) {
       LOG.error("Task or active path already existed for {}", task.getTaskId());
     }
@@ -523,6 +561,7 @@ public class TaskManager extends CuratorAsyncManager {
     return delete(getKilledPath(taskId));
   }
 
+  @Timed
   public SingularityDeleteResult deleteLastActiveTaskStatus(SingularityTaskId taskId) {
     return delete(getLastActiveTaskStatusPath(taskId));
   }
@@ -572,6 +611,8 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public SingularityDeleteResult deleteTaskHistory(SingularityTaskId taskId) {
+    taskCache.delete(getTaskPath(taskId));
+
     return delete(getHistoryPath(taskId));
   }
 

@@ -4,8 +4,6 @@ import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 
-import java.util.Collections;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -108,7 +106,7 @@ public class DeployResource extends AbstractRequestResource {
     }
 
     if (request.isDeployable()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), now, deployUser, PendingType.NEW_DEPLOY, Collections.<String> emptyList()));
+      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), now, deployUser, PendingType.NEW_DEPLOY));
     }
 
     return fillEntireRequest(requestWithState);

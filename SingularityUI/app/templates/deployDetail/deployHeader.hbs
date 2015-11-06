@@ -1,0 +1,46 @@
+{{! Part of deployBase }}
+<header class='detail-header'>
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="breadcrumb">
+                <li>
+                    Request <a href="{{appRoot}}/request/{{ data.requestId }}">{{ data.requestId }}</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <h3>
+                <span>
+                    {{ data.deployId }}
+                </span>
+                    {{#if data.deployResult.deployState}}
+                        <span class="deploy-state" data-state="{{ data.deployResult.deployState }}">
+                            {{ data.deployResult.deployState }}
+                        </span>
+                    {{else}}
+                        <span class="deploy-state" data-state="PENDING">
+                            pending
+                        </span>
+                    {{/if}}
+            </h3>
+        </div>
+        {{! Right side, buttons }}
+        <div class="col-md-4 button-container">
+            <a class="btn btn-default" data-request-id="{{ data.id }}" data-action="viewObjectJSON">
+                JSON
+            </a>
+        </div>
+    </div>
+    {{#if data.deployResult.message}}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="well text-muted">
+                    {{ data.deployResult.message }}
+                </div>
+            </div>
+        </div>
+    {{/if}}
+</header>

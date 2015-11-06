@@ -8,6 +8,7 @@ import org.apache.curator.utils.ZKPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -16,6 +17,7 @@ import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 
 public abstract class AbstractMachineManager<T extends SingularityMachineAbstraction<T>> extends CuratorAsyncManager {
@@ -27,8 +29,9 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
   private final Transcoder<T> transcoder;
   private final Transcoder<SingularityMachineStateHistoryUpdate> historyTranscoder;
 
-  public AbstractMachineManager(CuratorFramework curator, long zkAsyncTimeout, Transcoder<T> transcoder, Transcoder<SingularityMachineStateHistoryUpdate> historyTranscoder) {
-    super(curator, zkAsyncTimeout);
+  public AbstractMachineManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, Transcoder<T> transcoder,
+      Transcoder<SingularityMachineStateHistoryUpdate> historyTranscoder) {
+    super(curator, configuration, metricRegistry);
 
     this.transcoder = transcoder;
     this.historyTranscoder = historyTranscoder;
@@ -128,6 +131,16 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     }
 
     if (newState == MachineState.STARTING_DECOMMISSION && object.getCurrentState().getState().isDecommissioning()) {
+      return StateChangeResult.FAILURE_ILLEGAL_TRANSITION;
+    }
+
+    // can't jump from FROZEN to DECOMMISSIONING or DECOMMISSIONED
+    if (((newState == MachineState.DECOMMISSIONING) || (newState == MachineState.DECOMMISSIONED)) && (object.getCurrentState().getState() == MachineState.FROZEN)) {
+      return StateChangeResult.FAILURE_ILLEGAL_TRANSITION;
+    }
+
+    // can't jump from a decommissioning state to FROZEN
+    if ((newState == MachineState.FROZEN) && object.getCurrentState().getState().isDecommissioning()) {
       return StateChangeResult.FAILURE_ILLEGAL_TRANSITION;
     }
 

@@ -167,8 +167,17 @@ public class SingularityMailer implements Managed {
   }
 
   private Optional<EmailType> getEmailType(ExtendedTaskState taskState, SingularityRequest request, Collection<SingularityTaskHistoryUpdate> taskHistory) {
+    final Optional<SingularityTaskHistoryUpdate> cleaningUpdate = SingularityTaskHistoryUpdate.getUpdate(taskHistory, ExtendedTaskState.TASK_CLEANING);
+
     switch (taskState) {
       case TASK_FAILED:
+        if (cleaningUpdate.isPresent()) {
+          Optional<TaskCleanupType> cleanupType = getTaskCleanupTypefromSingularityTaskHistoryUpdate(cleaningUpdate.get());
+
+          if (cleanupType.isPresent() && cleanupType.get() == TaskCleanupType.DECOMISSIONING) {
+            return Optional.of(EmailType.TASK_FAILED_DECOMISSIONED);
+          }
+        }
         return Optional.of(EmailType.TASK_FAILED);
       case TASK_FINISHED:
         switch (request.getRequestType()) {
@@ -183,8 +192,6 @@ public class SingularityMailer implements Managed {
             return Optional.of(EmailType.TASK_FINISHED_LONG_RUNNING);
         }
       case TASK_KILLED:
-        Optional<SingularityTaskHistoryUpdate> cleaningUpdate = SingularityTaskHistoryUpdate.getUpdate(taskHistory, ExtendedTaskState.TASK_CLEANING);
-
         if (cleaningUpdate.isPresent()) {
           Optional<TaskCleanupType> cleanupType = getTaskCleanupTypefromSingularityTaskHistoryUpdate(cleaningUpdate.get());
 

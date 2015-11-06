@@ -55,9 +55,9 @@ class Requests extends Collection
             request = model.get('request')
 
             deployUserTrimmed = user.split("@")[0]
-            
+
             activeDeployUser = model.get('requestDeployState')?.activeDeploy?.user
-            
+
             if activeDeployUser
                 activeDeployUserTrimmed = activeDeployUser.split('@')[0]
                 if deployUserTrimmed is activeDeployUserTrimmed
@@ -73,7 +73,7 @@ class Requests extends Collection
             return false
 
     # Get `active` request type totals by user
-    getUserRequestTotals: (user) ->        
+    getUserRequestTotals: (user) ->
         userRequests = @getUserRequests user
 
         userRequestTotals =
@@ -87,7 +87,7 @@ class Requests extends Collection
         for request in userRequests
 
             type = request.get 'type'
-            
+
             continue if request.get('state') isnt 'ACTIVE'
 
             if type is 'ON_DEMAND'  then userRequestTotals.onDemand  += 1

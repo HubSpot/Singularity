@@ -32,14 +32,23 @@
     "messenger": "~1.4.1",
     "typeahead.js": "~0.10.4",
     "backbone.localStorage": "~1.1.9",
-    "underscore": "~1.8.0"
+    "underscore": "~1.8.0",
+    "sortable": "~0.6.0",
+    "datatables": "~1.10.7",
+    "datatables-bootstrap3-plugin": "~0.4.0",
+    "select2": "~3.5.2"
   },
   "resolutions": {
-    "backbone": "~1.1.2"
+    "backbone": "~1.1.2",
+    "bootstrap": "~3.2.0",
+    "underscore": "~1.6.0"
   },
   "overrides": {
     "vex": {
       "main": "js/vex.combined.min.js"
+    },
+    "datatables": {
+      "main": "media/js/jquery.dataTables.min.js"
     },
     "backbone": {
       "dependencies": {
@@ -51,6 +60,12 @@
       "dependencies": {
         "backbone": "~1.1.2"
       }
+    },
+    "sortable": {
+      "main": [
+          "js/sortable.min.js",
+          "css/sortable-theme-bootstrap.css"
+      ]
     }
   }
 }

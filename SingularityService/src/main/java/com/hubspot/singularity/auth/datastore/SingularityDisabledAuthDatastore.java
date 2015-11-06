@@ -16,11 +16,6 @@ public class SingularityDisabledAuthDatastore implements SingularityAuthDatastor
   }
 
   @Override
-  public void bustCache() {
-    // no-op
-  }
-
-  @Override
   public Optional<Boolean> isHealthy() {
     return Optional.absent();
   }

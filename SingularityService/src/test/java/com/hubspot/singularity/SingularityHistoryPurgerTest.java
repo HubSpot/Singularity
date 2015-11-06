@@ -1,9 +1,16 @@
 package com.hubspot.singularity;
 
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
+
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.TaskState;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -15,8 +22,11 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
+import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.SingularityHistoryPurger;
+import com.hubspot.singularity.data.history.SingularityTaskHistoryPersister;
+import com.hubspot.singularity.data.history.TaskHistoryHelper;
 
 import liquibase.Liquibase;
 import liquibase.database.Database;
@@ -31,6 +41,9 @@ public class SingularityHistoryPurgerTest extends SingularitySchedulerTestBase {
 
   @Inject
   protected HistoryManager historyManager;
+
+  @Inject
+  protected SingularityTaskHistoryPersister taskHistoryPersister;
 
   public SingularityHistoryPurgerTest() {
     super(true);
@@ -151,4 +164,61 @@ public class SingularityHistoryPurgerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(1, historyManager.getTaskHistoryForRequest(requestId, 0, 10).size());
   }
 
+  @Test
+  public void testRunId() {
+    initScheduledRequest();
+    initFirstDeploy();
+
+    String runId = "my-run-id";
+    String user = "my-user";
+
+    SingularityPendingRequestParent parent = requestResource.scheduleImmediately(requestId, Optional.of(user), Optional.of(runId), Collections.<String> emptyList());
+
+    Assert.assertEquals(runId, parent.getPendingRequest().getRunId().get());
+    Assert.assertEquals(user, parent.getPendingRequest().getUser().get());
+
+    resourceOffers();
+
+    Assert.assertEquals(runId, taskManager.getActiveTasks().get(0).getTaskRequest().getPendingTask().getRunId().get());
+    Assert.assertEquals(user, taskManager.getActiveTasks().get(0).getTaskRequest().getPendingTask().getUser().get());
+
+    SingularityTaskId taskId = taskManager.getActiveTaskIds().get(0);
+
+    statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_FINISHED);
+
+    taskHistoryPersister.runActionOnPoll();
+
+    Assert.assertEquals(runId, historyManager.getTaskHistory(taskId.getId()).get().getTask().getTaskRequest().getPendingTask().getRunId().get());
+    Assert.assertEquals(runId, historyManager.getTaskHistoryForRequest(requestId, 0, 10).get(0).getRunId().get());
+
+    parent = requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Optional.<String> absent(), Collections.<String> emptyList());
+
+    Assert.assertTrue(parent.getPendingRequest().getRunId().isPresent());
+  }
+
+  @Test
+  public void testPersisterRaceCondition() {
+    final TaskManager taskManagerSpy = spy(taskManager);
+    final TaskHistoryHelper taskHistoryHelperWithMockedTaskManager = new TaskHistoryHelper(taskManagerSpy, historyManager);
+
+    initScheduledRequest();
+    initFirstDeploy();
+
+    requestResource.scheduleImmediately(requestId, Optional.<String>absent(), Optional.<String>absent(), Collections.<String>emptyList());
+
+    resourceOffers();
+
+    final SingularityTaskId taskId = taskManager.getActiveTaskIds().get(0);
+
+    statusUpdate(taskManager.getTask(taskId).get(), Protos.TaskState.TASK_FINISHED, Optional.of(System.currentTimeMillis()));
+
+    // persist inactive task(s)
+    taskHistoryPersister.runActionOnPoll();
+
+    // mimic the persister race condition by overriding the inactive task IDs in ZK to the persisted task ID
+    doReturn(Arrays.asList(taskId)).when(taskManagerSpy).getInactiveTaskIdsForRequest(eq(requestId));
+
+    // assert that the history works, but more importantly, that we don't NPE
+    Assert.assertEquals(1, taskHistoryHelperWithMockedTaskManager.getBlendedHistory(requestId, 0, 5).size());
+  }
 }

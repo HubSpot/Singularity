@@ -2,8 +2,12 @@
 <header class='detail-header'>
     <div class="row">
         {{! Left side, info }}
-        <div class="col-md-8">
+        <div class="col-md-7">
             <h4>
+                <a class="star" data-action="starToggle" data-starred="{{ data.starred }}" data-id="{{ data.id }}">
+                    <span class="glyphicon glyphicon-star"></span>
+                </a>
+
                 <span class="request-state" data-state="{{ data.state }}">
                     {{humanizeText data.state}}
                 </span>
@@ -11,7 +15,6 @@
                 <span class="request-type">
                     {{humanizeText data.type}}
                 </span>
-                
             </h4>
 
             <h2>
@@ -20,7 +23,7 @@
         </div>
 
         {{! Right side, buttons }}
-        <div class="col-md-4 button-container">
+        <div class="col-md-5 button-container">
             <a class="btn btn-default" data-request-id="{{ data.id }}" data-action="viewObjectJSON">
                 JSON
             </a>
@@ -62,13 +65,19 @@
                     </a>
                 {{/if}}
             {{/unless}}
-            
+
             {{#if data.canBeBounced}}
                 <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="bounce">
                     Bounce
                 </a>
             {{/if}}
-            
+
+            {{#unless config.hideNewRequestButton}}
+                <a class="btn btn-primary" href="{{appRoot}}/requests/edit/{{ data.id }}">
+                    Edit
+                </a>
+            {{/unless}}
+
             {{#unless data.deleted}}
                 <a class="btn btn-danger" data-request-id="{{ data.id }}" data-action="remove">
                     Remove
@@ -80,8 +89,11 @@
     {{! Active deploy well }}
     <div class="well">
         {{#if data.activeDeploy}}
+            Active deploy
+            <code>
+                <a href="{{appRoot}}/request/{{ data.id }}/deploy/{{ data.activeDeploy.id }}">
+                  {{ data.activeDeploy.id }}</a></code>
             {{#with data.activeDeploy}}
-                Active deploy <code>{{ id }}</code>
                 {{#if metadata.deployedBy}}
                     by <strong>{{usernameFromEmail metadata.deployedBy}}</strong>
                 {{/if}}
@@ -95,7 +107,7 @@
                 No active deploy
             </span>
         {{/if}}
-        
+
         <a data-action="expand-deploy-history" class="pull-right">
             Deploy history
         </a>

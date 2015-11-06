@@ -1,0 +1,84 @@
+<div><div class="page-header">
+    <h2>Info</h2>
+</div>
+
+<div class="row">
+    <ul class="list-unstyled horizontal-description-list">
+        {{#if data.deployMarker.timestamp }}
+          <li class="col-md-4">
+              <div>
+                  <h4>Initiated<a data-clipboard-text="{{ timestampFromNow data.deployMarker.timestamp }}">Copy</a></h4>
+                  <p>{{ timestampFromNow data.deployMarker.timestamp }}</p>
+              </div>
+          </li>
+        {{/if}}
+        {{#if data.deployResult.timestamp}}
+          <li class="col-md-4">
+              <div>
+                  <h4>Completed<a data-clipboard-text="{{ timestampFromNow data.deployResult.timestamp }}">Copy</a></h4>
+                  <p>{{ timestampFromNow data.deployResult.timestamp }}</p>
+              </div>
+          </li>
+        {{/if}}
+        {{#if data.deploy.executorData.cmd}}
+          <li class="col-md-4">
+              <div>
+                  <h4>Command<a data-clipboard-text="{{ data.deploy.executorData.cmd }}">Copy</a></h4>
+                  <p>{{ data.deploy.executorData.cmd }}</p>
+              </div>
+          </li>
+        {{/if}}
+        {{#if data.deploy.resources.cpus}}
+          <li class="col-md-4">
+              <div>
+                  <h4>Resources<a data-clipboard-text="CPUs: {{ data.deploy.resources.cpus }} |
+                  Memory (Mb): {{ data.deploy.resources.memoryMb }} |
+                  Ports: {{ data.deploy.resources.numPorts }}">Copy</a></h4>
+                  <p>CPUs: {{ data.deploy.resources.cpus }} | Memory (MB): {{ data.deploy.resources.memoryMb }} | Ports: {{ data.deploy.resources.numPorts }}
+                  </p>
+              </div>
+          </li>
+        {{/if}}
+        {{#if data.deployStatistics.numTasks}}
+          <li class="col-md-4">
+              <div>
+                  <h4>Number of Tasks<a data-clipboard-text="{{ data.deployStatistics.numTasks }}">Copy</a></h4>
+                  <p>{{ data.deployStatistics.numTasks }}</p>
+              </div>
+          </li>
+        {{/if}}
+        {{#if data.deployStatistics.lastTaskState}}
+          <li class="col-md-4">
+              <div>
+                  <h4>Last Task State<a data-clipboard-text="{{ humanizeText data.deployStatistics.lastTaskState }}">Copy</a></h4>
+                  <p>{{ humanizeText data.deployStatistics.lastTaskState }}</p>
+              </div>
+          </li>
+        {{/if}}
+        {{#if data.deployStatistics.numSequentialRetries}}
+          <li class="col-md-4">
+              <div>
+                  <h4>Sequential Retries<a data-clipboard-text="{{ data.deployStatistics.numSequentialRetries }}">Copy</a></h4>
+                  <p>{{ data.deployStatistics.numSequentialRetries }}</p>
+              </div>
+          </li>
+        {{/if}}
+        {{#if data.deployStatistics.averageRuntimeMillis}}
+          <li class="col-md-4">
+              <div>
+                  <h4>Average Runtime Milliseconds<a data-clipboard-text="{{ data.deployStatistics.averageRuntimeMillis }}">Copy</a></h4>
+                  <p>{{ data.deployStatistics.averageRuntimeMillis }}</p>
+              </div>
+          </li>
+        {{/if}}
+        {{#if data.deploy.executorData.extraCmdLineArgs}}
+          <li class="col-md-4">
+              <div>
+                  <h4>Extra Command Line Arguments<a data-clipboard-text="{{ data.deploy.executorData.extraCmdLineArgs }}">Copy</a></h4>
+                  <p>{{ data.deploy.executorData.extraCmdLineArgs }}</p>
+              </div>
+          </li>
+        {{/if}}
+    </ul>
+</div>
+</div>

@@ -7,9 +7,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.google.inject.name.Named;
+import com.hubspot.singularity.executor.config.SingularityExecutorModule;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskState;
@@ -25,6 +28,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorLogging;
@@ -32,6 +36,7 @@ import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCallable;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
 
+@Singleton
 public class SingularityExecutorMonitor {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityExecutorMonitor.class);
@@ -41,6 +46,8 @@ public class SingularityExecutorMonitor {
   private final ScheduledExecutorService exitChecker;
 
   private final Lock exitLock;
+  private final AtomicBoolean alreadyShutDown;
+  private final CountDownLatch latch;
 
   @SuppressWarnings("rawtypes")
   private volatile Optional<Future> exitCheckerFuture;
@@ -57,7 +64,7 @@ public class SingularityExecutorMonitor {
   private final Map<String, SingularityExecutorTaskProcessCallable> processRunningTasks;
 
   @Inject
-  public SingularityExecutorMonitor(SingularityExecutorLogging logging, ExecutorUtils executorUtils, SingularityExecutorProcessKiller processKiller, SingularityExecutorThreadChecker threadChecker, SingularityExecutorConfiguration configuration) {
+  public SingularityExecutorMonitor(@Named(SingularityExecutorModule.ALREADY_SHUT_DOWN) AtomicBoolean alreadyShutDown, SingularityExecutorLogging logging, ExecutorUtils executorUtils, SingularityExecutorProcessKiller processKiller, SingularityExecutorThreadChecker threadChecker, SingularityExecutorConfiguration configuration) {
     this.logging = logging;
     this.configuration = configuration;
     this.executorUtils = executorUtils;
@@ -75,6 +82,8 @@ public class SingularityExecutorMonitor {
 
     this.runState = RunState.RUNNING;
     this.exitLock = new ReentrantLock();
+    this.alreadyShutDown = alreadyShutDown;
+    this.latch = new CountDownLatch(4);
 
     this.exitCheckerFuture = Optional.of(startExitChecker(Optional.<ExecutorDriver> absent()));
   }
@@ -88,6 +97,11 @@ public class SingularityExecutorMonitor {
   }
 
   public void shutdown(Optional<ExecutorDriver> driver) {
+    if (!alreadyShutDown.compareAndSet(false, true)) {
+      LOG.info("Already ran shut down process");
+      return;
+    }
+
     LOG.info("Shutdown requested with driver {}", driver);
 
     threadChecker.getExecutorService().shutdown();
@@ -97,14 +111,14 @@ public class SingularityExecutorMonitor {
     runningProcessPool.shutdown();
 
     for (SingularityExecutorTask task : tasks.values()) {
-      task.getLog().info("Executor shutting down - requested task kill with state: {}", requestKill(task.getTaskId()));
+      if (!task.wasKilled()) {
+        task.getLog().info("Executor shutting down - requested task kill with state: {}", requestKill(task.getTaskId()));
+      }
     }
 
     processKiller.getExecutorService().shutdown();
 
     exitChecker.shutdown();
-
-    CountDownLatch latch = new CountDownLatch(4);
 
     JavaUtils.awaitTerminationWithLatch(latch, "threadChecker", threadChecker.getExecutorService(), configuration.getShutdownTimeoutWaitMillis());
     JavaUtils.awaitTerminationWithLatch(latch, "processBuilder", processBuilderPool, configuration.getShutdownTimeoutWaitMillis());

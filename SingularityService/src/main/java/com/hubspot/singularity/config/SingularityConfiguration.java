@@ -27,6 +27,12 @@ public class SingularityConfiguration extends Configuration {
 
   private long askDriverToKillTasksAgainAfterMillis = TimeUnit.MINUTES.toMillis(5);
 
+  private int cacheTasksMaxSize = 5000;
+
+  private int cacheTasksInitialSize = 100;
+
+  private long cacheTasksForMillis = TimeUnit.DAYS.toMillis(1);
+
   private long cacheStateForMillis = TimeUnit.SECONDS.toMillis(30);
 
   private long checkDeploysEverySeconds = 5;
@@ -83,6 +89,10 @@ public class SingularityConfiguration extends Configuration {
 
   private long deployHealthyBySeconds = 120;
 
+  private long debugCuratorCallOverBytes = 25000;
+
+  private long debugCuratorCallOverMillis = 250;
+
   private boolean enableCorsFilter = false;
 
   private long healthcheckIntervalSeconds = 5;
@@ -104,7 +114,11 @@ public class SingularityConfiguration extends Configuration {
 
   private long loadBalancerRequestTimeoutMillis = 2000;
 
+  private long loadBalancerRemovalGracePeriodMillis = 0;
+
   private String loadBalancerUri;
+
+  private boolean deletePausedRequestsFromLoadBalancer = true;
 
   private int logFetchMaxThreads = 15;
 
@@ -190,6 +204,10 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   private Map<String, String> reserveSlavesWithAttributes = Collections.emptyMap();
 
+  @JsonProperty("graphite")
+  @NotNull
+  private GraphiteConfiguration graphiteConfiguration = new GraphiteConfiguration();
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -246,6 +264,22 @@ public class SingularityConfiguration extends Configuration {
     return cooldownAfterFailures;
   }
 
+  public long getDebugCuratorCallOverBytes() {
+    return debugCuratorCallOverBytes;
+  }
+
+  public void setDebugCuratorCallOverBytes(long debugCuratorCallOverBytes) {
+    this.debugCuratorCallOverBytes = debugCuratorCallOverBytes;
+  }
+
+  public long getDebugCuratorCallOverMillis() {
+    return debugCuratorCallOverMillis;
+  }
+
+  public void setDebugCuratorCallOverMillis(long debugCuratorCallOverMillis) {
+    this.debugCuratorCallOverMillis = debugCuratorCallOverMillis;
+  }
+
   public double getCooldownAfterPctOfInstancesFail() {
     return cooldownAfterPctOfInstancesFail;
   }
@@ -256,6 +290,22 @@ public class SingularityConfiguration extends Configuration {
 
   public long getCooldownMinScheduleSeconds() {
     return cooldownMinScheduleSeconds;
+  }
+
+  public int getCacheTasksMaxSize() {
+    return cacheTasksMaxSize;
+  }
+
+  public void setCacheTasksMaxSize(int cacheTasksMaxSize) {
+    this.cacheTasksMaxSize = cacheTasksMaxSize;
+  }
+
+  public int getCacheTasksInitialSize() {
+    return cacheTasksInitialSize;
+  }
+
+  public void setCacheTasksInitialSize(int cacheTasksInitialSize) {
+    this.cacheTasksInitialSize = cacheTasksInitialSize;
   }
 
   public int getCoreThreadpoolSize() {
@@ -324,6 +374,14 @@ public class SingularityConfiguration extends Configuration {
 
   public long getKillNonLongRunningTasksInCleanupAfterSeconds() {
     return killNonLongRunningTasksInCleanupAfterSeconds;
+  }
+
+  public long getLoadBalancerRemovalGracePeriodMillis() {
+    return loadBalancerRemovalGracePeriodMillis;
+  }
+
+  public void setLoadBalancerRemovalGracePeriodMillis(long loadBalancerRemovalGracePeriodMillis) {
+    this.loadBalancerRemovalGracePeriodMillis = loadBalancerRemovalGracePeriodMillis;
   }
 
   public long getDeleteDeadSlavesAfterHours() {
@@ -734,6 +792,14 @@ public class SingularityConfiguration extends Configuration {
     this.zooKeeperConfiguration = zooKeeperConfiguration;
   }
 
+  public long getCacheTasksForMillis() {
+    return cacheTasksForMillis;
+  }
+
+  public void setCacheTasksForMillis(long cacheTasksForMillis) {
+    this.cacheTasksForMillis = cacheTasksForMillis;
+  }
+
   public Optional<LDAPConfiguration> getLdapConfiguration() {
     return Optional.fromNullable(ldapConfiguration);
   }
@@ -764,5 +830,21 @@ public class SingularityConfiguration extends Configuration {
 
   public void setReserveSlavesWithAttrbiutes(Map<String, String> reserveSlavesWithAttributes) {
     this.reserveSlavesWithAttributes = reserveSlavesWithAttributes;
+  }
+
+  public GraphiteConfiguration getGraphiteConfiguration() {
+    return graphiteConfiguration;
+  }
+
+  public void setGraphiteConfiguration(GraphiteConfiguration graphiteConfiguration) {
+    this.graphiteConfiguration = graphiteConfiguration;
+  }
+
+  public boolean isDeletePausedRequestsFromLoadBalancer() {
+    return deletePausedRequestsFromLoadBalancer;
+  }
+
+  public void setDeletePausedRequestsFromLoadBalancer(boolean deletePausedRequestsFromLoadBalancer) {
+    this.deletePausedRequestsFromLoadBalancer = deletePausedRequestsFromLoadBalancer;
   }
 }

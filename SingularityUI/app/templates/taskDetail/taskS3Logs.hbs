@@ -4,7 +4,7 @@
     </div>
     {{#if data.length}}
         <div class="table-container">
-            <table class="table table-striped">
+            <table class="table table-striped paginated">
                 <thead>
                     <tr>
                         <th class="half-table">Log file</th>
@@ -18,7 +18,7 @@
                         <tr>
                             <td>
                                 <a class="long-link" href="{{ getUrl }}" target="_blank" title="{{ key }}">
-                                    {{ shortKey }}
+                                    {{ trimS3File shortKey taskId }}
                                 </a>
                             </td>
                             <td>

@@ -1,0 +1,14 @@
+<p>
+	Are you sure you want to to freeze this {{ type }}?
+</p>
+<pre>
+    {{#if host }}
+        {{ host }}
+    {{else}}
+        {{ id }}
+    {{/if}}
+</pre>
+
+<p>
+	Freezing a {{ type }} will prevent new tasks from being launched. Previously running tasks will be unaffected.
+</p>

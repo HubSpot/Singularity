@@ -29,15 +29,21 @@ fi
 if [[ ! -d ./tmp ]]; then
   echo "Creating tmp directory in sandbox"
   mkdir ./tmp
-  sudo chown -R {{{ user }}} ./tmp
 fi
+
+echo "Ensuring ./tmp is owned by {{{ user }}} with 0750"
+sudo chown -R {{{ user }}} ./tmp
+sudo chmod -R 0750 ./tmp
 
 # Create log directory for logrotate runs
 if [[ ! -d {{{ logDir }}} ]]; then
     echo "Creating log directory ({{{ logDir }}})"
     mkdir -p {{{ logDir }}}
-    sudo chown -R {{{ user }}} {{{ logDir }}}
 fi
+
+echo "Ensuring {{{ logDir }}} is owned by {{{ user }}} with 0750"
+sudo chown -R {{{ user }}} {{{ logDir }}}
+sudo chmod -R 0750 {{{ logDir }}}
 
 echo "Ensuring {{{ taskAppDirectory }}} is owned by {{{ user }}}"
 sudo chown -R {{{ user }}} {{{ taskAppDirectory }}}
@@ -56,9 +62,10 @@ fi
 
 # execute command
 {{#if shouldChangeUser}}
-echo "Executing: sudo -E -u {{{ user }}} {{{ cmd }}} >> ../{{{ logFile }}} 2>&1"
-exec sudo -E -u {{{ user }}} {{{ cmd }}} >> ../{{{ logFile }}} 2>&1
+echo "Executing: {{{ switchUserCommand }}} {{#if maxOpenFiles}}/bin/bash -c 'ulimit -n {{{maxOpenFiles}}} && {{/if}}{{{ cmd }}}{{#if maxOpenFiles}}'{{/if}} >> ../{{{ logFile }}} 2>&1"
+exec {{{ switchUserCommand }}} {{#if maxOpenFiles}}/bin/bash -c 'ulimit -n {{{maxOpenFiles}}} && {{/if}}{{{ cmd }}}{{#if maxOpenFiles}}'{{/if}} >> ../{{{ logFile }}} 2>&1
 {{else}}
 echo "Executing: {{{ cmd }}} >> ../{{{ logFile }}} 2>&1"
+{{#if maxOpenFiles}}ulimit -n {{{maxOpenFiles}}}{{/if}}
 exec {{{ cmd }}} >> ../{{{ logFile }}} 2>&1
 {{/if}}

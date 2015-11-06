@@ -1,7 +1,7 @@
 @import colors
 
 .detail-header
-    
+
     h1, h2, h3, h4, h5
         margin-top 0
         white-space nowrap
@@ -42,19 +42,19 @@
         background #f3f3f3
         color #888
         margin-right .5em
-        
+
         &[data-state='ACTIVE']
             color #519D3D
-        
+
         &[data-state='PAUSED']
             color #3374CD
-        
+
         &[data-state='SYSTEM_COOLDOWN']
             color #BF5D36
-        
+
         &[data-state='DELETED']
             color #ff0000
-        
+
         &:empty
             display none
 
@@ -64,3 +64,61 @@
     .well code
         background #fff
         color #888
+
+    .deploy-state
+        text-transform lowercase
+        padding 4px .8em
+        line-height 27px
+        font-size 18px
+        border-radius 4px
+        background #f3f3f3
+        color #888
+        margin-right .5em
+
+        &[data-state='SUCCEEDED']
+            color #519D3D
+
+        &[data-state='WAITING']
+            color #3374CD
+
+        &[data-state='PENDING']
+            color #3374CD
+
+        &[data-state='CANCELING']
+            color #F1ED00
+
+        &[data-state='OVERDUE']
+            color #BF5D36
+
+        &[data-state='CANCELED']
+            color #BF5D36
+
+        &[data-state='FAILED']
+            color #ff0000
+
+        &[data-state='FAILED_INTERNAL_STATE']
+            color #ff0000
+
+        &:empty
+            display none
+
+    .deploy-title
+        color #bbb
+
+    a[data-starred]
+      margin-right 5px
+      text-decoration none
+
+    a[data-starred="true"]
+        color $linkBlue
+        opacity: 1
+
+        &:hover
+          opacity 0.9
+
+    a[data-starred="false"]
+        color $grey
+        opacity 0.2
+
+        &:hover
+          opacity 0.3

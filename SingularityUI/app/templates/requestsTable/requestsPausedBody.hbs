@@ -1,23 +1,23 @@
 {{#unless rowsOnly}}
     {{#if haveRequests}}
-        <table class="table table-striped">
+        <table class="table table-striped sortable-theme-bootstrap" data-sortable>
             <thead>
                 <tr>
-                    <th data-sort-attribute="request.id">
+                    <th>
                         Name
                     </th>
-                    <th data-sort-attribute="request.requestType">
+                    <th>
                         Type
                     </th>
-                    <th data-sort-attribute="requestDeployState.activeDeploy.timestamp" class="hidden-xs">
+                    <th class="hidden-xs">
                         Requested
                     </th>
-                    <th data-sort-attribute="requestDeployState.activeDeploy.user" class="hidden-sm hidden-xs">
+                    <th class="hidden-sm hidden-xs">
                         Deploy user
                     </th>
 
                     {{#ifInSubFilter 'SCHEDULED' requestsSubFilter}}
-                        <th data-sort-attribute="request.schedule" class="visible-lg visible-xl schedule-header">
+                        <th class="visible-lg visible-xl schedule-header">
                             <span id="schedule">
                                 Schedule <span class="glyphicon glyphicon-question-sign"/>
                             </span>
@@ -73,6 +73,11 @@
                             <a data-request-id="{{ request.id }}" data-action="viewJSON" title="JSON">
                                 { }
                             </a>
+                            {{#unless config.hideNewRequestButton}}
+                                <a href="{{appRoot}}/requests/edit/{{request.id}}" title="Edit">
+                                    <span class="glyphicon glyphicon-edit"></span>
+                                </a>
+                            {{/unless}}
                         </td>
                     </tr>
                 {{/each}}

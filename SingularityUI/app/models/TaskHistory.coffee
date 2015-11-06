@@ -2,10 +2,6 @@ Model = require './model'
 
 Slave = require './Slave'
 
-DECOMMISION_STATES = ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'DECOMISSIONING', 'DECOMISSIONED', 'STARTING_DECOMISSION']
-
-TERMINAL_TASK_STATES = ['TASK_KILLED', 'TASK_LOST', 'TASK_FAILED', 'TASK_FINISHED']
-
 # This model hits up the history API and gets us the record for
 # an old (or current) Task
 class TaskHistory extends Model
@@ -36,7 +32,7 @@ class TaskHistory extends Model
         isStillRunning = true
 
         for taskUpdate in taskHistory.taskUpdates
-          if taskUpdate.taskState in TERMINAL_TASK_STATES
+          if taskUpdate.taskState in utils.TERMINAL_TASK_STATES
             isStillRunning = false
             break
 
@@ -50,7 +46,7 @@ class TaskHistory extends Model
                 async: false
                 error: =>
                     app.caughtError()
-            if taskHistory.slave.attributes.state in DECOMMISION_STATES
+            if taskHistory.slave.attributes.state in utils.DECOMMISION_STATES
                 taskHistory.decommissioning = true
             else if taskHistory.slave.attributes.state is not 'ACTIVE'
                 taskHistory.slaveMissing = true

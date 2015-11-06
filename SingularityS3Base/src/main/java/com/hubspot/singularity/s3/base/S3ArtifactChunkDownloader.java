@@ -16,9 +16,11 @@ import org.jets3t.service.S3Service;
 import org.jets3t.service.model.S3Object;
 import org.slf4j.Logger;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hubspot.deploy.S3Artifact;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 
 public class S3ArtifactChunkDownloader implements Callable<Path> {
@@ -31,10 +33,11 @@ public class S3ArtifactChunkDownloader implements Callable<Path> {
   private final long chunkSize;
   private final long length;
   private final Logger log;
+  private final SingularityRunnerExceptionNotifier exceptionNotifier;
 
   private int retryNum;
 
-  public S3ArtifactChunkDownloader(SingularityS3Configuration configuration, Logger log, S3Service s3, S3Artifact s3Artifact, Path downloadTo, int chunk, long chunkSize, long length) {
+  public S3ArtifactChunkDownloader(SingularityS3Configuration configuration, Logger log, S3Service s3, S3Artifact s3Artifact, Path downloadTo, int chunk, long chunkSize, long length, SingularityRunnerExceptionNotifier exceptionNotifier) {
     this.configuration = configuration;
     this.log = log;
     this.s3 = s3;
@@ -43,6 +46,7 @@ public class S3ArtifactChunkDownloader implements Callable<Path> {
     this.chunk = chunk;
     this.chunkSize = chunkSize;
     this.length = length;
+    this.exceptionNotifier = exceptionNotifier;
   }
 
   @Override
@@ -61,12 +65,14 @@ public class S3ArtifactChunkDownloader implements Callable<Path> {
           return future.get(configuration.getS3ChunkDownloadTimeoutMillis(), TimeUnit.MILLISECONDS);
         } catch (TimeoutException te) {
           log.error("Chunk {} (retry {}) for {} timed out after {} - total duration {}", chunk, retryNum, s3Artifact.getFilename(), JavaUtils.duration(timeout), JavaUtils.duration(start));
-
           future.cancel(true);
+          exceptionNotifier.notify(te, ImmutableMap.of("filename", s3Artifact.getFilename(), "chunk", Integer.toString(chunk), "retry", Integer.toString(retryNum)));
         } catch (InterruptedException ie) {
           log.warn("Chunk {} (retry {}) for {} interrupted", chunk, retryNum, s3Artifact.getFilename());
+          exceptionNotifier.notify(ie, ImmutableMap.of("filename", s3Artifact.getFilename(), "chunk", Integer.toString(chunk), "retry", Integer.toString(retryNum)));
         } catch (Throwable t) {
           log.error("Error while downloading chunk {} (retry {}) for {}", chunk, retryNum, s3Artifact.getFilename(), t);
+          exceptionNotifier.notify(t, ImmutableMap.of("filename", s3Artifact.getFilename(), "chunk", Integer.toString(chunk), "retry", Integer.toString(retryNum)));
         }
 
         retryNum++;

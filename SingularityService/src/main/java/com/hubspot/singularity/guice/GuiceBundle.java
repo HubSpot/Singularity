@@ -65,23 +65,29 @@ public class GuiceBundle<T extends Configuration> implements ConfiguredBundle<T>
 
   private final Class<T> configClass;
   private final ImmutableSet<ConfigurationAwareModule<T>> configurationAwareModules;
+  private final ImmutableSet<BootstrapAwareModule> bootstrapAwareModules;
   private final ImmutableSet<Module> guiceModules;
   private final Stage guiceStage;
+
+  private Bootstrap<?> bootstrap = null;
 
   @Inject
   @Named(GUICE_BUNDLE_NAME)
   private volatile Function<ResourceConfig, ServletContainer> replacer = null;
 
-  private GuiceBundle(final Class<T> configClass, final ImmutableSet<Module> guiceModules, final ImmutableSet<ConfigurationAwareModule<T>> configurationAwareModules, final Stage guiceStage) {
+  private GuiceBundle(final Class<T> configClass, final ImmutableSet<Module> guiceModules, final ImmutableSet<ConfigurationAwareModule<T>> configurationAwareModules, final ImmutableSet<BootstrapAwareModule> bootstrapAwareModules, final Stage guiceStage) {
     this.configClass = configClass;
 
     this.guiceModules = guiceModules;
     this.configurationAwareModules = configurationAwareModules;
+    this.bootstrapAwareModules = bootstrapAwareModules;
     this.guiceStage = guiceStage;
   }
 
   @Override
-  public void initialize(final Bootstrap<?> bootstrap) {}
+  public void initialize(final Bootstrap<?> bootstrap) {
+    this.bootstrap = bootstrap;
+  }
 
   @Override
   public void run(final T configuration, final Environment environment) throws Exception {
@@ -90,26 +96,32 @@ public class GuiceBundle<T extends Configuration> implements ConfiguredBundle<T>
       configurationAwareModule.setConfiguration(configuration);
     }
 
+    for (BootstrapAwareModule bootstrapAwareModule : bootstrapAwareModules) {
+      bootstrapAwareModule.setBootstrap(bootstrap);
+    }
+
     final DropwizardModule dropwizardModule = new DropwizardModule();
 
     final Injector injector =
         Guice.createInjector(guiceStage,
-            ImmutableSet.<Module>builder()
-            .addAll(guiceModules)
-            .addAll(configurationAwareModules)
-            .add(new GuiceEnforcerModule())
-            .add(new JerseyServletModule())
-            .add(dropwizardModule).add(new Module() {
-              @Override
-              public void configure(final Binder binder) {
-                binder.bind(Environment.class).toInstance(environment);
-                binder.bind(configClass).toInstance(configuration);
+                ImmutableSet.<Module>builder()
+                        .addAll(guiceModules)
+                        .addAll(configurationAwareModules)
+                        .addAll(bootstrapAwareModules)
+                        .add(new GuiceEnforcerModule())
+                        .add(new JerseyServletModule())
+                        .add(dropwizardModule).add(new Module() {
+                  @Override
+                  public void configure(final Binder binder) {
+                    binder.bind(Environment.class).toInstance(environment);
+                    binder.bind(configClass).toInstance(configuration);
 
-                binder.bind(GuiceContainer.class).to(DropwizardGuiceContainer.class).in(Scopes.SINGLETON);
+                    binder.bind(GuiceContainer.class).to(DropwizardGuiceContainer.class).in(Scopes.SINGLETON);
 
-                binder.bind(new TypeLiteral<Function<ResourceConfig, ServletContainer>>() {}).annotatedWith(GUICE_BUNDLE_NAMED).to(GuiceContainerReplacer.class).in(Scopes.SINGLETON);
-              }
-            }).build());
+                    binder.bind(new TypeLiteral<Function<ResourceConfig, ServletContainer>>() {
+                    }).annotatedWith(GUICE_BUNDLE_NAMED).to(GuiceContainerReplacer.class).in(Scopes.SINGLETON);
+                  }
+                }).build());
 
     injector.injectMembers(this);
     checkState(replacer != null, "No guice container replacer was injected!");
@@ -236,6 +248,7 @@ public class GuiceBundle<T extends Configuration> implements ConfiguredBundle<T>
     private final Class<U> configClass;
     private final ImmutableSet.Builder<Module> guiceModules = ImmutableSet.builder();
     private final ImmutableSet.Builder<ConfigurationAwareModule<U>> configurationAwareModules = ImmutableSet.builder();
+    private final ImmutableSet.Builder<BootstrapAwareModule> bootstrapAwareModules = ImmutableSet.builder();
     private Stage guiceStage = Stage.PRODUCTION;
 
     private Builder(final Class<U> configClass) {
@@ -260,6 +273,8 @@ public class GuiceBundle<T extends Configuration> implements ConfiguredBundle<T>
       for (Module module : modules) {
         if (module instanceof ConfigurationAwareModule<?>) {
           configurationAwareModules.add((ConfigurationAwareModule<U>) module);
+        } else if (module instanceof BootstrapAwareModule) {
+          bootstrapAwareModules.add((BootstrapAwareModule) module);
         } else {
           guiceModules.add(module);
         }
@@ -268,7 +283,7 @@ public class GuiceBundle<T extends Configuration> implements ConfiguredBundle<T>
     }
 
     public final GuiceBundle<U> build() {
-      return new GuiceBundle<U>(configClass, guiceModules.build(), configurationAwareModules.build(), guiceStage);
+      return new GuiceBundle<>(configClass, guiceModules.build(), configurationAwareModules.build(), bootstrapAwareModules.build(), guiceStage);
     }
   }
 }

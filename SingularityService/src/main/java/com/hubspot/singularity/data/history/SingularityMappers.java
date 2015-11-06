@@ -115,7 +115,7 @@ public class SingularityMappers {
           }
         }
 
-        return new SingularityTaskIdHistory(taskId, r.getTimestamp("updatedAt").getTime(), lastTaskState);
+        return new SingularityTaskIdHistory(taskId, r.getTimestamp("updatedAt").getTime(), lastTaskState, Optional.fromNullable(r.getString("runId")));
       } catch (SingularityTranscoderException e) {
         throw new ResultSetException("Could not deserialize database result", e, ctx);
       }

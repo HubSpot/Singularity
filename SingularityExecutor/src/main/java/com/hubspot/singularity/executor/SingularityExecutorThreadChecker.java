@@ -1,17 +1,22 @@
 package com.hubspot.singularity.executor;
 
-import java.util.List;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.helpers.NOPLogger;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
+import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -20,7 +25,6 @@ import com.hubspot.singularity.executor.SingularityExecutorMonitor.KillState;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCallable;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
-import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.DockerException;
 
@@ -28,6 +32,8 @@ import com.spotify.docker.client.DockerException;
 public class SingularityExecutorThreadChecker {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityExecutorThreadChecker.class);
+
+  private static Pattern CGROUP_CPU_REGEX = Pattern.compile("^\\d+:cpu:/(.*)$");
 
   private final SingularityExecutorConfiguration configuration;
   private final ScheduledExecutorService scheduledExecutorService;
@@ -44,6 +50,7 @@ public class SingularityExecutorThreadChecker {
   }
 
   public void start(SingularityExecutorMonitor monitor) {
+
     LOG.info("Starting a thread checker that will run every {}", JavaUtils.durationFromMillis(configuration.getCheckThreadsEveryMillis()));
 
     this.monitor = monitor;
@@ -77,6 +84,7 @@ public class SingularityExecutorThreadChecker {
 
       try {
         usedThreads = getNumUsedThreads(taskProcess);
+        LOG.trace("{} is using {} threads", taskProcess.getTask().getTaskId(), usedThreads);
       } catch (InterruptedException ie) {
         Thread.currentThread().interrupt();
         return;
@@ -101,28 +109,38 @@ public class SingularityExecutorThreadChecker {
   }
 
   private int getNumUsedThreads(SingularityExecutorTaskProcessCallable taskProcess) throws InterruptedException, ProcessFailedException {
-    SimpleProcessManager checkThreadsProcessManager = new SimpleProcessManager(NOPLogger.NOP_LOGGER);
-
     Optional<Integer> dockerPid = Optional.absent();
     if (taskProcess.getTask().getTaskInfo().hasContainer() && taskProcess.getTask().getTaskInfo().getContainer().hasDocker()) {
       try {
         String containerName = String.format("%s%s", configuration.getDockerPrefix(), taskProcess.getTask().getTaskId());
-        dockerPid = Optional.of(dockerClient.inspectContainer(containerName).state().pid());
+        int possiblePid = dockerClient.inspectContainer(containerName).state().pid();
+        if (possiblePid == 0) {
+          LOG.warn(String.format("Container %s has pid %s (running: %s). Defaulting to 0 threads running.", containerName, possiblePid, dockerClient.inspectContainer(containerName).state().running()));
+          return 0;
+        } else {
+          dockerPid = Optional.of(possiblePid);
+        }
       } catch (DockerException e) {
         throw new ProcessFailedException(String.format("Could not get docker root pid due to error: %s", e));
       }
     }
 
-    List<String> cmd = ImmutableList.of("/bin/sh",
-      "-c",
-      String.format("pstree %s -p | wc -l", dockerPid.or(taskProcess.getCurrentPid().get())));
-
-    List<String> output = checkThreadsProcessManager.runCommandWithOutput(cmd);
-
-    if (output.isEmpty()) {
-      throw new ProcessFailedException("Output from ps was empty");
+    try {
+      final Path procCgroupPath = Paths.get(String.format(configuration.getProcCgroupFormat(), dockerPid.or(taskProcess.getCurrentPid().get())));
+      if (Files.exists(procCgroupPath)) {
+        for (String line : Files.readAllLines(procCgroupPath, Charsets.UTF_8)) {
+          final Matcher matcher = CGROUP_CPU_REGEX.matcher(line);
+          if (matcher.matches()) {
+            return Files.readAllLines(Paths.get(String.format(configuration.getCgroupsMesosCpuTasksFormat(), matcher.group(1))), Charsets.UTF_8).size();
+          }
+        }
+        throw new RuntimeException("Unable to parse cgroup container from " + procCgroupPath.toString());
+      } else {
+        throw new RuntimeException(procCgroupPath.toString() + " does not exist");
+      }
+    } catch (IOException e) {
+      throw Throwables.propagate(e);
     }
-    return Integer.parseInt(output.get(0));
   }
 
 }

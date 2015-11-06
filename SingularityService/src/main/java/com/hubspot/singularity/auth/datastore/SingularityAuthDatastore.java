@@ -5,6 +5,5 @@ import com.hubspot.singularity.SingularityUser;
 
 public interface SingularityAuthDatastore {
   Optional<SingularityUser> getUser(String username);
-  void bustCache();
   Optional<Boolean> isHealthy();
 }

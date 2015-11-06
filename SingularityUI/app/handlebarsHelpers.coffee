@@ -29,6 +29,11 @@ Handlebars.registerHelper 'fixedDecimal', (value, options) ->
     if options.hash.place then place = options.hash.place else place = 2
     +(value).toFixed(place)
 
+Handlebars.registerHelper 'ifTaskInList', (list, task, options) ->
+    for t in list
+      if t.id == task
+        return options.fn @
+    return options.inverse @
 
 Handlebars.registerHelper 'ifInSubFilter', (needle, haystack, options) ->
     return options.fn @ if haystack is 'all'
@@ -43,6 +48,7 @@ Handlebars.registerHelper 'unlessInSubFilter', (needle, haystack, options) ->
         options.fn @
     else
         options.inverse @
+
 
 # {{#withLast [1, 2, 3]}}
 #     {{! this = 3 }}
@@ -69,6 +75,7 @@ Handlebars.registerHelper 'ifTimestampInPast', (timestamp, options) ->
 Handlebars.registerHelper 'timestampDuration', (timestamp) ->
     return '' if not timestamp
     moment.duration(timestamp).humanize()
+
 
 # 1234567890 => 1 Aug 1991 15:00
 Handlebars.registerHelper 'timestampFormatted', (timestamp) ->
@@ -106,3 +113,27 @@ Handlebars.registerHelper 'usernameFromEmail', (email) ->
 
 Handlebars.registerHelper 'substituteTaskId', (value, taskId) ->
     value.replace('$TASK_ID', taskId)
+
+Handlebars.registerHelper 'filename', (value) ->
+    value.substring(value.lastIndexOf('/') + 1)
+
+Handlebars.registerHelper 'getLabelClass', (state) ->
+    switch state
+        when 'TASK_STARTING', 'TASK_CLEANING'
+            'warning'
+        when 'TASK_STAGING', 'TASK_LAUNCHED', 'TASK_RUNNING'
+            'info'
+        when 'TASK_FINISHED'
+            'success'
+        when 'TASK_KILLED', 'TASK_LOST', 'TASK_FAILED', 'TASK_LOST_WHILE_DOWN'
+            'danger'
+        else
+            'default'
+
+Handlebars.registerHelper 'trimS3File', (filename, taskId) ->
+    unless config.taskS3LogOmitPrefix
+        return filename
+
+    finalRegex = config.taskS3LogOmitPrefix.replace('%taskId', taskId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).replace('%index', '[0-9]+').replace('%s', '[0-9]+')
+
+    return filename.replace(new RegExp(finalRegex), '')

@@ -259,13 +259,13 @@ public class SingularityClient {
   private void addQueryParams(HttpRequest.Builder requestBuilder, Map<String, Object> queryParams) {
     for (Entry<String, Object> queryParamEntry : queryParams.entrySet()) {
       if (queryParamEntry.getValue() instanceof String) {
-        requestBuilder.addQueryParam(queryParamEntry.getKey(), (String) queryParamEntry.getValue());
+        requestBuilder.setQueryParam(queryParamEntry.getKey()).to((String) queryParamEntry.getValue());
       } else if (queryParamEntry.getValue() instanceof Integer) {
-        requestBuilder.addQueryParam(queryParamEntry.getKey(), (Integer) queryParamEntry.getValue());
+        requestBuilder.setQueryParam(queryParamEntry.getKey()).to((Integer) queryParamEntry.getValue());
       } else if (queryParamEntry.getValue() instanceof Long) {
-        requestBuilder.addQueryParam(queryParamEntry.getKey(), (Long) queryParamEntry.getValue());
+        requestBuilder.setQueryParam(queryParamEntry.getKey()).to((Long) queryParamEntry.getValue());
       } else if (queryParamEntry.getValue() instanceof Boolean) {
-        requestBuilder.addQueryParam(queryParamEntry.getKey(), (Boolean) queryParamEntry.getValue());
+        requestBuilder.setQueryParam(queryParamEntry.getKey()).to((Boolean) queryParamEntry.getValue());
       } else {
         throw new RuntimeException(String.format("The type '%s' of query param %s is not supported. Only String, long, int and boolean values are supported",
             queryParamEntry.getValue().getClass().getName(), queryParamEntry.getKey()));
@@ -291,7 +291,7 @@ public class SingularityClient {
     HttpRequest.Builder request = HttpRequest.newBuilder().setUrl(uri).setMethod(Method.DELETE);
 
     if (user.isPresent()) {
-      request.addQueryParam("user", user.get());
+      request.setQueryParam("user").to(user.get());
     }
 
     addCredentials(request);
@@ -336,7 +336,7 @@ public class SingularityClient {
     HttpRequest.Builder request = HttpRequest.newBuilder().setUrl(uri).setMethod(Method.POST);
 
     if (user.isPresent()) {
-      request.addQueryParam("user", user.get());
+      request.setQueryParam("user").to(user.get());
     }
 
     if (body.isPresent()) {
@@ -368,10 +368,10 @@ public class SingularityClient {
     HttpRequest.Builder request = HttpRequest.newBuilder().setUrl(uri);
 
     if (skipCache.isPresent()) {
-      request.addQueryParam("skipCache", skipCache.get().booleanValue());
+      request.setQueryParam("skipCache").to(skipCache.get().booleanValue());
     }
     if (includeRequestIds.isPresent()) {
-      request.addQueryParam("includeRequestIds", includeRequestIds.get().booleanValue());
+      request.setQueryParam("includeRequestIds").to(includeRequestIds.get().booleanValue());
     }
 
     addCredentials(request);

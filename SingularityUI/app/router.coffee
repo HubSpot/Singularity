@@ -1,7 +1,9 @@
 DashboardController = require 'controllers/Dashboard'
 StatusController    = require 'controllers/Status'
 
-NewRequestController = require 'controllers/NewRequest'
+RequestFormNewController = require 'controllers/RequestFormNew'
+RequestFormEditController = require 'controllers/RequestFormEdit'
+
 NewDeployController  = require 'controllers/NewDeploy'
 
 RequestDetailController = require 'controllers/RequestDetail'
@@ -16,6 +18,8 @@ SlavesController = require 'controllers/Slaves'
 
 NotFoundController = require 'controllers/NotFound'
 
+DeployDetailController = require 'controllers/DeployDetail'
+
 class Router extends Backbone.Router
 
     routes:
@@ -23,6 +27,7 @@ class Router extends Backbone.Router
         'status(/)': 'status'
 
         'requests/new(/)': 'newRequest'
+        'requests/edit/:requestId': 'editRequest'
 
         'requests/:state/:subFilter/:searchFilter(/)': 'requestsTable'
         'requests/:state/:subFilter(/)': 'requestsTable'
@@ -30,6 +35,7 @@ class Router extends Backbone.Router
         'requests(/)': 'requestsTable'
 
         'request/:requestId(/)': 'requestDetail'
+        'request/:requestId/deploy/:deployId(/)': 'deployDetail'
 
         'request/:requestId/deploy(/)': 'newDeploy'
 
@@ -42,8 +48,11 @@ class Router extends Backbone.Router
         'task/:taskId/tail/*path': 'tail'
 
         'racks(/)': 'racks'
+        'racks/:state(/)': 'racks'
+
+        'slaves/:state(/)': 'slaves'
         'slaves(/)': 'slaves'
-        
+
         '*anything': 'notFound'
 
     dashboard: ->
@@ -53,7 +62,10 @@ class Router extends Backbone.Router
         app.bootstrapController new StatusController
 
     newRequest: ->
-        app.bootstrapController new NewRequestController
+        app.bootstrapController new RequestFormNewController
+
+    editRequest: (requestId = '') ->
+        app.bootstrapController new RequestFormEditController {requestId}
 
     requestsTable: (state = 'all', subFilter = 'all', searchFilter = '') ->
         app.bootstrapController new RequestsTableController {state, subFilter, searchFilter}
@@ -69,21 +81,24 @@ class Router extends Backbone.Router
 
     taskDetail: (taskId) ->
         app.bootstrapController new TaskDetailController {taskId, filePath:null}
-      
+
     taskFileBrowser: (taskId, filePath="") ->
         app.bootstrapController new TaskDetailController {taskId, filePath}
-        
+
     tail: (taskId, path = '') ->
         offset = window.location.hash.substr(1) || null
         app.bootstrapController new TailController {taskId, path, offset}
 
-    racks: ->
-        app.bootstrapController new RacksController
+    racks: (state = 'all') ->
+        app.bootstrapController new RacksController {state}
 
-    slaves: ->
-        app.bootstrapController new SlavesController
+    slaves: (state = 'all') ->
+        app.bootstrapController new SlavesController {state}
 
     notFound: ->
         app.bootstrapController new NotFoundController
+
+    deployDetail: (requestId, deployId) ->
+        app.bootstrapController new DeployDetailController {requestId, deployId}
 
 module.exports = Router

@@ -27,17 +27,29 @@ import ch.qos.logback.core.FileAppender;
 public class SingularityRunnerBaseLogging {
   private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(SingularityRunnerBaseLogging.class);
 
+  // classes from these packages perform DEBUG logging before the loggers are properly configured...
+  private static final String[] CHATTY_LOGGERS = {"org.jboss.logging", "org.hibernate", "com.github.jknack.handlebars"};
+
   private final ObjectMapper yamlMapper;
   private final SingularityRunnerBaseConfiguration baseConfiguration;
   private final BaseRunnerConfiguration primaryConfiguration;
   private final Set<BaseRunnerConfiguration> configurations;
+  private final Optional<String> consolidatedConfigFilename;
+
+  public static void quietEagerLogging() {
+    LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+    for (String name : CHATTY_LOGGERS) {
+      context.getLogger(name).setLevel(Level.WARN);
+    }
+  }
 
   @Inject
-  public SingularityRunnerBaseLogging(@Named(SingularityRunnerBaseModule.OBFUSCATED_YAML) ObjectMapper yamlMapper, SingularityRunnerBaseConfiguration baseConfiguration, BaseRunnerConfiguration primaryConfiguration, Set<BaseRunnerConfiguration> configurations) {
+  public SingularityRunnerBaseLogging(@Named(SingularityRunnerBaseModule.OBFUSCATED_YAML) ObjectMapper yamlMapper, SingularityRunnerBaseConfiguration baseConfiguration, BaseRunnerConfiguration primaryConfiguration, Set<BaseRunnerConfiguration> configurations, @Named(SingularityRunnerBaseModule.CONSOLIDATED_CONFIG_FILENAME) Optional<String> consolidatedConfigFilename) {
     this.yamlMapper = yamlMapper;
     this.primaryConfiguration = primaryConfiguration;
     this.configurations = configurations;
     this.baseConfiguration = baseConfiguration;
+    this.consolidatedConfigFilename = consolidatedConfigFilename;
 
     configureRootLogger();
     printProperties();
@@ -55,7 +67,7 @@ public class SingularityRunnerBaseLogging {
     for (BaseRunnerConfiguration configuration : configurations) {
       try {
         final Configuration annotation = configuration.getClass().getAnnotation(Configuration.class);
-        final String filename = annotation == null ? "(unknown)" : annotation.value();
+        final String filename = consolidatedConfigFilename.or(annotation == null ? "(unknown)" : annotation.filename());
         LOG.info(String.format("Loaded %s from %s:%n%s", configuration.getClass().getSimpleName(), filename, yamlMapper.writeValueAsString(configuration)));
       } catch (Exception e) {
         LOG.warn(String.format("Exception while attempting to print %s!", configuration.getClass().getName()), e);

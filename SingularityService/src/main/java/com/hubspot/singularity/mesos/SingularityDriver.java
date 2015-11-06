@@ -19,7 +19,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.groupon.mesos.JesosSchedulerDriver;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.MesosConfiguration;
@@ -63,11 +62,7 @@ public class SingularityDriver {
 
     this.scheduler = scheduler;
 
-    if (configuration.isUseNativeCode()) {
-        this.driver = new MesosSchedulerDriver(scheduler, frameworkInfo, configuration.getMaster());
-    } else {
-        this.driver = new JesosSchedulerDriver(scheduler, frameworkInfo, configuration.getMaster());
-    }
+    this.driver = new MesosSchedulerDriver(scheduler, frameworkInfo, configuration.getMaster());
   }
 
   @VisibleForTesting

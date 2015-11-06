@@ -6,7 +6,7 @@ import com.google.common.base.Optional;
 
 public enum LoadBalancerRequestType {
 
-  ADD, REMOVE, DEPLOY;
+  ADD, REMOVE, DEPLOY, DELETE;
 
   public static class LoadBalancerRequestId {
 

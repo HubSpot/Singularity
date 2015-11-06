@@ -8,24 +8,19 @@ class StatusView extends View
         @listenTo @model, 'sync', @render
 
     captureLastState: ->
-        @lastState = _.clone @model.attributes
+        @lastState = _.clone @model.toJSON()
 
     render: =>
-        # When refreshing we want to display a nice pretty animation
-        # showing which number boxes have changed.
-        if not @lastState?
-            # Render template from fresh data
-            @$el.html @template
-                state:  @model.attributes
-                synced: @model.synced
-        else
-            # Render template with old data and animate the new stuff in
-            @$el.html @template
-                state: @lastState
-                synced: @model.synced
+        @$el.html @template
+            state:  @model.toJSON()
+            synced: @model.synced
+            tasks: @model.taskDetail().tasks
+            requests: @model.requestDetail().requests
+            totalRequests: @model.requestDetail().total
+            totalTasks: @model.taskDetail().total
 
+        if @lastState?
             changedNumbers = {}
-
             numberAttributes = []
             # Go through each key. If the value is a number, we'll (try to)
             # perform a change animation on that key's box
@@ -42,14 +37,22 @@ class StatusView extends View
                         difference: "#{ if newNumber > oldNumber then '+' else '-' }#{ Math.abs(newNumber - oldNumber) }"
 
             for attributeName, changes of changedNumbers
-                $number = @$el.find(""".number[data-state-attribute="#{ attributeName }"]""")
-                $bigNumber = $number.parents('.big-number-link')
                 changeClassName = "changed-direction-#{ changes.direction }"
-                $bigNumber.addClass changeClassName
-                $bigNumber.find('.well').attr('data-changed-difference', changes.difference)
-                $number.html @model.attributes[attributeName]
-                do ($bigNumber, changeClassName) -> setTimeout (-> $bigNumber.removeClass changeClassName), 2000
+                $attribute = @$el.find("""[data-state-attribute="#{ attributeName }"]""").not('[data-type="column"]')
+                $bigNumber = $attribute.closest('.list-group-item')
+                $bigNumber.find('a').addClass(changeClassName).append("<span class='changeDifference'>#{changes.difference}</span>")
+                $attribute.html @model.attributes[attributeName]
 
+                do ($bigNumber, changeClassName) ->
+                    setTimeout (->
+                        $bigNumber.find('a').removeClass(changeClassName)
+                                  .find('changeDifference').remove().end()
+                                  .find('.changeDifference').fadeOut(1500)
+                    ), 2500
+
+        @$('.chart .chart__data-point[title]').tooltip(placement: 'right')
         @captureLastState()
+
+        super.afterRender()
 
 module.exports = StatusView

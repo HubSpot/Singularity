@@ -2,6 +2,7 @@ package com.hubspot.singularity.executor.config;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
@@ -21,7 +22,7 @@ import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
 
-@Configuration("/etc/singularity.executor.yaml")
+@Configuration(filename = "/etc/singularity.executor.yaml", consolidatedField = "executor")
 public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   public static final String SHUTDOWN_TIMEOUT_MILLIS = "executor.shutdown.timeout.millis";
 
@@ -181,7 +182,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @Min(1)
   @JsonProperty
-  private int tailLogLinesToSave = 500;
+  private int tailLogLinesToSave = 2500;
 
   @NotEmpty
   @JsonProperty
@@ -209,6 +210,29 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @JsonProperty
   private int dockerStopTimeout = 15;
+
+  @NotEmpty
+  @JsonProperty
+  private String cgroupsMesosCpuTasksFormat = "/cgroup/cpu/%s/tasks";
+
+  @NotEmpty
+  @JsonProperty
+  private String procCgroupFormat = "/proc/%s/cgroup";
+
+  @NotEmpty
+  @JsonProperty
+  private String switchUserCommandFormat = "sudo -E -u %s";
+
+  @JsonProperty
+  @NotEmpty
+  private List<String> artifactSignatureVerificationCommand = Arrays.asList("/usr/bin/gpg", "--verify", "{artifactSignaturePath}");
+
+  @JsonProperty
+  private boolean failTaskOnInvalidArtifactSignature = true;
+
+  @JsonProperty
+  @NotEmpty
+  private String signatureVerifyOut = "executor.gpg.out";
 
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
@@ -491,6 +515,55 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.dockerStopTimeout = dockerStopTimeout;
   }
 
+
+  public String getCgroupsMesosCpuTasksFormat() {
+    return cgroupsMesosCpuTasksFormat;
+  }
+
+  public void setCgroupsMesosCpuTasksFormat(String cgroupsMesosCpuTasksFormat) {
+    this.cgroupsMesosCpuTasksFormat = cgroupsMesosCpuTasksFormat;
+  }
+
+  public String getProcCgroupFormat() {
+    return procCgroupFormat;
+  }
+
+  public void setProcCgroupFormat(String procCgroupFormat) {
+    this.procCgroupFormat = procCgroupFormat;
+  }
+
+  public String getSwitchUserCommandFormat() {
+    return switchUserCommandFormat;
+  }
+
+  public void setSwitchUserCommandFormat(String switchUserCommandFormat) {
+    this.switchUserCommandFormat = switchUserCommandFormat;
+  }
+
+  public List<String> getArtifactSignatureVerificationCommand() {
+    return artifactSignatureVerificationCommand;
+  }
+
+  public void setArtifactSignatureVerificationCommand(List<String> artifactSignatureVerificationCommand) {
+    this.artifactSignatureVerificationCommand = artifactSignatureVerificationCommand;
+  }
+
+  public boolean isFailTaskOnInvalidArtifactSignature() {
+    return failTaskOnInvalidArtifactSignature;
+  }
+
+  public void setFailTaskOnInvalidArtifactSignature(boolean failTaskOnInvalidArtifactSignature) {
+    this.failTaskOnInvalidArtifactSignature = failTaskOnInvalidArtifactSignature;
+  }
+
+  public String getSignatureVerifyOut() {
+    return signatureVerifyOut;
+  }
+
+  public void setSignatureVerifyOut(String signatureVerifyOut) {
+    this.signatureVerifyOut = signatureVerifyOut;
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration[" +
@@ -526,8 +599,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", useLocalDownloadService=" + useLocalDownloadService +
             ", localDownloadServiceTimeoutMillis=" + localDownloadServiceTimeoutMillis +
             ", maxTaskThreads=" + maxTaskThreads +
-            ", dockerPrefix=" + dockerPrefix +
+            ", dockerPrefix='" + dockerPrefix + '\'' +
             ", dockerStopTimeout=" + dockerStopTimeout +
+            ", cgroupsMesosCpuTasksFormat='" + cgroupsMesosCpuTasksFormat + '\'' +
+            ", procCgroupFormat='" + procCgroupFormat + '\'' +
+            ", switchUserCommandFormat='" + switchUserCommandFormat + '\'' +
+            ", artifactSignatureVerificationCommand=" + artifactSignatureVerificationCommand +
+            ", failTaskOnInvalidArtifactSignature=" + failTaskOnInvalidArtifactSignature +
+            ", signatureVerifyOut='" + signatureVerifyOut + '\'' +
             ']';
   }
 

@@ -1,6 +1,7 @@
 package com.hubspot.singularity.executor.config;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
@@ -10,6 +11,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.executor.handlebars.BashEscapedHelper;
 import com.hubspot.singularity.executor.handlebars.IfPresentHelper;
+import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseLogging;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 import com.spotify.docker.client.DefaultDockerClient;
@@ -21,6 +23,7 @@ public class SingularityExecutorModule extends AbstractModule {
   public static final String LOGROTATE_TEMPLATE = "logrotate.conf";
   public static final String DOCKER_TEMPLATE = "docker.sh";
   public static final String LOCAL_DOWNLOAD_HTTP_CLIENT = "SingularityExecutorModule.local.download.http.client";
+  public static final String ALREADY_SHUT_DOWN = "already.shut.down";
 
   @Override
   protected void configure() {
@@ -69,6 +72,7 @@ public class SingularityExecutorModule extends AbstractModule {
   @Provides
   @Singleton
   public Handlebars providesHandlebars() {
+    SingularityRunnerBaseLogging.quietEagerLogging();  // handlebars emits DEBUG logs before logger is properly configured
     final Handlebars handlebars = new Handlebars();
 
     handlebars.registerHelper(BashEscapedHelper.NAME, new BashEscapedHelper());
@@ -81,5 +85,12 @@ public class SingularityExecutorModule extends AbstractModule {
   @Singleton
   public DockerClient providesDockerClient() {
     return new DefaultDockerClient("unix:///var/run/docker.sock");
+  }
+
+  @Provides
+  @Singleton
+  @Named(ALREADY_SHUT_DOWN)
+  public AtomicBoolean providesAlreadyShutDown() {
+    return new AtomicBoolean(false);
   }
 }

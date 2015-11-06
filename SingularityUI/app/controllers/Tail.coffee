@@ -9,10 +9,12 @@ TailView = require '../views/tail'
 class TailController extends Controller
 
     initialize: ({@taskId, @path, @offset}) ->
+        @title 'Tail of ' + @path
+
         @models.ajaxError = new AjaxError
         @collections.logLines = new LogLines [], {@taskId, @path, ajaxError: @models.ajaxError}
         @models.taskHistory = new TaskHistory {@taskId}
-    
+
         @setView new TailView _.extend {@taskId, @path, @offset},
             collection: @collections.logLines
             model: @models.taskHistory

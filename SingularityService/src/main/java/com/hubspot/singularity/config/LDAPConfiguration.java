@@ -1,17 +1,15 @@
 package com.hubspot.singularity.config;
 
-import java.util.concurrent.TimeUnit;
-
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
+import org.apache.directory.api.ldap.model.message.SearchScope;
 import org.apache.directory.ldap.client.api.LdapConnectionPool;
 import org.hibernate.validator.constraints.NotEmpty;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+
 public class LDAPConfiguration {
   //
   // LDAP CONNECTION
@@ -41,7 +39,7 @@ public class LDAPConfiguration {
 
   @JsonProperty
   @NotEmpty
-  private String userFilter = "";  // ex. (uid=%s)
+  private String userFilter = "(uid=%s)";
 
   @JsonProperty
   @NotEmpty
@@ -60,30 +58,15 @@ public class LDAPConfiguration {
 
   @JsonProperty
   @NotEmpty
-  private String groupFilter = ""; // ex. (memberUid=%s)
+  private String groupFilter = "(memberUid=%s)";
 
   @JsonProperty
   @NotEmpty
   private String groupNameAttribute = "cn";
 
-  //
-  // CACHING CONFIGURATION
-  //
   @JsonProperty
-  @Min(1)
-  private int cacheInitialCapacity = 40;
-
-  @JsonProperty
-  @Min(1)
-  private int cacheConcurrencyLevel = 4;
-
-  @JsonProperty
-  @Min(0)
-  private long cacheMaximumSize = 200;  // 0 == no caching
-
-  @JsonProperty
-  @Min(1)
-  private long cacheExpirationMs = TimeUnit.MINUTES.toMillis(5);
+  @NotNull
+  private SearchScope groupSearchScope = SearchScope.SUBTREE;
 
   //
   // LDAP CONNECTION POOL
@@ -108,9 +91,6 @@ public class LDAPConfiguration {
 
   @JsonProperty
   private long poolMaxWait = LdapConnectionPool.DEFAULT_MAX_WAIT;
-
-  @Min(1)
-  private int cacheThreads = 3;
 
   @JsonProperty
   @NotNull
@@ -210,38 +190,6 @@ public class LDAPConfiguration {
     this.groupNameAttribute = groupNameAttribute;
   }
 
-  public int getCacheInitialCapacity() {
-    return cacheInitialCapacity;
-  }
-
-  public void setCacheInitialCapacity(int cacheInitialCapacity) {
-    this.cacheInitialCapacity = cacheInitialCapacity;
-  }
-
-  public int getCacheConcurrencyLevel() {
-    return cacheConcurrencyLevel;
-  }
-
-  public void setCacheConcurrencyLevel(int cacheConcurrencyLevel) {
-    this.cacheConcurrencyLevel = cacheConcurrencyLevel;
-  }
-
-  public long getCacheMaximumSize() {
-    return cacheMaximumSize;
-  }
-
-  public void setCacheMaximumSize(long cacheMaximumSize) {
-    this.cacheMaximumSize = cacheMaximumSize;
-  }
-
-  public long getCacheExpirationMs() {
-    return cacheExpirationMs;
-  }
-
-  public void setCacheExpirationMs(long cacheExpirationMs) {
-    this.cacheExpirationMs = cacheExpirationMs;
-  }
-
   public boolean isPoolTestOnBorrow() {
     return poolTestOnBorrow;
   }
@@ -298,14 +246,6 @@ public class LDAPConfiguration {
     this.poolMaxWait = poolMaxWait;
   }
 
-  public int getCacheThreads() {
-    return cacheThreads;
-  }
-
-  public void setCacheThreads(int cacheThreads) {
-    this.cacheThreads = cacheThreads;
-  }
-
   public LdapPoolWhenExhaustedAction getPoolWhenExhaustedAction() {
     return poolWhenExhaustedAction;
   }
@@ -320,6 +260,14 @@ public class LDAPConfiguration {
 
   public void setStripUserEmailDomain(boolean stripUserEmailDomain) {
     this.stripUserEmailDomain = stripUserEmailDomain;
+  }
+
+  public SearchScope getGroupSearchScope() {
+    return groupSearchScope;
+  }
+
+  public void setGroupSearchScope(SearchScope groupSearchScope) {
+    this.groupSearchScope = groupSearchScope;
   }
 
   public enum LdapPoolWhenExhaustedAction {
