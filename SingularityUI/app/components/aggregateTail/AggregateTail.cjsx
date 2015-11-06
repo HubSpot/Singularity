@@ -73,7 +73,8 @@ AggregateTail = React.createClass
             offset={@props.offset}
             logLines={@props.logLines[taskId]}
             ajaxError={@props.ajaxError[taskId]}
-            activeTasks={@props.activeTasks} />
+            activeTasks={@props.activeTasks}
+            closeTail={@toggleViewingInstance} />
         </div>
       )
 

@@ -48,7 +48,8 @@ IndividualTail = React.createClass
         taskId={@props.taskId}
         instanceNumber={@props.instanceNumber}
         scrollToTop={@scrollToTop}
-        scrollToBottom={@scrollToBottom} />
+        scrollToBottom={@scrollToBottom}
+        closeTail={() => @props.closeTail(@props.taskId)} />
       <Contents
         ref="contents"
         requestId={@props.requestId}
