@@ -46,7 +46,7 @@ AggregateTail = React.createClass
     if @state.activeTasks.length > 0
       Object.keys(@props.logLines).sort((a, b) =>
         @getInstanceNumber(a) > @getInstanceNumber(b)
-      ).map (taskId, i) =>
+      ).map((taskId, i) =>
         <div key={taskId} id="tail-#{taskId}" className="col-md-#{@getColumnWidth()} tail-column">
           <IndividualTail
             ref="tail_#{i}"
@@ -59,6 +59,7 @@ AggregateTail = React.createClass
             ajaxError={@props.ajaxError[taskId]}
             activeTasks={@props.activeTasks} />
         </div>
+      )
 
   render: ->
     <div>
