@@ -69,6 +69,9 @@ public class UIConfiguration {
   @NotEmpty
   private String timestampFormat = "lll";
 
+  @NotEmpty
+  private String timestampWithSecondsFormat = "lll:ss";
+
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
   }
@@ -159,5 +162,13 @@ public class UIConfiguration {
 
   public void setTimestampFormat(String timestampFormat) {
     this.timestampFormat = timestampFormat;
+  }
+
+  public String getTimestampWithSecondsFormat() {
+    return timestampWithSecondsFormat;
+  }
+
+  public void setTimestampWithSecondsFormat(String timestampWithSecondsFormat) {
+    this.timestampWithSecondsFormat = timestampWithSecondsFormat;
   }
 }

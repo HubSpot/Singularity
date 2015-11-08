@@ -86,7 +86,7 @@ Handlebars.registerHelper 'timestampFormatted', (timestamp) ->
 Handlebars.registerHelper 'timestampFormattedWithSeconds', (timestamp) ->
     return '' if not timestamp
     timeObject = moment timestamp
-    timeObject.format window.config.timestampFormat + ':ss'
+    timeObject.format window.config.timestampWithSecondsFormat
 
 # 'DRIVER_NOT_RUNNING' => 'Driver not running'
 Handlebars.registerHelper 'humanizeText', (text) ->
