@@ -1,23 +1,14 @@
 package com.hubspot.singularity.runner.base.configuration;
 
-import java.util.Properties;
-
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
-import com.google.common.base.Strings;
 import com.hubspot.mesos.JavaUtils;
 
-public class SingularityRunnerBaseLoggingConfiguration implements OverridableByProperty {
-  public static final String DEFAULT_ROOT_LOG_LEVEL = "INFO";
-  public static final String DEFAULT_HUBSPOT_LOG_LEVEL = "INFO";
+public class SingularityRunnerBaseLoggingConfiguration {
   public static final String DEFAULT_DIRECTORY = "/var/log/singularity/";
 
-  public static final String LOGGING_PATTERN = "logging.pattern";
-  public static final String ROOT_LOG_NAME = "root.log.name";
-
-  public static final String ROOT_LOG_LEVEL = "root.log.level";
   public static final String HUBSPOT_LOG_LEVEL = "hubspot.log.level";
 
   public static SingularityRunnerBaseLoggingConfiguration defaultBaseConfig() {
@@ -90,28 +81,4 @@ public class SingularityRunnerBaseLoggingConfiguration implements OverridableByP
   public void setLoggingPattern(Optional<String> loggingPattern) {
     this.loggingPattern = loggingPattern;
   }
-
-  @Override
-  public void updateFromProperties(Properties properties) {
-    if (properties.containsKey(SingularityRunnerBaseConfiguration.ROOT_LOG_DIRECTORY) && !Strings.isNullOrEmpty(properties.getProperty(SingularityRunnerBaseConfiguration.ROOT_LOG_DIRECTORY))) {
-      setDirectory(Optional.of(properties.getProperty(SingularityRunnerBaseConfiguration.ROOT_LOG_DIRECTORY)));
-    }
-    if (properties.containsKey(LOGGING_PATTERN) && !Strings.isNullOrEmpty(properties.getProperty(LOGGING_PATTERN))) {
-      setLoggingPattern(Optional.of(properties.getProperty(LOGGING_PATTERN)));
-    }
-
-    if (properties.containsKey(ROOT_LOG_NAME) && !Strings.isNullOrEmpty(properties.getProperty(ROOT_LOG_NAME))) {
-      setFilename(Optional.of(properties.getProperty(ROOT_LOG_NAME)));
-    }
-
-    if (properties.containsKey(ROOT_LOG_LEVEL) && !Strings.isNullOrEmpty(properties.getProperty(ROOT_LOG_LEVEL))) {
-      setRootLogLevel(Optional.of(properties.getProperty(ROOT_LOG_LEVEL)));
-    }
-
-    if (properties.containsKey(HUBSPOT_LOG_LEVEL) && !Strings.isNullOrEmpty(properties.getProperty(HUBSPOT_LOG_LEVEL))) {
-      setHubSpotLogLevel(Optional.of(properties.getProperty(HUBSPOT_LOG_LEVEL)));
-    }
-  }
-
-
 }

@@ -3,7 +3,6 @@ package com.hubspot.singularity.logwatcher.config;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Properties;
 
 import javax.validation.constraints.Min;
 
@@ -18,17 +17,6 @@ import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
 
 @Configuration(filename = "/etc/singularity.logwatcher.yaml", consolidatedField = "logwatcher")
 public class SingularityLogWatcherConfiguration extends BaseRunnerConfiguration {
-  public static final String BYTE_BUFFER_CAPACITY = "logwatcher.bytebuffer.capacity";
-  public static final String POLL_MILLIS = "logwatcher.poll.millis";
-  public static final String FLUENTD_HOSTS = "logwatcher.fluentd.comma.separated.hosts.and.ports";
-
-  public static final String STORE_DIRECTORY = "logwatcher.store.directory";
-  public static final String STORE_SUFFIX = "logwatcher.store.suffix";
-
-  public static final String RETRY_DELAY_SECONDS = "logwatcher.retry.delay.seconds";
-
-  public static final String FLUENTD_TAG_PREFIX = "logwatcher.fluentd.tag.prefix";
-
   @Min(1)
   @JsonProperty
   private int byteBufferCapacity = 8192;
@@ -163,36 +151,5 @@ public class SingularityLogWatcherConfiguration extends BaseRunnerConfiguration 
             ", fluentdTagPrefix='" + fluentdTagPrefix + '\'' +
             ", retryDelaySeconds=" + retryDelaySeconds +
             ']';
-  }
-
-  @Override
-  public void updateFromProperties(Properties properties) {
-    if (properties.containsKey(BYTE_BUFFER_CAPACITY)) {
-      setByteBufferCapacity(Integer.parseInt(properties.getProperty(BYTE_BUFFER_CAPACITY)));
-    }
-
-    if (properties.containsKey(POLL_MILLIS)) {
-      setPollMillis(Long.parseLong(properties.getProperty(POLL_MILLIS)));
-    }
-
-    if (properties.containsKey(FLUENTD_HOSTS)) {
-      setFluentdHosts(properties.getProperty(FLUENTD_HOSTS));
-    }
-
-    if (properties.containsKey(STORE_DIRECTORY)) {
-      setStoreDirectory(properties.getProperty(STORE_DIRECTORY));
-    }
-
-    if (properties.containsKey(STORE_SUFFIX)) {
-      setStoreSuffix(properties.getProperty(STORE_SUFFIX));
-    }
-
-    if (properties.containsKey(RETRY_DELAY_SECONDS)) {
-      setRetryDelaySeconds(Long.parseLong(properties.getProperty(RETRY_DELAY_SECONDS)));
-    }
-
-    if (properties.containsKey(FLUENTD_TAG_PREFIX)) {
-      setFluentdTagPrefix(properties.getProperty(FLUENTD_TAG_PREFIX));
-    }
   }
 }

@@ -1,7 +1,5 @@
 package com.hubspot.singularity.runner.base.configuration;
 
-import java.util.Properties;
-
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.NotEmpty;
@@ -12,14 +10,6 @@ import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
 
 @Configuration(filename = "/etc/singularity.base.yaml", consolidatedField = "base")
 public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration {
-  public static final String ROOT_LOG_DIRECTORY = "root.log.directory";
-
-  public static final String LOG_METADATA_DIRECTORY = "logwatcher.metadata.directory";
-  public static final String LOG_METADATA_SUFFIX = "logwatcher.metadata.suffix";
-
-  public static final String S3_METADATA_SUFFIX = "s3uploader.metadata.suffix";
-  public static final String S3_METADATA_DIRECTORY = "s3uploader.metadata.directory";
-
   @DirectoryExists
   @JsonProperty
   private String s3UploaderMetadataDirectory;
@@ -106,24 +96,4 @@ public class SingularityRunnerBaseConfiguration extends BaseRunnerConfiguration 
             ", logWatcherMetadataSuffix='" + logWatcherMetadataSuffix + '\'' +
             ']';
   }
-
-  @Override
-  public void updateFromProperties(Properties properties) {
-    if (properties.containsKey(LOG_METADATA_DIRECTORY)) {
-      setLogWatcherMetadataDirectory(properties.getProperty(LOG_METADATA_DIRECTORY));
-    }
-
-    if (properties.containsKey(LOG_METADATA_SUFFIX)) {
-      setLogWatcherMetadataSuffix(properties.getProperty(LOG_METADATA_SUFFIX));
-    }
-
-    if (properties.containsKey(S3_METADATA_DIRECTORY)) {
-      setS3UploaderMetadataDirectory(properties.getProperty(S3_METADATA_DIRECTORY));
-    }
-
-    if (properties.containsKey(S3_METADATA_SUFFIX)) {
-      setS3UploaderMetadataSuffix(properties.getProperty(S3_METADATA_SUFFIX));
-    }
-  }
-
 }
