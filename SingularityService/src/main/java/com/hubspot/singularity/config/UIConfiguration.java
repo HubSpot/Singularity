@@ -66,6 +66,9 @@ public class UIConfiguration {
   @NotNull
   private String taskS3LogOmitPrefix = "";
 
+  @NotEmpty
+  private String timestampFormat = "lll";
+
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
   }
@@ -150,4 +153,11 @@ public class UIConfiguration {
     this.taskS3LogOmitPrefix = taskS3LogOmitPrefix;
   }
 
+  public String getTimestampFormat() {
+    return timestampFormat;
+  }
+
+  public void setTimestampFormat(String timestampFormat) {
+    this.timestampFormat = timestampFormat;
+  }
 }

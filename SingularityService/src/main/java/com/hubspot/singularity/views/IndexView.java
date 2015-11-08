@@ -39,6 +39,8 @@ public class IndexView extends View {
 
   private final Integer warnIfScheduledJobIsRunningPastNextRunPct;
 
+  private final String timestampFormat;
+
   public IndexView(String singularityUriBase, String appRoot, SingularityConfiguration configuration) {
     super("index.mustache");
 
@@ -76,6 +78,8 @@ public class IndexView extends View {
     this.taskS3LogOmitPrefix = configuration.getUiConfiguration().getTaskS3LogOmitPrefix();
 
     this.warnIfScheduledJobIsRunningPastNextRunPct = configuration.getWarnIfScheduledJobIsRunningPastNextRunPct();
+
+    this.timestampFormat = configuration.getUiConfiguration().getTimestampFormat();
   }
 
   public String getAppRoot() {
@@ -158,6 +162,10 @@ public class IndexView extends View {
     return warnIfScheduledJobIsRunningPastNextRunPct;
   }
 
+  public String getTimestampFormat() {
+    return timestampFormat;
+  }
+
   @Override
   public String toString() {
     return "IndexView[" +
@@ -180,6 +188,7 @@ public class IndexView extends View {
             ", finishedTaskLogPath='" + finishedTaskLogPath + '\'' +
             ", commonHostnameSuffixToOmit='" + commonHostnameSuffixToOmit + '\'' +
             ", warnIfScheduledJobIsRunningPastNextRunPct='" + warnIfScheduledJobIsRunningPastNextRunPct + '\'' +
+            ", timestampFormat='" + timestampFormat + '\'' +
             ']';
   }
 }

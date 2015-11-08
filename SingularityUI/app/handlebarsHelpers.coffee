@@ -60,7 +60,7 @@ Handlebars.registerHelper 'withLast', (list, options) ->
 Handlebars.registerHelper 'timestampFromNow', (timestamp) ->
     return '' if not timestamp
     timeObject = moment timestamp
-    "#{timeObject.fromNow()} (#{ timeObject.format 'lll'})"
+    "#{timeObject.fromNow()} (#{ timeObject.format window.config.timestampFormat})"
 
 Handlebars.registerHelper 'ifTimestampInPast', (timestamp, options) ->
     return options.inverse @ if not timestamp
@@ -81,12 +81,12 @@ Handlebars.registerHelper 'timestampDuration', (timestamp) ->
 Handlebars.registerHelper 'timestampFormatted', (timestamp) ->
     return '' if not timestamp
     timeObject = moment timestamp
-    timeObject.format 'lll'
+    timeObject.format window.config.timestampFormat
 
 Handlebars.registerHelper 'timestampFormattedWithSeconds', (timestamp) ->
     return '' if not timestamp
     timeObject = moment timestamp
-    timeObject.format 'lll:ss'
+    timeObject.format window.config.timestampFormat + ':ss'
 
 # 'DRIVER_NOT_RUNNING' => 'Driver not running'
 Handlebars.registerHelper 'humanizeText', (text) ->
