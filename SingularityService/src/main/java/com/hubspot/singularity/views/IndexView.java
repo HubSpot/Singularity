@@ -2,6 +2,8 @@ package com.hubspot.singularity.views;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import javax.ws.rs.HEAD;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -44,6 +46,10 @@ public class IndexView extends View {
   private final Integer warnIfScheduledJobIsRunningPastNextRunPct;
 
   private final String shellCommands;
+
+  private final String timestampFormat;
+
+  private final String timestampWithSecondsFormat;
 
   public IndexView(String singularityUriBase, String appRoot, SingularityConfiguration configuration, ObjectMapper mapper) {
     super("index.mustache");
@@ -89,6 +95,10 @@ public class IndexView extends View {
     } catch (JsonProcessingException e) {
       throw Throwables.propagate(e);
     }
+
+    this.timestampFormat = configuration.getUiConfiguration().getTimestampFormat();
+
+    this.timestampWithSecondsFormat = configuration.getUiConfiguration().getTimestampWithSecondsFormat();
   }
 
   public String getAppRoot() {
@@ -175,6 +185,14 @@ public class IndexView extends View {
     return shellCommands;
   }
 
+  public String getTimestampFormat() {
+    return timestampFormat;
+  }
+
+  public String getTimestampWithSecondsFormat() {
+    return timestampWithSecondsFormat;
+  }
+
   @Override
   public String toString() {
     return "IndexView[" +
@@ -199,6 +217,8 @@ public class IndexView extends View {
             ", taskS3LogOmitPrefix='" + taskS3LogOmitPrefix + '\'' +
             ", warnIfScheduledJobIsRunningPastNextRunPct=" + warnIfScheduledJobIsRunningPastNextRunPct +
             ", shellCommands='" + shellCommands + '\'' +
+            ", timestampFormat='" + timestampFormat + '\'' +
+            ", timestampWithSecondsFormat='" + timestampWithSecondsFormat + '\'' +
             ']';
   }
 }
