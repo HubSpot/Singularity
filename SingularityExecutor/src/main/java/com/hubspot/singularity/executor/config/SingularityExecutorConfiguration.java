@@ -5,7 +5,6 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.Min;
@@ -16,7 +15,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
-import com.google.common.base.Splitter;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandDescriptor;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
@@ -25,57 +23,6 @@ import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
 
 @Configuration(filename = "/etc/singularity.executor.yaml", consolidatedField = "executor")
 public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
-  public static final String SHUTDOWN_TIMEOUT_MILLIS = "executor.shutdown.timeout.millis";
-
-  public static final String HARD_KILL_AFTER_MILLIS = "executor.hard.kill.after.millis";
-  public static final String NUM_CORE_KILL_THREADS = "executor.num.core.kill.threads";
-
-  public static final String NUM_CORE_THREAD_CHECK_THREADS = "executor.num.core.thread.check.threads";
-  public static final String CHECK_THREADS_EVERY_MILLIS = "executor.check.threads.every.millis";
-
-  public static final String MAX_TASK_MESSAGE_LENGTH = "executor.status.update.max.task.message.length";
-
-  public static final String IDLE_EXECUTOR_SHUTDOWN_AFTER_MILLIS = "executor.idle.shutdown.after.millis";
-  public static final String SHUTDOWN_STOP_DRIVER_AFTER_MILLIS = "executor.shutdown.stop.driver.after.millis";
-
-  public static final String TASK_APP_DIRECTORY = "executor.task.app.directory";
-
-  public static final String TASK_EXECUTOR_JAVA_LOG_PATH = "executor.task.java.log.path";
-  public static final String TASK_EXECUTOR_BASH_LOG_PATH = "executor.task.bash.log.path";
-  public static final String TASK_SERVICE_LOG_PATH = "executor.task.service.log.path";
-
-  public static final String DEFAULT_USER = "executor.default.user";
-
-  public static final String GLOBAL_TASK_DEFINITION_DIRECTORY = "executor.global.task.definition.directory";
-  public static final String GLOBAL_TASK_DEFINITION_SUFFIX = "executor.global.task.definition.suffix";
-
-  public static final String LOGROTATE_COMMAND = "executor.logrotate.command";
-  public static final String LOGROTATE_CONFIG_DIRECTORY = "executor.logrotate.config.folder";
-  public static final String LOGROTATE_STATE_FILE = "executor.logrotate.state.file";
-  public static final String LOGROTATE_DIRECTORY = "executor.logrotate.to.directory";
-  public static final String LOGROTATE_MAXAGE_DAYS = "executor.logrotate.maxage.days";
-  public static final String LOGROTATE_COUNT = "executor.logrotate.count";
-  public static final String LOGROTATE_DATEFORMAT = "executor.logrotate.dateformat";
-
-  public static final String LOGROTATE_EXTRAS_DATEFORMAT = "executor.logrotate.extras.dateformat";
-  public static final String LOGROTATE_EXTRAS_FILES = "executor.logrotate.extras.files";
-
-  public static final String TAIL_LOG_LINES_TO_SAVE = "executor.service.log.tail.lines.to.save";
-  public static final String TAIL_LOG_FILENAME = "executor.service.log.tail.file.name";
-
-  public static final String S3_FILES_TO_BACKUP = "executor.s3.uploader.extras.files";
-  public static final String S3_UPLOADER_PATTERN = "executor.s3.uploader.pattern";
-  public static final String S3_UPLOADER_BUCKET = "executor.s3.uploader.bucket";
-
-  public static final String USE_LOCAL_DOWNLOAD_SERVICE = "executor.use.local.download.service";
-
-  public static final String LOCAL_DOWNLOAD_SERVICE_TIMEOUT_MILLIS = "executor.local.download.service.timeout.millis";
-
-  public static final String MAX_TASK_THREADS = "executor.max.task.threads";
-
-  public static final String DOCKER_PREFIX = "executor.docker.prefix";
-  public static final String DOCKER_STOP_TIMEOUT = "executor.docker.stop.timeout";
-
   @NotEmpty
   @JsonProperty
   private String executorJavaLog = "executor.java.log";
@@ -669,146 +616,5 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", shellCommandPidPlaceholder='" + shellCommandPidPlaceholder + '\'' +
             ", shellCommandUserPlaceholder='" + shellCommandUserPlaceholder + '\'' +
             ']';
-  }
-
-  @Override
-  public void updateFromProperties(Properties properties) {
-    final Splitter commaSplitter = Splitter.on(',').omitEmptyStrings().trimResults();
-
-    if (properties.containsKey(SHUTDOWN_TIMEOUT_MILLIS)) {
-      setShutdownTimeoutWaitMillis(Long.parseLong(properties.getProperty(SHUTDOWN_TIMEOUT_MILLIS)));
-    }
-
-    if (properties.containsKey(HARD_KILL_AFTER_MILLIS)) {
-      setHardKillAfterMillis(Long.parseLong(properties.getProperty(HARD_KILL_AFTER_MILLIS)));
-    }
-
-    if (properties.containsKey(NUM_CORE_KILL_THREADS)) {
-      setKillThreads(Integer.parseInt(properties.getProperty(NUM_CORE_KILL_THREADS)));
-    }
-
-    if (properties.containsKey(NUM_CORE_THREAD_CHECK_THREADS)) {
-      setThreadCheckThreads(Integer.parseInt(properties.getProperty(NUM_CORE_THREAD_CHECK_THREADS)));
-    }
-
-    if (properties.containsKey(CHECK_THREADS_EVERY_MILLIS)) {
-      setCheckThreadsEveryMillis(Long.parseLong(properties.getProperty(CHECK_THREADS_EVERY_MILLIS)));
-    }
-
-    if (properties.containsKey(MAX_TASK_MESSAGE_LENGTH)) {
-      setMaxTaskMessageLength(Integer.parseInt(properties.getProperty(MAX_TASK_MESSAGE_LENGTH)));
-    }
-
-    if (properties.containsKey(IDLE_EXECUTOR_SHUTDOWN_AFTER_MILLIS)) {
-      setIdleExecutorShutdownWaitMillis(Long.parseLong(properties.getProperty(IDLE_EXECUTOR_SHUTDOWN_AFTER_MILLIS)));
-    }
-
-    if (properties.containsKey(SHUTDOWN_STOP_DRIVER_AFTER_MILLIS)) {
-      setShutdownTimeoutWaitMillis(Long.parseLong(properties.getProperty(SHUTDOWN_STOP_DRIVER_AFTER_MILLIS)));
-    }
-
-    if (properties.containsKey(TASK_APP_DIRECTORY)) {
-      setTaskAppDirectory(properties.getProperty(TASK_APP_DIRECTORY));
-    }
-
-    if (properties.containsKey(TASK_EXECUTOR_JAVA_LOG_PATH)) {
-      setExecutorJavaLog(properties.getProperty(TASK_EXECUTOR_JAVA_LOG_PATH));
-    }
-
-    if (properties.containsKey(TASK_EXECUTOR_BASH_LOG_PATH)) {
-      setExecutorBashLog(properties.getProperty(TASK_EXECUTOR_BASH_LOG_PATH));
-    }
-
-    if (properties.containsKey(TASK_SERVICE_LOG_PATH)) {
-      setServiceLog(properties.getProperty(TASK_SERVICE_LOG_PATH));
-    }
-
-    if (properties.containsKey(DEFAULT_USER)) {
-      setDefaultRunAsUser(properties.getProperty(DEFAULT_USER));
-    }
-
-    if (properties.containsKey(GLOBAL_TASK_DEFINITION_DIRECTORY)) {
-      setGlobalTaskDefinitionDirectory(properties.getProperty(GLOBAL_TASK_DEFINITION_DIRECTORY));
-    }
-
-    if (properties.containsKey(GLOBAL_TASK_DEFINITION_SUFFIX)) {
-      setGlobalTaskDefinitionSuffix(properties.getProperty(GLOBAL_TASK_DEFINITION_SUFFIX));
-    }
-
-    if (properties.containsKey(LOGROTATE_COMMAND)) {
-      setLogrotateCommand(properties.getProperty(LOGROTATE_COMMAND));
-    }
-
-    if (properties.containsKey(LOGROTATE_CONFIG_DIRECTORY)) {
-      setLogrotateConfDirectory(properties.getProperty(LOGROTATE_CONFIG_DIRECTORY));
-    }
-
-    if (properties.containsKey(LOGROTATE_STATE_FILE)) {
-      setLogrotateStateFile(properties.getProperty(LOGROTATE_STATE_FILE));
-    }
-
-    if (properties.containsKey(LOGROTATE_DIRECTORY)) {
-      setLogrotateToDirectory(properties.getProperty(LOGROTATE_DIRECTORY));
-    }
-
-    if (properties.containsKey(LOGROTATE_MAXAGE_DAYS)) {
-      setLogrotateMaxageDays(Integer.parseInt(properties.getProperty(LOGROTATE_MAXAGE_DAYS)));
-    }
-
-    if (properties.containsKey(LOGROTATE_COUNT)) {
-      setLogrotateCount(Integer.parseInt(properties.getProperty(LOGROTATE_COUNT)));
-    }
-
-    if (properties.containsKey(LOGROTATE_DATEFORMAT)) {
-      setLogrotateDateformat(properties.getProperty(LOGROTATE_DATEFORMAT));
-    }
-
-    if (properties.containsKey(LOGROTATE_EXTRAS_DATEFORMAT)) {
-      setLogrotateExtrasDateformat(properties.getProperty(LOGROTATE_EXTRAS_DATEFORMAT));
-    }
-
-    if (properties.containsKey(LOGROTATE_EXTRAS_FILES)) {
-      setLogrotateAdditionalFiles(commaSplitter.splitToList(properties.getProperty(LOGROTATE_EXTRAS_FILES)));
-    }
-
-    if (properties.containsKey(TAIL_LOG_LINES_TO_SAVE)) {
-      setTailLogLinesToSave(Integer.parseInt(properties.getProperty(TAIL_LOG_LINES_TO_SAVE)));
-    }
-
-    if (properties.containsKey(TAIL_LOG_FILENAME)) {
-      setServiceFinishedTailLog(properties.getProperty(TAIL_LOG_FILENAME));
-    }
-
-    if (properties.containsKey(S3_FILES_TO_BACKUP)) {
-      setS3UploaderAdditionalFiles(commaSplitter.splitToList(properties.getProperty(S3_FILES_TO_BACKUP)));
-    }
-
-    if (properties.containsKey(S3_UPLOADER_PATTERN)) {
-      setS3UploaderKeyPattern(properties.getProperty(S3_UPLOADER_PATTERN));
-    }
-
-    if (properties.containsKey(S3_UPLOADER_BUCKET)) {
-      setS3UploaderBucket(properties.getProperty(S3_UPLOADER_BUCKET));
-    }
-
-    if (properties.containsKey(USE_LOCAL_DOWNLOAD_SERVICE)) {
-      setUseLocalDownloadService(Boolean.parseBoolean(properties.getProperty(USE_LOCAL_DOWNLOAD_SERVICE)));
-    }
-
-    if (properties.containsKey(LOCAL_DOWNLOAD_SERVICE_TIMEOUT_MILLIS)) {
-      setLocalDownloadServiceTimeoutMillis(Long.parseLong(properties.getProperty(LOCAL_DOWNLOAD_SERVICE_TIMEOUT_MILLIS)));
-    }
-
-    if (properties.containsKey(MAX_TASK_THREADS)) {
-      setMaxTaskThreads(Optional.of(Integer.parseInt(properties.getProperty(MAX_TASK_THREADS))));
-    }
-
-    if (properties.containsKey(DOCKER_PREFIX)) {
-      setDockerPrefix(properties.getProperty(DOCKER_PREFIX));
-    }
-
-    if (properties.containsKey(DOCKER_STOP_TIMEOUT)) {
-      setDockerStopTimeout(Integer.parseInt(properties.getProperty(DOCKER_STOP_TIMEOUT)));
-    }
   }
 }
