@@ -38,12 +38,12 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
   @NotNull
   @Obfuscate
   @JsonProperty
-  private String s3AccessKey = "";
+  private Optional<String> s3AccessKey = Optional.absent();
 
   @NotNull
   @Obfuscate
   @JsonProperty
-  private String s3SecretKey = "";
+  private Optional<String> s3SecretKey = Optional.absent();
 
   @Min(1)
   @JsonProperty
@@ -81,19 +81,19 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
     this.artifactCacheDirectory = artifactCacheDirectory;
   }
 
-  public String getS3AccessKey() {
+  public Optional<String> getS3AccessKey() {
     return s3AccessKey;
   }
 
-  public void setS3AccessKey(String s3AccessKey) {
+  public void setS3AccessKey(Optional<String> s3AccessKey) {
     this.s3AccessKey = s3AccessKey;
   }
 
-  public String getS3SecretKey() {
+  public Optional<String> getS3SecretKey() {
     return s3SecretKey;
   }
 
-  public void setS3SecretKey(String s3SecretKey) {
+  public void setS3SecretKey(Optional<String> s3SecretKey) {
     this.s3SecretKey = s3SecretKey;
   }
 
@@ -167,11 +167,11 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
     }
 
     if (properties.containsKey(S3_ACCESS_KEY)) {
-      setS3AccessKey(properties.getProperty(S3_ACCESS_KEY));
+      setS3AccessKey(Optional.of(properties.getProperty(S3_ACCESS_KEY)));
     }
 
     if (properties.containsKey(S3_SECRET_KEY)) {
-      setS3SecretKey(properties.getProperty(S3_SECRET_KEY));
+      setS3SecretKey(Optional.of(properties.getProperty(S3_SECRET_KEY)));
     }
 
     if (properties.containsKey(S3_CHUNK_SIZE)) {
