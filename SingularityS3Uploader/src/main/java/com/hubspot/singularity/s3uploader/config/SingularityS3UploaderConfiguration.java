@@ -2,7 +2,6 @@ package com.hubspot.singularity.s3uploader.config;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.Min;
@@ -13,25 +12,10 @@ import com.google.common.base.Optional;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.jackson.Obfuscate;
-import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
 import com.hubspot.singularity.s3.base.config.SingularityS3Credentials;
 
 @Configuration(filename = "/etc/singularity.s3uploader.yaml", consolidatedField = "s3uploader")
 public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration {
-  public static final String POLL_MILLIS = "s3uploader.poll.for.shutdown.millis";
-
-  public static final String CHECK_FOR_UPLOADS_EVERY_SECONDS = "s3uploader.check.uploads.every.seconds";
-  public static final String STOP_CHECKING_AFTER_HOURS_WITHOUT_NEW_FILE = "s3uploader.stop.checking.after.hours.without.new.file";
-
-  public static final String EXECUTOR_MAX_UPLOAD_THREADS = "s3uploader.max.upload.threads";
-
-  public static final String MAX_SINGLE_UPLOAD_BYTES = "s3uploader.max.single.upload.size";
-  public static final String UPLOAD_PART_SIZE = "s3uploader.upload.part.size";
-  public static final String RETRY_WAIT_MS = "s3uploader.retry.wait.ms";
-  public static final String RETRY_COUNT = "s3uploader.retry.count";
-
-  public static final String CHECK_FOR_OPEN_FILES = "s3uploader.check.for.open.files";
-
   @Min(0)
   @JsonProperty
   private long pollForShutDownMillis = 1000;
@@ -193,47 +177,5 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
             ", checkForOpenFiles=" + checkForOpenFiles +
             ", s3BucketCredentials=" + s3BucketCredentials +
             ']';
-  }
-
-  @Override
-  public void updateFromProperties(Properties properties) {
-    if (properties.containsKey(POLL_MILLIS)) {
-      setPollForShutDownMillis(Long.parseLong(properties.getProperty(POLL_MILLIS)));
-    }
-
-    if (properties.containsKey(CHECK_FOR_UPLOADS_EVERY_SECONDS)) {
-      setCheckUploadsEverySeconds(Long.parseLong(properties.getProperty(CHECK_FOR_UPLOADS_EVERY_SECONDS)));
-    }
-
-    if (properties.containsKey(STOP_CHECKING_AFTER_HOURS_WITHOUT_NEW_FILE)) {
-      setStopCheckingAfterMillisWithoutNewFile(Long.parseLong(properties.getProperty(STOP_CHECKING_AFTER_HOURS_WITHOUT_NEW_FILE)));
-    }
-
-    if (properties.containsKey(EXECUTOR_MAX_UPLOAD_THREADS)) {
-      setExecutorMaxUploadThreads(Integer.parseInt(properties.getProperty(EXECUTOR_MAX_UPLOAD_THREADS)));
-    }
-
-    if (properties.containsKey(SingularityS3Configuration.S3_ACCESS_KEY)) {
-      setS3AccessKey(Optional.of(properties.getProperty(SingularityS3Configuration.S3_ACCESS_KEY)));
-    }
-
-    if (properties.containsKey(SingularityS3Configuration.S3_SECRET_KEY)) {
-      setS3SecretKey(Optional.of(properties.getProperty(SingularityS3Configuration.S3_SECRET_KEY)));
-    }
-    if (properties.containsKey(MAX_SINGLE_UPLOAD_BYTES)) {
-      setMaxSingleUploadSizeBytes(Long.parseLong(properties.getProperty(MAX_SINGLE_UPLOAD_BYTES)));
-    }
-    if (properties.containsKey(UPLOAD_PART_SIZE)) {
-      setUploadPartSize(Long.parseLong(properties.getProperty(UPLOAD_PART_SIZE)));
-    }
-    if (properties.containsKey(RETRY_COUNT)) {
-      setRetryCount(Integer.parseInt(properties.getProperty(RETRY_COUNT)));
-    }
-    if (properties.containsKey(RETRY_WAIT_MS)) {
-      setRetryWaitMs(Integer.parseInt(RETRY_WAIT_MS));
-    }
-    if (properties.containsKey(CHECK_FOR_OPEN_FILES)) {
-      setCheckForOpenFiles(Boolean.parseBoolean(properties.getProperty(CHECK_FOR_OPEN_FILES)));
-    }
   }
 }
