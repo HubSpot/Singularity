@@ -59,6 +59,29 @@
         &:hover
             background #e6e6e6
 
+.status
+    display inline-block
+    padding-left 10px
+    color #AAA
+    text-transform capitalize
+
+    .indicator
+        display inline-block
+        width 10px
+        height 10px
+        border-radius 50%
+        margin-right 5px
+
+        &.running
+            opacity 1
+            animation blinker 1s ease-in infinite alternate
+
+        @keyframes blinker
+            from
+                opacity 1
+            to
+                opacity 0
+
 .tail-indicator
     z-index 500
     position absolute
