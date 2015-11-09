@@ -3,6 +3,7 @@ package com.hubspot.singularity.data;
 import java.net.ConnectException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.concurrent.ExecutionException;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -55,7 +56,7 @@ public class SandboxManager {
       }
 
       return objectMapper.readValue(response.getResponseBodyAsStream(), MESOS_FILE_OBJECTS);
-    } catch (ConnectException ce) {
+    } catch (ExecutionException | ConnectException ce) {
       throw new SlaveNotFoundException(ce);
     } catch (Exception e) {
       throw Throwables.propagate(e);
@@ -91,7 +92,7 @@ public class SandboxManager {
       }
 
       return Optional.of(objectMapper.readValue(response.getResponseBodyAsStream(), MesosFileChunkObject.class));
-    } catch (ConnectException ce) {
+    } catch (ExecutionException | ConnectException ce) {
       throw new SlaveNotFoundException(ce);
     } catch (Exception e) {
       throw Throwables.propagate(e);
