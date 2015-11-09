@@ -20,7 +20,7 @@ IndividualTail = React.createClass
     });
 
   componentWillUnmount: ->
-    Backbone.React.Component.mixin.off(@);
+    Backbone.React.Component.mixin.off(@)
 
   fetchNext: ->
     @props.logLines.fetchNext()

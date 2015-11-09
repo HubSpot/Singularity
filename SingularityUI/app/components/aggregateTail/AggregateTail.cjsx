@@ -74,13 +74,11 @@ AggregateTail = React.createClass
   getInstanceNumber: (taskId) ->
     @state.activeTasks.filter((t) =>
       t.id is taskId
-    )[0].taskId.instanceNo
+    )[0]?.taskId.instanceNo
 
   renderIndividualTails: ->
     if @state.activeTasks.length > 0
-      @state.viewingInstances.sort((a, b) =>
-        @getInstanceNumber(a) > @getInstanceNumber(b)
-      ).map((taskId, i) =>
+      @state.viewingInstances.map((taskId, i) =>
         <div key={taskId} id="tail-#{taskId}" className="col-md-#{@getColumnWidth()} tail-column">
           <IndividualTail
             ref="tail_#{i}"
