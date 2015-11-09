@@ -235,7 +235,6 @@ public class SingularityS3Uploader implements Closeable {
         }
       } catch (Exception e) {
         LOG.warn("Exception uploading {}", file, e);
-        exceptionNotifier.notify(e, ImmutableMap.of("file", file.toString()));
         throw e;
       }
 
