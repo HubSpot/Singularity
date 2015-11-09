@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
 import com.google.inject.Binder;
+import com.hubspot.dropwizard.guicier.ConfigurationAwareModule;
 import com.hubspot.mesos.client.SingularityMesosClientModule;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.SingularityDataModule;
@@ -8,7 +9,6 @@ import com.hubspot.singularity.data.history.SingularityHistoryModule;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderModule;
 import com.hubspot.singularity.data.zkmigrations.SingularityZkMigrationsModule;
 import com.hubspot.singularity.event.SingularityEventModule;
-import com.hubspot.singularity.guice.ConfigurationAwareModule;
 import com.hubspot.singularity.jersey.SingularityJerseyModule;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
 import com.hubspot.singularity.resources.SingularityResourceModule;

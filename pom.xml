@@ -36,6 +36,7 @@
     <!-- build the docs for releases -->
     <basepom.release.profiles>oss-release,build-swagger-documentation</basepom.release.profiles>
 
+    <dropwizard.guicier.version>0.7.1.0</dropwizard.guicier.version>
     <baragon.version>0.1.8</baragon.version>
     <mesos.docker.tag>0.23.0-1.0.ubuntu1404</mesos.docker.tag>
     <mesos.version>0.23.0</mesos.version>
@@ -120,6 +121,12 @@
         <groupId>com.hubspot.jackson</groupId>
         <artifactId>jackson-datatype-protobuf</artifactId>
         <version>0.9.2</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.hubspot.dropwizard</groupId>
+        <artifactId>dropwizard-guicier</artifactId>
+        <version>${dropwizard.guicier.version}</version>
       </dependency>
 
       <dependency>
