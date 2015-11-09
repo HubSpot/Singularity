@@ -40,7 +40,8 @@ class AggregateTailController extends Controller
 
         for taskId in taskIds
           @models.ajaxError[taskId] = new AjaxError
-          @collections.logLines[taskId] = new LogLines [], {taskId, @path, ajaxError: @models.ajaxError[taskId]}
+          path = @path.replace('$TASK_ID', taskId)
+          @collections.logLines[taskId] = new LogLines [], {taskId, path: path, ajaxError: @models.ajaxError[taskId]}
           if @offset?
               @collections.logLines[taskId].fetchOffset(@offset)
           else
