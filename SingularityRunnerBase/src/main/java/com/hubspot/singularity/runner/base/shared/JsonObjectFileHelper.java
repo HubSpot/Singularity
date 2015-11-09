@@ -28,15 +28,17 @@ public class JsonObjectFileHelper {
 
     log.info("Reading {}", file);
 
-    byte[] bytes = Files.readAllBytes(file);
-
-    log.trace("Read {} bytes from {} in {}", bytes.length, file, JavaUtils.duration(start));
-
-    if (bytes.length == 0) {
-      return Optional.absent();
-    }
+    byte[] bytes = new byte[0];
 
     try {
+      bytes = Files.readAllBytes(file);
+
+      log.trace("Read {} bytes from {} in {}", bytes.length, file, JavaUtils.duration(start));
+
+      if (bytes.length == 0) {
+       return Optional.absent();
+      }
+
       T object = objectMapper.readValue(bytes, clazz);
       return Optional.of(object);
     } catch (IOException e) {
