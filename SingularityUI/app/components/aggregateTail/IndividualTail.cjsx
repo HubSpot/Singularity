@@ -28,6 +28,7 @@ IndividualTail = React.createClass
 
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@)
+    @stopTaskPoll()
 
   startTaskStatusPoll: ->
     @task.fetch()
