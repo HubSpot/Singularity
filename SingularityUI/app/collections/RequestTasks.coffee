@@ -10,6 +10,8 @@ class RequestTasks extends PaginableCollection
     parse: (data) ->
         for task in data
             task.id = task.taskId.id
+
+        data = data.sort((a, b) -> a.taskId.instanceNo > b.taskId.instanceNo)
         data
 
     getTasksForDeploy: (deployId) ->
