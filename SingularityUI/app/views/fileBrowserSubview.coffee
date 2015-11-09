@@ -19,7 +19,7 @@ class FileBrowserSubview extends View
     render: ->
         # Ensure we have enough space to scroll
         offset = @$el.offset().top
-        
+
         breadcrumbs = utils.pathToBreadcrumbs @collection.currentDirectory
 
         @$el.html @template
@@ -27,7 +27,7 @@ class FileBrowserSubview extends View
             files:       _.pluck @collection.models, 'attributes'
             path:        @collection.path
             breadcrumbs: breadcrumbs
-            task:        @task
+            task:        @task.toJSON()
 
         # make sure body is large enough so we can fit the browser
         minHeight = @$el.offset().top + $(window).height()

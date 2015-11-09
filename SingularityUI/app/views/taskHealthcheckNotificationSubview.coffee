@@ -19,6 +19,7 @@ class taskHealthcheckNotificationSubview extends View
     renderData: =>
         requestId = @model.get('task').taskId.requestId
         deployId = @model.get('task').taskId.deployId
+
         deployStatus = @pendingDeploys.find (item) -> item.get('deployMarker') and item.get('deployMarker').requestId is requestId and item.get('deployMarker').deployId is deployId and item.get('currentDeployState') is 'WAITING'
 
         data:             @model.toJSON()

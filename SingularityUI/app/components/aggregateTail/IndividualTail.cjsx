@@ -6,6 +6,9 @@ IndividualTail = React.createClass
   mixins: [Backbone.React.Component.mixin]
 
   componentWillMount: ->
+    # Make sure its up to data-toggle
+    @props.logLines.fetchNext()
+
     # Automatically map backbone collections and models to the state of this component
     Backbone.React.Component.mixin.on(@, {
       collections: {
@@ -17,7 +20,7 @@ IndividualTail = React.createClass
     });
 
   componentWillUnmount: ->
-    Backbone.React.Component.mixin.off(@);
+    Backbone.React.Component.mixin.off(@)
 
   fetchNext: ->
     @props.logLines.fetchNext()

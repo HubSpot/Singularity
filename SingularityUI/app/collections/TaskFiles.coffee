@@ -8,7 +8,7 @@ class TaskFiles extends Collection
     model: TaskFile
 
     initialize: (models, { @taskId, @path }) ->
-    
+
     fetch: (params) ->
         data = if @path isnt null then {@path} else {}
         super _.extend params or {},
@@ -16,26 +16,28 @@ class TaskFiles extends Collection
 
     parse: (sandbox) ->
         taskFiles = sandbox.files
-        
+
         @currentDirectory = sandbox.currentDirectory
-                
+
         for taskLogFile in taskFiles
             if sandbox.currentDirectory
               taskLogFile.uiPath = sandbox.currentDirectory + "/" + taskLogFile.name
             else
               taskLogFile.uiPath = taskLogFile.name
-            
+
+            taskLogFile.uiPath = taskLogFile.uiPath.replace(@taskId, '$TASK_ID')
+
             taskLogFile.fullPath = sandbox.fullPathToRoot + "/" + taskLogFile.uiPath
-              
+
             taskLogFile.mtime = taskLogFile.mtime * 1000
-            
+
             httpPrefix = "http"
             httpPort = config.slaveHttpPort
-            
+
             if config.slaveHttpsPort
               httpPrefix = "https"
               httpPort = config.slaveHttpsPort
-              
+
             taskLogFile.downloadLink = "#{httpPrefix}://#{ sandbox.slaveHostname }:#{httpPort}/files/download.json?path=#{ taskLogFile.fullPath }"
             taskLogFile.isDirectory = taskLogFile.mode[0] is 'd'
             taskLogFile.taskId = @taskId

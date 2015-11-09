@@ -1,7 +1,6 @@
 <div class="page-header file-browser-header">
     <h2>
-        Files
-    </h2>
+        Files {{ task.requestId }}
 </div>
 {{#if task.slaveMissing}}
     <div class="empty-table-message">
@@ -43,7 +42,7 @@
                                 </a>
                             {{else}}
                                 {{#if isTailable}}
-                                    <a href="{{appRoot}}/task/{{ taskId }}/tail/{{ uiPath }}">
+                                    <a href="{{appRoot}}/request/{{ ../../../task.requestId }}/tail/{{ uiPath }}/?taskIds={{ taskId }}">
                                         <span class="glyphicon glyphicon-file"></span>{{ name }}
                                     </a>
                                 {{else}}
