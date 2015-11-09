@@ -45,7 +45,7 @@
                         {{timestampFromNow updatedAt}}
                     </td>
                     <td class="hidden-xs actions-column">
-                        <a href="{{ appRoot }}/task/{{ taskId.id }}/tail/{{ substituteTaskId ../../config.runningTaskLogPath taskId.id }}" title="Log">
+                        <a href="{{ appRoot }}/request/{{ taskId.requestId }}/tail/{{ ../../config.runningTaskLogPath }}/?taskIds={{ taskId.id }}" title="Log">
                             ...
                         </a>
                     </td>

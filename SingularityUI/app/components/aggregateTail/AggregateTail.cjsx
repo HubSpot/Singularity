@@ -1,13 +1,18 @@
-# BackboneReact = require "backbone-react-component"
 
 Header = require './Header'
 IndividualTail = require './IndividualTail'
+Utils = require '../../utils'
 
 AggregateTail = React.createClass
   mixins: [Backbone.React.Component.mixin]
 
+  # ============================================================================
+  # Lifecycle Methods                                                          |
+  # ============================================================================
+
   getInitialState: ->
-    viewingInstances: []
+    params = Utils.getQueryParams()
+    viewingInstances: if params.taskIds then params.taskIds.split(',').slice(0, 6) else []
 
   componentWillMount: ->
     # Automatically map backbone collections and models to the state of this component
@@ -18,20 +23,27 @@ AggregateTail = React.createClass
     });
 
   componentDidUpdate: (prevProps, prevState) ->
-    if prevState.activeTasks.length is 0 and @state.activeTasks.length > 0
+    if prevState.activeTasks.length is 0 and @state.activeTasks.length > 0 and not Utils.getQueryParams()?.taskIds
       @setState
-        viewingInstances: _.pluck(@state.activeTasks.sort((a, b) -> a.taskId.instanceNo > b.taskId.instanceNo), 'id')
+        viewingInstances: _.pluck(@state.activeTasks, 'id').slice(0, 6)
 
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@);
+
+  # ============================================================================
+  # Event Handlers                                                             |
+  # ============================================================================
 
   toggleViewingInstance: (taskId) ->
     if taskId in @state.viewingInstances
       viewing = _.without @state.viewingInstances, taskId
     else
       viewing = @state.viewingInstances.concat(taskId)
-    @setState
-      viewingInstances: viewing
+
+    if 0 < viewing.length <= 6
+      @setState
+        viewingInstances: viewing
+      history.replaceState @state, '', location.href.replace(location.search, "?taskIds=#{viewing.join(',')}")
 
   scrollAllTop: ->
     for tail of @refs
@@ -42,27 +54,31 @@ AggregateTail = React.createClass
       @refs[tail].scrollToBottom()
 
   getColumnWidth: ->
-    instances = Object.keys(@props.logLines).length
+    instances = @state.viewingInstances.length
     if instances is 1
       return 12
     else if instances in [2, 4]
       return 6
     else if instances in [3, 5, 6]
       return 4
+    else
+      return 1
+
+  # ============================================================================
+  # Rendering                                                                  |
+  # ============================================================================
 
   getRowType: ->
-    if Object.keys(@props.logLines).length > 3 then 'tail-row-half' else 'tail-row'
+    if @state.viewingInstances.length > 3 then 'tail-row-half' else 'tail-row'
 
   getInstanceNumber: (taskId) ->
     @state.activeTasks.filter((t) =>
       t.id is taskId
-    )[0].taskId.instanceNo
+    )[0]?.taskId.instanceNo
 
   renderIndividualTails: ->
     if @state.activeTasks.length > 0
-      @state.viewingInstances.sort((a, b) =>
-        @getInstanceNumber(a) > @getInstanceNumber(b)
-      ).map((taskId, i) =>
+      @state.viewingInstances.map((taskId, i) =>
         <div key={taskId} id="tail-#{taskId}" className="col-md-#{@getColumnWidth()} tail-column">
           <IndividualTail
             ref="tail_#{i}"

@@ -85,7 +85,7 @@ class Utils
         $element = $(options.selector)
         linkText = options.linkText || 'Copy'
         textSelector = options.textSelector || '.copy-text'
-        
+
         text = $element.find(textSelector).html()
         $copyLink = $ "<a data-clipboard-text='#{ _.escape text }'>#{linkText}</a>"
         $(options.copyLink).html($copyLink)
@@ -192,7 +192,11 @@ class Utils
         location = $("#{path}").offset().top - offset
         $('html, body').animate 'scrollTop' : location+'px', 1000
 
-
+    @getQueryParams: ->
+        if location.search
+          JSON.parse('{"' + decodeURI(location.search.substring(1).replace(/&/g, "\",\"").replace(/\=/g,"\":\"")) + '"}')
+        else
+          {}
 
 
 module.exports = Utils
