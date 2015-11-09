@@ -7,6 +7,8 @@ RequestTasks = require '../collections/RequestTasks'
 
 AggregateTailView = require '../views/aggregateTail'
 
+Utils = require '../utils'
+
 class AggregateTailController extends Controller
 
     initialize: ({@requestId, @path, @offset}) ->
@@ -31,7 +33,12 @@ class AggregateTailController extends Controller
 
     fetchCollections: ->
       @collections.activeTasks.fetch().done =>
-        for taskId in @collections.activeTasks.pluck('id')
+        taskIds = @collections.activeTasks.pluck('id')
+        params = Utils.getQueryParams()
+        if params.taskIds
+          taskIds = _.union taskIds, params.taskIds.split(',')
+
+        for taskId in taskIds
           @models.ajaxError[taskId] = new AjaxError
           @collections.logLines[taskId] = new LogLines [], {taskId, @path, ajaxError: @models.ajaxError[taskId]}
           if @offset?

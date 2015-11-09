@@ -6,6 +6,10 @@ Utils = require '../../utils'
 AggregateTail = React.createClass
   mixins: [Backbone.React.Component.mixin]
 
+  # ============================================================================
+  # Lifecycle Methods                                                          |
+  # ============================================================================
+
   getInitialState: ->
     params = Utils.getQueryParams()
     viewingInstances: if params.taskIds then params.taskIds.split(',').slice(0, 6) else []
@@ -26,15 +30,20 @@ AggregateTail = React.createClass
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@);
 
+  # ============================================================================
+  # Event Handlers                                                             |
+  # ============================================================================
+
   toggleViewingInstance: (taskId) ->
     if taskId in @state.viewingInstances
       viewing = _.without @state.viewingInstances, taskId
     else
       viewing = @state.viewingInstances.concat(taskId)
-    @setState
-      viewingInstances: viewing
 
-    history.replaceState @state, '', location.href.replace(location.search, "?taskIds=#{viewing.join(',')}")
+    if 0 < viewing.length <= 6
+      @setState
+        viewingInstances: viewing
+      history.replaceState @state, '', location.href.replace(location.search, "?taskIds=#{viewing.join(',')}")
 
   scrollAllTop: ->
     for tail of @refs
@@ -54,6 +63,10 @@ AggregateTail = React.createClass
       return 4
     else
       return 1
+
+  # ============================================================================
+  # Rendering                                                                  |
+  # ============================================================================
 
   getRowType: ->
     if @state.viewingInstances.length > 3 then 'tail-row-half' else 'tail-row'
