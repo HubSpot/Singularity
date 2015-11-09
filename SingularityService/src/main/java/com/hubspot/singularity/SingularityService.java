@@ -8,11 +8,11 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Binder;
 import com.google.inject.Module;
+import com.hubspot.dropwizard.guicier.BootstrapAwareModule;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.singularity.bundles.CorsBundle;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.guice.BootstrapAwareModule;
 import com.palominolabs.metrics.guice.MetricsInstrumentationModule;
 
 import io.dropwizard.Application;

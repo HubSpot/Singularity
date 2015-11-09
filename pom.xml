@@ -36,7 +36,7 @@
     <!-- build the docs for releases -->
     <basepom.release.profiles>oss-release,build-swagger-documentation</basepom.release.profiles>
 
-    <dropwizard.guicier.version>0.7.1.0</dropwizard.guicier.version>
+    <dropwizard.guicier.version>0.7.1.1</dropwizard.guicier.version>
     <baragon.version>0.1.8</baragon.version>
     <mesos.docker.tag>0.23.0-1.0.ubuntu1404</mesos.docker.tag>
     <mesos.version>0.23.0</mesos.version>
