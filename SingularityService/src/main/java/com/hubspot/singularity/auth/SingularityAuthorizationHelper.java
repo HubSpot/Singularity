@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
+import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskId;
@@ -80,7 +81,7 @@ public class SingularityAuthorizationHelper {
     }
   }
 
-  public void checkForAuthorizationByTaskId(String taskId, Optional<SingularityUser> user) {
+  public void checkForAuthorizationByTaskId(String taskId, Optional<SingularityUser> user, SingularityAuthorizationScope scope) {
     if (authEnabled) {
       try {
         final SingularityTaskId taskIdObj = SingularityTaskId.valueOf(taskId);
@@ -88,7 +89,7 @@ public class SingularityAuthorizationHelper {
         final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(taskIdObj.getRequestId());
 
         if (maybeRequest.isPresent()) {
-          checkForAuthorization(maybeRequest.get().getRequest(), Optional.<SingularityRequest>absent(), user);
+          checkForAuthorization(maybeRequest.get().getRequest(), Optional.<SingularityRequest>absent(), user, scope);
         }
       } catch (InvalidSingularityTaskIdException e) {
         badRequest(e.getMessage());
@@ -96,17 +97,17 @@ public class SingularityAuthorizationHelper {
     }
   }
 
-  public void checkForAuthorizationByRequestId(String requestId, Optional<SingularityUser> user) {
+  public void checkForAuthorizationByRequestId(String requestId, Optional<SingularityUser> user, SingularityAuthorizationScope scope) {
     if (authEnabled) {
       final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(requestId);
 
       if (maybeRequest.isPresent()) {
-        checkForAuthorization(maybeRequest.get().getRequest(), Optional.<SingularityRequest>absent(), user);
+        checkForAuthorization(maybeRequest.get().getRequest(), Optional.<SingularityRequest>absent(), user, scope);
       }
     }
   }
 
-  public boolean isAuthorizedForRequest(SingularityRequest request, Optional<SingularityUser> user) {
+  public boolean isAuthorizedForRequest(SingularityRequest request, Optional<SingularityUser> user, SingularityAuthorizationScope scope) {
     if (authEnabled) {
       // not authenticated == no authorization
       if (!user.isPresent()) {
@@ -123,23 +124,27 @@ public class SingularityAuthorizationHelper {
       // check admin groups
       if (groupsIntersect(userGroups, adminGroups)) {
         return true;
+      } else if (scope == SingularityAuthorizationScope.ADMIN) {
+        return false;
       }
 
-      // check JITA groups
-      if (groupsIntersect(userGroups, jitaGroups)) {
+      // check JITA groups and request owner group
+      if (groupsIntersect(userGroups, jitaGroups) || (request.getGroup().isPresent() && user.get().getGroups().contains(request.getGroup().get()))) {
         return true;
+      } else if (scope == SingularityAuthorizationScope.WRITE) {
+        return false;
       }
 
-      // check request groups
-      if (request.getGroup().isPresent()) {
-        return user.get().getGroups().contains(request.getGroup().get());
+      // check request's read-only groups
+      if (request.getReadOnlyGroups().isPresent() && groupsIntersect(user.get().getGroups(), request.getReadOnlyGroups().get())) {
+        return true;
       }
     }
 
     return true;
   }
 
-  public void checkForAuthorization(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityUser> user) {
+  public void checkForAuthorization(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityUser> user, SingularityAuthorizationScope scope) {
     if (authEnabled) {
       checkUnauthorized(user.isPresent(), "user must be present");
 
@@ -165,7 +170,7 @@ public class SingularityAuthorizationHelper {
     }
   }
 
-  public <T> Iterable<T> filterByAuthorizedRequests(final Optional<SingularityUser> user, List<T> objects, final Function<T, String> requestIdFunction) {
+  public <T> Iterable<T> filterByAuthorizedRequests(final Optional<SingularityUser> user, List<T> objects, final Function<T, String> requestIdFunction, final SingularityAuthorizationScope scope) {
     if (hasAdminAuthorization(user)) {
       return objects;
     }
@@ -188,12 +193,12 @@ public class SingularityAuthorizationHelper {
       @Override
       public boolean apply(@Nonnull T input) {
         final String requestId = requestIdFunction.apply(input);
-        return requestMap.containsKey(requestId) && isAuthorizedForRequest(requestMap.get(requestId).getRequest(), user);
+        return requestMap.containsKey(requestId) && isAuthorizedForRequest(requestMap.get(requestId).getRequest(), user, scope);
       }
     });
   }
 
-  public Iterable<String> filterAuthorizedRequestIds(final Optional<SingularityUser> user, List<String> requestIds) {
+  public Iterable<String> filterAuthorizedRequestIds(final Optional<SingularityUser> user, List<String> requestIds, final SingularityAuthorizationScope scope) {
     if (hasAdminAuthorization(user)) {
       return requestIds;
     }
@@ -208,7 +213,7 @@ public class SingularityAuthorizationHelper {
     return Iterables.filter(requestIds, new Predicate<String>() {
       @Override
       public boolean apply(@Nonnull String input) {
-        return requestMap.containsKey(input) && isAuthorizedForRequest(requestMap.get(input).getRequest(), user);
+        return requestMap.containsKey(input) && isAuthorizedForRequest(requestMap.get(input).getRequest(), user, scope);
       }
     });
   }

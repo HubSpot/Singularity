@@ -81,15 +81,15 @@ public class SingularityAuthorizationHelperTest {
     final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthDisabledConfig());
 
     // anyone should be authorized for requests with no group
-    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_NO_GROUP, NOT_LOGGED_IN));
-    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_NO_GROUP, USER_GROUP_A));
+    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_NO_GROUP, NOT_LOGGED_IN, SingularityAuthorizationScope.READ));
+    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_NO_GROUP, USER_GROUP_A, SingularityAuthorizationScope.READ));
 
     // users with matching group(s) should be authorized
-    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_A, USER_GROUP_A));
-    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_A, USER_GROUP_AB));
+    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_A, USER_GROUP_A, SingularityAuthorizationScope.READ));
+    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_A, USER_GROUP_AB, SingularityAuthorizationScope.READ));
 
     // users without matching group(s) should be authorized
-    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_A, USER_GROUP_B));
+    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_A, USER_GROUP_B, SingularityAuthorizationScope.READ));
   }
 
   @Test
@@ -97,22 +97,22 @@ public class SingularityAuthorizationHelperTest {
     final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig());
 
     // user must be authenticated
-    assertFalse(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_NO_GROUP, NOT_LOGGED_IN));
-    assertFalse(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_A, NOT_LOGGED_IN));
+    assertFalse(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_NO_GROUP, NOT_LOGGED_IN, SingularityAuthorizationScope.READ));
+    assertFalse(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_A, NOT_LOGGED_IN, SingularityAuthorizationScope.READ));
 
     // anyone should be authorized for requests with no group
-    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_NO_GROUP, USER_GROUP_A));
+    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_NO_GROUP, USER_GROUP_A, SingularityAuthorizationScope.READ));
 
     // user must be logged in to be authorized for any request
-    assertFalse(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_NO_GROUP, NOT_LOGGED_IN));
-    assertFalse(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_A, NOT_LOGGED_IN));
+    assertFalse(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_NO_GROUP, NOT_LOGGED_IN, SingularityAuthorizationScope.READ));
+    assertFalse(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_A, NOT_LOGGED_IN, SingularityAuthorizationScope.READ));
 
     // users with matching group(s) should be authorized
-    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_A, USER_GROUP_A));
-    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_A, USER_GROUP_AB));
+    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_A, USER_GROUP_A, SingularityAuthorizationScope.READ));
+    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_A, USER_GROUP_AB, SingularityAuthorizationScope.READ));
 
     // users without matching group(s) should not be authorized
-    assertFalse(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_B, USER_GROUP_A));
+    assertFalse(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_B, USER_GROUP_A, SingularityAuthorizationScope.READ));
   }
 
   @Test
@@ -120,14 +120,14 @@ public class SingularityAuthorizationHelperTest {
     final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig(ImmutableSet.of("a"), Collections.<String>emptySet(), Collections.<String>emptySet()));
 
     // users not in the required group are unauthorized
-    assertFalse(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_NO_GROUP, NOT_LOGGED_IN));
-    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_NO_GROUP, USER_GROUP_A));
-    assertFalse(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_NO_GROUP, USER_GROUP_B));
+    assertFalse(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_NO_GROUP, NOT_LOGGED_IN, SingularityAuthorizationScope.READ));
+    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_NO_GROUP, USER_GROUP_A, SingularityAuthorizationScope.READ));
+    assertFalse(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_NO_GROUP, USER_GROUP_B, SingularityAuthorizationScope.READ));
 
     // user must be part of required group(s) and request group
-    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_B, USER_GROUP_AB));
-    assertFalse(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_B, USER_GROUP_A));
-    assertFalse(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_B, USER_GROUP_B));
+    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_B, USER_GROUP_AB, SingularityAuthorizationScope.READ));
+    assertFalse(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_B, USER_GROUP_A, SingularityAuthorizationScope.READ));
+    assertFalse(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_B, USER_GROUP_B, SingularityAuthorizationScope.READ));
   }
 
   @Test
@@ -141,9 +141,9 @@ public class SingularityAuthorizationHelperTest {
     assertTrue(authorizationHelper.hasAdminAuthorization(USER_GROUP_ADMIN));
 
     // users in admin group have access to all
-    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_NO_GROUP, USER_GROUP_ADMIN));
-    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_A, USER_GROUP_ADMIN));
-    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_B, USER_GROUP_ADMIN));
+    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_NO_GROUP, USER_GROUP_ADMIN, SingularityAuthorizationScope.READ));
+    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_A, USER_GROUP_ADMIN, SingularityAuthorizationScope.READ));
+    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_B, USER_GROUP_ADMIN, SingularityAuthorizationScope.READ));
   }
 
   @Test
@@ -151,9 +151,9 @@ public class SingularityAuthorizationHelperTest {
     final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig(Collections.<String>emptySet(), ImmutableSet.of("admin"), ImmutableSet.of("b")));
 
     // user in JITA group(s) are authorized for all requests
-    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_NO_GROUP, USER_GROUP_B));
-    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_A, USER_GROUP_B));
-    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_B, USER_GROUP_B));
+    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_NO_GROUP, USER_GROUP_B, SingularityAuthorizationScope.READ));
+    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_A, USER_GROUP_B, SingularityAuthorizationScope.READ));
+    assertTrue(authorizationHelper.isAuthorizedForRequest(REQUEST_WITH_GROUP_B, USER_GROUP_B, SingularityAuthorizationScope.READ));
 
     // but still aren't admins
     assertFalse(authorizationHelper.hasAdminAuthorization(USER_GROUP_B));
@@ -191,41 +191,41 @@ public class SingularityAuthorizationHelperTest {
   public void testCheckForAuthorizationByTaskIdDoesntThrowOnAuthorized() {
     final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig(Collections.<String>emptySet(), ImmutableSet.of("admin"), Collections.<String>emptySet()));
 
-    authorizationHelper.checkForAuthorizationByRequestId(REQUEST_WITH_GROUP_A.getId(), USER_GROUP_A);
+    authorizationHelper.checkForAuthorizationByRequestId(REQUEST_WITH_GROUP_A.getId(), USER_GROUP_A, SingularityAuthorizationScope.READ);
   }
 
   @Test(expected = WebApplicationException.class)
   public void testCheckForAuthorizationByTaskIdThrowsOnForbidden() {
     final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig(Collections.<String>emptySet(), ImmutableSet.of("admin"), Collections.<String>emptySet()));
 
-    authorizationHelper.checkForAuthorizationByRequestId(REQUEST_WITH_GROUP_A.getId(), USER_GROUP_B);
+    authorizationHelper.checkForAuthorizationByRequestId(REQUEST_WITH_GROUP_A.getId(), USER_GROUP_B, SingularityAuthorizationScope.READ);
   }
 
   @Test
   public void testCheckForAuthorizationDoesntThrowOnAuthorized() {
     final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig(Collections.<String>emptySet(), ImmutableSet.of("admin"), Collections.<String>emptySet()));
 
-    authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A, Optional.<SingularityRequest>absent(), USER_GROUP_A);
+    authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A, Optional.<SingularityRequest>absent(), USER_GROUP_A, SingularityAuthorizationScope.READ);
   }
 
   @Test(expected = WebApplicationException.class)
   public void testCheckForAuthorizationThrowsOnForbidden() {
     final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig(Collections.<String>emptySet(), ImmutableSet.of("admin"), Collections.<String>emptySet()));
 
-    authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A, Optional.<SingularityRequest>absent(), USER_GROUP_B);
+    authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A, Optional.<SingularityRequest>absent(), USER_GROUP_B, SingularityAuthorizationScope.READ);
   }
 
   @Test
   public void testCheckForAuthorizationDoesntThrowOnValidChange() {
     final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig(Collections.<String>emptySet(), ImmutableSet.of("admin"), Collections.<String>emptySet()));
 
-    authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A_CHANGED_TO_B, Optional.of(REQUEST_WITH_GROUP_A), USER_GROUP_AB);
+    authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A_CHANGED_TO_B, Optional.of(REQUEST_WITH_GROUP_A), USER_GROUP_AB, SingularityAuthorizationScope.READ);
   }
 
   @Test(expected = WebApplicationException.class)
   public void testCheckForAuthorizationThrowsOnForbiddenChange() {
     final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig(Collections.<String>emptySet(), ImmutableSet.of("admin"), Collections.<String>emptySet()));
 
-    authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A_CHANGED_TO_B, Optional.of(REQUEST_WITH_GROUP_A), USER_GROUP_A);
+    authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A_CHANGED_TO_B, Optional.of(REQUEST_WITH_GROUP_A), USER_GROUP_A, SingularityAuthorizationScope.READ);
   }
 }

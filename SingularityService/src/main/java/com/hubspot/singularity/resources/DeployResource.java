@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployMarker;
@@ -62,7 +63,7 @@ public class DeployResource extends AbstractRequestResource {
   public Iterable<SingularityPendingDeploy> getPendingDeploys() {
     authorizationHelper.checkRequiredAuthorization(user);
 
-    return authorizationHelper.filterByAuthorizedRequests(user, deployManager.getPendingDeploys(), SingularityTransformHelpers.PENDING_DEPLOY_TO_REQUEST_ID);
+    return authorizationHelper.filterByAuthorizedRequests(user, deployManager.getPendingDeploys(), SingularityTransformHelpers.PENDING_DEPLOY_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
   @POST
@@ -83,7 +84,7 @@ public class DeployResource extends AbstractRequestResource {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
     SingularityRequest request = requestWithState.getRequest();
 
-    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user);
+    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user, SingularityAuthorizationScope.WRITE);
 
     if (!deployRequest.isUnpauseOnSuccessfulDeploy()) {
       checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to deploy (it must be manually unpaused first)", requestWithState.getRequest().getId());
@@ -124,7 +125,7 @@ public class DeployResource extends AbstractRequestResource {
       @ApiParam(required=false, value="The user which executes the delete request.") @QueryParam("user") Optional<String> queryUser) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
-    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user);
+    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user, SingularityAuthorizationScope.WRITE);
 
     Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestWithState.getRequest().getId());
 
