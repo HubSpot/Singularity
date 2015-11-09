@@ -56,10 +56,14 @@ public class SandboxManager {
       }
 
       return objectMapper.readValue(response.getResponseBodyAsStream(), MESOS_FILE_OBJECTS);
-    } catch (ExecutionException | ConnectException ce) {
+    } catch (ConnectException ce) {
       throw new SlaveNotFoundException(ce);
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      if (e.getCause().getClass() == ConnectException.class) {
+        throw new SlaveNotFoundException(e);
+      } else {
+        throw Throwables.propagate(e);
+      }
     }
   }
 
@@ -92,10 +96,14 @@ public class SandboxManager {
       }
 
       return Optional.of(objectMapper.readValue(response.getResponseBodyAsStream(), MesosFileChunkObject.class));
-    } catch (ExecutionException | ConnectException ce) {
+    } catch (ConnectException ce) {
       throw new SlaveNotFoundException(ce);
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      if (e.getCause().getClass() == ConnectException.class) {
+        throw new SlaveNotFoundException(e);
+      } else {
+        throw Throwables.propagate(e);
+      }
     }
   }
 }
