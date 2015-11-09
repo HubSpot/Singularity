@@ -1,10 +1,13 @@
 
+Utils = require '../../utils'
+
 StatusIndicator = React.createClass
 
   getClassName: ->
-    switch @props.status?.toUpperCase()
-      when 'TASK_RUNNING' then 'bg-info running'
-      when 'TASK_KILLED', 'TASK_FINISHED' then 'bg-danger'
+    if @props.status in Utils.TERMINAL_TASK_STATES
+      'bg-danger'
+    else
+      'bg-info running'
 
   render: ->
     <div className="status">

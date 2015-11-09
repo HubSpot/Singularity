@@ -79,7 +79,8 @@ IndividualTail = React.createClass
         offset={@props.offset}
         fetchNext={@fetchNext}
         fetchPrevious={@fetchPrevious}
-        fetchFromStart={@fetchFromStart} />
+        fetchFromStart={@fetchFromStart}
+        taskState={_.last(@state.task.taskUpdates)?.taskState} />
     </div>
 
 module.exports = IndividualTail

@@ -1,6 +1,8 @@
 LogLine = require './LogLine'
 Loader = require './Loader'
 
+Utils = require '../../utils'
+
 Contents = React.createClass
 
   # ============================================================================
@@ -39,6 +41,9 @@ Contents = React.createClass
     if prevProps.logLines.length isnt @props.logLines.length
       @setState
         linesToRender: @renderLines()
+
+    if @props.taskState in Utils.TERMINAL_TASK_STATES
+      @stopTailingPoll()
 
   componentWillUnmount: ->
     $(window).off 'resize orientationChange', @handleResize
