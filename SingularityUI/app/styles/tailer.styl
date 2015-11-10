@@ -227,64 +227,27 @@
   position absolute
   bottom 0
   right 0
-  background-color rgba(white, 0)
+  background-color rgba(white, 0.8)
+  padding 5px
 
-  animation-time = 1s
-  size = 30px
+  .loading
+    color $green
+    width 55px
+    float left
 
-  &>div
-    float right
+  .loading:after
+    overflow hidden
+    display inline-block
+    vertical-align bottom
+    -webkit-animation ellipsis steps(4,end) 900ms infinite
+    animation ellipsis steps(4,end) 900ms infinite
+    content "\2026"
+    width 0px
 
-  .text
-    color #AAA
-    font-weight 200
-    padding-right 5px
-    padding-top 10px
+  @keyframes ellipsis
+    to
+      width 1.25em
 
-  .loader
-    position relative
-    display block
-    width size
-    height size
-
-  .box
-    width 45%
-    height 45%
-    background rgba($grey, 0.7)
-    opacity 0
-    animation load animation-time linear infinite
-    &:nth-of-type(1)
-      position absolute
-      top 2.5%
-      left 2.5%
-
-    &:nth-of-type(2)
-      position absolute
-      top 2.5%
-      right 2.5%
-      animation-delay -(animation-time / 4 )
-
-    &:nth-of-type(3)
-      position absolute
-      bottom 2.5%
-      right 2.5%
-      animation-delay -(animation-time / 4 ) * 2
-
-    &:nth-of-type(4)
-      position absolute
-      bottom 2.5%
-      left 2.5%
-      animation-delay -(animation-time / 4 ) * 3
-
-  @keyframes load
-    0%
-      opacity 0
-
-    30%
-      opacity 0
-
-    90%
-      opacity 1
-
-    100%
-      opacity 0
+  @-webkit-keyframes ellipsis
+    to
+      width 1.25em

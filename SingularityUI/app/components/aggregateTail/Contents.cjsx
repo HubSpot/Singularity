@@ -77,7 +77,7 @@ Contents = React.createClass
     @stopTailingPoll()
     @setState
       isLoading: true
-      loadingText: 'Tailing...'
+      loadingText: 'Tailing'
     @props.fetchNext()
     @tailingPoll = setInterval =>
       @props.fetchNext()
