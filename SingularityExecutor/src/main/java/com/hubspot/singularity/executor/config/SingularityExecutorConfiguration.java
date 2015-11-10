@@ -189,7 +189,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   public List<SingularityExecutorShellCommandDescriptor> shellCommands = Collections.emptyList();
 
   @JsonProperty
-  public String shellCommandOutFile = "executor.commands.log";
+  public String shellCommandOutFile = "executor.commands.{TIMESTAMP}.log";
 
   @JsonProperty
   private String shellCommandPidPlaceholder = "{PID}";

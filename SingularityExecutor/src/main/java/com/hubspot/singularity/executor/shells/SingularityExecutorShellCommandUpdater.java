@@ -21,8 +21,8 @@ public class SingularityExecutorShellCommandUpdater {
   }
 
   // TODO thread?
-  public void sendUpdate(UpdateType updateType, Optional<String> message) {
-    SingularityTaskShellCommandUpdate update = new SingularityTaskShellCommandUpdate(shellRequest.getId(), System.currentTimeMillis(), message, updateType);
+  public void sendUpdate(UpdateType updateType, Optional<String> message, Optional<String> outputFilename) {
+    SingularityTaskShellCommandUpdate update = new SingularityTaskShellCommandUpdate(shellRequest.getId(), System.currentTimeMillis(), message, outputFilename, updateType);
 
     try {
       byte[] data = objectMapper.writeValueAsBytes(update);
