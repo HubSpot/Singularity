@@ -103,15 +103,15 @@ public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBas
 
     mesosScheduler.frameworkMessage(driver, task.getMesosTask().getExecutor().getExecutorId(), task.getMesosTask().getSlaveId(),
         updateTranscoder.toBytes(
-            new SingularityTaskShellCommandUpdate(firstShellRequest.getId(), System.currentTimeMillis(), Optional.<String> of("hi"), UpdateType.STARTED)));
+            new SingularityTaskShellCommandUpdate(firstShellRequest.getId(), System.currentTimeMillis(), Optional.<String> of("hi"), Optional.<String>absent(), UpdateType.STARTED)));
 
     mesosScheduler.frameworkMessage(driver, task.getMesosTask().getExecutor().getExecutorId(), task.getMesosTask().getSlaveId(),
         updateTranscoder.toBytes(
-            new SingularityTaskShellCommandUpdate(new SingularityTaskShellCommandRequestId(task.getTaskId(), "wat", System.currentTimeMillis()), System.currentTimeMillis(), Optional.<String> of("hi"), UpdateType.STARTED)));
+            new SingularityTaskShellCommandUpdate(new SingularityTaskShellCommandRequestId(task.getTaskId(), "wat", System.currentTimeMillis()), System.currentTimeMillis(), Optional.<String> of("hi"), Optional.<String>absent(), UpdateType.STARTED)));
 
     mesosScheduler.frameworkMessage(driver, task.getMesosTask().getExecutor().getExecutorId(), task.getMesosTask().getSlaveId(),
         updateTranscoder.toBytes(
-            new SingularityTaskShellCommandUpdate(new SingularityTaskShellCommandRequestId(new SingularityTaskId("makingitup", "did", System.currentTimeMillis(), 1, "host", "rack"), "wat", System.currentTimeMillis()), System.currentTimeMillis(), Optional.<String> of("hi"), UpdateType.STARTED)));
+            new SingularityTaskShellCommandUpdate(new SingularityTaskShellCommandRequestId(new SingularityTaskId("makingitup", "did", System.currentTimeMillis(), 1, "host", "rack"), "wat", System.currentTimeMillis()), System.currentTimeMillis(), Optional.<String> of("hi"), Optional.<String>absent(), UpdateType.STARTED)));
 
     assertEquals(true, taskManager.getTaskHistory(task.getTaskId()).get().getShellCommandHistory().get(1).getShellUpdates().get(0).getUpdateType() == UpdateType.STARTED);
 

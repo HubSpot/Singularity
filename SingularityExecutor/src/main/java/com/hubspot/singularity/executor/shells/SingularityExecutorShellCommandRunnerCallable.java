@@ -39,7 +39,7 @@ public class SingularityExecutorShellCommandRunnerCallable extends SafeProcessMa
 
     Optional<Integer> pid = getCurrentPid();
 
-    updater.sendUpdate(UpdateType.STARTED, Optional.of(String.format("pid - %s", pid.orNull())));
+    updater.sendUpdate(UpdateType.STARTED, Optional.of(String.format("pid - %s", pid.orNull())), Optional.<String>absent());
 
     try {
       return process.waitFor();

@@ -70,13 +70,15 @@ public class SingularityExecutorShellCommandRunner {
     try {
       command = buildCommand();
     } catch (InvalidShellCommandException isce) {
-      shellCommandUpdater.sendUpdate(UpdateType.INVALID, Optional.of(isce.getMessage()));
+      shellCommandUpdater.sendUpdate(UpdateType.INVALID, Optional.of(isce.getMessage()), Optional.<String>absent());
       return;
     }
 
-    shellCommandUpdater.sendUpdate(UpdateType.ACKED, Optional.of(Joiner.on(" ").join(command)));
+    final String outputFilename = executorConfiguration.getShellCommandOutFile().replace("{TIMESTAMP}", Long.toString(shellRequest.getTimestamp()));
 
-    final File outputFile = MesosUtils.getTaskDirectoryPath(getTask().getTaskId()).resolve(executorConfiguration.getShellCommandOutFile()).toFile();
+    shellCommandUpdater.sendUpdate(UpdateType.ACKED, Optional.of(Joiner.on(" ").join(command)), Optional.of(outputFilename));
+
+    final File outputFile = MesosUtils.getTaskDirectoryPath(getTask().getTaskId()).resolve(outputFilename).toFile();
 
     SingularityExecutorShellCommandRunnerCallable callable = new SingularityExecutorShellCommandRunnerCallable(task.getLog(), shellCommandUpdater, buildProcessBuilder(command, outputFile), outputFile);
 
@@ -88,14 +90,14 @@ public class SingularityExecutorShellCommandRunner {
       public void onSuccess(Integer result) {
         task.getLog().info("ShellRequest {} finished with {}", shellRequest, result);
 
-        shellCommandUpdater.sendUpdate(UpdateType.FINISHED, Optional.of(String.format("Finished with code %s", result)));
+        shellCommandUpdater.sendUpdate(UpdateType.FINISHED, Optional.of(String.format("Finished with code %s", result)), Optional.<String>absent());
       }
 
       @Override
       public void onFailure(Throwable t) {
         task.getLog().warn("ShellRequest {} failed", shellRequest, t);
 
-        shellCommandUpdater.sendUpdate(UpdateType.FAILED, Optional.of(String.format("Failed - %s (%s)", t.getClass().getSimpleName(), t.getMessage())));
+        shellCommandUpdater.sendUpdate(UpdateType.FAILED, Optional.of(String.format("Failed - %s (%s)", t.getClass().getSimpleName(), t.getMessage())), Optional.<String>absent());
       }
 
     });
