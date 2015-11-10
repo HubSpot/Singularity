@@ -1,12 +1,9 @@
 package com.hubspot.singularity;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 
 public class SingularityTaskRequest implements Comparable<SingularityTaskRequest> {
 

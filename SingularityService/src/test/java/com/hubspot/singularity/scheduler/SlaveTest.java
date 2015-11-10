@@ -1,7 +1,5 @@
 package com.hubspot.singularity.scheduler;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.ImmutableMap;
