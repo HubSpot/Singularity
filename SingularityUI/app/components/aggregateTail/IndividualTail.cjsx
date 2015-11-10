@@ -31,10 +31,11 @@ IndividualTail = React.createClass
     @stopTaskStatusPoll()
 
   startTaskStatusPoll: ->
+    console.log 'poll', @task
     @task.fetch()
-    @taskPoll = setInterval =>
-      @task.fetch()
-    , 5000
+    # @taskPoll = setInterval =>
+    #   @task.fetch()
+    # , 5000
 
   stopTaskStatusPoll: ->
     clearInterval @taskPoll

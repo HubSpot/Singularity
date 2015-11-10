@@ -34,16 +34,16 @@ Contents = React.createClass
       @scrollToBottom()
 
     # Start tailing automatically if we can't scroll
-    if 0 < $('.line').length * 20 <= @state.contentsHeight and !@tailingPoll
+    console.log @props.taskState not in Utils.TERMINAL_TASK_STATES
+    if @props.taskState in Utils.TERMINAL_TASK_STATES and @tailingPoll
+      @stopTailingPoll()
+    else if 0 < $('.line').length * 20 <= @state.contentsHeight and !@tailingPoll
       @startTailingPoll()
 
     # Update our loglines components only if needed
     if prevProps.logLines.length isnt @props.logLines.length
       @setState
         linesToRender: @renderLines()
-
-    if @props.taskState in Utils.TERMINAL_TASK_STATES
-      @stopTailingPoll()
 
   componentWillUnmount: ->
     $(window).off 'resize orientationChange', @handleResize
@@ -80,7 +80,10 @@ Contents = React.createClass
       isLoading: true
       loadingText: 'Tailing...'
     @props.fetchNext()
-    @tailingPoll = setInterval @props.fetchNext, 2000
+    @tailingPoll = setInterval =>
+
+      @props.fetchNext()
+    , 2000
 
   stopTailingPoll: ->
     @setState

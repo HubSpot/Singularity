@@ -79,7 +79,6 @@ AggregateTail = React.createClass
   renderIndividualTails: ->
     @state.viewingInstances.map((taskId, i) =>
       if @props.logLines[taskId]
-        console.log @props.logLines[taskId]
         <div key={taskId} id="tail-#{taskId}" className="col-md-#{@getColumnWidth()} tail-column">
           <IndividualTail
             ref="tail_#{i}"
