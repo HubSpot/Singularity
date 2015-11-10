@@ -14,7 +14,7 @@ class FileBrowserSubview extends View
         @listenTo @collection, 'error', @catchAjaxError
         @task = @model
 
-        @scrollAfterRender = Backbone.history.fragment.indexOf('/files') isnt -1
+        @scrollAfterRender = Backbone.history.fragment?.indexOf('/files') isnt -1
 
     render: ->
         # Ensure we have enough space to scroll
