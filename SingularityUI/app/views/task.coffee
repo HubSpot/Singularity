@@ -130,7 +130,18 @@ class TaskView extends View
                     vex.dialog.alert "<h3>Command Failed</h3><p><code>#{message}</code></p>"
                 else if (history and @cmdRequestIsStarted(history, timestamp))
                     clearInterval @pollInterval
-                    @pollForCmdFile()
+                    filename = @getCmdRequestOutputFilename(history, timestamp)
+                    if filename
+                        @pollForCmdFile(filename)
+                    else
+                        vex.close()  # TODO: show some sort of error
+
+    getCmdRequestOutputFilename: (history, timestamp) ->
+        for h in history
+            if h.shellRequest.timestamp == timestamp
+                for u in h.shellUpdates
+                    if u.updateType == 'ACKED'
+                        return u.outputFilename
 
     cmdRequestIsStarted: (history, timestamp) ->
         for h in history
@@ -156,15 +167,15 @@ class TaskView extends View
                         return u.message
         return ''
 
-    pollForCmdFile: =>
-        $('#statusText').html('Waiting for <code>executor.commands.log</code> to exist...')
+    pollForCmdFile: (filename) =>
+        $('#statusText').html("Waiting for <code>#{ filename }</code> to exist...")
         files = new TaskFiles [], {@taskId}
         @pollInterval = interval 1000, =>
             files.fetch().done =>
-                if @containsFile files.models, 'executor.commands.log'
+                if @containsFile files.models, filename
                     clearInterval @pollInterval
                     vex.close()
-                    app.router.navigate "task/#{@taskId}/tail/#{@taskId}/executor.commands.log", trigger: true
+                    app.router.navigate "task/#{@taskId}/tail/#{@taskId}/#{ filename }", trigger: true
 
     containsFile: (files, name) ->
         for file in files

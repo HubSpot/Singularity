@@ -59,34 +59,38 @@
                               <th>User</th>
                               <th>Status</th>
                               <th>Message</th>
+                              <th>Logs</th>
                           </tr>
                       </thead>
                       <tbody>
                           {{#each data.shellCommandHistory}}
-                            {{#each shellUpdates}}
-                              <tr>
-                                  <td data-value="{{ shellRequest.timestamp }}">
-                                      {{timestampFormatted timestamp}}
-                                  </td>
-                                  <td>
-                                      <code>{{../shellRequest.shellCommand.name}}</code>
-                                  </td>
-                                  <td>
-                                      {{#if ../shellRequest.shellCommand.options.length}}
-                                          <code>{{shellRequest.shellCommand.options}}</code>
-                                      {{/if}}
-                                  </td>
-                                  <td>
-                                      {{../shellRequest.user}}
-                                  </td>
-                                  <td>
-                                      {{humanizeText updateType}}
-                                  </td>
-                                  <td>
-                                    {{message}}
-                                  </td>
-                              </tr>
-                            {{/each}}
+                            <tr>
+                              <td data-value="{{ shellRequest.timestamp }}">
+                                  {{timestampFormatted shellRequest.timestamp}}
+                              </td>
+                              <td>
+                                  <code>{{shellRequest.shellCommand.name}}</code>
+                              </td>
+                              <td>
+                                  {{#if shellRequest.shellCommand.options.length}}
+                                      <code>{{shellRequest.shellCommand.options}}</code>
+                                  {{ else }}
+                                    (none)
+                                  {{/if}}
+                              </td>
+                              <td>
+                                {{shellRequest.user}}
+                              </td>
+                              <td>
+                                {{lastShellRequestStatus shellUpdates}}
+                              </td>
+                              <td>
+                                <ul>{{#each shellUpdates}}<li>{{timestampFormatted timestamp}}: {{ message }}</li>{{/each}}</ul>
+                              </td>
+                              <td>
+                                {{#ifShellRequestHasOutputFilename shellUpdates}}<a href="{{ appRoot }}/task/{{ ../shellRequest.taskId.id }}/tail/{{ ../shellRequest.taskId.id }}/{{shellRequestOutputFilename shellUpdates}}">View</a>{{/ifShellRequestHasOutputFilename}}
+                              </td>
+                            </tr>
                           {{/each}}
                       </tbody>
                   </table>
