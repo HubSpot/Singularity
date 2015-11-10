@@ -42,6 +42,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.runner.base.config.MissingConfigException;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
@@ -126,8 +127,13 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
   @Override
   public void startAndWait() {
-    Preconditions.checkState(configuration.getS3AccessKey().or(s3Configuration.getS3AccessKey()).isPresent(), "s3AccessKey not set in any s3 configs!");
-    Preconditions.checkState(configuration.getS3SecretKey().or(s3Configuration.getS3SecretKey()).isPresent(), "s3SecretKey not set in any s3 configs!");
+    if (!configuration.getS3AccessKey().or(s3Configuration.getS3AccessKey()).isPresent()) {
+      throw new MissingConfigException("s3AccessKey not set in any s3 configs!");
+    }
+    if (!configuration.getS3SecretKey().or(s3Configuration.getS3SecretKey()).isPresent()) {
+      throw new MissingConfigException("s3SecretKey not set in any s3 configs!");
+    }
+
     try {
       readInitialFiles();
     } catch (Throwable t) {
