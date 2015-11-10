@@ -156,3 +156,18 @@ Handlebars.registerHelper 'isSingularityExecutor', (value, options) ->
         options.fn(@)
     else
         options.inverse(@)
+
+Handlebars.registerHelper 'lastShellRequestStatus', (statuses) ->
+    if statuses.length > 0
+      statuses[0].updateType
+
+Handlebars.registerHelper 'shellRequestOutputFilename', (statuses) ->
+    for status in statuses
+      if status.outputFilename
+        return status.outputFilename
+
+Handlebars.registerHelper 'ifShellRequestHasOutputFilename', (statuses, options) ->
+    for status in statuses
+      if status.outputFilename
+        return options.fn @
+    return options.inverse @
