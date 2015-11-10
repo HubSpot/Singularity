@@ -21,7 +21,7 @@ Header = React.createClass
         )
 
   renderListItems: ->
-    @props.activeTasks.map (task) =>
+    tasks = @props.activeTasks.map (task) =>
       taskId = task.id
       <li key={taskId}>
         <a onClick={() => @props.toggleViewingInstance(taskId)}>
@@ -29,6 +29,11 @@ Header = React.createClass
           <span> Instance {task.taskId.instanceNo}</span>
         </a>
       </li>
+
+    if tasks.length > 0
+      return tasks
+    else
+      return <li><a className="disabled">No running instances</a></li>
 
   render: ->
     <div className="tail-header">

@@ -80,7 +80,6 @@ Contents = React.createClass
       loadingText: 'Tailing...'
     @props.fetchNext()
     @tailingPoll = setInterval =>
-
       @props.fetchNext()
     , 2000
 
