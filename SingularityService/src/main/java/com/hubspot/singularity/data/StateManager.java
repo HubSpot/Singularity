@@ -34,7 +34,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
-import com.hubspot.singularity.mesos.SingularityOfferState;
+import com.hubspot.singularity.SingularityOfferState;
 
 @Singleton
 public class StateManager extends CuratorManager {

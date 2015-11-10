@@ -10,10 +10,6 @@ import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.hubspot.mesos.MesosUtils;
@@ -32,15 +28,6 @@ public class SingularityOfferHolder {
     this.offer = offer;
     this.acceptedTasks = Lists.newArrayListWithCapacity(taskSizeHint);
     this.currentResources = offer.getResourcesList();
-  }
-
-  @JsonCreator
-  public SingularityOfferHolder(@JsonProperty("offer") Protos.Offer offer,
-                                @JsonProperty("acceptedTasks") List<SingularityTask> acceptedTasks,
-                                @JsonProperty("currentResources") List<Resource> currentResources) {
-    this.offer = offer;
-    this.acceptedTasks = acceptedTasks;
-    this.currentResources = currentResources;
   }
 
   public void addMatchedTask(SingularityTask task) {

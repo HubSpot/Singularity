@@ -35,7 +35,7 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.SingularityWebhook;
-import com.hubspot.singularity.mesos.SingularityOfferState;
+import com.hubspot.singularity.SingularityOfferState;
 
 public class SingularityTranscoderModule implements Module {
 

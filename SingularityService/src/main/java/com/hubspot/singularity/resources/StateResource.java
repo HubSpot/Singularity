@@ -12,7 +12,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityState;
 import com.hubspot.singularity.data.StateManager;
-import com.hubspot.singularity.mesos.SingularityOfferState;
+import com.hubspot.singularity.SingularityOfferState;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 
