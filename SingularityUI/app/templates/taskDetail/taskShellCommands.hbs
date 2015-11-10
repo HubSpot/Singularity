@@ -1,0 +1,109 @@
+{{#if data.taskUpdates}}
+  {{#if synced}}
+    <div class="page-header">
+      <h2>
+        Shell Commands
+        <small><a data-action="expandToggle">
+            {{#if expanded}}
+                collapse
+            {{else}}
+                view
+            {{/if}}
+        </a></small>
+      </h2>
+    </div>
+    <div class='{{#unless expanded}}hide{{/unless}}'>
+    {{#isRunningState data.taskUpdates}}
+      {{#isSingularityExecutor data.task.taskRequest.deploy.customExecutorCmd}}
+        <div class="row">
+          <form class="col-md-6" data-action="runShell" action="">
+            <h3>Execute a command</h3>
+            <div class="form-group required">
+              <label for="cmd">Select command</label>
+              <select name="cmd" class="form-control input-large" id="cmd" data-action="cmd">
+                {{#each config.shellCommands}}
+                  <option value="{{name}}">{{name}}</option>
+                {{/each}}
+              </select>
+              {{#withFirst config.shellCommands}}
+                <p class="cmd-description">{{description}}</p>
+              {{/withFirst}}
+
+              <div id="options" class="hidden">
+                <label for="cmd-option">Options</label>
+                <select multiple name="cmd-option" class="form-control input-large" id="cmd-option" disabled></select>
+              </div>
+
+              <label class="check-label">
+                <input id="open-log" type="checkbox" name="open-log" checked> Redirect to command output upon success
+              </label>
+            </div>
+            <button type="submit" id="btn_exec" class="btn btn-success" type="button">Run</button>
+
+            <span id="cmd-confirm"></span>
+          </form>
+        </div>
+      {{/isSingularityExecutor}}
+    {{/isRunningState}}
+    {{#if data.shellCommandHistory.length}}
+      <div class="row">
+          <div class="col-md-12">
+              <h3>Command History</h3>
+              <div class="table-container">
+                  <table class="table table-striped paginated">
+                      <thead>
+                          <tr>
+                              <th>Timestamp</th>
+                              <th>Command</th>
+                              <th>Options</th>
+                              <th>User</th>
+                              <th>Status</th>
+                              <th>Message</th>
+                              <th>Logs</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                          {{#each data.shellCommandHistory}}
+                            <tr>
+                              <td data-value="{{ shellRequest.timestamp }}">
+                                  {{timestampFormatted shellRequest.timestamp}}
+                              </td>
+                              <td>
+                                  <code>{{shellRequest.shellCommand.name}}</code>
+                              </td>
+                              <td>
+                                  {{#if shellRequest.shellCommand.options.length}}
+                                      <code>{{shellRequest.shellCommand.options}}</code>
+                                  {{ else }}
+                                    (none)
+                                  {{/if}}
+                              </td>
+                              <td>
+                                {{shellRequest.user}}
+                              </td>
+                              <td>
+                                {{lastShellRequestStatus shellUpdates}}
+                              </td>
+                              <td>
+                                <ul>{{#each shellUpdates}}<li>{{timestampFormatted timestamp}}: {{ message }}</li>{{/each}}</ul>
+                              </td>
+                              <td>
+                                {{#ifShellRequestHasOutputFilename shellUpdates}}<a href="{{ appRoot }}/task/{{ ../shellRequest.taskId.id }}/tail/{{ ../shellRequest.taskId.id }}/{{shellRequestOutputFilename shellUpdates}}">View</a>{{/ifShellRequestHasOutputFilename}}
+                              </td>
+                            </tr>
+                          {{/each}}
+                      </tbody>
+                  </table>
+              </div>
+          </div>
+      </div>
+    {{else}}
+        <div class="empty-table-message">
+            No commands run
+        </div>
+    {{/if}}
+  </div>
+{{/if}}
+{{else}}
+    <div class="page-loader centered cushy"></div>
+{{/if}}
