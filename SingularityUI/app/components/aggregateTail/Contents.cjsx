@@ -34,7 +34,6 @@ Contents = React.createClass
       @scrollToBottom()
 
     # Start tailing automatically if we can't scroll
-    console.log @props.taskState not in Utils.TERMINAL_TASK_STATES
     if @props.taskState in Utils.TERMINAL_TASK_STATES and @tailingPoll
       @stopTailingPoll()
     else if 0 < $('.line').length * 20 <= @state.contentsHeight and !@tailingPoll
