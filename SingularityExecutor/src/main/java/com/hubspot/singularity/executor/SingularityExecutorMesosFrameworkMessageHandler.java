@@ -51,7 +51,7 @@ public class SingularityExecutorMesosFrameworkMessageHandler {
       Optional<SingularityExecutorTaskProcessCallable> taskProcess = monitor.getTaskProcess(shellRequest.getTaskId().getId());
 
       if (!taskProcess.isPresent()) {
-        updater.sendUpdate(UpdateType.INVALID, Optional.of("No task process found"));
+        updater.sendUpdate(UpdateType.INVALID, Optional.of("No task process found"), Optional.<String>absent());
         return;
       }
 
