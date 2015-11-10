@@ -1,15 +1,19 @@
 package com.hubspot.singularity;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Optional;
 
 public class SingularityTaskRequest implements Comparable<SingularityTaskRequest> {
 
   private final SingularityRequest request;
   private final SingularityDeploy deploy;
   private final SingularityPendingTask pendingTask;
+  private Map<String, String> offerDeclinedReasons = new HashMap<>();
 
   @JsonCreator
   public SingularityTaskRequest(@JsonProperty("request") SingularityRequest request, @JsonProperty("deploy") SingularityDeploy deploy, @JsonProperty("pendingTask") SingularityPendingTask pendingTask) {
@@ -28,6 +32,18 @@ public class SingularityTaskRequest implements Comparable<SingularityTaskRequest
 
   public SingularityPendingTask getPendingTask() {
     return pendingTask;
+  }
+
+  public Map<String, String> getOfferDeclinedReasons() {
+    return offerDeclinedReasons;
+  }
+
+  public void addOfferDeclinedReason(String host, String reason) {
+    offerDeclinedReasons.put(host, reason);
+  }
+
+  public void clearOfferDeclinedReasons() {
+    offerDeclinedReasons.clear();
   }
 
   @Override
