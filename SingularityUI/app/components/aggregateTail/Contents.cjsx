@@ -34,9 +34,9 @@ Contents = React.createClass
       @scrollToBottom()
 
     # Start tailing automatically if we can't scroll
-    if @props.taskState in Utils.TERMINAL_TASK_STATES and @tailingPoll
+    if @props.taskState in Utils.TERMINAL_TASK_STATES
       @stopTailingPoll()
-    else if 0 < $('.line').length * 20 <= @state.contentsHeight and !@tailingPoll
+    else if (0 < $('.line').length * 20 <= @state.contentsHeight) and !@tailingPoll
       @startTailingPoll()
 
     # Update our loglines components only if needed
@@ -85,11 +85,12 @@ Contents = React.createClass
     , 2000
 
   stopTailingPoll: ->
-    @setState
-      isLoading: false
-      loadingText: ''
-    clearInterval @tailingPoll
-    @tailingPoll = null
+    if @tailingPoll
+      clearInterval @tailingPoll
+      @tailingPoll = null
+      @setState
+        isLoading: false
+        loadingText: ''
 
   # ============================================================================
   # Rendering                                                                  |
