@@ -122,12 +122,14 @@ class SingularitySlaveAndRackManager {
     if (!reservedSlaveAttributes.isEmpty()) {
       if (!taskRequest.getRequest().getRequiredSlaveAttributes().isPresent() ||
         !slaveAndRackHelper.hasRequiredAttributes(taskRequest.getRequest().getRequiredSlaveAttributes().get(), reservedSlaveAttributes)) {
+        LOG.trace("Slaves with attributes {} are reserved for matching tasks. Task with attributes {} does not match", reservedSlaveAttributes, taskRequest.getRequest().getRequiredSlaveAttributes().or(Collections.<String, String>emptyMap()));
         return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
       }
     }
 
     if (taskRequest.getRequest().getRequiredSlaveAttributes().isPresent()
       && !slaveAndRackHelper.hasRequiredAttributes(slaveAndRackHelper.getTextAttributes(offer), taskRequest.getRequest().getRequiredSlaveAttributes().get())) {
+      LOG.trace("Task requires slave with attributes {}, (cuurent attributes {})", slaveAndRackHelper.getTextAttributes(offer), taskRequest.getRequest().getRequiredSlaveAttributes().get());
       return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
     }
 
