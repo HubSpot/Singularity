@@ -272,6 +272,7 @@ public class TaskResource {
   @Path("/commands/queued")
   @ApiOperation(value="Retrieve a list of all the shell commands queued for execution")
   public List<SingularityTaskShellCommandRequest> getQueuedShellCommands() {
+    authorizationHelper.checkAdminAuthorization(user);
     return taskManager.getAllQueuedTaskShellCommandRequests();
   }
 
@@ -283,8 +284,10 @@ public class TaskResource {
     @ApiResponse(code=403, message="Given shell command doesn't exist")
   })
   @Consumes({ MediaType.APPLICATION_JSON })
-  public SingularityTaskShellCommandRequest runShellCommand(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> user, final SingularityShellCommand shellCommand) {
+  public SingularityTaskShellCommandRequest runShellCommand(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> queryUser, final SingularityShellCommand shellCommand) {
     SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
+
+    authorizationHelper.checkForAuthorizationByTaskId(taskId, user);
 
     if (!taskManager.isActiveTask(taskId)) {
       throw WebExceptions.badRequest("%s is not an active task, can't run %s on it", taskId, shellCommand.getName());
@@ -315,7 +318,7 @@ public class TaskResource {
       }
     }
 
-    SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(taskIdObj, user, System.currentTimeMillis(), shellCommand);
+    SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(taskIdObj, queryUser, System.currentTimeMillis(), shellCommand);
 
     taskManager.saveTaskShellCommandRequestToQueue(shellRequest);
 
