@@ -45,6 +45,9 @@ public class SingularityS3DownloaderServer implements SingularityDriver {
   public void startAndWait() {
     Preconditions.checkState(!server.isPresent());
 
+    Preconditions.checkState(s3Configuration.getS3AccessKey().isPresent(), "s3AccessKey not set!");
+    Preconditions.checkState(s3Configuration.getS3SecretKey().isPresent(), "s3SecretKey not set!");
+
     Server server = new Server();
 
     ServerConnector http = new ServerConnector(server);

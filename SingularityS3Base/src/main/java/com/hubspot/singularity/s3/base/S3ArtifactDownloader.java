@@ -63,7 +63,7 @@ public class S3ArtifactDownloader {
     Jets3tProperties jets3tProperties = Jets3tProperties.getInstance(Constants.JETS3T_PROPERTIES_FILENAME);
     jets3tProperties.setProperty("httpclient.socket-timeout-ms", Long.toString(configuration.getS3ChunkDownloadTimeoutMillis()));
 
-    final S3Service s3 = new RestS3Service(new AWSCredentials(configuration.getS3AccessKey(), configuration.getS3SecretKey()), null, null, jets3tProperties);
+    final S3Service s3 = new RestS3Service(new AWSCredentials(configuration.getS3AccessKey().get(), configuration.getS3SecretKey().get()), null, null, jets3tProperties);
 
     long length = 0;
 
