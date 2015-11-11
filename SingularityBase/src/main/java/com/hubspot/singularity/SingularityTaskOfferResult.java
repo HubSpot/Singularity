@@ -10,6 +10,7 @@ import com.google.common.base.Optional;
 
 @JsonIgnoreProperties( ignoreUnknown = true )
 public class SingularityTaskOfferResult {
+  private final long timestamp;
   private final SingularityPendingTaskId taskId;
   private Map<String, String> offerDeclinedReasons = new HashMap<>();
   private Optional<String> launchedOnHost = Optional.absent();
@@ -17,12 +18,15 @@ public class SingularityTaskOfferResult {
 
   public SingularityTaskOfferResult(SingularityPendingTaskId taskId) {
     this.taskId = taskId;
+    this.timestamp = System.currentTimeMillis();
   }
 
   @JsonCreator
-  public SingularityTaskOfferResult(@JsonProperty("taskId") SingularityPendingTaskId taskId,
+  public SingularityTaskOfferResult(@JsonProperty("timestamp") long timestamp,
+                                    @JsonProperty("taskId") SingularityPendingTaskId taskId,
                                     @JsonProperty("offerDeclinedReasons") Map<String, String> offerDeclinedReasons,
                                     @JsonProperty("launchedOnHost") Optional<String> launchedOnHost) {
+    this.timestamp = timestamp;
     this.taskId = taskId;
     this.offerDeclinedReasons = offerDeclinedReasons;
     this.launchedOnHost = launchedOnHost;
@@ -58,5 +62,13 @@ public class SingularityTaskOfferResult {
 
   public void setAcceptedOfferId(Optional<String> acceptedOfferId) {
     this.acceptedOfferId = acceptedOfferId;
+  }
+
+  public long getTimestamp() {
+    return timestamp;
+  }
+
+  public void setOfferDeclinedReasons(Map<String, String> offerDeclinedReasons) {
+    this.offerDeclinedReasons = offerDeclinedReasons;
   }
 }
