@@ -150,7 +150,7 @@ class SingularitySlaveAndRackManager {
 
     if (!taskRequest.getRequest().isRackSensitive() && slavePlacement == SlavePlacement.GREEDY) {
       offerResult.clearOfferDeclinedReasons();
-      offerResult.setAcceptedOfferId(Optional.of(offer.getId().toString()));
+      offerResult.setAcceptedOfferId(Optional.of(offer.getId().getValue()));
       offerResult.setLaunchedOnHost(Optional.of(offer.getHostname()));
       return SlaveMatchState.NOT_RACK_OR_SLAVE_PARTICULAR;
     }
@@ -230,7 +230,7 @@ class SingularitySlaveAndRackManager {
     }
 
     offerResult.clearOfferDeclinedReasons();
-    offerResult.setAcceptedOfferId(Optional.of(offer.getId().toString()));
+    offerResult.setAcceptedOfferId(Optional.of(offer.getId().getValue()));
     offerResult.setLaunchedOnHost(Optional.of(offer.getHostname()));
     return SlaveMatchState.OK;
   }
