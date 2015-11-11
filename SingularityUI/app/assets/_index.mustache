@@ -31,6 +31,8 @@
             taskS3LogOmitPrefix: "{{{ taskS3LogOmitPrefix }}}",
             slaveHttpPort: {{{slaveHttpPort}}},
             warnIfScheduledJobIsRunningPastNextRunPct: {{{warnIfScheduledJobIsRunningPastNextRunPct}}},
+            timestampFormat: localStorage.getItem('timestampFormatOverride') || "{{{timestampFormat}}}",
+            timestampWithSecondsFormat: localStorage.getItem('timestampWithSecondsFormatOverride') || "{{{timestampWithSecondsFormat}}}",
             {{#slaveHttpsPort}}
             slaveHttpsPort: {{{slaveHttpsPort}}}
             {{/slaveHttpsPort}}
