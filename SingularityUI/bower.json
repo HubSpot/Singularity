@@ -51,6 +51,10 @@
     "vex": {
       "main": "js/vex.combined.min.js"
     },
+    "react-list": {
+      "main": "react-list.js",
+      "ignore": []
+    },
     "datatables": {
       "main": "media/js/jquery.dataTables.min.js"
     },
