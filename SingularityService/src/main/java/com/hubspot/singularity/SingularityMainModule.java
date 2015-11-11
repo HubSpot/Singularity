@@ -72,9 +72,6 @@ import io.dropwizard.server.SimpleServerFactory;
 
 public class SingularityMainModule implements Module {
 
-  public static final String HOSTNAME_PROPERTY = "singularity.hostname";
-  public static final String HTTP_PORT_PROPERTY = "singularity.http.port";
-
   public static final String TASK_TEMPLATE = "task.template";
   public static final String REQUEST_IN_COOLDOWN_TEMPLATE = "request.in.cooldown.template";
   public static final String REQUEST_MODIFIED_TEMPLATE = "request.modified.template";

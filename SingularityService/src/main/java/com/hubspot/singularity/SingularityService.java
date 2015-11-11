@@ -6,14 +6,11 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.google.common.collect.ImmutableList;
-import com.google.inject.Binder;
 import com.google.inject.Module;
-import com.hubspot.dropwizard.guicier.BootstrapAwareModule;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.singularity.bundles.CorsBundle;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.palominolabs.metrics.guice.MetricsInstrumentationModule;
 
 import io.dropwizard.Application;
 import io.dropwizard.Bundle;
@@ -38,12 +35,6 @@ public class SingularityService<T extends SingularityConfiguration> extends Appl
 
     final GuiceBundle<SingularityConfiguration> guiceBundle = GuiceBundle.defaultBuilder(SingularityConfiguration.class)
         .modules(new SingularityServiceModule())
-        .modules(new BootstrapAwareModule() {
-          @Override
-          protected void configure(Binder binder, Bootstrap<?> bootstrap) {
-            binder.install(new MetricsInstrumentationModule(bootstrap.getMetricRegistry()));
-          }
-        })
         .modules(additionalModules)
         .build();
     bootstrap.addBundle(guiceBundle);
