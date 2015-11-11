@@ -55,7 +55,12 @@ Contents = React.createClass
     # Or the top?
     else if $(node).scrollTop() is 0
       @stopTailingPoll()
-      @props.fetchPrevious()
+      @setState
+        isLoading: true 
+      @props.fetchPrevious(=>
+        @setState
+          isLoading: false
+      )
     else
       @stopTailingPoll()
 

@@ -39,13 +39,13 @@ IndividualTail = React.createClass
   fetchNext: ->
     @props.logLines.fetchNext()
 
-  fetchPrevious: ->
+  fetchPrevious: (callback) ->
     @prevLines = @props.logLines.toJSON().length
     @props.logLines.fetchPrevious().done =>
       newLines = @props.logLines.toJSON().length - @prevLines
       console.log 'new', newLines
-      if newLines > 2
-        @scrollToLine(newLines - 1)
+      @scrollToLine(newLines)
+      callback()
 
   fetchFromStart: ->
     @props.logLines.fetchFromStart()
