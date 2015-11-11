@@ -41,7 +41,6 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityDeployHistory;
-import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestWithState;
@@ -262,7 +261,7 @@ public class S3LogResource extends AbstractHistoryResource {
   private SingularityRequestWithState getRequest(final String requestId) {
     final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(requestId);
     checkNotFound(maybeRequest.isPresent(), "RequestId %s does not exist", requestId);
-    authorizationHelper.checkForAuthorization(maybeRequest.get().getRequest(), Optional.<SingularityRequest>absent(), user, SingularityAuthorizationScope.READ);
+    authorizationHelper.checkForAuthorization(maybeRequest.get().getRequest(), user, SingularityAuthorizationScope.READ);
     return maybeRequest.get();
   }
 

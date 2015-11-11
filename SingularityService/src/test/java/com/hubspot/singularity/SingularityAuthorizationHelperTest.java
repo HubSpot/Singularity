@@ -173,20 +173,6 @@ public class SingularityAuthorizationHelperTest {
     authorizationHelper.checkAdminAuthorization(USER_GROUP_ADMIN);
   }
 
-  @Test(expected = WebApplicationException.class)
-  public void testCheckRequiredAuthorizationThrowsOnForbidden() {
-    final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig(ImmutableSet.of("a"), ImmutableSet.of("admin"), Collections.<String>emptySet()));
-
-    authorizationHelper.checkRequiredAuthorization(USER_GROUP_B);
-  }
-
-  @Test
-  public void testCheckRequiredAuthorizationDoesntThrowOnAuthorized() {
-    final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig(ImmutableSet.of("a"), ImmutableSet.of("admin"), Collections.<String>emptySet()));
-
-    authorizationHelper.checkRequiredAuthorization(USER_GROUP_A);
-  }
-
   @Test
   public void testCheckForAuthorizationByTaskIdDoesntThrowOnAuthorized() {
     final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig(Collections.<String>emptySet(), ImmutableSet.of("admin"), Collections.<String>emptySet()));
@@ -205,27 +191,27 @@ public class SingularityAuthorizationHelperTest {
   public void testCheckForAuthorizationDoesntThrowOnAuthorized() {
     final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig(Collections.<String>emptySet(), ImmutableSet.of("admin"), Collections.<String>emptySet()));
 
-    authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A, Optional.<SingularityRequest>absent(), USER_GROUP_A, SingularityAuthorizationScope.READ);
+    authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A, USER_GROUP_A, SingularityAuthorizationScope.READ);
   }
 
   @Test(expected = WebApplicationException.class)
   public void testCheckForAuthorizationThrowsOnForbidden() {
     final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig(Collections.<String>emptySet(), ImmutableSet.of("admin"), Collections.<String>emptySet()));
 
-    authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A, Optional.<SingularityRequest>absent(), USER_GROUP_B, SingularityAuthorizationScope.READ);
+    authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A, USER_GROUP_B, SingularityAuthorizationScope.READ);
   }
 
   @Test
   public void testCheckForAuthorizationDoesntThrowOnValidChange() {
     final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig(Collections.<String>emptySet(), ImmutableSet.of("admin"), Collections.<String>emptySet()));
 
-    authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A_CHANGED_TO_B, Optional.of(REQUEST_WITH_GROUP_A), USER_GROUP_AB, SingularityAuthorizationScope.READ);
+    authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A_CHANGED_TO_B, USER_GROUP_AB, SingularityAuthorizationScope.READ);
   }
 
   @Test(expected = WebApplicationException.class)
   public void testCheckForAuthorizationThrowsOnForbiddenChange() {
     final SingularityAuthorizationHelper authorizationHelper = buildAuthorizationHelper(buildAuthEnabledConfig(Collections.<String>emptySet(), ImmutableSet.of("admin"), Collections.<String>emptySet()));
 
-    authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A_CHANGED_TO_B, Optional.of(REQUEST_WITH_GROUP_A), USER_GROUP_A, SingularityAuthorizationScope.READ);
+    authorizationHelper.checkForAuthorization(REQUEST_WITH_GROUP_A_CHANGED_TO_B, USER_GROUP_A, SingularityAuthorizationScope.READ);
   }
 }

@@ -32,7 +32,6 @@ import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
@@ -121,7 +120,7 @@ public class TaskResource {
 
     checkNotFound(!taskRequestList.isEmpty(), "Couldn't find: " + pendingTaskIdStr);
 
-    authorizationHelper.checkForAuthorization(taskRequestList.get(0).getRequest(), Optional.<SingularityRequest>absent(), user, SingularityAuthorizationScope.READ);
+    authorizationHelper.checkForAuthorization(taskRequestList.get(0).getRequest(), user, SingularityAuthorizationScope.READ);
 
     return taskRequestList.get(0);
   }

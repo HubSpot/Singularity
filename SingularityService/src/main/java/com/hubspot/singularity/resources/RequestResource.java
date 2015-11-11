@@ -130,7 +130,10 @@ public class RequestResource extends AbstractRequestResource {
 
     SingularityRequestDeployHolder deployHolder = getDeployHolder(request.getId());
 
-    authorizationHelper.checkForAuthorization(request, maybeOldRequest, user, SingularityAuthorizationScope.WRITE);
+    if (maybeOldRequest.isPresent()) {
+      authorizationHelper.checkForAuthorization(maybeOldRequest.get(), user, SingularityAuthorizationScope.WRITE);
+    }
+    authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
 
     SingularityRequest newRequest = validator.checkSingularityRequest(request, maybeOldRequest, deployHolder.getActiveDeploy(), deployHolder.getPendingDeploy(), user);
 
@@ -188,7 +191,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiParam("Username of the person requesting the bounce") @QueryParam("user") Optional<String> queryUser) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
-    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user, SingularityAuthorizationScope.WRITE);
+    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
 
     checkBadRequest(requestWithState.getRequest().isLongRunning(), "Can not bounce a %s request (%s)", requestWithState.getRequest().getRequestType(), requestWithState);
 
@@ -217,7 +220,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiParam("Additional command line arguments to append to the task") List<String> commandLineArgs) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
-    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user, SingularityAuthorizationScope.WRITE);
+    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
 
     checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to run now (it must be manually unpaused first)", requestWithState.getRequest().getId());
 
@@ -256,7 +259,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiParam("Pause Request Options") Optional<SingularityPauseRequest> pauseRequest) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
-    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user, SingularityAuthorizationScope.WRITE);
+    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
 
     checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to pause (it must be manually unpaused first)", requestWithState.getRequest().getId());
 
@@ -290,7 +293,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiParam("Username of the person requesting the unpause") @QueryParam("user") Optional<String> queryUser) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
-    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user, SingularityAuthorizationScope.WRITE);
+    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
 
     checkConflict(requestWithState.getState() == RequestState.PAUSED, "Request %s is not in PAUSED state, it is in %s", requestId, requestWithState.getState());
 
@@ -314,7 +317,7 @@ public class RequestResource extends AbstractRequestResource {
   public SingularityRequestParent exitCooldown(@PathParam("requestId") String requestId, @QueryParam("user") Optional<String> queryUser) {
     final SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
-    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user, SingularityAuthorizationScope.WRITE);
+    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
 
     checkConflict(requestWithState.getState() == RequestState.SYSTEM_COOLDOWN, "Request %s is not in SYSTEM_COOLDOWN state, it is in %s", requestId, requestWithState.getState());
 
@@ -437,7 +440,7 @@ public class RequestResource extends AbstractRequestResource {
       @ApiParam("Username of the person requesting the delete") @QueryParam("user") Optional<String> queryUser) {
     SingularityRequest request = fetchRequest(requestId);
 
-    authorizationHelper.checkForAuthorization(request, Optional.<SingularityRequest>absent(), user, SingularityAuthorizationScope.WRITE);
+    authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
 
     requestManager.deleteRequest(request, queryUser);
 
@@ -466,7 +469,7 @@ public class RequestResource extends AbstractRequestResource {
     SingularityRequestDeployHolder deployHolder = getDeployHolder(newInstances.getId());
     SingularityRequest newRequest = oldRequest.toBuilder().setInstances(newInstances.getInstances()).build();
 
-    authorizationHelper.checkForAuthorization(newRequest, Optional.of(oldRequest), user, SingularityAuthorizationScope.WRITE);
+    authorizationHelper.checkForAuthorization(oldRequest, user, SingularityAuthorizationScope.WRITE);
 
     validator.checkSingularityRequest(newRequest, maybeOldRequest, deployHolder.getActiveDeploy(), deployHolder.getPendingDeploy(), user);
 

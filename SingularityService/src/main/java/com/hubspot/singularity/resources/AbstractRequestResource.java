@@ -7,7 +7,6 @@ import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityPendingDeploy;
-import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
@@ -38,7 +37,7 @@ public class AbstractRequestResource {
 
     checkNotFound(request.isPresent(), "Couldn't find request with id %s", requestId);
 
-    authorizationHelper.checkForAuthorization(request.get().getRequest(), Optional.<SingularityRequest>absent(), user, SingularityAuthorizationScope.READ);
+    authorizationHelper.checkForAuthorization(request.get().getRequest(), user, SingularityAuthorizationScope.READ);
 
     return request.get();
   }

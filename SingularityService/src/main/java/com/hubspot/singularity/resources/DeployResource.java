@@ -61,8 +61,6 @@ public class DeployResource extends AbstractRequestResource {
   @Path("/pending")
   @ApiOperation(response=SingularityPendingDeploy.class, responseContainer="List", value="Retrieve the list of current pending deploys")
   public Iterable<SingularityPendingDeploy> getPendingDeploys() {
-    authorizationHelper.checkRequiredAuthorization(user);
-
     return authorizationHelper.filterByAuthorizedRequests(user, deployManager.getPendingDeploys(), SingularityTransformHelpers.PENDING_DEPLOY_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
@@ -84,7 +82,7 @@ public class DeployResource extends AbstractRequestResource {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
     SingularityRequest request = requestWithState.getRequest();
 
-    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user, SingularityAuthorizationScope.WRITE);
+    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
 
     if (!deployRequest.isUnpauseOnSuccessfulDeploy()) {
       checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to deploy (it must be manually unpaused first)", requestWithState.getRequest().getId());
@@ -125,7 +123,7 @@ public class DeployResource extends AbstractRequestResource {
       @ApiParam(required=false, value="The user which executes the delete request.") @QueryParam("user") Optional<String> queryUser) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
-    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), Optional.<SingularityRequest>absent(), user, SingularityAuthorizationScope.WRITE);
+    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
 
     Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestWithState.getRequest().getId());
 
