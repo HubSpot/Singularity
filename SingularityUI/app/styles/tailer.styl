@@ -31,6 +31,10 @@
         .btn
             margin 2px
 
+        ul
+            max-height calc(100vh - 150px)
+            overflow auto
+
     .disabled
       color #AAA
 
@@ -215,13 +219,6 @@
     top 0
     width 100%
     overflow-x auto !important
-
-.settings-dropdown
-
-    &>li.checked>a::after
-            content "✓"
-            position absolute
-            left 5px
 
 .loading-spinner
   position absolute

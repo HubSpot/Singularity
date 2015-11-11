@@ -19,7 +19,7 @@ Contents = React.createClass
     $(window).on 'resize orientationChange', @handleResize
 
   componentDidMount: ->
-    @scrollNode = @refs.scrollContainer.getDOMNode()
+    @scrollNode = ReactDOM.findDOMNode(@refs.scrollContainer)
     @currentOffset = parseInt @props.offset
     @handleResize()
 
@@ -29,7 +29,7 @@ Contents = React.createClass
       if !@props.offset
         @scrollToBottom()
     if $(@scrollNode).scrollTop() is 0
-      @setScrollHeight(20)
+      # @setScrollHeight(20)
     else if @tailingPoll
       @scrollToBottom()
 
@@ -115,19 +115,20 @@ Contents = React.createClass
           highlight={@handleHighlight} />
       )
 
+  lineRenderer: (index, key) ->
+    @state.linesToRender[index]
+
   render: ->
     <div className="contents-container">
-      <div className="tail-contents">
+      <div className="tail-contents" ref="scrollContainer">
         {@renderError()}
-        <Infinite
-          ref="scrollContainer"
+        <ReactList
           className="infinite"
-          containerHeight={@state.contentsHeight || 1}
-          preloadAdditionalHeight={@state.contentsHeight * 2.5}
-          elementHeight={20}
-          handleScroll={_.throttle @handleScroll, 200}>
-          {@state.linesToRender}
-        </Infinite>
+          itemRenderer={@lineRenderer}
+          length={@state.linesToRender.length}
+          type="uniform"
+          onScroll={_.throttle @handleScroll, 200}>
+        </ReactList>
       </div>
       <Loader isVisable={@state.isLoading} text={@state.loadingText} />
     </div>
