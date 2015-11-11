@@ -15,21 +15,20 @@ Contents = React.createClass
       loadingText: ''
       linesToRender: []
 
-  componentWillMount: ->
-    $(window).on 'resize orientationChange', @handleResize
-
   componentDidMount: ->
     @scrollNode = ReactDOM.findDOMNode(@refs.scrollContainer)
     @currentOffset = parseInt @props.offset
-    @handleResize()
 
   componentDidUpdate: (prevProps, prevState) ->
     # Scroll to the appropriate place
     if @state.linesToRender.length > 0 and prevState.linesToRender.length is 0
       if !@props.offset
         @scrollToBottom()
-    if $(@scrollNode).scrollTop() is 0
-      # @setScrollHeight(20)
+      else
+        @scrollToLine(0)
+    # if $(@scrollNode).scrollTop() is 0
+    #   # console.log @props.isMoreToFetchAtBeginning()
+    #   # @scrollToLine(1)
     else if @tailingPoll
       @scrollToBottom()
 
@@ -44,19 +43,12 @@ Contents = React.createClass
       @setState
         linesToRender: @renderLines()
 
-  componentWillUnmount: ->
-    $(window).off 'resize orientationChange', @handleResize
-
   # ============================================================================
   # Event Handlers                                                             |
   # ============================================================================
 
-  handleResize: ->
-    height = $("#tail-#{@props.taskId.replace( /(:|\.|\[|\]|,)/g, "\\$1" )}").height() - 20
-    @setState
-      contentsHeight: height
-
-  handleScroll: (node) ->
+  handleScroll: ->
+    node = @scrollNode
     # Are we at the bottom?
     if $(node).scrollTop() + $(node).innerHeight() >= node.scrollHeight
       @startTailingPoll(node)
@@ -78,7 +70,7 @@ Contents = React.createClass
     @setState
       isLoading: true
       loadingText: 'Tailing'
-    @props.fetchNext()
+    # @props.fetchNext()
     @tailingPoll = setInterval =>
       @props.fetchNext()
     , 2000
@@ -118,16 +110,23 @@ Contents = React.createClass
   lineRenderer: (index, key) ->
     @state.linesToRender[index]
 
+  getLineHeight: (index) ->
+    if index is 0
+      return 40
+    else
+      return 20
+
   render: ->
     <div className="contents-container">
-      <div className="tail-contents" ref="scrollContainer">
+      <div className="tail-contents" ref="scrollContainer" onScroll={_.throttle @handleScroll, 200}>
         {@renderError()}
         <ReactList
           className="infinite"
+          ref="lines"
           itemRenderer={@lineRenderer}
+          itemSizeGetter={@getLineHeight}
           length={@state.linesToRender.length}
-          type="uniform"
-          onScroll={_.throttle @handleScroll, 200}>
+          type="uniform">
         </ReactList>
       </div>
       <Loader isVisable={@state.isLoading} text={@state.loadingText} />
@@ -137,20 +136,24 @@ Contents = React.createClass
   # Utility Methods                                                            |
   # ============================================================================
 
-  setScrollHeight: (height) ->
+  scrollToLine: (line) ->
+    console.log 'scrollto ' + line
     # console.log 'set', height, arguments.callee.caller
-    $(@scrollNode).scrollTop(height);
+    @refs.lines.scrollTo(line)
 
   scrollToTop: ->
+    console.log 'top'
     @stopTailingPoll()
     @setState
       isLoading: true
     @props.fetchFromStart().done =>
-      @setScrollHeight(0)
+      @refs.lines.scrollTo(0)
       @setState
         isLoading: false
 
   scrollToBottom: ->
-    @setScrollHeight(@scrollNode.scrollHeight)
+    console.log 'bot'
+    # console.log @state.linesToRender.length
+    @refs.lines.scrollTo(@state.linesToRender.length)
 
 module.exports = Contents

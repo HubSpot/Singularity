@@ -8,9 +8,6 @@ IndividualTail = React.createClass
   mixins: [Backbone.React.Component.mixin]
 
   componentWillMount: ->
-    # Make sure its up to data-toggle
-    @props.logLines.fetchNext()
-
     # Get the task info
     @task = new TaskHistory {taskId: @props.taskId}
     @startTaskStatusPoll()
@@ -48,19 +45,22 @@ IndividualTail = React.createClass
       newLines = @props.logLines.toJSON().length - @prevLines
       console.log 'new', newLines
       if newLines > 2
-        @setContentScroll((newLines) * 20)
+        @scrollToLine(newLines - 1)
 
   fetchFromStart: ->
     @props.logLines.fetchFromStart()
 
-  setContentScroll: (position) ->
-    @refs.contents.setScrollHeight(position)
+  scrollToLine: (line) ->
+    @refs.contents.scrollToLine(line)
 
   scrollToTop: ->
     @refs.contents.scrollToTop()
 
   scrollToBottom: ->
     @refs.contents.scrollToBottom()
+
+  isMoreToFetchAtBeginning: ->
+    @props.logLines.state.get('moreToFetchAtBeginning')
 
   render: ->
     <div>
@@ -81,6 +81,7 @@ IndividualTail = React.createClass
         fetchNext={@fetchNext}
         fetchPrevious={@fetchPrevious}
         fetchFromStart={@fetchFromStart}
+        isMoreToFetchAtBeginning={@isMoreToFetchAtBeginning}
         taskState={_.last(@state.task.taskUpdates)?.taskState} />
     </div>
 
