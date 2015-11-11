@@ -11,6 +11,7 @@ import javax.ws.rs.core.MediaType;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityState;
+import com.hubspot.singularity.SingularityTaskOfferResult;
 import com.hubspot.singularity.data.StateManager;
 import com.hubspot.singularity.SingularityOfferState;
 import com.wordnik.swagger.annotations.Api;
@@ -52,7 +53,7 @@ public class StateResource {
   @GET
   @Path("/offers")
   @ApiOperation("Retrieve the status of the most recently processed offers and scheduled tasks")
-  public SingularityOfferState getOfferState() {
-    return stateManager.getOfferState();
+  public List<SingularityTaskOfferResult> getOfferState() {
+    return stateManager.getOfferState().getTaskOfferResults();
   }
 }
