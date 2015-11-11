@@ -1,4 +1,5 @@
 @import colors
+@import nib
 
 .navbar
 
@@ -7,7 +8,7 @@
 
 // Red
 body.env-color-red .navbar
-  background-color $nav-red
+  background linear-gradient(top, $nav-red-start, $nav-red-end)
 
   li.dropdown ul a
     color $base-text
@@ -29,7 +30,7 @@ body.env-color-red .navbar
 
 // Yellow
 body.env-color-yellow .navbar
-  background-color $nav-yellow
+  background linear-gradient(top, $nav-yellow-start, $nav-yellow-end)
 
   .global-search-button span, .navbar-brand
     color $base-text
@@ -43,7 +44,7 @@ body.env-color-yellow .navbar
 
 // Green
 body.env-color-green .navbar
-  background-color $nav-green
+  background linear-gradient(top, $nav-green-start, $nav-green-end)
 
   li.dropdown ul a
     color $base-text
@@ -65,7 +66,7 @@ body.env-color-green .navbar
 
 // Blue
 body.env-color-blue .navbar
-  background-color $nav-blue
+  background linear-gradient(top, $nav-blue-start, $nav-blue-end)
 
   li.dropdown ul a
     color $base-text
