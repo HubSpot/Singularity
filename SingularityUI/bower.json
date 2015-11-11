@@ -36,7 +36,8 @@
     "sortable": "~0.6.0",
     "datatables": "~1.10.7",
     "datatables-bootstrap3-plugin": "~0.4.0",
-    "select2": "~3.5.2"
+    "select2": "~3.5.2",
+    "fuse.js": "~1.2.2"
   },
   "resolutions": {
     "backbone": "~1.1.2",
@@ -63,8 +64,8 @@
     },
     "sortable": {
       "main": [
-          "js/sortable.min.js",
-          "css/sortable-theme-bootstrap.css"
+        "js/sortable.min.js",
+        "css/sortable-theme-bootstrap.css"
       ]
     }
   }
