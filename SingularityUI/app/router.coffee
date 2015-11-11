@@ -16,6 +16,8 @@ TailController = require 'controllers/Tail'
 RacksController = require 'controllers/Racks'
 SlavesController = require 'controllers/Slaves'
 
+OffersController = require 'controllers/Offers'
+
 NotFoundController = require 'controllers/NotFound'
 
 DeployDetailController = require 'controllers/DeployDetail'
@@ -55,6 +57,8 @@ class Router extends Backbone.Router
 
         'slaves/:state(/)': 'slaves'
         'slaves(/)': 'slaves'
+
+        'offers(/)': 'offers'
 
         '*anything': 'notFound'
 
@@ -97,6 +101,9 @@ class Router extends Backbone.Router
 
     slaves: (state = 'all') ->
         app.bootstrapController new SlavesController {state}
+
+    offers: ->
+        app.bootstrapController new OffersController
 
     notFound: ->
         app.bootstrapController new NotFoundController
