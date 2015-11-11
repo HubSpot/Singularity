@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.Timer.Context;
+import com.github.rholder.retry.RetryException;
 import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
@@ -179,6 +180,10 @@ public class SingularityS3Uploader implements Closeable {
           metrics.error();
           LOG.warn("{} Couldn't upload {} due to {} ({}) - {}", logIdentifier, file, se.getErrorCode(), se.getResponseCode(), se.getErrorMessage(), se);
           exceptionNotifier.notify(se, ImmutableMap.of("logIdentifier", logIdentifier, "file", file.toString(), "errorCode", se.getErrorCode(), "responseCode", Integer.toString(se.getResponseCode()), "errorMessage", se.getErrorMessage()));
+        } catch (RetryException re) {
+          metrics.error();
+          LOG.warn("{} Couldn't upload or delete {}", logIdentifier, file, re);
+          exceptionNotifier.notify(re.getCause(), ImmutableMap.of("logIdentifier", logIdentifier, "file", file.toString(), "failedAttempts", Integer.toString(re.getNumberOfFailedAttempts())));
         } catch (Exception e) {
           metrics.error();
           LOG.warn("{} Couldn't upload or delete {}", logIdentifier, file, e);
@@ -235,7 +240,6 @@ public class SingularityS3Uploader implements Closeable {
         }
       } catch (Exception e) {
         LOG.warn("Exception uploading {}", file, e);
-        exceptionNotifier.notify(e, ImmutableMap.of("file", file.toString()));
         throw e;
       }
 
