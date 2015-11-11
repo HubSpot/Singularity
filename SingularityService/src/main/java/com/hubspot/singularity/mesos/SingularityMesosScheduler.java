@@ -197,7 +197,9 @@ public class SingularityMesosScheduler implements Scheduler {
         }
       }
 
-      stateManager.updateOfferState(offerState);
+      if (!offerState.getTaskOfferResults().isEmpty()) {
+        stateManager.updateOfferState(offerState);
+      }
 
     } catch (Throwable t) {
       LOG.error("Received fatal error while accepting offers - will decline all available offers", t);
