@@ -6,7 +6,6 @@ import java.util.Locale;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -41,7 +40,6 @@ public class UIConfiguration {
   private String title = "Singularity";
 
   @JsonProperty
-  @Pattern( regexp = "^|#[0-9a-fA-F]{6}$" )
   private String navColor = "";
 
   @JsonProperty
