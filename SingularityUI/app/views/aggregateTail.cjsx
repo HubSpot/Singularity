@@ -8,7 +8,7 @@ class AggregateTailView extends View
       window.addEventListener 'viewChange', @handleViewChange
 
     handleViewChange: =>
-      unmounted = React.unmountComponentAtNode @el
+      unmounted = ReactDOM.unmountComponentAtNode @el
       if unmounted
         window.removeEventListener 'viewChange', @handleViewChange
 
@@ -19,7 +19,7 @@ class AggregateTailView extends View
       $('html, body').css 'min-height', '0px'
       $('#global-zeroclipboard-html-bridge').css 'top', '1px'
 
-      React.render(
+      ReactDOM.render(
         <AggregateTail
           requestId={@requestId}
           path={@path}
