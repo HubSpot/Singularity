@@ -24,6 +24,8 @@ class TailView extends View
         @listenTo @collection.state, 'change:moreToFetch', @showOrHideMoreToFetchSpinners
         @listenTo @collection.state, 'change:moreToFetchAtBeginning', @showOrHideMoreToFetchSpinners
 
+        @listenTo @model, 'sync', @renderLinks
+
         # For the visual loading indicator thing
         @listenTo @collection, 'request', =>
             @$el.addClass 'fetching-data'
@@ -46,7 +48,7 @@ class TailView extends View
 
     render: =>
         breadcrumbs = utils.pathToBreadcrumbs @path
-        @$el.html @template {@taskId, @filename, breadcrumbs, ajaxError: @ajaxError.toJSON()}
+        @$el.html @template {@taskId, @filename, breadcrumbs, ajaxError: @ajaxError.toJSON(), taskHistory: @model.toJSON()}
 
         @$contents = @$ '.tail-contents'
         @$linesWrapper = @$contents.children('.lines-wrapper')
@@ -90,6 +92,16 @@ class TailView extends View
                 lines = @collection.filter (line) => line.get('offset') > lastLineOffset
                 @$linesWrapper.append @linesTemplate
                     lines: _.pluck lines, 'attributes'
+
+    renderLinks: ->
+        requestLink = @$('#request-link')
+        deployLink = @$('#deploy-link')
+        requestId = @model.toJSON().task.taskId.requestId
+        deployId = @model.toJSON().task.taskId.deployId
+        requestLink.text requestId
+        requestLink.attr 'href', "#{ config.appRoot }/request/#{ requestId }"
+        deployLink.text deployId
+        deployLink.attr 'href', "#{ config.appRoot }/request/#{ requestId }/deploy/#{ deployId }"
 
     scrollToTop:    => @$contents.scrollTop 0
     scrollToBottom: =>

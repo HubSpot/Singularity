@@ -4,6 +4,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
@@ -28,17 +29,21 @@ public class JsonObjectFileHelper {
 
     log.info("Reading {}", file);
 
-    byte[] bytes = Files.readAllBytes(file);
-
-    log.trace("Read {} bytes from {} in {}", bytes.length, file, JavaUtils.duration(start));
-
-    if (bytes.length == 0) {
-      return Optional.absent();
-    }
+    byte[] bytes = new byte[0];
 
     try {
+      bytes = Files.readAllBytes(file);
+
+      log.trace("Read {} bytes from {} in {}", bytes.length, file, JavaUtils.duration(start));
+
+      if (bytes.length == 0) {
+        return Optional.absent();
+      }
+
       T object = objectMapper.readValue(bytes, clazz);
       return Optional.of(object);
+    } catch (NoSuchFileException nsfe) {
+      log.warn("File {} does not exist", file);
     } catch (IOException e) {
       log.warn("File {} is not a valid {} ({})", file, clazz.getSimpleName(), new String(bytes, UTF_8), e);
     }

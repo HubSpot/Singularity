@@ -2,7 +2,6 @@ package com.hubspot.singularity.s3.base.config;
 
 import static com.hubspot.mesos.JavaUtils.obfuscateValue;
 
-import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.Min;
@@ -19,17 +18,6 @@ import com.hubspot.singularity.runner.base.jackson.Obfuscate;
 
 @Configuration(filename = "/etc/singularity.s3base.yaml", consolidatedField = "s3")
 public class SingularityS3Configuration extends BaseRunnerConfiguration {
-  public static final String ARTIFACT_CACHE_DIRECTORY = "artifact.cache.directory";
-
-  public static final String S3_ACCESS_KEY = "s3.access.key";
-  public static final String S3_SECRET_KEY = "s3.secret.key";
-
-  public static final String S3_CHUNK_SIZE = "s3.downloader.chunk.size";
-  public static final String S3_DOWNLOAD_TIMEOUT_MILLIS = "s3.downloader.timeout.millis";
-
-  public static final String LOCAL_DOWNLOAD_HTTP_PORT = "s3.downloader.http.port";
-  public static final String LOCAL_DOWNLOAD_HTTP_DOWNLOAD_PATH = "s3.downloader.http.download.path";
-
   @NotEmpty
   @DirectoryExists
   @JsonProperty
@@ -38,12 +26,12 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
   @NotNull
   @Obfuscate
   @JsonProperty
-  private String s3AccessKey = "";
+  private Optional<String> s3AccessKey = Optional.absent();
 
   @NotNull
   @Obfuscate
   @JsonProperty
-  private String s3SecretKey = "";
+  private Optional<String> s3SecretKey = Optional.absent();
 
   @Min(1)
   @JsonProperty
@@ -81,19 +69,19 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
     this.artifactCacheDirectory = artifactCacheDirectory;
   }
 
-  public String getS3AccessKey() {
+  public Optional<String> getS3AccessKey() {
     return s3AccessKey;
   }
 
-  public void setS3AccessKey(String s3AccessKey) {
+  public void setS3AccessKey(Optional<String> s3AccessKey) {
     this.s3AccessKey = s3AccessKey;
   }
 
-  public String getS3SecretKey() {
+  public Optional<String> getS3SecretKey() {
     return s3SecretKey;
   }
 
-  public void setS3SecretKey(String s3SecretKey) {
+  public void setS3SecretKey(Optional<String> s3SecretKey) {
     this.s3SecretKey = s3SecretKey;
   }
 
@@ -158,36 +146,5 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
             ", localDownloadHttpPort=" + localDownloadHttpPort +
             ", localDownloadPath='" + localDownloadPath + '\'' +
             ']';
-  }
-
-  @Override
-  public void updateFromProperties(Properties properties) {
-    if (properties.containsKey(ARTIFACT_CACHE_DIRECTORY)) {
-      setArtifactCacheDirectory(properties.getProperty(ARTIFACT_CACHE_DIRECTORY));
-    }
-
-    if (properties.containsKey(S3_ACCESS_KEY)) {
-      setS3AccessKey(properties.getProperty(S3_ACCESS_KEY));
-    }
-
-    if (properties.containsKey(S3_SECRET_KEY)) {
-      setS3SecretKey(properties.getProperty(S3_SECRET_KEY));
-    }
-
-    if (properties.containsKey(S3_CHUNK_SIZE)) {
-      setS3ChunkSize(Long.parseLong(properties.getProperty(S3_CHUNK_SIZE)));
-    }
-
-    if (properties.containsKey(S3_DOWNLOAD_TIMEOUT_MILLIS)) {
-      setS3DownloadTimeoutMillis(Long.parseLong(properties.getProperty(S3_DOWNLOAD_TIMEOUT_MILLIS)));
-    }
-
-    if (properties.containsKey(LOCAL_DOWNLOAD_HTTP_DOWNLOAD_PATH)) {
-      setLocalDownloadPath(properties.getProperty(LOCAL_DOWNLOAD_HTTP_DOWNLOAD_PATH));
-    }
-
-    if (properties.containsKey(LOCAL_DOWNLOAD_HTTP_PORT)) {
-      setLocalDownloadHttpPort(Integer.parseInt(properties.getProperty(LOCAL_DOWNLOAD_HTTP_PORT)));
-    }
   }
 }

@@ -37,7 +37,6 @@ public class SingularityRunnerBaseModule extends AbstractModule {
   public static final String YAML = "yaml";
   public static final String OBFUSCATED_YAML = "obfuscated.yaml";
   public static final String HOST_NAME_PROPERTY = "singularity.host.name";
-  public static final String HOST_ADDRESS_PROPERTY = "singularity.host.address";
   public static final String CONSOLIDATED_CONFIG_FILENAME = "consolidated.config.filename";
 
   public static final String CONFIG_PROPERTY = "singularityConfigFilename";

@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -41,6 +42,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.runner.base.config.MissingConfigException;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
@@ -57,6 +59,7 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   private static final Logger LOG = LoggerFactory.getLogger(SingularityS3UploaderDriver.class);
 
   private final SingularityRunnerBaseConfiguration baseConfiguration;
+  private final SingularityS3Configuration s3Configuration;
   private final SingularityS3UploaderConfiguration configuration;
   private final ScheduledExecutorService scheduler;
   private final Map<S3UploadMetadata, SingularityS3Uploader> metadataToUploader;
@@ -68,7 +71,6 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
   private final SingularityS3UploaderMetrics metrics;
   private final JsonObjectFileHelper jsonObjectFileHelper;
   private final ProcessUtils processUtils;
-  private final AWSCredentials defaultCredentials;
   private final String hostname;
   private final SingularityRunnerExceptionNotifier exceptionNotifier;
 
@@ -80,8 +82,8 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
     super(configuration.getPollForShutDownMillis(), Paths.get(baseConfiguration.getS3UploaderMetadataDirectory()), ImmutableList.of(StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE));
 
     this.baseConfiguration = baseConfiguration;
+    this.s3Configuration = s3Configuration;
     this.metrics = metrics;
-    this.defaultCredentials = new AWSCredentials(configuration.getS3AccessKey().or(s3Configuration.getS3AccessKey()), configuration.getS3SecretKey().or(s3Configuration.getS3SecretKey()));
 
     this.fileSystem = FileSystems.getDefault();
 
@@ -125,6 +127,13 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
   @Override
   public void startAndWait() {
+    if (!configuration.getS3AccessKey().or(s3Configuration.getS3AccessKey()).isPresent()) {
+      throw new MissingConfigException("s3AccessKey not set in any s3 configs!");
+    }
+    if (!configuration.getS3SecretKey().or(s3Configuration.getS3SecretKey()).isPresent()) {
+      throw new MissingConfigException("s3SecretKey not set in any s3 configs!");
+    }
+
     try {
       readInitialFiles();
     } catch (Throwable t) {
@@ -183,7 +192,9 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       runLock.unlock();
     }
 
-    future.cancel(false);
+    if (future != null) {
+      future.cancel(false);
+    }
 
     scheduler.shutdown();
     executorService.shutdown();
@@ -351,6 +362,8 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
       if (configuration.getS3BucketCredentials().containsKey(metadata.getS3Bucket())) {
         bucketCreds = Optional.of(configuration.getS3BucketCredentials().get(metadata.getS3Bucket()).toAWSCredentials());
       }
+
+      final AWSCredentials defaultCredentials = new AWSCredentials(configuration.getS3AccessKey().or(s3Configuration.getS3AccessKey()).get(), configuration.getS3SecretKey().or(s3Configuration.getS3SecretKey()).get());
 
       SingularityS3Uploader uploader = new SingularityS3Uploader(bucketCreds.or(defaultCredentials), metadata, fileSystem, metrics, filename, configuration, hostname, exceptionNotifier);
 

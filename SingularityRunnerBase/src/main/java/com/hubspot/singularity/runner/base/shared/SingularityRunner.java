@@ -9,6 +9,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
+import com.hubspot.singularity.runner.base.config.MissingConfigException;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -40,6 +41,9 @@ public class SingularityRunner {
       LOG.info("Exiting normally");
 
       System.exit(0);
+    } catch (MissingConfigException mce) {
+      LOG.error("Missing required configuration, exiting", mce);
+      System.exit(1);
     } catch (Throwable t) {
       LOG.error("Caught unexpected exception, exiting", t);
       exceptionNotifier.notify(t, Collections.<String, String>emptyMap());

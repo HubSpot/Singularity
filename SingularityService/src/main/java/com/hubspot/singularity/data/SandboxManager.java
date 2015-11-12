@@ -3,6 +3,7 @@ package com.hubspot.singularity.data;
 import java.net.ConnectException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.concurrent.ExecutionException;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -58,7 +59,11 @@ public class SandboxManager {
     } catch (ConnectException ce) {
       throw new SlaveNotFoundException(ce);
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      if (e.getCause().getClass() == ConnectException.class) {
+        throw new SlaveNotFoundException(e);
+      } else {
+        throw Throwables.propagate(e);
+      }
     }
   }
 
@@ -94,7 +99,11 @@ public class SandboxManager {
     } catch (ConnectException ce) {
       throw new SlaveNotFoundException(ce);
     } catch (Exception e) {
-      throw Throwables.propagate(e);
+      if (e.getCause().getClass() == ConnectException.class) {
+        throw new SlaveNotFoundException(e);
+      } else {
+        throw Throwables.propagate(e);
+      }
     }
   }
 }
