@@ -54,13 +54,14 @@ class TaskHistory extends Model
 
         taskHistory.isCleaning = _.last( taskHistory.taskUpdates ).taskState is 'TASK_CLEANING'
 
-        # Sort commands
-        taskHistory.shellCommandHistory.sort (a, b) =>
-            b.shellRequest.timestamp - a.shellRequest.timestamp
-        # Sort updates
-        for history in taskHistory.shellCommandHistory
-            history.shellUpdates = history.shellUpdates.sort (a, b) =>
-                b.timestamp - a.timestamp
+        if taskHistory.shellCommandHistory
+            # Sort commands
+            taskHistory.shellCommandHistory.sort (a, b) =>
+                b.shellRequest.timestamp - a.shellRequest.timestamp
+            # Sort updates
+            for history in taskHistory.shellCommandHistory
+                history.shellUpdates = history.shellUpdates.sort (a, b) =>
+                    b.timestamp - a.timestamp
 
         taskHistory.requestId = taskHistory.task.taskId.requestId
 
