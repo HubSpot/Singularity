@@ -13,6 +13,7 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityRequestHistory;
@@ -95,7 +96,7 @@ public class HistoryResource extends AbstractHistoryResource {
   public List<SingularityTaskIdHistory> getTaskHistoryForRequest(
       @ApiParam("Request ID to look up") @PathParam("requestId") String requestId) {
 
-    authorizationHelper.checkForAuthorizationByRequestId(requestId, user);
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
     List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForRequest(requestId);
 
     return taskHistoryHelper.getTaskHistoriesFor(taskManager, activeTaskIds);
@@ -115,7 +116,7 @@ public class HistoryResource extends AbstractHistoryResource {
   public List<SingularityTaskIdHistory> getActiveDeployTasks(
       @ApiParam("Request ID for deploy") @PathParam("requestId") String requestId,
       @ApiParam("Deploy ID") @PathParam("deployId") String deployId) {
-    authorizationHelper.checkForAuthorizationByRequestId(requestId, user);
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
     List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIdsForDeploy(requestId, deployId);
     return taskHistoryHelper.getTaskHistoriesFor(taskManager, activeTaskIds);
   }
@@ -131,7 +132,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
-    authorizationHelper.checkForAuthorizationByRequestId(requestId, user);
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
     SingularityDeployKey key = new SingularityDeployKey(requestId, deployId);
     return deployTaskHistoryHelper.getBlendedHistory(key, limitStart, limitCount);
   }
@@ -146,7 +147,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
-    authorizationHelper.checkForAuthorizationByRequestId(requestId, user);
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
     return taskHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount);
   }
@@ -161,7 +162,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
-    authorizationHelper.checkForAuthorizationByRequestId(requestId, user);
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
     return deployHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount);
   }
@@ -176,7 +177,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
 
-    authorizationHelper.checkForAuthorizationByRequestId(requestId, user);
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
     return requestHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount);
   }
@@ -193,7 +194,7 @@ public class HistoryResource extends AbstractHistoryResource {
 
     List<String> requestIds = historyManager.getRequestHistoryLike(requestIdLike, limitStart, limitCount);
 
-    return authorizationHelper.filterAuthorizedRequestIds(user, requestIds);  // TODO: will this screw up pagination?
+    return authorizationHelper.filterAuthorizedRequestIds(user, requestIds, SingularityAuthorizationScope.READ);  // TODO: will this screw up pagination?
   }
 
 }
