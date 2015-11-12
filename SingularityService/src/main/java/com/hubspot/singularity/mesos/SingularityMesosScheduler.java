@@ -58,6 +58,7 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 public class SingularityMesosScheduler implements Scheduler {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosScheduler.class);
+  private static final int KEEP_OFFER_DECISIONS_FOR_MINUTES = 5;
 
   private final Resources defaultResources;
   private final Resources defaultCustomExecutorResources;
@@ -145,7 +146,8 @@ public class SingularityMesosScheduler implements Scheduler {
 
     try {
       final List<SingularityTaskRequest> taskRequests = scheduler.getDueTasks();
-      final SingularityOfferState offerState = SingularityOfferState.emptyState();
+      final SingularityOfferState offerState = stateManager.getOfferState();
+      boolean shouldUpdateOfferState = !taskRequests.isEmpty();
 
       schedulerPriority.sortTaskRequestsInPriorityOrder(taskRequests);
 
@@ -197,7 +199,8 @@ public class SingularityMesosScheduler implements Scheduler {
         }
       }
 
-      if (!offerState.getTaskOfferResults().isEmpty()) {
+      if (shouldUpdateOfferState) {
+        offerState.trimOldData(KEEP_OFFER_DECISIONS_FOR_MINUTES);
         stateManager.updateOfferState(offerState);
       }
 

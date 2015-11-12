@@ -26,12 +26,12 @@
                     		<td>{{taskId.instanceNo}}</td>
                     		{{#if launchedOnHost}}
                     			<td>yes</td>
-                    			<td>Launched on {{launchedOnHost}} (offer: {{acceptedOfferId}})</td>
+                    			<td>Launched on <a href="{{appRoot}}/tasks/active/{{launchedOnHost}}">{{launchedOnHost}}</a> (offer: {{acceptedOfferId}})</td>
                     		{{else}}
                     		    <td>no</td>
                     		    <td>
                     		        {{#each offerDeclinedReasons}}
-                    		            {{@key}} : {{this}}
+                    		            <a href="{{appRoot}}/tasks/active/{{@key}}">{{@key}}</a> : {{this}}
                     		        {{else}}
                     		            No Offers
                     		        {{/each}}
