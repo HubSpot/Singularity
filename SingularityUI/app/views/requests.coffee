@@ -59,12 +59,18 @@ class RequestsView extends View
 
         # Only show requests that match the search query
         if @searchFilter
-            searchFilter = @searchFilter.toLowerCase().split("@")[0]
-            fuse = new Fuse(
-                requests
-                keys: ["request.id", "requestDeployState.activeDeploy.user", "request.owners"]
-                threshold: 0.4)
-            requests = fuse.search(searchFilter).reverse()
+            requests = _.filter requests, (request) =>
+                searchFilter = @searchFilter.toLowerCase().split("@")[0]
+                valuesToSearch = []
+
+                for user in request.request.owners ? []
+                  valuesToSearch.push(user.split("@")[0])
+
+                valuesToSearch.push(request.request.id)
+                valuesToSearch.push(request.requestDeployState?.activeDeploy?.user)
+
+                searchTarget = valuesToSearch.join("")
+                searchTarget.toLowerCase().indexOf(searchFilter) isnt -1
 
         # Only show requests that match the clicky filters
         if @state in @haveSubfilter and @subFilter isnt 'all'
