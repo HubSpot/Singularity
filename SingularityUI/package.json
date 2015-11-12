@@ -28,7 +28,7 @@
     "handlebars-brunch": "^1.9.1",
     "javascript-brunch": ">= 1.0 < 1.8",
     "less-brunch": "^1.7.2",
-    "react": "^0.14.2",
+    "react": "^0.14.1",
     "react-coffee-brunch": "^1.7.2",
     "stylus-brunch": ">= 1.0 < 1.8",
     "uglify-js-brunch": ">= 1.0 < 1.8"

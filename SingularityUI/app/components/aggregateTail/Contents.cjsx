@@ -15,46 +15,55 @@ Contents = React.createClass
       loadingText: ''
       linesToRender: []
 
+  componentWillMount: ->
+    $(window).on 'resize orientationChange', @handleResize
+
   componentDidMount: ->
-    @scrollNode = ReactDOM.findDOMNode(@refs.scrollContainer)
+    @scrollNode = @refs.scrollContainer.getDOMNode()
     @currentOffset = parseInt @props.offset
+    @handleResize()
 
   componentDidUpdate: (prevProps, prevState) ->
-    if @tailingPoll
+    # Scroll to the appropriate place
+    if @state.linesToRender.length > 0 and prevState.linesToRender.length is 0
+      if !@props.offset
+        @scrollToBottom()
+    if $(@scrollNode).scrollTop() is 0
+      @setScrollHeight(20)
+    else if @tailingPoll
       @scrollToBottom()
 
-    # Stop tailing if the task dies
+    # Start tailing automatically if we can't scroll
     if @props.taskState in Utils.TERMINAL_TASK_STATES
       @stopTailingPoll()
+    else if (0 < $('.line').length * 20 <= @state.contentsHeight) and !@tailingPoll
+      @startTailingPoll()
 
     # Update our loglines components only if needed
     if prevProps.logLines.length isnt @props.logLines.length
       @setState
         linesToRender: @renderLines()
 
+  componentWillUnmount: ->
+    $(window).off 'resize orientationChange', @handleResize
+
   # ============================================================================
   # Event Handlers                                                             |
   # ============================================================================
 
-  handleScroll: ->
-    node = @scrollNode
+  handleResize: ->
+    height = $("#tail-#{@props.taskId.replace( /(:|\.|\[|\]|,)/g, "\\$1" )}").height() - 20
+    @setState
+      contentsHeight: height
+
+  handleScroll: (node) ->
     # Are we at the bottom?
-    if $(node).scrollTop() + $(node).innerHeight() >= node.scrollHeight - 20
-      if @props.moreToFetch()
-        @props.fetchNext()
-      else
-        @startTailingPoll(node)
+    if $(node).scrollTop() + $(node).innerHeight() >= node.scrollHeight
+      @startTailingPoll(node)
     # Or the top?
     else if $(node).scrollTop() is 0
       @stopTailingPoll()
-      @setState
-        isLoading: true
-        loadingText: 'Fetching'
-      @props.fetchPrevious(=>
-        @setState
-          isLoading: false
-          loadingText: ''
-      )
+      @props.fetchPrevious()
     else
       @stopTailingPoll()
 
@@ -69,6 +78,7 @@ Contents = React.createClass
     @setState
       isLoading: true
       loadingText: 'Tailing'
+    @props.fetchNext()
     @tailingPoll = setInterval =>
       @props.fetchNext()
     , 2000
@@ -102,32 +112,22 @@ Contents = React.createClass
           key={i}
           index={i}
           highlighted={l.offset is @currentOffset}
-          highlight={@handleHighlight}
-          totalLines={@props.logLines.length} />
+          highlight={@handleHighlight} />
       )
-
-  lineRenderer: (index, key) ->
-    @state.linesToRender[index]
-
-  getLineHeight: (index) ->
-    if index in [0, @state.linesToRender.length]
-      return 40
-    else
-      return 20
 
   render: ->
     <div className="contents-container">
-      <div className="tail-contents" ref="scrollContainer" onScroll={_.throttle @handleScroll, 200}>
+      <div className="tail-contents">
         {@renderError()}
-        <ReactList
+        <Infinite
+          ref="scrollContainer"
           className="infinite"
-          ref="lines"
-          itemRenderer={@lineRenderer}
-          itemSizeGetter={@getLineHeight}
-          length={@state.linesToRender.length}
-          type="variable"
-          useTranslate3d={true}>
-        </ReactList>
+          containerHeight={@state.contentsHeight || 1}
+          preloadAdditionalHeight={@state.contentsHeight * 2.5}
+          elementHeight={20}
+          handleScroll={_.throttle @handleScroll, 200}>
+          {@state.linesToRender}
+        </Infinite>
       </div>
       <Loader isVisable={@state.isLoading} text={@state.loadingText} />
     </div>
@@ -136,13 +136,20 @@ Contents = React.createClass
   # Utility Methods                                                            |
   # ============================================================================
 
-  scrollToLine: (line) ->
-    @refs.lines.scrollTo(line)
+  setScrollHeight: (height) ->
+    # console.log 'set', height, arguments.callee.caller
+    $(@scrollNode).scrollTop(height);
 
   scrollToTop: ->
-    @refs.lines.scrollTo(0)
+    @stopTailingPoll()
+    @setState
+      isLoading: true
+    @props.fetchFromStart().done =>
+      @setScrollHeight(0)
+      @setState
+        isLoading: false
 
   scrollToBottom: ->
-    @refs.lines.scrollTo(@state.linesToRender.length)
+    @setScrollHeight(@scrollNode.scrollHeight)
 
 module.exports = Contents

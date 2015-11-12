@@ -7,11 +7,10 @@ TaskHistory = require '../../models/TaskHistory'
 IndividualTail = React.createClass
   mixins: [Backbone.React.Component.mixin]
 
-  # ============================================================================
-  # Lifecycle Methods                                                          |
-  # ============================================================================
-
   componentWillMount: ->
+    # Make sure its up to data-toggle
+    @props.logLines.fetchNext()
+
     # Get the task info
     @task = new TaskHistory {taskId: @props.taskId}
     @startTaskStatusPoll()
@@ -27,19 +26,9 @@ IndividualTail = React.createClass
       }
     });
 
-  componentDidMount: ->
-    if @props.offset?
-        @props.logLines.fetchOffset(@props.offset)
-    else
-        @props.logLines.fetchInitialData()
-
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@)
     @stopTaskStatusPoll()
-
-  # ============================================================================
-  # Event Handlers                                                             |
-  # ============================================================================
 
   startTaskStatusPoll: ->
     @task.fetch()
@@ -50,44 +39,28 @@ IndividualTail = React.createClass
   stopTaskStatusPoll: ->
     clearInterval @taskPoll
 
-  moreToFetch: ->
-    @props.logLines.state.get('moreToFetch')
-
   fetchNext: ->
-    _.defer(@props.logLines.fetchNext)
+    @props.logLines.fetchNext()
 
-  fetchPrevious: (callback) ->
+  fetchPrevious: ->
     @prevLines = @props.logLines.toJSON().length
-    _.defer( =>
-      @props.logLines.fetchPrevious().done =>
-        newLines = @props.logLines.toJSON().length - @prevLines
-        console.log 'new', newLines
-        if newLines > 0
-          @scrollToLine(newLines)
-        callback()
-    )
+    @props.logLines.fetchPrevious().done =>
+      newLines = @props.logLines.toJSON().length - @prevLines
+      console.log 'new', newLines
+      if newLines > 2
+        @setContentScroll((newLines) * 20)
 
-  scrollToLine: (line) ->
-    @refs.contents.scrollToLine(line)
+  fetchFromStart: ->
+    @props.logLines.fetchFromStart()
+
+  setContentScroll: (position) ->
+    @refs.contents.setScrollHeight(position)
 
   scrollToTop: ->
-    @refs.contents.stopTailingPoll()
-    if @props.logLines.getMinOffset() is 0
-      @refs.contents.scrollToTop()
-    else
-      @props.logLines.reset()
-      @props.logLines.fetchFromStart().done @refs.contents.scrollToTop
+    @refs.contents.scrollToTop()
 
   scrollToBottom: ->
-    if @props.logLines.state.get('moreToFetch') is true
-      @props.logLines.reset()
-      @props.logLines.fetchInitialData().done @refs.contents.scrollToBottom
-    else
-      @refs.contents.scrollToBottom()
-
-  # ============================================================================
-  # Rendering                                                                  |
-  # ============================================================================
+    @refs.contents.scrollToBottom()
 
   render: ->
     <div>
@@ -107,8 +80,8 @@ IndividualTail = React.createClass
         offset={@props.offset}
         fetchNext={@fetchNext}
         fetchPrevious={@fetchPrevious}
-        taskState={_.last(@state.task.taskUpdates)?.taskState}
-        moreToFetch={@moreToFetch} />
+        fetchFromStart={@fetchFromStart}
+        taskState={_.last(@state.task.taskUpdates)?.taskState} />
     </div>
 
 module.exports = IndividualTail

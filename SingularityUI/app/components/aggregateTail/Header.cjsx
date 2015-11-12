@@ -21,14 +21,15 @@ Header = React.createClass
         )
 
   renderListItems: ->
-    tasks = _.sortBy(@props.activeTasks, (t) => t.taskId.instanceNo).map (task, i) =>
-        taskId = task.id
-        <li key={i}>
-          <a onClick={() => @props.toggleViewingInstance(taskId)}>
-            <span className="glyphicon glyphicon-#{if taskId in @props.viewingInstances then 'check' else 'unchecked'}"></span>
-            <span> Instance {task.taskId.instanceNo}</span>
-          </a>
-        </li>
+    tasks = @props.activeTasks.map (task) =>
+      taskId = task.id
+      <li key={taskId}>
+        <a onClick={() => @props.toggleViewingInstance(taskId)}>
+          <span className="glyphicon glyphicon-#{if taskId in @props.viewingInstances then 'check' else 'unchecked'}"></span>
+          <span> Instance {task.taskId.instanceNo}</span>
+        </a>
+      </li>
+
     if tasks.length > 0
       return tasks
     else
