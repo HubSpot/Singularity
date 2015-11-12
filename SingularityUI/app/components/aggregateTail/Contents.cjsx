@@ -57,9 +57,11 @@ Contents = React.createClass
       @stopTailingPoll()
       @setState
         isLoading: true
+        loadingText: 'Fetching'
       @props.fetchPrevious(=>
         @setState
           isLoading: false
+          loadingText: ''
       )
     else
       @stopTailingPoll()
