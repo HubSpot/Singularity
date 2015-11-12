@@ -49,13 +49,14 @@ class LogLines extends Collection
         if @length > 0 then @last().getStartOffset() else 0
 
     fetchInitialData: =>
-        console.log 'initial'
+        # console.log 'initial'
         # When we request `read` without passing an offset, we get given
         # back just the end offset of the file
-        $.ajax
+        promise = $.ajax
             url: @url()
             data: {@path, length: @baseRequestLength}
-        .done (response) =>
+
+        promise.done (response) =>
             offset = response.offset - @baseRequestLength
             offset = orZero offset
             @ajaxError.set present: false
@@ -66,38 +67,41 @@ class LogLines extends Collection
                 length: @initialRequestLength
 
             @trigger 'initialdata'
-        .error (response) =>
+
+        promise.error (response) =>
             # If we get a 400, the file has likely not been generated
             # yet, so we'll pass a message to the view
             if response.status in [400, 404, 500]
                 app.caughtError()
                 @ajaxError.setFromErrorResponse response
 
+        promise
+
     fetchPrevious: ->
-        console.log 'prev'
+        # console.log 'prev'
         @fetch data:
             offset: orZero @getMinOffset() - @state.get('currentRequestLength')
 
     fetchNext: =>
-        console.log 'next'
+        # console.log 'next'
         @fetch data:
             offset: @getMaxOffset()
 
     fetchFromStart: =>
-        console.log 'start'
+        # console.log 'start'
         @fetch data:
             offset: 0
 
     fetchOffset: (offset) =>
-        console.log 'offset'
+        # console.log 'offset'
         @fetch data:
             offset: offset - 1
             done: => @trigger 'initialOffsetData'
 
     # Overwrite default fetch
     fetch: (params = {}) ->
-        if params is {}
-            console.log 'fetch default'
+        # if params is {}
+        #     console.log 'fetch default'
         defaultParams =
             remove: false
             data: _.extend {@path, length: @state.get('currentRequestLength')}, params.data

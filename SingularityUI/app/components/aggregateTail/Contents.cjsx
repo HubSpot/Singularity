@@ -21,15 +21,12 @@ Contents = React.createClass
 
   componentDidUpdate: (prevProps, prevState) ->
     # Scroll to the appropriate place
-    if @state.linesToRender.length > 0 and prevState.linesToRender.length is 0
-      if !@props.offset
-        @scrollToBottom()
-      else
-        @scrollToLine(0)
-    # if $(@scrollNode).scrollTop() is 0
-    #   # console.log @props.isMoreToFetchAtBeginning()
-    #   # @scrollToLine(1)
-    else if @tailingPoll
+    # if @state.linesToRender.length > 0 and prevState.linesToRender.length is 0
+    #   if !@props.offset
+    #     @scrollToBottom()
+    #   else
+    #     @scrollToLine(0)
+    if @tailingPoll
       @scrollToBottom()
 
     # Start tailing automatically if we can't scroll
@@ -133,7 +130,8 @@ Contents = React.createClass
           itemRenderer={@lineRenderer}
           itemSizeGetter={@getLineHeight}
           length={@state.linesToRender.length}
-          type="variable">
+          type="variable"
+          useTranslate3d={true}>
         </ReactList>
       </div>
       <Loader isVisable={@state.isLoading} text={@state.loadingText} />
@@ -145,22 +143,15 @@ Contents = React.createClass
 
   scrollToLine: (line) ->
     console.log 'scrollto ' + line
-    # console.log 'set', height, arguments.callee.caller
     @refs.lines.scrollTo(line)
 
   scrollToTop: ->
     console.log 'top'
     @stopTailingPoll()
-    @setState
-      isLoading: true
-    @props.fetchFromStart().done =>
-      @refs.lines.scrollTo(0)
-      @setState
-        isLoading: false
+    @refs.lines.scrollTo(0)
 
   scrollToBottom: ->
-    console.log 'bot'
-    # console.log @state.linesToRender.length
+    console.log 'bot'#, arguments.callee.caller
     @refs.lines.scrollTo(@state.linesToRender.length)
 
 module.exports = Contents

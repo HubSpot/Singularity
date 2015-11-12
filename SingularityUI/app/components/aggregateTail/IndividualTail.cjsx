@@ -55,13 +55,18 @@ IndividualTail = React.createClass
     @refs.contents.scrollToLine(line)
 
   scrollToTop: ->
-    @refs.contents.scrollToTop()
+    if @props.logLines.getMinOffset() is 0
+      @refs.contents.scrollToTop()
+    else
+      @props.logLines.reset()
+      @props.logLines.fetchFromStart().done @refs.contents.scrollToTop
 
   scrollToBottom: ->
-    @refs.contents.scrollToBottom()
-
-  isMoreToFetchAtBeginning: ->
-    @props.logLines.state.get('moreToFetchAtBeginning')
+    if @props.logLines.state.get('moreToFetch') is true
+      @props.logLines.reset()
+      @props.logLines.fetchInitialData().done @refs.contents.scrollToBottom
+    else
+      @refs.contents.scrollToBottom()
 
   render: ->
     <div>
@@ -83,7 +88,8 @@ IndividualTail = React.createClass
         fetchPrevious={@fetchPrevious}
         fetchFromStart={@fetchFromStart}
         isMoreToFetchAtBeginning={@isMoreToFetchAtBeginning}
-        taskState={_.last(@state.task.taskUpdates)?.taskState} />
+        taskState={_.last(@state.task.taskUpdates)?.taskState}
+        initialScroll={@state.initialScroll} />
     </div>
 
 module.exports = IndividualTail
