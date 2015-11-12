@@ -20,20 +20,12 @@ Contents = React.createClass
     @currentOffset = parseInt @props.offset
 
   componentDidUpdate: (prevProps, prevState) ->
-    # Scroll to the appropriate place
-    # if @state.linesToRender.length > 0 and prevState.linesToRender.length is 0
-    #   if !@props.offset
-    #     @scrollToBottom()
-    #   else
-    #     @scrollToLine(0)
     if @tailingPoll
       @scrollToBottom()
 
-    # Start tailing automatically if we can't scroll
+    # Stop tailing if the task dies
     if @props.taskState in Utils.TERMINAL_TASK_STATES
       @stopTailingPoll()
-    else if (0 < $('.line').length * 20 <= $(@scrollNode).height()) and !@tailingPoll
-      @startTailingPoll()
 
     # Update our loglines components only if needed
     if prevProps.logLines.length isnt @props.logLines.length
@@ -48,7 +40,10 @@ Contents = React.createClass
     node = @scrollNode
     # Are we at the bottom?
     if $(node).scrollTop() + $(node).innerHeight() >= node.scrollHeight - 20
-      @startTailingPoll(node)
+      if @props.moreToFetch()
+        @props.fetchNext()
+      else
+        @startTailingPoll(node)
     # Or the top?
     else if $(node).scrollTop() is 0
       @stopTailingPoll()
@@ -142,16 +137,12 @@ Contents = React.createClass
   # ============================================================================
 
   scrollToLine: (line) ->
-    console.log 'scrollto ' + line
     @refs.lines.scrollTo(line)
 
   scrollToTop: ->
-    console.log 'top'
-    @stopTailingPoll()
     @refs.lines.scrollTo(0)
 
   scrollToBottom: ->
-    console.log 'bot'#, arguments.callee.caller
     @refs.lines.scrollTo(@state.linesToRender.length)
 
 module.exports = Contents

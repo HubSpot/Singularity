@@ -27,6 +27,12 @@ IndividualTail = React.createClass
       }
     });
 
+  componentDidMount: ->
+    if @props.offset?
+        @props.logLines.fetchOffset(@props.offset)
+    else
+        @props.logLines.fetchInitialData()
+
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@)
     @stopTaskStatusPoll()
@@ -43,6 +49,9 @@ IndividualTail = React.createClass
 
   stopTaskStatusPoll: ->
     clearInterval @taskPoll
+
+  moreToFetch: ->
+    @props.logLines.state.get('moreToFetch')
 
   fetchNext: ->
     _.defer(@props.logLines.fetchNext)
@@ -62,6 +71,7 @@ IndividualTail = React.createClass
     @refs.contents.scrollToLine(line)
 
   scrollToTop: ->
+    @refs.contents.stopTailingPoll()
     if @props.logLines.getMinOffset() is 0
       @refs.contents.scrollToTop()
     else
@@ -78,7 +88,7 @@ IndividualTail = React.createClass
   # ============================================================================
   # Rendering                                                                  |
   # ============================================================================
-  
+
   render: ->
     <div>
       <IndividualHeader
@@ -98,7 +108,7 @@ IndividualTail = React.createClass
         fetchNext={@fetchNext}
         fetchPrevious={@fetchPrevious}
         taskState={_.last(@state.task.taskUpdates)?.taskState}
-        initialScroll={@state.initialScroll} />
+        moreToFetch={@moreToFetch} />
     </div>
 
 module.exports = IndividualTail
