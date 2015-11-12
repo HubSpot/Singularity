@@ -32,6 +32,10 @@ public class SingularityTaskOfferResult {
     this.launchedOnHost = launchedOnHost;
   }
 
+  public long getTimestamp() {
+    return timestamp;
+  }
+
   public SingularityPendingTaskId getTaskId() {
     return taskId;
   }
@@ -40,35 +44,33 @@ public class SingularityTaskOfferResult {
     return offerDeclinedReasons;
   }
 
+  public void setOfferDeclinedReasons(Map<String, String> offerDeclinedReasons) {
+    this.offerDeclinedReasons = offerDeclinedReasons;
+  }
+
   public Optional<String> getLaunchedOnHost() {
     return launchedOnHost;
-  }
-
-  public Optional<String> getAcceptedOfferId() {
-    return acceptedOfferId;
-  }
-
-  public void addOfferDeclinedReason(String host, String reason) {
-    offerDeclinedReasons.put(host, reason);
-  }
-
-  public void clearOfferDeclinedReasons() {
-    offerDeclinedReasons.clear();
   }
 
   public void setLaunchedOnHost(Optional<String> launchedOnHost) {
     this.launchedOnHost = launchedOnHost;
   }
 
+  public Optional<String> getAcceptedOfferId() {
+    return acceptedOfferId;
+  }
+
   public void setAcceptedOfferId(Optional<String> acceptedOfferId) {
     this.acceptedOfferId = acceptedOfferId;
   }
 
-  public long getTimestamp() {
-    return timestamp;
+  public void setLaunchedTaskInfo(Optional<String> launchedOnHost, Optional<String> acceptedOfferId) {
+    offerDeclinedReasons.clear();
+    this.launchedOnHost = launchedOnHost;
+    this.acceptedOfferId = acceptedOfferId;
   }
 
-  public void setOfferDeclinedReasons(Map<String, String> offerDeclinedReasons) {
-    this.offerDeclinedReasons = offerDeclinedReasons;
+  public void addOfferDeclinedReason(String host, String reason) {
+    offerDeclinedReasons.put(host, reason);
   }
 }

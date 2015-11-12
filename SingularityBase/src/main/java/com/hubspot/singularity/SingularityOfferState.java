@@ -2,6 +2,7 @@ package com.hubspot.singularity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -58,5 +59,16 @@ public class SingularityOfferState {
 
   public void setTaskOfferResults(List<SingularityTaskOfferResult> taskOfferResults) {
     this.taskOfferResults = taskOfferResults;
+  }
+
+  public void trimOldData(int removeOlderThanMinutes) {
+    long removeIfBefore = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(removeOlderThanMinutes);
+    List<SingularityTaskOfferResult> toRemove = new ArrayList<>();
+    for (SingularityTaskOfferResult offerResult : taskOfferResults) {
+      if (offerResult.getTimestamp() < removeIfBefore) {
+        toRemove.add(offerResult);
+      }
+    }
+    taskOfferResults.removeAll(toRemove);
   }
 }
