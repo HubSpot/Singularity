@@ -37,19 +37,21 @@ IndividualTail = React.createClass
     clearInterval @taskPoll
 
   fetchNext: ->
-    @props.logLines.fetchNext()
+    _.defer(@props.logLines.fetchNext)
 
   fetchPrevious: (callback) ->
     @prevLines = @props.logLines.toJSON().length
-    @props.logLines.fetchPrevious().done =>
-      newLines = @props.logLines.toJSON().length - @prevLines
-      console.log 'new', newLines
-      if newLines > 0
-        @scrollToLine(newLines)
-      callback()
+    _.defer( =>
+      @props.logLines.fetchPrevious().done =>
+        newLines = @props.logLines.toJSON().length - @prevLines
+        console.log 'new', newLines
+        if newLines > 0
+          @scrollToLine(newLines)
+        callback()
+    )
 
   fetchFromStart: ->
-    @props.logLines.fetchFromStart()
+    _.defer(@props.logLines.fetchFromStart)
 
   scrollToLine: (line) ->
     @refs.contents.scrollToLine(line)
