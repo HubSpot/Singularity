@@ -20,29 +20,31 @@
                     </thead>
                     <tbody>
                     {{#each offers}}
-                    	<tr>
-                    		<td><a href="{{appRoot}}/request/{{taskId.requestId}}">{{taskId.requestId}}</a></td>
-                    		<td><a href="{{appRoot}}/request/{{taskId.requestId}}/deploy/{{taskId.deployId}}">{{taskId.deployId}}</a></td>
-                    		<td>{{taskId.instanceNo}}</td>
-                    		{{#if launchedOnHost}}
-                    			<td>yes</td>
-                    			<td>Launched on <a href="{{appRoot}}/tasks/active/{{launchedOnHost}}">{{launchedOnHost}}</a> (offer: {{acceptedOfferId}})</td>
-                    		{{else}}
-                    		    <td>no</td>
-                    		    <td>
-                    		        {{#each offerDeclinedReasons}}
-                    		            <a href="{{appRoot}}/tasks/active/{{@key}}">{{@key}}</a> : {{this}}
-                    		        {{else}}
-                    		            No Offers
-                    		        {{/each}}
-                    		    </td>
-                    		{{/if}}
-                    		<td class="actions-column hidden-xs">
-                    			<a data-task-id="{{ id }}" data-action="viewJSON" title="JSON">
+                        <tr>
+                            <td><a href="{{appRoot}}/request/{{taskId.requestId}}">{{taskId.requestId}}</a></td>
+                            <td><a href="{{appRoot}}/request/{{taskId.requestId}}/deploy/{{taskId.deployId}}">{{taskId.deployId}}</a></td>
+                            <td>{{taskId.instanceNo}}</td>
+                            {{#if launchedOnHost}}
+                                <td>yes</td>
+                                <td><ul><li>Launched on <a href="{{appRoot}}/tasks/active/{{launchedOnHost}}">{{launchedOnHost}}</a></li></ul></td>
+                            {{else}}
+                                <td>no</td>
+                                <td>
+                                    <ul>
+                                        {{#each offerDeclinedReasons}}
+                                            <li><a href="{{appRoot}}/tasks/active/{{@key}}">{{@key}}</a> : {{this}}</li>
+                                        {{else}}
+                                            <li>No Offers</li>
+                                        {{/each}}
+                                    </ul>
+                                </td>
+                            {{/if}}
+                            <td class="actions-column hidden-xs">
+                                <a data-task-id="{{ id }}" data-action="viewJSON" title="JSON">
                                     { }
                                 </a>
-                    		</td>
-                    	</tr>
+                            </td>
+                        </tr>
                     {{/each}}
                     </tbody>
                 </table>
