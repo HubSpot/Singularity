@@ -7,6 +7,10 @@ TaskHistory = require '../../models/TaskHistory'
 IndividualTail = React.createClass
   mixins: [Backbone.React.Component.mixin]
 
+  # ============================================================================
+  # Lifecycle Methods                                                          |
+  # ============================================================================
+
   componentWillMount: ->
     # Get the task info
     @task = new TaskHistory {taskId: @props.taskId}
@@ -26,6 +30,10 @@ IndividualTail = React.createClass
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@)
     @stopTaskStatusPoll()
+
+  # ============================================================================
+  # Event Handlers                                                             |
+  # ============================================================================
 
   startTaskStatusPoll: ->
     @task.fetch()
@@ -50,9 +58,6 @@ IndividualTail = React.createClass
         callback()
     )
 
-  fetchFromStart: ->
-    _.defer(@props.logLines.fetchFromStart)
-
   scrollToLine: (line) ->
     @refs.contents.scrollToLine(line)
 
@@ -70,6 +75,10 @@ IndividualTail = React.createClass
     else
       @refs.contents.scrollToBottom()
 
+  # ============================================================================
+  # Rendering                                                                  |
+  # ============================================================================
+  
   render: ->
     <div>
       <IndividualHeader
@@ -88,8 +97,6 @@ IndividualTail = React.createClass
         offset={@props.offset}
         fetchNext={@fetchNext}
         fetchPrevious={@fetchPrevious}
-        fetchFromStart={@fetchFromStart}
-        isMoreToFetchAtBeginning={@isMoreToFetchAtBeginning}
         taskState={_.last(@state.task.taskUpdates)?.taskState}
         initialScroll={@state.initialScroll} />
     </div>
