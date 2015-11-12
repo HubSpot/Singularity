@@ -56,7 +56,7 @@ Contents = React.createClass
     else if $(node).scrollTop() is 0
       @stopTailingPoll()
       @setState
-        isLoading: true 
+        isLoading: true
       @props.fetchPrevious(=>
         @setState
           isLoading: false
@@ -131,7 +131,7 @@ Contents = React.createClass
           itemRenderer={@lineRenderer}
           itemSizeGetter={@getLineHeight}
           length={@state.linesToRender.length}
-          type="uniform">
+          type="variable">
         </ReactList>
       </div>
       <Loader isVisable={@state.isLoading} text={@state.loadingText} />
