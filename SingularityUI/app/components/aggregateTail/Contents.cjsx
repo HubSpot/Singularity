@@ -18,6 +18,8 @@ Contents = React.createClass
   componentDidMount: ->
     @scrollNode = ReactDOM.findDOMNode(@refs.scrollContainer)
     @currentOffset = parseInt @props.offset
+    if @props.taskState not in Utils.TERMINAL_TASK_STATES
+      @startTailingPoll()
 
   componentDidUpdate: (prevProps, prevState) ->
     if @tailingPoll
@@ -50,7 +52,7 @@ Contents = React.createClass
       @setState
         isLoading: true
         loadingText: 'Fetching'
-      @props.fetchPrevious(=>
+      @props.fetchPrevious( =>
         @setState
           isLoading: false
           loadingText: ''
@@ -143,6 +145,7 @@ Contents = React.createClass
     @refs.lines.scrollTo(0)
 
   scrollToBottom: ->
+    console.log 'bot'
     @refs.lines.scrollTo(@state.linesToRender.length)
 
 module.exports = Contents
