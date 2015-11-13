@@ -10,11 +10,11 @@ LogLine = React.createClass
 
   render: ->
     <div className="#{@getClassNames()}">
-      <div className="pre-line">
-        <a href="##{@props.offset}" className="offset-link" data-offset="#{@props.offset}" onClick={@props.highlight}>
-          <span className="glyphicon glyphicon-link" data-offset="#{@props.offset}"></span>
-        </a>
-      </div>
+      <a target="blank" href="#{@props.offsetLink}" className="offset-link" data-offset="#{@props.offset}">
+        <div className="pre-line">
+            <span className="glyphicon glyphicon-link" data-offset="#{@props.offset}"></span>
+        </div>
+      </a>
       <span>
         {@props.content}
       </span>
