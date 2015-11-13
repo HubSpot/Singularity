@@ -38,25 +38,25 @@ Contents = React.createClass
   # Event Handlers                                                             |
   # ============================================================================
 
-  handleScroll: ->
+  handleScroll: (e) ->
     node = @scrollNode
     # Are we at the bottom?
     if $(node).scrollTop() + $(node).innerHeight() >= node.scrollHeight - 20
       if @props.moreToFetch()
         @props.fetchNext()
-      else if @props.taskState not in Utils.TERMINAL_TASK_STATES
-        @startTailingPoll(node)
+      else if @props.taskState not in Utils.TERMINAL_TASK_STATES and @props.logLines.length > 0
+        @startTailingPoll()
     # Or the top?
     else if $(node).scrollTop() is 0
-      @stopTailingPoll()
-      @setState
-        isLoading: true
-        loadingText: 'Fetching'
-      @props.fetchPrevious( =>
+      if not @tailingPoll
         @setState
-          isLoading: false
-          loadingText: ''
-      )
+          isLoading: true
+          loadingText: 'Fetching'
+        @props.fetchPrevious( =>
+          @setState
+            isLoading: false
+            loadingText: ''
+        )
     else
       @stopTailingPoll()
 
@@ -145,7 +145,7 @@ Contents = React.createClass
     @refs.lines.scrollTo(0)
 
   scrollToBottom: ->
-    console.log 'bot'
+    # console.log 'bot'
     @refs.lines.scrollTo(@state.linesToRender.length)
 
 module.exports = Contents
