@@ -24,6 +24,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.mesos.json.MesosFileObject;
+import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularitySandbox;
 import com.hubspot.singularity.SingularitySandboxFile;
 import com.hubspot.singularity.SingularityService;
@@ -90,7 +91,7 @@ public class SandboxResource extends AbstractHistoryResource {
   @ApiOperation("Retrieve information about a specific task's sandbox.")
   public SingularitySandbox browse(@ApiParam("The task ID to browse") @PathParam("taskId") String taskId,
       @ApiParam("The path to browse from") @QueryParam("path") String path) {
-    authorizationHelper.checkForAuthorizationByTaskId(taskId, user);
+    authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.READ);
 
     final String currentDirectory = getCurrentDirectory(taskId, path);
     final SingularityTaskHistory history = checkHistory(taskId);
@@ -126,7 +127,7 @@ public class SandboxResource extends AbstractHistoryResource {
       @ApiParam("Optional string to grep for") @QueryParam("grep") Optional<String> grep,
       @ApiParam("Byte offset to start reading from") @QueryParam("offset") Optional<Long> offset,
       @ApiParam("Maximum number of bytes to read") @QueryParam("length") Optional<Long> length) {
-    authorizationHelper.checkForAuthorizationByTaskId(taskId, user);
+    authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.READ);
 
     final SingularityTaskHistory history = checkHistory(taskId);
 
