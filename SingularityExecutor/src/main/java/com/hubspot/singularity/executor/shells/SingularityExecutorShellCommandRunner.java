@@ -126,14 +126,14 @@ public class SingularityExecutorShellCommandRunner {
 
     List<String> command = new ArrayList<>();
 
-    if (shellCommandDescriptor.isDocker()) {
+    if (shellCommandDescriptor.isSwitchUser()) {
       String switchUserCommand = String.format(executorConfiguration.getSwitchUserCommandFormat(), taskProcess.getTask().getExecutorData().getUser().or(executorConfiguration.getDefaultRunAsUser()));
       command.addAll(Arrays.asList(switchUserCommand.split("\\s+")));
-      command.addAll(Arrays.asList(
-          "docker",
-          "exec",
-          String.format("%s%s", executorConfiguration.getDockerPrefix(), task.getTaskId())
-      ));
+    }
+
+    boolean isDocker = task.getTaskInfo().hasContainer() && task.getTaskInfo().getContainer().hasDocker();
+    if (isDocker) {
+      command.addAll(Arrays.asList("docker", "exec", String.format("%s%s", executorConfiguration.getDockerPrefix(), task.getTaskId())));
     }
 
     command.addAll(shellCommandDescriptor.getCommand());
@@ -148,7 +148,7 @@ public class SingularityExecutorShellCommandRunner {
           } catch (Exception e) {
             throw new InvalidShellCommandException("No PID found");
           }
-        } else if (task.getTaskInfo().hasContainer() && task.getTaskInfo().getContainer().hasDocker()) {
+        } else if (isDocker) {
           pid = 1;
         } else {
           if (!taskProcess.getCurrentPid().isPresent()) {
