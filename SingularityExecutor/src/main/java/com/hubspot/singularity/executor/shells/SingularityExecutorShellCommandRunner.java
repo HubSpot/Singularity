@@ -127,8 +127,9 @@ public class SingularityExecutorShellCommandRunner {
     List<String> command = new ArrayList<>();
 
     if (shellCommandDescriptor.isDocker()) {
+      String switchUserCommand = String.format(executorConfiguration.getSwitchUserCommandFormat(), taskProcess.getTask().getExecutorData().getUser().or(executorConfiguration.getDefaultRunAsUser()));
+      command.addAll(Arrays.asList(switchUserCommand.split("\\s+")));
       command.addAll(Arrays.asList(
-          String.format(executorConfiguration.getSwitchUserCommandFormat(), taskProcess.getTask().getExecutorData().getUser().or(executorConfiguration.getDefaultRunAsUser())),
           "docker",
           "exec",
           String.format("%s%s", executorConfiguration.getDockerPrefix(), task.getTaskId())
