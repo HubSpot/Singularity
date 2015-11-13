@@ -5,8 +5,10 @@ import java.util.List;
 
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SingularityExecutorShellCommandDescriptor {
 
   @JsonProperty
@@ -21,6 +23,10 @@ public class SingularityExecutorShellCommandDescriptor {
   @JsonProperty
   @NotNull
   private List<SingularityExecutorShellCommandOptionDescriptor> options = Collections.emptyList();
+
+  @JsonProperty
+  @NotNull
+  private boolean switchUser = true;
 
   public List<SingularityExecutorShellCommandOptionDescriptor> getOptions() {
     return options;
@@ -46,4 +52,11 @@ public class SingularityExecutorShellCommandDescriptor {
     return command;
   }
 
+  public boolean isSwitchUser() {
+    return switchUser;
+  }
+
+  public void setSwitchUser(boolean switchUser) {
+    this.switchUser = switchUser;
+  }
 }
