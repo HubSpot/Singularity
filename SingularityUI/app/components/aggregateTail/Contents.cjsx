@@ -18,13 +18,15 @@ Contents = React.createClass
   componentDidMount: ->
     @scrollNode = ReactDOM.findDOMNode(@refs.scrollContainer)
     @currentOffset = parseInt @props.offset
+    if @props.taskState not in Utils.TERMINAL_TASK_STATES and not @props.ajaxError.present
+      @startTailingPoll()
 
   componentDidUpdate: (prevProps, prevState) ->
     if @tailingPoll
       @scrollToBottom()
 
     # Stop tailing if the task dies
-    if @props.taskState in Utils.TERMINAL_TASK_STATES
+    if @props.taskState in Utils.TERMINAL_TASK_STATES or @props.ajaxError.present
       @stopTailingPoll()
 
     # Update our loglines components only if needed
@@ -36,25 +38,25 @@ Contents = React.createClass
   # Event Handlers                                                             |
   # ============================================================================
 
-  handleScroll: ->
+  handleScroll: (e) ->
     node = @scrollNode
     # Are we at the bottom?
     if $(node).scrollTop() + $(node).innerHeight() >= node.scrollHeight - 20
       if @props.moreToFetch()
         @props.fetchNext()
-      else
-        @startTailingPoll(node)
+      else if @props.taskState not in Utils.TERMINAL_TASK_STATES and @props.logLines.length > 0
+        @startTailingPoll()
     # Or the top?
     else if $(node).scrollTop() is 0
-      @stopTailingPoll()
-      @setState
-        isLoading: true
-        loadingText: 'Fetching'
-      @props.fetchPrevious(=>
+      if not @tailingPoll
         @setState
-          isLoading: false
-          loadingText: ''
-      )
+          isLoading: true
+          loadingText: 'Fetching'
+        @props.fetchPrevious( =>
+          @setState
+            isLoading: false
+            loadingText: ''
+        )
     else
       @stopTailingPoll()
 
@@ -117,7 +119,7 @@ Contents = React.createClass
 
   render: ->
     <div className="contents-container">
-      <div className="tail-contents" ref="scrollContainer" onScroll={_.throttle @handleScroll, 200}>
+      <div className="tail-contents #{@props.activeColor}" ref="scrollContainer" onScroll={_.throttle @handleScroll, 200}>
         {@renderError()}
         <ReactList
           className="infinite"
