@@ -13,6 +13,7 @@ AggregateTail = React.createClass
   getInitialState: ->
     params = Utils.getQueryParams()
     viewingInstances: if params.taskIds then params.taskIds.split(',').slice(0, 6) else []
+    color: @getActiveColor()
 
   componentWillMount: ->
     # Automatically map backbone collections and models to the state of this component
@@ -64,6 +65,14 @@ AggregateTail = React.createClass
     else
       return 1
 
+  setLogColor: (color) ->
+    localStorage.setItem('singularityLogColor', color)
+    @setState
+      color: color
+
+  getActiveColor: ->
+    localStorage.getItem('singularityLogColor')
+
   # ============================================================================
   # Rendering                                                                  |
   # ============================================================================
@@ -92,7 +101,8 @@ AggregateTail = React.createClass
             logLines={@props.logLines[taskId]}
             ajaxError={@props.ajaxError[taskId]}
             activeTasks={@props.activeTasks}
-            closeTail={@toggleViewingInstance} />
+            closeTail={@toggleViewingInstance}
+            activeColor={@state.color} />
         </div>
     )
 
@@ -105,7 +115,9 @@ AggregateTail = React.createClass
        scrollToBottom={@scrollAllBottom}
        activeTasks={@state.activeTasks}
        viewingInstances={@state.viewingInstances}
-       toggleViewingInstance={@toggleViewingInstance} />
+       toggleViewingInstance={@toggleViewingInstance}
+       setLogColor={@setLogColor}
+       activeColor={@state.color} />
       <div className="row #{@getRowType()}">
         {@renderIndividualTails()}
       </div>

@@ -61,7 +61,6 @@ IndividualTail = React.createClass
     _.defer( =>
       @props.logLines.fetchPrevious().done =>
         newLines = @props.logLines.toJSON().length - @prevLines
-        # console.log 'new', newLines
         if newLines > 0
           @scrollToLine(newLines)
         callback()
@@ -108,7 +107,8 @@ IndividualTail = React.createClass
         fetchNext={@fetchNext}
         fetchPrevious={@fetchPrevious}
         taskState={_.last(@state.task.taskUpdates)?.taskState}
-        moreToFetch={@moreToFetch} />
+        moreToFetch={@moreToFetch}
+        activeColor={@props.activeColor} />
     </div>
 
 module.exports = IndividualTail

@@ -119,7 +119,7 @@ Contents = React.createClass
 
   render: ->
     <div className="contents-container">
-      <div className="tail-contents" ref="scrollContainer" onScroll={_.throttle @handleScroll, 200}>
+      <div className="tail-contents #{@props.activeColor}" ref="scrollContainer" onScroll={_.throttle @handleScroll, 200}>
         {@renderError()}
         <ReactList
           className="infinite"

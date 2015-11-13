@@ -55,6 +55,28 @@ Header = React.createClass
         <div className="col-md-3 hidden-xs tail-buttons">
           <div className="btn-group">
             <button type="button" className="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <span className="glyphicon glyphicon-adjust"></span> <span className="caret"></span>
+            </button>
+            <ul className="dropdown-menu">
+              <li className={if @props.activeColor is '' then 'active'}>
+                <a onClick={() => @props.setLogColor('')}>
+                  <span>Default</span>
+                </a>
+              </li>
+              <li className={if @props.activeColor is 'midnight' then 'active'}>
+                <a onClick={() => @props.setLogColor('midnight')}>
+                  <span>Midnight</span>
+                </a>
+              </li>
+              <li className={if @props.activeColor is 'sand' then 'active'}>
+                <a onClick={() => @props.setLogColor('sand')}>
+                  <span>Sand</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div className="btn-group">
+            <button type="button" className="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               <span className="glyphicon glyphicon-cog"></span> <span className="caret"></span>
             </button>
             <ul className="dropdown-menu">
