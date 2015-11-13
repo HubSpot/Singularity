@@ -18,7 +18,7 @@ Contents = React.createClass
   componentDidMount: ->
     @scrollNode = ReactDOM.findDOMNode(@refs.scrollContainer)
     @currentOffset = parseInt @props.offset
-    if @props.taskState not in Utils.TERMINAL_TASK_STATES
+    if @props.taskState not in Utils.TERMINAL_TASK_STATES and not @props.ajaxError.present
       @startTailingPoll()
 
   componentDidUpdate: (prevProps, prevState) ->
@@ -26,7 +26,7 @@ Contents = React.createClass
       @scrollToBottom()
 
     # Stop tailing if the task dies
-    if @props.taskState in Utils.TERMINAL_TASK_STATES
+    if @props.taskState in Utils.TERMINAL_TASK_STATES or @props.ajaxError.present
       @stopTailingPoll()
 
     # Update our loglines components only if needed
@@ -44,7 +44,7 @@ Contents = React.createClass
     if $(node).scrollTop() + $(node).innerHeight() >= node.scrollHeight - 20
       if @props.moreToFetch()
         @props.fetchNext()
-      else
+      else if @props.taskState not in Utils.TERMINAL_TASK_STATES
         @startTailingPoll(node)
     # Or the top?
     else if $(node).scrollTop() is 0

@@ -61,7 +61,7 @@ IndividualTail = React.createClass
     _.defer( =>
       @props.logLines.fetchPrevious().done =>
         newLines = @props.logLines.toJSON().length - @prevLines
-        console.log 'new', newLines
+        # console.log 'new', newLines
         if newLines > 0
           @scrollToLine(newLines)
         callback()
