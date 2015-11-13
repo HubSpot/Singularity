@@ -18,7 +18,7 @@ Contents = React.createClass
   componentDidMount: ->
     @scrollNode = ReactDOM.findDOMNode(@refs.scrollContainer)
     @currentOffset = parseInt @props.offset
-    if @props.taskState not in Utils.TERMINAL_TASK_STATES and not @props.ajaxError.present
+    if @props.taskState not in Utils.TERMINAL_TASK_STATES and not @props.ajaxError.present and not @props.offset
       @startTailingPoll()
 
   componentDidUpdate: (prevProps, prevState) ->
