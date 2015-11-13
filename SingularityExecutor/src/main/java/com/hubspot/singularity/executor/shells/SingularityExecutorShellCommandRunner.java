@@ -32,7 +32,6 @@ public class SingularityExecutorShellCommandRunner {
   private final ListeningExecutorService shellCommandExecutorService;
   private final SingularityExecutorShellCommandUpdater shellCommandUpdater;
   private final SingularityExecutorConfiguration executorConfiguration;
-  private final DockerClient dockerClient;
 
   @SuppressWarnings("serial")
   private static class InvalidShellCommandException extends RuntimeException {
@@ -44,14 +43,13 @@ public class SingularityExecutorShellCommandRunner {
   }
 
   public SingularityExecutorShellCommandRunner(SingularityTaskShellCommandRequest shellRequest, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorTask task,
-      SingularityExecutorTaskProcessCallable taskProcess, ListeningExecutorService shellCommandExecutorService, SingularityExecutorShellCommandUpdater shellCommandUpdater, DockerClient dockerClient) {
+      SingularityExecutorTaskProcessCallable taskProcess, ListeningExecutorService shellCommandExecutorService, SingularityExecutorShellCommandUpdater shellCommandUpdater) {
     this.shellRequest = shellRequest;
     this.executorConfiguration = executorConfiguration;
     this.task = task;
     this.taskProcess = taskProcess;
     this.shellCommandUpdater = shellCommandUpdater;
     this.shellCommandExecutorService = shellCommandExecutorService;
-    this.dockerClient = dockerClient;
   }
 
   public SingularityTaskShellCommandRequest getShellRequest() {

@@ -26,14 +26,12 @@ public class SingularityExecutorMesosFrameworkMessageHandler {
   private final SingularityExecutorMonitor monitor;
   private final SingularityExecutorConfiguration executorConfiguration;
   private final ObjectMapper objectMapper;
-  private final DockerClient dockerClient;
 
   @Inject
-  public SingularityExecutorMesosFrameworkMessageHandler(ObjectMapper objectMapper, SingularityExecutorMonitor monitor, SingularityExecutorConfiguration executorConfiguration, DockerClient dockerClient) {
+  public SingularityExecutorMesosFrameworkMessageHandler(ObjectMapper objectMapper, SingularityExecutorMonitor monitor, SingularityExecutorConfiguration executorConfiguration) {
     this.objectMapper = objectMapper;
     this.monitor = monitor;
     this.executorConfiguration = executorConfiguration;
-    this.dockerClient = dockerClient;
   }
 
   public void handleMessage(byte[] data) {
@@ -59,7 +57,7 @@ public class SingularityExecutorMesosFrameworkMessageHandler {
       }
 
       SingularityExecutorShellCommandRunner shellRunner = new SingularityExecutorShellCommandRunner(shellRequest, executorConfiguration, matchingTask.get(),
-          taskProcess.get(), monitor.getShellCommandExecutorServiceForTask(shellRequest.getTaskId().getId()), updater, dockerClient);
+          taskProcess.get(), monitor.getShellCommandExecutorServiceForTask(shellRequest.getTaskId().getId()), updater);
 
       shellRunner.start();
     } catch (IOException e) {
