@@ -131,7 +131,7 @@ public class SingularityExecutorShellCommandRunner {
           String.format(executorConfiguration.getSwitchUserCommandFormat(), taskProcess.getTask().getExecutorData().getUser().or(executorConfiguration.getDefaultRunAsUser())),
           "docker",
           "exec",
-          String.format("%s-%s", executorConfiguration.getDockerPrefix(), task.getTaskId())
+          String.format("%s%s", executorConfiguration.getDockerPrefix(), task.getTaskId())
       ));
     }
 
