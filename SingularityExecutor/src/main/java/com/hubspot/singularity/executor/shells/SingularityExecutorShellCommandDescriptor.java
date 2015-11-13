@@ -22,6 +22,10 @@ public class SingularityExecutorShellCommandDescriptor {
   @NotNull
   private List<SingularityExecutorShellCommandOptionDescriptor> options = Collections.emptyList();
 
+  @JsonProperty
+  @NotNull
+  private boolean docker = false;
+
   public List<SingularityExecutorShellCommandOptionDescriptor> getOptions() {
     return options;
   }
@@ -46,4 +50,11 @@ public class SingularityExecutorShellCommandDescriptor {
     return command;
   }
 
+  public boolean isDocker() {
+    return docker;
+  }
+
+  public void setDocker(boolean docker) {
+    this.docker = docker;
+  }
 }
