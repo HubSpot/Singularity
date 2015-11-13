@@ -1,5 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -30,6 +31,8 @@ import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestDeployState;
+import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
@@ -39,6 +42,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -55,13 +59,15 @@ public class SingularityCleaner {
   private final SingularityDeployHealthHelper deployHealthHelper;
   private final LoadBalancerClient lbClient;
   private final SingularityExceptionNotifier exceptionNotifier;
+  private final RequestHistoryHelper requestHistoryHelper;
 
   private final SingularityConfiguration configuration;
   private final long killNonLongRunningTasksInCleanupAfterMillis;
 
   @Inject
   public SingularityCleaner(TaskManager taskManager, SingularityDeployHealthHelper deployHealthHelper, DeployManager deployManager, RequestManager requestManager,
-      SingularityDriverManager driverManager, SingularityConfiguration configuration, LoadBalancerClient lbClient, SingularityExceptionNotifier exceptionNotifier) {
+      SingularityDriverManager driverManager, SingularityConfiguration configuration, LoadBalancerClient lbClient, SingularityExceptionNotifier exceptionNotifier,
+      RequestHistoryHelper requestHistoryHelper) {
     this.taskManager = taskManager;
     this.lbClient = lbClient;
     this.deployHealthHelper = deployHealthHelper;
@@ -69,6 +75,7 @@ public class SingularityCleaner {
     this.requestManager = requestManager;
     this.driverManager = driverManager;
     this.exceptionNotifier = exceptionNotifier;
+    this.requestHistoryHelper = requestHistoryHelper;
 
     this.configuration = configuration;
 
@@ -183,7 +190,8 @@ public class SingularityCleaner {
 
       boolean killActiveTasks = requestCleanup.getKillTasks().or(configuration.isDefaultValueForKillTasksOfPausedRequests());
       boolean killScheduledTasks = true;
-      boolean deleteFromLoadBalancer = false;
+
+      final Iterable<SingularityTaskId> matchingActiveTaskIds = Iterables.filter(activeTaskIds, SingularityTaskId.matchingRequest(requestId));
 
       switch (requestCleanup.getCleanupType()) {
         case PAUSING:
@@ -196,10 +204,6 @@ public class SingularityCleaner {
               LOG.debug("Waiting on {} (it will expire after {}), because {} is {}", requestCleanup, JavaUtils.durationFromMillis(getObsoleteExpirationTime()), requestCleanup.getRequestId(), requestWithState.get().getState());
               continue;
             }
-          } else {
-            if (requestWithState.isPresent() && requestWithState.get().getRequest().isLoadBalanced()) {
-              deleteFromLoadBalancer = true;
-            }
           }
           break;
         case DELETING:
@@ -207,7 +211,14 @@ public class SingularityCleaner {
             killActiveTasks = false;
             killScheduledTasks = false;
             LOG.info("Ignoring {}, because {} still existed", requestCleanup, requestCleanup.getRequestId());
+            if (requestWithState.get().getRequest().isLoadBalanced() && configuration.isDeleteRemovedRequestsFromLoadBalancer()) {
+              createLbCleanupRequest(requestId, matchingActiveTaskIds);
+            }
           } else {
+            Optional<SingularityRequestHistory> maybeHistory = requestHistoryHelper.getLastHistory(requestId);
+            if (maybeHistory.isPresent() && maybeHistory.get().getRequest().isLoadBalanced() && configuration.isDeleteRemovedRequestsFromLoadBalancer()) {
+              createLbCleanupRequest(requestId, matchingActiveTaskIds);
+            }
             cleanupDeployState(requestCleanup);
           }
           break;
@@ -221,7 +232,7 @@ public class SingularityCleaner {
       }
 
       if (killActiveTasks) {
-        for (SingularityTaskId matchingTaskId : Iterables.filter(activeTaskIds, SingularityTaskId.matchingRequest(requestId))) {
+        for (SingularityTaskId matchingTaskId : matchingActiveTaskIds) {
           LOG.debug("Killing task {} due to {}", matchingTaskId, requestCleanup);
           driverManager.killAndRecord(matchingTaskId, requestCleanup.getCleanupType());
           numTasksKilled++;
@@ -238,14 +249,27 @@ public class SingularityCleaner {
         }
       }
 
-      if (deleteFromLoadBalancer && configuration.isDeletePausedRequestsFromLoadBalancer()) {
-        requestManager.createLBCleanupRequest(requestId);
-      }
-
       requestManager.deleteCleanRequest(requestId, requestCleanup.getCleanupType());
     }
 
     LOG.info("Killed {} tasks (removed {} scheduled) in {}", numTasksKilled, numScheduledTasksRemoved, JavaUtils.duration(start));
+  }
+
+  private void createLbCleanupRequest(String requestId, Iterable<SingularityTaskId> matchingActiveTaskIds) {
+    Optional<String> maybeCurrentDeployId = deployManager.getInUseDeployId(requestId);
+    Optional<SingularityDeploy> maybeDeploy = Optional.absent();
+    if (maybeCurrentDeployId.isPresent()) {
+      maybeDeploy = deployManager.getDeploy(requestId, maybeCurrentDeployId.get());
+      if (maybeDeploy.isPresent()) {
+        List<String> taskIds = new ArrayList<>();
+        for (SingularityTaskId taskId : matchingActiveTaskIds) {
+          taskIds.add(taskId.getId());
+        }
+        requestManager.saveLBCleanupRequest(new SingularityRequestLbCleanup(requestId, maybeDeploy.get().getLoadBalancerGroups().get(), maybeDeploy.get().getServiceBasePath().get(), taskIds, Optional.<SingularityLoadBalancerUpdate>absent()));
+        return;
+      }
+    }
+    exceptionNotifier.notify("Insufficient data to create LB request cleanup", ImmutableMap.of("requestId", requestId, "deployId", maybeCurrentDeployId.toString(), "deploy", maybeDeploy.toString()));
   }
 
   private void bounce(SingularityRequestCleanup requestCleanup, final List<SingularityTaskId> activeTaskIds) {
@@ -273,8 +297,9 @@ public class SingularityCleaner {
   public void drainCleanupQueue() {
     drainRequestCleanupQueue();
     drainTaskCleanupQueue();
-    drainLBTaskCleanupQueue();
-    drainLBRequestCleanupQueue();
+    final List<SingularityTaskId> lbCleanupTasks = taskManager.getLBCleanupTasks();
+    drainLBTaskCleanupQueue(lbCleanupTasks);
+    drainLBRequestCleanupQueue(lbCleanupTasks);
     checkKilledTaskIdRecords();
   }
 
@@ -503,10 +528,8 @@ public class SingularityCleaner {
     return CheckLBState.WAITING;
   }
 
-  private void drainLBTaskCleanupQueue() {
+  private void drainLBTaskCleanupQueue(List<SingularityTaskId> lbCleanupTasks) {
     final long start = System.currentTimeMillis();
-
-    final List<SingularityTaskId> lbCleanupTasks = taskManager.getLBCleanupTasks();
 
     if (lbCleanupTasks.isEmpty()) {
       LOG.trace("LB task cleanup queue is empty");
@@ -544,10 +567,10 @@ public class SingularityCleaner {
     LOG.info("LB cleaned {} tasks ({} left, {} obsolete) in {}", cleanedTasks, lbCleanupTasks.size() - (ignoredTasks + cleanedTasks), ignoredTasks, JavaUtils.duration(start));
   }
 
-  private void drainLBRequestCleanupQueue() {
+  private void drainLBRequestCleanupQueue(List<SingularityTaskId> lbCleanupTasks) {
     final long start = System.currentTimeMillis();
 
-    final List<String> lbCleanupRequests = requestManager.getLBCleanupRequestIds();
+    final List<SingularityRequestLbCleanup> lbCleanupRequests = requestManager.getLbCleanupRequests();
 
     if (lbCleanupRequests.isEmpty()) {
       LOG.trace("LB request cleanup queue is empty");
@@ -559,12 +582,12 @@ public class SingularityCleaner {
     int cleanedRequests = 0;
     int ignoredRequests = 0;
 
-    for (String requestId : lbCleanupRequests) {
+    for (SingularityRequestLbCleanup cleanup : lbCleanupRequests) {
       final long checkStart = System.currentTimeMillis();
 
-      final CheckLBState checkLbState = checkRequestLbState(requestId);
+      final CheckLBState checkLbState = checkRequestLbState(cleanup, lbCleanupTasks);
 
-      LOG.debug("LB cleanup for request {} had state {} after {}", requestId, checkLbState, JavaUtils.duration(checkStart));
+      LOG.debug("LB cleanup for request {} had state {} after {}", cleanup.getRequestId(), checkLbState, JavaUtils.duration(checkStart));
 
       switch (checkLbState) {
         case WAITING:
@@ -579,42 +602,49 @@ public class SingularityCleaner {
           ignoredRequests++;
       }
 
-      requestManager.deleteLBCleanupRequest(requestId);
+      requestManager.deleteLBCleanupRequest(cleanup.getRequestId());
     }
     LOG.info("LB cleaned {} requests ({} left, {} obsolete) in {}", cleanedRequests, lbCleanupRequests.size() - (ignoredRequests + cleanedRequests), ignoredRequests, JavaUtils.duration(start));
 
   }
 
-  private CheckLBState checkRequestLbState(String requestId) {
-    Optional<SingularityLoadBalancerUpdate> maybeDeleteUpdate = requestManager.getLoadBalancerState(requestId);
+  private boolean  canRunRequestLbCleanup(SingularityRequestLbCleanup cleanup, List<SingularityTaskId> lbCleanupTasks) {
+    Optional<SingularityRequestWithState> maybeRequestWithState = requestManager.getRequest(cleanup.getRequestId());
+    if (maybeRequestWithState.isPresent() && SingularityRequestWithState.isActive(maybeRequestWithState)) {
+      LOG.trace("Request is still active, will wait for request lb cleanup");
+      return false;
+    }
+    for (String taskId : cleanup.getActiveTaskIds()) {
+      if (taskManager.isActiveTask(taskId)) {
+        LOG.trace("Request still has active tasks, will wait for lb request cleanup");
+        return false;
+      }
+    }
+    for (SingularityTaskId taskId : lbCleanupTasks) {
+      if (taskId.getRequestId().equals(cleanup.getRequestId())) {
+        LOG.trace("Waiting for task lb cleanup to finish before trying request lb cleanup for request {}", cleanup.getRequestId());
+        return false;
+      }
+    }
+    return true;
+  }
 
-    Optional<SingularityRequestWithState> maybeRequestWithState = requestManager.getRequest(requestId);
-
-    if (!maybeRequestWithState.isPresent()) {
-      exceptionNotifier.notify(String.format("LB delete failed for paused request %s, request data not found", requestId), ImmutableMap.of("requestId", requestId));
+  private CheckLBState checkRequestLbState(SingularityRequestLbCleanup cleanup, List<SingularityTaskId> lbCleanupTasks) {
+    if (!canRunRequestLbCleanup(cleanup , lbCleanupTasks)) {
       return CheckLBState.RETRY;
     }
 
-    final LoadBalancerRequestId loadBalancerRequestId = getLoadBalancerRequestId(requestId, maybeDeleteUpdate);
+    Optional<SingularityLoadBalancerUpdate> maybeDeleteUpdate = cleanup.getLoadBalancerUpdate();
+    final LoadBalancerRequestId loadBalancerRequestId = getLoadBalancerRequestId(cleanup.getRequestId(), maybeDeleteUpdate);
     SingularityLoadBalancerUpdate lbDeleteUpdate;
-
     if (shouldEnqueueLbRequest(maybeDeleteUpdate)) {
-      Optional<String> maybeCurrentDeployId = deployManager.getInUseDeployId(requestId);
-      Optional<SingularityDeploy> maybeDeploy = Optional.absent();
-      if (maybeCurrentDeployId.isPresent()) {
-        maybeDeploy = deployManager.getDeploy(requestId, maybeCurrentDeployId.get());
-      }
-      if (maybeDeploy.isPresent()) {
-        lbDeleteUpdate = lbClient.delete(loadBalancerRequestId, maybeRequestWithState.get().getRequest(), maybeDeploy.get());
-        requestManager.saveLoadBalancerState(requestId, lbDeleteUpdate);
-      } else {
-        exceptionNotifier.notify(String.format("LB delete failed for paused request %s, current deploy not found", requestId),
-          ImmutableMap.of("requestId", requestId, "currentDeployId", maybeCurrentDeployId.toString(), "currentDeploy", maybeDeploy.toString()));
-        return CheckLBState.RETRY;
-      }
+      lbDeleteUpdate = lbClient.delete(loadBalancerRequestId, cleanup.getRequestId(), cleanup.getLoadBalancerGroups(), cleanup.getServiceBasePath());
+      cleanup.setLoadBalancerUpdate(Optional.of(lbDeleteUpdate));
+      requestManager.saveLBCleanupRequest(cleanup);
     } else if (maybeDeleteUpdate.get().getLoadBalancerState() == BaragonRequestState.WAITING || maybeDeleteUpdate.get().getLoadBalancerState() == BaragonRequestState.CANCELING) {
       lbDeleteUpdate = lbClient.getState(loadBalancerRequestId);
-      requestManager.saveLoadBalancerState(requestId, lbDeleteUpdate);
+      cleanup.setLoadBalancerUpdate(Optional.of(lbDeleteUpdate));
+      requestManager.saveLBCleanupRequest(cleanup);
     } else {
       lbDeleteUpdate = maybeDeleteUpdate.get();
     }
@@ -644,13 +674,13 @@ public class SingularityCleaner {
 
   private LoadBalancerRequestId getLoadBalancerRequestId(String requestId, Optional<SingularityLoadBalancerUpdate> lbDeleteUpdate) {
     if (!lbDeleteUpdate.isPresent()) {
-      return new LoadBalancerRequestId(requestId, LoadBalancerRequestType.DELETE, Optional.<Integer> absent());
+      return new LoadBalancerRequestId(String.format("%s-%s", requestId, System.currentTimeMillis()), LoadBalancerRequestType.DELETE, Optional.<Integer>absent());
     }
 
     switch (lbDeleteUpdate.get().getLoadBalancerState()) {
       case FAILED:
       case CANCELED:
-        return new LoadBalancerRequestId(requestId, LoadBalancerRequestType.DELETE, Optional.of(lbDeleteUpdate.get().getLoadBalancerRequestId().getAttemptNumber() + 1));
+        return new LoadBalancerRequestId(String.format("%s-%s", requestId, System.currentTimeMillis()), LoadBalancerRequestType.DELETE, Optional.of(lbDeleteUpdate.get().getLoadBalancerRequestId().getAttemptNumber() + 1));
       default:
         return lbDeleteUpdate.get().getLoadBalancerRequestId();
     }

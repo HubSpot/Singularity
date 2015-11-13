@@ -211,11 +211,8 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
   }
 
   @Override
-  public SingularityLoadBalancerUpdate delete(LoadBalancerRequestId loadBalancerRequestId, SingularityRequest request, SingularityDeploy deploy) {
-    final List<String> serviceOwners = request.getOwners().or(Collections.<String> emptyList());
-    final Set<String> loadBalancerGroups = deploy.getLoadBalancerGroups().or(Collections.<String> emptySet());
-    final BaragonService lbService = new BaragonService(request.getId(), serviceOwners, deploy.getServiceBasePath().get(), loadBalancerGroups, deploy.getLoadBalancerOptions().orNull());
-
+  public SingularityLoadBalancerUpdate delete(LoadBalancerRequestId loadBalancerRequestId, String requestId, Set<String> loadBalancerGroups, String serviceBasePath) {
+    final BaragonService lbService = new BaragonService(requestId, Collections.<String> emptyList(), serviceBasePath, loadBalancerGroups, Collections.<String, Object>emptyMap());
     final BaragonRequest loadBalancerRequest = new BaragonRequest(loadBalancerRequestId.toString(), lbService, Collections.<UpstreamInfo>emptyList(), Collections.<UpstreamInfo>emptyList(), Collections.<UpstreamInfo>emptyList(), Optional.<String>absent(), Optional.of(RequestAction.DELETE));
 
     return sendBaragonRequest(loadBalancerRequestId, loadBalancerRequest, LoadBalancerMethod.DELETE);
