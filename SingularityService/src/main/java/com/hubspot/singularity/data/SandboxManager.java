@@ -99,7 +99,7 @@ public class SandboxManager {
     } catch (ConnectException ce) {
       throw new SlaveNotFoundException(ce);
     } catch (Exception e) {
-      if (e.getCause().getClass() == ConnectException.class) {
+      if (e.getCause()!= null && e.getCause().getClass() == ConnectException.class) {
         throw new SlaveNotFoundException(e);
       } else {
         throw Throwables.propagate(e);
