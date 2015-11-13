@@ -24,8 +24,8 @@
   ],
   "dependencies": {
     "backbone-react-component": "^0.10.0",
-    "bootstrap": "~3.2.0",
-    "backbone": "~1.1.2",
+    "bootstrap": "~3.3.0",
+    "backbone": "~1.2.3",
     "jquery": "~1.11.1",
     "moment": "moment/moment#~2.7.0",
     "zeroclipboard": "~2.1.5",
