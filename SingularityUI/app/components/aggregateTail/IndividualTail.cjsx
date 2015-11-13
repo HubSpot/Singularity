@@ -81,7 +81,7 @@ IndividualTail = React.createClass
   scrollToBottom: ->
     if @props.logLines.state.get('moreToFetch') is true
       @props.logLines.reset()
-      @props.logLines.fetchInitialData().done @refs.contents.scrollToBottom
+      @props.logLines.fetchInitialData().done _.delay(@refs.contents.scrollToBottom, 200)
     else
       @refs.contents.scrollToBottom()
 

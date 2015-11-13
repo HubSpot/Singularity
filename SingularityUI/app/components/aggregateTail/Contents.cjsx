@@ -145,7 +145,6 @@ Contents = React.createClass
     @refs.lines.scrollTo(0)
 
   scrollToBottom: ->
-    # console.log 'bot'
     @refs.lines.scrollTo(@state.linesToRender.length)
 
 module.exports = Contents

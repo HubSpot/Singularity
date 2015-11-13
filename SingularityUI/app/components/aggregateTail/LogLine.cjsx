@@ -16,7 +16,7 @@ LogLine = React.createClass
         </a>
       </div>
       <span>
-        {@props.content}
+        {@props.index} | {@props.content}
       </span>
     </div>
 
