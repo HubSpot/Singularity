@@ -98,6 +98,8 @@ Contents = React.createClass
   renderLines: ->
     if @props.logLines
       @props.logLines.map((l, i) =>
+        link = window.location.href.replace(window.location.search, '').replace(window.location.hash, '')
+        link += "?taskIds=#{@props.taskId}##{l.offset}"
         <LogLine
           content={l.data}
           offset={l.offset}
@@ -105,7 +107,8 @@ Contents = React.createClass
           index={i}
           highlighted={l.offset is @currentOffset}
           highlight={@handleHighlight}
-          totalLines={@props.logLines.length} />
+          totalLines={@props.logLines.length}
+          offsetLink={link} />
       )
 
   lineRenderer: (index, key) ->
