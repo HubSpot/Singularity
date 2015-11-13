@@ -23,9 +23,8 @@
     "tests"
   ],
   "dependencies": {
-    "backbone-react-component": "^0.10.0",
-    "bootstrap": "~3.3.0",
-    "backbone": "~1.2.3",
+    "bootstrap": "~3.2.0",
+    "backbone": "~1.1.2",
     "jquery": "~1.11.1",
     "moment": "moment/moment#~2.7.0",
     "zeroclipboard": "~2.1.5",
@@ -48,10 +47,6 @@
   "overrides": {
     "vex": {
       "main": "js/vex.combined.min.js"
-    },
-    "react-list": {
-      "main": "react-list.js",
-      "ignore": []
     },
     "datatables": {
       "main": "media/js/jquery.dataTables.min.js"
