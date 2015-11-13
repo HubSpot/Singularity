@@ -1,8 +1,12 @@
 package com.hubspot.singularity.executor.shells;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -18,6 +22,7 @@ import com.hubspot.singularity.SingularityTaskShellCommandUpdate.UpdateType;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCallable;
+import com.spotify.docker.client.DockerClient;
 
 public class SingularityExecutorShellCommandRunner {
 
@@ -27,6 +32,7 @@ public class SingularityExecutorShellCommandRunner {
   private final ListeningExecutorService shellCommandExecutorService;
   private final SingularityExecutorShellCommandUpdater shellCommandUpdater;
   private final SingularityExecutorConfiguration executorConfiguration;
+  private final DockerClient dockerClient;
 
   @SuppressWarnings("serial")
   private static class InvalidShellCommandException extends RuntimeException {
@@ -38,13 +44,14 @@ public class SingularityExecutorShellCommandRunner {
   }
 
   public SingularityExecutorShellCommandRunner(SingularityTaskShellCommandRequest shellRequest, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorTask task,
-      SingularityExecutorTaskProcessCallable taskProcess, ListeningExecutorService shellCommandExecutorService, SingularityExecutorShellCommandUpdater shellCommandUpdater) {
+      SingularityExecutorTaskProcessCallable taskProcess, ListeningExecutorService shellCommandExecutorService, SingularityExecutorShellCommandUpdater shellCommandUpdater, DockerClient dockerClient) {
     this.shellRequest = shellRequest;
     this.executorConfiguration = executorConfiguration;
     this.task = task;
     this.taskProcess = taskProcess;
     this.shellCommandUpdater = shellCommandUpdater;
     this.shellCommandExecutorService = shellCommandExecutorService;
+    this.dockerClient = dockerClient;
   }
 
   public SingularityTaskShellCommandRequest getShellRequest() {
@@ -123,12 +130,27 @@ public class SingularityExecutorShellCommandRunner {
 
     for (int i = 0; i < command.size(); i++) {
       if (command.get(i).equals(executorConfiguration.getShellCommandPidPlaceholder())) {
-        if (!taskProcess.getCurrentPid().isPresent()) {
-          throw new InvalidShellCommandException("No PID found");
+        int pid;
+        Path pidFilePath = MesosUtils.getTaskDirectoryPath(getTask().getTaskId()).resolve(executorConfiguration.getShellCommandPidFile());
+        if (Files.exists(pidFilePath)) {
+          try {
+            pid = Integer.parseInt(new Scanner(pidFilePath).useDelimiter("\\Z").next());
+          } catch (Exception e) {
+            throw new InvalidShellCommandException("No PID found");
+          }
+        } else if (task.getTaskInfo().hasContainer() && task.getTaskInfo().getContainer().hasDocker()) {
+          pid = 1;
+        } else {
+          if (!taskProcess.getCurrentPid().isPresent()) {
+            throw new InvalidShellCommandException("No PID found");
+          }
+          pid = taskProcess.getCurrentPid().get();
         }
-        command.set(i, Integer.toString(taskProcess.getCurrentPid().get()));
+        command.set(i, Integer.toString(pid));
       } else if (command.get(i).equals(executorConfiguration.getShellCommandUserPlaceholder())) {
         command.set(i, taskProcess.getTask().getExecutorData().getUser().or(executorConfiguration.getDefaultRunAsUser()));
+      } else if (command.get(i).equals(executorConfiguration.getShellCommandContainerIdPlaceholder())) {
+        command.set(i, String.format("%s-%s", executorConfiguration.getDockerPrefix(), task.getTaskId()));
       }
     }
 

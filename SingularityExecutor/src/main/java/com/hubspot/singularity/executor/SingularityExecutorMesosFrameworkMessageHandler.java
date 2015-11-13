@@ -17,6 +17,7 @@ import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandRu
 import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandUpdater;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCallable;
+import com.spotify.docker.client.DockerClient;
 
 public class SingularityExecutorMesosFrameworkMessageHandler {
 
@@ -25,12 +26,14 @@ public class SingularityExecutorMesosFrameworkMessageHandler {
   private final SingularityExecutorMonitor monitor;
   private final SingularityExecutorConfiguration executorConfiguration;
   private final ObjectMapper objectMapper;
+  private final DockerClient dockerClient;
 
   @Inject
-  public SingularityExecutorMesosFrameworkMessageHandler(ObjectMapper objectMapper, SingularityExecutorMonitor monitor, SingularityExecutorConfiguration executorConfiguration) {
+  public SingularityExecutorMesosFrameworkMessageHandler(ObjectMapper objectMapper, SingularityExecutorMonitor monitor, SingularityExecutorConfiguration executorConfiguration, DockerClient dockerClient) {
     this.objectMapper = objectMapper;
     this.monitor = monitor;
     this.executorConfiguration = executorConfiguration;
+    this.dockerClient = dockerClient;
   }
 
   public void handleMessage(byte[] data) {
@@ -56,7 +59,7 @@ public class SingularityExecutorMesosFrameworkMessageHandler {
       }
 
       SingularityExecutorShellCommandRunner shellRunner = new SingularityExecutorShellCommandRunner(shellRequest, executorConfiguration, matchingTask.get(),
-          taskProcess.get(), monitor.getShellCommandExecutorServiceForTask(shellRequest.getTaskId().getId()), updater);
+          taskProcess.get(), monitor.getShellCommandExecutorServiceForTask(shellRequest.getTaskId().getId()), updater, dockerClient);
 
       shellRunner.start();
     } catch (IOException e) {
