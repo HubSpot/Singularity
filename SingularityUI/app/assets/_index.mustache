@@ -34,8 +34,9 @@
             timestampFormat: localStorage.getItem('timestampFormatOverride') || "{{{timestampFormat}}}",
             timestampWithSecondsFormat: localStorage.getItem('timestampWithSecondsFormatOverride') || "{{{timestampWithSecondsFormat}}}",
             {{#slaveHttpsPort}}
-            slaveHttpsPort: {{{slaveHttpsPort}}}
+            slaveHttpsPort: {{{slaveHttpsPort}}},
             {{/slaveHttpsPort}}
+            shellCommands: {{{shellCommands}}},
         };
     </script>
     <script src="{{{staticRoot}}}/js/app.js"></script>

@@ -2,6 +2,10 @@ package com.hubspot.singularity.views;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.google.common.base.Throwables;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
@@ -39,11 +43,13 @@ public class IndexView extends View {
 
   private final Integer warnIfScheduledJobIsRunningPastNextRunPct;
 
+  private final String shellCommands;
+
   private final String timestampFormat;
 
   private final String timestampWithSecondsFormat;
 
-  public IndexView(String singularityUriBase, String appRoot, SingularityConfiguration configuration) {
+  public IndexView(String singularityUriBase, String appRoot, SingularityConfiguration configuration, ObjectMapper mapper) {
     super("index.mustache");
 
     checkNotNull(singularityUriBase, "singularityUriBase is null");
@@ -80,6 +86,13 @@ public class IndexView extends View {
     this.taskS3LogOmitPrefix = configuration.getUiConfiguration().getTaskS3LogOmitPrefix();
 
     this.warnIfScheduledJobIsRunningPastNextRunPct = configuration.getWarnIfScheduledJobIsRunningPastNextRunPct();
+
+    ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
+    try {
+      this.shellCommands = ow.writeValueAsString(configuration.getUiConfiguration().getShellCommands());
+    } catch (JsonProcessingException e) {
+      throw Throwables.propagate(e);
+    }
 
     this.timestampFormat = configuration.getUiConfiguration().getTimestampFormat();
 
@@ -166,6 +179,10 @@ public class IndexView extends View {
     return warnIfScheduledJobIsRunningPastNextRunPct;
   }
 
+  public String getShellCommands() {
+    return shellCommands;
+  }
+
   public String getTimestampFormat() {
     return timestampFormat;
   }
@@ -195,7 +212,9 @@ public class IndexView extends View {
             ", runningTaskLogPath='" + runningTaskLogPath + '\'' +
             ", finishedTaskLogPath='" + finishedTaskLogPath + '\'' +
             ", commonHostnameSuffixToOmit='" + commonHostnameSuffixToOmit + '\'' +
-            ", warnIfScheduledJobIsRunningPastNextRunPct='" + warnIfScheduledJobIsRunningPastNextRunPct + '\'' +
+            ", taskS3LogOmitPrefix='" + taskS3LogOmitPrefix + '\'' +
+            ", warnIfScheduledJobIsRunningPastNextRunPct=" + warnIfScheduledJobIsRunningPastNextRunPct +
+            ", shellCommands='" + shellCommands + '\'' +
             ", timestampFormat='" + timestampFormat + '\'' +
             ", timestampWithSecondsFormat='" + timestampWithSecondsFormat + '\'' +
             ']';
