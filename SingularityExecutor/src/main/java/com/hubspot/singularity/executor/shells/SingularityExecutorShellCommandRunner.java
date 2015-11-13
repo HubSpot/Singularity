@@ -131,7 +131,7 @@ public class SingularityExecutorShellCommandRunner {
           String.format(executorConfiguration.getSwitchUserCommandFormat(), taskProcess.getTask().getExecutorData().getUser().or(executorConfiguration.getDefaultRunAsUser())),
           "docker",
           "exec",
-          String.format("%s-%s", executorConfiguration.getDockerPrefix(), task.getTaskId())
+          String.format("%s%s", executorConfiguration.getDockerPrefix(), task.getTaskId())
       ));
     }
 
@@ -159,7 +159,7 @@ public class SingularityExecutorShellCommandRunner {
       } else if (command.get(i).equals(executorConfiguration.getShellCommandUserPlaceholder())) {
         command.set(i, taskProcess.getTask().getExecutorData().getUser().or(executorConfiguration.getDefaultRunAsUser()));
       } else if (command.get(i).equals(executorConfiguration.getShellCommandContainerIdPlaceholder())) {
-        command.set(i, String.format("%s-%s", executorConfiguration.getDockerPrefix(), task.getTaskId()));
+        command.set(i, String.format("%s%s", executorConfiguration.getDockerPrefix(), task.getTaskId()));
       }
     }
 
