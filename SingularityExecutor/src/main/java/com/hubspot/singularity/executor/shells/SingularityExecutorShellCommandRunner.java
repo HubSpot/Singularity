@@ -124,7 +124,18 @@ public class SingularityExecutorShellCommandRunner {
 
     final SingularityExecutorShellCommandDescriptor shellCommandDescriptor = matchingShellCommandDescriptor.get();
 
-    List<String> command = new ArrayList<>(shellCommandDescriptor.getCommand());
+    List<String> command = new ArrayList<>();
+
+    if (shellCommandDescriptor.isDocker()) {
+      command.addAll(Arrays.asList(
+          String.format(executorConfiguration.getSwitchUserCommandFormat(), taskProcess.getTask().getExecutorData().getUser().or(executorConfiguration.getDefaultRunAsUser())),
+          "docker",
+          "exec",
+          String.format("%s-%s", executorConfiguration.getDockerPrefix(), task.getTaskId())
+      ));
+    }
+
+    command.addAll(shellCommandDescriptor.getCommand());
 
     for (int i = 0; i < command.size(); i++) {
       if (command.get(i).equals(executorConfiguration.getShellCommandPidPlaceholder())) {
