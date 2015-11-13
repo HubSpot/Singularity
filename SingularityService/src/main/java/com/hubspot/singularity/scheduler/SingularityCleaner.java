@@ -204,17 +204,6 @@ public class SingularityCleaner {
               LOG.debug("Waiting on {} (it will expire after {}), because {} is {}", requestCleanup, JavaUtils.durationFromMillis(getObsoleteExpirationTime()), requestCleanup.getRequestId(), requestWithState.get().getState());
               continue;
             }
-          } else {
-            if (requestWithState.isPresent()) {
-              if (requestWithState.get().getRequest().isLoadBalanced() && configuration.isDeletePausedRequestsFromLoadBalancer()) {
-                createLbCleanupRequest(requestId, matchingActiveTaskIds);
-              }
-            } else {
-              Optional<SingularityRequestHistory> maybeHistory = requestHistoryHelper.getLastHistory(requestId);
-              if (maybeHistory.isPresent() && maybeHistory.get().getRequest().isLoadBalanced() && configuration.isDeletePausedRequestsFromLoadBalancer()) {
-                createLbCleanupRequest(requestId, matchingActiveTaskIds);
-              }
-            }
           }
           break;
         case DELETING:
@@ -222,12 +211,12 @@ public class SingularityCleaner {
             killActiveTasks = false;
             killScheduledTasks = false;
             LOG.info("Ignoring {}, because {} still existed", requestCleanup, requestCleanup.getRequestId());
-            if (requestWithState.get().getRequest().isLoadBalanced() && configuration.isDeletePausedRequestsFromLoadBalancer()) {
+            if (requestWithState.get().getRequest().isLoadBalanced() && configuration.isDeleteRemovedRequestsFromLoadBalancer()) {
               createLbCleanupRequest(requestId, matchingActiveTaskIds);
             }
           } else {
             Optional<SingularityRequestHistory> maybeHistory = requestHistoryHelper.getLastHistory(requestId);
-            if (maybeHistory.isPresent() && maybeHistory.get().getRequest().isLoadBalanced() && configuration.isDeletePausedRequestsFromLoadBalancer()) {
+            if (maybeHistory.isPresent() && maybeHistory.get().getRequest().isLoadBalanced() && configuration.isDeleteRemovedRequestsFromLoadBalancer()) {
               createLbCleanupRequest(requestId, matchingActiveTaskIds);
             }
             cleanupDeployState(requestCleanup);
