@@ -5,6 +5,7 @@ import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkForbidden;
 import static com.hubspot.singularity.WebExceptions.checkUnauthorized;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,6 +23,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
+import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskId;
@@ -67,20 +69,12 @@ public class SingularityAuthorizationHelper {
   public void checkAdminAuthorization(Optional<SingularityUser> user) {
     if (authEnabled) {
       if (user.isPresent() && !adminGroups.isEmpty()) {
-        checkForbidden(groupsIntersect(user.get().getGroups(), adminGroups), "User must be part of an admin group");
+        checkForbidden(groupsIntersect(user.get().getGroups(), adminGroups), "%s must be part of one or more admin groups: %s", user.get().getId(), JavaUtils.COMMA_JOINER.join(adminGroups));
       }
     }
   }
 
-  public void checkRequiredAuthorization(Optional<SingularityUser> user) {
-    if (authEnabled) {
-      if (user.isPresent() && !requiredGroups.isEmpty()) {
-        checkForbidden(groupsIntersect(user.get().getGroups(), requiredGroups), "User must be part of a required group");
-      }
-    }
-  }
-
-  public void checkForAuthorizationByTaskId(String taskId, Optional<SingularityUser> user) {
+  public void checkForAuthorizationByTaskId(String taskId, Optional<SingularityUser> user, SingularityAuthorizationScope scope) {
     if (authEnabled) {
       try {
         final SingularityTaskId taskIdObj = SingularityTaskId.valueOf(taskId);
@@ -88,7 +82,7 @@ public class SingularityAuthorizationHelper {
         final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(taskIdObj.getRequestId());
 
         if (maybeRequest.isPresent()) {
-          checkForAuthorization(maybeRequest.get().getRequest(), Optional.<SingularityRequest>absent(), user);
+          checkForAuthorization(maybeRequest.get().getRequest(), user, scope);
         }
       } catch (InvalidSingularityTaskIdException e) {
         badRequest(e.getMessage());
@@ -96,76 +90,75 @@ public class SingularityAuthorizationHelper {
     }
   }
 
-  public void checkForAuthorizationByRequestId(String requestId, Optional<SingularityUser> user) {
+  public void checkForAuthorizationByRequestId(String requestId, Optional<SingularityUser> user, SingularityAuthorizationScope scope) {
     if (authEnabled) {
       final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(requestId);
 
       if (maybeRequest.isPresent()) {
-        checkForAuthorization(maybeRequest.get().getRequest(), Optional.<SingularityRequest>absent(), user);
+        checkForAuthorization(maybeRequest.get().getRequest(), user, scope);
       }
     }
   }
 
-  public boolean isAuthorizedForRequest(SingularityRequest request, Optional<SingularityUser> user) {
-    if (authEnabled) {
-      // not authenticated == no authorization
-      if (!user.isPresent()) {
-        return false;
-      }
-
-      final Set<String> userGroups = user.get().getGroups();
-
-      // check required groups
-      if (!requiredGroups.isEmpty() && Sets.intersection(user.get().getGroups(), requiredGroups).isEmpty()) {
-        return false;
-      }
-
-      // check admin groups
-      if (groupsIntersect(userGroups, adminGroups)) {
-        return true;
-      }
-
-      // check JITA groups
-      if (groupsIntersect(userGroups, jitaGroups)) {
-        return true;
-      }
-
-      // check request groups
-      if (request.getGroup().isPresent()) {
-        return user.get().getGroups().contains(request.getGroup().get());
-      }
+  public boolean isAuthorizedForRequest(SingularityRequest request, Optional<SingularityUser> user, SingularityAuthorizationScope scope) {
+    if (!authEnabled) {
+      return true;  // no auth == no rules!
     }
 
-    return true;
-  }
+    if (!user.isPresent()) {
+      return false;
+    }
 
-  public void checkForAuthorization(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityUser> user) {
-    if (authEnabled) {
-      checkUnauthorized(user.isPresent(), "user must be present");
+    final Set<String> userGroups = user.get().getGroups();
 
-      final Set<String> userGroups = user.get().getGroups();
+    final boolean userIsAdmin = adminGroups.isEmpty() ? false : groupsIntersect(userGroups, adminGroups);
+    final boolean userIsJITA = jitaGroups.isEmpty() ? false : groupsIntersect(userGroups, jitaGroups);
+    final boolean userIsRequestOwner = request.getGroup().isPresent() ? userGroups.contains(request.getGroup().get()) : true;
+    final boolean userIsReadOnlyUser = request.getReadOnlyGroups().isPresent() ? groupsIntersect(userGroups, request.getReadOnlyGroups().get()) : false;
+    final boolean userIsPartOfRequiredGroups = requiredGroups.isEmpty() ? true : groupsIntersect(userGroups, requiredGroups);
 
-      // check for required group membership...
-      if (!requiredGroups.isEmpty()) {
-        checkForbidden(groupsIntersect(userGroups, requiredGroups), "User %s must be part of one or more required groups: %s", user.get().getId(), JavaUtils.COMMA_JOINER.join(requiredGroups));
-      }
-
-      // if user isn't part of an admin group...
-      if (!groupsIntersect(userGroups, adminGroups)) {
-        // if changing groups, check for group membership of old group
-        if (existingRequest.isPresent() && existingRequest.get().getGroup().isPresent() && !request.getGroup().equals(existingRequest.get().getGroup())) {
-          checkForbidden(userGroups.contains(existingRequest.get().getGroup().get()), "User %s must be part of old group %s", user.get().getId(), existingRequest.get().getGroup().get());
-        }
-
-        // check for group membership of current / new group
-        if (request.getGroup().isPresent()) {
-          checkForbidden(userGroups.contains(request.getGroup().get()), "User %s must be part of group %s", user.get().getId(), request.getGroup().get());
-        }
-      }
+    if (userIsAdmin) {
+      return true;  // Admins Rule Everything Around Me
+    } else if (scope == SingularityAuthorizationScope.READ) {
+      return (userIsReadOnlyUser || userIsRequestOwner || userIsJITA) && userIsPartOfRequiredGroups;
+    } else if (scope == SingularityAuthorizationScope.WRITE) {
+      return (userIsRequestOwner || userIsJITA) && userIsPartOfRequiredGroups;
+    } else {
+      return false;
     }
   }
 
-  public <T> Iterable<T> filterByAuthorizedRequests(final Optional<SingularityUser> user, List<T> objects, final Function<T, String> requestIdFunction) {
+  public void checkForAuthorization(SingularityRequest request, Optional<SingularityUser> user, SingularityAuthorizationScope scope) {
+    if (!authEnabled) {
+      return;
+    }
+
+    checkUnauthorized(user.isPresent(), "user must be present");
+
+    final Set<String> userGroups = user.get().getGroups();
+
+    final boolean userIsAdmin = adminGroups.isEmpty() ? false : groupsIntersect(userGroups, adminGroups);
+    final boolean userIsJITA = jitaGroups.isEmpty() ? false : groupsIntersect(userGroups, jitaGroups);
+    final boolean userIsRequestOwner = request.getGroup().isPresent() ? userGroups.contains(request.getGroup().get()) : true;
+    final boolean userIsReadOnlyUser = request.getReadOnlyGroups().isPresent() ? groupsIntersect(userGroups, request.getReadOnlyGroups().get()) : false;
+    final boolean userIsPartOfRequiredGroups = requiredGroups.isEmpty() ? true : groupsIntersect(userGroups, requiredGroups);
+
+    if (userIsAdmin) {
+      return;  // Admins Rule Everything Around Me
+    }
+
+    checkForbidden(userIsPartOfRequiredGroups, "%s must be a member of one or more required groups: %s", user.get().getId(), JavaUtils.COMMA_JOINER.join(requiredGroups));
+
+    if (scope == SingularityAuthorizationScope.READ) {
+      checkForbidden(userIsReadOnlyUser || userIsRequestOwner || userIsJITA, "%s must be a member of one or more groups to %s %s: %s", user.get().getId(), scope.name(), request.getId(), JavaUtils.COMMA_JOINER.join(Iterables.concat(request.getReadOnlyGroups().or(Collections.<String>emptySet()), request.getGroup().asSet(), jitaGroups)));
+    } else if (scope == SingularityAuthorizationScope.WRITE) {
+      checkForbidden(userIsRequestOwner || userIsJITA, "%s must be a member of one or more groups to %s %s: %s", user.get().getId(), scope.name(), request.getId(), JavaUtils.COMMA_JOINER.join(Iterables.concat(request.getGroup().asSet(), jitaGroups)));
+    } else if (scope == SingularityAuthorizationScope.ADMIN) {
+      checkForbidden(userIsAdmin, "%s must be a member of one or more groups to %s %s: %s", user.get().getId(), scope.name(), request.getId(), JavaUtils.COMMA_JOINER.join(adminGroups));
+    }
+  }
+
+  public <T> Iterable<T> filterByAuthorizedRequests(final Optional<SingularityUser> user, List<T> objects, final Function<T, String> requestIdFunction, final SingularityAuthorizationScope scope) {
     if (hasAdminAuthorization(user)) {
       return objects;
     }
@@ -188,12 +181,12 @@ public class SingularityAuthorizationHelper {
       @Override
       public boolean apply(@Nonnull T input) {
         final String requestId = requestIdFunction.apply(input);
-        return requestMap.containsKey(requestId) && isAuthorizedForRequest(requestMap.get(requestId).getRequest(), user);
+        return requestMap.containsKey(requestId) && isAuthorizedForRequest(requestMap.get(requestId).getRequest(), user, scope);
       }
     });
   }
 
-  public Iterable<String> filterAuthorizedRequestIds(final Optional<SingularityUser> user, List<String> requestIds) {
+  public Iterable<String> filterAuthorizedRequestIds(final Optional<SingularityUser> user, List<String> requestIds, final SingularityAuthorizationScope scope) {
     if (hasAdminAuthorization(user)) {
       return requestIds;
     }
@@ -208,7 +201,7 @@ public class SingularityAuthorizationHelper {
     return Iterables.filter(requestIds, new Predicate<String>() {
       @Override
       public boolean apply(@Nonnull String input) {
-        return requestMap.containsKey(input) && isAuthorizedForRequest(requestMap.get(input).getRequest(), user);
+        return requestMap.containsKey(input) && isAuthorizedForRequest(requestMap.get(input).getRequest(), user, scope);
       }
     });
   }
