@@ -287,7 +287,7 @@ public class TaskResource {
   public SingularityTaskShellCommandRequest runShellCommand(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> queryUser, final SingularityShellCommand shellCommand) {
     SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
 
-    authorizationHelper.checkForAuthorizationByTaskId(taskId, user);
+    authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.READ);
 
     if (!taskManager.isActiveTask(taskId)) {
       throw WebExceptions.badRequest("%s is not an active task, can't run %s on it", taskId, shellCommand.getName());
