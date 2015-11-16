@@ -17,7 +17,6 @@ import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandRu
 import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandUpdater;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCallable;
-import com.spotify.docker.client.DockerClient;
 
 public class SingularityExecutorMesosFrameworkMessageHandler {
 
