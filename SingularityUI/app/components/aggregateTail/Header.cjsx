@@ -83,6 +83,10 @@ Header = React.createClass
               {@renderListItems()}
             </ul>
           </div>
+          <div className="btn-group" role="group">
+            <button type="button" className="btn btn-sm btn-default no-margin #{if !@props.splitView then 'active'}" onClick={@props.toggleView}>Unified</button>
+            <button type="button" className="btn btn-sm btn-default no-margin #{if @props.splitView then 'active'}" onClick={@props.toggleView}>Split</button>
+          </div>
           <a className="btn btn-default btn-sm tail-bottom-button" onClick={@props.scrollToBottom}>
             All to bottom
           </a>

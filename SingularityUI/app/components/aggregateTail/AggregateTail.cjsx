@@ -14,6 +14,7 @@ AggregateTail = React.createClass
     params = Utils.getQueryParams()
     viewingInstances: if params.taskIds then params.taskIds.split(',').slice(0, 6) else []
     color: @getActiveColor()
+    splitView: true
 
   componentWillMount: ->
     # Automatically map backbone collections and models to the state of this component
@@ -73,6 +74,10 @@ AggregateTail = React.createClass
   getActiveColor: ->
     localStorage.getItem('singularityLogColor')
 
+  toggleView: ->
+    @setState
+      splitView: !@state.splitView
+
   # ============================================================================
   # Rendering                                                                  |
   # ============================================================================
@@ -117,7 +122,9 @@ AggregateTail = React.createClass
        viewingInstances={@state.viewingInstances}
        toggleViewingInstance={@toggleViewingInstance}
        setLogColor={@setLogColor}
-       activeColor={@state.color} />
+       activeColor={@state.color}
+       splitView={@state.splitView}
+       toggleView={@toggleView} />
       <div className="row #{@getRowType()}">
         {@renderIndividualTails()}
       </div>
