@@ -11,6 +11,8 @@ class LogLines extends Collection
 
     delimiter: /\n/
 
+    timestampRegex: /\d{2}:\d{2}:\d{2}.\d{3}/
+
     # How much we request at a time (before growing it)
     baseRequestLength: 30000
 
@@ -169,11 +171,24 @@ class LogLines extends Collection
         if lines[lines.length - 1].match whiteSpace or not lines[lines.length - 1]
             lines = _.initial lines
 
-        # create the objects for LogLine models
-        lines.map (data) ->
-            line = {data, offset}
-            offset += data.length + 1
+        @lastTimestamp = null
+        @timestampIndex = 0
 
+        # create the objects for LogLine models
+        lines.map (data) =>
+            regexResult = @timestampRegex.exec data
+            if regexResult isnt null
+              timestamp = moment regexResult[0], 'HH:mm:ss.sss'
+              @lastTimestamp = timestamp
+              @timestampIndex = 0
+            else
+              timestamp = @lastTimestamp
+              if @lastTimestamp
+                @timestampIndex++
+
+            line = {data, offset, timestamp, @timestampIndex}
+            offset += data.length + 1
+            console.log line
             line
 
     growRequestLength: (previousParseTimestamp, lastParseTimestamp) ->
