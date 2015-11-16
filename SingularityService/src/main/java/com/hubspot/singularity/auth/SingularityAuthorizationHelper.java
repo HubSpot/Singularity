@@ -69,7 +69,7 @@ public class SingularityAuthorizationHelper {
   public void checkAdminAuthorization(Optional<SingularityUser> user) {
     if (authEnabled) {
       if (user.isPresent() && !adminGroups.isEmpty()) {
-        checkForbidden(groupsIntersect(user.get().getGroups(), adminGroups), "User must be part of an admin group");
+        checkForbidden(groupsIntersect(user.get().getGroups(), adminGroups), "%s must be part of one or more admin groups: %s", user.get().getId(), JavaUtils.COMMA_JOINER.join(adminGroups));
       }
     }
   }
@@ -147,14 +147,14 @@ public class SingularityAuthorizationHelper {
       return;  // Admins Rule Everything Around Me
     }
 
-    checkUnauthorized(userIsPartOfRequiredGroups, "%s must be a member of one or more required groups: %s", user.get().getId(), JavaUtils.COMMA_JOINER.join(requiredGroups));
+    checkForbidden(userIsPartOfRequiredGroups, "%s must be a member of one or more required groups: %s", user.get().getId(), JavaUtils.COMMA_JOINER.join(requiredGroups));
 
     if (scope == SingularityAuthorizationScope.READ) {
-      checkUnauthorized(userIsReadOnlyUser || userIsRequestOwner || userIsJITA, "%s must a member of [%s] to %s", user.get().getId(), JavaUtils.COMMA_JOINER.join(Iterables.concat(request.getReadOnlyGroups().or(Collections.<String>emptySet()), request.getGroup().asSet(), jitaGroups)), scope.name());
+      checkForbidden(userIsReadOnlyUser || userIsRequestOwner || userIsJITA, "%s must be a member of one or more groups to %s %s: %s", user.get().getId(), scope.name(), request.getId(), JavaUtils.COMMA_JOINER.join(Iterables.concat(request.getReadOnlyGroups().or(Collections.<String>emptySet()), request.getGroup().asSet(), jitaGroups)));
     } else if (scope == SingularityAuthorizationScope.WRITE) {
-      checkUnauthorized(userIsRequestOwner || userIsJITA, "%s must be a member of [%s] to %s", user.get().getId(), JavaUtils.COMMA_JOINER.join(Iterables.concat(request.getGroup().asSet(), jitaGroups)), scope.name());
+      checkForbidden(userIsRequestOwner || userIsJITA, "%s must be a member of one or more groups to %s %s: %s", user.get().getId(), scope.name(), request.getId(), JavaUtils.COMMA_JOINER.join(Iterables.concat(request.getGroup().asSet(), jitaGroups)));
     } else if (scope == SingularityAuthorizationScope.ADMIN) {
-      checkUnauthorized(userIsAdmin, "%s must be a member of [%s] to %s", user.get().getId(), JavaUtils.COMMA_JOINER.join(adminGroups), scope.name());
+      checkForbidden(userIsAdmin, "%s must be a member of one or more groups to %s %s: %s", user.get().getId(), scope.name(), request.getId(), JavaUtils.COMMA_JOINER.join(adminGroups));
     }
   }
 
