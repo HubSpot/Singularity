@@ -56,11 +56,17 @@ Handlebars.registerHelper 'unlessInSubFilter', (needle, haystack, options) ->
 Handlebars.registerHelper 'withLast', (list, options) ->
     options.fn _.last list
 
+# {{#withFirst [1, 2, 3]}}
+#     {{! this = 1 }}
+# {{/withFirst}}
+Handlebars.registerHelper 'withFirst', (list, options) ->
+    options.fn list[0]
+
 # 1234567890 => 20 minutes ago
 Handlebars.registerHelper 'timestampFromNow', (timestamp) ->
     return '' if not timestamp
     timeObject = moment timestamp
-    "#{timeObject.fromNow()} (#{ timeObject.format 'lll'})"
+    "#{timeObject.fromNow()} (#{ timeObject.format window.config.timestampFormat})"
 
 Handlebars.registerHelper 'ifTimestampInPast', (timestamp, options) ->
     return options.inverse @ if not timestamp
@@ -81,12 +87,12 @@ Handlebars.registerHelper 'timestampDuration', (timestamp) ->
 Handlebars.registerHelper 'timestampFormatted', (timestamp) ->
     return '' if not timestamp
     timeObject = moment timestamp
-    timeObject.format 'lll'
+    timeObject.format window.config.timestampFormat
 
 Handlebars.registerHelper 'timestampFormattedWithSeconds', (timestamp) ->
     return '' if not timestamp
     timeObject = moment timestamp
-    timeObject.format 'lll:ss'
+    timeObject.format window.config.timestampWithSecondsFormat
 
 # 'DRIVER_NOT_RUNNING' => 'Driver not running'
 Handlebars.registerHelper 'humanizeText', (text) ->
@@ -137,3 +143,31 @@ Handlebars.registerHelper 'trimS3File', (filename, taskId) ->
     finalRegex = config.taskS3LogOmitPrefix.replace('%taskId', taskId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).replace('%index', '[0-9]+').replace('%s', '[0-9]+')
 
     return filename.replace(new RegExp(finalRegex), '')
+
+Handlebars.registerHelper 'isRunningState', (list, options) ->
+    switch _.last(list).taskState
+        when 'TASK_RUNNING'
+            options.fn(@)
+        else
+            options.inverse(@)
+
+Handlebars.registerHelper 'isSingularityExecutor', (value, options) ->
+    if value.indexOf 'singularity-executor' != -1
+        options.fn(@)
+    else
+        options.inverse(@)
+
+Handlebars.registerHelper 'lastShellRequestStatus', (statuses) ->
+    if statuses.length > 0
+      statuses[0].updateType
+
+Handlebars.registerHelper 'shellRequestOutputFilename', (statuses) ->
+    for status in statuses
+      if status.outputFilename
+        return status.outputFilename
+
+Handlebars.registerHelper 'ifShellRequestHasOutputFilename', (statuses, options) ->
+    for status in statuses
+      if status.outputFilename
+        return options.fn @
+    return options.inverse @

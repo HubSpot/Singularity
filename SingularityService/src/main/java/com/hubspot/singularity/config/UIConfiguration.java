@@ -2,17 +2,19 @@ package com.hubspot.singularity.config;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 
 public class UIConfiguration {
 
@@ -41,7 +43,6 @@ public class UIConfiguration {
   private String title = "Singularity";
 
   @JsonProperty
-  @Pattern( regexp = "^|#[0-9a-fA-F]{6}$" )
   private String navColor = "";
 
   @JsonProperty
@@ -52,6 +53,10 @@ public class UIConfiguration {
 
   @NotEmpty
   private String finishedTaskLogPath = "stdout";
+
+  @JsonProperty
+  @NotNull
+  private List<ShellCommandDescriptor> shellCommands = Collections.emptyList();
 
   private boolean hideNewDeployButton = false;
   private boolean hideNewRequestButton = false;
@@ -65,6 +70,12 @@ public class UIConfiguration {
 
   @NotNull
   private String taskS3LogOmitPrefix = "";
+
+  @NotEmpty
+  private String timestampFormat = "lll";
+
+  @NotEmpty
+  private String timestampWithSecondsFormat = "lll:ss";
 
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
@@ -134,6 +145,14 @@ public class UIConfiguration {
     this.finishedTaskLogPath = finishedTaskLogPath;
   }
 
+  public List<ShellCommandDescriptor> getShellCommands() {
+    return shellCommands;
+  }
+
+  public void setShellCommands(List<ShellCommandDescriptor> shellCommands) {
+    this.shellCommands = shellCommands;
+  }
+
   public String getRunningTaskLogPath() {
     return runningTaskLogPath;
   }
@@ -150,4 +169,19 @@ public class UIConfiguration {
     this.taskS3LogOmitPrefix = taskS3LogOmitPrefix;
   }
 
+  public String getTimestampFormat() {
+    return timestampFormat;
+  }
+
+  public void setTimestampFormat(String timestampFormat) {
+    this.timestampFormat = timestampFormat;
+  }
+
+  public String getTimestampWithSecondsFormat() {
+    return timestampWithSecondsFormat;
+  }
+
+  public void setTimestampWithSecondsFormat(String timestampWithSecondsFormat) {
+    this.timestampWithSecondsFormat = timestampWithSecondsFormat;
+  }
 }

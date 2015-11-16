@@ -20,6 +20,7 @@ public class SingularityMesosModule extends AbstractModule {
     bind(SingularityDriver.class).in(Scopes.SINGLETON);
     bind(SingularityLogSupport.class).in(Scopes.SINGLETON);
     bind(SingularityMesosScheduler.class).in(Scopes.SINGLETON);
+    bind(SingularityMesosFrameworkMessageHandler.class).in(Scopes.SINGLETON);
     bind(SingularityMesosSchedulerDelegator.class).in(Scopes.SINGLETON);
     bind(SingularityMesosTaskBuilder.class).in(Scopes.SINGLETON);
     bind(SingularitySlaveAndRackManager.class).in(Scopes.SINGLETON);

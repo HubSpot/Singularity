@@ -6,9 +6,12 @@ import static com.hubspot.singularity.WebExceptions.notFound;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -19,9 +22,11 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.mesos.client.MesosClient;
@@ -33,15 +38,21 @@ import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityService;
+import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.config.UIConfiguration;
+import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
+import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
@@ -63,16 +74,18 @@ public class TaskResource {
   private final MesosClient mesosClient;
   private final SingularityAuthorizationHelper authorizationHelper;
   private final Optional<SingularityUser> user;
+  private final UIConfiguration uiConfiguration;
 
   @Inject
   public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient,
-                      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user) {
+                      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, UIConfiguration uiConfiguration) {
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
     this.slaveManager = slaveManager;
     this.mesosClient = mesosClient;
     this.authorizationHelper = authorizationHelper;
     this.user = user;
+    this.uiConfiguration = uiConfiguration;
   }
 
   @GET
@@ -253,6 +266,63 @@ public class TaskResource {
     }
 
     return taskCleanup;
+  }
+
+
+  @Path("/commands/queued")
+  @ApiOperation(value="Retrieve a list of all the shell commands queued for execution")
+  public List<SingularityTaskShellCommandRequest> getQueuedShellCommands() {
+    authorizationHelper.checkAdminAuthorization(user);
+    return taskManager.getAllQueuedTaskShellCommandRequests();
+  }
+
+  @POST
+  @Path("/task/{taskId}/command")
+  @ApiOperation(value="Run a configured shell command against the given task")
+  @ApiResponses({
+    @ApiResponse(code=400, message="Given shell command option doesn't exist"),
+    @ApiResponse(code=403, message="Given shell command doesn't exist")
+  })
+  @Consumes({ MediaType.APPLICATION_JSON })
+  public SingularityTaskShellCommandRequest runShellCommand(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> queryUser, final SingularityShellCommand shellCommand) {
+    SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
+
+    authorizationHelper.checkForAuthorizationByTaskId(taskId, user);
+
+    if (!taskManager.isActiveTask(taskId)) {
+      throw WebExceptions.badRequest("%s is not an active task, can't run %s on it", taskId, shellCommand.getName());
+    }
+
+    Optional<ShellCommandDescriptor> commandDescriptor = Iterables.tryFind(uiConfiguration.getShellCommands(), new Predicate<ShellCommandDescriptor>() {
+
+      @Override
+      public boolean apply(ShellCommandDescriptor input) {
+        return input.getName().equals(shellCommand.getName());
+      }
+    });
+
+    if (!commandDescriptor.isPresent()) {
+      throw WebExceptions.forbidden("Shell command %s not in %s", shellCommand.getName(), uiConfiguration.getShellCommands());
+    }
+
+    Set<String> options = Sets.newHashSetWithExpectedSize(commandDescriptor.get().getOptions().size());
+    for (ShellCommandOptionDescriptor option : commandDescriptor.get().getOptions()) {
+      options.add(option.getName());
+    }
+
+    if (shellCommand.getOptions().isPresent()) {
+      for (String option : shellCommand.getOptions().get()) {
+        if (!options.contains(option)) {
+          throw WebExceptions.badRequest("Shell command %s does not have option %s (%s)", shellCommand.getName(), option, options);
+        }
+      }
+    }
+
+    SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(taskIdObj, queryUser, System.currentTimeMillis(), shellCommand);
+
+    taskManager.saveTaskShellCommandRequestToQueue(shellRequest);
+
+    return shellRequest;
   }
 
 }

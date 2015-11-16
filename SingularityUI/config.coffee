@@ -42,7 +42,7 @@ exports.config =
             apiRoot: process.env.SINGULARITY_API_URI ? ''
             slaveHttpPort: process.env.SINGULARITY_SLAVE_HTTP_PORT ? 5051
             title: process.env.SINGULARITY_TITLE ? 'Singularity (local dev)'
-            navColor: process.env.SINGULARITY_NAV_COLOR ? ''
+            navColor: process.env.SINGULARITY_NAV_COLOR
             defaultCpus: process.env.SINGUALRITY_DEFAULT_CPUS ? 1
             defaultMemory: process.env.SINGULARITY_DEFAULT_MEMORY ? 128
             defaultHealthcheckIntervalSeconds: process.env.SINGULARITY_DEFAULT_HEALTHCHECK_INTERVAL_SECONDS ? 5
@@ -55,6 +55,9 @@ exports.config =
             commonHostnameSuffixToOmit: process.env.SINGULARITY_COMMON_HOSTNAME_SUFFIX_TO_OMIT ? ""
             taskS3LogOmitPrefix: process.env.SINGULARITY_TASK_S3_LOG_OMIT_PREFIX ? ''
             warnIfScheduledJobIsRunningPastNextRunPct: process.env.SINGULARITY_WARN_IF_SCHEDULED_JOB_IS_RUNNING_PAST_NEXT_RUN_PCT ? 200
+            shellCommands: process.env.SINGULARITY_SHELL_COMMANDS ? "[]"
+            timestampFormat: process.env.SINGULARITY_TIMESTAMP_FORMAT ? 'lll'
+            timestampWithSecondsFormat: process.env.SINGULARITY_TIMESTAMP_WITH_SECONDS_FORMAT ? 'lll:ss'
 
         compiledTemplate = handlebars.compile(indexTemplate)(templateData)
         fs.writeFileSync destination, compiledTemplate

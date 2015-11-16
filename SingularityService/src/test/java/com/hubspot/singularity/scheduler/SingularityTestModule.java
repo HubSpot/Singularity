@@ -55,6 +55,7 @@ import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.RackResource;
 import com.hubspot.singularity.resources.RequestResource;
 import com.hubspot.singularity.resources.SlaveResource;
+import com.hubspot.singularity.resources.TaskResource;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
@@ -192,6 +193,7 @@ public class SingularityTestModule implements Module {
 
     mainBinder.bind(DeployResource.class);
     mainBinder.bind(RequestResource.class);
+    mainBinder.bind(TaskResource.class);
     mainBinder.bind(SlaveResource.class);
     mainBinder.bind(RackResource.class);
   }

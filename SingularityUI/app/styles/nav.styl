@@ -1,4 +1,85 @@
+@import colors
+@import nib
+
 .navbar
-    
+
     .navbar-brand, #navigation-links .global-search-button
         color #bbb
+
+// Red
+body.env-color-red .navbar
+  background linear-gradient(top, $nav-red-start, $nav-red-end)
+
+  li.dropdown ul a
+    color $base-text
+
+  li a, .global-search-button span, .navbar-brand
+    color $base-text
+
+    &:hover
+      color black
+
+  .active > a,
+  .open > a
+    color $base-text
+    background-color $nav-red-dark
+
+    &:hover
+      color black
+      background-color $nav-red-dark
+
+// Yellow
+body.env-color-yellow .navbar
+  background linear-gradient(top, $nav-yellow-start, $nav-yellow-end)
+
+  .global-search-button span, .navbar-brand
+    color $base-text
+
+  .active > a,
+  .open > a
+    background-color $nav-yellow-dark
+
+    &:hover
+      background-color $nav-yellow-dark
+
+// Green
+body.env-color-green .navbar
+  background linear-gradient(top, $nav-green-start, $nav-green-end)
+
+  li.dropdown ul a
+    color $base-text
+
+  li a, .global-search-button span, .navbar-brand
+    color $base-text
+
+    &:hover
+      color $base-text
+
+  .active > a,
+  .open > a
+    color $base-text
+    background-color $nav-green-dark
+
+    &:hover
+      color black
+      background-color $nav-green-dark
+
+// Blue
+body.env-color-blue .navbar
+  background linear-gradient(top, $nav-blue-start, $nav-blue-end)
+
+  li.dropdown ul a
+    color $base-text
+
+  li a, .global-search-button span, .navbar-brand
+    color $base-text
+
+    &:hover
+      color black
+
+  .active > a,
+  .open > a
+    background-color $nav-blue-dark
+
+    &:hover
+      background-color $nav-blue-dark

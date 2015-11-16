@@ -10,13 +10,7 @@
     <link rel="shortcut icon" href="{{{staticRoot}}}/images/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <link rel="stylesheet" href="{{{staticRoot}}}/css/app.css">
-    {{#navColor}}
-    <style>
-        .navbar-default {
-            background-color: {{{navColor}}};
-        }
-    </style>
-    {{/navColor}}
+
     <script>
         window.config = {
             staticRoot: "{{{staticRoot}}}",
@@ -37,15 +31,23 @@
             taskS3LogOmitPrefix: "{{{ taskS3LogOmitPrefix }}}",
             slaveHttpPort: {{{slaveHttpPort}}},
             warnIfScheduledJobIsRunningPastNextRunPct: {{{warnIfScheduledJobIsRunningPastNextRunPct}}},
+            timestampFormat: localStorage.getItem('timestampFormatOverride') || "{{{timestampFormat}}}",
+            timestampWithSecondsFormat: localStorage.getItem('timestampWithSecondsFormatOverride') || "{{{timestampWithSecondsFormat}}}",
             {{#slaveHttpsPort}}
-            slaveHttpsPort: {{{slaveHttpsPort}}}
+            slaveHttpsPort: {{{slaveHttpsPort}}},
             {{/slaveHttpsPort}}
+            shellCommands: {{{shellCommands}}},
         };
     </script>
     <script src="{{{staticRoot}}}/js/app.js"></script>
     <script>require('initialize');</script>
 </head>
+{{#navColor}}
+<body class="env-color-{{{.}}}">
+{{/navColor}}
+{{^navColor}}
 <body>
+{{/navColor}}
     <div class="page-loader fixed"></div>
     <div id="page" class="container-fluid"></div>
     <div style="-webkit-transform: translateZ(0)"></div>
