@@ -1,8 +1,12 @@
 package com.hubspot.singularity.executor.shells;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
@@ -18,6 +22,7 @@ import com.hubspot.singularity.SingularityTaskShellCommandUpdate.UpdateType;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCallable;
+import com.spotify.docker.client.DockerClient;
 
 public class SingularityExecutorShellCommandRunner {
 
@@ -119,14 +124,39 @@ public class SingularityExecutorShellCommandRunner {
 
     final SingularityExecutorShellCommandDescriptor shellCommandDescriptor = matchingShellCommandDescriptor.get();
 
-    List<String> command = new ArrayList<>(shellCommandDescriptor.getCommand());
+    List<String> command = new ArrayList<>();
+
+    if (shellCommandDescriptor.isSwitchUser()) {
+      String switchUserCommand = String.format(executorConfiguration.getSwitchUserCommandFormat(), taskProcess.getTask().getExecutorData().getUser().or(executorConfiguration.getDefaultRunAsUser()));
+      command.addAll(Arrays.asList(switchUserCommand.split("\\s+")));
+    }
+
+    boolean isDocker = task.getTaskInfo().hasContainer() && task.getTaskInfo().getContainer().hasDocker();
+    if (isDocker) {
+      command.addAll(Arrays.asList("docker", "exec", String.format("%s%s", executorConfiguration.getDockerPrefix(), task.getTaskId())));
+    }
+
+    command.addAll(shellCommandDescriptor.getCommand());
 
     for (int i = 0; i < command.size(); i++) {
       if (command.get(i).equals(executorConfiguration.getShellCommandPidPlaceholder())) {
-        if (!taskProcess.getCurrentPid().isPresent()) {
-          throw new InvalidShellCommandException("No PID found");
+        int pid;
+        Path pidFilePath = MesosUtils.getTaskDirectoryPath(getTask().getTaskId()).resolve(executorConfiguration.getShellCommandPidFile());
+        if (Files.exists(pidFilePath)) {
+          try {
+            pid = Integer.parseInt(new Scanner(pidFilePath).useDelimiter("\\Z").next());
+          } catch (Exception e) {
+            throw new InvalidShellCommandException("No PID found");
+          }
+        } else if (isDocker) {
+          pid = 1;
+        } else {
+          if (!taskProcess.getCurrentPid().isPresent()) {
+            throw new InvalidShellCommandException("No PID found");
+          }
+          pid = taskProcess.getCurrentPid().get();
         }
-        command.set(i, Integer.toString(taskProcess.getCurrentPid().get()));
+        command.set(i, Integer.toString(pid));
       } else if (command.get(i).equals(executorConfiguration.getShellCommandUserPlaceholder())) {
         command.set(i, taskProcess.getTask().getExecutorData().getUser().or(executorConfiguration.getDefaultRunAsUser()));
       }
