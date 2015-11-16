@@ -1,7 +1,8 @@
-
 Header = require './Header'
 IndividualTail = require './IndividualTail'
+InterleavedTail = require './InterleavedTail'
 Utils = require '../../utils'
+LogLines = require '../../collections/LogLines'
 
 AggregateTail = React.createClass
   mixins: [Backbone.React.Component.mixin]
@@ -90,6 +91,12 @@ AggregateTail = React.createClass
       t.id is taskId
     )[0]?.taskId.instanceNo
 
+  renderTail: ->
+    if @state.splitView
+      return @renderIndividualTails()
+    else
+      return @renderInterleavedTail()
+
   renderIndividualTails: ->
     @state.viewingInstances.sort((a, b) =>
       @getInstanceNumber(a) > @getInstanceNumber(b)
@@ -110,6 +117,27 @@ AggregateTail = React.createClass
             activeColor={@state.color} />
         </div>
     )
+
+  renderInterleavedTail: ->
+    logLines = @state.viewingInstances.map((taskId) =>
+      @props.logLines[taskId]
+    )
+    ajaxErrors = @state.viewingInstances.map((taskId) =>
+      @props.ajaxError[taskId]
+    )
+    <div className="col-md-12 tail-column">
+      <InterleavedTail
+        path={@props.path}
+        requestId={@props.requestId}
+        taskId={taskId}
+        instanceNumber={''}
+        offset={@props.offset}
+        logLines={logLines}
+        ajaxErrors={ajaxErrors}
+        activeTasks={@props.activeTasks}
+        closeTail={_.noop}
+        activeColor={@state.color} />
+    </div>
 
   render: ->
     <div>

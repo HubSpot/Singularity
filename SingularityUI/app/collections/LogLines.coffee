@@ -188,7 +188,7 @@ class LogLines extends Collection
 
             line = {data, offset, timestamp, @timestampIndex}
             offset += data.length + 1
-            console.log line
+
             line
 
     growRequestLength: (previousParseTimestamp, lastParseTimestamp) ->
@@ -210,5 +210,11 @@ class LogLines extends Collection
         newRequestLength = @baseRequestLength if newRequestLength < @baseRequestLength
 
         @state.set('currentRequestLength', newRequestLength)
+
+
+    # Static Methods -----------------------------------------------------------
+
+    @merge: (collections) ->
+      console.log collections
 
 module.exports = LogLines
