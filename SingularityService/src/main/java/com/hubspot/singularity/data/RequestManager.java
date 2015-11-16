@@ -29,6 +29,7 @@ import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
+import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
@@ -43,7 +44,7 @@ public class RequestManager extends CuratorAsyncManager {
   private final Transcoder<SingularityPendingRequest> pendingRequestTranscoder;
   private final Transcoder<SingularityRequestCleanup> requestCleanupTranscoder;
   private final Transcoder<SingularityRequestHistory> requestHistoryTranscoder;
-  private final Transcoder<SingularityLoadBalancerUpdate> loadBalancerUpdateTranscoder;
+  private final Transcoder<SingularityRequestLbCleanup> requestLbCleanupTranscoder;
 
   private final SingularityEventListener singularityEventListener;
 
@@ -57,7 +58,7 @@ public class RequestManager extends CuratorAsyncManager {
 
   @Inject
   public RequestManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, SingularityEventListener singularityEventListener,
-      Transcoder<SingularityRequestCleanup> requestCleanupTranscoder, Transcoder<SingularityRequestWithState> requestTranscoder, Transcoder<SingularityLoadBalancerUpdate> loadBalancerUpdateTranscoder,
+      Transcoder<SingularityRequestCleanup> requestCleanupTranscoder, Transcoder<SingularityRequestWithState> requestTranscoder, Transcoder<SingularityRequestLbCleanup> requestLbCleanupTranscoder,
       Transcoder<SingularityPendingRequest> pendingRequestTranscoder, Transcoder<SingularityRequestHistory> requestHistoryTranscoder) {
     super(curator, configuration, metricRegistry);
     this.requestTranscoder = requestTranscoder;
@@ -65,7 +66,7 @@ public class RequestManager extends CuratorAsyncManager {
     this.pendingRequestTranscoder = pendingRequestTranscoder;
     this.requestHistoryTranscoder = requestHistoryTranscoder;
     this.singularityEventListener = singularityEventListener;
-    this.loadBalancerUpdateTranscoder = loadBalancerUpdateTranscoder;
+    this.requestLbCleanupTranscoder = requestLbCleanupTranscoder;
   }
 
   private String getRequestPath(String requestId) {
@@ -280,6 +281,14 @@ public class RequestManager extends CuratorAsyncManager {
     delete(getRequestPath(request.getId()));
   }
 
+  public List<SingularityRequestLbCleanup> getLbCleanupRequests() {
+    return getAsyncChildren(LB_CLEANUP_PATH_ROOT, requestLbCleanupTranscoder);
+  }
+
+  public Optional<SingularityRequestLbCleanup> getLbCleanupRequest(String requestId) {
+    return getData(getLBCleanupPath(requestId), requestLbCleanupTranscoder);
+  }
+
   public List<String> getLBCleanupRequestIds() {
     return getChildren(LB_CLEANUP_PATH_ROOT);
   }
@@ -288,19 +297,11 @@ public class RequestManager extends CuratorAsyncManager {
     return ZKPaths.makePath(LB_CLEANUP_PATH_ROOT, requestId);
   }
 
-  public SingularityCreateResult createLBCleanupRequest(String requestId) {
-    return create(getLBCleanupPath(requestId));
+  public void saveLBCleanupRequest(SingularityRequestLbCleanup cleanup) {
+    save(getLBCleanupPath(cleanup.getRequestId()), cleanup, requestLbCleanupTranscoder);
   }
 
   public SingularityDeleteResult deleteLBCleanupRequest(String requestId) {
     return delete(getLBCleanupPath(requestId));
-  }
-
-  public Optional<SingularityLoadBalancerUpdate> getLoadBalancerState(String requestId) {
-    return getData(getLBCleanupPath(requestId), loadBalancerUpdateTranscoder);
-  }
-
-  public void saveLoadBalancerState(String requestId, SingularityLoadBalancerUpdate lbUpdate) {
-    save(getLBCleanupPath(requestId), lbUpdate, loadBalancerUpdateTranscoder);
   }
 }
