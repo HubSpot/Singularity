@@ -34,6 +34,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+import com.hubspot.singularity.SingularityOfferState;
 
 @Singleton
 public class StateManager extends CuratorManager {
@@ -42,6 +43,7 @@ public class StateManager extends CuratorManager {
 
   private static final String ROOT_PATH = "/hosts";
   private static final String STATE_PATH = "/STATE";
+  private static final String OFFER_STATE_PATH = "/offerState";
 
   private final RequestManager requestManager;
   private final TaskManager taskManager;
@@ -50,19 +52,21 @@ public class StateManager extends CuratorManager {
   private final RackManager rackManager;
   private final Transcoder<SingularityState> stateTranscoder;
   private final Transcoder<SingularityHostState> hostStateTranscoder;
+  private final Transcoder<SingularityOfferState> offerStateTranscoder;
   private final SingularityConfiguration singularityConfiguration;
   private final SingularityAuthDatastore authDatastore;
 
   @Inject
   public StateManager(CuratorFramework curatorFramework, SingularityConfiguration configuration, MetricRegistry metricRegistry, RequestManager requestManager, TaskManager taskManager,
       DeployManager deployManager, SlaveManager slaveManager, RackManager rackManager, Transcoder<SingularityState> stateTranscoder, Transcoder<SingularityHostState> hostStateTranscoder,
-      SingularityConfiguration singularityConfiguration, SingularityAuthDatastore authDatastore) {
+      Transcoder<SingularityOfferState> offerStateTranscoder, SingularityConfiguration singularityConfiguration, SingularityAuthDatastore authDatastore) {
     super(curatorFramework, configuration, metricRegistry);
 
     this.requestManager = requestManager;
     this.taskManager = taskManager;
     this.stateTranscoder = stateTranscoder;
     this.hostStateTranscoder = hostStateTranscoder;
+    this.offerStateTranscoder = offerStateTranscoder;
     this.slaveManager = slaveManager;
     this.rackManager = rackManager;
     this.deployManager = deployManager;
@@ -297,4 +301,11 @@ public class StateManager extends CuratorManager {
             includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy);
   }
 
+  public SingularityOfferState getOfferState() {
+    return getData(OFFER_STATE_PATH, offerStateTranscoder).or(SingularityOfferState.emptyState());
+  }
+
+  public void updateOfferState(SingularityOfferState newOfferState) {
+    save(OFFER_STATE_PATH, newOfferState, offerStateTranscoder);
+  }
 }

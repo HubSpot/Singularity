@@ -3,6 +3,7 @@ package com.hubspot.singularity;
 import static com.hubspot.singularity.JsonHelpers.copyOfList;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -37,6 +38,7 @@ public class SingularityRequest {
   private final Optional<Boolean> rackSensitive;
   private final Optional<List<String>> rackAffinity;
   private final Optional<SlavePlacement> slavePlacement;
+  private final Optional<Map<String, String>> requiredSlaveAttributes;
 
   private final Optional<Boolean> loadBalanced;
 
@@ -49,7 +51,7 @@ public class SingularityRequest {
       @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive, @JsonProperty("loadBalanced") Optional<Boolean> loadBalanced,
       @JsonProperty("killOldNonLongRunningTasksAfterMillis") Optional<Long> killOldNonLongRunningTasksAfterMillis, @JsonProperty("scheduleType") Optional<ScheduleType> scheduleType,
       @JsonProperty("quartzSchedule") Optional<String> quartzSchedule, @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity,
-      @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement, @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis,
+      @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement, @JsonProperty("requiredSlaveAttributes") Optional<Map<String, String>> requiredSlaveAttributes, @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis,
       @JsonProperty("waitAtLeastMillisAfterTaskFinishesForReschedule") Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule, @JsonProperty("group") Optional<String> group,
       @JsonProperty("readOnlyGroups") Optional<Set<String>> readOnlyGroups) {
     this.id = id;
@@ -65,6 +67,7 @@ public class SingularityRequest {
     this.quartzSchedule = quartzSchedule;
     this.rackAffinity = rackAffinity;
     this.slavePlacement = slavePlacement;
+    this.requiredSlaveAttributes = requiredSlaveAttributes;
     this.scheduledExpectedRuntimeMillis = scheduledExpectedRuntimeMillis;
     this.waitAtLeastMillisAfterTaskFinishesForReschedule = waitAtLeastMillisAfterTaskFinishesForReschedule;
     this.group = group;
@@ -91,6 +94,7 @@ public class SingularityRequest {
     .setRackAffinity(copyOfList(rackAffinity))
     .setWaitAtLeastMillisAfterTaskFinishesForReschedule(waitAtLeastMillisAfterTaskFinishesForReschedule)
     .setSlavePlacement(slavePlacement)
+    .setRequiredSlaveAttributes(requiredSlaveAttributes)
     .setScheduledExpectedRuntimeMillis(scheduledExpectedRuntimeMillis)
     .setGroup(group)
     .setReadOnlyGroups(readOnlyGroups);
@@ -155,6 +159,10 @@ public class SingularityRequest {
 
   public Optional<Long> getScheduledExpectedRuntimeMillis() {
     return scheduledExpectedRuntimeMillis;
+  }
+
+  public Optional<Map<String, String>> getRequiredSlaveAttributes() {
+    return requiredSlaveAttributes;
   }
 
   @JsonIgnore
@@ -247,6 +255,7 @@ public class SingularityRequest {
             ", rackSensitive=" + rackSensitive +
             ", rackAffinity=" + rackAffinity +
             ", slavePlacement=" + slavePlacement +
+            ", requiredSlaveAttributes=" + requiredSlaveAttributes +
             ", loadBalanced=" + loadBalanced +
             ", group=" + group +
             ", readOnlyGroups=" + readOnlyGroups +
@@ -276,6 +285,7 @@ public class SingularityRequest {
             Objects.equals(rackSensitive, request.rackSensitive) &&
             Objects.equals(rackAffinity, request.rackAffinity) &&
             Objects.equals(slavePlacement, request.slavePlacement) &&
+            Objects.equals(requiredSlaveAttributes, request.requiredSlaveAttributes) &&
             Objects.equals(loadBalanced, request.loadBalanced) &&
             Objects.equals(group, request.group) &&
             Objects.equals(readOnlyGroups, request.readOnlyGroups);
@@ -283,6 +293,6 @@ public class SingularityRequest {
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, loadBalanced, group, readOnlyGroups);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, loadBalanced, group, readOnlyGroups);
   }
 }

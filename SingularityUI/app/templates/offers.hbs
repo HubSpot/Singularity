@@ -1,0 +1,59 @@
+{{#if synced}}
+    <header>
+        <h1>Offer Decisions</h1>
+    </header>
+    {{#if offers}}
+        <div class='col-md-12'>
+            <div class="row">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Request</th>
+                            <th>Deploy</th>
+                            <th>Instance</th>
+                            <th>Launched</th>
+                            <th>Details</th>
+                            <th class="hidden-xs">
+                                {{! Actions column }}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {{#each offers}}
+                        <tr>
+                            <td><a href="{{appRoot}}/request/{{taskId.requestId}}">{{taskId.requestId}}</a></td>
+                            <td><a href="{{appRoot}}/request/{{taskId.requestId}}/deploy/{{taskId.deployId}}">{{taskId.deployId}}</a></td>
+                            <td>{{taskId.instanceNo}}</td>
+                            {{#if launchedOnHost}}
+                                <td>yes</td>
+                                <td><ul><li>Launched on <a href="{{appRoot}}/tasks/active/{{launchedOnHost}}">{{launchedOnHost}}</a></li></ul></td>
+                            {{else}}
+                                <td>no</td>
+                                <td>
+                                    <ul>
+                                        {{#each offerDeclinedReasons}}
+                                            <li><a href="{{appRoot}}/tasks/active/{{@key}}">{{@key}}</a> : {{this}}</li>
+                                        {{else}}
+                                            <li>No Offers</li>
+                                        {{/each}}
+                                    </ul>
+                                </td>
+                            {{/if}}
+                            <td class="actions-column hidden-xs">
+                                <a data-task-id="{{ id }}" data-action="viewJSON" title="JSON">
+                                    { }
+                                </a>
+                            </td>
+                        </tr>
+                    {{/each}}
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+    {{else}}
+        <div id='empty-table' class="empty-table-message"><p>No Recent Task Placements</p></div>
+    {{/if}}
+{{else}}
+<div class="page-loader centered cushy"></div>
+{{/if}}

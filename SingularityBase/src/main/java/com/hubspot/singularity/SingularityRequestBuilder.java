@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -32,6 +33,7 @@ public class SingularityRequestBuilder {
   private Optional<Boolean> rackSensitive;
   private Optional<List<String>> rackAffinity;
   private Optional<SlavePlacement> slavePlacement;
+  private Optional<Map<String, String>> requiredSlaveAttributes;
 
   private Optional<Boolean> loadBalanced;
 
@@ -52,6 +54,7 @@ public class SingularityRequestBuilder {
     this.quartzSchedule = Optional.absent();
     this.rackAffinity = Optional.absent();
     this.slavePlacement = Optional.absent();
+    this.requiredSlaveAttributes = Optional.absent();
     this.scheduledExpectedRuntimeMillis = Optional.absent();
     this.daemon = Optional.absent();
     this.waitAtLeastMillisAfterTaskFinishesForReschedule = Optional.absent();
@@ -61,7 +64,7 @@ public class SingularityRequestBuilder {
 
   public SingularityRequest build() {
     return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, daemon, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule,
-        rackAffinity, slavePlacement, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readOnlyGroups);
+        rackAffinity, slavePlacement, requiredSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readOnlyGroups);
   }
 
   public Optional<Boolean> getLoadBalanced() {
@@ -218,6 +221,11 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  public SingularityRequestBuilder setRequiredSlaveAttributes(Optional<Map<String, String>> requiredSlaveAttributes) {
+    this.requiredSlaveAttributes = requiredSlaveAttributes;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityRequestBuilder[" +
@@ -236,6 +244,7 @@ public class SingularityRequestBuilder {
             ", rackSensitive=" + rackSensitive +
             ", rackAffinity=" + rackAffinity +
             ", slavePlacement=" + slavePlacement +
+            ", requiredSlaveAttrbiutes=" + requiredSlaveAttributes +
             ", loadBalanced=" + loadBalanced +
             ", group=" + group +
             ", readOnlyGroups=" + readOnlyGroups +
@@ -265,6 +274,7 @@ public class SingularityRequestBuilder {
             Objects.equals(rackSensitive, that.rackSensitive) &&
             Objects.equals(rackAffinity, that.rackAffinity) &&
             Objects.equals(slavePlacement, that.slavePlacement) &&
+            Objects.equals(requiredSlaveAttributes, that.requiredSlaveAttributes) &&
             Objects.equals(loadBalanced, that.loadBalanced) &&
             Objects.equals(group, that.group);
   }
