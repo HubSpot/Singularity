@@ -1,5 +1,5 @@
 
-IndividualHeader = require "./IndividualHeader"
+InterleavedHeader = require "./InterleavedHeader"
 Contents = require "./Contents"
 
 TaskHistory = require '../../models/TaskHistory'
@@ -92,6 +92,8 @@ InterleavedTail = React.createClass
 
   render: ->
     <div>
+      <InterleavedHeader
+      />
       <Contents
         ref="contents"
         requestId={@props.requestId}

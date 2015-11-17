@@ -130,7 +130,6 @@ Contents = React.createClass
         "hsla(#{interval * i}, 100%, 50%, 0.1)"
       for taskId, i in taskIds
         map[taskId] = colors[i]
-
     map
 
   lineRenderer: (index, key) ->
