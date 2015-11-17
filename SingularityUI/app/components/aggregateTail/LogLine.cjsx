@@ -9,14 +9,14 @@ LogLine = React.createClass
     clazz
 
   render: ->
-    <div className="#{@getClassNames()}">
+    <div className="#{@getClassNames()}" style={backgroundColor: @props.color}>
       <a target="blank" href="#{@props.offsetLink}" className="offset-link" data-offset="#{@props.offset}">
         <div className="pre-line">
             <span className="glyphicon glyphicon-link" data-offset="#{@props.offset}"></span>
         </div>
       </a>
       <span>
-        {@props.content} <strong>| {@props.taskId}</strong>
+        {@props.content}
       </span>
     </div>
 

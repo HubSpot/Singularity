@@ -100,6 +100,7 @@ Contents = React.createClass
 
   renderLines: ->
     if @props.logLines
+      colors = @taskIdToColorMap()
       @props.logLines.map((l, i) =>
         link = window.location.href.replace(window.location.search, '').replace(window.location.hash, '')
         link += "?taskIds=#{@props.taskId}##{l.offset}"
@@ -112,8 +113,25 @@ Contents = React.createClass
           highlight={@handleHighlight}
           totalLines={@props.logLines.length}
           offsetLink={link}
-          taskId={l.taskId} />
+          taskId={l.taskId}
+          color={colors[l.taskId]} />
       )
+
+  taskIdToColorMap: ->
+    map = {}
+    taskIds = _.uniq(@props.logLines.map((line) =>
+      line.taskId
+    ))
+    if taskIds.length is 1
+      map[taskIds[0]] = 'hsla(0, 0, 0, 0)'
+    else
+      interval = 360 / taskIds.length
+      colors = taskIds.map (taskId, i) =>
+        "hsla(#{interval * i}, 100%, 50%, 0.1)"
+      for taskId, i in taskIds
+        map[taskId] = colors[i]
+
+    map
 
   lineRenderer: (index, key) ->
     @state.linesToRender[index]
