@@ -5,6 +5,7 @@ import static com.hubspot.singularity.WebExceptions.checkNotFound;
 
 import com.google.common.base.Optional;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
+import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
@@ -39,7 +40,7 @@ public abstract class AbstractHistoryResource {
   }
 
   protected SingularityTaskHistory getTaskHistory(SingularityTaskId taskId) {
-    authorizationHelper.checkForAuthorizationByRequestId(taskId.getRequestId(), user);
+    authorizationHelper.checkForAuthorizationByRequestId(taskId.getRequestId(), user, SingularityAuthorizationScope.READ);
 
     Optional<SingularityTaskHistory> history = taskManager.getTaskHistory(taskId);
 
@@ -53,7 +54,7 @@ public abstract class AbstractHistoryResource {
   }
 
   protected SingularityDeployHistory getDeployHistory(String requestId, String deployId) {
-    authorizationHelper.checkForAuthorizationByRequestId(requestId, user);
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
     Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(requestId, deployId, true);
 

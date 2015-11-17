@@ -4,6 +4,7 @@ import static com.hubspot.singularity.JsonHelpers.copyOfList;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -40,6 +41,7 @@ public class SingularityRequest {
   private final Optional<Boolean> loadBalanced;
 
   private final Optional<String> group;
+  private final Optional<Set<String>> readOnlyGroups;
 
   @JsonCreator
   public SingularityRequest(@JsonProperty("id") String id, @JsonProperty("requestType") RequestType requestType, @JsonProperty("owners") Optional<List<String>> owners,
@@ -48,7 +50,8 @@ public class SingularityRequest {
       @JsonProperty("killOldNonLongRunningTasksAfterMillis") Optional<Long> killOldNonLongRunningTasksAfterMillis, @JsonProperty("scheduleType") Optional<ScheduleType> scheduleType,
       @JsonProperty("quartzSchedule") Optional<String> quartzSchedule, @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity,
       @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement, @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis,
-      @JsonProperty("waitAtLeastMillisAfterTaskFinishesForReschedule") Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule, @JsonProperty("group") Optional<String> group) {
+      @JsonProperty("waitAtLeastMillisAfterTaskFinishesForReschedule") Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule, @JsonProperty("group") Optional<String> group,
+      @JsonProperty("readOnlyGroups") Optional<Set<String>> readOnlyGroups) {
     this.id = id;
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
@@ -65,6 +68,7 @@ public class SingularityRequest {
     this.scheduledExpectedRuntimeMillis = scheduledExpectedRuntimeMillis;
     this.waitAtLeastMillisAfterTaskFinishesForReschedule = waitAtLeastMillisAfterTaskFinishesForReschedule;
     this.group = group;
+    this.readOnlyGroups = readOnlyGroups;
 
     if (requestType == null) {
       this.requestType = RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced);
@@ -88,7 +92,8 @@ public class SingularityRequest {
     .setWaitAtLeastMillisAfterTaskFinishesForReschedule(waitAtLeastMillisAfterTaskFinishesForReschedule)
     .setSlavePlacement(slavePlacement)
     .setScheduledExpectedRuntimeMillis(scheduledExpectedRuntimeMillis)
-    .setGroup(group);
+    .setGroup(group)
+    .setReadOnlyGroups(readOnlyGroups);
   }
 
   public String getId() {
@@ -220,6 +225,10 @@ public class SingularityRequest {
     return group;
   }
 
+  public Optional<Set<String>> getReadOnlyGroups() {
+    return readOnlyGroups;
+  }
+
   @Override
   public String toString() {
     return "SingularityRequest[" +
@@ -240,6 +249,7 @@ public class SingularityRequest {
             ", slavePlacement=" + slavePlacement +
             ", loadBalanced=" + loadBalanced +
             ", group=" + group +
+            ", readOnlyGroups=" + readOnlyGroups +
             ']';
   }
 
@@ -267,11 +277,12 @@ public class SingularityRequest {
             Objects.equals(rackAffinity, request.rackAffinity) &&
             Objects.equals(slavePlacement, request.slavePlacement) &&
             Objects.equals(loadBalanced, request.loadBalanced) &&
-            Objects.equals(group, request.group);
+            Objects.equals(group, request.group) &&
+            Objects.equals(readOnlyGroups, request.readOnlyGroups);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, loadBalanced, group);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, loadBalanced, group, readOnlyGroups);
   }
 }
