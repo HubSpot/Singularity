@@ -135,7 +135,8 @@ Contents = React.createClass
           itemSizeGetter={@getLineHeight}
           length={@state.linesToRender.length}
           type="variable"
-          useTranslate3d={true}>
+          useTranslate3d={true}
+          threshold={1000}>
         </ReactList>
       </div>
       <Loader isVisable={@state.isLoading} text={@state.loadingText} />
