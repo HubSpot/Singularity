@@ -175,7 +175,7 @@ class LogLines extends Collection
         @timestampIndex = 0
 
         # create the objects for LogLine models
-        lines.map (data) =>
+        res = lines.map (data) =>
             regexResult = @timestampRegex.exec data
             if regexResult isnt null
               timestamp = moment regexResult[0], 'HH:mm:ss.sss'
@@ -186,10 +186,17 @@ class LogLines extends Collection
               if @lastTimestamp
                 @timestampIndex++
 
-            line = {data, offset, timestamp, @timestampIndex}
+            line = {data, offset, timestamp, @timestampIndex, @taskId}
             offset += data.length + 1
 
             line
+
+        earliest = _.min(res, (line) => line.timestamp.unix())
+        for line in res
+          if !line.timestamp
+            line.timestamp = earliest
+
+        res
 
     growRequestLength: (previousParseTimestamp, lastParseTimestamp) ->
         return if !previousParseTimestamp? or !lastParseTimestamp?
@@ -214,7 +221,19 @@ class LogLines extends Collection
 
     # Static Methods -----------------------------------------------------------
 
+    # Merge an array of multiple LogLines collections ordered by timestamp
     @merge: (collections) ->
-      console.log collections
+      collection =  _.union.apply @, collections
+      collection = collection.sort (a, b) =>
+        if !a.timestamp.isSame(b.timestamp)
+          return a.timestamp.isAfter(b.timestamp)
+        else if a.taskId isnt b.taskId
+          return a.taskId > b.taskId
+        else if a.timestampIndex isnt b.timestampIndex
+          return a.timestampIndex > b.timestampIndex
+        else
+          return 0
+
+      collection
 
 module.exports = LogLines

@@ -3,6 +3,7 @@ IndividualHeader = require "./IndividualHeader"
 Contents = require "./Contents"
 
 TaskHistory = require '../../models/TaskHistory'
+LogLines = require '../../collections/LogLines'
 
 InterleavedTail = React.createClass
   mixins: [Backbone.React.Component.mixin]
@@ -10,6 +11,10 @@ InterleavedTail = React.createClass
   # ============================================================================
   # Lifecycle Methods                                                          |
   # ============================================================================
+
+  getInitialState: ->
+    @state =
+      mergedLines = []
 
   componentWillMount: ->
     # Get the task info
@@ -35,6 +40,10 @@ InterleavedTail = React.createClass
     else
       for logLines in @props.logLines
         logLines.fetchInitialData()
+
+  componentDidUpdate: (prevProps, prevState) ->
+    @setState
+      mergedLines: LogLines.merge @props.viewingInstances.map (taskId) => @state[taskId]
 
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@)
@@ -84,9 +93,19 @@ InterleavedTail = React.createClass
   # ============================================================================
 
   render: ->
-    console.log @state
     <div>
-
+      <Contents
+        ref="contents"
+        requestId={@props.requestId}
+        taskId={@props.taskId}
+        logLines={@state.mergedLines}
+        ajaxError={@state.ajaxError}
+        offset={@props.offset}
+        fetchNext={@fetchNext}
+        fetchPrevious={@fetchPrevious}
+        taskState={''}
+        moreToFetch={@moreToFetch}
+        activeColor={@props.activeColor} />
     </div>
 
 module.exports = InterleavedTail

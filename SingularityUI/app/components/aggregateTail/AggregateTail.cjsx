@@ -136,7 +136,8 @@ AggregateTail = React.createClass
         ajaxErrors={ajaxErrors}
         activeTasks={@props.activeTasks}
         closeTail={_.noop}
-        activeColor={@state.color} />
+        activeColor={@state.color}
+        viewingInstances={@state.viewingInstances} />
     </div>
 
   render: ->
