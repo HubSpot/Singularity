@@ -22,9 +22,6 @@ Contents = React.createClass
       @startTailingPoll()
 
   componentDidUpdate: (prevProps, prevState) ->
-    if !@props.logLines
-      return
-
     if @tailingPoll
       @scrollToBottom()
 
@@ -33,7 +30,7 @@ Contents = React.createClass
       @stopTailingPoll()
 
     # Update our loglines components only if needed
-    if prevProps.logLines?.length isnt @props.logLines.length
+    if prevProps.logLines?.length isnt @props.logLines?.length
       @setState
         linesToRender: @renderLines()
 
@@ -115,7 +112,8 @@ Contents = React.createClass
           highlighted={l.offset is @currentOffset}
           highlight={@handleHighlight}
           totalLines={@props.logLines.length}
-          offsetLink={link} />
+          offsetLink={link}
+          taskId={l.taskId} />
       )
 
   lineRenderer: (index, key) ->

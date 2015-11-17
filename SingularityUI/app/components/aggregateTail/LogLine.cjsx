@@ -16,7 +16,7 @@ LogLine = React.createClass
         </div>
       </a>
       <span>
-        {@props.content}
+        {@props.content} <strong>| {@props.taskId}</strong>
       </span>
     </div>
 

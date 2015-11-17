@@ -84,6 +84,9 @@ AggregateTail = React.createClass
   # ============================================================================
 
   getRowType: ->
+    if !@state.splitView
+      return 'tail-row'
+
     if @state.viewingInstances.length > 3 then 'tail-row-half' else 'tail-row'
 
   getInstanceNumber: (taskId) ->

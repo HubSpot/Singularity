@@ -191,11 +191,12 @@ class LogLines extends Collection
 
             line
 
-        earliest = _.min(res, (line) => line.timestamp.unix())
-        for line in res
-          if !line.timestamp
-            line.timestamp = earliest
+        # earliest = _.min(res, (line) => line.timestamp?.unix())
+        # for line in res
+        #   if !line.timestamp
+        #     line.timestamp = earliest
 
+        # console.log _.countBy(res, (l) => l.timestamp is null)
         res
 
     growRequestLength: (previousParseTimestamp, lastParseTimestamp) ->
@@ -225,7 +226,7 @@ class LogLines extends Collection
     @merge: (collections) ->
       collection =  _.union.apply @, collections
       collection = collection.sort (a, b) =>
-        if !a.timestamp.isSame(b.timestamp)
+        if a.timestamp and b.timestamp and !a.timestamp.isSame(b.timestamp)
           return a.timestamp.isAfter(b.timestamp)
         else if a.taskId isnt b.taskId
           return a.taskId > b.taskId

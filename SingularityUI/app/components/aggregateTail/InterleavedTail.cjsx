@@ -39,11 +39,9 @@ InterleavedTail = React.createClass
         logLines.fetchOffset(@props.offset)
     else
       for logLines in @props.logLines
-        logLines.fetchInitialData()
-
-  componentDidUpdate: (prevProps, prevState) ->
-    @setState
-      mergedLines: LogLines.merge @props.viewingInstances.map (taskId) => @state[taskId]
+        logLines.fetchInitialData().done =>
+          @setState
+            mergedLines: LogLines.merge @props.viewingInstances.map (taskId) => @state[taskId]
 
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@)
