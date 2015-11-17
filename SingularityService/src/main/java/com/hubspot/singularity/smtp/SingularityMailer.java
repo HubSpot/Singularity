@@ -2,6 +2,7 @@ package com.hubspot.singularity.smtp;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -507,15 +508,24 @@ public class SingularityMailer implements Managed {
       toList.addAll(request.getOwners().get());
     }
 
-    if (destination.contains(EmailDestination.ACTION_TAKER) && actionTaker.isPresent()) {
-      toList.add(actionTaker.get());
-    }
-
     if (destination.contains(EmailDestination.ADMINS) && !maybeSmtpConfiguration.get().getAdmins().isEmpty()) {
       if (toList.isEmpty()) {
         toList.addAll(maybeSmtpConfiguration.get().getAdmins());
       } else {
         ccList.addAll(maybeSmtpConfiguration.get().getAdmins());
+      }
+    }
+
+    if (actionTaker.isPresent()) {
+      if (destination.contains(EmailDestination.ACTION_TAKER)) {
+        toList.add(actionTaker.get());
+      } else {
+        final Iterator<String> i = toList.iterator();
+        while (i.hasNext()) {
+          if (actionTaker.get().equalsIgnoreCase(i.next())) {
+            i.remove();
+          }
+        }
       }
     }
 
