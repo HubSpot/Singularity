@@ -178,7 +178,7 @@ class LogLines extends Collection
         res = lines.map (data) =>
             regexResult = @timestampRegex.exec data
             if regexResult isnt null
-              timestamp = moment regexResult[0], 'HH:mm:ss.sss'
+              timestamp = moment regexResult[0], 'HH:mm:ss.SSS'
               @lastTimestamp = timestamp
               @timestampIndex = 0
             else
@@ -227,7 +227,7 @@ class LogLines extends Collection
       collection =  _.union.apply @, collections
       collection = collection.sort (a, b) =>
         if a.timestamp and b.timestamp and !a.timestamp.isSame(b.timestamp)
-          return a.timestamp.isAfter(b.timestamp)
+          return a.timestamp.isBefore(b.timestamp)
         else if a.taskId isnt b.taskId
           return a.taskId > b.taskId
         else if a.timestampIndex isnt b.timestampIndex

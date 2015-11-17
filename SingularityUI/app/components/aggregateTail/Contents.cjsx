@@ -99,7 +99,6 @@ Contents = React.createClass
       </div>
 
   renderLines: ->
-    console.log @props.logLines.length
     if @props.logLines
       @props.logLines.map((l, i) =>
         link = window.location.href.replace(window.location.search, '').replace(window.location.hash, '')
