@@ -129,7 +129,7 @@ AggregateTail = React.createClass
       <InterleavedTail
         path={@props.path}
         requestId={@props.requestId}
-        taskId={taskId}
+        taskId={@state.viewingInstances[0]}
         instanceNumber={''}
         offset={@props.offset}
         logLines={logLines}
@@ -154,7 +154,7 @@ AggregateTail = React.createClass
        splitView={@state.splitView}
        toggleView={@toggleView} />
       <div className="row #{@getRowType()}">
-        {@renderIndividualTails()}
+        {@renderTail()}
       </div>
     </div>
 

@@ -34,6 +34,9 @@ Contents = React.createClass
       @setState
         linesToRender: @renderLines()
 
+  componentWillUnmount: ->
+    @stopTailingPoll()
+  
   # ============================================================================
   # Event Handlers                                                             |
   # ============================================================================
