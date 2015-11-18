@@ -209,7 +209,7 @@ public class RequestResource extends AbstractRequestResource {
     if (placement != SlavePlacement.GREEDY && placement != SlavePlacement.OPTIMISTIC) {
       int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(MachineState.ACTIVE);
       int requiredSlaveCount = requestWithState.getRequest().getInstancesSafe() * 2;
-      checkBadRequest(currentActiveSlaveCount >= requiredSlaveCount, "Not enough slaves to successfully complete a bounce of reqeust %s (minimum required: %s, current: %s)", requestId, requiredSlaveCount, currentActiveSlaveCount);
+      checkBadRequest(currentActiveSlaveCount >= requiredSlaveCount, "Not enough active slaves to successfully complete a bounce of reqeust %s (minimum required: %s, current: %s). Consider deploying or changing the slave placement strategy instead", requestId, requiredSlaveCount, currentActiveSlaveCount);
     }
 
     SingularityCreateResult createResult = requestManager.createCleanupRequest(
