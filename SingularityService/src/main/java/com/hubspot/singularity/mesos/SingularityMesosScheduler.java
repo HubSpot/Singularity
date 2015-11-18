@@ -146,7 +146,8 @@ public class SingularityMesosScheduler implements Scheduler {
 
     try {
       final List<SingularityTaskRequest> taskRequests = scheduler.getDueTasks();
-      final SingularityOfferState offerState = stateManager.getOfferState();
+      //final SingularityOfferState offerState = stateManager.getOfferState();
+      final SingularityOfferState offerState = SingularityOfferState.emptyState();
       boolean shouldUpdateOfferState = !taskRequests.isEmpty();
 
       schedulerPriority.sortTaskRequestsInPriorityOrder(taskRequests);
