@@ -23,12 +23,10 @@ import com.hubspot.mesos.json.MesosMasterSlaveObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityMachineAbstraction;
-import com.hubspot.singularity.SingularityOfferState;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskOfferResult;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -88,33 +86,28 @@ class SingularitySlaveAndRackManager {
 
   }
 
-  public SlaveMatchState doesOfferMatch(Protos.Offer offer, SingularityTaskRequest taskRequest, SingularitySchedulerStateCache stateCache, SingularityOfferState offerState) {
+  public SlaveMatchState doesOfferMatch(Protos.Offer offer, SingularityTaskRequest taskRequest, SingularitySchedulerStateCache stateCache) {
     final String host = offer.getHostname();
     final String rackId = slaveAndRackHelper.getRackIdOrDefault(offer);
     final String slaveId = offer.getSlaveId().getValue();
-    final SingularityTaskOfferResult offerResult = offerState.getOfferResult(taskRequest.getPendingTask().getPendingTaskId());
 
     final MachineState currentSlaveState = stateCache.getSlave(slaveId).get().getCurrentState().getState();
 
     if (currentSlaveState == MachineState.FROZEN) {
-      offerResult.addOfferDeclinedReason(host, "Slave is frozen");
       return SlaveMatchState.SLAVE_FROZEN;
     }
 
     if (currentSlaveState.isDecommissioning()) {
-      offerResult.addOfferDeclinedReason(host, "Slave is decommissioning");
       return SlaveMatchState.SLAVE_DECOMMISSIONING;
     }
 
     final MachineState currentRackState = stateCache.getRack(rackId).get().getCurrentState().getState();
 
     if (currentRackState == MachineState.FROZEN) {
-      offerResult.addOfferDeclinedReason(host, "Rack is frozeon");
       return SlaveMatchState.RACK_FROZEN;
     }
 
     if (currentRackState.isDecommissioning()) {
-      offerResult.addOfferDeclinedReason(host, "Rack is decommissioning");
       return SlaveMatchState.RACK_DECOMMISSIONING;
     }
 
@@ -122,7 +115,6 @@ class SingularitySlaveAndRackManager {
       if (!taskRequest.getRequest().getRackAffinity().get().contains(rackId)) {
         String message = String.format("Task %s requires a rack in %s (current rack %s)", taskRequest.getPendingTask().getPendingTaskId(), taskRequest.getRequest().getRackAffinity().get(), rackId);
         LOG.trace(message);
-        offerResult.addOfferDeclinedReason(host, message);
         return SlaveMatchState.RACK_AFFINITY_NOT_MATCHING;
       }
     }
@@ -133,7 +125,6 @@ class SingularitySlaveAndRackManager {
         !slaveAndRackHelper.hasRequiredAttributes(taskRequest.getRequest().getRequiredSlaveAttributes().get(), reservedSlaveAttributes)) {
         String message = String.format("Slaves with attributes %s are reserved for matching tasks. Task with attributes %s does not match", reservedSlaveAttributes, taskRequest.getRequest().getRequiredSlaveAttributes().or(Collections.<String, String>emptyMap()));
         LOG.trace(message);
-        offerResult.addOfferDeclinedReason(host, message);
         return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
       }
     }
@@ -142,14 +133,12 @@ class SingularitySlaveAndRackManager {
       && !slaveAndRackHelper.hasRequiredAttributes(slaveAndRackHelper.getTextAttributes(offer), taskRequest.getRequest().getRequiredSlaveAttributes().get())) {
       String message = String.format("Task requires slave with attributes %s, (slave attributes are %s)", taskRequest.getRequest().getRequiredSlaveAttributes().get(), slaveAndRackHelper.getTextAttributes(offer));
       LOG.trace(message);
-      offerResult.addOfferDeclinedReason(host, message);
       return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
     }
 
     final SlavePlacement slavePlacement = taskRequest.getRequest().getSlavePlacement().or(configuration.getDefaultSlavePlacement());
 
     if (!taskRequest.getRequest().isRackSensitive() && slavePlacement == SlavePlacement.GREEDY) {
-      offerResult.setLaunchedTaskInfo(Optional.of(host), Optional.of(offer.getId().getValue()));
       return SlaveMatchState.NOT_RACK_OR_SLAVE_PARTICULAR;
     }
 
@@ -189,7 +178,6 @@ class SingularitySlaveAndRackManager {
       if (!isRackOk) {
         String message = String.format("Rejecting RackSensitive task %s from slave %s (%s) due to numOnRack %s and cleaningOnSlave %s", taskRequest.getRequest().getId(), slaveId, host, numOnRack, numCleaningOnSlave);
         LOG.trace(message);
-        offerResult.addOfferDeclinedReason(host, message);
         return SlaveMatchState.RACK_SATURATED;
       }
     }
@@ -200,7 +188,6 @@ class SingularitySlaveAndRackManager {
         if (numOnSlave > 0 || numCleaningOnSlave > 0) {
           String message = String.format("Rejecting SEPARATE task %s from slave %s (%s) due to numOnSlave %s numCleaningOnSlave %s", taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave);
           LOG.trace(message);
-          offerResult.addOfferDeclinedReason(host, message);
           return SlaveMatchState.SLAVE_SATURATED;
         }
         break;
@@ -208,7 +195,6 @@ class SingularitySlaveAndRackManager {
         if (numOnSlave > 0 || numCleaningOnSlave > 0 || numOtherDeploysOnSlave > 0) {
           String message = String.format("Rejecting SEPARATE task %s from slave %s (%s) due to numOnSlave %s numCleaningOnSlave %s numOtherDeploysOnSlave %s", taskRequest.getRequest().getId(), slaveId, host, numOnSlave, numCleaningOnSlave, numOtherDeploysOnSlave);
           LOG.trace(message);
-          offerResult.addOfferDeclinedReason(host, message);
           return SlaveMatchState.SLAVE_SATURATED;
         }
         break;
@@ -220,14 +206,12 @@ class SingularitySlaveAndRackManager {
         if (!isSlaveOk) {
           String message = String.format("Rejecting OPTIMISTIC task %s from slave %s (%s) due to numOnSlave %s", taskRequest.getRequest().getId(), slaveId, host, numOnSlave);
           LOG.trace(message);
-          offerResult.addOfferDeclinedReason(host, message);
           return SlaveMatchState.SLAVE_SATURATED;
         }
         break;
       case GREEDY:
     }
 
-    offerResult.setLaunchedTaskInfo(Optional.of(host), Optional.of(offer.getId().getValue()));
     return SlaveMatchState.OK;
   }
 

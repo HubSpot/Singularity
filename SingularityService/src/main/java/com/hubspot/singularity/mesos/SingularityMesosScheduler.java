@@ -28,12 +28,10 @@ import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityMainModule;
-import com.hubspot.singularity.SingularityOfferState;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskOfferResult;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
@@ -146,15 +144,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
     try {
       final List<SingularityTaskRequest> taskRequests = scheduler.getDueTasks();
-      final SingularityOfferState offerState = stateManager.getOfferState();
-      boolean shouldUpdateOfferState = !taskRequests.isEmpty();
-
       schedulerPriority.sortTaskRequestsInPriorityOrder(taskRequests);
-
-      for (SingularityTaskRequest taskRequest : taskRequests) {
-        LOG.trace("Task {} is due", taskRequest.getPendingTask().getPendingTaskId());
-        offerState.addOfferResult(new SingularityTaskOfferResult(taskRequest.getPendingTask().getPendingTaskId()));
-      }
 
       numDueTasks = taskRequests.size();
 
@@ -176,7 +166,7 @@ public class SingularityMesosScheduler implements Scheduler {
             continue;
           }
 
-          Optional<SingularityTask> accepted = match(taskRequests, stateCache, offerHolder, offerState);
+          Optional<SingularityTask> accepted = match(taskRequests, stateCache, offerHolder);
           if (accepted.isPresent()) {
             offerHolder.addMatchedTask(accepted.get());
             addedTaskInLastLoop = true;
@@ -198,12 +188,6 @@ public class SingularityMesosScheduler implements Scheduler {
           driver.declineOffer(offerHolder.getOffer().getId());
         }
       }
-
-      if (shouldUpdateOfferState) {
-        offerState.trimOldData(KEEP_OFFER_DECISIONS_FOR_MINUTES);
-        stateManager.updateOfferState(offerState);
-      }
-
     } catch (Throwable t) {
       LOG.error("Received fatal error while accepting offers - will decline all available offers", t);
 
@@ -222,7 +206,7 @@ public class SingularityMesosScheduler implements Scheduler {
         offers.size() - acceptedOffers.size(), numDueTasks - acceptedOffers.size());
   }
 
-  private Optional<SingularityTask> match(Collection<SingularityTaskRequest> taskRequests, SingularitySchedulerStateCache stateCache, SingularityOfferHolder offerHolder, SingularityOfferState offerState) {
+  private Optional<SingularityTask> match(Collection<SingularityTaskRequest> taskRequests, SingularitySchedulerStateCache stateCache, SingularityOfferHolder offerHolder) {
 
     for (SingularityTaskRequest taskRequest : taskRequests) {
       final Resources taskResources = taskRequest.getDeploy().getResources().or(defaultResources);
@@ -235,7 +219,7 @@ public class SingularityMesosScheduler implements Scheduler {
       LOG.trace("Attempting to match task {} resources {} ({} for task + {} for executor) with remaining offer resources {}", taskRequest.getPendingTask().getPendingTaskId(), totalResources, taskResources, executorResources, offerHolder.getCurrentResources());
 
       final boolean matchesResources = MesosUtils.doesOfferMatchResources(totalResources, offerHolder.getCurrentResources());
-      final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder.getOffer(), taskRequest, stateCache, offerState);
+      final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder.getOffer(), taskRequest, stateCache);
 
       if (matchesResources && slaveMatchState.isMatchAllowed()) {
         final SingularityTask task = mesosTaskBuilder.buildTask(offerHolder.getOffer(), offerHolder.getCurrentResources(), taskRequest, taskResources, executorResources);
