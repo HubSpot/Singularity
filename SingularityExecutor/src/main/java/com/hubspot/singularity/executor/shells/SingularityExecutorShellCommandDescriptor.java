@@ -24,10 +24,6 @@ public class SingularityExecutorShellCommandDescriptor {
   @NotNull
   private List<SingularityExecutorShellCommandOptionDescriptor> options = Collections.emptyList();
 
-  @JsonProperty
-  @NotNull
-  private boolean runAsTaskUser = true;
-
   public List<SingularityExecutorShellCommandOptionDescriptor> getOptions() {
     return options;
   }
@@ -50,13 +46,5 @@ public class SingularityExecutorShellCommandDescriptor {
 
   public List<String> getCommand() {
     return command;
-  }
-
-  public boolean isRunAsTaskUser() {
-    return runAsTaskUser;
-  }
-
-  public void setRunAsTaskUser(boolean runAsTaskUser) {
-    this.runAsTaskUser = runAsTaskUser;
   }
 }
