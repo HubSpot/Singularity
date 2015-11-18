@@ -243,7 +243,12 @@ public class SingularityMesosScheduler implements Scheduler {
 
         return Optional.of(task);
       } else {
-        taskRequest.getPendingTask().addUnmatchedOffer(offerHolder.getOffer().getHostname(), slaveMatchState);
+        if (!matchesResources) {
+          taskRequest.getPendingTask().addUnmatchedOffer(offerHolder.getOffer().getHostname(), SlaveMatchState.RESOURCES_DO_NOT_MATCH);
+        }
+        if (!slaveMatchState.isMatchAllowed()) {
+          taskRequest.getPendingTask().addUnmatchedOffer(offerHolder.getOffer().getHostname(), slaveMatchState);
+        }
         LOG.trace("Ignoring offer {} on {} for task {}; matched resources: {}, slave match state: {}", offerHolder.getOffer().getId(), offerHolder.getOffer().getHostname(), taskRequest
             .getPendingTask().getPendingTaskId(), matchesResources, slaveMatchState);
       }
