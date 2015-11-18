@@ -191,7 +191,13 @@ public class SingularityMesosScheduler implements Scheduler {
       }
 
       for (SingularityTaskRequest taskRequest : taskRequests) {
-        taskManager.savePendingTask(taskRequest.getPendingTask());
+        try {
+          if (!taskRequest.getPendingTask().getUnmatchedOffers().isEmpty()) {
+            taskManager.savePendingTask(taskRequest.getPendingTask());
+          }
+        } catch (Exception e) {
+          LOG.error(String.format("Could not save unmatchedOffers for pending task %s", taskRequest.getPendingTask().getPendingTaskId()));
+        }
       }
 
     } catch (Throwable t) {

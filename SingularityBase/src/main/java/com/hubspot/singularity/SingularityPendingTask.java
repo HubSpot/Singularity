@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -100,9 +101,13 @@ public class SingularityPendingTask {
 
   public void addUnmatchedOffer(String host, SlaveMatchState reason) {
     if (unmatchedOffers.containsKey(reason)) {
-      unmatchedOffers.get(reason).add(host);
+      if (!unmatchedOffers.get(reason).contains(host)) {
+        unmatchedOffers.get(reason).add(host);
+      }
     } else {
-      unmatchedOffers.put(reason, Arrays.asList(host));
+      List<String> hosts = new ArrayList<>();
+      hosts.add(host);
+      unmatchedOffers.put(reason, hosts);
     }
   }
 
