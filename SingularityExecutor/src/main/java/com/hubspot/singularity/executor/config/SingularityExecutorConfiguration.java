@@ -248,7 +248,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private String shellCommandUserPlaceholder = "{USER}";
 
   @JsonProperty
-  private String shellCommandPidFile = ".shell_command_pid";
+  private String shellCommandPidFile = ".task-pid";
 
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));

@@ -26,7 +26,7 @@ public class SingularityExecutorShellCommandDescriptor {
 
   @JsonProperty
   @NotNull
-  private boolean switchUser = true;
+  private boolean runAsTaskUser = true;
 
   public List<SingularityExecutorShellCommandOptionDescriptor> getOptions() {
     return options;
@@ -52,11 +52,11 @@ public class SingularityExecutorShellCommandDescriptor {
     return command;
   }
 
-  public boolean isSwitchUser() {
-    return switchUser;
+  public boolean isRunAsTaskUser() {
+    return runAsTaskUser;
   }
 
-  public void setSwitchUser(boolean switchUser) {
-    this.switchUser = switchUser;
+  public void setRunAsTaskUser(boolean runAsTaskUser) {
+    this.runAsTaskUser = runAsTaskUser;
   }
 }
