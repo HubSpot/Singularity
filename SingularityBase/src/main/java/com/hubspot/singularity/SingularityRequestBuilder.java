@@ -212,17 +212,17 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  public SingularityRequestBuilder setRequiredSlaveAttributes(Optional<Map<String, String>> requiredSlaveAttributes) {
+    this.requiredSlaveAttributes = requiredSlaveAttributes;
+    return this;
+  }
+
   public Optional<Set<String>> getReadOnlyGroups() {
     return readOnlyGroups;
   }
 
   public SingularityRequestBuilder setReadOnlyGroups(Optional<Set<String>> readOnlyGroups) {
     this.readOnlyGroups = readOnlyGroups;
-    return this;
-  }
-
-  public SingularityRequestBuilder setRequiredSlaveAttributes(Optional<Map<String, String>> requiredSlaveAttributes) {
-    this.requiredSlaveAttributes = requiredSlaveAttributes;
     return this;
   }
 

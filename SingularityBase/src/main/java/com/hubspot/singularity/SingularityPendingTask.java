@@ -1,6 +1,10 @@
 package com.hubspot.singularity;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.Nonnull;
@@ -17,6 +21,7 @@ public class SingularityPendingTask {
   private final List<String> cmdLineArgsList;
   private final Optional<String> user;
   private final Optional<String> runId;
+  private final Map<SlaveMatchState, List<String>> unmatchedOffers;
 
   public static Predicate<SingularityPendingTask> matchingRequest(final String requestId) {
     return new Predicate<SingularityPendingTask>() {
@@ -40,13 +45,18 @@ public class SingularityPendingTask {
     };
   }
 
+  public SingularityPendingTask(SingularityPendingTaskId pendingTaskId, List<String> cmdLineArgsList, Optional<String> user, Optional<String> runId) {
+    this(pendingTaskId, cmdLineArgsList, user, runId, new HashMap<SlaveMatchState, List<String>>());
+  }
+
   @JsonCreator
   public SingularityPendingTask(@JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId, @JsonProperty("cmdLineArgsList") List<String> cmdLineArgsList,
-      @JsonProperty("user") Optional<String> user, @JsonProperty("runId") Optional<String> runId) {
+      @JsonProperty("user") Optional<String> user, @JsonProperty("runId") Optional<String> runId, @JsonProperty("unmatchedOffers") Map<SlaveMatchState, List<String>> unmatchedOffers) {
     this.pendingTaskId = pendingTaskId;
     this.user = user;
     this.cmdLineArgsList = JavaUtils.nonNullImmutable(cmdLineArgsList);
     this.runId = runId;
+    this.unmatchedOffers = unmatchedOffers == null ? new HashMap<SlaveMatchState, List<String>>() : unmatchedOffers;
   }
 
   @Override
@@ -85,9 +95,29 @@ public class SingularityPendingTask {
     return runId;
   }
 
+  public Map<SlaveMatchState, List<String>> getUnmatchedOffers() {
+    return unmatchedOffers;
+  }
+
+  public void addUnmatchedOffer(String host, SlaveMatchState reason) {
+    if (unmatchedOffers.containsKey(reason)) {
+      if (!unmatchedOffers.get(reason).contains(host)) {
+        unmatchedOffers.get(reason).add(host);
+      }
+    } else {
+      List<String> hosts = new ArrayList<>();
+      hosts.add(host);
+      unmatchedOffers.put(reason, hosts);
+    }
+  }
+
+  public void clearUnmatchedOffers() {
+    unmatchedOffers.clear();
+  }
+
   @Override
   public String toString() {
-    return "SingularityPendingTask [pendingTaskId=" + pendingTaskId + ", cmdLineArgsList=" + cmdLineArgsList + ", user=" + user + ", runId=" + runId + "]";
+    return "SingularityPendingTask [pendingTaskId=" + pendingTaskId + ", cmdLineArgsList=" + cmdLineArgsList + ", user=" + user + ", runId=" + runId + ", unmatchedOffers=" + unmatchedOffers + "]";
   }
 
 }

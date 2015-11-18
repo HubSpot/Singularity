@@ -28,23 +28,20 @@ import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityMainModule;
-import com.hubspot.singularity.SingularityOfferState;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityTaskOfferResult;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
+import com.hubspot.singularity.SlaveMatchState;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
-import com.hubspot.singularity.data.StateManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderException;
-import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager.SlaveMatchState;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
@@ -56,7 +53,6 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 public class SingularityMesosScheduler implements Scheduler {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosScheduler.class);
-  private static final int KEEP_OFFER_DECISIONS_FOR_MINUTES = 5;
 
   private final Resources defaultResources;
   private final Resources defaultCustomExecutorResources;
@@ -71,7 +67,6 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SingularitySlaveAndRackManager slaveAndRackManager;
   private final SingularitySchedulerPriority schedulerPriority;
   private final SingularityLogSupport logSupport;
-  private final StateManager stateManager;
 
   private final SingularityExceptionNotifier exceptionNotifier;
 
@@ -85,7 +80,7 @@ public class SingularityMesosScheduler implements Scheduler {
   SingularityMesosScheduler(MesosConfiguration mesosConfiguration, SingularityConfiguration configuration, TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager,
       SingularitySchedulerPriority schedulerPriority, SingularityNewTaskChecker newTaskChecker, SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport,
       Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager, SingularityExceptionNotifier exceptionNotifier,SingularityMesosFrameworkMessageHandler messageHandler,
-      @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier, final IdTranscoder<SingularityTaskId> taskIdTranscoder, CustomExecutorConfiguration customExecutorConfiguration, StateManager stateManager) {
+      @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier, final IdTranscoder<SingularityTaskId> taskIdTranscoder, CustomExecutorConfiguration customExecutorConfiguration) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0);
     this.taskManager = taskManager;
@@ -104,7 +99,6 @@ public class SingularityMesosScheduler implements Scheduler {
     this.taskIdTranscoder = taskIdTranscoder;
     this.exceptionNotifier = exceptionNotifier;
     this.configuration = configuration;
-    this.stateManager = stateManager;
   }
 
   @Override
@@ -146,15 +140,11 @@ public class SingularityMesosScheduler implements Scheduler {
 
     try {
       final List<SingularityTaskRequest> taskRequests = scheduler.getDueTasks();
-      //final SingularityOfferState offerState = stateManager.getOfferState();
-      final SingularityOfferState offerState = SingularityOfferState.emptyState();
-      boolean shouldUpdateOfferState = !taskRequests.isEmpty();
-
       schedulerPriority.sortTaskRequestsInPriorityOrder(taskRequests);
 
       for (SingularityTaskRequest taskRequest : taskRequests) {
         LOG.trace("Task {} is due", taskRequest.getPendingTask().getPendingTaskId());
-        offerState.addOfferResult(new SingularityTaskOfferResult(taskRequest.getPendingTask().getPendingTaskId()));
+        taskRequest.getPendingTask().clearUnmatchedOffers();
       }
 
       numDueTasks = taskRequests.size();
@@ -177,7 +167,7 @@ public class SingularityMesosScheduler implements Scheduler {
             continue;
           }
 
-          Optional<SingularityTask> accepted = match(taskRequests, stateCache, offerHolder, offerState);
+          Optional<SingularityTask> accepted = match(taskRequests, stateCache, offerHolder);
           if (accepted.isPresent()) {
             offerHolder.addMatchedTask(accepted.get());
             addedTaskInLastLoop = true;
@@ -200,9 +190,14 @@ public class SingularityMesosScheduler implements Scheduler {
         }
       }
 
-      if (shouldUpdateOfferState) {
-        offerState.trimOldData(KEEP_OFFER_DECISIONS_FOR_MINUTES);
-        stateManager.updateOfferState(offerState);
+      for (SingularityTaskRequest taskRequest : taskRequests) {
+        try {
+          if (!taskRequest.getPendingTask().getUnmatchedOffers().isEmpty()) {
+            taskManager.savePendingTask(taskRequest.getPendingTask());
+          }
+        } catch (Exception e) {
+          LOG.error(String.format("Could not save unmatchedOffers for pending task %s", taskRequest.getPendingTask().getPendingTaskId()));
+        }
       }
 
     } catch (Throwable t) {
@@ -223,7 +218,7 @@ public class SingularityMesosScheduler implements Scheduler {
         offers.size() - acceptedOffers.size(), numDueTasks - acceptedOffers.size());
   }
 
-  private Optional<SingularityTask> match(Collection<SingularityTaskRequest> taskRequests, SingularitySchedulerStateCache stateCache, SingularityOfferHolder offerHolder, SingularityOfferState offerState) {
+  private Optional<SingularityTask> match(Collection<SingularityTaskRequest> taskRequests, SingularitySchedulerStateCache stateCache, SingularityOfferHolder offerHolder) {
 
     for (SingularityTaskRequest taskRequest : taskRequests) {
       final Resources taskResources = taskRequest.getDeploy().getResources().or(defaultResources);
@@ -236,7 +231,7 @@ public class SingularityMesosScheduler implements Scheduler {
       LOG.trace("Attempting to match task {} resources {} ({} for task + {} for executor) with remaining offer resources {}", taskRequest.getPendingTask().getPendingTaskId(), totalResources, taskResources, executorResources, offerHolder.getCurrentResources());
 
       final boolean matchesResources = MesosUtils.doesOfferMatchResources(totalResources, offerHolder.getCurrentResources());
-      final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder.getOffer(), taskRequest, stateCache, offerState);
+      final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder.getOffer(), taskRequest, stateCache);
 
       if (matchesResources && slaveMatchState.isMatchAllowed()) {
         final SingularityTask task = mesosTaskBuilder.buildTask(offerHolder.getOffer(), offerHolder.getCurrentResources(), taskRequest, taskResources, executorResources);
@@ -254,6 +249,12 @@ public class SingularityMesosScheduler implements Scheduler {
 
         return Optional.of(task);
       } else {
+        if (!matchesResources) {
+          taskRequest.getPendingTask().addUnmatchedOffer(offerHolder.getOffer().getHostname(), SlaveMatchState.RESOURCES_DO_NOT_MATCH);
+        }
+        if (!slaveMatchState.isMatchAllowed()) {
+          taskRequest.getPendingTask().addUnmatchedOffer(offerHolder.getOffer().getHostname(), slaveMatchState);
+        }
         LOG.trace("Ignoring offer {} on {} for task {}; matched resources: {}, slave match state: {}", offerHolder.getOffer().getId(), offerHolder.getOffer().getHostname(), taskRequest
             .getPendingTask().getPendingTaskId(), matchesResources, slaveMatchState);
       }
