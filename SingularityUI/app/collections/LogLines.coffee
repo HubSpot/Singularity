@@ -227,11 +227,11 @@ class LogLines extends Collection
       collection =  _.union.apply @, collections
       collection = collection.sort (a, b) =>
         if a.timestamp and b.timestamp and !a.timestamp.isSame(b.timestamp)
-          return a.timestamp.isBefore(b.timestamp)
+          return if a.timestamp.isBefore(b.timestamp) then -1 else 1
         else if a.taskId isnt b.taskId
-          return a.taskId > b.taskId
+          return if a.taskId > b.taskId then -1 else 1
         else if a.timestampIndex isnt b.timestampIndex
-          return a.timestampIndex > b.timestampIndex
+          return if a.timestampIndex > b.timestampIndex then -1 else 1
         else
           return 0
 
