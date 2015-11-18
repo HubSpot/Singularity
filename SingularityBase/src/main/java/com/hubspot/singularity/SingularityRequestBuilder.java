@@ -3,6 +3,7 @@ package com.hubspot.singularity;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import com.google.common.base.Optional;
 
@@ -37,6 +38,7 @@ public class SingularityRequestBuilder {
   private Optional<Boolean> loadBalanced;
 
   private Optional<String> group;
+  private Optional<Set<String>> readOnlyGroups;
 
   public SingularityRequestBuilder(String id, RequestType requestType) {
     this.id = id;
@@ -57,11 +59,12 @@ public class SingularityRequestBuilder {
     this.daemon = Optional.absent();
     this.waitAtLeastMillisAfterTaskFinishesForReschedule = Optional.absent();
     this.group = Optional.absent();
+    this.readOnlyGroups = Optional.absent();
   }
 
   public SingularityRequest build() {
     return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, daemon, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule,
-        rackAffinity, slavePlacement, requiredSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group);
+        rackAffinity, slavePlacement, requiredSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readOnlyGroups);
   }
 
   public Optional<Boolean> getLoadBalanced() {
@@ -214,12 +217,38 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  public Optional<Set<String>> getReadOnlyGroups() {
+    return readOnlyGroups;
+  }
+
+  public SingularityRequestBuilder setReadOnlyGroups(Optional<Set<String>> readOnlyGroups) {
+    this.readOnlyGroups = readOnlyGroups;
+    return this;
+  }
+
   @Override
   public String toString() {
-    return "SingularityRequestBuilder [id=" + id + ", requestType=" + requestType + ", owners=" + owners + ", numRetriesOnFailure=" + numRetriesOnFailure + ", schedule=" + schedule
-        + ", quartzSchedule=" + quartzSchedule + ", scheduleType=" + scheduleType + ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis
-        + ", scheduledExpectedRuntimeMillis=" + scheduledExpectedRuntimeMillis + ", waitAtLeastMillisAfterTaskFinishesForReschedule=" + waitAtLeastMillisAfterTaskFinishesForReschedule + ", daemon="
-        + daemon + ", instances=" + instances + ", rackSensitive=" + rackSensitive + ", rackAffinity=" + rackAffinity + ", slavePlacement=" + slavePlacement + ", requiredSlaveAttrbiutes=" + requiredSlaveAttributes + ", loadBalanced=" + loadBalanced + ", group=" + group + "]";
+    return "SingularityRequestBuilder[" +
+            "id='" + id + '\'' +
+            ", requestType=" + requestType +
+            ", owners=" + owners +
+            ", numRetriesOnFailure=" + numRetriesOnFailure +
+            ", schedule=" + schedule +
+            ", quartzSchedule=" + quartzSchedule +
+            ", scheduleType=" + scheduleType +
+            ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis +
+            ", scheduledExpectedRuntimeMillis=" + scheduledExpectedRuntimeMillis +
+            ", waitAtLeastMillisAfterTaskFinishesForReschedule=" + waitAtLeastMillisAfterTaskFinishesForReschedule +
+            ", daemon=" + daemon +
+            ", instances=" + instances +
+            ", rackSensitive=" + rackSensitive +
+            ", rackAffinity=" + rackAffinity +
+            ", slavePlacement=" + slavePlacement +
+            ", requiredSlaveAttrbiutes=" + requiredSlaveAttributes +
+            ", loadBalanced=" + loadBalanced +
+            ", group=" + group +
+            ", readOnlyGroups=" + readOnlyGroups +
+            ']';
   }
 
   @Override

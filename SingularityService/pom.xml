@@ -66,6 +66,11 @@
     </dependency>
 
     <dependency>
+      <groupId>com.hubspot.dropwizard</groupId>
+      <artifactId>dropwizard-guicier</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>javax.inject</groupId>
       <artifactId>javax.inject</artifactId>
     </dependency>
@@ -155,11 +160,6 @@
     <dependency>
       <groupId>com.ning</groupId>
       <artifactId>async-http-client</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>io.dropwizard</groupId>
-      <artifactId>dropwizard-servlets</artifactId>
     </dependency>
 
     <dependency>
@@ -271,16 +271,6 @@
     <dependency>
       <groupId>com.sun.jersey</groupId>
       <artifactId>jersey-server</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.sun.jersey</groupId>
-      <artifactId>jersey-servlet</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.sun.jersey.contribs</groupId>
-      <artifactId>jersey-guice</artifactId>
     </dependency>
 
     <dependency>
