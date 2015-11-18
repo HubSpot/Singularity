@@ -30,9 +30,12 @@ Contents = React.createClass
       @stopTailingPoll()
 
     # Update our loglines components only if needed
-    if prevProps.logLines.length isnt @props.logLines.length
+    if prevProps.logLines?.length isnt @props.logLines?.length
       @setState
         linesToRender: @renderLines()
+
+  componentWillUnmount: ->
+    @stopTailingPoll()
 
   # ============================================================================
   # Event Handlers                                                             |
@@ -97,6 +100,11 @@ Contents = React.createClass
 
   renderLines: ->
     if @props.logLines
+      if @props.colorMap
+        colors = @props.colorMap(@props.logLines)
+      else
+        colors = {}
+        colors[@props.logLines[0].taskId] = 'hsla(0, 0, 0, 0)'
       @props.logLines.map((l, i) =>
         link = window.location.href.replace(window.location.search, '').replace(window.location.hash, '')
         link += "?taskIds=#{@props.taskId}##{l.offset}"
@@ -108,7 +116,9 @@ Contents = React.createClass
           highlighted={l.offset is @currentOffset}
           highlight={@handleHighlight}
           totalLines={@props.logLines.length}
-          offsetLink={link} />
+          offsetLink={link}
+          taskId={l.taskId}
+          color={colors[l.taskId]} />
       )
 
   lineRenderer: (index, key) ->
@@ -131,7 +141,8 @@ Contents = React.createClass
           itemSizeGetter={@getLineHeight}
           length={@state.linesToRender.length}
           type="variable"
-          useTranslate3d={true}>
+          useTranslate3d={true}
+          threshold={1000}>
         </ReactList>
       </div>
       <Loader isVisable={@state.isLoading} text={@state.loadingText} />

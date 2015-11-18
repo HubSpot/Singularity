@@ -28,7 +28,7 @@
     .tail-buttons
         text-align right
 
-        .btn
+        .btn:not(.no-margin)
             margin 2px
 
         ul
@@ -126,6 +126,24 @@
         border-top-color $blue
         border-right-color $blue
 
+.legend
+    position absolute
+    right 0
+    top 30px
+    padding 10px
+    max-width 500px
+    background rgba(white, 0.8)
+    z-index 999
+
+    ul
+        list-style-type none
+
+    .swatch
+        display inline-block
+        width 1em
+        height 1em
+        margin-right 10px
+
 .tail-contents
     overflow auto
     position absolute
@@ -149,7 +167,7 @@
 
         &:hover
             .pre-line
-                background #f6f6f6
+                background rgba(0, 0, 0, 0)
             .offset-link
                 visibility visible
 
@@ -173,23 +191,9 @@
     background #002b36
     color #839496
 
-    &:hover
-        .pre-line
-            background #002b36
-
-    .pre-line
-        background #002b36
-
 .tail-contents.sand
     background #f9edd8
     color #333333
-
-    &:hover
-        .pre-line
-            background #f9edd8
-
-    .pre-line
-        background #f9edd8
 
 .lines-wrapper
     padding-top 10px

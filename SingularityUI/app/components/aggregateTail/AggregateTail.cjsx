@@ -1,7 +1,8 @@
-
 Header = require './Header'
 IndividualTail = require './IndividualTail'
+InterleavedTail = require './InterleavedTail'
 Utils = require '../../utils'
+LogLines = require '../../collections/LogLines'
 
 AggregateTail = React.createClass
   mixins: [Backbone.React.Component.mixin]
@@ -14,6 +15,7 @@ AggregateTail = React.createClass
     params = Utils.getQueryParams()
     viewingInstances: if params.taskIds then params.taskIds.split(',').slice(0, 6) else []
     color: @getActiveColor()
+    splitView: true
 
   componentWillMount: ->
     # Automatically map backbone collections and models to the state of this component
@@ -73,17 +75,30 @@ AggregateTail = React.createClass
   getActiveColor: ->
     localStorage.getItem('singularityLogColor')
 
+  toggleView: ->
+    @setState
+      splitView: !@state.splitView
+
   # ============================================================================
   # Rendering                                                                  |
   # ============================================================================
 
   getRowType: ->
+    if !@state.splitView
+      return 'tail-row'
+
     if @state.viewingInstances.length > 3 then 'tail-row-half' else 'tail-row'
 
   getInstanceNumber: (taskId) ->
     @state.activeTasks.filter((t) =>
       t.id is taskId
     )[0]?.taskId.instanceNo
+
+  renderTail: ->
+    if @state.splitView
+      return @renderIndividualTails()
+    else
+      return @renderInterleavedTail()
 
   renderIndividualTails: ->
     @state.viewingInstances.sort((a, b) =>
@@ -106,6 +121,28 @@ AggregateTail = React.createClass
         </div>
     )
 
+  renderInterleavedTail: ->
+    logLines = @state.viewingInstances.map((taskId) =>
+      @props.logLines[taskId]
+    )
+    ajaxErrors = @state.viewingInstances.map((taskId) =>
+      @props.ajaxError[taskId]
+    )
+    <div className="col-md-12 tail-column">
+      <InterleavedTail
+        path={@props.path}
+        requestId={@props.requestId}
+        taskId={@state.viewingInstances[0]}
+        instanceNumber={''}
+        offset={@props.offset}
+        logLines={logLines}
+        ajaxErrors={ajaxErrors}
+        activeTasks={@props.activeTasks}
+        closeTail={_.noop}
+        activeColor={@state.color}
+        viewingInstances={@state.viewingInstances} />
+    </div>
+
   render: ->
     <div>
       <Header
@@ -117,9 +154,11 @@ AggregateTail = React.createClass
        viewingInstances={@state.viewingInstances}
        toggleViewingInstance={@toggleViewingInstance}
        setLogColor={@setLogColor}
-       activeColor={@state.color} />
+       activeColor={@state.color}
+       splitView={@state.splitView}
+       toggleView={@toggleView} />
       <div className="row #{@getRowType()}">
-        {@renderIndividualTails()}
+        {@renderTail()}
       </div>
     </div>
 

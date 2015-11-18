@@ -11,6 +11,8 @@ class LogLines extends Collection
 
     delimiter: /\n/
 
+    timestampRegex: /\d{2}:\d{2}:\d{2}.\d{3}/
+
     # How much we request at a time (before growing it)
     baseRequestLength: 30000
 
@@ -169,12 +171,33 @@ class LogLines extends Collection
         if lines[lines.length - 1].match whiteSpace or not lines[lines.length - 1]
             lines = _.initial lines
 
+        @lastTimestamp = null
+        @timestampIndex = 0
+
         # create the objects for LogLine models
-        lines.map (data) ->
-            line = {data, offset}
+        res = lines.map (data) =>
+            regexResult = @timestampRegex.exec data
+            if regexResult isnt null
+              timestamp = moment regexResult[0], 'HH:mm:ss.SSS'
+              @lastTimestamp = timestamp
+              @timestampIndex = 0
+            else
+              timestamp = @lastTimestamp
+              if @lastTimestamp
+                @timestampIndex++
+
+            line = {data, offset, timestamp, @timestampIndex, @taskId}
             offset += data.length + 1
 
             line
+
+        # earliest = _.min(res, (line) => line.timestamp?.unix())
+        # for line in res
+        #   if !line.timestamp
+        #     line.timestamp = earliest
+
+        # console.log _.countBy(res, (l) => l.timestamp is null)
+        res
 
     growRequestLength: (previousParseTimestamp, lastParseTimestamp) ->
         return if !previousParseTimestamp? or !lastParseTimestamp?
@@ -195,5 +218,23 @@ class LogLines extends Collection
         newRequestLength = @baseRequestLength if newRequestLength < @baseRequestLength
 
         @state.set('currentRequestLength', newRequestLength)
+
+
+    # Static Methods -----------------------------------------------------------
+
+    # Merge an array of multiple LogLines collections ordered by timestamp
+    @merge: (collections) ->
+      collection =  _.union.apply @, collections
+      collection = collection.sort (a, b) =>
+        if a.timestamp and b.timestamp and !a.timestamp.isSame(b.timestamp)
+          return if a.timestamp.isBefore(b.timestamp) then -1 else 1
+        else if a.taskId isnt b.taskId
+          return if a.taskId > b.taskId then -1 else 1
+        else if a.timestampIndex isnt b.timestampIndex
+          return if a.timestampIndex > b.timestampIndex then -1 else 1
+        else
+          return 0
+
+      collection
 
 module.exports = LogLines
