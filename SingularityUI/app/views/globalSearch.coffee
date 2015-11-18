@@ -50,7 +50,8 @@ class GlobalSearchView extends View
                 @requests.toJSON()
                 keys: ["request.id"]
                 threshold: 0.6
-                id: "request.id")
+                id: "request.id"
+                maxPatternLength: 128)
             results = fuse.search(query)
 
             process results.slice(0, 10)
