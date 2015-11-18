@@ -40,8 +40,7 @@ InterleavedTail = React.createClass
     else
       for logLines in @props.logLines
         logLines.fetchInitialData().done =>
-          @setState
-            mergedLines: LogLines.merge @props.viewingInstances.map (taskId) => @state[taskId]
+          @mergeLines()
 
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@)
@@ -50,12 +49,22 @@ InterleavedTail = React.createClass
   # Event Handlers                                                             |
   # ============================================================================
 
+  mergeLines: ->
+    @setState
+      mergedLines: LogLines.merge @props.viewingInstances.map (taskId) => @state[taskId]
+
   moreToFetch: ->
-    @props.logLines.state.get('moreToFetch')
+    _.some(@props.logLines, (logLines) =>
+      logLines.state.get('moreToFetch')
+    )
 
   fetchNext: ->
+    promises = []
     for logLines in @props.logLines
-      @props.logLines.fetchNext
+      promises.push(logLines.fetchNext())
+    Promise.all(promises).then =>
+      @mergeLines()
+
 
   fetchPrevious: (callback) ->
     for logLines in @props.logLines
@@ -93,7 +102,7 @@ InterleavedTail = React.createClass
   taskIdToColorMap: (logLines) ->
     if !logLines
       return {}
-      
+
     map = {}
     taskIds = _.uniq(logLines.map((line) =>
       line.taskId
