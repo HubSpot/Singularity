@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.Lists;
@@ -516,7 +517,7 @@ public class SingularityMailer implements Managed {
       }
     }
 
-    if (actionTaker.isPresent()) {
+    if (actionTaker.isPresent() && !Strings.isNullOrEmpty(actionTaker.get())) {
       if (destination.contains(EmailDestination.ACTION_TAKER)) {
         toList.add(actionTaker.get());
       } else {
