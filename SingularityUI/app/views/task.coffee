@@ -15,7 +15,6 @@ class TaskView extends View
         _.extend super,
             'click [data-action="viewObjectJSON"]': 'viewJson'
             'click [data-action="viewJsonProperty"]': 'viewJsonProperty'
-            'click [data-action="remove"]': 'killTask'
             'submit [data-action="runShell"]': 'executeCommand'
             'change [data-action="cmd"]': 'cmdSelected'
 
@@ -67,12 +66,6 @@ class TaskView extends View
                 modelClone.attributes[key].splice 0, modelClone.attributes[key].length, value[index]
 
         utils.viewJSON modelClone
-
-    killTask: (event) ->
-        taskModel = new Task id: @taskId
-        taskModel.promptKill =>
-            setTimeout (=> @trigger 'refreshrequest'), 1000
-
 
     executeCommand: (event) ->
         event.preventDefault()
