@@ -28,6 +28,7 @@ import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.SlaveMatchState;
 import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.AbstractMachineManager;
@@ -60,30 +61,6 @@ class SingularitySlaveAndRackManager {
     this.rackManager = rackManager;
     this.slaveManager = slaveManager;
     this.taskManager = taskManager;
-  }
-
-  public enum SlaveMatchState {
-    OK(true),
-    NOT_RACK_OR_SLAVE_PARTICULAR(true),
-    RACK_SATURATED(false),
-    SLAVE_SATURATED(false),
-    SLAVE_DECOMMISSIONING(false),
-    RACK_DECOMMISSIONING(false),
-    RACK_AFFINITY_NOT_MATCHING(false),
-    SLAVE_ATTRIBUTES_DO_NOT_MATCH(false),
-    SLAVE_FROZEN(false),
-    RACK_FROZEN(false);
-
-    private final boolean isMatchAllowed;
-
-    private SlaveMatchState(boolean isMatchAllowed) {
-      this.isMatchAllowed = isMatchAllowed;
-    }
-
-    public boolean isMatchAllowed() {
-      return isMatchAllowed;
-    }
-
   }
 
   public SlaveMatchState doesOfferMatch(Protos.Offer offer, SingularityTaskRequest taskRequest, SingularitySchedulerStateCache stateCache) {

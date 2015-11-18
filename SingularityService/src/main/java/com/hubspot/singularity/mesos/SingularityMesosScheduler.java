@@ -34,15 +34,14 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
+import com.hubspot.singularity.SlaveMatchState;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
-import com.hubspot.singularity.data.StateManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderException;
-import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager.SlaveMatchState;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
@@ -145,6 +144,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
       for (SingularityTaskRequest taskRequest : taskRequests) {
         LOG.trace("Task {} is due", taskRequest.getPendingTask().getPendingTaskId());
+        taskRequest.getPendingTask().clearUnmatchedOffers();
       }
 
       numDueTasks = taskRequests.size();
@@ -189,6 +189,11 @@ public class SingularityMesosScheduler implements Scheduler {
           driver.declineOffer(offerHolder.getOffer().getId());
         }
       }
+
+      for (SingularityTaskRequest taskRequest : taskRequests) {
+        taskManager.savePendingTask(taskRequest.getPendingTask());
+      }
+
     } catch (Throwable t) {
       LOG.error("Received fatal error while accepting offers - will decline all available offers", t);
 
@@ -238,6 +243,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
         return Optional.of(task);
       } else {
+        taskRequest.getPendingTask().addUnmatchedOffer(offerHolder.getOffer().getHostname(), slaveMatchState);
         LOG.trace("Ignoring offer {} on {} for task {}; matched resources: {}, slave match state: {}", offerHolder.getOffer().getId(), offerHolder.getOffer().getHostname(), taskRequest
             .getPendingTask().getPendingTaskId(), matchesResources, slaveMatchState);
       }
