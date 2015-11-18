@@ -14,7 +14,7 @@ InterleavedTail = React.createClass
 
   getInitialState: ->
     @state =
-      mergedLines = []
+      mergedLines: []
 
   componentWillMount: ->
     # Get the task info
@@ -40,7 +40,7 @@ InterleavedTail = React.createClass
     else
       for logLines in @props.logLines
         logLines.fetchInitialData().done =>
-          @mergeLines()
+          @mergeLines(@props.viewingInstances.map (taskId) => @state[taskId])
 
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@)
@@ -49,9 +49,10 @@ InterleavedTail = React.createClass
   # Event Handlers                                                             |
   # ============================================================================
 
-  mergeLines: ->
+  mergeLines: (lines) ->
+    newLines = @state.mergedLines.concat(LogLines.merge lines)
     @setState
-      mergedLines: LogLines.merge @props.viewingInstances.map (taskId) => @state[taskId]
+      mergedLines: newLines
 
   moreToFetch: ->
     _.some(@props.logLines, (logLines) =>
@@ -60,11 +61,23 @@ InterleavedTail = React.createClass
 
   fetchNext: ->
     promises = []
+    oldLineCount = @props.logLines.map (logLines) => {taskId: logLines.taskId, length: logLines.length}
     for logLines in @props.logLines
       promises.push(logLines.fetchNext())
-    Promise.all(promises).then =>
-      @mergeLines()
 
+    Promise.all(promises).then =>
+      newLineCount = @props.logLines.map (logLines) => {taskId: logLines.taskId, length: logLines.length}
+      deltas = newLineCount.map (count) =>
+        taskId: count.taskId
+        delta: count.length - _.findWhere(oldLineCount, {taskId: count.taskId}).length
+
+      newLines = []
+      for delta in deltas
+        lines = _.findWhere(@props.logLines, {taskId: delta.taskId}).toJSON()
+        slice = lines.slice(lines.length - delta.delta, lines.length)
+        newLines.push(slice)
+
+      @mergeLines(newLines)
 
   fetchPrevious: (callback) ->
     for logLines in @props.logLines
