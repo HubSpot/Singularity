@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +20,7 @@ public class SingularityPendingTask {
   private final List<String> cmdLineArgsList;
   private final Optional<String> user;
   private final Optional<String> runId;
-  private final Map<String, SlaveMatchState> unmatchedOffers;
+  private final Map<SlaveMatchState, List<String>> unmatchedOffers;
 
   public static Predicate<SingularityPendingTask> matchingRequest(final String requestId) {
     return new Predicate<SingularityPendingTask>() {
@@ -43,14 +44,18 @@ public class SingularityPendingTask {
     };
   }
 
+  public SingularityPendingTask(SingularityPendingTaskId pendingTaskId, List<String> cmdLineArgsList, Optional<String> user, Optional<String> runId) {
+    this(pendingTaskId, cmdLineArgsList, user, runId, new HashMap<SlaveMatchState, List<String>>());
+  }
+
   @JsonCreator
   public SingularityPendingTask(@JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId, @JsonProperty("cmdLineArgsList") List<String> cmdLineArgsList,
-      @JsonProperty("user") Optional<String> user, @JsonProperty("runId") Optional<String> runId, @JsonProperty("unmatchedOffers") Map<String, SlaveMatchState> unmatchedOffers) {
+      @JsonProperty("user") Optional<String> user, @JsonProperty("runId") Optional<String> runId, @JsonProperty("unmatchedOffers") Map<SlaveMatchState, List<String>> unmatchedOffers) {
     this.pendingTaskId = pendingTaskId;
     this.user = user;
     this.cmdLineArgsList = JavaUtils.nonNullImmutable(cmdLineArgsList);
     this.runId = runId;
-    this.unmatchedOffers = unmatchedOffers == null ? new HashMap<String, SlaveMatchState>() : unmatchedOffers;
+    this.unmatchedOffers = unmatchedOffers == null ? new HashMap<SlaveMatchState, List<String>>() : unmatchedOffers;
   }
 
   @Override
@@ -89,12 +94,16 @@ public class SingularityPendingTask {
     return runId;
   }
 
-  public Map<String, SlaveMatchState> getUnmatchedOffers() {
+  public Map<SlaveMatchState, List<String>> getUnmatchedOffers() {
     return unmatchedOffers;
   }
 
   public void addUnmatchedOffer(String host, SlaveMatchState reason) {
-    unmatchedOffers.put(host, reason);
+    if (unmatchedOffers.containsKey(reason)) {
+      unmatchedOffers.get(reason).add(host);
+    } else {
+      unmatchedOffers.put(reason, Arrays.asList(host));
+    }
   }
 
   public void clearUnmatchedOffers() {
