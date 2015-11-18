@@ -34,6 +34,9 @@ InterleavedTail = React.createClass
     });
 
   componentDidMount: ->
+    for logLines in @props.logLines
+      logLines.reset()
+      
     if @props.offset?
       for logLines in @props.logLines
         logLines.fetchOffset(@props.offset)
@@ -80,11 +83,13 @@ InterleavedTail = React.createClass
       @mergeLines(newLines)
 
   fetchPrevious: (callback) ->
+    console.log 'prev'
     for logLines in @props.logLines
       @prevLines = logLines.toJSON().length
       _.defer( =>
         logLines.fetchPrevious().done =>
           newLines = logLines.toJSON().length - @prevLines
+          console.log newLines
           if newLines > 0
             @scrollToLine(newLines)
           callback()
