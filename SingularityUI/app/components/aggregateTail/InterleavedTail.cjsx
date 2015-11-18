@@ -34,13 +34,12 @@ InterleavedTail = React.createClass
     });
 
   componentDidMount: ->
-    if @props.offset?
-      for logLines in @props.logLines
-        logLines.fetchOffset(@props.offset)
-    else
-      for logLines in @props.logLines
-        logLines.fetchInitialData().done =>
-          @mergeLines(@props.viewingInstances.map (taskId) => @state[taskId])
+    for logLines in @props.logLines
+      logLines.reset()
+
+    for logLines in @props.logLines
+      logLines.fetchInitialData().done =>
+        @mergeLines(@props.viewingInstances.map (taskId) => @state[taskId])
 
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@)
@@ -49,8 +48,11 @@ InterleavedTail = React.createClass
   # Event Handlers                                                             |
   # ============================================================================
 
-  mergeLines: (lines) ->
-    newLines = @state.mergedLines.concat(LogLines.merge lines)
+  mergeLines: (lines, beginning = false) ->
+    if beginning
+      newLines = LogLines.merge(lines).concat(@state.mergedLines)
+    else
+      newLines = @state.mergedLines.concat(LogLines.merge lines)
     @setState
       mergedLines: newLines
 
@@ -80,15 +82,29 @@ InterleavedTail = React.createClass
       @mergeLines(newLines)
 
   fetchPrevious: (callback) ->
+    promises = []
+    oldLineCount = @props.logLines.map (logLines) => {taskId: logLines.taskId, length: logLines.length}
     for logLines in @props.logLines
-      @prevLines = logLines.toJSON().length
-      _.defer( =>
-        logLines.fetchPrevious().done =>
-          newLines = logLines.toJSON().length - @prevLines
-          if newLines > 0
-            @scrollToLine(newLines)
-          callback()
-      )
+      promises.push(logLines.fetchPrevious())
+
+    Promise.all(promises).then =>
+      newLineCount = @props.logLines.map (logLines) => {taskId: logLines.taskId, length: logLines.length}
+      deltas = newLineCount.map (count) =>
+        taskId: count.taskId
+        delta: count.length - _.findWhere(oldLineCount, {taskId: count.taskId}).length
+
+      newLines = []
+      for delta in deltas
+        lines = _.findWhere(@props.logLines, {taskId: delta.taskId}).toJSON()
+        slice = lines.slice(0, delta.delta)
+        newLines.push(slice)
+
+      @mergeLines(newLines, true)
+      totalNew = _.reduce(deltas, (memo, delta) =>
+        memo + delta.delta
+      , 0)
+      @scrollToLine(totalNew)
+      callback()
 
   scrollToLine: (line) ->
     @refs.contents.scrollToLine(line)
