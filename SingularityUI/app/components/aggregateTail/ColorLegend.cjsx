@@ -4,7 +4,7 @@ ColorLegend = React.createClass
   renderColors: ->
     _.keys(@props.colors).map (taskId) =>
       <li key={taskId}>
-        {@props.colors[taskId]} {taskId}
+        <div className="swatch" style={backgroundColor: @props.colors[taskId]}></div>{taskId}
       </li>
 
   render: ->
