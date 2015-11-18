@@ -22,7 +22,6 @@ import com.hubspot.singularity.SingularityTaskShellCommandUpdate.UpdateType;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCallable;
-import com.spotify.docker.client.DockerClient;
 
 public class SingularityExecutorShellCommandRunner {
 
@@ -126,10 +125,7 @@ public class SingularityExecutorShellCommandRunner {
 
     List<String> command = new ArrayList<>();
 
-    if (shellCommandDescriptor.isSwitchUser()) {
-      String switchUserCommand = String.format(executorConfiguration.getSwitchUserCommandFormat(), taskProcess.getTask().getExecutorData().getUser().or(executorConfiguration.getDefaultRunAsUser()));
-      command.addAll(Arrays.asList(switchUserCommand.split("\\s+")));
-    }
+    command.addAll(executorConfiguration.getShellCommandPrefix());
 
     boolean isDocker = task.getTaskInfo().hasContainer() && task.getTaskInfo().getContainer().hasDocker();
     if (isDocker) {
