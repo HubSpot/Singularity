@@ -90,9 +90,28 @@ InterleavedTail = React.createClass
   # Rendering                                                                  |
   # ============================================================================
 
+  taskIdToColorMap: (logLines) ->
+    if !logLines
+      return {}
+      
+    map = {}
+    taskIds = _.uniq(logLines.map((line) =>
+      line.taskId
+    ))
+    if taskIds.length is 1
+      map[taskIds[0]] = 'hsla(0, 0, 0, 0)'
+    else
+      interval = 360 / taskIds.length
+      colors = taskIds.map (taskId, i) =>
+        "hsla(#{interval * i}, 100%, 50%, 0.1)"
+      for taskId, i in taskIds
+        map[taskId] = colors[i]
+    map
+
   render: ->
     <div>
       <InterleavedHeader
+        colors={@taskIdToColorMap(@state.mergedLines)}
       />
       <Contents
         ref="contents"
@@ -105,7 +124,8 @@ InterleavedTail = React.createClass
         fetchPrevious={@fetchPrevious}
         taskState={''}
         moreToFetch={@moreToFetch}
-        activeColor={@props.activeColor} />
+        activeColor={@props.activeColor}
+        colorMap={@taskIdToColorMap} />
     </div>
 
 module.exports = InterleavedTail

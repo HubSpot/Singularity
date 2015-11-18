@@ -13,7 +13,7 @@ InterleavedHeader = React.createClass
 
   renderLegend: ->
     if @state.showLegend
-      <ColorLegend />
+      <ColorLegend colors={@props.colors}/>
 
   render: ->
     <div className="individual-header">
