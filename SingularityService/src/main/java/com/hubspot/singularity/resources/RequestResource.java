@@ -188,7 +188,8 @@ public class RequestResource extends AbstractRequestResource {
   @ApiOperation(value="Bounce a specific Singularity request. A bounce launches replacement task(s), and then kills the original task(s) if the replacement(s) are healthy.",
   response=SingularityRequestParent.class)
   public SingularityRequestParent bounce(@ApiParam("The request ID to bounce") @PathParam("requestId") String requestId,
-      @ApiParam("Username of the person requesting the bounce") @QueryParam("user") Optional<String> queryUser) {
+      @ApiParam("Username of the person requesting the bounce") @QueryParam("user") Optional<String> queryUser,
+      @ApiParam("Incrementally bounce, shutting down old tasks as new ones are started successfully") @QueryParam("incremental") Optional<Boolean> incremental) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
@@ -197,8 +198,10 @@ public class RequestResource extends AbstractRequestResource {
 
     checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to bounce (it must be manually unpaused first)", requestWithState.getRequest().getId());
 
+    boolean isIncremental = incremental.or(false);
+
     SingularityCreateResult createResult = requestManager.createCleanupRequest(
-            new SingularityRequestCleanup(queryUser, RequestCleanupType.BOUNCE, System.currentTimeMillis(), Optional.<Boolean>absent(), requestId, Optional.of(getAndCheckDeployId(requestId))));
+            new SingularityRequestCleanup(queryUser, isIncremental ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE, System.currentTimeMillis(), Optional.<Boolean>absent(), requestId, Optional.of(getAndCheckDeployId(requestId))));
 
     checkConflict(createResult != SingularityCreateResult.EXISTED, "%s is already bouncing", requestId);
 

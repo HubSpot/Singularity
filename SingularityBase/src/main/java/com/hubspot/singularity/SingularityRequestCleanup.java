@@ -7,7 +7,7 @@ import com.google.common.base.Optional;
 public class SingularityRequestCleanup {
 
   public enum RequestCleanupType {
-    DELETING, PAUSING, BOUNCE;
+    DELETING, PAUSING, BOUNCE, INCREMENTAL_BOUNCE;
   }
 
   private final Optional<String> user;
