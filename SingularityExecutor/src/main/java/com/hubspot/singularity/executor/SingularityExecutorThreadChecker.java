@@ -89,7 +89,9 @@ public class SingularityExecutorThreadChecker {
         Thread.currentThread().interrupt();
         return;
       } catch (Throwable t) {
-        taskProcess.getTask().getLog().error("While fetching used threads for {}", taskProcess.getTask().getTaskId(), t);
+        if (!taskProcess.wasKilled()) {
+          taskProcess.getTask().getLog().error("While fetching used threads for {}", taskProcess.getTask().getTaskId(), t);
+        }
         continue;
       }
 
