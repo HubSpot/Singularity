@@ -142,7 +142,7 @@ public class SingularityExecutorShellCommandRunner {
           try {
             pid = Integer.parseInt(new Scanner(pidFilePath).useDelimiter("\\Z").next());
           } catch (Exception e) {
-            throw new InvalidShellCommandException("No PID found");
+            throw new InvalidShellCommandException(String.format("No PID found due to exception reading pid file: %s", e.getMessage()));
           }
         } else if (isDocker) {
           pid = 1;
