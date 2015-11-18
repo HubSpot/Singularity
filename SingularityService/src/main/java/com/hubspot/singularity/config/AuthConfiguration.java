@@ -15,7 +15,7 @@ public class AuthConfiguration {
 
   @JsonProperty
   @NotNull
-  private SingularityAuthenticatorClass authenticator = SingularityAuthenticatorClass.DISABLED;
+  private SingularityAuthenticatorClass authenticator = SingularityAuthenticatorClass.QUERYPARAM_PASSTHROUGH;
 
   @JsonProperty
   @NotNull

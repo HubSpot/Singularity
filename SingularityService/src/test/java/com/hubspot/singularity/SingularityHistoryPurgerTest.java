@@ -45,6 +45,9 @@ public class SingularityHistoryPurgerTest extends SingularitySchedulerTestBase {
   @Inject
   protected SingularityTaskHistoryPersister taskHistoryPersister;
 
+  @Inject
+  protected SingularityTestAuthenticator testAuthenticator;
+
   public SingularityHistoryPurgerTest() {
     super(true);
   }
@@ -172,8 +175,9 @@ public class SingularityHistoryPurgerTest extends SingularitySchedulerTestBase {
 
     String runId = "my-run-id";
     String user = "my-user";
+    testAuthenticator.setUser(Optional.of(new SingularityUser("", Optional.<String>absent(), Optional.of(user), Collections.<String>emptySet())));
 
-    SingularityPendingRequestParent parent = requestResource.scheduleImmediately(requestId, Optional.of(user), Optional.of(runId), Collections.<String> emptyList());
+    SingularityPendingRequestParent parent = requestResource.scheduleImmediately(requestId, Optional.of(runId), Collections.<String> emptyList());
 
     Assert.assertEquals(runId, parent.getPendingRequest().getRunId().get());
     Assert.assertEquals(user, parent.getPendingRequest().getUser().get());
@@ -192,7 +196,7 @@ public class SingularityHistoryPurgerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(runId, historyManager.getTaskHistory(taskId.getId()).get().getTask().getTaskRequest().getPendingTask().getRunId().get());
     Assert.assertEquals(runId, historyManager.getTaskHistoryForRequest(requestId, 0, 10).get(0).getRunId().get());
 
-    parent = requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Optional.<String> absent(), Collections.<String> emptyList());
+    parent = requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList());
 
     Assert.assertTrue(parent.getPendingRequest().getRunId().isPresent());
   }
@@ -205,7 +209,7 @@ public class SingularityHistoryPurgerTest extends SingularitySchedulerTestBase {
     initScheduledRequest();
     initFirstDeploy();
 
-    requestResource.scheduleImmediately(requestId, Optional.<String>absent(), Optional.<String>absent(), Collections.<String>emptyList());
+    requestResource.scheduleImmediately(requestId, Optional.<String>absent(), Collections.<String>emptyList());
 
     resourceOffers();
 
