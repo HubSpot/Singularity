@@ -206,9 +206,11 @@ public class RequestResource extends AbstractRequestResource {
     checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to bounce (it must be manually unpaused first)", requestWithState.getRequest().getId());
 
     SlavePlacement placement = requestWithState.getRequest().getSlavePlacement().or(configuration.getDefaultSlavePlacement());
-    int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(MachineState.ACTIVE);
-    int requiredSlaveCount = requestWithState.getRequest().getInstancesSafe() * 2;
-    checkBadRequest(placement == SlavePlacement.GREEDY || placement == SlavePlacement.OPTIMISTIC || currentActiveSlaveCount >= requiredSlaveCount, "Not enough slaves to successfully complete a bounce of reqeust %s (minimum required: %s, current: %s)", requestId, requiredSlaveCount, currentActiveSlaveCount);
+    if (placement != SlavePlacement.GREEDY && placement != SlavePlacement.OPTIMISTIC) {
+      int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(MachineState.ACTIVE);
+      int requiredSlaveCount = requestWithState.getRequest().getInstancesSafe() * 2;
+      checkBadRequest(currentActiveSlaveCount >= requiredSlaveCount, "Not enough slaves to successfully complete a bounce of reqeust %s (minimum required: %s, current: %s)", requestId, requiredSlaveCount, currentActiveSlaveCount);
+    }
 
     SingularityCreateResult createResult = requestManager.createCleanupRequest(
             new SingularityRequestCleanup(queryUser, RequestCleanupType.BOUNCE, System.currentTimeMillis(), Optional.<Boolean>absent(), requestId, Optional.of(getAndCheckDeployId(requestId))));
