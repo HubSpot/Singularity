@@ -248,7 +248,7 @@ public class SingularityRequestBuilder {
             ", rackSensitive=" + rackSensitive +
             ", rackAffinity=" + rackAffinity +
             ", slavePlacement=" + slavePlacement +
-            ", requiredSlaveAttributes=" + requiredSlaveAttributes +
+            ", requiredSlaveAttrbiutes=" + requiredSlaveAttributes +
             ", loadBalanced=" + loadBalanced +
             ", group=" + group +
             ", readOnlyGroups=" + readOnlyGroups +

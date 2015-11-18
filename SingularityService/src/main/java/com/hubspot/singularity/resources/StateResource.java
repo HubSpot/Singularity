@@ -11,9 +11,7 @@ import javax.ws.rs.core.MediaType;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityState;
-import com.hubspot.singularity.SingularityTaskOfferResult;
 import com.hubspot.singularity.data.StateManager;
-import com.hubspot.singularity.SingularityOfferState;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 
@@ -48,12 +46,5 @@ public class StateResource {
   @ApiOperation("Retrieve the list of over-provisioned request IDs.")
   public List<String> getOverProvisionedRequestIds(@QueryParam("skipCache") boolean skipCache) {
     return stateManager.getState(skipCache, true).getOverProvisionedRequestIds();
-  }
-
-  @GET
-  @Path("/offers")
-  @ApiOperation("Retrieve the status of the most recently processed offers and scheduled tasks")
-  public List<SingularityTaskOfferResult> getOfferState() {
-    return stateManager.getOfferState().getTaskOfferResults();
   }
 }
