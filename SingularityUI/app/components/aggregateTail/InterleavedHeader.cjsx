@@ -17,7 +17,7 @@ InterleavedHeader = React.createClass
 
   render: ->
     <div className="individual-header">
-      <span className="instance-link">Multiple Tasks</span>
+      <span className="instance-link">Viewing {@props.numTasks} Tasks</span>
       <span className="right-buttons">
         <a className="action-link" onClick={@toggleLegend}><span className="glyphicon glyphicon-menu-hamburger"></span></a>
       </span>
