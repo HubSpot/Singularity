@@ -176,6 +176,7 @@ InterleavedTail = React.createClass
     <div>
       <InterleavedHeader
         colors={@taskIdToColorMap(@state.mergedLines)}
+        numTasks={@props.logLines.length}
       />
       <Contents
         ref="contents"
