@@ -11,7 +11,7 @@ class LogLines extends Collection
 
     delimiter: /\n/
 
-    timestampRegex: /\d{2}:\d{2}:\d{2}.\d{3}/
+    # timestampRegex: /\d{2}:\d{2}:\d{2}.\d{3}/
 
     # How much we request at a time (before growing it)
     baseRequestLength: 30000
@@ -177,21 +177,21 @@ class LogLines extends Collection
 
         # create the objects for LogLine models
         res = lines.map (data) =>
-            regexResult = @timestampRegex.exec data
-            # TODO: We need to give "orphaned" lines at the beginning of a file a timestamp if we have any
-            if regexResult isnt null
-              timestamp = moment regexResult[0], 'HH:mm:ss.SSS'
-              @lastTimestamp = timestamp
-              @timestampIndex = 0
-            else
-              timestamp = @lastTimestamp
-              if @lastTimestamp
-                @timestampIndex++
+          tryTimestamp = moment data, 'HH:mm:ss.SSS'
+          # TODO: We need to give "orphaned" lines at the beginning of a file a timestamp if we have any
+          if tryTimestamp.isValid()
+            timestamp = tryTimestamp
+            @lastTimestamp = timestamp
+            @timestampIndex = 0
+          else
+            timestamp = @lastTimestamp
+            if @lastTimestamp
+              @timestampIndex++
 
-            line = {data, offset, timestamp, @timestampIndex, @taskId}
-            offset += data.length + 1
+          line = {data, offset, timestamp, @timestampIndex, @taskId}
+          offset += data.length + 1
 
-            line
+          line
 
         res
 
