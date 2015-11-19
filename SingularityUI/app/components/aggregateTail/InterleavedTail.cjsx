@@ -30,7 +30,7 @@ InterleavedTail = React.createClass
 
     Backbone.React.Component.mixin.on(@, {
       models: models
-      collections: collections
+      # collections: collections
     });
 
   componentDidMount: ->
@@ -150,7 +150,7 @@ InterleavedTail = React.createClass
     map = {}
     taskIds = _.uniq(logLines.map((line) =>
       line.taskId
-    ))
+    )).sort()
     if taskIds.length is 1
       map[taskIds[0]] = 'hsla(0, 0, 0, 0)'
     else
