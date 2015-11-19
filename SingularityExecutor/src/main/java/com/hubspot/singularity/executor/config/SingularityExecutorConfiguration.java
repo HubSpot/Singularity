@@ -194,6 +194,12 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private String shellCommandUserPlaceholder = "{USER}";
 
+  @JsonProperty
+  private String shellCommandPidFile = ".task-pid";
+
+  @JsonProperty
+  private List<String> shellCommandPrefix = Collections.emptyList();
+
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
   }
@@ -554,6 +560,22 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.shellCommandOutFile = shellCommandOutFile;
   }
 
+  public String getShellCommandPidFile() {
+    return shellCommandPidFile;
+  }
+
+  public void setShellCommandPidFile(String shellCommandPidFile) {
+    this.shellCommandPidFile = shellCommandPidFile;
+  }
+
+  public List<String> getShellCommandPrefix() {
+    return shellCommandPrefix;
+  }
+
+  public void setShellCommandPrefix(List<String> shellCommandPrefix) {
+    this.shellCommandPrefix = shellCommandPrefix;
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration[" +
@@ -601,6 +623,8 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", shellCommandOutFile='" + shellCommandOutFile + '\'' +
             ", shellCommandPidPlaceholder='" + shellCommandPidPlaceholder + '\'' +
             ", shellCommandUserPlaceholder='" + shellCommandUserPlaceholder + '\'' +
+            ", shellCommandPidFile='" + shellCommandPidFile + '\'' +
+            ", shellCommandPrefix='" + shellCommandPrefix + '\'' +
             ']';
   }
 }
