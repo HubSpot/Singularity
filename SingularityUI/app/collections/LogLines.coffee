@@ -177,6 +177,7 @@ class LogLines extends Collection
         # create the objects for LogLine models
         res = lines.map (data) =>
             regexResult = @timestampRegex.exec data
+            # TODO: We need to give "orphaned" lines at the beginning of a file a timestamp if we have any
             if regexResult isnt null
               timestamp = moment regexResult[0], 'HH:mm:ss.SSS'
               @lastTimestamp = timestamp
@@ -191,12 +192,6 @@ class LogLines extends Collection
 
             line
 
-        # earliest = _.min(res, (line) => line.timestamp?.unix())
-        # for line in res
-        #   if !line.timestamp
-        #     line.timestamp = earliest
-
-        # console.log _.countBy(res, (l) => l.timestamp is null)
         res
 
     growRequestLength: (previousParseTimestamp, lastParseTimestamp) ->

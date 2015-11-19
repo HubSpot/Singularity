@@ -99,7 +99,7 @@ Contents = React.createClass
       </div>
 
   renderLines: ->
-    if @props.logLines
+    if @props.logLines and @props.logLines.length > 0
       if @props.colorMap
         colors = @props.colorMap(@props.logLines)
       else
@@ -139,7 +139,7 @@ Contents = React.createClass
           ref="lines"
           itemRenderer={@lineRenderer}
           itemSizeGetter={@getLineHeight}
-          length={@state.linesToRender.length}
+          length={@state.linesToRender?.length || 0}
           type="variable"
           useTranslate3d={true}
           threshold={1000}>
@@ -159,6 +159,6 @@ Contents = React.createClass
     @refs.lines.scrollTo(0)
 
   scrollToBottom: ->
-    @refs.lines.scrollTo(@state.linesToRender.length)
+    @refs.lines.scrollTo(@state.linesToRender?.length || 0)
 
 module.exports = Contents
