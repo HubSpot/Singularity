@@ -34,6 +34,13 @@ Header = React.createClass
     else
       return <li><a className="disabled">No running instances</a></li>
 
+  renderViewButtons: ->
+    if @props.viewingInstances.length > 1
+      <div className="btn-group" role="group">
+        <button type="button" className="btn btn-sm btn-default no-margin #{if !@props.splitView then 'active'}" onClick={@props.toggleView}>Unified</button>
+        <button type="button" className="btn btn-sm btn-default no-margin #{if @props.splitView then 'active'}" onClick={@props.toggleView}>Split</button>
+      </div>
+
   render: ->
     <div className="tail-header">
       <div className="row">
@@ -83,10 +90,7 @@ Header = React.createClass
               {@renderListItems()}
             </ul>
           </div>
-          <div className="btn-group" role="group">
-            <button type="button" className="btn btn-sm btn-default no-margin #{if !@props.splitView then 'active'}" onClick={@props.toggleView}>Unified</button>
-            <button type="button" className="btn btn-sm btn-default no-margin #{if @props.splitView then 'active'}" onClick={@props.toggleView}>Split</button>
-          </div>
+          {@renderViewButtons()}
           <a className="btn btn-default btn-sm tail-bottom-button" onClick={@props.scrollToBottom}>
             All to bottom
           </a>
