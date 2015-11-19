@@ -37,9 +37,11 @@ InterleavedTail = React.createClass
     for logLines in @props.logLines
       logLines.reset()
 
+    promises = []
     for logLines in @props.logLines
-      logLines.fetchInitialData().done =>
-        @mergeLines(@props.viewingInstances.map (taskId) => @state[taskId])
+      promises.push(logLines.fetchInitialData())
+    Promise.all(promises).then =>
+      @mergeLines(@props.logLines.map((logLines) => logLines.toJSON()))
 
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@)
@@ -103,7 +105,8 @@ InterleavedTail = React.createClass
       totalNew = _.reduce(deltas, (memo, delta) =>
         memo + delta.delta
       , 0)
-      @scrollToLine(totalNew)
+      if totalNew > 0
+        @scrollToLine(totalNew)
       callback()
 
   scrollToLine: (line) ->
@@ -111,16 +114,28 @@ InterleavedTail = React.createClass
 
   scrollToTop: ->
     @refs.contents.stopTailingPoll()
-    if @props.logLines.getMinOffset() is 0
+    if _.every(@props.logLines, (logLines) => logLines.getMinOffset() is 0)
       @refs.contents.scrollToTop()
     else
-      @props.logLines.reset()
-      @props.logLines.fetchFromStart().done @refs.contents.scrollToTop
+      _.each(@props.logLines, (logLines) => logLines.reset())
+      promises = []
+      _.each(@props.logLines, (logLines) => promises.push(logLines.fetchFromStart()))
+      Promise.all(promises).then =>
+        @setState
+          mergedLines: []
+        @mergeLines(@props.logLines.map((logLines) => logLines.toJSON()))
+        @refs.contents.scrollToTop
 
   scrollToBottom: ->
-    if @props.logLines.state.get('moreToFetch') is true
-      @props.logLines.reset()
-      @props.logLines.fetchInitialData().done _.delay(@refs.contents.scrollToBottom, 200)
+    if _.every(@props.logLines, (logLines) => logLines.state.get('moreToFetch') is true)
+      _.each(@props.logLines, (logLines) => logLines.reset())
+      promises = []
+      for logLines in @props.logLines
+        promises.push(logLines.fetchInitialData())
+      Promise.all(promises).then =>
+        @setState
+          mergedLines: []
+        @mergeLines(@props.logLines.map((logLines) => logLines.toJSON()))
     else
       @refs.contents.scrollToBottom()
 

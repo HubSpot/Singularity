@@ -130,6 +130,7 @@ AggregateTail = React.createClass
     )
     <div className="col-md-12 tail-column">
       <InterleavedTail
+        ref="tail"
         path={@props.path}
         requestId={@props.requestId}
         taskId={@state.viewingInstances[0]}
