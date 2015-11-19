@@ -11,7 +11,8 @@ class LogLines extends Collection
 
     delimiter: /\n/
 
-    # timestampRegex: /\d{2}:\d{2}:\d{2}.\d{3}/
+    @lastTimestamp = null
+    @timestampIndex = 0
 
     # How much we request at a time (before growing it)
     baseRequestLength: 30000
@@ -171,9 +172,6 @@ class LogLines extends Collection
         # remove last line if empty, or if it only has whitespace
         if lines[lines.length - 1].match whiteSpace or not lines[lines.length - 1]
             lines = _.initial lines
-
-        @lastTimestamp = null
-        @timestampIndex = 0
 
         # create the objects for LogLine models
         res = lines.map (data) =>
