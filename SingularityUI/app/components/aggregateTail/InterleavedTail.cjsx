@@ -43,6 +43,17 @@ InterleavedTail = React.createClass
     Promise.all(promises).then =>
       @mergeLines(@props.logLines.map((logLines) => logLines.toJSON()))
 
+  componentWillReceiveProps: (nextProps) ->
+    if nextProps.logLines isnt @props.logLines
+      _.each(nextProps.logLines, (logLines) => logLines.reset())
+      promises = []
+      for logLines in nextProps.logLines
+        promises.push(logLines.fetchInitialData())
+      Promise.all(promises).then =>
+        @setState
+          mergedLines: []
+        @mergeLines(nextProps.logLines.map((logLines) => logLines.toJSON()))
+
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@)
 

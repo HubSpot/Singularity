@@ -102,7 +102,7 @@ AggregateTail = React.createClass
 
   renderIndividualTails: ->
     @state.viewingInstances.sort((a, b) =>
-      @getInstanceNumber(a) > @getInstanceNumber(b)
+      if @getInstanceNumber(a) > @getInstanceNumber(b) then -1 else 1
     ).map((taskId, i) =>
       if @props.logLines[taskId]
         <div key={taskId} id="tail-#{taskId}" className="col-md-#{@getColumnWidth()} tail-column">
@@ -134,12 +134,10 @@ AggregateTail = React.createClass
         path={@props.path}
         requestId={@props.requestId}
         taskId={@state.viewingInstances[0]}
-        instanceNumber={''}
         offset={@props.offset}
         logLines={logLines}
         ajaxErrors={ajaxErrors}
         activeTasks={@props.activeTasks}
-        closeTail={_.noop}
         activeColor={@state.color}
         viewingInstances={@state.viewingInstances} />
     </div>
