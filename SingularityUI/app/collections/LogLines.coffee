@@ -224,7 +224,7 @@ class LogLines extends Collection
 
     # Merge an array of multiple LogLines collections ordered by timestamp
     @merge: (collections) ->
-      collection =  _.union.apply @, collections
+      collection = [].concat.apply [], collections
       collection = collection.sort (a, b) =>
         if a.timestamp and b.timestamp and !a.timestamp.isSame(b.timestamp)
           return if a.timestamp.isBefore(b.timestamp) then -1 else 1
