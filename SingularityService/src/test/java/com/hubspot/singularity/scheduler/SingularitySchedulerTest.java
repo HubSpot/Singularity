@@ -941,7 +941,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     SingularityTask taskTwo = startTask(firstDeploy, 2);
     SingularityTask taskThree = startTask(firstDeploy, 3);
 
-    requestResource.bounce(requestId, user);
+    requestResource.bounce(requestId, user, Optional.of(false));
 
     Assert.assertTrue(requestManager.cleanupRequestExists(requestId));
 
