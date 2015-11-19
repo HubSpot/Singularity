@@ -20,17 +20,11 @@ InterleavedTail = React.createClass
     # Get the task info
     @task = new TaskHistory {taskId: @props.taskId}
 
-    collections = {}
     models = {}
-
-    for logLines in @props.logLines
-      collections[logLines.taskId] = logLines
-
     models.ajaxError = @props.ajaxErrors[0]
 
     Backbone.React.Component.mixin.on(@, {
       models: models
-      # collections: collections
     });
 
   componentDidMount: ->
@@ -50,9 +44,7 @@ InterleavedTail = React.createClass
       for logLines in nextProps.logLines
         promises.push(logLines.fetchInitialData())
       Promise.all(promises).then =>
-        @setState
-          mergedLines: []
-        @mergeLines(nextProps.logLines.map((logLines) => logLines.toJSON()))
+        @resetMergedLines()
 
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@)
@@ -132,23 +124,24 @@ InterleavedTail = React.createClass
       promises = []
       _.each(@props.logLines, (logLines) => promises.push(logLines.fetchFromStart()))
       Promise.all(promises).then =>
-        @setState
-          mergedLines: []
-        @mergeLines(@props.logLines.map((logLines) => logLines.toJSON()))
-        @refs.contents.scrollToTop
+        @resetMergedLines()
+        @refs.contents.scrollToTop()
 
   scrollToBottom: ->
     if _.every(@props.logLines, (logLines) => logLines.state.get('moreToFetch') is true)
       _.each(@props.logLines, (logLines) => logLines.reset())
-      promises = []
       for logLines in @props.logLines
-        promises.push(logLines.fetchInitialData())
-      Promise.all(promises).then =>
-        @setState
-          mergedLines: []
-        @mergeLines(@props.logLines.map((logLines) => logLines.toJSON()))
+        logLines.fetchInitialData(=>
+          @resetMergedLines()
+          @refs.contents.scrollToBottom()
+        )
     else
       @refs.contents.scrollToBottom()
+
+  resetMergedLines: ->
+    @setState
+      mergedLines: []
+    @mergeLines(@props.logLines.map((logLines) => logLines.toJSON()))
 
   # ============================================================================
   # Rendering                                                                  |
