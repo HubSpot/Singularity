@@ -31,11 +31,11 @@ InterleavedTail = React.createClass
     for logLines in @props.logLines
       logLines.reset()
 
-    promises = []
     for logLines in @props.logLines
-      promises.push(logLines.fetchInitialData())
-    Promise.all(promises).then =>
-      @mergeLines(@props.logLines.map((logLines) => logLines.toJSON()))
+      logLines.fetchInitialData(=>
+        @resetMergedLines()
+        @refs.contents.scrollToBottom()
+      )
 
   componentWillReceiveProps: (nextProps) ->
     if nextProps.logLines isnt @props.logLines
