@@ -50,7 +50,7 @@ class LogLines extends Collection
         # Get the offest of the beginning of the last line, not the end of the last line
         if @length > 0 then @last().getStartOffset() else 0
 
-    fetchInitialData: =>
+    fetchInitialData: (callback = _.noop)=>
         # console.log 'initial'
         # When we request `read` without passing an offset, we get given
         # back just the end offset of the file
@@ -69,6 +69,7 @@ class LogLines extends Collection
                 length: @initialRequestLength
 
             @trigger 'initialdata'
+            request.done callback
 
         promise.error (response) =>
             # If we get a 400, the file has likely not been generated
