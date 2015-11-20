@@ -175,10 +175,13 @@ class LogLines extends Collection
 
         # create the objects for LogLine models
         res = lines.map (data) =>
-          tryTimestamp = moment data, 'HH:mm:ss.SSS'
+          # Try builtin ISO 8601 timetamp strings
+          tryTimestamp = moment data
+          # Try custom format
+          tryTimestampCustom = moment data, 'HH:mm:ss.SSS'
           # TODO: We need to give "orphaned" lines at the beginning of a file a timestamp if we have any
-          if tryTimestamp.isValid()
-            timestamp = tryTimestamp
+          if tryTimestamp.isValid() or tryTimestampCustom.isValid()
+            timestamp = if tryTimestamp.isValid() then tryTimestamp else tryTimestampCustom
             @lastTimestamp = timestamp
             @timestampIndex = 0
           else
