@@ -174,6 +174,7 @@ class LogLines extends Collection
             lines = _.initial lines
 
         # create the objects for LogLine models
+        @lastTimestamp = null
         res = lines.map (data) =>
           # Try builtin ISO 8601 timetamp strings
           tryTimestamp = moment data
