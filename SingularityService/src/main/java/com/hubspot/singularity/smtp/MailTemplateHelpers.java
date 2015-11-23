@@ -16,10 +16,10 @@ import com.google.inject.Singleton;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.SingularityEmailType;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.config.EmailConfigurationEnums;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.SandboxManager;
@@ -212,8 +212,8 @@ public class MailTemplateHelpers {
    * @param history task history.
    * @return subject line string.
    */
-  public String getSubjectForTaskHistory(SingularityTaskId taskId, ExtendedTaskState state, EmailConfigurationEnums.EmailType type, Collection<SingularityTaskHistoryUpdate> history) {
-    if (type == EmailConfigurationEnums.EmailType.TASK_SCHEDULED_OVERDUE_TO_FINISH) {
+  public String getSubjectForTaskHistory(SingularityTaskId taskId, ExtendedTaskState state, SingularityEmailType type, Collection<SingularityTaskHistoryUpdate> history) {
+    if (type == SingularityEmailType.TASK_SCHEDULED_OVERDUE_TO_FINISH) {
       return String.format("Task is overdue to finish (%s)", taskId.toString());
     }
 
