@@ -111,7 +111,7 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
     boolean caughtException = false;
 
     try {
-      requestResource.scheduleImmediately(requestId,  Optional.<String> absent(), Optional.<String> absent(), null);
+      requestResource.scheduleImmediately(requestId, Optional.<String> absent(), null);
     } catch (Exception e) {
       caughtException = true;
     }

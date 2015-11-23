@@ -211,7 +211,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     SingularityTask firstTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
     createAndSchedulePendingTask(firstDeployId);
 
-    requestResource.pause(requestId, Optional.<String> absent(), Optional.of(new SingularityPauseRequest(Optional.of("testuser"), Optional.of(false))));
+    requestResource.pause(requestId, Optional.of(new SingularityPauseRequest(Optional.of("testuser"), Optional.of(false))));
 
     cleaner.drainCleanupQueue();
 
@@ -232,7 +232,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     SingularityTask firstTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
 
-    requestResource.deleteRequest(requestId, Optional.<String> absent());
+    requestResource.deleteRequest(requestId);
 
     Assert.assertTrue(requestManager.getCleanupRequests().size() == 1);
 
@@ -281,7 +281,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
 
-    requestResource.submit(request.toBuilder().setInstances(Optional.of(3)).build(), Optional.<String>absent());
+    requestResource.submit(request.toBuilder().setInstances(Optional.of(3)).build());
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
     List<Offer> oneOffer = Arrays.asList(createOffer(12, 1024));
@@ -297,7 +297,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
 
-    requestResource.submit(request.toBuilder().setInstances(Optional.of(10)).build(), Optional.<String>absent());
+    requestResource.submit(request.toBuilder().setInstances(Optional.of(10)).build());
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
     sms.resourceOffers(driver, Arrays.asList(createOffer(2, 1024), createOffer(1, 1024)));
@@ -311,7 +311,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
 
-    requestResource.submit(request.toBuilder().setInstances(Optional.of(15)).build(), Optional.<String> absent());
+    requestResource.submit(request.toBuilder().setInstances(Optional.of(15)).build());
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
     sms.resourceOffers(driver, Arrays.asList(createOffer(20, 1024), createOffer(20, 1024)));
@@ -335,7 +335,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     schedule = "*/1 * * * * ? 1995";
 
     // cause it to be pending
-    requestResource.submit(request.toBuilder().setQuartzSchedule(Optional.of(schedule)).build(), Optional.<String> absent());
+    requestResource.submit(request.toBuilder().setQuartzSchedule(Optional.of(schedule)).build());
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
     Assert.assertTrue(requestResource.getActiveRequests().isEmpty());
@@ -343,7 +343,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
 
     schedule = "*/1 * * * * ?";
-    requestResource.submit(request.toBuilder().setQuartzSchedule(Optional.of(schedule)).build(), Optional.<String>absent());
+    requestResource.submit(request.toBuilder().setQuartzSchedule(Optional.of(schedule)).build());
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
     Assert.assertTrue(!requestResource.getActiveRequests().isEmpty());
@@ -374,7 +374,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   @Test
   public void testOneOffsDontRunByThemselves() {
     SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND);
-    requestResource.submit(bldr.build(), Optional.<String> absent());
+    requestResource.submit(bldr.build());
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
 
     deploy("d2");
@@ -384,7 +384,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
 
-    requestResource.scheduleImmediately(requestId, user, Optional.<String> absent(), Collections.<String> emptyList());
+    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList());
 
     resourceOffers();
 
@@ -396,7 +396,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(0, taskManager.getActiveTaskIds().size());
     Assert.assertEquals(0, taskManager.getPendingTaskIds().size());
 
-    requestResource.scheduleImmediately(requestId, user, Optional.<String> absent(), Collections.<String> emptyList());
+    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList());
 
     resourceOffers();
 
@@ -412,10 +412,10 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   @Test
   public void testOneOffsDontMoveDuringDecomission() {
     SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND);
-    requestResource.submit(bldr.build(), Optional.<String> absent());
+    requestResource.submit(bldr.build());
     deploy("d2");
 
-    requestResource.scheduleImmediately(requestId, user, Optional.<String> absent(), Collections.<String> emptyList());
+    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList());
 
     validateTaskDoesntMoveDuringDecommission();
   }
@@ -937,7 +937,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   public void testBounce() {
     initRequest();
 
-    requestResource.updateInstances(requestId, Optional.<String> absent(), new SingularityRequestInstances(requestId, Optional.of(3)));
+    requestResource.updateInstances(requestId, new SingularityRequestInstances(requestId, Optional.of(3)));
 
     initFirstDeploy();
 
@@ -945,7 +945,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     SingularityTask taskTwo = startTask(firstDeploy, 2);
     SingularityTask taskThree = startTask(firstDeploy, 3);
 
-    requestResource.bounce(requestId, user);
+    requestResource.bounce(requestId);
 
     Assert.assertTrue(requestManager.cleanupRequestExists(requestId));
 
@@ -1189,7 +1189,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(0, taskManager.getTasksOnSlave(taskManager.getActiveTaskIds(), slaveManager.getObject("slave1").get()).size());
 
-    slaveResource.activateSlave("slave1", Optional.of("user2"));
+    slaveResource.activateSlave("slave1");
 
     sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
 
@@ -1250,25 +1250,25 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   @Test
   public void testOnDemandTasksPersist() {
     SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND);
-    requestResource.submit(bldr.build(), Optional.<String> absent());
+    requestResource.submit(bldr.build());
     deploy("d2");
     deployChecker.checkDeploys();
 
-    requestResource.scheduleImmediately(requestId, user, Optional.<String> absent(), Collections.<String> emptyList());
+    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList());
 
     resourceOffers();
 
-    requestResource.scheduleImmediately(requestId, user, Optional.<String> absent(), Collections.<String> emptyList());
+    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList());
 
     resourceOffers();
 
     Assert.assertEquals(2, taskManager.getActiveTaskIds().size());
 
-    requestResource.scheduleImmediately(requestId, user, Optional.<String> absent(), Collections.<String> emptyList());
+    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList());
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
-    requestResource.scheduleImmediately(requestId, user, Optional.<String> absent(), Collections.<String> emptyList());
+    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList());
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
@@ -1322,7 +1322,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(5, taskManager.getActiveTaskIds().size());
 
-    requestResource.updateInstances(requestId, Optional.of("user1"), new SingularityRequestInstances(requestId, Optional.of(2)));
+    requestResource.updateInstances(requestId, new SingularityRequestInstances(requestId, Optional.of(2)));
 
     resourceOffers();
     cleaner.drainCleanupQueue();
@@ -1606,7 +1606,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
 
-    requestResource.submit(request.toBuilder().setInstances(Optional.of(20)).build(), Optional.<String> absent());
+    requestResource.submit(request.toBuilder().setInstances(Optional.of(20)).build());
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
     sms.resourceOffers(driver, Arrays.asList(createOffer(36, 12024)));
