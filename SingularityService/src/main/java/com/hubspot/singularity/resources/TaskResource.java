@@ -29,6 +29,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.mesos.json.MesosTaskStatisticsObject;
@@ -244,10 +245,10 @@ public class TaskResource {
   @ApiResponses({
     @ApiResponse(code=409, message="Task already has a cleanup request (can be overridden with override=true)")
   })
-  public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> queryUser, @ApiParam("Pass true to save over any existing cleanup requests") @QueryParam("override") Optional<Boolean> override) {
+  public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId, @ApiParam("Pass true to save over any existing cleanup requests") @QueryParam("override") Optional<Boolean> override) {
     final SingularityTask task = checkActiveTask(taskId, SingularityAuthorizationScope.WRITE);
 
-    final SingularityTaskCleanup taskCleanup = new SingularityTaskCleanup(queryUser, TaskCleanupType.USER_REQUESTED, System.currentTimeMillis(), task.getTaskId(), Optional.<String> absent());
+    final SingularityTaskCleanup taskCleanup = new SingularityTaskCleanup(JavaUtils.getUserEmail(user), TaskCleanupType.USER_REQUESTED, System.currentTimeMillis(), task.getTaskId(), Optional.<String> absent());
 
     if (override.isPresent() && override.get().booleanValue()) {
       taskManager.saveTaskCleanup(taskCleanup);
@@ -284,7 +285,7 @@ public class TaskResource {
     @ApiResponse(code=403, message="Given shell command doesn't exist")
   })
   @Consumes({ MediaType.APPLICATION_JSON })
-  public SingularityTaskShellCommandRequest runShellCommand(@PathParam("taskId") String taskId, @QueryParam("user") Optional<String> queryUser, final SingularityShellCommand shellCommand) {
+  public SingularityTaskShellCommandRequest runShellCommand(@PathParam("taskId") String taskId, final SingularityShellCommand shellCommand) {
     SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
 
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.WRITE);
@@ -318,7 +319,7 @@ public class TaskResource {
       }
     }
 
-    SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(taskIdObj, queryUser, System.currentTimeMillis(), shellCommand);
+    SingularityTaskShellCommandRequest shellRequest = new SingularityTaskShellCommandRequest(taskIdObj, JavaUtils.getUserEmail(user), System.currentTimeMillis(), shellCommand);
 
     taskManager.saveTaskShellCommandRequestToQueue(shellRequest);
 

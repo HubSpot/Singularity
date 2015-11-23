@@ -13,6 +13,7 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularityService;
@@ -57,40 +58,36 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   @DELETE
   @Path("/slave/{slaveId}")
   @ApiOperation("Remove a known slave, erasing history. This operation will cancel decomissioning of the slave")
-  public void removeSlave(@ApiParam("Active SlaveId") @PathParam("slaveId") String slaveId, @QueryParam("user") Optional<String> queryUser) {
+  public void removeSlave(@ApiParam("Active SlaveId") @PathParam("slaveId") String slaveId) {
     super.remove(slaveId);
   }
 
   @POST
   @Path("/slave/{slaveId}/decomission")
   @Deprecated
-  public void decomissionSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId,
-      @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> queryUser) {
-    super.decommission(slaveId, queryUser);
+  public void decomissionSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId) {
+    super.decommission(slaveId, JavaUtils.getUserEmail(user));
   }
 
   @POST
   @Path("/slave/{slaveId}/decommission")
   @ApiOperation("Begin decommissioning a specific active slave")
-  public void decommissionSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId,
-      @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> queryUser) {
-    super.decommission(slaveId, queryUser);
+  public void decommissionSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId) {
+    super.decommission(slaveId, JavaUtils.getUserEmail(user));
   }
 
   @POST
   @Path("/slave/{slaveId}/freeze")
   @ApiOperation("Freeze tasks on a specific slave")
-  public void freezeSlave(@ApiParam("Slave ID") @PathParam("slaveId") String slaveId,
-                          @ApiParam("User requesting the freeze") @QueryParam("user") Optional<String> user) {
-    super.freeze(slaveId, user);
+  public void freezeSlave(@ApiParam("Slave ID") @PathParam("slaveId") String slaveId) {
+    super.freeze(slaveId, JavaUtils.getUserEmail(user));
   }
 
   @POST
   @Path("/slave/{slaveId}/activate")
   @ApiOperation("Activate a decomissioning slave, canceling decomission without erasing history")
-  public void activateSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId,
-      @ApiParam("User requesting the activate") @QueryParam("user") Optional<String> queryUser) {
-    super.activate(slaveId, queryUser);
+  public void activateSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId) {
+    super.activate(slaveId, JavaUtils.getUserEmail(user));
   }
 
 }
