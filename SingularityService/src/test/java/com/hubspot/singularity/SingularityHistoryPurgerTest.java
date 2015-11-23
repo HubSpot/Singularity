@@ -174,18 +174,14 @@ public class SingularityHistoryPurgerTest extends SingularitySchedulerTestBase {
     initFirstDeploy();
 
     String runId = "my-run-id";
-    String user = "my-user";
-    testAuthenticator.setUser(Optional.of(new SingularityUser("", Optional.<String>absent(), Optional.of(user), Collections.<String>emptySet())));
 
     SingularityPendingRequestParent parent = requestResource.scheduleImmediately(requestId, Optional.of(runId), Collections.<String> emptyList());
 
     Assert.assertEquals(runId, parent.getPendingRequest().getRunId().get());
-    Assert.assertEquals(user, parent.getPendingRequest().getUser().get());
 
     resourceOffers();
 
     Assert.assertEquals(runId, taskManager.getActiveTasks().get(0).getTaskRequest().getPendingTask().getRunId().get());
-    Assert.assertEquals(user, taskManager.getActiveTasks().get(0).getTaskRequest().getPendingTask().getUser().get());
 
     SingularityTaskId taskId = taskManager.getActiveTaskIds().get(0);
 
