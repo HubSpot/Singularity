@@ -11,6 +11,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.hubspot.singularity.config.SentryConfiguration;
+import com.hubspot.singularity.jersey.RequestStash;
 
 import net.kencochrane.raven.Raven;
 import net.kencochrane.raven.RavenFactory;
@@ -65,15 +66,16 @@ public class SingularityExceptionNotifier {
     final StackTraceElement[] currentThreadStackTrace = Thread.currentThread().getStackTrace();
 
     final EventBuilder eventBuilder = new EventBuilder()
-            .setCulprit(getPrefix() + t.getMessage())
-            .setMessage(Strings.nullToEmpty(t.getMessage()))
-            .setLevel(Event.Level.ERROR)
-            .setLogger(getCallingClassName(currentThreadStackTrace))
-            .addSentryInterface(new ExceptionInterface(t));
+            .withCulprit(getPrefix() + t.getMessage())
+            .withMessage(Strings.nullToEmpty(t.getMessage()))
+            .withLevel(Event.Level.ERROR)
+            .withLogger(getCallingClassName(currentThreadStackTrace))
+            .withSentryInterface(new ExceptionInterface(t))
+            .withExtra("url", RequestStash.INSTANCE.getUrl().or("none"));
 
     if (extraData != null && !extraData.isEmpty()) {
       for (Map.Entry<String, String> entry : extraData.entrySet()) {
-        eventBuilder.addExtra(entry.getKey(), entry.getValue());
+        eventBuilder.withExtra(entry.getKey(), entry.getValue());
       }
     }
 
@@ -88,13 +90,14 @@ public class SingularityExceptionNotifier {
     final StackTraceElement[] currentThreadStackTrace = Thread.currentThread().getStackTrace();
 
     final EventBuilder eventBuilder = new EventBuilder()
-            .setMessage(getPrefix() + subject)
-            .setLevel(Event.Level.ERROR)
-            .setLogger(getCallingClassName(currentThreadStackTrace));
+            .withMessage(getPrefix() + subject)
+            .withLevel(Event.Level.ERROR)
+            .withLogger(getCallingClassName(currentThreadStackTrace))
+            .withExtra("url", RequestStash.INSTANCE.getUrl().or("none"));
 
     if (extraData != null && !extraData.isEmpty()) {
       for (Map.Entry<String, String> entry : extraData.entrySet()) {
-        eventBuilder.addExtra(entry.getKey(), entry.getValue());
+        eventBuilder.withExtra(entry.getKey(), entry.getValue());
       }
     }
 
