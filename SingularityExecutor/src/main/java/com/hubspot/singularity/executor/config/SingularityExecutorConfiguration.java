@@ -201,7 +201,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private List<String> shellCommandPrefix = Collections.emptyList();
 
   @JsonProperty
-  private Optional<Integer> dockerClientTimeLimitMs = Optional.absent();
+  private Optional<Integer> dockerClientTimeLimitSeconds = Optional.absent();
 
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
@@ -579,12 +579,12 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.shellCommandPrefix = shellCommandPrefix;
   }
 
-  public Optional<Integer> getDockerClientTimeLimitMs() {
-    return dockerClientTimeLimitMs;
+  public Optional<Integer> getDockerClientTimeLimitSeconds() {
+    return dockerClientTimeLimitSeconds;
   }
 
-  public void setDockerClientTimeLimitMs(Optional<Integer> dockerClientTimeLimitMs) {
-    this.dockerClientTimeLimitMs = dockerClientTimeLimitMs;
+  public void setDockerClientTimeLimitSeconds(Optional<Integer> dockerClientTimeLimitMs) {
+    this.dockerClientTimeLimitSeconds = dockerClientTimeLimitMs;
   }
 
   @Override
@@ -636,7 +636,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", shellCommandUserPlaceholder='" + shellCommandUserPlaceholder + '\'' +
             ", shellCommandPidFile='" + shellCommandPidFile + '\'' +
             ", shellCommandPrefix='" + shellCommandPrefix + '\'' +
-            ", dockerClientTimeLimitMs='" + dockerClientTimeLimitMs + '\'' +
+            ", dockerClientTimeLimitMs='" + dockerClientTimeLimitSeconds + '\'' +
             ']';
   }
 }

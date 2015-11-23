@@ -88,9 +88,9 @@ public class SingularityExecutorModule extends AbstractModule {
   @Provides
   @Singleton
   public DockerClient providesDockerClient(SingularityExecutorConfiguration configuration) {
-    if (configuration.getDockerClientTimeLimitMs().isPresent()) {
+    if (configuration.getDockerClientTimeLimitSeconds().isPresent()) {
       TimeLimiter limiter = new SimpleTimeLimiter();
-      return limiter.newProxy(new DefaultDockerClient("unix:///var/run/docker.sock"), DockerClient.class, configuration.getDockerClientTimeLimitMs().get(), TimeUnit.MILLISECONDS);
+      return limiter.newProxy(new DefaultDockerClient("unix:///var/run/docker.sock"), DockerClient.class, configuration.getDockerClientTimeLimitSeconds().get(), TimeUnit.SECONDS);
     } else {
       return new DefaultDockerClient("unix:///var/run/docker.sock");
     }
