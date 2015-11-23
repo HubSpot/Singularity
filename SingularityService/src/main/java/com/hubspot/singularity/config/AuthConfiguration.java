@@ -19,7 +19,7 @@ public class AuthConfiguration {
 
   @JsonProperty
   @NotNull
-  private SingularityAuthDatastoreClass datastore = SingularityAuthDatastoreClass.DISABLED;
+  private SingularityAuthDatastoreClass datastore = SingularityAuthDatastoreClass.DUMMY;
 
   @JsonProperty
   @NotNull
