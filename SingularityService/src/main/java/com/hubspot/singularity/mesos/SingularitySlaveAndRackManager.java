@@ -2,6 +2,7 @@ package com.hubspot.singularity.mesos;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -98,11 +99,14 @@ class SingularitySlaveAndRackManager {
 
     Map<String, String> reservedSlaveAttributes = slaveAndRackHelper.reservedSlaveAttributes(offer);
     if (!reservedSlaveAttributes.isEmpty()) {
-      if (!taskRequest.getRequest().getRequiredSlaveAttributes().isPresent() ||
-        !slaveAndRackHelper.hasRequiredAttributes(taskRequest.getRequest().getRequiredSlaveAttributes().get(), reservedSlaveAttributes)) {
-        String message = String.format("Slaves with attributes %s are reserved for matching tasks. Task with attributes %s does not match", reservedSlaveAttributes, taskRequest.getRequest().getRequiredSlaveAttributes().or(Collections.<String, String>emptyMap()));
-        LOG.trace(message);
-        return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
+      if (taskRequest.getRequest().getRequiredSlaveAttributes().isPresent() || taskRequest.getRequest().getAllowedSlaveAttributes().isPresent()) {
+        Map<String, String> mergedAttributes = taskRequest.getRequest().getRequiredSlaveAttributes().or(new HashMap<String, String>());
+        mergedAttributes.putAll(taskRequest.getRequest().getAllowedSlaveAttributes().or(new HashMap<String, String>()));
+        if (!slaveAndRackHelper.hasRequiredAttributes(mergedAttributes, reservedSlaveAttributes)) {
+          String message = String.format("Slaves with attributes %s are reserved for matching tasks. Task with attributes %s does not match", reservedSlaveAttributes, taskRequest.getRequest().getRequiredSlaveAttributes().or(Collections.<String, String>emptyMap()));
+          LOG.trace(message);
+          return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
+        }
       }
     }
 

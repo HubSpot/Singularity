@@ -34,6 +34,7 @@ public class SingularityRequestBuilder {
   private Optional<List<String>> rackAffinity;
   private Optional<SlavePlacement> slavePlacement;
   private Optional<Map<String, String>> requiredSlaveAttributes;
+  private Optional<Map<String, String>> allowedSlaveAttributes;
 
   private Optional<Boolean> loadBalanced;
 
@@ -55,6 +56,7 @@ public class SingularityRequestBuilder {
     this.rackAffinity = Optional.absent();
     this.slavePlacement = Optional.absent();
     this.requiredSlaveAttributes = Optional.absent();
+    this.allowedSlaveAttributes = Optional.absent();
     this.scheduledExpectedRuntimeMillis = Optional.absent();
     this.daemon = Optional.absent();
     this.waitAtLeastMillisAfterTaskFinishesForReschedule = Optional.absent();
@@ -64,7 +66,7 @@ public class SingularityRequestBuilder {
 
   public SingularityRequest build() {
     return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, daemon, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule,
-        rackAffinity, slavePlacement, requiredSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readOnlyGroups);
+        rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readOnlyGroups);
   }
 
   public Optional<Boolean> getLoadBalanced() {
@@ -185,11 +187,6 @@ public class SingularityRequestBuilder {
     return requiredSlaveAttributes;
   }
 
-  public SingularityRequestBuilder setRequiredSlaveAttributes(Optional<Map<String, String>> requiredSlaveAttributes) {
-    this.requiredSlaveAttributes = requiredSlaveAttributes;
-    return this;
-  }
-
   public Optional<Long> getScheduledExpectedRuntimeMillis() {
     return scheduledExpectedRuntimeMillis;
   }
@@ -221,6 +218,16 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  public SingularityRequestBuilder setRequiredSlaveAttributes(Optional<Map<String, String>> requiredSlaveAttributes) {
+    this.requiredSlaveAttributes = requiredSlaveAttributes;
+    return this;
+  }
+
+  public SingularityRequestBuilder setAllowedSlaveAttributes(Optional<Map<String, String>> allowedSlaveAttributes) {
+    this.allowedSlaveAttributes = allowedSlaveAttributes;
+    return this;
+  }
+
   public Optional<Set<String>> getReadOnlyGroups() {
     return readOnlyGroups;
   }
@@ -249,6 +256,7 @@ public class SingularityRequestBuilder {
             ", rackAffinity=" + rackAffinity +
             ", slavePlacement=" + slavePlacement +
             ", requiredSlaveAttrbiutes=" + requiredSlaveAttributes +
+            ", allowedSlaveAttrbiutes=" + allowedSlaveAttributes +
             ", loadBalanced=" + loadBalanced +
             ", group=" + group +
             ", readOnlyGroups=" + readOnlyGroups +
@@ -279,6 +287,7 @@ public class SingularityRequestBuilder {
             Objects.equals(rackAffinity, that.rackAffinity) &&
             Objects.equals(slavePlacement, that.slavePlacement) &&
             Objects.equals(requiredSlaveAttributes, that.requiredSlaveAttributes) &&
+            Objects.equals(allowedSlaveAttributes, that.allowedSlaveAttributes) &&
             Objects.equals(loadBalanced, that.loadBalanced) &&
             Objects.equals(group, that.group) &&
             Objects.equals(readOnlyGroups, that.readOnlyGroups);
@@ -286,6 +295,10 @@ public class SingularityRequestBuilder {
 
   @Override
   public int hashCode() {
+<<<<<<< HEAD
     return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, loadBalanced, group, readOnlyGroups);
+=======
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group);
+>>>>>>> attribute_placement
   }
 }
