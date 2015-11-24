@@ -2,7 +2,9 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -82,7 +84,7 @@ public class SingularityCleaner {
     this.killNonLongRunningTasksInCleanupAfterMillis = TimeUnit.SECONDS.toMillis(configuration.getKillNonLongRunningTasksInCleanupAfterSeconds());
   }
 
-  private boolean shouldKillTask(SingularityTaskCleanup taskCleanup, List<SingularityTaskId> activeTaskIds, List<SingularityTaskId> cleaningTasks) {
+  private boolean shouldKillTask(SingularityTaskCleanup taskCleanup, List<SingularityTaskId> activeTaskIds, List<SingularityTaskId> cleaningTasks, Map<String, Integer> incrementalBounceRemainingInstanceMap) {
     final Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(taskCleanup.getTaskId().getRequestId());
 
     if (!requestWithState.isPresent()) {
@@ -134,6 +136,21 @@ public class SingularityCleaner {
 
     // check to see if there are enough active tasks out there that have been active for long enough that we can safely shut this task down.
     final List<SingularityTaskId> matchingTasks = SingularityTaskId.matchingAndNotIn(activeTaskIds, taskCleanup.getTaskId().getRequestId(), taskCleanup.getTaskId().getDeployId(), cleaningTasks);
+
+    // For an incremental bounce, shut down old tasks as new ones are started
+    if (taskCleanup.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
+      String key = String.format("%s-%s", taskCleanup.getTaskId().getRequestId(), taskCleanup.getTaskId().getDeployId());
+      int runningCleaningTasks = incrementalBounceRemainingInstanceMap.get(key) != null ? incrementalBounceRemainingInstanceMap.get(key) : 0;
+      if (matchingTasks.size() + runningCleaningTasks > request.getInstancesSafe()) {
+        if (runningCleaningTasks > 0) {
+          int count = incrementalBounceRemainingInstanceMap.get(key);
+          incrementalBounceRemainingInstanceMap.put(key, count - 1);
+        } else {
+          incrementalBounceRemainingInstanceMap.put(key, 0);
+        }
+        return true;
+      }
+    }
 
     if (matchingTasks.size() < request.getInstancesSafe()) {
       LOG.trace("Not killing a task {} yet, only {} matching out of a required {}", taskCleanup, matchingTasks.size(), request.getInstancesSafe());
@@ -226,7 +243,14 @@ public class SingularityCleaner {
           killActiveTasks = false;
           killScheduledTasks = false;
 
-          bounce(requestCleanup, activeTaskIds);
+          bounce(requestCleanup, activeTaskIds, false);
+
+          break;
+        case INCREMENTAL_BOUNCE:
+          killActiveTasks = false;
+          killScheduledTasks = false;
+
+          bounce(requestCleanup, activeTaskIds, true);
 
           break;
       }
@@ -272,7 +296,7 @@ public class SingularityCleaner {
     exceptionNotifier.notify("Insufficient data to create LB request cleanup", ImmutableMap.of("requestId", requestId, "deployId", maybeCurrentDeployId.toString(), "deploy", maybeDeploy.toString()));
   }
 
-  private void bounce(SingularityRequestCleanup requestCleanup, final List<SingularityTaskId> activeTaskIds) {
+  private void bounce(SingularityRequestCleanup requestCleanup, final List<SingularityTaskId> activeTaskIds, boolean isIncremental) {
     final long now = System.currentTimeMillis();
 
     final List<SingularityTaskId> matchingTaskIds = SingularityTaskId.matchingAndNotIn(activeTaskIds, requestCleanup.getRequestId(), requestCleanup.getDeployId().get(), Collections.<SingularityTaskId> emptyList());
@@ -280,7 +304,7 @@ public class SingularityCleaner {
     for (SingularityTaskId matchingTaskId : matchingTaskIds) {
       LOG.debug("Adding task {} to cleanup (bounce)", matchingTaskId.getId());
 
-      taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), TaskCleanupType.BOUNCING, now, matchingTaskId, Optional.<String> absent()));
+      taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), isIncremental ? TaskCleanupType.INCREMENTAL_BOUNCE : TaskCleanupType.BOUNCING, now, matchingTaskId, Optional.<String> absent()));
     }
 
     requestManager.addToPendingQueue(new SingularityPendingRequest(requestCleanup.getRequestId(), requestCleanup.getDeployId().get(), requestCleanup.getTimestamp(), PendingType.BOUNCE));
@@ -362,9 +386,19 @@ public class SingularityCleaner {
       return;
     }
 
+    Map<String, Integer> incrementalBounceRemainingInstanceMap = new HashMap<>();
     final List<SingularityTaskId> cleaningTasks = Lists.newArrayListWithCapacity(cleanupTasks.size());
     for (SingularityTaskCleanup cleanupTask : cleanupTasks) {
       cleaningTasks.add(cleanupTask.getTaskId());
+      if (cleanupTask.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
+        String key = String.format("%s-%s", cleanupTask.getTaskId().getRequestId(), cleanupTask.getTaskId().getDeployId());
+        if (incrementalBounceRemainingInstanceMap.containsKey(key)) {
+          incrementalBounceRemainingInstanceMap.put(key, 1);
+        } else {
+          int count = incrementalBounceRemainingInstanceMap.get(key);
+          incrementalBounceRemainingInstanceMap.put(key, count + 1);
+        }
+      }
     }
 
     LOG.info("Cleaning up {} tasks", cleanupTasks.size());
@@ -377,7 +411,7 @@ public class SingularityCleaner {
       if (!isValidTask(cleanupTask)) {
         LOG.info("Couldn't find a matching active task for cleanup task {}, deleting..", cleanupTask);
         taskManager.deleteCleanupTask(cleanupTask.getTaskId().getId());
-      } else if (shouldKillTask(cleanupTask, activeTaskIds, cleaningTasks) && checkLBStateAndShouldKillTask(cleanupTask)) {
+      } else if (shouldKillTask(cleanupTask, activeTaskIds, cleaningTasks, incrementalBounceRemainingInstanceMap) && checkLBStateAndShouldKillTask(cleanupTask)) {
         driverManager.killAndRecord(cleanupTask.getTaskId(), cleanupTask.getCleanupType());
 
         taskManager.deleteCleanupTask(cleanupTask.getTaskId().getId());
