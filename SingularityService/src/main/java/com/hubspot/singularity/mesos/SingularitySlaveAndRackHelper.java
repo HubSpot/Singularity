@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.inject.Singleton;
@@ -65,6 +66,50 @@ public class SingularitySlaveAndRackHelper {
 
   public String getRackIdOrDefault(Offer offer) {
     return getRackId(offer).or(defaultRackId);
+  }
+
+  public Map<String, String> getTextAttributes(Map<String, String> attributes) {
+    Map<String, String> textAttributes = new HashMap<>(attributes);
+    if (textAttributes.containsKey(rackIdAttributeKey)) {
+      textAttributes.remove(rackIdAttributeKey);
+    }
+    return textAttributes;
+  }
+
+  public Map<String, String> getTextAttributes(Offer offer) {
+    Map<String, String> textAttributes = new HashMap<>();
+    for (Attribute attribute : offer.getAttributesList()) {
+      if (!attribute.getName().equals(rackIdAttributeKey)) {
+        if (attribute.hasText()) {
+          textAttributes.put(attribute.getName(), attribute.getText().getValue());
+        } else if (attribute.hasScalar()) {
+          textAttributes.put(attribute.getName(), Double.toString(attribute.getScalar().getValue()));
+        } else if (attribute.hasRanges()) {
+          textAttributes.put(attribute.getName(), attribute.getRanges().getRangeList().toString());
+        }
+      }
+    }
+    return textAttributes;
+  }
+
+  public Map<String, String> reservedSlaveAttributes(Offer offer) {
+    Map<String, String> reservedAttributes = new HashMap<>();
+    Map<String, String> offerTextAttributes = getTextAttributes(offer);
+    for (Map.Entry<String, String> entry : configuration.getReserveSlavesWithAttributes().entrySet()) {
+      if (offerTextAttributes.containsKey(entry.getKey()) && offerTextAttributes.get(entry.getKey()).equals(entry.getValue())) {
+        reservedAttributes.put(entry.getKey(), entry.getValue());
+      }
+    }
+    return reservedAttributes;
+  }
+
+  public boolean hasRequiredAttributes(Map<String, String> attributes, Map<String, String> requiredAttributes) {
+    for (Map.Entry<String, String> entry : requiredAttributes.entrySet()) {
+      if (!(attributes.containsKey(entry.getKey()) && attributes.get(entry.getKey()).equals(entry.getValue()))) {
+        return false;
+      }
+    }
+    return true;
   }
 
 }
