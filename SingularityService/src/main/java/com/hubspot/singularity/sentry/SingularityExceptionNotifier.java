@@ -3,6 +3,7 @@ package com.hubspot.singularity.sentry;
 import java.util.Map;
 
 import javax.inject.Singleton;
+import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,8 +11,10 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
+import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.config.SentryConfiguration;
-import com.hubspot.singularity.jersey.RequestStash;
 
 import net.kencochrane.raven.Raven;
 import net.kencochrane.raven.RavenFactory;
@@ -25,10 +28,12 @@ public class SingularityExceptionNotifier {
 
   private final Optional<Raven> raven;
   private final Optional<SentryConfiguration> sentryConfiguration;
+  private final Provider<Optional<HttpServletRequest>> requestProvider;
 
   @Inject
-  public SingularityExceptionNotifier(Optional<SentryConfiguration> sentryConfiguration) {
+  public SingularityExceptionNotifier(Optional<SentryConfiguration> sentryConfiguration, @Named(SingularityMainModule.CURRENT_HTTP_REQUEST) Provider<Optional<HttpServletRequest>> requestProvider) {
     this.sentryConfiguration = sentryConfiguration;
+    this.requestProvider = requestProvider;
     if (sentryConfiguration.isPresent()) {
       this.raven = Optional.of(RavenFactory.ravenInstance(sentryConfiguration.get().getDsn()));
     } else {
@@ -42,6 +47,16 @@ public class SingularityExceptionNotifier {
     }
 
     return sentryConfiguration.get().getPrefix() + " ";
+  }
+
+  private Optional<String> getCurrentUrl() {
+    final Optional<HttpServletRequest> request = requestProvider.get();
+
+    if (request.isPresent()) {
+      return Optional.of(request.get().getRequestURI());
+    } else {
+      return Optional.absent();
+    }
   }
 
   private String getCallingClassName(StackTraceElement[] stackTrace) {
@@ -71,7 +86,7 @@ public class SingularityExceptionNotifier {
             .withLevel(Event.Level.ERROR)
             .withLogger(getCallingClassName(currentThreadStackTrace))
             .withSentryInterface(new ExceptionInterface(t))
-            .withExtra("url", RequestStash.INSTANCE.getUrl().or("none"));
+            .withExtra("url", getCurrentUrl().or("none"));
 
     if (extraData != null && !extraData.isEmpty()) {
       for (Map.Entry<String, String> entry : extraData.entrySet()) {
@@ -93,7 +108,7 @@ public class SingularityExceptionNotifier {
             .withMessage(getPrefix() + subject)
             .withLevel(Event.Level.ERROR)
             .withLogger(getCallingClassName(currentThreadStackTrace))
-            .withExtra("url", RequestStash.INSTANCE.getUrl().or("none"));
+            .withExtra("url", getCurrentUrl().or("none"));
 
     if (extraData != null && !extraData.isEmpty()) {
       for (Map.Entry<String, String> entry : extraData.entrySet()) {
