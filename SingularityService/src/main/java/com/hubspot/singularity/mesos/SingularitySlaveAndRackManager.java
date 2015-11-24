@@ -107,6 +107,10 @@ class SingularitySlaveAndRackManager {
           LOG.trace(message);
           return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
         }
+      } else {
+        String message = String.format("Slaves with attributes %s are reserved for matching tasks. No attributes specified for task %s", reservedSlaveAttributes, taskRequest.getPendingTask().getPendingTaskId().getId());
+        LOG.trace(message);
+        return SlaveMatchState.SLAVE_ATTRIBUTES_DO_NOT_MATCH;
       }
     }
 
