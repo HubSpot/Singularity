@@ -31,8 +31,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Binder;
 import com.google.inject.Module;
-import com.google.inject.OutOfScopeException;
 import com.google.inject.Provides;
+import com.google.inject.ProvisionException;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
@@ -320,7 +320,7 @@ public class SingularityMainModule implements Module {
   public Optional<HttpServletRequest> providesUrl(Provider<HttpServletRequest> requestProvider) {
     try {
       return Optional.of(requestProvider.get());
-    } catch (OutOfScopeException oose) {
+    } catch (ProvisionException pe) {  // this will happen if we're not in the REQUEST scope
       return Optional.absent();
     }
   }
