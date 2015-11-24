@@ -1,8 +1,4 @@
 View = require './view'
-Task = require '../models/Task'
-
-LogLines = require '../collections/LogLines'
-AjaxError = require '../models/AjaxError'
 
 class taskLatestLogSubview extends View
 
