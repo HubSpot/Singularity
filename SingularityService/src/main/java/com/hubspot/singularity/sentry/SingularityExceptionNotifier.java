@@ -1,5 +1,6 @@
 package com.hubspot.singularity.sentry;
 
+import java.util.Collections;
 import java.util.Map;
 
 import javax.inject.Singleton;
@@ -14,6 +15,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.SingularityMainModule;
+import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.SentryConfiguration;
 
 import net.kencochrane.raven.Raven;
@@ -21,6 +23,8 @@ import net.kencochrane.raven.RavenFactory;
 import net.kencochrane.raven.event.Event;
 import net.kencochrane.raven.event.EventBuilder;
 import net.kencochrane.raven.event.interfaces.ExceptionInterface;
+import net.kencochrane.raven.event.interfaces.HttpInterface;
+import net.kencochrane.raven.event.interfaces.UserInterface;
 
 @Singleton
 public class SingularityExceptionNotifier {
@@ -29,11 +33,13 @@ public class SingularityExceptionNotifier {
   private final Optional<Raven> raven;
   private final Optional<SentryConfiguration> sentryConfiguration;
   private final Provider<Optional<HttpServletRequest>> requestProvider;
+  private final Provider<Optional<SingularityUser>> userProvider;
 
   @Inject
-  public SingularityExceptionNotifier(Optional<SentryConfiguration> sentryConfiguration, @Named(SingularityMainModule.CURRENT_HTTP_REQUEST) Provider<Optional<HttpServletRequest>> requestProvider) {
+  public SingularityExceptionNotifier(Optional<SentryConfiguration> sentryConfiguration, @Named(SingularityMainModule.CURRENT_HTTP_REQUEST) Provider<Optional<HttpServletRequest>> requestProvider, Provider<Optional<SingularityUser>> userProvider) {
     this.sentryConfiguration = sentryConfiguration;
     this.requestProvider = requestProvider;
+    this.userProvider = userProvider;
     if (sentryConfiguration.isPresent()) {
       this.raven = Optional.of(RavenFactory.ravenInstance(sentryConfiguration.get().getDsn()));
     } else {
@@ -73,6 +79,10 @@ public class SingularityExceptionNotifier {
     raven.sendEvent(eventBuilder.build());
   }
 
+  public void notify(Throwable t) {
+    notify(t, Collections.<String, String>emptyMap());
+  }
+
   public void notify(Throwable t, Map<String, String> extraData) {
     if (!raven.isPresent()) {
       return;
@@ -85,8 +95,19 @@ public class SingularityExceptionNotifier {
             .withMessage(Strings.nullToEmpty(t.getMessage()))
             .withLevel(Event.Level.ERROR)
             .withLogger(getCallingClassName(currentThreadStackTrace))
-            .withSentryInterface(new ExceptionInterface(t))
-            .withExtra("url", getCurrentUrl().or("none"));
+            .withSentryInterface(new ExceptionInterface(t));
+
+    final Optional<HttpServletRequest> maybeRequest = requestProvider.get();
+
+    if (maybeRequest.isPresent()) {
+      eventBuilder.withSentryInterface(new HttpInterface(maybeRequest.get()));
+    }
+
+    final Optional<SingularityUser> maybeUser = userProvider.get();
+
+    if (maybeUser.isPresent()) {
+      eventBuilder.withSentryInterface(new UserInterface(maybeUser.get().getId(), maybeUser.get().getId(), "", maybeUser.get().getEmail().or("")));
+    }
 
     if (extraData != null && !extraData.isEmpty()) {
       for (Map.Entry<String, String> entry : extraData.entrySet()) {
@@ -95,6 +116,10 @@ public class SingularityExceptionNotifier {
     }
 
     sendEvent(raven.get(), eventBuilder);
+  }
+
+  public void notify(String subject) {
+    notify(subject, Collections.<String, String>emptyMap());
   }
 
   public void notify(String subject, Map<String, String> extraData) {
@@ -107,8 +132,13 @@ public class SingularityExceptionNotifier {
     final EventBuilder eventBuilder = new EventBuilder()
             .withMessage(getPrefix() + subject)
             .withLevel(Event.Level.ERROR)
-            .withLogger(getCallingClassName(currentThreadStackTrace))
-            .withExtra("url", getCurrentUrl().or("none"));
+            .withLogger(getCallingClassName(currentThreadStackTrace));
+
+    final Optional<HttpServletRequest> maybeRequest = requestProvider.get();
+
+    if (maybeRequest.isPresent()) {
+      eventBuilder.withSentryInterface(new HttpInterface(maybeRequest.get()));
+    }
 
     if (extraData != null && !extraData.isEmpty()) {
       for (Map.Entry<String, String> entry : extraData.entrySet()) {
