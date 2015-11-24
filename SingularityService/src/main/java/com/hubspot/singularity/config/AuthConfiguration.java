@@ -15,11 +15,11 @@ public class AuthConfiguration {
 
   @JsonProperty
   @NotNull
-  private SingularityAuthenticatorClass authenticator = SingularityAuthenticatorClass.DISABLED;
+  private SingularityAuthenticatorClass authenticator = SingularityAuthenticatorClass.QUERYPARAM_PASSTHROUGH;
 
   @JsonProperty
   @NotNull
-  private SingularityAuthDatastoreClass datastore = SingularityAuthDatastoreClass.DISABLED;
+  private SingularityAuthDatastoreClass datastore = SingularityAuthDatastoreClass.DUMMY;
 
   @JsonProperty
   @NotNull

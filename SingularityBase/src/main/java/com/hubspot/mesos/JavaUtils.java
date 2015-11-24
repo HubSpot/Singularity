@@ -37,6 +37,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
+import com.hubspot.singularity.SingularityUser;
 
 public final class JavaUtils {
 
@@ -196,5 +197,11 @@ public final class JavaUtils {
     return string.replace("-", "_");
   }
 
-
+  public static final Optional<String> getUserEmail(Optional<SingularityUser> user) {
+    if (user.isPresent()) {
+      return user.get().getEmail();
+    } else {
+      return Optional.absent();
+    }
+  }
 }

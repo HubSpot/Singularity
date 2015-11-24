@@ -28,6 +28,7 @@ import com.google.inject.Binder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.Scopes;
 import com.google.inject.OutOfScopeException;
 import com.google.inject.Provider;
 import com.google.inject.Stage;
@@ -40,6 +41,8 @@ import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAuthModule;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTestAuthenticator;
+import com.hubspot.singularity.auth.authenticator.SingularityAuthenticator;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
@@ -200,7 +203,14 @@ public class SingularityTestModule implements Module {
     mainBinder.install(new SingularityZkMigrationsModule());
     mainBinder.install(new SingularityMesosClientModule());
     mainBinder.install(new SingularityEventModule(configuration));
-    mainBinder.install(new SingularityAuthModule(configuration));
+    mainBinder.install(Modules.override(new SingularityAuthModule(configuration))
+            .with(new Module() {
+              @Override
+              public void configure(Binder binder) {
+                binder.bind(SingularityAuthenticator.class).to(SingularityTestAuthenticator.class);
+                binder.bind(SingularityTestAuthenticator.class).in(Scopes.SINGLETON);
+              }
+            }));
 
     mainBinder.bind(DeployResource.class);
     mainBinder.bind(RequestResource.class);

@@ -13,6 +13,7 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularityRack;
@@ -59,40 +60,36 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   @DELETE
   @Path("/rack/{rackId}")
   @ApiOperation("Remove a known rack, erasing history. This operation will cancel decomissioning of racks")
-  public void removeRack(@ApiParam("Rack ID") @PathParam("rackId") String rackId, @QueryParam("user") Optional<String> queryUser) {
+  public void removeRack(@ApiParam("Rack ID") @PathParam("rackId") String rackId) {
     super.remove(rackId);
   }
 
   @POST
   @Path("/rack/{rackId}/decomission")
   @Deprecated
-  public void decomissionRack(@ApiParam("Active rack ID") @PathParam("rackId") String rackId,
-      @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> queryUser) {
-    super.decommission(rackId, queryUser);
+  public void decomissionRack(@ApiParam("Active rack ID") @PathParam("rackId") String rackId) {
+    super.decommission(rackId, JavaUtils.getUserEmail(user));
   }
 
   @POST
   @Path("/rack/{rackId}/decommission")
   @ApiOperation("Begin decommissioning a specific active rack")
-  public void decommissionRack(@ApiParam("Active rack ID") @PathParam("rackId") String rackId,
-      @ApiParam("User requesting the decommisioning") @QueryParam("user") Optional<String> queryUser) {
-    super.decommission(rackId, queryUser);
+  public void decommissionRack(@ApiParam("Active rack ID") @PathParam("rackId") String rackId) {
+    super.decommission(rackId, JavaUtils.getUserEmail(user));
   }
 
   @POST
   @Path("/rack/{rackId}/freeze")
   @ApiOperation("Freeze a specific rack")
-  public void freezeRack(@ApiParam("Rack ID") @PathParam("rackId") String rackId,
-                               @ApiParam("User requesting the freeze") @QueryParam("user") Optional<String> user) {
-    super.freeze(rackId, user);
+  public void freezeRack(@ApiParam("Rack ID") @PathParam("rackId") String rackId) {
+    super.freeze(rackId, JavaUtils.getUserEmail(user));
   }
 
   @POST
   @Path("/rack/{rackId}/activate")
   @ApiOperation("Activate a decomissioning rack, canceling decomission without erasing history")
-  public void activateSlave(@ApiParam("Active rackId") @PathParam("rackId") String rackId,
-      @ApiParam("User requesting the activate") @QueryParam("user") Optional<String> queryUser) {
-    super.activate(rackId, queryUser);
+  public void activateSlave(@ApiParam("Active rackId") @PathParam("rackId") String rackId) {
+    super.activate(rackId, JavaUtils.getUserEmail(user));
   }
 
 }
