@@ -141,8 +141,6 @@ public class SingularityCleaner {
     if (taskCleanup.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
       String key = String.format("%s-%s", taskCleanup.getTaskId().getRequestId(), taskCleanup.getTaskId().getDeployId());
       int runningCleaningTasks = incrementalBounceRemainingInstanceMap.get(key) != null ? incrementalBounceRemainingInstanceMap.get(key) : 0;
-      LOG.trace(String.format("incremental bounce map: %s", incrementalBounceRemainingInstanceMap));
-      LOG.trace(String.format("running cleaning: %s, matching: %s", runningCleaningTasks, matchingTasks));
       if (matchingTasks.size() + runningCleaningTasks > request.getInstancesSafe()) {
         if (runningCleaningTasks > 0) {
           int count = incrementalBounceRemainingInstanceMap.get(key);
