@@ -15,6 +15,7 @@ ExpandableTableSubview = require '../views/expandableTableSubview'
 OverviewSubview = require '../views/taskOverviewSubview'
 HealthcheckNotification = require '../views/taskHealthcheckNotificationSubview'
 SimpleSubview = require '../views/simpleSubview'
+LatestLog = require '../views/taskLatestLogSubview'
 
 TaskView = require '../views/task'
 
@@ -49,6 +50,11 @@ class TaskDetailController extends Controller
             taskId: @taskId
             path:   @filePath
 
+        # Files where we expect the log to be
+        @collections.logDirectory = new TaskFiles [],
+            taskId: @taskId
+            path:   undefined
+
         @collections.s3Logs = new TaskS3Logs [], {@taskId}
 
         @collections.taskCleanups = new TaskCleanups
@@ -74,9 +80,10 @@ class TaskDetailController extends Controller
             model:    @models.task
             template: @templates.history
 
-        @subviews.latestLog = new SimpleSubview
-            model:    @models.task
-            template: @templates.latestLog
+        @subviews.latestLog = new LatestLog
+            task:      @models.task
+            logDir:    @collections.logDirectory
+            template:  @templates.latestLog
 
         @subviews.fileBrowser = new FileBrowserSubview
             collection:      @collections.files
@@ -194,6 +201,11 @@ class TaskDetailController extends Controller
         @models.task.fetch()
             .done =>
                 @fetchResourceUsage() if @models.task.get('isStillRunning')
+                logPath = if @models.task.get('isStillRunning') then config.runningTaskLogPath else config.finishedTaskLogPath
+                logPath = logPath.replace('$TASK_ID', @taskId)
+                logPath = _.initial(logPath.split('/')).join('/')
+                @collections.logDirectory.path = logPath
+                @collections.logDirectory.fetch()
             .success =>
                 @getAlerts()
             .error =>
