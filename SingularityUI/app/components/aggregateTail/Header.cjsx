@@ -75,9 +75,9 @@ Header = React.createClass
                   <span>Midnight</span>
                 </a>
               </li>
-              <li className={if @props.activeColor is 'sand' then 'active'}>
-                <a onClick={() => @props.setLogColor('sand')}>
-                  <span>Sand</span>
+              <li className={if @props.activeColor is 'solarized' then 'active'}>
+                <a onClick={() => @props.setLogColor('solarized')}>
+                  <span>Solarized</span>
                 </a>
               </li>
             </ul>
