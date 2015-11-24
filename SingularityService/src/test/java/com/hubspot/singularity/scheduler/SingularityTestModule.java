@@ -7,6 +7,8 @@ import static org.mockito.Mockito.when;
 
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos.MasterInfo;
 import org.apache.mesos.Protos.Status;
@@ -26,6 +28,8 @@ import com.google.inject.Binder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.OutOfScopeException;
+import com.google.inject.Provider;
 import com.google.inject.Stage;
 import com.google.inject.TypeLiteral;
 import com.google.inject.util.Modules;
@@ -153,6 +157,13 @@ public class SingularityTestModule implements Module {
 
             binder.bind(new TypeLiteral<Optional<Raven>>() {}).toInstance(Optional.<Raven>absent());
             binder.bind(new TypeLiteral<Optional<SentryConfiguration>>() {}).toInstance(Optional.<SentryConfiguration>absent());
+
+            binder.bind(HttpServletRequest.class).toProvider(new Provider<HttpServletRequest>() {
+              @Override
+              public HttpServletRequest get() {
+                throw new OutOfScopeException("testing");
+              }
+            });
           }
         }));
 
