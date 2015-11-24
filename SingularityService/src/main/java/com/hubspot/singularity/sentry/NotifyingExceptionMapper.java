@@ -1,7 +1,5 @@
 package com.hubspot.singularity.sentry;
 
-import java.util.Collections;
-
 import javax.ws.rs.core.Response;
 
 import com.google.inject.Inject;
@@ -22,7 +20,7 @@ public class NotifyingExceptionMapper extends LoggingExceptionMapper<Exception> 
     final Response response = super.toResponse(e);
 
     if (response.getStatus() >= 500) {
-      notifier.notify(e, Collections.<String, String>emptyMap());
+      notifier.notify(e);
     }
 
     return response;
