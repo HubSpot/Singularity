@@ -86,7 +86,10 @@ class TaskView extends View
         cmd = config.shellCommands.filter((cmd) ->
           return cmd.name is $("#cmd option:selected").text()
         )[0]
-        console.log cmd
+
+        @subviews.shellCommands.selectedCommandIndex = $("#cmd").prop('selectedIndex')
+        @subviews.shellCommands.selectedCommandDescription = cmd.description or ''
+
         $('.cmd-description').text(cmd.description or '')
         $('#btn_exec').prop("disabled", false)
 
