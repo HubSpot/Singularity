@@ -16,6 +16,8 @@ IndividualTail = React.createClass
     @task = new TaskHistory {taskId: @props.taskId}
     @startTaskStatusPoll()
 
+    @props.logLines.grep = @props.search
+
     # Automatically map backbone collections and models to the state of this component
     Backbone.React.Component.mixin.on(@, {
       collections: {
@@ -32,6 +34,12 @@ IndividualTail = React.createClass
         @props.logLines.fetchOffset(@props.offset)
     else
         @props.logLines.fetchInitialData()
+
+  componentWillReceiveProps: (nextProps) ->
+    if nextProps.search isnt @props.search
+      @props.logLines.grep = nextProps.search
+      @props.logLines.reset()
+      @props.logLines.fetchInitialData().done _.delay(@refs.contents.scrollToBottom, 200)
 
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@)

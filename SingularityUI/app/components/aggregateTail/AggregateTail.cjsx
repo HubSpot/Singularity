@@ -123,7 +123,8 @@ AggregateTail = React.createClass
             ajaxError={@props.ajaxError[taskId]}
             activeTasks={@props.activeTasks}
             closeTail={@toggleViewingInstance}
-            activeColor={@state.color} />
+            activeColor={@state.color}
+            search={@state.search} />
         </div>
     )
 

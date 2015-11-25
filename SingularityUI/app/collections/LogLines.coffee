@@ -14,6 +14,8 @@ class LogLines extends Collection
     @lastTimestamp = null
     @timestampIndex = 0
 
+    @grep = ''
+
     # How much we request at a time (before growing it)
     baseRequestLength: 30000
 
@@ -108,7 +110,7 @@ class LogLines extends Collection
         #     console.log 'fetch default'
         defaultParams =
             remove: false
-            data: _.extend {@path, length: @state.get('currentRequestLength')}, params.data
+            data: _.extend {@path, length: @state.get('currentRequestLength'), grep: @grep}, params.data
 
         request = super _.extend params, defaultParams
 
