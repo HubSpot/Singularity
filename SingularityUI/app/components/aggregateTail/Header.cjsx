@@ -20,6 +20,16 @@ Header = React.createClass
           </li>
         )
 
+  renderTasksDropdown: ->
+    <div className="btn-group">
+      <button type="button" className="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <span className="glyphicon glyphicon-cog"></span> <span className="caret"></span>
+      </button>
+      <ul className="dropdown-menu">
+        {@renderListItems()}
+      </ul>
+    </div>
+
   renderListItems: ->
     tasks = _.sortBy(@props.activeTasks, (t) => t.taskId.instanceNo).map (task, i) =>
         taskId = task.id
@@ -41,6 +51,40 @@ Header = React.createClass
         <button type="button" className="btn btn-sm btn-default no-margin #{if @props.splitView then 'active'}" onClick={@props.toggleView}>Split</button>
       </div>
 
+  renderColorList: ->
+    <div className="btn-group">
+      <button type="button" className="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <span className="glyphicon glyphicon-adjust"></span> <span className="caret"></span>
+      </button>
+      <ul className="dropdown-menu">
+        <li className={if @props.activeColor is '' then 'active'}>
+          <a onClick={() => @props.setLogColor('')}>
+            <span>Default</span>
+          </a>
+        </li>
+        <li className={if @props.activeColor is 'midnight' then 'active'}>
+          <a onClick={() => @props.setLogColor('midnight')}>
+            <span>Midnight</span>
+          </a>
+        </li>
+        <li className={if @props.activeColor is 'solarized' then 'active'}>
+          <a onClick={() => @props.setLogColor('solarized')}>
+            <span>Solarized</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+  renderAnchorButtons: ->
+    <span>
+      <a className="btn btn-default btn-sm tail-bottom-button" onClick={@props.scrollToBottom}>
+        All to bottom
+      </a>
+      <a className="btn btn-default btn-sm tail-top-button" onClick={@props.scrollToTop}>
+        All to top
+      </a>
+    </span>
+
   render: ->
     <div className="tail-header">
       <div className="row">
@@ -60,43 +104,10 @@ Header = React.createClass
           </ul>
         </div>
         <div className="col-md-3 hidden-xs tail-buttons">
-          <div className="btn-group">
-            <button type="button" className="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              <span className="glyphicon glyphicon-adjust"></span> <span className="caret"></span>
-            </button>
-            <ul className="dropdown-menu">
-              <li className={if @props.activeColor is '' then 'active'}>
-                <a onClick={() => @props.setLogColor('')}>
-                  <span>Default</span>
-                </a>
-              </li>
-              <li className={if @props.activeColor is 'midnight' then 'active'}>
-                <a onClick={() => @props.setLogColor('midnight')}>
-                  <span>Midnight</span>
-                </a>
-              </li>
-              <li className={if @props.activeColor is 'solarized' then 'active'}>
-                <a onClick={() => @props.setLogColor('solarized')}>
-                  <span>Solarized</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-          <div className="btn-group">
-            <button type="button" className="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              <span className="glyphicon glyphicon-cog"></span> <span className="caret"></span>
-            </button>
-            <ul className="dropdown-menu">
-              {@renderListItems()}
-            </ul>
-          </div>
+          {@renderColorList()}
+          {@renderTasksDropdown()}
           {@renderViewButtons()}
-          <a className="btn btn-default btn-sm tail-bottom-button" onClick={@props.scrollToBottom}>
-            All to bottom
-          </a>
-          <a className="btn btn-default btn-sm tail-top-button" onClick={@props.scrollToTop}>
-            All to top
-          </a>
+          {@renderAnchorButtons()}
         </div>
       </div>
     </div>
