@@ -20,6 +20,9 @@ InterleavedTail = React.createClass
     # Get the task info
     @task = new TaskHistory {taskId: @props.taskId}
 
+    for logLines in @props.logLines
+      logLines.grep = @props.search
+
     models = {}
     models.ajaxError = @props.ajaxErrors[0]
 
@@ -45,6 +48,16 @@ InterleavedTail = React.createClass
         promises.push(logLines.fetchInitialData())
       Promise.all(promises).then =>
         @resetMergedLines()
+    if nextProps.search isnt @props.search
+      _.each(nextProps.logLines, (logLines) =>
+        logLines.grep = nextProps.search
+        logLines.reset()
+      )
+      for logLines in @props.logLines
+        logLines.fetchInitialData(=>
+          @resetMergedLines()
+          @refs.contents.scrollToBottom()
+        )
 
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@)

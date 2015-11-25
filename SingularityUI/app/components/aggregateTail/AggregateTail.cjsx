@@ -145,7 +145,8 @@ AggregateTail = React.createClass
         logLines={logLines}
         ajaxErrors={ajaxErrors}
         activeTasks={@props.activeTasks}
-        viewingInstances={@state.viewingInstances} />
+        viewingInstances={@state.viewingInstances}
+        search={@state.search} />
     </div>
 
   render: ->
