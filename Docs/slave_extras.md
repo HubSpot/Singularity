@@ -28,7 +28,8 @@ logWatcherMetadataDirectory: path/to/logwatcher/metadata
 loggingDirectory: path/to/logs
 
 # Desired logging level
-loggingLevel: DEBUG
+loggingLevel:
+   com.hubspot: INFO
 ```
 
 ---
