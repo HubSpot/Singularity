@@ -196,7 +196,8 @@ InterleavedTail = React.createClass
         taskState={''}
         moreToFetch={@moreToFetch}
         activeColor={@props.activeColor}
-        colorMap={@taskIdToColorMap} />
+        colorMap={@taskIdToColorMap}
+        search={@props.search} />
     </div>
 
 module.exports = InterleavedTail

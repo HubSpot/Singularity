@@ -34,10 +34,8 @@ LogLine = React.createClass
       text: content.slice(lastEnd)
       match: false
 
-    res = sections.map (s, i) =>
+    sections.map (s, i) =>
       <span key={i} className={if s.match then 'search-match'}>{s.text}</span>
-
-    res
 
   render: ->
     <div className="#{@getClassNames()}" style={backgroundColor: @props.color}>
