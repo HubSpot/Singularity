@@ -1,6 +1,5 @@
 package com.hubspot.singularity.mesos;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
@@ -94,7 +93,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
   private void handleUncaughtSchedulerException(Throwable t) {
     LOG.error("Scheduler threw an uncaught exception - exiting", t);
 
-    exceptionNotifier.notify(t, Collections.<String, String>emptyMap());
+    exceptionNotifier.notify(t);
 
     abort.abort(AbortReason.UNRECOVERABLE_ERROR, Optional.of(t));
   }

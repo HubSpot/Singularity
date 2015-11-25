@@ -2,6 +2,7 @@ package com.hubspot.singularity;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.inject.name.Names.named;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -12,6 +13,7 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
@@ -30,6 +32,7 @@ import com.google.common.net.HostAndPort;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Provides;
+import com.google.inject.ProvisionException;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
@@ -89,6 +92,8 @@ public class SingularityMainModule implements Module {
 
   public static final String NEW_TASK_THREADPOOL_NAME = "_new_task_threadpool";
   public static final Named NEW_TASK_THREADPOOL_NAMED = Names.named(NEW_TASK_THREADPOOL_NAME);
+
+  public static final String CURRENT_HTTP_REQUEST = "_singularity_current_http_request";
 
   private final SingularityConfiguration configuration;
 
@@ -310,4 +315,13 @@ public class SingularityMainModule implements Module {
     return getJadeTemplate("rate_limited.jade");
   }
 
+  @Provides
+  @Named(CURRENT_HTTP_REQUEST)
+  public Optional<HttpServletRequest> providesUrl(Provider<HttpServletRequest> requestProvider) {
+    try {
+      return Optional.of(requestProvider.get());
+    } catch (ProvisionException pe) {  // this will happen if we're not in the REQUEST scope
+      return Optional.absent();
+    }
+  }
 }
