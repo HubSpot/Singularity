@@ -1,6 +1,22 @@
 
 Header = React.createClass
 
+  getInitialState: ->
+    searchVal: @props.search
+
+  handleSearchChange: (event) ->
+    @setState
+      searchVal: event.target.value
+
+  setSearch: ->
+    @props.setSearch(@state.searchVal)
+
+  handleKeyPress: (event) ->
+    if event.keyCode is 13
+      @setSearch()
+      # @refs.searchDDToggle.dropdown('toggle')
+      $("#searchDDToggle").dropdown("toggle")
+
   renderBreadcrumbs: ->
     segments = @props.path.split('/')
     return segments.map (s, i) =>
@@ -87,15 +103,15 @@ Header = React.createClass
 
   renderSearch: ->
     <div className="btn-group">
-      <button type="button" className="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      <button id="searchDDToggle" type="button" className="btn btn-#{if @props.search is '' then 'default' else 'info'} btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         <span className="glyphicon glyphicon-search"></span> <span className="caret"></span>
       </button>
       <ul className="dropdown-menu">
         <li>
           <div className="input-group log-search">
-            <input type="text" className="form-control" placeholder="Filter/grep" />
+            <input type="text" className="form-control" placeholder="Grep Logs" value={@state.searchVal} onChange={@handleSearchChange} onKeyPress={@handleKeyPress} />
             <span className="input-group-btn">
-              <button className="btn btn-info" type="button"><span className="glyphicon glyphicon-search"></span></button>
+              <button className="btn btn-info" type="button" onClick={@setSearch}><span className="glyphicon glyphicon-search"></span></button>
             </span>
           </div>
         </li>
@@ -121,9 +137,9 @@ Header = React.createClass
           </ul>
         </div>
         <div className="col-md-3 hidden-xs tail-buttons">
-          {@renderColorList()}
-          {@renderTasksDropdown()}
           {@renderSearch()}
+          {@renderTasksDropdown()}
+          {@renderColorList()}
           {@renderViewButtons()}
           {@renderAnchorButtons()}
         </div>
