@@ -57,13 +57,21 @@ public class S3ArtifactDownloader {
     }
   }
 
+  private AWSCredentials getCredentialsForBucket(String bucketName) {
+    if (configuration.getS3BucketCredentials().containsKey(bucketName)) {
+      return configuration.getS3BucketCredentials().get(bucketName).toAWSCredentials();
+    }
+
+    return new AWSCredentials(configuration.getS3AccessKey().get(), configuration.getS3SecretKey().get());
+  }
+
   private void downloadThrows(final S3Artifact s3Artifact, final Path downloadTo) throws Exception {
     log.info("Downloading {}", s3Artifact);
 
     Jets3tProperties jets3tProperties = Jets3tProperties.getInstance(Constants.JETS3T_PROPERTIES_FILENAME);
     jets3tProperties.setProperty("httpclient.socket-timeout-ms", Long.toString(configuration.getS3ChunkDownloadTimeoutMillis()));
 
-    final S3Service s3 = new RestS3Service(new AWSCredentials(configuration.getS3AccessKey().get(), configuration.getS3SecretKey().get()), null, null, jets3tProperties);
+    final S3Service s3 = new RestS3Service(getCredentialsForBucket(s3Artifact.getS3Bucket()), null, null, jets3tProperties);
 
     long length = 0;
 
