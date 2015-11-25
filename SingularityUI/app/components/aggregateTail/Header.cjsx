@@ -23,7 +23,7 @@ Header = React.createClass
   renderTasksDropdown: ->
     <div className="btn-group">
       <button type="button" className="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-        <span className="glyphicon glyphicon-cog"></span> <span className="caret"></span>
+        <span className="glyphicon glyphicon-tasks"></span> <span className="caret"></span>
       </button>
       <ul className="dropdown-menu">
         {@renderListItems()}
@@ -78,12 +78,29 @@ Header = React.createClass
   renderAnchorButtons: ->
     <span>
       <a className="btn btn-default btn-sm tail-bottom-button" onClick={@props.scrollToBottom}>
-        All to bottom
+        <span className="glyphicon glyphicon-chevron-down"></span>
       </a>
       <a className="btn btn-default btn-sm tail-top-button" onClick={@props.scrollToTop}>
-        All to top
+        <span className="glyphicon glyphicon-chevron-up"></span>
       </a>
     </span>
+
+  renderSearch: ->
+    <div className="btn-group">
+      <button type="button" className="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <span className="glyphicon glyphicon-search"></span> <span className="caret"></span>
+      </button>
+      <ul className="dropdown-menu">
+        <li>
+          <div className="input-group log-search">
+            <input type="text" className="form-control" placeholder="Filter/grep" />
+            <span className="input-group-btn">
+              <button className="btn btn-info" type="button"><span className="glyphicon glyphicon-search"></span></button>
+            </span>
+          </div>
+        </li>
+      </ul>
+    </div>
 
   render: ->
     <div className="tail-header">
@@ -106,6 +123,7 @@ Header = React.createClass
         <div className="col-md-3 hidden-xs tail-buttons">
           {@renderColorList()}
           {@renderTasksDropdown()}
+          {@renderSearch()}
           {@renderViewButtons()}
           {@renderAnchorButtons()}
         </div>
