@@ -6,9 +6,6 @@ import java.util.Map;
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.inject.Inject;
@@ -28,8 +25,6 @@ import net.kencochrane.raven.event.interfaces.UserInterface;
 
 @Singleton
 public class SingularityExceptionNotifier {
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityExceptionNotifier.class);
-
   private final Optional<Raven> raven;
   private final Optional<SentryConfiguration> sentryConfiguration;
   private final Provider<Optional<HttpServletRequest>> requestProvider;
@@ -53,16 +48,6 @@ public class SingularityExceptionNotifier {
     }
 
     return sentryConfiguration.get().getPrefix() + " ";
-  }
-
-  private Optional<String> getCurrentUrl() {
-    final Optional<HttpServletRequest> request = requestProvider.get();
-
-    if (request.isPresent()) {
-      return Optional.of(request.get().getRequestURI());
-    } else {
-      return Optional.absent();
-    }
   }
 
   private String getCallingClassName(StackTraceElement[] stackTrace) {
