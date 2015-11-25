@@ -116,7 +116,8 @@ IndividualTail = React.createClass
         fetchPrevious={@fetchPrevious}
         taskState={_.last(@state.task.taskUpdates)?.taskState}
         moreToFetch={@moreToFetch}
-        activeColor={@props.activeColor} />
+        activeColor={@props.activeColor}
+        search={@props.search} />
     </div>
 
 module.exports = IndividualTail

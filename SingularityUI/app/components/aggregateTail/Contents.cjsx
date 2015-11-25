@@ -118,7 +118,8 @@ Contents = React.createClass
           totalLines={@props.logLines.length}
           offsetLink={link}
           taskId={l.taskId}
-          color={colors[l.taskId]} />
+          color={colors[l.taskId]}
+          search={@props.search} />
       )
 
   lineRenderer: (index, key) ->
