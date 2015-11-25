@@ -15,6 +15,7 @@ class LogLines extends Collection
     @timestampIndex = 0
 
     @grep = ''
+    @nextOffset = null
 
     # How much we request at a time (before growing it)
     baseRequestLength: 30000
@@ -91,7 +92,8 @@ class LogLines extends Collection
     fetchNext: =>
         # console.log 'next'
         @fetch data:
-            offset: @getMaxOffset()
+            offset: @nextOffset or @getMaxOffset()
+        @nextOffset = null
 
     fetchFromStart: =>
         # console.log 'start'
@@ -125,6 +127,7 @@ class LogLines extends Collection
         super
 
     parse: (result, options) =>
+        @nextOffset = result.nextOffset
         offset = result.offset
         whiteSpace = /^\s*$/
 
