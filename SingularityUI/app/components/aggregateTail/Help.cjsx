@@ -11,7 +11,7 @@ Help = React.createClass
       <h4><span className="glyphicon glyphicon-search"></span> Grep</h4>
       <p>
         Enter a string here to only display lines in the file that contain a match. Regular expressions are supported.<br/>
-        While the input is open, press <kbd>enter</kbd> to commit the search. Press <kbd>esc</kbd> to clear the current search.
+        While the input is open, press <kbd>return</kbd> to commit the search. Press <kbd>esc</kbd> to clear the current search.
         The button will turn blue to indicate a search string is currently being applied.
       </p>
       <h4><span className="glyphicon glyphicon-tasks"></span> Select Instances</h4>
