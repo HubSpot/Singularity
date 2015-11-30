@@ -19,6 +19,7 @@ import javax.ws.rs.core.MediaType;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -139,7 +140,7 @@ public class SandboxResource extends AbstractHistoryResource {
 
       checkNotFound(maybeChunk.isPresent(), "File %s does not exist for task ID %s", fullPath, taskId);
 
-      if (grep.isPresent()) {
+      if (grep.isPresent() && !Strings.isNullOrEmpty(grep.get())) {
         final Pattern grepPattern = Pattern.compile(grep.get());
         final StringBuilder strBuilder = new StringBuilder(maybeChunk.get().getData().length());
 
@@ -150,7 +151,7 @@ public class SandboxResource extends AbstractHistoryResource {
           }
         }
 
-        return new MesosFileChunkObject(strBuilder.toString(), maybeChunk.get().getOffset());
+        return new MesosFileChunkObject(strBuilder.toString(), maybeChunk.get().getOffset(), Optional.of(maybeChunk.get().getOffset() + maybeChunk.get().getData().length()));
       }
 
       return maybeChunk.get();
