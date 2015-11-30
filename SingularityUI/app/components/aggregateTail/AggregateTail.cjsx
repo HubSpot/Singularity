@@ -54,6 +54,12 @@ AggregateTail = React.createClass
     @setState
       viewingInstances: [taskId]
 
+  selectTasks: (selectFuncion) ->
+    viewing = _.pluck(selectFuncion(_.sortBy(@state.activeTasks, (task) => task.taskId.instanceNo)), 'id')
+    @setState
+      viewingInstances: viewing
+    history.replaceState @state, '', location.href.replace(location.search, "?taskIds=#{viewing.join(',')}&grep=#{@state.search}")
+
   setSearch: (search) ->
     @setState
       search: search
@@ -176,7 +182,8 @@ AggregateTail = React.createClass
         toggleView={@toggleView}
         setSearch={@setSearch}
         search={@state.search}
-        toggleHelp={@toggleHelp} />
+        toggleHelp={@toggleHelp}
+        selectTasks={@selectTasks} />
       <div className="row #{@getRowType()}">
         {@renderTail()}
       </div>
