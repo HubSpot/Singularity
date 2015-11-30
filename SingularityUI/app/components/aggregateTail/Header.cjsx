@@ -8,14 +8,17 @@ Header = React.createClass
     @setState
       searchVal: event.target.value
 
-  setSearch: ->
-    @props.setSearch(@state.searchVal)
+  setSearch: (val = @state.searchVal) ->
+    @props.setSearch(val)
 
   handleKeyPress: (event) ->
     if event.keyCode is 13 # Enter: commit search and close
       @setSearch()
       $("#searchDDToggle").dropdown("toggle")
-    else if event.keyCode is 27 # Escape: close without committing
+    else if event.keyCode is 27 # Escape: clear search and commit
+      @setState
+        searchVal: ''
+      @setSearch('')
       $("#searchDDToggle").dropdown("toggle")
 
   renderBreadcrumbs: ->
