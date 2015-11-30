@@ -25,7 +25,6 @@ Header = React.createClass
     ReactDOM.findDOMNode(@refs.searchInput).focus()
 
   handleTasksKeyDown: (event) ->
-    console.log event.keyCode
     if event.keyCode is 70
       @props.selectTasks((tasks) =>
         _.first(tasks, 6)
