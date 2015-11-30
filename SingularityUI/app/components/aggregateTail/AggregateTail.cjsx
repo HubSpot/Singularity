@@ -16,6 +16,7 @@ AggregateTail = React.createClass
     viewingInstances: if params.taskIds then params.taskIds.split(',').slice(0, 6) else []
     color: @getActiveColor()
     splitView: true
+    search: if params.grep then params.grep else ''
 
   componentWillMount: ->
     # Automatically map backbone collections and models to the state of this component
@@ -46,7 +47,16 @@ AggregateTail = React.createClass
     if 0 < viewing.length <= 6
       @setState
         viewingInstances: viewing
-      history.replaceState @state, '', location.href.replace(location.search, "?taskIds=#{viewing.join(',')}")
+      history.replaceState @state, '', location.href.replace(location.search, "?taskIds=#{viewing.join(',')}&grep=#{@state.search}")
+
+  showOnlyInstance: (taskId) ->
+    @setState
+      viewingInstances: [taskId]
+
+  setSearch: (search) ->
+    @setState
+      search: search
+    history.replaceState @state, '', location.href.replace(location.search, "?taskIds=#{@state.viewingInstances.join(',')}&grep=#{search}")
 
   scrollAllTop: ->
     for tail of @refs
@@ -117,7 +127,9 @@ AggregateTail = React.createClass
             ajaxError={@props.ajaxError[taskId]}
             activeTasks={@props.activeTasks}
             closeTail={@toggleViewingInstance}
-            activeColor={@state.color} />
+            expandTail={@showOnlyInstance}
+            activeColor={@state.color}
+            search={@state.search} />
         </div>
     )
 
@@ -138,23 +150,26 @@ AggregateTail = React.createClass
         logLines={logLines}
         ajaxErrors={ajaxErrors}
         activeTasks={@props.activeTasks}
-        viewingInstances={@state.viewingInstances} />
+        viewingInstances={@state.viewingInstances}
+        search={@state.search} />
     </div>
 
   render: ->
     <div>
       <Header
-       path={@props.path}
-       requestId={@props.requestId}
-       scrollToTop={@scrollAllTop}
-       scrollToBottom={@scrollAllBottom}
-       activeTasks={@state.activeTasks}
-       viewingInstances={@state.viewingInstances}
-       toggleViewingInstance={@toggleViewingInstance}
-       setLogColor={@setLogColor}
-       activeColor={@state.color}
-       splitView={@state.splitView}
-       toggleView={@toggleView} />
+        path={@props.path}
+        requestId={@props.requestId}
+        scrollToTop={@scrollAllTop}
+        scrollToBottom={@scrollAllBottom}
+        activeTasks={@state.activeTasks}
+        viewingInstances={@state.viewingInstances}
+        toggleViewingInstance={@toggleViewingInstance}
+        setLogColor={@setLogColor}
+        activeColor={@state.color}
+        splitView={@state.splitView}
+        toggleView={@toggleView}
+        setSearch={@setSearch}
+        search={@state.search} />
       <div className="row #{@getRowType()}">
         {@renderTail()}
       </div>

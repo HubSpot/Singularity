@@ -1,6 +1,29 @@
 
 Header = React.createClass
 
+  getInitialState: ->
+    searchVal: @props.search
+
+  handleSearchChange: (event) ->
+    @setState
+      searchVal: event.target.value
+
+  setSearch: (val) ->
+    @props.setSearch(val)
+
+  handleSearchKeyPress: (event) ->
+    if event.keyCode is 13 # Enter: commit search and close
+      @setSearch(@state.searchVal)
+      $("#searchDDToggle").dropdown("toggle")
+    else if event.keyCode is 27 # Escape: clear search and commit
+      @setState
+        searchVal: ''
+      @setSearch('')
+      $("#searchDDToggle").dropdown("toggle")
+
+  handleSearchToggle: (event) ->
+    ReactDOM.findDOMNode(@refs.searchInput).focus()
+
   renderBreadcrumbs: ->
     segments = @props.path.split('/')
     return segments.map (s, i) =>
@@ -19,6 +42,16 @@ Header = React.createClass
             </strong>
           </li>
         )
+
+  renderTasksDropdown: ->
+    <div className="btn-group">
+      <button type="button" className="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <span className="glyphicon glyphicon-tasks"></span> <span className="caret"></span>
+      </button>
+      <ul className="dropdown-menu">
+        {@renderListItems()}
+      </ul>
+    </div>
 
   renderListItems: ->
     tasks = _.sortBy(@props.activeTasks, (t) => t.taskId.instanceNo).map (task, i) =>
@@ -41,6 +74,57 @@ Header = React.createClass
         <button type="button" className="btn btn-sm btn-default no-margin #{if @props.splitView then 'active'}" onClick={@props.toggleView}>Split</button>
       </div>
 
+  renderColorList: ->
+    <div className="btn-group">
+      <button type="button" className="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <span className="glyphicon glyphicon-adjust"></span> <span className="caret"></span>
+      </button>
+      <ul className="dropdown-menu">
+        <li className={if @props.activeColor is '' then 'active'}>
+          <a onClick={() => @props.setLogColor('')}>
+            <span>Default</span>
+          </a>
+        </li>
+        <li className={if @props.activeColor is 'midnight' then 'active'}>
+          <a onClick={() => @props.setLogColor('midnight')}>
+            <span>Midnight</span>
+          </a>
+        </li>
+        <li className={if @props.activeColor is 'solarized' then 'active'}>
+          <a onClick={() => @props.setLogColor('solarized')}>
+            <span>Solarized</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+  renderAnchorButtons: ->
+    <span>
+      <a className="btn btn-default btn-sm tail-bottom-button" onClick={@props.scrollToBottom}>
+        <span className="glyphicon glyphicon-chevron-down"></span>
+      </a>
+      <a className="btn btn-default btn-sm tail-top-button" onClick={@props.scrollToTop}>
+        <span className="glyphicon glyphicon-chevron-up"></span>
+      </a>
+    </span>
+
+  renderSearch: ->
+    <div className="btn-group">
+      <button id="searchDDToggle" type="button" className="btn btn-#{if @props.search is '' then 'default' else 'info'} btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" onClick={@handleSearchToggle}>
+        <span className="glyphicon glyphicon-search"></span> <span className="caret"></span>
+      </button>
+      <ul className="dropdown-menu">
+        <li>
+          <div className="input-group log-search">
+            <input ref="searchInput" type="text" className="form-control" placeholder="Grep Logs" value={@state.searchVal} onChange={@handleSearchChange} onKeyDown={@handleSearchKeyPress} />
+            <span className="input-group-btn">
+              <button className="btn btn-info no-margin" type="button" onClick={() => @setSearch(@state.searchVal)}><span className="glyphicon glyphicon-search"></span></button>
+            </span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
   render: ->
     <div className="tail-header">
       <div className="row">
@@ -60,43 +144,11 @@ Header = React.createClass
           </ul>
         </div>
         <div className="col-md-3 hidden-xs tail-buttons">
-          <div className="btn-group">
-            <button type="button" className="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              <span className="glyphicon glyphicon-adjust"></span> <span className="caret"></span>
-            </button>
-            <ul className="dropdown-menu">
-              <li className={if @props.activeColor is '' then 'active'}>
-                <a onClick={() => @props.setLogColor('')}>
-                  <span>Default</span>
-                </a>
-              </li>
-              <li className={if @props.activeColor is 'midnight' then 'active'}>
-                <a onClick={() => @props.setLogColor('midnight')}>
-                  <span>Midnight</span>
-                </a>
-              </li>
-              <li className={if @props.activeColor is 'sand' then 'active'}>
-                <a onClick={() => @props.setLogColor('sand')}>
-                  <span>Sand</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-          <div className="btn-group">
-            <button type="button" className="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              <span className="glyphicon glyphicon-cog"></span> <span className="caret"></span>
-            </button>
-            <ul className="dropdown-menu">
-              {@renderListItems()}
-            </ul>
-          </div>
+          {@renderSearch()}
+          {@renderTasksDropdown()}
+          {@renderColorList()}
           {@renderViewButtons()}
-          <a className="btn btn-default btn-sm tail-bottom-button" onClick={@props.scrollToBottom}>
-            All to bottom
-          </a>
-          <a className="btn btn-default btn-sm tail-top-button" onClick={@props.scrollToTop}>
-            All to top
-          </a>
+          {@renderAnchorButtons()}
         </div>
       </div>
     </div>

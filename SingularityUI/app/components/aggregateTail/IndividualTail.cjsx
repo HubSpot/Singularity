@@ -16,6 +16,8 @@ IndividualTail = React.createClass
     @task = new TaskHistory {taskId: @props.taskId}
     @startTaskStatusPoll()
 
+    @props.logLines.grep = @props.search
+
     # Automatically map backbone collections and models to the state of this component
     Backbone.React.Component.mixin.on(@, {
       collections: {
@@ -32,6 +34,12 @@ IndividualTail = React.createClass
         @props.logLines.fetchOffset(@props.offset)
     else
         @props.logLines.fetchInitialData()
+
+  componentWillReceiveProps: (nextProps) ->
+    if nextProps.search isnt @props.search
+      @props.logLines.grep = nextProps.search
+      @props.logLines.reset()
+      @props.logLines.fetchInitialData().done _.delay(@refs.contents.scrollToBottom, 200)
 
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@)
@@ -96,6 +104,7 @@ IndividualTail = React.createClass
         scrollToTop={@scrollToTop}
         scrollToBottom={@scrollToBottom}
         closeTail={() => @props.closeTail(@props.taskId)}
+        expandTail={() => @props.expandTail(@props.taskId)}
         taskState={_.last(@state.task.taskUpdates)?.taskState} />
       <Contents
         ref="contents"
@@ -108,7 +117,8 @@ IndividualTail = React.createClass
         fetchPrevious={@fetchPrevious}
         taskState={_.last(@state.task.taskUpdates)?.taskState}
         moreToFetch={@moreToFetch}
-        activeColor={@props.activeColor} />
+        activeColor={@props.activeColor}
+        search={@props.search} />
     </div>
 
 module.exports = IndividualTail
