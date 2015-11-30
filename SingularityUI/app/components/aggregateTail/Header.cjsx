@@ -11,7 +11,7 @@ Header = React.createClass
   setSearch: (val) ->
     @props.setSearch(val)
 
-  handleSearchKeyPress: (event) ->
+  handleSearchKeyDown: (event) ->
     if event.keyCode is 13 # Enter: commit search and close
       @setSearch(@state.searchVal)
       $("#searchDDToggle").dropdown("toggle")
@@ -23,6 +23,34 @@ Header = React.createClass
 
   handleSearchToggle: (event) ->
     ReactDOM.findDOMNode(@refs.searchInput).focus()
+
+  handleTasksKeyDown: (event) ->
+    if event.keyCode is 70
+      @props.selectTasks((tasks) =>
+        _.first(tasks, 6)
+      )
+    else if event.keyCode is 76
+      @props.selectTasks((tasks) =>
+        _.last(tasks, 6)
+      )
+    else if event.keyCode is 79
+      @props.selectTasks((tasks) =>
+        _.first(_.filter(tasks, (t) =>
+          t.taskId.instanceNo % 2 is 1
+        ), 6)
+      )
+    else if event.keyCode is 69
+      @props.selectTasks((tasks) =>
+        _.first(_.filter(tasks, (t) =>
+          t.taskId.instanceNo % 2 is 0
+        ), 6)
+      )
+    else if 49 <= event.keyCode <= 57
+      @props.selectTasks((tasks) =>
+        _.filter(tasks, (t) =>
+          t.taskId.instanceNo is parseInt(String.fromCharCode(event.keyCode))
+        )
+      )
 
   renderBreadcrumbs: ->
     segments = @props.path.split('/')
@@ -45,7 +73,7 @@ Header = React.createClass
 
   renderTasksDropdown: ->
     <div className="btn-group">
-      <button type="button" className="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      <button type="button" className="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" onKeyDown={@handleTasksKeyDown}>
         <span className="glyphicon glyphicon-tasks"></span> <span className="caret"></span>
       </button>
       <ul className="dropdown-menu">
@@ -80,19 +108,19 @@ Header = React.createClass
         <span className="glyphicon glyphicon-adjust"></span> <span className="caret"></span>
       </button>
       <ul className="dropdown-menu">
-        <li className={if @props.activeColor is '' then 'active'}>
+        <li className={if @props.activeColor not in ['dark', 'light'] then 'active'}>
           <a onClick={() => @props.setLogColor('')}>
             <span>Default</span>
           </a>
         </li>
-        <li className={if @props.activeColor is 'midnight' then 'active'}>
-          <a onClick={() => @props.setLogColor('midnight')}>
-            <span>Midnight</span>
+        <li className={if @props.activeColor is 'dark' then 'active'}>
+          <a onClick={() => @props.setLogColor('dark')}>
+            <span>Dark</span>
           </a>
         </li>
-        <li className={if @props.activeColor is 'solarized' then 'active'}>
-          <a onClick={() => @props.setLogColor('solarized')}>
-            <span>Solarized</span>
+        <li className={if @props.activeColor is 'light' then 'active'}>
+          <a onClick={() => @props.setLogColor('light')}>
+            <span>Light</span>
           </a>
         </li>
       </ul>
@@ -108,6 +136,11 @@ Header = React.createClass
       </a>
     </span>
 
+  renderHelpButton: ->
+    <a className="help-link" onClick={@props.toggleHelp}>
+      <span className="glyphicon glyphicon-question-sign"></span>
+    </a>
+
   renderSearch: ->
     <div className="btn-group">
       <button id="searchDDToggle" type="button" className="btn btn-#{if @props.search is '' then 'default' else 'info'} btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" onClick={@handleSearchToggle}>
@@ -116,7 +149,7 @@ Header = React.createClass
       <ul className="dropdown-menu">
         <li>
           <div className="input-group log-search">
-            <input ref="searchInput" type="text" className="form-control" placeholder="Grep Logs" value={@state.searchVal} onChange={@handleSearchChange} onKeyDown={@handleSearchKeyPress} />
+            <input ref="searchInput" type="text" className="form-control" placeholder="Grep Logs" value={@state.searchVal} onChange={@handleSearchChange} onKeyDown={@handleSearchKeyDown} />
             <span className="input-group-btn">
               <button className="btn btn-info no-margin" type="button" onClick={() => @setSearch(@state.searchVal)}><span className="glyphicon glyphicon-search"></span></button>
             </span>
@@ -149,6 +182,7 @@ Header = React.createClass
           {@renderColorList()}
           {@renderViewButtons()}
           {@renderAnchorButtons()}
+          {@renderHelpButton()}
         </div>
       </div>
     </div>

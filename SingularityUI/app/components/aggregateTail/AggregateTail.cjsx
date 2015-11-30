@@ -3,6 +3,7 @@ IndividualTail = require './IndividualTail'
 InterleavedTail = require './InterleavedTail'
 Utils = require '../../utils'
 LogLines = require '../../collections/LogLines'
+Help = require './Help'
 
 AggregateTail = React.createClass
   mixins: [Backbone.React.Component.mixin]
@@ -53,6 +54,12 @@ AggregateTail = React.createClass
     @setState
       viewingInstances: [taskId]
 
+  selectTasks: (selectFuncion) ->
+    viewing = _.pluck(selectFuncion(_.sortBy(@state.activeTasks, (task) => task.taskId.instanceNo)), 'id')
+    @setState
+      viewingInstances: viewing
+    history.replaceState @state, '', location.href.replace(location.search, "?taskIds=#{viewing.join(',')}&grep=#{@state.search}")
+
   setSearch: (search) ->
     @setState
       search: search
@@ -88,6 +95,11 @@ AggregateTail = React.createClass
   toggleView: ->
     @setState
       splitView: !@state.splitView
+
+  toggleHelp: ->
+    vex.open
+      content: React.renderToString(<Help/>)
+      contentClassName: 'help-dialog'
 
   # ============================================================================
   # Rendering                                                                  |
@@ -169,7 +181,9 @@ AggregateTail = React.createClass
         splitView={@state.splitView}
         toggleView={@toggleView}
         setSearch={@setSearch}
-        search={@state.search} />
+        search={@state.search}
+        toggleHelp={@toggleHelp}
+        selectTasks={@selectTasks} />
       <div className="row #{@getRowType()}">
         {@renderTail()}
       </div>
