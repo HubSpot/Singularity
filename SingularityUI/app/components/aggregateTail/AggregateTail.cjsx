@@ -3,6 +3,7 @@ IndividualTail = require './IndividualTail'
 InterleavedTail = require './InterleavedTail'
 Utils = require '../../utils'
 LogLines = require '../../collections/LogLines'
+Help = require './Help'
 
 AggregateTail = React.createClass
   mixins: [Backbone.React.Component.mixin]
@@ -89,6 +90,11 @@ AggregateTail = React.createClass
     @setState
       splitView: !@state.splitView
 
+  toggleHelp: ->
+    vex.open
+      content: React.renderToString(<Help/>)
+      contentClassName: 'help-dialog'
+
   # ============================================================================
   # Rendering                                                                  |
   # ============================================================================
@@ -169,7 +175,8 @@ AggregateTail = React.createClass
         splitView={@state.splitView}
         toggleView={@toggleView}
         setSearch={@setSearch}
-        search={@state.search} />
+        search={@state.search}
+        toggleHelp={@toggleHelp} />
       <div className="row #{@getRowType()}">
         {@renderTail()}
       </div>

@@ -80,7 +80,7 @@ Header = React.createClass
         <span className="glyphicon glyphicon-adjust"></span> <span className="caret"></span>
       </button>
       <ul className="dropdown-menu">
-        <li className={if @props.activeColor is '' then 'active'}>
+        <li className={if @props.activeColor not in ['dark', 'light'] then 'active'}>
           <a onClick={() => @props.setLogColor('')}>
             <span>Default</span>
           </a>
@@ -107,6 +107,11 @@ Header = React.createClass
         <span className="glyphicon glyphicon-chevron-up"></span>
       </a>
     </span>
+
+  renderHelpButton: ->
+    <a className="help-link" onClick={@props.toggleHelp}>
+      <span className="glyphicon glyphicon-question-sign"></span>
+    </a>
 
   renderSearch: ->
     <div className="btn-group">
@@ -149,6 +154,7 @@ Header = React.createClass
           {@renderColorList()}
           {@renderViewButtons()}
           {@renderAnchorButtons()}
+          {@renderHelpButton()}
         </div>
       </div>
     </div>
