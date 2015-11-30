@@ -11,7 +11,7 @@ Header = React.createClass
   setSearch: (val) ->
     @props.setSearch(val)
 
-  handleKeyPress: (event) ->
+  handleSearchKeyPress: (event) ->
     if event.keyCode is 13 # Enter: commit search and close
       @setSearch(@state.searchVal)
       $("#searchDDToggle").dropdown("toggle")
@@ -20,6 +20,10 @@ Header = React.createClass
         searchVal: ''
       @setSearch('')
       $("#searchDDToggle").dropdown("toggle")
+
+  handleSearchToggle: (event) ->
+    console.log 'tog'
+    ReactDOM.findDOMNode(@refs.searchInput).focus()
 
   renderBreadcrumbs: ->
     segments = @props.path.split('/')
@@ -107,13 +111,13 @@ Header = React.createClass
 
   renderSearch: ->
     <div className="btn-group">
-      <button id="searchDDToggle" type="button" className="btn btn-#{if @props.search is '' then 'default' else 'info'} btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      <button id="searchDDToggle" type="button" className="btn btn-#{if @props.search is '' then 'default' else 'info'} btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" onClick={@handleSearchToggle}>
         <span className="glyphicon glyphicon-search"></span> <span className="caret"></span>
       </button>
       <ul className="dropdown-menu">
         <li>
           <div className="input-group log-search">
-            <input type="text" className="form-control" placeholder="Grep Logs" value={@state.searchVal} onChange={@handleSearchChange} onKeyDown={@handleKeyPress} />
+            <input ref="searchInput" type="text" className="form-control" placeholder="Grep Logs" value={@state.searchVal} onChange={@handleSearchChange} onKeyDown={@handleSearchKeyPress} />
             <span className="input-group-btn">
               <button className="btn btn-info no-margin" type="button" onClick={() => @setSearch(@state.searchVal)}><span className="glyphicon glyphicon-search"></span></button>
             </span>
