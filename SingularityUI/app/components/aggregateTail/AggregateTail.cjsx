@@ -98,8 +98,9 @@ AggregateTail = React.createClass
 
   toggleHelp: ->
     vex.open
-      content: React.renderToString(<Help/>)
+      content: '<div id="help-target"></div>'
       contentClassName: 'help-dialog'
+    ReactDOM.render(<Help/>, $('#help-target').get()[0])
 
   # ============================================================================
   # Rendering                                                                  |
