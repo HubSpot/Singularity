@@ -8,12 +8,12 @@ Header = React.createClass
     @setState
       searchVal: event.target.value
 
-  setSearch: (val = @state.searchVal) ->
+  setSearch: (val) ->
     @props.setSearch(val)
 
   handleKeyPress: (event) ->
     if event.keyCode is 13 # Enter: commit search and close
-      @setSearch()
+      @setSearch(@state.searchVal)
       $("#searchDDToggle").dropdown("toggle")
     else if event.keyCode is 27 # Escape: clear search and commit
       @setState
@@ -115,7 +115,7 @@ Header = React.createClass
           <div className="input-group log-search">
             <input type="text" className="form-control" placeholder="Grep Logs" value={@state.searchVal} onChange={@handleSearchChange} onKeyDown={@handleKeyPress} />
             <span className="input-group-btn">
-              <button className="btn btn-info no-margin" type="button" onClick={@setSearch}><span className="glyphicon glyphicon-search"></span></button>
+              <button className="btn btn-info no-margin" type="button" onClick={() => @setSearch(@state.searchVal)}><span className="glyphicon glyphicon-search"></span></button>
             </span>
           </div>
         </li>
