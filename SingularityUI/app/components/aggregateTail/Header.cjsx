@@ -85,14 +85,14 @@ Header = React.createClass
             <span>Default</span>
           </a>
         </li>
-        <li className={if @props.activeColor is 'midnight' then 'active'}>
-          <a onClick={() => @props.setLogColor('midnight')}>
-            <span>Midnight</span>
+        <li className={if @props.activeColor is 'dark' then 'active'}>
+          <a onClick={() => @props.setLogColor('dark')}>
+            <span>Dark</span>
           </a>
         </li>
-        <li className={if @props.activeColor is 'solarized' then 'active'}>
-          <a onClick={() => @props.setLogColor('solarized')}>
-            <span>Solarized</span>
+        <li className={if @props.activeColor is 'light' then 'active'}>
+          <a onClick={() => @props.setLogColor('light')}>
+            <span>Light</span>
           </a>
         </li>
       </ul>
