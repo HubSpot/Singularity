@@ -22,7 +22,6 @@ Header = React.createClass
       $("#searchDDToggle").dropdown("toggle")
 
   handleSearchToggle: (event) ->
-    console.log 'tog'
     ReactDOM.findDOMNode(@refs.searchInput).focus()
 
   renderBreadcrumbs: ->
