@@ -104,6 +104,7 @@ IndividualTail = React.createClass
         scrollToTop={@scrollToTop}
         scrollToBottom={@scrollToBottom}
         closeTail={() => @props.closeTail(@props.taskId)}
+        expandTail={() => @props.expandTail(@props.taskId)}
         taskState={_.last(@state.task.taskUpdates)?.taskState} />
       <Contents
         ref="contents"

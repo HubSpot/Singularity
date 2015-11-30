@@ -49,6 +49,10 @@ AggregateTail = React.createClass
         viewingInstances: viewing
       history.replaceState @state, '', location.href.replace(location.search, "?taskIds=#{viewing.join(',')}&grep=#{@state.search}")
 
+  showOnlyInstance: (taskId) ->
+    @setState
+      viewingInstances: [taskId]
+
   setSearch: (search) ->
     @setState
       search: search
@@ -123,6 +127,7 @@ AggregateTail = React.createClass
             ajaxError={@props.ajaxError[taskId]}
             activeTasks={@props.activeTasks}
             closeTail={@toggleViewingInstance}
+            expandTail={@showOnlyInstance}
             activeColor={@state.color}
             search={@state.search} />
         </div>
