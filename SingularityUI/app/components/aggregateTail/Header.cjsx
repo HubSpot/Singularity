@@ -12,9 +12,10 @@ Header = React.createClass
     @props.setSearch(@state.searchVal)
 
   handleKeyPress: (event) ->
-    console.log event.keyCode
-    if event.keyCode is 13
+    if event.keyCode is 13 # Enter: commit search and close
       @setSearch()
+      $("#searchDDToggle").dropdown("toggle")
+    else if event.keyCode is 27 # Escape: close without committing
       $("#searchDDToggle").dropdown("toggle")
 
   renderBreadcrumbs: ->
