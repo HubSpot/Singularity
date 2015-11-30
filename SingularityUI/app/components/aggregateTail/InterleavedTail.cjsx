@@ -85,19 +85,19 @@ InterleavedTail = React.createClass
     for logLines in @props.logLines
       promises.push(logLines.fetchNext())
 
-    Promise.all(promises).then =>
-      newLineCount = @props.logLines.map (logLines) => {taskId: logLines.taskId, length: logLines.length}
-      deltas = newLineCount.map (count) =>
-        taskId: count.taskId
-        delta: count.length - _.findWhere(oldLineCount, {taskId: count.taskId}).length
+    Promise.all(promises).then => _.delay =>
+        newLineCount = @props.logLines.map (logLines) => {taskId: logLines.taskId, length: logLines.length}
+        deltas = newLineCount.map (count) =>
+          taskId: count.taskId
+          delta: count.length - _.findWhere(oldLineCount, {taskId: count.taskId}).length
 
-      newLines = []
-      for delta in deltas
-        lines = _.findWhere(@props.logLines, {taskId: delta.taskId}).toJSON()
-        slice = lines.slice(lines.length - delta.delta, lines.length)
-        newLines.push(slice)
-
-      @mergeLines(newLines)
+        newLines = []
+        for delta in deltas
+          lines = _.findWhere(@props.logLines, {taskId: delta.taskId}).toJSON()
+          slice = lines.slice(lines.length - delta.delta, lines.length)
+          newLines.push(slice)
+        @mergeLines(newLines)
+      , 300
 
   fetchPrevious: (callback) ->
     promises = []
@@ -105,25 +105,26 @@ InterleavedTail = React.createClass
     for logLines in @props.logLines
       promises.push(logLines.fetchPrevious())
 
-    Promise.all(promises).then =>
-      newLineCount = @props.logLines.map (logLines) => {taskId: logLines.taskId, length: logLines.length}
-      deltas = newLineCount.map (count) =>
-        taskId: count.taskId
-        delta: count.length - _.findWhere(oldLineCount, {taskId: count.taskId}).length
+    Promise.all(promises).then => _.delay =>
+        newLineCount = @props.logLines.map (logLines) => {taskId: logLines.taskId, length: logLines.length}
+        deltas = newLineCount.map (count) =>
+          taskId: count.taskId
+          delta: count.length - _.findWhere(oldLineCount, {taskId: count.taskId}).length
 
-      newLines = []
-      for delta in deltas
-        lines = _.findWhere(@props.logLines, {taskId: delta.taskId}).toJSON()
-        slice = lines.slice(0, delta.delta)
-        newLines.push(slice)
+        newLines = []
+        for delta in deltas
+          lines = _.findWhere(@props.logLines, {taskId: delta.taskId}).toJSON()
+          slice = lines.slice(0, delta.delta)
+          newLines.push(slice)
 
-      @mergeLines(newLines, true)
-      totalNew = _.reduce(deltas, (memo, delta) =>
-        memo + delta.delta
-      , 0)
-      if totalNew > 0
-        @scrollToLine(totalNew)
-      callback()
+        @mergeLines(newLines, true)
+        totalNew = _.reduce(deltas, (memo, delta) =>
+          memo + delta.delta
+        , 0)
+        if totalNew > 0
+          @scrollToLine(totalNew)
+        callback()
+      , 300
 
   scrollToLine: (line) ->
     @refs.contents.scrollToLine(line)
