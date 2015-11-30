@@ -12,9 +12,9 @@ Header = React.createClass
     @props.setSearch(@state.searchVal)
 
   handleKeyPress: (event) ->
+    console.log event.keyCode
     if event.keyCode is 13
       @setSearch()
-      # @refs.searchDDToggle.dropdown('toggle')
       $("#searchDDToggle").dropdown("toggle")
 
   renderBreadcrumbs: ->
@@ -109,7 +109,7 @@ Header = React.createClass
       <ul className="dropdown-menu">
         <li>
           <div className="input-group log-search">
-            <input type="text" className="form-control" placeholder="Grep Logs" value={@state.searchVal} onChange={@handleSearchChange} onKeyPress={@handleKeyPress} />
+            <input type="text" className="form-control" placeholder="Grep Logs" value={@state.searchVal} onChange={@handleSearchChange} onKeyDown={@handleKeyPress} />
             <span className="input-group-btn">
               <button className="btn btn-info" type="button" onClick={@setSearch}><span className="glyphicon glyphicon-search"></span></button>
             </span>
