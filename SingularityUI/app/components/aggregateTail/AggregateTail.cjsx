@@ -27,6 +27,9 @@ AggregateTail = React.createClass
       }
     });
 
+    $(window).on("blur", @onWindowBlur)
+    $(window).on("focus", @onWindowFocus)
+
   componentDidUpdate: (prevProps, prevState) ->
     if prevState.activeTasks.length is 0 and @state.activeTasks.length > 0 and not Utils.getQueryParams()?.taskIds
       @setState
@@ -34,10 +37,25 @@ AggregateTail = React.createClass
 
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@);
+    $(window).off("blur", @onWindowBlur)
+    $(window).off("focus", @onWindowFocus)
 
   # ============================================================================
   # Event Handlers                                                             |
   # ============================================================================
+
+  onWindowBlur: ->
+    @blurTimer = _.delay( =>
+      for k, tail of @refs
+        if tail.isTailing()
+          tail.stopTailing()
+          $(window).one("focus", =>
+            tail.startTailing()
+          )
+    , 900000) # 15 minutes
+
+  onWindowFocus: ->
+    clearTimeout(@blurTimer)
 
   toggleViewingInstance: (taskId) ->
     if taskId in @state.viewingInstances
