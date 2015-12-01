@@ -119,7 +119,7 @@ public class SingularityConfiguration extends Configuration {
 
   private String loadBalancerUri;
 
-  private boolean deletePausedRequestsFromLoadBalancer = true;
+  private boolean deleteRemovedRequestsFromLoadBalancer = false;
 
   private int logFetchMaxThreads = 15;
 
@@ -838,11 +838,11 @@ public class SingularityConfiguration extends Configuration {
     this.graphiteConfiguration = graphiteConfiguration;
   }
 
-  public boolean isDeletePausedRequestsFromLoadBalancer() {
-    return deletePausedRequestsFromLoadBalancer;
+  public boolean isDeleteRemovedRequestsFromLoadBalancer() {
+    return deleteRemovedRequestsFromLoadBalancer;
   }
 
-  public void setDeletePausedRequestsFromLoadBalancer(boolean deletePausedRequestsFromLoadBalancer) {
-    this.deletePausedRequestsFromLoadBalancer = deletePausedRequestsFromLoadBalancer;
+  public void setDeleteRemovedRequestsFromLoadBalancer(boolean deleteRemovedRequestsFromLoadBalancer) {
+    this.deleteRemovedRequestsFromLoadBalancer = deleteRemovedRequestsFromLoadBalancer;
   }
 }

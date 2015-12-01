@@ -40,6 +40,7 @@ import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestInstances;
+import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularitySchedulerTestBase;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
@@ -901,14 +902,16 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initLoadBalancedRequest();
     initFirstDeploy();
 
-    requestManager.createLBCleanupRequest(requestId);
+    requestManager.saveLBCleanupRequest(new SingularityRequestLbCleanup(requestId, Sets.newHashSet("test"), "/basepath", Collections.<String>emptyList(), Optional.<SingularityLoadBalancerUpdate>absent()));
+
+    requestManager.pause(request, System.currentTimeMillis(), Optional.<String>absent());
 
     testingLbClient.setNextBaragonRequestState(BaragonRequestState.WAITING);
 
     cleaner.drainCleanupQueue();
     Assert.assertTrue(!requestManager.getLBCleanupRequestIds().isEmpty());
 
-    Optional<SingularityLoadBalancerUpdate> lbUpdate = requestManager.getLoadBalancerState(requestId);
+    Optional<SingularityLoadBalancerUpdate> lbUpdate = requestManager.getLbCleanupRequest(requestId).get().getLoadBalancerUpdate();
 
     Assert.assertTrue(lbUpdate.isPresent());
     Assert.assertTrue(lbUpdate.get().getLoadBalancerState() == BaragonRequestState.WAITING);
@@ -918,7 +921,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     cleaner.drainCleanupQueue();
     Assert.assertTrue(!requestManager.getLBCleanupRequestIds().isEmpty());
 
-    lbUpdate = requestManager.getLoadBalancerState(requestId);
+    lbUpdate = requestManager.getLbCleanupRequest(requestId).get().getLoadBalancerUpdate();
 
     Assert.assertTrue(lbUpdate.isPresent());
     Assert.assertTrue(lbUpdate.get().getLoadBalancerState() == BaragonRequestState.FAILED);
