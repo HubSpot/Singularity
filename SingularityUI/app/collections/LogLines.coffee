@@ -38,8 +38,6 @@ class LogLines extends Collection
 
         currentRequestLength: @::baseRequestLength
 
-
-
     url: => "#{ config.apiRoot }/sandbox/#{ @taskId }/read"
 
     initialize: (models, {@taskId, @path, @ajaxError}) ->
@@ -200,9 +198,10 @@ class LogLines extends Collection
 
           line
 
-        for l in res
-          if not res.timestamp
-            res.timestamp = @firstTimestamp.subtract(1, 'ms')
+        if @firstTimestamp
+          for l in res
+            if not res.timestamp
+              res.timestamp = @firstTimestamp.subtract(1, 'ms')
 
         res
 
