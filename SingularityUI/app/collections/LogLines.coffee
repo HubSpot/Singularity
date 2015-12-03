@@ -11,6 +11,12 @@ class LogLines extends Collection
 
     delimiter: /\n/
 
+    @lastTimestamp = null
+    @timestampIndex = 0
+
+    @grep = ''
+    @nextOffset = null
+
     # How much we request at a time (before growing it)
     baseRequestLength: 30000
 
@@ -32,8 +38,6 @@ class LogLines extends Collection
 
         currentRequestLength: @::baseRequestLength
 
-
-
     url: => "#{ config.apiRoot }/sandbox/#{ @taskId }/read"
 
     initialize: (models, {@taskId, @path, @ajaxError}) ->
@@ -48,13 +52,15 @@ class LogLines extends Collection
         # Get the offest of the beginning of the last line, not the end of the last line
         if @length > 0 then @last().getStartOffset() else 0
 
-    fetchInitialData: =>
+    fetchInitialData: (callback = _.noop)=>
+        # console.log 'initial'
         # When we request `read` without passing an offset, we get given
         # back just the end offset of the file
-        $.ajax
+        promise = $.ajax
             url: @url()
             data: {@path, length: @baseRequestLength}
-        .done (response) =>
+
+        promise.done (response) =>
             offset = response.offset - @baseRequestLength
             offset = orZero offset
             @ajaxError.set present: false
@@ -65,35 +71,46 @@ class LogLines extends Collection
                 length: @initialRequestLength
 
             @trigger 'initialdata'
-        .error (response) =>
+            request.done callback
+
+        promise.error (response) =>
             # If we get a 400, the file has likely not been generated
             # yet, so we'll pass a message to the view
             if response.status in [400, 404, 500]
                 app.caughtError()
                 @ajaxError.setFromErrorResponse response
-    
+
+        promise
+
     fetchPrevious: ->
+        # console.log 'prev'
         @fetch data:
             offset: orZero @getMinOffset() - @state.get('currentRequestLength')
 
     fetchNext: =>
+        # console.log 'next'
         @fetch data:
-            offset: @getMaxOffset()
+            offset: @nextOffset or @getMaxOffset()
+        @nextOffset = null
 
     fetchFromStart: =>
+        # console.log 'start'
         @fetch data:
             offset: 0
 
     fetchOffset: (offset) =>
-        @fetch data: 
+        # console.log 'offset'
+        @fetch data:
             offset: offset - 1
             done: => @trigger 'initialOffsetData'
 
     # Overwrite default fetch
     fetch: (params = {}) ->
+        # if params is {}
+        #     console.log 'fetch default'
         defaultParams =
             remove: false
-            data: _.extend {@path, length: @state.get('currentRequestLength')}, params.data
+            data: _.extend {@path, length: @state.get('currentRequestLength'), grep: @grep}, params.data
 
         request = super _.extend params, defaultParams
 
@@ -108,6 +125,7 @@ class LogLines extends Collection
         super
 
     parse: (result, options) =>
+        @nextOffset = result.nextOffset
         offset = result.offset
         whiteSpace = /^\s*$/
 
@@ -159,11 +177,33 @@ class LogLines extends Collection
             lines = _.initial lines
 
         # create the objects for LogLine models
-        lines.map (data) ->
-            line = {data, offset}
-            offset += data.length + 1
+        @lastTimestamp = null
+        @firstTimestamp = null
+        res = lines.map (data) =>
+          tryTimestamp = moment data # Try builtin ISO 8601 timetamp strings
+          tryTimestampCustom = moment data, 'HH:mm:ss.SSS' # Try custom format
+          if tryTimestamp.isValid() or tryTimestampCustom.isValid()
+            timestamp = if tryTimestamp.isValid() then tryTimestamp else tryTimestampCustom
+            if not @lastTimestamp
+                @firstTimestamp = timestamp
+            @lastTimestamp = timestamp
+            @timestampIndex = 0
+          else
+            timestamp = @lastTimestamp
+            if @lastTimestamp
+              @timestampIndex++
 
-            line
+          line = {data, offset, timestamp, @timestampIndex, @taskId}
+          offset += data.length + 1
+
+          line
+
+        if @firstTimestamp
+          for l in res
+            if not res.timestamp
+              res.timestamp = @firstTimestamp.subtract(1, 'ms')
+
+        res
 
     growRequestLength: (previousParseTimestamp, lastParseTimestamp) ->
         return if !previousParseTimestamp? or !lastParseTimestamp?
@@ -184,5 +224,23 @@ class LogLines extends Collection
         newRequestLength = @baseRequestLength if newRequestLength < @baseRequestLength
 
         @state.set('currentRequestLength', newRequestLength)
+
+
+    # Static Methods -----------------------------------------------------------
+
+    # Merge an array of multiple LogLines collections ordered by timestamp
+    @merge: (collections) ->
+      collection = [].concat.apply [], collections
+      collection = collection.sort (a, b) =>
+        if a.timestamp and b.timestamp and !a.timestamp.isSame(b.timestamp)
+          return if a.timestamp.isBefore(b.timestamp) then -1 else 1
+        else if a.taskId isnt b.taskId
+          return if a.taskId > b.taskId then -1 else 1
+        else if a.timestampIndex isnt b.timestampIndex
+          return if a.timestampIndex > b.timestampIndex then -1 else 1
+        else
+          return 0
+
+      collection
 
 module.exports = LogLines

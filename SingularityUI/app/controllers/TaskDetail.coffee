@@ -125,7 +125,6 @@ class TaskDetailController extends Controller
             model: @models.task
 
         @refresh()
-        @collections.files.fetch().error @ignore404
 
         app.showView @view
 
@@ -195,6 +194,7 @@ class TaskDetailController extends Controller
 
         @models.task.fetch()
             .done =>
+                @collections.files.fetch().error @ignore404
                 @fetchResourceUsage() if @models.task.get('isStillRunning')
             .success =>
                 @getAlerts()
