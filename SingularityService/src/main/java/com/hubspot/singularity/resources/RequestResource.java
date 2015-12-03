@@ -27,6 +27,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
@@ -46,11 +47,14 @@ import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.api.SingularityPauseRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
+import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.wordnik.swagger.annotations.Api;
@@ -67,13 +71,17 @@ public class RequestResource extends AbstractRequestResource {
 
   private final SingularityMailer mailer;
   private final TaskManager taskManager;
+  private final SlaveManager slaveManager;
+  private final SingularityConfiguration configuration;
 
   @Inject
-  public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user) {
+  public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, SlaveManager slaveManager, SingularityConfiguration configuration) {
     super(requestManager, deployManager, user, validator, authorizationHelper);
 
     this.mailer = mailer;
     this.taskManager = taskManager;
+    this.slaveManager = slaveManager;
+    this.configuration = configuration;
   }
 
   private static class SingularityRequestDeployHolder {
@@ -195,6 +203,13 @@ public class RequestResource extends AbstractRequestResource {
     checkBadRequest(requestWithState.getRequest().isLongRunning(), "Can not bounce a %s request (%s)", requestWithState.getRequest().getRequestType(), requestWithState);
 
     checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to bounce (it must be manually unpaused first)", requestWithState.getRequest().getId());
+
+    SlavePlacement placement = requestWithState.getRequest().getSlavePlacement().or(configuration.getDefaultSlavePlacement());
+    if (placement != SlavePlacement.GREEDY && placement != SlavePlacement.OPTIMISTIC) {
+      int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(MachineState.ACTIVE);
+      int requiredSlaveCount = requestWithState.getRequest().getInstancesSafe() * 2;
+      checkBadRequest(currentActiveSlaveCount >= requiredSlaveCount, "Not enough active slaves to successfully complete a bounce of request %s (minimum required: %s, current: %s). Consider deploying or changing the slave placement strategy instead.", requestId, requiredSlaveCount, currentActiveSlaveCount);
+    }
 
     SingularityCreateResult createResult = requestManager.createCleanupRequest(
             new SingularityRequestCleanup(JavaUtils.getUserEmail(user), RequestCleanupType.BOUNCE, System.currentTimeMillis(), Optional.<Boolean>absent(), requestId, Optional.of(getAndCheckDeployId(requestId))));
