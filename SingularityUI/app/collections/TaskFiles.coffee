@@ -30,7 +30,7 @@ class TaskFiles extends Collection
             if !taskLogFile.isDirectory
               taskLogFile.uiPath = taskLogFile.uiPath.replace(@taskId, '$TASK_ID')
 
-            taskLogFile.fullPath = sandbox.fullPathToRoot + "/" + taskLogFile.uiPath
+            taskLogFile.fullPath = sandbox.fullPathToRoot + "/" + taskLogFile.uiPath.replace('$TASK_ID', @taskId)
 
             taskLogFile.mtime = taskLogFile.mtime * 1000
 
