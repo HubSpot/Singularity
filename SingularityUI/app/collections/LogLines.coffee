@@ -38,8 +38,6 @@ class LogLines extends Collection
 
         currentRequestLength: @::baseRequestLength
 
-
-
     url: => "#{ config.apiRoot }/sandbox/#{ @taskId }/read"
 
     initialize: (models, {@taskId, @path, @ajaxError}) ->
@@ -180,14 +178,14 @@ class LogLines extends Collection
 
         # create the objects for LogLine models
         @lastTimestamp = null
+        @firstTimestamp = null
         res = lines.map (data) =>
-          # Try builtin ISO 8601 timetamp strings
-          tryTimestamp = moment data
-          # Try custom format
-          tryTimestampCustom = moment data, 'HH:mm:ss.SSS'
-          # TODO: We need to give "orphaned" lines at the beginning of a file a timestamp if we have any
+          tryTimestamp = moment data # Try builtin ISO 8601 timetamp strings
+          tryTimestampCustom = moment data, 'HH:mm:ss.SSS' # Try custom format
           if tryTimestamp.isValid() or tryTimestampCustom.isValid()
             timestamp = if tryTimestamp.isValid() then tryTimestamp else tryTimestampCustom
+            if not @lastTimestamp
+                @firstTimestamp = timestamp
             @lastTimestamp = timestamp
             @timestampIndex = 0
           else
@@ -199,6 +197,11 @@ class LogLines extends Collection
           offset += data.length + 1
 
           line
+
+        if @firstTimestamp
+          for l in res
+            if not res.timestamp
+              res.timestamp = @firstTimestamp.subtract(1, 'ms')
 
         res
 

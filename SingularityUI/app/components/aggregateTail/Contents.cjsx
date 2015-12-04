@@ -153,6 +153,9 @@ Contents = React.createClass
   # Utility Methods                                                            |
   # ============================================================================
 
+  isTailing: ->
+    !(_.isNull(@tailingPoll) or _.isUndefined(@tailingPoll))
+
   scrollToLine: (line) ->
     @refs.lines.scrollTo(line)
 

@@ -74,6 +74,15 @@ IndividualTail = React.createClass
         callback()
     )
 
+  isTailing: ->
+    @refs.contents.isTailing()
+
+  stopTailing: ->
+    @refs.contents.stopTailingPoll()
+
+  startTailing: ->
+    @refs.contents.startTailingPoll()
+
   scrollToLine: (line) ->
     @refs.contents.scrollToLine(line)
 

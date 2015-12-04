@@ -126,6 +126,15 @@ InterleavedTail = React.createClass
         callback()
       , 300
 
+  isTailing: ->
+    @refs.contents.isTailing()
+
+  stopTailing: ->
+    @refs.contents.stopTailingPoll()
+
+  startTailing: ->
+    @refs.contents.startTailingPoll()
+
   scrollToLine: (line) ->
     @refs.contents.scrollToLine(line)
 

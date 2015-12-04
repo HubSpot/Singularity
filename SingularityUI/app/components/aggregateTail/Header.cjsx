@@ -41,6 +41,8 @@ Header = React.createClass
       )
     else if event.keyCode is 69
       @props.selectTasks((tasks) =>
+        if tasks.length <= 1
+          return tasks
         _.first(_.filter(tasks, (t) =>
           t.taskId.instanceNo % 2 is 0
         ), 6)
