@@ -98,12 +98,16 @@ public class SingularityDeployHealthHelper {
       } else if (healthcheckResult.isFailed()) {
         LOG.debug("Found a failed healthcheck: {}", healthcheckResult);
 
-        if (deploy.getHealthcheckMaxRetries().isPresent() && taskManager.getNumHealthchecks(taskId) > deploy.getHealthcheckMaxRetries().get()) {
-          LOG.debug("{} failed {} healthchecks, the max for the deploy", taskId, deploy.getHealthcheckMaxRetries().get());
+        final Optional<Integer> healthcheckMaxRetries = deploy.getHealthcheckMaxRetries().or(configuration.getHealthcheckMaxRetries());
+
+        if (healthcheckMaxRetries.isPresent() && taskManager.getNumHealthchecks(taskId) > healthcheckMaxRetries.get()) {
+          LOG.debug("{} failed {} healthchecks, the max for the deploy", taskId, healthcheckMaxRetries.get());
           return DeployHealth.UNHEALTHY;
         }
 
-        if (isDeployPending && deploy.getHealthcheckMaxTotalTimeoutSeconds().isPresent()) {
+        final Optional<Long> healthcheckMaxTotalTimeoutSeconds = deploy.getHealthcheckMaxTotalTimeoutSeconds().or(configuration.getHealthcheckMaxTotalTimeoutSeconds());
+
+        if (isDeployPending && healthcheckMaxTotalTimeoutSeconds.isPresent()) {
           Collection<SingularityTaskHistoryUpdate> updates = taskManager.getTaskHistoryUpdates(taskId);
 
           long runningAt = 0;
@@ -118,7 +122,7 @@ public class SingularityDeployHealthHelper {
           if (runningAt > 0) {
             final long durationSinceRunning = System.currentTimeMillis() - runningAt;
 
-            if (durationSinceRunning > TimeUnit.SECONDS.toMillis(deploy.getHealthcheckMaxTotalTimeoutSeconds().get())) {
+            if (durationSinceRunning > TimeUnit.SECONDS.toMillis(healthcheckMaxTotalTimeoutSeconds.get())) {
               LOG.debug("{} has been running for {} and has yet to pass healthchecks, failing deploy", taskId, JavaUtils.durationFromMillis(durationSinceRunning));
 
               return DeployHealth.UNHEALTHY;

@@ -66,8 +66,10 @@ public class SingularityHealthchecker {
   }
 
   public void enqueueHealthcheck(SingularityTask task) {
-    if (task.getTaskRequest().getDeploy().getHealthcheckMaxRetries().isPresent() && taskManager.getNumHealthchecks(task.getTaskId()) > task.getTaskRequest().getDeploy().getHealthcheckMaxRetries().get()) {
-      LOG.info("Not enqueuing new healthcheck for {}, it has already attempted {} times", task.getTaskId(), task.getTaskRequest().getDeploy().getHealthcheckMaxRetries());
+    final Optional<Integer> healthcheckMaxRetries = task.getTaskRequest().getDeploy().getHealthcheckMaxRetries().or(configuration.getHealthcheckMaxRetries());
+
+    if (healthcheckMaxRetries.isPresent() && taskManager.getNumHealthchecks(task.getTaskId()) > healthcheckMaxRetries.get()) {
+      LOG.info("Not enqueuing new healthcheck for {}, it has already attempted {} times", task.getTaskId(), healthcheckMaxRetries.get());
       return;
     }
 
