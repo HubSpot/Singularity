@@ -2,9 +2,7 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -13,9 +11,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.JavaUtils;
@@ -24,6 +24,7 @@ import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
+import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityDriverManager;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
@@ -84,7 +85,7 @@ public class SingularityCleaner {
     this.killNonLongRunningTasksInCleanupAfterMillis = TimeUnit.SECONDS.toMillis(configuration.getKillNonLongRunningTasksInCleanupAfterSeconds());
   }
 
-  private boolean shouldKillTask(SingularityTaskCleanup taskCleanup, List<SingularityTaskId> activeTaskIds, List<SingularityTaskId> cleaningTasks, Map<String, Integer> incrementalBounceRemainingInstanceMap) {
+  private boolean shouldKillTask(SingularityTaskCleanup taskCleanup, List<SingularityTaskId> activeTaskIds, List<SingularityTaskId> cleaningTasks, Multiset<SingularityDeployKey> incrementalBounceCleaningTasks) {
     final Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(taskCleanup.getTaskId().getRequestId());
 
     if (!requestWithState.isPresent()) {
@@ -139,15 +140,10 @@ public class SingularityCleaner {
 
     // For an incremental bounce, shut down old tasks as new ones are started
     if (taskCleanup.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
-      String key = String.format("%s-%s", taskCleanup.getTaskId().getRequestId(), taskCleanup.getTaskId().getDeployId());
-      int runningCleaningTasks = incrementalBounceRemainingInstanceMap.get(key) != null ? incrementalBounceRemainingInstanceMap.get(key) : 0;
-      if (matchingTasks.size() + runningCleaningTasks > request.getInstancesSafe()) {
-        if (runningCleaningTasks > 0) {
-          int count = incrementalBounceRemainingInstanceMap.get(key);
-          incrementalBounceRemainingInstanceMap.put(key, count - 1);
-        } else {
-          incrementalBounceRemainingInstanceMap.put(key, 0);
-        }
+      final SingularityDeployKey key = SingularityDeployKey.fromTaskId(taskCleanup.getTaskId());
+
+      if (matchingTasks.size() + incrementalBounceCleaningTasks.count(key) > request.getInstancesSafe()) {
+        incrementalBounceCleaningTasks.remove(key);
         return true;
       }
     }
@@ -386,18 +382,13 @@ public class SingularityCleaner {
       return;
     }
 
-    Map<String, Integer> incrementalBounceRemainingInstanceMap = new HashMap<>();
+    final Multiset<SingularityDeployKey> incrementalBounceCleaningTasks = HashMultiset.create();
+
     final List<SingularityTaskId> cleaningTasks = Lists.newArrayListWithCapacity(cleanupTasks.size());
     for (SingularityTaskCleanup cleanupTask : cleanupTasks) {
       cleaningTasks.add(cleanupTask.getTaskId());
       if (cleanupTask.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
-        String key = String.format("%s-%s", cleanupTask.getTaskId().getRequestId(), cleanupTask.getTaskId().getDeployId());
-        if (!incrementalBounceRemainingInstanceMap.containsKey(key)) {
-          incrementalBounceRemainingInstanceMap.put(key, 1);
-        } else {
-          int count = incrementalBounceRemainingInstanceMap.get(key);
-          incrementalBounceRemainingInstanceMap.put(key, count + 1);
-        }
+        incrementalBounceCleaningTasks.add(SingularityDeployKey.fromTaskId(cleanupTask.getTaskId()));
       }
     }
 
@@ -411,7 +402,7 @@ public class SingularityCleaner {
       if (!isValidTask(cleanupTask)) {
         LOG.info("Couldn't find a matching active task for cleanup task {}, deleting..", cleanupTask);
         taskManager.deleteCleanupTask(cleanupTask.getTaskId().getId());
-      } else if (shouldKillTask(cleanupTask, activeTaskIds, cleaningTasks, incrementalBounceRemainingInstanceMap) && checkLBStateAndShouldKillTask(cleanupTask)) {
+      } else if (shouldKillTask(cleanupTask, activeTaskIds, cleaningTasks, incrementalBounceCleaningTasks) && checkLBStateAndShouldKillTask(cleanupTask)) {
         driverManager.killAndRecord(cleanupTask.getTaskId(), cleanupTask.getCleanupType());
 
         taskManager.deleteCleanupTask(cleanupTask.getTaskId().getId());
