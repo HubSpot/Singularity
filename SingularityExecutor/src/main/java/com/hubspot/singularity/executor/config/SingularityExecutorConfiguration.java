@@ -136,8 +136,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private String serviceFinishedTailLog = "tail_of_finished_service.log";
 
+  @NotEmpty
   @JsonProperty
-  private String s3UploaderKeyPattern;
+  private String s3UploaderKeyPattern = "%requestId/%Y/%m/%taskId_%index-%s-%filename";
 
   @JsonProperty
   private String s3UploaderBucket;

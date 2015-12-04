@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -102,7 +101,7 @@ public class SingularityLDAPDatastore implements SingularityAuthDatastore {
       }
     } catch (LdapException e) {
       LOG.warn("LdapException caught when checking health", e);
-      exceptionNotifier.notify(e, Collections.<String, String>emptyMap());
+      exceptionNotifier.notify(e);
     }
     return Optional.of(false);
   }
