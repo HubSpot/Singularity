@@ -196,7 +196,7 @@ public class RequestResource extends AbstractRequestResource {
   @ApiOperation(value="Bounce a specific Singularity request. A bounce launches replacement task(s), and then kills the original task(s) if the replacement(s) are healthy.",
   response=SingularityRequestParent.class)
   public SingularityRequestParent bounce(@ApiParam("The request ID to bounce") @PathParam("requestId") String requestId,
-      @ApiParam("Incrementally bounce, shutting down old tasks as new ones are started successfully") @QueryParam("incremental") Optional<Boolean> incremental) {
+      @ApiParam("Incrementally bounce, shutting down old tasks as new ones are started successfully") @QueryParam("incremental") boolean incremental) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
@@ -205,17 +205,15 @@ public class RequestResource extends AbstractRequestResource {
 
     checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to bounce (it must be manually unpaused first)", requestWithState.getRequest().getId());
 
-    boolean isIncremental = incremental.or(false);
-
     SlavePlacement placement = requestWithState.getRequest().getSlavePlacement().or(configuration.getDefaultSlavePlacement());
-    if (!isIncremental && (placement != SlavePlacement.GREEDY && placement != SlavePlacement.OPTIMISTIC)) {
+    if (placement != SlavePlacement.GREEDY && placement != SlavePlacement.OPTIMISTIC) {
       int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(MachineState.ACTIVE);
-      int requiredSlaveCount = isIncremental ? requestWithState.getRequest().getInstancesSafe() + 1 : requestWithState.getRequest().getInstancesSafe() * 2;
-      checkBadRequest(currentActiveSlaveCount >= requiredSlaveCount, "Not enough active slaves to successfully complete a bounce of request %s (minimum required: %s, current: %s). Consider deploying or changing the slave placement strategy instead.", requestId, requiredSlaveCount, currentActiveSlaveCount);
+      int requiredSlaveCount = incremental ? requestWithState.getRequest().getInstancesSafe() + 1 : requestWithState.getRequest().getInstancesSafe() * 2;
+      checkBadRequest(currentActiveSlaveCount >= requiredSlaveCount, "Not enough active slaves to successfully complete a bounce of request %s (minimum required: %s, current: %s). Consider deploying, or changing the slave placement strategy instead.", requestId, requiredSlaveCount, currentActiveSlaveCount);
     }
 
     SingularityCreateResult createResult = requestManager.createCleanupRequest(
-            new SingularityRequestCleanup(JavaUtils.getUserEmail(user), isIncremental ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE, System.currentTimeMillis(), Optional.<Boolean>absent(), requestId, Optional.of(getAndCheckDeployId(requestId))));
+            new SingularityRequestCleanup(JavaUtils.getUserEmail(user), incremental ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE, System.currentTimeMillis(), Optional.<Boolean>absent(), requestId, Optional.of(getAndCheckDeployId(requestId))));
 
     checkConflict(createResult != SingularityCreateResult.EXISTED, "%s is already bouncing", requestId);
 
