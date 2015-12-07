@@ -17,6 +17,7 @@ PaginatedTableClientsideView = require '../views/paginatedTableClientsideView'
 OverviewSubview = require '../views/taskOverviewSubview'
 HealthcheckNotification = require '../views/taskHealthcheckNotificationSubview'
 SimpleSubview = require '../views/simpleSubview'
+ShellCommands = require '../views/taskShellCommandsSubview'
 
 TaskView = require '../views/task'
 
@@ -114,7 +115,7 @@ class TaskDetailController extends Controller
             collection:    @collections.alerts
             template:      @templates.alerts
 
-        @subviews.shellCommands = new SimpleSubview
+        @subviews.shellCommands = new ShellCommands
             model: @models.task
             template: @templates.shellCommands
 
