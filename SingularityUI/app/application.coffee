@@ -42,7 +42,7 @@ class Application
 
         # so sneaky
         el = document.createElement('a')
-        el.href = config.appRoot
+        el.href = config.appRoot or '/'
 
         Backbone.history.start
             pushState: true
