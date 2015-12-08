@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -76,7 +77,7 @@ public class SingularityExecutorArtifactFetcher {
       artifactManager.signalKillToProcessIfActive();
     }
 
-    public void fetchFiles() {
+    public void fetchFiles() throws InterruptedException {
       extractFiles(task, artifactManager, executorData);
 
       boolean fetchS3ArtifactsLocally = true;
@@ -97,6 +98,9 @@ public class SingularityExecutorArtifactFetcher {
           fetchS3ArtifactsLocally = false;
 
           task.getLog().info("Fetched {} (S3) artifacts and {} (S3) artifact signatures from local download service in {}", executorData.getS3Artifacts().size(), executorData.getS3ArtifactSignatures().isPresent() ? executorData.getS3ArtifactSignatures().get().size() : 0, JavaUtils.duration(start));
+        } catch (InterruptedException ie) {
+          task.getLog().warn("Interrupted while downloading S3 artifacts from local download service");
+          throw ie;
         } catch (Throwable t) {
           task.getLog().error("Failed downloading S3 artifacts from local download service - falling back to in-task fetch", t);
         }
@@ -119,7 +123,7 @@ public class SingularityExecutorArtifactFetcher {
       }
     }
 
-    private void downloadFilesFromLocalDownloadService(List<? extends S3Artifact> s3Artifacts, SingularityExecutorTask task) {
+    private void downloadFilesFromLocalDownloadService(List<? extends S3Artifact> s3Artifacts, SingularityExecutorTask task) throws InterruptedException {
       final List<ListenableFuture<Response>> futures = Lists.newArrayListWithCapacity(s3Artifacts.size());
 
       for (S3Artifact s3Artifact : s3Artifacts) {
@@ -148,7 +152,7 @@ public class SingularityExecutorArtifactFetcher {
         Response response;
         try {
           response = future.get();
-        } catch (Exception e) {
+        } catch (ExecutionException e) {
           throw Throwables.propagate(e);
         }
 
