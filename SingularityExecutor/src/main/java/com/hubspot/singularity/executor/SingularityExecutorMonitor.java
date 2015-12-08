@@ -434,6 +434,7 @@ public class SingularityExecutorMonitor {
 
     if (runningProcess != null) {
       if (wasKilled) {
+        LOG.info("Destroying process by request {} ({})", taskId, runningProcess.getCurrentPid());
         task.markForceDestroyed();
         runningProcess.signalKillToProcessIfActive();
         return KillState.DESTROYING_PROCESS;

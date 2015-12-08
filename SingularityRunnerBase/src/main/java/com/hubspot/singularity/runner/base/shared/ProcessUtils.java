@@ -7,6 +7,7 @@ import java.lang.reflect.Field;
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
@@ -17,6 +18,8 @@ import com.google.common.io.Closeables;
 import com.hubspot.mesos.JavaUtils;
 
 public class ProcessUtils {
+
+  private static final Logger LOG = LoggerFactory.getLogger(ProcessUtils.class);
 
   private final Optional<Logger> log;
 
@@ -63,6 +66,10 @@ public class ProcessUtils {
       } else {
         log.get().info(logLine);
       }
+    }
+
+    if (signal != Signal.CHECK) {
+      LOG.debug("Signaling {} ({}) to process {}", signal, signal.getCode(), pid);
     }
 
     try {

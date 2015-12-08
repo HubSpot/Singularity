@@ -7,15 +7,20 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.LoggerFactory;
+
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCallable;
 
 @Singleton
 public class SingularityExecutorProcessKiller {
+
+  private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(SingularityExecutorProcessKiller.class);
 
   private final SingularityExecutorConfiguration configuration;
   private final ScheduledExecutorService scheduledExecutorService;
@@ -30,12 +35,16 @@ public class SingularityExecutorProcessKiller {
   }
 
   public void submitKillRequest(final SingularityExecutorTaskProcessCallable processCallable) {
+    LOG.info("Terming process {} ({})", processCallable.getTask().getTaskId(), processCallable.getCurrentPid());
     processCallable.markKilled();  // makes it so that the task can not start
     processCallable.signalTermToProcessIfActive();
+
+    final long start = System.currentTimeMillis();
 
     destroyFutures.put(processCallable.getTask().getTaskId(), scheduledExecutorService.schedule(new Runnable() {
       @Override
       public void run() {
+        LOG.info("Killing process {} ({}) after waiting {} (max: {})", processCallable.getTask().getTaskId(), processCallable.getCurrentPid(), JavaUtils.duration(start), JavaUtils.durationFromMillis(configuration.getHardKillAfterMillis()));
         processCallable.getTask().markDestroyedAfterWaiting();
         processCallable.signalKillToProcessIfActive();
       }
