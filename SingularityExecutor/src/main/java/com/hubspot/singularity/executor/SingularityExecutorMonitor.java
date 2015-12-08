@@ -128,12 +128,14 @@ public class SingularityExecutorMonitor {
 
     exitChecker.shutdown();
 
+    final long start = System.currentTimeMillis();
+
     JavaUtils.awaitTerminationWithLatch(latch, "threadChecker", threadChecker.getExecutorService(), configuration.getShutdownTimeoutWaitMillis());
     JavaUtils.awaitTerminationWithLatch(latch, "processBuilder", processBuilderPool, configuration.getShutdownTimeoutWaitMillis());
     JavaUtils.awaitTerminationWithLatch(latch, "runningProcess", runningProcessPool, configuration.getShutdownTimeoutWaitMillis());
     JavaUtils.awaitTerminationWithLatch(latch, "processKiller", processKiller.getExecutorService(), configuration.getShutdownTimeoutWaitMillis());
 
-    LOG.info("Awaiting shutdown of all executor services for a max of {}", JavaUtils.durationFromMillis(configuration.getShutdownTimeoutWaitMillis()));
+    LOG.info("Awaiting shutdown of all thread pools for a max of {}", JavaUtils.durationFromMillis(configuration.getShutdownTimeoutWaitMillis()));
 
     try {
       latch.await();
@@ -141,7 +143,7 @@ public class SingularityExecutorMonitor {
       LOG.warn("While awaiting shutdown of executor services", e);
     }
 
-    LOG.info("Waiting {} before exiting...", JavaUtils.durationFromMillis(configuration.getStopDriverAfterMillis()));
+    LOG.info("Waited {} for shutdown of thread pools, now waiting {} before exiting...", JavaUtils.duration(start), JavaUtils.durationFromMillis(configuration.getStopDriverAfterMillis()));
 
     try {
       Thread.sleep(configuration.getStopDriverAfterMillis());
@@ -279,8 +281,6 @@ public class SingularityExecutorMonitor {
 
   public void finishTask(final SingularityExecutorTask task, Protos.TaskState taskState, String message, Optional<String> errorMsg, Object... errorObjects) {
     try {
-      processKiller.cancelDestroyFuture(task.getTaskId());
-
       if (errorMsg.isPresent()) {
         task.getLog().error(errorMsg.get(), errorObjects);
       }
@@ -357,6 +357,8 @@ public class SingularityExecutorMonitor {
   }
 
   private void onFinish(SingularityExecutorTask task, Protos.TaskState taskState) {
+    processKiller.cancelDestroyFuture(task.getTaskId());
+
     tasks.remove(task.getTaskId());
     processRunningTasks.remove(task.getTaskId());
     processBuildingTasks.remove(task.getTaskId());
@@ -406,6 +408,8 @@ public class SingularityExecutorMonitor {
 
     final SingularityExecutorTask task = maybeTask.get();
 
+    task.getLog().info("Executor asked to kill {}", taskId);
+
     ListenableFuture<ProcessBuilder> processBuilderFuture = null;
     SingularityExecutorTaskProcessCallable runningProcess = null;
 
@@ -425,6 +429,8 @@ public class SingularityExecutorMonitor {
     }
 
     if (processBuilderFuture != null) {
+      task.getLog().info("Canceling process builder future for {}", taskId);
+
       processBuilderFuture.cancel(true);
 
       task.getProcessBuilder().cancel();
@@ -433,6 +439,8 @@ public class SingularityExecutorMonitor {
     }
 
     if (runningProcess != null) {
+      task.getLog().info("Killing process for task {} (was killed: {})", taskId, wasKilled);
+
       if (wasKilled) {
         LOG.info("Destroying process by request {} ({})", taskId, runningProcess.getCurrentPid());
         task.markForceDestroyed();

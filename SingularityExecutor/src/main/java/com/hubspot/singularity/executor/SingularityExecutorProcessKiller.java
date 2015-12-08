@@ -35,7 +35,7 @@ public class SingularityExecutorProcessKiller {
   }
 
   public void submitKillRequest(final SingularityExecutorTaskProcessCallable processCallable) {
-    LOG.info("Terming process {} ({})", processCallable.getTask().getTaskId(), processCallable.getCurrentPid());
+    LOG.info("Signaling -15 to process {} ({})", processCallable.getTask().getTaskId(), processCallable.getCurrentPid());
     processCallable.markKilled();  // makes it so that the task can not start
     processCallable.signalTermToProcessIfActive();
 
@@ -44,7 +44,7 @@ public class SingularityExecutorProcessKiller {
     destroyFutures.put(processCallable.getTask().getTaskId(), scheduledExecutorService.schedule(new Runnable() {
       @Override
       public void run() {
-        LOG.info("Killing process {} ({}) after waiting {} (max: {})", processCallable.getTask().getTaskId(), processCallable.getCurrentPid(), JavaUtils.duration(start), JavaUtils.durationFromMillis(configuration.getHardKillAfterMillis()));
+        LOG.info("Killing (-9) process {} ({}) after waiting {} (max: {})", processCallable.getTask().getTaskId(), processCallable.getCurrentPid(), JavaUtils.duration(start), JavaUtils.durationFromMillis(configuration.getHardKillAfterMillis()));
         processCallable.getTask().markDestroyedAfterWaiting();
         processCallable.signalKillToProcessIfActive();
       }
@@ -55,7 +55,10 @@ public class SingularityExecutorProcessKiller {
     ScheduledFuture<?> future = destroyFutures.remove(taskId);
 
     if (future != null) {
-      future.cancel(false);
+      boolean canceled = future.cancel(false);
+      LOG.info("Canceled kill future for {} - {}", taskId, canceled);
+    } else {
+      LOG.info("No kill future to cancel for {}", taskId);
     }
   }
 
