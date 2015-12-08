@@ -4,6 +4,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.InvalidSingularityTaskIdException;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseLogging;
 
 import ch.qos.logback.classic.Logger;
@@ -21,14 +23,28 @@ public class SingularityExecutorLogging {
     this.baseLogging = baseLogging;
   }
 
-  public Logger buildTaskLogger(String taskId, String taskLogFile) {
+  public Logger buildTaskLogger(String taskId, String executorId, String executorPid, String taskLogFile) {
     LOG.info("Building a task logger for {} pointing to {}", taskId, taskLogFile);
 
     LoggerContext context = new LoggerContext();
 
+    context.setName(executorPid);
+
     baseLogging.prepareRootLogger(context);
 
-    Logger taskLogger = context.getLogger(taskId);
+    String loggerId = taskId;
+
+    try {
+      SingularityTaskId singularityTaskId = SingularityTaskId.valueOf(taskId);
+
+      loggerId = String.format("%s.%s.%s.%s.%s", singularityTaskId.getRequestId(), singularityTaskId.getDeployId(), singularityTaskId.getStartedAt(),
+          singularityTaskId.getInstanceNo(), executorId);
+
+    } catch (InvalidSingularityTaskIdException e) {
+      LOG.info("Handling non-SingularityTaskId %s", taskId);
+    }
+
+    Logger taskLogger = context.getLogger(loggerId);
     taskLogger.detachAndStopAllAppenders();
 
     if (baseLogging.getRootLogPath().isPresent()) {
