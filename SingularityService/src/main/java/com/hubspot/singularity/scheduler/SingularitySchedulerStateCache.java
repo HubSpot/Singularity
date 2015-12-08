@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -32,7 +33,7 @@ public class SingularitySchedulerStateCache {
   private Optional<Collection<SingularityTaskId>> activeTaskIds;
   private Optional<Collection<SingularityPendingTask>> scheduledTasks;
   private Optional<Collection<SingularityTaskId>> cleaningTasks;
-  private Optional<Collection<SingularityKilledTaskIdRecord>> killedTasks;
+  private Optional<Collection<SingularityTaskId>> killedTasks;
   private Optional<Integer> numActiveRacks;
   private Optional<Integer> numActiveSlaves;
 
@@ -84,13 +85,14 @@ public class SingularitySchedulerStateCache {
 
   public Collection<SingularityTaskId> getKilledTasks() {
     if (!killedTasks.isPresent()) {
-      killedTasks = getMutableCollection(taskManager.getKilledTaskIdRecords());
+      List<SingularityKilledTaskIdRecord> killedTaskRecords = taskManager.getKilledTaskIdRecords();
+      Collection<SingularityTaskId> taskIds = Sets.newHashSet();
+      for (SingularityKilledTaskIdRecord record : killedTaskRecords) {
+        taskIds.add(record.getTaskId());
+      }
+      killedTasks = Optional.of(taskIds);
     }
-    Collection<SingularityTaskId> taskIds = new ArrayList<>();
-    for (SingularityKilledTaskIdRecord record : killedTasks.get()) {
-      taskIds.add(record.getTaskId());
-    }
-    return taskIds;
+    return killedTasks.get();
   }
 
   public int getNumActiveRacks() {
