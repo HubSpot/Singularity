@@ -281,8 +281,6 @@ public class SingularityExecutorMonitor {
 
   public void finishTask(final SingularityExecutorTask task, Protos.TaskState taskState, String message, Optional<String> errorMsg, Object... errorObjects) {
     try {
-      processKiller.cancelDestroyFuture(task.getTaskId());
-
       if (errorMsg.isPresent()) {
         task.getLog().error(errorMsg.get(), errorObjects);
       }
@@ -359,6 +357,8 @@ public class SingularityExecutorMonitor {
   }
 
   private void onFinish(SingularityExecutorTask task, Protos.TaskState taskState) {
+    processKiller.cancelDestroyFuture(task.getTaskId());
+
     tasks.remove(task.getTaskId());
     processRunningTasks.remove(task.getTaskId());
     processBuildingTasks.remove(task.getTaskId());
