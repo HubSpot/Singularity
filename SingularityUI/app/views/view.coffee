@@ -50,7 +50,7 @@ class View extends Backbone.View
       $('table.paginated').css('display', 'table');
 
       searchInput = $('.big-search-box')
-      strLength= searchInput.val().length * 2
+      strLength = searchInput.val().length * 2
       if strLength > 0
         searchInput.focus()
         searchInput[0].setSelectionRange(strLength, strLength)
