@@ -75,7 +75,7 @@ public class SingularityExecutor implements Executor {
     LOG.info("Asked to launch task {}", taskId);
 
     try {
-      final ch.qos.logback.classic.Logger taskLog = taskBuilder.buildTaskLogger(taskId);
+      final ch.qos.logback.classic.Logger taskLog = taskBuilder.buildTaskLogger(taskId, taskInfo.getExecutor().getExecutorId().getValue());
       final SingularityExecutorTask task = taskBuilder.buildTask(taskId, executorDriver, taskInfo, taskLog);
 
       SubmitState submitState = monitor.submit(task);
