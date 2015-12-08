@@ -91,6 +91,11 @@
         <b>Request is bouncing:</b> {{ runningInstanceCount }} of {{ data.instances }} replacement tasks are currently running.
     </div>
     {{/if}}
+    {{#if isDeploying}}
+    <div class="alert alert-warning" role="alert">
+        <b>Deploy <a href="">{{data.pendingDeploy.id}}</a> is pending:</b> {{ deployingInstanceCount }} of {{ data.instances }} new tasks are currently running.
+    </div>
+    {{/if}}
 
     {{! Active deploy well }}
     <div class="well">
