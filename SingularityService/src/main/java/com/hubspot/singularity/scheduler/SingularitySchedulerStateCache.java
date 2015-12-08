@@ -86,7 +86,7 @@ public class SingularitySchedulerStateCache {
   public Collection<SingularityTaskId> getKilledTasks() {
     if (!killedTasks.isPresent()) {
       List<SingularityKilledTaskIdRecord> killedTaskRecords = taskManager.getKilledTaskIdRecords();
-      Collection<SingularityTaskId> taskIds = new ArrayList<>();
+      Collection<SingularityTaskId> taskIds = Sets.newHashSet();
       for (SingularityKilledTaskIdRecord record : killedTaskRecords) {
         taskIds.add(record.getTaskId());
       }
