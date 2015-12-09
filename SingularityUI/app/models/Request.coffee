@@ -90,9 +90,9 @@ class Request extends Model
               id:      @get "id"
               instances: confirmedOrPromptData
 
-    bounce: =>
+    bounce: (incremental) =>
         $.ajax
-            url:  "#{ @url() }/bounce?user=#{ app.getUsername() }"
+            url:  "#{ @url() }/bounce?user=#{ app.getUsername() }&incremental=#{ incremental }"
             type: "POST"
 
     exitCooldown: =>
@@ -249,7 +249,8 @@ class Request extends Model
             message: bounceTemplate id: @get "id"
             callback: (confirmed) =>
                 return if not confirmed
-                @bounce().done callback
+                incremental = $('.vex #incremental-bounce').is ':checked'
+                @bounce(incremental).done callback
 
     promptExitCooldown: (callback) =>
         vex.dialog.confirm
