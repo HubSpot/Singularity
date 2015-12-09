@@ -30,6 +30,12 @@ AggregateTail = React.createClass
     $(window).on("blur", @onWindowBlur)
     $(window).on("focus", @onWindowFocus)
 
+  componentDidMount: ->
+    if @state.viewingInstances.length is 1
+      document.title = "Tail of #{@props.path.replace('$TASK_ID', @state.viewingInstances[0])}"
+    else
+      document.title = "Tail of #{@props.path}"
+
   componentDidUpdate: (prevProps, prevState) ->
     if prevState.activeTasks.length is 0 and @state.activeTasks.length > 0 and not Utils.getQueryParams()?.taskIds
       @setState
@@ -67,6 +73,10 @@ AggregateTail = React.createClass
       @setState
         viewingInstances: viewing
       history.replaceState @state, '', location.href.replace(location.search, "?taskIds=#{viewing.join(',')}&grep=#{@state.search}")
+      if viewing.length is 1
+        document.title = "Tail of #{@props.path.replace('$TASK_ID', viewing[0])}"
+      else
+        document.title = "Tail of #{@props.path}"
 
   showOnlyInstance: (taskId) ->
     @setState
