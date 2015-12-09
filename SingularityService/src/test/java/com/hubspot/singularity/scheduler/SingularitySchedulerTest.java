@@ -809,6 +809,29 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testSkipDeployHealthchecks() {
+    initRequest();
+
+    final String deployId = "deploy_test";
+
+    SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId);
+    db.setHealthcheckUri(Optional.of("http://uri"));
+    db.setSkipHealthchecksOnDeploy(Optional.of(true));
+
+    SingularityDeploy deploy = initDeploy(db, System.currentTimeMillis());
+
+    deployChecker.checkDeploys();
+
+    Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
+
+    launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_RUNNING);
+
+    deployChecker.checkDeploys();
+
+    Assert.assertEquals(DeployState.SUCCEEDED, deployManager.getDeployResult(requestId, deployId).get().getDeployState());
+  }
+
+  @Test
   public void testReconciliation() {
     Assert.assertTrue(!taskReconciliation.isReconciliationRunning());
 
