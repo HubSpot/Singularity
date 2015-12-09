@@ -39,6 +39,7 @@ class DashboardView extends View
                 requests: pausedRequests
                 haveRequests: pausedRequests.length > 0
                 requestsSubFilter: ''
+                collectionSynced: @collection.synced
 
         @$el.html @templateBase context, partials
         @renderTable()
