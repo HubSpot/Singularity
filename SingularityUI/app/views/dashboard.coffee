@@ -4,6 +4,7 @@ class DashboardView extends View
 
     templateBase: require '../templates/dashboard'
     templateRequestsTable: require '../templates/dashboardTable/dashboardStarred'
+    templateRequestsPausedBody: require '../templates/requestsTable/requestsPausedBody'
 
     events: ->
         _.extend super,
@@ -21,15 +22,22 @@ class DashboardView extends View
         partials =
             partials:
                 requestsBody: @templateRequestsTable
+                requestsPausedBody: @templateRequestsPausedBody
 
         # Count up the Requests for the clicky boxes
         userRequestTotals = @collection.getUserRequestTotals deployUser
+
+        pausedRequests = _.map(_.filter(@collection.getUserRequests(app.getUsername()), (r) -> r.get('state') is 'PAUSED'), (r) -> r.toJSON())
 
         context =
             deployUser: deployUser
             collectionSynced: @collection.synced
             userRequestTotals: userRequestTotals or { }
             haveStarredRequests: @collection.getStarredOnly().length
+            pausedRequests:
+                requests: pausedRequests
+                haveRequests: pausedRequests.length > 0
+                requestsSubFilter: ''
 
         @$el.html @templateBase context, partials
         @renderTable()
