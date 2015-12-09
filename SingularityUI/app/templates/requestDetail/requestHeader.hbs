@@ -93,7 +93,7 @@
     {{/if}}
     {{#if isDeploying}}
     <div class="alert alert-warning" role="alert">
-        <b>Deploy <a href="">{{data.pendingDeploy.id}}</a> is pending:</b> {{ deployingInstanceCount }} of {{ data.instances }} new tasks are currently running.
+        <b>Deploy <a href="{{appRoot}}/request/{{ data.id }}/deploy/{{ data.pendingDeploy.id }}">{{data.pendingDeploy.id}}</a> is pending:</b> {{ deployingInstanceCount }} of {{ data.instances }} new tasks are currently running.
     </div>
     {{/if}}
 

@@ -30,7 +30,7 @@ class requestHeaderSubview extends View
         isBouncing: bounces?.length > 0 and @taskCleanups.synced and @activeTasks.synced
         runningInstanceCount: @activeTasks.where({lastTaskState: 'TASK_RUNNING'}).length
         deployingInstanceCount: deployingInstanceCount
-        isDeploying: !!@model.get('pendingDeploy') and @model.synced
+        isDeploying: !!@model.get('pendingDeploy') and @model.synced and @activeTasks.synced
         config: config
         data:      @model.toJSON()
         synced:    @model.synced
