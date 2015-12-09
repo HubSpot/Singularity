@@ -84,8 +84,8 @@ When the `-g` option is set, the log fetcher will grep the downloaded files for 
 
 - Only get logs that match a glob or logfile name with the `-l` option
 
-`logfetch -r ‘My_Request_Id’ -l ‘*.out’`
-`logfetch -r ‘My_Request_Id’ -l ‘access.log’`
+`logfetch -r 'My_Request_Id' -l '*.out'`
+`logfetch -r 'My_Request_Id' -l 'access.log'`
 
 #Logtail
 You can tail live log files using `logtail`. Just provide the request, task, or request and deploy along with a log file path.
@@ -136,5 +136,5 @@ example:
 
 - grep in logs matching `*.out` logs from request `My_Request_Id`
 
-`logfetch -r ‘My_Request_Id’ -l ‘*.out’ -g 'Regex_here'`
+`logfetch -r 'My_Request_Id' -l '*.out' -g 'Regex_here'`
 
