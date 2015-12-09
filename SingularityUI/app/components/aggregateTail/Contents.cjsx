@@ -63,6 +63,10 @@ Contents = React.createClass
     else
       @stopTailingPoll()
 
+  handleKeyDown: (e) ->
+    if e.keyCode is 38
+      @stopTailingPoll()
+
   handleHighlight: (e) ->
     @currentOffset = parseInt $(e.target).attr 'data-offset'
     @setState
@@ -133,7 +137,7 @@ Contents = React.createClass
 
   render: ->
     <div className="contents-container">
-      <div className="tail-contents #{@props.activeColor}" ref="scrollContainer" onScroll={_.throttle @handleScroll, 200}>
+      <div className="tail-contents #{@props.activeColor}" ref="scrollContainer" onScroll={@handleScroll}  onKeyDown={@handleKeyDown} tabIndex="1">
         {@renderError()}
         <ReactList
           className="infinite"
