@@ -12,11 +12,11 @@ import com.hubspot.singularity.runner.base.configuration.Configuration;
 
 @Configuration(filename = "/etc/singularity.oomkiller.yaml", consolidatedField = "oomkiller")
 public class SingularityOOMKillerConfiguration extends BaseRunnerConfiguration {
-  @NotNull
+  @Min(1)
   @JsonProperty
   private double requestKillThresholdRatio = 1.0;
 
-  @NotNull
+  @Min(1)
   @JsonProperty
   private double killProcessDirectlyThresholdRatio = 1.2;
 

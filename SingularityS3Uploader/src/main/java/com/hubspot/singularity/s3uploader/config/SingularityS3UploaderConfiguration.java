@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
@@ -42,19 +43,19 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
   @Obfuscate
   private Optional<String> s3SecretKey = Optional.absent();
 
-  @NotNull
+  @Max(5368709120L)
   @JsonProperty
   private long maxSingleUploadSizeBytes = 5368709120L;
 
-  @NotNull
+  @Min(5242880L)
   @JsonProperty
   private long uploadPartSize = 20971520L;
 
-  @NotNull
+  @Min(500)
   @JsonProperty
   private int retryWaitMs = 1000;
 
-  @NotNull
+  @Min(0)
   @JsonProperty
   private int retryCount = 2;
 

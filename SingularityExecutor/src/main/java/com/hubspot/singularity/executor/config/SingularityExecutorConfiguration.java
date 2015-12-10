@@ -146,7 +146,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private String s3UploaderBucket;
 
-  @NotEmpty
   @JsonProperty
   private boolean useLocalDownloadService = false;
 
@@ -161,7 +160,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private String dockerPrefix = "se-";
 
-  @NotNull
+  @Min(5)
   @JsonProperty
   private int dockerStopTimeout = 15;
 
