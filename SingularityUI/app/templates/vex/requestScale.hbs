@@ -2,7 +2,7 @@
 <pre>{{ id }}</pre>
 
 <label for="bounce" id="bounce-label">
-    <input type="checkbox" id="bounce">
+    <input type="checkbox" id="bounce" onclick="bounceOptionChanged()">
     Also bounce after scaling
 </label>
 <div id="incremental-bounce-option" hidden>
@@ -12,11 +12,10 @@
 	</label>
 </div>
 <script type="text/javascript">
-function bounceOptionChanged()
-{
-    if($('.vex #bounce').is(":checked"))   
-        $(".vex #incremental-bounce-option").show();
-    else
-        $(".vex #incremental-bounce-option").hide();
-}
+	function bounceOptionChanged() {
+	    if($('.vex #bounce').is(":checked"))
+	        $(".vex #incremental-bounce-option").show();
+	    else
+	        $(".vex #incremental-bounce-option").hide();
+	}
 </script>

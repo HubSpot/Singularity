@@ -128,14 +128,14 @@ class Request extends Model
             ]
             placeholder: @get 'instances'
             callback: (data) =>
-                return if data is false
+                return unless data
                 bounce = $('.vex #bounce').is ':checked'
                 incremental = $('.vex #incremental-bounce').is ':checked'
-                @scale(data, bounce, incremental).done 
-                  if bounce
-                    @bounce(incremental).done callback
-                  else
-                    callback
+                @scale(data, bounce, incremental).done =>
+                    if bounce
+                        @bounce(incremental).done callback
+                    else
+                        callback
 
     promptUnpause: (callback) =>
         vex.dialog.confirm
