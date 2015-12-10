@@ -26,6 +26,7 @@ public class GraphiteConfiguration {
   @NotNull
   private String hostnameOmitSuffix = "";
 
+  @NotNull
   @JsonProperty
   private int periodSeconds = 60;
 

@@ -1,6 +1,7 @@
 package com.hubspot.singularity.oomkiller.config;
 
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -11,9 +12,11 @@ import com.hubspot.singularity.runner.base.configuration.Configuration;
 
 @Configuration(filename = "/etc/singularity.oomkiller.yaml", consolidatedField = "oomkiller")
 public class SingularityOOMKillerConfiguration extends BaseRunnerConfiguration {
+  @NotNull
   @JsonProperty
   private double requestKillThresholdRatio = 1.0;
 
+  @NotNull
   @JsonProperty
   private double killProcessDirectlyThresholdRatio = 1.2;
 
