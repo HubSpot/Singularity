@@ -1,6 +1,7 @@
 package com.hubspot.singularity.mesos;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.inject.Singleton;
@@ -95,9 +96,11 @@ public class SingularitySlaveAndRackHelper {
   public Map<String, String> reservedSlaveAttributes(Offer offer) {
     Map<String, String> reservedAttributes = new HashMap<>();
     Map<String, String> offerTextAttributes = getTextAttributes(offer);
-    for (Map.Entry<String, String> entry : configuration.getReserveSlavesWithAttributes().entrySet()) {
-      if (offerTextAttributes.containsKey(entry.getKey()) && offerTextAttributes.get(entry.getKey()).equals(entry.getValue())) {
-        reservedAttributes.put(entry.getKey(), entry.getValue());
+    for (Map.Entry<String, List<String>> entry : configuration.getReserveSlavesWithAttributes().entrySet()) {
+      for (String attr : entry.getValue()) {
+        if (offerTextAttributes.containsKey(entry.getKey()) && offerTextAttributes.get(entry.getKey()).equals(attr)) {
+          reservedAttributes.put(entry.getKey(), attr);
+        }
       }
     }
     return reservedAttributes;
