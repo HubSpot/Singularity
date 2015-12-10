@@ -143,6 +143,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private String s3UploaderBucket;
 
+  @NotEmpty
   @JsonProperty
   private boolean useLocalDownloadService = false;
 
@@ -157,6 +158,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private String dockerPrefix = "se-";
 
+  @NotNull
   @JsonProperty
   private int dockerStopTimeout = 15;
 
@@ -186,15 +188,19 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   public List<SingularityExecutorShellCommandDescriptor> shellCommands = Collections.emptyList();
 
+  @NotEmpty
   @JsonProperty
   public String shellCommandOutFile = "executor.commands.{TIMESTAMP}.log";
 
+  @NotEmpty
   @JsonProperty
   private String shellCommandPidPlaceholder = "{PID}";
 
+  @NotEmpty
   @JsonProperty
   private String shellCommandUserPlaceholder = "{USER}";
 
+  @NotEmpty
   @JsonProperty
   private String shellCommandPidFile = ".task-pid";
 

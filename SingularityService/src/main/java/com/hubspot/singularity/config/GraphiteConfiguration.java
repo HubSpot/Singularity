@@ -5,6 +5,8 @@ import java.util.List;
 
 import javax.validation.constraints.NotNull;
 
+import org.hibernate.validator.constraints.NotEmpty;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class GraphiteConfiguration {
@@ -12,6 +14,7 @@ public class GraphiteConfiguration {
   @JsonProperty
   private boolean enabled = false;
 
+  @NotEmpty
   @JsonProperty
   private String hostname;
 
@@ -26,6 +29,7 @@ public class GraphiteConfiguration {
   @NotNull
   private String hostnameOmitSuffix = "";
 
+  @NotNull
   @JsonProperty
   private int periodSeconds = 60;
 
