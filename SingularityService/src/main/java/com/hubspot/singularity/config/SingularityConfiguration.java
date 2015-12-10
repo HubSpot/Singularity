@@ -1,6 +1,7 @@
 package com.hubspot.singularity.config;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -210,7 +211,7 @@ public class SingularityConfiguration extends Configuration {
   private AuthConfiguration authConfiguration = new AuthConfiguration();
 
   @NotNull
-  private Map<String, String> reserveSlavesWithAttributes = Collections.emptyMap();
+  private Map<String, List<String>> reserveSlavesWithAttributes = Collections.emptyMap();
 
   @JsonProperty("graphite")
   @NotNull
@@ -856,11 +857,11 @@ public class SingularityConfiguration extends Configuration {
     this.historyPurgingConfiguration = historyPurgingConfiguration;
   }
 
-  public Map<String, String> getReserveSlavesWithAttributes() {
+  public Map<String, List<String>> getReserveSlavesWithAttributes() {
     return reserveSlavesWithAttributes;
   }
 
-  public void setReserveSlavesWithAttrbiutes(Map<String, String> reserveSlavesWithAttributes) {
+  public void setReserveSlavesWithAttrbiutes(Map<String, List<String>> reserveSlavesWithAttributes) {
     this.reserveSlavesWithAttributes = reserveSlavesWithAttributes;
   }
 
