@@ -17,7 +17,8 @@ progress = 0
 goal = 0
 
 def download_s3_logs(args):
-  sys.stderr.write(colored('Checking for S3 log files', 'cyan') + '\n')
+  if not args.silent:
+    sys.stderr.write(colored('Checking for S3 log files', 'cyan') + '\n')
   callbacks.progress = 0
   logs = logs_for_all_requests(args)
   async_requests = []
@@ -27,32 +28,36 @@ def download_s3_logs(args):
     filename = log_file['key'].rsplit("/", 1)[1]
     if logfetch_base.is_in_date_range(args, int(str(log_file['lastModified'])[0:-3])):
       if not args.logtype or log_matches(args, filename):
-        if args.verbose:
+        if args.verbose and not args.silent:
           sys.stderr.write(colored('Including log {0}'.format(filename), 'blue') + '\n')
         if not already_downloaded(args.dest, filename):
           async_requests.append(
             grequests.AsyncRequest('GET', log_file['getUrl'], callback=callbacks.generate_callback(log_file['getUrl'], args.dest, filename, args.chunk_size, args.verbose), headers=args.headers)
           )
         else:
-          if args.verbose:
+          if args.verbose and not args.silent:
             sys.stderr.write(colored('Log already downloaded {0}'.format(filename), 'blue') + '\n')
           all_logs.append('{0}/{1}'.format(args.dest, filename.replace('.gz', '.log')))
         zipped_files.append('{0}/{1}'.format(args.dest, filename))
       else:
-        if args.verbose:
+        if args.verbose and not args.silent:
           sys.stderr.write(colored('Excluding {0} log does not match logtype argument {1}'.format(filename, args.logtype), 'magenta') + '\n')
     else:
-      if args.verbose:
+      if args.verbose and not args.silent:
         sys.stderr.write(colored('Excluding {0}, not in date range'.format(filename), 'magenta') + '\n')
   if async_requests:
-    sys.stderr.write(colored('Starting {0} S3 Downloads with {1} parallel fetches\n'.format(len(async_requests), args.num_parallel_fetches), 'cyan'))
+    if not args.silent:
+      sys.stderr.write(colored('Starting {0} S3 Downloads with {1} parallel fetches\n'.format(len(async_requests), args.num_parallel_fetches), 'cyan'))
     callbacks.goal = len(async_requests)
     grequests.map(async_requests, stream=True, size=args.num_parallel_fetches)
-    sys.stderr.write(colored('\nUnpacking {0} S3 log(s)\n'.format(len(async_requests)), 'cyan'))
+    if not args.silent:
+      sys.stderr.write(colored('\nUnpacking {0} S3 log(s)\n'.format(len(async_requests)), 'cyan'))
   else:
-    sys.stderr.write(colored('No S3 logs to download\n', 'cyan'))
+    if not args.silent:
+      sys.stderr.write(colored('No S3 logs to download\n', 'cyan'))
   all_logs = all_logs + logfetch_base.unpack_logs(args, zipped_files)
-  sys.stderr.write(colored('All S3 logs up to date\n', 'cyan'))
+  if not args.silent:
+    sys.stderr.write(colored('All S3 logs up to date\n', 'cyan'))
   return all_logs
 
 def already_downloaded(dest, filename):
@@ -71,8 +76,9 @@ def logs_for_all_requests(args):
       s3_logs = get_json_response(s3_task_logs_uri(args, task), args, s3_params)
       logs = logs + s3_logs if s3_logs else logs
       tasks_progress += 1
-      logfetch_base.update_progress_bar(tasks_progress, tasks_goal, 'S3 Log Finder')
-    sys.stderr.write(colored('\nAlso searching s3 history...\n', 'cyan'))
+      logfetch_base.update_progress_bar(tasks_progress, tasks_goal, 'S3 Log Finder', args.silent)
+    if not args.silent:
+      sys.stderr.write(colored('\nAlso searching s3 history...\n', 'cyan'))
     for request in logfetch_base.all_requests(args):
       s3_logs = get_json_response(s3_request_logs_uri(args, request), args, s3_params)
       logs = logs + s3_logs if s3_logs else logs
