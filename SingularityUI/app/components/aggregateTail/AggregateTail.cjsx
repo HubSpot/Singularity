@@ -34,7 +34,7 @@ AggregateTail = React.createClass
     if @state.viewingInstances.length is 1
       document.title = "Tail of #{@props.path.replace('$TASK_ID', @state.viewingInstances[0])}"
     else
-      document.title = "Tail of #{@props.path}"
+      document.title = "Tail of #{@props.path.replace('$TASK_ID', 'Task Directory')}"
 
   componentDidUpdate: (prevProps, prevState) ->
     if prevState.activeTasks.length is 0 and @state.activeTasks.length > 0 and not Utils.getQueryParams()?.taskIds
@@ -76,7 +76,7 @@ AggregateTail = React.createClass
       if viewing.length is 1
         document.title = "Tail of #{@props.path.replace('$TASK_ID', viewing[0])}"
       else
-        document.title = "Tail of #{@props.path}"
+        document.title = "Tail of #{@props.path.replace('$TASK_ID', 'Task Directory')}"
 
   showOnlyInstance: (taskId) ->
     @setState
