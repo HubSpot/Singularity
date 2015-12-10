@@ -14,7 +14,6 @@ public class GraphiteConfiguration {
   @JsonProperty
   private boolean enabled = false;
 
-  @NotEmpty
   @JsonProperty
   private String hostname;
 
