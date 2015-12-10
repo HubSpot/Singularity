@@ -81,6 +81,7 @@ AggregateTail = React.createClass
   showOnlyInstance: (taskId) ->
     @setState
       viewingInstances: [taskId]
+    history.replaceState @state, '', location.href.replace(location.search, "?taskIds=#{taskId}&view=#{@getViewString(@state.splitView)}&grep=#{@state.search}")
 
   selectTasks: (selectFuncion) ->
     viewing = _.pluck(selectFuncion(_.sortBy(@state.activeTasks, (task) => task.taskId.instanceNo)), 'id')
