@@ -16,7 +16,7 @@ AggregateTail = React.createClass
     params = Utils.getQueryParams()
     viewingInstances: if params.taskIds then params.taskIds.split(',').slice(0, 6) else []
     color: @getActiveColor()
-    splitView: true
+    splitView: !(params.view is 'unified')
     search: if params.grep then params.grep else ''
 
   componentWillMount: ->
@@ -34,7 +34,7 @@ AggregateTail = React.createClass
     if @state.viewingInstances.length is 1
       document.title = "Tail of #{@props.path.replace('$TASK_ID', @state.viewingInstances[0])}"
     else
-      document.title = "Tail of #{@props.path}"
+      document.title = "Tail of #{@props.path.replace('$TASK_ID', 'Task Directory')}"
 
   componentDidUpdate: (prevProps, prevState) ->
     if prevState.activeTasks.length is 0 and @state.activeTasks.length > 0 and not Utils.getQueryParams()?.taskIds
@@ -72,11 +72,11 @@ AggregateTail = React.createClass
     if 0 < viewing.length <= 6
       @setState
         viewingInstances: viewing
-      history.replaceState @state, '', location.href.replace(location.search, "?taskIds=#{viewing.join(',')}&grep=#{@state.search}")
+      history.replaceState @state, '', location.href.replace(location.search, "?taskIds=#{viewing.join(',')}&view=#{@getViewString(@state.splitView)}&grep=#{@state.search}")
       if viewing.length is 1
         document.title = "Tail of #{@props.path.replace('$TASK_ID', viewing[0])}"
       else
-        document.title = "Tail of #{@props.path}"
+        document.title = "Tail of #{@props.path.replace('$TASK_ID', 'Task Directory')}"
 
   showOnlyInstance: (taskId) ->
     @setState
@@ -86,12 +86,12 @@ AggregateTail = React.createClass
     viewing = _.pluck(selectFuncion(_.sortBy(@state.activeTasks, (task) => task.taskId.instanceNo)), 'id')
     @setState
       viewingInstances: viewing
-    history.replaceState @state, '', location.href.replace(location.search, "?taskIds=#{viewing.join(',')}&grep=#{@state.search}")
+    history.replaceState @state, '', location.href.replace(location.search, "?taskIds=#{viewing.join(',')}&view=#{@getViewString(@state.splitView)}&grep=#{@state.search}")
 
   setSearch: (search) ->
     @setState
       search: search
-    history.replaceState @state, '', location.href.replace(location.search, "?taskIds=#{@state.viewingInstances.join(',')}&grep=#{search}")
+    history.replaceState @state, '', location.href.replace(location.search, "?taskIds=#{@state.viewingInstances.join(',')}&view=#{@getViewString(@state.splitView)}&grep=#{search}")
 
   scrollAllTop: ->
     for tail of @refs
@@ -121,8 +121,14 @@ AggregateTail = React.createClass
     localStorage.getItem('singularityLogColor')
 
   toggleView: ->
+    splitView = !@state.splitView
     @setState
-      splitView: !@state.splitView
+      splitView: splitView
+    viewString = @getViewString(splitView)
+    history.replaceState @state, '', location.href.replace(location.search, "?taskIds=#{@state.viewingInstances.join(',')}&view=#{viewString}&grep=#{@state.search}")
+
+  getViewString: (splitView) ->
+    if splitView then 'split' else 'unified'
 
   toggleHelp: ->
     vex.open
@@ -181,19 +187,20 @@ AggregateTail = React.createClass
     ajaxErrors = @state.viewingInstances.map((taskId) =>
       @props.ajaxError[taskId]
     )
-    <div className="col-md-12 tail-column">
-      <InterleavedTail
-        ref="tail"
-        path={@props.path}
-        requestId={@props.requestId}
-        taskId={@state.viewingInstances[0]}
-        offset={@props.offset}
-        logLines={logLines}
-        ajaxErrors={ajaxErrors}
-        activeTasks={@props.activeTasks}
-        viewingInstances={@state.viewingInstances}
-        search={@state.search} />
-    </div>
+    if _.filter(logLines, (l) => l isnt undefined).length is @state.viewingInstances.length
+      <div className="col-md-12 tail-column">
+        <InterleavedTail
+          ref="tail"
+          path={@props.path}
+          requestId={@props.requestId}
+          taskId={@state.viewingInstances[0]}
+          offset={@props.offset}
+          logLines={logLines}
+          ajaxErrors={ajaxErrors}
+          activeTasks={@props.activeTasks}
+          viewingInstances={@state.viewingInstances}
+          search={@state.search} />
+      </div>
 
   render: ->
     <div>
