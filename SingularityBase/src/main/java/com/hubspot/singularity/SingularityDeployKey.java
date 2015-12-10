@@ -26,6 +26,10 @@ public class SingularityDeployKey extends SingularityId {
     return new SingularityDeployKey(deployMarker.getRequestId(), deployMarker.getDeployId());
   }
 
+  public static SingularityDeployKey fromTaskId(SingularityTaskId taskId) {
+    return new SingularityDeployKey(taskId.getRequestId(), taskId.getDeployId());
+  }
+
   public static Map<SingularityDeployKey, SingularityDeploy> fromDeploys(Collection<SingularityDeploy> deploys) {
     return Maps.uniqueIndex(deploys, new Function<SingularityDeploy, SingularityDeployKey>() {
       @Override
