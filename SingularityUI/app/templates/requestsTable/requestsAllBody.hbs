@@ -72,7 +72,7 @@
                         <td class="visible-lg visible-xl">
                             {{usernameFromEmail requestDeployState.activeDeploy.user }}
                         </td>
-                        <td class="hidden-xs">
+                        <td class="hidden-xs" data-value="{{requestDeployState.activeDeploy.timestamp}}">
                             {{timestampFromNow requestDeployState.activeDeploy.timestamp}}
                         </td>
 
