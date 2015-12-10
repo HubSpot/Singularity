@@ -58,6 +58,8 @@ Header = React.createClass
     path = @props.path
     if @props.viewingInstances.length is 1
       path = path.replace('$TASK_ID', @props.viewingInstances[0])
+    else
+      path = path.replace('$TASK_ID', 'Task Directory')
     segments = path.split('/')
     return segments.map (s, i) =>
       path = segments.slice(0, i + 1).join('/')
