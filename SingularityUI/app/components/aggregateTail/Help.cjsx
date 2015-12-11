@@ -27,7 +27,7 @@ Help = React.createClass
         <li><kbd>l</kbd> Select (up to) the last 6 instances</li>
         <li><kbd>e</kbd> Select (up to) the first 6 even-numbered instances</li>
         <li><kbd>o</kbd> Select (up to) the first 6 odd-numbered instances</li>
-        <li><kbd>[0-9]</kbd> Select the corresponding numbered intance</li>
+        <li><kbd>[0-9]</kbd> Select the corresponding numbered instance</li>
       </ul>
       <h4><span className="glyphicon glyphicon-adjust"></span> Color Scheme</h4>
       <p>
