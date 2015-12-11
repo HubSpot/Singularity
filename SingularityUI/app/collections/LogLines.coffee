@@ -89,8 +89,11 @@ class LogLines extends Collection
 
     fetchNext: =>
         # console.log 'next'
-        @fetch data:
+        @fetch(data:
             offset: @nextOffset or @getMaxOffset()
+        ).error (error) =>
+          # Don't throw an error if the task ends while we're tailing
+          app.caughtError() if error.status is 404
         @nextOffset = null
 
     fetchFromStart: =>
@@ -112,7 +115,7 @@ class LogLines extends Collection
             remove: false
             data: _.extend {@path, length: @state.get('currentRequestLength'), grep: @grep}, params.data
 
-        request = super _.extend params, defaultParams
+        request = super(_.extend params, defaultParams)
 
         request
 
