@@ -84,9 +84,11 @@ class LogLines extends Collection
 
     fetchPrevious: ->
         # console.log 'prev'
-        @fetch data:
-            offset: orZero @getMinOffset() - @state.get('currentRequestLength')
-
+        @fetch(
+            data:
+                offset: orZero @getMinOffset() - @state.get('currentRequestLength')
+        ).error (error) =>
+          app.caughtError() if error.status is 404
     fetchNext: =>
         # console.log 'next'
         @fetch(data:
