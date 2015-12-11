@@ -1,2 +1,13 @@
 <p>Enter the desired number of instances to run for request:</p>
 <pre>{{ id }}</pre>
+
+<label for="bounce" id="bounce-label">
+    <input type="checkbox" id="bounce">
+    Bounce after scaling
+</label>
+<div id="incremental-bounce-options" hidden>
+	<label for="incremental-bounce" id="incremental-bounce-label">
+	    <input type="radio" name="incremental" value="false" checked> Kill old tasks once ALL new tasks are healthy<br>
+	    <input type="radio" name="incremental" id="incremental-bounce" value="true"> Kill old tasks as new tasks become healthy
+	</label>
+</div>
