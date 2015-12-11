@@ -6,7 +6,8 @@ GREP_COMMAND_FORMAT = '{0} {1}'
 DEFAULT_GREP_COMMAND = 'grep --color=always \'{0}\''
 
 def grep_files(args, all_logs):
-  sys.stderr.write('\n')
+  if not args.silent:
+    sys.stderr.write('\n')
   if args.grep:
     if all_logs:
       all_logs.sort()
@@ -14,10 +15,12 @@ def grep_files(args, all_logs):
         command = grep_command(args, log)
         output = os.popen(command).read()
         if output is not None and output != '':
-          sys.stderr.write(colored(log, 'cyan') + '\n')
+          if not args.silent:
+            sys.stderr.write(colored(log, 'cyan') + '\n')
           sys.stdout.write(output)
 
-      sys.stderr.write(colored('Finished grep, exiting', 'green') + '\n')
+      if not args.silent:
+        sys.stderr.write(colored('Finished grep, exiting', 'green') + '\n')
     else:
       sys.stderr.write(colored('No logs found\n', 'magenta'))
 
