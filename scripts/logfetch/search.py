@@ -10,11 +10,11 @@ def find_cached_logs(args):
     log_fn_match = get_matcher(args)
     for filename in os.listdir(args.dest):
         if fnmatch.fnmatch(filename, log_fn_match) and in_date_range(args, filename):
-            if args.verbose:
+            if args.verbose and not args.silent:
                 sys.stderr.write(colored('Including log {0}\n'.format(filename), 'blue'))
             matching_logs.append('{0}/{1}'.format(args.dest, filename))
         else:
-            if args.verbose:
+            if args.verbose and not args.silent:
                 sys.stderr.write(colored('Excluding log {0}, not in date range\n'.format(filename), 'magenta'))
     return matching_logs
             
