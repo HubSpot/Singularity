@@ -127,9 +127,23 @@ class Request extends Model
                 vex.dialog.buttons.NO
             ]
             placeholder: @get 'instances'
+            afterOpen: ($vexContent) ->
+                $vexContent.find('#bounce').click =>
+                    if $('.vex #bounce').is ':checked'
+                        $(".vex #incremental-bounce-options").show()
+                    else
+                        $(".vex #incremental-bounce-options").hide()
+
             callback: (data) =>
-                return if data is false
-                @scale(data).done callback
+                return unless data
+                bounce = $('.vex #bounce').is ':checked'
+                incremental = $('.vex #incremental-bounce').is ':checked'
+                @scale(data).done =>
+                    if bounce
+                        @bounce(incremental).done callback
+                    else
+                        callback
+        
 
     promptUnpause: (callback) =>
         vex.dialog.confirm
