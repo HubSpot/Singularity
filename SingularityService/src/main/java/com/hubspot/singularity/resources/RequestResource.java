@@ -149,8 +149,8 @@ public class RequestResource extends AbstractRequestResource {
 
     final long now = System.currentTimeMillis();
 
-    if (maybeOldRequestWithState.isPresent() && maybeOldRequestWithState.get().getState() == RequestState.PAUSED) {
-      requestManager.update(newRequest, RequestState.PAUSED, maybeOldRequest.isPresent() ? RequestHistoryType.UPDATED : RequestHistoryType.CREATED, now, JavaUtils.getUserEmail(user));
+    if (maybeOldRequestWithState.isPresent()) {
+      requestManager.update(newRequest, maybeOldRequestWithState.get().getState(), maybeOldRequest.isPresent() ? RequestHistoryType.UPDATED : RequestHistoryType.CREATED, now, JavaUtils.getUserEmail(user));
     } else {
       requestManager.activate(newRequest, maybeOldRequest.isPresent() ? RequestHistoryType.UPDATED : RequestHistoryType.CREATED, now, JavaUtils.getUserEmail(user));
     }
