@@ -1,18 +1,18 @@
 {{#unless rowsOnly}}
     {{#if haveRequests}}
-        <table class="table table-striped sortable-theme-bootstrap" data-sortable>
+        <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>
+                    <th data-sort-attribute="requestId">
                         ID
                     </th>
-                    <th class="visible-md">
+                    <th class="visible-md" data-sort-attribute="user">
                         User
                     </th>
-                    <th class="hidden-xs">
+                    <th class="hidden-xs" data-sort-attribute="timestamp">
                         Timestamp
                     </th>
-                    <th class="visible-md">
+                    <th class="visible-md" data-sort-attribute="cleanupType">
                         Cleaning Type
                     </th>
                 </tr>

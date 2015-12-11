@@ -171,6 +171,7 @@ public class SingularityExecutorMonitor {
 
     try {
       if (tasks.isEmpty()) {
+        LOG.info("Shutting down executor due to no tasks being submitted within {}", JavaUtils.durationFromMillis(configuration.getIdleExecutorShutdownWaitMillis()));
         runState = RunState.SHUTDOWN;
         shuttingDown = true;
       }
