@@ -31,11 +31,11 @@ def unpack_logs(args, logs):
         if args.verbose and not args.silent:
           sys.stderr.write(colored('Unpacked log {0}/{1}'.format(progress, goal), 'green') + colored(zipped_file, 'white') + '\n')
         else:
-          update_progress_bar(progress, goal, 'Unpack')
+          update_progress_bar(progress, goal, 'Unpack', args.silent)
         successful.append(unzipped)
       else:
         progress += 1
-        update_progress_bar(progress, goal, 'Unpack')
+        update_progress_bar(progress, goal, 'Unpack', args.silent)
     except Exception as e:
       print e
       if os.path.isfile(zipped_file):

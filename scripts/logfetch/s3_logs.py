@@ -32,7 +32,7 @@ def download_s3_logs(args):
           sys.stderr.write(colored('Including log {0}'.format(filename), 'blue') + '\n')
         if not already_downloaded(args.dest, filename):
           async_requests.append(
-            grequests.AsyncRequest('GET', log_file['getUrl'], callback=callbacks.generate_callback(log_file['getUrl'], args.dest, filename, args.chunk_size, args.verbose), headers=args.headers)
+            grequests.AsyncRequest('GET', log_file['getUrl'], callback=callbacks.generate_callback(log_file['getUrl'], args.dest, filename, args.chunk_size, args.verbose, args.silent), headers=args.headers)
           )
         else:
           if args.verbose and not args.silent:
