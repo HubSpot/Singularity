@@ -1,7 +1,6 @@
 package com.hubspot.singularity;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 import com.google.common.base.Function;
 
@@ -65,9 +64,9 @@ public class SingularityTransformHelpers {
   };
 
   public static final Function<SingularityKilledTaskIdRecord, String> KILLED_TASK_ID_RECORD_TO_REQUEST_ID = new Function<SingularityKilledTaskIdRecord, String>() {
-    @Nullable
+    @Nonnull
     @Override
-    public String apply(@Nullable SingularityKilledTaskIdRecord input) {
+    public String apply(@Nonnull SingularityKilledTaskIdRecord input) {
       return input.getTaskId().getRequestId();
     }
   };
