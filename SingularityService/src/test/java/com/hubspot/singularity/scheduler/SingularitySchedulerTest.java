@@ -1014,8 +1014,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     initFirstDeploy();
 
-    SingularityTask taskOne = startTask(firstDeploy, 1);
-    SingularityTask taskTwo = startTask(firstDeploy, 2);
+    SingularityTask taskOne = startSeparatePlacementTask(firstDeploy, 1);
+    SingularityTask taskTwo = startSeparatePlacementTask(firstDeploy, 2);
 
     requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.INCREMENTAL_BOUNCE, System.currentTimeMillis(), Optional.<Boolean>absent(), requestId, Optional.of(firstDeployId)));
 
@@ -1028,7 +1028,6 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     resourceOffers(3);
 
-    System.out.print(taskManager.getActiveTaskIds().size());
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 3);
 
     cleaner.drainCleanupQueue();
