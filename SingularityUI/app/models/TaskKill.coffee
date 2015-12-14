@@ -1,6 +1,6 @@
 Model = require './model'
 
-class TaskKill extends Model
+class TaskKillRecord extends Model
 
     url: => "#{ config.apiRoot }/tasks/task/#{ @get('id') }"
 
@@ -15,4 +15,4 @@ class TaskKill extends Model
 
         kill
 
-module.exports = TaskKill
+module.exports = TaskKillRecord
