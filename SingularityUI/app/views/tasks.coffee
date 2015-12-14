@@ -41,6 +41,8 @@ class TasksView extends View
         @bodyTemplate = @bodyTemplateMap[@state]
 
         @listenTo @collection, 'sync', @render
+        @listenTo @collection.cleaning, 'reset', @render
+        @listenTo @collection.killing, 'reset', @render
 
         @searchChange = _.debounce @searchChange, 200
 
@@ -122,7 +124,7 @@ class TasksView extends View
         tasks = @currentTasks.slice(@renderProgress, newProgress)
         @renderProgress = newProgress
 
-        decomTasks = @attributes.cleaning.pluck('taskId')
+        decomTasks = _.union(@attributes.cleaning.pluck('taskId'), @attributes.killing.pluck('taskId'))
         $contents = @bodyTemplate
             tasks: tasks
             rowsOnly: true
