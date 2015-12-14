@@ -57,7 +57,7 @@ class State extends Model
         }
 
     taskDetail: ->
-        
+
         total = @get('activeTasks') + @get('lateTasks') + @get('scheduledTasks') + @get('cleaningTasks') + @get('lbCleanupTasks')
         tasks = [
             {

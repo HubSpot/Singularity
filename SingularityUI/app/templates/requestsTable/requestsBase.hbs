@@ -16,8 +16,14 @@
             <li class="{{#ifEqual requestsFilter "pending"}}active{{/ifEqual}}">
                 <a href="{{appRoot}}/requests/pending">Pending</a>
             </li>
-            <li class="{{#ifEqual requestsFilter "cleaning"}}active{{/ifEqual}}">
+            <li class="{{#ifEqual requestsFilter "cleaning"}}active{{/ifEqual}} separator-pill">
                 <a href="{{appRoot}}/requests/cleaning">Cleaning</a>
+            </li>
+            <li class="{{#ifEqual requestsFilter "activeDeploy"}}active{{/ifEqual}}">
+                <a href="{{appRoot}}/requests/activeDeploy">Active Deploy</a>
+            </li>
+            <li class="{{#ifEqual requestsFilter "noDeploy"}}active{{/ifEqual}}">
+                <a href="{{appRoot}}/requests/noDeploy">No Deploy</a>
             </li>
         </ul>
 
