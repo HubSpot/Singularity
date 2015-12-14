@@ -2,7 +2,7 @@ Collection = require './collection'
 
 TaskKillRecord = require '../models/TaskKillRecord'
 
-class TaskKills extends Collection
+class TaskKillRecords extends Collection
 
     model: TaskKillRecord
 
@@ -10,4 +10,4 @@ class TaskKills extends Collection
 
     url: -> "#{ config.apiRoot }/tasks/killed"
 
-module.exports = TaskKills
+module.exports = TaskKillRecords

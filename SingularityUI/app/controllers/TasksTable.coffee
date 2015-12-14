@@ -5,7 +5,7 @@ TaskPending = require '../models/TaskPending'
 Tasks = require '../collections/Tasks'
 TasksPending = require '../collections/TasksPending'
 TaskCleanups = require '../collections/TaskCleanups'
-TaskKills = require '../collections/TaskKills'
+TaskKillRecords = require '../collections/TaskKillRecords'
 
 TasksTableView = require '../views/tasks'
 
@@ -23,7 +23,7 @@ class TasksTableController extends Controller
         else
             @collections.tasks = new Tasks [], {@state}
         @collections.taskCleanups = new TaskCleanups
-        @collections.taskKills = new TaskKills
+        @collections.taskKills = new TaskKillRecords
 
         @setView new TasksTableView _.extend {@state, @searchFilter},
             collection: @collections.tasks
