@@ -5,6 +5,7 @@ TaskPending = require '../models/TaskPending'
 Tasks = require '../collections/Tasks'
 TasksPending = require '../collections/TasksPending'
 TaskCleanups = require '../collections/TaskCleanups'
+TaskKillRecords = require '../collections/TaskKillRecords'
 
 TasksTableView = require '../views/tasks'
 
@@ -22,18 +23,19 @@ class TasksTableController extends Controller
         else
             @collections.tasks = new Tasks [], {@state}
         @collections.taskCleanups = new TaskCleanups
+        @collections.taskKills = new TaskKillRecords
 
         @setView new TasksTableView _.extend {@state, @searchFilter},
             collection: @collections.tasks
             pendingTasks: @collections.tasksPending
             attributes:
                 cleaning: @collections.taskCleanups
+                killing: @collections.taskKills
 
         # Fetch a pending task's full details
         @view.on 'getPendingTask', (task) => @getPendingTask(task)
 
-        @collections.tasks.fetch()
-        @collections.taskCleanups.fetch()
+        @refresh()
         app.showView @view
 
     getPendingTask: (task) ->
@@ -54,6 +56,7 @@ class TasksTableController extends Controller
         return if @view.isSorted
 
         @collections.taskCleanups.fetch()
+        @collections.taskKills.fetch()
         @collections.tasks.fetch reset: true
 
 module.exports = TasksTableController
