@@ -38,7 +38,7 @@ LogLine = React.createClass
       <span key={i} className={if s.match then 'search-match'}>{s.text}</span>
 
   render: ->
-    <div className="#{@getClassNames()}" style={backgroundColor: @props.color}>
+    <div className="#{@getClassNames()}" style={backgroundColor: @props.color} title={@props.taskId}>
       <a target="blank" href="#{@props.offsetLink}" className="offset-link" data-offset="#{@props.offset}">
         <div className="pre-line">
             <span className="glyphicon glyphicon-link" data-offset="#{@props.offset}"></span>
