@@ -88,7 +88,6 @@ class RequestsView extends View
                 filter
 
         # Filter by deploy type if applicable
-        console.log _.filter(requests, (r) => !r.requestDeployState?.activeDeploy)
         if @state in ['activeDeploy', 'noDeploy']
             requests = _.filter requests, (request) =>
                 if @state == 'activeDeploy'
