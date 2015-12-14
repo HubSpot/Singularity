@@ -1,10 +1,10 @@
 Collection = require './collection'
 
-TaskKill = require '../models/TaskKill'
+TaskKillRecord = require '../models/TaskKillRecord'
 
 class TaskKills extends Collection
 
-    model: TaskKill
+    model: TaskKillRecord
 
     comparator: 'timestamp'
 
