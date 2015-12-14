@@ -36,6 +36,7 @@ import com.hubspot.mesos.json.MesosTaskStatisticsObject;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityService;
@@ -176,6 +177,13 @@ public class TaskResource {
   @ApiOperation("Retrieve the list of cleaning tasks.")
   public Iterable<SingularityTaskCleanup> getCleaningTasks() {
     return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getCleanupTasks(), SingularityTransformHelpers.TASK_CLEANUP_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
+  }
+
+  @GET
+  @Path("/killed")
+  @ApiOperation("Retrieve the list of killed tasks.")
+  public Iterable<SingularityKilledTaskIdRecord> getKilledTasks() {
+    return authorizationHelper.filterByAuthorizedRequests(user, taskManager.getKilledTaskIdRecords(), SingularityTransformHelpers.KILLED_TASK_ID_RECORD_TO_REQUEST_ID, SingularityAuthorizationScope.READ);
   }
 
   @GET
