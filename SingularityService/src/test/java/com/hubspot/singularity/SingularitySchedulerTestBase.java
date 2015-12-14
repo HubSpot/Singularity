@@ -1,7 +1,9 @@
 package com.hubspot.singularity;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -193,7 +195,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     SingularityPendingTask pendingTask = buildPendingTask(request, deploy, launchTime, instanceNo);
     SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
 
-    Offer offer = createOffer(125, 1024);
+    Offer offer = createOffer(125, 1024, String.format("slave%s", instanceNo), String.format("host%s", instanceNo));
 
     SingularityTaskId taskId = new SingularityTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, offer.getHostname(), "rack1");
     TaskID taskIdProto = TaskID.newBuilder().setValue(taskId.toString()).build();
@@ -334,7 +336,15 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void resourceOffers() {
-    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1"), createOffer(20, 20000, "slave2", "host2")));
+    resourceOffers(2);
+  }
+
+  protected void resourceOffers(int numSlaves) {
+    List<Offer> offers = new ArrayList<>();
+    for (int i = 1; i <= numSlaves; i++) {
+      offers.add(createOffer(20, 20000, String.format("slave%s", i), String.format("host%s", i)));
+    }
+    sms.resourceOffers(driver, offers);
   }
 
   protected void deploy(String deployId) {
