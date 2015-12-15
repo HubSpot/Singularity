@@ -163,9 +163,11 @@ public class SingularityConfiguration extends Configuration {
   private long saveStateEverySeconds = 60;
 
   @JsonProperty("sentry")
+  @Valid
   private SentryConfiguration sentryConfiguration;
 
   @JsonProperty("smtp")
+  @Valid
   private SMTPConfiguration smtpConfiguration;
 
   private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toSeconds(10);
@@ -208,6 +210,7 @@ public class SingularityConfiguration extends Configuration {
 
   @JsonProperty("auth")
   @NotNull
+  @Valid
   private AuthConfiguration authConfiguration = new AuthConfiguration();
 
   @NotNull
@@ -215,6 +218,7 @@ public class SingularityConfiguration extends Configuration {
 
   @JsonProperty("graphite")
   @NotNull
+  @Valid
   private GraphiteConfiguration graphiteConfiguration = new GraphiteConfiguration();
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
