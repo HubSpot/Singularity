@@ -2,9 +2,11 @@ package com.hubspot.singularity.resources;
 
 import static com.hubspot.singularity.WebExceptions.checkForbidden;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskState;
@@ -96,4 +98,10 @@ public class TestResource {
     managed.start();
   }
 
+  @POST
+  @Path("/exception")
+  @ApiOperation("Trigger an exception.")
+  public void throwException(@QueryParam("message") @DefaultValue("test exception") String message) {
+    throw new RuntimeException(message);
+  }
 }

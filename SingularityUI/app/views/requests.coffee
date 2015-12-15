@@ -63,7 +63,8 @@ class RequestsView extends View
             fuse = new Fuse(
                 requests
                 keys: ["request.id", "requestDeployState.activeDeploy.user", "request.owners"]
-                threshold: 0.4)
+                threshold: 0.4
+                maxPatternLength: 128)
             requests = fuse.search(searchFilter).reverse()
 
         # Only show requests that match the clicky filters

@@ -1,6 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -339,7 +340,10 @@ public class SingularityScheduler {
 
   private List<SingularityTaskId> getMatchingTaskIds(SingularitySchedulerStateCache stateCache, SingularityRequest request, SingularityPendingRequest pendingRequest) {
     if (request.isLongRunning()) {
-      return SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), request.getId(), pendingRequest.getDeployId(), stateCache.getCleaningTasks());
+      Collection<SingularityTaskId> exclude = Sets.newHashSet();
+      exclude.addAll(stateCache.getCleaningTasks());
+      exclude.addAll(stateCache.getKilledTasks());
+      return SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), request.getId(), pendingRequest.getDeployId(), exclude);
     } else {
       return Lists.newArrayList(Iterables.filter(stateCache.getActiveTaskIds(), SingularityTaskId.matchingRequest(request.getId())));
     }

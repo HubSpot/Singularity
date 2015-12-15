@@ -2,6 +2,9 @@
 <pre>{{ id }}</pre>
 <p>
 	Bouncing a request will cause replacement tasks to be scheduled
-	(and under normal conditions) executed immediately. Existing
-	tasks will be killed once replacement tasks are deemed healthy.
+	(and under normal conditions) executed immediately.
 </p>
+<label for="incremental-bounce" id="incremental-bounce-label">
+    <input type="radio" name="incremental" value="false" checked> Kill old tasks once ALL new tasks are healthy<br>
+    <input type="radio" name="incremental" id="incremental-bounce" value="true"> Kill old tasks as new tasks become healthy
+</label>

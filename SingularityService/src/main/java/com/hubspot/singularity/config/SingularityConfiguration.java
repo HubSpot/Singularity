@@ -104,6 +104,12 @@ public class SingularityConfiguration extends Configuration {
 
   private long healthcheckTimeoutSeconds = 5;
 
+  @NotNull
+  private Optional<Integer> healthcheckMaxRetries = Optional.absent();
+
+  @NotNull
+  private Optional<Long> healthcheckMaxTotalTimeoutSeconds = Optional.absent();
+
   private String hostname;
 
   private long killAfterTasksDoNotRunDefaultSeconds = 600;
@@ -121,7 +127,7 @@ public class SingularityConfiguration extends Configuration {
 
   private String loadBalancerUri;
 
-  private boolean deletePausedRequestsFromLoadBalancer = true;
+  private boolean deleteRemovedRequestsFromLoadBalancer = false;
 
   private int logFetchMaxThreads = 15;
 
@@ -369,6 +375,14 @@ public class SingularityConfiguration extends Configuration {
 
   public long getHealthcheckTimeoutSeconds() {
     return healthcheckTimeoutSeconds;
+  }
+
+  public Optional<Integer> getHealthcheckMaxRetries() {
+    return healthcheckMaxRetries;
+  }
+
+  public Optional<Long> getHealthcheckMaxTotalTimeoutSeconds() {
+    return healthcheckMaxTotalTimeoutSeconds;
   }
 
   public Optional<String> getHostname() {
@@ -683,6 +697,14 @@ public class SingularityConfiguration extends Configuration {
     this.healthcheckTimeoutSeconds = healthcheckTimeoutSeconds;
   }
 
+  public void setHealthcheckMaxRetries(Optional<Integer> healthcheckMaxRetries) {
+    this.healthcheckMaxRetries = healthcheckMaxRetries;
+  }
+
+  public void setHealthcheckMaxTotalTimeoutSeconds(Optional<Long> healthcheckMaxTotalTimeoutSeconds) {
+    this.healthcheckMaxTotalTimeoutSeconds = healthcheckMaxTotalTimeoutSeconds;
+  }
+
   public void setHostname(String hostname) {
     this.hostname = hostname;
   }
@@ -851,11 +873,11 @@ public class SingularityConfiguration extends Configuration {
     this.graphiteConfiguration = graphiteConfiguration;
   }
 
-  public boolean isDeletePausedRequestsFromLoadBalancer() {
-    return deletePausedRequestsFromLoadBalancer;
+  public boolean isDeleteRemovedRequestsFromLoadBalancer() {
+    return deleteRemovedRequestsFromLoadBalancer;
   }
 
-  public void setDeletePausedRequestsFromLoadBalancer(boolean deletePausedRequestsFromLoadBalancer) {
-    this.deletePausedRequestsFromLoadBalancer = deletePausedRequestsFromLoadBalancer;
+  public void setDeleteRemovedRequestsFromLoadBalancer(boolean deleteRemovedRequestsFromLoadBalancer) {
+    this.deleteRemovedRequestsFromLoadBalancer = deleteRemovedRequestsFromLoadBalancer;
   }
 }

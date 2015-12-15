@@ -25,6 +25,8 @@ DEFAULT_TASK_COUNT = 20
 DEFAULT_DAYS = 7
 DEFAULT_S3_PATTERN = '%requestId/%%Y/%m/%taskId_%index-%s-%filename'
 
+IS_A_TTY = sys.stdout.isatty()
+
 def exit(reason, color='red'):
   sys.stderr.write(colored(reason, color) + '\n')
   sys.exit(1)
@@ -145,8 +147,12 @@ def fetch():
   parser.add_argument("-U", "--use-cache", dest="use_cache", help="Use cache for live logs, don't re-download them", action='store_true')
   parser.add_argument("--search", dest="search", help="run logsearch on the local cache of downloaded files", action='store_true')
   parser.add_argument("-V", "--verbose", dest="verbose", help="Print more verbose output", action='store_true')
+  parser.add_argument("--silent", dest="silent", help="No stderr (progress, file names, etc) output", action='store_true')
 
   args = parser.parse_args(remaining_argv)
+
+  if not IS_A_TTY:
+    args.silent = True
 
   check_args(args)
   args.start = convert_to_date(args, args.start, True)
@@ -156,7 +162,8 @@ def fetch():
   try:
     setattr(args, 'headers', dict(config.items("Request Headers")))
   except:
-    sys.stderr.write('No additional request headers found\n')
+    if not args.silent:
+      sys.stderr.write('No additional request headers found\n')
     setattr(args, 'headers', {})
 
   if args.search:
@@ -202,11 +209,16 @@ def search():
   parser.add_argument("-g", "--grep", dest="grep", help="Regex to grep for (normal grep syntax) or a full grep command")
   parser.add_argument("-z", "--local-zone", dest="zone", help="If specified, input times in the local time zone and convert to UTC, if not specified inputs are assumed to be UTC", action="store_true")
   parser.add_argument("-V", "--verbose", dest="verbose", help="Print more verbose output", action='store_true')
+  parser.add_argument("--silent", dest="silent", help="No stderr (progress, file names, etc) output", action='store_true')
 
   args, unknown = parser.parse_known_args(remaining_argv)
 
+  if not IS_A_TTY:
+    args.silent = True
+
   if args.verbose and unknown:
-    sys.stderr.write(colored('Found unknown args {0}'.format(unknown), 'magenta'))
+    if not args.silent:
+      sys.stderr.write(colored('Found unknown args {0}'.format(unknown), 'magenta'))
 
   check_args(args)
   args.start = convert_to_date(args, args.start, True)
@@ -264,8 +276,12 @@ def cat():
   parser.add_argument("-L", "--skip-live", dest="skip_live", help="Don't download/search live logs", action='store_true')
   parser.add_argument("-U", "--use-cache", dest="use_cache", help="Use cache for live logs, don't re-download them", action='store_true')
   parser.add_argument("-V", "--verbose", dest="verbose", help="Print more verbose output", action='store_true')
+  parser.add_argument("--silent", dest="silent", help="No stderr (progress, file names, etc) output", action='store_true')
 
   args = parser.parse_args(remaining_argv)
+
+  if not IS_A_TTY:
+    args.silent = True
 
   check_args(args)
   args.start = convert_to_date(args, args.start, True)
@@ -275,7 +291,8 @@ def cat():
   try:
     setattr(args, 'headers', dict(config.items("Request Headers")))
   except:
-    sys.stderr.write('No additional request headers found\n')
+    if not args.silent:
+      sys.stderr.write('No additional request headers found\n')
     setattr(args, 'headers', {})
 
 
@@ -310,8 +327,12 @@ def tail():
   parser.add_argument("-g", "--grep", dest="grep", help="String to grep for")
   parser.add_argument("-l", "--logfile", dest="logfile", help="Logfile path/name to tail (ie 'logs/access.log')")
   parser.add_argument("-V", "--verbose", dest="verbose", help="more verbose output", action='store_true')
+  parser.add_argument("--silent", dest="silent", help="No stderr (progress, file names, etc) output", action='store_true')
 
   args = parser.parse_args(remaining_argv)
+
+  if not IS_A_TTY:
+    args.silent = True
 
   if not args.logfile:
     exit("Must specify logfile to tail (-l)")
@@ -321,7 +342,8 @@ def tail():
   try:
     setattr(args, 'headers', dict(config.items("Request Headers")))
   except:
-    sys.stderr.write('No additional request headers found\n')
+    if not args.silent:
+      sys.stderr.write('No additional request headers found\n')
     setattr(args, 'headers', {})
 
 

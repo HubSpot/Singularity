@@ -16,15 +16,18 @@ BROWSE_FOLDER_FORMAT = '{0}/sandbox/{1}/browse'
 
 def start_tail(args):
   if args.requestId:
-    sys.stderr.write('Fetching tasks\n')
+    if not args.silent:
+      sys.stderr.write('Fetching tasks\n')
     tasks = [str(t) for t in logfetch_base.tasks_for_requests(args)]
   else:
     tasks = [args.taskId]
   if args.verbose:
     sys.stderr.write(colored('Tailing logs for tasks:\n', 'green'))
-    for t in tasks:
-      sys.stderr.write(colored('{0}\n'.format(t), 'yellow'))
-  sys.stderr.write(colored('ctrl+c to exit\n', 'cyan'))
+    if not args.silent:
+      for t in tasks:
+        sys.stderr.write(colored('{0}\n'.format(t), 'yellow'))
+  if not args.silent:
+    sys.stderr.write(colored('ctrl+c to exit\n', 'cyan'))
   try:
     threads = []
     for task in tasks:
@@ -36,7 +39,8 @@ def start_tail(args):
       if not t.isAlive:
         break
   except KeyboardInterrupt:
-    sys.stderr.write(colored('Stopping tail', 'magenta') + '\n')
+    if not args.silent:
+      sys.stderr.write(colored('Stopping tail', 'magenta') + '\n')
     sys.exit(0)
 
 def logs_folder_files(args, task):
@@ -82,7 +86,7 @@ class LogStreamer(threading.Thread):
       logfile_response.raise_for_status()
       offset = long(logfile_response.json()['offset'])
     except ValueError:
-      sys.stderr.write(colored('Could get initial offset for log in task {0}, check that the task is still active and that the slave it runs on has not been decommissioned\n'.format(task), 'red'))
+      sys.stderr.write(colored('Could not get initial offset for log in task {0}, check that the task is still active and that the slave it runs on has not been decommissioned\n'.format(task), 'red'))
       keep_trying = False
     except:
       sys.stderr.write(colored('Could not find log file at path {0} for task {1}, check your -l arg and try again\n'.format(args.logfile, task), 'red'))

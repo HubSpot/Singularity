@@ -41,6 +41,8 @@ class TasksView extends View
         @bodyTemplate = @bodyTemplateMap[@state]
 
         @listenTo @collection, 'sync', @render
+        @listenTo @collection.cleaning, 'reset', @render
+        @listenTo @collection.killing, 'reset', @render
 
         @searchChange = _.debounce @searchChange, 200
 
@@ -50,12 +52,9 @@ class TasksView extends View
 
         # Only show tasks that match the search query
         if @searchFilter
-            searchFilter = @searchFilter.toLowerCase()
-            fuse = new Fuse(
-                tasks
-                keys: ["id", "host"]
-                threshold: 0.4)
-            tasks = fuse.search(searchFilter).reverse()
+            tasks = _.filter tasks, (task) =>
+                searchField = "#{ task.id }#{ task.host }".toLowerCase().replace(/-/g, '_')
+                searchField.toLowerCase().indexOf(@searchFilter.toLowerCase().replace(/-/g, '_')) isnt -1
         # Sort the table if the user clicked on the table heading things
         if @sortAttribute?
             tasks = _.sortBy tasks, (task) =>
@@ -125,7 +124,7 @@ class TasksView extends View
         tasks = @currentTasks.slice(@renderProgress, newProgress)
         @renderProgress = newProgress
 
-        decomTasks = @attributes.cleaning.pluck('taskId')
+        decomTasks = _.union(@attributes.cleaning.pluck('taskId'), @attributes.killing.pluck('taskId'))
         $contents = @bodyTemplate
             tasks: tasks
             rowsOnly: true

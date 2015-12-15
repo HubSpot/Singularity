@@ -15,7 +15,6 @@ class TaskView extends View
         _.extend super,
             'click [data-action="viewObjectJSON"]': 'viewJson'
             'click [data-action="viewJsonProperty"]': 'viewJsonProperty'
-            'click [data-action="remove"]': 'killTask'
             'submit [data-action="runShell"]': 'executeCommand'
             'change [data-action="cmd"]': 'cmdSelected'
 
@@ -68,12 +67,6 @@ class TaskView extends View
 
         utils.viewJSON modelClone
 
-    killTask: (event) ->
-        taskModel = new Task id: @taskId
-        taskModel.promptKill =>
-            setTimeout (=> @trigger 'refreshrequest'), 1000
-
-
     executeCommand: (event) ->
         event.preventDefault()
         cmd = $("#cmd option:selected").text()
@@ -93,7 +86,10 @@ class TaskView extends View
         cmd = config.shellCommands.filter((cmd) ->
           return cmd.name is $("#cmd option:selected").text()
         )[0]
-        console.log cmd
+
+        @subviews.shellCommands.selectedCommandIndex = $("#cmd").prop('selectedIndex')
+        @subviews.shellCommands.selectedCommandDescription = cmd.description or ''
+
         $('.cmd-description').text(cmd.description or '')
         $('#btn_exec').prop("disabled", false)
 

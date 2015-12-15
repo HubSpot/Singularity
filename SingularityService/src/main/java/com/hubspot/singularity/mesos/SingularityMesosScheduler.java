@@ -299,7 +299,7 @@ public class SingularityMesosScheduler implements Scheduler {
     try {
       return Optional.of(taskIdTranscoder.fromString(taskId));
     } catch (InvalidSingularityTaskIdException | SingularityTranscoderException e) {
-      exceptionNotifier.notify(e, Collections.<String, String>emptyMap());
+      exceptionNotifier.notify(e);
       LOG.error("Unexpected taskId {} ", taskId, e);
       return Optional.absent();
     }
@@ -353,7 +353,7 @@ public class SingularityMesosScheduler implements Scheduler {
         }
       } else {
         final String message = String.format("Task %s is active but is missing task data", taskId);
-        exceptionNotifier.notify(message, Collections.<String, String>emptyMap());
+        exceptionNotifier.notify(message);
         LOG.error(message);
       }
     }
