@@ -35,6 +35,8 @@ class Request extends Model
         data.instances = data.request.instances or 1
         data.hasMoreThanOneInstance = data.instances > 1
 
+        data.bounceAfterScale = data.request.bounceAfterScale
+
         data.paused = data.state is 'PAUSED'
         data.deleted = data.state is 'DELETED'
         data.inCooldown = data.state is 'SYSTEM_COOLDOWN'
@@ -122,6 +124,7 @@ class Request extends Model
         vex.dialog.prompt
             message: scaleTemplate
                 id: @get "id"
+                bounceAfterScale: @get "bounceAfterScale"
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.YES), text: 'Scale'
                 vex.dialog.buttons.NO

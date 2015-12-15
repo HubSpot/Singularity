@@ -37,6 +37,7 @@ public class SingularityRequestBuilder {
 
   private Optional<String> group;
   private Optional<Set<String>> readOnlyGroups;
+  private Optional<Boolean> bounceAfterScale;
 
   public SingularityRequestBuilder(String id, RequestType requestType) {
     this.id = id;
@@ -57,11 +58,12 @@ public class SingularityRequestBuilder {
     this.waitAtLeastMillisAfterTaskFinishesForReschedule = Optional.absent();
     this.group = Optional.absent();
     this.readOnlyGroups = Optional.absent();
+    this.bounceAfterScale = Optional.absent();
   }
 
   public SingularityRequest build() {
     return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, daemon, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule,
-        rackAffinity, slavePlacement, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readOnlyGroups);
+        rackAffinity, slavePlacement, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readOnlyGroups, bounceAfterScale);
   }
 
   public Optional<Boolean> getLoadBalanced() {
@@ -218,6 +220,15 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  public Optional<Boolean> getBounceAfterScale() {
+    return bounceAfterScale;
+  }
+
+  public SingularityRequestBuilder setBounceAfterScale(Optional<Boolean> bounceAfterScale) {
+    this.bounceAfterScale = bounceAfterScale;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityRequestBuilder[" +
@@ -239,6 +250,7 @@ public class SingularityRequestBuilder {
             ", loadBalanced=" + loadBalanced +
             ", group=" + group +
             ", readOnlyGroups=" + readOnlyGroups +
+            ", bounceAfterScale=" + bounceAfterScale +
             ']';
   }
 
@@ -266,11 +278,13 @@ public class SingularityRequestBuilder {
             Objects.equals(rackAffinity, that.rackAffinity) &&
             Objects.equals(slavePlacement, that.slavePlacement) &&
             Objects.equals(loadBalanced, that.loadBalanced) &&
-            Objects.equals(group, that.group);
+            Objects.equals(group, that.group) &&
+            Objects.equals(readOnlyGroups, that.readOnlyGroups) &&
+            Objects.equals(bounceAfterScale, that.bounceAfterScale);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, loadBalanced, group);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, loadBalanced, group, readOnlyGroups, bounceAfterScale);
   }
 }

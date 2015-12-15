@@ -42,6 +42,7 @@ public class SingularityRequest {
 
   private final Optional<String> group;
   private final Optional<Set<String>> readOnlyGroups;
+  private final Optional<Boolean> bounceAfterScale;
 
   @JsonCreator
   public SingularityRequest(@JsonProperty("id") String id, @JsonProperty("requestType") RequestType requestType, @JsonProperty("owners") Optional<List<String>> owners,
@@ -51,7 +52,7 @@ public class SingularityRequest {
       @JsonProperty("quartzSchedule") Optional<String> quartzSchedule, @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity,
       @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement, @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis,
       @JsonProperty("waitAtLeastMillisAfterTaskFinishesForReschedule") Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule, @JsonProperty("group") Optional<String> group,
-      @JsonProperty("readOnlyGroups") Optional<Set<String>> readOnlyGroups) {
+      @JsonProperty("readOnlyGroups") Optional<Set<String>> readOnlyGroups, @JsonProperty("bounceAfterScale") Optional<Boolean> bounceAfterScale) {
     this.id = id;
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
@@ -69,6 +70,7 @@ public class SingularityRequest {
     this.waitAtLeastMillisAfterTaskFinishesForReschedule = waitAtLeastMillisAfterTaskFinishesForReschedule;
     this.group = group;
     this.readOnlyGroups = readOnlyGroups;
+    this.bounceAfterScale = bounceAfterScale;
 
     if (requestType == null) {
       this.requestType = RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced);
@@ -93,7 +95,8 @@ public class SingularityRequest {
     .setSlavePlacement(slavePlacement)
     .setScheduledExpectedRuntimeMillis(scheduledExpectedRuntimeMillis)
     .setGroup(group)
-    .setReadOnlyGroups(readOnlyGroups);
+    .setReadOnlyGroups(readOnlyGroups)
+    .setBounceAfterScale(bounceAfterScale);
   }
 
   public String getId() {
@@ -229,6 +232,10 @@ public class SingularityRequest {
     return readOnlyGroups;
   }
 
+  public boolean isBounceAfterScale() {
+    return bounceAfterScale.or(Boolean.FALSE).booleanValue();
+  }
+
   @Override
   public String toString() {
     return "SingularityRequest[" +
@@ -250,6 +257,7 @@ public class SingularityRequest {
             ", loadBalanced=" + loadBalanced +
             ", group=" + group +
             ", readOnlyGroups=" + readOnlyGroups +
+            ", bounceAfterScale=" + bounceAfterScale +
             ']';
   }
 
@@ -278,11 +286,12 @@ public class SingularityRequest {
             Objects.equals(slavePlacement, request.slavePlacement) &&
             Objects.equals(loadBalanced, request.loadBalanced) &&
             Objects.equals(group, request.group) &&
-            Objects.equals(readOnlyGroups, request.readOnlyGroups);
+            Objects.equals(readOnlyGroups, request.readOnlyGroups) &&
+            Objects.equals(bounceAfterScale, request.bounceAfterScale);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, loadBalanced, group, readOnlyGroups);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, loadBalanced, group, readOnlyGroups, bounceAfterScale);
   }
 }
