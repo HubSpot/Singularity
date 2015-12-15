@@ -21,6 +21,8 @@ class FileBrowserSubview extends View
         offset = @$el.offset().top
 
         breadcrumbs = utils.pathToBreadcrumbs @collection.currentDirectory
+        timeSinceStart = if @task.get('task')?.taskId?.startedAt then new Date().getTime() - @task.get('task').taskId.startedAt else 0
+        startingUp = timeSinceStart < 1000 * 60 * 60 # 1 Hour
 
         @$el.html @template
             synced:      @collection.synced
@@ -28,6 +30,7 @@ class FileBrowserSubview extends View
             path:        @collection.path
             breadcrumbs: breadcrumbs
             task:        @task.toJSON()
+            startingUp:  startingUp
 
         # make sure body is large enough so we can fit the browser
         minHeight = @$el.offset().top + $(window).height()
