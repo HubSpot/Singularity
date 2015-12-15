@@ -124,7 +124,7 @@ class TasksView extends View
         tasks = @currentTasks.slice(@renderProgress, newProgress)
         @renderProgress = newProgress
 
-        decomTasks = _.union(_.pluck(@cleaningTasks.where(cleanupType: 'DECOMISSIONING'), 'taskId'), _.pluck(@taskKillRecords.where(taskCleanupType: 'DECOMISSIONING'), 'taskId'))
+        decomTasks = _.union(_.pluck(_.map(@cleaningTasks.where(cleanupType: 'DECOMISSIONING'), (t) -> t.toJSON()), 'taskId'), _.pluck(_.map(@taskKillRecords.where(taskCleanupType: 'DECOMISSIONING'), (t) -> t.toJSON()), 'taskId'))
         $contents = @bodyTemplate
             tasks: tasks
             rowsOnly: true
