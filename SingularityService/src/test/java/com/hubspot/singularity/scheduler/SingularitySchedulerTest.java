@@ -415,10 +415,11 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   @Test
   public void testOneOffsDontMoveDuringDecomission() {
     SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND);
+
     requestResource.submit(bldr.build());
     deploy("d2");
 
-    requestResource.scheduleImmediately(requestId, Optional.<String>absent(), Collections.<String>emptyList());
+    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList());
 
     validateTaskDoesntMoveDuringDecommission();
   }
