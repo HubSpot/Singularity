@@ -49,10 +49,4 @@ class View extends Backbone.View
           next: '<span class="glyphicon glyphicon-chevron-right"></span>'
       $('table.paginated').css('display', 'table');
 
-      $searchInput = $('.big-search-box')
-      strLength = $searchInput.val().length * 2
-      if strLength > 0
-        $searchInput.focus()
-        $searchInput[0].setSelectionRange(strLength, strLength)
-
 module.exports = View
