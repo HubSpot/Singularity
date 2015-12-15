@@ -6,26 +6,28 @@ import com.google.common.base.Optional;
 
 public class SingularityPauseRequest {
 
-  private final Optional<String> user;
   private final Optional<Boolean> killTasks;
+  private final Optional<Long> durationMillis;
 
   @JsonCreator
-  public SingularityPauseRequest(@JsonProperty("user") Optional<String> user, @JsonProperty("killTasks") Optional<Boolean> killTasks) {
-    this.user = user;
+  public SingularityPauseRequest(
+      @JsonProperty("killTasks") Optional<Boolean> killTasks,
+      @JsonProperty("durationMillis") Optional<Long> durationMillis) {
     this.killTasks = killTasks;
-  }
-
-  public Optional<String> getUser() {
-    return user;
+    this.durationMillis = durationMillis;
   }
 
   public Optional<Boolean> getKillTasks() {
     return killTasks;
   }
 
+  public Optional<Long> getDurationMillis() {
+    return durationMillis;
+  }
+
   @Override
   public String toString() {
-    return "SingularityPauseRequest [user=" + user + ", killTasks=" + killTasks + "]";
+    return "SingularityPauseRequest [killTasks=" + killTasks + ", durationMillis=" + durationMillis + "]";
   }
 
 }

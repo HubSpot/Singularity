@@ -135,7 +135,7 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
     Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
 
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, System.currentTimeMillis(), PendingType.ONEOFF));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, System.currentTimeMillis(), Optional.<String> absent(), PendingType.ONEOFF, Optional.<Boolean> absent()));
 
     startup.checkSchedulerForInconsistentState();
 

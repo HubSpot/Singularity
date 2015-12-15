@@ -38,6 +38,7 @@ import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderException;
@@ -57,6 +58,7 @@ public class SingularityMesosScheduler implements Scheduler {
   private final Resources defaultResources;
   private final Resources defaultCustomExecutorResources;
   private final TaskManager taskManager;
+  private final RequestManager requestManager;
   private final DeployManager deployManager;
   private final SingularityScheduler scheduler;
   private final SingularityConfiguration configuration;
@@ -78,7 +80,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
   @Inject
   SingularityMesosScheduler(MesosConfiguration mesosConfiguration, SingularityConfiguration configuration, TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager,
-      SingularitySchedulerPriority schedulerPriority, SingularityNewTaskChecker newTaskChecker, SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport,
+      SingularitySchedulerPriority schedulerPriority, SingularityNewTaskChecker newTaskChecker, SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, RequestManager requestManager,
       Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager, SingularityExceptionNotifier exceptionNotifier, SingularityMesosFrameworkMessageHandler messageHandler,
       @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier, final IdTranscoder<SingularityTaskId> taskIdTranscoder, CustomExecutorConfiguration customExecutorConfiguration) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
@@ -98,6 +100,7 @@ public class SingularityMesosScheduler implements Scheduler {
     this.schedulerDriverSupplier = schedulerDriverSupplier;
     this.taskIdTranscoder = taskIdTranscoder;
     this.exceptionNotifier = exceptionNotifier;
+    this.requestManager = requestManager;
     this.configuration = configuration;
   }
 
@@ -328,7 +331,7 @@ public class SingularityMesosScheduler implements Scheduler {
         final Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
 
         if (taskState == ExtendedTaskState.TASK_RUNNING) {
-          healthchecker.enqueueHealthcheck(task.get(), pendingDeploy);
+          healthchecker.enqueueHealthcheck(task.get(), pendingDeploy, requestManager.getRequest(taskIdObj.getRequestId()));
         }
 
         if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {

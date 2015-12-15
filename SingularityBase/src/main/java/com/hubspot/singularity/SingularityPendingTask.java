@@ -17,6 +17,7 @@ public class SingularityPendingTask {
   private final List<String> cmdLineArgsList;
   private final Optional<String> user;
   private final Optional<String> runId;
+  private final Optional<Boolean> skipHealthchecks;
 
   public static Predicate<SingularityPendingTask> matchingRequest(final String requestId) {
     return new Predicate<SingularityPendingTask>() {
@@ -42,11 +43,12 @@ public class SingularityPendingTask {
 
   @JsonCreator
   public SingularityPendingTask(@JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId, @JsonProperty("cmdLineArgsList") List<String> cmdLineArgsList,
-      @JsonProperty("user") Optional<String> user, @JsonProperty("runId") Optional<String> runId) {
+      @JsonProperty("user") Optional<String> user, @JsonProperty("runId") Optional<String> runId, @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks) {
     this.pendingTaskId = pendingTaskId;
     this.user = user;
     this.cmdLineArgsList = JavaUtils.nonNullImmutable(cmdLineArgsList);
     this.runId = runId;
+    this.skipHealthchecks = skipHealthchecks;
   }
 
   @Override
@@ -85,9 +87,13 @@ public class SingularityPendingTask {
     return runId;
   }
 
+  public Optional<Boolean> getSkipHealthchecks() {
+    return skipHealthchecks;
+  }
+
   @Override
   public String toString() {
-    return "SingularityPendingTask [pendingTaskId=" + pendingTaskId + ", cmdLineArgsList=" + cmdLineArgsList + ", user=" + user + ", runId=" + runId + "]";
+    return "SingularityPendingTask [pendingTaskId=" + pendingTaskId + ", cmdLineArgsList=" + cmdLineArgsList + ", user=" + user + ", runId=" + runId + ", skipHealthchecks=" + skipHealthchecks + "]";
   }
 
 }

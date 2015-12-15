@@ -11,7 +11,6 @@ import java.util.Random;
 
 import javax.inject.Provider;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +19,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.horizon.HttpClient;
@@ -459,21 +457,11 @@ public class SingularityClient {
   // ACTIONS ON A DEPLOY FOR A SINGULARITY REQUEST
   //
 
-  public SingularityRequestParent createDeployForSingularityRequest(String requestId, SingularityDeploy pendingDeploy, Optional<Boolean> deployUnpause, Optional<String> user) {
+  public SingularityRequestParent createDeployForSingularityRequest(String requestId, SingularityDeploy pendingDeploy, Optional<Boolean> deployUnpause) {
     final String requestUri = String.format(DEPLOYS_FORMAT, getHost(), contextPath);
 
-    List<Pair<String, String>> queryParams = Lists.newArrayList();
-
-    if (user.isPresent()) {
-      queryParams.add(Pair.of("user", user.get()));
-    }
-
-    if (deployUnpause.isPresent()) {
-      queryParams.add(Pair.of("deployUnpause", Boolean.toString(deployUnpause.get())));
-    }
-
     HttpResponse response = post(requestUri, String.format("new deploy %s", new SingularityDeployKey(requestId, pendingDeploy.getId())),
-        Optional.of(new SingularityDeployRequest(pendingDeploy, user, deployUnpause)), Optional.<String> absent());
+        Optional.of(new SingularityDeployRequest(pendingDeploy, deployUnpause)), Optional.<String> absent());
 
     return getAndLogRequestAndDeployStatus(response.getAs(SingularityRequestParent.class));
   }

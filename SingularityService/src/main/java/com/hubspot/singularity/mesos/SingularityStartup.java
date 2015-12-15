@@ -158,7 +158,7 @@ class SingularityStartup {
       }
     }
 
-    requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), activeDeployId, timestamp, PendingType.STARTUP));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), activeDeployId, timestamp, Optional.<String> absent(), PendingType.STARTUP, Optional.<Boolean> absent()));
   }
 
   private void enqueueHealthAndNewTaskChecks() {
@@ -170,7 +170,9 @@ class SingularityStartup {
     final Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> taskUpdates = taskManager.getTaskHistoryUpdates(activeTaskMap.keySet());
 
     final Map<SingularityDeployKey, SingularityPendingDeploy> pendingDeploys = Maps.uniqueIndex(deployManager.getPendingDeploys(), SingularityDeployKey.FROM_PENDING_TO_DEPLOY_KEY);
+    final Map<String, SingularityRequestWithState> idToRequest = Maps.uniqueIndex(requestManager.getRequests(), SingularityRequestWithState.REQUEST_STATE_TO_REQUEST_ID);
 
+    requestManager.getActiveRequests();
     int enqueuedNewTaskChecks = 0;
     int enqueuedHealthchecks = 0;
 
@@ -188,7 +190,7 @@ class SingularityStartup {
           enqueuedNewTaskChecks++;
         }
         if (simplifiedTaskState == SimplifiedTaskState.RUNNING) {
-          if (healthchecker.enqueueHealthcheck(task, pendingDeploy)) {
+          if (healthchecker.enqueueHealthcheck(task, pendingDeploy, Optional.fromNullable(idToRequest.get(taskId.getRequestId())))) {
             enqueuedHealthchecks++;
           }
         }

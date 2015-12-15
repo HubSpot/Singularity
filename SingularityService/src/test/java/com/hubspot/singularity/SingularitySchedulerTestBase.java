@@ -184,7 +184,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected SingularityPendingTask buildPendingTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo) {
     SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, PendingType.IMMEDIATE, launchTime);
-    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Collections.<String> emptyList(), Optional.<String> absent(), Optional.<String> absent());
+    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Collections.<String> emptyList(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent());
 
     return pendingTask;
   }
@@ -342,7 +342,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void deploy(String deployId, Optional<Boolean> unpauseOnDeploy) {
-    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, deployId).setCommand(Optional.of("sleep 1")).build(), Optional.<String> absent(), unpauseOnDeploy));
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, deployId).setCommand(Optional.of("sleep 1")).build(), unpauseOnDeploy));
   }
 
   protected SingularityPendingTask createAndSchedulePendingTask(String deployId) {
@@ -351,7 +351,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(requestId, deployId,
         System.currentTimeMillis() + TimeUnit.DAYS.toMillis(random.nextInt(3)), random.nextInt(10), PendingType.IMMEDIATE, System.currentTimeMillis());
 
-    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Collections.<String> emptyList(), Optional.<String> absent(), Optional.<String> absent());
+    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Collections.<String> emptyList(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent());
 
     taskManager.savePendingTask(pendingTask);
 
@@ -360,7 +360,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected void saveAndSchedule(SingularityRequestBuilder bldr) {
     requestManager.activate(bldr.build(), RequestHistoryType.UPDATED, System.currentTimeMillis(), Optional.<String> absent());
-    requestManager.addToPendingQueue(new SingularityPendingRequest(bldr.getId(), firstDeployId, System.currentTimeMillis(), PendingType.UPDATED_REQUEST));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(bldr.getId(), firstDeployId, System.currentTimeMillis(), Optional.<String> absent(), PendingType.UPDATED_REQUEST, Optional.<Boolean> absent()));
     scheduler.drainPendingQueue(stateCacheProvider.get());
   }
 

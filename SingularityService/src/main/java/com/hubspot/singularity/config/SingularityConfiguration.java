@@ -38,6 +38,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long checkNewTasksEverySeconds = 5;
 
+  private long checkTimedUserActionEveryMillis = TimeUnit.MINUTES.toMillis(5);
+
   private int checkNewTasksScheduledThreads = 3;
 
   private long checkReconcileWhenRunningEveryMillis = TimeUnit.SECONDS.toMillis(30);
@@ -250,6 +252,10 @@ public class SingularityConfiguration extends Configuration {
 
   public long getCheckWebhooksEveryMillis() {
     return checkWebhooksEveryMillis;
+  }
+
+  public long getCheckTimedUserActionEveryMillis() {
+    return checkTimedUserActionEveryMillis;
   }
 
   public long getCleanupEverySeconds() {

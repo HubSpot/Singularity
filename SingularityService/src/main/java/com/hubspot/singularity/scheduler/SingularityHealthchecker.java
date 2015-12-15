@@ -21,6 +21,7 @@ import com.hubspot.singularity.HealthcheckProtocol;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingDeploy;
+import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -84,8 +85,8 @@ public class SingularityHealthchecker {
   }
 
   @Timed
-  public boolean enqueueHealthcheck(SingularityTask task, Optional<SingularityPendingDeploy> pendingDeploy) {
-    if (!shouldHealthcheck(task, pendingDeploy)) {
+  public boolean enqueueHealthcheck(SingularityTask task, Optional<SingularityPendingDeploy> pendingDeploy, Optional<SingularityRequestWithState> request) {
+    if (!shouldHealthcheck(task, request, pendingDeploy)) {
       return false;
     }
 
@@ -168,12 +169,20 @@ public class SingularityHealthchecker {
     handler.saveResult(Optional.<Integer> absent(), Optional.<String> absent(), Optional.of(message));
   }
 
-  private boolean shouldHealthcheck(final SingularityTask task, Optional<SingularityPendingDeploy> pendingDeploy) {
+  private boolean shouldHealthcheck(final SingularityTask task, final Optional<SingularityRequestWithState> request, Optional<SingularityPendingDeploy> pendingDeploy) {
     if (!task.getTaskRequest().getRequest().isLongRunning() || !task.getTaskRequest().getDeploy().getHealthcheckUri().isPresent()) {
       return false;
     }
 
+    if (task.getTaskRequest().getPendingTask().getSkipHealthchecks().or(false)) {
+      return false;
+    }
+
     if (pendingDeploy.isPresent() && pendingDeploy.get().getDeployMarker().getDeployId().equals(task.getTaskId().getDeployId()) && task.getTaskRequest().getDeploy().getSkipHealthchecksOnDeploy().or(false)) {
+      return false;
+    }
+
+    if (request.isPresent() && request.get().getRequest().getSkipHealthchecks().or(false)) {
       return false;
     }
 

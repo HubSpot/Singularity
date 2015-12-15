@@ -33,6 +33,7 @@ public class SingularityRequest {
   private final Optional<Boolean> daemon;
 
   private final Optional<Integer> instances;
+  private final Optional<Boolean> skipHealthchecks;
 
   private final Optional<Boolean> rackSensitive;
   private final Optional<List<String>> rackAffinity;
@@ -51,7 +52,7 @@ public class SingularityRequest {
       @JsonProperty("quartzSchedule") Optional<String> quartzSchedule, @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity,
       @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement, @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis,
       @JsonProperty("waitAtLeastMillisAfterTaskFinishesForReschedule") Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule, @JsonProperty("group") Optional<String> group,
-      @JsonProperty("readOnlyGroups") Optional<Set<String>> readOnlyGroups) {
+      @JsonProperty("readOnlyGroups") Optional<Set<String>> readOnlyGroups, @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks) {
     this.id = id;
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
@@ -69,6 +70,7 @@ public class SingularityRequest {
     this.waitAtLeastMillisAfterTaskFinishesForReschedule = waitAtLeastMillisAfterTaskFinishesForReschedule;
     this.group = group;
     this.readOnlyGroups = readOnlyGroups;
+    this.skipHealthchecks = skipHealthchecks;
 
     if (requestType == null) {
       this.requestType = RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced);
@@ -227,6 +229,10 @@ public class SingularityRequest {
 
   public Optional<Set<String>> getReadOnlyGroups() {
     return readOnlyGroups;
+  }
+
+  public Optional<Boolean> getSkipHealthchecks() {
+    return skipHealthchecks;
   }
 
   @Override

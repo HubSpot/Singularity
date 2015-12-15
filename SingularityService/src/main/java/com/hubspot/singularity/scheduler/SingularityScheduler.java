@@ -1,7 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -95,9 +94,9 @@ public class SingularityScheduler {
     this.cooldown = cooldown;
   }
 
-  private void cleanupTaskDueToDecomission(final Set<String> requestIdsToReschedule, final Set<SingularityTaskId> matchingTaskIds, SingularityTask task,
+  private void cleanupTaskDueToDecomission(final Map<String, Optional<String>> requestIdsToUserToReschedule, final Set<SingularityTaskId> matchingTaskIds, SingularityTask task,
       SingularityMachineAbstraction<?> decommissioningObject) {
-    requestIdsToReschedule.add(task.getTaskRequest().getRequest().getId());
+    requestIdsToUserToReschedule.put(task.getTaskRequest().getRequest().getId(), decommissioningObject.getCurrentState().getUser());
 
     matchingTaskIds.add(task.getTaskId());
 
@@ -119,7 +118,7 @@ public class SingularityScheduler {
   public void checkForDecomissions(SingularitySchedulerStateCache stateCache) {
     final long start = System.currentTimeMillis();
 
-    final Set<String> requestIdsToReschedule = Sets.newHashSet();
+    final Map<String, Optional<String>> requestIdsToUserToReschedule = Maps.newHashMap();
     final Set<SingularityTaskId> matchingTaskIds = Sets.newHashSet();
 
     final Collection<SingularityTaskId> activeTaskIds = stateCache.getActiveTaskIds();
@@ -130,7 +129,7 @@ public class SingularityScheduler {
       boolean foundTask = false;
 
       for (SingularityTask activeTask : taskManager.getTasksOnSlave(activeTaskIds, slave)) {
-        cleanupTaskDueToDecomission(requestIdsToReschedule, matchingTaskIds, activeTask, slave);
+        cleanupTaskDueToDecomission(requestIdsToUserToReschedule, matchingTaskIds, activeTask, slave);
         foundTask = true;
       }
 
@@ -157,7 +156,7 @@ public class SingularityScheduler {
 
         if (sanitizedRackId.equals(activeTaskId.getSanitizedRackId())) {
           Optional<SingularityTask> maybeTask = taskManager.getTask(activeTaskId);
-          cleanupTaskDueToDecomission(requestIdsToReschedule, matchingTaskIds, maybeTask.get(), rack);
+          cleanupTaskDueToDecomission(requestIdsToUserToReschedule, matchingTaskIds, maybeTask.get(), rack);
         }
       }
 
@@ -166,13 +165,15 @@ public class SingularityScheduler {
       }
     }
 
-    for (String requestId : requestIdsToReschedule) {
+    for (Entry<String, Optional<String>> requestIdAndUser : requestIdsToUserToReschedule.entrySet()) {
+      final String requestId = requestIdAndUser.getKey();
+
       LOG.trace("Rescheduling request {} due to decomissions", requestId);
 
       Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
 
       if (maybeDeployId.isPresent()) {
-        requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), start, PendingType.DECOMISSIONED_SLAVE_OR_RACK));
+        requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), start, requestIdAndUser.getValue(), PendingType.DECOMISSIONED_SLAVE_OR_RACK, Optional.<Boolean> absent()));
       } else {
         LOG.warn("Not rescheduling a request ({}) because of no active deploy", requestId);
       }
@@ -181,10 +182,10 @@ public class SingularityScheduler {
     changeState(slaves, slaveManager);
     changeState(racks, rackManager);
 
-    if (slaves.isEmpty() && racks.isEmpty() && requestIdsToReschedule.isEmpty() && matchingTaskIds.isEmpty()) {
+    if (slaves.isEmpty() && racks.isEmpty() && requestIdsToUserToReschedule.isEmpty() && matchingTaskIds.isEmpty()) {
       LOG.trace("Decomission check found nothing");
     } else {
-      LOG.info("Found {} decomissioning slaves, {} decomissioning racks, rescheduling {} requests and scheduling {} tasks for cleanup in {}", slaves.size(), racks.size(), requestIdsToReschedule.size(), matchingTaskIds.size(), JavaUtils.duration(start));
+      LOG.info("Found {} decomissioning slaves, {} decomissioning racks, rescheduling {} requests and scheduling {} tasks for cleanup in {}", slaves.size(), racks.size(), requestIdsToUserToReschedule.size(), matchingTaskIds.size(), JavaUtils.duration(start));
     }
   }
 
@@ -459,7 +460,8 @@ public class SingularityScheduler {
       requestManager.exitCooldown(request, System.currentTimeMillis(), Optional.<String>absent());
     }
 
-    SingularityPendingRequest pendingRequest = new SingularityPendingRequest(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId(), System.currentTimeMillis(), pendingType);
+    SingularityPendingRequest pendingRequest = new SingularityPendingRequest(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId(),
+        System.currentTimeMillis(), Optional.<String> absent(), pendingType, Optional.<Boolean> absent());
 
     scheduleTasks(stateCache, request, requestState, deployStatistics, pendingRequest, getMatchingTaskIds(stateCache, request, pendingRequest));
 
@@ -601,7 +603,7 @@ public class SingularityScheduler {
       }
 
       newTasks.add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt.get(), nextInstanceNumber, pendingRequest.getPendingType(), pendingRequest.getTimestamp()),
-          pendingRequest.getCmdLineArgsList(), pendingRequest.getUser(), pendingRequest.getRunId()));
+          pendingRequest.getCmdLineArgsList(), pendingRequest.getUser(), pendingRequest.getRunId(), pendingRequest.getSkipHealthchecks()));
 
       nextInstanceNumber++;
     }

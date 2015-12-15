@@ -40,7 +40,7 @@ public class SingularityDeployIT {
             .setCommand(Optional.of("sleep 10"))
             .build();
 
-    singularityClient.createDeployForSingularityRequest(REQUEST_ID, deploy, Optional.<Boolean>absent(), Optional.<String>absent());
+    singularityClient.createDeployForSingularityRequest(REQUEST_ID, deploy, Optional.<Boolean>absent());
 
     Optional<DeployState> deployState = Optional.absent();
     for (int i = 0; i < 10; i++) {

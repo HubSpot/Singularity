@@ -72,11 +72,10 @@ public class DeployResource extends AbstractRequestResource {
     @ApiResponse(code=409, message="A current deploy is in progress. It may be canceled by calling DELETE"),
   })
   public SingularityRequestParent deploy(@ApiParam(required=true) SingularityDeployRequest deployRequest) {
-    final Optional<String> deployUser = deployRequest.getUser();
-
     SingularityDeploy deploy = deployRequest.getDeploy();
     checkNotNullBadRequest(deploy, "DeployRequest must have a deploy object");
 
+    final Optional<String> deployUser = JavaUtils.getUserEmail(user);
     final String requestId = checkNotNullBadRequest(deploy.getRequestId(), "DeployRequest must have a non-null requestId");
 
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
@@ -105,7 +104,7 @@ public class DeployResource extends AbstractRequestResource {
     }
 
     if (request.isDeployable()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), now, deployUser, PendingType.NEW_DEPLOY));
+      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), now, deployUser, PendingType.NEW_DEPLOY, deployRequest.getDeploy().getSkipHealthchecksOnDeploy()));
     }
 
     return fillEntireRequest(requestWithState);

@@ -9,23 +9,15 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityDeployRequest {
 
-  private final Optional<String> user;
   private final Optional<Boolean> unpauseOnSuccessfulDeploy;
   private final SingularityDeploy deploy;
 
   @JsonCreator
   public SingularityDeployRequest(
       @JsonProperty("deploy") SingularityDeploy deploy,
-      @JsonProperty("user") Optional<String> user,
       @JsonProperty("unpauseOnSuccessfulDeploy") Optional<Boolean> unpauseOnSuccessfulDeploy) {
     this.deploy = deploy;
-    this.user = user;
     this.unpauseOnSuccessfulDeploy = unpauseOnSuccessfulDeploy;
-  }
-
-  @ApiModelProperty(required=false, value="User owning this deploy.")
-  public Optional<String> getUser() {
-    return user;
   }
 
   @ApiModelProperty(required=false, value="If deploy is successful, also unpause the request.")
@@ -45,7 +37,7 @@ public class SingularityDeployRequest {
 
   @Override
   public String toString() {
-    return "SingularityDeployRequest [user=" + user + ", unpauseOnSuccessfulDeploy=" + unpauseOnSuccessfulDeploy + ", deploy=" + deploy + "]";
+    return "SingularityDeployRequest [unpauseOnSuccessfulDeploy=" + unpauseOnSuccessfulDeploy + ", deploy=" + deploy + "]";
   }
 
 }
