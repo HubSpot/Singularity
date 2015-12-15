@@ -121,6 +121,11 @@ class RequestsView extends View
         @currentRequests = requests
 
     render: =>
+        # Save the state of the caret if the search box has already been rendered
+        $searchInput = $('.big-search-box')
+        @prevSelectionStart = $searchInput[0].selectionStart
+        @prevSelectionEnd = $searchInput[0].selectionEnd
+
         # Renders the base template
         # The table contents are rendered bit by bit as the user scrolls down.
         context =
@@ -161,6 +166,10 @@ class RequestsView extends View
                 @showPopover(e)
             hide: (e) ->
                 @hidePopover(e)
+
+        # Reset search box caret
+        $searchInput = $('.big-search-box')
+        $searchInput[0].setSelectionRange(@prevSelectionStart, @prevSelectionEnd)
 
     # Prepares the staged rendering and triggers the first one
     renderTable: =>
