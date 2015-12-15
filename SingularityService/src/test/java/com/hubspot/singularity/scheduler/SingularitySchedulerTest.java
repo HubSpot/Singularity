@@ -2,7 +2,9 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -17,6 +19,7 @@ import org.mockito.Matchers;
 import org.mockito.Mockito;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.singularity.DeployState;
@@ -496,7 +499,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     request = bldr.build();
     saveRequest(request);
 
-    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, "d1").setCommand(Optional.of("cmd")).build(), Optional.<String> absent(), Optional.<Boolean> absent()));
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, "d1").setCommand(Optional.of("cmd")).build(), Optional.<String>absent(), Optional.<Boolean>absent()));
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
@@ -708,6 +711,109 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 3);
   }
 
+  @Test
+  public void testReservedSlaveAttribute() {
+    Map<String, List<String>> reservedAttributes = new HashMap<>();
+    reservedAttributes.put("reservedKey", Arrays.asList("reservedValue1"));
+    configuration.setReserveSlavesWithAttrbiutes(reservedAttributes);
+
+    initRequest();
+    initFirstDeploy();
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)));
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("reservedKey", "reservedValue1"))));
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 0);
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave2", "host2", Optional.<String>absent(), ImmutableMap.of("reservedKey", "notAReservedValue"))));
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 1);
+  }
+
+  @Test
+  public void testReservedSlaveWithMatchinRequestAttribute() {
+    Map<String, List<String>> reservedAttributes = new HashMap<>();
+    reservedAttributes.put("reservedKey", Arrays.asList("reservedValue1"));
+    configuration.setReserveSlavesWithAttrbiutes(reservedAttributes);
+
+    Map<String, String> reservedAttributesMap = ImmutableMap.of("reservedKey", "reservedValue1");
+    initRequest();
+    initFirstDeploy();
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)));
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String>absent(), reservedAttributesMap)));
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 0);
+
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)).setRequiredSlaveAttributes(Optional.of(reservedAttributesMap)));
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("reservedKey", "reservedValue1"))));
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 1);
+  }
+
+  @Test
+  public void testAllowedSlaveAttributes() {
+    Map<String, List<String>> reservedAttributes = new HashMap<>();
+    reservedAttributes.put("reservedKey", Arrays.asList("reservedValue1"));
+    configuration.setReserveSlavesWithAttrbiutes(reservedAttributes);
+
+    Map<String, String> allowedAttributes = new HashMap<>();
+    allowedAttributes.put("reservedKey", "reservedValue1");
+
+    initRequest();
+    initFirstDeploy();
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)));
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("reservedKey", "reservedValue1"))));
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 0);
+
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)).setAllowedSlaveAttributes(Optional.of(allowedAttributes)));
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("reservedKey", "reservedValue1"))));
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 1);
+  }
+
+  @Test
+  public void testRequiredSlaveAttributesForRequest() {
+    Map<String, String> requiredAttributes = new HashMap<>();
+    requiredAttributes.put("requiredKey", "requiredValue1");
+
+    initRequest();
+    initFirstDeploy();
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)).setRequiredSlaveAttributes(Optional.of(requiredAttributes)));
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("requiredKey", "notTheRightValue"))));
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave2", "host2", Optional.<String>absent(), ImmutableMap.of("notTheRightKey", "requiredValue1"))));
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 0);
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave2", "host2", Optional.<String>absent(), requiredAttributes)));
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 1);
+  }
+
+  @Test
+  public void testMultipleRequiredAttributes() {
+    Map<String, String> requiredAttributes = new HashMap<>();
+    requiredAttributes.put("requiredKey1", "requiredValue1");
+    requiredAttributes.put("requiredKey2", "requiredValue2");
+
+    initRequest();
+    initFirstDeploy();
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(1)).setRequiredSlaveAttributes(Optional.of(requiredAttributes)));
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String>absent(), ImmutableMap.of("requiredKey1", "requiredValue1"))));
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave2", "host2", Optional.<String>absent(), ImmutableMap.of("requiredKey1", "requiredValue1", "someotherkey", "someothervalue"))));
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 0);
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave2", "host2", Optional.<String>absent(), requiredAttributes)));
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 1);
+  }
 
   @Test
   public void testLBCleanup() {
