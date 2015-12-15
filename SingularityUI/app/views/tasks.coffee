@@ -37,12 +37,12 @@ class TasksView extends View
 
             'click th[data-sort-attribute]': 'sortTable'
 
-    initialize: ({@state, @searchFilter}) ->
+    initialize: ({@state, @searchFilter, @cleaningTasks, @taskKillRecords}) ->
         @bodyTemplate = @bodyTemplateMap[@state]
 
         @listenTo @collection, 'sync', @render
-        @listenTo @collection.cleaning, 'reset', @render
-        @listenTo @collection.killing, 'reset', @render
+        @listenTo @cleaningTasks, 'change', @render
+        @listenTo @taskKillRecords, 'change', @render
 
         @searchChange = _.debounce @searchChange, 200
 
@@ -124,7 +124,7 @@ class TasksView extends View
         tasks = @currentTasks.slice(@renderProgress, newProgress)
         @renderProgress = newProgress
 
-        decomTasks = _.union(@attributes.cleaning.pluck('taskId'), @attributes.killing.pluck('taskId'))
+        decomTasks = _.union(_.pluck(_.map(@cleaningTasks.where(cleanupType: 'DECOMISSIONING'), (t) -> t.toJSON()), 'taskId'), _.pluck(_.map(@taskKillRecords.where(taskCleanupType: 'DECOMISSIONING'), (t) -> t.toJSON()), 'taskId'))
         $contents = @bodyTemplate
             tasks: tasks
             rowsOnly: true
