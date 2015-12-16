@@ -31,6 +31,7 @@ import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
+import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -46,6 +47,7 @@ import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SlavePlacement;
+import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityPauseRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
@@ -58,6 +60,7 @@ import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
+import com.hubspot.singularity.expiring.SingularityExpiringParent;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
@@ -233,7 +236,7 @@ public class RequestResource extends AbstractRequestResource {
     requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), JavaUtils.getUserEmail(user));
 
     if (bounceRequest.isPresent() && bounceRequest.get().getDurationMillis().isPresent()) {
-      requestManager.saveExpiringBounce(new SingularityExpiringBounce(bounceRequest.get().getDurationMillis().get(), requestId, JavaUtils.getUserEmail(user),
+      requestManager.saveExpiringObject(new SingularityExpiringBounce(bounceRequest.get().getDurationMillis().get(), requestId, JavaUtils.getUserEmail(user),
           System.currentTimeMillis(), bounceRequest.get()));
     }
 
@@ -310,7 +313,7 @@ public class RequestResource extends AbstractRequestResource {
     requestManager.pause(requestWithState.getRequest(), now, JavaUtils.getUserEmail(user));
 
     if (pauseRequest.isPresent() && pauseRequest.get().getDurationMillis().isPresent()) {
-      requestManager.saveExpiringPause(new SingularityExpiringPause(pauseRequest.get().getDurationMillis().get(), requestId, JavaUtils.getUserEmail(user),
+      requestManager.saveExpiringObject(new SingularityExpiringPause(pauseRequest.get().getDurationMillis().get(), requestId, JavaUtils.getUserEmail(user),
           System.currentTimeMillis(), pauseRequest.get()));
     }
 
@@ -485,7 +488,6 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/request/{requestId}/scale")
   @ApiOperation(value="Scale the number of instances up or down for a specific Request", response=SingularityRequestParent.class)
   @ApiResponses({
-    @ApiResponse(code=400, message="Posted object did not match Request ID"),
     @ApiResponse(code=404, message="No Request with that ID"),
   })
   public SingularityRequestParent scale(@ApiParam("The Request ID to scale") @PathParam("requestId") String requestId,
@@ -498,18 +500,67 @@ public class RequestResource extends AbstractRequestResource {
     submitRequest(newRequest, oldRequestWithState.getState(), scaleRequest.getSkipHealthchecks());
 
     if (scaleRequest.getDurationMillis().isPresent()) {
-      requestManager.saveExpiringScale(new SingularityExpiringScale(scaleRequest.getDurationMillis().get(), requestId, JavaUtils.getUserEmail(user),
+      requestManager.saveExpiringObject(new SingularityExpiringScale(scaleRequest.getDurationMillis().get(), requestId, JavaUtils.getUserEmail(user),
           System.currentTimeMillis(), scaleRequest, oldRequest.getInstances()));
     }
 
     return fillEntireRequest(fetchRequestWithState(requestId));
   }
 
+  private <T extends SingularityExpiringParent> SingularityRequestParent deleteExpiringObject(Class<T> clazz, String requestId) {
+    SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
+
+    SingularityDeleteResult deleteResult = requestManager.deleteExpiringObject(clazz, requestId);
+
+    WebExceptions.checkNotFound(deleteResult == SingularityDeleteResult.DELETED, "%s didn't have an expiring %s request", clazz.getSimpleName(), requestId);
+
+    return fillEntireRequest(requestWithState);
+  }
+
+  @DELETE
+  @Path("/request/{requestId}/scale")
+  @ApiOperation(value="Delete/cancel the expiring scale. This makes the scale request permanent.", response=SingularityRequestParent.class)
+  @ApiResponses({
+    @ApiResponse(code=404, message="No Request or expiring scale request for that ID"),
+  })
+  public SingularityRequestParent deleteExpiringScale(@ApiParam("The Request ID") @PathParam("requestId") String requestId) {
+    return deleteExpiringObject(SingularityExpiringScale.class, requestId);
+  }
+
+  @DELETE
+  @Path("/request/{requestId}/skipHealthchecks")
+  @ApiOperation(value="Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks request permanent.", response=SingularityRequestParent.class)
+  @ApiResponses({
+    @ApiResponse(code=404, message="No Request or expiring skipHealthchecks request for that ID"),
+  })
+  public SingularityRequestParent deleteExpiringSkipHealthchecks(@ApiParam("The Request ID") @PathParam("requestId") String requestId) {
+    return deleteExpiringObject(SingularityExpiringSkipHealthchecks.class, requestId);
+  }
+
+  @DELETE
+  @Path("/request/{requestId}/pause")
+  @ApiOperation(value="Delete/cancel the expiring pause. This makes the pause request permanent.", response=SingularityRequestParent.class)
+  @ApiResponses({
+    @ApiResponse(code=404, message="No Request or expiring pause request for that ID"),
+  })
+  public SingularityRequestParent deleteExpiringPause(@ApiParam("The Request ID") @PathParam("requestId") String requestId) {
+    return deleteExpiringObject(SingularityExpiringPause.class, requestId);
+  }
+
+  @DELETE
+  @Path("/request/{requestId}/bounce")
+  @ApiOperation(value="Delete/cancel the expiring bounce. This makes the bounce request permanent.", response=SingularityRequestParent.class)
+  @ApiResponses({
+    @ApiResponse(code=404, message="No Request or expiring bounce request for that ID"),
+  })
+  public SingularityRequestParent deleteExpiringBounce(@ApiParam("The Request ID") @PathParam("requestId") String requestId) {
+    return deleteExpiringObject(SingularityExpiringBounce.class, requestId);
+  }
+
   @PUT
   @Path("/request/{requestId}/skipHealthchecks")
   @ApiOperation(value="Update the skipHealthchecks field for the request, possibly temporarily", response=SingularityRequestParent.class)
   @ApiResponses({
-    @ApiResponse(code=400, message="Posted object did not match Request ID"),
     @ApiResponse(code=404, message="No Request with that ID"),
   })
   public SingularityRequestParent skipHealthchecks(@ApiParam("The Request ID to scale") @PathParam("requestId") String requestId,
@@ -522,7 +573,7 @@ public class RequestResource extends AbstractRequestResource {
     submitRequest(newRequest, oldRequestWithState.getState(), Optional.<Boolean> absent());
 
     if (skipHealthchecksRequest.getDurationMillis().isPresent()) {
-      requestManager.saveExpiringSkipHealthchecks(new SingularityExpiringSkipHealthchecks(skipHealthchecksRequest.getDurationMillis().get(), requestId, JavaUtils.getUserEmail(user),
+      requestManager.saveExpiringObject(new SingularityExpiringSkipHealthchecks(skipHealthchecksRequest.getDurationMillis().get(), requestId, JavaUtils.getUserEmail(user),
           System.currentTimeMillis(), skipHealthchecksRequest, oldRequest.getSkipHealthchecks()));
     }
 

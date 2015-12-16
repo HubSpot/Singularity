@@ -2,6 +2,7 @@ package com.hubspot.singularity.data;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -12,6 +13,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -48,11 +50,6 @@ public class RequestManager extends CuratorAsyncManager {
   private final Transcoder<SingularityRequestHistory> requestHistoryTranscoder;
   private final Transcoder<SingularityRequestLbCleanup> requestLbCleanupTranscoder;
 
-  private final Transcoder<SingularityExpiringBounce> expiringBounceTranscoder;
-  private final Transcoder<SingularityExpiringScale> expiringScaleTranscoder;
-  private final Transcoder<SingularityExpiringPause> expiringPauseTranscoder;
-  private final Transcoder<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecksTranscoder;
-
   private final SingularityEventListener singularityEventListener;
 
   private static final String REQUEST_ROOT = "/requests";
@@ -68,6 +65,15 @@ public class RequestManager extends CuratorAsyncManager {
   private static final String EXPIRING_SCALE_PATH_ROOT = EXPIRING_ACTION_PATH_ROOT + "/scale";
   private static final String EXPIRING_SKIP_HC_PATH_ROOT = EXPIRING_ACTION_PATH_ROOT + "/skipHc";
 
+  private static final Map<Class<? extends SingularityExpiringParent>, String> EXPIRING_CLASS_TO_PATH = ImmutableMap.of(
+        SingularityExpiringBounce.class, EXPIRING_BOUNCE_PATH_ROOT,
+        SingularityExpiringParent.class, EXPIRING_PAUSE_PATH_ROOT,
+        SingularityExpiringScale.class, EXPIRING_SCALE_PATH_ROOT,
+        SingularityExpiringSkipHealthchecks.class, EXPIRING_SKIP_HC_PATH_ROOT
+      );
+
+  private final Map<Class<? extends SingularityExpiringParent>, Transcoder<? extends SingularityExpiringParent>> expiringTranscoderMap;
+
   @Inject
   public RequestManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, SingularityEventListener singularityEventListener,
       Transcoder<SingularityRequestCleanup> requestCleanupTranscoder, Transcoder<SingularityRequestWithState> requestTranscoder, Transcoder<SingularityRequestLbCleanup> requestLbCleanupTranscoder,
@@ -80,22 +86,25 @@ public class RequestManager extends CuratorAsyncManager {
     this.requestHistoryTranscoder = requestHistoryTranscoder;
     this.singularityEventListener = singularityEventListener;
     this.requestLbCleanupTranscoder = requestLbCleanupTranscoder;
-    this.expiringBounceTranscoder = expiringBounceTranscoder;
-    this.expiringPauseTranscoder = expiringPauseTranscoder;
-    this.expiringScaleTranscoder = expiringScaleTranscoder;
-    this.expiringSkipHealthchecksTranscoder = expiringSkipHealthchecksTranscoder;
+
+    this.expiringTranscoderMap = ImmutableMap.of(
+        SingularityExpiringBounce.class, expiringBounceTranscoder,
+        SingularityExpiringParent.class, expiringPauseTranscoder,
+        SingularityExpiringScale.class, expiringScaleTranscoder,
+        SingularityExpiringSkipHealthchecks.class, expiringSkipHealthchecksTranscoder
+      );
   }
 
   private String getRequestPath(String requestId) {
     return ZKPaths.makePath(NORMAL_PATH_ROOT, requestId);
   }
 
-  private String getExpiringPath(String root, String requestId) {
-    return ZKPaths.makePath(root, requestId);
+  private <T extends SingularityExpiringParent> String getExpiringPath(T expiringObject) {
+    return getExpiringPath(expiringObject.getClass(), expiringObject.getRequestId());
   }
 
-  private <T extends SingularityExpiringParent> String getExpiringPath(String root, T expiringObject) {
-    return getExpiringPath(root, expiringObject.getRequestId());
+  private <T extends SingularityExpiringParent> String getExpiringPath(Class<T> clazz, String requestId) {
+    return ZKPaths.makePath(EXPIRING_CLASS_TO_PATH.get(clazz), requestId);
   }
 
   private String getHistoryParentPath(String requestId) {
@@ -331,68 +340,46 @@ public class RequestManager extends CuratorAsyncManager {
     return delete(getLBCleanupPath(requestId));
   }
 
-  public SingularityCreateResult saveExpiringBounce(SingularityExpiringBounce expiringBounce) {
-    return save(getExpiringPath(EXPIRING_BOUNCE_PATH_ROOT, expiringBounce), expiringBounce, expiringBounceTranscoder);
+  public <T extends SingularityExpiringParent> List<T> getExpiringObjects(Class<T> clazz) {
+    return getAsyncChildren(EXPIRING_CLASS_TO_PATH.get(clazz), getTranscoder(clazz));
   }
 
-  public SingularityCreateResult saveExpiringPause(SingularityExpiringPause expiringPause) {
-    return save(getExpiringPath(EXPIRING_PAUSE_PATH_ROOT, expiringPause), expiringPause, expiringPauseTranscoder);
+  @SuppressWarnings("unchecked")
+  private <T extends SingularityExpiringParent> Transcoder<T> getTranscoder(Class<T> clazz) {
+    return (Transcoder<T>) expiringTranscoderMap.get(clazz);
   }
 
-  public SingularityCreateResult saveExpiringScale(SingularityExpiringScale expiringScale) {
-    return save(getExpiringPath(EXPIRING_SCALE_PATH_ROOT, expiringScale), expiringScale, expiringScaleTranscoder);
+  @SuppressWarnings("unchecked")
+  private <T extends SingularityExpiringParent> Transcoder<T> getTranscoder(T expiringObject) {
+    return getTranscoder((Class<T>) expiringObject.getClass());
   }
 
-  public SingularityCreateResult saveExpiringSkipHealthchecks(SingularityExpiringSkipHealthchecks expiringSkipHealthchecks) {
-    return save(getExpiringPath(EXPIRING_SKIP_HC_PATH_ROOT, expiringSkipHealthchecks), expiringSkipHealthchecks, expiringSkipHealthchecksTranscoder);
+  public <T extends SingularityExpiringParent> Optional<T> getExpiringObject(Class<T> clazz, String requestId) {
+    return getData(getExpiringPath(clazz, requestId), getTranscoder(clazz));
+  }
+
+  public <T extends SingularityExpiringParent> SingularityCreateResult saveExpiringObject(T expiringObject) {
+    return save(getExpiringPath(expiringObject), expiringObject, getTranscoder(expiringObject));
+  }
+
+  public <T extends SingularityExpiringParent> SingularityDeleteResult deleteExpiringObject(Class<T> clazz, String requestId) {
+    return delete(getExpiringPath(clazz, requestId));
   }
 
   public Optional<SingularityExpiringBounce> getExpiringBounce(String requestId) {
-    return getData(getExpiringPath(EXPIRING_BOUNCE_PATH_ROOT, requestId), expiringBounceTranscoder);
+    return getExpiringObject(SingularityExpiringBounce.class, requestId);
   }
 
   public Optional<SingularityExpiringPause> getExpiringPause(String requestId) {
-    return getData(getExpiringPath(EXPIRING_PAUSE_PATH_ROOT, requestId), expiringPauseTranscoder);
+    return getExpiringObject(SingularityExpiringPause.class, requestId);
   }
 
   public Optional<SingularityExpiringScale> getExpiringScale(String requestId) {
-    return getData(getExpiringPath(EXPIRING_SCALE_PATH_ROOT, requestId), expiringScaleTranscoder);
+    return getExpiringObject(SingularityExpiringScale.class, requestId);
   }
 
   public Optional<SingularityExpiringSkipHealthchecks> getExpiringSkipHealthchecks(String requestId) {
-    return getData(getExpiringPath(EXPIRING_SKIP_HC_PATH_ROOT, requestId), expiringSkipHealthchecksTranscoder);
-  }
-
-  public List<SingularityExpiringBounce> getExpiringBounce() {
-    return getAsyncChildren(EXPIRING_BOUNCE_PATH_ROOT, expiringBounceTranscoder);
-  }
-
-  public List<SingularityExpiringPause> getExpiringPause() {
-    return getAsyncChildren(EXPIRING_PAUSE_PATH_ROOT, expiringPauseTranscoder);
-  }
-
-  public List<SingularityExpiringScale> getExpiringScale() {
-    return getAsyncChildren(EXPIRING_SCALE_PATH_ROOT, expiringScaleTranscoder);
-  }
-
-  public List<SingularityExpiringSkipHealthchecks> getExpiringSkipHealthchecks() {
-    return getAsyncChildren(EXPIRING_SKIP_HC_PATH_ROOT, expiringSkipHealthchecksTranscoder);
-  }
-
-  public SingularityDeleteResult deleteExpiringBounce(String requestId) {
-    return delete(getExpiringPath(EXPIRING_BOUNCE_PATH_ROOT, requestId));
-  }
-
-  public SingularityDeleteResult deleteExpiringPause(String requestId) {
-    return delete(getExpiringPath(EXPIRING_PAUSE_PATH_ROOT, requestId));
-  }
-
-  public SingularityDeleteResult deleteExpiringScale(String requestId) {
-    return delete(getExpiringPath(EXPIRING_SCALE_PATH_ROOT, requestId));
-  }
-
-  public SingularityDeleteResult deleteExpiringSkipHealthchecks(String requestId) {
-    return delete(getExpiringPath(EXPIRING_SKIP_HC_PATH_ROOT, requestId));
+    return getExpiringObject(SingularityExpiringSkipHealthchecks.class, requestId);
   }
 
 }
