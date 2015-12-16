@@ -26,6 +26,8 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.client.MesosClient;
+import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -106,9 +108,11 @@ public class SingularityExecutorCleanup {
 
     if (runningTaskIds.isEmpty()) {
       if (cleanupConfiguration.isSafeModeWontRunWithNoTasks()) {
-        final String errorMessage = String.format("Running in safe mode and found 0 running tasks - aborting cleanup");
-        LOG.error(errorMessage);
-        statisticsBldr.setErrorMessage(errorMessage);
+        if (!isDecommissioned()) {
+          final String errorMessage = String.format("Running in safe mode and found 0 running tasks - aborting cleanup");
+          LOG.error(errorMessage);
+          statisticsBldr.setErrorMessage(errorMessage);
+        }
         return statisticsBldr.build();
       } else {
         LOG.warn("Found 0 running tasks - proceeding with cleanup as we are not in safe mode");
@@ -182,6 +186,17 @@ public class SingularityExecutorCleanup {
     }
 
     return statisticsBldr.build();
+  }
+
+  private boolean isDecommissioned() {
+    Collection<SingularitySlave> slaves = singularityClient.getSlaves(Optional.of(MachineState.DECOMMISSIONED));
+    boolean decommissioned = false;
+    for (SingularitySlave slave : slaves) {
+      if (slave.getHost().equals(hostname)) {
+        decommissioned = true;
+      }
+    }
+    return decommissioned;
   }
 
   private Set<String> getRunningTaskIds() {
