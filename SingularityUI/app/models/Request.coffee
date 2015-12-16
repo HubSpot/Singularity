@@ -57,7 +57,7 @@ class Request extends Model
             url:  "#{ @url() }/unpause?user=#{ app.getUsername() }"
             type: 'POST'
 
-    pause: (killTasks) =>
+    pause: (killTasks, duration) =>
         $.ajax
             url:         "#{ @url() }/pause"
             type:        'POST'
@@ -65,6 +65,7 @@ class Request extends Model
             data:         JSON.stringify
                 user:      app.getUsername()
                 killTasks: killTasks
+                durationMillis: @_parseDuration(duration)
 
     run: (confirmedOrPromptData) ->
         options =
@@ -83,17 +84,21 @@ class Request extends Model
 
     scale: (confirmedOrPromptData) =>
         $.ajax
-          url: "#{ @url() }/instances?user=#{ app.getUsername() }"
+          url: "#{ @url() }/scale?user=#{ app.getUsername() }"
           type: "PUT"
           contentType: 'application/json'
-          data:         JSON.stringify
-              id:      @get "id"
-              instances: confirmedOrPromptData
+          data: JSON.stringify
+              instances: confirmedOrPromptData.instances
+              duration: @_parseDuration(confirmedOrPromptData.duration)
 
-    bounce: (incremental) =>
+    bounce: (incremental, duration) =>
         $.ajax
-            url:  "#{ @url() }/bounce?user=#{ app.getUsername() }&incremental=#{ incremental }"
             type: "POST"
+            url:  "#{ @url() }/bounce?user=#{ app.getUsername() }"
+            contentType: 'application/json'
+            data: JSON.stringify
+              durationMillis: @_parseDuration(duration)
+              incremental: incremental
 
     exitCooldown: =>
         $.ajax
@@ -104,6 +109,13 @@ class Request extends Model
         $.ajax
             url:  "#{ @url() }?user=#{ app.getUsername() }"
             type: "DELETE"
+
+    _parseDuration: (duration) =>
+        # Convert strings like '1 hr', '2 days', etc. or any combination thereof to millis
+        try
+            return juration.parse(duration) * 1000
+        catch e
+            console.error "Error parsing duration input: #{duration}"
 
     ###
     promptX opens a dialog asking the user to confirm an action and then does it
@@ -116,17 +128,21 @@ class Request extends Model
             callback: (confirmed) =>
                 return unless confirmed
                 killTasks = not $('.vex #kill-tasks').is ':checked'
-                @pause(killTasks).done callback
+                duration = $('.vex #pause-expiration').val()
+                @pause(killTasks, duration).done callback
 
     promptScale: (callback) =>
-        vex.dialog.prompt
+        vex.dialog.open
             message: scaleTemplate
                 id: @get "id"
+            input: """
+                <input name="instances" type="number" placeholder="#{@get 'instances'}" min="1" step="1" required />
+                <input name="duration" type="text" placeholder="Expiration (optional)" />
+            """
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.YES), text: 'Scale'
                 vex.dialog.buttons.NO
             ]
-            placeholder: @get 'instances'
             callback: (data) =>
                 return if data is false
                 @scale(data).done callback
@@ -250,7 +266,8 @@ class Request extends Model
             callback: (confirmed) =>
                 return if not confirmed
                 incremental = $('.vex #incremental-bounce').is ':checked'
-                @bounce(incremental).done callback
+                duration = $('.vex #bounce-expiration').val()
+                @bounce(incremental, duration).done callback
 
     promptExitCooldown: (callback) =>
         vex.dialog.confirm

@@ -37,7 +37,8 @@
     "datatables": "~1.10.7",
     "datatables-bootstrap3-plugin": "~0.4.0",
     "select2": "~3.5.2",
-    "fuse.js": "~1.2.2"
+    "fuse.js": "~1.2.2",
+    "juration": "*"
   },
   "resolutions": {
     "backbone": "~1.1.2",
