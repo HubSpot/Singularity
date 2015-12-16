@@ -32,7 +32,6 @@ import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingRequestParent;
@@ -58,6 +57,10 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.expiring.SingularityExpiringBounce;
+import com.hubspot.singularity.expiring.SingularityExpiringPause;
+import com.hubspot.singularity.expiring.SingularityExpiringScale;
+import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -124,7 +127,7 @@ public class RequestResource extends AbstractRequestResource {
     return new SingularityRequestDeployHolder(activeDeploy, pendingDeploy);
   }
 
-  private SingularityRequestParent submitRequest(SingularityRequest request, RequestState requestState, Optional<Boolean> skipHealthchecks) {
+  private void submitRequest(SingularityRequest request, RequestState requestState, Optional<Boolean> skipHealthchecks) {
     checkNotNullBadRequest(request.getId(), "Request must have an id");
     checkConflict(!requestManager.cleanupRequestExists(request.getId()), "Request %s is currently cleaning. Try again after a few moments", request.getId());
 
@@ -145,8 +148,6 @@ public class RequestResource extends AbstractRequestResource {
     requestManager.save(newRequest, requestState, maybeOldRequest.isPresent() ? RequestHistoryType.UPDATED : RequestHistoryType.CREATED, now, JavaUtils.getUserEmail(user));
 
     checkReschedule(newRequest, maybeOldRequest, JavaUtils.getUserEmail(user), now, skipHealthchecks);
-
-    return fillEntireRequest(fetchRequestWithState(request.getId()));
   }
 
   @POST
@@ -157,7 +158,8 @@ public class RequestResource extends AbstractRequestResource {
     @ApiResponse(code=409, message="Request object is being cleaned. Try again shortly"),
   })
   public SingularityRequestParent activate(@ApiParam("The Singularity request to create or update") SingularityRequest request) {
-    return submitRequest(request, RequestState.ACTIVE, Optional.<Boolean> absent());
+    submitRequest(request, RequestState.ACTIVE, Optional.<Boolean> absent());
+    return fillEntireRequest(fetchRequestWithState(request.getId()));
   }
 
   private void checkReschedule(SingularityRequest newRequest, Optional<SingularityRequest> maybeOldRequest, Optional<String> user, long timestamp, Optional<Boolean> skipHealthchecks) {
@@ -201,8 +203,6 @@ public class RequestResource extends AbstractRequestResource {
   response=SingularityRequestParent.class)
   public SingularityRequestParent bounce(@ApiParam("The request ID to bounce") @PathParam("requestId") String requestId,
       @ApiParam("Bounce request options") Optional<SingularityBounceRequest> bounceRequest) {
-    // check bounce request requestId TODO
-
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
@@ -231,6 +231,11 @@ public class RequestResource extends AbstractRequestResource {
     checkConflict(createResult != SingularityCreateResult.EXISTED, "%s is already bouncing", requestId);
 
     requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), JavaUtils.getUserEmail(user));
+
+    if (bounceRequest.isPresent() && bounceRequest.get().getDurationMillis().isPresent()) {
+      requestManager.saveExpiringBounce(new SingularityExpiringBounce(bounceRequest.get().getDurationMillis().get(), requestId, JavaUtils.getUserEmail(user),
+          System.currentTimeMillis(), bounceRequest.get()));
+    }
 
     return fillEntireRequest(requestWithState);
   }
@@ -283,8 +288,6 @@ public class RequestResource extends AbstractRequestResource {
   })
   public SingularityRequestParent pause(@ApiParam("The request ID to pause") @PathParam("requestId") String requestId,
       @ApiParam("Pause Request Options") Optional<SingularityPauseRequest> pauseRequest) {
-    // TODO Check pause request request Id
-
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
@@ -305,6 +308,11 @@ public class RequestResource extends AbstractRequestResource {
     mailer.sendRequestPausedMail(requestWithState.getRequest(), JavaUtils.getUserEmail(user));
 
     requestManager.pause(requestWithState.getRequest(), now, JavaUtils.getUserEmail(user));
+
+    if (pauseRequest.isPresent() && pauseRequest.get().getDurationMillis().isPresent()) {
+      requestManager.saveExpiringPause(new SingularityExpiringPause(pauseRequest.get().getDurationMillis().get(), requestId, JavaUtils.getUserEmail(user),
+          System.currentTimeMillis(), pauseRequest.get()));
+    }
 
     return fillEntireRequest(new SingularityRequestWithState(requestWithState.getRequest(), RequestState.PAUSED, now));
   }
@@ -388,7 +396,7 @@ public class RequestResource extends AbstractRequestResource {
 
     for (SingularityRequestWithState requestWithState : requests) {
       Optional<SingularityRequestDeployState> deployState = Optional.fromNullable(deployStates.get(requestWithState.getRequest().getId()));
-      parents.add(new SingularityRequestParent(requestWithState.getRequest(), requestWithState.getState(), deployState, Optional.<SingularityDeploy> absent(), Optional.<SingularityDeploy> absent(), Optional.<SingularityPendingDeploy> absent()));
+      parents.add(new SingularityRequestParent(requestWithState.getRequest(), requestWithState.getState(), deployState));
     }
 
     return parents;
@@ -487,7 +495,14 @@ public class RequestResource extends AbstractRequestResource {
     SingularityRequest oldRequest = oldRequestWithState.getRequest();
     SingularityRequest newRequest = oldRequest.toBuilder().setInstances(scaleRequest.getInstances()).build();
 
-    return submitRequest(newRequest, oldRequestWithState.getState(), scaleRequest.getSkipHealthchecks());
+    submitRequest(newRequest, oldRequestWithState.getState(), scaleRequest.getSkipHealthchecks());
+
+    if (scaleRequest.getDurationMillis().isPresent()) {
+      requestManager.saveExpiringScale(new SingularityExpiringScale(scaleRequest.getDurationMillis().get(), requestId, JavaUtils.getUserEmail(user),
+          System.currentTimeMillis(), scaleRequest, oldRequest.getInstances()));
+    }
+
+    return fillEntireRequest(fetchRequestWithState(requestId));
   }
 
   @PUT
@@ -504,7 +519,14 @@ public class RequestResource extends AbstractRequestResource {
     SingularityRequest oldRequest = oldRequestWithState.getRequest();
     SingularityRequest newRequest = oldRequest.toBuilder().setSkipHealthchecks(skipHealthchecksRequest.getSkipHealthchecks()).build();
 
-    return submitRequest(newRequest, oldRequestWithState.getState(), Optional.<Boolean> absent());
+    submitRequest(newRequest, oldRequestWithState.getState(), Optional.<Boolean> absent());
+
+    if (skipHealthchecksRequest.getDurationMillis().isPresent()) {
+      requestManager.saveExpiringSkipHealthchecks(new SingularityExpiringSkipHealthchecks(skipHealthchecksRequest.getDurationMillis().get(), requestId, JavaUtils.getUserEmail(user),
+          System.currentTimeMillis(), skipHealthchecksRequest, oldRequest.getSkipHealthchecks()));
+    }
+
+    return fillEntireRequest(fetchRequestWithState(requestId));
   }
 
   @GET
