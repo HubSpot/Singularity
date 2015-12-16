@@ -48,6 +48,9 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
   @JsonProperty
   private Optional<SingularityClientCredentials> singularityClientCredentials = Optional.absent();
 
+  @JsonProperty
+  private boolean cleanTasksWhenDecommissioned = true;
+
   public SingularityExecutorCleanupConfiguration() {
     super(Optional.of("singularity-executor-cleanup.log"));
   }
@@ -114,6 +117,14 @@ public class SingularityExecutorCleanupConfiguration extends BaseRunnerConfigura
 
   public void setSingularityClientCredentials(Optional<SingularityClientCredentials> singularityClientCredentials) {
     this.singularityClientCredentials = singularityClientCredentials;
+  }
+
+  public boolean isCleanTasksWhenDecommissioned() {
+    return cleanTasksWhenDecommissioned;
+  }
+
+  public void setCleanTasksWhenDecommissioned(boolean cleanTasksWhenDecommissioned) {
+    this.cleanTasksWhenDecommissioned = cleanTasksWhenDecommissioned;
   }
 
   @Override

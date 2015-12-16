@@ -107,15 +107,19 @@ public class SingularityExecutorCleanup {
     statisticsBldr.setMesosRunningTasks(runningTaskIds.size());
 
     if (runningTaskIds.isEmpty()) {
-      if (cleanupConfiguration.isSafeModeWontRunWithNoTasks()) {
-        if (!isDecommissioned()) {
+      if (!isDecommissioned()) {
+        if (cleanupConfiguration.isSafeModeWontRunWithNoTasks()) {
           final String errorMessage = String.format("Running in safe mode and found 0 running tasks - aborting cleanup");
           LOG.error(errorMessage);
           statisticsBldr.setErrorMessage(errorMessage);
+          return statisticsBldr.build();
+        } else {
+          LOG.warn("Found 0 running tasks - proceeding with cleanup as we are not in safe mode");
         }
-        return statisticsBldr.build();
       } else {
-        LOG.warn("Found 0 running tasks - proceeding with cleanup as we are not in safe mode");
+        if (!cleanupConfiguration.isCleanTasksWhenDecommissioned()) {
+          return statisticsBldr.build();
+        }
       }
     }
 
