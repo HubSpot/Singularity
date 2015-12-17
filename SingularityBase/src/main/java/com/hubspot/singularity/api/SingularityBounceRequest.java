@@ -11,8 +11,8 @@ public class SingularityBounceRequest {
   private final Optional<Long> durationMillis;
 
   @JsonCreator
-  public SingularityBounceRequest(@JsonProperty("incremental") Optional<Boolean> incremental,
-      @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks, @JsonProperty("requestId") String requestId, @JsonProperty("durationMillis") Optional<Long> durationMillis) {
+  public SingularityBounceRequest(@JsonProperty("incremental") Optional<Boolean> incremental, @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
+      @JsonProperty("durationMillis") Optional<Long> durationMillis) {
     this.incremental = incremental;
     this.skipHealthchecks = skipHealthchecks;
     this.durationMillis = durationMillis;

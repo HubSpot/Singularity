@@ -95,7 +95,8 @@ public class SingularityRequest {
     .setSlavePlacement(slavePlacement)
     .setScheduledExpectedRuntimeMillis(scheduledExpectedRuntimeMillis)
     .setGroup(group)
-    .setReadOnlyGroups(readOnlyGroups);
+    .setReadOnlyGroups(readOnlyGroups)
+    .setSkipHealthchecks(skipHealthchecks);
   }
 
   public String getId() {

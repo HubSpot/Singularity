@@ -52,6 +52,7 @@ import com.hubspot.singularity.scheduler.SingularityCleaner;
 import com.hubspot.singularity.scheduler.SingularityCooldownChecker;
 import com.hubspot.singularity.scheduler.SingularityDeployChecker;
 import com.hubspot.singularity.scheduler.SingularityExpiringUserActionPoller;
+import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityScheduledJobPoller;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
 import com.hubspot.singularity.scheduler.SingularitySchedulerPriority;
@@ -116,6 +117,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityEventListener eventListener;
   @Inject
   protected SingularityExpiringUserActionPoller expiringUserActionPoller;
+  @Inject
+  protected SingularityHealthchecker healthchecker;
 
   @Inject
   @Named(SingularityMainModule.SERVER_ID_PROPERTY)
@@ -282,12 +285,21 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void initFirstDeploy() {
-    firstDeploy = initDeploy(request, firstDeployId);
+    firstDeploy = initAndFinishDeploy(request, firstDeployId);
   }
 
-  protected SingularityDeploy initDeploy(SingularityRequest request, String deployId) {
-    SingularityDeployMarker marker =  new SingularityDeployMarker(request.getId(), deployId, System.currentTimeMillis(), Optional.<String> absent());
-    SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100")).build();
+  protected void initHCDeploy() {
+    firstDeploy = initAndFinishDeploy(new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100")).setHealthcheckUri(Optional.of("http://uri")));
+  }
+
+  protected SingularityDeploy initAndFinishDeploy(SingularityRequest request, String deployId) {
+    return initAndFinishDeploy(new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100")));
+  }
+
+  protected SingularityDeploy initAndFinishDeploy(SingularityDeployBuilder builder) {
+    SingularityDeploy deploy = builder.build();
+
+    SingularityDeployMarker marker =  new SingularityDeployMarker(request.getId(), deploy.getId(), System.currentTimeMillis(), Optional.<String> absent());
 
     deployManager.saveDeploy(request, marker, deploy);
 

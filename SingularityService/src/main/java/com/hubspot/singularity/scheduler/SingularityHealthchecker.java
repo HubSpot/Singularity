@@ -95,16 +95,18 @@ public class SingularityHealthchecker {
     return true;
   }
 
-  public void cancelHealthcheck(String taskId) {
+  public boolean cancelHealthcheck(String taskId) {
     ScheduledFuture<?> future = taskIdToHealthcheck.remove(taskId);
 
     if (future == null) {
-      return;
+      return false;
     }
 
     boolean canceled = future.cancel(false);
 
     LOG.trace("Canceling healthcheck ({}) for task {}", canceled, taskId);
+
+    return canceled;
   }
 
   private ScheduledFuture<?> enqueueHealthcheckWithDelay(final SingularityTask task, long delaySeconds) {
