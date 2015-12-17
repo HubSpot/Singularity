@@ -58,14 +58,17 @@ class Request extends Model
             type: 'POST'
 
     pause: (killTasks, duration) =>
+        data =
+            user:      app.getUsername()
+            killTasks: killTasks
+        duration = @_parseDuration(duration)
+        if duration
+            data[durationMillis] = duration
         $.ajax
             url:         "#{ @url() }/pause"
             type:        'POST'
             contentType: 'application/json'
-            data:         JSON.stringify
-                user:      app.getUsername()
-                killTasks: killTasks
-                durationMillis: @_parseDuration(duration)
+            data: JSON.stringify data
 
     run: (confirmedOrPromptData) ->
         options =
@@ -83,13 +86,16 @@ class Request extends Model
         $.ajax options
 
     scale: (confirmedOrPromptData) =>
+        data =
+            instances: confirmedOrPromptData.instances
+        duration = @_parseDuration(confirmedOrPromptData.duration)
+        if duration
+            data[durationMillis] = duration
         $.ajax
           url: "#{ @url() }/scale?user=#{ app.getUsername() }"
           type: "PUT"
           contentType: 'application/json'
-          data: JSON.stringify
-              instances: confirmedOrPromptData.instances
-              durationMillis: @_parseDuration(confirmedOrPromptData.duration)
+          data: JSON.stringify data
 
     makeScalePermanent: (callback) =>
         $.ajax(
@@ -110,13 +116,16 @@ class Request extends Model
         ).then callback
 
     bounce: (incremental, duration) =>
+        data =
+            incremental: incremental
+        duration = @_parseDuration(duration)
+        if duration
+            data[durationMillis] = duration
         $.ajax
             type: "POST"
             url:  "#{ @url() }/bounce?user=#{ app.getUsername() }"
             contentType: 'application/json'
-            data: JSON.stringify
-              durationMillis: @_parseDuration(duration)
-              incremental: incremental
+            data: JSON.stringify data
 
     exitCooldown: =>
         $.ajax
