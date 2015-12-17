@@ -10,7 +10,7 @@ public class SingularitySkipHealthchecksRequest {
   private final Optional<Long> durationMillis;
 
   @JsonCreator
-  public SingularitySkipHealthchecksRequest(@JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks, @JsonProperty("duration") Optional<Long> durationMillis) {
+  public SingularitySkipHealthchecksRequest(@JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks, @JsonProperty("durationMillis") Optional<Long> durationMillis) {
     this.skipHealthchecks = skipHealthchecks;
     this.durationMillis = durationMillis;
   }

@@ -51,6 +51,7 @@ import com.hubspot.singularity.resources.SlaveResource;
 import com.hubspot.singularity.scheduler.SingularityCleaner;
 import com.hubspot.singularity.scheduler.SingularityCooldownChecker;
 import com.hubspot.singularity.scheduler.SingularityDeployChecker;
+import com.hubspot.singularity.scheduler.SingularityExpiringUserActionPoller;
 import com.hubspot.singularity.scheduler.SingularityScheduledJobPoller;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
 import com.hubspot.singularity.scheduler.SingularitySchedulerPriority;
@@ -113,6 +114,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected ZkDataMigrationRunner migrationRunner;
   @Inject
   protected SingularityEventListener eventListener;
+  @Inject
+  protected SingularityExpiringUserActionPoller expiringUserActionPoller;
 
   @Inject
   @Named(SingularityMainModule.SERVER_ID_PROPERTY)

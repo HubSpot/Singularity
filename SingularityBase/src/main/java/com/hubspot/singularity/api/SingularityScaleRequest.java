@@ -11,7 +11,7 @@ public class SingularityScaleRequest {
   private final Optional<Boolean> skipHealthchecks;
 
   @JsonCreator
-  public SingularityScaleRequest(@JsonProperty("instances") Optional<Integer> instances, @JsonProperty("duration") Optional<Long> durationMillis,
+  public SingularityScaleRequest(@JsonProperty("instances") Optional<Integer> instances, @JsonProperty("durationMillis") Optional<Long> durationMillis,
       @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks) {
     this.instances = instances;
     this.durationMillis = durationMillis;

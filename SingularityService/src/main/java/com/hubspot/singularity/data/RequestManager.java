@@ -67,7 +67,7 @@ public class RequestManager extends CuratorAsyncManager {
 
   private static final Map<Class<? extends SingularityExpiringParent>, String> EXPIRING_CLASS_TO_PATH = ImmutableMap.of(
         SingularityExpiringBounce.class, EXPIRING_BOUNCE_PATH_ROOT,
-        SingularityExpiringParent.class, EXPIRING_PAUSE_PATH_ROOT,
+        SingularityExpiringPause.class, EXPIRING_PAUSE_PATH_ROOT,
         SingularityExpiringScale.class, EXPIRING_SCALE_PATH_ROOT,
         SingularityExpiringSkipHealthchecks.class, EXPIRING_SKIP_HC_PATH_ROOT
       );
@@ -89,7 +89,7 @@ public class RequestManager extends CuratorAsyncManager {
 
     this.expiringTranscoderMap = ImmutableMap.of(
         SingularityExpiringBounce.class, expiringBounceTranscoder,
-        SingularityExpiringParent.class, expiringPauseTranscoder,
+        SingularityExpiringPause.class, expiringPauseTranscoder,
         SingularityExpiringScale.class, expiringScaleTranscoder,
         SingularityExpiringSkipHealthchecks.class, expiringSkipHealthchecksTranscoder
       );

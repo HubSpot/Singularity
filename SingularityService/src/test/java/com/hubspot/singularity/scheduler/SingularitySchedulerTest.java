@@ -963,6 +963,77 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testPause() {
+    initRequest();
+    initFirstDeploy();
+
+    SingularityTask taskOne = startTask(firstDeploy);
+
+    requestResource.pause(requestId, Optional.<SingularityPauseRequest> absent());
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertEquals(1, taskManager.getKilledTaskIdRecords().size());
+
+    statusUpdate(taskOne, TaskState.TASK_KILLED);
+
+    resourceOffers();
+
+    Assert.assertEquals(0, taskManager.getActiveTaskIds().size());
+    Assert.assertEquals(0, taskManager.getPendingTasks().size());
+    Assert.assertEquals(RequestState.PAUSED, requestManager.getRequest(requestId).get().getState());
+    Assert.assertEquals(requestId, requestManager.getPausedRequests().iterator().next().getRequest().getId());
+
+    requestResource.unpause(requestId);
+
+    resourceOffers();
+
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+    Assert.assertEquals(0, taskManager.getPendingTasks().size());
+
+    Assert.assertEquals(RequestState.ACTIVE, requestManager.getRequest(requestId).get().getState());
+    Assert.assertEquals(requestId, requestManager.getActiveRequests().iterator().next().getRequest().getId());
+  }
+
+  @Test
+  public void testExpiringPause() {
+    initRequest();
+    initFirstDeploy();
+
+    SingularityTask taskOne = startTask(firstDeploy);
+
+    requestResource.pause(requestId, Optional.of(new SingularityPauseRequest(Optional.<Boolean> absent(), Optional.of(1L))));
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertEquals(1, taskManager.getKilledTaskIdRecords().size());
+
+    statusUpdate(taskOne, TaskState.TASK_KILLED);
+
+    resourceOffers();
+
+    Assert.assertEquals(0, taskManager.getActiveTaskIds().size());
+    Assert.assertEquals(0, taskManager.getPendingTasks().size());
+    Assert.assertEquals(RequestState.PAUSED, requestManager.getRequest(requestId).get().getState());
+    Assert.assertEquals(requestId, requestManager.getPausedRequests().iterator().next().getRequest().getId());
+
+    try {
+      Thread.sleep(2);
+    } catch (InterruptedException ie){
+    }
+
+    expiringUserActionPoller.runActionOnPoll();
+
+    resourceOffers();
+
+//    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+//    Assert.assertEquals(0, taskManager.getPendingTasks().size());
+//
+//    Assert.assertEquals(RequestState.ACTIVE, requestManager.getRequest(requestId).get().getState());
+//    Assert.assertEquals(requestId, requestManager.getActiveRequests().iterator().next().getRequest().getId());
+  }
+
+  @Test
   public void testBounce() {
     initRequest();
 

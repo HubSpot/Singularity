@@ -97,6 +97,8 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
     @Override
     protected void handleExpiringObject(SingularityExpiringPause expiringObject) {
+      // TODO
+
 
     }
 
