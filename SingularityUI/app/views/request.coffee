@@ -30,6 +30,10 @@ class RequestView extends View
 
             'click [data-action="makeScalePermanent"]': 'makeScalePermanent'
             'click [data-action="makePausePermanent"]': 'makePausePermanent'
+            'click [data-action="cancelBounce"]': 'cancelBounce'
+
+            'click [data-action="revertPause"]': 'revertPause'
+            'click [data-action="revertScale"]': 'revertScale'
 
     initialize: ({@requestId}) ->
 
@@ -126,6 +130,19 @@ class RequestView extends View
     makePausePermanent: (e) =>
         @model.makePausePermanent =>
             @trigger 'refreshrequest'
+
+    cancelBounce: (e) =>
+        @model.cancelBounce =>
+            @trigger 'refreshrequest'
+
+    revertPause: (e) =>
+        @model.unpause()
+        @makePausePermanent();
+
+    revertScale: (e) =>
+        @model.scale
+            instances: $(e.target).attr('data-revert-param')
+        @makeScalePermanent()
 
     runTask: (e) =>
         id = $(e.target).parents('tr').data 'id'

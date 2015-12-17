@@ -91,15 +91,23 @@ class Request extends Model
               instances: confirmedOrPromptData.instances
               durationMillis: @_parseDuration(confirmedOrPromptData.duration)
 
-    makeScalePermanent: =>
-        $.ajax
-          url: "#{ @url() }/scale }"
+    makeScalePermanent: (callback) =>
+        $.ajax(
+          url: "#{ @url() }/scale?user=#{ app.getUsername() }"
           type: "DELETE"
+        ).then callback
 
-    makePausePermanent: =>
-        $.ajax
-          url: "#{ @url() }/pause }"
+    makePausePermanent: (callback) =>
+        $.ajax(
+          url: "#{ @url() }/pause?user=#{ app.getUsername() }"
           type: "DELETE"
+        ).then callback
+
+    cancelBounce: (callback) =>
+        $.ajax(
+          url: "#{ @url() }/bounce?user=#{ app.getUsername() }"
+          type: "DELETE"
+        ).then callback
 
     bounce: (incremental, duration) =>
         $.ajax
@@ -121,6 +129,8 @@ class Request extends Model
             type: "DELETE"
 
     _parseDuration: (duration) =>
+        if !duration
+            return duration
         # Convert strings like '1 hr', '2 days', etc. or any combination thereof to millis
         try
             return juration.parse(duration) * 1000
