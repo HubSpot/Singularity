@@ -93,7 +93,12 @@ class Request extends Model
 
     makeScalePermanent: =>
         $.ajax
-          url: "#{ @url() }/scale?user=#{ app.getUsername() }"
+          url: "#{ @url() }/scale }"
+          type: "DELETE"
+
+    makePausePermanent: =>
+        $.ajax
+          url: "#{ @url() }/pause }"
           type: "DELETE"
 
     bounce: (incremental, duration) =>

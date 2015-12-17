@@ -7,7 +7,7 @@
             <button type="button" class="btn btn-xs btn-default">{{ revertText }}</button>
             <button type="button" class="btn btn-xs btn-primary" data-action="{{ revertAction }}">Make Permanent</button>
         {{else}}
-            <button type="button" class="btn btn-xs btn-default">Cancel</button>
+            <button type="button" class="btn btn-xs btn-default" data-action="{{ cancelAction }}">{{ cancelText }}</button>
         {{/if}}
     </div>
 {{/each}}

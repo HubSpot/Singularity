@@ -29,6 +29,7 @@ class RequestView extends View
             'click [data-action="expand-deploy-history"]': 'flashDeployHistory'
 
             'click [data-action="makeScalePermanent"]': 'makeScalePermanent'
+            'click [data-action="makePausePermanent"]': 'makePausePermanent'
 
     initialize: ({@requestId}) ->
 
@@ -120,6 +121,10 @@ class RequestView extends View
 
     makeScalePermanent: (e) =>
         @model.makeScalePermanent =>
+            @trigger 'refreshrequest'
+
+    makePausePermanent: (e) =>
+        @model.makePausePermanent =>
             @trigger 'refreshrequest'
 
     runTask: (e) =>

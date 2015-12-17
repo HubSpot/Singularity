@@ -17,6 +17,10 @@ class requestHeaderSubview extends View
         @$el.html @template @renderData()
 
     renderData: =>
+        console.log
+            pauseDisabled: !!@model.toJSON().expiringPause
+            scaleDisabled: !!@model.toJSON().expiringScale
+            bounceDisabled: !!@model.toJSON().expiringBounce
         bounces = @taskCleanups.where
             cleanupType: 'BOUNCING'
             requestId: @model.get('id')
@@ -26,5 +30,8 @@ class requestHeaderSubview extends View
         config: config
         data:      @model.toJSON()
         synced:    @model.synced
+        pauseDisabled: !!@model.toJSON().expiringPause
+        scaleDisabled: !!@model.toJSON().expiringScale
+        bounceDisabled: !!@model.toJSON().expiringBounce
 
 module.exports = requestHeaderSubview

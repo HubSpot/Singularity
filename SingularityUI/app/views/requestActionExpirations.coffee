@@ -30,8 +30,10 @@ class requestActionExpirations extends View
         if request.expiringPause
             expirations.push
                 action: 'Pause'
-                endMillis: request.expiringScale.startMillis + request.expiringScale.durationMillis
+                endMillis: request.expiringPause.startMillis + request.expiringPause.durationMillis
                 canRevert: false
+                cancelText: 'Make Permanent'
+                cancelAction: "makePausePermanent"
         console.log expirations
 
         request: request

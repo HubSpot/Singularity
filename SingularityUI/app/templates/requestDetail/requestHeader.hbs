@@ -49,25 +49,25 @@
             {{/if}}
 
             {{#if data.canBeScaled}}
-                <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="scale">
+                <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="scale" {{#if scaleDisabled }}disabled{{/if}}>
                     Scale
                 </a>
             {{/if}}
 
             {{#unless data.deleted}}
                 {{#if data.paused}}
-                    <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="unpause">
+                    <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="unpause" {{#if pauseDisabled }}disabled{{/if}}>
                         Unpause
                     </a>
                 {{else}}
-                    <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="pause">
+                    <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="pause" {{#if pauseDisabled }}disabled{{/if}}>
                         Pause
                     </a>
                 {{/if}}
             {{/unless}}
 
             {{#if data.canBeBounced}}
-                <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="bounce">
+                <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="bounce" {{#if bounceDisabled }}disabled{{/if}}>
                     Bounce
                 </a>
             {{/if}}
