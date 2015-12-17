@@ -153,8 +153,8 @@ public class HistoryResource extends AbstractHistoryResource {
   }
 
   @GET
-  @Path("/request/{requestId}/tasks/{runId}")
-  @ApiOperation("Retrieve the history for all tasks of a specific request.")
+  @Path("/request/{requestId}/run/{runId}")
+  @ApiOperation("Retrieve the history for a task by runId")
   public Optional<SingularityTaskIdHistory> getTaskHistoryForRequest(
       @ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
       @ApiParam("runId to look up") @PathParam("runId") String runId) {
