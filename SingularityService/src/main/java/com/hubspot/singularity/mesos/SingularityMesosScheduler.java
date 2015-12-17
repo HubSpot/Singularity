@@ -144,7 +144,6 @@ public class SingularityMesosScheduler implements Scheduler {
 
       for (SingularityTaskRequest taskRequest : taskRequests) {
         LOG.trace("Task {} is due", taskRequest.getPendingTask().getPendingTaskId());
-        taskRequest.getPendingTask().clearUnmatchedOffers();
       }
 
       numDueTasks = taskRequests.size();
@@ -189,17 +188,6 @@ public class SingularityMesosScheduler implements Scheduler {
           driver.declineOffer(offerHolder.getOffer().getId());
         }
       }
-
-      for (SingularityTaskRequest taskRequest : taskRequests) {
-        try {
-          if (!taskRequest.getPendingTask().getUnmatchedOffers().isEmpty()) {
-            taskManager.savePendingTask(taskRequest.getPendingTask());
-          }
-        } catch (Exception e) {
-          LOG.error(String.format("Could not save unmatchedOffers for pending task %s", taskRequest.getPendingTask().getPendingTaskId()));
-        }
-      }
-
     } catch (Throwable t) {
       LOG.error("Received fatal error while accepting offers - will decline all available offers", t);
 
@@ -249,12 +237,6 @@ public class SingularityMesosScheduler implements Scheduler {
 
         return Optional.of(task);
       } else {
-        if (!matchesResources) {
-          taskRequest.getPendingTask().addUnmatchedOffer(offerHolder.getOffer().getHostname(), SlaveMatchState.RESOURCES_DO_NOT_MATCH);
-        }
-        if (!slaveMatchState.isMatchAllowed()) {
-          taskRequest.getPendingTask().addUnmatchedOffer(offerHolder.getOffer().getHostname(), slaveMatchState);
-        }
         LOG.trace("Ignoring offer {} on {} for task {}; matched resources: {}, slave match state: {}", offerHolder.getOffer().getId(), offerHolder.getOffer().getHostname(), taskRequest
             .getPendingTask().getPendingTaskId(), matchesResources, slaveMatchState);
       }

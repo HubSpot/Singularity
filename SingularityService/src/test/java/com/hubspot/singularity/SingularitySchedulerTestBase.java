@@ -172,15 +172,11 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
     List<Attribute> attributesList = new ArrayList<>();
     for (Map.Entry<String, String> entry : attributes.entrySet()) {
-      try {
-        attributesList.add(Attribute.newBuilder()
-            .setType(Type.TEXT)
-            .setName(entry.getKey())
-            .setText(Text.newBuilder().setValue(entry.getValue()).build())
-            .build());
-      } catch (Exception e) {
-        Throwables.propagate(e);
-      }
+      attributesList.add(Attribute.newBuilder()
+          .setType(Type.TEXT)
+          .setName(entry.getKey())
+          .setText(Text.newBuilder().setValue(entry.getValue()).build())
+          .build());
     }
 
     return Offer.newBuilder()
