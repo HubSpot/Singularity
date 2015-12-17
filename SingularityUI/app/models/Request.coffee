@@ -63,7 +63,7 @@ class Request extends Model
             killTasks: killTasks
         duration = @_parseDuration(duration)
         if duration
-            data[durationMillis] = duration
+            data.durationMillis = duration
         $.ajax
             url:         "#{ @url() }/pause"
             type:        'POST'
@@ -90,7 +90,7 @@ class Request extends Model
             instances: confirmedOrPromptData.instances
         duration = @_parseDuration(confirmedOrPromptData.duration)
         if duration
-            data[durationMillis] = duration
+            data.durationMillis = duration
         $.ajax
           url: "#{ @url() }/scale?user=#{ app.getUsername() }"
           type: "PUT"
@@ -120,7 +120,7 @@ class Request extends Model
             incremental: incremental
         duration = @_parseDuration(duration)
         if duration
-            data[durationMillis] = duration
+            data.durationMillis = duration
         $.ajax
             type: "POST"
             url:  "#{ @url() }/bounce?user=#{ app.getUsername() }"

@@ -129,7 +129,7 @@ class RequestView extends View
 
     makePausePermanent: (e) =>
         @model.makePausePermanent =>
-            @trigger 'refreshrequest'
+            _.delay(() => @trigger 'refreshrequest', 500)
 
     cancelBounce: (e) =>
         @model.cancelBounce =>
