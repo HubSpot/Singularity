@@ -20,10 +20,16 @@ class requestActionExpirations extends View
                 action: 'Scale'
                 endMillis: request.expiringScale.startMillis + request.expiringScale.durationMillis
                 canRevert: true
+                revertAction: "makeScalePermanent"
                 revertText: "Revert to #{request.expiringScale.revertToInstances} #{if request.expiringScale.revertToInstances is 1 then 'instance' else 'instances'}"
         if request.expiringBounce
             expirations.push
                 action: 'Bounce'
+                endMillis: request.expiringScale.startMillis + request.expiringScale.durationMillis
+                canRevert: false
+        if request.expiringPause
+            expirations.push
+                action: 'Pause'
                 endMillis: request.expiringScale.startMillis + request.expiringScale.durationMillis
                 canRevert: false
         console.log expirations

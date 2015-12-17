@@ -89,7 +89,12 @@ class Request extends Model
           contentType: 'application/json'
           data: JSON.stringify
               instances: confirmedOrPromptData.instances
-              duration: @_parseDuration(confirmedOrPromptData.duration)
+              durationMillis: @_parseDuration(confirmedOrPromptData.duration)
+
+    makeScalePermanent: =>
+        $.ajax
+          url: "#{ @url() }/scale?user=#{ app.getUsername() }"
+          type: "DELETE"
 
     bounce: (incremental, duration) =>
         $.ajax
