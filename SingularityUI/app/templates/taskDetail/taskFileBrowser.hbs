@@ -51,12 +51,12 @@
                                 {{/if}}
                             {{/if}}
                         </td>
-                        <td class="hidden-xs" data-value="{{#if isDirectory}}a{{else}}b{{/if}} {{size}}">
+                        <td class="hidden-xs" data-value="{{#if isDirectory}}0{{else}}{{size}}{{/if}}">
                             {{#unless isDirectory}}
                                 {{humanizeFileSize size}}
                             {{/unless}}
                         </td>
-                        <td class="hidden-xs" data-value="{{#if isDirectory}}a{{else}}b{{/if}} {{ mtime }}"><span title="{{ mtime }}">{{timestampFormatted mtime}}</span></td>
+                        <td class="hidden-xs" data-value="{{ mtime }}"><span title="{{ mtime }}">{{timestampFormatted mtime}}</span></td>
                         <td class="actions-column hidden-xs">
                             {{#unless isDirectory}}
                                 <a href="{{ downloadLink }}" target="_blank" title="Download">
