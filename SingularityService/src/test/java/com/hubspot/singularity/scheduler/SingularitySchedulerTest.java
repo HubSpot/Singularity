@@ -1026,11 +1026,11 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     resourceOffers();
 
-//    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
-//    Assert.assertEquals(0, taskManager.getPendingTasks().size());
-//
-//    Assert.assertEquals(RequestState.ACTIVE, requestManager.getRequest(requestId).get().getState());
-//    Assert.assertEquals(requestId, requestManager.getActiveRequests().iterator().next().getRequest().getId());
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+    Assert.assertEquals(0, taskManager.getPendingTasks().size());
+
+    Assert.assertEquals(RequestState.ACTIVE, requestManager.getRequest(requestId).get().getState());
+    Assert.assertEquals(requestId, requestManager.getActiveRequests().iterator().next().getRequest().getId());
   }
 
   @Test

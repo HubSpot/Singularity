@@ -6,10 +6,16 @@ import java.util.concurrent.locks.Lock;
 
 import javax.inject.Singleton;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
@@ -17,19 +23,26 @@ import com.hubspot.singularity.expiring.SingularityExpiringParent;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
+import com.hubspot.singularity.helpers.RequestHelper;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
 
 @Singleton
 public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPoller {
 
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityExpiringUserActionPoller.class);
+
   private final RequestManager requestManager;
+  private final RequestHelper requestHelper;
   private final List<SingularityExpiringUserActionHandler<?>> handlers;
 
+  // TODO not sure if this needs a lock.
   @Inject
-  SingularityExpiringUserActionPoller(SingularityConfiguration configuration, RequestManager requestManager, @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock) {
+  SingularityExpiringUserActionPoller(SingularityConfiguration configuration, RequestManager requestManager, @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock,
+      RequestHelper requestHelper) {
     super(configuration.getCheckExpiringUserActionEveryMillis(), TimeUnit.MILLISECONDS, lock);
 
     this.requestManager = requestManager;
+    this.requestHelper = requestHelper;
 
     List<SingularityExpiringUserActionHandler<?>> tempHandlers = Lists.newArrayList();
     tempHandlers.add(new SingularityExpiringBounceHandler());
@@ -65,14 +78,21 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
     protected void checkExpiringObjects() {
       for (T expiringObject : requestManager.getExpiringObjects(clazz)) {
         if (isExpiringDue(expiringObject)) {
-          handleExpiringObject(expiringObject);
+
+          Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(expiringObject.getRequestId());
+
+          if (!requestWithState.isPresent()) {
+            LOG.warn("Request {} not present, discarding {}", expiringObject.getRequestId(), expiringObject);
+          } else {
+            handleExpiringObject(expiringObject, requestWithState.get());
+          }
 
           requestManager.deleteExpiringObject(clazz, expiringObject.getRequestId());
         }
       }
     }
 
-    protected abstract void handleExpiringObject(T expiringObject);
+    protected abstract void handleExpiringObject(T expiringObject, SingularityRequestWithState requestWithState);
 
   }
 
@@ -83,7 +103,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
     }
 
     @Override
-    protected void handleExpiringObject(SingularityExpiringBounce expiringObject) {
+    protected void handleExpiringObject(SingularityExpiringBounce expiringObject, SingularityRequestWithState requestWithState) {
 
     }
 
@@ -96,10 +116,15 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
     }
 
     @Override
-    protected void handleExpiringObject(SingularityExpiringPause expiringObject) {
-      // TODO
+    protected void handleExpiringObject(SingularityExpiringPause expiringObject, SingularityRequestWithState requestWithState) {
+      if (requestWithState.getState() != RequestState.PAUSED) {
+        LOG.warn("Discarding {} because request {} is in state {}", expiringObject, requestWithState.getRequest().getId(), requestWithState.getState());
+        return;
+      }
 
+      LOG.info("Unpausing request {} because of {}", requestWithState.getRequest().getId(), expiringObject);
 
+      requestHelper.unpause(requestWithState.getRequest(), expiringObject.getUser());
     }
 
   }
@@ -111,7 +136,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
     }
 
     @Override
-    protected void handleExpiringObject(SingularityExpiringScale expiringObject) {
+    protected void handleExpiringObject(SingularityExpiringScale expiringObject, SingularityRequestWithState requestWithState) {
 
     }
 
@@ -124,7 +149,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
     }
 
     @Override
-    protected void handleExpiringObject(SingularityExpiringSkipHealthchecks expiringObject) {
+    protected void handleExpiringObject(SingularityExpiringSkipHealthchecks expiringObject, SingularityRequestWithState requestWithState) {
 
     }
 

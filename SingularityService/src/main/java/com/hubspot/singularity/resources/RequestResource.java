@@ -64,6 +64,7 @@ import com.hubspot.singularity.expiring.SingularityExpiringParent;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
 import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
+import com.hubspot.singularity.helpers.RequestHelper;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -80,14 +81,17 @@ public class RequestResource extends AbstractRequestResource {
   private final SingularityMailer mailer;
   private final TaskManager taskManager;
   private final SlaveManager slaveManager;
+  private final RequestHelper requestHelper;
   private final SingularityConfiguration configuration;
 
   @Inject
-  public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, SlaveManager slaveManager, SingularityConfiguration configuration) {
+  public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer,
+      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, SlaveManager slaveManager, SingularityConfiguration configuration, RequestHelper requestHelper) {
     super(requestManager, deployManager, user, validator, authorizationHelper);
 
     this.mailer = mailer;
     this.taskManager = taskManager;
+    this.requestHelper = requestHelper;
     this.slaveManager = slaveManager;
     this.configuration = configuration;
   }
@@ -333,17 +337,7 @@ public class RequestResource extends AbstractRequestResource {
 
     checkConflict(requestWithState.getState() == RequestState.PAUSED, "Request %s is not in PAUSED state, it is in %s", requestId, requestWithState.getState());
 
-    mailer.sendRequestUnpausedMail(requestWithState.getRequest(), JavaUtils.getUserEmail(user));
-
-    Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
-
-    final long now = System.currentTimeMillis();
-
-    requestManager.unpause(requestWithState.getRequest(), now, JavaUtils.getUserEmail(user));
-
-    if (maybeDeployId.isPresent() && !requestWithState.getRequest().isOneOff()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), now, JavaUtils.getUserEmail(user), PendingType.UNPAUSED, Optional.<Boolean> absent()));
-    }
+    final long now = requestHelper.unpause(requestWithState.getRequest(), JavaUtils.getUserEmail(user));
 
     return fillEntireRequest(new SingularityRequestWithState(requestWithState.getRequest(), RequestState.ACTIVE, now));
   }
