@@ -57,7 +57,7 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
       }
     }
 
-    Optional<SingularityTaskHistory> history = historyManager.getTaskHistory(runId);
+    Optional<SingularityTaskHistory> history = historyManager.getTaskHistoryByRunId(requestId, runId);
 
     if (history.isPresent()) {
       return Optional.of(SingularityTaskIdHistory.fromTaskIdAndTaskAndUpdates(history.get().getTask().getTaskId(), history.get().getTask(), history.get().getTaskUpdates()));

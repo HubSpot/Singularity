@@ -121,8 +121,8 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
-  public Optional<SingularityTaskHistory> getTaskHistoryByRunId(String runId) {
-    byte[] historyBytes = history.getTaskHistoryForTaskByRunId(runId);
+  public Optional<SingularityTaskHistory> getTaskHistoryByRunId(String requestId, String runId) {
+    byte[] historyBytes = history.getTaskHistoryForTaskByRunId(requestId, runId);
 
     if (historyBytes == null || historyBytes.length == 0) {
       return Optional.absent();
