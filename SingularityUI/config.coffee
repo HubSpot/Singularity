@@ -50,6 +50,7 @@ exports.config =
             defaultDeployHealthTimeoutSeconds: process.env.SINGULARITY_DEPLOY_HEALTH_TIMEOUT_SECONDS ? 120
             hideNewDeployButton: process.env.SINGULARITY_HIDE_NEW_DEPLOY_BUTTON ? "false"
             hideNewRequestButton: process.env.SINGULARITY_HIDE_NEW_REQUEST_BUTTON ? "false"
+            loadBalancingEnabled: process.env.SINGULARITY_LOAD_BALANCING_ENABLED ? "false"
             runningTaskLogPath:  process.env.SINGULARITY_RUNNING_TASK_LOG_PATH ? "stdout"
             finishedTaskLogPath: process.env.SINGULARITY_FINISHED_TASK_LOG_PATH ? "stdout"
             commonHostnameSuffixToOmit: process.env.SINGULARITY_COMMON_HOSTNAME_SUFFIX_TO_OMIT ? ""

@@ -7,6 +7,7 @@ import javax.ws.rs.HEAD;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -26,6 +27,7 @@ public class IndexView extends View {
 
   private final Boolean hideNewDeployButton;
   private final Boolean hideNewRequestButton;
+  private final Boolean loadBalancingEnabled;
 
   private final String title;
 
@@ -73,6 +75,7 @@ public class IndexView extends View {
 
     this.hideNewDeployButton = configuration.getUiConfiguration().isHideNewDeployButton();
     this.hideNewRequestButton = configuration.getUiConfiguration().isHideNewRequestButton();
+    this.loadBalancingEnabled = !Strings.isNullOrEmpty(configuration.getLoadBalancerUri());
 
     this.navColor = configuration.getUiConfiguration().getNavColor();
 
@@ -147,6 +150,10 @@ public class IndexView extends View {
 
   public Boolean getHideNewRequestButton() {
     return hideNewRequestButton;
+  }
+
+  public Boolean getLoadBalancingEnabled() {
+    return loadBalancingEnabled;
   }
 
   public long getDefaultHealthcheckIntervalSeconds() {
