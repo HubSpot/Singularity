@@ -121,6 +121,17 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
+  public Optional<SingularityTaskHistory> getTaskHistoryByRunId(String runId) {
+    byte[] historyBytes = history.getTaskHistoryForTaskByRunId(runId);
+
+    if (historyBytes == null || historyBytes.length == 0) {
+      return Optional.absent();
+    }
+
+    return Optional.of(taskHistoryTranscoder.fromBytes(historyBytes));
+  }
+
+  @Override
   public List<SingularityRequestIdCount> getRequestIdCounts(Date before) {
     return history.getRequestIdCounts(before);
   }
