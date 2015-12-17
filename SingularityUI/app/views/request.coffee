@@ -43,6 +43,7 @@ class RequestView extends View
         @$('#task-history').html        @subviews.taskHistory.$el
         @$('#deploy-history').html      @subviews.deployHistory.$el
         @$('#request-history').html     @subviews.requestHistory.$el
+        @$('#request-action-expirations').html @subviews.actionExpirations.$el
 
         super.afterRender()
 

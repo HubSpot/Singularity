@@ -1,0 +1,13 @@
+{{! Part of requestBase }}
+
+{{#each data}}
+    <div class='alert alert-info'>
+        <strong>Action Expiration: </strong> This request has an active <strong>{{ action }}</strong> request that expires {{ timestampFromNow endMillis }}.
+        {{#if canRevert}}
+            <button type="button" class="btn btn-xs btn-default">{{ revertText }}</button>
+            <button type="button" class="btn btn-xs btn-primary">Make Permanent</button>
+        {{else}}
+            <button type="button" class="btn btn-xs btn-default">Cancel</button>
+        {{/if}}
+    </div>
+{{/each}}
