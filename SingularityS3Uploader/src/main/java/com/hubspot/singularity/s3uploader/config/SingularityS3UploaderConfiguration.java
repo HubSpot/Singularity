@@ -44,6 +44,7 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
   private Optional<String> s3SecretKey = Optional.absent();
 
   @Max(5368709120L)
+  @Min(0)
   @JsonProperty
   private long maxSingleUploadSizeBytes = 5368709120L;
 
@@ -51,7 +52,7 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
   @JsonProperty
   private long uploadPartSize = 20971520L;
 
-  @Min(500)
+  @Min(0)
   @JsonProperty
   private int retryWaitMs = 1000;
 
