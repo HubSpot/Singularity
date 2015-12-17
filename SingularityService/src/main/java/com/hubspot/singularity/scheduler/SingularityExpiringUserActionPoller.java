@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
 import javax.inject.Singleton;
+import javax.ws.rs.WebApplicationException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
@@ -137,9 +139,15 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
     @Override
     protected void handleExpiringObject(SingularityExpiringScale expiringObject, SingularityRequestWithState requestWithState) {
+      final SingularityRequest oldRequest = requestWithState.getRequest();
+      final SingularityRequest newRequest = oldRequest.toBuilder().setInstances(expiringObject.getRevertToInstances()).build();
 
+      try {
+        requestHelper.updateRequest(newRequest, Optional.of(oldRequest), requestWithState.getState(), expiringObject.getUser(), Optional.<Boolean> absent());
+      } catch (WebApplicationException wae) {
+        LOG.error("While trying to apply {} for {}", expiringObject, expiringObject.getRequestId(), wae);
+      }
     }
-
   }
 
   private class SingularityExpiringSkipHealthchecksHandler extends SingularityExpiringUserActionHandler<SingularityExpiringSkipHealthchecks> {
@@ -150,9 +158,15 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
     @Override
     protected void handleExpiringObject(SingularityExpiringSkipHealthchecks expiringObject, SingularityRequestWithState requestWithState) {
+      final SingularityRequest oldRequest = requestWithState.getRequest();
+      final SingularityRequest newRequest = oldRequest.toBuilder().setSkipHealthchecks(expiringObject.getRevertToSkipHealthchecks()).build();
 
+      try {
+        requestHelper.updateRequest(newRequest, Optional.of(oldRequest), requestWithState.getState(), expiringObject.getUser(), Optional.<Boolean> absent());
+      } catch (WebApplicationException wae) {
+        LOG.error("While trying to apply {} for {}", expiringObject, expiringObject.getRequestId(), wae);
+      }
     }
-
   }
 
 }

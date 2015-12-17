@@ -32,7 +32,6 @@ import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingRequestParent;
@@ -40,7 +39,6 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularityRequestDeployState;
-import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
@@ -96,44 +94,6 @@ public class RequestResource extends AbstractRequestResource {
     this.configuration = configuration;
   }
 
-  private static class SingularityRequestDeployHolder {
-
-    private final Optional<SingularityDeploy> activeDeploy;
-    private final Optional<SingularityDeploy> pendingDeploy;
-
-    public SingularityRequestDeployHolder(Optional<SingularityDeploy> activeDeploy, Optional<SingularityDeploy> pendingDeploy) {
-      this.activeDeploy = activeDeploy;
-      this.pendingDeploy = pendingDeploy;
-    }
-
-    public Optional<SingularityDeploy> getActiveDeploy() {
-      return activeDeploy;
-    }
-
-    public Optional<SingularityDeploy> getPendingDeploy() {
-      return pendingDeploy;
-    }
-
-  }
-
-  private SingularityRequestDeployHolder getDeployHolder(String requestId) {
-    Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(requestId);
-
-    Optional<SingularityDeploy> activeDeploy = Optional.absent();
-    Optional<SingularityDeploy> pendingDeploy = Optional.absent();
-
-    if (requestDeployState.isPresent()) {
-      if (requestDeployState.get().getActiveDeploy().isPresent()) {
-        activeDeploy = deployManager.getDeploy(requestId, requestDeployState.get().getActiveDeploy().get().getDeployId());
-      }
-      if (requestDeployState.get().getPendingDeploy().isPresent()) {
-        pendingDeploy = deployManager.getDeploy(requestId, requestDeployState.get().getPendingDeploy().get().getDeployId());
-      }
-    }
-
-    return new SingularityRequestDeployHolder(activeDeploy, pendingDeploy);
-  }
-
   private void submitRequest(SingularityRequest request, RequestState requestState, Optional<Boolean> skipHealthchecks) {
     checkNotNullBadRequest(request.getId(), "Request must have an id");
     checkConflict(!requestManager.cleanupRequestExists(request.getId()), "Request %s is currently cleaning. Try again after a few moments", request.getId());
@@ -141,20 +101,12 @@ public class RequestResource extends AbstractRequestResource {
     Optional<SingularityRequestWithState> maybeOldRequestWithState = requestManager.getRequest(request.getId());
     Optional<SingularityRequest> maybeOldRequest = maybeOldRequestWithState.isPresent() ? Optional.of(maybeOldRequestWithState.get().getRequest()) : Optional.<SingularityRequest> absent();
 
-    SingularityRequestDeployHolder deployHolder = getDeployHolder(request.getId());
-
     if (maybeOldRequest.isPresent()) {
       authorizationHelper.checkForAuthorization(maybeOldRequest.get(), user, SingularityAuthorizationScope.WRITE);
     }
     authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
 
-    SingularityRequest newRequest = validator.checkSingularityRequest(request, maybeOldRequest, deployHolder.getActiveDeploy(), deployHolder.getPendingDeploy(), user);
-
-    final long now = System.currentTimeMillis();
-
-    requestManager.save(newRequest, requestState, maybeOldRequest.isPresent() ? RequestHistoryType.UPDATED : RequestHistoryType.CREATED, now, JavaUtils.getUserEmail(user));
-
-    checkReschedule(newRequest, maybeOldRequest, JavaUtils.getUserEmail(user), now, skipHealthchecks);
+    requestHelper.updateRequest(request, maybeOldRequest, requestState, JavaUtils.getUserEmail(user), skipHealthchecks);
   }
 
   @POST
@@ -167,33 +119,6 @@ public class RequestResource extends AbstractRequestResource {
   public SingularityRequestParent activate(@ApiParam("The Singularity request to create or update") SingularityRequest request) {
     submitRequest(request, RequestState.ACTIVE, Optional.<Boolean> absent());
     return fillEntireRequest(fetchRequestWithState(request.getId()));
-  }
-
-  private void checkReschedule(SingularityRequest newRequest, Optional<SingularityRequest> maybeOldRequest, Optional<String> user, long timestamp, Optional<Boolean> skipHealthchecks) {
-    if (!maybeOldRequest.isPresent()) {
-      return;
-    }
-
-    if (shouldReschedule(newRequest, maybeOldRequest.get())) {
-      Optional<String> maybeDeployId = deployManager.getInUseDeployId(newRequest.getId());
-
-      if (maybeDeployId.isPresent()) {
-        requestManager.addToPendingQueue(new SingularityPendingRequest(newRequest.getId(), maybeDeployId.get(), timestamp, user, PendingType.UPDATED_REQUEST, skipHealthchecks));
-      }
-    }
-  }
-
-  private boolean shouldReschedule(SingularityRequest newRequest, SingularityRequest oldRequest) {
-    if (newRequest.getInstancesSafe() != oldRequest.getInstancesSafe()) {
-      return true;
-    }
-    if (newRequest.isScheduled() && oldRequest.isScheduled()) {
-      if (!newRequest.getQuartzScheduleSafe().equals(oldRequest.getQuartzScheduleSafe())) {
-        return true;
-      }
-    }
-
-    return false;
   }
 
   private String getAndCheckDeployId(String requestId) {

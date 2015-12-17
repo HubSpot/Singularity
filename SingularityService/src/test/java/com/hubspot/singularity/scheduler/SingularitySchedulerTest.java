@@ -1438,6 +1438,29 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testExpiringScale() {
+    initRequest();
+    initFirstDeploy();
+
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(5), Optional.of(1L), Optional.<Boolean> absent()));
+
+    try {
+      Thread.sleep(2);
+    } catch (InterruptedException e) {
+
+    }
+
+    expiringUserActionPoller.runActionOnPoll();
+
+    resourceOffers();
+    resourceOffers();
+    resourceOffers();
+    resourceOffers();
+
+    Assert.assertEquals(1, taskManager.getNumActiveTasks());
+  }
+
+  @Test
   public void testWaitAfterTaskWorks() {
     initRequest();
     initFirstDeploy();

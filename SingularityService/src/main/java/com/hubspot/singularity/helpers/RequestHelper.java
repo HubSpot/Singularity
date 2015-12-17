@@ -3,11 +3,16 @@ package com.hubspot.singularity.helpers;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityRequestDeployState;
+import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
+import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
 @Singleton
@@ -16,12 +21,14 @@ public class RequestHelper {
   private final RequestManager requestManager;
   private final SingularityMailer mailer;
   private final DeployManager deployManager;
+  private final SingularityValidator validator;
 
   @Inject
-  public RequestHelper(RequestManager requestManager, SingularityMailer mailer, DeployManager deployManager) {
+  public RequestHelper(RequestManager requestManager, SingularityMailer mailer, DeployManager deployManager, SingularityValidator validator) {
     this.requestManager = requestManager;
     this.mailer = mailer;
     this.deployManager = deployManager;
+    this.validator = validator;
   }
 
   public long unpause(SingularityRequest request, Optional<String> user) {
@@ -38,6 +45,63 @@ public class RequestHelper {
     }
 
     return now;
+  }
+
+  private SingularityRequestDeployHolder getDeployHolder(String requestId) {
+    Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(requestId);
+
+    Optional<SingularityDeploy> activeDeploy = Optional.absent();
+    Optional<SingularityDeploy> pendingDeploy = Optional.absent();
+
+    if (requestDeployState.isPresent()) {
+      if (requestDeployState.get().getActiveDeploy().isPresent()) {
+        activeDeploy = deployManager.getDeploy(requestId, requestDeployState.get().getActiveDeploy().get().getDeployId());
+      }
+      if (requestDeployState.get().getPendingDeploy().isPresent()) {
+        pendingDeploy = deployManager.getDeploy(requestId, requestDeployState.get().getPendingDeploy().get().getDeployId());
+      }
+    }
+
+    return new SingularityRequestDeployHolder(activeDeploy, pendingDeploy);
+  }
+
+  private boolean shouldReschedule(SingularityRequest newRequest, SingularityRequest oldRequest) {
+    if (newRequest.getInstancesSafe() != oldRequest.getInstancesSafe()) {
+      return true;
+    }
+    if (newRequest.isScheduled() && oldRequest.isScheduled()) {
+      if (!newRequest.getQuartzScheduleSafe().equals(oldRequest.getQuartzScheduleSafe())) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private void checkReschedule(SingularityRequest newRequest, Optional<SingularityRequest> maybeOldRequest, Optional<String> user, long timestamp, Optional<Boolean> skipHealthchecks) {
+    if (!maybeOldRequest.isPresent()) {
+      return;
+    }
+
+    if (shouldReschedule(newRequest, maybeOldRequest.get())) {
+      Optional<String> maybeDeployId = deployManager.getInUseDeployId(newRequest.getId());
+
+      if (maybeDeployId.isPresent()) {
+        requestManager.addToPendingQueue(new SingularityPendingRequest(newRequest.getId(), maybeDeployId.get(), timestamp, user, PendingType.UPDATED_REQUEST, skipHealthchecks));
+      }
+    }
+  }
+
+  public void updateRequest(SingularityRequest request, Optional<SingularityRequest> maybeOldRequest, RequestState requestState, Optional<String> user, Optional<Boolean> skipHealthchecks) {
+    SingularityRequestDeployHolder deployHolder = getDeployHolder(request.getId());
+
+    SingularityRequest newRequest = validator.checkSingularityRequest(request, maybeOldRequest, deployHolder.getActiveDeploy(), deployHolder.getPendingDeploy());
+
+    final long now = System.currentTimeMillis();
+
+    requestManager.save(newRequest, requestState, maybeOldRequest.isPresent() ? RequestHistoryType.UPDATED : RequestHistoryType.CREATED, now, user);
+
+    checkReschedule(newRequest, maybeOldRequest, user, now, skipHealthchecks);
   }
 
 }
