@@ -158,6 +158,8 @@ class Request extends Model
             input: """
                 <input name="instances" type="number" placeholder="#{@get 'instances'}" min="1" step="1" required />
                 <input name="duration" type="text" placeholder="Expiration (optional)" />
+                <span class="help">If an expiration duration is specified, this action will be reverted afterwards. Accepts any english time duration. (Days, Hr, Min...)</span>
+
             """
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.YES), text: 'Scale'

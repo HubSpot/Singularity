@@ -8,6 +8,7 @@
     <input type="radio" name="incremental" value="false" checked> Kill old tasks once ALL new tasks are healthy<br>
     <input type="radio" name="incremental" id="incremental-bounce" value="true"> Kill old tasks as new tasks become healthy
 </label>
-<div class="vex-dialog-input">
+<div class="vex-dialog-input expiration-input">
 		<input name="duration" id="bounce-expiration" type="text" placeholder="Expiration (optional)" />
 </div>
+<span class="help">If an expiration duration is specified, this action will be reverted afterwards. Accepts any english time duration. (Days, Hr, Min...)</span>
