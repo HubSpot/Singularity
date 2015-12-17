@@ -247,8 +247,8 @@ public class SingularityRequest {
     return readOnlyGroups;
   }
 
-  public boolean isBounceAfterScale() {
-    return bounceAfterScale.or(Boolean.FALSE).booleanValue();
+  public Optional<Boolean> getBounceAfterScale() {
+    return bounceAfterScale;
   }
 
   @Override
