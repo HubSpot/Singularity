@@ -122,14 +122,16 @@ class Request extends Model
 
     promptScale: (callback) =>
         vex.dialog.prompt
-            message: scaleTemplate
-                id: @get "id"
-                bounceAfterScale: @get "bounceAfterScale"
+            message: "Enter the desired number of instances to run for request:"
+            input:
+                scaleTemplate
+                    id: @get "id"
+                    bounceAfterScale: @get "bounceAfterScale"
+                    placeholder: @get 'instances'
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.YES), text: 'Scale'
                 vex.dialog.buttons.NO
             ]
-            placeholder: @get 'instances'
             afterOpen: ($vexContent) ->
                 $vexContent.find('#bounce').click =>
                     if $('.vex #bounce').is ':checked'
