@@ -50,7 +50,7 @@ class GlobalSearchView extends View
                 extract: (o) ->
                     o.id
             res = fuzzy.filter(query, @requests.toJSON(), options)
-            results = _.pluck(_.pluck(res, 'original'), 'id')
+            results = _.pluck(_.pluck(_.sortBy(res, (r) => r.score).reverse(), 'original'), 'id')
 
             process results.slice(0, 10)
 
