@@ -52,9 +52,16 @@ class TasksView extends View
 
         # Only show tasks that match the search query
         if @searchFilter
-            tasks = _.filter tasks, (task) =>
-                searchField = "#{ task.id }#{ task.host }".toLowerCase().replace(/-/g, '_')
-                searchField.toLowerCase().indexOf(@searchFilter.toLowerCase().replace(/-/g, '_')) isnt -1
+            host =
+                extract: (o) ->
+                    "#{o.host}"
+            id =
+                extract: (o) ->
+                    "#{o.id}"
+            res1 = fuzzy.filter(@searchFilter, tasks, host)
+            res2 = fuzzy.filter(@searchFilter, tasks, id)
+            tasks = _.union(_.pluck(res1, 'original'), _.pluck(res2, 'original'))
+
         # Sort the table if the user clicked on the table heading things
         if @sortAttribute?
             tasks = _.sortBy tasks, (task) =>

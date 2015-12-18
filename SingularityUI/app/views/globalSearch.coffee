@@ -46,13 +46,11 @@ class GlobalSearchView extends View
 
             @lastSearchQuery = query
 
-            fuse = new Fuse(
-                @requests.toJSON()
-                keys: ["request.id"]
-                threshold: 0.6
-                id: "request.id"
-                maxPatternLength: 128)
-            results = fuse.search(query)
+            options =
+                extract: (o) ->
+                    o.id
+            res = fuzzy.filter(query, @requests.toJSON(), options)
+            results = _.pluck(_.pluck(res, 'original'), 'id')
 
             process results.slice(0, 10)
 
