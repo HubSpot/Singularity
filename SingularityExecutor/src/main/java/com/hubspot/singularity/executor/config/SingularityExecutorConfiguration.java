@@ -49,11 +49,11 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @Min(0)
   @JsonProperty
-  private long idleExecutorShutdownWaitMillis = TimeUnit.SECONDS.toMillis(30);
+  private long idleExecutorShutdownWaitMillis = TimeUnit.SECONDS.toMillis(10);
 
   @Min(0)
   @JsonProperty
-  private long stopDriverAfterMillis = TimeUnit.SECONDS.toMillis(5);
+  private long stopDriverAfterMillis = TimeUnit.SECONDS.toMillis(1);
 
   @NotEmpty
   @DirectoryExists
