@@ -23,6 +23,7 @@ import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployMarker;
+import com.hubspot.singularity.SingularityDeployProgress;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -50,6 +51,7 @@ import com.wordnik.swagger.annotations.ApiResponses;
 @Api(description="Manages Singularity Deploys for existing requests", value=DeployResource.PATH, position=2)
 public class DeployResource extends AbstractRequestResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/deploys";
+  public static final int DEFAULT_DEPLOY_STEP_WAIT_TIME_SECONDS = 60;
 
   @Inject
   public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user) {
@@ -93,7 +95,18 @@ public class DeployResource extends AbstractRequestResource {
     final long now = System.currentTimeMillis();
 
     SingularityDeployMarker deployMarker = new SingularityDeployMarker(requestId, deploy.getId(), now, deployUser);
-    SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING);
+
+    Optional<SingularityDeployProgress> deployProgress = Optional.absent();
+    if (request.isLongRunning()) {
+      deployProgress = Optional.of(new SingularityDeployProgress(
+          Math.min(deploy.getDeployRate().or(request.getInstancesSafe()), request.getInstancesSafe()),
+          deploy.getDeployRate().or(request.getInstancesSafe()),
+          deploy.getDeployStepWaitTimeSeconds().or(DEFAULT_DEPLOY_STEP_WAIT_TIME_SECONDS),
+          false,
+          System.currentTimeMillis()));
+    }
+
+    SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING, deployProgress);
 
     checkConflict(deployManager.createPendingDeploy(pendingDeployObj) != SingularityCreateResult.EXISTED,
         "Pending deploy already in progress for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orNull());

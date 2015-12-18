@@ -53,6 +53,9 @@ public class SingularityDeployBuilder {
   private Optional<Set<String>> loadBalancerGroups;
   private Optional<Map<String, Object>> loadBalancerOptions;
 
+  private Optional<Integer> deployRate;
+  private Optional<Integer> deployStepWaitTimeSeconds;
+
   public SingularityDeployBuilder(String requestId, String id) {
     this.requestId = requestId;
     this.id = id;
@@ -84,12 +87,15 @@ public class SingularityDeployBuilder {
     this.serviceBasePath = Optional.absent();
     this.loadBalancerGroups = Optional.absent();
     this.loadBalancerOptions = Optional.absent();
+    this.deployRate = Optional.absent();
+    this.deployStepWaitTimeSeconds = Optional.absent();
   }
 
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, customExecutorUser, resources, env,
         uris, metadata, executorData, version, timestamp, labels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckMaxRetries,
-        healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy, healthcheckProtocol);
+        healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy, healthcheckProtocol,
+        deployRate, deployStepWaitTimeSeconds);
   }
 
   public String getRequestId() {
@@ -357,6 +363,24 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<Integer> getDeployRate() {
+    return deployRate;
+  }
+
+  public SingularityDeployBuilder setDeployRate(Optional<Integer> deployRate) {
+    this.deployRate = deployRate;
+    return this;
+  }
+
+  public Optional<Integer> getDeployStepWaitTimeSeconds() {
+    return deployStepWaitTimeSeconds;
+  }
+
+  public SingularityDeployBuilder setDeployStepWaitTimeSeconds(Optional<Integer> deployStepWaitTimeSeconds) {
+    this.deployStepWaitTimeSeconds = deployStepWaitTimeSeconds;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeployBuilder{" +
@@ -390,6 +414,8 @@ public class SingularityDeployBuilder {
       ", serviceBasePath=" + serviceBasePath +
       ", loadBalancerGroups=" + loadBalancerGroups +
       ", loadBalancerOptions=" + loadBalancerOptions +
+      ", deployRate=" + deployRate +
+      ", deployStepWaitTimeSeconds=" + deployStepWaitTimeSeconds +
       '}';
   }
 
