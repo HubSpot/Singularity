@@ -12,9 +12,10 @@ AggregateTail = React.createClass
   # Lifecycle Methods                                                          |
   # ============================================================================
 
+  # Single Mode: Backwards compatability mode for the old URL format. Disables all task switching controls.
   getInitialState: ->
     params = Utils.getQueryParams()
-    viewingInstances: if params.taskIds then params.taskIds.split(',').slice(0, 6) else []
+    viewingInstances: if @props.singleMode then [@props.singleModeTaskId] else (if params.taskIds then params.taskIds.split(',').slice(0, 6) else [])
     color: @getActiveColor()
     splitView: !(params.view is 'unified')
     search: if params.grep then params.grep else ''
@@ -37,7 +38,7 @@ AggregateTail = React.createClass
       document.title = "Tail of #{@props.path.replace('$TASK_ID', 'Task Directory')}"
 
   componentDidUpdate: (prevProps, prevState) ->
-    if prevState.activeTasks.length is 0 and @state.activeTasks.length > 0 and not Utils.getQueryParams()?.taskIds
+    if prevState.activeTasks.length is 0 and @state.activeTasks.length > 0 and not Utils.getQueryParams()?.taskIds and !@props.singleMode
       @setState
         viewingInstances: _.pluck(@state.activeTasks, 'id').slice(0, 6)
 
@@ -64,6 +65,9 @@ AggregateTail = React.createClass
     clearTimeout(@blurTimer)
 
   toggleViewingInstance: (taskId) ->
+    if @props.singleMode
+      return
+
     if taskId in @state.viewingInstances
       viewing = _.without @state.viewingInstances, taskId
     else
@@ -79,11 +83,17 @@ AggregateTail = React.createClass
         document.title = "Tail of #{@props.path.replace('$TASK_ID', 'Task Directory')}"
 
   showOnlyInstance: (taskId) ->
+    if @props.singleMode
+      return
+
     @setState
       viewingInstances: [taskId]
     history.replaceState @state, '', location.href.replace(location.search, "?taskIds=#{taskId}&view=#{@getViewString(@state.splitView)}&grep=#{@state.search}")
 
   selectTasks: (selectFuncion) ->
+    if @props.singleMode
+      return
+
     viewing = _.pluck(selectFuncion(_.sortBy(@state.activeTasks, (task) => task.taskId.instanceNo)), 'id')
     @setState
       viewingInstances: viewing
@@ -177,7 +187,8 @@ AggregateTail = React.createClass
             closeTail={@toggleViewingInstance}
             expandTail={@showOnlyInstance}
             activeColor={@state.color}
-            search={@state.search} />
+            search={@state.search}
+            onlyTask={@state.viewingInstances.length is 1} />
         </div>
     )
 
@@ -220,7 +231,8 @@ AggregateTail = React.createClass
         setSearch={@setSearch}
         search={@state.search}
         toggleHelp={@toggleHelp}
-        selectTasks={@selectTasks} />
+        selectTasks={@selectTasks}
+        singleMode={@props.singleMode} />
       <div className="row #{@getRowType()}">
         {@renderTail()}
       </div>

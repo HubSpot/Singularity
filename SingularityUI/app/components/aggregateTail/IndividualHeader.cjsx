@@ -12,10 +12,20 @@ IndividualHeader = React.createClass
     task = @props.task
     "Deploy ID: #{task.task?.taskId?.deployId or ''}\nHost: #{task.task?.taskId?.host or ''}"
 
+  renderClose: ->
+    if @props.onlyTask
+      return null
+    <a className="action-link" onClick={@props.closeTail}><span className="glyphicon glyphicon-remove"></span></a>
+
+  renderExpand: ->
+    if @props.onlyTask
+      return null
+    <a className="action-link" onClick={@props.expandTail}><span className="glyphicon glyphicon-resize-full"></span></a>
+
   render: ->
     <div className="individual-header">
-      <a className="action-link" onClick={@props.closeTail}><span className="glyphicon glyphicon-remove"></span></a>
-      <a className="action-link" onClick={@props.expandTail}><span className="glyphicon glyphicon-resize-full"></span></a>
+      {@renderClose()}
+      {@renderExpand()}
       <div ref="ttTarget" className="width-constrained" data-toggle="tooltip" data-placement="bottom" title={@getTooltipText()}>
         <a className="instance-link" href="#{config.appRoot}/task/#{@props.taskId}">{if @props.instanceNumber then "Instance #{@props.instanceNumber}" else @props.taskId}</a>
       </div>

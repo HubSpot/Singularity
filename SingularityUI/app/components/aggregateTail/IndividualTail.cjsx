@@ -115,7 +115,8 @@ IndividualTail = React.createClass
         closeTail={() => @props.closeTail(@props.taskId)}
         expandTail={() => @props.expandTail(@props.taskId)}
         taskState={_.last(@state.task.taskUpdates)?.taskState}
-        task={@state.task} />
+        task={@state.task}
+        onlyTask={@props.onlyTask} />
       <Contents
         ref="contents"
         requestId={@props.requestId}
