@@ -15,7 +15,7 @@ AUTO_TAIL_TIMEOUT = 5 * 60 * 1000
 class AutoTailer extends Backbone.View
 
     initialize: ({@requestId, @autoTailFilename, @autoTailTimestamp}) ->
-        
+
         @history     = new RequestHistoricalTasks [], {@requestId}
 
         @activeTasks = new RequestTasks [],
@@ -29,14 +29,14 @@ class AutoTailer extends Backbone.View
 
 
     # Start polling for task changes, and check
-    # Task History changes in case we need 
-    # to back out of the file redirect 
+    # Task History changes in case we need
+    # to back out of the file redirect
     startAutoTailPolling: ->
         @showAutoTailWaitingDialog()
         @stopAutoTailPolling()
 
         @listenTo @history, 'reset', @handleHistoryReset
-        @listenToOnce @activeTasks, 'add', @handleActiveTasksAdd
+        @listenTo @activeTasks, 'reset', @handleActiveTasksAdd
 
         @autoTailPollInterval = interval 2000, =>
             if @autoTailTaskFiles
@@ -61,14 +61,18 @@ class AutoTailer extends Backbone.View
         matchingTask = tasks.find (task) -> task.get('taskId').startedAt > timestamp
         if matchingTask
             $('.auto-tail-checklist').addClass 'waiting-for-file'
-            @stopListening @activeTasks, 'add'
+            @stopListening @activeTasks, 'reset'
             @autoTailTaskFiles = new TaskFiles [], taskId: matchingTask.get('id')
 
-    handleActiveTasksAdd: (task) =>
-        $('.auto-tail-checklist').addClass 'waiting-for-file'
-        @autoTailTaskId = task.get('id')
-        @autoTailTaskFiles = new TaskFiles [], taskId: @autoTailTaskId
-        @listenTo @autoTailTaskFiles, 'add', @handleTaskFilesAdd
+    handleActiveTasksAdd: (tasks) =>
+        timestamp = @autoTailTimestamp
+        matchingTask = tasks.find (task) -> task.get('taskId').startedAt > timestamp
+        if matchingTask
+            $('.auto-tail-checklist').addClass 'waiting-for-file'
+            @autoTailTaskId = matchingTask.get('id')
+            @autoTailTaskFiles = new TaskFiles [], taskId: @autoTailTaskId
+            @stopListening @activeTasks, 'reset'
+            @listenTo @autoTailTaskFiles, 'add', @handleTaskFilesAdd
 
     handleTaskFilesAdd: =>
         if @autoTailTaskFiles.findWhere({name: @autoTailFilename})
@@ -92,7 +96,7 @@ class AutoTailer extends Backbone.View
     showAutoTailWaitingDialog: ->
         vex.dialog.alert
             overlayClosesOnClick: false
-            message: autoTailWaitingTemplate 
+            message: autoTailWaitingTemplate
                 autoTailFilename: @autoTailFilename
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.NO), text: 'Close'
