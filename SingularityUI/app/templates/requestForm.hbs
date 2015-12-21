@@ -74,14 +74,16 @@
               </label>
             </div>
           </div>
-          <div class="col-sm-4">
-            <div class="form-group">
-              <label data-tooltip='cannot-change' for="load-balanced"{{#if model.id}} class="subtle"{{/if}}>
-                <input {{#if model.id}}disabled="disabled"{{/if}} type="checkbox" id="load-balanced">
-                Load balanced
-              </label>
+          {{#if config.loadBalancingEnabled }}
+            <div class="col-sm-4">
+              <div class="form-group">
+                <label data-tooltip='cannot-change' for="load-balanced"{{#if model.id}} class="subtle"{{/if}}>
+                  <input {{#if model.id}}disabled="disabled"{{/if}} type="checkbox" id="load-balanced">
+                  Load balanced
+                </label>
+              </div>
             </div>
-          </div>
+          {{/if}}
         </div>
         <div class="form-group">
           <label for="rackAffinity-SERVICE">Rack Affinity <span class='form-label-tip'>separate multiple racks with commas</span></label>

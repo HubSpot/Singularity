@@ -49,11 +49,11 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @Min(0)
   @JsonProperty
-  private long idleExecutorShutdownWaitMillis = TimeUnit.SECONDS.toMillis(30);
+  private long idleExecutorShutdownWaitMillis = TimeUnit.SECONDS.toMillis(10);
 
   @Min(0)
   @JsonProperty
-  private long stopDriverAfterMillis = TimeUnit.SECONDS.toMillis(5);
+  private long stopDriverAfterMillis = TimeUnit.SECONDS.toMillis(1);
 
   @NotEmpty
   @DirectoryExists
@@ -157,6 +157,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private String dockerPrefix = "se-";
 
+  @Min(5)
   @JsonProperty
   private int dockerStopTimeout = 15;
 
@@ -186,15 +187,19 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   public List<SingularityExecutorShellCommandDescriptor> shellCommands = Collections.emptyList();
 
+  @NotEmpty
   @JsonProperty
   public String shellCommandOutFile = "executor.commands.{TIMESTAMP}.log";
 
+  @NotEmpty
   @JsonProperty
   private String shellCommandPidPlaceholder = "{PID}";
 
+  @NotEmpty
   @JsonProperty
   private String shellCommandUserPlaceholder = "{USER}";
 
+  @NotEmpty
   @JsonProperty
   private String shellCommandPidFile = ".task-pid";
 
