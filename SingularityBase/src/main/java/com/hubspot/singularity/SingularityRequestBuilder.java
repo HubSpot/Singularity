@@ -71,6 +71,7 @@ public class SingularityRequestBuilder {
         rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readOnlyGroups, bounceAfterScale);
   }
 
+
   public Optional<Boolean> getLoadBalanced() {
     return loadBalanced;
   }
