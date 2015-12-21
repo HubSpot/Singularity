@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -160,10 +161,23 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected Offer createOffer(double cpus, double memory, String slave, String host, Optional<String> rack) {
+    return createOffer(cpus, memory, slave, host, rack, Collections.<String, String>emptyMap());
+  }
+
+  protected Offer createOffer(double cpus, double memory, String slave, String host, Optional<String> rack, Map<String, String> attributes) {
     SlaveID slaveId = SlaveID.newBuilder().setValue(slave).build();
     FrameworkID frameworkId = FrameworkID.newBuilder().setValue("framework1").build();
 
     Random r = new Random();
+
+    List<Attribute> attributesList = new ArrayList<>();
+    for (Map.Entry<String, String> entry : attributes.entrySet()) {
+      attributesList.add(Attribute.newBuilder()
+          .setType(Type.TEXT)
+          .setName(entry.getKey())
+          .setText(Text.newBuilder().setValue(entry.getValue()).build())
+          .build());
+    }
 
     return Offer.newBuilder()
         .setId(OfferID.newBuilder().setValue("offer" + r.nextInt(1000)).build())
@@ -173,6 +187,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
         .addAttributes(Attribute.newBuilder().setType(Type.TEXT).setText(Text.newBuilder().setValue(rack.or(configuration.getMesosConfiguration().getDefaultRackId()))).setName(configuration.getMesosConfiguration().getRackIdAttributeKey()))
         .addResources(Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.CPUS).setScalar(Scalar.newBuilder().setValue(cpus)))
         .addResources(Resource.newBuilder().setType(Type.SCALAR).setName(MesosUtils.MEMORY).setScalar(Scalar.newBuilder().setValue(memory)))
+        .addAllAttributes(attributesList)
         .build();
   }
 
@@ -258,7 +273,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void statusUpdate(SingularityTask task, TaskState state) {
-    statusUpdate(task, state, Optional.<Long> absent());
+    statusUpdate(task, state, Optional.<Long>absent());
   }
 
   protected void initLoadBalancedRequest() {
@@ -270,7 +285,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void saveRequest(SingularityRequest request) {
-    requestManager.activate(request, RequestHistoryType.CREATED, System.currentTimeMillis(), Optional.<String> absent());
+    requestManager.activate(request, RequestHistoryType.CREATED, System.currentTimeMillis(), Optional.<String>absent());
   }
 
   protected void protectedInitRequest(boolean isLoadBalanced, boolean isScheduled) {

@@ -65,10 +65,10 @@ public class SingularityExecutorTaskBuilder {
     this.s3Configuration = s3Configuration;
   }
 
-  public Logger buildTaskLogger(String taskId) {
+  public Logger buildTaskLogger(String taskId, String executorId) {
     Path javaExecutorLogPath = MesosUtils.getTaskDirectoryPath(taskId).resolve(executorConfiguration.getExecutorJavaLog());
 
-    return executorLogging.buildTaskLogger(taskId, javaExecutorLogPath.toString());
+    return executorLogging.buildTaskLogger(taskId, executorId, executorPid, javaExecutorLogPath.toString());
   }
 
   public SingularityExecutorTask buildTask(String taskId, ExecutorDriver driver, TaskInfo taskInfo, Logger log) {
