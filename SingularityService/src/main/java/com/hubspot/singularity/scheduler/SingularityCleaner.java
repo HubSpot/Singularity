@@ -303,7 +303,7 @@ public class SingularityCleaner {
       taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), isIncremental ? TaskCleanupType.INCREMENTAL_BOUNCE : TaskCleanupType.BOUNCING, now, matchingTaskId, Optional.<String> absent()));
     }
 
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestCleanup.getRequestId(), requestCleanup.getDeployId().get(), requestCleanup.getTimestamp(), PendingType.BOUNCE));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestCleanup.getRequestId(), requestCleanup.getDeployId().get(), requestCleanup.getTimestamp(), requestCleanup.getUser(), PendingType.BOUNCE, requestCleanup.getSkipHealthchecks()));
 
     LOG.info("Added {} tasks for request {} to cleanup bounce queue in {}", matchingTaskIds.size(), requestCleanup.getRequestId(), JavaUtils.duration(now));
   }
@@ -317,9 +317,11 @@ public class SingularityCleaner {
   public void drainCleanupQueue() {
     drainRequestCleanupQueue();
     drainTaskCleanupQueue();
+
     final List<SingularityTaskId> lbCleanupTasks = taskManager.getLBCleanupTasks();
     drainLBTaskCleanupQueue(lbCleanupTasks);
     drainLBRequestCleanupQueue(lbCleanupTasks);
+
     checkKilledTaskIdRecords();
   }
 

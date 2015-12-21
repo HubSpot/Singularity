@@ -206,7 +206,8 @@ public class SingularityDeployChecker {
 
     if (!request.isDeployable() && !request.isOneOff()) {
       // TODO should this override? What if someone has mucked with the pending queue for this deploy ?
-      requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), pendingDeploy.getDeployMarker().getDeployId(), deployResult.getTimestamp(), PendingType.NEW_DEPLOY));
+      requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), pendingDeploy.getDeployMarker().getDeployId(), deployResult.getTimestamp(),
+          pendingDeploy.getDeployMarker().getUser(), PendingType.NEW_DEPLOY, deploy.isPresent() ? deploy.get().getSkipHealthchecksOnDeploy() : Optional.<Boolean> absent()));
     }
 
     deployManager.saveDeployResult(pendingDeploy.getDeployMarker(), deploy, deployResult);

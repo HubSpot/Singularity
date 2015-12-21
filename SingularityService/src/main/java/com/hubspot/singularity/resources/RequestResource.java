@@ -31,8 +31,7 @@ import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
-import com.hubspot.singularity.SingularityDeploy;
-import com.hubspot.singularity.SingularityPendingDeploy;
+import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingRequestParent;
@@ -40,15 +39,17 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularityRequestDeployState;
-import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
-import com.hubspot.singularity.SingularityRequestInstances;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SlavePlacement;
+import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityPauseRequest;
+import com.hubspot.singularity.api.SingularityScaleRequest;
+import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
@@ -56,6 +57,12 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.expiring.SingularityExpiringBounce;
+import com.hubspot.singularity.expiring.SingularityExpiringParent;
+import com.hubspot.singularity.expiring.SingularityExpiringPause;
+import com.hubspot.singularity.expiring.SingularityExpiringScale;
+import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
+import com.hubspot.singularity.helpers.RequestHelper;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -72,54 +79,34 @@ public class RequestResource extends AbstractRequestResource {
   private final SingularityMailer mailer;
   private final TaskManager taskManager;
   private final SlaveManager slaveManager;
+  private final RequestHelper requestHelper;
   private final SingularityConfiguration configuration;
 
   @Inject
-  public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, SlaveManager slaveManager, SingularityConfiguration configuration) {
+  public RequestResource(SingularityValidator validator, DeployManager deployManager, TaskManager taskManager, RequestManager requestManager, SingularityMailer mailer,
+      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, SlaveManager slaveManager, SingularityConfiguration configuration, RequestHelper requestHelper) {
     super(requestManager, deployManager, user, validator, authorizationHelper);
 
     this.mailer = mailer;
     this.taskManager = taskManager;
+    this.requestHelper = requestHelper;
     this.slaveManager = slaveManager;
     this.configuration = configuration;
   }
 
-  private static class SingularityRequestDeployHolder {
+  private void submitRequest(SingularityRequest request, RequestState requestState, Optional<Boolean> skipHealthchecks) {
+    checkNotNullBadRequest(request.getId(), "Request must have an id");
+    checkConflict(!requestManager.cleanupRequestExists(request.getId()), "Request %s is currently cleaning. Try again after a few moments", request.getId());
 
-    private final Optional<SingularityDeploy> activeDeploy;
-    private final Optional<SingularityDeploy> pendingDeploy;
+    Optional<SingularityRequestWithState> maybeOldRequestWithState = requestManager.getRequest(request.getId());
+    Optional<SingularityRequest> maybeOldRequest = maybeOldRequestWithState.isPresent() ? Optional.of(maybeOldRequestWithState.get().getRequest()) : Optional.<SingularityRequest> absent();
 
-    public SingularityRequestDeployHolder(Optional<SingularityDeploy> activeDeploy, Optional<SingularityDeploy> pendingDeploy) {
-      this.activeDeploy = activeDeploy;
-      this.pendingDeploy = pendingDeploy;
+    if (maybeOldRequest.isPresent()) {
+      authorizationHelper.checkForAuthorization(maybeOldRequest.get(), user, SingularityAuthorizationScope.WRITE);
     }
+    authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
 
-    public Optional<SingularityDeploy> getActiveDeploy() {
-      return activeDeploy;
-    }
-
-    public Optional<SingularityDeploy> getPendingDeploy() {
-      return pendingDeploy;
-    }
-
-  }
-
-  private SingularityRequestDeployHolder getDeployHolder(String requestId) {
-    Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(requestId);
-
-    Optional<SingularityDeploy> activeDeploy = Optional.absent();
-    Optional<SingularityDeploy> pendingDeploy = Optional.absent();
-
-    if (requestDeployState.isPresent()) {
-      if (requestDeployState.get().getActiveDeploy().isPresent()) {
-        activeDeploy = deployManager.getDeploy(requestId, requestDeployState.get().getActiveDeploy().get().getDeployId());
-      }
-      if (requestDeployState.get().getPendingDeploy().isPresent()) {
-        pendingDeploy = deployManager.getDeploy(requestId, requestDeployState.get().getPendingDeploy().get().getDeployId());
-      }
-    }
-
-    return new SingularityRequestDeployHolder(activeDeploy, pendingDeploy);
+    requestHelper.updateRequest(request, maybeOldRequest, requestState, JavaUtils.getUserEmail(user), skipHealthchecks);
   }
 
   @POST
@@ -129,62 +116,9 @@ public class RequestResource extends AbstractRequestResource {
     @ApiResponse(code=400, message="Request object is invalid"),
     @ApiResponse(code=409, message="Request object is being cleaned. Try again shortly"),
   })
-  public SingularityRequestParent submit(@ApiParam("The Singularity request to create or update") SingularityRequest request) {
-    checkNotNullBadRequest(request.getId(), "Request must have an id");
-    checkConflict(!requestManager.cleanupRequestExists(request.getId()), "Request %s is currently cleaning. Try again after a few moments", request.getId());
-
-    Optional<SingularityRequestWithState> maybeOldRequestWithState = requestManager.getRequest(request.getId());
-    Optional<SingularityRequest> maybeOldRequest = maybeOldRequestWithState.isPresent() ? Optional.of(maybeOldRequestWithState.get().getRequest()) : Optional.<SingularityRequest> absent();
-
-    SingularityRequestDeployHolder deployHolder = getDeployHolder(request.getId());
-
-    if (maybeOldRequest.isPresent()) {
-      authorizationHelper.checkForAuthorization(maybeOldRequest.get(), user, SingularityAuthorizationScope.WRITE);
-    }
-    authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
-
-    SingularityRequest newRequest = validator.checkSingularityRequest(request, maybeOldRequest, deployHolder.getActiveDeploy(), deployHolder.getPendingDeploy(), user);
-
-    checkConflict(maybeOldRequest.isPresent() || !requestManager.cleanupRequestExists(request.getId()), "Request %s is currently cleaning. Try again after a few moments", request.getId());
-
-    final long now = System.currentTimeMillis();
-
-    if (maybeOldRequestWithState.isPresent() && maybeOldRequestWithState.get().getRequest().isLongRunning()) {
-      requestManager.update(newRequest, maybeOldRequestWithState.get().getState(), maybeOldRequest.isPresent() ? RequestHistoryType.UPDATED : RequestHistoryType.CREATED, now, JavaUtils.getUserEmail(user));
-    } else {
-      requestManager.activate(newRequest, maybeOldRequest.isPresent() ? RequestHistoryType.UPDATED : RequestHistoryType.CREATED, now, JavaUtils.getUserEmail(user));
-    }
-
-    checkReschedule(newRequest, maybeOldRequest, now);
-
+  public SingularityRequestParent activate(@ApiParam("The Singularity request to create or update") SingularityRequest request) {
+    submitRequest(request, RequestState.ACTIVE, Optional.<Boolean> absent());
     return fillEntireRequest(fetchRequestWithState(request.getId()));
-  }
-
-  private void checkReschedule(SingularityRequest newRequest, Optional<SingularityRequest> maybeOldRequest, long timestamp) {
-    if (!maybeOldRequest.isPresent()) {
-      return;
-    }
-
-    if (shouldReschedule(newRequest, maybeOldRequest.get())) {
-      Optional<String> maybeDeployId = deployManager.getInUseDeployId(newRequest.getId());
-
-      if (maybeDeployId.isPresent()) {
-        requestManager.addToPendingQueue(new SingularityPendingRequest(newRequest.getId(), maybeDeployId.get(), timestamp, PendingType.UPDATED_REQUEST));
-      }
-    }
-  }
-
-  private boolean shouldReschedule(SingularityRequest newRequest, SingularityRequest oldRequest) {
-    if (newRequest.getInstancesSafe() != oldRequest.getInstancesSafe()) {
-      return true;
-    }
-    if (newRequest.isScheduled() && oldRequest.isScheduled()) {
-      if (!newRequest.getQuartzScheduleSafe().equals(oldRequest.getQuartzScheduleSafe())) {
-        return true;
-      }
-    }
-
-    return false;
   }
 
   private String getAndCheckDeployId(String requestId) {
@@ -200,7 +134,7 @@ public class RequestResource extends AbstractRequestResource {
   @ApiOperation(value="Bounce a specific Singularity request. A bounce launches replacement task(s), and then kills the original task(s) if the replacement(s) are healthy.",
   response=SingularityRequestParent.class)
   public SingularityRequestParent bounce(@ApiParam("The request ID to bounce") @PathParam("requestId") String requestId,
-      @ApiParam("Incrementally bounce, shutting down old tasks as new ones are started successfully") @QueryParam("incremental") boolean incremental) {
+      @ApiParam("Bounce request options") Optional<SingularityBounceRequest> bounceRequest) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
@@ -210,18 +144,30 @@ public class RequestResource extends AbstractRequestResource {
     checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to bounce (it must be manually unpaused first)", requestWithState.getRequest().getId());
 
     SlavePlacement placement = requestWithState.getRequest().getSlavePlacement().or(configuration.getDefaultSlavePlacement());
+
+    final boolean isIncrementalBounce = bounceRequest.isPresent() && bounceRequest.get().getIncremental().or(false);
+
     if (placement != SlavePlacement.GREEDY && placement != SlavePlacement.OPTIMISTIC) {
       int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(MachineState.ACTIVE);
-      int requiredSlaveCount = incremental ? requestWithState.getRequest().getInstancesSafe() + 1 : requestWithState.getRequest().getInstancesSafe() * 2;
+      int requiredSlaveCount = isIncrementalBounce ? requestWithState.getRequest().getInstancesSafe() + 1 : requestWithState.getRequest().getInstancesSafe() * 2;
+
       checkBadRequest(currentActiveSlaveCount >= requiredSlaveCount, "Not enough active slaves to successfully complete a bounce of request %s (minimum required: %s, current: %s). Consider deploying, or changing the slave placement strategy instead.", requestId, requiredSlaveCount, currentActiveSlaveCount);
     }
 
+    final Optional<Boolean> skipHealthchecks = bounceRequest.isPresent() ? bounceRequest.get().getSkipHealthchecks() : Optional.<Boolean> absent();
+
     SingularityCreateResult createResult = requestManager.createCleanupRequest(
-            new SingularityRequestCleanup(JavaUtils.getUserEmail(user), incremental ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE, System.currentTimeMillis(), Optional.<Boolean>absent(), requestId, Optional.of(getAndCheckDeployId(requestId))));
+            new SingularityRequestCleanup(JavaUtils.getUserEmail(user), isIncrementalBounce ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE,
+                System.currentTimeMillis(), Optional.<Boolean>absent(), requestId, Optional.of(getAndCheckDeployId(requestId)), skipHealthchecks));
 
     checkConflict(createResult != SingularityCreateResult.EXISTED, "%s is already bouncing", requestId);
 
     requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), JavaUtils.getUserEmail(user));
+
+    if (bounceRequest.isPresent() && bounceRequest.get().getDurationMillis().isPresent()) {
+      requestManager.saveExpiringObject(new SingularityExpiringBounce(bounceRequest.get().getDurationMillis().get(), requestId, JavaUtils.getUserEmail(user),
+          System.currentTimeMillis(), bounceRequest.get()));
+    }
 
     return fillEntireRequest(requestWithState);
   }
@@ -257,7 +203,7 @@ public class RequestResource extends AbstractRequestResource {
       runId = Optional.of(UUID.randomUUID().toString());
     }
 
-    final SingularityPendingRequest pendingRequest = new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(), JavaUtils.getUserEmail(user), pendingType, commandLineArgs, runId);
+    final SingularityPendingRequest pendingRequest = new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(), JavaUtils.getUserEmail(user), pendingType, commandLineArgs, runId, Optional.<Boolean> absent());
 
     SingularityCreateResult result = requestManager.addToPendingQueue(pendingRequest);
 
@@ -281,21 +227,24 @@ public class RequestResource extends AbstractRequestResource {
     checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to pause (it must be manually unpaused first)", requestWithState.getRequest().getId());
 
     Optional<Boolean> killTasks = Optional.absent();
-    Optional<String> pauseUser = Optional.absent();
     if (pauseRequest.isPresent()) {
-      pauseUser = JavaUtils.getUserEmail(user).or(pauseRequest.get().getUser());
       killTasks = pauseRequest.get().getKillTasks();
     }
 
     final long now = System.currentTimeMillis();
 
-    SingularityCreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(JavaUtils.getUserEmail(user), RequestCleanupType.PAUSING, now, killTasks, requestId, Optional.<String> absent()));
+    SingularityCreateResult result = requestManager.createCleanupRequest(new SingularityRequestCleanup(JavaUtils.getUserEmail(user), RequestCleanupType.PAUSING, now, killTasks, requestId, Optional.<String> absent(), Optional.<Boolean> absent()));
 
     checkConflict(result == SingularityCreateResult.CREATED, "%s is already pausing - try again soon", requestId, result);
 
     mailer.sendRequestPausedMail(requestWithState.getRequest(), JavaUtils.getUserEmail(user));
 
-    requestManager.pause(requestWithState.getRequest(), now, pauseUser);
+    requestManager.pause(requestWithState.getRequest(), now, JavaUtils.getUserEmail(user));
+
+    if (pauseRequest.isPresent() && pauseRequest.get().getDurationMillis().isPresent()) {
+      requestManager.saveExpiringObject(new SingularityExpiringPause(pauseRequest.get().getDurationMillis().get(), requestId, JavaUtils.getUserEmail(user),
+          System.currentTimeMillis(), pauseRequest.get()));
+    }
 
     return fillEntireRequest(new SingularityRequestWithState(requestWithState.getRequest(), RequestState.PAUSED, now));
   }
@@ -313,17 +262,7 @@ public class RequestResource extends AbstractRequestResource {
 
     checkConflict(requestWithState.getState() == RequestState.PAUSED, "Request %s is not in PAUSED state, it is in %s", requestId, requestWithState.getState());
 
-    mailer.sendRequestUnpausedMail(requestWithState.getRequest(), JavaUtils.getUserEmail(user));
-
-    Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
-
-    final long now = System.currentTimeMillis();
-
-    requestManager.unpause(requestWithState.getRequest(), now, JavaUtils.getUserEmail(user));
-
-    if (maybeDeployId.isPresent() && !requestWithState.getRequest().isOneOff()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), now, JavaUtils.getUserEmail(user), PendingType.UNPAUSED));
-    }
+    final long now = requestHelper.unpause(requestWithState.getRequest(), JavaUtils.getUserEmail(user));
 
     return fillEntireRequest(new SingularityRequestWithState(requestWithState.getRequest(), RequestState.ACTIVE, now));
   }
@@ -344,7 +283,7 @@ public class RequestResource extends AbstractRequestResource {
     requestManager.exitCooldown(requestWithState.getRequest(), now, JavaUtils.getUserEmail(user));
 
     if (maybeDeployId.isPresent() && !requestWithState.getRequest().isOneOff()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), now, JavaUtils.getUserEmail(user), PendingType.IMMEDIATE));
+      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), now, JavaUtils.getUserEmail(user), PendingType.IMMEDIATE, Optional.<Boolean> absent()));
     }
 
     return fillEntireRequest(requestWithState);
@@ -379,7 +318,7 @@ public class RequestResource extends AbstractRequestResource {
 
     for (SingularityRequestWithState requestWithState : requests) {
       Optional<SingularityRequestDeployState> deployState = Optional.fromNullable(deployStates.get(requestWithState.getRequest().getId()));
-      parents.add(new SingularityRequestParent(requestWithState.getRequest(), requestWithState.getState(), deployState, Optional.<SingularityDeploy> absent(), Optional.<SingularityDeploy> absent(), Optional.<SingularityPendingDeploy> absent()));
+      parents.add(new SingularityRequestParent(requestWithState.getRequest(), requestWithState.getState(), deployState));
     }
 
     return parents;
@@ -465,36 +404,99 @@ public class RequestResource extends AbstractRequestResource {
   }
 
   @PUT
-  @Path("/request/{requestId}/instances")
-  @ApiOperation(value="Scale the number of instances up or down for a specific Request", response=SingularityRequest.class)
+  @Path("/request/{requestId}/scale")
+  @ApiOperation(value="Scale the number of instances up or down for a specific Request", response=SingularityRequestParent.class)
   @ApiResponses({
-    @ApiResponse(code=400, message="Posted object did not match Request ID"),
     @ApiResponse(code=404, message="No Request with that ID"),
   })
-  public SingularityRequest updateInstances(@ApiParam("The Request ID to scale") @PathParam("requestId") String requestId,
+  public SingularityRequestParent scale(@ApiParam("The Request ID to scale") @PathParam("requestId") String requestId,
+      @ApiParam("Object to hold number of instances to request") SingularityScaleRequest scaleRequest) {
+    SingularityRequestWithState oldRequestWithState = fetchRequestWithState(requestId);
 
-      @ApiParam("Object to hold number of instances to request") SingularityRequestInstances newInstances) {
+    SingularityRequest oldRequest = oldRequestWithState.getRequest();
+    SingularityRequest newRequest = oldRequest.toBuilder().setInstances(scaleRequest.getInstances()).build();
 
-    checkBadRequest(requestId != null && newInstances.getId() != null && requestId.equals(newInstances.getId()), "Update for request instance must pass a matching non-null requestId in path (%s) and object (%s)", requestId, newInstances.getId());
-    checkConflict(!requestManager.cleanupRequestExists(requestId), "Request %s is currently cleaning. Try again after a few moments", requestId);
+    submitRequest(newRequest, oldRequestWithState.getState(), scaleRequest.getSkipHealthchecks());
 
-    SingularityRequest oldRequest = fetchRequest(requestId);
-    Optional<SingularityRequest> maybeOldRequest = Optional.of(oldRequest);
+    if (scaleRequest.getDurationMillis().isPresent()) {
+      requestManager.saveExpiringObject(new SingularityExpiringScale(scaleRequest.getDurationMillis().get(), requestId, JavaUtils.getUserEmail(user),
+          System.currentTimeMillis(), scaleRequest, oldRequest.getInstances()));
+    }
 
-    SingularityRequestDeployHolder deployHolder = getDeployHolder(newInstances.getId());
-    SingularityRequest newRequest = oldRequest.toBuilder().setInstances(newInstances.getInstances()).build();
+    return fillEntireRequest(fetchRequestWithState(requestId));
+  }
 
-    authorizationHelper.checkForAuthorization(oldRequest, user, SingularityAuthorizationScope.WRITE);
+  private <T extends SingularityExpiringParent> SingularityRequestParent deleteExpiringObject(Class<T> clazz, String requestId) {
+    SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
-    validator.checkSingularityRequest(newRequest, maybeOldRequest, deployHolder.getActiveDeploy(), deployHolder.getPendingDeploy(), user);
+    SingularityDeleteResult deleteResult = requestManager.deleteExpiringObject(clazz, requestId);
 
-    final long now = System.currentTimeMillis();
+    WebExceptions.checkNotFound(deleteResult == SingularityDeleteResult.DELETED, "%s didn't have an expiring %s request", clazz.getSimpleName(), requestId);
 
-    requestManager.update(newRequest, now, JavaUtils.getUserEmail(user));
+    return fillEntireRequest(requestWithState);
+  }
 
-    checkReschedule(newRequest, maybeOldRequest, now);
+  @DELETE
+  @Path("/request/{requestId}/scale")
+  @ApiOperation(value="Delete/cancel the expiring scale. This makes the scale request permanent.", response=SingularityRequestParent.class)
+  @ApiResponses({
+    @ApiResponse(code=404, message="No Request or expiring scale request for that ID"),
+  })
+  public SingularityRequestParent deleteExpiringScale(@ApiParam("The Request ID") @PathParam("requestId") String requestId) {
+    return deleteExpiringObject(SingularityExpiringScale.class, requestId);
+  }
 
-    return newRequest;
+  @DELETE
+  @Path("/request/{requestId}/skipHealthchecks")
+  @ApiOperation(value="Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks request permanent.", response=SingularityRequestParent.class)
+  @ApiResponses({
+    @ApiResponse(code=404, message="No Request or expiring skipHealthchecks request for that ID"),
+  })
+  public SingularityRequestParent deleteExpiringSkipHealthchecks(@ApiParam("The Request ID") @PathParam("requestId") String requestId) {
+    return deleteExpiringObject(SingularityExpiringSkipHealthchecks.class, requestId);
+  }
+
+  @DELETE
+  @Path("/request/{requestId}/pause")
+  @ApiOperation(value="Delete/cancel the expiring pause. This makes the pause request permanent.", response=SingularityRequestParent.class)
+  @ApiResponses({
+    @ApiResponse(code=404, message="No Request or expiring pause request for that ID"),
+  })
+  public SingularityRequestParent deleteExpiringPause(@ApiParam("The Request ID") @PathParam("requestId") String requestId) {
+    return deleteExpiringObject(SingularityExpiringPause.class, requestId);
+  }
+
+  @DELETE
+  @Path("/request/{requestId}/bounce")
+  @ApiOperation(value="Delete/cancel the expiring bounce. This makes the bounce request permanent.", response=SingularityRequestParent.class)
+  @ApiResponses({
+    @ApiResponse(code=404, message="No Request or expiring bounce request for that ID"),
+  })
+  public SingularityRequestParent deleteExpiringBounce(@ApiParam("The Request ID") @PathParam("requestId") String requestId) {
+    return deleteExpiringObject(SingularityExpiringBounce.class, requestId);
+  }
+
+  @PUT
+  @Path("/request/{requestId}/skipHealthchecks")
+  @ApiOperation(value="Update the skipHealthchecks field for the request, possibly temporarily", response=SingularityRequestParent.class)
+  @ApiResponses({
+    @ApiResponse(code=404, message="No Request with that ID"),
+  })
+  public SingularityRequestParent skipHealthchecks(@ApiParam("The Request ID to scale") @PathParam("requestId") String requestId,
+      @ApiParam("SkipHealtchecks options") SingularitySkipHealthchecksRequest skipHealthchecksRequest) {
+    SingularityRequestWithState oldRequestWithState = fetchRequestWithState(requestId);
+
+    SingularityRequest oldRequest = oldRequestWithState.getRequest();
+    SingularityRequest newRequest = oldRequest.toBuilder().setSkipHealthchecks(skipHealthchecksRequest.getSkipHealthchecks()).build();
+
+    submitRequest(newRequest, oldRequestWithState.getState(), Optional.<Boolean> absent());
+
+    if (skipHealthchecksRequest.getDurationMillis().isPresent()) {
+      requestManager.saveExpiringObject(new SingularityExpiringSkipHealthchecks(skipHealthchecksRequest.getDurationMillis().get(), requestId, JavaUtils.getUserEmail(user),
+          System.currentTimeMillis(), skipHealthchecksRequest, oldRequest.getSkipHealthchecks()));
+    }
+
+    return fillEntireRequest(fetchRequestWithState(requestId));
   }
 
   @GET

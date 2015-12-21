@@ -29,6 +29,7 @@ public class SingularityRequestBuilder {
   private Optional<Boolean> daemon;
 
   private Optional<Integer> instances;
+  private Optional<Boolean> skipHealthchecks;
 
   private Optional<Boolean> rackSensitive;
   private Optional<List<String>> rackAffinity;
@@ -64,13 +65,22 @@ public class SingularityRequestBuilder {
     this.group = Optional.absent();
     this.readOnlyGroups = Optional.absent();
     this.bounceAfterScale = Optional.absent();
+    this.skipHealthchecks = Optional.absent();
   }
 
   public SingularityRequest build() {
     return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, daemon, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule,
-        rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readOnlyGroups, bounceAfterScale);
+        rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readOnlyGroups, bounceAfterScale, skipHealthchecks);
   }
 
+  public Optional<Boolean> getSkipHealthchecks() {
+    return skipHealthchecks;
+  }
+
+  public SingularityRequestBuilder setSkipHealthchecks(Optional<Boolean> skipHealthchecks) {
+    this.skipHealthchecks = skipHealthchecks;
+    return this;
+  }
 
   public Optional<Boolean> getLoadBalanced() {
     return loadBalanced;
@@ -273,6 +283,7 @@ public class SingularityRequestBuilder {
             ", group=" + group +
             ", readOnlyGroups=" + readOnlyGroups +
             ", bounceAfterScale=" + bounceAfterScale +
+            ", skipHealthchecks=" + skipHealthchecks +
             ']';
   }
 
@@ -304,11 +315,14 @@ public class SingularityRequestBuilder {
             Objects.equals(loadBalanced, that.loadBalanced) &&
             Objects.equals(group, that.group) &&
             Objects.equals(readOnlyGroups, that.readOnlyGroups) &&
-            Objects.equals(bounceAfterScale, that.bounceAfterScale);
+            Objects.equals(bounceAfterScale, that.bounceAfterScale) &&
+            Objects.equals(skipHealthchecks, that.skipHealthchecks);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis,
+        scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, 
+        requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale, skipHealthchecks);
   }
 }

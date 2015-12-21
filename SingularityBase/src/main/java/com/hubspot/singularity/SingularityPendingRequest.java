@@ -20,19 +20,16 @@ public class SingularityPendingRequest {
   private final Optional<String> user;
   private final List<String> cmdLineArgsList;
   private final Optional<String> runId;
+  private final Optional<Boolean> skipHealthchecks;
 
-  public SingularityPendingRequest(String requestId, String deployId, long timestamp, PendingType pendingType) {
-    this(requestId, deployId, timestamp, Optional.<String> absent(), pendingType, Collections.<String> emptyList(), Optional.<String> absent());
-  }
-
-  public SingularityPendingRequest(String requestId, String deployId, long timestamp, Optional<String> user, PendingType pendingType) {
-    this(requestId, deployId, timestamp, user, pendingType, Collections.<String> emptyList(), Optional.<String> absent());
+  public SingularityPendingRequest(String requestId, String deployId, long timestamp, Optional<String> user, PendingType pendingType, Optional<Boolean> skipHealthchecks) {
+    this(requestId, deployId, timestamp, user, pendingType, Collections.<String> emptyList(), Optional.<String> absent(), skipHealthchecks);
   }
 
   @JsonCreator
   public SingularityPendingRequest(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("timestamp") long timestamp,
       @JsonProperty("user") Optional<String> user, @JsonProperty("pendingType") PendingType pendingType, @JsonProperty("cmdLineArgsList") List<String> cmdLineArgsList,
-      @JsonProperty("runId") Optional<String> runId) {
+      @JsonProperty("runId") Optional<String> runId, @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.timestamp = timestamp;
@@ -40,6 +37,7 @@ public class SingularityPendingRequest {
     this.cmdLineArgsList = cmdLineArgsList;
     this.pendingType = pendingType;
     this.runId = runId;
+    this.skipHealthchecks = skipHealthchecks;
   }
 
   public Optional<String> getRunId() {
@@ -70,10 +68,14 @@ public class SingularityPendingRequest {
     return cmdLineArgsList;
   }
 
+  public Optional<Boolean> getSkipHealthchecks() {
+    return skipHealthchecks;
+  }
+
   @Override
   public String toString() {
     return "SingularityPendingRequest [requestId=" + requestId + ", deployId=" + deployId + ", timestamp=" + timestamp + ", pendingType=" + pendingType + ", user=" + user + ", cmdLineArgsList="
-        + cmdLineArgsList + "]";
+        + cmdLineArgsList + ", runId=" + runId + ", skipHealthchecks=" + skipHealthchecks + "]";
   }
 
 }

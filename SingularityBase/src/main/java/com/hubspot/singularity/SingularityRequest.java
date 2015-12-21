@@ -34,6 +34,7 @@ public class SingularityRequest {
   private final Optional<Boolean> daemon;
 
   private final Optional<Integer> instances;
+  private final Optional<Boolean> skipHealthchecks;
 
   private final Optional<Boolean> rackSensitive;
   private final Optional<List<String>> rackAffinity;
@@ -53,9 +54,11 @@ public class SingularityRequest {
       @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive, @JsonProperty("loadBalanced") Optional<Boolean> loadBalanced,
       @JsonProperty("killOldNonLongRunningTasksAfterMillis") Optional<Long> killOldNonLongRunningTasksAfterMillis, @JsonProperty("scheduleType") Optional<ScheduleType> scheduleType,
       @JsonProperty("quartzSchedule") Optional<String> quartzSchedule, @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity,
-      @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement, @JsonProperty("requiredSlaveAttributes") Optional<Map<String, String>> requiredSlaveAttributes, @JsonProperty("allowedSlaveAttributes") Optional<Map<String, String>> allowedSlaveAttributes,
-      @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis, @JsonProperty("waitAtLeastMillisAfterTaskFinishesForReschedule") Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule, @JsonProperty("group") Optional<String> group,
-      @JsonProperty("readOnlyGroups") Optional<Set<String>> readOnlyGroups, @JsonProperty("bounceAfterScale") Optional<Boolean> bounceAfterScale) {
+      @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement, @JsonProperty("requiredSlaveAttributes") Optional<Map<String, String>> requiredSlaveAttributes, 
+      @JsonProperty("allowedSlaveAttributes") Optional<Map<String, String>> allowedSlaveAttributes, @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis,
+      @JsonProperty("waitAtLeastMillisAfterTaskFinishesForReschedule") Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule, @JsonProperty("group") Optional<String> group,
+      @JsonProperty("readOnlyGroups") Optional<Set<String>> readOnlyGroups, @JsonProperty("bounceAfterScale") Optional<Boolean> bounceAfterScale, 
+      @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks) {
     this.id = id;
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
@@ -76,6 +79,7 @@ public class SingularityRequest {
     this.group = group;
     this.readOnlyGroups = readOnlyGroups;
     this.bounceAfterScale = bounceAfterScale;
+    this.skipHealthchecks = skipHealthchecks;
 
     if (requestType == null) {
       this.requestType = RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced);
@@ -103,7 +107,8 @@ public class SingularityRequest {
     .setScheduledExpectedRuntimeMillis(scheduledExpectedRuntimeMillis)
     .setGroup(group)
     .setReadOnlyGroups(readOnlyGroups)
-    .setBounceAfterScale(bounceAfterScale);
+    .setBounceAfterScale(bounceAfterScale)
+    .setSkipHealthchecks(skipHealthchecks);
   }
 
   public String getId() {
@@ -249,6 +254,10 @@ public class SingularityRequest {
 
   public Optional<Boolean> getBounceAfterScale() {
     return bounceAfterScale;
+  }
+
+  public Optional<Boolean> getSkipHealthchecks() {
+    return skipHealthchecks;
   }
 
   @Override

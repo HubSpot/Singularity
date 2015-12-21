@@ -34,5 +34,8 @@ class requestHeaderSubview extends View
         config: config
         data:      @model.toJSON()
         synced:    @model.synced
+        pauseDisabled: !!@model.toJSON().expiringPause and (@model.toJSON().expiringPause.startMillis + @model.toJSON().expiringPause.durationMillis) > new Date().getTime()
+        scaleDisabled: !!@model.toJSON().expiringScale and (@model.toJSON().expiringScale.startMillis + @model.toJSON().expiringScale.durationMillis) > new Date().getTime()
+        bounceDisabled: !!@model.toJSON().expiringBounce and (@model.toJSON().expiringBounce.startMillis + @model.toJSON().expiringBounce.durationMillis) > new Date().getTime()
 
 module.exports = requestHeaderSubview

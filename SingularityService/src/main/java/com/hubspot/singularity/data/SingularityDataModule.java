@@ -7,11 +7,14 @@ import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.helpers.RequestHelper;
 
 public class SingularityDataModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    bind(RequestHelper.class).in(Scopes.SINGLETON);
+
     bind(MetadataManager.class).in(Scopes.SINGLETON);
     bind(StateManager.class).in(Scopes.SINGLETON);
     bind(TaskManager.class).in(Scopes.SINGLETON);

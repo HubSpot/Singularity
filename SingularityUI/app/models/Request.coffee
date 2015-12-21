@@ -59,14 +59,18 @@ class Request extends Model
             url:  "#{ @url() }/unpause?user=#{ app.getUsername() }"
             type: 'POST'
 
-    pause: (killTasks) =>
+    pause: (killTasks, duration) =>
+        data =
+            user:      app.getUsername()
+            killTasks: killTasks
+        duration = @_parseDuration(duration)
+        if duration
+            data.durationMillis = duration
         $.ajax
             url:         "#{ @url() }/pause"
             type:        'POST'
             contentType: 'application/json'
-            data:         JSON.stringify
-                user:      app.getUsername()
-                killTasks: killTasks
+            data: JSON.stringify data
 
     run: (confirmedOrPromptData) ->
         options =
@@ -84,18 +88,46 @@ class Request extends Model
         $.ajax options
 
     scale: (confirmedOrPromptData) =>
+        data =
+            instances: confirmedOrPromptData.instances
+        duration = @_parseDuration(confirmedOrPromptData.duration)
+        if duration
+            data.durationMillis = duration
         $.ajax
-          url: "#{ @url() }/instances?user=#{ app.getUsername() }"
+          url: "#{ @url() }/scale?user=#{ app.getUsername() }"
           type: "PUT"
           contentType: 'application/json'
-          data:         JSON.stringify
-              id:      @get "id"
-              instances: confirmedOrPromptData
+          data: JSON.stringify data
 
-    bounce: (incremental) =>
+    makeScalePermanent: (callback) =>
+        $.ajax(
+          url: "#{ @url() }/scale?user=#{ app.getUsername() }"
+          type: "DELETE"
+        ).then callback
+
+    makePausePermanent: (callback) =>
+        $.ajax(
+          url: "#{ @url() }/pause?user=#{ app.getUsername() }"
+          type: "DELETE"
+        ).then callback
+
+    cancelBounce: (callback) =>
+        $.ajax(
+          url: "#{ @url() }/bounce?user=#{ app.getUsername() }"
+          type: "DELETE"
+        ).then callback
+
+    bounce: (incremental, duration) =>
+        data =
+            incremental: incremental
+        duration = @_parseDuration(duration)
+        if duration
+            data.durationMillis = duration
         $.ajax
-            url:  "#{ @url() }/bounce?user=#{ app.getUsername() }&incremental=#{ incremental }"
             type: "POST"
+            url:  "#{ @url() }/bounce?user=#{ app.getUsername() }"
+            contentType: 'application/json'
+            data: JSON.stringify data
 
     exitCooldown: =>
         $.ajax
@@ -106,6 +138,15 @@ class Request extends Model
         $.ajax
             url:  "#{ @url() }?user=#{ app.getUsername() }"
             type: "DELETE"
+
+    _parseDuration: (duration) =>
+        if !duration
+            return duration
+        # Convert strings like '1 hr', '2 days', etc. or any combination thereof to millis
+        try
+            return juration.parse(duration) * 1000
+        catch e
+            console.error "Error parsing duration input: #{duration}"
 
     ###
     promptX opens a dialog asking the user to confirm an action and then does it
@@ -118,16 +159,22 @@ class Request extends Model
             callback: (confirmed) =>
                 return unless confirmed
                 killTasks = not $('.vex #kill-tasks').is ':checked'
-                @pause(killTasks).done callback
+                duration = $('.vex #pause-expiration').val()
+                @pause(killTasks, duration).done callback
 
     promptScale: (callback) =>
-        vex.dialog.prompt
+        vex.dialog.open
             message: "Enter the desired number of instances to run for request:"
             input:
                 scaleTemplate
                     id: @get "id"
                     bounceAfterScale: @get "bounceAfterScale"
                     placeholder: @get 'instances'
+            input: """
+                <input name="instances" type="number" placeholder="#{@get 'instances'}" min="1" step="1" required />
+                <input name="duration" type="text" placeholder="Expiration (optional)" />
+                <span class="help">If an expiration duration is specified, this action will be reverted afterwards. Accepts any english time duration. (Days, Hr, Min...)</span>
+            """
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.YES), text: 'Scale'
                 vex.dialog.buttons.NO
@@ -269,7 +316,8 @@ class Request extends Model
             callback: (confirmed) =>
                 return if not confirmed
                 incremental = $('.vex #incremental-bounce').is ':checked'
-                @bounce(incremental).done callback
+                duration = $('.vex #bounce-expiration').val()
+                @bounce(incremental, duration).done callback
 
     promptExitCooldown: (callback) =>
         vex.dialog.confirm

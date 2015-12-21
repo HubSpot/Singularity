@@ -17,6 +17,7 @@ PaginatedTableServersideView = require '../views/paginatedTableServersideView'
 
 SimpleSubview          = require '../views/simpleSubview'
 RequestHeaderView      = require '../views/requestHeader'
+RequestActionExpirationsView = require '../views/requestActionExpirations'
 
 class RequestDetailController extends Controller
 
@@ -68,6 +69,9 @@ class RequestDetailController extends Controller
             model:          @models.request
             taskCleanups:   @collections.taskCleanups
             activeTasks:    @collections.activeTasks
+
+        @subviews.actionExpirations = new RequestActionExpirationsView
+            model:          @models.request
 
         # would have used header subview for this info,
         # but header expects a request model that
