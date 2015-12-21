@@ -27,6 +27,7 @@ class taskHealthcheckNotificationSubview extends View
         hasSuccessfulHealthcheck: @model.get('healthcheckResults')?.length > 0 and _.find(@model.get('healthcheckResults'), (item) -> item.statusCode is 200)
         lastHealthcheckFailed: @model.get('healthcheckResults')?.length > 0 and @model.get('healthcheckResults')[0].statusCode isnt 200
         synced:           @model.synced
+        config:           config
 
     triggerToggleHealthchecks: ->
         @trigger 'toggleHealthchecks'
