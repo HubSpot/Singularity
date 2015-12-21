@@ -192,11 +192,19 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, int instanceNo, TaskState initialTaskState) {
-    return launchTask(request, deploy, System.currentTimeMillis() - 1, System.currentTimeMillis(), instanceNo, initialTaskState);
+    return launchTask(request, deploy, System.currentTimeMillis() - 1, System.currentTimeMillis(), instanceNo, initialTaskState, false);
+  }
+
+  protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, int instanceNo, TaskState initialTaskState, boolean separateHost) {
+    return launchTask(request, deploy, System.currentTimeMillis() - 1, System.currentTimeMillis(), instanceNo, initialTaskState, separateHost);
   }
 
   protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, long taskLaunch, int instanceNo, TaskState initialTaskState) {
-    return launchTask(request, deploy, taskLaunch, System.currentTimeMillis(), instanceNo, initialTaskState);
+    return launchTask(request, deploy, taskLaunch, System.currentTimeMillis(), instanceNo, initialTaskState, false);
+  }
+
+  protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, long updateTime, int instanceNo, TaskState initialTaskState) {
+    return launchTask(request, deploy, launchTime, updateTime, instanceNo, initialTaskState, false);
   }
 
   protected SingularityPendingTask buildPendingTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo) {
@@ -207,10 +215,19 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected SingularityTask prepTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo) {
+    return prepTask(request, deploy, launchTime, instanceNo, false);
+  }
+
+  protected SingularityTask prepTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo, boolean separateHosts) {
     SingularityPendingTask pendingTask = buildPendingTask(request, deploy, launchTime, instanceNo);
     SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
 
-    Offer offer = createOffer(125, 1024);
+    Offer offer;
+    if (separateHosts) {
+      offer = createOffer(125, 1024, String.format("slave%s", instanceNo), String.format("host%s", instanceNo));
+    } else {
+      offer = createOffer(125, 1024);
+    }
 
     SingularityTaskId taskId = new SingularityTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, offer.getHostname(), "rack1");
     TaskID taskIdProto = TaskID.newBuilder().setValue(taskId.toString()).build();
@@ -229,11 +246,11 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected SingularityTask prepTask() {
-    return prepTask(request, firstDeploy, System.currentTimeMillis(), 1);
+    return prepTask(request, firstDeploy, System.currentTimeMillis(), 1, false);
   }
 
-  protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, long updateTime, int instanceNo, TaskState initialTaskState) {
-    SingularityTask task = prepTask(request, deploy, launchTime, instanceNo);
+  protected SingularityTask launchTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, long updateTime, int instanceNo, TaskState initialTaskState, boolean separateHost) {
+    SingularityTask task = prepTask(request, deploy, launchTime, instanceNo, separateHost);
 
     taskManager.createTaskAndDeletePendingTask(task);
 
@@ -350,8 +367,20 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     return launchTask(request, deploy, instanceNo, TaskState.TASK_RUNNING);
   }
 
+  protected SingularityTask startSeparatePlacementTask(SingularityDeploy deploy, int instanceNo) {
+    return launchTask(request, deploy, instanceNo, TaskState.TASK_RUNNING, true);
+  }
+
   protected void resourceOffers() {
     sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1"), createOffer(20, 20000, "slave2", "host2")));
+  }
+
+  protected void resourceOffers(int numSlaves) {
+    List<Offer> offers = new ArrayList<>();
+    for (int i = 1; i <= numSlaves; i++) {
+      offers.add(createOffer(20, 20000, String.format("slave%s", i), String.format("host%s", i)));
+    }
+    sms.resourceOffers(driver, offers);
   }
 
   protected void deploy(String deployId) {
