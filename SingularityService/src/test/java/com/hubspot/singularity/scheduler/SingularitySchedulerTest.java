@@ -1192,7 +1192,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     SingularityRequest request = requestResource.getRequest(requestId).getRequest();
 
-    requestResource.submit(request.toBuilder()
+    requestResource.activate(request.toBuilder()
         .setSlavePlacement(Optional.of(SlavePlacement.SEPARATE_BY_REQUEST))
         .setInstances(Optional.of(2)).build()
     );
@@ -1202,7 +1202,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     SingularityTask taskOne = startSeparatePlacementTask(firstDeploy, 1);
     SingularityTask taskTwo = startSeparatePlacementTask(firstDeploy, 2);
 
-    requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.INCREMENTAL_BOUNCE, System.currentTimeMillis(), Optional.<Boolean>absent(), requestId, Optional.of(firstDeployId)));
+    requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.INCREMENTAL_BOUNCE, System.currentTimeMillis(), Optional.<Boolean>absent(), requestId, Optional.of(firstDeployId), Optional.<Boolean> absent()));
 
     Assert.assertTrue(requestManager.cleanupRequestExists(requestId));
 
