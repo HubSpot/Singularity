@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -11,25 +13,28 @@ public class SingularitySlave extends SingularityMachineAbstraction<SingularityS
 
   private final String host;
   private final String rackId;
+  private final Map<String, String> attributes;
 
-  public SingularitySlave(String slaveId, String host, String rackId) {
+  public SingularitySlave(String slaveId, String host, String rackId, Map<String, String> attributes) {
     super(slaveId);
 
     this.host = host;
     this.rackId = rackId;
+    this.attributes = attributes;
   }
 
   @JsonCreator
   public SingularitySlave(@JsonProperty("slaveId") String slaveId, @JsonProperty("firstSeenAt") long firstSeenAt, @JsonProperty("currentState") SingularityMachineStateHistoryUpdate currentState,
-      @JsonProperty("host") String host, @JsonProperty("rackId") String rackId) {
+      @JsonProperty("host") String host, @JsonProperty("rackId") String rackId, @JsonProperty("attributes") Map<String, String> attributes) {
     super(slaveId, firstSeenAt, currentState);
     this.host = host;
     this.rackId = rackId;
+    this.attributes = attributes;
   }
 
   @Override
   public SingularitySlave changeState(SingularityMachineStateHistoryUpdate newState) {
-    return new SingularitySlave(getId(), getFirstSeenAt(), newState, host, rackId);
+    return new SingularitySlave(getId(), getFirstSeenAt(), newState, host, rackId, attributes);
   }
 
   @ApiModelProperty("Slave hostname")
@@ -52,6 +57,10 @@ public class SingularitySlave extends SingularityMachineAbstraction<SingularityS
   @ApiModelProperty("Slave rack ID")
   public String getRackId() {
     return rackId;
+  }
+
+  public Map<String, String> getAttributes() {
+    return attributes;
   }
 
   @Override

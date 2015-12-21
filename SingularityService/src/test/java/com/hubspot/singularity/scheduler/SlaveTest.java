@@ -2,6 +2,7 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.ImmutableMap;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -32,8 +33,8 @@ public class SlaveTest extends SingularityCuratorTestBase {
 
   @Test
   public void testDeadSlavesArePurged() {
-    SingularitySlave liveSlave = new SingularitySlave("1", "h1", "r1");
-    SingularitySlave deadSlave = new SingularitySlave("2", "h1", "r1");
+    SingularitySlave liveSlave = new SingularitySlave("1", "h1", "r1", ImmutableMap.of("uniqueAttribute", "1"));
+    SingularitySlave deadSlave = new SingularitySlave("2", "h1", "r1", ImmutableMap.of("uniqueAttribute", "2"));
 
     final long now = System.currentTimeMillis();
 

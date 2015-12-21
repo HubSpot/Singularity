@@ -3,6 +3,7 @@ package com.hubspot.singularity;
 import static com.hubspot.singularity.JsonHelpers.copyOfList;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -38,11 +39,14 @@ public class SingularityRequest {
   private final Optional<Boolean> rackSensitive;
   private final Optional<List<String>> rackAffinity;
   private final Optional<SlavePlacement> slavePlacement;
+  private final Optional<Map<String, String>> requiredSlaveAttributes;
+  private final Optional<Map<String, String>> allowedSlaveAttributes;
 
   private final Optional<Boolean> loadBalanced;
 
   private final Optional<String> group;
   private final Optional<Set<String>> readOnlyGroups;
+  private final Optional<Boolean> bounceAfterScale;
 
   @JsonCreator
   public SingularityRequest(@JsonProperty("id") String id, @JsonProperty("requestType") RequestType requestType, @JsonProperty("owners") Optional<List<String>> owners,
@@ -52,7 +56,8 @@ public class SingularityRequest {
       @JsonProperty("quartzSchedule") Optional<String> quartzSchedule, @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity,
       @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement, @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis,
       @JsonProperty("waitAtLeastMillisAfterTaskFinishesForReschedule") Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule, @JsonProperty("group") Optional<String> group,
-      @JsonProperty("readOnlyGroups") Optional<Set<String>> readOnlyGroups, @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks) {
+      @JsonProperty("readOnlyGroups") Optional<Set<String>> readOnlyGroups, @JsonProperty("bounceAfterScale") Optional<Boolean> bounceAfterScale, 
+      @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks) {
     this.id = id;
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
@@ -66,10 +71,13 @@ public class SingularityRequest {
     this.quartzSchedule = quartzSchedule;
     this.rackAffinity = rackAffinity;
     this.slavePlacement = slavePlacement;
+    this.requiredSlaveAttributes = requiredSlaveAttributes;
+    this.allowedSlaveAttributes = allowedSlaveAttributes;
     this.scheduledExpectedRuntimeMillis = scheduledExpectedRuntimeMillis;
     this.waitAtLeastMillisAfterTaskFinishesForReschedule = waitAtLeastMillisAfterTaskFinishesForReschedule;
     this.group = group;
     this.readOnlyGroups = readOnlyGroups;
+    this.bounceAfterScale = bounceAfterScale;
     this.skipHealthchecks = skipHealthchecks;
 
     if (requestType == null) {
@@ -93,9 +101,12 @@ public class SingularityRequest {
     .setRackAffinity(copyOfList(rackAffinity))
     .setWaitAtLeastMillisAfterTaskFinishesForReschedule(waitAtLeastMillisAfterTaskFinishesForReschedule)
     .setSlavePlacement(slavePlacement)
+    .setRequiredSlaveAttributes(requiredSlaveAttributes)
+    .setAllowedSlaveAttributes(allowedSlaveAttributes)
     .setScheduledExpectedRuntimeMillis(scheduledExpectedRuntimeMillis)
     .setGroup(group)
     .setReadOnlyGroups(readOnlyGroups)
+    .setBounceAfterScale(bounceAfterScale)
     .setSkipHealthchecks(skipHealthchecks);
   }
 
@@ -158,6 +169,14 @@ public class SingularityRequest {
 
   public Optional<Long> getScheduledExpectedRuntimeMillis() {
     return scheduledExpectedRuntimeMillis;
+  }
+
+  public Optional<Map<String, String>> getRequiredSlaveAttributes() {
+    return requiredSlaveAttributes;
+  }
+
+  public Optional<Map<String, String>> getAllowedSlaveAttributes() {
+    return allowedSlaveAttributes;
   }
 
   @JsonIgnore
@@ -232,6 +251,10 @@ public class SingularityRequest {
     return readOnlyGroups;
   }
 
+  public Optional<Boolean> getBounceAfterScale() {
+    return bounceAfterScale;
+  }
+
   public Optional<Boolean> getSkipHealthchecks() {
     return skipHealthchecks;
   }
@@ -254,9 +277,12 @@ public class SingularityRequest {
             ", rackSensitive=" + rackSensitive +
             ", rackAffinity=" + rackAffinity +
             ", slavePlacement=" + slavePlacement +
+            ", requiredSlaveAttributes=" + requiredSlaveAttributes +
+            ", allowedSlaveAttributes=" + allowedSlaveAttributes +
             ", loadBalanced=" + loadBalanced +
             ", group=" + group +
             ", readOnlyGroups=" + readOnlyGroups +
+            ", bounceAfterScale=" + bounceAfterScale +
             ']';
   }
 
@@ -283,13 +309,16 @@ public class SingularityRequest {
             Objects.equals(rackSensitive, request.rackSensitive) &&
             Objects.equals(rackAffinity, request.rackAffinity) &&
             Objects.equals(slavePlacement, request.slavePlacement) &&
+            Objects.equals(requiredSlaveAttributes, request.requiredSlaveAttributes) &&
+            Objects.equals(allowedSlaveAttributes, request.allowedSlaveAttributes) &&
             Objects.equals(loadBalanced, request.loadBalanced) &&
             Objects.equals(group, request.group) &&
-            Objects.equals(readOnlyGroups, request.readOnlyGroups);
+            Objects.equals(readOnlyGroups, request.readOnlyGroups) &&
+            Objects.equals(bounceAfterScale, request.bounceAfterScale);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, loadBalanced, group, readOnlyGroups);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale);
   }
 }

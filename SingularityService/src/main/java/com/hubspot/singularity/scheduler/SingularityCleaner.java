@@ -537,9 +537,9 @@ public class SingularityCleaner {
         return CheckLBState.DONE;
       case FAILED:
       case CANCELED:
-        LOG.error("LB removal request {} ({}) got unexpected response {}", lbAddUpdate.get(), loadBalancerRequestId, lbRemoveUpdate.getLoadBalancerState());
-        exceptionNotifier.notify(String.format("LB removal failed for %s", lbAddUpdate.get().getLoadBalancerRequestId().toString()),
-            ImmutableMap.of("state", lbRemoveUpdate.getLoadBalancerState().name(), "loadBalancerRequestId", loadBalancerRequestId.toString(), "addUpdate", lbAddUpdate.get().toString()));
+        LOG.error("LB removal request {} ({}) got unexpected response {}", lbRemoveUpdate, loadBalancerRequestId, lbRemoveUpdate.getLoadBalancerState());
+        exceptionNotifier.notify(String.format("LB removal failed for %s", lbRemoveUpdate.getLoadBalancerRequestId().toString()),
+            ImmutableMap.of("state", lbRemoveUpdate.getLoadBalancerState().name(), "loadBalancerRequestId", loadBalancerRequestId.toString(), "addUpdate", lbRemoveUpdate.toString()));
         return CheckLBState.RETRY;
       case UNKNOWN:
       case CANCELING:
@@ -547,8 +547,8 @@ public class SingularityCleaner {
         LOG.trace("Waiting on LB cleanup request {} in state {}", loadBalancerRequestId, lbRemoveUpdate.getLoadBalancerState());
         break;
       case INVALID_REQUEST_NOOP:
-        exceptionNotifier.notify(String.format("LB removal failed for %s", lbAddUpdate.get().getLoadBalancerRequestId().toString()),
-          ImmutableMap.of("state", lbRemoveUpdate.getLoadBalancerState().name(), "loadBalancerRequestId", loadBalancerRequestId.toString(), "addUpdate", lbAddUpdate.get().toString()));
+        exceptionNotifier.notify(String.format("LB removal failed for %s", lbRemoveUpdate.getLoadBalancerRequestId().toString()),
+          ImmutableMap.of("state", lbRemoveUpdate.getLoadBalancerState().name(), "loadBalancerRequestId", loadBalancerRequestId.toString(), "addUpdate", lbRemoveUpdate.toString()));
         return CheckLBState.LOAD_BALANCE_FAILED;
     }
 
