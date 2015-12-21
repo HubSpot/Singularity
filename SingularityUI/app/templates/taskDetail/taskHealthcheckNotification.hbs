@@ -53,7 +53,7 @@
     {{#if lastHealthcheckFailed}}
         {{#with data.healthcheckResults.[0]}}
         <div class="alert alert-warning" role="alert">
-            <b>Task failed due to no passing healthchecks:</b> Last healthcheck {{#if statusCode}}responded with <span class="label label-danger">HTTP {{statusCode}}</span>{{else}}did not respond{{/if}}{{#if durationMillis}} in {{durationMillis}}ms{{/if}} at {{timestampFormattedWithSeconds timestamp}}. <a href="#health-checks" data-action="viewHealthchecks">View all healthchecks.</a> <a href="{{ appRoot }}/task/{{ ../data.taskId }}/tail/{{ substituteTaskId ../config.finishedTaskLogPath ../data.taskId }}">View Logs.</a>
+            <b>Task failed due to no passing healthchecks:</b> Last healthcheck {{#if statusCode}}responded with <span class="label label-danger">HTTP {{statusCode}}</span>{{else}}did not respond{{/if}}{{#if durationMillis}} in {{durationMillis}}ms{{/if}} at {{timestampFormattedWithSeconds timestamp}}. <a href="#health-checks" data-action="viewHealthchecks">View all healthchecks.</a> <a href="{{ appRoot }}/task/{{ ../data.taskId }}/tail/{{ substituteTaskId ../config.finishedTaskLogPath ../data.taskId }}">View service logs.</a>
         </div>
         {{/with}}
     {{/if}}
