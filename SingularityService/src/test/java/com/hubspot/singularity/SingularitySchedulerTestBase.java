@@ -323,17 +323,17 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void initHCDeploy() {
-    firstDeploy = initAndFinishDeploy(new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100")).setHealthcheckUri(Optional.of("http://uri")));
+    firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100")).setHealthcheckUri(Optional.of("http://uri")));
   }
 
   protected SingularityDeploy initAndFinishDeploy(SingularityRequest request, String deployId) {
-    return initAndFinishDeploy(new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100")));
+    return initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100")));
   }
 
-  protected SingularityDeploy initAndFinishDeploy(SingularityDeployBuilder builder) {
+  protected SingularityDeploy initAndFinishDeploy(SingularityRequest request, SingularityDeployBuilder builder) {
     SingularityDeploy deploy = builder.build();
 
-    SingularityDeployMarker marker =  new SingularityDeployMarker(request.getId(), deploy.getId(), System.currentTimeMillis(), Optional.<String> absent());
+    SingularityDeployMarker marker =  new SingularityDeployMarker(deploy.getRequestId(), deploy.getId(), System.currentTimeMillis(), Optional.<String> absent());
 
     deployManager.saveDeploy(request, marker, deploy);
 
