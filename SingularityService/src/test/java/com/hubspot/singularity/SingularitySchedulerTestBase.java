@@ -317,11 +317,11 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected void initRequest() {
     protectedInitRequest(false, false);
   }
-
+  
   protected void initFirstDeploy() {
     firstDeploy = initAndFinishDeploy(request, firstDeployId);
   }
-
+  
   protected void initHCDeploy() {
     firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100")).setHealthcheckUri(Optional.of("http://uri")));
   }
@@ -333,7 +333,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityDeploy initAndFinishDeploy(SingularityRequest request, SingularityDeployBuilder builder) {
     SingularityDeploy deploy = builder.build();
 
-    SingularityDeployMarker marker =  new SingularityDeployMarker(deploy.getRequestId(), deploy.getId(), System.currentTimeMillis(), Optional.<String> absent());
+    SingularityDeployMarker marker = new SingularityDeployMarker(deploy.getRequestId(), deploy.getId(), System.currentTimeMillis(), Optional.<String> absent());
 
     deployManager.saveDeploy(request, marker, deploy);
 
