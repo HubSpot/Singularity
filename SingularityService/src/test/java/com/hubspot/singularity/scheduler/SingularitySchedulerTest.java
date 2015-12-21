@@ -1109,6 +1109,51 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testIncrementalBounce() {
+    initRequest();
+
+    SingularityRequest request = requestResource.getRequest(requestId).getRequest();
+
+    requestResource.submit(request.toBuilder()
+        .setSlavePlacement(Optional.of(SlavePlacement.SEPARATE_BY_REQUEST))
+        .setInstances(Optional.of(2)).build()
+    );
+
+    initFirstDeploy();
+
+    SingularityTask taskOne = startSeparatePlacementTask(firstDeploy, 1);
+    SingularityTask taskTwo = startSeparatePlacementTask(firstDeploy, 2);
+
+    requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.INCREMENTAL_BOUNCE, System.currentTimeMillis(), Optional.<Boolean>absent(), requestId, Optional.of(firstDeployId)));
+
+    Assert.assertTrue(requestManager.cleanupRequestExists(requestId));
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertTrue(!requestManager.cleanupRequestExists(requestId));
+    Assert.assertTrue(taskManager.getCleanupTaskIds().size() == 2);
+
+    resourceOffers(3);
+
+    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 3);
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertTrue(taskManager.getCleanupTaskIds().size() == 1);
+
+    for (SingularityTask task : taskManager.getActiveTasks()) {
+      if (!task.getTaskId().equals(taskOne.getTaskId()) && !task.getTaskId().equals(taskTwo.getTaskId())) {
+        statusUpdate(task, TaskState.TASK_RUNNING, Optional.of(1L));
+      }
+    }
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertTrue(taskManager.getCleanupTaskIds().isEmpty());
+    Assert.assertTrue(taskManager.getKilledTaskIdRecords().size() == 2);
+  }
+
+  @Test
   public void testScheduledNotification() {
     schedule = "0 0 * * * ?"; // run every hour
     initScheduledRequest();
