@@ -139,6 +139,17 @@ class Request extends Model
             url:  "#{ @url() }?user=#{ app.getUsername() }"
             type: "DELETE"
 
+    _validateDuration: (duration, action) =>
+        if @_parseDuration(duration)
+            return true
+        else
+            vex.dialog.open
+                message: 'Invalid duration specified, please try again.'
+                callback: (data) ->
+                  if data
+                      action()
+            return false
+
     _parseDuration: (duration) =>
         if !duration
             return duration
@@ -147,6 +158,7 @@ class Request extends Model
             return juration.parse(duration) * 1000
         catch e
             console.error "Error parsing duration input: #{duration}"
+            return null
 
     ###
     promptX opens a dialog asking the user to confirm an action and then does it
@@ -160,7 +172,9 @@ class Request extends Model
                 return unless confirmed
                 killTasks = not $('.vex #kill-tasks').is ':checked'
                 duration = $('.vex #pause-expiration').val()
-                @pause(killTasks, duration).done callback
+
+                if !duration or (duration and @_validateDuration(duration, @promptPause))
+                    @pause(killTasks, duration).done callback
 
     promptScale: (callback) =>
         vex.dialog.open
@@ -172,7 +186,7 @@ class Request extends Model
                     placeholder: @get 'instances'
             input: """
                 <input name="instances" type="number" placeholder="#{@get 'instances'}" min="1" step="1" required />
-                <input name="duration" type="text" placeholder="Expiration (optional)" />
+                <input name="duration" id="scale-expiration" type="text" placeholder="Expiration (optional)" />
                 <span class="help">If an expiration duration is specified, this action will be reverted afterwards. Accepts any english time duration. (Days, Hr, Min...)</span>
             """
             buttons: [
@@ -190,12 +204,14 @@ class Request extends Model
                 return unless data
                 bounce = $('.vex #bounce').is ':checked'
                 incremental = $('.vex #incremental-bounce').is ':checked'
-                @scale(data).done =>
-                    if bounce
-                        @bounce(incremental).done callback
-                    else
-                        callback
-        
+                duration = $('.vex #scale-expiration').val()
+                if !duration or (duration and @_validateDuration(duration, @promptScale))
+                    @scale(data).done =>
+                        if bounce
+                            @bounce(incremental).done callback
+                        else
+                            callback
+
 
     promptUnpause: (callback) =>
         vex.dialog.confirm
@@ -317,7 +333,9 @@ class Request extends Model
                 return if not confirmed
                 incremental = $('.vex #incremental-bounce').is ':checked'
                 duration = $('.vex #bounce-expiration').val()
-                @bounce(incremental, duration).done callback
+
+                if !duration or (duration and @_validateDuration(duration, @promptBounce))
+                    @bounce(incremental, duration).done callback
 
     promptExitCooldown: (callback) =>
         vex.dialog.confirm
