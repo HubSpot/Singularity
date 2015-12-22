@@ -2,6 +2,8 @@ package com.hubspot.singularity.smtp;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +33,8 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.api.SingularityPauseRequest;
+import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.EmailConfigurationEnums.EmailDestination;
 import com.hubspot.singularity.config.EmailConfigurationEnums.EmailType;
 import com.hubspot.singularity.config.SMTPConfiguration;
@@ -298,7 +302,7 @@ public class SingularityMailer implements Managed {
 
   public enum RequestMailType {
 
-    PAUSED(EmailType.REQUEST_PAUSED), UNPAUSED(EmailType.REQUEST_UNPAUSED), REMOVED(EmailType.REQUEST_REMOVED);
+    PAUSED(EmailType.REQUEST_PAUSED), UNPAUSED(EmailType.REQUEST_UNPAUSED), REMOVED(EmailType.REQUEST_REMOVED), SCALED(EmailType.REQUEST_SCALED);
 
     private final EmailType emailType;
 
@@ -312,7 +316,7 @@ public class SingularityMailer implements Managed {
 
   }
 
-  private void sendRequestMail(final SingularityRequest request, final RequestMailType type, final Optional<String> user) {
+  private void sendRequestMail(final SingularityRequest request, final RequestMailType type, final Optional<String> user, final Optional<Map<String, Object>> additionalProperties) {
     if (!maybeSmtpConfiguration.isPresent()) {
       LOG.debug("Not sending request mail - no SMTP configuration is present");
       return;
@@ -323,7 +327,7 @@ public class SingularityMailer implements Managed {
       @Override
       public void run() {
         try {
-          prepareRequestMail(request, type, user);
+          prepareRequestMail(request, type, user, additionalProperties);
         } catch (Throwable t) {
           LOG.error("While preparing request mail for {} / {}", request, type, t);
           exceptionNotifier.notify(t, ImmutableMap.of("requestId", request.getId()));
@@ -332,7 +336,7 @@ public class SingularityMailer implements Managed {
     });
   }
 
-  private void prepareRequestMail(SingularityRequest request, RequestMailType type, Optional<String> user) {
+  private void prepareRequestMail(SingularityRequest request, RequestMailType type, Optional<String> user, Optional<Map<String, Object>> additionalProperties) {
     final List<EmailDestination> emailDestination = getDestination(type.getEmailType());
 
     if (emailDestination.isEmpty()) {
@@ -344,8 +348,10 @@ public class SingularityMailer implements Managed {
     final Map<String, Object> templateProperties = Maps.newHashMap();
     populateRequestEmailProperties(templateProperties, request);
 
+    templateProperties.put("expiring", Boolean.FALSE);
     templateProperties.put("requestPaused", type == RequestMailType.PAUSED);
     templateProperties.put("requestUnpaused", type == RequestMailType.UNPAUSED);
+    templateProperties.put("requestScaled", type == RequestMailType.SCALED);
     templateProperties.put("action", type.name().toLowerCase());
     templateProperties.put("hasUser", user.isPresent());
 
@@ -353,21 +359,65 @@ public class SingularityMailer implements Managed {
       templateProperties.put("user", user.get());
     }
 
+    if (additionalProperties.isPresent()) {
+      templateProperties.putAll(additionalProperties.get());
+    }
+
     final String body = Jade4J.render(requestModifiedTemplate, templateProperties);
 
     queueMail(emailDestination, request, type.getEmailType(), user, subject, body);
   }
 
-  public void sendRequestPausedMail(SingularityRequest request, Optional<String> user) {
-    sendRequestMail(request, RequestMailType.PAUSED, user);
+  private void setupExpireFormat(Map<String, Object> additionalProperties, Optional<Long> durationMillis) {
+    if (!durationMillis.isPresent()) {
+      return;
+    }
+
+    additionalProperties.put("expiring", Boolean.TRUE);
+
+    final long now = System.currentTimeMillis();
+    final long future = now + durationMillis.get();
+
+    additionalProperties.put("expireFormat", new Date(future));
+  }
+
+  public void sendRequestPausedMail(SingularityRequest request, Optional<SingularityPauseRequest> pauseRequest, Optional<String> user) {
+    Map<String, Object> additionalProperties = new HashMap<>();
+
+    Boolean killTasks = Boolean.TRUE;
+
+    if (pauseRequest.isPresent()) {
+      setupExpireFormat(additionalProperties, pauseRequest.get().getDurationMillis());
+
+      if (pauseRequest.get().getKillTasks().isPresent()) {
+        killTasks = pauseRequest.get().getKillTasks().get();
+      }
+    }
+
+    additionalProperties.put("killTasks", killTasks);
+
+    sendRequestMail(request, RequestMailType.PAUSED, user, Optional.of(additionalProperties));
   }
 
   public void sendRequestUnpausedMail(SingularityRequest request, Optional<String> user) {
-    sendRequestMail(request, RequestMailType.UNPAUSED, user);
+    sendRequestMail(request, RequestMailType.UNPAUSED, user, Optional.<Map<String, Object>> absent());
+  }
+
+  public void sendRequestScaledMail(SingularityRequest request, Optional<SingularityScaleRequest> newScaleRequest, Optional<Integer> formerInstances, Optional<String> user) {
+    Map<String, Object> additionalProperties = new HashMap<>();
+
+    if (newScaleRequest.isPresent()) {
+      setupExpireFormat(additionalProperties, newScaleRequest.get().getDurationMillis());
+    }
+
+    additionalProperties.put("newInstances", request.getInstancesSafe());
+    additionalProperties.put("oldInstances", formerInstances.or(1));
+
+    sendRequestMail(request, RequestMailType.SCALED, user, Optional.of(additionalProperties));
   }
 
   public void sendRequestRemovedMail(SingularityRequest request, Optional<String> user) {
-    sendRequestMail(request, RequestMailType.REMOVED, user);
+    sendRequestMail(request, RequestMailType.REMOVED, user, Optional.<Map<String, Object>> absent());
   }
 
   public void sendRequestInCooldownMail(final SingularityRequest request) {

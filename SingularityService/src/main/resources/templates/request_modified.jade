@@ -36,8 +36,17 @@ html
             h3(style="margin: 0; font-size: 20px; line-height: 1") Status
           p
           if requestPaused
-            #{ requestId } will not run again until it is manually unpaused. Existing tasks will be killed.
+            if expiring
+              #{ requestId } will not run again until #{ expireFormat }.
+            else
+           	  #{ requestId } will not run again until it is manually unpaused.
+           	if killTasks 
+              Existing tasks will be killed.
           else if requestUnpaused
             #{ requestId } will begin scheduling and executing tasks immediately.
+          else if requestScaled
+          	#{ requestId } will attempt to schedule and run #{ newInstances }. Previously, it was running with #{ oldInstances }. 
+          	if expiring
+          	  It will revert to #{ oldInstances } at #{ expireFormat }.
           else
             #{ requestId } will only be reactivated if it is updated via the API.

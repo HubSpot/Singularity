@@ -79,6 +79,7 @@ public class SMTPConfiguration {
       .put(EmailType.REQUEST_PAUSED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
       .put(EmailType.REQUEST_REMOVED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
       .put(EmailType.REQUEST_UNPAUSED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
+      .put(EmailType.REQUEST_SCALED, ImmutableList.of(EmailDestination.OWNERS))
       .build());
 
   public Map<EmailType, List<EmailDestination>> getEmailConfiguration() {

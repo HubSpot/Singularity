@@ -157,8 +157,8 @@ public class RequestResource extends AbstractRequestResource {
     final Optional<Boolean> skipHealthchecks = bounceRequest.isPresent() ? bounceRequest.get().getSkipHealthchecks() : Optional.<Boolean> absent();
 
     SingularityCreateResult createResult = requestManager.createCleanupRequest(
-            new SingularityRequestCleanup(JavaUtils.getUserEmail(user), isIncrementalBounce ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE,
-                System.currentTimeMillis(), Optional.<Boolean>absent(), requestId, Optional.of(getAndCheckDeployId(requestId)), skipHealthchecks));
+        new SingularityRequestCleanup(JavaUtils.getUserEmail(user), isIncrementalBounce ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE,
+            System.currentTimeMillis(), Optional.<Boolean>absent(), requestId, Optional.of(getAndCheckDeployId(requestId)), skipHealthchecks));
 
     checkConflict(createResult != SingularityCreateResult.EXISTED, "%s is already bouncing", requestId);
 
@@ -237,7 +237,7 @@ public class RequestResource extends AbstractRequestResource {
 
     checkConflict(result == SingularityCreateResult.CREATED, "%s is already pausing - try again soon", requestId, result);
 
-    mailer.sendRequestPausedMail(requestWithState.getRequest(), JavaUtils.getUserEmail(user));
+    mailer.sendRequestPausedMail(requestWithState.getRequest(), pauseRequest, JavaUtils.getUserEmail(user));
 
     requestManager.pause(requestWithState.getRequest(), now, JavaUtils.getUserEmail(user));
 
@@ -422,6 +422,8 @@ public class RequestResource extends AbstractRequestResource {
       requestManager.saveExpiringObject(new SingularityExpiringScale(scaleRequest.getDurationMillis().get(), requestId, JavaUtils.getUserEmail(user),
           System.currentTimeMillis(), scaleRequest, oldRequest.getInstances()));
     }
+
+    mailer.sendRequestScaledMail(newRequest, Optional.of(scaleRequest), oldRequest.getInstances(), JavaUtils.getUserEmail(user));
 
     return fillEntireRequest(fetchRequestWithState(requestId));
   }
