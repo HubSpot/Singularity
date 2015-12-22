@@ -37,18 +37,18 @@ html
           p
           if requestPaused
             if expiring
-              #{ requestId } will not run again until #{ expireFormat }.
+              | #{ requestId } will not run again until #{ expireFormat }.
             else
-              #{ requestId } will not run again until it is manually unpaused.
-            if killTasks 
-              Existing tasks will be killed.
+              | #{ requestId } will not run again until it is manually unpaused.
+            if killTasks
+              | Existing tasks will be killed.
             else
-              Existing tasks will not be killed.
+              | Existing tasks will not be killed.
           else if requestUnpaused
-            #{ requestId } will begin scheduling and executing tasks immediately.
+            | #{ requestId } will begin scheduling and executing tasks immediately.
           else if requestScaled
-            #{ requestId } will attempt to schedule and run #{ newInstances } task(s). Previously, it was running #{ oldInstances } task(s). 
+            | #{ requestId } will attempt to schedule and run #{ newInstances } task(s). Previously, it was running #{ oldInstances } task(s). 
             if expiring
-              It will revert to #{ oldInstances } at #{ expireFormat }.
+              | It will revert to #{ oldInstances } at #{ expireFormat }.
           else
-            #{ requestId } will only be reactivated if it is updated via the API.
+            | #{ requestId } will only be reactivated if it is updated via the API.
