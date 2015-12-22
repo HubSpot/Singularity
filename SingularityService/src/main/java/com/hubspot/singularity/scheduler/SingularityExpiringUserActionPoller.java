@@ -18,6 +18,7 @@ import com.google.inject.name.Named;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
+import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
@@ -27,6 +28,7 @@ import com.hubspot.singularity.expiring.SingularityExpiringScale;
 import com.hubspot.singularity.expiring.SingularityExpiringSkipHealthchecks;
 import com.hubspot.singularity.helpers.RequestHelper;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
+import com.hubspot.singularity.smtp.SingularityMailer;
 
 @Singleton
 public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPoller {
@@ -34,17 +36,19 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
   private static final Logger LOG = LoggerFactory.getLogger(SingularityExpiringUserActionPoller.class);
 
   private final RequestManager requestManager;
+  private final SingularityMailer mailer;
   private final RequestHelper requestHelper;
   private final List<SingularityExpiringUserActionHandler<?>> handlers;
 
   // TODO not sure if this needs a lock.
   @Inject
   SingularityExpiringUserActionPoller(SingularityConfiguration configuration, RequestManager requestManager, @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock,
-      RequestHelper requestHelper) {
+      RequestHelper requestHelper, SingularityMailer mailer) {
     super(configuration.getCheckExpiringUserActionEveryMillis(), TimeUnit.MILLISECONDS, lock);
 
     this.requestManager = requestManager;
     this.requestHelper = requestHelper;
+    this.mailer = mailer;
 
     List<SingularityExpiringUserActionHandler<?>> tempHandlers = Lists.newArrayList();
     tempHandlers.add(new SingularityExpiringBounceHandler());
@@ -144,6 +148,8 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
       try {
         requestHelper.updateRequest(newRequest, Optional.of(oldRequest), requestWithState.getState(), expiringObject.getUser(), Optional.<Boolean> absent());
+
+        mailer.sendRequestScaledMail(newRequest, Optional.<SingularityScaleRequest> absent(), oldRequest.getInstances(), expiringObject.getUser());
       } catch (WebApplicationException wae) {
         LOG.error("While trying to apply {} for {}", expiringObject, expiringObject.getRequestId(), wae);
       }
@@ -167,6 +173,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
         LOG.error("While trying to apply {} for {}", expiringObject, expiringObject.getRequestId(), wae);
       }
     }
+
   }
 
 }
