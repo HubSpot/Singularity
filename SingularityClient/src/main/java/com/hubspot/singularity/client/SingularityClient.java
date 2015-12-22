@@ -80,6 +80,7 @@ public class SingularityClient {
   private static final String HISTORY_FORMAT = "http://%s/%s/history";
   private static final String TASK_HISTORY_FORMAT = HISTORY_FORMAT + "/task/%s";
   private static final String REQUEST_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/requests";
+  private static final String TASK_HISTORY_BY_RUN_ID_FORMAT = HISTORY_FORMAT + "/request/%s/run/%s";
   private static final String REQUEST_ACTIVE_TASKS_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/tasks/active";
   private static final String REQUEST_INACTIVE_TASKS_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/tasks";
   private static final String REQUEST_DEPLOY_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/deploy/%s";
@@ -781,6 +782,12 @@ public class SingularityClient {
     final String requestUri = String.format(REQUEST_DEPLOY_HISTORY_FORMAT, getHost(), contextPath, requestId, deployId);
 
     return getSingle(requestUri, "deploy history", new SingularityDeployKey(requestId, deployId).getId(), SingularityDeployHistory.class);
+  }
+
+  public Optional<SingularityTaskIdHistory> getHistoryForTask(String requestId, String runId) {
+    final String requestUri = String.format(TASK_HISTORY_BY_RUN_ID_FORMAT, getHost(), contextPath, requestId, runId);
+
+    return getSingle(requestUri, "task history", requestId, SingularityTaskIdHistory.class);
   }
 
   //
