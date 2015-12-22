@@ -216,7 +216,7 @@ class Request extends Model
                         if bounce
                             @bounce(incremental).done callback
                         else
-                            callback
+                            callback()
 
 
     promptUnpause: (callback) =>
