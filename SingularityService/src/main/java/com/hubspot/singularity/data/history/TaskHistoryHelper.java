@@ -50,4 +50,20 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
     return Optional.absent();
   }
 
+  public Optional<SingularityTaskIdHistory> getByRunId(String requestId, String runId) {
+    for (SingularityTaskIdHistory history : getFromZk(requestId)) {
+      if (history.getRunId().isPresent() && history.getRunId().get().equals(runId)) {
+        return Optional.of(history);
+      }
+    }
+
+    Optional<SingularityTaskHistory> history = historyManager.getTaskHistoryByRunId(requestId, runId);
+
+    if (history.isPresent()) {
+      return Optional.of(SingularityTaskIdHistory.fromTaskIdAndTaskAndUpdates(history.get().getTask().getTaskId(), history.get().getTask(), history.get().getTaskUpdates()));
+    }
+
+    return Optional.absent();
+  }
+
 }

@@ -81,3 +81,6 @@ ALTER TABLE `taskHistory`
   ADD COLUMN deployId VARCHAR(100) NULL,
   ADD KEY `deployId` (`deployId`, `requestId`, `updatedAt`);
 UPDATE `taskHistory` SET `deployId` = SUBSTRING_INDEX(SUBSTRING_INDEX(`taskId`, '-', -5), '-', 1) WHERE `deployId` IS NULL;
+
+--changeset ssalinas:8 dbms:mysql
+ALTER TABLE `taskHistory` ADD KEY `runId` (`runId`, `requestId`);
