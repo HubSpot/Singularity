@@ -103,19 +103,25 @@ class Request extends Model
         $.ajax(
           url: "#{ @url() }/scale?user=#{ app.getUsername() }"
           type: "DELETE"
-        ).then callback
+        ).then () =>
+          @unset('expiringScale')
+          callback()
 
     makePausePermanent: (callback) =>
         $.ajax(
           url: "#{ @url() }/pause?user=#{ app.getUsername() }"
           type: "DELETE"
-        ).then callback
+        ).then () =>
+          @unset('expiringPause')
+          callback()
 
     cancelBounce: (callback) =>
         $.ajax(
           url: "#{ @url() }/bounce?user=#{ app.getUsername() }"
           type: "DELETE"
-        ).then callback
+        ).then () =>
+          @unset('expiringBounce')
+          callback()
 
     bounce: (incremental, duration) =>
         data =
