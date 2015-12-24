@@ -418,7 +418,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.submit(bldr.build());
     deploy("d2");
 
-    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList());
+    requestResource.scheduleImmediately(requestId, Optional.<String>absent(), Collections.<String>emptyList());
 
     validateTaskDoesntMoveDuringDecommission();
   }

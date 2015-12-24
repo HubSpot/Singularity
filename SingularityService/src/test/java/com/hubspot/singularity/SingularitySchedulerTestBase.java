@@ -335,7 +335,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
     deployManager.saveDeploy(request, marker, deploy);
 
-    startDeploy(marker);
+    startDeploy(marker, timestamp);
 
     return deploy;
   }
@@ -346,11 +346,12 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
     deployManager.saveDeploy(request, secondDeployMarker, secondDeploy);
 
-    startDeploy(secondDeployMarker);
+    startDeploy(secondDeployMarker, System.currentTimeMillis());
   }
 
-  protected void startDeploy(SingularityDeployMarker deployMarker) {
-    deployManager.savePendingDeploy(new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING, Optional.<SingularityDeployProgress>absent()));
+  protected void startDeploy(SingularityDeployMarker deployMarker, long timestamp) {
+    SingularityDeployProgress startingDeployProgress = new SingularityDeployProgress(1, 1, 10, false, timestamp);
+    deployManager.savePendingDeploy(new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING, Optional.of(startingDeployProgress)));
   }
 
   protected void finishDeploy(SingularityDeployMarker marker, SingularityDeploy deploy) {

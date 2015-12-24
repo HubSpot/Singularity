@@ -227,7 +227,7 @@ public class SingularityScheduler {
 
           int numScheduledTasks = scheduleTasks(stateCache, maybeRequest.get().getRequest(), requestState, deployStatistics, pendingRequest, matchingTaskIds, maybePendingDeploy);
 
-          if (numScheduledTasks == 0 && !matchingTaskIds.isEmpty() && maybeRequest.get().getRequest().isScheduled() && pendingRequest.getPendingType() == PendingType.NEW_DEPLOY) {
+          if (numScheduledTasks == 0 && !matchingTaskIds.isEmpty() && maybeRequest.get().getRequest().isScheduled() && pendingRequest.getPendingType() == PendingType.NEXT_DEPLOY_STEP) {
             LOG.trace("Holding pending request {} because it is scheduled and has an active task", pendingRequest);
             heldForScheduledActiveTask++;
             continue;
@@ -357,14 +357,6 @@ public class SingularityScheduler {
     }
   }
 
-  private List<SingularityTaskId> getOtherTaskIdsMatchingRequest(SingularitySchedulerStateCache stateCache, SingularityRequest request, List<SingularityTaskId> matchingTasks) {
-    Collection<SingularityTaskId> exclude = Sets.newHashSet();
-    exclude.addAll(stateCache.getCleaningTasks());
-    exclude.addAll(stateCache.getKilledTasks());
-    exclude.addAll(matchingTasks);
-    return SingularityTaskId.matchingAndNotIn(stateCache.getActiveTaskIds(), request.getId(), exclude);
-  }
-
   private int scheduleTasks(SingularitySchedulerStateCache stateCache, SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics,
       SingularityPendingRequest pendingRequest, List<SingularityTaskId> matchingTaskIds, Optional<SingularityPendingDeploy> maybePendingDeploy) {
     if (request.getRequestType() != RequestType.ON_DEMAND) {
@@ -391,7 +383,7 @@ public class SingularityScheduler {
     } else if (numMissingInstances < 0) {
       final long now = System.currentTimeMillis();
 
-      if (maybePendingDeploy.get().getDeployProgress().isPresent()) {
+      if (maybePendingDeploy.isPresent() && maybePendingDeploy.get().getDeployProgress().isPresent()) {
         Collections.sort(matchingTaskIds, SingularityTaskId.INSTANCE_NO_COMPARATOR); // For deploy steps we replace lowest instances first, so clean those
       } else {
         Collections.sort(matchingTaskIds, Collections.reverseOrder(SingularityTaskId.INSTANCE_NO_COMPARATOR)); // clean the highest numbers
