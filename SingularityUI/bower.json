@@ -41,7 +41,7 @@
     "react": "~0.14.2",
     "react-list": "~0.7.3",
     "react-dom": "~0.1.0",
-    "fuse.js": "~1.2.2"
+    "fuzzy": "~0.1.1"
   },
   "resolutions": {
     "backbone": "~1.1.2",
