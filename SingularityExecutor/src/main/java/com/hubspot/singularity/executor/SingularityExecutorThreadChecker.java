@@ -130,7 +130,7 @@ public class SingularityExecutorThreadChecker {
       } catch (DockerException e) {
         throw new ProcessFailedException(String.format("Could not get docker root pid due to error: %s", e));
       } catch (UncheckedTimeoutException te) {
-        throw new ProcessFailedException("Timed out trying to reach docker daemon");
+        throw new ProcessFailedException(String.format("Timed out trying to reach docker daemon after %s seconds", configuration.getDockerClientTimeLimitSeconds()));
       }
     }
 
