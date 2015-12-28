@@ -50,8 +50,18 @@ class RequestsView extends View
         @bodyTemplate = @bodyTemplateMap[@state]
         @listenTo @collection, 'sync', @render
 
-        # So we don't spam it with every keystroke
-        @searchChange = _.debounce @searchChange, 200
+        @fuzzySearch = _.memoize(@fuzzySearch)
+
+    fuzzySearch: (filter, requests) =>
+        id =
+            extract: (o) ->
+                o.id
+        user =
+            extract: (o) ->
+                o.requestDeployState?.activeDeploy?.user or ''
+        res1 = fuzzy.filter(filter, requests, id)
+        res2 = fuzzy.filter(filter, requests, user)
+        _.pluck(_.sortBy(_.union(res1, res2), (r) => r.score), 'original')
 
     # Returns the array of requests that need to be rendered
     filterCollection: =>
@@ -59,13 +69,7 @@ class RequestsView extends View
 
         # Only show requests that match the search query
         if @searchFilter
-            searchFilter = @searchFilter.toLowerCase().split("@")[0]
-            fuse = new Fuse(
-                requests
-                keys: ["request.id", "requestDeployState.activeDeploy.user", "request.owners"]
-                threshold: 0.4
-                maxPatternLength: 128)
-            requests = fuse.search(searchFilter).reverse()
+            requests = @fuzzySearch(@searchFilter, requests)
 
         # Only show requests that match the clicky filters
         if @state in @haveSubfilter and @subFilter isnt 'all'
