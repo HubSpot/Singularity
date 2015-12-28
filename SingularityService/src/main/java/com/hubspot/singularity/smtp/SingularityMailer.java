@@ -71,7 +71,7 @@ public class SingularityMailer implements Managed {
   private final Joiner adminJoiner;
   private final MailTemplateHelpers mailTemplateHelpers;
 
-  private final static Pattern TASK_STATUS_BY_PATTERN = Pattern.compile("(\\w+) by \\w+");
+  private static final Pattern TASK_STATUS_BY_PATTERN = Pattern.compile("(\\w+) by \\w+");
 
   @Inject
   public SingularityMailer(
