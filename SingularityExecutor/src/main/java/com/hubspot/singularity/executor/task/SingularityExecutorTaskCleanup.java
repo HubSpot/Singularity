@@ -127,7 +127,7 @@ public class SingularityExecutorTaskCleanup {
       log.info(String.format("Container %s was already removed", containerName));
       return true;
     } catch (UncheckedTimeoutException te) {
-      log.error("Timed out trying to reach docker daemon", te);
+      log.error(String.format("Timed out trying to reach docker daemon after %s seconds", configuration.getDockerClientTimeLimitSeconds()), te);
     } catch (Exception e) {
       log.info(String.format("Could not ensure removal of docker container due to error %s", e));
     }
