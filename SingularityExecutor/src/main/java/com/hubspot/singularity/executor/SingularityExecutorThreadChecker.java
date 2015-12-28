@@ -18,6 +18,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
@@ -128,6 +129,8 @@ public class SingularityExecutorThreadChecker {
         }
       } catch (DockerException e) {
         throw new ProcessFailedException(String.format("Could not get docker root pid due to error: %s", e));
+      } catch (UncheckedTimeoutException te) {
+        throw new ProcessFailedException("Timed out trying to reach docker daemon");
       }
     }
 
