@@ -1,21 +1,21 @@
 {{#unless rowsOnly}}
     {{#if haveTasks}}
-        <table class="table table-striped sortable-theme-bootstrap" data-sortable>
+        <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>
+                    <th data-sort-attribute="id">
                         Name
                     </th>
-                    <th>
+                    <th data-sort-attribute="startedAt">
                         Started
                     </th>
-                    <th>
+                    <th data-sort-attribute="host">
                         Host
                     </th>
-                    <th>
+                    <th data-sort-attribute="rackId">
                         Rack
                     </th>
-                    <th>
+                    <th data-sort-attribute="instanceNo">
                         Instance No
                     </th>
                     <th class="hidden-xs">
