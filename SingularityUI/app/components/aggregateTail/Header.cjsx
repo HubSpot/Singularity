@@ -79,6 +79,9 @@ Header = React.createClass
         )
 
   renderTasksDropdown: ->
+    if @props.singleMode
+      return null
+      
     <div className="btn-group">
       <button type="button" className="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" onKeyDown={@handleTasksKeyDown}>
         <span className="glyphicon glyphicon-tasks"></span> <span className="caret"></span>
