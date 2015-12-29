@@ -56,6 +56,15 @@ class TaskHistory extends Model
 
         taskHistory.requestId = taskHistory.task.taskId.requestId
 
+        if taskHistory.shellCommandHistory
+            # Sort commands
+            taskHistory.shellCommandHistory.sort (a, b) =>
+                b.shellRequest.timestamp - a.shellRequest.timestamp
+            # Sort updates
+            for history in taskHistory.shellCommandHistory
+                history.shellUpdates = history.shellUpdates.sort (a, b) =>
+                    b.timestamp - a.timestamp
+
         taskHistory
 
     parseResources: (task) ->

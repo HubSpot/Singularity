@@ -35,6 +35,7 @@ public class SingularityRunnerBaseLogging {
   private final BaseRunnerConfiguration primaryConfiguration;
   private final Set<BaseRunnerConfiguration> configurations;
   private final Optional<String> consolidatedConfigFilename;
+  private final String executorPid;
 
   public static void quietEagerLogging() {
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -44,12 +45,15 @@ public class SingularityRunnerBaseLogging {
   }
 
   @Inject
-  public SingularityRunnerBaseLogging(@Named(SingularityRunnerBaseModule.OBFUSCATED_YAML) ObjectMapper yamlMapper, SingularityRunnerBaseConfiguration baseConfiguration, BaseRunnerConfiguration primaryConfiguration, Set<BaseRunnerConfiguration> configurations, @Named(SingularityRunnerBaseModule.CONSOLIDATED_CONFIG_FILENAME) Optional<String> consolidatedConfigFilename) {
+  public SingularityRunnerBaseLogging(@Named(SingularityRunnerBaseModule.OBFUSCATED_YAML) ObjectMapper yamlMapper, SingularityRunnerBaseConfiguration baseConfiguration,
+      BaseRunnerConfiguration primaryConfiguration, Set<BaseRunnerConfiguration> configurations, @Named(SingularityRunnerBaseModule.CONSOLIDATED_CONFIG_FILENAME) Optional<String> consolidatedConfigFilename,
+      @Named(SingularityRunnerBaseModule.PROCESS_NAME) String executorPid) {
     this.yamlMapper = yamlMapper;
     this.primaryConfiguration = primaryConfiguration;
     this.configurations = configurations;
     this.baseConfiguration = baseConfiguration;
     this.consolidatedConfigFilename = consolidatedConfigFilename;
+    this.executorPid = executorPid;
 
     configureRootLogger();
     printProperties();
@@ -87,6 +91,8 @@ public class SingularityRunnerBaseLogging {
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
 
     Logger rootLogger = prepareRootLogger(context);
+
+    context.setName(executorPid);
 
     context.getLogger("ROOT").setLevel(Level.toLevel(BaseRunnerConfiguration.DEFAULT_ROOT_LOG_LEVEL));
     context.getLogger("com.hubspot").setLevel(Level.toLevel(BaseRunnerConfiguration.DEFAULT_HUBSPOT_LOG_LEVEL));

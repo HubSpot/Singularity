@@ -46,6 +46,7 @@ Two commands exist for downloading logs.
 |-U, --use-cache|Don't redownload live logs, prefer the cached version|false|
 |--search|Run logsearch on the cache of local files (no downloading)|false|
 |-V, --verbose|More verbose output|false|
+|--silent|No output except for log content, overrides -V|false|
 
 ##Grep and Log Files
 When the `-g` option is set, the log fetcher will grep the downloaded files for the provided regex.
@@ -84,8 +85,8 @@ When the `-g` option is set, the log fetcher will grep the downloaded files for 
 
 - Only get logs that match a glob or logfile name with the `-l` option
 
-`logfetch -r ‘My_Request_Id’ -l ‘*.out’`
-`logfetch -r ‘My_Request_Id’ -l ‘access.log’`
+`logfetch -r 'My_Request_Id' -l '*.out'`
+`logfetch -r 'My_Request_Id' -l 'access.log'`
 
 #Logtail
 You can tail live log files using `logtail`. Just provide the request, task, or request and deploy along with a log file path.
@@ -109,7 +110,8 @@ You can also provide the `-g` option which will provide the grep string to the s
 |-u, --singularity-uri-base|Base url for singularity (e.g. `localhost:8080/singularity/v2/api`)|Must be set!|
 |-g, --grep|Grep string or full command for searching output||
 |-l, --logfile|Log file path to tail (ie logs/access.log)|Must be set!|
-|-v, --verbose|Extra output about the task id associated with logs in the output|False|
+|-V, --verbose|Extra output about the task id associated with logs in the output|False|
+|--silent|No output except for log content, overrides -V|false|
 
 #Logsearch
 
@@ -130,11 +132,12 @@ An offline version of `logfetch` that will aid in searching through your directo
 |-p, --file-pattern|Should match the executor.s3.uploader.pattern setting, determines if we can match on file name for s3 logs|`%requestId/%Y/%m/%taskId_%index-%s-%filename`|
 |-g, --grep|Grep string for searching log files(Only for `logfetch`)||
 |-l, --logtype|Glob matcher for type of log file to download| None (match all)|
-|-V, --verbose|More verbose output||
+|-V, --verbose|More verbose output|false|
+|--silent|No output except for log content, overrides -V|false|
 
 example:
 
 - grep in logs matching `*.out` logs from request `My_Request_Id`
 
-`logfetch -r ‘My_Request_Id’ -l ‘*.out’ -g 'Regex_here'`
+`logfetch -r 'My_Request_Id' -l '*.out' -g 'Regex_here'`
 

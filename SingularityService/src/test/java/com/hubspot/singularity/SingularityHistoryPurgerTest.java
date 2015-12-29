@@ -45,6 +45,9 @@ public class SingularityHistoryPurgerTest extends SingularitySchedulerTestBase {
   @Inject
   protected SingularityTaskHistoryPersister taskHistoryPersister;
 
+  @Inject
+  protected SingularityTestAuthenticator testAuthenticator;
+
   public SingularityHistoryPurgerTest() {
     super(true);
   }
@@ -80,10 +83,11 @@ public class SingularityHistoryPurgerTest extends SingularitySchedulerTestBase {
     List<SingularityTaskHealthcheckResult> hcs = Collections.emptyList();
     List<SingularityLoadBalancerUpdate> upds = Collections.emptyList();
     List<SingularityTaskHistoryUpdate> historyUpdates = Collections.emptyList();
+    List<SingularityTaskShellCommandHistory> shellHistory = Collections.emptyList();
 
     SingularityTask task = prepTask(request, firstDeploy, launchTime, 1);
 
-    SingularityTaskHistory taskHistory = new SingularityTaskHistory(historyUpdates, directory, hcs, task, upds);
+    SingularityTaskHistory taskHistory = new SingularityTaskHistory(historyUpdates, directory, hcs, task, upds, shellHistory);
 
     return taskHistory;
   }
@@ -170,17 +174,14 @@ public class SingularityHistoryPurgerTest extends SingularitySchedulerTestBase {
     initFirstDeploy();
 
     String runId = "my-run-id";
-    String user = "my-user";
 
-    SingularityPendingRequestParent parent = requestResource.scheduleImmediately(requestId, Optional.of(user), Optional.of(runId), Collections.<String> emptyList());
+    SingularityPendingRequestParent parent = requestResource.scheduleImmediately(requestId, Optional.of(runId), Collections.<String> emptyList());
 
     Assert.assertEquals(runId, parent.getPendingRequest().getRunId().get());
-    Assert.assertEquals(user, parent.getPendingRequest().getUser().get());
 
     resourceOffers();
 
     Assert.assertEquals(runId, taskManager.getActiveTasks().get(0).getTaskRequest().getPendingTask().getRunId().get());
-    Assert.assertEquals(user, taskManager.getActiveTasks().get(0).getTaskRequest().getPendingTask().getUser().get());
 
     SingularityTaskId taskId = taskManager.getActiveTaskIds().get(0);
 
@@ -191,7 +192,7 @@ public class SingularityHistoryPurgerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(runId, historyManager.getTaskHistory(taskId.getId()).get().getTask().getTaskRequest().getPendingTask().getRunId().get());
     Assert.assertEquals(runId, historyManager.getTaskHistoryForRequest(requestId, 0, 10).get(0).getRunId().get());
 
-    parent = requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Optional.<String> absent(), Collections.<String> emptyList());
+    parent = requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList());
 
     Assert.assertTrue(parent.getPendingRequest().getRunId().isPresent());
   }
@@ -204,7 +205,7 @@ public class SingularityHistoryPurgerTest extends SingularitySchedulerTestBase {
     initScheduledRequest();
     initFirstDeploy();
 
-    requestResource.scheduleImmediately(requestId, Optional.<String>absent(), Optional.<String>absent(), Collections.<String>emptyList());
+    requestResource.scheduleImmediately(requestId, Optional.<String>absent(), Collections.<String>emptyList());
 
     resourceOffers();
 

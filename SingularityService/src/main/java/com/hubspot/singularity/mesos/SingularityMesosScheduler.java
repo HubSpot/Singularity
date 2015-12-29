@@ -1,7 +1,5 @@
 package com.hubspot.singularity.mesos;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -36,6 +34,7 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
+import com.hubspot.singularity.SlaveMatchState;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -43,7 +42,6 @@ import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderException;
-import com.hubspot.singularity.mesos.SingularitySlaveAndRackManager.SlaveMatchState;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
@@ -63,6 +61,7 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SingularityScheduler scheduler;
   private final SingularityConfiguration configuration;
   private final SingularityMesosTaskBuilder mesosTaskBuilder;
+  private final SingularityMesosFrameworkMessageHandler messageHandler;
   private final SingularityHealthchecker healthchecker;
   private final SingularityNewTaskChecker newTaskChecker;
   private final SingularitySlaveAndRackManager slaveAndRackManager;
@@ -80,7 +79,7 @@ public class SingularityMesosScheduler implements Scheduler {
   @Inject
   SingularityMesosScheduler(MesosConfiguration mesosConfiguration, SingularityConfiguration configuration, TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager,
       SingularitySchedulerPriority schedulerPriority, SingularityNewTaskChecker newTaskChecker, SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport,
-      Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager, SingularityExceptionNotifier exceptionNotifier,
+      Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager, SingularityExceptionNotifier exceptionNotifier,SingularityMesosFrameworkMessageHandler messageHandler,
       @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier, final IdTranscoder<SingularityTaskId> taskIdTranscoder, CustomExecutorConfiguration customExecutorConfiguration) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0);
@@ -90,6 +89,7 @@ public class SingularityMesosScheduler implements Scheduler {
     this.newTaskChecker = newTaskChecker;
     this.slaveAndRackManager = slaveAndRackManager;
     this.scheduler = scheduler;
+    this.messageHandler = messageHandler;
     this.mesosTaskBuilder = mesosTaskBuilder;
     this.logSupport = logSupport;
     this.stateCacheProvider = stateCacheProvider;
@@ -188,7 +188,6 @@ public class SingularityMesosScheduler implements Scheduler {
           driver.declineOffer(offerHolder.getOffer().getId());
         }
       }
-
     } catch (Throwable t) {
       LOG.error("Received fatal error while accepting offers - will decline all available offers", t);
 
@@ -282,7 +281,7 @@ public class SingularityMesosScheduler implements Scheduler {
     try {
       return Optional.of(taskIdTranscoder.fromString(taskId));
     } catch (InvalidSingularityTaskIdException | SingularityTranscoderException e) {
-      exceptionNotifier.notify(e, Collections.<String, String>emptyMap());
+      exceptionNotifier.notify(e);
       LOG.error("Unexpected taskId {} ", taskId, e);
       return Optional.absent();
     }
@@ -336,7 +335,7 @@ public class SingularityMesosScheduler implements Scheduler {
         }
       } else {
         final String message = String.format("Task %s is active but is missing task data", taskId);
-        exceptionNotifier.notify(message, Collections.<String, String>emptyMap());
+        exceptionNotifier.notify(message);
         LOG.error(message);
       }
     }
@@ -365,7 +364,9 @@ public class SingularityMesosScheduler implements Scheduler {
 
   @Override
   public void frameworkMessage(SchedulerDriver driver, Protos.ExecutorID executorId, Protos.SlaveID slaveId, byte[] data) {
-    LOG.info("Framework message from executor {} on slave {} with data {}", executorId, slaveId, new String(data, UTF_8));
+    LOG.info("Framework message from executor {} on slave {} with {} bytes of data", executorId, slaveId, data.length);
+
+    messageHandler.handleMessage(executorId, slaveId, data);
   }
 
   @Override

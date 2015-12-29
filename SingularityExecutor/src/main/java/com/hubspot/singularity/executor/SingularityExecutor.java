@@ -1,7 +1,5 @@
 package com.hubspot.singularity.executor;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import org.apache.mesos.Executor;
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
@@ -22,14 +20,17 @@ public class SingularityExecutor implements Executor {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityExecutor.class);
 
   private final SingularityExecutorTaskBuilder taskBuilder;
+  private final SingularityExecutorMesosFrameworkMessageHandler messageHandler;
   private final SingularityExecutorMonitor monitor;
   private final ExecutorUtils executorUtils;
 
   @Inject
-  public SingularityExecutor(SingularityExecutorMonitor monitor, ExecutorUtils executorUtils, SingularityExecutorTaskBuilder taskBuilder) {
+  public SingularityExecutor(SingularityExecutorMonitor monitor, ExecutorUtils executorUtils, SingularityExecutorTaskBuilder taskBuilder,
+      SingularityExecutorMesosFrameworkMessageHandler messageHandler) {
     this.taskBuilder = taskBuilder;
     this.monitor = monitor;
     this.executorUtils = executorUtils;
+    this.messageHandler = messageHandler;
   }
 
   /**
@@ -74,21 +75,21 @@ public class SingularityExecutor implements Executor {
     LOG.info("Asked to launch task {}", taskId);
 
     try {
-      final ch.qos.logback.classic.Logger taskLog = taskBuilder.buildTaskLogger(taskId);
+      final ch.qos.logback.classic.Logger taskLog = taskBuilder.buildTaskLogger(taskId, taskInfo.getExecutor().getExecutorId().getValue());
       final SingularityExecutorTask task = taskBuilder.buildTask(taskId, executorDriver, taskInfo, taskLog);
 
       SubmitState submitState = monitor.submit(task);
 
       switch (submitState) {
-      case REJECTED:
-        LOG.warn("Can't launch task {}, it was rejected (probably due to shutdown)", taskInfo);
-        break;
-      case TASK_ALREADY_EXISTED:
-        LOG.error("Can't launch task {}, already had a task with that ID", taskInfo);
-        break;
-      case SUBMITTED:
-        task.getLog().info("Launched task {} with data {}", taskId, task.getExecutorData());
-        break;
+        case REJECTED:
+          LOG.warn("Can't launch task {}, it was rejected (probably due to shutdown)", taskInfo);
+          break;
+        case TASK_ALREADY_EXISTED:
+          LOG.error("Can't launch task {}, already had a task with that ID", taskInfo);
+          break;
+        case SUBMITTED:
+          task.getLog().info("Launched task {} with data {}", taskId, task.getExecutorData());
+          break;
       }
     } catch (Throwable t) {
       LOG.error("Unexpected exception starting task {}", taskId, t);
@@ -113,21 +114,25 @@ public class SingularityExecutor implements Executor {
     KillState killState = monitor.requestKill(taskId);
 
     switch (killState) {
-    case DIDNT_EXIST:
-    case INCONSISTENT_STATE:
-      LOG.warn("Couldn't kill task {} due to killState {}", taskId, killState);
-      break;
-    case DESTROYING_PROCESS:
-    case INTERRUPTING_PRE_PROCESS:
-    case KILLING_PROCESS:
-      LOG.info("Requested kill of task {} with killState {}", taskId, killState);
-      break;
+      case DIDNT_EXIST:
+      case INCONSISTENT_STATE:
+        LOG.warn("Couldn't kill task {} due to killState {}", taskId, killState);
+        break;
+      case DESTROYING_PROCESS:
+      case INTERRUPTING_PRE_PROCESS:
+      case KILLING_PROCESS:
+        LOG.info("Requested kill of task {} with killState {}", taskId, killState);
+        break;
     }
   }
 
   @Override
   public void frameworkMessage(ExecutorDriver executorDriver, byte[] bytes) {
-    LOG.info("Received framework message: {}", new String(bytes, UTF_8));
+    try {
+      messageHandler.handleMessage(bytes);
+    } catch (Throwable t) {
+      LOG.warn("Unexpected exception while handling framework message", t);
+    }
   }
 
   /**

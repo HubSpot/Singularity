@@ -7,6 +7,8 @@ import static org.mockito.Mockito.when;
 
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.curator.test.TestingServer;
 import org.apache.mesos.Protos.MasterInfo;
 import org.apache.mesos.Protos.Status;
@@ -26,15 +28,21 @@ import com.google.inject.Binder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.Scopes;
+import com.google.inject.OutOfScopeException;
+import com.google.inject.Provider;
 import com.google.inject.Stage;
 import com.google.inject.TypeLiteral;
 import com.google.inject.util.Modules;
+import com.hubspot.dropwizard.guicier.GuiceBundle;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.mesos.client.SingularityMesosClientModule;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityAuthModule;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTestAuthenticator;
+import com.hubspot.singularity.auth.authenticator.SingularityAuthenticator;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
@@ -45,7 +53,6 @@ import com.hubspot.singularity.data.history.SingularityHistoryModule;
 import com.hubspot.singularity.data.transcoders.SingularityTranscoderModule;
 import com.hubspot.singularity.data.zkmigrations.SingularityZkMigrationsModule;
 import com.hubspot.singularity.event.SingularityEventModule;
-import com.hubspot.singularity.guice.GuiceBundle;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityDriver;
@@ -55,6 +62,7 @@ import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.RackResource;
 import com.hubspot.singularity.resources.RequestResource;
 import com.hubspot.singularity.resources.SlaveResource;
+import com.hubspot.singularity.resources.TaskResource;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
@@ -152,6 +160,13 @@ public class SingularityTestModule implements Module {
 
             binder.bind(new TypeLiteral<Optional<Raven>>() {}).toInstance(Optional.<Raven>absent());
             binder.bind(new TypeLiteral<Optional<SentryConfiguration>>() {}).toInstance(Optional.<SentryConfiguration>absent());
+
+            binder.bind(HttpServletRequest.class).toProvider(new Provider<HttpServletRequest>() {
+              @Override
+              public HttpServletRequest get() {
+                throw new OutOfScopeException("testing");
+              }
+            });
           }
         }));
 
@@ -188,10 +203,18 @@ public class SingularityTestModule implements Module {
     mainBinder.install(new SingularityZkMigrationsModule());
     mainBinder.install(new SingularityMesosClientModule());
     mainBinder.install(new SingularityEventModule(configuration));
-    mainBinder.install(new SingularityAuthModule(configuration));
+    mainBinder.install(Modules.override(new SingularityAuthModule(configuration))
+            .with(new Module() {
+              @Override
+              public void configure(Binder binder) {
+                binder.bind(SingularityAuthenticator.class).to(SingularityTestAuthenticator.class);
+                binder.bind(SingularityTestAuthenticator.class).in(Scopes.SINGLETON);
+              }
+            }));
 
     mainBinder.bind(DeployResource.class);
     mainBinder.bind(RequestResource.class);
+    mainBinder.bind(TaskResource.class);
     mainBinder.bind(SlaveResource.class);
     mainBinder.bind(RackResource.class);
   }

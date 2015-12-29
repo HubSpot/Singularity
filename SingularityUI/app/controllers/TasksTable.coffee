@@ -5,6 +5,7 @@ TaskPending = require '../models/TaskPending'
 Tasks = require '../collections/Tasks'
 TasksPending = require '../collections/TasksPending'
 TaskCleanups = require '../collections/TaskCleanups'
+TaskKillRecords = require '../collections/TaskKillRecords'
 
 TasksTableView = require '../views/tasks'
 
@@ -22,18 +23,18 @@ class TasksTableController extends Controller
         else
             @collections.tasks = new Tasks [], {@state}
         @collections.taskCleanups = new TaskCleanups
+        @collections.taskKillRecords = new TaskKillRecords
 
         @setView new TasksTableView _.extend {@state, @searchFilter},
             collection: @collections.tasks
             pendingTasks: @collections.tasksPending
-            attributes:
-                cleaning: @collections.taskCleanups
+            cleaningTasks: @collections.taskCleanups
+            taskKillRecords: @collections.taskKillRecords
 
         # Fetch a pending task's full details
         @view.on 'getPendingTask', (task) => @getPendingTask(task)
 
-        @collections.tasks.fetch()
-        @collections.taskCleanups.fetch()
+        @refresh()
         app.showView @view
 
     getPendingTask: (task) ->
@@ -48,12 +49,14 @@ class TasksTableController extends Controller
             app.hideFixedPageLoader()
 
     refresh: ->
+        @collections.taskCleanups.fetch()
+        @collections.taskKillRecords.fetch()
+
         # Don't refresh if user is scrolled down, viewing the table (arbitrary value)
         return if $(window).scrollTop() > 200
         # Don't refresh if the table is sorted
         return if @view.isSorted
 
-        @collections.taskCleanups.fetch()
         @collections.tasks.fetch reset: true
 
 module.exports = TasksTableController

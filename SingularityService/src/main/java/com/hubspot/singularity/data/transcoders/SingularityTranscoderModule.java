@@ -24,6 +24,7 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestHistory;
+import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityState;
@@ -33,6 +34,8 @@ import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskShellCommandRequest;
+import com.hubspot.singularity.SingularityTaskShellCommandUpdate;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.SingularityWebhook;
 
@@ -56,6 +59,7 @@ public class SingularityTranscoderModule implements Module {
     bindTranscoder(binder).asJson(SingularityRack.class);
     bindTranscoder(binder).asJson(SingularityRequest.class);
     bindTranscoder(binder).asJson(SingularityRequestCleanup.class);
+    bindTranscoder(binder).asJson(SingularityRequestLbCleanup.class);
     bindTranscoder(binder).asJson(SingularityRequestDeployState.class);
     bindTranscoder(binder).asJson(SingularityRequestWithState.class);
     bindTranscoder(binder).asJson(SingularitySlave.class);
@@ -63,6 +67,8 @@ public class SingularityTranscoderModule implements Module {
     bindTranscoder(binder).asJson(SingularityTaskHistoryUpdate.class);
     bindTranscoder(binder).asJson(SingularityWebhook.class);
     bindTranscoder(binder).asJson(SingularityMachineStateHistoryUpdate.class);
+    bindTranscoder(binder).asJson(SingularityTaskShellCommandUpdate.class);
+    bindTranscoder(binder).asJson(SingularityTaskShellCommandRequest.class);
 
     bindTranscoder(binder).asCompressedJson(SingularityDeployHistory.class);
     bindTranscoder(binder).asCompressedJson(SingularityDeploy.class);

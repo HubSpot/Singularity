@@ -1,12 +1,12 @@
 {{#unless rowsOnly}}
     {{#if haveRequests}}
-        <table class="table table-striped sortable-theme-bootstrap" data-sortable>
+        <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>
+                    <th data-sort-attribute="requestId">
                         ID
                     </th>
-                    <th>
+                    <th data-sort-attribute="pendingType">
                         Pending Type
                     </th>
                 </tr>

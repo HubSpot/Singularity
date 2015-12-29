@@ -52,6 +52,14 @@ When matching a Mesos resource offer to a deploy, Singularity can use one of sev
 - `SEPARATE_BY_REQUEST`: ensures no two tasks belonging to the same request (regardless if deploy id) are placed on the same host
 - `OPTIMISTIC`: attempts to spread out tasks but may schedule some on the same slave
 
+Slave placement can also be impacted by slave attributes. There are three scenarios that Singularity supports:
+
+1. *Specific Slaves -> For a certain request, only run it on slaves with matching attributes* - In this case, you would specify `requiredSlaveAttributes` in the json for your request, and the tasks for that request would only be scheduled on slaves that have all of those attributes.
+
+2. *Reserved Slaves -> Reserve a slave for specific requests, only run those requests on those slaves* - In your Singularity config, specify the `reserveSlavesWithAttributes` field. Singularity will then only schedule tasks on slaves with those attributes if the request's required attributes also match those.
+
+3. *Test Group of Slaves -> Reserve a slave for specific requests, but don't restrict the requests to that slave* - In your Singularity config, specify the `reserveSlavesWithAttributes` field as in the previous example. But, in the request json, specify the `allowedSlaveAttributes` field. Then, the request will be allowed to run elsewhere in the cluster, but will also have the matching attributes to run on the reserved slave.
+
 #### Singularity Scheduler Dependencies
 The Singularity scheduler uses ZooKeeper as a distributed replication log to maintain state and keep track of registered deployable items, the active deploys for these items and the running tasks that fulfill the deploys. As shown in the drawing, the same ZooKeeper quorum utilized by Mesos masters and slaves can be reused for Singularity.  
 

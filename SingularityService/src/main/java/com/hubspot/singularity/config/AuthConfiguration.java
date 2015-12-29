@@ -15,11 +15,11 @@ public class AuthConfiguration {
 
   @JsonProperty
   @NotNull
-  private SingularityAuthenticatorClass authenticator = SingularityAuthenticatorClass.DISABLED;
+  private SingularityAuthenticatorClass authenticator = SingularityAuthenticatorClass.QUERYPARAM_PASSTHROUGH;
 
   @JsonProperty
   @NotNull
-  private SingularityAuthDatastoreClass datastore = SingularityAuthDatastoreClass.DISABLED;
+  private SingularityAuthDatastoreClass datastore = SingularityAuthDatastoreClass.DUMMY;
 
   @JsonProperty
   @NotNull
@@ -32,6 +32,10 @@ public class AuthConfiguration {
   @JsonProperty
   @NotNull
   private Set<String> jitaGroups = new HashSet<>();
+
+  @JsonProperty
+  @NotNull
+  private Set<String> defaultReadOnlyGroups = new HashSet<>();
 
   @JsonProperty
   @NotNull
@@ -83,6 +87,14 @@ public class AuthConfiguration {
 
   public void setJitaGroups(Set<String> jitaGroups) {
     this.jitaGroups = jitaGroups;
+  }
+
+  public Set<String> getDefaultReadOnlyGroups() {
+    return defaultReadOnlyGroups;
+  }
+
+  public void setDefaultReadOnlyGroups(Set<String> defaultReadOnlyGroups) {
+    this.defaultReadOnlyGroups = defaultReadOnlyGroups;
   }
 
   public String getRequestUserHeaderName() {

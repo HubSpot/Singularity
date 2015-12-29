@@ -18,7 +18,9 @@ class TaskCleanup extends Model
 
         cleanup.isImmediate = CLEANUP_IS_IMMEDIATE[cleanup.cleanupType] ? false
 
-        cleanup.id = "#{ cleanup.taskIdString }-#{ cleanup.timestamp }"
+        cleanup.id = "#{ cleanup.taskId.id }-#{ cleanup.timestamp }"
+
+        cleanup.requestId = cleanup.taskId?.requestId
 
         cleanup
 

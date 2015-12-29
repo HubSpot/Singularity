@@ -13,6 +13,7 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.leader.LeaderLatch;
@@ -31,6 +32,7 @@ import com.google.common.net.HostAndPort;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Provides;
+import com.google.inject.ProvisionException;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
@@ -45,6 +47,7 @@ import com.hubspot.singularity.config.S3GroupOverrideConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
 import com.hubspot.singularity.guice.DropwizardMetricRegistryProvider;
 import com.hubspot.singularity.guice.DropwizardObjectMapperProvider;
@@ -72,9 +75,6 @@ import io.dropwizard.server.SimpleServerFactory;
 
 public class SingularityMainModule implements Module {
 
-  public static final String HOSTNAME_PROPERTY = "singularity.hostname";
-  public static final String HTTP_PORT_PROPERTY = "singularity.http.port";
-
   public static final String TASK_TEMPLATE = "task.template";
   public static final String REQUEST_IN_COOLDOWN_TEMPLATE = "request.in.cooldown.template";
   public static final String REQUEST_MODIFIED_TEMPLATE = "request.modified.template";
@@ -92,6 +92,8 @@ public class SingularityMainModule implements Module {
 
   public static final String NEW_TASK_THREADPOOL_NAME = "_new_task_threadpool";
   public static final Named NEW_TASK_THREADPOOL_NAMED = Names.named(NEW_TASK_THREADPOOL_NAME);
+
+  public static final String CURRENT_HTTP_REQUEST = "_singularity_current_http_request";
 
   private final SingularityConfiguration configuration;
 
@@ -245,6 +247,12 @@ public class SingularityMainModule implements Module {
 
   @Provides
   @Singleton
+  public UIConfiguration uiConfiguration(final SingularityConfiguration config) {
+    return config.getUiConfiguration();
+  }
+
+  @Provides
+  @Singleton
   public CustomExecutorConfiguration customExecutorConfiguration(final SingularityConfiguration config) {
     return config.getCustomExecutorConfiguration();
   }
@@ -307,4 +315,13 @@ public class SingularityMainModule implements Module {
     return getJadeTemplate("rate_limited.jade");
   }
 
+  @Provides
+  @Named(CURRENT_HTTP_REQUEST)
+  public Optional<HttpServletRequest> providesUrl(Provider<HttpServletRequest> requestProvider) {
+    try {
+      return Optional.of(requestProvider.get());
+    } catch (ProvisionException pe) {  // this will happen if we're not in the REQUEST scope
+      return Optional.absent();
+    }
+  }
 }

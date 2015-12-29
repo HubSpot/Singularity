@@ -1,5 +1,7 @@
 package com.hubspot.singularity.config;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -88,6 +90,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long deployHealthyBySeconds = 120;
 
+  private int dispatchTaskShellCommandsEverySeconds = 5;
+
   private long debugCuratorCallOverBytes = 25000;
 
   private long debugCuratorCallOverMillis = 250;
@@ -99,6 +103,12 @@ public class SingularityConfiguration extends Configuration {
   private int healthcheckStartThreads = 3;
 
   private long healthcheckTimeoutSeconds = 5;
+
+  @NotNull
+  private Optional<Integer> healthcheckMaxRetries = Optional.absent();
+
+  @NotNull
+  private Optional<Long> healthcheckMaxTotalTimeoutSeconds = Optional.absent();
 
   private String hostname;
 
@@ -117,7 +127,7 @@ public class SingularityConfiguration extends Configuration {
 
   private String loadBalancerUri;
 
-  private boolean deletePausedRequestsFromLoadBalancer = true;
+  private boolean deleteRemovedRequestsFromLoadBalancer = false;
 
   private int logFetchMaxThreads = 15;
 
@@ -153,9 +163,11 @@ public class SingularityConfiguration extends Configuration {
   private long saveStateEverySeconds = 60;
 
   @JsonProperty("sentry")
+  @Valid
   private SentryConfiguration sentryConfiguration;
 
   @JsonProperty("smtp")
+  @Valid
   private SMTPConfiguration smtpConfiguration;
 
   private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toSeconds(10);
@@ -198,10 +210,15 @@ public class SingularityConfiguration extends Configuration {
 
   @JsonProperty("auth")
   @NotNull
+  @Valid
   private AuthConfiguration authConfiguration = new AuthConfiguration();
+
+  @NotNull
+  private Map<String, List<String>> reserveSlavesWithAttributes = Collections.emptyMap();
 
   @JsonProperty("graphite")
   @NotNull
+  @Valid
   private GraphiteConfiguration graphiteConfiguration = new GraphiteConfiguration();
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
@@ -210,6 +227,10 @@ public class SingularityConfiguration extends Configuration {
 
   public long getCacheStateForMillis() {
     return cacheStateForMillis;
+  }
+
+  public long getDispatchTaskShellCommandsEverySeconds() {
+    return dispatchTaskShellCommandsEverySeconds;
   }
 
   public long getCheckDeploysEverySeconds() {
@@ -358,6 +379,14 @@ public class SingularityConfiguration extends Configuration {
 
   public long getHealthcheckTimeoutSeconds() {
     return healthcheckTimeoutSeconds;
+  }
+
+  public Optional<Integer> getHealthcheckMaxRetries() {
+    return healthcheckMaxRetries;
+  }
+
+  public Optional<Long> getHealthcheckMaxTotalTimeoutSeconds() {
+    return healthcheckMaxTotalTimeoutSeconds;
   }
 
   public Optional<String> getHostname() {
@@ -672,6 +701,14 @@ public class SingularityConfiguration extends Configuration {
     this.healthcheckTimeoutSeconds = healthcheckTimeoutSeconds;
   }
 
+  public void setHealthcheckMaxRetries(Optional<Integer> healthcheckMaxRetries) {
+    this.healthcheckMaxRetries = healthcheckMaxRetries;
+  }
+
+  public void setHealthcheckMaxTotalTimeoutSeconds(Optional<Long> healthcheckMaxTotalTimeoutSeconds) {
+    this.healthcheckMaxTotalTimeoutSeconds = healthcheckMaxTotalTimeoutSeconds;
+  }
+
   public void setHostname(String hostname) {
     this.hostname = hostname;
   }
@@ -730,6 +767,10 @@ public class SingularityConfiguration extends Configuration {
 
   public void setNewTaskCheckerBaseDelaySeconds(int newTaskCheckerBaseDelaySeconds) {
     this.newTaskCheckerBaseDelaySeconds = newTaskCheckerBaseDelaySeconds;
+  }
+
+  public void setDispatchTaskShellCommandsEverySeconds(int dispatchTaskShellCommandsEverySeconds) {
+    this.dispatchTaskShellCommandsEverySeconds = dispatchTaskShellCommandsEverySeconds;
   }
 
   public void setPersistHistoryEverySeconds(long persistHistoryEverySeconds) {
@@ -820,6 +861,14 @@ public class SingularityConfiguration extends Configuration {
     this.historyPurgingConfiguration = historyPurgingConfiguration;
   }
 
+  public Map<String, List<String>> getReserveSlavesWithAttributes() {
+    return reserveSlavesWithAttributes;
+  }
+
+  public void setReserveSlavesWithAttrbiutes(Map<String, List<String>> reserveSlavesWithAttributes) {
+    this.reserveSlavesWithAttributes = reserveSlavesWithAttributes;
+  }
+
   public GraphiteConfiguration getGraphiteConfiguration() {
     return graphiteConfiguration;
   }
@@ -828,11 +877,11 @@ public class SingularityConfiguration extends Configuration {
     this.graphiteConfiguration = graphiteConfiguration;
   }
 
-  public boolean isDeletePausedRequestsFromLoadBalancer() {
-    return deletePausedRequestsFromLoadBalancer;
+  public boolean isDeleteRemovedRequestsFromLoadBalancer() {
+    return deleteRemovedRequestsFromLoadBalancer;
   }
 
-  public void setDeletePausedRequestsFromLoadBalancer(boolean deletePausedRequestsFromLoadBalancer) {
-    this.deletePausedRequestsFromLoadBalancer = deletePausedRequestsFromLoadBalancer;
+  public void setDeleteRemovedRequestsFromLoadBalancer(boolean deleteRemovedRequestsFromLoadBalancer) {
+    this.deleteRemovedRequestsFromLoadBalancer = deleteRemovedRequestsFromLoadBalancer;
   }
 }

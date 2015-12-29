@@ -15,6 +15,7 @@ ExpandableTableSubview = require '../views/expandableTableSubview'
 OverviewSubview = require '../views/taskOverviewSubview'
 HealthcheckNotification = require '../views/taskHealthcheckNotificationSubview'
 SimpleSubview = require '../views/simpleSubview'
+ShellCommands = require '../views/taskShellCommandsSubview'
 
 TaskView = require '../views/task'
 
@@ -32,6 +33,7 @@ class TaskDetailController extends Controller
         resourceUsage:              require '../templates/taskDetail/taskResourceUsage'
         alerts:                     require '../templates/alerts'
         latestLog:                  require '../templates/taskDetail/taskLatestLog'
+        shellCommands:              require '../templates/taskDetail/taskShellCommands'
 
     initialize: ({@taskId, @filePath}) ->
         @title @taskId
@@ -111,6 +113,10 @@ class TaskDetailController extends Controller
             collection:    @collections.alerts
             template:      @templates.alerts
 
+        @subviews.shellCommands = new ShellCommands
+            model: @models.task
+            template: @templates.shellCommands
+
         #
         # Getting stuff in gear
         #
@@ -120,7 +126,6 @@ class TaskDetailController extends Controller
         @refresh()
 
         app.showView @view
-
 
     fetchResourceUsage: ->
         @models.resourceUsage?.fetch()
