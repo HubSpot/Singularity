@@ -2,6 +2,7 @@ package com.hubspot.singularity.mesos;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.inject.Singleton;
@@ -15,6 +16,10 @@ import org.apache.mesos.Protos.Environment;
 import org.apache.mesos.Protos.Environment.Variable;
 import org.apache.mesos.Protos.ExecutorID;
 import org.apache.mesos.Protos.ExecutorInfo;
+import org.apache.mesos.Protos.Label;
+import org.apache.mesos.Protos.Labels;
+import org.apache.mesos.Protos.Labels.Builder;
+import org.apache.mesos.Protos.LabelsOrBuilder;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.TaskID;
@@ -103,6 +108,14 @@ class SingularityMesosTaskBuilder {
     bldr.setSlaveId(offer.getSlaveId());
 
     bldr.setName(taskRequest.getRequest().getId());
+
+    if (taskRequest.getDeploy().getLabels().isPresent() && !taskRequest.getDeploy().getLabels().get().isEmpty()) {
+      Builder labelsBuilder = Labels.newBuilder();
+      for (Map.Entry<String, String> label : taskRequest.getDeploy().getLabels().get().entrySet()) {
+        labelsBuilder.addLabels(Label.newBuilder().setKey(label.getKey()).setValue(label.getValue()).build());
+      }
+      bldr.setLabels(labelsBuilder);
+    }
 
     TaskInfo task = bldr.build();
 
