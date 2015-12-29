@@ -179,7 +179,7 @@ public class SingularityDeployChecker {
   private void cleanupTasks(SingularityDeployMarker deployMarker, SingularityDeployResult deployResult, Iterable<SingularityTaskId> tasksToKill) {
     for (SingularityTaskId matchingTask : tasksToKill) {
       taskManager.createTaskCleanup(new SingularityTaskCleanup(deployMarker.getUser(), deployResult.getDeployState().getCleanupType(), deployResult.getTimestamp(), matchingTask,
-          Optional.of(String.format("Deploy %s - %s", deployMarker.getDeployId(), deployResult.getDeployState().name()))));
+          Optional.of(String.format("Deploy %s - %s", deployMarker.getDeployId(), deployResult.getDeployState().name())), Optional.<String> absent()));
     }
   }
 
@@ -207,16 +207,17 @@ public class SingularityDeployChecker {
     if (!request.isDeployable() && !request.isOneOff()) {
       // TODO should this override? What if someone has mucked with the pending queue for this deploy ?
       requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), pendingDeploy.getDeployMarker().getDeployId(), deployResult.getTimestamp(),
-          pendingDeploy.getDeployMarker().getUser(), PendingType.NEW_DEPLOY, deploy.isPresent() ? deploy.get().getSkipHealthchecksOnDeploy() : Optional.<Boolean> absent()));
+          pendingDeploy.getDeployMarker().getUser(), PendingType.NEW_DEPLOY, deploy.isPresent() ? deploy.get().getSkipHealthchecksOnDeploy() : Optional.<Boolean> absent(),
+              pendingDeploy.getDeployMarker().getMessage()));
     }
 
     deployManager.saveDeployResult(pendingDeploy.getDeployMarker(), deploy, deployResult);
 
     if (requestWithState.getState() == RequestState.DEPLOYING_TO_UNPAUSE) {
       if (deployResult.getDeployState() == DeployState.SUCCEEDED) {
-        requestManager.activate(request, RequestHistoryType.DEPLOYED_TO_UNPAUSE, deployResult.getTimestamp(), pendingDeploy.getDeployMarker().getUser());
+        requestManager.activate(request, RequestHistoryType.DEPLOYED_TO_UNPAUSE, deployResult.getTimestamp(), pendingDeploy.getDeployMarker().getUser(), Optional.<String> absent());
       } else {
-        requestManager.pause(request, deployResult.getTimestamp(), pendingDeploy.getDeployMarker().getUser());
+        requestManager.pause(request, deployResult.getTimestamp(), pendingDeploy.getDeployMarker().getUser(), Optional.<String> absent());
       }
     }
 

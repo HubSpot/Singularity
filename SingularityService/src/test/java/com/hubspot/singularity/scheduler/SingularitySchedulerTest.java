@@ -26,6 +26,7 @@ import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
@@ -40,7 +41,6 @@ import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityRequestCleanup;
-import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularitySchedulerTestBase;
@@ -51,10 +51,13 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.api.SingularityBounceRequest;
+import com.hubspot.singularity.api.SingularityDeleteRequestRequest;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.api.SingularityPauseRequest;
+import com.hubspot.singularity.api.SingularityRunNowRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
+import com.hubspot.singularity.api.SingularityUnpauseRequest;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation.ReconciliationState;
 
@@ -84,7 +87,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     taskManager.savePendingTask(p3);
 
     requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, secondDeployId, System.currentTimeMillis(), Optional.<String> absent(), PendingType.NEW_DEPLOY,
-        Optional.<Boolean> absent()));
+        Optional.<Boolean> absent(), Optional.<String> absent()));
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
@@ -221,7 +224,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     SingularityTask firstTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
     createAndSchedulePendingTask(firstDeployId);
 
-    requestResource.pause(requestId, Optional.of(new SingularityPauseRequest(Optional.of(false), Optional.<Long> absent())));
+    requestResource.pause(requestId, Optional.of(new SingularityPauseRequest(Optional.of(false), Optional.<Long> absent(), Optional.<String> absent(), Optional.<String>absent())));
 
     cleaner.drainCleanupQueue();
 
@@ -242,7 +245,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     SingularityTask firstTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
 
-    requestResource.deleteRequest(requestId);
+    requestResource.deleteRequest(requestId, Optional.<SingularityDeleteRequestRequest> absent());
 
     Assert.assertTrue(requestManager.getCleanupRequests().size() == 1);
 
@@ -278,7 +281,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(taskManager.getKilledTaskIdRecords().isEmpty());
     Assert.assertTrue(!taskManager.getCleanupTasks().isEmpty());
 
-    requestManager.activate(request.toBuilder().setKillOldNonLongRunningTasksAfterMillis(Optional.<Long>of(0L)).build(), RequestHistoryType.CREATED, System.currentTimeMillis(), Optional.<String>absent());
+    requestManager.activate(request.toBuilder().setKillOldNonLongRunningTasksAfterMillis(Optional.<Long>of(0L)).build(), RequestHistoryType.CREATED, System.currentTimeMillis(), Optional.<String>absent(), Optional.<String>absent());
 
     cleaner.drainCleanupQueue();
 
@@ -394,7 +397,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
 
-    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList());
+    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList(), Optional.<SingularityRunNowRequest> absent());
 
     resourceOffers();
 
@@ -406,7 +409,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(0, taskManager.getActiveTaskIds().size());
     Assert.assertEquals(0, taskManager.getPendingTaskIds().size());
 
-    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList());
+    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList(), Optional.<SingularityRunNowRequest> absent());
 
     resourceOffers();
 
@@ -425,7 +428,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.activate(bldr.build());
     deploy("d2");
 
-    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList());
+    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList(), Optional.<SingularityRunNowRequest> absent());
 
     validateTaskDoesntMoveDuringDecommission();
   }
@@ -461,7 +464,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     request = bldr.build();
     saveRequest(request);
 
-    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, "d1").setCommand(Optional.of("cmd")).build(), Optional.<Boolean> absent()));
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, "d1").setCommand(Optional.of("cmd")).build(), Optional.<Boolean> absent(), Optional.<String> absent()));
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
@@ -480,7 +483,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(taskManager.getActiveTaskIds().isEmpty());
 
-    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, "d2").setCommand(Optional.of("cmd")).build(), Optional.<Boolean>absent()));
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, "d2").setCommand(Optional.of("cmd")).build(), Optional.<Boolean>absent(), Optional.<String> absent()));
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
@@ -506,7 +509,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     request = bldr.build();
     saveRequest(request);
 
-    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, "d1").setCommand(Optional.of("cmd")).build(), Optional.<Boolean> absent()));
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, "d1").setCommand(Optional.of("cmd")).build(), Optional.<Boolean> absent(), Optional.<String> absent()));
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
@@ -521,7 +524,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     request = bldr.setNumRetriesOnFailure(Optional.of(2)).build();
     saveRequest(request);
 
-    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, "d1").setCommand(Optional.of("cmd")).build(), Optional.<Boolean> absent()));
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, "d1").setCommand(Optional.of("cmd")).build(), Optional.<Boolean> absent(), Optional.<String> absent()));
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
     deployChecker.checkDeploys();
@@ -605,7 +608,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     configuration.setCooldownAfterFailures(2);
     configuration.setCooldownAfterPctOfInstancesFail(.51);
 
-    requestManager.activate(request.toBuilder().setInstances(Optional.of(4)).build(), RequestHistoryType.CREATED, System.currentTimeMillis(), Optional.<String> absent());
+    requestManager.activate(request.toBuilder().setInstances(Optional.of(4)).build(), RequestHistoryType.CREATED, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String>absent());
 
     SingularityTask task1 = startTask(firstDeploy, 1);
     SingularityTask task2 = startTask(firstDeploy, 2);
@@ -879,7 +882,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
 
-    requestManager.pause(request, System.currentTimeMillis(), Optional.<String>absent());
+    requestManager.pause(request, System.currentTimeMillis(), Optional.<String>absent(), Optional.<String>absent());
 
     boolean exception = false;
 
@@ -1021,7 +1024,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   public void badPauseExpires() {
     initRequest();
 
-    requestManager.createCleanupRequest(new SingularityRequestCleanup(Optional.<String>absent(), RequestCleanupType.PAUSING, System.currentTimeMillis(), Optional.<Boolean>absent(), requestId, Optional.<String>absent(), Optional.<Boolean> absent()));
+    requestManager.createCleanupRequest(new SingularityRequestCleanup(Optional.<String>absent(), RequestCleanupType.PAUSING, System.currentTimeMillis(),
+        Optional.<Boolean>absent(), requestId, Optional.<String>absent(), Optional.<Boolean> absent(), Optional.<String>absent(), Optional.<String>absent()));
 
     cleaner.drainCleanupQueue();
 
@@ -1041,7 +1045,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     requestManager.saveLBCleanupRequest(new SingularityRequestLbCleanup(requestId, Sets.newHashSet("test"), "/basepath", Collections.<String>emptyList(), Optional.<SingularityLoadBalancerUpdate>absent()));
 
-    requestManager.pause(request, System.currentTimeMillis(), Optional.<String>absent());
+    requestManager.pause(request, System.currentTimeMillis(), Optional.<String>absent(), Optional.<String>absent());
 
     testingLbClient.setNextBaragonRequestState(BaragonRequestState.WAITING);
 
@@ -1091,7 +1095,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(RequestState.PAUSED, requestManager.getRequest(requestId).get().getState());
     Assert.assertEquals(requestId, requestManager.getPausedRequests().iterator().next().getRequest().getId());
 
-    requestResource.unpause(requestId);
+    requestResource.unpause(requestId, Optional.<SingularityUnpauseRequest> absent());
 
     resourceOffers();
 
@@ -1109,7 +1113,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     SingularityTask taskOne = startTask(firstDeploy);
 
-    requestResource.pause(requestId, Optional.of(new SingularityPauseRequest(Optional.<Boolean> absent(), Optional.of(1L))));
+    requestResource.pause(requestId, Optional.of(new SingularityPauseRequest(Optional.<Boolean> absent(), Optional.of(1L), Optional.<String> absent(), Optional.<String>absent())));
 
     cleaner.drainCleanupQueue();
 
@@ -1144,7 +1148,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   public void testBounce() {
     initRequest();
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.<Long> absent(), Optional.<Boolean> absent()));
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.<Long> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<String>absent()));
 
     initFirstDeploy();
 
@@ -1195,14 +1199,15 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.activate(request.toBuilder()
         .setSlavePlacement(Optional.of(SlavePlacement.SEPARATE_BY_REQUEST))
         .setInstances(Optional.of(2)).build()
-    );
+        );
 
     initFirstDeploy();
 
     SingularityTask taskOne = startSeparatePlacementTask(firstDeploy, 1);
     SingularityTask taskTwo = startSeparatePlacementTask(firstDeploy, 2);
 
-    requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.INCREMENTAL_BOUNCE, System.currentTimeMillis(), Optional.<Boolean>absent(), requestId, Optional.of(firstDeployId), Optional.<Boolean> absent()));
+    requestManager.createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.INCREMENTAL_BOUNCE, System.currentTimeMillis(),
+        Optional.<Boolean>absent(), requestId, Optional.of(firstDeployId), Optional.<Boolean> absent(), Optional.<String>absent(), Optional.<String>absent()));
 
     Assert.assertTrue(requestManager.cleanupRequestExists(requestId));
 
@@ -1506,21 +1511,21 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     deploy("d2");
     deployChecker.checkDeploys();
 
-    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList());
+    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList(), Optional.<SingularityRunNowRequest> absent());
 
     resourceOffers();
 
-    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList());
+    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList(), Optional.<SingularityRunNowRequest> absent());
 
     resourceOffers();
 
     Assert.assertEquals(2, taskManager.getActiveTaskIds().size());
 
-    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList());
+    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList(), Optional.<SingularityRunNowRequest> absent());
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
-    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList());
+    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList(), Optional.<SingularityRunNowRequest> absent());
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
@@ -1574,7 +1579,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(5, taskManager.getActiveTaskIds().size());
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(2), Optional.<Long> absent(), Optional.<Boolean> absent()));
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(2), Optional.<Long> absent(), Optional.<Boolean> absent(),
+        Optional.<String> absent(), Optional.<String>absent()));
 
     resourceOffers();
     cleaner.drainCleanupQueue();
@@ -1594,7 +1600,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(5), Optional.of(1L), Optional.<Boolean> absent()));
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(5), Optional.of(1L), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<String>absent()));
 
     try {
       Thread.sleep(2);
@@ -1621,7 +1627,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(healthchecker.cancelHealthcheck(firstTask.getTaskId().getId()));
 
-    requestResource.skipHealthchecks(requestId, new SingularitySkipHealthchecksRequest(Optional.of(true), Optional.of(1L)));
+    requestResource.skipHealthchecks(requestId, new SingularitySkipHealthchecksRequest(Optional.of(true), Optional.of(1L), Optional.<String> absent(), Optional.<String>absent()));
 
     statusUpdate(firstTask, TaskState.TASK_FAILED);
 
@@ -1645,7 +1651,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     SingularityTask firstTask = startTask(firstDeploy);
 
-    requestResource.bounce(requestId, Optional.of(new SingularityBounceRequest(Optional.<Boolean> absent(), Optional.of(true), Optional.<Long> absent())));
+    requestResource.bounce(requestId, Optional.of(new SingularityBounceRequest(Optional.<Boolean> absent(), Optional.of(true), Optional.<Long> absent(), Optional.<String> absent(), Optional.<String>absent())));
 
     cleaner.drainCleanupQueue();
     resourceOffers();

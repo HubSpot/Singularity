@@ -11,13 +11,16 @@ public class SingularityDeployRequest {
 
   private final Optional<Boolean> unpauseOnSuccessfulDeploy;
   private final SingularityDeploy deploy;
+  private final Optional<String> message;
 
   @JsonCreator
   public SingularityDeployRequest(
       @JsonProperty("deploy") SingularityDeploy deploy,
-      @JsonProperty("unpauseOnSuccessfulDeploy") Optional<Boolean> unpauseOnSuccessfulDeploy) {
+      @JsonProperty("unpauseOnSuccessfulDeploy") Optional<Boolean> unpauseOnSuccessfulDeploy,
+      @JsonProperty("message") Optional<String> message) {
     this.deploy = deploy;
     this.unpauseOnSuccessfulDeploy = unpauseOnSuccessfulDeploy;
+    this.message = message;
   }
 
   @ApiModelProperty(required=false, value="If deploy is successful, also unpause the request.")
@@ -35,9 +38,13 @@ public class SingularityDeployRequest {
     return deploy;
   }
 
+  public Optional<String> getMessage() {
+    return message;
+  }
+
   @Override
   public String toString() {
-    return "SingularityDeployRequest [unpauseOnSuccessfulDeploy=" + unpauseOnSuccessfulDeploy + ", deploy=" + deploy + "]";
+    return "SingularityDeployRequest [unpauseOnSuccessfulDeploy=" + unpauseOnSuccessfulDeploy + ", deploy=" + deploy + ", message=" + message + "]";
   }
 
 }

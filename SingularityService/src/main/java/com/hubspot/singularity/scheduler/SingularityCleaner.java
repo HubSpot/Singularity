@@ -39,8 +39,8 @@ import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -236,18 +236,11 @@ public class SingularityCleaner {
           }
           break;
         case BOUNCE:
-          killActiveTasks = false;
-          killScheduledTasks = false;
-
-          bounce(requestCleanup, activeTaskIds, false);
-
-          break;
         case INCREMENTAL_BOUNCE:
           killActiveTasks = false;
           killScheduledTasks = false;
 
-          bounce(requestCleanup, activeTaskIds, true);
-
+          bounce(requestCleanup, activeTaskIds);
           break;
       }
 
@@ -292,7 +285,7 @@ public class SingularityCleaner {
     exceptionNotifier.notify("Insufficient data to create LB request cleanup", ImmutableMap.of("requestId", requestId, "deployId", maybeCurrentDeployId.toString(), "deploy", maybeDeploy.toString()));
   }
 
-  private void bounce(SingularityRequestCleanup requestCleanup, final List<SingularityTaskId> activeTaskIds, boolean isIncremental) {
+  private void bounce(SingularityRequestCleanup requestCleanup, final List<SingularityTaskId> activeTaskIds) {
     final long now = System.currentTimeMillis();
 
     final List<SingularityTaskId> matchingTaskIds = SingularityTaskId.matchingAndNotIn(activeTaskIds, requestCleanup.getRequestId(), requestCleanup.getDeployId().get(), Collections.<SingularityTaskId> emptyList());
@@ -300,10 +293,11 @@ public class SingularityCleaner {
     for (SingularityTaskId matchingTaskId : matchingTaskIds) {
       LOG.debug("Adding task {} to cleanup (bounce)", matchingTaskId.getId());
 
-      taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), isIncremental ? TaskCleanupType.INCREMENTAL_BOUNCE : TaskCleanupType.BOUNCING, now, matchingTaskId, Optional.<String> absent()));
+      taskManager.createTaskCleanup(new SingularityTaskCleanup(requestCleanup.getUser(), requestCleanup.getCleanupType().getTaskCleanupType().get(), now, matchingTaskId, requestCleanup.getMessage(), requestCleanup.getActionId()));
     }
 
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestCleanup.getRequestId(), requestCleanup.getDeployId().get(), requestCleanup.getTimestamp(), requestCleanup.getUser(), PendingType.BOUNCE, requestCleanup.getSkipHealthchecks()));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestCleanup.getRequestId(), requestCleanup.getDeployId().get(), requestCleanup.getTimestamp(),
+        requestCleanup.getUser(), PendingType.BOUNCE, requestCleanup.getSkipHealthchecks(), requestCleanup.getMessage()));
 
     LOG.info("Added {} tasks for request {} to cleanup bounce queue in {}", matchingTaskIds.size(), requestCleanup.getRequestId(), JavaUtils.duration(now));
   }
@@ -548,7 +542,7 @@ public class SingularityCleaner {
         break;
       case INVALID_REQUEST_NOOP:
         exceptionNotifier.notify(String.format("LB removal failed for %s", lbRemoveUpdate.getLoadBalancerRequestId().toString()),
-          ImmutableMap.of("state", lbRemoveUpdate.getLoadBalancerState().name(), "loadBalancerRequestId", loadBalancerRequestId.toString(), "addUpdate", lbRemoveUpdate.toString()));
+            ImmutableMap.of("state", lbRemoveUpdate.getLoadBalancerState().name(), "loadBalancerRequestId", loadBalancerRequestId.toString(), "addUpdate", lbRemoveUpdate.toString()));
         return CheckLBState.LOAD_BALANCE_FAILED;
     }
 
@@ -683,7 +677,7 @@ public class SingularityCleaner {
       case CANCELED:
         LOG.error("LB delete request {} ({}) got unexpected response {}", lbDeleteUpdate, loadBalancerRequestId, lbDeleteUpdate.getLoadBalancerState());
         exceptionNotifier.notify(String.format("LB delete failed for %s", lbDeleteUpdate.getLoadBalancerRequestId().toString()),
-          ImmutableMap.of("state", lbDeleteUpdate.getLoadBalancerState().name(), "loadBalancerRequestId", loadBalancerRequestId.toString(), "addUpdate", lbDeleteUpdate.toString()));
+            ImmutableMap.of("state", lbDeleteUpdate.getLoadBalancerState().name(), "loadBalancerRequestId", loadBalancerRequestId.toString(), "addUpdate", lbDeleteUpdate.toString()));
         return CheckLBState.RETRY;
       case UNKNOWN:
       case CANCELING:
@@ -692,7 +686,7 @@ public class SingularityCleaner {
         break;
       case INVALID_REQUEST_NOOP:
         exceptionNotifier.notify(String.format("LB delete failed for %s", lbDeleteUpdate.getLoadBalancerRequestId().toString()),
-          ImmutableMap.of("state", lbDeleteUpdate.getLoadBalancerState().name(), "loadBalancerRequestId", loadBalancerRequestId.toString(), "addUpdate", lbDeleteUpdate.toString()));
+            ImmutableMap.of("state", lbDeleteUpdate.getLoadBalancerState().name(), "loadBalancerRequestId", loadBalancerRequestId.toString(), "addUpdate", lbDeleteUpdate.toString()));
         return CheckLBState.LOAD_BALANCE_FAILED;
     }
 

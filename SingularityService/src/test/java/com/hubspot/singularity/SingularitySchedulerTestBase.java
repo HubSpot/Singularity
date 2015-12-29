@@ -291,7 +291,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void saveRequest(SingularityRequest request) {
-    requestManager.activate(request, RequestHistoryType.CREATED, System.currentTimeMillis(), Optional.<String>absent());
+    requestManager.activate(request, RequestHistoryType.CREATED, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
   }
 
   protected void protectedInitRequest(boolean isLoadBalanced, boolean isScheduled) {
@@ -317,11 +317,11 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected void initRequest() {
     protectedInitRequest(false, false);
   }
-  
+
   protected void initFirstDeploy() {
     firstDeploy = initAndFinishDeploy(request, firstDeployId);
   }
-  
+
   protected void initHCDeploy() {
     firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100")).setHealthcheckUri(Optional.of("http://uri")));
   }
@@ -333,7 +333,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityDeploy initAndFinishDeploy(SingularityRequest request, SingularityDeployBuilder builder) {
     SingularityDeploy deploy = builder.build();
 
-    SingularityDeployMarker marker = new SingularityDeployMarker(deploy.getRequestId(), deploy.getId(), System.currentTimeMillis(), Optional.<String> absent());
+    SingularityDeployMarker marker = new SingularityDeployMarker(deploy.getRequestId(), deploy.getId(), System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
 
     deployManager.saveDeploy(request, marker, deploy);
 
@@ -343,7 +343,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected SingularityDeploy initDeploy(SingularityDeployBuilder builder, long timestamp) {
-    SingularityDeployMarker marker = new SingularityDeployMarker(requestId, builder.getId(), timestamp, Optional.<String> absent());
+    SingularityDeployMarker marker = new SingularityDeployMarker(requestId, builder.getId(), timestamp, Optional.<String> absent(), Optional.<String> absent());
     builder.setCommand(Optional.of("sleep 100"));
 
     SingularityDeploy deploy = builder.build();
@@ -356,7 +356,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void initSecondDeploy() {
-    secondDeployMarker = new SingularityDeployMarker(requestId, secondDeployId, System.currentTimeMillis(), Optional.<String> absent());
+    secondDeployMarker = new SingularityDeployMarker(requestId, secondDeployId, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
     secondDeploy = new SingularityDeployBuilder(requestId, secondDeployId).setCommand(Optional.of("sleep 100")).build();
 
     deployManager.saveDeploy(request, secondDeployMarker, secondDeploy);
@@ -403,7 +403,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void deploy(String deployId, Optional<Boolean> unpauseOnDeploy) {
-    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, deployId).setCommand(Optional.of("sleep 1")).build(), unpauseOnDeploy));
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, deployId).setCommand(Optional.of("sleep 1")).build(), unpauseOnDeploy, Optional.<String> absent()));
   }
 
   protected SingularityPendingTask createAndSchedulePendingTask(String deployId) {
@@ -420,8 +420,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void saveAndSchedule(SingularityRequestBuilder bldr) {
-    requestManager.activate(bldr.build(), RequestHistoryType.UPDATED, System.currentTimeMillis(), Optional.<String> absent());
-    requestManager.addToPendingQueue(new SingularityPendingRequest(bldr.getId(), firstDeployId, System.currentTimeMillis(), Optional.<String> absent(), PendingType.UPDATED_REQUEST, Optional.<Boolean> absent()));
+    requestManager.activate(bldr.build(), RequestHistoryType.UPDATED, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
+    requestManager.addToPendingQueue(new SingularityPendingRequest(bldr.getId(), firstDeployId, System.currentTimeMillis(), Optional.<String> absent(), PendingType.UPDATED_REQUEST, Optional.<Boolean> absent(), Optional.<String> absent()));
     scheduler.drainPendingQueue(stateCacheProvider.get());
   }
 

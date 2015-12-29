@@ -4,17 +4,16 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
-public class SingularityScaleRequest {
+public class SingularityScaleRequest extends SingularityExpiringRequestParent {
 
   private final Optional<Integer> instances;
-  private final Optional<Long> durationMillis;
   private final Optional<Boolean> skipHealthchecks;
 
   @JsonCreator
   public SingularityScaleRequest(@JsonProperty("instances") Optional<Integer> instances, @JsonProperty("durationMillis") Optional<Long> durationMillis,
-      @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks) {
+      @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks, @JsonProperty("actionId") Optional<String> actionId, @JsonProperty("message") Optional<String> message) {
+    super(durationMillis, actionId, message);
     this.instances = instances;
-    this.durationMillis = durationMillis;
     this.skipHealthchecks = skipHealthchecks;
   }
 
@@ -26,13 +25,9 @@ public class SingularityScaleRequest {
     return instances;
   }
 
-  public Optional<Long> getDurationMillis() {
-    return durationMillis;
-  }
-
   @Override
   public String toString() {
-    return "SingularityScaleRequest [instances=" + instances + ", durationMillis=" + durationMillis + ", skipHealthchecks=" + skipHealthchecks + "]";
+    return "SingularityScaleRequest [instances=" + instances + ", skipHealthchecks=" + skipHealthchecks + ", toString()=" + super.toString() + "]";
   }
 
 }

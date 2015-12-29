@@ -12,8 +12,6 @@ import org.apache.mesos.Protos.Status;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityRequestCleanup.RequestCleanupType;
-import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SingularityDriver;
 

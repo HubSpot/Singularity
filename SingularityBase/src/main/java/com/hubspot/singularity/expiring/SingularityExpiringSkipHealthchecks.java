@@ -4,22 +4,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 
-public class SingularityExpiringSkipHealthchecks extends SingularityExpiringParent {
+public class SingularityExpiringSkipHealthchecks extends SingularityExpiringParent<SingularitySkipHealthchecksRequest> {
 
-  private final SingularitySkipHealthchecksRequest skipHealthchecksRequest;
   private final Optional<Boolean> revertToSkipHealthchecks;
 
-  public SingularityExpiringSkipHealthchecks(@JsonProperty("durationMillis") long durationMillis, @JsonProperty("requestId") String requestId, @JsonProperty("user") Optional<String> user,
-      @JsonProperty("startMillis") long startMillis, @JsonProperty("skipHealthchecksRequest") SingularitySkipHealthchecksRequest skipHealthchecksRequest,
-      @JsonProperty("revertToSkipHealthchecks") Optional<Boolean> revertToSkipHealthchecks) {
-    super(durationMillis, requestId, user, startMillis);
+  public SingularityExpiringSkipHealthchecks(@JsonProperty("requestId") String requestId, @JsonProperty("user") Optional<String> user,
+      @JsonProperty("startMillis") long startMillis, @JsonProperty("expiringAPIRequestObject") SingularitySkipHealthchecksRequest skipHealthchecksRequest,
+      @JsonProperty("revertToSkipHealthchecks") Optional<Boolean> revertToSkipHealthchecks, @JsonProperty("actionId") String actionId) {
+    super(skipHealthchecksRequest, requestId, user, startMillis, actionId);
 
     this.revertToSkipHealthchecks = revertToSkipHealthchecks;
-    this.skipHealthchecksRequest = skipHealthchecksRequest;
-  }
-
-  public SingularitySkipHealthchecksRequest getSkipHealthchecksRequest() {
-    return skipHealthchecksRequest;
   }
 
   public Optional<Boolean> getRevertToSkipHealthchecks() {
@@ -28,7 +22,7 @@ public class SingularityExpiringSkipHealthchecks extends SingularityExpiringPare
 
   @Override
   public String toString() {
-    return "SingularityExpiringSkipHealthchecks [skipHealthchecksRequest=" + skipHealthchecksRequest + ", revertToSkipHealthchecks=" + revertToSkipHealthchecks + "]";
+    return "SingularityExpiringSkipHealthchecks [revertToSkipHealthchecks=" + revertToSkipHealthchecks + ", toString()=" + super.toString() + "]";
   }
 
 }
