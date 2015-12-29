@@ -153,7 +153,7 @@ AggregateTail = React.createClass
 
   getRowType: ->
     if !@state.splitView
-      return 'w'
+      return ''
 
     if @state.viewingInstances.length > 3 then 'tail-row-half' else 'tail-row'
 
