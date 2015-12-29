@@ -4,7 +4,8 @@ AggregateTail = require '../components/aggregateTail/AggregateTail'
 
 class AggregateTailView extends View
 
-    initialize: ({@requestId, @path, @ajaxError, @offset, @activeTasks, @logLines}) ->
+    # Single Mode: Backwards compatability mode for the old URL format. Disables all task switching controls.
+    initialize: ({@requestId, @path, @ajaxError, @offset, @activeTasks, @logLines, @singleMode, @singleModeTaskId}) ->
       window.addEventListener 'viewChange', @handleViewChange
 
     handleViewChange: =>
@@ -27,6 +28,8 @@ class AggregateTailView extends View
           ajaxError={@ajaxError}
           logLines={@logLines}
           activeTasks={@activeTasks}
+          singleMode={@singleMode}
+          singleModeTaskId={@singleModeTaskId}
         />,
         @el);
 
