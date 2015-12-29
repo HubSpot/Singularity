@@ -8,6 +8,11 @@ IndividualHeader = React.createClass
     if @props.task.task?.taskId? and target
       $(target).tooltip(container: 'body', template: '<div class="tooltip tailer-tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>')
 
+  componentWillUnmount: () ->
+    target = ReactDOM.findDOMNode(@refs.ttTarget)
+    if @props.task.task?.taskId? and target
+      $(target).tooltip('destroy')
+
   getTooltipText: ->
     task = @props.task
     "Deploy ID: #{task.task?.taskId?.deployId or ''}\nHost: #{task.task?.taskId?.host or ''}"
