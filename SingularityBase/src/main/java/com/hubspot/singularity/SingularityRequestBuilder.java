@@ -42,6 +42,7 @@ public class SingularityRequestBuilder {
   private Optional<String> group;
   private Optional<Set<String>> readOnlyGroups;
   private Optional<Boolean> bounceAfterScale;
+  private Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides;
 
   public SingularityRequestBuilder(String id, RequestType requestType) {
     this.id = id;
@@ -66,11 +67,12 @@ public class SingularityRequestBuilder {
     this.readOnlyGroups = Optional.absent();
     this.bounceAfterScale = Optional.absent();
     this.skipHealthchecks = Optional.absent();
+    this.emailConfigurationOverrides = Optional.absent();
   }
 
   public SingularityRequest build() {
     return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, daemon, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule,
-        rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readOnlyGroups, bounceAfterScale, skipHealthchecks);
+        rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readOnlyGroups, bounceAfterScale, skipHealthchecks, emailConfigurationOverrides);
   }
 
   public Optional<Boolean> getSkipHealthchecks() {
@@ -259,6 +261,15 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  public Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> getEmailConfigurationOverrides() {
+    return emailConfigurationOverrides;
+  }
+
+  public SingularityRequestBuilder setEmailConfigurationOverrides(Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides) {
+    this.emailConfigurationOverrides = emailConfigurationOverrides;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityRequestBuilder[" +
@@ -284,6 +295,7 @@ public class SingularityRequestBuilder {
             ", readOnlyGroups=" + readOnlyGroups +
             ", bounceAfterScale=" + bounceAfterScale +
             ", skipHealthchecks=" + skipHealthchecks +
+            ", emailConfigurationOverrides=" + emailConfigurationOverrides +
             ']';
   }
 
@@ -316,14 +328,15 @@ public class SingularityRequestBuilder {
             Objects.equals(group, that.group) &&
             Objects.equals(readOnlyGroups, that.readOnlyGroups) &&
             Objects.equals(bounceAfterScale, that.bounceAfterScale) &&
-            Objects.equals(skipHealthchecks, that.skipHealthchecks);
+            Objects.equals(skipHealthchecks, that.skipHealthchecks) &&
+            Objects.equals(emailConfigurationOverrides, that.emailConfigurationOverrides);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis,
         scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement,
-        requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale, skipHealthchecks);
+        requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale, skipHealthchecks, emailConfigurationOverrides);
   }
 
 }

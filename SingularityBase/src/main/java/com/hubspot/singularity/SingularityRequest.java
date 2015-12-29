@@ -48,6 +48,8 @@ public class SingularityRequest {
   private final Optional<Set<String>> readOnlyGroups;
   private final Optional<Boolean> bounceAfterScale;
 
+  private final Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides;
+
   @JsonCreator
   public SingularityRequest(@JsonProperty("id") String id, @JsonProperty("requestType") RequestType requestType, @JsonProperty("owners") Optional<List<String>> owners,
       @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure, @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("daemon") Optional<Boolean> daemon, @JsonProperty("instances") Optional<Integer> instances,
@@ -58,7 +60,8 @@ public class SingularityRequest {
       @JsonProperty("allowedSlaveAttributes") Optional<Map<String, String>> allowedSlaveAttributes, @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis,
       @JsonProperty("waitAtLeastMillisAfterTaskFinishesForReschedule") Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule, @JsonProperty("group") Optional<String> group,
       @JsonProperty("readOnlyGroups") Optional<Set<String>> readOnlyGroups, @JsonProperty("bounceAfterScale") Optional<Boolean> bounceAfterScale,
-      @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks) {
+      @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
+      @JsonProperty("emailConfigurationOverrides") Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides) {
     this.id = id;
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
@@ -80,6 +83,7 @@ public class SingularityRequest {
     this.readOnlyGroups = readOnlyGroups;
     this.bounceAfterScale = bounceAfterScale;
     this.skipHealthchecks = skipHealthchecks;
+    this.emailConfigurationOverrides = emailConfigurationOverrides;
 
     if (requestType == null) {
       this.requestType = RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced);
@@ -108,7 +112,8 @@ public class SingularityRequest {
     .setGroup(group)
     .setReadOnlyGroups(readOnlyGroups)
     .setBounceAfterScale(bounceAfterScale)
-    .setSkipHealthchecks(skipHealthchecks);
+    .setSkipHealthchecks(skipHealthchecks)
+    .setEmailConfigurationOverrides(emailConfigurationOverrides);
   }
 
   public String getId() {
@@ -260,6 +265,10 @@ public class SingularityRequest {
     return skipHealthchecks;
   }
 
+  public Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> getEmailConfigurationOverrides() {
+    return emailConfigurationOverrides;
+  }
+
   @Override
   public String toString() {
     return "SingularityRequest[" +
@@ -284,6 +293,8 @@ public class SingularityRequest {
             ", group=" + group +
             ", readOnlyGroups=" + readOnlyGroups +
             ", bounceAfterScale=" + bounceAfterScale +
+            ", skipHealthchecks=" + skipHealthchecks +
+            ", emailConfigurationOverrides=" + emailConfigurationOverrides +
             ']';
   }
 
@@ -315,11 +326,13 @@ public class SingularityRequest {
             Objects.equals(loadBalanced, request.loadBalanced) &&
             Objects.equals(group, request.group) &&
             Objects.equals(readOnlyGroups, request.readOnlyGroups) &&
-            Objects.equals(bounceAfterScale, request.bounceAfterScale);
+            Objects.equals(bounceAfterScale, request.bounceAfterScale) &&
+            Objects.equals(skipHealthchecks, request.skipHealthchecks) &&
+            Objects.equals(emailConfigurationOverrides, request.emailConfigurationOverrides);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale, skipHealthchecks, emailConfigurationOverrides);
   }
 }
