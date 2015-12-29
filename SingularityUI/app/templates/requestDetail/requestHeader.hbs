@@ -91,10 +91,24 @@
         <b>Request is bouncing:</b> {{ runningInstanceCount }} of {{ data.instances }} replacement tasks are currently running.
     </div>
     {{/if}}
+
     {{#if isDeploying}}
-    <div class="alert alert-warning" role="alert">
-        <b>Deploy <a href="{{appRoot}}/request/{{ data.id }}/deploy/{{ data.pendingDeploy.id }}">{{data.pendingDeploy.id}}</a> is pending:</b> {{ deployingInstanceCount }} of {{ data.instances }} new tasks are currently running.
-    </div>
+        <div class="well">
+            <b>Deploy </b><code><a href="{{appRoot}}/request/{{ data.id }}/deploy/{{ data.pendingDeploy.id }}">{{data.pendingDeploy.id}}</a></code><b> is pending:</b>
+            {{#ifEqual data.pendingDeployState.deployProgress.targetActiveInstances data.instances}}
+                {{ deployingInstanceCount }} of {{ data.instances }} new tasks are currently running.{{#ifEqual deployingInstanceCount data.instances}} Waiting for new tasks to become healthy.{{/ifEqual}}
+            {{else}}
+                {{#if data.pendingDeployState.deployProgress}}
+                    {{#if data.pendingDeployState.deployProgress.stepComplete}}
+                        Deployed {{data.pendingDeployState.deployProgress.targetActiveInstances}} of {{ data.instances }} instances, next deploy step in {{timestampFromNow nextDeployStepTimestamp}}
+                    {{else}}
+                        Trying to deploy {{data.pendingDeployState.deployProgress.targetActiveInstances}} of {{ data.instances }} instances, {{ deployingInstanceCount }} of {{data.pendingDeployState.deployProgress.targetActiveInstances}} new tasks are currently running.
+                    {{/if}}
+                {{else}}
+                    {{ deployingInstanceCount }} of {{ data.instances }} new tasks are currently running.
+                {{/if}}
+            {{/ifEqual}}
+        </div>
     {{/if}}
 
     {{! Active deploy well }}
