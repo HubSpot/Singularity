@@ -1,5 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -17,8 +18,11 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.SingularityPendingRequest;
+import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
+import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
@@ -43,7 +47,6 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
   private final RequestHelper requestHelper;
   private final List<SingularityExpiringUserActionHandler<?>> handlers;
 
-  // TODO not sure if this needs a lock.
   @Inject
   SingularityExpiringUserActionPoller(SingularityConfiguration configuration, RequestManager requestManager, TaskManager taskManager,
       @Named(SingularityMesosModule.SCHEDULER_LOCK_NAME) final Lock lock, RequestHelper requestHelper, SingularityMailer mailer) {
@@ -126,17 +129,24 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
     @Override
     protected void handleExpiringObject(SingularityExpiringBounce expiringObject, SingularityRequestWithState requestWithState, String message) {
-      // how does a bounce work?
+      for (SingularityTaskCleanup taskCleanup : taskManager.getCleanupTasks()) {
+        if (taskCleanup.getTaskId().getRequestId().equals(expiringObject.getRequestId())
+            && taskCleanup.getActionId().isPresent() && expiringObject.getActionId().equals(taskCleanup.getActionId().get())) {
+          LOG.info("Discarding cleanup for {} ({}) because of {}", taskCleanup.getTaskId(), taskCleanup, expiringObject);
+          taskManager.deleteCleanupTask(taskCleanup.getTaskId().getId());
+        }
+      }
 
-      // task cleanup of type Bounce
-      // pending request - ignores teh bouncing ones
-      // so they will keep restaritng
-      // so you need to erase the task cleanups.
+      Optional<SingularityPendingRequest> pendingRequest = requestManager.getPendingRequest(expiringObject.getRequestId(), expiringObject.getDeployId());
 
-      //      for (SingularityTaskCleanup taskCleanup : taskManager.getCleanupTasks()) {
-      //        if (expiringObject.getBounceRequest().getIncremental().)
-      //
-      //      }
+      if (pendingRequest.isPresent() && pendingRequest.get().getActionId().isPresent() && pendingRequest.get().getActionId().equals(expiringObject.getActionId())) {
+        LOG.info("Discarding pending request for {} ({}) because of {}", expiringObject.getRequestId(), pendingRequest.get(), expiringObject);
+
+        requestManager.deletePendingRequest(pendingRequest.get());
+      }
+
+      requestManager.addToPendingQueue(new SingularityPendingRequest(expiringObject.getRequestId(), expiringObject.getDeployId(), System.currentTimeMillis(), expiringObject.getUser(),
+          PendingType.CANCEL_BOUNCE, Collections.<String> emptyList(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.of(message), Optional.of(expiringObject.getActionId())));
     }
 
   }

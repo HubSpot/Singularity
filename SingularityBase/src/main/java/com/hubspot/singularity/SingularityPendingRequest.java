@@ -10,7 +10,7 @@ import com.google.common.base.Optional;
 public class SingularityPendingRequest {
 
   public enum PendingType {
-    IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE, STARTUP;
+    IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE, STARTUP, CANCEL_BOUNCE;
   }
 
   private final String requestId;
@@ -22,15 +22,17 @@ public class SingularityPendingRequest {
   private final Optional<String> runId;
   private final Optional<Boolean> skipHealthchecks;
   private final Optional<String> message;
+  private final Optional<String> actionId;
 
   public SingularityPendingRequest(String requestId, String deployId, long timestamp, Optional<String> user, PendingType pendingType, Optional<Boolean> skipHealthchecks, Optional<String> message) {
-    this(requestId, deployId, timestamp, user, pendingType, Collections.<String> emptyList(), Optional.<String> absent(), skipHealthchecks, message);
+    this(requestId, deployId, timestamp, user, pendingType, Collections.<String> emptyList(), Optional.<String> absent(), skipHealthchecks, message, Optional.<String> absent());
   }
 
   @JsonCreator
   public SingularityPendingRequest(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("timestamp") long timestamp,
       @JsonProperty("user") Optional<String> user, @JsonProperty("pendingType") PendingType pendingType, @JsonProperty("cmdLineArgsList") List<String> cmdLineArgsList,
-      @JsonProperty("runId") Optional<String> runId, @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks, @JsonProperty("message") Optional<String> message) {
+      @JsonProperty("runId") Optional<String> runId, @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks, @JsonProperty("message") Optional<String> message,
+      @JsonProperty("actionId") Optional<String> actionId) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.timestamp = timestamp;
@@ -40,6 +42,11 @@ public class SingularityPendingRequest {
     this.runId = runId;
     this.skipHealthchecks = skipHealthchecks;
     this.message = message;
+    this.actionId = actionId;
+  }
+
+  public Optional<String> getActionId() {
+    return actionId;
   }
 
   public Optional<String> getRunId() {
@@ -81,7 +88,7 @@ public class SingularityPendingRequest {
   @Override
   public String toString() {
     return "SingularityPendingRequest [requestId=" + requestId + ", deployId=" + deployId + ", timestamp=" + timestamp + ", pendingType=" + pendingType + ", user=" + user + ", cmdLineArgsList="
-        + cmdLineArgsList + ", runId=" + runId + ", skipHealthchecks=" + skipHealthchecks + ", message=" + message + "]";
+        + cmdLineArgsList + ", runId=" + runId + ", skipHealthchecks=" + skipHealthchecks + ", message=" + message + ", actionId=" + actionId + "]";
   }
 
 }

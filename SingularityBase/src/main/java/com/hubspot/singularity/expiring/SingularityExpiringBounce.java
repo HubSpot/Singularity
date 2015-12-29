@@ -6,10 +6,18 @@ import com.hubspot.singularity.api.SingularityBounceRequest;
 
 public class SingularityExpiringBounce extends SingularityExpiringParent<SingularityBounceRequest> {
 
-  public SingularityExpiringBounce(@JsonProperty("requestId") String requestId,
+  private final String deployId;
+
+  public SingularityExpiringBounce(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId,
       @JsonProperty("user") Optional<String> user, @JsonProperty("startMillis") long startMillis,
       @JsonProperty("expiringAPIRequestObject") SingularityBounceRequest bounceRequest, @JsonProperty("actionId") String actionId) {
     super(bounceRequest, requestId, user, startMillis, actionId);
+
+    this.deployId = deployId;
+  }
+
+  public String getDeployId() {
+    return deployId;
   }
 
   @Override

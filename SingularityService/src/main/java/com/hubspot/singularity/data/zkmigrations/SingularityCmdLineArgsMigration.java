@@ -115,7 +115,7 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
       for (String pendingRequest : curator.getChildren().forPath(REQUEST_PENDING_PATH)) {
         SingularityPendingRequestPrevious previous = objectMapper.readValue(curator.getData().forPath(ZKPaths.makePath(REQUEST_PENDING_PATH, pendingRequest)), SingularityPendingRequestPrevious.class);
         SingularityPendingRequest newRequest = new SingularityPendingRequest(previous.requestId, previous.deployId, previous.timestamp, previous.user, previous.pendingType,
-            getCmdLineArgs(previous.cmdLineArgs), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent());
+            getCmdLineArgs(previous.cmdLineArgs), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<String> absent());
 
         LOG.info("Re-saving {}", newRequest);
 

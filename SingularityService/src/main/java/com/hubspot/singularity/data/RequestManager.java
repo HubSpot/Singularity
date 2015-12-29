@@ -216,6 +216,10 @@ public class RequestManager extends CuratorAsyncManager {
     return result;
   }
 
+  public Optional<SingularityPendingRequest> getPendingRequest(String requestId, String deployId) {
+    return getData(getPendingPath(requestId, deployId), pendingRequestTranscoder);
+  }
+
   @VisibleForTesting
   protected SingularityCreateResult saveHistory(SingularityRequestHistory history) {
     final String path = getHistoryPath(history);
@@ -323,23 +327,23 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public Optional<SingularityRequestLbCleanup> getLbCleanupRequest(String requestId) {
-    return getData(getLBCleanupPath(requestId), requestLbCleanupTranscoder);
+    return getData(getLbCleanupPath(requestId), requestLbCleanupTranscoder);
   }
 
-  public List<String> getLBCleanupRequestIds() {
+  public List<String> getLbCleanupRequestIds() {
     return getChildren(LB_CLEANUP_PATH_ROOT);
   }
 
-  private String getLBCleanupPath(String requestId) {
+  private String getLbCleanupPath(String requestId) {
     return ZKPaths.makePath(LB_CLEANUP_PATH_ROOT, requestId);
   }
 
-  public void saveLBCleanupRequest(SingularityRequestLbCleanup cleanup) {
-    save(getLBCleanupPath(cleanup.getRequestId()), cleanup, requestLbCleanupTranscoder);
+  public void saveLbCleanupRequest(SingularityRequestLbCleanup cleanup) {
+    save(getLbCleanupPath(cleanup.getRequestId()), cleanup, requestLbCleanupTranscoder);
   }
 
-  public SingularityDeleteResult deleteLBCleanupRequest(String requestId) {
-    return delete(getLBCleanupPath(requestId));
+  public SingularityDeleteResult deleteLbCleanupRequest(String requestId) {
+    return delete(getLbCleanupPath(requestId));
   }
 
   public <T extends SingularityExpiringParent<? extends SingularityExpiringRequestParent>> List<T> getExpiringObjects(Class<T> clazz) {

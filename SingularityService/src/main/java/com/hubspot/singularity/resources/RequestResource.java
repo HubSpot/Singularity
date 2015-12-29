@@ -166,19 +166,25 @@ public class RequestResource extends AbstractRequestResource {
     if (bounceRequest.isPresent()) {
       actionId = bounceRequest.get().getActionId();
       message = bounceRequest.get().getMessage();
+
+      if (bounceRequest.get().getDurationMillis().isPresent() && !actionId.isPresent()) {
+        actionId = Optional.of(UUID.randomUUID().toString());
+      }
     }
+
+    final String deployId = getAndCheckDeployId(requestId);
 
     SingularityCreateResult createResult = requestManager.createCleanupRequest(
         new SingularityRequestCleanup(JavaUtils.getUserEmail(user), isIncrementalBounce ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE,
-            System.currentTimeMillis(), Optional.<Boolean>absent(), requestId, Optional.of(getAndCheckDeployId(requestId)), skipHealthchecks, message, actionId));
+            System.currentTimeMillis(), Optional.<Boolean> absent(), requestId, Optional.of(deployId), skipHealthchecks, message, actionId));
 
     checkConflict(createResult != SingularityCreateResult.EXISTED, "%s is already bouncing", requestId);
 
     requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), JavaUtils.getUserEmail(user), message);
 
     if (bounceRequest.isPresent() && bounceRequest.get().getDurationMillis().isPresent()) {
-      requestManager.saveExpiringObject(new SingularityExpiringBounce(requestId, JavaUtils.getUserEmail(user),
-          System.currentTimeMillis(), bounceRequest.get(), bounceRequest.get().getActionId().or(UUID.randomUUID().toString())));
+      requestManager.saveExpiringObject(new SingularityExpiringBounce(requestId, deployId, JavaUtils.getUserEmail(user),
+          System.currentTimeMillis(), bounceRequest.get(), actionId.get()));
     }
 
     return fillEntireRequest(requestWithState);
@@ -229,7 +235,7 @@ public class RequestResource extends AbstractRequestResource {
     }
 
     final SingularityPendingRequest pendingRequest = new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(),
-        JavaUtils.getUserEmail(user), pendingType, commandLineArgs, runId, skipHealthchecks, message);
+        JavaUtils.getUserEmail(user), pendingType, commandLineArgs, runId, skipHealthchecks, message, Optional.<String> absent());
 
     SingularityCreateResult result = requestManager.addToPendingQueue(pendingRequest);
 
@@ -258,8 +264,11 @@ public class RequestResource extends AbstractRequestResource {
 
     if (pauseRequest.isPresent()) {
       killTasks = pauseRequest.get().getKillTasks();
-      actionId = pauseRequest.get().getActionId();
       message = pauseRequest.get().getMessage();
+
+      if (pauseRequest.get().getDurationMillis().isPresent() && !actionId.isPresent()) {
+        actionId = Optional.of(UUID.randomUUID().toString());
+      }
     }
 
     final long now = System.currentTimeMillis();
@@ -275,7 +284,7 @@ public class RequestResource extends AbstractRequestResource {
 
     if (pauseRequest.isPresent() && pauseRequest.get().getDurationMillis().isPresent()) {
       requestManager.saveExpiringObject(new SingularityExpiringPause(requestId, JavaUtils.getUserEmail(user),
-          System.currentTimeMillis(), pauseRequest.get(), pauseRequest.get().getActionId().or(UUID.randomUUID().toString())));
+          System.currentTimeMillis(), pauseRequest.get(), actionId.get()));
     }
 
     return fillEntireRequest(new SingularityRequestWithState(requestWithState.getRequest(), RequestState.PAUSED, now));
@@ -565,7 +574,7 @@ public class RequestResource extends AbstractRequestResource {
   @Path("/lbcleanup")
   @ApiOperation("Retrieve the list of tasks being cleaned from load balancers.")
   public Iterable<String> getLbCleanupRequests() {
-    return authorizationHelper.filterAuthorizedRequestIds(user, requestManager.getLBCleanupRequestIds(), SingularityAuthorizationScope.READ);
+    return authorizationHelper.filterAuthorizedRequestIds(user, requestManager.getLbCleanupRequestIds(), SingularityAuthorizationScope.READ);
   }
 
 }

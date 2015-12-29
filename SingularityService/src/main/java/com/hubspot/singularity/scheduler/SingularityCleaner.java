@@ -278,7 +278,7 @@ public class SingularityCleaner {
         for (SingularityTaskId taskId : matchingActiveTaskIds) {
           taskIds.add(taskId.getId());
         }
-        requestManager.saveLBCleanupRequest(new SingularityRequestLbCleanup(requestId, maybeDeploy.get().getLoadBalancerGroups().get(), maybeDeploy.get().getServiceBasePath().get(), taskIds, Optional.<SingularityLoadBalancerUpdate>absent()));
+        requestManager.saveLbCleanupRequest(new SingularityRequestLbCleanup(requestId, maybeDeploy.get().getLoadBalancerGroups().get(), maybeDeploy.get().getServiceBasePath().get(), taskIds, Optional.<SingularityLoadBalancerUpdate>absent()));
         return;
       }
     }
@@ -297,7 +297,7 @@ public class SingularityCleaner {
     }
 
     requestManager.addToPendingQueue(new SingularityPendingRequest(requestCleanup.getRequestId(), requestCleanup.getDeployId().get(), requestCleanup.getTimestamp(),
-        requestCleanup.getUser(), PendingType.BOUNCE, requestCleanup.getSkipHealthchecks(), requestCleanup.getMessage()));
+        requestCleanup.getUser(), PendingType.BOUNCE, Collections.<String> emptyList(), Optional.<String> absent(), requestCleanup.getSkipHealthchecks(), requestCleanup.getMessage(), requestCleanup.getActionId()));
 
     LOG.info("Added {} tasks for request {} to cleanup bounce queue in {}", matchingTaskIds.size(), requestCleanup.getRequestId(), JavaUtils.duration(now));
   }
@@ -623,7 +623,7 @@ public class SingularityCleaner {
           ignoredRequests++;
       }
 
-      requestManager.deleteLBCleanupRequest(cleanup.getRequestId());
+      requestManager.deleteLbCleanupRequest(cleanup.getRequestId());
     }
     LOG.info("LB cleaned {} requests ({} left, {} obsolete) in {}", cleanedRequests, lbCleanupRequests.size() - (ignoredRequests + cleanedRequests), ignoredRequests, JavaUtils.duration(start));
 
@@ -661,11 +661,11 @@ public class SingularityCleaner {
     if (shouldEnqueueLbRequest(maybeDeleteUpdate)) {
       lbDeleteUpdate = lbClient.delete(loadBalancerRequestId, cleanup.getRequestId(), cleanup.getLoadBalancerGroups(), cleanup.getServiceBasePath());
       cleanup.setLoadBalancerUpdate(Optional.of(lbDeleteUpdate));
-      requestManager.saveLBCleanupRequest(cleanup);
+      requestManager.saveLbCleanupRequest(cleanup);
     } else if (maybeDeleteUpdate.get().getLoadBalancerState() == BaragonRequestState.WAITING || maybeDeleteUpdate.get().getLoadBalancerState() == BaragonRequestState.CANCELING) {
       lbDeleteUpdate = lbClient.getState(loadBalancerRequestId);
       cleanup.setLoadBalancerUpdate(Optional.of(lbDeleteUpdate));
-      requestManager.saveLBCleanupRequest(cleanup);
+      requestManager.saveLbCleanupRequest(cleanup);
     } else {
       lbDeleteUpdate = maybeDeleteUpdate.get();
     }
