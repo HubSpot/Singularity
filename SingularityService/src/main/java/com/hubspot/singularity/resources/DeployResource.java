@@ -51,7 +51,7 @@ import com.wordnik.swagger.annotations.ApiResponses;
 @Api(description="Manages Singularity Deploys for existing requests", value=DeployResource.PATH, position=2)
 public class DeployResource extends AbstractRequestResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/deploys";
-  public static final int DEFAULT_DEPLOY_STEP_WAIT_TIME_SECONDS = 60;
+  public static final int DEFAULT_DEPLOY_STEP_WAIT_TIME_SECONDS = 0;
 
   @Inject
   public DeployResource(RequestManager requestManager, DeployManager deployManager, SingularityValidator validator, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user) {
