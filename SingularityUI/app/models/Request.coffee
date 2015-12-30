@@ -65,10 +65,11 @@ class Request extends Model
               skipHealthchecks: false
             )
 
-    pause: (killTasks, duration) =>
+    pause: (killTasks, duration, message) =>
         data =
             user:      app.getUsername()
             killTasks: killTasks
+            message: message
         duration = @_parseDuration(duration)
         if duration
             data.durationMillis = duration
@@ -96,6 +97,7 @@ class Request extends Model
     scale: (confirmedOrPromptData) =>
         data =
             instances: confirmedOrPromptData.instances
+            message: confirmedOrPromptData.message
         duration = @_parseDuration(confirmedOrPromptData.duration)
         if duration
             data.durationMillis = duration
@@ -219,9 +221,10 @@ class Request extends Model
                 return unless confirmed
                 killTasks = not $('.vex #kill-tasks').is ':checked'
                 duration = $('.vex #pause-expiration').val()
+                message = $('.vex #pause-message').val()
 
                 if !duration or (duration and @_validateDuration(duration, @promptPause))
-                    @pause(killTasks, duration).done callback
+                    @pause(killTasks, duration, message).done callback
 
     promptScale: (callback) =>
         vex.dialog.open
@@ -233,6 +236,7 @@ class Request extends Model
                     placeholder: @get 'instances'
             input: """
                 <input name="instances" type="number" placeholder="#{@get 'instances'}" min="1" step="1" required />
+                <input name="message" id="scale-message" type="text" placeholder="Message (optional)" />
                 <input name="duration" id="scale-expiration" type="text" placeholder="Expiration (optional)" />
                 <span class="help">If an expiration duration is specified, this action will be reverted afterwards. Accepts any english time duration. (Days, Hr, Min...)</span>
             """
@@ -251,6 +255,7 @@ class Request extends Model
                 return unless data
                 bounce = $('.vex #bounce').is ':checked'
                 incremental = $('.vex #incremental-bounce').is ':checked'
+                message = $('.vex #scale-message').val()
                 duration = $('.vex #scale-expiration').val()
                 if !duration or (duration and @_validateDuration(duration, @promptScale))
                     @scale(data).done =>

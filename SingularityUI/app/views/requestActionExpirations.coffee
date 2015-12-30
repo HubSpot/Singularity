@@ -25,6 +25,7 @@ class requestActionExpirations extends View
                 revertText: "Revert to #{request.expiringScale.revertToInstances} #{if request.expiringScale.revertToInstances is 1 then 'instance' else 'instances'}"
                 revertAction: 'revertScale'
                 revertParam: request.expiringScale.revertToInstances
+                message: request.expiringScale.expiringAPIRequestObject.message
         if request.expiringBounce and (request.expiringBounce.startMillis + request.expiringBounce.expiringAPIRequestObject.durationMillis) > new Date().getTime()
             expirations.push
                 action: 'Bounce'
@@ -32,6 +33,7 @@ class requestActionExpirations extends View
                 canRevert: false
                 cancelText: 'Cancel'
                 cancelAction: 'cancelBounce'
+                message: request.expiringBounce.expiringAPIRequestObject.message
         if request.expiringPause and (request.expiringPause.startMillis + request.expiringPause.expiringAPIRequestObject.durationMillis) > new Date().getTime()
             expirations.push
                 action: 'Pause'
@@ -41,6 +43,7 @@ class requestActionExpirations extends View
                 cancelAction: 'makePausePermanent'
                 revertText: "Unpause"
                 revertAction: 'revertPause'
+                message: request.expiringPause.expiringAPIRequestObject.message
         if request.expiringSkipHealthchecks and (request.expiringSkipHealthchecks.startMillis + request.expiringSkipHealthchecks.expiringAPIRequestObject.durationMillis) > new Date().getTime()
             expirations.push
                 action: if request.expiringSkipHealthchecks.expiringAPIRequestObject.skipHealthchecks then 'Disable Healthchecks' else 'Enable Healthchecks'
@@ -51,6 +54,7 @@ class requestActionExpirations extends View
                 revertText: if request.expiringSkipHealthchecks.expiringAPIRequestObject.skipHealthchecks then 'Enable Healthchecks' else 'Disable Healthchecks'
                 revertAction: 'revertSkipHealthchecks'
                 revertParam: !request.expiringSkipHealthchecks.expiringAPIRequestObject.skipHealthchecks
+                message: request.expiringSkipHealthchecks.expiringAPIRequestObject.message
 
         request: request
         data: expirations
