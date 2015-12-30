@@ -81,8 +81,9 @@ public class SingularityMappers {
     @Override
     public SingularityRequestHistory map(int index, ResultSet r, StatementContext ctx) throws SQLException {
       try {
+        // TODO should read message from result set.
         return new SingularityRequestHistory(r.getTimestamp("createdAt").getTime(), Optional.fromNullable(r.getString("user")), RequestHistoryType.valueOf(r.getString("requestState")),
-            singularityRequestTranscoder.fromBytes(r.getBytes("request")), Optional.fromNullable(r.getString("message")));
+            singularityRequestTranscoder.fromBytes(r.getBytes("request")), Optional.<String> absent());
       } catch (SingularityTranscoderException e) {
         throw new ResultSetException("Could not deserialize database result", e, ctx);
       }
@@ -129,8 +130,9 @@ public class SingularityMappers {
 
     @Override
     public SingularityDeployHistory map(int index, ResultSet r, StatementContext ctx) throws SQLException {
+      // TODO handle message column
       SingularityDeployMarker marker =
-          new SingularityDeployMarker(r.getString("requestId"), r.getString("deployId"), r.getTimestamp("createdAt").getTime(), Optional.fromNullable(r.getString("user")), Optional.fromNullable(r.getString("message")));
+          new SingularityDeployMarker(r.getString("requestId"), r.getString("deployId"), r.getTimestamp("createdAt").getTime(), Optional.fromNullable(r.getString("user")), Optional.<String> absent());
       SingularityDeployResult deployState =
           new SingularityDeployResult(DeployState.valueOf(r.getString("deployState")), Optional.<String>absent(), Optional.<SingularityLoadBalancerUpdate>absent(), r.getTimestamp("deployStateAt")
               .getTime());
