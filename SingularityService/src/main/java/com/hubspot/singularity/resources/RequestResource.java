@@ -98,19 +98,24 @@ public class RequestResource extends AbstractRequestResource {
     this.configuration = configuration;
   }
 
-  private void submitRequest(SingularityRequest request, RequestState requestState, Optional<Boolean> skipHealthchecks, Optional<String> message) {
+  private void submitRequest(SingularityRequest request, Optional<SingularityRequestWithState> oldRequestWithState, Optional<Boolean> skipHealthchecks, Optional<String> message) {
     checkNotNullBadRequest(request.getId(), "Request must have an id");
     checkConflict(!requestManager.cleanupRequestExists(request.getId()), "Request %s is currently cleaning. Try again after a few moments", request.getId());
 
-    Optional<SingularityRequestWithState> maybeOldRequestWithState = requestManager.getRequest(request.getId());
-    Optional<SingularityRequest> maybeOldRequest = maybeOldRequestWithState.isPresent() ? Optional.of(maybeOldRequestWithState.get().getRequest()) : Optional.<SingularityRequest> absent();
+    Optional<SingularityRequest> oldRequest = oldRequestWithState.isPresent() ? Optional.of(oldRequestWithState.get().getRequest()) : Optional.<SingularityRequest> absent();
 
-    if (maybeOldRequest.isPresent()) {
-      authorizationHelper.checkForAuthorization(maybeOldRequest.get(), user, SingularityAuthorizationScope.WRITE);
+    if (oldRequest.isPresent()) {
+      authorizationHelper.checkForAuthorization(oldRequest.get(), user, SingularityAuthorizationScope.WRITE);
     }
     authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
 
-    requestHelper.updateRequest(request, maybeOldRequest, requestState, JavaUtils.getUserEmail(user), skipHealthchecks, message);
+    RequestState requestState = RequestState.ACTIVE;
+
+    if (oldRequestWithState.isPresent()) {
+      requestState = oldRequestWithState.get().getState();
+    }
+
+    requestHelper.updateRequest(request, oldRequest, requestState, JavaUtils.getUserEmail(user), skipHealthchecks, message);
   }
 
   @POST
@@ -120,8 +125,8 @@ public class RequestResource extends AbstractRequestResource {
     @ApiResponse(code=400, message="Request object is invalid"),
     @ApiResponse(code=409, message="Request object is being cleaned. Try again shortly"),
   })
-  public SingularityRequestParent activate(@ApiParam("The Singularity request to create or update") SingularityRequest request) {
-    submitRequest(request, RequestState.ACTIVE, Optional.<Boolean> absent(), Optional.<String> absent());
+  public SingularityRequestParent postRequest(@ApiParam("The Singularity request to create or update") SingularityRequest request) {
+    submitRequest(request, requestManager.getRequest(request.getId()), Optional.<Boolean> absent(), Optional.<String> absent());
     return fillEntireRequest(fetchRequestWithState(request.getId()));
   }
 
@@ -484,7 +489,7 @@ public class RequestResource extends AbstractRequestResource {
     SingularityRequest oldRequest = oldRequestWithState.getRequest();
     SingularityRequest newRequest = oldRequest.toBuilder().setInstances(scaleRequest.getInstances()).build();
 
-    submitRequest(newRequest, oldRequestWithState.getState(), scaleRequest.getSkipHealthchecks(), scaleRequest.getMessage());
+    submitRequest(newRequest, Optional.of(oldRequestWithState), scaleRequest.getSkipHealthchecks(), scaleRequest.getMessage());
 
     if (scaleRequest.getDurationMillis().isPresent()) {
       requestManager.saveExpiringObject(new SingularityExpiringScale(requestId, JavaUtils.getUserEmail(user),
@@ -559,7 +564,7 @@ public class RequestResource extends AbstractRequestResource {
     SingularityRequest oldRequest = oldRequestWithState.getRequest();
     SingularityRequest newRequest = oldRequest.toBuilder().setSkipHealthchecks(skipHealthchecksRequest.getSkipHealthchecks()).build();
 
-    submitRequest(newRequest, oldRequestWithState.getState(), Optional.<Boolean> absent(), skipHealthchecksRequest.getMessage());
+    submitRequest(newRequest, Optional.of(oldRequestWithState), Optional.<Boolean> absent(), skipHealthchecksRequest.getMessage());
 
     if (skipHealthchecksRequest.getDurationMillis().isPresent()) {
       requestManager.saveExpiringObject(new SingularityExpiringSkipHealthchecks(requestId, JavaUtils.getUserEmail(user),
