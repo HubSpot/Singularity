@@ -60,8 +60,8 @@ class Request extends Model
             contentType: 'application/json'
             type: 'POST'
             data: JSON.stringify(
-              message: ''
-              actionId: null,
+              message: null
+              actionId: null
               skipHealthchecks: false
             )
 
