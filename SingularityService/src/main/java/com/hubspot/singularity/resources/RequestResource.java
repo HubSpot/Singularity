@@ -204,7 +204,6 @@ public class RequestResource extends AbstractRequestResource {
   })
   public SingularityPendingRequestParent scheduleImmediately(@ApiParam("The request ID to run") @PathParam("requestId") String requestId,
       @ApiParam("Run ID to associate with this task. If not specified, one will be generated") @QueryParam("runId") Optional<String> runId,
-      @ApiParam("Additional command line arguments to append to the task") List<String> commandLineArgs,
       Optional<SingularityRunNowRequest> runNowRequest) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
@@ -225,14 +224,13 @@ public class RequestResource extends AbstractRequestResource {
 
     Optional<String> message = Optional.absent();
     Optional<Boolean> skipHealthchecks = Optional.absent();
+    Optional<List<String>> commandLineArgs = Optional.absent();
 
     if (runNowRequest.isPresent()) {
       message = runNowRequest.get().getMessage();
       runId = runNowRequest.get().getRunId();
       skipHealthchecks = runNowRequest.get().getSkipHealthchecks();
-      if (runNowRequest.get().getCommandLineArgs().isPresent()) {
-        commandLineArgs = runNowRequest.get().getCommandLineArgs().get();
-      }
+      commandLineArgs = runNowRequest.get().getCommandLineArgs();
     }
 
     if (!runId.isPresent()) {

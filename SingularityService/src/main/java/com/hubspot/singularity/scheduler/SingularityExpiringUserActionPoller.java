@@ -1,6 +1,5 @@
 package com.hubspot.singularity.scheduler;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -146,7 +145,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
       }
 
       requestManager.addToPendingQueue(new SingularityPendingRequest(expiringObject.getRequestId(), expiringObject.getDeployId(), System.currentTimeMillis(), expiringObject.getUser(),
-          PendingType.CANCEL_BOUNCE, Collections.<String> emptyList(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.of(message), Optional.of(expiringObject.getActionId())));
+          PendingType.CANCEL_BOUNCE, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.of(message), Optional.of(expiringObject.getActionId())));
     }
 
   }

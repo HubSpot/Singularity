@@ -9,12 +9,11 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.hubspot.mesos.JavaUtils;
 
 public class SingularityPendingTask {
 
   private final SingularityPendingTaskId pendingTaskId;
-  private final List<String> cmdLineArgsList;
+  private final Optional<List<String>> cmdLineArgsList;
   private final Optional<String> user;
   private final Optional<String> runId;
   private final Optional<Boolean> skipHealthchecks;
@@ -42,11 +41,11 @@ public class SingularityPendingTask {
   }
 
   @JsonCreator
-  public SingularityPendingTask(@JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId, @JsonProperty("cmdLineArgsList") List<String> cmdLineArgsList,
+  public SingularityPendingTask(@JsonProperty("pendingTaskId") SingularityPendingTaskId pendingTaskId, @JsonProperty("cmdLineArgsList") Optional<List<String>> cmdLineArgsList,
       @JsonProperty("user") Optional<String> user, @JsonProperty("runId") Optional<String> runId, @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks) {
     this.pendingTaskId = pendingTaskId;
     this.user = user;
-    this.cmdLineArgsList = JavaUtils.nonNullImmutable(cmdLineArgsList);
+    this.cmdLineArgsList = cmdLineArgsList;
     this.runId = runId;
     this.skipHealthchecks = skipHealthchecks;
   }
@@ -79,7 +78,7 @@ public class SingularityPendingTask {
     return pendingTaskId;
   }
 
-  public List<String> getCmdLineArgsList() {
+  public Optional<List<String>> getCmdLineArgsList() {
     return cmdLineArgsList;
   }
 
