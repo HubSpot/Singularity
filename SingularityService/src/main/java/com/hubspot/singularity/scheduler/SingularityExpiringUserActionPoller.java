@@ -139,7 +139,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
 
       Optional<SingularityPendingRequest> pendingRequest = requestManager.getPendingRequest(expiringObject.getRequestId(), expiringObject.getDeployId());
 
-      if (pendingRequest.isPresent() && pendingRequest.get().getActionId().isPresent() && pendingRequest.get().getActionId().equals(expiringObject.getActionId())) {
+      if (pendingRequest.isPresent() && pendingRequest.get().getActionId().isPresent() && pendingRequest.get().getActionId().get().equals(expiringObject.getActionId())) {
         LOG.info("Discarding pending request for {} ({}) because of {}", expiringObject.getRequestId(), pendingRequest.get(), expiringObject);
 
         requestManager.deletePendingRequest(pendingRequest.get());
