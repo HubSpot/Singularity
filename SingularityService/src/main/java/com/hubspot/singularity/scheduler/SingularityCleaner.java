@@ -140,13 +140,16 @@ public class SingularityCleaner {
 
     // For an incremental bounce, shut down old tasks as new ones are started
     final SingularityDeployKey key = SingularityDeployKey.fromTaskId(taskCleanup.getTaskId());
-    if (taskCleanup.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE && matchingTasks.size() + incrementalBounceCleaningTasks.count(key) < request.getInstancesSafe()) {
-      return false;
-    }
-
-    if (taskCleanup.getCleanupType() != TaskCleanupType.INCREMENTAL_BOUNCE && matchingTasks.size() < request.getInstancesSafe()) {
-      LOG.trace("Not killing a task {} yet, only {} matching out of a required {}", taskCleanup, matchingTasks.size(), request.getInstancesSafe());
-      return false;
+    if (taskCleanup.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
+      if (matchingTasks.size() + incrementalBounceCleaningTasks.count(key) < request.getInstancesSafe()) {
+        LOG.trace("Not killing a task {} yet, only {} matching out of a required {}", taskCleanup, matchingTasks.size(), request.getInstancesSafe() - incrementalBounceCleaningTasks.count(key));
+        return false;
+      }
+    } else {
+      if (matchingTasks.size() < request.getInstancesSafe()) {
+        LOG.trace("Not killing a task {} yet, only {} matching out of a required {}", taskCleanup, matchingTasks.size(), request.getInstancesSafe());
+        return false;
+      }
     }
 
     final Optional<SingularityDeploy> deploy = deployManager.getDeploy(requestId, activeDeployId);
