@@ -121,6 +121,14 @@ class Request extends Model
           @unset('expiringPause')
           callback()
 
+    makeSkipHealthchecksPermanent: (callback) =>
+        $.ajax(
+          url: "#{ @url() }/skipHealthchecks?user=#{ app.getUsername() }"
+          type: "DELETE"
+        ).then () =>
+          @unset('expiringSkipHealthchecks')
+          callback()
+
     cancelBounce: (callback) =>
         $.ajax(
           url: "#{ @url() }/bounce?user=#{ app.getUsername() }"

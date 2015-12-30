@@ -33,10 +33,12 @@ class RequestView extends View
 
             'click [data-action="makeScalePermanent"]': 'makeScalePermanent'
             'click [data-action="makePausePermanent"]': 'makePausePermanent'
+            'click [data-action="makeSkipHealthchecksPermanent"]': 'makeSkipHealthchecksPermanent'
             'click [data-action="cancelBounce"]': 'cancelBounce'
 
             'click [data-action="revertPause"]': 'revertPause'
             'click [data-action="revertScale"]': 'revertScale'
+            'click [data-action="revertSkipHealthchecks"]': 'revertSkipHealthchecks'
 
     initialize: ({@requestId}) ->
 
@@ -142,6 +144,10 @@ class RequestView extends View
         @model.makePausePermanent =>
             @trigger 'refreshrequest'
 
+    makeSkipHealthchecksPermanent: (e) =>
+        @model.makeSkipHealthchecksPermanent =>
+            @trigger 'refreshrequest'
+
     cancelBounce: (e) =>
         @model.cancelBounce =>
             @trigger 'refreshrequest'
@@ -154,6 +160,14 @@ class RequestView extends View
         @model.scale
             instances: $(e.target).attr('data-revert-param')
         @makeScalePermanent()
+
+    revertSkipHealthchecks: (e) =>
+        skipHealthchecks = $(e.target).attr('data-revert-param')
+        if skipHealthchecks == 'true'
+            @model.disableHealthchecks()
+        else
+            @model.enableHealthchecks()
+        @makeSkipHealthchecksPermanent()
 
     runTask: (e) =>
         id = $(e.target).parents('tr').data 'id'
