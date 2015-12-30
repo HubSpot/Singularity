@@ -57,7 +57,13 @@ class Request extends Model
     unpause: =>
         $.ajax
             url:  "#{ @url() }/unpause?user=#{ app.getUsername() }"
+            contentType: 'application/json'
             type: 'POST'
+            data: JSON.stringify(
+              message: ''
+              actionId: null,
+              skipHealthchecks: false
+            )
 
     pause: (killTasks, duration) =>
         data =

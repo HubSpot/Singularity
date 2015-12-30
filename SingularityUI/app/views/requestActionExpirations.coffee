@@ -15,27 +15,27 @@ class requestActionExpirations extends View
     renderData: =>
         expirations = []
         request = @model.toJSON()
-        if request.expiringScale and (request.expiringScale.startMillis + request.expiringScale.durationMillis) > new Date().getTime()
+        if request.expiringScale and (request.expiringScale.startMillis + request.expiringScale.expiringAPIRequestObject.durationMillis) > new Date().getTime()
             expirations.push
                 action: 'Scale'
-                endMillis: request.expiringScale.startMillis + request.expiringScale.durationMillis
+                endMillis: request.expiringScale.startMillis + request.expiringScale.expiringAPIRequestObject.durationMillis
                 canRevert: true
                 cancelText: 'Make Permanent'
                 cancelAction: "makeScalePermanent"
                 revertText: "Revert to #{request.expiringScale.revertToInstances} #{if request.expiringScale.revertToInstances is 1 then 'instance' else 'instances'}"
                 revertAction: 'revertScale'
                 revertParam: request.expiringScale.revertToInstances
-        if request.expiringBounce and (request.expiringBounce.startMillis + request.expiringBounce.durationMillis) > new Date().getTime()
+        if request.expiringBounce and (request.expiringBounce.startMillis + request.expiringBounce.expiringAPIRequestObject.durationMillis) > new Date().getTime()
             expirations.push
                 action: 'Bounce'
-                endMillis: request.expiringBounce.startMillis + request.expiringBounce.durationMillis
+                endMillis: request.expiringBounce.startMillis + request.expiringBounce.expiringAPIRequestObject.durationMillis
                 canRevert: false
                 cancelText: 'Cancel'
                 cancelAction: 'cancelBounce'
-        if request.expiringPause and (request.expiringPause.startMillis + request.expiringPause.durationMillis) > new Date().getTime()
+        if request.expiringPause and (request.expiringPause.startMillis + request.expiringPause.expiringAPIRequestObject.durationMillis) > new Date().getTime()
             expirations.push
                 action: 'Pause'
-                endMillis: request.expiringPause.startMillis + request.expiringPause.durationMillis
+                endMillis: request.expiringPause.startMillis + request.expiringPause.expiringAPIRequestObject.durationMillis
                 canRevert: true
                 cancelText: 'Make Permanent'
                 cancelAction: 'makePausePermanent'
