@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -259,6 +260,10 @@ public class SingularityClient {
   }
 
   private void addQueryParams(HttpRequest.Builder requestBuilder, Map<String, Object> queryParams) {
+    if (queryParams == null) {
+      return;
+    }
+
     for (Entry<String, Object> queryParamEntry : queryParams.entrySet()) {
       if (queryParamEntry.getValue() instanceof String) {
         requestBuilder.setQueryParam(queryParamEntry.getKey()).to((String) queryParamEntry.getValue());
@@ -317,8 +322,12 @@ public class SingularityClient {
   }
 
   private <T> Optional<T> post(String uri, String type, Optional<?> body, Optional<String> user, Optional<Class<T>> clazz) {
+    return postWithParams(uri, type, body, Collections.<String, Object>emptyMap(), user, clazz);
+  }
+
+  private <T> Optional<T> postWithParams(String uri, String type, Optional<?> body, Map<String, Object> queryParams, Optional<String> user, Optional<Class<T>> clazz) {
     try {
-      HttpResponse response = post(uri, type, body, user);
+      HttpResponse response = postWithParams(uri, type, body, queryParams, user);
 
       if (clazz.isPresent()) {
         return Optional.of(response.getAs(clazz.get()));
@@ -331,6 +340,10 @@ public class SingularityClient {
   }
 
   private HttpResponse post(String uri, String type, Optional<?> body, Optional<String> user) {
+    return postWithParams(uri, type, body, Collections.<String, Object>emptyMap(), user);
+  }
+
+  private HttpResponse postWithParams(String uri, String type, Optional<?> body, Map<String, Object> queryParams, Optional<String> user) {
     LOG.info("Posting {} to {}", type, uri);
 
     final long start = System.currentTimeMillis();
@@ -340,6 +353,8 @@ public class SingularityClient {
     if (user.isPresent()) {
       request.setQueryParam("user").to(user.get());
     }
+
+    addQueryParams(request, queryParams);
 
     if (body.isPresent()) {
       request.setBody(body.get());
@@ -439,9 +454,17 @@ public class SingularityClient {
   }
 
   public void runSingularityRequest(String requestId, Optional<String> user, Optional<List<String>> additionalArgs) {
+    runSingularityRequest(requestId, user, additionalArgs, Optional.<String>absent());
+  }
+
+  public void runSingularityRequest(String requestId, Optional<String> user, Optional<List<String>> additionalArgs, Optional<String> runId) {
     final String requestUri = String.format(REQUEST_RUN_FORMAT, getHost(), contextPath, requestId);
 
-    post(requestUri, String.format("run of request %s", requestId), additionalArgs, user);
+    Map<String, Object> queryParams = Collections.<String, Object>emptyMap();
+    if (runId.isPresent()) {
+      queryParams = ImmutableMap.of("runId", (Object)runId.get());
+    }
+    postWithParams(requestUri, String.format("run of request %s", requestId), additionalArgs, queryParams, user);
   }
 
   public void bounceSingularityRequest(String requestId, Optional<String> user) {
