@@ -121,6 +121,14 @@ class Request extends Model
           @unset('expiringPause')
           callback()
 
+    makeSkipHealthchecksPermanent: (callback) =>
+        $.ajax(
+          url: "#{ @url() }/skipHealthchecks?user=#{ app.getUsername() }"
+          type: "DELETE"
+        ).then () =>
+          @unset('expiringSkipHealthchecks')
+          callback()
+
     cancelBounce: (callback) =>
         $.ajax(
           url: "#{ @url() }/bounce?user=#{ app.getUsername() }"
@@ -145,6 +153,33 @@ class Request extends Model
         $.ajax
             url: "#{ @url() }/exit-cooldown?user=#{ app.getUsername() }"
             type: "POST"
+            contentType: 'application/json'
+
+    disableHealthchecks: (message, duration) =>
+        data =
+            message: message
+            skipHealthchecks: true
+        duration = @_parseDuration(duration)
+        if duration
+            data.durationMillis = duration
+        $.ajax
+            type: "PUT"
+            url:  "#{ @url() }/skipHealthchecks?user=#{ app.getUsername() }"
+            contentType: 'application/json'
+            data: JSON.stringify data
+
+    enableHealthchecks: (message, duration) =>
+        data =
+            message: message
+            skipHealthchecks: false
+        duration = @_parseDuration(duration)
+        if duration
+            data.durationMillis = duration
+        $.ajax
+            type: "PUT"
+            url:  "#{ @url() }/skipHealthchecks?user=#{ app.getUsername() }"
+            contentType: 'application/json'
+            data: JSON.stringify data
 
     destroy: =>
         $.ajax
@@ -224,6 +259,43 @@ class Request extends Model
                         else
                             callback()
 
+    promptDisableHealthchecks: (callback) =>
+        vex.dialog.open
+            message: "Turn <strong>off</strong> healthchecks for this request."
+            input: """
+                <input name="message" id="disable-healthchecks-message" type="text" placeholder="Message (optional)" />
+                <input name="duration" id="disable-healthchecks-expiration" type="text" placeholder="Expiration (optional)" />
+                <span class="help">If an expiration duration is specified, this action will be reverted afterwards. Accepts any english time duration. (Days, Hr, Min...)</span>
+            """
+            buttons: [
+                $.extend _.clone(vex.dialog.buttons.YES), text: 'Disable Healthchecks'
+                vex.dialog.buttons.NO
+            ]
+            callback: (data) =>
+                return unless data
+                duration = $('.vex #disable-healthchecks-expiration').val()
+                message = $('.vex #disable-healthchecks-message').val()
+                if !duration or (duration and @_validateDuration(duration, @promptDisableHealthchecks))
+                    @disableHealthchecks(message, duration).done callback
+
+    promptEnableHealthchecks: (callback) =>
+        vex.dialog.open
+            message: "Turn <strong>on</strong> healthchecks for this request."
+            input: """
+                <input name="message" id="disable-healthchecks-message" type="text" placeholder="Message (optional)" />
+                <input name="duration" id="disable-healthchecks-expiration" type="text" placeholder="Expiration (optional)" />
+                <span class="help">If an expiration duration is specified, this action will be reverted afterwards. Accepts any english time duration. (Days, Hr, Min...)</span>
+            """
+            buttons: [
+                $.extend _.clone(vex.dialog.buttons.YES), text: 'Enable Healthchecks'
+                vex.dialog.buttons.NO
+            ]
+            callback: (data) =>
+                return unless data
+                duration = $('.vex #disable-healthchecks-expiration').val()
+                message = $('.vex #disable-healthchecks-message').val()
+                if !duration or (duration and @_validateDuration(duration, @promptEnableHealthchecks))
+                    @enableHealthchecks(message, duration).done callback
 
     promptUnpause: (callback) =>
         vex.dialog.confirm

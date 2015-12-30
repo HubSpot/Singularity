@@ -24,16 +24,21 @@ class RequestView extends View
             'click [data-action="exit-cooldown"]': 'exitCooldownRequest'
             'click [data-action="starToggle"]': 'toggleStar'
 
+            'click [data-action="disableHealthchecks"]': 'disableHealthchecks'
+            'click [data-action="enableHealthchecks"]': 'enableHealthchecks'
+
             'click [data-action="run-now"]': 'runTask'
 
             'click [data-action="expand-deploy-history"]': 'flashDeployHistory'
 
             'click [data-action="makeScalePermanent"]': 'makeScalePermanent'
             'click [data-action="makePausePermanent"]': 'makePausePermanent'
+            'click [data-action="makeSkipHealthchecksPermanent"]': 'makeSkipHealthchecksPermanent'
             'click [data-action="cancelBounce"]': 'cancelBounce'
 
             'click [data-action="revertPause"]': 'revertPause'
             'click [data-action="revertScale"]': 'revertScale'
+            'click [data-action="revertSkipHealthchecks"]': 'revertSkipHealthchecks'
 
     initialize: ({@requestId}) ->
 
@@ -119,6 +124,14 @@ class RequestView extends View
         @model.promptBounce =>
             @trigger 'refreshrequest'
 
+    disableHealthchecks: (e) =>
+        @model.promptDisableHealthchecks =>
+            @trigger 'refreshrequest'
+
+    enableHealthchecks: (e) =>
+        @model.promptEnableHealthchecks =>
+            @trigger 'refreshrequest'
+
     exitCooldownRequest: (e) =>
         @model.promptExitCooldown =>
             @trigger 'refreshrequest'
@@ -129,6 +142,10 @@ class RequestView extends View
 
     makePausePermanent: (e) =>
         @model.makePausePermanent =>
+            @trigger 'refreshrequest'
+
+    makeSkipHealthchecksPermanent: (e) =>
+        @model.makeSkipHealthchecksPermanent =>
             @trigger 'refreshrequest'
 
     cancelBounce: (e) =>
@@ -143,6 +160,14 @@ class RequestView extends View
         @model.scale
             instances: $(e.target).attr('data-revert-param')
         @makeScalePermanent()
+
+    revertSkipHealthchecks: (e) =>
+        skipHealthchecks = $(e.target).attr('data-revert-param')
+        if skipHealthchecks == 'true'
+            @model.disableHealthchecks()
+        else
+            @model.enableHealthchecks()
+        @makeSkipHealthchecksPermanent()
 
     runTask: (e) =>
         id = $(e.target).parents('tr').data 'id'

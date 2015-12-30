@@ -50,6 +50,7 @@ public class SingularityRequestParent {
     this.expiringSkipHealthchecks = expiringSkipHealthchecks;
   }
 
+
   public RequestState getState() {
     return state;
   }

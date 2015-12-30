@@ -41,6 +41,16 @@ class requestActionExpirations extends View
                 cancelAction: 'makePausePermanent'
                 revertText: "Unpause"
                 revertAction: 'revertPause'
+        if request.expiringSkipHealthchecks and (request.expiringSkipHealthchecks.startMillis + request.expiringSkipHealthchecks.expiringAPIRequestObject.durationMillis) > new Date().getTime()
+            expirations.push
+                action: if request.expiringSkipHealthchecks.expiringAPIRequestObject.skipHealthchecks then 'Disable Healthchecks' else 'Enable Healthchecks'
+                endMillis: request.expiringSkipHealthchecks.startMillis + request.expiringSkipHealthchecks.expiringAPIRequestObject.durationMillis
+                canRevert: true
+                cancelText: 'Make Permanent'
+                cancelAction: 'makeSkipHealthchecksPermanent'
+                revertText: if request.expiringSkipHealthchecks.expiringAPIRequestObject.skipHealthchecks then 'Enable Healthchecks' else 'Disable Healthchecks'
+                revertAction: 'revertSkipHealthchecks'
+                revertParam: !request.expiringSkipHealthchecks.expiringAPIRequestObject.skipHealthchecks
 
         request: request
         data: expirations

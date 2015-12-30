@@ -78,6 +78,18 @@
                 </a>
             {{/unless}}
 
+            {{#if canDisableHealthchecks}}
+                {{#if data.request.skipHealthchecks}}
+                  <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="enableHealthchecks">
+                      Enable Healthchecks
+                  </a>
+                {{else}}
+                  <a class="btn btn-warning" data-request-id="{{ data.id }}" data-action="disableHealthchecks">
+                      Disable Healthchecks
+                  </a>
+                {{/if}}
+            {{/if}}
+
             {{#unless data.deleted}}
                 <a class="btn btn-danger" data-request-id="{{ data.id }}" data-action="remove">
                     Remove
