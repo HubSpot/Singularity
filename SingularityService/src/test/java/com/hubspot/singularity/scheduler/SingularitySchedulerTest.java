@@ -70,7 +70,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
   private SingularityPendingTask pendingTask(String requestId, String deployId, PendingType pendingType) {
     return new SingularityPendingTask(new SingularityPendingTaskId(requestId, deployId, System.currentTimeMillis(), 1, pendingType, System.currentTimeMillis()),
-        Collections.<String> emptyList(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent());
+        Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent());
   }
 
   @Test
@@ -151,16 +151,16 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initSecondDeploy();
 
     SingularityPendingTaskId taskIdOne = new SingularityPendingTaskId(requestId, firstDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(3), 1, PendingType.IMMEDIATE, System.currentTimeMillis());
-    SingularityPendingTask taskOne = new SingularityPendingTask(taskIdOne, Collections.<String> emptyList(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent());
+    SingularityPendingTask taskOne = new SingularityPendingTask(taskIdOne, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent());
 
     SingularityPendingTaskId taskIdTwo = new SingularityPendingTaskId(requestId, firstDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1), 2, PendingType.IMMEDIATE, System.currentTimeMillis());
-    SingularityPendingTask taskTwo = new SingularityPendingTask(taskIdTwo, Collections.<String> emptyList(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent());
+    SingularityPendingTask taskTwo = new SingularityPendingTask(taskIdTwo, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent());
 
     SingularityPendingTaskId taskIdThree = new SingularityPendingTaskId(requestId, secondDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(3), 1, PendingType.IMMEDIATE, System.currentTimeMillis());
-    SingularityPendingTask taskThree = new SingularityPendingTask(taskIdThree, Collections.<String> emptyList(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent());
+    SingularityPendingTask taskThree = new SingularityPendingTask(taskIdThree, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent());
 
     SingularityPendingTaskId taskIdFour = new SingularityPendingTaskId(requestId + "hi", firstDeployId, System.currentTimeMillis() + TimeUnit.DAYS.toMillis(3), 5, PendingType.IMMEDIATE, System.currentTimeMillis());
-    SingularityPendingTask taskFour = new SingularityPendingTask(taskIdFour,Collections.<String> emptyList(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent());
+    SingularityPendingTask taskFour = new SingularityPendingTask(taskIdFour,Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent());
 
     taskManager.savePendingTask(taskOne);
     taskManager.savePendingTask(taskTwo);
@@ -398,7 +398,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
 
-    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList(), Optional.<SingularityRunNowRequest> absent());
+    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Optional.<SingularityRunNowRequest> absent());
 
     resourceOffers();
 
@@ -410,7 +410,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(0, taskManager.getActiveTaskIds().size());
     Assert.assertEquals(0, taskManager.getPendingTaskIds().size());
 
-    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList(), Optional.<SingularityRunNowRequest> absent());
+    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Optional.<SingularityRunNowRequest> absent());
 
     resourceOffers();
 
@@ -429,7 +429,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(bldr.build());
     deploy("d2");
 
-    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList(), Optional.<SingularityRunNowRequest> absent());
+    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Optional.<SingularityRunNowRequest> absent());
 
     validateTaskDoesntMoveDuringDecommission();
   }
@@ -1639,21 +1639,21 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     deploy("d2");
     deployChecker.checkDeploys();
 
-    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList(), Optional.<SingularityRunNowRequest> absent());
+    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Optional.<SingularityRunNowRequest> absent());
 
     resourceOffers();
 
-    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList(), Optional.<SingularityRunNowRequest> absent());
+    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Optional.<SingularityRunNowRequest> absent());
 
     resourceOffers();
 
     Assert.assertEquals(2, taskManager.getActiveTaskIds().size());
 
-    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList(), Optional.<SingularityRunNowRequest> absent());
+    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Optional.<SingularityRunNowRequest> absent());
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
-    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList(), Optional.<SingularityRunNowRequest> absent());
+    requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Optional.<SingularityRunNowRequest> absent());
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
 

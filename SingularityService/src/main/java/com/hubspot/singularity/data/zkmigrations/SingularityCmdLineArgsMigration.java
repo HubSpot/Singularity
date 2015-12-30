@@ -150,8 +150,8 @@ public class SingularityCmdLineArgsMigration extends ZkDataMigration {
     }
   }
 
-  private List<String> getCmdLineArgs(Optional<String> cmdLineArgs) {
-    return cmdLineArgs.isPresent() ? Collections.singletonList(cmdLineArgs.get()) : Collections.<String> emptyList();
+  private Optional<List<String>> getCmdLineArgs(Optional<String> cmdLineArgs) {
+    return cmdLineArgs.isPresent() ? Optional.of(Collections.singletonList(cmdLineArgs.get())) : Optional.<List<String>> absent();
   }
 
   private Optional<String> getCmdLineArgs(SingularityPendingTaskId pendingTaskId) throws Exception {

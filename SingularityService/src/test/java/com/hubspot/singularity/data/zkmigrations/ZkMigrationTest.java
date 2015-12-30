@@ -86,9 +86,9 @@ public class ZkMigrationTest extends SingularityTestBaseNoDb {
 
     migrationRunner.checkMigrations();
 
-    Assert.assertTrue(taskManager.getPendingTask(pt1).get().getCmdLineArgsList().isEmpty());
-    Assert.assertTrue(taskManager.getPendingTask(pt2).get().getCmdLineArgsList().get(0).equals("cmd line args"));
-    Assert.assertTrue(taskManager.getPendingTask(pt2).get().getCmdLineArgsList().size() == 1);
+    Assert.assertTrue(!taskManager.getPendingTask(pt1).get().getCmdLineArgsList().isPresent());
+    Assert.assertTrue(taskManager.getPendingTask(pt2).get().getCmdLineArgsList().get().get(0).equals("cmd line args"));
+    Assert.assertTrue(taskManager.getPendingTask(pt2).get().getCmdLineArgsList().get().size() == 1);
 
     Assert.assertTrue(taskManager.getPendingTaskIds().contains(pt1));
     Assert.assertTrue(taskManager.getPendingTaskIds().contains(pt2));
@@ -100,14 +100,14 @@ public class ZkMigrationTest extends SingularityTestBaseNoDb {
         Assert.assertEquals(r.getDeployId(), p1.getDeployId());
         Assert.assertEquals(r.getTimestamp(), p1.getTimestamp());
         Assert.assertEquals(r.getPendingType(), p1.getPendingType());
-        Assert.assertTrue(r.getCmdLineArgsList().isEmpty());
+        Assert.assertTrue(!r.getCmdLineArgsList().isPresent());
         Assert.assertEquals(r.getUser(), p1.getUser());
       } else {
         Assert.assertEquals(r.getDeployId(), p2.getDeployId());
         Assert.assertEquals(r.getTimestamp(), p2.getTimestamp());
         Assert.assertEquals(r.getPendingType(), p2.getPendingType());
-        Assert.assertTrue(r.getCmdLineArgsList().size() == 1);
-        Assert.assertTrue(r.getCmdLineArgsList().get(0).equals("cmd line args"));
+        Assert.assertTrue(r.getCmdLineArgsList().get().size() == 1);
+        Assert.assertTrue(r.getCmdLineArgsList().get().get(0).equals("cmd line args"));
         Assert.assertEquals(r.getUser(), p2.getUser());
       }
     }
