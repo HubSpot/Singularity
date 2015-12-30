@@ -14,7 +14,7 @@ class Requests extends Collection
         active: [ 'request', 'requestDeployState' ]
 
     initialize: (models, { @state }) ->
-        @state = if not @state? or @state is 'all' then '' else @state
+        @state = if not @state? or @state in ['all', 'activeDeploy', 'noDeploy'] then '' else @state
         @state = if @state is 'cleaning' then 'cleanup' else @state
 
     url: ->

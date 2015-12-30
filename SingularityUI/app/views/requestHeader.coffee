@@ -21,8 +21,16 @@ class requestHeaderSubview extends View
             cleanupType: 'BOUNCING'
             requestId: @model.get('id')
 
+        deployingInstanceCount = 0
+
+        if !!@model.get('pendingDeploy')
+            console.log @activeTasks
+            deployingInstanceCount = @activeTasks.where({deployId: @model.get('pendingDeploy').id, lastTaskState: 'TASK_RUNNING'}).length
+
         isBouncing: bounces?.length > 0 and @taskCleanups.synced and @activeTasks.synced
         runningInstanceCount: @activeTasks.where({lastTaskState: 'TASK_RUNNING'}).length
+        deployingInstanceCount: deployingInstanceCount
+        isDeploying: !!@model.get('pendingDeploy') and @model.synced and @activeTasks.synced
         config: config
         data:      @model.toJSON()
         synced:    @model.synced
