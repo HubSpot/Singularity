@@ -1,7 +1,6 @@
 package com.hubspot.singularity.oomkiller.config;
 
 import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -79,11 +78,11 @@ public class SingularityOOMKillerConfiguration extends BaseRunnerConfiguration {
   @Override
   public String toString() {
     return "SingularityOOMKillerConfiguration[" +
-            "requestKillThresholdRatio=" + requestKillThresholdRatio +
-            ", killProcessDirectlyThresholdRatio=" + killProcessDirectlyThresholdRatio +
-            ", checkForOOMEveryMillis=" + checkForOOMEveryMillis +
-            ", slaveHostname='" + slaveHostname + '\'' +
-            ", cgroupProcsPathFormat='" + cgroupProcsPathFormat + '\'' +
-            ']';
+        "requestKillThresholdRatio=" + requestKillThresholdRatio +
+        ", killProcessDirectlyThresholdRatio=" + killProcessDirectlyThresholdRatio +
+        ", checkForOOMEveryMillis=" + checkForOOMEveryMillis +
+        ", slaveHostname='" + slaveHostname + '\'' +
+        ", cgroupProcsPathFormat='" + cgroupProcsPathFormat + '\'' +
+        ']';
   }
 }
