@@ -24,6 +24,9 @@ class RequestView extends View
             'click [data-action="exit-cooldown"]': 'exitCooldownRequest'
             'click [data-action="starToggle"]': 'toggleStar'
 
+            'click [data-action="disableHealthchecks"]': 'disableHealthchecks'
+            'click [data-action="enableHealthchecks"]': 'enableHealthchecks'
+
             'click [data-action="run-now"]': 'runTask'
 
             'click [data-action="expand-deploy-history"]': 'flashDeployHistory'
@@ -117,6 +120,14 @@ class RequestView extends View
 
     bounceRequest: (e) =>
         @model.promptBounce =>
+            @trigger 'refreshrequest'
+
+    disableHealthchecks: (e) =>
+        @model.promptDisableHealthchecks =>
+            @trigger 'refreshrequest'
+
+    enableHealthchecks: (e) =>
+        @model.promptEnableHealthchecks =>
             @trigger 'refreshrequest'
 
     exitCooldownRequest: (e) =>

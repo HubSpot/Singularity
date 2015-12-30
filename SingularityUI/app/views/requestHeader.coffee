@@ -13,6 +13,7 @@ class requestHeaderSubview extends View
         @listenTo @activeTasks, 'sync', @render
 
     render: =>
+        console.log @renderData()
         return if not @model.synced
         @$el.html @template @renderData()
 
@@ -34,6 +35,7 @@ class requestHeaderSubview extends View
         config: config
         data:      @model.toJSON()
         synced:    @model.synced
+        canDisableHealthchecks: !!@model.toJSON().activeDeploy and !!@model.toJSON().activeDeploy.healthcheckUri and !@model.toJSON().paused
         pauseDisabled: !!@model.toJSON().expiringPause and (@model.toJSON().expiringPause.startMillis + @model.toJSON().expiringPause.expiringAPIRequestObject.durationMillis) > new Date().getTime()
         scaleDisabled: !!@model.toJSON().expiringScale and (@model.toJSON().expiringScale.startMillis + @model.toJSON().expiringScale.expiringAPIRequestObject.durationMillis) > new Date().getTime()
         bounceDisabled: !!@model.toJSON().expiringBounce and (@model.toJSON().expiringBounce.startMillis + @model.toJSON().expiringBounce.expiringAPIRequestObject.durationMillis) > new Date().getTime()
