@@ -1201,16 +1201,62 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
         Optional.of(new SingularityBounceRequest(Optional.of(false), Optional.<Boolean> absent(), Optional.of(1L), Optional.<String> absent(), Optional.of("msg"))));
 
     cleaner.drainCleanupQueue();
-    resourceOffers(3);
-
+    resourceOffers();
+    runLaunchedTasks();
     cleaner.drainCleanupQueue();
+    killKilledTasks();
+
+    Assert.assertTrue(taskManager.getCleanupTaskIds().isEmpty());
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
 
     Assert.assertTrue(!requestManager.getExpiringBounce(requestId).isPresent());
   }
 
-  // test that when a bounce finishes it expunges the expiring guy rather than waiting for it
-  // test that if a bounce is halfway through killing, it still expires and will eventually launch replacement tasks (get healthy)
-  // test if there are 3 new tasks that they get killed.
+  @Test
+  public void testExpiringNonIncrementalBounce() {
+    initWithTasks(3);
+
+    requestResource.bounce(requestId,
+        Optional.of(new SingularityBounceRequest(Optional.<Boolean> absent(), Optional.<Boolean> absent(), Optional.of(1L), Optional.of("aid"), Optional.<String> absent())));
+
+    Assert.assertTrue(!requestManager.getCleanupRequests().get(0).getMessage().isPresent());
+    Assert.assertEquals("aid", requestManager.getCleanupRequests().get(0).getActionId().get());
+
+    // creates cleanup tasks:
+    cleaner.drainCleanupQueue();
+
+    Assert.assertEquals(1, requestManager.getPendingRequests().size());
+    Assert.assertEquals(0, requestManager.getCleanupRequests().size());
+    Assert.assertEquals(3, taskManager.getCleanupTaskIds().size());
+
+    // should have 1 pending task and 2 launched
+
+    resourceOffersByNumTasks(2);
+
+    Assert.assertEquals(1, taskManager.getPendingTasks().size());
+    Assert.assertEquals(5, taskManager.getActiveTaskIds().size());
+    Assert.assertEquals(3, taskManager.getCleanupTaskIds().size());
+    Assert.assertEquals(0, requestManager.getPendingRequests().size());
+    Assert.assertEquals(0, requestManager.getCleanupRequests().size());
+
+    try {
+      Thread.sleep(1);
+    } catch (InterruptedException ie) {
+    }
+
+    expiringUserActionPoller.runActionOnPoll();
+
+    resourceOffers();
+    cleaner.drainCleanupQueue();
+    killKilledTasks();
+
+    Assert.assertEquals(3, taskManager.getActiveTaskIds().size());
+    Assert.assertEquals(0, taskManager.getPendingTasks().size());
+    Assert.assertEquals(0, taskManager.getCleanupTaskIds().size());
+    Assert.assertEquals(0, requestManager.getPendingRequests().size());
+    Assert.assertEquals(0, requestManager.getCleanupRequests().size());
+  }
+
   @Test
   public void testExpiringIncrementalBounce() {
     initRequest();
@@ -1241,10 +1287,11 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(actionId, taskManager.getCleanupTasks().get(0).getActionId().get());
 
     SingularityTask taskFour = startTask(firstDeploy, 4);
-    SingularityTask taskFive = launchTask(request, firstDeploy, 5, TaskState.TASK_STARTING);
-
-    statusUpdate(taskFour, TaskState.TASK_RUNNING, Optional.of(1L));
-
+    //    SingularityTask taskFive = launchTask(request, firstDeploy, 5, TaskState.TASK_STARTING);
+    //
+    //    // for now
+    //    statusUpdate(taskFive, TaskState.TASK_RUNNING, Optional.of(1L));
+    //
     cleaner.drainCleanupQueue();
 
     Assert.assertEquals(1, taskManager.getKilledTaskIdRecords().size());
@@ -1257,11 +1304,17 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     expiringUserActionPoller.runActionOnPoll();
 
     cleaner.drainCleanupQueue();
+
     resourceOffers();
 
+    killKilledTasks();
+
+    Assert.assertTrue(!requestManager.getExpiringBounce(requestId).isPresent());
+    Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
+    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
     Assert.assertTrue(taskManager.getActiveTaskIds().size() == 3);
     Assert.assertTrue(!requestManager.cleanupRequestExists(requestId));
-    Assert.assertTrue(!taskManager.getCleanupTasks().isEmpty());
+    Assert.assertTrue(taskManager.getCleanupTasks().isEmpty());
   }
 
   @Test

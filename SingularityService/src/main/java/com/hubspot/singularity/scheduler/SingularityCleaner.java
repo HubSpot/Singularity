@@ -2,7 +2,9 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -46,6 +48,7 @@ import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
+import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -378,13 +381,17 @@ public class SingularityCleaner {
       return;
     }
 
-    final Multiset<SingularityDeployKey> incrementalBounceCleaningTasks = HashMultiset.create();
+    final Multiset<SingularityDeployKey> incrementalBounceCleaningTasks = HashMultiset.create(cleanupTasks.size());
+    final Set<SingularityDeployKey> isBouncing = new HashSet<>(cleanupTasks.size());
 
     final List<SingularityTaskId> cleaningTasks = Lists.newArrayListWithCapacity(cleanupTasks.size());
     for (SingularityTaskCleanup cleanupTask : cleanupTasks) {
       cleaningTasks.add(cleanupTask.getTaskId());
       if (cleanupTask.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
         incrementalBounceCleaningTasks.add(SingularityDeployKey.fromTaskId(cleanupTask.getTaskId()));
+      }
+      if (cleanupTask.getCleanupType() == TaskCleanupType.BOUNCING || cleanupTask.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
+        isBouncing.add(SingularityDeployKey.fromTaskId(cleanupTask.getTaskId()));
       }
     }
 
@@ -404,6 +411,18 @@ public class SingularityCleaner {
         taskManager.deleteCleanupTask(cleanupTask.getTaskId().getId());
 
         killedTasks++;
+      } else if (cleanupTask.getCleanupType() == TaskCleanupType.BOUNCING || cleanupTask.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
+        isBouncing.remove(SingularityDeployKey.fromTaskId(cleanupTask.getTaskId()));
+      }
+    }
+
+    for (SingularityDeployKey bounceSucceeded : isBouncing) {
+      Optional<SingularityExpiringBounce> expiringBounce = requestManager.getExpiringBounce(bounceSucceeded.getRequestId());
+
+      if (expiringBounce.isPresent() && expiringBounce.get().getDeployId().equals(bounceSucceeded.getDeployId())) {
+        LOG.info("Bounce succeeded for {}, deleting expiring bounce {}", bounceSucceeded.getRequestId(), expiringBounce.get());
+
+        requestManager.deleteExpiringObject(SingularityExpiringBounce.class, bounceSucceeded.getRequestId());
       }
     }
 

@@ -2,6 +2,7 @@ package com.hubspot.singularity;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +37,9 @@ import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.api.SingularityDeployRequest;
+import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RackManager;
@@ -224,6 +227,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     return prepTask(request, deploy, launchTime, instanceNo, false);
   }
 
+
   protected SingularityTask prepTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo, boolean separateHosts) {
     SingularityPendingTask pendingTask = buildPendingTask(request, deploy, launchTime, instanceNo);
     SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
@@ -282,6 +286,30 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     statusUpdate(task, state, Optional.<Long>absent());
   }
 
+  protected void runLaunchedTasks() {
+    for (SingularityTaskId taskId : taskManager.getActiveTaskIds()) {
+      Collection<SingularityTaskHistoryUpdate> updates = taskManager.getTaskHistoryUpdates(taskId);
+
+      SimplifiedTaskState currentState = SingularityTaskHistoryUpdate.getCurrentState(updates);
+
+      switch (currentState) {
+        case UNKNOWN:
+        case WAITING:
+          statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_RUNNING);
+          break;
+        case DONE:
+        case RUNNING:
+          break;
+      }
+    }
+  }
+
+  protected void killKilledTasks() {
+    for (SingularityKilledTaskIdRecord killed : taskManager.getKilledTaskIdRecords()) {
+      statusUpdate(taskManager.getTask(killed.getTaskId()).get(), TaskState.TASK_KILLED);
+    }
+  }
+
   protected void initLoadBalancedRequest() {
     protectedInitRequest(true, false);
   }
@@ -316,6 +344,16 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected void initRequest() {
     protectedInitRequest(false, false);
+  }
+
+  protected void initWithTasks(int num) {
+    initRequest();
+
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(num), Optional.<Long> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<String>absent()));
+
+    initFirstDeploy();
+
+    startTasks(num);
   }
 
   protected void initFirstDeploy() {
@@ -382,12 +420,26 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     return launchTask(request, deploy, instanceNo, TaskState.TASK_RUNNING);
   }
 
+  protected void startTasks(int num) {
+    for (int i = 1; i < num + 1; i++) {
+      startTask(firstDeploy, i);
+    }
+  }
+
   protected SingularityTask startSeparatePlacementTask(SingularityDeploy deploy, int instanceNo) {
     return launchTask(request, deploy, instanceNo, TaskState.TASK_RUNNING, true);
   }
 
   protected void resourceOffers() {
     sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1"), createOffer(20, 20000, "slave2", "host2")));
+  }
+
+  protected void resourceOffersByNumTasks(int numTasks) {
+    List<Offer> offers = new ArrayList<>();
+    for (int i = 1; i <= numTasks; i++) {
+      offers.add(createOffer(1, 128, String.format("slave%s", i), String.format("host%s", i)));
+    }
+    sms.resourceOffers(driver, offers);
   }
 
   protected void resourceOffers(int numSlaves) {
