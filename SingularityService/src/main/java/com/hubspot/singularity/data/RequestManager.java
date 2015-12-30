@@ -249,8 +249,8 @@ public class RequestManager extends CuratorAsyncManager {
     return save(request, RequestState.ACTIVE, historyType, timestamp, user, message);
   }
 
-  public SingularityCreateResult update(SingularityRequest request, RequestState requestState, RequestHistoryType historyType, long timestamp, Optional<String> user) {
-    return save(request, requestState, historyType, timestamp, user);
+  public SingularityCreateResult update(SingularityRequest request, RequestState requestState, RequestHistoryType historyType, long timestamp, Optional<String> user, Optional<String> message) {
+    return save(request, requestState, historyType, timestamp, user, message);
   }
 
   public List<SingularityPendingRequest> getPendingRequests() {
