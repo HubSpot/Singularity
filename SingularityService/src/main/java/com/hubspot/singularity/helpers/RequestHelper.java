@@ -102,6 +102,10 @@ public class RequestHelper {
 
     final long now = System.currentTimeMillis();
 
+    if (requestState == RequestState.FINISHED && maybeOldRequest.isPresent() && shouldReschedule(newRequest, maybeOldRequest.get())) {
+      requestState = RequestState.ACTIVE;
+    }
+
     requestManager.save(newRequest, requestState, maybeOldRequest.isPresent() ? RequestHistoryType.UPDATED : RequestHistoryType.CREATED, now, user, message);
 
     checkReschedule(newRequest, maybeOldRequest, user, now, skipHealthchecks, message);
