@@ -60,11 +60,12 @@ else
   echo "No deploy-specific profile.d"
 fi
 
-{{#if maxOpenFiles}}
-echo "Setting max open files soft limit to {{{maxOpenFiles}}}"
-ulimit -Sn {{{maxOpenFiles}}}
-{{/if}}
-
 # execute command
-echo "Executing: {{#if shouldChangeUser}}{{{ switchUserCommand }}} {{/if}}{{{ cmd }}} >> ../{{{ logFile }}} 2>&1"
-exec {{#if shouldChangeUser}}{{{ switchUserCommand }}} {{/if}}{{{ cmd }}} >> ../{{{ logFile }}} 2>&1
+{{#if shouldChangeUser}}
+echo "Executing: sudo -E -u {{{ user }}} ({{#if maxOpenFiles}}ulimit -Sn {{{maxOpenFiles}}} && {{/if}}{{{ cmd }}}) >> ../{{{ logFile }}} 2>&1"
+exec sudo -E -u {{{ user }}} ({{#if maxOpenFiles}}ulimit -Sn {{{maxOpenFiles}}} && {{/if}}{{{ cmd }}}) >> ../{{{ logFile }}} 2>&1
+{{else}}
+echo "Executing: {{{ cmd }}} >> ../{{{ logFile }}} 2>&1"
+{{#if maxOpenFiles}}ulimit -Sn {{{maxOpenFiles}}}{{/if}}
+exec {{{ cmd }}} >> ../{{{ logFile }}} 2>&1
+{{/if}}
