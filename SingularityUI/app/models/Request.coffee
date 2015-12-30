@@ -152,6 +152,7 @@ class Request extends Model
             url: "#{ @url() }/exit-cooldown?user=#{ app.getUsername() }"
             type: "POST"
             contentType: 'application/json'
+            data: '{}'
 
     disableHealthchecks: (message, duration) =>
         data =
