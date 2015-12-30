@@ -48,10 +48,10 @@ import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.AbstractMachineManager;
 import com.hubspot.singularity.data.DeployManager;
@@ -103,7 +103,7 @@ public class SingularityScheduler {
     LOG.trace("Scheduling a cleanup task for {} due to decomissioning {}", task.getTaskId(), decommissioningObject);
 
     taskManager.createTaskCleanup(new SingularityTaskCleanup(decommissioningObject.getCurrentState().getUser(), TaskCleanupType.DECOMISSIONING, System.currentTimeMillis(),
-        task.getTaskId(), Optional.of(String.format("%s %s is decomissioning", decommissioningObject.getTypeName(), decommissioningObject.getName()))));
+        task.getTaskId(), Optional.of(String.format("%s %s is decomissioning", decommissioningObject.getTypeName(), decommissioningObject.getName())), Optional.<String> absent()));
   }
 
   private <T extends SingularityMachineAbstraction<T>> Map<T, MachineState> getDefaultMap(List<T> objects) {
@@ -173,7 +173,7 @@ public class SingularityScheduler {
       Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
 
       if (maybeDeployId.isPresent()) {
-        requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), start, requestIdAndUser.getValue(), PendingType.DECOMISSIONED_SLAVE_OR_RACK, Optional.<Boolean> absent()));
+        requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), start, requestIdAndUser.getValue(), PendingType.DECOMISSIONED_SLAVE_OR_RACK, Optional.<Boolean> absent(), Optional.<String> absent()));
       } else {
         LOG.warn("Not rescheduling a request ({}) because of no active deploy", requestId);
       }
@@ -250,7 +250,7 @@ public class SingularityScheduler {
     }
 
     if (cooldown.hasCooldownExpired(requestWithState.getRequest(), deployStatistics, Optional.<Integer> absent(), Optional.<Long> absent())) {
-      requestManager.exitCooldown(requestWithState.getRequest(), System.currentTimeMillis(), Optional.<String>absent());
+      requestManager.exitCooldown(requestWithState.getRequest(), System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
       return RequestState.ACTIVE;
     }
 
@@ -383,7 +383,7 @@ public class SingularityScheduler {
 
         LOG.info("Cleaning up task {} due to new request {} - scaling down to {} instances", toCleanup.getId(), request.getId(), request.getInstancesSafe());
 
-        taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.SCALING_DOWN, now, toCleanup, Optional.<String> absent()));
+        taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.SCALING_DOWN, now, toCleanup, Optional.<String> absent(), Optional.<String> absent()));
       }
     }
 
@@ -457,11 +457,11 @@ public class SingularityScheduler {
       // TODO send not cooldown anymore email
       LOG.info("Request {} succeeded a task, removing from cooldown", request.getId());
       requestState = RequestState.ACTIVE;
-      requestManager.exitCooldown(request, System.currentTimeMillis(), Optional.<String>absent());
+      requestManager.exitCooldown(request, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
     }
 
     SingularityPendingRequest pendingRequest = new SingularityPendingRequest(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId(),
-        System.currentTimeMillis(), Optional.<String> absent(), pendingType, Optional.<Boolean> absent());
+        System.currentTimeMillis(), Optional.<String> absent(), pendingType, Optional.<Boolean> absent(), Optional.<String> absent());
 
     scheduleTasks(stateCache, request, requestState, deployStatistics, pendingRequest, getMatchingTaskIds(stateCache, request, pendingRequest));
 

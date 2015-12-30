@@ -39,7 +39,7 @@ public class BlendedHistoryTest extends SingularityTestBaseNoDb {
   }
 
   private SingularityRequestHistory makeHistory(long createdAt, RequestHistoryType type) {
-    return new SingularityRequestHistory(createdAt, Optional.<String> absent(), type, request);
+    return new SingularityRequestHistory(createdAt, Optional.<String> absent(), type, request, Optional.<String> absent());
   }
 
   // DESCENDING

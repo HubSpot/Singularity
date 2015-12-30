@@ -13,17 +13,20 @@ public class SingularityRequestHistory implements Comparable<SingularityRequestH
   private final Optional<String> user;
   private final RequestHistoryType eventType;
   private final SingularityRequest request;
+  private final Optional<String> message;
 
   public enum RequestHistoryType {
     CREATED, UPDATED, DELETED, PAUSED, UNPAUSED, ENTERED_COOLDOWN, EXITED_COOLDOWN, FINISHED, DEPLOYED_TO_UNPAUSE, BOUNCED;
   }
 
   @JsonCreator
-  public SingularityRequestHistory(@JsonProperty("createdAt") long createdAt, @JsonProperty("user") Optional<String> user, @JsonProperty("eventType") RequestHistoryType eventType, @JsonProperty("request") SingularityRequest request) {
+  public SingularityRequestHistory(@JsonProperty("createdAt") long createdAt, @JsonProperty("user") Optional<String> user,
+      @JsonProperty("eventType") RequestHistoryType eventType, @JsonProperty("request") SingularityRequest request, @JsonProperty("message") Optional<String> message) {
     this.createdAt = createdAt;
     this.user = user;
     this.eventType = eventType;
     this.request = request;
+    this.message = message;
   }
 
   @Override
@@ -37,7 +40,7 @@ public class SingularityRequestHistory implements Comparable<SingularityRequestH
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(createdAt, user, eventType, request);
+    return Objects.hashCode(createdAt, user, eventType, request, message);
   }
 
   @Override
@@ -53,7 +56,8 @@ public class SingularityRequestHistory implements Comparable<SingularityRequestH
     return Objects.equal(this.createdAt, that.createdAt)
         && Objects.equal(this.user, that.user)
         && Objects.equal(this.eventType, that.eventType)
-        && Objects.equal(this.request, that.request);
+        && Objects.equal(this.request, that.request)
+        && Objects.equal(this.message, that.message);
   }
 
   public long getCreatedAt() {
@@ -78,9 +82,13 @@ public class SingularityRequestHistory implements Comparable<SingularityRequestH
     return request;
   }
 
+  public Optional<String> getMessage() {
+    return message;
+  }
+
   @Override
   public String toString() {
-    return "SingularityRequestHistory [createdAt=" + createdAt + ", user=" + user + ", eventType=" + eventType + ", request=" + request + "]";
+    return "SingularityRequestHistory [createdAt=" + createdAt + ", user=" + user + ", eventType=" + eventType + ", request=" + request + ", message=" + message + "]";
   }
 
 }

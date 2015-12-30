@@ -4,22 +4,17 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
-public class SingularityBounceRequest {
+public class SingularityBounceRequest extends SingularityExpiringRequestParent {
 
   private final Optional<Boolean> incremental;
   private final Optional<Boolean> skipHealthchecks;
-  private final Optional<Long> durationMillis;
 
   @JsonCreator
   public SingularityBounceRequest(@JsonProperty("incremental") Optional<Boolean> incremental, @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
-      @JsonProperty("durationMillis") Optional<Long> durationMillis) {
+      @JsonProperty("durationMillis") Optional<Long> durationMillis, @JsonProperty("actionId") Optional<String> actionId, @JsonProperty("message") Optional<String> message) {
+    super(durationMillis, actionId, message);
     this.incremental = incremental;
     this.skipHealthchecks = skipHealthchecks;
-    this.durationMillis = durationMillis;
-  }
-
-  public Optional<Long> getDurationMillis() {
-    return durationMillis;
   }
 
   public Optional<Boolean> getIncremental() {
@@ -32,7 +27,7 @@ public class SingularityBounceRequest {
 
   @Override
   public String toString() {
-    return "SingularityBounceRequest [incremental=" + incremental + ", skipHealthchecks=" + skipHealthchecks + ", durationMillis=" + durationMillis + "]";
+    return "SingularityBounceRequest [incremental=" + incremental + ", skipHealthchecks=" + skipHealthchecks + ", toString()=" + super.toString() + "]";
   }
 
 }

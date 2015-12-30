@@ -4,24 +4,25 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 
-public class SingularityExpiringBounce extends SingularityExpiringParent {
+public class SingularityExpiringBounce extends SingularityExpiringParent<SingularityBounceRequest> {
 
-  private final SingularityBounceRequest bounceRequest;
+  private final String deployId;
 
-  public SingularityExpiringBounce(@JsonProperty("durationMillis") long durationMillis, @JsonProperty("requestId") String requestId, @JsonProperty("user") Optional<String> user,
-      @JsonProperty("startMillis") long startMillis, @JsonProperty("bounceRequest") SingularityBounceRequest bounceRequest) {
-    super(durationMillis, requestId, user, startMillis);
+  public SingularityExpiringBounce(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId,
+      @JsonProperty("user") Optional<String> user, @JsonProperty("startMillis") long startMillis,
+      @JsonProperty("expiringAPIRequestObject") SingularityBounceRequest bounceRequest, @JsonProperty("actionId") String actionId) {
+    super(bounceRequest, requestId, user, startMillis, actionId);
 
-    this.bounceRequest = bounceRequest;
+    this.deployId = deployId;
   }
 
-  public SingularityBounceRequest getBounceRequest() {
-    return bounceRequest;
+  public String getDeployId() {
+    return deployId;
   }
 
   @Override
   public String toString() {
-    return "SingularityExpiringBounce [bounceRequest=" + bounceRequest + ", toString()=" + super.toString() + "]";
+    return "SingularityExpiringBounce [toString()=" + super.toString() + "]";
   }
 
 }

@@ -31,17 +31,18 @@ public class RequestHelper {
     this.validator = validator;
   }
 
-  public long unpause(SingularityRequest request, Optional<String> user) {
+  public long unpause(SingularityRequest request, Optional<String> user, Optional<String> message, Optional<Boolean> skipHealthchecks) {
     mailer.sendRequestUnpausedMail(request, user);
 
     Optional<String> maybeDeployId = deployManager.getInUseDeployId(request.getId());
 
     final long now = System.currentTimeMillis();
 
-    requestManager.unpause(request, now, user);
+    requestManager.unpause(request, now, user, message);
 
     if (maybeDeployId.isPresent() && !request.isOneOff()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), maybeDeployId.get(), now, user, PendingType.UNPAUSED, Optional.<Boolean> absent()));
+      requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), maybeDeployId.get(), now, user, PendingType.UNPAUSED,
+          skipHealthchecks, message));
     }
 
     return now;
@@ -78,7 +79,7 @@ public class RequestHelper {
     return false;
   }
 
-  private void checkReschedule(SingularityRequest newRequest, Optional<SingularityRequest> maybeOldRequest, Optional<String> user, long timestamp, Optional<Boolean> skipHealthchecks) {
+  private void checkReschedule(SingularityRequest newRequest, Optional<SingularityRequest> maybeOldRequest, Optional<String> user, long timestamp, Optional<Boolean> skipHealthchecks, Optional<String> message) {
     if (!maybeOldRequest.isPresent()) {
       return;
     }
@@ -87,21 +88,23 @@ public class RequestHelper {
       Optional<String> maybeDeployId = deployManager.getInUseDeployId(newRequest.getId());
 
       if (maybeDeployId.isPresent()) {
-        requestManager.addToPendingQueue(new SingularityPendingRequest(newRequest.getId(), maybeDeployId.get(), timestamp, user, PendingType.UPDATED_REQUEST, skipHealthchecks));
+        requestManager.addToPendingQueue(new SingularityPendingRequest(newRequest.getId(), maybeDeployId.get(), timestamp, user, PendingType.UPDATED_REQUEST,
+            skipHealthchecks, message));
       }
     }
   }
 
-  public void updateRequest(SingularityRequest request, Optional<SingularityRequest> maybeOldRequest, RequestState requestState, Optional<String> user, Optional<Boolean> skipHealthchecks) {
+  public void updateRequest(SingularityRequest request, Optional<SingularityRequest> maybeOldRequest, RequestState requestState, Optional<String> user, Optional<Boolean> skipHealthchecks,
+      Optional<String> message) {
     SingularityRequestDeployHolder deployHolder = getDeployHolder(request.getId());
 
     SingularityRequest newRequest = validator.checkSingularityRequest(request, maybeOldRequest, deployHolder.getActiveDeploy(), deployHolder.getPendingDeploy());
 
     final long now = System.currentTimeMillis();
 
-    requestManager.save(newRequest, requestState, maybeOldRequest.isPresent() ? RequestHistoryType.UPDATED : RequestHistoryType.CREATED, now, user);
+    requestManager.save(newRequest, requestState, maybeOldRequest.isPresent() ? RequestHistoryType.UPDATED : RequestHistoryType.CREATED, now, user, message);
 
-    checkReschedule(newRequest, maybeOldRequest, user, now, skipHealthchecks);
+    checkReschedule(newRequest, maybeOldRequest, user, now, skipHealthchecks, message);
   }
 
 }

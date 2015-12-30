@@ -158,7 +158,7 @@ class SingularityStartup {
       }
     }
 
-    requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), activeDeployId, timestamp, Optional.<String> absent(), PendingType.STARTUP, Optional.<Boolean> absent()));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), activeDeployId, timestamp, Optional.<String> absent(), PendingType.STARTUP, Optional.<Boolean> absent(), Optional.<String> absent()));
   }
 
   private void enqueueHealthAndNewTaskChecks() {

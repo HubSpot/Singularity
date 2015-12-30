@@ -1,23 +1,26 @@
 package com.hubspot.singularity.expiring;
 
 import com.google.common.base.Optional;
+import com.hubspot.singularity.api.SingularityExpiringRequestParent;
 
-public abstract class SingularityExpiringParent {
+public abstract class SingularityExpiringParent<T extends SingularityExpiringRequestParent> {
 
-  private final long durationMillis;
   private final String requestId;
   private final Optional<String> user;
   private final long startMillis;
+  private final String actionId;
+  private final T expiringAPIRequestObject;
 
-  public SingularityExpiringParent(long durationMillis, String requestId, Optional<String> user, long startMillis) {
-    this.durationMillis = durationMillis;
+  public SingularityExpiringParent(T expiringAPIRequestObject, String requestId, Optional<String> user, long startMillis, String actionId) {
+    this.expiringAPIRequestObject = expiringAPIRequestObject;
     this.requestId = requestId;
     this.user = user;
     this.startMillis = startMillis;
+    this.actionId = actionId;
   }
 
-  public long getDurationMillis() {
-    return durationMillis;
+  public T getExpiringAPIRequestObject() {
+    return expiringAPIRequestObject;
   }
 
   public String getRequestId() {
@@ -32,9 +35,13 @@ public abstract class SingularityExpiringParent {
     return startMillis;
   }
 
+  public String getActionId() {
+    return actionId;
+  }
+
   @Override
   public String toString() {
-    return "SingularityExpiringParent [durationMillis=" + durationMillis + ", requestId=" + requestId + ", user=" + user + ", startMillis=" + startMillis + "]";
+    return "SingularityExpiringParent [requestId=" + requestId + ", user=" + user + ", startMillis=" + startMillis + ", actionId=" + actionId + ", expiringAPIRequestObject=" + expiringAPIRequestObject + "]";
   }
 
 }

@@ -14,6 +14,7 @@ import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularitySchedulerTestBase;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.api.SingularityRunNowRequest;
 
 public class SingularityStartupTest extends SingularitySchedulerTestBase {
 
@@ -111,7 +112,7 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
     boolean caughtException = false;
 
     try {
-      requestResource.scheduleImmediately(requestId, Optional.<String> absent(), null);
+      requestResource.scheduleImmediately(requestId, Optional.<String> absent(), null, Optional.<SingularityRunNowRequest> absent());
     } catch (Exception e) {
       caughtException = true;
     }
@@ -135,7 +136,7 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
     Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
 
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, System.currentTimeMillis(), Optional.<String> absent(), PendingType.ONEOFF, Optional.<Boolean> absent()));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, System.currentTimeMillis(), Optional.<String> absent(), PendingType.ONEOFF, Optional.<Boolean> absent(), Optional.<String> absent()));
 
     startup.checkSchedulerForInconsistentState();
 
