@@ -149,10 +149,10 @@ public class RequestResource extends AbstractRequestResource {
 
     final long now = System.currentTimeMillis();
 
-    if (maybeOldRequestWithState.isPresent() && maybeOldRequestWithState.get().getRequest().isLongRunning()) {
-      requestManager.update(newRequest, maybeOldRequestWithState.get().getState(), maybeOldRequest.isPresent() ? RequestHistoryType.UPDATED : RequestHistoryType.CREATED, now, JavaUtils.getUserEmail(user));
+    if (maybeOldRequestWithState.isPresent() && maybeOldRequestWithState.get().getState() != RequestState.FINISHED) {
+      requestManager.update(newRequest, maybeOldRequestWithState.get().getState(), RequestHistoryType.UPDATED, now, JavaUtils.getUserEmail(user));
     } else {
-      requestManager.activate(newRequest, maybeOldRequest.isPresent() ? RequestHistoryType.UPDATED : RequestHistoryType.CREATED, now, JavaUtils.getUserEmail(user));
+      requestManager.activate(newRequest, maybeOldRequestWithState.isPresent() ? RequestHistoryType.UPDATED : RequestHistoryType.CREATED, now, JavaUtils.getUserEmail(user));
     }
 
     checkReschedule(newRequest, maybeOldRequest, now);
@@ -217,7 +217,7 @@ public class RequestResource extends AbstractRequestResource {
     }
 
     SingularityCreateResult createResult = requestManager.createCleanupRequest(
-            new SingularityRequestCleanup(JavaUtils.getUserEmail(user), incremental ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE, System.currentTimeMillis(), Optional.<Boolean>absent(), requestId, Optional.of(getAndCheckDeployId(requestId))));
+        new SingularityRequestCleanup(JavaUtils.getUserEmail(user), incremental ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE, System.currentTimeMillis(), Optional.<Boolean>absent(), requestId, Optional.of(getAndCheckDeployId(requestId))));
 
     checkConflict(createResult != SingularityCreateResult.EXISTED, "%s is already bouncing", requestId);
 
