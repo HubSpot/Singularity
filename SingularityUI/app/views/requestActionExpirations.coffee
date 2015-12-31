@@ -18,7 +18,7 @@ class requestActionExpirations extends View
 
         if request.expiringScale and (request.expiringScale.startMillis + request.expiringScale.expiringAPIRequestObject.durationMillis) > new Date().getTime()
             expirations.push
-                action: 'Scale'
+                action: "Scale (to #{request.request.instances} instances)"
                 user: request.expiringScale.user.split('@')[0]
                 endMillis: request.expiringScale.startMillis + request.expiringScale.expiringAPIRequestObject.durationMillis
                 canRevert: true

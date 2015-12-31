@@ -30,7 +30,7 @@ public class SingularityDeployIT {
 
     final String deployId = Long.toString(System.currentTimeMillis());
 
-    singularityClient.createOrUpdateSingularityRequest(request, Optional.<String>absent());
+    singularityClient.createOrUpdateSingularityRequest(request);
 
     final Optional<SingularityRequestParent> requestParent = singularityClient.getSingularityRequest(REQUEST_ID);
     assertTrue(requestParent.isPresent());
