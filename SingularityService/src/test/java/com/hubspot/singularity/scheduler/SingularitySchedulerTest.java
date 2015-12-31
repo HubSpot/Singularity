@@ -1120,7 +1120,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
         .setInstances(Optional.of(2)).build()
     );
 
-    initFirstDeploy();
+    initFirstDeployWithHealthcheck();
 
     SingularityTask taskOne = startSeparatePlacementTask(firstDeploy, 1);
     SingularityTask taskTwo = startSeparatePlacementTask(firstDeploy, 2);
@@ -1132,26 +1132,48 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     cleaner.drainCleanupQueue();
 
     Assert.assertTrue(!requestManager.cleanupRequestExists(requestId));
-    Assert.assertTrue(taskManager.getCleanupTaskIds().size() == 2);
+    Assert.assertEquals(2, taskManager.getCleanupTaskIds().size());
 
     resourceOffers(3);
 
-    Assert.assertTrue(taskManager.getActiveTaskIds().size() == 3);
-
-    cleaner.drainCleanupQueue();
-
-    Assert.assertTrue(taskManager.getCleanupTaskIds().size() == 1);
+    SingularityTask taskThree = null;
 
     for (SingularityTask task : taskManager.getActiveTasks()) {
       if (!task.getTaskId().equals(taskOne.getTaskId()) && !task.getTaskId().equals(taskTwo.getTaskId())) {
-        statusUpdate(task, TaskState.TASK_RUNNING, Optional.of(1L));
+        taskThree = task;
       }
     }
+
+    statusUpdate(taskThree, TaskState.TASK_RUNNING, Optional.of(1L));
+    Assert.assertEquals(3, taskManager.getActiveTaskIds().size());
+
+    cleaner.drainCleanupQueue();
+
+    // No old tasks should be killed before new ones pass healthchecks
+    Assert.assertEquals(2, taskManager.getCleanupTaskIds().size());
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent(), taskThree.getTaskId()));
+
+    cleaner.drainCleanupQueue();
+    Assert.assertEquals(1, taskManager.getCleanupTaskIds().size());
+
+    statusUpdate(taskOne, TaskState.TASK_KILLED);
+
+    resourceOffers(3);
+
+    SingularityTask taskFour = null;
+
+    for (SingularityTask task : taskManager.getActiveTasks()) {
+      if (!task.getTaskId().equals(taskOne.getTaskId()) && !task.getTaskId().equals(taskTwo.getTaskId()) && !task.getTaskId().equals(taskThree.getTaskId())) {
+        taskFour = task;
+      }
+    }
+
+    statusUpdate(taskFour, TaskState.TASK_RUNNING, Optional.of(1L));
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent(), taskFour.getTaskId()));
 
     cleaner.drainCleanupQueue();
 
     Assert.assertTrue(taskManager.getCleanupTaskIds().isEmpty());
-    Assert.assertTrue(taskManager.getKilledTaskIdRecords().size() == 2);
   }
 
   @Test

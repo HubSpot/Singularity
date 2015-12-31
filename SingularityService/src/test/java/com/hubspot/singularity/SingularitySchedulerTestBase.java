@@ -313,18 +313,31 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void initFirstDeploy() {
-    firstDeploy = initDeploy(request, firstDeployId);
+    firstDeploy = initDeploy(request, firstDeployId, false);
   }
 
   protected SingularityDeploy initDeploy(SingularityRequest request, String deployId) {
+    return initDeploy(request, deployId, false);
+  }
+
+  protected SingularityDeploy initDeploy(SingularityRequest request, String deployId, boolean hasHealthcheck) {
     SingularityDeployMarker marker =  new SingularityDeployMarker(request.getId(), deployId, System.currentTimeMillis(), Optional.<String> absent());
-    SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100")).build();
+    SingularityDeployBuilder deployBuilder = new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100"));
+    if (hasHealthcheck) {
+      deployBuilder.setHealthcheckUri(Optional.of("http://uri"));
+    }
+
+    SingularityDeploy deploy = deployBuilder.build();
 
     deployManager.saveDeploy(request, marker, deploy);
 
     finishDeploy(marker, deploy);
 
     return deploy;
+  }
+
+  protected void initFirstDeployWithHealthcheck() {
+    firstDeploy = initDeploy(request, firstDeployId, true);
   }
 
   protected SingularityDeploy initDeploy(SingularityDeployBuilder builder, long timestamp) {
@@ -350,7 +363,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void startDeploy(SingularityDeployMarker deployMarker) {
-    deployManager.savePendingDeploy(new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING));
+    deployManager.savePendingDeploy(new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate>absent(), DeployState.WAITING));
   }
 
   protected void finishDeploy(SingularityDeployMarker marker, SingularityDeploy deploy) {
