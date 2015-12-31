@@ -20,12 +20,12 @@ IndividualHeader = React.createClass
   renderClose: ->
     if @props.onlyTask
       return null
-    <a className="action-link" onClick={@props.closeTail}><span className="glyphicon glyphicon-remove"></span></a>
+    <a className="action-link" onClick={@props.closeTail} title="Close Tail"><span className="glyphicon glyphicon-remove"></span></a>
 
   renderExpand: ->
     if @props.onlyTask
       return null
-    <a className="action-link" onClick={@props.expandTail}><span className="glyphicon glyphicon-resize-full"></span></a>
+    <a className="action-link" onClick={@props.expandTail} title="Show Only this Tail"><span className="glyphicon glyphicon-resize-full"></span></a>
 
   render: ->
     <div className="individual-header">
@@ -36,8 +36,8 @@ IndividualHeader = React.createClass
       </div>
       <span><StatusIndicator status={@props.taskState}/></span>
       <span className="right-buttons">
-        <a className="action-link" onClick={@props.scrollToBottom}><span className="glyphicon glyphicon-chevron-down"></span></a>
-        <a className="action-link" onClick={@props.scrollToTop}><span className="glyphicon glyphicon-chevron-up"></span></a>
+        <a className="action-link" onClick={@props.scrollToBottom} title="Scroll to Bottom"><span className="glyphicon glyphicon-chevron-down"></span></a>
+        <a className="action-link" onClick={@props.scrollToTop} title="Scroll to Top"><span className="glyphicon glyphicon-chevron-up"></span></a>
       </span>
     </div>
 
