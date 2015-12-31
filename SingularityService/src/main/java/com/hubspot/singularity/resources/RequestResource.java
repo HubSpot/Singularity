@@ -233,7 +233,9 @@ public class RequestResource extends AbstractRequestResource {
       commandLineArgs = runNowRequest.get().getCommandLineArgs();
     }
 
-    checkBadRequest(!runId.isPresent() || runId.get().length() < 100, "runId must be less than 100 characters. RunId %s has %s characters", runId.get(), runId.get().length());
+    if (runId.isPresent() && runId.get().length() > 100) {
+      throw badRequest("runId must be less than 100 characters. RunId %s has %s characters", runId.get(), runId.get().length());
+    }
 
     if (!runId.isPresent()) {
       runId = Optional.of(UUID.randomUUID().toString());

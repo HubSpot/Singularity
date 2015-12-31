@@ -310,7 +310,7 @@ public class RequestManager extends CuratorAsyncManager {
     return getData(getRequestPath(requestId), requestTranscoder);
   }
 
-  public void deleteRequest(SingularityRequest request, Optional<String> user, Optional<String> actionId, Optional<String> message) {
+  public SingularityDeleteResult deleteRequest(SingularityRequest request, Optional<String> user, Optional<String> actionId, Optional<String> message) {
     final long now = System.currentTimeMillis();
 
     // delete it no matter if the delete request already exists.
@@ -319,7 +319,11 @@ public class RequestManager extends CuratorAsyncManager {
 
     saveHistory(new SingularityRequestHistory(now, user, RequestHistoryType.DELETED, request, message));
 
-    delete(getRequestPath(request.getId()));
+    SingularityDeleteResult deleteResult = delete(getRequestPath(request.getId()));
+
+    LOG.info("Request {} deleted ({}) by {} - {}", request.getId(), deleteResult, user, message);
+
+    return deleteResult;
   }
 
   public List<SingularityRequestLbCleanup> getLbCleanupRequests() {
