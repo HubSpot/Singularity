@@ -139,18 +139,17 @@ public class SingularityCleaner {
     final List<SingularityTaskId> matchingTasks = SingularityTaskId.matchingAndNotIn(activeTaskIds, taskCleanup.getTaskId().getRequestId(), taskCleanup.getTaskId().getDeployId(), cleaningTasks);
 
     // For an incremental bounce, shut down old tasks as new ones are started
+    final SingularityDeployKey key = SingularityDeployKey.fromTaskId(taskCleanup.getTaskId());
     if (taskCleanup.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
-      final SingularityDeployKey key = SingularityDeployKey.fromTaskId(taskCleanup.getTaskId());
-
-      if (matchingTasks.size() + incrementalBounceCleaningTasks.count(key) > request.getInstancesSafe()) {
-        incrementalBounceCleaningTasks.remove(key);
-        return true;
+      if (matchingTasks.size() + incrementalBounceCleaningTasks.count(key) <= request.getInstancesSafe()) {
+        LOG.trace("Not killing a task {} yet, only {} matching out of a required {}", taskCleanup, matchingTasks.size(), request.getInstancesSafe() - incrementalBounceCleaningTasks.count(key));
+        return false;
       }
-    }
-
-    if (matchingTasks.size() < request.getInstancesSafe()) {
-      LOG.trace("Not killing a task {} yet, only {} matching out of a required {}", taskCleanup, matchingTasks.size(), request.getInstancesSafe());
-      return false;
+    } else {
+      if (matchingTasks.size() < request.getInstancesSafe()) {
+        LOG.trace("Not killing a task {} yet, only {} matching out of a required {}", taskCleanup, matchingTasks.size(), request.getInstancesSafe());
+        return false;
+      }
     }
 
     final Optional<SingularityDeploy> deploy = deployManager.getDeploy(requestId, activeDeployId);
@@ -160,6 +159,9 @@ public class SingularityCleaner {
     switch (deployHealth) {
       case HEALTHY:
         LOG.debug("Killing a task {}, all replacement tasks are healthy", taskCleanup);
+        if (taskCleanup.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
+          incrementalBounceCleaningTasks.remove(key);
+        }
         return true;
       case WAITING:
       case UNHEALTHY:
