@@ -77,19 +77,22 @@ class Request extends Model
             contentType: 'application/json'
             data: JSON.stringify data
 
-    run: (confirmedOrPromptData) ->
+    run: (confirmedOrPromptData, message) ->
         options =
             url: "#{ @url() }/run?user=#{ app.getUsername() }"
             type: 'POST'
             contentType: 'application/json'
+            data: {}
 
         if typeof confirmedOrPromptData is 'string'
           if confirmedOrPromptData != ''
-            options.data = JSON.stringify([confirmedOrPromptData])
+            options.data.commandLineArgs = [confirmedOrPromptData]
           else
-            options.data = '[]'
+            options.data.commandLineArgs = []
           options.processData = false
 
+        options.data.message = message
+        options.data = JSON.stringify(options.data)
         $.ajax options
 
     scale: (confirmedOrPromptData) =>
@@ -329,6 +332,7 @@ class Request extends Model
 
                 fileName = @data.filename.trim()
                 commandLineInput = @data.commandLineInput.trim()
+                message = @data.message
 
                 if fileName.length is 0 and @data.autoTail is 'on'
                     $(window.noFilenameError).removeClass('hide')
@@ -349,7 +353,7 @@ class Request extends Model
                     localStorage.setItem('taskRunAutoTail', @data.autoTail)
                     @data.id = @get 'id'
 
-                    @run( @data.commandLineInput ).done callback( @data )
+                    @run( @data.commandLineInput, message ).done callback( @data )
                     return true
 
             afterOpen: =>
