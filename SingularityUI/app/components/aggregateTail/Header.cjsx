@@ -81,8 +81,8 @@ Header = React.createClass
   renderTasksDropdown: ->
     if @props.singleMode
       return null
-      
-    <div className="btn-group">
+
+    <div className="btn-group" title="Select Instances">
       <button type="button" className="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" onKeyDown={@handleTasksKeyDown}>
         <span className="glyphicon glyphicon-tasks"></span> <span className="caret"></span>
       </button>
@@ -107,13 +107,13 @@ Header = React.createClass
 
   renderViewButtons: ->
     if @props.viewingInstances.length > 1
-      <div className="btn-group" role="group">
+      <div className="btn-group" role="group" title="Select View Type">
         <button type="button" className="btn btn-sm btn-default no-margin #{if !@props.splitView then 'active'}" onClick={@props.toggleView}>Unified</button>
         <button type="button" className="btn btn-sm btn-default no-margin #{if @props.splitView then 'active'}" onClick={@props.toggleView}>Split</button>
       </div>
 
   renderColorList: ->
-    <div className="btn-group">
+    <div className="btn-group" title="Select Color Scheme">
       <button type="button" className="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         <span className="glyphicon glyphicon-adjust"></span> <span className="caret"></span>
       </button>
@@ -138,21 +138,21 @@ Header = React.createClass
 
   renderAnchorButtons: ->
     <span>
-      <a className="btn btn-default btn-sm tail-bottom-button" onClick={@props.scrollToBottom}>
+      <a className="btn btn-default btn-sm tail-bottom-button" onClick={@props.scrollToBottom} title="Scroll All to Bottom">
         <span className="glyphicon glyphicon-chevron-down"></span>
       </a>
-      <a className="btn btn-default btn-sm tail-top-button" onClick={@props.scrollToTop}>
+      <a className="btn btn-default btn-sm tail-top-button" onClick={@props.scrollToTop} title="Scroll All to Top">
         <span className="glyphicon glyphicon-chevron-up"></span>
       </a>
     </span>
 
   renderHelpButton: ->
-    <a className="help-link" onClick={@props.toggleHelp}>
+    <a className="help-link" onClick={@props.toggleHelp} title="Show Help">
       <span className="glyphicon glyphicon-question-sign"></span>
     </a>
 
   renderSearch: ->
-    <div className="btn-group">
+    <div className="btn-group" title="Grep">
       <button id="searchDDToggle" type="button" className="btn btn-#{if @props.search is '' then 'default' else 'info'} btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" onClick={@handleSearchToggle}>
         <span className="glyphicon glyphicon-search"></span> <span className="caret"></span>
       </button>
