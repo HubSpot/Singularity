@@ -54,12 +54,14 @@ class Request extends Model
             url:  "#{ @url() }/paused"
             type: 'DELETE'
 
-    unpause: =>
+    unpause: (data) =>
         $.ajax
             url:  "#{ @url() }/unpause?user=#{ app.getUsername() }"
             contentType: 'application/json'
             type: 'POST'
-            data: '{}'
+            data: JSON.stringify(
+                message: data.message
+            )
 
     pause: (killTasks, duration, message) =>
         data =
@@ -302,9 +304,12 @@ class Request extends Model
     promptUnpause: (callback) =>
         vex.dialog.confirm
             message: unpauseTemplate id: @get "id"
+            input: """
+                <input name="message" id="disable-healthchecks-message" type="text" placeholder="Message (optional)" />
+            """
             callback: (confirmed) =>
                 return unless confirmed
-                @unpause().done callback
+                @unpause(confirmed).done callback
 
     promptRun: (callback) =>
         vex.dialog.prompt
