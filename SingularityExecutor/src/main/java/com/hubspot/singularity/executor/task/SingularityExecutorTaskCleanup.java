@@ -9,6 +9,7 @@ import java.util.List;
 import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.spotify.docker.client.ContainerNotFoundException;
@@ -125,6 +126,8 @@ public class SingularityExecutorTaskCleanup {
     } catch (ContainerNotFoundException e) {
       log.info(String.format("Container %s was already removed", containerName));
       return true;
+    } catch (UncheckedTimeoutException te) {
+      log.error(String.format("Timed out trying to reach docker daemon after %s seconds", configuration.getDockerClientTimeLimitSeconds()), te);
     } catch (Exception e) {
       log.info(String.format("Could not ensure removal of docker container due to error %s", e));
     }
