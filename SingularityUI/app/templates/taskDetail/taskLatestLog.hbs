@@ -8,11 +8,11 @@
   <div class="col-md-4">
     <h4>
       {{#if data.isStillRunning}}
-          <a href="{{ appRoot }}/task/{{ data.taskId }}/tail/{{ substituteTaskId config.runningTaskLogPath data.taskId }}" title="Log">
+          <a href="{{ appRoot }}/request/{{ data.task.taskId.requestId }}/tail/{{ config.runningTaskLogPath }}/?taskIds={{ data.taskId }}" title="Log">
               <span class="glyphicon glyphicon-file"></span> {{{filename config.runningTaskLogPath}}}
           </a>
       {{else}}
-          <a href="{{ appRoot }}/task/{{ data.taskId }}/tail/{{ substituteTaskId config.finishedTaskLogPath data.taskId }}" title="Log">
+          <a href="{{ appRoot }}/request/{{ data.task.taskId.requestId }}/tail/{{ config.finishedTaskLogPath }}/?taskIds={{ data.taskId }}" title="Log">
               <span class="glyphicon glyphicon-file"></span> {{{filename config.finishedTaskLogPath}}}
           </a>
       {{/if}}

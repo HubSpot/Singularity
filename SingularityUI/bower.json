@@ -23,8 +23,9 @@
     "tests"
   ],
   "dependencies": {
-    "bootstrap": "~3.2.0",
-    "backbone": "~1.1.2",
+    "backbone-react-component": "^0.10.0",
+    "bootstrap": "~3.3.0",
+    "backbone": "~1.2.3",
     "jquery": "~1.11.1",
     "moment": "moment/moment#~2.7.0",
     "zeroclipboard": "~2.1.5",
@@ -37,6 +38,10 @@
     "datatables": "~1.10.7",
     "datatables-bootstrap3-plugin": "~0.4.0",
     "select2": "~3.5.2",
+    "react": "~0.14.2",
+    "react-list": "~0.7.3",
+    "react-dom": "~0.1.0",
+    "fuse.js": "~1.2.2",
     "fuzzy": "~0.1.1"
   },
   "resolutions": {
@@ -47,6 +52,10 @@
   "overrides": {
     "vex": {
       "main": "js/vex.combined.min.js"
+    },
+    "react-list": {
+      "main": "react-list.js",
+      "ignore": []
     },
     "datatables": {
       "main": "media/js/jquery.dataTables.min.js"

@@ -20,6 +20,8 @@ NotFoundController = require 'controllers/NotFound'
 
 DeployDetailController = require 'controllers/DeployDetail'
 
+AggregateTailController = require 'controllers/AggregateTail'
+
 class Router extends Backbone.Router
 
     routes:
@@ -36,6 +38,7 @@ class Router extends Backbone.Router
 
         'request/:requestId(/)': 'requestDetail'
         'request/:requestId/deploy/:deployId(/)': 'deployDetail'
+        'request/:requestId/tail/*path': 'aggregateTail'
 
         'request/:requestId/deploy(/)': 'newDeploy'
 
@@ -100,5 +103,9 @@ class Router extends Backbone.Router
 
     deployDetail: (requestId, deployId) ->
         app.bootstrapController new DeployDetailController {requestId, deployId}
+
+    aggregateTail: (requestId, path = '') ->
+        offset = window.location.hash.substr(1) || null
+        app.bootstrapController new AggregateTailController {requestId, path, offset}
 
 module.exports = Router
