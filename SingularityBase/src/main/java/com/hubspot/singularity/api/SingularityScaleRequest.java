@@ -3,6 +3,7 @@ package com.hubspot.singularity.api;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityScaleRequest extends SingularityExpiringRequestParent {
 
@@ -17,10 +18,12 @@ public class SingularityScaleRequest extends SingularityExpiringRequestParent {
     this.skipHealthchecks = skipHealthchecks;
   }
 
+  @ApiModelProperty(required=false, value="If set to true, healthchecks will be skipped while scaling this request (only)")
   public Optional<Boolean> getSkipHealthchecks() {
     return skipHealthchecks;
   }
 
+  @ApiModelProperty(required=false, value="The number of instances to scale to")
   public Optional<Integer> getInstances() {
     return instances;
   }

@@ -23,23 +23,24 @@ public class SingularityDeployRequest {
     this.message = message;
   }
 
-  @ApiModelProperty(required=false, value="If deploy is successful, also unpause the request.")
+  @ApiModelProperty(required=false, value="If deploy is successful, also unpause the request")
   public Optional<Boolean> getUnpauseOnSuccessfulDeploy() {
     return unpauseOnSuccessfulDeploy;
+  }
+
+  @ApiModelProperty(required=true, value="The Singularity deploy object, containing all the required details about the Deploy")
+  public SingularityDeploy getDeploy() {
+    return deploy;
+  }
+
+  @ApiModelProperty(required=false, value="A message to show users about this deploy (metadata)")
+  public Optional<String> getMessage() {
+    return message;
   }
 
   @JsonIgnore
   public boolean isUnpauseOnSuccessfulDeploy() {
     return unpauseOnSuccessfulDeploy.or(Boolean.FALSE);
-  }
-
-  @ApiModelProperty(required=true, value="The Singularity deploy object")
-  public SingularityDeploy getDeploy() {
-    return deploy;
-  }
-
-  public Optional<String> getMessage() {
-    return message;
   }
 
   @Override
