@@ -3,6 +3,7 @@ package com.hubspot.singularity.api;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityPauseRequest extends SingularityExpiringRequestParent {
 
@@ -16,6 +17,7 @@ public class SingularityPauseRequest extends SingularityExpiringRequestParent {
     this.killTasks = killTasks;
   }
 
+  @ApiModelProperty(required=false, value="If set to false, tasks will be allowed to finish instead of killed immediately")
   public Optional<Boolean> getKillTasks() {
     return killTasks;
   }

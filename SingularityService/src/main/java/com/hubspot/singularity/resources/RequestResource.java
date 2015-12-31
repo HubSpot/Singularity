@@ -491,6 +491,8 @@ public class RequestResource extends AbstractRequestResource {
     SingularityRequest oldRequest = oldRequestWithState.getRequest();
     SingularityRequest newRequest = oldRequest.toBuilder().setInstances(scaleRequest.getInstances()).build();
 
+    checkBadRequest(oldRequest.getInstancesSafe() != newRequest.getInstancesSafe(), "Scale request has no affect on the # of instances (%s)", newRequest.getInstancesSafe());
+
     submitRequest(newRequest, Optional.of(oldRequestWithState), scaleRequest.getSkipHealthchecks(), scaleRequest.getMessage());
 
     if (scaleRequest.getDurationMillis().isPresent()) {

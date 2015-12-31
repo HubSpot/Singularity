@@ -3,6 +3,7 @@ package com.hubspot.singularity.api;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityBounceRequest extends SingularityExpiringRequestParent {
 
@@ -17,10 +18,12 @@ public class SingularityBounceRequest extends SingularityExpiringRequestParent {
     this.skipHealthchecks = skipHealthchecks;
   }
 
+  @ApiModelProperty(required=false, value="If present and set to true, old tasks will be killed as soon as replacement tasks are available, instead of waiting for all replacement tasks to be healthy")
   public Optional<Boolean> getIncremental() {
     return incremental;
   }
 
+  @ApiModelProperty(required=false, value="Instruct replacement tasks for this bounce only to skip healthchecks")
   public Optional<Boolean> getSkipHealthchecks() {
     return skipHealthchecks;
   }

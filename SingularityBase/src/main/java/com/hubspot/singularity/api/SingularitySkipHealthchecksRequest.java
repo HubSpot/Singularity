@@ -3,6 +3,7 @@ package com.hubspot.singularity.api;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularitySkipHealthchecksRequest extends SingularityExpiringRequestParent {
 
@@ -15,6 +16,7 @@ public class SingularitySkipHealthchecksRequest extends SingularityExpiringReque
     this.skipHealthchecks = skipHealthchecks;
   }
 
+  @ApiModelProperty(required=false, value="If set to true, healthchecks will be skipped for all tasks for this request until reversed")
   public Optional<Boolean> getSkipHealthchecks() {
     return skipHealthchecks;
   }
