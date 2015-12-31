@@ -51,6 +51,7 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityWebhook;
+import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 
 public class SingularityClient {
@@ -442,10 +443,10 @@ public class SingularityClient {
     post(requestUri, String.format("run of request %s", requestId), additionalArgs, user);
   }
 
-  public void bounceSingularityRequest(String requestId, Optional<String> user) {
+  public void bounceSingularityRequest(String requestId, Optional<SingularityBounceRequest> bounceOptions, Optional<String> user) {
     final String requestUri = String.format(REQUEST_BOUNCE_FORMAT, getHost(), contextPath, requestId);
 
-    post(requestUri, String.format("bounce of request %s", requestId), Optional.absent(), user);
+    post(requestUri, String.format("bounce of request %s", requestId), bounceOptions, user);
   }
 
   public void exitCooldown(String requestId, Optional<String> user) {
