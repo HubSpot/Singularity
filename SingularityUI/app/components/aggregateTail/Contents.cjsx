@@ -147,7 +147,7 @@ Contents = React.createClass
           length={@state.linesToRender?.length || 0}
           type="variable"
           useTranslate3d={true}
-          threshold={1000}>
+          threshold={5000}>
         </ReactList>
       </div>
       <Loader isVisable={@state.isLoading} text={@state.loadingText} />
