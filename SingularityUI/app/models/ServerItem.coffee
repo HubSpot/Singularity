@@ -52,10 +52,12 @@ class ServerItem extends Model
             url: "#{ @url() }/freeze?user=#{ app.getUsername() }"
             type: "POST"
 
-    decommission: =>
+    decommission: (message) =>
         $.ajax
             url: "#{ @url() }/decommission?user=#{ app.getUsername() }"
             type: "POST"
+            data: JSON.stringify
+                message: message
 
     reactivate: =>
         $.ajax
@@ -101,8 +103,11 @@ class ServerItem extends Model
 
     promptDecommission: (callback) =>
         state = @get 'state'
-        vex.dialog.confirm
+        vex.dialog.open
             message: @decommissionTemplate {@id, @host, @type}
+            input: """
+                <input name="message" type="text" placeholder="Message (optional)" />
+            """
             buttons: [
                 $.extend {}, vex.dialog.buttons.YES,
                     text: 'Decommission',
@@ -110,9 +115,9 @@ class ServerItem extends Model
                 vex.dialog.buttons.NO
             ]
 
-            callback: (confirmed) =>
-                return unless confirmed
-                @decommission().done callback
+            callback: (data) =>
+                return unless data
+                @decommission(data.message).done callback
 
 
     promptReactivate: (callback) =>
