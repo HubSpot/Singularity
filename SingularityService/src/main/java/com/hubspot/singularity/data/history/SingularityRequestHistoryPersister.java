@@ -1,7 +1,6 @@
 package com.hubspot.singularity.data.history;
 
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -9,7 +8,6 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeleteResult;
@@ -70,16 +68,11 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
     final long start = System.currentTimeMillis();
 
     final List<String> requestIdsWithHistory = requestManager.getRequestIdsWithHistory();
-    final Set<String> requestIds = Sets.newHashSet(requestManager.getAllRequestIds());
 
     int numHistoryTransferred = 0;
     int numRequests = 0;
 
     for (String requestId : requestIdsWithHistory) {
-      if (!requestIds.contains(requestId)) {
-        continue;
-      }
-
       numRequests++;
 
       List<SingularityRequestHistory> historyForRequestId = requestManager.getRequestHistory(requestId);
