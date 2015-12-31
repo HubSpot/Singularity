@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
@@ -64,6 +66,8 @@ public class SingularityMailer implements Managed {
 
   private final Joiner adminJoiner;
   private final MailTemplateHelpers mailTemplateHelpers;
+
+  private static final Pattern TASK_STATUS_BY_PATTERN = Pattern.compile("(\\w+) by \\w+");
 
   @Inject
   public SingularityMailer(
@@ -155,13 +159,21 @@ public class SingularityMailer implements Managed {
     templateProperties.put("taskRan", mailTemplateHelpers.didTaskRun(taskHistory));
   }
 
-  private Optional<TaskCleanupType> getTaskCleanupTypefromSingularityTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate) {
+  private static Optional<TaskCleanupType> getTaskCleanupTypefromSingularityTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate) {
     if (!taskHistoryUpdate.getStatusMessage().isPresent()) {
       return Optional.absent();
     }
 
+    String taskCleanupTypeMsg = taskHistoryUpdate.getStatusMessage().get();
+
+    Matcher matcher = TASK_STATUS_BY_PATTERN.matcher(taskCleanupTypeMsg);
+
+    if (matcher.find()) {
+      taskCleanupTypeMsg = matcher.group(1);
+    }
+
     try {
-      return Optional.of(TaskCleanupType.valueOf(taskHistoryUpdate.getStatusMessage().get()));
+      return Optional.of(TaskCleanupType.valueOf(taskCleanupTypeMsg.toUpperCase()));
     } catch (IllegalArgumentException iae) {
       LOG.warn("Couldn't parse TaskCleanupType from update {}", taskHistoryUpdate);
       return Optional.absent();
