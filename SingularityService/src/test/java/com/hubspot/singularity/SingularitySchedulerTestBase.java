@@ -372,12 +372,33 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     SingularityDeploy deploy = builder.build();
 
     SingularityDeployMarker marker = new SingularityDeployMarker(deploy.getRequestId(), deploy.getId(), System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
+    firstDeploy = initDeploy(request, firstDeployId, false);
 
     deployManager.saveDeploy(request, marker, deploy);
 
     finishDeploy(marker, deploy);
 
     return deploy;
+  }
+
+  protected SingularityDeploy initDeploy(SingularityRequest request, String deployId, boolean hasHealthcheck) {
+    SingularityDeployMarker marker =  new SingularityDeployMarker(request.getId(), deployId, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String>absent());
+    SingularityDeployBuilder deployBuilder = new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100"));
+    if (hasHealthcheck) {
+      deployBuilder.setHealthcheckUri(Optional.of("http://uri"));
+    }
+
+    SingularityDeploy deploy = deployBuilder.build();
+
+    deployManager.saveDeploy(request, marker, deploy);
+
+    finishDeploy(marker, deploy);
+
+    return deploy;
+  }
+
+  protected void initFirstDeployWithHealthcheck() {
+    firstDeploy = initDeploy(request, firstDeployId, true);
   }
 
   protected SingularityDeploy initDeploy(SingularityDeployBuilder builder, long timestamp) {
@@ -403,13 +424,13 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void startDeploy(SingularityDeployMarker deployMarker) {
-    deployManager.savePendingDeploy(new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING));
+    deployManager.savePendingDeploy(new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate>absent(), DeployState.WAITING));
   }
 
   protected void finishDeploy(SingularityDeployMarker marker, SingularityDeploy deploy) {
     deployManager.saveDeployResult(marker, Optional.of(deploy), new SingularityDeployResult(DeployState.SUCCEEDED));
 
-    deployManager.saveNewRequestDeployState(new SingularityRequestDeployState(requestId, Optional.of(marker), Optional.<SingularityDeployMarker> absent()));
+    deployManager.saveNewRequestDeployState(new SingularityRequestDeployState(requestId, Optional.of(marker), Optional.<SingularityDeployMarker>absent()));
   }
 
   protected SingularityTask startTask(SingularityDeploy deploy) {
