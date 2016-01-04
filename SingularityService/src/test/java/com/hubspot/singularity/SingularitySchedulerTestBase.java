@@ -361,7 +361,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void initHCDeploy() {
-    firstDeploy = initDeploy(request, firstDeployId, true);
+    firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100")).setHealthcheckUri(Optional.of("http://uri")));
   }
 
   protected SingularityDeploy initAndFinishDeploy(SingularityRequest request, String deployId) {
@@ -372,23 +372,6 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     SingularityDeploy deploy = builder.build();
 
     SingularityDeployMarker marker = new SingularityDeployMarker(deploy.getRequestId(), deploy.getId(), System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
-    firstDeploy = initDeploy(request, firstDeployId, false);
-
-    deployManager.saveDeploy(request, marker, deploy);
-
-    finishDeploy(marker, deploy);
-
-    return deploy;
-  }
-
-  protected SingularityDeploy initDeploy(SingularityRequest request, String deployId, boolean hasHealthcheck) {
-    SingularityDeployMarker marker =  new SingularityDeployMarker(request.getId(), deployId, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String>absent());
-    SingularityDeployBuilder deployBuilder = new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100"));
-    if (hasHealthcheck) {
-      deployBuilder.setHealthcheckUri(Optional.of("http://uri"));
-    }
-
-    SingularityDeploy deploy = deployBuilder.build();
 
     deployManager.saveDeploy(request, marker, deploy);
 
