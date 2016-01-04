@@ -15,7 +15,7 @@ class taskLatestLogSubview extends View
   renderData: =>
       file = if @task.get('isStillRunning') then config.runningTaskLogPath else config.finishedTaskLogPath
       file = _.last(file.split('/'))
-      exists = _.contains(_.pluck(@logDir.toJSON(), 'uiPath'), file)
+      exists = _.contains(_.map(_.pluck(@logDir.toJSON(), 'uiPath'), (path) -> _.last(path.split('/'))), file)
 
       data: @task.toJSON()
       fileExists: exists
