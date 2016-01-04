@@ -565,10 +565,14 @@ public class TaskManager extends CuratorAsyncManager {
 
     final long now = System.currentTimeMillis();
 
-    String msg = String.format("Task launched because of pending type %s", task.getTaskRequest().getPendingTask().getPendingTaskId().getPendingType().name());
+    String msg = String.format("Task launched because of %s", task.getTaskRequest().getPendingTask().getPendingTaskId().getPendingType().name());
 
     if (task.getTaskRequest().getPendingTask().getUser().isPresent()) {
-      msg = msg + " by " + task.getTaskRequest().getPendingTask().getUser().get();
+      msg = String.format("%s by %s", msg, task.getTaskRequest().getPendingTask().getUser().get());
+    }
+
+    if (task.getTaskRequest().getPendingTask().getMessage().isPresent()) {
+      msg = String.format("%s (%s)", msg, task.getTaskRequest().getPendingTask().getMessage().get());
     }
 
     saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(task.getTaskId(), now, ExtendedTaskState.TASK_LAUNCHED, Optional.of(msg)));
