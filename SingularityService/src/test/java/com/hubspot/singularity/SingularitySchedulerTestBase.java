@@ -397,10 +397,6 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     return deploy;
   }
 
-  protected void initFirstDeployWithHealthcheck() {
-    firstDeploy = initDeploy(request, firstDeployId, true);
-  }
-
   protected SingularityDeploy initDeploy(SingularityDeployBuilder builder, long timestamp) {
     SingularityDeployMarker marker = new SingularityDeployMarker(requestId, builder.getId(), timestamp, Optional.<String> absent(), Optional.<String> absent());
     builder.setCommand(Optional.of("sleep 100"));

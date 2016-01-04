@@ -1266,9 +1266,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     initFirstDeploy();
 
-    SingularityTask taskOne = startTask(firstDeploy, 1);
-    SingularityTask taskTwo = startTask(firstDeploy, 2);
-    SingularityTask taskThree = startTask(firstDeploy, 3);
+    startTask(firstDeploy, 1);
+    startTask(firstDeploy, 2);
+    startTask(firstDeploy, 3);
 
     requestResource.bounce(requestId,
         Optional.of(new SingularityBounceRequest(Optional.of(true), Optional.<Boolean> absent(), Optional.of(1L), Optional.<String> absent(), Optional.of("msg"))));
@@ -1287,12 +1287,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals("msg", taskManager.getCleanupTasks().get(0).getMessage().get());
     Assert.assertEquals(actionId, taskManager.getCleanupTasks().get(0).getActionId().get());
 
-    SingularityTask taskFour = startTask(firstDeploy, 4);
-    //    SingularityTask taskFive = launchTask(request, firstDeploy, 5, TaskState.TASK_STARTING);
-    //
-    //    // for now
-    //    statusUpdate(taskFive, TaskState.TASK_RUNNING, Optional.of(1L));
-    //
+    startTask(firstDeploy, 4);
+//    launchTask(request, firstDeploy, 5, TaskState.TASK_STARTING);
+
     cleaner.drainCleanupQueue();
 
     Assert.assertEquals(1, taskManager.getKilledTaskIdRecords().size());
@@ -1329,7 +1326,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
         .setInstances(Optional.of(2)).build()
         );
 
-    initFirstDeployWithHealthcheck();
+    initHCDeploy();
 
     SingularityTask taskOne = startSeparatePlacementTask(firstDeploy, 1);
     SingularityTask taskTwo = startSeparatePlacementTask(firstDeploy, 2);
