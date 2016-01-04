@@ -29,10 +29,6 @@ public class SingularityRequest {
 
   private final Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule;
 
-  //"use requestType instead"
-  @Deprecated
-  private final Optional<Boolean> daemon;
-
   private final Optional<Integer> instances;
   private final Optional<Boolean> skipHealthchecks;
 
@@ -52,7 +48,7 @@ public class SingularityRequest {
 
   @JsonCreator
   public SingularityRequest(@JsonProperty("id") String id, @JsonProperty("requestType") RequestType requestType, @JsonProperty("owners") Optional<List<String>> owners,
-      @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure, @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("daemon") Optional<Boolean> daemon, @JsonProperty("instances") Optional<Integer> instances,
+      @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure, @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("instances") Optional<Integer> instances,
       @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive, @JsonProperty("loadBalanced") Optional<Boolean> loadBalanced,
       @JsonProperty("killOldNonLongRunningTasksAfterMillis") Optional<Long> killOldNonLongRunningTasksAfterMillis, @JsonProperty("scheduleType") Optional<ScheduleType> scheduleType,
       @JsonProperty("quartzSchedule") Optional<String> quartzSchedule, @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity,
@@ -66,7 +62,6 @@ public class SingularityRequest {
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
     this.schedule = schedule;
-    this.daemon = daemon;
     this.rackSensitive = rackSensitive;
     this.instances = instances;
     this.loadBalanced = loadBalanced;
@@ -82,14 +77,9 @@ public class SingularityRequest {
     this.group = group;
     this.readOnlyGroups = readOnlyGroups;
     this.bounceAfterScale = bounceAfterScale;
-    this.skipHealthchecks = skipHealthchecks;
     this.emailConfigurationOverrides = emailConfigurationOverrides;
-
-    if (requestType == null) {
-      this.requestType = RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced);
-    } else {
-      this.requestType = requestType;
-    }
+    this.skipHealthchecks = skipHealthchecks;
+    this.requestType = requestType;
   }
 
   public SingularityRequestBuilder toBuilder() {
@@ -112,8 +102,8 @@ public class SingularityRequest {
     .setGroup(group)
     .setReadOnlyGroups(readOnlyGroups)
     .setBounceAfterScale(bounceAfterScale)
-    .setSkipHealthchecks(skipHealthchecks)
-    .setEmailConfigurationOverrides(emailConfigurationOverrides);
+    .setEmailConfigurationOverrides(emailConfigurationOverrides)
+    .setSkipHealthchecks(skipHealthchecks);
   }
 
   public String getId() {
@@ -134,11 +124,6 @@ public class SingularityRequest {
 
   public Optional<String> getQuartzSchedule() {
     return quartzSchedule;
-  }
-
-  @Deprecated
-  public Optional<Boolean> getDaemon() {
-    return daemon;
   }
 
   public Optional<Integer> getInstances() {
@@ -205,12 +190,6 @@ public class SingularityRequest {
   }
 
   @JsonIgnore
-  @Deprecated
-  public boolean isDaemon() {
-    return daemon.or(Boolean.TRUE).booleanValue();
-  }
-
-  @JsonIgnore
   public boolean isLongRunning() {
     return requestType.isLongRunning();
   }
@@ -261,12 +240,11 @@ public class SingularityRequest {
     return bounceAfterScale;
   }
 
-  public Optional<Boolean> getSkipHealthchecks() {
-    return skipHealthchecks;
-  }
-
   public Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> getEmailConfigurationOverrides() {
     return emailConfigurationOverrides;
+}
+  public Optional<Boolean> getSkipHealthchecks() {
+    return skipHealthchecks;
   }
 
   @Override
@@ -282,7 +260,6 @@ public class SingularityRequest {
             ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis +
             ", scheduledExpectedRuntimeMillis=" + scheduledExpectedRuntimeMillis +
             ", waitAtLeastMillisAfterTaskFinishesForReschedule=" + waitAtLeastMillisAfterTaskFinishesForReschedule +
-            ", daemon=" + daemon +
             ", instances=" + instances +
             ", rackSensitive=" + rackSensitive +
             ", rackAffinity=" + rackAffinity +
@@ -293,7 +270,6 @@ public class SingularityRequest {
             ", group=" + group +
             ", readOnlyGroups=" + readOnlyGroups +
             ", bounceAfterScale=" + bounceAfterScale +
-            ", skipHealthchecks=" + skipHealthchecks +
             ", emailConfigurationOverrides=" + emailConfigurationOverrides +
             ']';
   }
@@ -327,12 +303,11 @@ public class SingularityRequest {
             Objects.equals(group, request.group) &&
             Objects.equals(readOnlyGroups, request.readOnlyGroups) &&
             Objects.equals(bounceAfterScale, request.bounceAfterScale) &&
-            Objects.equals(skipHealthchecks, request.skipHealthchecks) &&
             Objects.equals(emailConfigurationOverrides, request.emailConfigurationOverrides);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale, skipHealthchecks, emailConfigurationOverrides);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides);
   }
 }
