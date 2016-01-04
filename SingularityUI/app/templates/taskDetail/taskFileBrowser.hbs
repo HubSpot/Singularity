@@ -75,11 +75,7 @@
         {{else}}
               <div class="page-loader-container">
                   <div class="empty-table-message">
-                    {{#if startingUp}}
-                        Could not get files. The task is probably still starting up.
-                    {{else}}
-                        Could not get files. This task is old; perhaps they have been archived to S3?
-                    {{/if}}
+                    {{emptySandboxMessage}}
                   </div>
               </div>
         {{/if}}
