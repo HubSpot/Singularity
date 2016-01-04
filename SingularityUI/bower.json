@@ -38,12 +38,12 @@
     "datatables": "~1.10.7",
     "datatables-bootstrap3-plugin": "~0.4.0",
     "select2": "~3.5.2",
-    "fuse.js": "~1.2.2",
-    "juration": "*",
     "react": "~0.14.2",
     "react-list": "~0.7.3",
     "react-dom": "~0.1.0",
-    "fuzzy": "~0.1.1"
+    "fuzzy": "~0.1.1",
+    "fuse.js": "~1.2.2",
+    "juration": "*"
   },
   "resolutions": {
     "backbone": "~1.1.2",
