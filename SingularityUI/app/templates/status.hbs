@@ -9,7 +9,9 @@
                 <div class="col-md-3 col-sm-3 hidden-xs chart">
                     <div class='chart__column'>
                         {{#each requests}}
-                            <span data-type="column" data-state-attribute='{{ attribute }}' style='height: {{percent}}%' title="{{count}} {{label}}" class='chart__data-point chart-fill-{{ type }}'></span>
+                            {{#if link}}<a href="{{appRoot}}{{link}}">{{/if}}
+                              <span data-type="column" data-state-attribute='{{ attribute }}' style='height: {{percent}}%' title="{{count}} {{label}}" class='chart__data-point chart-fill-{{ type }}'></span>
+                            {{#if link}}</a>{{/if}}
                         {{/each}}
                     </div>
                     <h5 class='text-center'>{{totalRequests}} Total</h5>
@@ -57,7 +59,9 @@
                 <div class="col-md-3 col-sm-3 chart hidden-xs">
                     <div class='chart__column'>
                         {{#each tasks}}
-                            <span style='height: {{percent}}%' title="{{count}} {{label}}" class='chart__data-point chart-fill-{{ type }}'></span>
+                            {{#if link}}<a href="{{appRoot}}{{link}}">{{/if}}
+                              <span style='height: {{percent}}%' title="{{count}} {{label}}" class='chart__data-point chart-fill-{{ type }}'></span>
+                            {{#if link}}</a>{{/if}}
                         {{/each}}
                     </div>
                     <h5 class='text-center'>{{totalTasks}} Total</h5>
