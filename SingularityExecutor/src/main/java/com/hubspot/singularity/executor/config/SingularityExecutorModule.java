@@ -1,10 +1,13 @@
 package com.hubspot.singularity.executor.config;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
+import com.google.common.util.concurrent.SimpleTimeLimiter;
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -84,8 +87,13 @@ public class SingularityExecutorModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public DockerClient providesDockerClient() {
-    return new DefaultDockerClient("unix:///var/run/docker.sock");
+  public DockerClient providesDockerClient(SingularityExecutorConfiguration configuration) {
+    if (configuration.getDockerClientTimeLimitSeconds().isPresent()) {
+      TimeLimiter limiter = new SimpleTimeLimiter();
+      return limiter.newProxy(new DefaultDockerClient("unix:///var/run/docker.sock"), DockerClient.class, configuration.getDockerClientTimeLimitSeconds().get(), TimeUnit.SECONDS);
+    } else {
+      return new DefaultDockerClient("unix:///var/run/docker.sock");
+    }
   }
 
   @Provides
