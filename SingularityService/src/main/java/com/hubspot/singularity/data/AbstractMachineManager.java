@@ -113,7 +113,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
     FAILURE_NOT_FOUND, FAILURE_ALREADY_AT_STATE, FAILURE_ILLEGAL_TRANSITION, SUCCESS;
   }
 
-  public StateChangeResult changeState(String objectId, MachineState newState, Optional<String> user) {
+  public StateChangeResult changeState(String objectId, MachineState newState, Optional<String> message, Optional<String> user) {
     Optional<T> maybeObject = getObject(objectId);
 
     if (!maybeObject.isPresent()) {
@@ -122,10 +122,10 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
 
     final T object = maybeObject.get();
 
-    return changeState(object, newState, user);
+    return changeState(object, newState, message, user);
   }
 
-  public StateChangeResult changeState(T object, MachineState newState, Optional<String> user) {
+  public StateChangeResult changeState(T object, MachineState newState, Optional<String> message, Optional<String> user) {
     if (object.getCurrentState().getState() == newState) {
       return StateChangeResult.FAILURE_ALREADY_AT_STATE;
     }
@@ -144,7 +144,7 @@ public abstract class AbstractMachineManager<T extends SingularityMachineAbstrac
       return StateChangeResult.FAILURE_ILLEGAL_TRANSITION;
     }
 
-    SingularityMachineStateHistoryUpdate newStateUpdate = new SingularityMachineStateHistoryUpdate(object.getId(), newState, System.currentTimeMillis(), user);
+    SingularityMachineStateHistoryUpdate newStateUpdate = new SingularityMachineStateHistoryUpdate(object.getId(), newState, System.currentTimeMillis(), user, message);
 
     LOG.debug("{} changing state from {} to {} by {}", object.getId(), object.getCurrentState().getState(), newState, user);
 
