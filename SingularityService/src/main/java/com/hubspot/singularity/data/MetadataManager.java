@@ -11,8 +11,8 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.SingularityEmailType;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.config.EmailConfigurationEnums.EmailType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.StringTranscoder;
 
@@ -58,7 +58,7 @@ public class MetadataManager extends CuratorManager {
     save(ZK_DATA_VERSION_PATH, Optional.of(newVersion.getBytes(UTF_8)));
   }
 
-  public void saveMailRecord(SingularityRequest request, EmailType emailType) {
+  public void saveMailRecord(SingularityRequest request, SingularityEmailType emailType) {
     create(getMailRecordPathForRequestAndTypeAndTime(request.getId(), emailType.name(), Long.toString(System.currentTimeMillis())));
   }
 

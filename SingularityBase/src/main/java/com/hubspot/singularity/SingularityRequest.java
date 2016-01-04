@@ -48,6 +48,8 @@ public class SingularityRequest {
   private final Optional<Set<String>> readOnlyGroups;
   private final Optional<Boolean> bounceAfterScale;
 
+  private final Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides;
+
   @JsonCreator
   public SingularityRequest(@JsonProperty("id") String id, @JsonProperty("requestType") RequestType requestType, @JsonProperty("owners") Optional<List<String>> owners,
       @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure, @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("daemon") Optional<Boolean> daemon, @JsonProperty("instances") Optional<Integer> instances,
@@ -58,6 +60,7 @@ public class SingularityRequest {
       @JsonProperty("allowedSlaveAttributes") Optional<Map<String, String>> allowedSlaveAttributes, @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis,
       @JsonProperty("waitAtLeastMillisAfterTaskFinishesForReschedule") Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule, @JsonProperty("group") Optional<String> group,
       @JsonProperty("readOnlyGroups") Optional<Set<String>> readOnlyGroups, @JsonProperty("bounceAfterScale") Optional<Boolean> bounceAfterScale,
+      @JsonProperty("emailConfigurationOverrides") Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides) {
       @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks) {
     this.id = id;
     this.owners = owners;
@@ -79,6 +82,7 @@ public class SingularityRequest {
     this.group = group;
     this.readOnlyGroups = readOnlyGroups;
     this.bounceAfterScale = bounceAfterScale;
+    this.emailConfigurationOverrides = emailConfigurationOverrides;
     this.skipHealthchecks = skipHealthchecks;
 
     if (requestType == null) {
@@ -108,6 +112,7 @@ public class SingularityRequest {
     .setGroup(group)
     .setReadOnlyGroups(readOnlyGroups)
     .setBounceAfterScale(bounceAfterScale)
+    .setEmailConfigurationOverrides(emailConfigurationOverrides);
     .setSkipHealthchecks(skipHealthchecks);
   }
 
@@ -256,6 +261,9 @@ public class SingularityRequest {
     return bounceAfterScale;
   }
 
+  public Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> getEmailConfigurationOverrides() {
+    return emailConfigurationOverrides;
+}
   public Optional<Boolean> getSkipHealthchecks() {
     return skipHealthchecks;
   }
@@ -284,6 +292,7 @@ public class SingularityRequest {
             ", group=" + group +
             ", readOnlyGroups=" + readOnlyGroups +
             ", bounceAfterScale=" + bounceAfterScale +
+            ", emailConfigurationOverrides=" + emailConfigurationOverrides +
             ']';
   }
 
@@ -315,11 +324,12 @@ public class SingularityRequest {
             Objects.equals(loadBalanced, request.loadBalanced) &&
             Objects.equals(group, request.group) &&
             Objects.equals(readOnlyGroups, request.readOnlyGroups) &&
-            Objects.equals(bounceAfterScale, request.bounceAfterScale);
+            Objects.equals(bounceAfterScale, request.bounceAfterScale) &&
+            Objects.equals(emailConfigurationOverrides, request.emailConfigurationOverrides);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides);
   }
 }
