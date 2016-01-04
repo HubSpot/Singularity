@@ -6,6 +6,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityCuratorTestBase;
@@ -32,8 +33,8 @@ public class SlaveTest extends SingularityCuratorTestBase {
 
   @Test
   public void testDeadSlavesArePurged() {
-    SingularitySlave liveSlave = new SingularitySlave("1", "h1", "r1");
-    SingularitySlave deadSlave = new SingularitySlave("2", "h1", "r1");
+    SingularitySlave liveSlave = new SingularitySlave("1", "h1", "r1", ImmutableMap.of("uniqueAttribute", "1"));
+    SingularitySlave deadSlave = new SingularitySlave("2", "h1", "r1", ImmutableMap.of("uniqueAttribute", "2"));
 
     final long now = System.currentTimeMillis();
 

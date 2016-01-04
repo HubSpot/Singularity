@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -28,10 +29,13 @@ public class SingularityRequestBuilder {
   private Optional<Boolean> daemon;
 
   private Optional<Integer> instances;
+  private Optional<Boolean> skipHealthchecks;
 
   private Optional<Boolean> rackSensitive;
   private Optional<List<String>> rackAffinity;
   private Optional<SlavePlacement> slavePlacement;
+  private Optional<Map<String, String>> requiredSlaveAttributes;
+  private Optional<Map<String, String>> allowedSlaveAttributes;
 
   private Optional<Boolean> loadBalanced;
 
@@ -53,17 +57,29 @@ public class SingularityRequestBuilder {
     this.quartzSchedule = Optional.absent();
     this.rackAffinity = Optional.absent();
     this.slavePlacement = Optional.absent();
+    this.requiredSlaveAttributes = Optional.absent();
+    this.allowedSlaveAttributes = Optional.absent();
     this.scheduledExpectedRuntimeMillis = Optional.absent();
     this.daemon = Optional.absent();
     this.waitAtLeastMillisAfterTaskFinishesForReschedule = Optional.absent();
     this.group = Optional.absent();
     this.readOnlyGroups = Optional.absent();
     this.bounceAfterScale = Optional.absent();
+    this.skipHealthchecks = Optional.absent();
   }
 
   public SingularityRequest build() {
     return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, daemon, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule,
-        rackAffinity, slavePlacement, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readOnlyGroups, bounceAfterScale);
+        rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readOnlyGroups, bounceAfterScale, skipHealthchecks);
+  }
+
+  public Optional<Boolean> getSkipHealthchecks() {
+    return skipHealthchecks;
+  }
+
+  public SingularityRequestBuilder setSkipHealthchecks(Optional<Boolean> skipHealthchecks) {
+    this.skipHealthchecks = skipHealthchecks;
+    return this;
   }
 
   public Optional<Boolean> getLoadBalanced() {
@@ -211,6 +227,16 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  public SingularityRequestBuilder setRequiredSlaveAttributes(Optional<Map<String, String>> requiredSlaveAttributes) {
+    this.requiredSlaveAttributes = requiredSlaveAttributes;
+    return this;
+  }
+
+  public SingularityRequestBuilder setAllowedSlaveAttributes(Optional<Map<String, String>> allowedSlaveAttributes) {
+    this.allowedSlaveAttributes = allowedSlaveAttributes;
+    return this;
+  }
+
   public Optional<Set<String>> getReadOnlyGroups() {
     return readOnlyGroups;
   }
@@ -247,10 +273,13 @@ public class SingularityRequestBuilder {
             ", rackSensitive=" + rackSensitive +
             ", rackAffinity=" + rackAffinity +
             ", slavePlacement=" + slavePlacement +
+            ", requiredSlaveAttrbiutes=" + requiredSlaveAttributes +
+            ", allowedSlaveAttrbiutes=" + allowedSlaveAttributes +
             ", loadBalanced=" + loadBalanced +
             ", group=" + group +
             ", readOnlyGroups=" + readOnlyGroups +
             ", bounceAfterScale=" + bounceAfterScale +
+            ", skipHealthchecks=" + skipHealthchecks +
             ']';
   }
 
@@ -277,14 +306,20 @@ public class SingularityRequestBuilder {
             Objects.equals(rackSensitive, that.rackSensitive) &&
             Objects.equals(rackAffinity, that.rackAffinity) &&
             Objects.equals(slavePlacement, that.slavePlacement) &&
+            Objects.equals(requiredSlaveAttributes, that.requiredSlaveAttributes) &&
+            Objects.equals(allowedSlaveAttributes, that.allowedSlaveAttributes) &&
             Objects.equals(loadBalanced, that.loadBalanced) &&
             Objects.equals(group, that.group) &&
             Objects.equals(readOnlyGroups, that.readOnlyGroups) &&
-            Objects.equals(bounceAfterScale, that.bounceAfterScale);
+            Objects.equals(bounceAfterScale, that.bounceAfterScale) &&
+            Objects.equals(skipHealthchecks, that.skipHealthchecks);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, loadBalanced, group, readOnlyGroups, bounceAfterScale);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis,
+        scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement,
+        requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale, skipHealthchecks);
   }
+
 }

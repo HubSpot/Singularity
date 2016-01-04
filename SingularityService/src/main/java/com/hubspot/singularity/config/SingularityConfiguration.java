@@ -1,5 +1,7 @@
 package com.hubspot.singularity.config;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -37,6 +39,8 @@ public class SingularityConfiguration extends Configuration {
   private long checkDeploysEverySeconds = 5;
 
   private long checkNewTasksEverySeconds = 5;
+
+  private long checkExpiringUserActionEveryMillis = TimeUnit.SECONDS.toMillis(45);
 
   private int checkNewTasksScheduledThreads = 3;
 
@@ -210,6 +214,9 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   @Valid
   private AuthConfiguration authConfiguration = new AuthConfiguration();
+
+  @NotNull
+  private Map<String, List<String>> reserveSlavesWithAttributes = Collections.emptyMap();
 
   @JsonProperty("graphite")
   @NotNull
@@ -844,6 +851,14 @@ public class SingularityConfiguration extends Configuration {
     return authConfiguration;
   }
 
+  public long getCheckExpiringUserActionEveryMillis() {
+    return checkExpiringUserActionEveryMillis;
+  }
+
+  public void setCheckExpiringUserActionEveryMillis(long checkExpiringUserActionEveryMillis) {
+    this.checkExpiringUserActionEveryMillis = checkExpiringUserActionEveryMillis;
+  }
+
   public void setAuthConfiguration(AuthConfiguration authConfiguration) {
     this.authConfiguration = authConfiguration;
   }
@@ -854,6 +869,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setHistoryPurgingConfiguration(HistoryPurgingConfiguration historyPurgingConfiguration) {
     this.historyPurgingConfiguration = historyPurgingConfiguration;
+  }
+
+  public Map<String, List<String>> getReserveSlavesWithAttributes() {
+    return reserveSlavesWithAttributes;
+  }
+
+  public void setReserveSlavesWithAttrbiutes(Map<String, List<String>> reserveSlavesWithAttributes) {
+    this.reserveSlavesWithAttributes = reserveSlavesWithAttributes;
   }
 
   public GraphiteConfiguration getGraphiteConfiguration() {

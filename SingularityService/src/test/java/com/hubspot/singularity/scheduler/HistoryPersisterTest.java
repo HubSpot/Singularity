@@ -39,11 +39,11 @@ public class HistoryPersisterTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(!requestManager.getRequestHistory(requestId).isEmpty());
 
-    requestManager.deleteRequest(request, user);
+    requestManager.deleteRequest(request, user, Optional.<String> absent(), Optional.<String> absent());
 
     requestManager.deleteHistoryParent(requestId);
 
-    requestManager.activate(request, RequestHistoryType.CREATED, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(3), Optional.<String> absent());
+    requestManager.activate(request, RequestHistoryType.CREATED, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(3), Optional.<String> absent(), Optional.<String> absent());
     requestManager.cooldown(request, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(2));
 
     requestHistoryPersister.runActionOnPoll();
@@ -97,11 +97,11 @@ public class HistoryPersisterTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
 
-    requestManager.deleteRequest(request, user);
+    requestManager.deleteRequest(request, user, Optional.<String> absent(), Optional.<String> absent());
 
     requestManager.deleteHistoryParent(requestId);
 
-    requestManager.activate(request, RequestHistoryType.CREATED, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(3), Optional.<String> absent());
+    requestManager.activate(request, RequestHistoryType.CREATED, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(3), Optional.<String> absent(), Optional.<String> absent());
 
     configuration.setDatabaseConfiguration(new DataSourceFactory());
 

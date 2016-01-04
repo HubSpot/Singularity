@@ -1,24 +1,24 @@
 {{#unless rowsOnly}}
     {{#if haveTasks}}
-        <table class="table table-striped sortable-theme-bootstrap" data-sortable>
+        <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>
+                    <th data-sort-attribute="taskId.id">
                         Name
                     </th>
-                    <th class="hidden-xs">
+                    <th class="hidden-xs" data-sort-attribute="taskId.startedAt">
                         Started
                     </th>
-                    <th class="hidden-xs">
+                    <th class="hidden-xs" data-sort-attribute="host">
                         Host
                     </th>
-                    <th class="hidden-xs">
+                    <th class="hidden-xs" data-sort-attribute="taskId.rackId">
                         Rack
                     </th>
-                    <th class="visible-lg">
+                    <th class="visible-lg" data-sort-attribute="cpus">
                         CPUs
                     </th>
-                    <th class="visible-lg">
+                    <th class="visible-lg" data-sort-attribute="memoryMb">
                         Memory
                     </th>
                     <th class="hidden-xs">

@@ -6,40 +6,26 @@ import com.google.common.base.Optional;
 
 public class SingularityTaskCleanup {
 
-  public enum TaskCleanupType {
-    USER_REQUESTED(true, true), DECOMISSIONING(false, false), SCALING_DOWN(true, false), BOUNCING(false, false), INCREMENTAL_BOUNCE(false, false), DEPLOY_FAILED(true, true), NEW_DEPLOY_SUCCEEDED(true, false), DEPLOY_CANCELED(true, true), UNHEALTHY_NEW_TASK(true, true), OVERDUE_NEW_TASK(true, true);
-
-    private final boolean killLongRunningTaskInstantly;
-    private final boolean killNonLongRunningTaskInstantly;
-
-    private TaskCleanupType(boolean killLongRunningTaskInstantly, boolean killNonLongRunningTaskInstantly) {
-      this.killLongRunningTaskInstantly = killLongRunningTaskInstantly;
-      this.killNonLongRunningTaskInstantly = killNonLongRunningTaskInstantly;
-    }
-
-    public boolean shouldKillTaskInstantly(SingularityRequest request) {
-      if (request.isLongRunning()) {
-        return killLongRunningTaskInstantly;
-      } else {
-        return killNonLongRunningTaskInstantly;
-      }
-    }
-  }
-
   private final Optional<String> user;
   private final TaskCleanupType cleanupType;
   private final long timestamp;
   private final SingularityTaskId taskId;
   private final Optional<String> message;
+  private final Optional<String> actionId;
 
   @JsonCreator
   public SingularityTaskCleanup(@JsonProperty("user") Optional<String> user, @JsonProperty("cleanupType") TaskCleanupType cleanupType, @JsonProperty("timestamp") long timestamp,
-      @JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("message") Optional<String> message) {
+      @JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("message") Optional<String> message, @JsonProperty("actionId") Optional<String> actionId) {
     this.user = user;
     this.cleanupType = cleanupType;
     this.timestamp = timestamp;
     this.taskId = taskId;
     this.message = message;
+    this.actionId = actionId;
+  }
+
+  public Optional<String> getActionId() {
+    return actionId;
   }
 
   public Optional<String> getMessage() {
@@ -64,7 +50,7 @@ public class SingularityTaskCleanup {
 
   @Override
   public String toString() {
-    return "SingularityTaskCleanup [user=" + user + ", cleanupType=" + cleanupType + ", timestamp=" + timestamp + ", taskId=" + taskId + ", message=" + message + "]";
+    return "SingularityTaskCleanup [user=" + user + ", cleanupType=" + cleanupType + ", timestamp=" + timestamp + ", taskId=" + taskId + ", message=" + message + ", actionId=" + actionId + "]";
   }
 
 }

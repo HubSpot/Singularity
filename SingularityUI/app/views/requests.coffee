@@ -17,11 +17,13 @@ class RequestsView extends View
         paused:   require '../templates/requestsTable/requestsPausedBody'
         pending:  require '../templates/requestsTable/requestsPendingBody'
         cleaning: require '../templates/requestsTable/requestsCleaningBody'
+        activeDeploy: require '../templates/requestsTable/requestsAllBody'
+        noDeploy: require '../templates/requestsTable/requestsAllBody'
 
     quartzTemplate: require '../templates/vex/quartzInfo'
 
     # Which table views have sub-filters (daemon, scheduled, on-demand)
-    haveSubfilter: ['all', 'active', 'paused', 'cooldown']
+    haveSubfilter: ['all', 'active', 'paused', 'cooldown', 'activeDeploy', 'noDeploy']
 
     # For staged rendering
     renderProgress: 0
@@ -50,8 +52,18 @@ class RequestsView extends View
         @bodyTemplate = @bodyTemplateMap[@state]
         @listenTo @collection, 'sync', @render
 
-        # So we don't spam it with every keystroke
-        @searchChange = _.debounce @searchChange, 200
+        @fuzzySearch = _.memoize(@fuzzySearch)
+
+    fuzzySearch: (filter, requests) =>
+        id =
+            extract: (o) ->
+                o.id
+        user =
+            extract: (o) ->
+                o.requestDeployState?.activeDeploy?.user or ''
+        res1 = fuzzy.filter(filter, requests, id)
+        res2 = fuzzy.filter(filter, requests, user)
+        _.pluck(_.sortBy(_.union(res1, res2), (r) => r.score), 'original')
 
     # Returns the array of requests that need to be rendered
     filterCollection: =>
@@ -59,13 +71,7 @@ class RequestsView extends View
 
         # Only show requests that match the search query
         if @searchFilter
-            searchFilter = @searchFilter.toLowerCase().split("@")[0]
-            fuse = new Fuse(
-                requests
-                keys: ["request.id", "requestDeployState.activeDeploy.user", "request.owners"]
-                threshold: 0.4
-                maxPatternLength: 128)
-            requests = fuse.search(searchFilter).reverse()
+            requests = @fuzzySearch(@searchFilter, requests)
 
         # Only show requests that match the clicky filters
         if @state in @haveSubfilter and @subFilter isnt 'all'
@@ -85,6 +91,15 @@ class RequestsView extends View
 
                 filter
 
+        # Filter by deploy type if applicable
+        if @state in ['activeDeploy', 'noDeploy']
+            requests = _.filter requests, (request) =>
+                if @state == 'activeDeploy'
+                    return !!request.requestDeployState?.activeDeploy
+                else if @state == 'noDeploy'
+                    return !request.requestDeployState?.activeDeploy
+                return true
+
         # Sort the table if the user clicked on the table heading things
         if @sortAttribute?
             requests = _.sortBy requests, (request) =>
@@ -103,7 +118,7 @@ class RequestsView extends View
         else
             requests.reverse()
 
-        if @state in ['all', 'active']
+        if @state in ['all', 'active', 'activeDeploy', 'noDeploy']
             for request in requests
                 request.starred = @collection.isStarred request.id
 

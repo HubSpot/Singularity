@@ -58,8 +58,8 @@ public class SingularityMesosTaskBuilderTest {
 
   @Before
   public void createMocks() {
-    pendingTask = new SingularityPendingTask(new SingularityPendingTaskId("test", "1", 0, 1, PendingType.IMMEDIATE, 0), Collections.<String> emptyList(),
-        Optional.<String> absent(), Optional.<String> absent());
+    pendingTask = new SingularityPendingTask(new SingularityPendingTaskId("test", "1", 0, 1, PendingType.IMMEDIATE, 0), Optional.<List<String>> absent(),
+        Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent());
 
     final SingularitySlaveAndRackHelper slaveAndRackHelper = mock(SingularitySlaveAndRackHelper.class);
     final ExecutorIdGenerator idGenerator = mock(ExecutorIdGenerator.class);
@@ -87,8 +87,8 @@ public class SingularityMesosTaskBuilderTest {
   public void testShellCommand() {
     final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER).build();
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
-    .setCommand(Optional.of("/bin/echo hi"))
-    .build();
+        .setCommand(Optional.of("/bin/echo hi"))
+        .build();
     final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
     final SingularityTask task = builder.buildTask(offer, null, taskRequest, taskResources, executorResources);
 
@@ -101,9 +101,9 @@ public class SingularityMesosTaskBuilderTest {
   public void testArgumentCommand() {
     final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER).build();
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
-    .setCommand(Optional.of("/bin/echo"))
-    .setArguments(Optional.of(Collections.singletonList("wat")))
-    .build();
+        .setCommand(Optional.of("/bin/echo"))
+        .setArguments(Optional.of(Collections.singletonList("wat")))
+        .build();
     final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
     final SingularityTask task = builder.buildTask(offer, null, taskRequest, taskResources, executorResources);
 
@@ -130,16 +130,16 @@ public class SingularityMesosTaskBuilderTest {
 
     final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER).build();
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
-      SingularityContainerType.DOCKER,
+        SingularityContainerType.DOCKER,
         Optional.of(Arrays.asList(
-                new SingularityVolume("/container", Optional.of("/host"), SingularityDockerVolumeMode.RW),
-                new SingularityVolume("/container/${TASK_REQUEST_ID}/${TASK_DEPLOY_ID}", Optional.of("/host/${TASK_ID}"), SingularityDockerVolumeMode.RO))),
+            new SingularityVolume("/container", Optional.of("/host"), SingularityDockerVolumeMode.RW),
+            new SingularityVolume("/container/${TASK_REQUEST_ID}/${TASK_DEPLOY_ID}", Optional.of("/host/${TASK_ID}"), SingularityDockerVolumeMode.RO))),
         Optional.of(new SingularityDockerInfo("docker-image", true, SingularityDockerNetworkType.BRIDGE, Optional.of(Arrays.asList(literalMapping, offerMapping)), Optional.of(false), Optional.<Map<String, String>>of(ImmutableMap.of("env", "var=value")) )));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
-      .setContainerInfo(Optional.of(containerInfo))
-      .setCommand(Optional.of("/bin/echo"))
-      .setArguments(Optional.of(Collections.singletonList("wat")))
-      .build();
+        .setContainerInfo(Optional.of(containerInfo))
+        .setCommand(Optional.of("/bin/echo"))
+        .setArguments(Optional.of(Collections.singletonList("wat")))
+        .build();
     final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
     final SingularityTask task = builder.buildTask(offer, Collections.singletonList(portsResource), taskRequest, taskResources, executorResources);
 
@@ -177,13 +177,13 @@ public class SingularityMesosTaskBuilderTest {
 
     final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER).build();
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
-      SingularityContainerType.DOCKER,
+        SingularityContainerType.DOCKER,
         Optional.<List<SingularityVolume>>absent(),
         Optional.of(new SingularityDockerInfo("docker-image", true, SingularityDockerNetworkType.NONE,
             Optional.<List<SingularityDockerPortMapping>>absent())));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
-      .setContainerInfo(Optional.of(containerInfo))
-      .build();
+        .setContainerInfo(Optional.of(containerInfo))
+        .build();
     final SingularityTaskRequest taskRequest = new SingularityTaskRequest(request, deploy, pendingTask);
     final SingularityTask task = builder.buildTask(offer, Collections.<Protos.Resource>emptyList(), taskRequest, taskResources, executorResources);
 

@@ -49,25 +49,25 @@
             {{/if}}
 
             {{#if data.canBeScaled}}
-                <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="scale">
+                <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="scale" {{#if scaleDisabled }}disabled{{/if}}>
                     Scale
                 </a>
             {{/if}}
 
             {{#unless data.deleted}}
                 {{#if data.paused}}
-                    <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="unpause">
+                    <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="unpause" {{#if pauseDisabled }}disabled{{/if}}>
                         Unpause
                     </a>
                 {{else}}
-                    <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="pause">
+                    <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="pause" {{#if pauseDisabled }}disabled{{/if}}>
                         Pause
                     </a>
                 {{/if}}
             {{/unless}}
 
             {{#if data.canBeBounced}}
-                <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="bounce">
+                <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="bounce" {{#if bounceDisabled }}disabled{{/if}}>
                     Bounce
                 </a>
             {{/if}}
@@ -77,6 +77,18 @@
                     Edit
                 </a>
             {{/unless}}
+
+            {{#if canDisableHealthchecks}}
+                {{#if data.request.skipHealthchecks}}
+                  <a class="btn btn-warning" data-request-id="{{ data.id }}" data-action="enableHealthchecks">
+                      Enable Healthchecks
+                  </a>
+                {{else}}
+                  <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="disableHealthchecks">
+                      Disable Healthchecks
+                  </a>
+                {{/if}}
+            {{/if}}
 
             {{#unless data.deleted}}
                 <a class="btn btn-danger" data-request-id="{{ data.id }}" data-action="remove">
@@ -89,6 +101,11 @@
     {{#if isBouncing}}
     <div class="alert alert-warning" role="alert">
         <b>Request is bouncing:</b> {{ runningInstanceCount }} of {{ data.instances }} replacement tasks are currently running.
+    </div>
+    {{/if}}
+    {{#if isDeploying}}
+    <div class="alert alert-warning" role="alert">
+        <b>Deploy <a href="{{appRoot}}/request/{{ data.id }}/deploy/{{ data.pendingDeploy.id }}">{{data.pendingDeploy.id}}</a> is pending:</b> {{ deployingInstanceCount }} of {{ data.instances }} new tasks are currently running.
     </div>
     {{/if}}
 

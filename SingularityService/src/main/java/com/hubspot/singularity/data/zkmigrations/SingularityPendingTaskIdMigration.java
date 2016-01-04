@@ -1,6 +1,7 @@
 package com.hubspot.singularity.data.zkmigrations;
 
 import java.util.Collections;
+import java.util.List;
 
 import javax.inject.Singleton;
 
@@ -57,8 +58,8 @@ public class SingularityPendingTaskIdMigration extends ZkDataMigration {
 
           Optional<String> cmdLineArgs = getCmdLineArgs(pendingTaskId);
 
-          taskManager.savePendingTask(new SingularityPendingTask(newPendingTaskId, cmdLineArgs.isPresent() ? Collections.singletonList(cmdLineArgs.get()) :
-            Collections.<String> emptyList(), Optional.<String> absent(), Optional.<String> absent()));
+          taskManager.savePendingTask(new SingularityPendingTask(newPendingTaskId, cmdLineArgs.isPresent() ? Optional.of(Collections.singletonList(cmdLineArgs.get())) :
+            Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent()));
 
           curator.delete().forPath(ZKPaths.makePath(PENDING_TASKS_ROOT, pendingTaskId));
         }

@@ -17,7 +17,7 @@ master:
     MESOS_WORK_DIR: /var/lib/mesos
 
 slave:
-  image: hubspot/singularityexecutorslave:0.4.6-SNAPSHOT
+  image: hubspot/singularityexecutorslave:0.4.8-SNAPSHOT
   command: mesos-slave
   net: host
   environment:
@@ -25,19 +25,20 @@ slave:
     MESOS_HOSTNAME: localhost
     MESOS_IP: 127.0.0.1
     MESOS_CONTAINERIZERS: docker,mesos
+    MESOS_ATTRIBUTES: "example:value;myNumber:1"
   volumes:
     - /var/run/docker.sock:/var/run/docker.sock
     - /sys:/sys
 
 scheduler:
-  image: hubspot/singularityservice:0.4.6-SNAPSHOT
+  image: hubspot/singularityservice:0.4.8-SNAPSHOT
   net: host
   environment:
     - DOCKER_HOST
     - LOAD_BALANCER_URI=http://localhost:8080/baragon/v2/request
 
 baragonservice:
-  image: hubspot/baragonservice:0.1.9
+  image: hubspot/baragonservice:0.1.11
   net: host
   environment:
     - DOCKER_HOST
@@ -45,7 +46,7 @@ baragonservice:
     - BARAGON_UI_BASE=/baragon/v2
 
 baragonagent:
-  image: hubspot/baragonagent:0.1.9
+  image: hubspot/baragonagent:0.1.11
   net: host
   environment:
     NGINX_PORT: 80

@@ -18,6 +18,7 @@ import com.hubspot.mesos.json.MesosTaskMonitorObject;
 import com.hubspot.mesos.json.MesosTaskObject;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityTaskCleanupResult;
+import com.hubspot.singularity.api.SingularityKillTaskRequest;
 import com.hubspot.singularity.client.SingularityClient;
 import com.hubspot.singularity.oomkiller.config.SingularityOOMKillerConfiguration;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
@@ -104,7 +105,7 @@ public class SingularityOOMKiller {
         }
       } else {
         for (MesosTaskObject task : executor.getCompletedTasks()) {
-          Optional<SingularityTaskCleanupResult> taskCleanupResult = singularity.killTask(task.getId(), Optional.<String> absent());
+          Optional<SingularityTaskCleanupResult> taskCleanupResult = singularity.killTask(task.getId(), Optional.<SingularityKillTaskRequest> absent());
 
           if (taskCleanupResult.isPresent()) {
             LOG.info("Kill result {} for {}", taskCleanupResult.get().getResult(), task.getId());

@@ -45,10 +45,30 @@ public class JDBIHistoryManager implements HistoryManager {
     return history.getTaskHistoryForDeploy(requestId, deployId, limitStart, limitCount);
   }
 
+  private String getVarcharField(Optional<String> field, int maxLength) {
+    if (!field.isPresent()) {
+      return null;
+    }
+
+    if (field.get().length() > maxLength) {
+      return field.get().substring(0, maxLength);
+    }
+
+    return field.get();
+  }
+
+  private String getMessageField(Optional<String> message) {
+    return getVarcharField(message, 280);
+  }
+
+  private String getUserField(Optional<String> user) {
+    return getVarcharField(user, 100);
+  }
+
   @Override
   public void saveRequestHistoryUpdate(SingularityRequestHistory requestHistory) {
     history.insertRequestHistory(requestHistory.getRequest().getId(), singularityRequestTranscoder.toBytes(requestHistory.getRequest()), new Date(requestHistory.getCreatedAt()),
-        requestHistory.getEventType().name(), requestHistory.getUser().orNull());
+        requestHistory.getEventType().name(), getUserField(requestHistory.getUser()), getMessageField(requestHistory.getMessage()));
   }
 
   @Override
@@ -56,7 +76,8 @@ public class JDBIHistoryManager implements HistoryManager {
     history.insertDeployHistory(deployHistory.getDeployMarker().getRequestId(),
         deployHistory.getDeployMarker().getDeployId(),
         new Date(deployHistory.getDeployMarker().getTimestamp()),
-        deployHistory.getDeployMarker().getUser().orNull(),
+        getUserField(deployHistory.getDeployMarker().getUser()),
+        getMessageField(deployHistory.getDeployMarker().getMessage()),
         deployHistory.getDeployResult().isPresent() ? new Date(deployHistory.getDeployResult().get().getTimestamp()) : new Date(deployHistory.getDeployMarker().getTimestamp()),
             deployHistory.getDeployResult().isPresent() ? deployHistory.getDeployResult().get().getDeployState().name() : DeployState.CANCELED.name(),
                 deployHistoryTranscoder.toBytes(deployHistory));
@@ -112,6 +133,17 @@ public class JDBIHistoryManager implements HistoryManager {
   @Override
   public Optional<SingularityTaskHistory> getTaskHistory(String taskId) {
     byte[] historyBytes = history.getTaskHistoryForTask(taskId);
+
+    if (historyBytes == null || historyBytes.length == 0) {
+      return Optional.absent();
+    }
+
+    return Optional.of(taskHistoryTranscoder.fromBytes(historyBytes));
+  }
+
+  @Override
+  public Optional<SingularityTaskHistory> getTaskHistoryByRunId(String requestId, String runId) {
+    byte[] historyBytes = history.getTaskHistoryForTaskByRunId(requestId, runId);
 
     if (historyBytes == null || historyBytes.length == 0) {
       return Optional.absent();
