@@ -215,10 +215,13 @@ class TailView extends View
 
     goToTop: =>
         if @collection.getMinOffset() is 0
+            @stopTailing() if @isTailing
             @scrollToTop()
         else
             @collection.reset()
-            @collection.fetchFromStart().done @scrollToTop
+            @collection.fetchFromStart().done =>
+              @stopTailing() if @isTailing
+              @scrollToTop()
 
     goToBottom: =>
         if @collection.state.get('moreToFetch') is true

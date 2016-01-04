@@ -3,32 +3,47 @@ Controller = require './Controller'
 LogLines = require '../collections/LogLines'
 TaskHistory = require '../models/TaskHistory'
 AjaxError = require '../models/AjaxError'
+RequestTasks = require '../collections/RequestTasks'
 
-TailView = require '../views/tail'
+AggregateTailView = require '../views/aggregateTail'
+
+Utils = require '../utils'
 
 class TailController extends Controller
 
     initialize: ({@taskId, @path, @offset}) ->
         @title 'Tail of ' + @path
 
-        @models.ajaxError = new AjaxError
-        @collections.logLines = new LogLines [], {@taskId, @path, ajaxError: @models.ajaxError}
-        @models.taskHistory = new TaskHistory {@taskId}
+        task = new TaskHistory {taskId: @taskId}
+        task.fetch().done =>
+            @requestId = task.get('task').taskId.requestId
 
-        @setView new TailView _.extend {@taskId, @path, @offset},
-            collection: @collections.logLines
-            model: @models.taskHistory
-            ajaxError: @models.ajaxError
+            @models.ajaxError = []
+            @collections.logLines = []
 
-        app.showView @view
+            @collections.activeTasks = new RequestTasks [],
+                requestId: @requestId
+                state:    'active'
 
-        if @offset?
-            $.when( @collections.logLines.fetchOffset(@offset), @refresh() ).then => @view.afterInitialOffsetData()
-        else
-            $.when( @collections.logLines.fetchInitialData(), @refresh() ).then => @view.afterInitialData()
+            @view = new AggregateTailView _.extend {@requestId, @path, @offset},
+                activeTasks: @collections.activeTasks
+                logLines: @collections.logLines
+                ajaxError: @models.ajaxError
+                singleMode: true
+                singleModeTaskId: @taskId
 
-    refresh: ->
-        @models.taskHistory.fetch()
+            @setView @view
+
+            @fetchCollections()
+            app.showView @view
+
+    fetchCollections: ->
+      @collections.activeTasks.fetch().done =>
+        @models.ajaxError[@taskId] = new AjaxError
+        path = @path.replace('$TASK_ID', @taskId)
+        @collections.logLines[@taskId] = new LogLines [], {@taskId, path: path, ajaxError: @models.ajaxError[@taskId]}
+
+        @view.render()
 
 
 module.exports = TailController

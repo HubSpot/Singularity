@@ -15,7 +15,7 @@
     <div class='{{#unless expanded}}hide{{/unless}}'>
     {{#isRunningState data.taskUpdates}}
       {{#isSingularityExecutor data.task.taskRequest.deploy.customExecutorCmd}}
-        <div class="row">
+        <div class="row" id="shell-commands-form">
           <form class="col-md-6" data-action="runShell" action="">
             <h3>Execute a command</h3>
             <div class="form-group required">

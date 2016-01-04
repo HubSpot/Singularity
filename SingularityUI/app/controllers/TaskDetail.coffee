@@ -15,6 +15,7 @@ ExpandableTableSubview = require '../views/expandableTableSubview'
 OverviewSubview = require '../views/taskOverviewSubview'
 HealthcheckNotification = require '../views/taskHealthcheckNotificationSubview'
 SimpleSubview = require '../views/simpleSubview'
+ShellCommands = require '../views/taskShellCommandsSubview'
 LatestLog = require '../views/taskLatestLogSubview'
 
 TaskView = require '../views/task'
@@ -119,7 +120,7 @@ class TaskDetailController extends Controller
             collection:    @collections.alerts
             template:      @templates.alerts
 
-        @subviews.shellCommands = new SimpleSubview
+        @subviews.shellCommands = new ShellCommands
             model: @models.task
             template: @templates.shellCommands
 
@@ -130,7 +131,6 @@ class TaskDetailController extends Controller
             model: @models.task
 
         @refresh()
-        @collections.files.fetch().error @ignore404
 
         app.showView @view
 
@@ -200,6 +200,7 @@ class TaskDetailController extends Controller
 
         @models.task.fetch()
             .done =>
+                @collections.files.fetch().error @ignore404
                 @fetchResourceUsage() if @models.task.get('isStillRunning')
                 logPath = if @models.task.get('isStillRunning') then config.runningTaskLogPath else config.finishedTaskLogPath
                 logPath = logPath.replace('$TASK_ID', @taskId)

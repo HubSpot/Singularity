@@ -27,7 +27,7 @@ public abstract class BaseRunnerConfiguration {
 
   @NotNull
   @JsonProperty
-  private Optional<String> loggingPattern = Optional.absent();
+  private Optional<String> loggingPattern = Optional.of("%-5level [%d] [%.15thread] %logger{50} %contextName - %msg%n");
 
   @NotNull
   @JsonProperty

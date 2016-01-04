@@ -60,6 +60,11 @@ public class NoopHistoryManager implements HistoryManager {
   }
 
   @Override
+  public Optional<SingularityTaskHistory> getTaskHistoryByRunId(String requestId, String runId) {
+    return Optional.absent();
+  }
+
+  @Override
   public List<SingularityRequestHistory> getRequestHistory(String requestId, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount) {
     return Collections.emptyList();
   }

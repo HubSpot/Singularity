@@ -1,5 +1,7 @@
 package com.hubspot.singularity.config;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -102,6 +104,12 @@ public class SingularityConfiguration extends Configuration {
 
   private long healthcheckTimeoutSeconds = 5;
 
+  @NotNull
+  private Optional<Integer> healthcheckMaxRetries = Optional.absent();
+
+  @NotNull
+  private Optional<Long> healthcheckMaxTotalTimeoutSeconds = Optional.absent();
+
   private String hostname;
 
   private long killAfterTasksDoNotRunDefaultSeconds = 600;
@@ -155,9 +163,11 @@ public class SingularityConfiguration extends Configuration {
   private long saveStateEverySeconds = 60;
 
   @JsonProperty("sentry")
+  @Valid
   private SentryConfiguration sentryConfiguration;
 
   @JsonProperty("smtp")
+  @Valid
   private SMTPConfiguration smtpConfiguration;
 
   private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toSeconds(10);
@@ -200,10 +210,15 @@ public class SingularityConfiguration extends Configuration {
 
   @JsonProperty("auth")
   @NotNull
+  @Valid
   private AuthConfiguration authConfiguration = new AuthConfiguration();
+
+  @NotNull
+  private Map<String, List<String>> reserveSlavesWithAttributes = Collections.emptyMap();
 
   @JsonProperty("graphite")
   @NotNull
+  @Valid
   private GraphiteConfiguration graphiteConfiguration = new GraphiteConfiguration();
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
@@ -364,6 +379,14 @@ public class SingularityConfiguration extends Configuration {
 
   public long getHealthcheckTimeoutSeconds() {
     return healthcheckTimeoutSeconds;
+  }
+
+  public Optional<Integer> getHealthcheckMaxRetries() {
+    return healthcheckMaxRetries;
+  }
+
+  public Optional<Long> getHealthcheckMaxTotalTimeoutSeconds() {
+    return healthcheckMaxTotalTimeoutSeconds;
   }
 
   public Optional<String> getHostname() {
@@ -678,6 +701,14 @@ public class SingularityConfiguration extends Configuration {
     this.healthcheckTimeoutSeconds = healthcheckTimeoutSeconds;
   }
 
+  public void setHealthcheckMaxRetries(Optional<Integer> healthcheckMaxRetries) {
+    this.healthcheckMaxRetries = healthcheckMaxRetries;
+  }
+
+  public void setHealthcheckMaxTotalTimeoutSeconds(Optional<Long> healthcheckMaxTotalTimeoutSeconds) {
+    this.healthcheckMaxTotalTimeoutSeconds = healthcheckMaxTotalTimeoutSeconds;
+  }
+
   public void setHostname(String hostname) {
     this.hostname = hostname;
   }
@@ -828,6 +859,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setHistoryPurgingConfiguration(HistoryPurgingConfiguration historyPurgingConfiguration) {
     this.historyPurgingConfiguration = historyPurgingConfiguration;
+  }
+
+  public Map<String, List<String>> getReserveSlavesWithAttributes() {
+    return reserveSlavesWithAttributes;
+  }
+
+  public void setReserveSlavesWithAttrbiutes(Map<String, List<String>> reserveSlavesWithAttributes) {
+    this.reserveSlavesWithAttributes = reserveSlavesWithAttributes;
   }
 
   public GraphiteConfiguration getGraphiteConfiguration() {

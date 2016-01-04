@@ -18,7 +18,7 @@ def unpack_logs(args, logs):
   for zipped_file in logs:
     try:
       if os.path.isfile(zipped_file):
-        if args.verbose:
+        if args.verbose and not args.silent:
           sys.stderr.write(colored('Starting unpack of {0}'.format(zipped_file), 'magenta') + '\n')
         file_in = gzip.open(zipped_file, 'rb')
         unzipped = zipped_file.replace('.gz', '.log')
@@ -28,21 +28,22 @@ def unpack_logs(args, logs):
         file_in.close
         os.remove(zipped_file)
         progress += 1
-        if args.verbose:
+        if args.verbose and not args.silent:
           sys.stderr.write(colored('Unpacked log {0}/{1}'.format(progress, goal), 'green') + colored(zipped_file, 'white') + '\n')
         else:
-          update_progress_bar(progress, goal, 'Unpack')
+          update_progress_bar(progress, goal, 'Unpack', args.silent)
         successful.append(unzipped)
       else:
         progress += 1
-        update_progress_bar(progress, goal, 'Unpack')
+        update_progress_bar(progress, goal, 'Unpack', args.silent)
     except Exception as e:
       print e
       if os.path.isfile(zipped_file):
         os.remove(zipped_file)
       sys.stderr.write(colored('Could not unpack {0}'.format(zipped_file), 'red') + '\n')
       continue
-  sys.stderr.write('\n')
+  if not args.silent:
+    sys.stderr.write('\n')
   return successful
 
 def base_uri(args):
@@ -99,7 +100,7 @@ def is_in_date_range(args, timestamp):
   else:
     return False if timedelta.days < args.start else True
 
-def update_progress_bar(progress, goal, progress_type):
+def update_progress_bar(progress, goal, progress_type, silent):
   bar_length = 30
   percent = float(progress) / goal
   hashes = '#' * int(round(percent * bar_length))
@@ -112,5 +113,6 @@ def update_progress_bar(progress, goal, progress_type):
     color = 'yellow'
   else:
     color = 'blue'
-  sys.stderr.write("\r{0} Progress: [".format(progress_type) + colored("{0}".format(hashes + spaces), color) + "] {0}%".format(int(round(percent * 100))))
-  sys.stderr.flush()
+  if not silent:
+    sys.stderr.write("\r{0} Progress: [".format(progress_type) + colored("{0}".format(hashes + spaces), color) + "] {0}%".format(int(round(percent * 100))))
+    sys.stderr.flush()

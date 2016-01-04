@@ -6,7 +6,7 @@ goal = 0
 
 CALLBACK_FORMAT = '{0}/{1}'
 
-def update_progress_bar(progress):
+def update_progress_bar(silent, progress):
   bar_length = 30
   global goal
   percent = float(progress) / goal
@@ -20,11 +20,12 @@ def update_progress_bar(progress):
     color = 'yellow'
   else:
     color = 'blue'
-  sys.stderr.write("\rDownload Progress: [" + colored("{0}".format(hashes + spaces), color) + "] {0}%".format(int(round(percent * 100))))
-  sys.stderr.flush()
+  if not silent: 
+    sys.stderr.write("\rDownload Progress: [" + colored("{0}".format(hashes + spaces), color) + "] {0}%".format(int(round(percent * 100))))
+    sys.stderr.flush()
 
 
-def generate_callback(request, destination, filename, chunk_size, verbose):
+def generate_callback(request, destination, filename, chunk_size, verbose, silent):
   path = CALLBACK_FORMAT.format(destination, filename) if destination else filename
 
   def callback(response, **kwargs):
@@ -34,9 +35,9 @@ def generate_callback(request, destination, filename, chunk_size, verbose):
       for chunk in response.iter_content(chunk_size):
         f.write(chunk)
       progress += 1
-      if verbose:
+      if verbose and not silent:
         sys.stderr.write(colored('Downloaded log {0}/{1} '.format(progress, goal), 'green') + colored(path, 'white') + '\n')
       else:
-        update_progress_bar(progress)
+        update_progress_bar(silent, progress)
 
   return callback

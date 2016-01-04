@@ -20,8 +20,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HostAndPort;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.config.EmailConfigurationEnums.EmailDestination;
-import com.hubspot.singularity.config.EmailConfigurationEnums.EmailType;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -106,9 +104,9 @@ public class SingularityAbort implements ConnectionStateListener {
       return;
     }
 
-    final List<EmailDestination> emailDestination = maybeSmtpConfiguration.get().getEmailConfiguration().get(EmailType.SINGULARITY_ABORTING);
+    final List<SingularityEmailDestination> emailDestination = maybeSmtpConfiguration.get().getEmailConfiguration().get(SingularityEmailType.SINGULARITY_ABORTING);
 
-    if (emailDestination.isEmpty() || !emailDestination.contains(EmailDestination.ADMINS)) {
+    if (emailDestination.isEmpty() || !emailDestination.contains(SingularityEmailDestination.ADMINS)) {
       LOG.info("Not configured to send abort mail");
       return;
     }

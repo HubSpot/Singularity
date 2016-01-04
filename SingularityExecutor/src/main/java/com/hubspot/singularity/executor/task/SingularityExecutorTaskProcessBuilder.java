@@ -9,6 +9,7 @@ import org.apache.mesos.Protos.TaskState;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
@@ -17,6 +18,7 @@ import com.hubspot.singularity.executor.models.EnvironmentContext;
 import com.hubspot.singularity.executor.models.RunnerContext;
 import com.hubspot.singularity.executor.task.SingularityExecutorArtifactFetcher.SingularityExecutorTaskArtifactFetcher;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
+import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
 import com.spotify.docker.client.DockerClient;
 
 public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBuilder> {
@@ -60,7 +62,11 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
   public ProcessBuilder call() throws Exception {
     if (task.getTaskInfo().hasContainer() && task.getTaskInfo().getContainer().hasDocker()) {
       executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo(), TaskState.TASK_STARTING, String.format("Pulling image... (executor pid: %s)", executorPid), task.getLog());
-      dockerClient.pull(task.getTaskInfo().getContainer().getDocker().getImage());
+      try {
+        dockerClient.pull(task.getTaskInfo().getContainer().getDocker().getImage());
+      } catch (UncheckedTimeoutException te) {
+        throw new ProcessFailedException(String.format("Timed out trying to reach docker daemon after %s seconds", configuration.getDockerClientTimeLimitSeconds()));
+      }
     }
 
     executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo(), TaskState.TASK_STARTING, String.format("Staging files... (executor pid: %s)", executorPid), task.getLog());
@@ -114,7 +120,9 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
       !getExecutorUser().equals(executorData.getUser().or(configuration.getDefaultRunAsUser())),
       executorData.getMaxOpenFiles().orNull(),
       String.format(configuration.getSwitchUserCommandFormat(), executorData.getUser().or(configuration.getDefaultRunAsUser())));
+
     EnvironmentContext environmentContext = new EnvironmentContext(taskInfo);
+
     if (taskInfo.hasContainer() && taskInfo.getContainer().hasDocker()) {
       task.getLog().info("Writing a runner script to execute {} in docker container", cmd);
       templateManager.writeDockerScript(getPath("runner.sh"), new DockerContext(environmentContext, runnerContext, configuration.getDockerPrefix(), configuration.getDockerStopTimeout(), taskInfo.getContainer().getDocker().getPrivileged()));

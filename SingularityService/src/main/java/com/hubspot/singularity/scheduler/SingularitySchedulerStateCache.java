@@ -1,14 +1,17 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularitySlave;
@@ -30,6 +33,7 @@ public class SingularitySchedulerStateCache {
   private Optional<Collection<SingularityTaskId>> activeTaskIds;
   private Optional<Collection<SingularityPendingTask>> scheduledTasks;
   private Optional<Collection<SingularityTaskId>> cleaningTasks;
+  private Optional<Collection<SingularityTaskId>> killedTasks;
   private Optional<Integer> numActiveRacks;
   private Optional<Integer> numActiveSlaves;
 
@@ -42,6 +46,7 @@ public class SingularitySchedulerStateCache {
     activeTaskIds = Optional.absent();
     scheduledTasks = Optional.absent();
     cleaningTasks = Optional.absent();
+    killedTasks = Optional.absent();
     numActiveRacks = Optional.absent();
     numActiveSlaves = Optional.absent();
 
@@ -76,6 +81,18 @@ public class SingularitySchedulerStateCache {
     }
 
     return cleaningTasks.get();
+  }
+
+  public Collection<SingularityTaskId> getKilledTasks() {
+    if (!killedTasks.isPresent()) {
+      List<SingularityKilledTaskIdRecord> killedTaskRecords = taskManager.getKilledTaskIdRecords();
+      Collection<SingularityTaskId> taskIds = Sets.newHashSet();
+      for (SingularityKilledTaskIdRecord record : killedTaskRecords) {
+        taskIds.add(record.getTaskId());
+      }
+      killedTasks = Optional.of(taskIds);
+    }
+    return killedTasks.get();
   }
 
   public int getNumActiveRacks() {

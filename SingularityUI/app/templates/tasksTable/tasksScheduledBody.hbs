@@ -1,18 +1,18 @@
 {{#unless rowsOnly}}
     {{#if haveTasks}}
-        <table class="table table-striped sortable-theme-bootstrap" data-sortable>
+        <table class="table table-striped">
             <thead>
                 <tr>
-                    <th >
+                    <th data-sort-attribute="id">
                         Name
                     </th>
-                    <th class="hidden-xs">
+                    <th class="hidden-xs" data-sort-attribute="pendingTask.pendingTaskId.nextRunAt">
                         Next run
                     </th>
-                    <th>
+                    <th data-sort-attribute="pendingTask.pendingTaskId.pendingType">
                         Pending Type
                     </th>
-                    <th>
+                    <th data-sort-attribute="pendingTask.pendingTaskId.deployId">
                         Deploy ID
                     </th>
                     <th class="hidden-xs">

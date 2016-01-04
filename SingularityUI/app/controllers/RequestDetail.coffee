@@ -4,6 +4,7 @@ Request                = require '../models/Request'
 RequestDeployStatus    = require '../models/RequestDeployStatus'
 
 Tasks                  = require '../collections/Tasks'
+TaskCleanups           = require '../collections/TaskCleanups'
 RequestTasks           = require '../collections/RequestTasks'
 RequestHistoricalTasks = require '../collections/RequestHistoricalTasks'
 RequestDeployHistory   = require '../collections/RequestDeployHistory'
@@ -13,11 +14,11 @@ Requests               = require '../collections/Requests'
 RequestDetailView      = require '../views/request'
 ExpandableTableSubview = require '../views/expandableTableSubview'
 SimpleSubview          = require '../views/simpleSubview'
+RequestHeaderView      = require '../views/requestHeader'
 
 class RequestDetailController extends Controller
 
     templates:
-        header:             require '../templates/requestDetail/requestHeader'
         requestHistoryMsg:  require '../templates/requestDetail/requestHistoryMsg'
         stats:              require '../templates/requestDetail/requestStats'
 
@@ -41,6 +42,8 @@ class RequestDetailController extends Controller
             requestId: @requestId
             deployId:  undefined
 
+        @collections.taskCleanups = new TaskCleanups
+
         @collections.activeTasks = new RequestTasks [],
             requestId: @requestId
             state:    'active'
@@ -59,9 +62,10 @@ class RequestDetailController extends Controller
         #
         # Subviews
         #
-        @subviews.header = new SimpleSubview
-            model:      @models.request
-            template:   @templates.header
+        @subviews.header = new RequestHeaderView
+            model:          @models.request
+            taskCleanups:   @collections.taskCleanups
+            activeTasks:    @collections.activeTasks
 
         # would have used header subview for this info,
         # but header expects a request model that
@@ -135,6 +139,7 @@ class RequestDetailController extends Controller
         if @models.activeDeployStats.deployId?
             @models.activeDeployStats.fetch().error @ignore404
 
+        @collections.taskCleanups.fetch().error   @ignore404
         @collections.activeTasks.fetch().error    @ignore404
         @collections.scheduledTasks.fetch().error @ignore404
         @collections.scheduledTasks.fetch({reset: true}).error @ignore404

@@ -35,6 +35,8 @@ class Request extends Model
         data.instances = data.request.instances or 1
         data.hasMoreThanOneInstance = data.instances > 1
 
+        data.bounceAfterScale = data.request.bounceAfterScale
+
         data.paused = data.state is 'PAUSED'
         data.deleted = data.state is 'DELETED'
         data.inCooldown = data.state is 'SYSTEM_COOLDOWN'
@@ -90,9 +92,9 @@ class Request extends Model
               id:      @get "id"
               instances: confirmedOrPromptData
 
-    bounce: =>
+    bounce: (incremental) =>
         $.ajax
-            url:  "#{ @url() }/bounce?user=#{ app.getUsername() }"
+            url:  "#{ @url() }/bounce?user=#{ app.getUsername() }&incremental=#{ incremental }"
             type: "POST"
 
     exitCooldown: =>
@@ -120,16 +122,33 @@ class Request extends Model
 
     promptScale: (callback) =>
         vex.dialog.prompt
-            message: scaleTemplate
-                id: @get "id"
+            message: "Enter the desired number of instances to run for request:"
+            input:
+                scaleTemplate
+                    id: @get "id"
+                    bounceAfterScale: @get "bounceAfterScale"
+                    placeholder: @get 'instances'
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.YES), text: 'Scale'
                 vex.dialog.buttons.NO
             ]
-            placeholder: @get 'instances'
+            afterOpen: ($vexContent) ->
+                $vexContent.find('#bounce').click =>
+                    if $('.vex #bounce').is ':checked'
+                        $(".vex #incremental-bounce-options").show()
+                    else
+                        $(".vex #incremental-bounce-options").hide()
+
             callback: (data) =>
-                return if data is false
-                @scale(data).done callback
+                return unless data
+                bounce = $('.vex #bounce').is ':checked'
+                incremental = $('.vex #incremental-bounce').is ':checked'
+                @scale(data).done =>
+                    if bounce
+                        @bounce(incremental).done callback
+                    else
+                        callback
+        
 
     promptUnpause: (callback) =>
         vex.dialog.confirm
@@ -249,7 +268,8 @@ class Request extends Model
             message: bounceTemplate id: @get "id"
             callback: (confirmed) =>
                 return if not confirmed
-                @bounce().done callback
+                incremental = $('.vex #incremental-bounce').is ':checked'
+                @bounce(incremental).done callback
 
     promptExitCooldown: (callback) =>
         vex.dialog.confirm

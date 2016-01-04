@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.4.6-SNAPSHOT</version>
+    <version>0.4.8-SNAPSHOT</version>
   </parent>
 
   <artifactId>SingularityService</artifactId>
@@ -43,11 +43,6 @@
     <dependency>
       <groupId>com.google.inject</groupId>
       <artifactId>guice</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.google.inject.extensions</groupId>
-      <artifactId>guice-servlet</artifactId>
     </dependency>
 
     <dependency>
@@ -404,55 +399,6 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>com.github.eirslett</groupId>
-        <artifactId>frontend-maven-plugin</artifactId>
-        <configuration>
-          <workingDirectory>../SingularityUI</workingDirectory>
-          <nodeDownloadRoot>https://hubspot-boxen-public.s3.amazonaws.com/nodejs/</nodeDownloadRoot>
-        </configuration>
-        <executions>
-          <execution>
-            <id>install node and npm</id>
-            <goals>
-              <goal>install-node-and-npm</goal>
-            </goals>
-            <configuration>
-              <nodeVersion>v0.10.28</nodeVersion>
-              <npmVersion>1.4.9</npmVersion>
-            </configuration>
-          </execution>
-          <execution>
-            <id>npm install</id>
-            <goals>
-              <goal>npm</goal>
-            </goals>
-            <configuration>
-              <arguments>install</arguments>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>add-generated-resources</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>add-resource</goal>
-            </goals>
-            <configuration>
-              <resources>
-                <resource>
-                  <directory>${project.build.directory}/generated-resources</directory>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
 
     <pluginManagement>
@@ -516,41 +462,102 @@
     <!-- ======================================================================== -->
     <profile>
       <id>build-swagger-documentation</id>
-    <build>
-      <plugins>
-        <plugin>
-          <groupId>com.github.kongchen</groupId>
-          <artifactId>swagger-maven-plugin</artifactId>
-          <executions>
-            <execution>
-              <id>build-markdown-documentation</id>
-              <phase>compile</phase>
-              <goals>
-                <goal>generate</goal>
-              </goals>
-              <configuration>
-                <apiSources>
-                  <apiSource>
-                    <locations>com.hubspot.singularity.resources</locations>
-                    <apiVersion>${project.version}</apiVersion>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.github.kongchen</groupId>
+            <artifactId>swagger-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>build-markdown-documentation</id>
+                <phase>compile</phase>
+                <goals>
+                  <goal>generate</goal>
+                </goals>
+                <configuration>
+                  <apiSources>
+                    <apiSource>
+                      <locations>com.hubspot.singularity.resources</locations>
+                      <apiVersion>${project.version}</apiVersion>
 
-                    <apiInfo>
-                      <title>Singularity REST API</title>
-                      <description>Singularity Mesos Framework API</description>
-                    </apiInfo>
+                      <apiInfo>
+                        <title>Singularity REST API</title>
+                        <description>Singularity Mesos Framework API</description>
+                      </apiInfo>
 
-                    <outputTemplate>${basedir}/../SingularityUI/app/assets/api-docs/markdown.mustache</outputTemplate>
-                    <mustacheFileRoot>${basedir}/../SingularityUI/app/assets/api-docs</mustacheFileRoot>
-                    <outputPath>${basedir}/../Docs/reference/api.md</outputPath>
-                    <apiSortComparator>com.hubspot.singularity.swagger.ApiSortComparator</apiSortComparator>
-                  </apiSource>
-                </apiSources>
-              </configuration>
-            </execution>
-          </executions>
-        </plugin>
-      </plugins>
-    </build>
+                      <outputTemplate>${basedir}/../SingularityUI/app/assets/api-docs/markdown.mustache</outputTemplate>
+                      <mustacheFileRoot>${basedir}/../SingularityUI/app/assets/api-docs</mustacheFileRoot>
+                      <outputPath>${basedir}/../Docs/reference/api.md</outputPath>
+                      <apiSortComparator>com.hubspot.singularity.swagger.ApiSortComparator</apiSortComparator>
+                    </apiSource>
+                  </apiSources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>build-webui</id>
+      <activation>
+        <property>
+          <name>!skipSingularityWebUI</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>com.github.eirslett</groupId>
+            <artifactId>frontend-maven-plugin</artifactId>
+            <configuration>
+              <workingDirectory>../SingularityUI</workingDirectory>
+              <nodeDownloadRoot>https://hubspot-boxen-public.s3.amazonaws.com/nodejs/</nodeDownloadRoot>
+            </configuration>
+            <executions>
+              <execution>
+                <id>install node and npm</id>
+                <goals>
+                  <goal>install-node-and-npm</goal>
+                </goals>
+                <configuration>
+                  <nodeVersion>v0.10.28</nodeVersion>
+                  <npmVersion>1.4.9</npmVersion>
+                </configuration>
+              </execution>
+              <execution>
+                <id>npm install</id>
+                <goals>
+                  <goal>npm</goal>
+                </goals>
+                <configuration>
+                  <arguments>install</arguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>add-generated-resources</id>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>add-resource</goal>
+                </goals>
+                <configuration>
+                  <resources>
+                    <resource>
+                      <directory>${project.build.directory}/generated-resources</directory>
+                    </resource>
+                  </resources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
     <profile>
       <id>build-docker-image</id>

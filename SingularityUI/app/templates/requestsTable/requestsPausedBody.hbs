@@ -1,23 +1,23 @@
 {{#unless rowsOnly}}
     {{#if haveRequests}}
-        <table class="table table-striped sortable-theme-bootstrap" data-sortable>
+        <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>
+                    <th data-sort-attribute="request.id">
                         Name
                     </th>
-                    <th>
+                    <th data-sort-attribute="request.requestType">
                         Type
                     </th>
-                    <th class="hidden-xs">
+                    <th class="hidden-xs" data-sort-attribute="requestDeployState.activeDeploy.timestamp">
                         Requested
                     </th>
-                    <th class="hidden-sm hidden-xs">
+                    <th class="hidden-sm hidden-xs" data-sort-attribute="requestDeployState.activeDeploy.user">
                         Deploy user
                     </th>
 
                     {{#ifInSubFilter 'SCHEDULED' requestsSubFilter}}
-                        <th class="visible-lg visible-xl schedule-header">
+                        <th class="visible-lg visible-xl schedule-header" data-sort-attribute="request.schedule">
                             <span id="schedule">
                                 Schedule <span class="glyphicon glyphicon-question-sign"/>
                             </span>
@@ -42,7 +42,7 @@
                         <td>
                             {{humanizeText request.requestType}}
                         </td>
-                        <td class="hidden-xs">
+                        <td class="hidden-xs" data-value="{{requestDeployState.activeDeploy.timestamp}}">
                             {{timestampFromNow requestDeployState.activeDeploy.timestamp}}
                         </td>
                         <td class="hidden-sm hidden-xs">

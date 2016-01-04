@@ -29,6 +29,9 @@ public interface HistoryJDBI {
   @SqlQuery("SELECT bytes FROM taskHistory WHERE taskId = :taskId")
   byte[] getTaskHistoryForTask(@Bind("taskId") String taskId);
 
+  @SqlQuery("SELECT bytes FROM taskHistory WHERE requestId = :requestId AND runId = :runId")
+  byte[] getTaskHistoryForTaskByRunId(@Bind("requestId") String requestId, @Bind("runId") String runId);
+
   @SqlQuery("SELECT bytes FROM deployHistory WHERE requestId = :requestId AND deployId = :deployId")
   byte[] getDeployHistoryForDeploy(@Bind("requestId") String requestId, @Bind("deployId") String deployId);
 

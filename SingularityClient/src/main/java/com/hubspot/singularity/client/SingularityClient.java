@@ -82,6 +82,7 @@ public class SingularityClient {
   private static final String HISTORY_FORMAT = "http://%s/%s/history";
   private static final String TASK_HISTORY_FORMAT = HISTORY_FORMAT + "/task/%s";
   private static final String REQUEST_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/requests";
+  private static final String TASK_HISTORY_BY_RUN_ID_FORMAT = HISTORY_FORMAT + "/request/%s/run/%s";
   private static final String REQUEST_ACTIVE_TASKS_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/tasks/active";
   private static final String REQUEST_INACTIVE_TASKS_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/tasks";
   private static final String REQUEST_DEPLOY_HISTORY_FORMAT = HISTORY_FORMAT + "/request/%s/deploy/%s";
@@ -99,6 +100,7 @@ public class SingularityClient {
   private static final String REQUEST_DELETE_PAUSED_FORMAT = REQUESTS_FORMAT + "/request/%s/paused";
   private static final String REQUEST_BOUNCE_FORMAT = REQUESTS_FORMAT + "/request/%s/bounce";
   private static final String REQUEST_PAUSE_FORMAT = REQUESTS_FORMAT + "/request/%s/pause";
+  private static final String REQUEST_RUN_FORMAT = REQUESTS_FORMAT + "/request/%s/run";
   private static final String REQUEST_EXIT_COOLDOWN_FORMAT = REQUESTS_FORMAT + "/request/%s/exit-cooldown";
 
   private static final String DEPLOYS_FORMAT = "http://%s/%s/deploys";
@@ -434,6 +436,12 @@ public class SingularityClient {
     final String requestUri = String.format(REQUEST_PAUSE_FORMAT, getHost(), contextPath, requestId);
 
     post(requestUri, String.format("pause of request %s", requestId), Optional.absent(), user);
+  }
+
+  public void runSingularityRequest(String requestId, Optional<String> user, Optional<List<String>> additionalArgs) {
+    final String requestUri = String.format(REQUEST_RUN_FORMAT, getHost(), contextPath, requestId);
+
+    post(requestUri, String.format("run of request %s", requestId), additionalArgs, user);
   }
 
   public void bounceSingularityRequest(String requestId, Optional<String> user) {
@@ -786,6 +794,12 @@ public class SingularityClient {
     final String requestUri = String.format(REQUEST_DEPLOY_HISTORY_FORMAT, getHost(), contextPath, requestId, deployId);
 
     return getSingle(requestUri, "deploy history", new SingularityDeployKey(requestId, deployId).getId(), SingularityDeployHistory.class);
+  }
+
+  public Optional<SingularityTaskIdHistory> getHistoryForTask(String requestId, String runId) {
+    final String requestUri = String.format(TASK_HISTORY_BY_RUN_ID_FORMAT, getHost(), contextPath, requestId, runId);
+
+    return getSingle(requestUri, "task history", requestId, SingularityTaskIdHistory.class);
   }
 
   //

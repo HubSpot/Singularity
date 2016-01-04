@@ -33,7 +33,7 @@ public class SingularityExecutorRunner {
 
       final Protos.Status driverStatus = executorRunner.run();
 
-      LOG.info("Finished after {} with status: {}", JavaUtils.duration(start), driverStatus);
+      LOG.info("Executor finished after {} with status: {}", JavaUtils.duration(start), driverStatus);
 
       System.exit(driverStatus == Protos.Status.DRIVER_STOPPED ? 0 : 1);
     } catch (Throwable t) {
@@ -62,7 +62,7 @@ public class SingularityExecutorRunner {
 
       @Override
       public void run() {
-        LOG.info("Executor is shutting down...");
+        LOG.info("Executor is shutting down, ensuring shutdown via shutdown hook");
         monitor.shutdown(Optional.of((ExecutorDriver) driver));
       }
 

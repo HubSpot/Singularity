@@ -1,7 +1,6 @@
 <div class="page-header file-browser-header">
     <h2>
         Files
-    </h2>
 </div>
 {{#if task.slaveMissing}}
     <div class="empty-table-message">
@@ -16,7 +15,7 @@
         {{/each}}
     </ul>
     {{#if files}}
-        <table class="table table-striped files-table">
+        <table class="table table-striped files-table sortable-theme-bootstrap" data-sortable>
             <thead>
                 <tr>
                     <th>
@@ -28,7 +27,7 @@
                     <th class="hidden-xs">
                         Last modified
                     </th>
-                    <th class="hidden-xs">
+                    <th class="hidden-xs" data-sortable="false">
 
                     </th>
                 </tr>
@@ -43,7 +42,7 @@
                                 </a>
                             {{else}}
                                 {{#if isTailable}}
-                                    <a href="{{appRoot}}/task/{{ taskId }}/tail/{{ uiPath }}">
+                                    <a href="{{appRoot}}/request/{{ ../task.requestId }}/tail/{{ uiPath }}/?taskIds={{ taskId }}">
                                         <span class="glyphicon glyphicon-file"></span>{{ name }}
                                     </a>
                                 {{else}}
@@ -51,12 +50,12 @@
                                 {{/if}}
                             {{/if}}
                         </td>
-                        <td class="hidden-xs" data-value="{{ size }}">
+                        <td class="hidden-xs" data-value="{{#if isDirectory}}0{{else}}{{size}}{{/if}}">
                             {{#unless isDirectory}}
                                 {{humanizeFileSize size}}
                             {{/unless}}
                         </td>
-                        <td class="hidden-xs" data-value="{{#if isDirectory}}a{{else}}b{{/if}} {{ mtime }}"><span title="{{ mtime }}">{{timestampFormatted mtime}}</span></td>
+                        <td class="hidden-xs" data-value="{{ mtime }}"><span title="{{ mtime }}">{{timestampFormatted mtime}}</span></td>
                         <td class="actions-column hidden-xs">
                             {{#unless isDirectory}}
                                 <a href="{{ downloadLink }}" target="_blank" title="Download">
@@ -69,16 +68,8 @@
             </tbody>
         </table>
     {{else}}
-        {{#if synced}}
-            <div class="empty-table-message">
-                This directory is empty
-            </div>
-        {{else}}
-            <div class="page-loader-container">
-                <div class="empty-table-message">
-                    Could not get files. The task is probably still starting up.
-                </div>
-            </div>
-        {{/if}}
+        <div class="empty-table-message">
+            {{emptySandboxMessage}}
+        </div>
     {{/if}}
 {{/if}}

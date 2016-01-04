@@ -37,12 +37,25 @@ class TasksView extends View
 
             'click th[data-sort-attribute]': 'sortTable'
 
-    initialize: ({@state, @searchFilter}) ->
+    initialize: ({@state, @searchFilter, @cleaningTasks, @taskKillRecords}) ->
         @bodyTemplate = @bodyTemplateMap[@state]
 
         @listenTo @collection, 'sync', @render
+        @listenTo @cleaningTasks, 'change', @render
+        @listenTo @taskKillRecords, 'change', @render
 
-        @searchChange = _.debounce @searchChange, 200
+        @fuzzySearch = _.memoize(@fuzzySearch)
+
+    fuzzySearch: (filter, tasks) =>
+        host =
+            extract: (o) ->
+                "#{o.host}"
+        id =
+            extract: (o) ->
+                "#{o.id}"
+        res1 = fuzzy.filter(filter, tasks, host)
+        res2 = fuzzy.filter(filter, tasks, id)
+        _.pluck(_.sortBy(_.union(res1, res2), (r) => r.score), 'original')
 
     # Returns the array of tasks that need to be rendered
     filterCollection: =>
@@ -50,9 +63,8 @@ class TasksView extends View
 
         # Only show tasks that match the search query
         if @searchFilter
-            tasks = _.filter tasks, (task) =>
-                searchField = "#{ task.id }#{ task.host }".toLowerCase().replace(/-/g, '_')
-                searchField.toLowerCase().indexOf(@searchFilter.toLowerCase().replace(/-/g, '_')) isnt -1
+            tasks = @fuzzySearch(@searchFilter, tasks)
+
         # Sort the table if the user clicked on the table heading things
         if @sortAttribute?
             tasks = _.sortBy tasks, (task) =>
@@ -73,6 +85,11 @@ class TasksView extends View
         @currentTasks = tasks
 
     render: =>
+        # Save the state of the caret if the search box has already been rendered
+        $searchInput = $('.big-search-box')
+        @prevSelectionStart = $searchInput[0].selectionStart
+        @prevSelectionEnd = $searchInput[0].selectionEnd
+
         # Renders the base template
         # The table contents are rendered bit by bit as the user scrolls down.
         context =
@@ -90,6 +107,10 @@ class TasksView extends View
         @renderTable()
 
         super.afterRender()
+
+        # Reset search box caret
+        $searchInput = $('.big-search-box')
+        $searchInput[0].setSelectionRange(@prevSelectionStart, @prevSelectionEnd)
 
     # Prepares the staged rendering and triggers the first one
     renderTable: =>
@@ -122,7 +143,7 @@ class TasksView extends View
         tasks = @currentTasks.slice(@renderProgress, newProgress)
         @renderProgress = newProgress
 
-        decomTasks = @attributes.cleaning.pluck('taskId')
+        decomTasks = _.union(_.pluck(_.map(@cleaningTasks.where(cleanupType: 'DECOMISSIONING'), (t) -> t.toJSON()), 'taskId'), _.pluck(_.map(@taskKillRecords.where(taskCleanupType: 'DECOMISSIONING'), (t) -> t.toJSON()), 'taskId'))
         $contents = @bodyTemplate
             tasks: tasks
             rowsOnly: true
