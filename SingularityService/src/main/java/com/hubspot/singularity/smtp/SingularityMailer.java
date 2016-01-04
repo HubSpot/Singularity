@@ -39,8 +39,6 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.api.SingularityPauseRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
-import com.hubspot.singularity.config.EmailConfigurationEnums.EmailDestination;
-import com.hubspot.singularity.config.EmailConfigurationEnums.EmailType;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.MetadataManager;
@@ -321,7 +319,7 @@ public class SingularityMailer implements Managed {
 
   public enum RequestMailType {
 
-    PAUSED(SingularityEmailType.REQUEST_PAUSED), UNPAUSED(SingularityEmailType.REQUEST_UNPAUSED), REMOVED(SingularityEmailType.REQUEST_REMOVED), SCALED(SingularityEmailType.REQUEST_SCALED;
+    PAUSED(SingularityEmailType.REQUEST_PAUSED), UNPAUSED(SingularityEmailType.REQUEST_UNPAUSED), REMOVED(SingularityEmailType.REQUEST_REMOVED), SCALED(SingularityEmailType.REQUEST_SCALED);
 
     private final SingularityEmailType emailType;
 
