@@ -68,16 +68,8 @@
             </tbody>
         </table>
     {{else}}
-        {{#if synced}}
-            <div class="empty-table-message">
-                This directory is empty
-            </div>
-        {{else}}
-              <div class="page-loader-container">
-                  <div class="empty-table-message">
-                    {{emptySandboxMessage}}
-                  </div>
-              </div>
-        {{/if}}
+        <div class="empty-table-message">
+            {{emptySandboxMessage}}
+        </div>
     {{/if}}
 {{/if}}
