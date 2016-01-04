@@ -59,7 +59,7 @@ public class SingularityPendingTaskIdMigration extends ZkDataMigration {
           Optional<String> cmdLineArgs = getCmdLineArgs(pendingTaskId);
 
           taskManager.savePendingTask(new SingularityPendingTask(newPendingTaskId, cmdLineArgs.isPresent() ? Optional.of(Collections.singletonList(cmdLineArgs.get())) :
-            Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent()));
+            Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent()));
 
           curator.delete().forPath(ZKPaths.makePath(PENDING_TASKS_ROOT, pendingTaskId));
         }
