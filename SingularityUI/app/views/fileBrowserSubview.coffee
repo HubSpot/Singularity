@@ -21,16 +21,21 @@ class FileBrowserSubview extends View
         offset = @$el.offset().top
 
         breadcrumbs = utils.pathToBreadcrumbs @collection.currentDirectory
-        timeSinceStart = if @task.get('task')?.taskId?.startedAt then new Date().getTime() - @task.get('task').taskId.startedAt else 0
-        startingUp = timeSinceStart < 1000 * 60 * 60 # 1 Hour
+
+        emptySandboxMessage = 'No files exist in task directory.'
+
+        if @task.get('taskUpdates').length > 0
+            switch _.last(@task.get('taskUpdates'))
+                when 'TASK_LAUNCHED', 'TASK_STAGING', 'TASK_STARTING' then 'Could not browse files. The task is still starting up.'
+                when 'TASK_KILLED', 'TASK_FAILED', 'TASK_LOST' then 'No files exist in task directory. It may have been deleted.'
 
         @$el.html @template
-            synced:      @collection.synced
-            files:       _.pluck @collection.models, 'attributes'
-            path:        @collection.path
-            breadcrumbs: breadcrumbs
-            task:        @task
-            startingUp:  startingUp
+            synced:                 @collection.synced
+            files:                  _.pluck @collection.models, 'attributes'
+            path:                   @collection.path
+            breadcrumbs:            breadcrumbs
+            task:                   @task
+            emptySandboxMessage:    emptySandboxMessage
 
         # make sure body is large enough so we can fit the browser
         minHeight = @$el.offset().top + $(window).height()
