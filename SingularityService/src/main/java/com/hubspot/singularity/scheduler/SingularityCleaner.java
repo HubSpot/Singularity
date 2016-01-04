@@ -144,9 +144,14 @@ public class SingularityCleaner {
     // For an incremental bounce, shut down old tasks as new ones are started
     final SingularityDeployKey key = SingularityDeployKey.fromTaskId(taskCleanup.getTaskId());
     if (taskCleanup.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
-      if (matchingTasks.size() + incrementalBounceCleaningTasks.count(key) <= request.getInstancesSafe()) {
+      int healthyReplaceMentTasks = numHealthyTasks(requestId, activeDeployId, matchingTasks);
+      if (healthyReplaceMentTasks + incrementalBounceCleaningTasks.count(key) <= request.getInstancesSafe()) {
         LOG.trace("Not killing a task {} yet, only {} matching out of a required {}", taskCleanup, matchingTasks.size(), request.getInstancesSafe() - incrementalBounceCleaningTasks.count(key));
         return false;
+      } else {
+        LOG.debug("Killing a task {}, {} replacement tasks are healthy", taskCleanup, healthyReplaceMentTasks);
+        incrementalBounceCleaningTasks.remove(key);
+        return true;
       }
     } else {
       if (matchingTasks.size() < request.getInstancesSafe()) {
@@ -162,9 +167,6 @@ public class SingularityCleaner {
     switch (deployHealth) {
       case HEALTHY:
         LOG.debug("Killing a task {}, all replacement tasks are healthy", taskCleanup);
-        if (taskCleanup.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
-          incrementalBounceCleaningTasks.remove(key);
-        }
         return true;
       case WAITING:
       case UNHEALTHY:
@@ -172,6 +174,11 @@ public class SingularityCleaner {
         LOG.trace("Not killing a task {}, waiting for new replacement tasks to be healthy (current state: {})", taskCleanup, deployState);
         return false;
     }
+  }
+
+  private int numHealthyTasks(String requestId, String activeDeployId, List<SingularityTaskId> matchingTasks) {
+    Optional<SingularityDeploy> deploy = deployManager.getDeploy(requestId, activeDeployId);
+    return deployHealthHelper.getNumHealthyTasks(deploy, matchingTasks, false);
   }
 
   private boolean isObsolete(long start, long cleanupRequest) {
