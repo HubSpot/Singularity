@@ -361,7 +361,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void initHCDeploy() {
-    firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100")).setHealthcheckUri(Optional.of("http://uri")));
+    firstDeploy = initDeploy(request, firstDeployId, true);
   }
 
   protected SingularityDeploy initAndFinishDeploy(SingularityRequest request, String deployId) {
