@@ -121,15 +121,15 @@ public class SingularityExecutorTaskCleanup {
         dockerClient.stopContainer(containerName, configuration.getDockerStopTimeout());
       }
       dockerClient.removeContainer(containerName);
-      log.info(String.format("Removed container %s", containerName));
+      log.info("Removed container {}", containerName);
       return true;
     } catch (ContainerNotFoundException e) {
-      log.info(String.format("Container %s was already removed", containerName));
+      log.info("Container {} was already removed", containerName);
       return true;
     } catch (UncheckedTimeoutException te) {
-      log.error(String.format("Timed out trying to reach docker daemon after %s seconds", configuration.getDockerClientTimeLimitSeconds()), te);
+      log.error("Timed out trying to reach docker daemon after {} seconds", configuration.getDockerClientTimeLimitSeconds(), te);
     } catch (Exception e) {
-      log.info(String.format("Could not ensure removal of docker container due to error %s", e));
+      log.info("Could not ensure removal of docker container", e);
     }
     return false;
   }
