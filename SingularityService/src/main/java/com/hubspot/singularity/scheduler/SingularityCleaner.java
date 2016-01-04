@@ -177,15 +177,8 @@ public class SingularityCleaner {
   }
 
   private int numHealthyTasks(String requestId, String activeDeployId, List<SingularityTaskId> matchingTasks) {
-    int healthyCount = 0;
     Optional<SingularityDeploy> deploy = deployManager.getDeploy(requestId, activeDeployId);
-
-    for (SingularityTaskId taskId : matchingTasks) {
-      if (deployHealthHelper.getDeployHealth(deploy, Collections.singletonList(taskId), false) == DeployHealth.HEALTHY) {
-        healthyCount++;
-      }
-    }
-    return healthyCount;
+    return deployHealthHelper.getNumHealthyTasks(deploy, matchingTasks, false);
   }
 
   private boolean isObsolete(long start, long cleanupRequest) {
