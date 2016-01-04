@@ -62,10 +62,10 @@ fi
 
 # execute command
 {{#if shouldChangeUser}}
-echo "Executing: {{{ switchUserCommand }}} {{#if maxOpenFiles}}/bin/bash -c 'ulimit -n {{{maxOpenFiles}}} && {{/if}}{{{ cmd }}}{{#if maxOpenFiles}}'{{/if}} >> ../{{{ logFile }}} 2>&1"
-exec {{{ switchUserCommand }}} {{#if maxOpenFiles}}/bin/bash -c 'ulimit -n {{{maxOpenFiles}}} && {{/if}}{{{ cmd }}}{{#if maxOpenFiles}}'{{/if}} >> ../{{{ logFile }}} 2>&1
+echo "Executing: sudo -E -u {{{ user }}} ({{#if maxOpenFiles}}ulimit -Sn {{{maxOpenFiles}}} && {{/if}}{{{ cmd }}}) >> ../{{{ logFile }}} 2>&1"
+exec sudo -E -u {{{ user }}} ({{#if maxOpenFiles}}ulimit -Sn {{{maxOpenFiles}}} && {{/if}}{{{ cmd }}}) >> ../{{{ logFile }}} 2>&1
 {{else}}
 echo "Executing: {{{ cmd }}} >> ../{{{ logFile }}} 2>&1"
-{{#if maxOpenFiles}}ulimit -n {{{maxOpenFiles}}}{{/if}}
+{{#if maxOpenFiles}}ulimit -Sn {{{maxOpenFiles}}}{{/if}}
 exec {{{ cmd }}} >> ../{{{ logFile }}} 2>&1
 {{/if}}
