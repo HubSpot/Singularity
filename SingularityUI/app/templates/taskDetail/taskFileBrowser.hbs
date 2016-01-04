@@ -73,11 +73,11 @@
                 This directory is empty
             </div>
         {{else}}
-            <div class="page-loader-container">
-                <div class="empty-table-message">
-                    Could not get files. The task is probably still starting up.
-                </div>
-            </div>
+              <div class="page-loader-container">
+                  <div class="empty-table-message">
+                    {{emptySandboxMessage}}
+                  </div>
+              </div>
         {{/if}}
     {{/if}}
 {{/if}}
