@@ -84,6 +84,3 @@ UPDATE `taskHistory` SET `deployId` = SUBSTRING_INDEX(SUBSTRING_INDEX(`taskId`, 
 
 --changeset ssalinas:8 dbms:mysql
 ALTER TABLE `taskHistory` ADD KEY `runId` (`runId`, `requestId`);
-
---changeset tpetr:10 dbms:mysql
-UPDATE DATABASECHANGELOG SET FILENAME = 'mysql/singularity.sql' WHERE ID < 10;
