@@ -67,7 +67,8 @@ class Request extends Model
         data =
             user:      app.getUsername()
             killTasks: killTasks
-            message: message
+        if message
+            data.message = message
         duration = @_parseDuration(duration)
         if duration
             data.durationMillis = duration
@@ -91,14 +92,17 @@ class Request extends Model
             options.data.commandLineArgs = []
           options.processData = false
 
-        options.data.message = message
+        if message
+            options.data.message = message
         options.data = JSON.stringify(options.data)
         $.ajax options
 
     scale: (confirmedOrPromptData) =>
         data =
             instances: confirmedOrPromptData.instances
-            message: confirmedOrPromptData.message
+
+        if confirmedOrPromptData.message
+            data.message = confirmedOrPromptData.message
         duration = @_parseDuration(confirmedOrPromptData.duration)
         if duration
             data.durationMillis = duration
@@ -161,8 +165,9 @@ class Request extends Model
 
     disableHealthchecks: (message, duration) =>
         data =
-            message: message
             skipHealthchecks: true
+        if message
+            data.message = message
         duration = @_parseDuration(duration)
         if duration
             data.durationMillis = duration
@@ -174,8 +179,9 @@ class Request extends Model
 
     enableHealthchecks: (message, duration) =>
         data =
-            message: message
             skipHealthchecks: false
+        if message
+            data.message = message
         duration = @_parseDuration(duration)
         if duration
             data.durationMillis = duration

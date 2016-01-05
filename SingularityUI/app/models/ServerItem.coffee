@@ -53,11 +53,13 @@ class ServerItem extends Model
             type: "POST"
 
     decommission: (message) =>
+        data = {}
+        if message
+            data.message = message
         $.ajax
             url: "#{ @url() }/decommission"
             type: "POST"
-            data: JSON.stringify
-                message: message
+            data: data
 
     reactivate: =>
         $.ajax
