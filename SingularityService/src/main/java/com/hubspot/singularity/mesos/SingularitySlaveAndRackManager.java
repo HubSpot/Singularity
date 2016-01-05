@@ -16,8 +16,10 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
+import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.json.MesosMasterSlaveObject;
@@ -124,10 +126,10 @@ class SingularitySlaveAndRackManager {
     }
 
     final int numDesiredInstances = taskRequest.getRequest().getInstancesSafe();
-    double numOnRack = 0;
     double numOnSlave = 0;
     double numCleaningOnSlave = 0;
     double numOtherDeploysOnSlave = 0;
+    final Multiset<String> countPerRack = HashMultiset.create();
 
     final String sanitizedHost = JavaUtils.getReplaceHyphensWithUnderscores(host);
     final String sanitizedRackId = JavaUtils.getReplaceHyphensWithUnderscores(rackId);
@@ -146,18 +148,16 @@ class SingularitySlaveAndRackManager {
           numOtherDeploysOnSlave++;
         }
       }
-      if (taskId.getSanitizedRackId().equals(sanitizedRackId) && !cleaningTasks.contains(taskId) && taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
-        numOnRack++;
+      if (!cleaningTasks.contains(taskId) && taskRequest.getDeploy().getId().equals(taskId.getDeployId())) {
+        countPerRack.add(taskId.getSanitizedRackId());
       }
     }
 
     if (taskRequest.getRequest().isRackSensitive()) {
-      final double numPerRack = numDesiredInstances / (double) stateCache.getNumActiveRacks();
-
-      final boolean isRackOk = numOnRack < numPerRack;
+      final boolean isRackOk = countPerRack.count(sanitizedRackId) < getInstanceCountForRack(countPerRack, stateCache.getNumActiveRacks());
 
       if (!isRackOk) {
-        LOG.trace("Rejecting RackSensitive task {} from slave {} ({}) due to numOnRack {} and cleaningOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, numOnRack, numCleaningOnSlave);
+        LOG.trace("Rejecting RackSensitive task {} from slave {} ({}) due to countPerRack {} and cleaningOnSlave {}", taskRequest.getRequest().getId(), slaveId, host, countPerRack, numCleaningOnSlave);
         return SlaveMatchState.RACK_SATURATED;
       }
     }
@@ -190,6 +190,31 @@ class SingularitySlaveAndRackManager {
     }
 
     return SlaveMatchState.OK;
+  }
+
+  public int getInstanceCountForRack(Multiset<String> countPerRack, int numActiveRacks) {
+    for (int i = numActiveRacks - countPerRack.size(); i > 0; i--) {
+      countPerRack.add(String.format("RackWithNoMatchingTasks-%s", i));
+    }
+
+    int maxOnRack = 0;
+    boolean allRacksEqual = true;
+
+    Optional<Integer> previousValue = Optional.absent();
+    for (Multiset.Entry entry : countPerRack.entrySet()) {
+      if (entry.getCount() > maxOnRack) {
+        maxOnRack = entry.getCount();
+      }
+      if (previousValue.isPresent() && entry.getCount() != previousValue.get()) {
+        allRacksEqual = false;
+      }
+      previousValue = Optional.of(entry.getCount());
+    }
+    if (allRacksEqual) {
+      return maxOnRack + 1;
+    } else {
+      return maxOnRack;
+    }
   }
 
   public void slaveLost(SlaveID slaveIdObj) {
