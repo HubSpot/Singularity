@@ -1826,6 +1826,39 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(1, taskManager.getNumActiveTasks());
   }
 
+  @Test
+  public void testHealthchecksDuringBounce() {
+    initRequest();
+    initHCDeploy();
+
+    startTask(firstDeploy);
+
+    requestResource.bounce(requestId);
+
+    cleaner.drainCleanupQueue();
+
+    SingularityTask secondTask = startTask(firstDeploy);
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertEquals(1, taskManager.getNumCleanupTasks());
+    Assert.assertEquals(2, taskManager.getNumActiveTasks());
+
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(500), Optional.of(1000L), 1, Optional.<String> absent(), Optional.<String> absent(), secondTask.getTaskId()));
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertEquals(1, taskManager.getNumCleanupTasks());
+    Assert.assertEquals(2, taskManager.getNumActiveTasks());
+
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent(), secondTask.getTaskId()));
+
+    cleaner.drainCleanupQueue();
+    killKilledTasks();
+
+    Assert.assertEquals(0, taskManager.getNumCleanupTasks());
+    Assert.assertEquals(1, taskManager.getNumActiveTasks());
+  }
 
   @Test
   public void testWaitAfterTaskWorks() {

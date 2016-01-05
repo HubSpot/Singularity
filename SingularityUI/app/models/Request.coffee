@@ -56,7 +56,7 @@ class Request extends Model
 
     unpause: (data) =>
         $.ajax
-            url:  "#{ @url() }/unpause?user=#{ app.getUsername() }"
+            url:  "#{ @url() }/unpause"
             contentType: 'application/json'
             type: 'POST'
             data: JSON.stringify(
@@ -67,7 +67,8 @@ class Request extends Model
         data =
             user:      app.getUsername()
             killTasks: killTasks
-            message: message
+        if message
+            data.message = message
         duration = @_parseDuration(duration)
         if duration
             data.durationMillis = duration
@@ -79,7 +80,7 @@ class Request extends Model
 
     run: (confirmedOrPromptData, message) ->
         options =
-            url: "#{ @url() }/run?user=#{ app.getUsername() }"
+            url: "#{ @url() }/run"
             type: 'POST'
             contentType: 'application/json'
             data: {}
@@ -91,26 +92,29 @@ class Request extends Model
             options.data.commandLineArgs = []
           options.processData = false
 
-        options.data.message = message
+        if message
+            options.data.message = message
         options.data = JSON.stringify(options.data)
         $.ajax options
 
     scale: (confirmedOrPromptData) =>
         data =
             instances: confirmedOrPromptData.instances
-            message: confirmedOrPromptData.message
+
+        if confirmedOrPromptData.message
+            data.message = confirmedOrPromptData.message
         duration = @_parseDuration(confirmedOrPromptData.duration)
         if duration
             data.durationMillis = duration
         $.ajax
-          url: "#{ @url() }/scale?user=#{ app.getUsername() }"
+          url: "#{ @url() }/scale"
           type: "PUT"
           contentType: 'application/json'
           data: JSON.stringify data
 
     makeScalePermanent: (callback) =>
         $.ajax(
-          url: "#{ @url() }/scale?user=#{ app.getUsername() }"
+          url: "#{ @url() }/scale"
           type: "DELETE"
         ).then () =>
           @unset('expiringScale')
@@ -118,7 +122,7 @@ class Request extends Model
 
     makePausePermanent: (callback) =>
         $.ajax(
-          url: "#{ @url() }/pause?user=#{ app.getUsername() }"
+          url: "#{ @url() }/pause"
           type: "DELETE"
         ).then () =>
           @unset('expiringPause')
@@ -126,7 +130,7 @@ class Request extends Model
 
     makeSkipHealthchecksPermanent: (callback) =>
         $.ajax(
-          url: "#{ @url() }/skipHealthchecks?user=#{ app.getUsername() }"
+          url: "#{ @url() }/skipHealthchecks"
           type: "DELETE"
         ).then () =>
           @unset('expiringSkipHealthchecks')
@@ -134,7 +138,7 @@ class Request extends Model
 
     cancelBounce: (callback) =>
         $.ajax(
-          url: "#{ @url() }/bounce?user=#{ app.getUsername() }"
+          url: "#{ @url() }/bounce"
           type: "DELETE"
         ).then () =>
           @unset('expiringBounce')
@@ -148,47 +152,54 @@ class Request extends Model
             data.durationMillis = duration
         $.ajax
             type: "POST"
-            url:  "#{ @url() }/bounce?user=#{ app.getUsername() }"
+            url:  "#{ @url() }/bounce"
             contentType: 'application/json'
             data: JSON.stringify data
 
     exitCooldown: =>
         $.ajax
-            url: "#{ @url() }/exit-cooldown?user=#{ app.getUsername() }"
+            url: "#{ @url() }/exit-cooldown"
             type: "POST"
             contentType: 'application/json'
             data: '{}'
 
     disableHealthchecks: (message, duration) =>
         data =
-            message: message
             skipHealthchecks: true
+        if message
+            data.message = message
         duration = @_parseDuration(duration)
         if duration
             data.durationMillis = duration
         $.ajax
             type: "PUT"
-            url:  "#{ @url() }/skipHealthchecks?user=#{ app.getUsername() }"
+            url:  "#{ @url() }/skipHealthchecks"
             contentType: 'application/json'
             data: JSON.stringify data
 
     enableHealthchecks: (message, duration) =>
         data =
-            message: message
             skipHealthchecks: false
+        if message
+            data.message = message
         duration = @_parseDuration(duration)
         if duration
             data.durationMillis = duration
         $.ajax
             type: "PUT"
-            url:  "#{ @url() }/skipHealthchecks?user=#{ app.getUsername() }"
+            url:  "#{ @url() }/skipHealthchecks"
             contentType: 'application/json'
             data: JSON.stringify data
 
-    destroy: =>
+    destroy: (message) =>
+        data = {}
+        if message
+            data.message = message
         $.ajax
-            url:  "#{ @url() }?user=#{ app.getUsername() }"
             type: "DELETE"
+            url:  @url()
+            contentType: 'application/json'
+            data: JSON.stringify(data)
 
     _validateDuration: (duration, action) =>
         if @_parseDuration(duration)
@@ -417,9 +428,12 @@ class Request extends Model
     promptRemove: (callback) =>
         vex.dialog.confirm
             message: removeTemplate id: @get "id"
+            input: """
+                <input name="message" id="disable-healthchecks-message" type="text" placeholder="Message (optional)" />
+            """
             callback: (confirmed) =>
                 return if not confirmed
-                @destroy().done callback
+                @destroy(confirmed.message).done callback
 
     promptBounce: (callback) =>
         vex.dialog.confirm
