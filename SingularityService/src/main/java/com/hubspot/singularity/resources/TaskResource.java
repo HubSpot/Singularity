@@ -248,6 +248,13 @@ public class TaskResource {
 
   @DELETE
   @Path("/task/{taskId}")
+  public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId) {
+    return killTask(taskId, Optional.<SingularityKillTaskRequest> absent());
+  }
+
+  @DELETE
+  @Path("/task/{taskId}")
+  @Consumes({ MediaType.APPLICATION_JSON })
   @ApiOperation(value="Attempt to kill task, optionally overriding an existing cleanup request (that may be waiting for replacement tasks to become healthy)", response=SingularityTaskCleanup.class)
   @ApiResponses({
     @ApiResponse(code=409, message="Task already has a cleanup request (can be overridden with override=true)")
