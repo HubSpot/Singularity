@@ -73,6 +73,11 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("database")
   private DataSourceFactory databaseConfiguration;
 
+  @JsonProperty("databaseMigration")
+  private DataSourceFactory databaseMigrationConfiguration;
+
+  private boolean runDbMigrationAtStartup = true;
+
   @NotNull
   private SlavePlacement defaultSlavePlacement = SlavePlacement.GREEDY;
 
@@ -337,6 +342,14 @@ public class SingularityConfiguration extends Configuration {
 
   public Optional<DataSourceFactory> getDatabaseConfiguration() {
     return Optional.fromNullable(databaseConfiguration);
+  }
+
+  public Optional<DataSourceFactory> getDatabaseMigrationConfiguration() {
+    return Optional.fromNullable(databaseMigrationConfiguration);
+  }
+
+  public boolean isRunDbMigrationAtStartup() {
+    return runDbMigrationAtStartup;
   }
 
   public SlavePlacement getDefaultSlavePlacement() {
@@ -649,6 +662,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setDatabaseConfiguration(DataSourceFactory databaseConfiguration) {
     this.databaseConfiguration = databaseConfiguration;
+  }
+
+  public void setDatabaseMigrationConfiguration(DataSourceFactory databaseMigrationConfiguration) {
+    this.databaseMigrationConfiguration = databaseMigrationConfiguration;
+  }
+
+  public void setRunDbMigrationAtStartup(boolean runDbMigrationAtStartup) {
+    this.runDbMigrationAtStartup = runDbMigrationAtStartup;
   }
 
   public void setDefaultSlavePlacement(SlavePlacement defaultSlavePlacement) {

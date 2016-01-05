@@ -31,10 +31,12 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHolder;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.zkmigrations.ZkDataMigrationRunner;
+import com.hubspot.singularity.data.dbmigrations.SingularityDbMigrationRunner;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
@@ -53,11 +55,13 @@ class SingularityStartup {
   private final SingularityNewTaskChecker newTaskChecker;
   private final SingularityTaskReconciliation taskReconciliation;
   private final ZkDataMigrationRunner zkDataMigrationRunner;
+  private final SingularityDbMigrationRunner dbMigrationRunner;
+  private final SingularityConfiguration configuration;
 
   @Inject
   SingularityStartup(MesosClient mesosClient, SingularityHealthchecker healthchecker, SingularityNewTaskChecker newTaskChecker,
       SingularitySlaveAndRackManager slaveAndRackManager, TaskManager taskManager, RequestManager requestManager, DeployManager deployManager, SingularityTaskReconciliation taskReconciliation,
-      ZkDataMigrationRunner zkDataMigrationRunner) {
+      ZkDataMigrationRunner zkDataMigrationRunner, SingularityDbMigrationRunner dbMigrationRunner, SingularityConfiguration configuration) {
     this.mesosClient = mesosClient;
     this.zkDataMigrationRunner = zkDataMigrationRunner;
     this.slaveAndRackManager = slaveAndRackManager;
@@ -67,6 +71,8 @@ class SingularityStartup {
     this.taskManager = taskManager;
     this.healthchecker = healthchecker;
     this.taskReconciliation = taskReconciliation;
+    this.dbMigrationRunner = dbMigrationRunner;
+    this.configuration = configuration;
   }
 
   public void startup(MasterInfo masterInfo, SchedulerDriver driver) throws Exception {
@@ -77,6 +83,12 @@ class SingularityStartup {
     LOG.info("Starting up... fetching state data from: " + uri);
 
     zkDataMigrationRunner.checkMigrations();
+
+    if (configuration.isRunDbMigrationAtStartup()) {
+      dbMigrationRunner.checkMigrations();
+    } else {
+      LOG.info("Skipping db migration because runDbMigrationAtStartup = false");
+    }
 
     MesosMasterStateObject state = mesosClient.getMasterState(uri);
 
