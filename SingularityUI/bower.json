@@ -40,7 +40,7 @@
     "select2": "~3.5.2",
     "react": "~0.14.2",
     "react-list": "~0.7.3",
-    "react-dom": "~0.1.0",
+    "react-dom": "git://github.com/EtienneLem/react-dom-util.git",
     "fuzzy": "~0.1.1",
     "fuse.js": "~1.2.2",
     "juration": "*"
