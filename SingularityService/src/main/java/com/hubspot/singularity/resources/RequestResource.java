@@ -17,7 +17,6 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
@@ -140,6 +139,13 @@ public class RequestResource extends AbstractRequestResource {
 
   @POST
   @Path("/request/{requestId}/bounce")
+  public SingularityRequestParent bounce(@PathParam("requestId") String requestId) {
+    return bounce(requestId, Optional.<SingularityBounceRequest> absent());
+  }
+
+  @POST
+  @Path("/request/{requestId}/bounce")
+  @Consumes({ MediaType.APPLICATION_JSON })
   @ApiOperation(value="Bounce a specific Singularity request. A bounce launches replacement task(s), and then kills the original task(s) if the replacement(s) are healthy.",
   response=SingularityRequestParent.class)
   public SingularityRequestParent bounce(@ApiParam("The request ID to bounce") @PathParam("requestId") String requestId,
@@ -197,13 +203,18 @@ public class RequestResource extends AbstractRequestResource {
 
   @POST
   @Path("/request/{requestId}/run")
+  public SingularityPendingRequestParent scheduleImmediately(@PathParam("requestId") String requestId) {
+    return scheduleImmediately(requestId, Optional.<SingularityRunNowRequest> absent());
+  }
+
+  @POST
+  @Path("/request/{requestId}/run")
   @Consumes({ MediaType.APPLICATION_JSON })
   @ApiOperation(value="Schedule a one-off or scheduled Singularity request for immediate execution.", response=SingularityRequestParent.class)
   @ApiResponses({
     @ApiResponse(code=400, message="Singularity Request is not scheduled or one-off"),
   })
   public SingularityPendingRequestParent scheduleImmediately(@ApiParam("The request ID to run") @PathParam("requestId") String requestId,
-      @ApiParam("Run ID to associate with this task. If not specified, one will be generated") @QueryParam("runId") Optional<String> runId,
       Optional<SingularityRunNowRequest> runNowRequest) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
@@ -222,6 +233,7 @@ public class RequestResource extends AbstractRequestResource {
       throw badRequest("Can not request an immediate run of a non-scheduled / always running request (%s)", requestWithState.getRequest());
     }
 
+    Optional<String> runId = Optional.absent();
     Optional<String> message = Optional.absent();
     Optional<Boolean> skipHealthchecks = Optional.absent();
     Optional<List<String>> commandLineArgs = Optional.absent();
@@ -253,6 +265,13 @@ public class RequestResource extends AbstractRequestResource {
 
   @POST
   @Path("/request/{requestId}/pause")
+  public SingularityRequestParent pause(@PathParam("requestId") String requestId) {
+    return pause(requestId, Optional.<SingularityPauseRequest> absent());
+  }
+
+  @POST
+  @Path("/request/{requestId}/pause")
+  @Consumes({ MediaType.APPLICATION_JSON })
   @ApiOperation(value="Pause a Singularity request, future tasks will not run until it is manually unpaused. API can optionally choose to kill existing tasks", response=SingularityRequestParent.class)
   @ApiResponses({
     @ApiResponse(code=409, message="Request is already paused or being cleaned"),
@@ -299,6 +318,13 @@ public class RequestResource extends AbstractRequestResource {
 
   @POST
   @Path("/request/{requestId}/unpause")
+  public SingularityRequestParent unpauseNoBody(@PathParam("requestId") String requestId) {
+    return unpause(requestId, Optional.<SingularityUnpauseRequest> absent());
+  }
+
+  @POST
+  @Path("/request/{requestId}/unpause")
+  @Consumes({ MediaType.APPLICATION_JSON })
   @ApiOperation(value="Unpause a Singularity Request, scheduling new tasks immediately", response=SingularityRequestParent.class)
   @ApiResponses({
     @ApiResponse(code=409, message="Request is not paused"),
@@ -326,6 +352,17 @@ public class RequestResource extends AbstractRequestResource {
 
   @POST
   @Path("/request/{requestId}/exit-cooldown")
+  public SingularityRequestParent exitCooldown(@PathParam("requestId") String requestId) {
+    return exitCooldown(requestId, Optional.<SingularityExitCooldownRequest> absent());
+  }
+
+  @POST
+  @Path("/request/{requestId}/exit-cooldown")
+  @Consumes({ MediaType.APPLICATION_JSON })
+  @ApiOperation(value="Immediately exits cooldown, scheduling new tasks immediately", response=SingularityRequestParent.class)
+  @ApiResponses({
+    @ApiResponse(code=409, message="Request is not in cooldown"),
+  })
   public SingularityRequestParent exitCooldown(@PathParam("requestId") String requestId, Optional<SingularityExitCooldownRequest> exitCooldownRequest) {
     final SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
@@ -453,12 +490,18 @@ public class RequestResource extends AbstractRequestResource {
 
   @DELETE
   @Path("/request/{requestId}")
+  public SingularityRequest deleteRequest(@PathParam("requestId") String requestId) {
+    return deleteRequest(requestId, Optional.<SingularityDeleteRequestRequest> absent());
+  }
+
+  @DELETE
+  @Path("/request/{requestId}")
   @ApiOperation(value="Delete a specific Request by ID and return the deleted Request", response=SingularityRequest.class)
   @ApiResponses({
     @ApiResponse(code=404, message="No Request with that ID"),
   })
   public SingularityRequest deleteRequest(@ApiParam("The request ID to delete.") @PathParam("requestId") String requestId,
-      Optional<SingularityDeleteRequestRequest> deleteRequest) {
+      @ApiParam("Delete options") Optional<SingularityDeleteRequestRequest> deleteRequest) {
     SingularityRequest request = fetchRequest(requestId);
 
     authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
@@ -480,6 +523,7 @@ public class RequestResource extends AbstractRequestResource {
 
   @PUT
   @Path("/request/{requestId}/scale")
+  @Consumes({ MediaType.APPLICATION_JSON })
   @ApiOperation(value="Scale the number of instances up or down for a specific Request", response=SingularityRequestParent.class)
   @ApiResponses({
     @ApiResponse(code=404, message="No Request with that ID"),
@@ -557,6 +601,7 @@ public class RequestResource extends AbstractRequestResource {
 
   @PUT
   @Path("/request/{requestId}/skipHealthchecks")
+  @Consumes({ MediaType.APPLICATION_JSON })
   @ApiOperation(value="Update the skipHealthchecks field for the request, possibly temporarily", response=SingularityRequestParent.class)
   @ApiResponses({
     @ApiResponse(code=404, message="No Request with that ID"),
