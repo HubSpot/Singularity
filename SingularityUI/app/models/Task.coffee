@@ -46,7 +46,7 @@ class Task extends Model
             url: @url()
             type: "DELETE"
             contentType: 'application/json'
-            data: data
+            data: JSON.stringify data
 
     runShellCommand: (cmd, options = []) =>
         params =
