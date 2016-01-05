@@ -162,7 +162,7 @@ public class SingularityCleaner {
 
     final Optional<SingularityDeploy> deploy = deployManager.getDeploy(requestId, activeDeployId);
 
-    final DeployHealth deployHealth = deployHealthHelper.getDeployHealth(deploy, matchingTasks, false);
+    final DeployHealth deployHealth = deployHealthHelper.getDeployHealth(requestWithState.get().getRequest(), deploy, matchingTasks, false);
 
     switch (deployHealth) {
       case HEALTHY:
