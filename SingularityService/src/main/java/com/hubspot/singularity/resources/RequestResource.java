@@ -496,6 +496,7 @@ public class RequestResource extends AbstractRequestResource {
 
   @DELETE
   @Path("/request/{requestId}")
+  @Consumes({ MediaType.APPLICATION_JSON })
   @ApiOperation(value="Delete a specific Request by ID and return the deleted Request", response=SingularityRequest.class)
   @ApiResponses({
     @ApiResponse(code=404, message="No Request with that ID"),
