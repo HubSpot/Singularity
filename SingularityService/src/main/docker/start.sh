@@ -26,10 +26,5 @@ args+=( -Ddw.ui.baseUrl="${SINGULARITY_URI_BASE:=$DEFAULT_URI_BASE}" )
 
 [[ ! ${SINGULARITY_PERSIST_HISTORY_EVERY_SECONDS:-} ]] || args+=( -Ddw.persistHistoryEverySeconds="${SINGULARITY_PERSIST_HISTORY_EVERY_SECONDS}" )
 
-if [[ "${SINGULARITY_DB_MIGRATE:-}" != "" ]]; then
-	echo "Running: java ${args[@]} -jar /SingularityService.jar db migrate /etc/singularity/singularity.yaml --migrations /etc/singularity/migrations.sql"
-	java "${args[@]}" -jar /SingularityService.jar db migrate /etc/singularity/singularity.yaml --migrations /etc/singularity/migrations.sql
-fi
-
 echo "Running: java ${args[@]} -jar /SingularityService.jar $*"
 exec java "${args[@]}" -jar /SingularityService.jar $*
