@@ -1816,6 +1816,14 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(healthchecker.cancelHealthcheck(firstTask.getTaskId().getId()));
     Assert.assertTrue(!healthchecker.cancelHealthcheck(secondTask.getTaskId().getId()));
     Assert.assertTrue(healthchecker.cancelHealthcheck(thirdTask.getTaskId().getId()));
+
+    statusUpdate(thirdTask, TaskState.TASK_KILLED);
+
+    cleaner.drainCleanupQueue();
+    killKilledTasks();
+
+    Assert.assertEquals(0, taskManager.getNumCleanupTasks());
+    Assert.assertEquals(1, taskManager.getNumActiveTasks());
   }
 
 
