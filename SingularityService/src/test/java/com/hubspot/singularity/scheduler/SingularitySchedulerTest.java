@@ -1820,4 +1820,31 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(taskManager.getActiveTasks().size() == 20);
   }
 
+  @Test
+  public void testEvenRackPlacement() {
+    initRequest();
+    initFirstDeploy();
+
+    requestResource.submit(request.toBuilder().setInstances(Optional.of(6)).setRackSensitive(Optional.of(true)).build());
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    // Enough resources for 1 task on each host so we register 3 active racks
+    sms.resourceOffers(driver, Arrays.asList(createOffer(2, 128, "slave1", "host1", Optional.of("rack1")), createOffer(2, 128, "slave2", "host2", Optional.of("rack2")), createOffer(2, 128, "slave3", "host3", Optional.of("rack3"))));
+
+    Assert.assertEquals(3, taskManager.getActiveTasks().size());
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.of("rack1")), createOffer(20, 20000, "slave2", "host2", Optional.of("rack2"))));
+
+    Assert.assertEquals(5, taskManager.getActiveTasks().size());
+
+    // We should be waiting for rack3 to get its second task before adding any more to racks 1 or 2
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.of("rack1")), createOffer(20, 20000, "slave2", "host2", Optional.of("rack2"))));
+
+    Assert.assertEquals(5, taskManager.getActiveTasks().size());
+
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave3", "host3", Optional.of("rack3"))));
+
+    Assert.assertEquals(6, taskManager.getActiveTasks().size());
+  }
+
 }
