@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
@@ -12,6 +11,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.db.DatabaseConfiguration;
+import io.dropwizard.db.ManagedDataSource;
 import io.dropwizard.migrations.CloseableLiquibase;
 
 @Singleton
@@ -27,7 +27,7 @@ public class SingularityDbMigrationRunner {
     this.metricRegistry = metricRegistry;
   }
 
-  public void checkMigrations() {
+  public void checkMigrations() throws Exception {
     final DataSourceFactory dataSourceFactory;
 
     if (configuration.getDatabaseMigrationConfiguration().isPresent()) {
@@ -41,14 +41,20 @@ public class SingularityDbMigrationRunner {
       return;
     }
 
-    try (final CloseableLiquibase liquibase = new CloseableLiquibase(dataSourceFactory.build(metricRegistry, "liquibase"))) {
+    final ManagedDataSource managedDataSource = dataSourceFactory.build(metricRegistry, "liquibase");
+
+    try (final CloseableLiquibase liquibase = new CloseableLiquibase(managedDataSource, "pre-migrations.xml")) {
+      final long start = System.currentTimeMillis();
+      LOG.info("Starting db pre-migration...");
+      liquibase.update("");
+      LOG.info("Ran db pre-migration in {}", JavaUtils.duration(start));
+    }
+
+    try (final CloseableLiquibase liquibase = new CloseableLiquibase(managedDataSource)) {
       final long start = System.currentTimeMillis();
       LOG.info("Starting db migration...");
       liquibase.update("");
       LOG.info("Ran db migration in {}", JavaUtils.duration(start));
-    } catch (Exception e) {
-      LOG.error("Caught exception while running database migration", e);
-      throw Throwables.propagate(e);
     }
   }
 
