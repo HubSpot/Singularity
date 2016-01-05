@@ -9,28 +9,33 @@ import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityDeployRequest {
 
-  private final Optional<String> user;
   private final Optional<Boolean> unpauseOnSuccessfulDeploy;
   private final SingularityDeploy deploy;
+  private final Optional<String> message;
 
   @JsonCreator
   public SingularityDeployRequest(
       @JsonProperty("deploy") SingularityDeploy deploy,
-      @JsonProperty("user") Optional<String> user,
-      @JsonProperty("unpauseOnSuccessfulDeploy") Optional<Boolean> unpauseOnSuccessfulDeploy) {
+      @JsonProperty("unpauseOnSuccessfulDeploy") Optional<Boolean> unpauseOnSuccessfulDeploy,
+      @JsonProperty("message") Optional<String> message) {
     this.deploy = deploy;
-    this.user = user;
     this.unpauseOnSuccessfulDeploy = unpauseOnSuccessfulDeploy;
+    this.message = message;
   }
 
-  @ApiModelProperty(required=false, value="User owning this deploy.")
-  public Optional<String> getUser() {
-    return user;
-  }
-
-  @ApiModelProperty(required=false, value="If deploy is successful, also unpause the request.")
+  @ApiModelProperty(required=false, value="If deploy is successful, also unpause the request")
   public Optional<Boolean> getUnpauseOnSuccessfulDeploy() {
     return unpauseOnSuccessfulDeploy;
+  }
+
+  @ApiModelProperty(required=true, value="The Singularity deploy object, containing all the required details about the Deploy")
+  public SingularityDeploy getDeploy() {
+    return deploy;
+  }
+
+  @ApiModelProperty(required=false, value="A message to show users about this deploy (metadata)")
+  public Optional<String> getMessage() {
+    return message;
   }
 
   @JsonIgnore
@@ -38,14 +43,9 @@ public class SingularityDeployRequest {
     return unpauseOnSuccessfulDeploy.or(Boolean.FALSE);
   }
 
-  @ApiModelProperty(required=true, value="The Singularity deploy object")
-  public SingularityDeploy getDeploy() {
-    return deploy;
-  }
-
   @Override
   public String toString() {
-    return "SingularityDeployRequest [user=" + user + ", unpauseOnSuccessfulDeploy=" + unpauseOnSuccessfulDeploy + ", deploy=" + deploy + "]";
+    return "SingularityDeployRequest [unpauseOnSuccessfulDeploy=" + unpauseOnSuccessfulDeploy + ", deploy=" + deploy + ", message=" + message + "]";
   }
 
 }

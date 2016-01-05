@@ -2,16 +2,12 @@ package com.hubspot.singularity.hooks;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import javax.ws.rs.HEAD;
-
-import com.hubspot.baragon.models.RequestAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +20,7 @@ import com.hubspot.baragon.models.BaragonRequest;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.baragon.models.BaragonResponse;
 import com.hubspot.baragon.models.BaragonService;
+import com.hubspot.baragon.models.RequestAction;
 import com.hubspot.baragon.models.UpstreamInfo;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;

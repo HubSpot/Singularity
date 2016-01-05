@@ -11,7 +11,6 @@ import java.util.Random;
 
 import javax.inject.Provider;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +19,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.horizon.HttpClient;
@@ -53,7 +51,13 @@ import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityWebhook;
+import com.hubspot.singularity.api.SingularityBounceRequest;
+import com.hubspot.singularity.api.SingularityDeleteRequestRequest;
 import com.hubspot.singularity.api.SingularityDeployRequest;
+import com.hubspot.singularity.api.SingularityExitCooldownRequest;
+import com.hubspot.singularity.api.SingularityKillTaskRequest;
+import com.hubspot.singularity.api.SingularityPauseRequest;
+import com.hubspot.singularity.api.SingularityRunNowRequest;
 
 public class SingularityClient {
 
@@ -97,7 +101,6 @@ public class SingularityClient {
   private static final String REQUEST_GET_FORMAT = REQUESTS_FORMAT + "/request/%s";
   private static final String REQUEST_CREATE_OR_UPDATE_FORMAT = REQUESTS_FORMAT;
   private static final String REQUEST_DELETE_ACTIVE_FORMAT = REQUESTS_FORMAT + "/request/%s";
-  private static final String REQUEST_DELETE_PAUSED_FORMAT = REQUESTS_FORMAT + "/request/%s/paused";
   private static final String REQUEST_BOUNCE_FORMAT = REQUESTS_FORMAT + "/request/%s/bounce";
   private static final String REQUEST_PAUSE_FORMAT = REQUESTS_FORMAT + "/request/%s/pause";
   private static final String REQUEST_RUN_FORMAT = REQUESTS_FORMAT + "/request/%s/run";
@@ -281,19 +284,23 @@ public class SingularityClient {
     }
   }
 
-  private <T> void delete(String uri, String type, String id, Optional<String> user) {
-    delete(uri, type, id, user, Optional.<Class<T>> absent());
+  private <T> void delete(String uri, String type, String id) {
+    delete(uri, type, id, Optional.absent());
   }
 
-  private <T> Optional<T> delete(String uri, String type, String id, Optional<String> user, Optional<Class<T>> clazz) {
+  private <T> void delete(String uri, String type, String id, Optional<?> body) {
+    delete(uri, type, id, body, Optional.<Class<T>> absent());
+  }
+
+  private <T> Optional<T> delete(String uri, String type, String id, Optional<?> body, Optional<Class<T>> clazz) {
     LOG.info("Deleting {} {} from {}", type, id, uri);
 
     final long start = System.currentTimeMillis();
 
     HttpRequest.Builder request = HttpRequest.newBuilder().setUrl(uri).setMethod(Method.DELETE);
 
-    if (user.isPresent()) {
-      request.setQueryParam("user").to(user.get());
+    if (body.isPresent()) {
+      request.setBody(body.get());
     }
 
     addCredentials(request);
@@ -316,9 +323,9 @@ public class SingularityClient {
     return Optional.absent();
   }
 
-  private <T> Optional<T> post(String uri, String type, Optional<?> body, Optional<String> user, Optional<Class<T>> clazz) {
+  private <T> Optional<T> post(String uri, String type, Optional<?> body, Optional<Class<T>> clazz) {
     try {
-      HttpResponse response = post(uri, type, body, user);
+      HttpResponse response = post(uri, type, body);
 
       if (clazz.isPresent()) {
         return Optional.of(response.getAs(clazz.get()));
@@ -330,16 +337,12 @@ public class SingularityClient {
     return Optional.<T>absent();
   }
 
-  private HttpResponse post(String uri, String type, Optional<?> body, Optional<String> user) {
+  private HttpResponse post(String uri, String type, Optional<?> body) {
     LOG.info("Posting {} to {}", type, uri);
 
     final long start = System.currentTimeMillis();
 
     HttpRequest.Builder request = HttpRequest.newBuilder().setUrl(uri).setMethod(Method.POST);
-
-    if (user.isPresent()) {
-      request.setQueryParam("user").to(user.get());
-    }
 
     if (body.isPresent()) {
       request.setBody(body.get());
@@ -397,16 +400,16 @@ public class SingularityClient {
     return getSingle(singularityApiRequestUri, "request", requestId, SingularityRequestParent.class);
   }
 
-  public void createOrUpdateSingularityRequest(SingularityRequest request, Optional<String> user) {
+  public void createOrUpdateSingularityRequest(SingularityRequest request) {
     checkNotNull(request.getId(), "A posted Singularity Request must have an id");
 
     final String requestUri = String.format(REQUEST_CREATE_OR_UPDATE_FORMAT, getHost(), contextPath);
 
-    post(requestUri, String.format("request %s", request.getId()), Optional.of(request), user);
+    post(requestUri, String.format("request %s", request.getId()), Optional.of(request));
   }
 
   /**
-   * Delete a singularity request that is active.
+   * Delete a singularity request .
    * If the deletion is successful the deleted singularity request is returned.
    * If the request to be deleted is not found {code Optional.absent()} is returned
    * If an error occurs during deletion an exception is returned
@@ -420,61 +423,45 @@ public class SingularityClient {
    * @return
    *      the singularity request that was deleted
    */
-  public Optional<SingularityRequest> deleteActiveSingularityRequest(String requestId, Optional<String> user) {
+  public Optional<SingularityRequest> deleteSingularityRequest(String requestId, Optional<SingularityDeleteRequestRequest> deleteRequest) {
     final String requestUri = String.format(REQUEST_DELETE_ACTIVE_FORMAT, getHost(), contextPath, requestId);
 
-    return delete(requestUri, "active request", requestId, user, Optional.of(SingularityRequest.class));
+    return delete(requestUri, "active request", requestId, deleteRequest, Optional.of(SingularityRequest.class));
   }
 
-  public Optional<SingularityRequest> deletePausedSingularityRequest(String requestId, Optional<String> user) {
-    final String requestUri = String.format(REQUEST_DELETE_PAUSED_FORMAT, getHost(), contextPath, requestId);
-
-    return delete(requestUri, "paused request", requestId, user, Optional.of(SingularityRequest.class));
-  }
-
-  public void pauseSingularityRequest(String requestId, Optional<String> user) {
+  public void pauseSingularityRequest(String requestId, Optional<SingularityPauseRequest> pauseRequest) {
     final String requestUri = String.format(REQUEST_PAUSE_FORMAT, getHost(), contextPath, requestId);
 
-    post(requestUri, String.format("pause of request %s", requestId), Optional.absent(), user);
+    post(requestUri, String.format("pause of request %s", requestId), pauseRequest);
   }
 
-  public void runSingularityRequest(String requestId, Optional<String> user, Optional<List<String>> additionalArgs) {
+  public void runSingularityRequest(String requestId, Optional<SingularityRunNowRequest> runNowRequest) {
     final String requestUri = String.format(REQUEST_RUN_FORMAT, getHost(), contextPath, requestId);
 
-    post(requestUri, String.format("run of request %s", requestId), additionalArgs, user);
+    post(requestUri, String.format("run of request %s", requestId), runNowRequest);
   }
 
-  public void bounceSingularityRequest(String requestId, Optional<String> user) {
+  public void bounceSingularityRequest(String requestId, Optional<SingularityBounceRequest> bounceOptions) {
     final String requestUri = String.format(REQUEST_BOUNCE_FORMAT, getHost(), contextPath, requestId);
 
-    post(requestUri, String.format("bounce of request %s", requestId), Optional.absent(), user);
+    post(requestUri, String.format("bounce of request %s", requestId), bounceOptions);
   }
 
-  public void exitCooldown(String requestId, Optional<String> user) {
+  public void exitCooldown(String requestId, Optional<SingularityExitCooldownRequest> exitCooldownRequest) {
     final String requestUri = String.format(REQUEST_EXIT_COOLDOWN_FORMAT, getHost(), contextPath, requestId);
 
-    post(requestUri, String.format("exit cooldown of request %s", requestId), Optional.absent(), user);
+    post(requestUri, String.format("exit cooldown of request %s", requestId), exitCooldownRequest);
   }
 
   //
   // ACTIONS ON A DEPLOY FOR A SINGULARITY REQUEST
   //
 
-  public SingularityRequestParent createDeployForSingularityRequest(String requestId, SingularityDeploy pendingDeploy, Optional<Boolean> deployUnpause, Optional<String> user) {
+  public SingularityRequestParent createDeployForSingularityRequest(String requestId, SingularityDeploy pendingDeploy, Optional<Boolean> deployUnpause, Optional<String> message) {
     final String requestUri = String.format(DEPLOYS_FORMAT, getHost(), contextPath);
 
-    List<Pair<String, String>> queryParams = Lists.newArrayList();
-
-    if (user.isPresent()) {
-      queryParams.add(Pair.of("user", user.get()));
-    }
-
-    if (deployUnpause.isPresent()) {
-      queryParams.add(Pair.of("deployUnpause", Boolean.toString(deployUnpause.get())));
-    }
-
     HttpResponse response = post(requestUri, String.format("new deploy %s", new SingularityDeployKey(requestId, pendingDeploy.getId())),
-        Optional.of(new SingularityDeployRequest(pendingDeploy, user, deployUnpause)), Optional.<String> absent());
+        Optional.of(new SingularityDeployRequest(pendingDeploy, deployUnpause, message)));
 
     return getAndLogRequestAndDeployStatus(response.getAs(SingularityRequestParent.class));
   }
@@ -487,10 +474,11 @@ public class SingularityClient {
     return singularityRequestParent;
   }
 
-  public SingularityRequestParent cancelPendingDeployForSingularityRequest(String requestId, String deployId, Optional<String> user) {
+  public SingularityRequestParent cancelPendingDeployForSingularityRequest(String requestId, String deployId) {
     final String requestUri = String.format(DELETE_DEPLOY_FORMAT, getHost(), contextPath, deployId, requestId);
 
-    SingularityRequestParent singularityRequestParent = delete(requestUri, "pending deploy", new SingularityDeployKey(requestId, deployId).getId(), user, Optional.of(SingularityRequestParent.class)).get();
+    SingularityRequestParent singularityRequestParent = delete(requestUri, "pending deploy", new SingularityDeployKey(requestId, deployId).getId(), Optional.absent(),
+        Optional.of(SingularityRequestParent.class)).get();
 
     return getAndLogRequestAndDeployStatus(singularityRequestParent);
   }
@@ -602,10 +590,10 @@ public class SingularityClient {
     return getCollection(requestUri, String.format("active tasks on slave %s", slaveId), TASKS_COLLECTION);
   }
 
-  public Optional<SingularityTaskCleanupResult> killTask(String taskId, Optional<String> user) {
+  public Optional<SingularityTaskCleanupResult> killTask(String taskId, Optional<SingularityKillTaskRequest> killTaskRequest) {
     final String requestUri = String.format(TASKS_KILL_TASK_FORMAT, getHost(), contextPath, taskId);
 
-    return delete(requestUri, "task", taskId, user, Optional.of(SingularityTaskCleanupResult.class));
+    return delete(requestUri, "task", taskId, killTaskRequest, Optional.of(SingularityTaskCleanupResult.class));
   }
 
   //
@@ -640,22 +628,22 @@ public class SingularityClient {
     return getCollection(requestUri, String.format("%s racks", type), RACKS_COLLECTION);
   }
 
-  public void decomissionRack(String rackId, Optional<String> user) {
+  public void decomissionRack(String rackId) {
     final String requestUri = String.format(RACKS_DECOMISSION_FORMAT, getHost(), contextPath, rackId);
 
-    post(requestUri, String.format("decomission rack %s", rackId), Optional.absent(), user);
+    post(requestUri, String.format("decomission rack %s", rackId), Optional.absent());
   }
 
-  public void deleteDecomissioningRack(String rackId, Optional<String> user) {
+  public void deleteDecomissioningRack(String rackId) {
     final String requestUri = String.format(RACKS_DELETE_DECOMISSIONING_FORMAT, getHost(), contextPath, rackId);
 
-    delete(requestUri, "rack", rackId, user);
+    delete(requestUri, "rack", rackId);
   }
 
-  public void deleteDeadRack(String rackId, Optional<String> user) {
+  public void deleteDeadRack(String rackId) {
     final String requestUri = String.format(RACKS_DELETE_DEAD_FORMAT, getHost(), contextPath, rackId);
 
-    delete(requestUri, "dead rack", rackId, user);
+    delete(requestUri, "dead rack", rackId);
   }
 
   //
@@ -713,16 +701,16 @@ public class SingularityClient {
     return getCollectionWithParams(requestUri, type, maybeQueryParams, SLAVES_COLLECTION);
   }
 
-  public void decomissionSlave(String slaveId, Optional<String> user) {
+  public void decomissionSlave(String slaveId) {
     final String requestUri = String.format(SLAVES_DECOMISSION_FORMAT, getHost(), contextPath, slaveId);
 
-    post(requestUri, String.format("decomission slave %s", slaveId), Optional.absent(), user);
+    post(requestUri, String.format("decomission slave %s", slaveId), Optional.absent());
   }
 
-  public void deleteSlave(String slaveId, Optional<String> user) {
+  public void deleteSlave(String slaveId) {
     final String requestUri = String.format(SLAVES_DELETE_FORMAT, getHost(), contextPath, slaveId);
 
-    delete(requestUri, "deleting slave", slaveId, user);
+    delete(requestUri, "deleting slave", slaveId);
   }
 
   //
@@ -806,16 +794,16 @@ public class SingularityClient {
   // WEBHOOKS
   //
 
-  public Optional<SingularityCreateResult> addWebhook(SingularityWebhook webhook, Optional<String> user) {
+  public Optional<SingularityCreateResult> addWebhook(SingularityWebhook webhook) {
     final String requestUri = String.format(WEBHOOKS_FORMAT, getHost(), contextPath);
 
-    return post(requestUri, String.format("webhook %s", webhook.getUri()), Optional.of(webhook), user, Optional.of(SingularityCreateResult.class));
+    return post(requestUri, String.format("webhook %s", webhook.getUri()), Optional.of(webhook), Optional.of(SingularityCreateResult.class));
   }
 
-  public Optional<SingularityDeleteResult> deleteWebhook(String webhookId, Optional<String> user) {
+  public Optional<SingularityDeleteResult> deleteWebhook(String webhookId) {
     final String requestUri = String.format(WEBHOOKS_DELETE_FORMAT, getHost(), contextPath, webhookId);
 
-    return delete(requestUri, String.format("webhook with id %s", webhookId), webhookId, user, Optional.of(SingularityDeleteResult.class));
+    return delete(requestUri, String.format("webhook with id %s", webhookId), webhookId, Optional.absent(), Optional.of(SingularityDeleteResult.class));
   }
 
   public Collection<SingularityWebhook> getActiveWebhook() {

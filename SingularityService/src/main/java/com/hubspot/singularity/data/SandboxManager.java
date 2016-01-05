@@ -3,7 +3,6 @@ package com.hubspot.singularity.data;
 import java.net.ConnectException;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.concurrent.ExecutionException;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -25,22 +25,22 @@ public class SingularityDeployIT {
   @Test
   public void testDeploy(SingularityClient singularityClient) throws Exception {
     final SingularityRequest request = new SingularityRequestBuilder(REQUEST_ID, RequestType.RUN_ONCE)
-            .setInstances(Optional.of(2))
-            .build();
+        .setInstances(Optional.of(2))
+        .build();
 
     final String deployId = Long.toString(System.currentTimeMillis());
 
-    singularityClient.createOrUpdateSingularityRequest(request, Optional.<String>absent());
+    singularityClient.createOrUpdateSingularityRequest(request);
 
     final Optional<SingularityRequestParent> requestParent = singularityClient.getSingularityRequest(REQUEST_ID);
     assertTrue(requestParent.isPresent());
     assertEquals(request, requestParent.get().getRequest());
 
     final SingularityDeploy deploy = new SingularityDeployBuilder(REQUEST_ID, deployId)
-            .setCommand(Optional.of("sleep 10"))
-            .build();
+        .setCommand(Optional.of("sleep 10"))
+        .build();
 
-    singularityClient.createDeployForSingularityRequest(REQUEST_ID, deploy, Optional.<Boolean>absent(), Optional.<String>absent());
+    singularityClient.createDeployForSingularityRequest(REQUEST_ID, deploy, Optional.<Boolean>absent(), Optional.<String> absent());
 
     Optional<DeployState> deployState = Optional.absent();
     for (int i = 0; i < 10; i++) {
