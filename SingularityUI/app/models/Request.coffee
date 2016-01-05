@@ -191,10 +191,15 @@ class Request extends Model
             contentType: 'application/json'
             data: JSON.stringify data
 
-    destroy: =>
+    destroy: (message) =>
+        data = {}
+        if message
+            data.message = message
         $.ajax
-            url:  @url()
             type: "DELETE"
+            url:  @url()
+            contentType: 'application/json'
+            data: JSON.stringify(data)
 
     _validateDuration: (duration, action) =>
         if @_parseDuration(duration)
@@ -423,9 +428,12 @@ class Request extends Model
     promptRemove: (callback) =>
         vex.dialog.confirm
             message: removeTemplate id: @get "id"
+            input: """
+                <input name="message" id="disable-healthchecks-message" type="text" placeholder="Message (optional)" />
+            """
             callback: (confirmed) =>
                 return if not confirmed
-                @destroy().done callback
+                @destroy(confirmed.message).done callback
 
     promptBounce: (callback) =>
         vex.dialog.confirm
