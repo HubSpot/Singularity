@@ -56,7 +56,7 @@ class Request extends Model
 
     unpause: (data) =>
         $.ajax
-            url:  "#{ @url() }/unpause?user=#{ app.getUsername() }"
+            url:  "#{ @url() }/unpause"
             contentType: 'application/json'
             type: 'POST'
             data: JSON.stringify(
@@ -79,7 +79,7 @@ class Request extends Model
 
     run: (confirmedOrPromptData, message) ->
         options =
-            url: "#{ @url() }/run?user=#{ app.getUsername() }"
+            url: "#{ @url() }/run"
             type: 'POST'
             contentType: 'application/json'
             data: {}
@@ -103,14 +103,14 @@ class Request extends Model
         if duration
             data.durationMillis = duration
         $.ajax
-          url: "#{ @url() }/scale?user=#{ app.getUsername() }"
+          url: "#{ @url() }/scale"
           type: "PUT"
           contentType: 'application/json'
           data: JSON.stringify data
 
     makeScalePermanent: (callback) =>
         $.ajax(
-          url: "#{ @url() }/scale?user=#{ app.getUsername() }"
+          url: "#{ @url() }/scale"
           type: "DELETE"
         ).then () =>
           @unset('expiringScale')
@@ -118,7 +118,7 @@ class Request extends Model
 
     makePausePermanent: (callback) =>
         $.ajax(
-          url: "#{ @url() }/pause?user=#{ app.getUsername() }"
+          url: "#{ @url() }/pause"
           type: "DELETE"
         ).then () =>
           @unset('expiringPause')
@@ -126,7 +126,7 @@ class Request extends Model
 
     makeSkipHealthchecksPermanent: (callback) =>
         $.ajax(
-          url: "#{ @url() }/skipHealthchecks?user=#{ app.getUsername() }"
+          url: "#{ @url() }/skipHealthchecks"
           type: "DELETE"
         ).then () =>
           @unset('expiringSkipHealthchecks')
@@ -134,7 +134,7 @@ class Request extends Model
 
     cancelBounce: (callback) =>
         $.ajax(
-          url: "#{ @url() }/bounce?user=#{ app.getUsername() }"
+          url: "#{ @url() }/bounce"
           type: "DELETE"
         ).then () =>
           @unset('expiringBounce')
@@ -148,13 +148,13 @@ class Request extends Model
             data.durationMillis = duration
         $.ajax
             type: "POST"
-            url:  "#{ @url() }/bounce?user=#{ app.getUsername() }"
+            url:  "#{ @url() }/bounce"
             contentType: 'application/json'
             data: JSON.stringify data
 
     exitCooldown: =>
         $.ajax
-            url: "#{ @url() }/exit-cooldown?user=#{ app.getUsername() }"
+            url: "#{ @url() }/exit-cooldown"
             type: "POST"
             contentType: 'application/json'
             data: '{}'
@@ -168,7 +168,7 @@ class Request extends Model
             data.durationMillis = duration
         $.ajax
             type: "PUT"
-            url:  "#{ @url() }/skipHealthchecks?user=#{ app.getUsername() }"
+            url:  "#{ @url() }/skipHealthchecks"
             contentType: 'application/json'
             data: JSON.stringify data
 
@@ -181,13 +181,13 @@ class Request extends Model
             data.durationMillis = duration
         $.ajax
             type: "PUT"
-            url:  "#{ @url() }/skipHealthchecks?user=#{ app.getUsername() }"
+            url:  "#{ @url() }/skipHealthchecks"
             contentType: 'application/json'
             data: JSON.stringify data
 
     destroy: =>
         $.ajax
-            url:  "#{ @url() }?user=#{ app.getUsername() }"
+            url:  @url()
             type: "DELETE"
 
     _validateDuration: (duration, action) =>
