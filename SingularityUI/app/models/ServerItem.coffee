@@ -59,6 +59,7 @@ class ServerItem extends Model
         $.ajax
             url: "#{ @url() }/decommission"
             type: "POST"
+            contentType: 'application/json'
             data: data
 
     reactivate: =>
