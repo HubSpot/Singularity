@@ -36,17 +36,17 @@ class Task extends Model
         task
 
     kill: (message, override=false) =>
-        params =
-            user: app.getUsername()
+        data =
             override: override
 
+        if message
+            data.message = message
+
         $.ajax
-            url: "#{ @url() }?#{ $.param params }"
+            url: @url()
             type: "DELETE"
             contentType: 'application/json'
-            data: JSON.stringify(
-                message: message
-            )
+            data: data
 
     runShellCommand: (cmd, options = []) =>
         params =

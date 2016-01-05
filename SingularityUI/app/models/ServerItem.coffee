@@ -44,24 +44,27 @@ class ServerItem extends Model
 
     remove: =>
         $.ajax
-            url: "#{ @url() }?user=#{ app.getUsername() }"
+            url: @url()
             type: "DELETE"
 
     freeze: =>
         $.ajax
-            url: "#{ @url() }/freeze?user=#{ app.getUsername() }"
+            url: "#{ @url() }/freeze"
             type: "POST"
 
     decommission: (message) =>
+        data = {}
+        if message
+            data.message = message
         $.ajax
-            url: "#{ @url() }/decommission?user=#{ app.getUsername() }"
+            url: "#{ @url() }/decommission"
             type: "POST"
-            data: JSON.stringify
-                message: message
+            contentType: 'application/json'
+            data: data
 
     reactivate: =>
         $.ajax
-            url: "#{ @url()}/activate?user=#{ app.getUsername()}"
+            url: "#{ @url()}/activate"
             type: "POST"
 
     host: =>

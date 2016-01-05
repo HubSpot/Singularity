@@ -120,7 +120,7 @@ class RequestFormBase extends FormBaseView
 
         @request = new Request requestObject
         @request.raw = true
-        @request.url = "#{ config.apiRoot }/requests?user=#{ app.getUsername() }"
+        @request.url = "#{ config.apiRoot }/requests"
         @request.isNew = -> true
 
         @requestObject = requestObject
