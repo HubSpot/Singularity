@@ -88,9 +88,12 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
     }
 
     protected String getMessage(T expiringObject) {
-      return String.format("%s expired after %s (%s)", getActionName(),
-          JavaUtils.durationFromMillis(expiringObject.getExpiringAPIRequestObject().getDurationMillis().get()),
-          expiringObject.getExpiringAPIRequestObject().getMessage().or("No message"));
+      String msg = String.format("%s expired after %s", getActionName(),
+          JavaUtils.durationFromMillis(expiringObject.getExpiringAPIRequestObject().getDurationMillis().get()));
+      if (expiringObject.getExpiringAPIRequestObject().getMessage().isPresent() && expiringObject.getExpiringAPIRequestObject().getMessage().get().length() > 0) {
+        msg = String.format("%s (%s)", msg, expiringObject.getExpiringAPIRequestObject().getMessage().get());
+      }
+      return msg;
     }
 
     protected void checkExpiringObjects() {
