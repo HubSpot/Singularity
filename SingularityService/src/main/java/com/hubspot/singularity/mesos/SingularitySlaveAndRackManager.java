@@ -193,12 +193,12 @@ class SingularitySlaveAndRackManager {
   }
 
   public int getInstanceCountForRack(Multiset<String> countPerRack, int numActiveRacks) {
-    for (int i = numActiveRacks - countPerRack.size(); i > 0; i--) {
-      countPerRack.add(String.format("RackWithNoMatchingTasks-%s", i));
-    }
-
     int maxOnRack = 0;
     boolean allRacksEqual = true;
+
+    if (countPerRack.size() != 0 && countPerRack.size() < numActiveRacks) {
+      allRacksEqual = false;
+    }
 
     Optional<Integer> previousValue = Optional.absent();
     for (Multiset.Entry entry : countPerRack.entrySet()) {
@@ -210,6 +210,7 @@ class SingularitySlaveAndRackManager {
       }
       previousValue = Optional.of(entry.getCount());
     }
+
     if (allRacksEqual) {
       return maxOnRack + 1;
     } else {
