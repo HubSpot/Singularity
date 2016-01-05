@@ -4,9 +4,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.HEAD;
-
-import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
 import org.slf4j.Logger;
@@ -250,10 +247,6 @@ public class RequestManager extends CuratorAsyncManager {
 
   public SingularityCreateResult activate(SingularityRequest request, RequestHistoryType historyType, long timestamp, Optional<String> user, Optional<String> message) {
     return save(request, RequestState.ACTIVE, historyType, timestamp, user, message);
-  }
-
-  public SingularityCreateResult update(SingularityRequest request, RequestState requestState, RequestHistoryType historyType, long timestamp, Optional<String> user) {
-    return save(request, requestState, historyType, timestamp, user);
   }
 
   public List<SingularityPendingRequest> getPendingRequests() {
