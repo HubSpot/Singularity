@@ -53,7 +53,6 @@ class LogLines extends Collection
         if @length > 0 then @last().getStartOffset() else 0
 
     fetchInitialData: (callback = _.noop)=>
-        # console.log 'initial'
         # When we request `read` without passing an offset, we get given
         # back just the end offset of the file
         promise = $.ajax
@@ -83,14 +82,12 @@ class LogLines extends Collection
         promise
 
     fetchPrevious: ->
-        # console.log 'prev'
         @fetch(
             data:
                 offset: orZero @getMinOffset() - @state.get('currentRequestLength')
         ).error (error) =>
           app.caughtError() if error.status is 404
     fetchNext: =>
-        # console.log 'next'
         @fetch(data:
             offset: @nextOffset or @getMaxOffset()
         ).error (error) =>
@@ -99,20 +96,16 @@ class LogLines extends Collection
         @nextOffset = null
 
     fetchFromStart: =>
-        # console.log 'start'
         @fetch data:
             offset: 0
 
     fetchOffset: (offset) =>
-        # console.log 'offset'
         @fetch data:
             offset: offset - 1
             done: => @trigger 'initialOffsetData'
 
     # Overwrite default fetch
     fetch: (params = {}) ->
-        # if params is {}
-        #     console.log 'fetch default'
         defaultParams =
             remove: false
             data: _.extend {@path, length: @state.get('currentRequestLength'), grep: @grep}, params.data
