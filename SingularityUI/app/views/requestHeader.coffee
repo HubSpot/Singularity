@@ -24,7 +24,6 @@ class requestHeaderSubview extends View
         deployingInstanceCount = 0
 
         if !!@model.get('pendingDeploy')
-            console.log @activeTasks
             deployingInstanceCount = @activeTasks.where({deployId: @model.get('pendingDeploy').id, lastTaskState: 'TASK_RUNNING'}).length
 
         isBouncing: bounces?.length > 0 and @taskCleanups.synced and @activeTasks.synced
