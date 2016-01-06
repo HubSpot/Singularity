@@ -54,6 +54,7 @@ import com.hubspot.singularity.SlavePlacement;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityDeleteRequestRequest;
 import com.hubspot.singularity.api.SingularityDeployRequest;
+import com.hubspot.singularity.api.SingularityKillTaskRequest;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.api.SingularityPauseRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
@@ -237,6 +238,53 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     // make sure something new isn't scheduled!
     Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+  }
+
+  @Test
+  public void testTaskKill() {
+    initRequest();
+    initFirstDeploy();
+
+    SingularityTask firstTask = startTask(firstDeploy);
+
+    taskResource.killTask(firstTask.getTaskId().getId());
+
+    cleaner.drainCleanupQueue();
+    killKilledTasks();
+
+    Assert.assertEquals(0, taskManager.getNumCleanupTasks());
+    Assert.assertEquals(0, taskManager.getNumActiveTasks());
+  }
+
+  @Test
+  public void testTaskBounce() {
+    initRequest();
+    initFirstDeploy();
+
+    SingularityTask firstTask = startTask(firstDeploy);
+
+    taskResource.killTask(firstTask.getTaskId().getId(), Optional.of(
+        new SingularityKillTaskRequest(Optional.<Boolean> absent(), Optional.of("msg"), Optional.<String> absent(), Optional.of(true))));
+
+    cleaner.drainCleanupQueue();
+
+    killKilledTasks();
+
+    Assert.assertEquals(1, taskManager.getNumCleanupTasks());
+    Assert.assertEquals(0, taskManager.getKilledTaskIdRecords().size());
+
+    resourceOffers();
+    runLaunchedTasks();
+
+    Assert.assertEquals(1, taskManager.getNumCleanupTasks());
+    Assert.assertEquals(0, taskManager.getKilledTaskIdRecords().size());
+    Assert.assertEquals(2, taskManager.getNumActiveTasks());
+
+    cleaner.drainCleanupQueue();
+    killKilledTasks();
+
+    Assert.assertEquals(0, taskManager.getNumCleanupTasks());
+    Assert.assertEquals(1, taskManager.getNumActiveTasks());
   }
 
   @Test
