@@ -72,11 +72,10 @@ public class DeployResource extends AbstractRequestResource {
     @ApiResponse(code=409, message="A current deploy is in progress. It may be canceled by calling DELETE"),
   })
   public SingularityRequestParent deploy(@ApiParam(required=true) SingularityDeployRequest deployRequest) {
-    final Optional<String> deployUser = deployRequest.getUser();
-
     SingularityDeploy deploy = deployRequest.getDeploy();
     checkNotNullBadRequest(deploy, "DeployRequest must have a deploy object");
 
+    final Optional<String> deployUser = JavaUtils.getUserEmail(user);
     final String requestId = checkNotNullBadRequest(deploy.getRequestId(), "DeployRequest must have a non-null requestId");
 
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
@@ -88,11 +87,11 @@ public class DeployResource extends AbstractRequestResource {
       checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to deploy (it must be manually unpaused first)", requestWithState.getRequest().getId());
     }
 
-    deploy = validator.checkDeploy(request, deploy, user);
+    deploy = validator.checkDeploy(request, deploy);
 
     final long now = System.currentTimeMillis();
 
-    SingularityDeployMarker deployMarker = new SingularityDeployMarker(requestId, deploy.getId(), now, deployUser);
+    SingularityDeployMarker deployMarker = new SingularityDeployMarker(requestId, deploy.getId(), now, deployUser, deployRequest.getMessage());
     SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING);
 
     checkConflict(deployManager.createPendingDeploy(pendingDeployObj) != SingularityCreateResult.EXISTED,
@@ -101,11 +100,12 @@ public class DeployResource extends AbstractRequestResource {
     deployManager.saveDeploy(request, deployMarker, deploy);
 
     if (requestWithState.getState() == RequestState.PAUSED) {
-      requestManager.deployToUnpause(request, now, deployUser);
+      requestManager.deployToUnpause(request, now, deployUser, deployRequest.getMessage());
     }
 
     if (request.isDeployable()) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), now, deployUser, PendingType.NEW_DEPLOY));
+      requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), now, deployUser, PendingType.NEW_DEPLOY,
+          deployRequest.getDeploy().getSkipHealthchecksOnDeploy(), deployRequest.getMessage()));
     }
 
     return fillEntireRequest(requestWithState);
@@ -118,8 +118,8 @@ public class DeployResource extends AbstractRequestResource {
     @ApiResponse(code=400, message="Deploy is not in the pending state pending or is not not present"),
   })
   public SingularityRequestParent cancelDeploy(
-      @ApiParam(required=true,  value="The Singularity Request Id from which the deployment is removed.") @PathParam("requestId") String requestId,
-      @ApiParam(required=true,  value="The Singularity Deploy Id that should be removed.") @PathParam("deployId") String deployId) {
+      @ApiParam(required=true, value="The Singularity Request Id from which the deployment is removed.") @PathParam("requestId") String requestId,
+      @ApiParam(required=true, value="The Singularity Deploy Id that should be removed.") @PathParam("deployId") String deployId) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
@@ -130,7 +130,7 @@ public class DeployResource extends AbstractRequestResource {
       throw badRequest("Request %s does not have a pending deploy %s", requestId, deployId);
     }
 
-    deployManager.createCancelDeployRequest(new SingularityDeployMarker(requestId, deployId, System.currentTimeMillis(), JavaUtils.getUserEmail(user)));
+    deployManager.createCancelDeployRequest(new SingularityDeployMarker(requestId, deployId, System.currentTimeMillis(), JavaUtils.getUserEmail(user), Optional.<String> absent()));
 
     return fillEntireRequest(requestWithState);
   }

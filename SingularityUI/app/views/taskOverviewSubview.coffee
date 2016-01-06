@@ -44,7 +44,7 @@ class taskOverviewSubview extends View
         synced:         @model.synced and @collection.synced
 
 
-    # Choose prompt based on if we plan to 
+    # Choose prompt based on if we plan to
     # gracefully kill (sigterm), or force kill (kill-9)
     promptKillTask: =>
         @model.fetch().done =>
@@ -67,14 +67,17 @@ class taskOverviewSubview extends View
                                 className: 'vex-dialog-button-primary vex-dialog-button-primary-remove'
                             vex.dialog.buttons.NO
                         ]
+                        input: """
+                            <input name="message" id="disable-healthchecks-message" type="text" placeholder="Message (optional)" />
+                        """
                         message: templ id: @model.taskId
 
                         callback: (confirmed) =>
-                            @killTask() if confirmed
+                            @killTask(confirmed) if confirmed
 
 
-    killTask: =>
-        @taskModel.kill(@model.has('cleanup') or @model.get('isCleaning'))
+    killTask: (data) =>
+        @taskModel.kill(data.message, @model.has('cleanup') or @model.get('isCleaning'))
             .done (data) =>
                 @collection.add [data], parse: true  # automatically response  object to the cleanup collection
             .error (response) =>

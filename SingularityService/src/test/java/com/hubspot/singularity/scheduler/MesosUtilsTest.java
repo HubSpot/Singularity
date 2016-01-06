@@ -47,8 +47,6 @@ public class MesosUtilsTest {
     Assert.assertTrue(list.get(0).getTaskState() == ExtendedTaskState.TASK_LAUNCHED);
     Assert.assertTrue(list.get(1).getTaskState() == ExtendedTaskState.TASK_RUNNING);
     Assert.assertTrue(list.get(2).getTaskState() == ExtendedTaskState.TASK_FAILED);
-
-
   }
 
   @Test

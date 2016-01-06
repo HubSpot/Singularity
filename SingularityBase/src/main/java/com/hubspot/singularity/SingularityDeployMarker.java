@@ -10,18 +10,19 @@ import com.google.common.collect.ComparisonChain;
 public class SingularityDeployMarker implements Comparable<SingularityDeployMarker> {
 
   private final String requestId;
-
   private final String deployId;
-
   private final long timestamp;
   private final Optional<String> user;
+  private final Optional<String> message;
 
   @JsonCreator
-  public SingularityDeployMarker(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("timestamp") long timestamp, @JsonProperty("user") Optional<String> user) {
+  public SingularityDeployMarker(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("timestamp") long timestamp,
+      @JsonProperty("user") Optional<String> user, @JsonProperty("message") Optional<String> message) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.timestamp = timestamp;
     this.user = user;
+    this.message = message;
   }
 
   @Override
@@ -40,28 +41,28 @@ public class SingularityDeployMarker implements Comparable<SingularityDeployMark
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
-        return true;
+      return true;
     }
     if (obj == null) {
-        return false;
+      return false;
     }
     if (getClass() != obj.getClass()) {
-        return false;
+      return false;
     }
     SingularityDeployMarker other = (SingularityDeployMarker) obj;
     if (deployId == null) {
       if (other.deployId != null) {
         return false;
-    }
+      }
     } else if (!deployId.equals(other.deployId)) {
-        return false;
+      return false;
     }
     if (requestId == null) {
       if (other.requestId != null) {
         return false;
-    }
+      }
     } else if (!requestId.equals(other.requestId)) {
-        return false;
+      return false;
     }
     return true;
   }
@@ -82,9 +83,13 @@ public class SingularityDeployMarker implements Comparable<SingularityDeployMark
     return user;
   }
 
+  public Optional<String> getMessage() {
+    return message;
+  }
+
   @Override
   public String toString() {
-    return "SingularityDeployMarker [requestId=" + requestId + ", deployId=" + deployId + ", timestamp=" + timestamp + ", user=" + user + "]";
+    return "SingularityDeployMarker [requestId=" + requestId + ", deployId=" + deployId + ", timestamp=" + timestamp + ", user=" + user + ", message=" + message + "]";
   }
 
 }

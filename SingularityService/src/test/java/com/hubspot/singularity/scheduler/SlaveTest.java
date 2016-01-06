@@ -2,11 +2,11 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.collect.ImmutableMap;
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityCuratorTestBase;
@@ -38,8 +38,8 @@ public class SlaveTest extends SingularityCuratorTestBase {
 
     final long now = System.currentTimeMillis();
 
-    liveSlave = liveSlave.changeState(new SingularityMachineStateHistoryUpdate("1", MachineState.ACTIVE, 100, Optional.<String> absent()));
-    deadSlave = deadSlave.changeState(new SingularityMachineStateHistoryUpdate("2", MachineState.DEAD, now - TimeUnit.HOURS.toMillis(10), Optional.<String> absent()));
+    liveSlave = liveSlave.changeState(new SingularityMachineStateHistoryUpdate("1", MachineState.ACTIVE, 100, Optional.<String> absent(), Optional.<String> absent()));
+    deadSlave = deadSlave.changeState(new SingularityMachineStateHistoryUpdate("2", MachineState.DEAD, now - TimeUnit.HOURS.toMillis(10), Optional.<String> absent(), Optional.<String> absent()));
 
     slaveManager.saveObject(liveSlave);
     slaveManager.saveObject(deadSlave);

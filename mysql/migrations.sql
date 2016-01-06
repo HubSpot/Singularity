@@ -84,3 +84,8 @@ UPDATE `taskHistory` SET `deployId` = SUBSTRING_INDEX(SUBSTRING_INDEX(`taskId`, 
 
 --changeset ssalinas:8 dbms:mysql
 ALTER TABLE `taskHistory` ADD KEY `runId` (`runId`, `requestId`);
+
+--changeset wsorenson:9 dbms:mysql
+ALTER TABLE `requestHistory` ADD COLUMN message VARCHAR(280) NULL;
+
+ALTER TABLE `deployHistory` ADD COLUMN message VARCHAR(280) NULL;

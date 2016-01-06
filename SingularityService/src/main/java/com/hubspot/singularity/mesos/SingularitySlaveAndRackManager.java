@@ -198,7 +198,7 @@ class SingularitySlaveAndRackManager {
     Optional<SingularitySlave> slave = slaveManager.getObject(slaveId);
 
     if (slave.isPresent()) {
-      slaveManager.changeState(slave.get(), MachineState.DEAD, Optional.<String> absent());
+      slaveManager.changeState(slave.get(), MachineState.DEAD, Optional.<String> absent(), Optional.<String> absent());
 
       checkRackAfterSlaveLoss(slave.get());
     } else {
@@ -220,7 +220,7 @@ class SingularitySlaveAndRackManager {
     LOG.info("Found {} slaves left in rack {}", numInRack, lostSlave.getRackId());
 
     if (numInRack == 0) {
-      rackManager.changeState(lostSlave.getRackId(), MachineState.DEAD, Optional.<String> absent());
+      rackManager.changeState(lostSlave.getRackId(), MachineState.DEAD, Optional.<String> absent(), Optional.<String> absent());
     }
   }
 
@@ -261,11 +261,11 @@ class SingularitySlaveAndRackManager {
     }
 
     for (SingularitySlave leftOverSlave : activeSlavesById.values()) {
-      slaveManager.changeState(leftOverSlave, MachineState.MISSING_ON_STARTUP, Optional.<String> absent());
+      slaveManager.changeState(leftOverSlave, MachineState.MISSING_ON_STARTUP, Optional.<String> absent(), Optional.<String> absent());
     }
 
     for (SingularityRack leftOverRack : remainingActiveRacks.values()) {
-      rackManager.changeState(leftOverRack, MachineState.MISSING_ON_STARTUP, Optional.<String> absent());
+      rackManager.changeState(leftOverRack, MachineState.MISSING_ON_STARTUP, Optional.<String> absent(), Optional.<String> absent());
     }
 
     LOG.info("Found {} new racks ({} missing) and {} new slaves ({} missing)", racks, remainingActiveRacks.size(), slaves, activeSlavesById.size());
@@ -292,7 +292,7 @@ class SingularitySlaveAndRackManager {
         return CheckResult.ALREADY_ACTIVE;
       case DEAD:
       case MISSING_ON_STARTUP:
-        manager.changeState(object.getId(), MachineState.ACTIVE, Optional.<String> absent());
+        manager.changeState(object.getId(), MachineState.ACTIVE, Optional.<String> absent(), Optional.<String> absent());
         return CheckResult.NEW;
       case DECOMMISSIONED:
       case DECOMMISSIONING:
@@ -336,7 +336,7 @@ class SingularitySlaveAndRackManager {
 
     if (slave.get().getCurrentState().getState() == MachineState.DECOMMISSIONING) {
       if (!hasTaskLeftOnSlave(taskId, slaveId, stateCache)) {
-        slaveManager.changeState(slave.get(), MachineState.DECOMMISSIONED, slave.get().getCurrentState().getUser());
+        slaveManager.changeState(slave.get(), MachineState.DECOMMISSIONED, slave.get().getCurrentState().getMessage(), slave.get().getCurrentState().getUser());
       }
     }
 
@@ -351,7 +351,7 @@ class SingularitySlaveAndRackManager {
 
     if (rack.get().getCurrentState().getState() == MachineState.DECOMMISSIONING) {
       if (!hasTaskLeftOnRack(taskId, stateCache)) {
-        rackManager.changeState(rack.get(), MachineState.DECOMMISSIONED, rack.get().getCurrentState().getUser());
+        rackManager.changeState(rack.get(), MachineState.DECOMMISSIONED, rack.get().getCurrentState().getMessage(), rack.get().getCurrentState().getUser());
       }
     }
   }
