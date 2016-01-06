@@ -71,7 +71,6 @@ class ServerItem extends Model
             type: "POST"
             contentType: 'application/json'
             data: JSON.stringify(data)
-            data: data
 
     reactivate: (message) =>
         data = {}
