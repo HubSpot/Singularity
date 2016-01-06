@@ -56,32 +56,43 @@ public class SingularityMachineStateHistoryUpdate {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
+    if (this == obj) {
       return true;
-    if (obj == null)
+    }
+    if (obj == null) {
       return false;
-    if (getClass() != obj.getClass())
+    }
+    if (getClass() != obj.getClass()) {
       return false;
+    }
     SingularityMachineStateHistoryUpdate other = (SingularityMachineStateHistoryUpdate) obj;
     if (message == null) {
-      if (other.message != null)
+      if (other.message != null) {
         return false;
-    } else if (!message.equals(other.message))
+      }
+    } else if (!message.equals(other.message)) {
       return false;
+    }
     if (objectId == null) {
-      if (other.objectId != null)
+      if (other.objectId != null) {
         return false;
-    } else if (!objectId.equals(other.objectId))
+      }
+    } else if (!objectId.equals(other.objectId)) {
       return false;
-    if (state != other.state)
+    }
+    if (state != other.state) {
       return false;
-    if (timestamp != other.timestamp)
+    }
+    if (timestamp != other.timestamp) {
       return false;
+    }
     if (user == null) {
-      if (other.user != null)
+      if (other.user != null) {
         return false;
-    } else if (!user.equals(other.user))
+      }
+    } else if (!user.equals(other.user)) {
       return false;
+    }
     return true;
   }
 
