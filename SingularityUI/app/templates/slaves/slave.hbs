@@ -14,6 +14,7 @@
                 {{#ifInSubFilter data.[0].state 'ACTIVE'}}
                     <th>Activated By</th>
                 {{/ifInSubFilter}}
+                <th data-sortable="false">Message</th>
                 <th data-sortable="false"></th>
             </tr>
         </thead>
@@ -33,6 +34,7 @@
                     {{#ifInSubFilter state 'ACTIVE,DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION'}}
                         <td>{{ user }}</td>
                     {{/ifInSubFilter}}
+                    <td>{{ currentState.message }}</td>
                     <td class="actions-column">
                         {{#ifInSubFilter state 'DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION,FROZEN'}}
                             <a data-slave-host="{{ host }}" data-slave-id="{{ id }}" data-state="{{ state }}" data-action="reactivate" title="Reactivate">
