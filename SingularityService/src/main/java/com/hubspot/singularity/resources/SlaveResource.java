@@ -19,6 +19,7 @@ import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.SlaveManager;
 import com.wordnik.swagger.annotations.Api;
@@ -63,31 +64,24 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   }
 
   @POST
-  @Path("/slave/{slaveId}/decomission")
-  @Deprecated
-  public void decomissionSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId) {
-    super.decommission(slaveId, JavaUtils.getUserEmail(user));
-  }
-
-  @POST
   @Path("/slave/{slaveId}/decommission")
   @ApiOperation("Begin decommissioning a specific active slave")
-  public void decommissionSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId) {
-    super.decommission(slaveId, JavaUtils.getUserEmail(user));
+  public void decommissionSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId, Optional<SingularityMachineChangeRequest> changeRequest) {
+    super.decommission(slaveId, changeRequest, JavaUtils.getUserEmail(user));
   }
 
   @POST
   @Path("/slave/{slaveId}/freeze")
   @ApiOperation("Freeze tasks on a specific slave")
-  public void freezeSlave(@ApiParam("Slave ID") @PathParam("slaveId") String slaveId) {
-    super.freeze(slaveId, JavaUtils.getUserEmail(user));
+  public void freezeSlave(@ApiParam("Slave ID") @PathParam("slaveId") String slaveId, Optional<SingularityMachineChangeRequest> changeRequest) {
+    super.freeze(slaveId, changeRequest, JavaUtils.getUserEmail(user));
   }
 
   @POST
   @Path("/slave/{slaveId}/activate")
   @ApiOperation("Activate a decomissioning slave, canceling decomission without erasing history")
-  public void activateSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId) {
-    super.activate(slaveId, JavaUtils.getUserEmail(user));
+  public void activateSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId, Optional<SingularityMachineChangeRequest> changeRequest) {
+    super.activate(slaveId, changeRequest, JavaUtils.getUserEmail(user));
   }
 
 }
