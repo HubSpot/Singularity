@@ -68,16 +68,18 @@ class taskOverviewSubview extends View
                             vex.dialog.buttons.NO
                         ]
                         input: """
-                            <input name="message" id="disable-healthchecks-message" type="text" placeholder="Message (optional)" />
+                            <input name="wait-for-replacement-task" id="wait-for-replacement-task" type="checkbox" checked /> Launch new task on a different slave
+                            <input name="message" type="text" placeholder="Message (optional)" />
                         """
                         message: templ id: @model.taskId
 
                         callback: (confirmed) =>
+                            confirmed.waitForReplacementTask = $('.vex #wait-for-replacement-task').is ':checked'
                             @killTask(confirmed) if confirmed
 
 
     killTask: (data) =>
-        @taskModel.kill(data.message, @model.has('cleanup') or @model.get('isCleaning'))
+        @taskModel.kill(data.message, @model.has('cleanup') or @model.get('isCleaning'), data.waitForReplacementTask)
             .done (data) =>
                 @collection.add [data], parse: true  # automatically response  object to the cleanup collection
             .error (response) =>
