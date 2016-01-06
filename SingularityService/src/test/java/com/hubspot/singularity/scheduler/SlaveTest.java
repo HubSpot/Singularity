@@ -2,11 +2,11 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.collect.ImmutableMap;
 import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityCuratorTestBase;

@@ -21,10 +21,16 @@ import org.skife.jdbi.v2.Handle;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
+import com.hubspot.singularity.api.SingularityDeleteRequestRequest;
+import com.hubspot.singularity.api.SingularityRunNowRequest;
+import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
+import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
 import com.hubspot.singularity.data.history.SingularityHistoryPurger;
+import com.hubspot.singularity.data.history.SingularityRequestHistoryPersister;
 import com.hubspot.singularity.data.history.SingularityTaskHistoryPersister;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
 
@@ -34,7 +40,7 @@ import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.resource.FileSystemResourceAccessor;
 
-public class SingularityHistoryPurgerTest extends SingularitySchedulerTestBase {
+public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
   @Inject
   protected Provider<DBI> dbiProvider;
@@ -46,9 +52,12 @@ public class SingularityHistoryPurgerTest extends SingularitySchedulerTestBase {
   protected SingularityTaskHistoryPersister taskHistoryPersister;
 
   @Inject
+  protected SingularityRequestHistoryPersister requestHistoryPersister;
+
+  @Inject
   protected SingularityTestAuthenticator testAuthenticator;
 
-  public SingularityHistoryPurgerTest() {
+  public SingularityHistoryTest() {
     super(true);
   }
 
@@ -175,7 +184,8 @@ public class SingularityHistoryPurgerTest extends SingularitySchedulerTestBase {
 
     String runId = "my-run-id";
 
-    SingularityPendingRequestParent parent = requestResource.scheduleImmediately(requestId, Optional.of(runId), Collections.<String> emptyList());
+    SingularityPendingRequestParent parent = requestResource.scheduleImmediately(requestId,
+        Optional.of(new SingularityRunNowRequest(Optional.<String> absent(), Optional.<Boolean> absent(), Optional.of(runId), Optional.<List<String>> absent())));
 
     Assert.assertEquals(runId, parent.getPendingRequest().getRunId().get());
 
@@ -192,7 +202,7 @@ public class SingularityHistoryPurgerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(runId, historyManager.getTaskHistory(taskId.getId()).get().getTask().getTaskRequest().getPendingTask().getRunId().get());
     Assert.assertEquals(runId, historyManager.getTaskHistoryForRequest(requestId, 0, 10).get(0).getRunId().get());
 
-    parent = requestResource.scheduleImmediately(requestId, Optional.<String> absent(), Collections.<String> emptyList());
+    parent = requestResource.scheduleImmediately(requestId);
 
     Assert.assertTrue(parent.getPendingRequest().getRunId().isPresent());
   }
@@ -205,7 +215,7 @@ public class SingularityHistoryPurgerTest extends SingularitySchedulerTestBase {
     initScheduledRequest();
     initFirstDeploy();
 
-    requestResource.scheduleImmediately(requestId, Optional.<String>absent(), Collections.<String>emptyList());
+    requestResource.scheduleImmediately(requestId);
 
     resourceOffers();
 
@@ -222,4 +232,38 @@ public class SingularityHistoryPurgerTest extends SingularitySchedulerTestBase {
     // assert that the history works, but more importantly, that we don't NPE
     Assert.assertEquals(1, taskHistoryHelperWithMockedTaskManager.getBlendedHistory(requestId, 0, 5).size());
   }
+
+  @Test
+  public void testMessage() {
+    initRequest();
+
+    String msg = null;
+    for (int i = 0; i < 300; i++) {
+      msg = msg + i;
+    }
+
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(2), Optional.<Long> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.of(msg)));
+    requestResource.deleteRequest(requestId, Optional.of(new SingularityDeleteRequestRequest(Optional.of("a msg"), Optional.<String> absent())));
+
+    cleaner.drainCleanupQueue();
+
+    requestHistoryPersister.runActionOnPoll();
+
+    List<SingularityRequestHistory> history = historyManager.getRequestHistory(requestId, Optional.of(OrderDirection.DESC), 0, 100);
+
+    Assert.assertEquals(3, history.size());
+
+    for (SingularityRequestHistory historyItem : history) {
+      if (historyItem.getEventType() == RequestHistoryType.DELETED) {
+        Assert.assertEquals("a msg", historyItem.getMessage().get());
+      } else if (historyItem.getEventType() == RequestHistoryType.UPDATED) {
+        Assert.assertEquals(280, historyItem.getMessage().get().length());
+      } else {
+        Assert.assertTrue(!historyItem.getMessage().isPresent());
+      }
+    }
+
+  }
+
+
 }

@@ -15,6 +15,8 @@ import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityDeploy;
+import com.hubspot.singularity.SingularityRequest;
+import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
@@ -40,11 +42,37 @@ public class SingularityDeployHealthHelper {
     WAITING, UNHEALTHY, HEALTHY;
   }
 
-  public DeployHealth getDeployHealth(final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> activeTasks, final boolean isDeployPending) {
-    if (!deploy.isPresent() || !deploy.get().getHealthcheckUri().isPresent() || (isDeployPending && deploy.get().getSkipHealthchecksOnDeploy().or(false))) {
-      return getNoHealthcheckDeployHealth(deploy, activeTasks);
-    } else {
+  private boolean shouldCheckHealthchecks(final SingularityRequest request, final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> activeTasks, final boolean isDeployPending) {
+    if (!deploy.isPresent()) {
+      return false;
+    }
+
+    if (!deploy.get().getHealthcheckUri().isPresent()) {
+      return false;
+    }
+
+    if (isDeployPending && deploy.get().getSkipHealthchecksOnDeploy().or(false)) {
+      return false;
+    }
+
+    if (request.getSkipHealthchecks().or(Boolean.FALSE)) {
+      return false;
+    }
+
+    for (SingularityTask task : taskManager.getTasks(activeTasks).values()) {
+      if (task.getTaskRequest().getPendingTask().getSkipHealthchecks().or(Boolean.FALSE)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  public DeployHealth getDeployHealth(final SingularityRequest request, final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> activeTasks, final boolean isDeployPending) {
+    if (shouldCheckHealthchecks(request, deploy, activeTasks, isDeployPending)) {
       return getHealthcheckDeployState(deploy.get(), activeTasks, isDeployPending);
+    } else {
+      return getNoHealthcheckDeployHealth(deploy, activeTasks);
     }
   }
 
