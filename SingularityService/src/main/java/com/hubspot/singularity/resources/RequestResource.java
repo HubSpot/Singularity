@@ -38,6 +38,7 @@ import com.hubspot.singularity.SingularityPendingRequestParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestDeployState;
+import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
@@ -97,7 +98,8 @@ public class RequestResource extends AbstractRequestResource {
     this.configuration = configuration;
   }
 
-  private void submitRequest(SingularityRequest request, Optional<SingularityRequestWithState> oldRequestWithState, Optional<Boolean> skipHealthchecks, Optional<String> message) {
+  private void submitRequest(SingularityRequest request, Optional<SingularityRequestWithState> oldRequestWithState, Optional<RequestHistoryType> historyType,
+      Optional<Boolean> skipHealthchecks, Optional<String> message) {
     checkNotNullBadRequest(request.getId(), "Request must have an id");
     checkConflict(!requestManager.cleanupRequestExists(request.getId()), "Request %s is currently cleaning. Try again after a few moments", request.getId());
 
@@ -114,7 +116,7 @@ public class RequestResource extends AbstractRequestResource {
       requestState = oldRequestWithState.get().getState();
     }
 
-    requestHelper.updateRequest(request, oldRequest, requestState, JavaUtils.getUserEmail(user), skipHealthchecks, message);
+    requestHelper.updateRequest(request, oldRequest, requestState, historyType, JavaUtils.getUserEmail(user), skipHealthchecks, message);
   }
 
   @POST
@@ -125,7 +127,7 @@ public class RequestResource extends AbstractRequestResource {
     @ApiResponse(code=409, message="Request object is being cleaned. Try again shortly"),
   })
   public SingularityRequestParent postRequest(@ApiParam("The Singularity request to create or update") SingularityRequest request) {
-    submitRequest(request, requestManager.getRequest(request.getId()), Optional.<Boolean> absent(), Optional.<String> absent());
+    submitRequest(request, requestManager.getRequest(request.getId()), Optional.<RequestHistoryType> absent(), Optional.<Boolean> absent(), Optional.<String> absent());
     return fillEntireRequest(fetchRequestWithState(request.getId()));
   }
 
@@ -538,7 +540,7 @@ public class RequestResource extends AbstractRequestResource {
 
     checkBadRequest(oldRequest.getInstancesSafe() != newRequest.getInstancesSafe(), "Scale request has no affect on the # of instances (%s)", newRequest.getInstancesSafe());
 
-    submitRequest(newRequest, Optional.of(oldRequestWithState), scaleRequest.getSkipHealthchecks(), scaleRequest.getMessage());
+    submitRequest(newRequest, Optional.of(oldRequestWithState), Optional.of(RequestHistoryType.SCALED), scaleRequest.getSkipHealthchecks(), scaleRequest.getMessage());
 
     if (scaleRequest.getDurationMillis().isPresent()) {
       requestManager.saveExpiringObject(new SingularityExpiringScale(requestId, JavaUtils.getUserEmail(user),
@@ -614,7 +616,7 @@ public class RequestResource extends AbstractRequestResource {
     SingularityRequest oldRequest = oldRequestWithState.getRequest();
     SingularityRequest newRequest = oldRequest.toBuilder().setSkipHealthchecks(skipHealthchecksRequest.getSkipHealthchecks()).build();
 
-    submitRequest(newRequest, Optional.of(oldRequestWithState), Optional.<Boolean> absent(), skipHealthchecksRequest.getMessage());
+    submitRequest(newRequest, Optional.of(oldRequestWithState), Optional.<RequestHistoryType> absent(), Optional.<Boolean> absent(), skipHealthchecksRequest.getMessage());
 
     if (skipHealthchecksRequest.getDurationMillis().isPresent()) {
       requestManager.saveExpiringObject(new SingularityExpiringSkipHealthchecks(requestId, JavaUtils.getUserEmail(user),
