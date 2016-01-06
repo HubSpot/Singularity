@@ -7,6 +7,7 @@ import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.AbstractMachineManager;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
@@ -33,8 +34,14 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
 
   protected abstract String getObjectTypeString();
 
-  private void changeState(String objectId, MachineState newState, Optional<String> user) {
-    StateChangeResult result = manager.changeState(objectId, newState, user);
+  private void changeState(String objectId, MachineState newState, Optional<SingularityMachineChangeRequest> changeRequest, Optional<String> user) {
+    Optional<String> message = Optional.absent();
+
+    if (changeRequest.isPresent()) {
+      message = changeRequest.get().getMessage();
+    }
+
+    StateChangeResult result = manager.changeState(objectId, newState, message, user);
 
     switch (result) {
       case FAILURE_NOT_FOUND:
@@ -48,19 +55,19 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
 
   }
 
-  protected void decommission(String objectId, Optional<String> queryUser) {
+  protected void decommission(String objectId, Optional<SingularityMachineChangeRequest> decomissionRequest, Optional<String> queryUser) {
     authorizationHelper.checkAdminAuthorization(user);
-    changeState(objectId, MachineState.STARTING_DECOMMISSION, queryUser);
+    changeState(objectId, MachineState.STARTING_DECOMMISSION, decomissionRequest, queryUser);
   }
 
-  protected void freeze(String objectId, Optional<String> queryUser) {
+  protected void freeze(String objectId, Optional<SingularityMachineChangeRequest> freezeRequest, Optional<String> queryUser) {
     authorizationHelper.checkAdminAuthorization(user);
-    changeState(objectId, MachineState.FROZEN, queryUser);
+    changeState(objectId, MachineState.FROZEN, freezeRequest, queryUser);
   }
 
-  protected void activate(String objectId, Optional<String> queryUser) {
+  protected void activate(String objectId, Optional<SingularityMachineChangeRequest> activateRequest, Optional<String> queryUser) {
     authorizationHelper.checkAdminAuthorization(user);
-    changeState(objectId, MachineState.ACTIVE, queryUser);
+    changeState(objectId, MachineState.ACTIVE, activateRequest, queryUser);
   }
 
 }

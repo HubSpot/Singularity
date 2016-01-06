@@ -256,7 +256,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     for (SingularityRequestHistory historyItem : history) {
       if (historyItem.getEventType() == RequestHistoryType.DELETED) {
         Assert.assertEquals("a msg", historyItem.getMessage().get());
-      } else if (historyItem.getEventType() == RequestHistoryType.UPDATED) {
+      } else if (historyItem.getEventType() == RequestHistoryType.SCALED) {
         Assert.assertEquals(280, historyItem.getMessage().get().length());
       } else {
         Assert.assertTrue(!historyItem.getMessage().isPresent());

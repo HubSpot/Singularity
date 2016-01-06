@@ -94,8 +94,8 @@ public class RequestHelper {
     }
   }
 
-  public void updateRequest(SingularityRequest request, Optional<SingularityRequest> maybeOldRequest, RequestState requestState, Optional<String> user, Optional<Boolean> skipHealthchecks,
-      Optional<String> message) {
+  public void updateRequest(SingularityRequest request, Optional<SingularityRequest> maybeOldRequest, RequestState requestState, Optional<RequestHistoryType> historyType,
+      Optional<String> user, Optional<Boolean> skipHealthchecks, Optional<String> message) {
     SingularityRequestDeployHolder deployHolder = getDeployHolder(request.getId());
 
     SingularityRequest newRequest = validator.checkSingularityRequest(request, maybeOldRequest, deployHolder.getActiveDeploy(), deployHolder.getPendingDeploy());
@@ -106,7 +106,17 @@ public class RequestHelper {
       requestState = RequestState.ACTIVE;
     }
 
-    requestManager.save(newRequest, requestState, maybeOldRequest.isPresent() ? RequestHistoryType.UPDATED : RequestHistoryType.CREATED, now, user, message);
+    RequestHistoryType historyTypeToSet = null;
+
+    if (historyType.isPresent()) {
+      historyTypeToSet = historyType.get();
+    } else if (maybeOldRequest.isPresent()) {
+      historyTypeToSet = RequestHistoryType.UPDATED;
+    } else {
+      historyTypeToSet = RequestHistoryType.CREATED;
+    }
+
+    requestManager.save(newRequest, requestState, historyTypeToSet, now, user, message);
 
     checkReschedule(newRequest, maybeOldRequest, user, now, skipHealthchecks, message);
   }
