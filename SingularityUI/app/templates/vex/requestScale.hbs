@@ -1,7 +1,7 @@
 <pre>{{ id }}</pre>
 
 <div class="vex-dialog-input">
-	<input name="vex" type="text" class="vex-dialog-prompt-input" placeholder="{{placeholder}}" value>
+	<input name="instances" type="number" placeholder="{{placeholder}}" min="1" step="1" required />
 </div>
 <label for="bounce" id="bounce-label">
     <input type="checkbox" id="bounce"{{#if bounceAfterScale}} checked{{/if}}>
@@ -13,3 +13,6 @@
 	    <input type="radio" name="incremental" id="incremental-bounce" value="true"> Kill old tasks as new tasks become healthy
 	</label>
 </div>
+<input name="duration" id="scale-expiration" type="text" placeholder="Expiration (optional)" />
+<span class="help">If an expiration duration is specified, this action will be reverted afterwards. Accepts any english time duration. (Days, Hr, Min...)</span>
+<input name="message" id="scale-message" type="text" placeholder="Message (optional)" />
