@@ -144,9 +144,10 @@ class Request extends Model
           @unset('expiringBounce')
           callback()
 
-    bounce: (incremental, duration) =>
-        data =
-            incremental: incremental
+    bounce: ({incremental, duration, skipHealthchecks, message}) =>
+        data = {incremental, skipHealthchecks}
+        if message
+            data.message = message
         duration = @_parseDuration(duration)
         if duration
             data.durationMillis = duration
@@ -247,12 +248,6 @@ class Request extends Model
                     id: @get "id"
                     bounceAfterScale: @get "bounceAfterScale"
                     placeholder: @get 'instances'
-            input: """
-                <input name="instances" type="number" placeholder="#{@get 'instances'}" min="1" step="1" required />
-                <input name="message" id="scale-message" type="text" placeholder="Message (optional)" />
-                <input name="duration" id="scale-expiration" type="text" placeholder="Expiration (optional)" />
-                <span class="help">If an expiration duration is specified, this action will be reverted afterwards. Accepts any english time duration. (Days, Hr, Min...)</span>
-            """
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.YES), text: 'Scale'
                 vex.dialog.buttons.NO
@@ -273,7 +268,7 @@ class Request extends Model
                 if !duration or (duration and @_validateDuration(duration, @promptScale))
                     @scale(data).done =>
                         if bounce
-                            @bounce(incremental).done callback
+                            @bounce({incremental}).done callback
                         else
                             callback()
 
@@ -438,13 +433,17 @@ class Request extends Model
     promptBounce: (callback) =>
         vex.dialog.confirm
             message: bounceTemplate id: @get "id"
+            input: """
+                <input name="message" id="bounce-message" type="text" placeholder="Message (optional)" />
+            """
             callback: (confirmed) =>
                 return if not confirmed
-                incremental = $('.vex #incremental-bounce').is ':checked'
-                duration = $('.vex #bounce-expiration').val()
+                confirmed.incremental = $('.vex #incremental-bounce').is ':checked'
+                confirmed.skipHealthchecks = $('.vex #skip-healthchecks').is ':checked'
+                confirmed.duration = $('.vex #bounce-expiration').val()
 
-                if !duration or (duration and @_validateDuration(duration, @promptBounce))
-                    @bounce(incremental, duration).done callback
+                if !confirmed.duration or (confirmed.duration and @_validateDuration(confirmed.duration, @promptBounce))
+                    @bounce(confirmed).done callback
 
     promptExitCooldown: (callback) =>
         vex.dialog.confirm

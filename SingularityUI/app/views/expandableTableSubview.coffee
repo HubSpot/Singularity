@@ -31,7 +31,6 @@ class ExpandableTableSubview extends View
         # If we've already rendered stuff and now we're trying to render
         # an empty collection (`next` returned an empty list)
         if not @collection.length and @collection.currentPage isnt 1
-            console.log @collection.currentPage
             # Disable the next button and don't render anything
             $nextButton = @$('[data-action="next-page"]')
             $nextButton.attr 'disabled', true
