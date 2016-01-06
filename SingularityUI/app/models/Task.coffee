@@ -35,9 +35,8 @@ class Task extends Model
 
         task
 
-    kill: (message, override=false) =>
-        data =
-            override: override
+    kill: (message, override=false, waitForReplacementTask=false) =>
+        data = {override, waitForReplacementTask}
 
         if message
             data.message = message
