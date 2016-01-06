@@ -42,27 +42,45 @@ class ServerItem extends Model
             item.user = item.currentState.user
         item
 
-    remove: =>
+    remove: (message) =>
+        data = {}
+        if message
+            data.message = message
         $.ajax
             url: "#{ @url() }?user=#{ app.getUsername() }"
             type: "DELETE"
+            contentType: 'application/json'
+            data: JSON.stringify(data)
 
-    freeze: =>
+    freeze: (message) =>
+        data = {}
+        if message
+            data.message = message
         $.ajax
             url: "#{ @url() }/freeze?user=#{ app.getUsername() }"
             type: "POST"
+            contentType: 'application/json'
+            data: JSON.stringify(data)
 
     decommission: (message) =>
+        data = {}
+        if message
+            data.message = message
         $.ajax
             url: "#{ @url() }/decommission?user=#{ app.getUsername() }"
             type: "POST"
-            data: JSON.stringify
-                message: message
+            contentType: 'application/json'
+            data: JSON.stringify(data)
 
-    reactivate: =>
+    reactivate: (message) =>
+        data = {}
+        if message
+            data.message = message
         $.ajax
             url: "#{ @url()}/activate?user=#{ app.getUsername()}"
             type: "POST"
+            contentType: 'application/json'
+            data: JSON.stringify(data)
 
     host: =>
         @get 'host'
@@ -75,6 +93,9 @@ class ServerItem extends Model
         state = @get 'state'
         vex.dialog.confirm
             message: @removeTemplates[state] {@id, @host, @type}
+            input: """
+                <input name="message" type="text" placeholder="Message (optional)" />
+            """
             buttons: [
                 $.extend {}, vex.dialog.buttons.YES,
                     text: 'Remove',
@@ -82,14 +103,17 @@ class ServerItem extends Model
                 vex.dialog.buttons.NO
             ]
 
-            callback: (confirmed) =>
-                return unless confirmed
-                @remove().done callback
+            callback: (data) =>
+                return unless data
+                @remove(data.message).done callback
 
     promptFreeze: (callback) =>
         state = @get 'state'
         vex.dialog.confirm
             message: @freezeTemplate {@id, @host, @type}
+            input: """
+                <input name="message" type="text" placeholder="Message (optional)" />
+            """
             buttons: [
                 $.extend {}, vex.dialog.buttons.YES,
                     text: 'Freeze',
@@ -97,9 +121,9 @@ class ServerItem extends Model
                 vex.dialog.buttons.NO
             ]
 
-            callback: (confirmed) =>
-                return unless confirmed
-                @freeze().done callback
+            callback: (data) =>
+                return unless data
+                @freeze(data.message).done callback
 
     promptDecommission: (callback) =>
         state = @get 'state'
@@ -124,6 +148,9 @@ class ServerItem extends Model
         state = @get 'state'
         vex.dialog.confirm
             message: @reactivateTemplate {@id, @host, @type}
+            input: """
+                <input name="message" type="text" placeholder="Message (optional)" />
+            """
             buttons: [
                 $.extend {}, vex.dialog.buttons.YES,
                     text: 'Reactivate',
@@ -131,9 +158,9 @@ class ServerItem extends Model
                 vex.dialog.buttons.NO
             ]
 
-            callback: (confirmed) =>
-                return unless confirmed
-                @reactivate().done callback
+            callback: (data) =>
+                return unless data
+                @reactivate(data.message).done callback
 
 
 module.exports = ServerItem
