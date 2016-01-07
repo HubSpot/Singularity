@@ -92,15 +92,12 @@ ALTER TABLE `deployHistory` ADD COLUMN message VARCHAR(280) NULL;
 
 --changeset wsorenson:10 dbms:mysql
 ALTER TABLE `taskHistory`
-  ADD COLUMN `host` VARCHAR(100) NULL,
+  ADD COLUMN `host` VARCHAR(100) CHARACTER SET ASCII NULL,
   ADD COLUMN `startedAt` TIMESTAMP NULL,
+  DROP KEY `deployId`,
   ADD KEY `startedAt` (`requestId`, `startedAt`),
+  ADD KEY `lastTaskStatus` (`requestId`, `lastTaskStatus`, `startedAt`),
+  ADD KEY `deployId` (`requestId`, `deployId`, `startedAt`),
   ADD KEY `host` (`requestId`, `host`, `startedAt`);
 UPDATE `taskHistory` SET `host` = SUBSTRING_INDEX(SUBSTRING_INDEX(`taskId`, '-', -2), '-', 1) WHERE `host` IS NULL;
 UPDATE `taskHistory` SET `startedAt` = FROM_UNIXTIME(SUBSTRING_INDEX(SUBSTRING_INDEX(`taskId`, '-', -4), '-', 1)/1000) WHERE `startedAt` IS NULL;
-
-
-
-
-
-
