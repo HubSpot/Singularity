@@ -11,6 +11,9 @@
                 {{#ifInSubFilter data.[0].state 'DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION'}}
                     <th>Decommissioned By</th>
                 {{/ifInSubFilter}}
+                {{#ifInSubFilter data.[0].state 'FROZEN'}}
+                    <th>Frozen By</th>
+                {{/ifInSubFilter}}
                 {{#ifInSubFilter data.[0].state 'ACTIVE'}}
                     <th>Activated By</th>
                 {{/ifInSubFilter}}
@@ -31,7 +34,7 @@
                     <td class="hidden-xs" data-value="{{ uptime }}">
                         {{timestampDuration uptime}}
                     </td>
-                    {{#ifInSubFilter state 'ACTIVE,DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION'}}
+                    {{#ifInSubFilter state 'ACTIVE,DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION,FROZEN'}}
                         <td>{{ user }}</td>
                     {{/ifInSubFilter}}
                     <td>{{ currentState.message }}</td>
