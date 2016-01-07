@@ -85,7 +85,11 @@ class SingularityMesosTaskBuilder {
 
     final Optional<SingularityContainerInfo> containerInfo = taskRequest.getDeploy().getContainerInfo();
     if (desiredTaskResources.getNumPorts() > 0 || hasLiteralPortMapping(containerInfo)) {
-      portsResource = Optional.of(MesosUtils.getPortsResource(desiredTaskResources.getNumPorts(), availableResources, containerInfo.get().getDocker().get().getLiteralHostPorts()));
+      List<Long> requestedPorts = new ArrayList<>();
+      if (hasLiteralPortMapping(containerInfo)) {
+        requestedPorts.addAll(containerInfo.get().getDocker().get().getLiteralHostPorts());
+      }
+      portsResource = Optional.of(MesosUtils.getPortsResource(desiredTaskResources.getNumPorts(), availableResources, requestedPorts));
       ports = Optional.of(MesosUtils.getPorts(portsResource.get(), desiredTaskResources.getNumPorts()));
     }
 
