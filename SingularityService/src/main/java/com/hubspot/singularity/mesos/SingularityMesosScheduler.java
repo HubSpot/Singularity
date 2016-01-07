@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -219,9 +220,15 @@ public class SingularityMesosScheduler implements Scheduler {
 
       final Resources totalResources = Resources.add(taskResources, executorResources);
 
+      final List<Long> requestedPorts = new ArrayList<>();
+
+      if (taskRequest.getDeploy().getContainerInfo().isPresent() && taskRequest.getDeploy().getContainerInfo().get().getDocker().isPresent()) {
+        requestedPorts.addAll(taskRequest.getDeploy().getContainerInfo().get().getDocker().get().getLiteralHostPorts());
+      }
+
       LOG.trace("Attempting to match task {} resources {} ({} for task + {} for executor) with remaining offer resources {}", taskRequest.getPendingTask().getPendingTaskId(), totalResources, taskResources, executorResources, offerHolder.getCurrentResources());
 
-      final boolean matchesResources = MesosUtils.doesOfferMatchResources(totalResources, offerHolder.getCurrentResources());
+      final boolean matchesResources = MesosUtils.doesOfferMatchResources(totalResources, offerHolder.getCurrentResources(), requestedPorts);
       final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder.getOffer(), taskRequest, stateCache);
 
       if (matchesResources && slaveMatchState.isMatchAllowed()) {
