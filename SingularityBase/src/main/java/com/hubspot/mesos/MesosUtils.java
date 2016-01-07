@@ -117,6 +117,7 @@ public final class MesosUtils {
   }
 
   public static Resource getPortsResource(int numPorts, List<Resource> resources, List<Long> otherRequestedPorts) {
+    List<Long> requestedPorts = new ArrayList<>(otherRequestedPorts);
     Ranges ranges = getRanges(resources, PORTS);
 
     Preconditions.checkState(ranges.getRangeCount() > 0, "Ports %s should have existed in resources %s", PORTS, resources);
@@ -148,13 +149,13 @@ public final class MesosUtils {
         portsSoFar += (rangeEndSelection - rangeStartSelection) + 1;
 
         List<Long> toRemove = new ArrayList<>();
-        for (long port : otherRequestedPorts) {
+        for (long port : requestedPorts) {
           if (rangeStartSelection >= port && rangeEndSelection <= port) {
             toRemove.add(port);
             portsSoFar --;
           }
         }
-        otherRequestedPorts.removeAll(toRemove);
+        requestedPorts.removeAll(toRemove);
 
         if (portsSoFar == numPorts) {
           break;
@@ -162,7 +163,7 @@ public final class MesosUtils {
       }
     }
 
-    for (long port : otherRequestedPorts) {
+    for (long port : requestedPorts) {
       rangesBldr.addRange(Range.newBuilder()
           .setBegin(port)
           .setEnd(port)
