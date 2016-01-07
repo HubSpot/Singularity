@@ -22,6 +22,15 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.hubspot.baragon.models.BaragonRequestState;
+import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityContainerInfo;
+import com.hubspot.mesos.SingularityContainerType;
+import com.hubspot.mesos.SingularityDockerInfo;
+import com.hubspot.mesos.SingularityDockerNetworkType;
+import com.hubspot.mesos.SingularityDockerPortMapping;
+import com.hubspot.mesos.SingularityDockerVolumeMode;
+import com.hubspot.mesos.SingularityPortMappingType;
+import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.LoadBalancerRequestType;
@@ -30,6 +39,7 @@ import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
+import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
@@ -1818,6 +1828,44 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     resourceOffers();
 
     Assert.assertTrue(taskManager.getActiveTasks().size() == 20);
+  }
+
+  @Test
+  public void testRequestedPorts() {
+    final SingularityDockerPortMapping literalMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 80, Optional.of(SingularityPortMappingType.LITERAL), 8080, Optional.<String>absent());
+    final SingularityDockerPortMapping offerMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 81, Optional.of(SingularityPortMappingType.FROM_OFFER), 0, Optional.of("udp"));
+    final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
+      SingularityContainerType.DOCKER,
+      Optional.<List<SingularityVolume>>absent(),
+      Optional.of(
+        new SingularityDockerInfo("docker-image",
+          true,
+          SingularityDockerNetworkType.BRIDGE,
+          Optional.of(Arrays.asList(literalMapping, offerMapping)),
+          Optional.of(false),
+          Optional.<Map<String, String>>of(ImmutableMap.of("env", "var=value"))
+    )));
+    final SingularityDeployBuilder deployBuilder = new SingularityDeployBuilder(requestId, "test-docker-ports-deploy");
+    deployBuilder.setContainerInfo(Optional.of(containerInfo)).setResources(Optional.of(new Resources(1, 64, 1)));
+
+    initRequest();
+    long timestamp = System.currentTimeMillis();
+    initDeploy(deployBuilder, timestamp);
+    finishDeploy(new SingularityDeployMarker(requestId, deployBuilder.getId(), timestamp, Optional.<String>absent()), deployBuilder.build());
+    requestResource.submit(request.toBuilder().setInstances(Optional.of(2)).build());
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    String[] portRangeWithNoRequestedPorts = {"65:70"};
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRangeWithNoRequestedPorts)));
+    Assert.assertEquals(0, taskManager.getActiveTasks().size());
+
+    String[] portRangeWithSomeRequestedPorts = {"80:82"};
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRangeWithSomeRequestedPorts)));
+    Assert.assertEquals(0, taskManager.getActiveTasks().size());
+
+    String[] portRangeWithAllRequestedPorts = {"80:82", "8080:8080"};
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRangeWithAllRequestedPorts)));
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
   }
 
 }
