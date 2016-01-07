@@ -1832,21 +1832,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testRequestedPorts() {
-    final SingularityDockerPortMapping literalMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 80, Optional.of(SingularityPortMappingType.LITERAL), 8080, Optional.<String>absent());
-    final SingularityDockerPortMapping offerMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 81, Optional.of(SingularityPortMappingType.FROM_OFFER), 0, Optional.of("udp"));
-    final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
-      SingularityContainerType.DOCKER,
-      Optional.<List<SingularityVolume>>absent(),
-      Optional.of(
-        new SingularityDockerInfo("docker-image",
-          true,
-          SingularityDockerNetworkType.BRIDGE,
-          Optional.of(Arrays.asList(literalMapping, offerMapping)),
-          Optional.of(false),
-          Optional.<Map<String, String>>of(ImmutableMap.of("env", "var=value"))
-    )));
-    final SingularityDeployBuilder deployBuilder = new SingularityDeployBuilder(requestId, "test-docker-ports-deploy");
-    deployBuilder.setContainerInfo(Optional.of(containerInfo)).setResources(Optional.of(new Resources(1, 64, 1)));
+    final SingularityDeployBuilder deployBuilder = dockerDeployWithPorts(3);
 
     initRequest();
     long timestamp = System.currentTimeMillis();
@@ -1863,9 +1849,32 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRangeWithSomeRequestedPorts)));
     Assert.assertEquals(0, taskManager.getActiveTasks().size());
 
-    String[] portRangeWithAllRequestedPorts = {"80:82", "8080:8080"};
-    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRangeWithAllRequestedPorts)));
+    String[] portRangeWithRequestedButNotEnoughPorts = {"80:80", "8080:8080"};
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRangeWithRequestedButNotEnoughPorts)));
+    Assert.assertEquals(0, taskManager.getActiveTasks().size());
+
+    String[] portRangeWithNeededPorts = {"80:83", "8080:8080"};
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRangeWithNeededPorts)));
     Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+  }
+
+  private SingularityDeployBuilder dockerDeployWithPorts(int numPorts) {
+    final SingularityDockerPortMapping literalMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 80, Optional.of(SingularityPortMappingType.LITERAL), 8080, Optional.<String>absent());
+    final SingularityDockerPortMapping offerMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 81, Optional.of(SingularityPortMappingType.FROM_OFFER), 0, Optional.of("udp"));
+    final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
+      SingularityContainerType.DOCKER,
+      Optional.<List<SingularityVolume>>absent(),
+      Optional.of(
+        new SingularityDockerInfo("docker-image",
+          true,
+          SingularityDockerNetworkType.BRIDGE,
+          Optional.of(Arrays.asList(literalMapping, offerMapping)),
+          Optional.of(false),
+          Optional.<Map<String, String>>of(ImmutableMap.of("env", "var=value"))
+        )));
+    final SingularityDeployBuilder deployBuilder = new SingularityDeployBuilder(requestId, "test-docker-ports-deploy");
+    deployBuilder.setContainerInfo(Optional.of(containerInfo)).setResources(Optional.of(new Resources(1, 64, numPorts)));
+    return deployBuilder;
   }
 
 }
