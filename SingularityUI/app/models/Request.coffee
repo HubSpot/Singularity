@@ -276,9 +276,9 @@ class Request extends Model
         vex.dialog.open
             message: "Turn <strong>off</strong> healthchecks for this request."
             input: """
-                <input name="message" id="disable-healthchecks-message" type="text" placeholder="Message (optional)" />
                 <input name="duration" id="disable-healthchecks-expiration" type="text" placeholder="Expiration (optional)" />
                 <span class="help">If an expiration duration is specified, this action will be reverted afterwards. Accepts any english time duration. (Days, Hr, Min...)</span>
+                <input name="message" id="disable-healthchecks-message" type="text" placeholder="Message (optional)" />
             """
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.YES), text: 'Disable Healthchecks'
