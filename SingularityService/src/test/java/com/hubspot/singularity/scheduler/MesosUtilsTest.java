@@ -80,7 +80,7 @@ public class MesosUtilsTest {
     }
 
     if (ranges.length > 0) {
-      resources.add(buildRanges(ranges));
+      resources.add(buildPortRanges(ranges));
     }
 
     return resources;
@@ -96,7 +96,24 @@ public class MesosUtilsTest {
 
   }
 
-  private Resource buildRanges(String... ranges) {
+  @Test
+  public void testLiteralHostPortSelection() {
+    String[] rangesNotOverlappingRequestedPorts = {"23:24", "25:25", "31:32", "50:51"};
+    int numPorts = 1;
+    List<Long> requestedPorts = Arrays.asList(50L, 51L);
+    Resource resource = MesosUtils.getPortsResource(numPorts, buildOffer(rangesNotOverlappingRequestedPorts).getResourcesList(), requestedPorts);
+    Assert.assertTrue(MesosUtils.getAllPorts(Collections.singletonList(resource)).containsAll(requestedPorts));
+    Assert.assertEquals(numPorts + requestedPorts.size(), MesosUtils.getNumPorts(Collections.singletonList(resource)));
+
+    String[] rangesOverlappingRequestPorts = {"23:28"};
+    numPorts = 4;
+    requestedPorts = Arrays.asList(25L, 27L);
+    resource = MesosUtils.getPortsResource(numPorts, buildOffer(rangesOverlappingRequestPorts).getResourcesList(), requestedPorts);
+    Assert.assertTrue(MesosUtils.getAllPorts(Collections.singletonList(resource)).containsAll(requestedPorts));
+    Assert.assertEquals(numPorts + requestedPorts.size(), MesosUtils.getNumPorts(Collections.singletonList(resource)));
+  }
+
+  public static Resource buildPortRanges(String... ranges) {
     Resource.Builder resources = Resource.newBuilder()
         .setType(Type.RANGES)
         .setName(MesosUtils.PORTS);
@@ -124,7 +141,7 @@ public class MesosUtilsTest {
         .setHostname("hostname")
         .setSlaveId(SlaveID.newBuilder().setValue("slaveid").build());
 
-    offer.addResources(buildRanges(ranges));
+    offer.addResources(buildPortRanges(ranges));
 
     return offer.build();
   }
