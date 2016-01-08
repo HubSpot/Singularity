@@ -22,6 +22,15 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.hubspot.baragon.models.BaragonRequestState;
+import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityContainerInfo;
+import com.hubspot.mesos.SingularityContainerType;
+import com.hubspot.mesos.SingularityDockerInfo;
+import com.hubspot.mesos.SingularityDockerNetworkType;
+import com.hubspot.mesos.SingularityDockerPortMapping;
+import com.hubspot.mesos.SingularityDockerVolumeMode;
+import com.hubspot.mesos.SingularityPortMappingType;
+import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.LoadBalancerRequestType;
@@ -31,6 +40,7 @@ import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
+import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
@@ -1452,11 +1462,13 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     scheduledJobPoller.runActionOnPoll();
 
-    Mockito.verify(mailer, Mockito.times(1)).sendTaskOverdueMail(Matchers.<Optional<SingularityTask>> any(), Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(), Matchers.anyLong(), Matchers.anyLong());
+    Mockito.verify(mailer, Mockito.times(1)).sendTaskOverdueMail(Matchers.<Optional<SingularityTask>> any(), Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(),
+      Matchers.anyLong(), Matchers.anyLong());
 
     scheduledJobPoller.runActionOnPoll();
 
-    Mockito.verify(mailer, Mockito.times(1)).sendTaskOverdueMail(Matchers.<Optional<SingularityTask>> any(), Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(), Matchers.anyLong(), Matchers.anyLong());
+    Mockito.verify(mailer, Mockito.times(1)).sendTaskOverdueMail(Matchers.<Optional<SingularityTask>> any(), Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(),
+      Matchers.anyLong(), Matchers.anyLong());
 
     statusUpdate(firstTask, TaskState.TASK_FINISHED);
 
@@ -1473,7 +1485,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     scheduledJobPoller.runActionOnPoll();
 
-    Mockito.verify(mailer, Mockito.times(1)).sendTaskOverdueMail(Matchers.<Optional<SingularityTask>> any(), Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(), Matchers.anyLong(), Matchers.anyLong());
+    Mockito.verify(mailer, Mockito.times(1)).sendTaskOverdueMail(Matchers.<Optional<SingularityTask>> any(), Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(),
+      Matchers.anyLong(), Matchers.anyLong());
 
     statusUpdate(secondTask, TaskState.TASK_FINISHED);
 
@@ -1488,13 +1501,15 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     scheduledJobPoller.runActionOnPoll();
 
-    Mockito.verify(mailer, Mockito.times(2)).sendTaskOverdueMail(Matchers.<Optional<SingularityTask>> any(), Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(), Matchers.anyLong(), Matchers.anyLong());
+    Mockito.verify(mailer, Mockito.times(2)).sendTaskOverdueMail(Matchers.<Optional<SingularityTask>> any(), Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(),
+      Matchers.anyLong(), Matchers.anyLong());
 
     taskManager.deleteTaskHistory(thirdTask.getTaskId());
 
     scheduledJobPoller.runActionOnPoll();
 
-    Mockito.verify(mailer, Mockito.times(3)).sendTaskOverdueMail(Matchers.<Optional<SingularityTask>> any(), Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(), Matchers.anyLong(), Matchers.anyLong());
+    Mockito.verify(mailer, Mockito.times(3)).sendTaskOverdueMail(Matchers.<Optional<SingularityTask>> any(), Matchers.<SingularityTaskId> any(), Matchers.<SingularityRequest> any(),
+      Matchers.anyLong(), Matchers.anyLong());
   }
 
   @Test
@@ -1775,7 +1790,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(5, taskManager.getActiveTaskIds().size());
 
     requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(2), Optional.<Long> absent(), Optional.<Boolean> absent(),
-        Optional.<String> absent(), Optional.<String>absent()));
+      Optional.<String> absent(), Optional.<String> absent()));
 
     resourceOffers();
     cleaner.drainCleanupQueue();
@@ -1795,7 +1810,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
 
-    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(5), Optional.of(1L), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<String>absent()));
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(5), Optional.of(1L), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<String> absent()));
 
     try {
       Thread.sleep(2);
@@ -1822,7 +1837,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(healthchecker.cancelHealthcheck(firstTask.getTaskId().getId()));
 
-    requestResource.skipHealthchecks(requestId, new SingularitySkipHealthchecksRequest(Optional.of(true), Optional.of(1L), Optional.<String> absent(), Optional.<String>absent()));
+    requestResource.skipHealthchecks(requestId, new SingularitySkipHealthchecksRequest(Optional.of(true), Optional.of(1L), Optional.<String> absent(), Optional.<String> absent()));
 
     statusUpdate(firstTask, TaskState.TASK_FAILED);
 
@@ -1900,7 +1915,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(1, taskManager.getNumCleanupTasks());
     Assert.assertEquals(2, taskManager.getNumActiveTasks());
 
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent(), secondTask.getTaskId()));
+    taskManager.saveHealthcheckResult(
+      new SingularityTaskHealthcheckResult(Optional.of(200), Optional.of(1000L), System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent(), secondTask.getTaskId()));
 
     cleaner.drainCleanupQueue();
     killKilledTasks();
@@ -2121,8 +2137,10 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(!deployManager.getDeployResult(requestId, deployId).isPresent());
 
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(500), Optional.of(1000L), System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent(), task.getTaskId()));
-    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(500), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.<String> absent(), Optional.<String> absent(), task.getTaskId()));
+    taskManager.saveHealthcheckResult(
+      new SingularityTaskHealthcheckResult(Optional.of(500), Optional.of(1000L), System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent(), task.getTaskId()));
+    taskManager.saveHealthcheckResult(
+      new SingularityTaskHealthcheckResult(Optional.of(500), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.<String> absent(), Optional.<String> absent(), task.getTaskId()));
 
     deployChecker.checkDeploys();
 
@@ -2195,4 +2213,50 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(taskManager.getActiveTasks().size() == 20);
   }
+
+  @Test
+  public void testRequestedPorts() {
+    final SingularityDeployBuilder deployBuilder = dockerDeployWithPorts(3);
+
+    initRequest();
+    initAndFinishDeploy(request, deployBuilder);
+    requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build());
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    String[] portRangeWithNoRequestedPorts = {"65:70"};
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRangeWithNoRequestedPorts)));
+    Assert.assertEquals(0, taskManager.getActiveTasks().size());
+
+    String[] portRangeWithSomeRequestedPorts = {"80:82"};
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRangeWithSomeRequestedPorts)));
+    Assert.assertEquals(0, taskManager.getActiveTasks().size());
+
+    String[] portRangeWithRequestedButNotEnoughPorts = {"80:80", "8080:8080"};
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRangeWithRequestedButNotEnoughPorts)));
+    Assert.assertEquals(0, taskManager.getActiveTasks().size());
+
+    String[] portRangeWithNeededPorts = {"80:83", "8080:8080"};
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRangeWithNeededPorts)));
+    Assert.assertEquals(1, taskManager.getActiveTaskIds().size());
+  }
+
+  private SingularityDeployBuilder dockerDeployWithPorts(int numPorts) {
+    final SingularityDockerPortMapping literalMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 80, Optional.of(SingularityPortMappingType.LITERAL), 8080, Optional.<String>absent());
+    final SingularityDockerPortMapping offerMapping = new SingularityDockerPortMapping(Optional.<SingularityPortMappingType>absent(), 81, Optional.of(SingularityPortMappingType.FROM_OFFER), 0, Optional.of("udp"));
+    final SingularityContainerInfo containerInfo = new SingularityContainerInfo(
+      SingularityContainerType.DOCKER,
+      Optional.<List<SingularityVolume>>absent(),
+      Optional.of(
+        new SingularityDockerInfo("docker-image",
+          true,
+          SingularityDockerNetworkType.BRIDGE,
+          Optional.of(Arrays.asList(literalMapping, offerMapping)),
+          Optional.of(false),
+          Optional.<Map<String, String>>of(ImmutableMap.of("env", "var=value"))
+        )));
+    final SingularityDeployBuilder deployBuilder = new SingularityDeployBuilder(requestId, "test-docker-ports-deploy");
+    deployBuilder.setContainerInfo(Optional.of(containerInfo)).setResources(Optional.of(new Resources(1, 64, numPorts)));
+    return deployBuilder;
+  }
+
 }
