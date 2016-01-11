@@ -144,7 +144,7 @@ public class SingularityCleaner {
     // For an incremental bounce, shut down old tasks as new ones are started
     final SingularityDeployKey key = SingularityDeployKey.fromTaskId(taskCleanup.getTaskId());
     if (taskCleanup.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
-      int healthyReplaceMentTasks = numHealthyTasks(requestId, activeDeployId, matchingTasks);
+      int healthyReplaceMentTasks = numHealthyTasks(request, activeDeployId, matchingTasks);
       if (healthyReplaceMentTasks + incrementalBounceCleaningTasks.count(key) <= request.getInstancesSafe()) {
         LOG.trace("Not killing a task {} yet, only {} matching out of a required {}", taskCleanup, matchingTasks.size(), request.getInstancesSafe() - incrementalBounceCleaningTasks.count(key));
         return false;
@@ -176,9 +176,9 @@ public class SingularityCleaner {
     }
   }
 
-  private int numHealthyTasks(String requestId, String activeDeployId, List<SingularityTaskId> matchingTasks) {
-    Optional<SingularityDeploy> deploy = deployManager.getDeploy(requestId, activeDeployId);
-    return deployHealthHelper.getNumHealthyTasks(deploy, matchingTasks, false);
+  private int numHealthyTasks(SingularityRequest request, String activeDeployId, List<SingularityTaskId> matchingTasks) {
+    Optional<SingularityDeploy> deploy = deployManager.getDeploy(request.getId(), activeDeployId);
+    return deployHealthHelper.getNumHealthyTasks(request, deploy, matchingTasks, false);
   }
 
   private boolean isObsolete(long start, long cleanupRequest) {
