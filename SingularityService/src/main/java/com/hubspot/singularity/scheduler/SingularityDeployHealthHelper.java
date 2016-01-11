@@ -78,9 +78,9 @@ public class SingularityDeployHealthHelper {
 
   public int getNumHealthyTasks(final SingularityRequest request, final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> activeTasks, final boolean isDeployPending) {
     if (shouldCheckHealthchecks(request, deploy, activeTasks, isDeployPending)) {
-      return getNumHealthcheckHealthyTasks(deploy, activeTasks);
-    } else {
       return getNumHealthcheckedHealthyTasks(deploy.get(), activeTasks, isDeployPending);
+    } else {
+      return getNoHealthcheckHealthyTasks(deploy, activeTasks);
     }
   }
 
@@ -109,7 +109,7 @@ public class SingularityDeployHealthHelper {
     return DeployHealth.HEALTHY;
   }
 
-  private int getNumHealthcheckHealthyTasks(final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> matchingActiveTasks) {
+  private int getNoHealthcheckHealthyTasks(final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> matchingActiveTasks) {
     final Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> taskUpdates = taskManager.getTaskHistoryUpdates(matchingActiveTasks);
 
     int healthyCount = 0;
