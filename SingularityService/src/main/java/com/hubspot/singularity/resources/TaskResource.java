@@ -36,6 +36,8 @@ import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
+import com.hubspot.singularity.SingularityPendingRequest;
+import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityService;
@@ -55,6 +57,7 @@ import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
+import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
@@ -70,6 +73,7 @@ public class TaskResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/tasks";
 
   private final TaskManager taskManager;
+  private final RequestManager requestManager;
   private final SlaveManager slaveManager;
   private final TaskRequestManager taskRequestManager;
   private final MesosClient mesosClient;
@@ -79,11 +83,12 @@ public class TaskResource {
 
   @Inject
   public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient,
-      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, UIConfiguration uiConfiguration) {
+      SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, UIConfiguration uiConfiguration, RequestManager requestManager) {
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
     this.slaveManager = slaveManager;
     this.mesosClient = mesosClient;
+    this.requestManager = requestManager;
     this.authorizationHelper = authorizationHelper;
     this.user = user;
     this.uiConfiguration = uiConfiguration;
@@ -248,6 +253,13 @@ public class TaskResource {
 
   @DELETE
   @Path("/task/{taskId}")
+  public SingularityTaskCleanup killTask(@PathParam("taskId") String taskId) {
+    return killTask(taskId, Optional.<SingularityKillTaskRequest> absent());
+  }
+
+  @DELETE
+  @Path("/task/{taskId}")
+  @Consumes({ MediaType.APPLICATION_JSON })
   @ApiOperation(value="Attempt to kill task, optionally overriding an existing cleanup request (that may be waiting for replacement tasks to become healthy)", response=SingularityTaskCleanup.class)
   @ApiResponses({
     @ApiResponse(code=409, message="Task already has a cleanup request (can be overridden with override=true)")
@@ -258,14 +270,24 @@ public class TaskResource {
     Optional<String> message = Optional.absent();
     Optional<Boolean> override = Optional.absent();
     Optional<String> actionId = Optional.absent();
+    Optional<Boolean> waitForReplacementTask = Optional.absent();
 
     if (killTaskRequest.isPresent()) {
       actionId = killTaskRequest.get().getActionId();
       message = killTaskRequest.get().getMessage();
       override = killTaskRequest.get().getOverride();
+      waitForReplacementTask = killTaskRequest.get().getWaitForReplacementTask();
     }
 
-    final SingularityTaskCleanup taskCleanup = new SingularityTaskCleanup(JavaUtils.getUserEmail(user), TaskCleanupType.USER_REQUESTED, System.currentTimeMillis(),
+    TaskCleanupType cleanupType = TaskCleanupType.USER_REQUESTED;
+
+    if (waitForReplacementTask.or(Boolean.FALSE)) {
+      cleanupType = TaskCleanupType.USER_REQUESTED_TASK_BOUNCE;
+    }
+
+    final long now = System.currentTimeMillis();
+
+    final SingularityTaskCleanup taskCleanup = new SingularityTaskCleanup(JavaUtils.getUserEmail(user), cleanupType, now,
         task.getTaskId(), message, actionId);
 
     if (override.isPresent() && override.get().booleanValue()) {
@@ -284,9 +306,13 @@ public class TaskResource {
       }
     }
 
+    if (cleanupType == TaskCleanupType.USER_REQUESTED_TASK_BOUNCE) {
+      requestManager.addToPendingQueue(new SingularityPendingRequest(task.getTaskId().getRequestId(), task.getTaskRequest().getDeploy().getId(), now, JavaUtils.getUserEmail(user),
+          PendingType.TASK_BOUNCE, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), message, actionId));
+    }
+
     return taskCleanup;
   }
-
 
   @Path("/commands/queued")
   @ApiOperation(value="Retrieve a list of all the shell commands queued for execution")

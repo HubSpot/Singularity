@@ -191,7 +191,7 @@ public class SingularityScheduler {
 
   private <T extends SingularityMachineAbstraction<T>> void changeState(Map<T, MachineState> map, AbstractMachineManager<T> manager) {
     for (Entry<T, MachineState> entry : map.entrySet()) {
-      manager.changeState(entry.getKey().getId(), entry.getValue(), entry.getKey().getCurrentState().getUser());
+      manager.changeState(entry.getKey().getId(), entry.getValue(), entry.getKey().getCurrentState().getMessage(), entry.getKey().getCurrentState().getUser());
     }
   }
 
@@ -603,7 +603,7 @@ public class SingularityScheduler {
       }
 
       newTasks.add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt.get(), nextInstanceNumber, pendingRequest.getPendingType(), pendingRequest.getTimestamp()),
-          pendingRequest.getCmdLineArgsList(), pendingRequest.getUser(), pendingRequest.getRunId(), pendingRequest.getSkipHealthchecks()));
+          pendingRequest.getCmdLineArgsList(), pendingRequest.getUser(), pendingRequest.getRunId(), pendingRequest.getSkipHealthchecks(), pendingRequest.getMessage()));
 
       nextInstanceNumber++;
     }

@@ -12,7 +12,7 @@ public abstract class SingularityMachineAbstraction<T extends SingularityMachine
   private final SingularityMachineStateHistoryUpdate currentState;
 
   public SingularityMachineAbstraction(String id) {
-    this(id, System.currentTimeMillis(), new SingularityMachineStateHistoryUpdate(id, MachineState.ACTIVE, System.currentTimeMillis(), Optional.<String> absent()));
+    this(id, System.currentTimeMillis(), new SingularityMachineStateHistoryUpdate(id, MachineState.ACTIVE, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent()));
   }
 
   public SingularityMachineAbstraction(String id, long firstSeenAt, SingularityMachineStateHistoryUpdate currentState) {

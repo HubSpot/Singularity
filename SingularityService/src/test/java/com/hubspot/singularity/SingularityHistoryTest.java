@@ -184,7 +184,8 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     String runId = "my-run-id";
 
-    SingularityPendingRequestParent parent = requestResource.scheduleImmediately(requestId, Optional.of(runId),  Optional.<SingularityRunNowRequest> absent());
+    SingularityPendingRequestParent parent = requestResource.scheduleImmediately(requestId,
+        Optional.of(new SingularityRunNowRequest(Optional.<String> absent(), Optional.<Boolean> absent(), Optional.of(runId), Optional.<List<String>> absent())));
 
     Assert.assertEquals(runId, parent.getPendingRequest().getRunId().get());
 
@@ -201,7 +202,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(runId, historyManager.getTaskHistory(taskId.getId()).get().getTask().getTaskRequest().getPendingTask().getRunId().get());
     Assert.assertEquals(runId, historyManager.getTaskHistoryForRequest(requestId, 0, 10).get(0).getRunId().get());
 
-    parent = requestResource.scheduleImmediately(requestId, Optional.<String> absent(),  Optional.<SingularityRunNowRequest> absent());
+    parent = requestResource.scheduleImmediately(requestId);
 
     Assert.assertTrue(parent.getPendingRequest().getRunId().isPresent());
   }
@@ -214,7 +215,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     initScheduledRequest();
     initFirstDeploy();
 
-    requestResource.scheduleImmediately(requestId, Optional.<String>absent(), Optional.<SingularityRunNowRequest> absent());
+    requestResource.scheduleImmediately(requestId);
 
     resourceOffers();
 
@@ -255,7 +256,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     for (SingularityRequestHistory historyItem : history) {
       if (historyItem.getEventType() == RequestHistoryType.DELETED) {
         Assert.assertEquals("a msg", historyItem.getMessage().get());
-      } else if (historyItem.getEventType() == RequestHistoryType.UPDATED) {
+      } else if (historyItem.getEventType() == RequestHistoryType.SCALED) {
         Assert.assertEquals(280, historyItem.getMessage().get().length());
       } else {
         Assert.assertTrue(!historyItem.getMessage().isPresent());

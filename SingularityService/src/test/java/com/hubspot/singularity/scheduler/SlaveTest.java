@@ -38,8 +38,8 @@ public class SlaveTest extends SingularityCuratorTestBase {
 
     final long now = System.currentTimeMillis();
 
-    liveSlave = liveSlave.changeState(new SingularityMachineStateHistoryUpdate("1", MachineState.ACTIVE, 100, Optional.<String> absent()));
-    deadSlave = deadSlave.changeState(new SingularityMachineStateHistoryUpdate("2", MachineState.DEAD, now - TimeUnit.HOURS.toMillis(10), Optional.<String> absent()));
+    liveSlave = liveSlave.changeState(new SingularityMachineStateHistoryUpdate("1", MachineState.ACTIVE, 100, Optional.<String> absent(), Optional.<String> absent()));
+    deadSlave = deadSlave.changeState(new SingularityMachineStateHistoryUpdate("2", MachineState.DEAD, now - TimeUnit.HOURS.toMillis(10), Optional.<String> absent(), Optional.<String> absent()));
 
     slaveManager.saveObject(liveSlave);
     slaveManager.saveObject(deadSlave);

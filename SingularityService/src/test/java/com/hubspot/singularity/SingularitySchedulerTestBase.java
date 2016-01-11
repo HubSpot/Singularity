@@ -54,6 +54,7 @@ import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.RackResource;
 import com.hubspot.singularity.resources.RequestResource;
 import com.hubspot.singularity.resources.SlaveResource;
+import com.hubspot.singularity.resources.TaskResource;
 import com.hubspot.singularity.scheduler.SingularityCleaner;
 import com.hubspot.singularity.scheduler.SingularityCooldownChecker;
 import com.hubspot.singularity.scheduler.SingularityDeployChecker;
@@ -95,6 +96,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected RackResource rackResource;
   @Inject
   protected SlaveResource slaveResource;
+  @Inject
+  protected TaskResource taskResource;
   @Inject
   protected RequestResource requestResource;
   @Inject
@@ -218,7 +221,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected SingularityPendingTask buildPendingTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo) {
     SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, PendingType.IMMEDIATE, launchTime);
-    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent());
+    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent());
 
     return pendingTask;
   }
@@ -464,7 +467,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(requestId, deployId,
         System.currentTimeMillis() + TimeUnit.DAYS.toMillis(random.nextInt(3)), random.nextInt(10), PendingType.IMMEDIATE, System.currentTimeMillis());
 
-    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent());
+    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent());
 
     taskManager.savePendingTask(pendingTask);
 
