@@ -1,7 +1,6 @@
 <div class="page-header file-browser-header">
     <h2>
         Files
-    </h2>
 </div>
 {{#if task.slaveMissing}}
     <div class="empty-table-message">
@@ -43,7 +42,7 @@
                                 </a>
                             {{else}}
                                 {{#if isTailable}}
-                                    <a href="{{appRoot}}/task/{{ taskId }}/tail/{{ uiPath }}">
+                                    <a href="{{appRoot}}/request/{{ ../task.requestId }}/tail/{{ uiPath }}/?taskIds={{ taskId }}">
                                         <span class="glyphicon glyphicon-file"></span>{{ name }}
                                     </a>
                                 {{else}}
@@ -69,16 +68,8 @@
             </tbody>
         </table>
     {{else}}
-        {{#if synced}}
-            <div class="empty-table-message">
-                This directory is empty
-            </div>
-        {{else}}
-            <div class="page-loader-container">
-                <div class="empty-table-message">
-                    Could not get files. The task is probably still starting up.
-                </div>
-            </div>
-        {{/if}}
+        <div class="empty-table-message">
+            {{emptySandboxMessage}}
+        </div>
     {{/if}}
 {{/if}}

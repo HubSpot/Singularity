@@ -12,6 +12,7 @@ class FileBrowserSubview extends View
     initialize: ({ @scrollWhenReady }) ->
         @listenTo @collection, 'sync',  @render
         @listenTo @collection, 'error', @catchAjaxError
+        @listenTo @model, 'sync', @render
         @task = @model
 
         @scrollAfterRender = Backbone.history.fragment.indexOf('/files') isnt -1
@@ -19,15 +20,23 @@ class FileBrowserSubview extends View
     render: ->
         # Ensure we have enough space to scroll
         offset = @$el.offset().top
-        
+
         breadcrumbs = utils.pathToBreadcrumbs @collection.currentDirectory
 
+        emptySandboxMessage = 'No files exist in task directory.'
+
+        if @task.get('taskUpdates') and @task.get('taskUpdates').length > 0
+            switch _.last(@task.get('taskUpdates')).taskState
+                when 'TASK_LAUNCHED', 'TASK_STAGING', 'TASK_STARTING' then emptySandboxMessage = 'Could not browse files. The task is still starting up.'
+                when 'TASK_KILLED', 'TASK_FAILED', 'TASK_LOST', 'TASK_FINISHED' then emptySandboxMessage = 'No files exist in task directory. It may have been cleaned up.'
+
         @$el.html @template
-            synced:      @collection.synced
-            files:       _.pluck @collection.models, 'attributes'
-            path:        @collection.path
-            breadcrumbs: breadcrumbs
-            task:        @task
+            synced:                 @collection.synced and @task.synced
+            files:                  _.pluck @collection.models, 'attributes'
+            path:                   @collection.path
+            breadcrumbs:            breadcrumbs
+            task:                   @task.toJSON()
+            emptySandboxMessage:    emptySandboxMessage
 
         # make sure body is large enough so we can fit the browser
         minHeight = @$el.offset().top + $(window).height()

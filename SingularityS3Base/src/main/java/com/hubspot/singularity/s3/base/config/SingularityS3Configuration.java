@@ -2,6 +2,8 @@ package com.hubspot.singularity.s3.base.config;
 
 import static com.hubspot.mesos.JavaUtils.obfuscateValue;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.Min;
@@ -56,6 +58,10 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
   @NotEmpty
   @JsonProperty
   private String localDownloadPath = "/download";
+
+  @NotNull
+  @JsonProperty
+  private Map<String, SingularityS3Credentials> s3BucketCredentials = new HashMap<>();
 
   public SingularityS3Configuration() {
     super(Optional.<String>absent());
@@ -133,6 +139,14 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
     this.s3ChunkDownloadTimeoutMillis = s3ChunkDownloadTimeoutMillis;
   }
 
+  public Map<String, SingularityS3Credentials> getS3BucketCredentials() {
+    return s3BucketCredentials;
+  }
+
+  public void setS3BucketCredentials(Map<String, SingularityS3Credentials> s3BucketCredentials) {
+    this.s3BucketCredentials = s3BucketCredentials;
+  }
+
   @Override
   public String toString() {
     return "SingularityS3Configuration[" +
@@ -145,6 +159,7 @@ public class SingularityS3Configuration extends BaseRunnerConfiguration {
             ", s3ChunkRetries=" + s3ChunkRetries +
             ", localDownloadHttpPort=" + localDownloadHttpPort +
             ", localDownloadPath='" + localDownloadPath + '\'' +
+            ", s3BucketCredentials=" + s3BucketCredentials +
             ']';
   }
 }

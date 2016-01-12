@@ -30,10 +30,10 @@ import com.hubspot.singularity.SingularityLoadBalancerUpdate.LoadBalancerMethod;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
-import com.hubspot.singularity.SingularityTaskCleanup.TaskCleanupType;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate.SimplifiedTaskState;
+import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
@@ -205,8 +205,8 @@ public class SingularityNewTaskChecker {
     switch (state) {
       case CHECK_IF_OVERDUE:
         if (isOverdue(task)) {
-          taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(), task.getTaskId(),
-              Optional.of(String.format("Task did not become healthy after %s", JavaUtils.durationFromMillis(killAfterUnhealthyMillis)))));
+          taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(),
+              task.getTaskId(), Optional.of(String.format("Task did not become healthy after %s", JavaUtils.durationFromMillis(killAfterUnhealthyMillis))), Optional.<String>absent()));
         } else {
           reEnqueueCheck(task);
         }
@@ -215,8 +215,8 @@ public class SingularityNewTaskChecker {
         reEnqueueCheck(task);
         break;
       case UNHEALTHY_KILL_TASK:
-        taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.UNHEALTHY_NEW_TASK, System.currentTimeMillis(), task.getTaskId(),
-            Optional.of("Task is not healthy")));
+        taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.UNHEALTHY_NEW_TASK, System.currentTimeMillis(),
+            task.getTaskId(), Optional.of("Task is not healthy"), Optional.<String> absent()));
         break;
       case HEALTHY:
       case OBSOLETE:

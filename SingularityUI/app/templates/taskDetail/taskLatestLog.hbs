@@ -1,21 +1,25 @@
-<div class="page-header">
-    <h2>
-        Logs
-    </h2>
-</div>
+{{#if fileExists}}
 
-<div class="row">
-  <div class="col-md-4">
-    <h4>
-      {{#if data.isStillRunning}}
-          <a href="{{ appRoot }}/task/{{ data.taskId }}/tail/{{ substituteTaskId config.runningTaskLogPath data.taskId }}" title="Log">
-              <span class="glyphicon glyphicon-file"></span> {{{filename config.runningTaskLogPath}}}
-          </a>
-      {{else}}
-          <a href="{{ appRoot }}/task/{{ data.taskId }}/tail/{{ substituteTaskId config.finishedTaskLogPath data.taskId }}" title="Log">
-              <span class="glyphicon glyphicon-file"></span> {{{filename config.finishedTaskLogPath}}}
-          </a>
-      {{/if}}
-    </h4>
+  <div class="page-header">
+      <h2>
+          Logs
+      </h2>
   </div>
-</div>
+
+  <div class="row">
+    <div class="col-md-4">
+      <h4>
+        {{#if data.isStillRunning}}
+            <a href="{{ appRoot }}/task/{{ data.taskId }}/tail/{{ substituteTaskId config.runningTaskLogPath data.taskId }}" title="Log">
+                <span class="glyphicon glyphicon-file"></span> {{{filename config.runningTaskLogPath}}}
+            </a>
+        {{else}}
+            <a href="{{ appRoot }}/task/{{ data.taskId }}/tail/{{ substituteTaskId config.finishedTaskLogPath data.taskId }}" title="Log">
+                <span class="glyphicon glyphicon-file"></span> {{{filename config.finishedTaskLogPath}}}
+            </a>
+        {{/if}}
+      </h4>
+    </div>
+  </div>
+
+{{/if}}

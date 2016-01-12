@@ -16,6 +16,9 @@
                         Created
                     </th>
                     <th class="hidden-xs">
+                        Message
+                    </th>
+                    <th class="hidden-xs">
                         {{! Actions }}
                     </th>
                 </tr>
@@ -31,6 +34,9 @@
                         </td>
                         <td class="hidden-xs" data-value="{{ createdAt }}">
                             {{timestampFromNow createdAt}}
+                        </td>
+                        <td class="hidden-xs">
+                            {{message}}
                         </td>
                         <td class="hidden-xs actions-column">
                             <a data-action="viewJSON" title="JSON">

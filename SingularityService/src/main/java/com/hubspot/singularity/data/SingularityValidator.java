@@ -10,8 +10,6 @@ import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
 
-import com.hubspot.mesos.SingularityContainerInfo;
-import com.hubspot.mesos.SingularityVolume;
 import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
@@ -20,16 +18,17 @@ import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
+import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityContainerType;
 import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityPortMappingType;
+import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
@@ -98,7 +97,7 @@ public class SingularityValidator {
   }
 
   public SingularityRequest checkSingularityRequest(SingularityRequest request, Optional<SingularityRequest> existingRequest, Optional<SingularityDeploy> activeDeploy,
-      Optional<SingularityDeploy> pendingDeploy, Optional<SingularityUser> user) {
+      Optional<SingularityDeploy> pendingDeploy) {
 
     checkBadRequest(request.getId() != null && !request.getId().contains("/"), "Id can not be null or contain / characters");
 
@@ -166,7 +165,7 @@ public class SingularityValidator {
     return request.toBuilder().setQuartzSchedule(Optional.fromNullable(quartzSchedule)).build();
   }
 
-  public SingularityDeploy checkDeploy(SingularityRequest request, SingularityDeploy deploy, Optional<SingularityUser> user) {
+  public SingularityDeploy checkDeploy(SingularityRequest request, SingularityDeploy deploy) {
     checkNotNull(request, "request is null");
     checkNotNull(deploy, "deploy is null");
 

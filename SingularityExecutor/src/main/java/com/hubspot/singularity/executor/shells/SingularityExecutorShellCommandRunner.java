@@ -139,10 +139,19 @@ public class SingularityExecutorShellCommandRunner {
         int pid;
         Path pidFilePath = MesosUtils.getTaskDirectoryPath(getTask().getTaskId()).resolve(executorConfiguration.getShellCommandPidFile());
         if (Files.exists(pidFilePath)) {
+          Scanner scanner = null;
           try {
-            pid = Integer.parseInt(new Scanner(pidFilePath).useDelimiter("\\Z").next());
+            scanner = new Scanner(pidFilePath);
+            scanner.useDelimiter("\\Z");
+            pid = Integer.parseInt(scanner.next());
           } catch (Exception e) {
             throw new InvalidShellCommandException(String.format("No PID found due to exception reading pid file: %s", e.getMessage()));
+          } finally {
+            if (scanner != null) {
+              try {
+                scanner.close();
+              } catch (Throwable t) {}
+            }
           }
         } else if (isDocker) {
           pid = 1;

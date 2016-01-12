@@ -44,7 +44,18 @@ class TasksView extends View
         @listenTo @cleaningTasks, 'change', @render
         @listenTo @taskKillRecords, 'change', @render
 
-        @searchChange = _.debounce @searchChange, 200
+        @fuzzySearch = _.memoize(@fuzzySearch)
+
+    fuzzySearch: (filter, tasks) =>
+        host =
+            extract: (o) ->
+                "#{o.host}"
+        id =
+            extract: (o) ->
+                "#{o.id}"
+        res1 = fuzzy.filter(filter, tasks, host)
+        res2 = fuzzy.filter(filter, tasks, id)
+        _.pluck(_.sortBy(_.union(res1, res2), (r) => r.score), 'original')
 
     # Returns the array of tasks that need to be rendered
     filterCollection: =>
@@ -52,9 +63,8 @@ class TasksView extends View
 
         # Only show tasks that match the search query
         if @searchFilter
-            tasks = _.filter tasks, (task) =>
-                searchField = "#{ task.id }#{ task.host }".toLowerCase().replace(/-/g, '_')
-                searchField.toLowerCase().indexOf(@searchFilter.toLowerCase().replace(/-/g, '_')) isnt -1
+            tasks = @fuzzySearch(@searchFilter, tasks)
+
         # Sort the table if the user clicked on the table heading things
         if @sortAttribute?
             tasks = _.sortBy tasks, (task) =>
@@ -217,6 +227,10 @@ class TasksView extends View
 
     promptKill: (id, callback) ->
         vex.dialog.confirm
+            input: """
+                <input name="wait-for-replacement-task" id="wait-for-replacement-task" type="checkbox" checked /> Wait for replacement task to start before killing this task
+                <input name="message" type="text" placeholder="Message (optional)" />
+            """
             buttons: [
                 $.extend {}, vex.dialog.buttons.YES,
                     text: 'Kill task'
@@ -227,7 +241,8 @@ class TasksView extends View
 
             callback: (confirmed) =>
                 return unless confirmed
-                deleteRequest = @collection.get(id).kill()
+                waitForReplacementTask = $('.vex #wait-for-replacement-task').is ':checked'
+                deleteRequest = @collection.get(id).kill(confirmed.message, false, waitForReplacementTask)
 
                 # ignore errors (probably means you tried
                 # to kill an already dead task)

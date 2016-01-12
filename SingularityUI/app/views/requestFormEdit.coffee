@@ -59,7 +59,7 @@ class RequestFormEdit extends RequestFormBaseView
         if _.contains ['RUN_ONCE', 'ON_DEMAND'], @requestType
             @model.unset 'instances'
 
-        @model.url = "#{ config.apiRoot }/requests?user=#{ app.getUsername() }"
+        @model.url = "#{ config.apiRoot }/requests"
         @model.isNew = -> true
 
         serverRequest = @model.save @requestObject

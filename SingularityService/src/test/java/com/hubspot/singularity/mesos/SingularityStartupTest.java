@@ -111,7 +111,7 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
     boolean caughtException = false;
 
     try {
-      requestResource.scheduleImmediately(requestId, Optional.<String> absent(), null);
+      requestResource.scheduleImmediately(requestId);
     } catch (Exception e) {
       caughtException = true;
     }
@@ -135,7 +135,7 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
     Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
 
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, System.currentTimeMillis(), PendingType.ONEOFF));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, System.currentTimeMillis(), Optional.<String> absent(), PendingType.ONEOFF, Optional.<Boolean> absent(), Optional.<String> absent()));
 
     startup.checkSchedulerForInconsistentState();
 

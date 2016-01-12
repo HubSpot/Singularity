@@ -13,8 +13,8 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.hubspot.singularity.config.EmailConfigurationEnums.EmailDestination;
-import com.hubspot.singularity.config.EmailConfigurationEnums.EmailType;
+import com.hubspot.singularity.SingularityEmailDestination;
+import com.hubspot.singularity.SingularityEmailType;
 
 public class SMTPConfiguration {
 
@@ -67,25 +67,26 @@ public class SMTPConfiguration {
   private List<String> taskEmailTailFiles = Arrays.asList("stdout", "stderr");
 
   @JsonProperty("emails")
-  private Map<EmailType, List<EmailDestination>> emailConfiguration = Maps.newHashMap(ImmutableMap.<EmailType, List<EmailDestination>>builder()
-      .put(EmailType.REQUEST_IN_COOLDOWN, ImmutableList.of(EmailDestination.ADMINS, EmailDestination.OWNERS))
-      .put(EmailType.SINGULARITY_ABORTING, ImmutableList.of(EmailDestination.ADMINS))
-      .put(EmailType.TASK_FAILED, ImmutableList.of(EmailDestination.ADMINS, EmailDestination.OWNERS, EmailDestination.ACTION_TAKER))
-      .put(EmailType.TASK_LOST, ImmutableList.of(EmailDestination.ADMINS, EmailDestination.ACTION_TAKER))
-      .put(EmailType.TASK_FINISHED_LONG_RUNNING, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
-      .put(EmailType.TASK_FINISHED_ON_DEMAND, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ACTION_TAKER))
-      .put(EmailType.TASK_SCHEDULED_OVERDUE_TO_FINISH, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
-      .put(EmailType.TASK_KILLED_UNHEALTHY, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
-      .put(EmailType.REQUEST_PAUSED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
-      .put(EmailType.REQUEST_REMOVED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
-      .put(EmailType.REQUEST_UNPAUSED, ImmutableList.of(EmailDestination.OWNERS, EmailDestination.ADMINS))
+  private Map<SingularityEmailType, List<SingularityEmailDestination>> emailConfiguration = Maps.newHashMap(ImmutableMap.<SingularityEmailType, List<SingularityEmailDestination>>builder()
+      .put(SingularityEmailType.REQUEST_IN_COOLDOWN, ImmutableList.of(SingularityEmailDestination.ADMINS, SingularityEmailDestination.OWNERS))
+      .put(SingularityEmailType.SINGULARITY_ABORTING, ImmutableList.of(SingularityEmailDestination.ADMINS))
+      .put(SingularityEmailType.TASK_FAILED, ImmutableList.of(SingularityEmailDestination.ADMINS, SingularityEmailDestination.OWNERS, SingularityEmailDestination.ACTION_TAKER))
+      .put(SingularityEmailType.TASK_LOST, ImmutableList.of(SingularityEmailDestination.ADMINS, SingularityEmailDestination.ACTION_TAKER))
+      .put(SingularityEmailType.TASK_FINISHED_LONG_RUNNING, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
+      .put(SingularityEmailType.TASK_FINISHED_ON_DEMAND, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ACTION_TAKER))
+      .put(SingularityEmailType.TASK_SCHEDULED_OVERDUE_TO_FINISH, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
+      .put(SingularityEmailType.TASK_KILLED_UNHEALTHY, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
+      .put(SingularityEmailType.REQUEST_PAUSED, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
+      .put(SingularityEmailType.REQUEST_REMOVED, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
+      .put(SingularityEmailType.REQUEST_UNPAUSED, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
+      .put(SingularityEmailType.REQUEST_SCALED, ImmutableList.of(SingularityEmailDestination.OWNERS))
       .build());
 
-  public Map<EmailType, List<EmailDestination>> getEmailConfiguration() {
+  public Map<SingularityEmailType, List<SingularityEmailDestination>> getEmailConfiguration() {
     return emailConfiguration;
   }
 
-  public void setEmailConfiguration(Map<EmailType, List<EmailDestination>> emailConfiguration) {
+  public void setEmailConfiguration(Map<SingularityEmailType, List<SingularityEmailDestination>> emailConfiguration) {
     this.emailConfiguration.putAll(emailConfiguration);
   }
 

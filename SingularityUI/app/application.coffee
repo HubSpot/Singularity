@@ -112,8 +112,6 @@ class Application
                 Messenger().error
                     message:   "<p>Could not reach the Singularity API. Please make sure SingularityUI is properly set up.</p><p>If running through Brunch, this might be your browser blocking cross-domain requests.</p>"
             else
-                console.log jqxhr.responseText
-
                 try
                   serverMessage = JSON.parse(jqxhr.responseText).message or jqxhr.responseText
                 catch
@@ -130,7 +128,7 @@ class Application
                                     <p>The error has been saved to your JS console. <span class='copy-link'>Copy error message</span>.</p>
                                 </div>"""
                 console.error jqxhr
-                options = 
+                options =
                     selector: selector
                     linkText: 'Copy error message'
                     copyLink: '.copy-link'
@@ -153,6 +151,9 @@ class Application
 
     # Called by Controllers when their views are ready to take over
     showView: (view) ->
+        # Fire a view change event for manual cleanups (Unmount react components)
+        window.dispatchEvent(new Event('viewChange'));
+
         # Clean up events & stuff
         @views.current?.remove()
 
