@@ -43,7 +43,9 @@ public class AbstractRequestResource {
   }
 
   protected SingularityRequestParent fillEntireRequest(SingularityRequestWithState requestWithState) {
-    Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(requestWithState.getRequest().getId());
+    final String requestId = requestWithState.getRequest().getId();
+
+    final Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(requestId);
 
     Optional<SingularityDeploy> activeDeploy = Optional.absent();
     Optional<SingularityDeploy> pendingDeploy = Optional.absent();
@@ -53,9 +55,11 @@ public class AbstractRequestResource {
       pendingDeploy = fillDeploy(requestDeployState.get().getPendingDeploy());
     }
 
-    Optional<SingularityPendingDeploy> pendingDeployState = deployManager.getPendingDeploy(requestWithState.getRequest().getId());
+    Optional<SingularityPendingDeploy> pendingDeployState = deployManager.getPendingDeploy(requestId);
 
-    return new SingularityRequestParent(requestWithState.getRequest(), requestWithState.getState(), requestDeployState, activeDeploy, pendingDeploy, pendingDeployState);
+    return new SingularityRequestParent(requestWithState.getRequest(), requestWithState.getState(), requestDeployState, activeDeploy, pendingDeploy, pendingDeployState,
+        requestManager.getExpiringBounce(requestId), requestManager.getExpiringPause(requestId), requestManager.getExpiringScale(requestId),
+        requestManager.getExpiringSkipHealthchecks(requestId));
   }
 
   protected Optional<SingularityDeploy> fillDeploy(Optional<SingularityDeployMarker> deployMarker) {

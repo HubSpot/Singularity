@@ -19,6 +19,7 @@ import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.RackManager;
 import com.wordnik.swagger.annotations.Api;
@@ -65,31 +66,24 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   }
 
   @POST
-  @Path("/rack/{rackId}/decomission")
-  @Deprecated
-  public void decomissionRack(@ApiParam("Active rack ID") @PathParam("rackId") String rackId) {
-    super.decommission(rackId, JavaUtils.getUserEmail(user));
-  }
-
-  @POST
   @Path("/rack/{rackId}/decommission")
   @ApiOperation("Begin decommissioning a specific active rack")
-  public void decommissionRack(@ApiParam("Active rack ID") @PathParam("rackId") String rackId) {
-    super.decommission(rackId, JavaUtils.getUserEmail(user));
+  public void decommissionRack(@ApiParam("Active rack ID") @PathParam("rackId") String rackId, Optional<SingularityMachineChangeRequest> changeRequest) {
+    super.decommission(rackId, changeRequest, JavaUtils.getUserEmail(user));
   }
 
   @POST
   @Path("/rack/{rackId}/freeze")
   @ApiOperation("Freeze a specific rack")
-  public void freezeRack(@ApiParam("Rack ID") @PathParam("rackId") String rackId) {
-    super.freeze(rackId, JavaUtils.getUserEmail(user));
+  public void freezeRack(@ApiParam("Rack ID") @PathParam("rackId") String rackId, Optional<SingularityMachineChangeRequest> changeRequest) {
+    super.freeze(rackId, changeRequest, JavaUtils.getUserEmail(user));
   }
 
   @POST
   @Path("/rack/{rackId}/activate")
   @ApiOperation("Activate a decomissioning rack, canceling decomission without erasing history")
-  public void activateSlave(@ApiParam("Active rackId") @PathParam("rackId") String rackId) {
-    super.activate(rackId, JavaUtils.getUserEmail(user));
+  public void activateSlave(@ApiParam("Active rackId") @PathParam("rackId") String rackId, Optional<SingularityMachineChangeRequest> changeRequest) {
+    super.activate(rackId, changeRequest, JavaUtils.getUserEmail(user));
   }
 
 }

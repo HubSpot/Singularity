@@ -8,9 +8,13 @@
                 {{#ifInSubFilter data.[0].state 'DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION'}}
                     <th>Decommissioned By</th>
                 {{/ifInSubFilter}}
+                {{#ifInSubFilter data.[0].state 'FROZEN'}}
+                    <th>Frozen By</th>
+                {{/ifInSubFilter}}
                 {{#ifInSubFilter data.[0].state 'ACTIVE'}}
                     <th>Activated By</th>
                 {{/ifInSubFilter}}
+                <th data-sortable="false">Message</th>
                 <th data-sortable="false"></th>
             </tr>
         </thead>
@@ -20,9 +24,10 @@
                     <td>{{ id }}</td>
                     <td>{{humanizeText state }}</td>
                     <td data-value="{{ uptime }}">{{timestampDuration uptime}}</td>
-                    {{#ifInSubFilter state 'ACTIVE,DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION'}}
+                    {{#ifInSubFilter state 'ACTIVE,DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION,FROZEN'}}
                         <td>{{ user }}</td>
                     {{/ifInSubFilter}}
+                    <td>{{ currentState.message }}</td>
                     <td class="actions-column">
                         {{#ifInSubFilter state 'DECOMMISSIONING,DECOMMISSIONED,STARTING_DECOMMISSION'}}
                             <a data-rack-id="{{ id }}" data-state="{{ state }}" data-action="reactivate" title="Reactivate">

@@ -41,7 +41,8 @@
     "react": "~0.14.2",
     "react-list": "~0.7.3",
     "react-dom": "git://github.com/EtienneLem/react-dom-util.git",
-    "fuzzy": "~0.1.1"
+    "fuzzy": "~0.1.1",
+    "juration": "*"
   },
   "resolutions": {
     "backbone": "~1.1.2",
