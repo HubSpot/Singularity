@@ -76,7 +76,7 @@ public class SingularityRequestTypeMigration extends ZkDataMigration {
         private final Optional<Boolean> daemon;
         private final Optional<Boolean> loadBalanced;
 
-        private Map<String, Object> unknownFields = new HashMap<>();
+        private final Map<String, Object> unknownFields = new HashMap<>();
 
         @JsonCreator
         public OldSingularityRequest(@JsonProperty("id") String id,
