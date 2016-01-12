@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hubspot.singularity.JsonHelpers.copyOfList;
 
 import java.util.List;
@@ -29,10 +30,6 @@ public class SingularityRequest {
 
   private final Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule;
 
-  //"use requestType instead"
-  @Deprecated
-  private final Optional<Boolean> daemon;
-
   private final Optional<Integer> instances;
   private final Optional<Boolean> skipHealthchecks;
 
@@ -52,7 +49,7 @@ public class SingularityRequest {
 
   @JsonCreator
   public SingularityRequest(@JsonProperty("id") String id, @JsonProperty("requestType") RequestType requestType, @JsonProperty("owners") Optional<List<String>> owners,
-      @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure, @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("daemon") Optional<Boolean> daemon, @JsonProperty("instances") Optional<Integer> instances,
+      @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure, @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("instances") Optional<Integer> instances,
       @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive, @JsonProperty("loadBalanced") Optional<Boolean> loadBalanced,
       @JsonProperty("killOldNonLongRunningTasksAfterMillis") Optional<Long> killOldNonLongRunningTasksAfterMillis, @JsonProperty("scheduleType") Optional<ScheduleType> scheduleType,
       @JsonProperty("quartzSchedule") Optional<String> quartzSchedule, @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity,
@@ -66,7 +63,6 @@ public class SingularityRequest {
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
     this.schedule = schedule;
-    this.daemon = daemon;
     this.rackSensitive = rackSensitive;
     this.instances = instances;
     this.loadBalanced = loadBalanced;
@@ -84,11 +80,7 @@ public class SingularityRequest {
     this.bounceAfterScale = bounceAfterScale;
     this.emailConfigurationOverrides = emailConfigurationOverrides;
     this.skipHealthchecks = skipHealthchecks;
-    if (requestType == null) {
-      this.requestType = RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced);
-    } else {
-      this.requestType = requestType;
-    }
+    this.requestType = checkNotNull(requestType, "requestType cannot be null");
   }
 
   public SingularityRequestBuilder toBuilder() {
@@ -133,11 +125,6 @@ public class SingularityRequest {
 
   public Optional<String> getQuartzSchedule() {
     return quartzSchedule;
-  }
-
-  @Deprecated
-  public Optional<Boolean> getDaemon() {
-    return daemon;
   }
 
   public Optional<Integer> getInstances() {

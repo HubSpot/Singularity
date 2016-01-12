@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
@@ -18,8 +19,6 @@ import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTaskId;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.SingularityRequestBuilder;
-import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTestBaseNoDb;
 import com.hubspot.singularity.data.MetadataManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -122,19 +121,14 @@ public class ZkMigrationTest extends SingularityTestBaseNoDb {
   public void testSingularityRequestTypeMigration() throws Exception {
     metadataManager.setZkDataVersion("8");
 
-    final SingularityRequest deprecatedOnDemandRequest = new SingularityRequestBuilder("old-on-demand", null).setDaemon(Optional.of(false)).build();
-
-    Assert.assertEquals(RequestType.ON_DEMAND, deprecatedOnDemandRequest.getRequestType());
-    Assert.assertEquals(Optional.of(false), deprecatedOnDemandRequest.getDaemon());
-
-    requestManager.save(deprecatedOnDemandRequest, RequestState.ACTIVE, SingularityRequestHistory.RequestHistoryType.CREATED, 0, Optional.<String>absent(), Optional.<String>absent());
+    curator.create().creatingParentsIfNeeded().forPath("/requests/all/old-on-demand", objectMapper.writeValueAsBytes(ImmutableMap.of("state", RequestState.ACTIVE, "request", ImmutableMap.of("id", "old-on-demand", "daemon", false), "timestamp", 0)));
 
     migrationRunner.checkMigrations();
 
-    final SingularityRequest request = requestManager.getRequest(deprecatedOnDemandRequest.getId()).get().getRequest();
+    final SingularityRequest request = requestManager.getRequest("old-on-demand").get().getRequest();
 
+    Assert.assertEquals("old-on-demand", request.getId());
     Assert.assertEquals(RequestType.ON_DEMAND, request.getRequestType());
-    Assert.assertEquals(Optional.absent(), request.getDaemon());
   }
 
 
