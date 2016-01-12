@@ -24,6 +24,10 @@ public class SingularityRequestBuilder {
 
   private Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule;
 
+  @Deprecated
+  // use requestType
+  private Optional<Boolean> daemon;
+
   private Optional<Integer> instances;
   private Optional<Boolean> skipHealthchecks;
 
@@ -57,6 +61,7 @@ public class SingularityRequestBuilder {
     this.requiredSlaveAttributes = Optional.absent();
     this.allowedSlaveAttributes = Optional.absent();
     this.scheduledExpectedRuntimeMillis = Optional.absent();
+    this.daemon = Optional.absent();
     this.waitAtLeastMillisAfterTaskFinishesForReschedule = Optional.absent();
     this.group = Optional.absent();
     this.readOnlyGroups = Optional.absent();
@@ -66,7 +71,7 @@ public class SingularityRequestBuilder {
   }
 
   public SingularityRequest build() {
-    return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule,
+    return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, daemon, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule,
         rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readOnlyGroups,
         bounceAfterScale, skipHealthchecks, emailConfigurationOverrides);
   }
@@ -117,6 +122,17 @@ public class SingularityRequestBuilder {
 
   public SingularityRequestBuilder setSchedule(Optional<String> schedule) {
     this.schedule = schedule;
+    return this;
+  }
+
+  @Deprecated
+  public Optional<Boolean> getDaemon() {
+    return daemon;
+  }
+
+  @Deprecated
+  public SingularityRequestBuilder setDaemon(Optional<Boolean> daemon) {
+    this.daemon = daemon;
     return this;
   }
 
