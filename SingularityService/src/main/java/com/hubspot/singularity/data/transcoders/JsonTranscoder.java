@@ -14,7 +14,7 @@ public class JsonTranscoder<T> implements Transcoder<T> {
   private final ObjectMapper objectMapper;
   private final Class<T> clazz;
 
-  JsonTranscoder(final ObjectMapper objectMapper, final Class<T> clazz) {
+  public JsonTranscoder(final ObjectMapper objectMapper, final Class<T> clazz) {
     this.objectMapper = checkNotNull(objectMapper, "objectMapper is null");
     this.clazz = checkNotNull(clazz, "clazz is null");
   }

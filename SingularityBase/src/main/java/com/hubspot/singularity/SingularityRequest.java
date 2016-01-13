@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hubspot.singularity.JsonHelpers.copyOfList;
 
 import java.util.List;
@@ -58,7 +59,7 @@ public class SingularityRequest {
       @JsonProperty("readOnlyGroups") Optional<Set<String>> readOnlyGroups, @JsonProperty("bounceAfterScale") Optional<Boolean> bounceAfterScale,
       @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
       @JsonProperty("emailConfigurationOverrides") Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides) {
-    this.id = id;
+    this.id = checkNotNull(id, "id cannot be null");
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
     this.schedule = schedule;
@@ -79,7 +80,7 @@ public class SingularityRequest {
     this.bounceAfterScale = bounceAfterScale;
     this.emailConfigurationOverrides = emailConfigurationOverrides;
     this.skipHealthchecks = skipHealthchecks;
-    this.requestType = requestType;
+    this.requestType = checkNotNull(requestType, "requestType cannot be null");
   }
 
   public SingularityRequestBuilder toBuilder() {
