@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
@@ -50,12 +51,12 @@ public class SingularityRequestTypeMigration extends ZkDataMigration {
             try {
                 OldSingularityRequestWithState requestWithState = oldSingularityRequestTranscoder.fromBytes(curator.getData().forPath("/requests/all/" + requestId));
 
-                if (!requestWithState.getRequest().getDaemon().isPresent()) {
-                    LOG.info("Skipping {}, already already has requestType set", requestId);
+                if (requestWithState.getRequest().getOriginalRequestType().isPresent()) {
+                    LOG.info("Skipping {}, requestType is present ({})", requestId, requestWithState.getRequest().getOriginalRequestType().get());
                     continue;
                 }
 
-                LOG.info("Saving request {}", requestId);
+                LOG.info("Saving request {} with requestType {}", requestId, requestWithState.getRequest().getRequestType());
                 curator.setData().forPath("/requests/all/" + requestId, oldSingularityRequestTranscoder.toBytes(requestWithState));
                 num++;
             } catch (Throwable t) {
@@ -70,6 +71,7 @@ public class SingularityRequestTypeMigration extends ZkDataMigration {
     static class OldSingularityRequest {
 
         private final String id;
+        private final Optional<RequestType> originalRequestType;
         private final RequestType requestType;
 
         private final Optional<String> schedule;
@@ -80,7 +82,7 @@ public class SingularityRequestTypeMigration extends ZkDataMigration {
 
         @JsonCreator
         public OldSingularityRequest(@JsonProperty("id") String id,
-            @JsonProperty("requestType") RequestType requestType,
+            @JsonProperty("requestType") Optional<RequestType> originalRequestType,
             @JsonProperty("schedule") Optional<String> schedule,
             @JsonProperty("daemon") Optional<Boolean> daemon,
             @JsonProperty("loadBalanced") Optional<Boolean> loadBalanced) {
@@ -88,11 +90,8 @@ public class SingularityRequestTypeMigration extends ZkDataMigration {
             this.schedule = schedule;
             this.daemon = daemon;
             this.loadBalanced = loadBalanced;
-            if (requestType == null) {
-                this.requestType = RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced);
-            } else {
-                this.requestType = requestType;
-            }
+            this.originalRequestType = originalRequestType == null ? Optional.<RequestType>absent() : originalRequestType;
+            this.requestType = this.originalRequestType.or(RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced));
         }
 
         @JsonAnySetter
@@ -123,6 +122,11 @@ public class SingularityRequestTypeMigration extends ZkDataMigration {
 
         public Optional<Boolean> getLoadBalanced() {
             return loadBalanced;
+        }
+
+        @JsonIgnore
+        public Optional<RequestType> getOriginalRequestType() {
+            return originalRequestType;
         }
     }
 
