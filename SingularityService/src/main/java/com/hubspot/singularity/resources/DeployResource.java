@@ -26,6 +26,7 @@ import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployProgress;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingDeploy;
+import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
@@ -102,6 +103,7 @@ public class DeployResource extends AbstractRequestResource {
           deploy.getDeployInstanceCountPerStep().or(request.getInstancesSafe()),
           deploy.getDeployStepWaitTimeSeconds().or(DEFAULT_DEPLOY_STEP_WAIT_TIME_SECONDS),
           false,
+          deploy.getAutoAdvanceDeploySteps().or(true),
           System.currentTimeMillis()));
     }
 
@@ -144,6 +146,35 @@ public class DeployResource extends AbstractRequestResource {
     }
 
     deployManager.createCancelDeployRequest(new SingularityDeployMarker(requestId, deployId, System.currentTimeMillis(), JavaUtils.getUserEmail(user), Optional.<String> absent()));
+
+    return fillEntireRequest(requestWithState);
+  }
+
+  @POST
+  @Path("/deploy/{deployId}/request/{requestId}")
+  @ApiOperation(value="Update the target active instance count for a pending deploy", response=SingularityRequestParent.class)
+  @ApiResponses({
+    @ApiResponse(code=400, message="Deploy is not in the pending state pending or is not not present")
+  })
+  public SingularityRequestParent updatePendingDeploy(
+    @ApiParam(required=true, value="The Singularity Request Id from which the deployment is removed.") @PathParam("requestId") String requestId,
+    @ApiParam(required=true, value="The Singularity Deploy Id that should be removed.") @PathParam("deployId") String deployId,
+    @ApiParam(required=true) SingularityUpdatePendingDeployRequest updateRequest) {
+    SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
+
+    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
+
+    Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestWithState.getRequest().getId());
+
+    if (!deployState.isPresent() || !deployState.get().getPendingDeploy().isPresent() || !deployState.get().getPendingDeploy().get().getDeployId().equals(deployId)) {
+      throw badRequest("Request %s does not have a pending deploy %s", requestId, deployId);
+    }
+
+    if (updateRequest.getTargetActiveInstances() > requestWithState.getRequest().getInstancesSafe()) {
+      throw badRequest("Cannot update pending deploy to have more instances (%s) than instances set for request (%s)");
+    }
+
+    deployManager.createUpdatePendingDeployRequest(updateRequest);
 
     return fillEntireRequest(requestWithState);
   }

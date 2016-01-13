@@ -408,7 +408,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void startDeploy(SingularityDeployMarker deployMarker, long timestamp) {
-    SingularityDeployProgress startingDeployProgress = new SingularityDeployProgress(1, 1, 10, false, timestamp);
+    SingularityDeployProgress startingDeployProgress = new SingularityDeployProgress(1, 1, 10, false, true, timestamp);
     deployManager.savePendingDeploy(new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate>absent(), DeployState.WAITING, Optional.of(startingDeployProgress)));
   }
 
@@ -457,18 +457,19 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void deploy(String deployId) {
-    deploy(deployId, Optional.<Boolean> absent(), Optional.<Integer> absent(), false);
+    deploy(deployId, Optional.<Boolean> absent(), Optional.<Integer> absent(), Optional.<Boolean> absent(), false);
   }
 
   protected void deploy(String deployId, Optional<Boolean> unpauseOnDeploy) {
-    deploy(deployId, unpauseOnDeploy, Optional.<Integer>absent(), false);
+    deploy(deployId, unpauseOnDeploy, Optional.<Integer> absent(), Optional.<Boolean> absent(), false);
   }
 
-  protected void deploy(String deployId, Optional<Boolean> unpauseOnDeploy, Optional<Integer> deployRate, boolean loadBalanced) {
+  protected void deploy(String deployId, Optional<Boolean> unpauseOnDeploy, Optional<Integer> deployRate, Optional<Boolean> autoAdvance, boolean loadBalanced) {
     SingularityDeployBuilder builder = new SingularityDeployBuilder(requestId, deployId);
     builder
         .setCommand(Optional.of("sleep 1"))
         .setDeployInstanceCountPerStep(deployRate)
+        .setAutoAdvanceDeploySteps(autoAdvance)
         .setDeployStepWaitTimeSeconds(Optional.of(0));
     if (loadBalanced) {
       Set<String> groups = new HashSet<>(Arrays.asList("group"));

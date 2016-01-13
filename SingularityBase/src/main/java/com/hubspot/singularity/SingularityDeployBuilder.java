@@ -55,6 +55,7 @@ public class SingularityDeployBuilder {
 
   private Optional<Integer> deployInstanceCountPerStep;
   private Optional<Integer> deployStepWaitTimeSeconds;
+  private Optional<Boolean> autoAdvanceDeploySteps;
 
   public SingularityDeployBuilder(String requestId, String id) {
     this.requestId = requestId;
@@ -89,13 +90,14 @@ public class SingularityDeployBuilder {
     this.loadBalancerOptions = Optional.absent();
     this.deployInstanceCountPerStep = Optional.absent();
     this.deployStepWaitTimeSeconds = Optional.absent();
+    this.autoAdvanceDeploySteps = Optional.absent();
   }
 
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, customExecutorUser, resources, env,
         uris, metadata, executorData, version, timestamp, labels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckMaxRetries,
         healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy, healthcheckProtocol,
-      deployInstanceCountPerStep, deployStepWaitTimeSeconds);
+      deployInstanceCountPerStep, deployStepWaitTimeSeconds, autoAdvanceDeploySteps);
   }
 
   public String getRequestId() {
@@ -378,6 +380,15 @@ public class SingularityDeployBuilder {
 
   public SingularityDeployBuilder setDeployStepWaitTimeSeconds(Optional<Integer> deployStepWaitTimeSeconds) {
     this.deployStepWaitTimeSeconds = deployStepWaitTimeSeconds;
+    return this;
+  }
+
+  public Optional<Boolean> getAutoAdvanceDeploySteps() {
+    return autoAdvanceDeploySteps;
+  }
+
+  public SingularityDeployBuilder setAutoAdvanceDeploySteps(Optional<Boolean> autoAdvanceDeploySteps) {
+    this.autoAdvanceDeploySteps = autoAdvanceDeploySteps;
     return this;
   }
 

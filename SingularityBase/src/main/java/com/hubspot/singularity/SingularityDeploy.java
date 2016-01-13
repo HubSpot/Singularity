@@ -62,6 +62,7 @@ public class SingularityDeploy {
 
   private final Optional<Integer> deployInstanceCountPerStep;
   private final Optional<Integer> deployStepWaitTimeSeconds;
+  private final Optional<Boolean> autoAdvanceDeploySteps;
 
   public static SingularityDeployBuilder newBuilder(String requestId, String id) {
     return new SingularityDeployBuilder(requestId, id);
@@ -99,7 +100,8 @@ public class SingularityDeploy {
       @JsonProperty("skipHealthchecksOnDeploy") Optional<Boolean> skipHealthchecksOnDeploy,
       @JsonProperty("healthCheckProtocol") Optional<HealthcheckProtocol> healthcheckProtocol,
       @JsonProperty("deployInstanceCountPerStep") Optional<Integer> deployInstanceCountPerStep,
-      @JsonProperty("deployStepWaitTimeMs") Optional<Integer> deployStepWaitTimeSeconds) {
+      @JsonProperty("deployStepWaitTimeMs") Optional<Integer> deployStepWaitTimeSeconds,
+      @JsonProperty("autoAdvanceDeploySteps") Optional<Boolean> autoAdvanceDeploySteps) {
     this.requestId = requestId;
 
     this.command = command;
@@ -142,6 +144,7 @@ public class SingularityDeploy {
 
     this.deployInstanceCountPerStep = deployInstanceCountPerStep;
     this.deployStepWaitTimeSeconds = deployStepWaitTimeSeconds;
+    this.autoAdvanceDeploySteps = autoAdvanceDeploySteps;
   }
 
   public SingularityDeployBuilder toBuilder() {
@@ -337,6 +340,11 @@ public class SingularityDeploy {
     return deployStepWaitTimeSeconds;
   }
 
+  @ApiModelProperty(required=false, value="automatically advance to the next target instance count after `deployStepWaitTimeSeconds` seconds")
+  public Optional<Boolean> getAutoAdvanceDeploySteps() {
+    return autoAdvanceDeploySteps;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeploy{" +
@@ -372,6 +380,7 @@ public class SingularityDeploy {
       ", labels=" + labels +
       ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
       ", deployStepWaitTimeSeconds=" + deployStepWaitTimeSeconds +
+      ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +
       '}';
   }
 
