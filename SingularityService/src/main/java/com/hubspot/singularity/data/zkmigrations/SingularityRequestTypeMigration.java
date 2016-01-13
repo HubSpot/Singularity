@@ -67,7 +67,7 @@ public class SingularityRequestTypeMigration extends ZkDataMigration {
         LOG.info("Applied {} in {}", num, JavaUtils.duration(start));
     }
 
-    private static class OldSingularityRequest {
+    static class OldSingularityRequest {
 
         private final String id;
         private final RequestType requestType;
@@ -126,7 +126,7 @@ public class SingularityRequestTypeMigration extends ZkDataMigration {
         }
     }
 
-    private static class OldSingularityRequestWithState {
+    static class OldSingularityRequestWithState {
         private final OldSingularityRequest request;
         private final RequestState state;
         private final long timestamp;
