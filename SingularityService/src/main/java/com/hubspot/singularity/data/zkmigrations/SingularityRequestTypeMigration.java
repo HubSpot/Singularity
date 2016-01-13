@@ -23,7 +23,7 @@ import com.hubspot.singularity.data.transcoders.JsonTranscoder;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 
 public class SingularityRequestTypeMigration extends ZkDataMigration {
-    private static final Logger LOG = LoggerFactory.getLogger(ScheduleMigration.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SingularityRequestTypeMigration.class);
 
     private final RequestManager requestManager;
     private final CuratorFramework curator;
