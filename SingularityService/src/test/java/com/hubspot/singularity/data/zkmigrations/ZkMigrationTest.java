@@ -10,7 +10,10 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -111,6 +114,38 @@ public class ZkMigrationTest extends SingularityTestBaseNoDb {
         Assert.assertEquals(r.getUser(), p2.getUser());
       }
     }
+  }
+
+  @Test
+  public void testSingularityRequestTypeMigration() throws Exception {
+    metadataManager.setZkDataVersion("8");
+
+    final List<String> owners = ImmutableList.of("foo1@bar.com", "foo2@bar.com");
+
+    final SingularityRequestTypeMigration.OldSingularityRequest oldOnDemandRequest = new SingularityRequestTypeMigration.OldSingularityRequest("old-on-demand", null, Optional.<String>absent(), Optional.of(false), Optional.<Boolean>absent());
+    final SingularityRequestTypeMigration.OldSingularityRequest oldWorkerRequest = new SingularityRequestTypeMigration.OldSingularityRequest("old-worker", null, Optional.<String>absent(), Optional.of(true), Optional.<Boolean>absent());
+    final SingularityRequestTypeMigration.OldSingularityRequest oldScheduledRequest = new SingularityRequestTypeMigration.OldSingularityRequest("old-scheduled", null, Optional.of("0 0 0 0 0"), Optional.<Boolean>absent(), Optional.<Boolean>absent());
+    final SingularityRequestTypeMigration.OldSingularityRequest oldServiceRequest = new SingularityRequestTypeMigration.OldSingularityRequest("old-service", null, Optional.<String>absent(), Optional.of(true), Optional.of(true));
+
+    oldOnDemandRequest.setUnknownField("owners", owners);
+
+    // save old-style requests to ZK
+    curator.create().creatingParentsIfNeeded().forPath("/requests/all/" + oldOnDemandRequest.getId(), objectMapper.writeValueAsBytes(new SingularityRequestTypeMigration.OldSingularityRequestWithState(oldOnDemandRequest, RequestState.ACTIVE, System.currentTimeMillis())));
+    curator.create().creatingParentsIfNeeded().forPath("/requests/all/" + oldWorkerRequest.getId(), objectMapper.writeValueAsBytes(new SingularityRequestTypeMigration.OldSingularityRequestWithState(oldWorkerRequest, RequestState.ACTIVE, System.currentTimeMillis())));
+    curator.create().creatingParentsIfNeeded().forPath("/requests/all/" + oldScheduledRequest.getId(), objectMapper.writeValueAsBytes(new SingularityRequestTypeMigration.OldSingularityRequestWithState(oldScheduledRequest, RequestState.ACTIVE, System.currentTimeMillis())));
+    curator.create().creatingParentsIfNeeded().forPath("/requests/all/" + oldServiceRequest.getId(), objectMapper.writeValueAsBytes(new SingularityRequestTypeMigration.OldSingularityRequestWithState(oldServiceRequest, RequestState.ACTIVE, System.currentTimeMillis())));
+
+    // run ZK migration
+    migrationRunner.checkMigrations();
+
+    // assert that the migration properly set the requestType field
+    Assert.assertEquals(RequestType.ON_DEMAND, requestManager.getRequest(oldOnDemandRequest.getId()).get().getRequest().getRequestType());
+    Assert.assertEquals(RequestType.WORKER, requestManager.getRequest(oldWorkerRequest.getId()).get().getRequest().getRequestType());
+    Assert.assertEquals(RequestType.SCHEDULED, requestManager.getRequest(oldScheduledRequest.getId()).get().getRequest().getRequestType());
+    Assert.assertEquals(RequestType.SERVICE, requestManager.getRequest(oldServiceRequest.getId()).get().getRequest().getRequestType());
+
+    // assert that the migration properly carried over any additional fields on the request
+    Assert.assertEquals(Optional.of(owners), requestManager.getRequest(oldOnDemandRequest.getId()).get().getRequest().getOwners());
   }
 
 
