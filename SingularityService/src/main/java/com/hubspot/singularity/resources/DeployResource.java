@@ -7,7 +7,6 @@ import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.HEAD;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -99,8 +98,8 @@ public class DeployResource extends AbstractRequestResource {
     Optional<SingularityDeployProgress> deployProgress = Optional.absent();
     if (request.isLongRunning()) {
       deployProgress = Optional.of(new SingularityDeployProgress(
-          Math.min(deploy.getDeployRate().or(request.getInstancesSafe()), request.getInstancesSafe()),
-          deploy.getDeployRate().or(request.getInstancesSafe()),
+          Math.min(deploy.getDeployInstanceCountPerStep().or(request.getInstancesSafe()), request.getInstancesSafe()),
+          deploy.getDeployInstanceCountPerStep().or(request.getInstancesSafe()),
           deploy.getDeployStepWaitTimeSeconds().or(DEFAULT_DEPLOY_STEP_WAIT_TIME_SECONDS),
           false,
           System.currentTimeMillis()));

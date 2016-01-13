@@ -375,8 +375,8 @@ public class SingularityDeployChecker {
     if (deployProgress.isStepComplete()) {
       if (canMoveToNextStep(deployProgress)) {
         SingularityDeployProgress newProgress = new SingularityDeployProgress(
-            Math.min(deployProgress.getTargetActiveInstances() + deployProgress.getDeployRate(), request.getInstancesSafe()),
-            deployProgress.getDeployRate(),
+            Math.min(deployProgress.getTargetActiveInstances() + deployProgress.getDeployInstanceCountPerStep(), request.getInstancesSafe()),
+            deployProgress.getDeployInstanceCountPerStep(),
             deployProgress.getDeployStepWaitTimeSeconds(),
             false,
             System.currentTimeMillis()
@@ -483,7 +483,7 @@ public class SingularityDeployChecker {
     SingularityDeployProgress deployProgress = pendingDeploy.getDeployProgress().get();
     SingularityDeployProgress newProgress = new SingularityDeployProgress(
         deployProgress.getTargetActiveInstances(),
-        deployProgress.getDeployRate(),
+        deployProgress.getDeployInstanceCountPerStep(),
         deployProgress.getDeployStepWaitTimeSeconds(),
         true,
         System.currentTimeMillis()

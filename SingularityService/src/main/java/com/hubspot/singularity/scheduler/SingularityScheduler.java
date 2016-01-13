@@ -597,7 +597,7 @@ public class SingularityScheduler {
         if (deployProgress.isStepComplete()) {
           numInstances = request.getInstancesSafe() - deployProgress.getTargetActiveInstances();
         } else {
-          numInstances = request.getInstancesSafe() - (Math.max(deployProgress.getTargetActiveInstances() - deployProgress.getDeployRate(), 0));
+          numInstances = request.getInstancesSafe() - (Math.max(deployProgress.getTargetActiveInstances() - deployProgress.getDeployInstanceCountPerStep(), 0));
         }
       }
     } else {

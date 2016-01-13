@@ -4,18 +4,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SingularityDeployProgress {
   private final int targetActiveInstances;
-  private final int deployRate;
+  private final int deployInstanceCountPerStep;
   private final long deployStepWaitTimeSeconds;
   private final boolean stepComplete;
   private final long timestamp;
 
   public SingularityDeployProgress(@JsonProperty("targetActiveInstances") int targetActiveInstances,
-                                   @JsonProperty("deployRate") int deployRate,
+                                   @JsonProperty("deployInstanceCountPerStep") int deployInstanceCountPerStep,
                                    @JsonProperty("deployStepWaitTimeSeconds") long deployStepWaitTimeSeconds,
                                    @JsonProperty("stepComplete") boolean stepComplete,
                                    @JsonProperty("timestamp") long timestamp) {
     this.targetActiveInstances = targetActiveInstances;
-    this.deployRate = deployRate;
+    this.deployInstanceCountPerStep = deployInstanceCountPerStep;
     this.deployStepWaitTimeSeconds = deployStepWaitTimeSeconds;
     this.stepComplete = stepComplete;
     this.timestamp = timestamp;
@@ -25,8 +25,8 @@ public class SingularityDeployProgress {
     return targetActiveInstances;
   }
 
-  public int getDeployRate() {
-    return deployRate;
+  public int getDeployInstanceCountPerStep() {
+    return deployInstanceCountPerStep;
   }
 
   public boolean isStepComplete() {
@@ -45,7 +45,7 @@ public class SingularityDeployProgress {
   public String toString() {
     return "SingularityIncrementalDeployProgress{" +
         "targetActiveInstances=" + targetActiveInstances +
-        ", deployRate=" + deployRate +
+        ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
         ", deployStepWaitTimeSeconds=" + deployStepWaitTimeSeconds +
         ", stepComplete=" + stepComplete +
         ", timestamp=" + timestamp +

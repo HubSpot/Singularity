@@ -60,7 +60,7 @@ public class SingularityDeploy {
   private final Optional<Set<String>> loadBalancerGroups;
   private final Optional<Map<String, Object>> loadBalancerOptions;
 
-  private final Optional<Integer> deployRate;
+  private final Optional<Integer> deployInstanceCountPerStep;
   private final Optional<Integer> deployStepWaitTimeSeconds;
 
   public static SingularityDeployBuilder newBuilder(String requestId, String id) {
@@ -98,7 +98,7 @@ public class SingularityDeploy {
       @JsonProperty("loadBalancerOptions") Optional<Map<String, Object>> loadBalancerOptions,
       @JsonProperty("skipHealthchecksOnDeploy") Optional<Boolean> skipHealthchecksOnDeploy,
       @JsonProperty("healthCheckProtocol") Optional<HealthcheckProtocol> healthcheckProtocol,
-      @JsonProperty("deployRate") Optional<Integer> deployRate,
+      @JsonProperty("deployInstanceCountPerStep") Optional<Integer> deployInstanceCountPerStep,
       @JsonProperty("deployStepWaitTimeMs") Optional<Integer> deployStepWaitTimeSeconds) {
     this.requestId = requestId;
 
@@ -140,7 +140,7 @@ public class SingularityDeploy {
     this.loadBalancerGroups = loadBalancerGroups;
     this.loadBalancerOptions = loadBalancerOptions;
 
-    this.deployRate = deployRate;
+    this.deployInstanceCountPerStep = deployInstanceCountPerStep;
     this.deployStepWaitTimeSeconds = deployStepWaitTimeSeconds;
   }
 
@@ -174,7 +174,7 @@ public class SingularityDeploy {
     .setUris(copyOfList(uris))
     .setExecutorData(executorData)
     .setLabels(labels)
-    .setDeployRate(deployRate)
+    .setDeployInstanceCountPerStep(deployInstanceCountPerStep)
     .setDeployStepWaitTimeSeconds(deployStepWaitTimeSeconds);
   }
 
@@ -328,8 +328,8 @@ public class SingularityDeploy {
   }
 
   @ApiModelProperty(required=false, value="deploy this many instances at a time")
-  public Optional<Integer> getDeployRate() {
-    return deployRate;
+  public Optional<Integer> getDeployInstanceCountPerStep() {
+    return deployInstanceCountPerStep;
   }
 
   @ApiModelProperty(required=false, value="wait this long between deploy steps")
@@ -370,7 +370,7 @@ public class SingularityDeploy {
       ", loadBalancerGroups=" + loadBalancerGroups +
       ", loadBalancerOptions=" + loadBalancerOptions +
       ", labels=" + labels +
-      ", deployRate=" + deployRate +
+      ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
       ", deployStepWaitTimeSeconds=" + deployStepWaitTimeSeconds +
       '}';
   }
