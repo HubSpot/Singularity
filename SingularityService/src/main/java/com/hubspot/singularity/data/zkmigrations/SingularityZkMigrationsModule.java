@@ -25,6 +25,7 @@ public class SingularityZkMigrationsModule implements Module {
     dataMigrations.addBinding().to(TaskManagerRequiredParentsForTransactionsMigration.class);
     dataMigrations.addBinding().to(SlaveAndRackMigration2.class);
     dataMigrations.addBinding().to(ScheduleMigration.class);
+    dataMigrations.addBinding().to(SingularityRequestTypeMigration.class);
   }
 
   @Provides
