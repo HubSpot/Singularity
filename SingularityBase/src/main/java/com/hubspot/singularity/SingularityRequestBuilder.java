@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -41,8 +43,8 @@ public class SingularityRequestBuilder {
   private Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides;
 
   public SingularityRequestBuilder(String id, RequestType requestType) {
-    this.id = id;
-    this.requestType = requestType;
+    this.id = checkNotNull(id, "id cannot be null");
+    this.requestType = checkNotNull(requestType, "requestType cannot be null");
     this.owners = Optional.absent();
     this.numRetriesOnFailure = Optional.absent();
     this.schedule = Optional.absent();
