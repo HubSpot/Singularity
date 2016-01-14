@@ -100,6 +100,7 @@ public class SingularityValidator {
       Optional<SingularityDeploy> pendingDeploy) {
 
     checkBadRequest(request.getId() != null && !request.getId().contains("/"), "Id can not be null or contain / characters");
+    checkBadRequest(request.getRequestType() != null, "RequestType cannot be null or missing");
 
     if (!allowRequestsWithoutOwners) {
       checkBadRequest(request.getOwners().isPresent() && !request.getOwners().get().isEmpty(), "Request must have owners defined (this can be turned off in Singularity configuration)");

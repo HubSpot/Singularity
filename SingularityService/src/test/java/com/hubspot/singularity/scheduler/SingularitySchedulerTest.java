@@ -1363,6 +1363,43 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testIncrementalBounceShutsDownOldTasksPerNewHealthyTask() {
+    initRequest();
+
+    requestResource.scale(requestId, new SingularityScaleRequest(Optional.of(3), Optional.<Long> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<String>absent()));
+
+    initFirstDeploy();
+
+    startTask(firstDeploy, 1);
+    startTask(firstDeploy, 2);
+    startTask(firstDeploy, 3);
+
+    requestResource.bounce(requestId,
+        Optional.of(new SingularityBounceRequest(Optional.of(true), Optional.<Boolean>absent(), Optional.of(1L), Optional.<String>absent(), Optional.of("msg"))));
+
+    Assert.assertTrue(requestManager.cleanupRequestExists(requestId));
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertTrue(!requestManager.cleanupRequestExists(requestId));
+    Assert.assertEquals(3, taskManager.getCleanupTaskIds().size());
+
+    SingularityTask newTask = launchTask(request, firstDeploy, 5, TaskState.TASK_STARTING);
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertEquals(0, taskManager.getKilledTaskIdRecords().size());
+    Assert.assertEquals(4, taskManager.getActiveTaskIds().size());
+
+    statusUpdate(newTask, TaskState.TASK_RUNNING);
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertEquals(1, taskManager.getKilledTaskIdRecords().size());
+    Assert.assertEquals(4, taskManager.getActiveTaskIds().size());
+  }
+
+  @Test
   public void testIncrementalBounce() {
     initRequest();
 
