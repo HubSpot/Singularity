@@ -472,7 +472,10 @@ class Request extends Model
 
     promptStepDeploy: (callback) =>
         pendingDeploy = @get "pendingDeployState"
-        nextInstances = Math.min(@get "instances", pendingDeploy.deployProgress.targetActiveInstances + pendingDeploy.deployProgress.deployInstanceCountPerStep)
+        nextInstances = pendingDeploy.deployProgress.targetActiveInstances + pendingDeploy.deployProgress.deployInstanceCountPerStep
+        maxInstances = @get "instances"
+        if maxInstances < nextInstances
+            nextInstances = maxInstances
         vex.dialog.confirm
             message: "<h3>Advance Deploy</h3>"
             input: stepDeployTemplate
