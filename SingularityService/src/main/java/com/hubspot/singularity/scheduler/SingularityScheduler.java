@@ -28,6 +28,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestState;
@@ -589,7 +590,7 @@ public class SingularityScheduler {
     }
 
     final int numInstances;
-    if (maybePendingDeploy.isPresent() && maybePendingDeploy.get().getDeployProgress().isPresent()) {
+    if (maybePendingDeploy.isPresent() && !(maybePendingDeploy.get().getCurrentDeployState() == DeployState.CANCELED) && maybePendingDeploy.get().getDeployProgress().isPresent()) {
       SingularityDeployProgress deployProgress = maybePendingDeploy.get().getDeployProgress().get();
       if (maybePendingDeploy.get().getDeployMarker().getDeployId().equals(pendingRequest.getDeployId())) {
         numInstances = deployProgress.getTargetActiveInstances();
@@ -679,11 +680,6 @@ public class SingularityScheduler {
       final long prevNextRunAt = nextRunAt;
       nextRunAt = Math.max(nextRunAt, now + TimeUnit.SECONDS.toMillis(configuration.getCooldownMinScheduleSeconds()));
       LOG.trace("Adjusted next run of {} to {} (from: {}) due to cooldown", request.getId(), nextRunAt, prevNextRunAt);
-    }
-
-    if (pendingType == PendingType.NEXT_DEPLOY_STEP && maybePendingDeploy.isPresent() && maybePendingDeploy.get().getDeployProgress().isPresent()) {
-      nextRunAt = Math.max(nextRunAt, now + TimeUnit.SECONDS.toMillis(maybePendingDeploy.get().getDeployProgress().get().getDeployStepWaitTimeSeconds()));
-      LOG.trace("Set next run of pending deploy {} for request {} to {} due to deploy step wait time of {}ms", maybePendingDeploy.get().getDeployMarker().getDeployId(), request.getId(), nextRunAt, maybePendingDeploy.get().getDeployProgress().get().getDeployStepWaitTimeSeconds());
     }
 
     return Optional.of(nextRunAt);

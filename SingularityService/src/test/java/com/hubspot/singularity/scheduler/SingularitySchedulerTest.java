@@ -308,10 +308,12 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     deployChecker.checkDeploys();
 
+    // Deploy should not have moved to next step even though instances are launched
     deployProgressStepOne = deployManager.getPendingDeploys().get(0).getDeployProgress().get();
     Assert.assertTrue(deployProgressStepOne.isStepComplete());
     Assert.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
 
+    // Add the 'ok' to move to the next step
     deployResource.updatePendingDeploy(requestId, secondDeployId, new SingularityUpdatePendingDeployRequest(requestId, secondDeployId, 2));
 
     deployChecker.checkDeploys();

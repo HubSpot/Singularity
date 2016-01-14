@@ -223,11 +223,19 @@ public class SingularityDeployChecker {
     if (!request.isDeployable() && !request.isOneOff()) {
       // TODO should this override? What if someone has mucked with the pending queue for this deploy ?
       requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), pendingDeploy.getDeployMarker().getDeployId(), deployResult.getTimestamp(),
-        pendingDeploy.getDeployMarker().getUser(), PendingType.NEXT_DEPLOY_STEP, deploy.isPresent() ? deploy.get().getSkipHealthchecksOnDeploy() : Optional.<Boolean> absent(),
-        pendingDeploy.getDeployMarker().getMessage()));
+        pendingDeploy.getDeployMarker().getUser(), deployResult.getDeployState() == DeployState.CANCELED ? PendingType.DEPLOY_CANCELLED : PendingType.NEXT_DEPLOY_STEP,
+        deploy.isPresent() ? deploy.get().getSkipHealthchecksOnDeploy() : Optional.<Boolean> absent(), pendingDeploy.getDeployMarker().getMessage()));
     }
 
     deployManager.saveDeployResult(pendingDeploy.getDeployMarker(), deploy, deployResult);
+
+    if (request.isDeployable() && deployResult.getDeployState() == DeployState.CANCELED) {
+      Optional<SingularityRequestDeployState> maybeRequestDeployState = deployManager.getRequestDeployState(request.getId());
+      if (maybeRequestDeployState.isPresent() && maybeRequestDeployState.get().getActiveDeploy().isPresent()) {
+        requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), maybeRequestDeployState.get().getActiveDeploy().get().getDeployId(), deployResult.getTimestamp(),
+          pendingDeploy.getDeployMarker().getUser(), PendingType.DEPLOY_CANCELLED, request.getSkipHealthchecks(), pendingDeploy.getDeployMarker().getMessage()));
+      }
+    }
 
     if (requestWithState.getState() == RequestState.DEPLOYING_TO_UNPAUSE) {
       if (deployResult.getDeployState() == DeployState.SUCCEEDED) {
@@ -388,6 +396,11 @@ public class SingularityDeployChecker {
   private SingularityDeployResult checkDeployProgress(final SingularityRequest request, final Optional<SingularityDeployMarker> cancelRequest, final SingularityPendingDeploy pendingDeploy, final Optional<SingularityUpdatePendingDeployRequest> updatePendingDeployRequest,
                                                       final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> deployActiveTasks, final Collection<SingularityTaskId> otherActiveTasks) {
     SingularityDeployProgress deployProgress = pendingDeploy.getDeployProgress().get();
+    final boolean isCancelRequestPresent = cancelRequest.isPresent();
+    if (isCancelRequestPresent) {
+      LOG.info("Canceling a deploy {} due to cancel request {}", pendingDeploy, cancelRequest.get());
+      return new SingularityDeployResult(DeployState.CANCELED, String.format("Canceled due to request by %s at %s", cancelRequest.get().getUser(), cancelRequest.get().getTimestamp()));
+    }
 
     if (deployProgress.isStepComplete()) {
       if (canMoveToNextStep(deployProgress) || updatePendingDeployRequest.isPresent()) {
@@ -406,7 +419,7 @@ public class SingularityDeployChecker {
       }
       return new SingularityDeployResult(DeployState.WAITING);
     } else {
-      final boolean isCancelRequestPresent = cancelRequest.isPresent();
+
       final boolean isDeployOverdue = isDeployOverdue(pendingDeploy, deploy);
       if (deployActiveTasks.size() >= deployProgress.getTargetActiveInstances()) {
         if (shouldCheckLbState(pendingDeploy)) {
@@ -430,14 +443,9 @@ public class SingularityDeployChecker {
           }
         }
 
-        if (isCancelRequestPresent || isDeployOverdue) {
+        if (isDeployOverdue) {
           if (request.isLoadBalanced() && shouldCancelLoadBalancer(pendingDeploy)) {
             return cancelLoadBalancer(pendingDeploy);
-          }
-
-          if (isCancelRequestPresent) {
-            LOG.info("Canceling a deploy {} due to cancel request {}", pendingDeploy, cancelRequest.get());
-            return new SingularityDeployResult(DeployState.CANCELED, String.format("Canceled due to request by %s at %s", cancelRequest.get().getUser(), cancelRequest.get().getTimestamp()));
           }
         }
 

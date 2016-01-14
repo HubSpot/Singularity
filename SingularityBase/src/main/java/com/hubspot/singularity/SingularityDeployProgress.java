@@ -14,7 +14,7 @@ public class SingularityDeployProgress {
                                    @JsonProperty("deployInstanceCountPerStep") int deployInstanceCountPerStep,
                                    @JsonProperty("deployStepWaitTimeSeconds") long deployStepWaitTimeSeconds,
                                    @JsonProperty("stepComplete") boolean stepComplete,
-                                   @JsonProperty("autoAdvance") boolean autoAdvanceDeploySteps,
+                                   @JsonProperty("autoAdvanceDeploySteps") boolean autoAdvanceDeploySteps,
                                    @JsonProperty("timestamp") long timestamp) {
     this.targetActiveInstances = targetActiveInstances;
     this.deployInstanceCountPerStep = deployInstanceCountPerStep;
