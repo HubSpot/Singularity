@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.DeployState;
+import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;
@@ -36,13 +37,9 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
-  public List<SingularityTaskIdHistory> getTaskHistoryForRequest(String requestId, Integer limitStart, Integer limitCount) {
-    return history.getTaskHistoryForRequest(requestId, limitStart, limitCount);
-  }
-
-  @Override
-  public List<SingularityTaskIdHistory> getTaskHistoryForDeploy(String requestId, String deployId, Integer limitStart, Integer limitCount) {
-    return history.getTaskHistoryForDeploy(requestId, deployId, limitStart, limitCount);
+  public List<SingularityTaskIdHistory> getTaskIdHistory(String requestId, Optional<String> deployId, Optional<String> host, Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore,
+      Optional<Long> startedAfter, Optional<OrderDirection> orderDirection, Optional<Integer> limitStart, Integer limitCount) {
+    return history.getTaskIdHistory(requestId, deployId, host, lastTaskStatus, startedBefore, startedAfter, orderDirection, limitStart, limitCount);
   }
 
   private String getVarcharField(Optional<String> field, int maxLength) {

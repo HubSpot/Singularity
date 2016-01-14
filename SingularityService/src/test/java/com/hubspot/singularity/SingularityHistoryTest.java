@@ -111,6 +111,11 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
   }
 
 
+  private List<SingularityTaskIdHistory> getTaskHistoryForRequest(String requestId, int start, int limit) {
+    return historyManager.getTaskIdHistory(requestId, Optional.<String> absent(), Optional.<String> absent(), Optional.<ExtendedTaskState> absent(),
+        Optional.<Long> absent(), Optional.<Long> absent(), Optional.<OrderDirection> absent(), Optional.of(start), limit);
+  }
+
   @Test
   public void historyUpdaterTest() {
     initRequest();
@@ -127,13 +132,13 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(historyManager.getTaskHistory(taskHistory.getTask().getTaskId().getId()).get().getTask() != null);
 
-    Assert.assertEquals(1, historyManager.getTaskHistoryForRequest(requestId, 0, 100).size());
+    Assert.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 100).size());
 
     SingularityHistoryPurger purger = new SingularityHistoryPurger(historyPurgingConfiguration, historyManager);
 
     purger.runActionOnPoll();
 
-    Assert.assertEquals(1, historyManager.getTaskHistoryForRequest(requestId, 0, 100).size());
+    Assert.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 100).size());
 
     Assert.assertTrue(!historyManager.getTaskHistory(taskHistory.getTask().getTaskId().getId()).isPresent());
   }
@@ -145,7 +150,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     saveTasks(3, System.currentTimeMillis());
 
-    Assert.assertEquals(3, historyManager.getTaskHistoryForRequest(requestId, 0, 10).size());
+    Assert.assertEquals(3, getTaskHistoryForRequest(requestId, 0, 10).size());
 
     HistoryPurgingConfiguration historyPurgingConfiguration = new HistoryPurgingConfiguration();
     historyPurgingConfiguration.setEnabled(true);
@@ -156,26 +161,26 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     purger.runActionOnPoll();
 
-    Assert.assertEquals(3, historyManager.getTaskHistoryForRequest(requestId, 0, 10).size());
+    Assert.assertEquals(3, getTaskHistoryForRequest(requestId, 0, 10).size());
 
     historyPurgingConfiguration.setDeleteTaskHistoryAfterTasksPerRequest(1);
 
     purger.runActionOnPoll();
 
-    Assert.assertEquals(1, historyManager.getTaskHistoryForRequest(requestId, 0, 10).size());
+    Assert.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 10).size());
 
     historyPurgingConfiguration.setDeleteTaskHistoryAfterTasksPerRequest(25);
     historyPurgingConfiguration.setDeleteTaskHistoryAfterDays(100);
 
     purger.runActionOnPoll();
 
-    Assert.assertEquals(1, historyManager.getTaskHistoryForRequest(requestId, 0, 10).size());
+    Assert.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 10).size());
 
     saveTasks(100, System.currentTimeMillis() - TimeUnit.DAYS.toMillis(200));
 
     purger.runActionOnPoll();
 
-    Assert.assertEquals(1, historyManager.getTaskHistoryForRequest(requestId, 0, 10).size());
+    Assert.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 10).size());
   }
 
   @Test
@@ -203,7 +208,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     taskHistoryPersister.runActionOnPoll();
 
     Assert.assertEquals(runId, historyManager.getTaskHistory(taskId.getId()).get().getTask().getTaskRequest().getPendingTask().getRunId().get());
-    Assert.assertEquals(runId, historyManager.getTaskHistoryForRequest(requestId, 0, 10).get(0).getRunId().get());
+    Assert.assertEquals(runId, getTaskHistoryForRequest(requestId, 0, 10).get(0).getRunId().get());
 
     parent = requestResource.scheduleImmediately(requestId);
 
