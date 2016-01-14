@@ -2,12 +2,15 @@ package com.hubspot.singularity.data.history;
 
 import java.util.List;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
 
 @Singleton
 public class DeployTaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHistory, SingularityDeployKey> {
@@ -29,6 +32,7 @@ public class DeployTaskHistoryHelper extends BlendedHistoryHelper<SingularityTas
 
   @Override
   protected List<SingularityTaskIdHistory> getFromHistory(final SingularityDeployKey deployKey, int historyStart, int numFromHistory) {
-    return historyManager.getTaskHistoryForDeploy(deployKey.getRequestId(), deployKey.getDeployId(), historyStart, numFromHistory);
+    return historyManager.getTaskIdHistory(deployKey.getRequestId(), Optional.of(deployKey.getDeployId()), Optional.<String> absent(), Optional.<ExtendedTaskState> absent(),
+        Optional.<Long> absent(), Optional.<Long> absent(), Optional.<OrderDirection> absent(), Optional.of(historyStart), numFromHistory);
   }
 }

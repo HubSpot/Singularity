@@ -5,11 +5,13 @@ import java.util.List;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
 
 @Singleton
 public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHistory, String> {
@@ -32,7 +34,8 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
 
   @Override
   protected List<SingularityTaskIdHistory> getFromHistory(String requestId, int historyStart, int numFromHistory) {
-    return historyManager.getTaskHistoryForRequest(requestId, historyStart, numFromHistory);
+    return historyManager.getTaskIdHistory(requestId, Optional.<String> absent(), Optional.<String> absent(), Optional.<ExtendedTaskState> absent(),
+        Optional.<Long> absent(), Optional.<Long> absent(), Optional.<OrderDirection> absent(), Optional.of(historyStart), numFromHistory);
   }
 
   public Optional<SingularityTask> getTask(SingularityTaskId taskId) {
