@@ -125,7 +125,9 @@ public class SingularityExecutorShellCommandRunner {
 
     List<String> command = new ArrayList<>();
 
-    command.addAll(executorConfiguration.getShellCommandPrefix());
+    if (!shellCommandDescriptor.isSkipCommandPrefix()) {
+      command.addAll(executorConfiguration.getShellCommandPrefix());
+    }
 
     boolean isDocker = task.getTaskInfo().hasContainer() && task.getTaskInfo().getContainer().hasDocker();
     if (isDocker) {

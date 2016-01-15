@@ -24,6 +24,9 @@ public class SingularityExecutorShellCommandDescriptor {
   @NotNull
   private List<SingularityExecutorShellCommandOptionDescriptor> options = Collections.emptyList();
 
+  @JsonProperty
+  private boolean skipCommandPrefix = false;
+
   public List<SingularityExecutorShellCommandOptionDescriptor> getOptions() {
     return options;
   }
@@ -46,5 +49,13 @@ public class SingularityExecutorShellCommandDescriptor {
 
   public List<String> getCommand() {
     return command;
+  }
+
+  public boolean isSkipCommandPrefix() {
+    return skipCommandPrefix;
+  }
+
+  public void setSkipCommandPrefix(boolean skipCommandPrefix) {
+    this.skipCommandPrefix = skipCommandPrefix;
   }
 }
