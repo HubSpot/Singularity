@@ -2,7 +2,10 @@
     {{! If there's a TaskCleanup object associated with this task, display its info }}
     {{#if data.cleanup}}
         <div class="alert alert-warning" role="alert">
-            <b>Task is cleaning:</b> {{data.cleanup.message}}
+            <b>Task is cleaning:</b> {{ data.cleanup.cleanupType }}
+            {{#if data.cleanup.message}}
+                ({{ data.cleanup.message }})
+            {{/if}}
         </div>
     {{else}}
         {{#if data.isCleaning}}
