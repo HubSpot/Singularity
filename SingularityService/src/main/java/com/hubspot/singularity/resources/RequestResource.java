@@ -172,13 +172,12 @@ public class RequestResource extends AbstractRequestResource {
     }
 
     final Optional<Boolean> skipHealthchecks = bounceRequest.isPresent() ? bounceRequest.get().getSkipHealthchecks() : Optional.<Boolean> absent();
-
-    Optional<String> message = Optional.absent();
+    Optional<String> message = Optional.of("Bounce in progress"); // Default bounce message
     Optional<String> actionId = Optional.absent();
 
     if (bounceRequest.isPresent()) {
       actionId = bounceRequest.get().getActionId();
-      message = bounceRequest.get().getMessage();
+      message = bounceRequest.get().getMessage().or(message);
 
       if (bounceRequest.get().getDurationMillis().isPresent() && !actionId.isPresent()) {
         actionId = Optional.of(UUID.randomUUID().toString());
