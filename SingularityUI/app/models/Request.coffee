@@ -54,58 +54,174 @@ class Request extends Model
             url:  "#{ @url() }/paused"
             type: 'DELETE'
 
-    unpause: =>
+    unpause: (data) =>
         $.ajax
-            url:  "#{ @url() }/unpause?user=#{ app.getUsername() }"
+            url:  "#{ @url() }/unpause"
+            contentType: 'application/json'
             type: 'POST'
+            data: JSON.stringify(
+                message: data.message
+            )
 
-    pause: (killTasks) =>
+    pause: (killTasks, duration, message) =>
+        data =
+            user:      app.getUsername()
+            killTasks: killTasks
+        if message
+            data.message = message
+        duration = @_parseDuration(duration)
+        if duration
+            data.durationMillis = duration
         $.ajax
             url:         "#{ @url() }/pause"
             type:        'POST'
             contentType: 'application/json'
-            data:         JSON.stringify
-                user:      app.getUsername()
-                killTasks: killTasks
+            data: JSON.stringify data
 
-    run: (confirmedOrPromptData) ->
+    run: (confirmedOrPromptData, message) ->
         options =
-            url: "#{ @url() }/run?user=#{ app.getUsername() }"
+            url: "#{ @url() }/run"
             type: 'POST'
             contentType: 'application/json'
+            data: {}
 
         if typeof confirmedOrPromptData is 'string'
           if confirmedOrPromptData != ''
-            options.data = JSON.stringify([confirmedOrPromptData])
+            options.data.commandLineArgs = [confirmedOrPromptData]
           else
-            options.data = '[]'
+            options.data.commandLineArgs = []
           options.processData = false
 
+        if message
+            options.data.message = message
+        options.data = JSON.stringify(options.data)
         $.ajax options
 
     scale: (confirmedOrPromptData) =>
+        data =
+            instances: confirmedOrPromptData.instances
+
+        if confirmedOrPromptData.message
+            data.message = confirmedOrPromptData.message
+        duration = @_parseDuration(confirmedOrPromptData.duration)
+        if duration
+            data.durationMillis = duration
         $.ajax
-          url: "#{ @url() }/instances?user=#{ app.getUsername() }"
+          url: "#{ @url() }/scale"
           type: "PUT"
           contentType: 'application/json'
-          data:         JSON.stringify
-              id:      @get "id"
-              instances: confirmedOrPromptData
+          data: JSON.stringify data
 
-    bounce: (incremental) =>
+    makeScalePermanent: (callback) =>
+        $.ajax(
+          url: "#{ @url() }/scale"
+          type: "DELETE"
+        ).then () =>
+          @unset('expiringScale')
+          callback()
+
+    makePausePermanent: (callback) =>
+        $.ajax(
+          url: "#{ @url() }/pause"
+          type: "DELETE"
+        ).then () =>
+          @unset('expiringPause')
+          callback()
+
+    makeSkipHealthchecksPermanent: (callback) =>
+        $.ajax(
+          url: "#{ @url() }/skipHealthchecks"
+          type: "DELETE"
+        ).then () =>
+          @unset('expiringSkipHealthchecks')
+          callback()
+
+    cancelBounce: (callback) =>
+        $.ajax(
+          url: "#{ @url() }/bounce"
+          type: "DELETE"
+        ).then () =>
+          @unset('expiringBounce')
+          callback()
+
+    bounce: ({incremental, duration, skipHealthchecks, message}) =>
+        data = {incremental, skipHealthchecks}
+        if message
+            data.message = message
+        duration = @_parseDuration(duration)
+        if duration
+            data.durationMillis = duration
         $.ajax
-            url:  "#{ @url() }/bounce?user=#{ app.getUsername() }&incremental=#{ incremental }"
             type: "POST"
+            url:  "#{ @url() }/bounce"
+            contentType: 'application/json'
+            data: JSON.stringify data
 
     exitCooldown: =>
         $.ajax
-            url: "#{ @url() }/exit-cooldown?user=#{ app.getUsername() }"
+            url: "#{ @url() }/exit-cooldown"
             type: "POST"
+            contentType: 'application/json'
+            data: '{}'
 
-    destroy: =>
+    disableHealthchecks: (message, duration) =>
+        data =
+            skipHealthchecks: true
+        if message
+            data.message = message
+        duration = @_parseDuration(duration)
+        if duration
+            data.durationMillis = duration
         $.ajax
-            url:  "#{ @url() }?user=#{ app.getUsername() }"
+            type: "PUT"
+            url:  "#{ @url() }/skipHealthchecks"
+            contentType: 'application/json'
+            data: JSON.stringify data
+
+    enableHealthchecks: (message, duration) =>
+        data =
+            skipHealthchecks: false
+        if message
+            data.message = message
+        duration = @_parseDuration(duration)
+        if duration
+            data.durationMillis = duration
+        $.ajax
+            type: "PUT"
+            url:  "#{ @url() }/skipHealthchecks"
+            contentType: 'application/json'
+            data: JSON.stringify data
+
+    destroy: (message) =>
+        data = {}
+        if message
+            data.message = message
+        $.ajax
             type: "DELETE"
+            url:  @url()
+            contentType: 'application/json'
+            data: JSON.stringify(data)
+
+    _validateDuration: (duration, action) =>
+        if @_parseDuration(duration)
+            return true
+        else
+            vex.dialog.open
+                message: 'Invalid duration specified, please try again.'
+                callback: (data) ->
+                  if data
+                      action()
+            return false
+
+    _parseDuration: (duration) =>
+        if !duration
+            return duration
+        # Convert strings like '1 hr', '2 days', etc. or any combination thereof to millis
+        try
+            return juration.parse(duration) * 1000
+        catch e
+            console.error "Error parsing duration input: #{duration}"
+            return null
 
     ###
     promptX opens a dialog asking the user to confirm an action and then does it
@@ -118,10 +234,14 @@ class Request extends Model
             callback: (confirmed) =>
                 return unless confirmed
                 killTasks = not $('.vex #kill-tasks').is ':checked'
-                @pause(killTasks).done callback
+                duration = $('.vex #pause-expiration').val()
+                message = $('.vex #pause-message').val()
+
+                if !duration or (duration and @_validateDuration(duration, @promptPause))
+                    @pause(killTasks, duration, message).done callback
 
     promptScale: (callback) =>
-        vex.dialog.prompt
+        vex.dialog.open
             message: "Enter the desired number of instances to run for request:"
             input:
                 scaleTemplate
@@ -143,19 +263,62 @@ class Request extends Model
                 return unless data
                 bounce = $('.vex #bounce').is ':checked'
                 incremental = $('.vex #incremental-bounce').is ':checked'
-                @scale(data).done =>
-                    if bounce
-                        @bounce(incremental).done callback
-                    else
-                        callback
-        
+                message = $('.vex #scale-message').val()
+                duration = $('.vex #scale-expiration').val()
+                if !duration or (duration and @_validateDuration(duration, @promptScale))
+                    @scale(data).done =>
+                        if bounce
+                            @bounce({incremental}).done callback
+                        else
+                            callback()
+
+    promptDisableHealthchecks: (callback) =>
+        vex.dialog.open
+            message: "Turn <strong>off</strong> healthchecks for this request."
+            input: """
+                <input name="duration" id="disable-healthchecks-expiration" type="text" placeholder="Expiration (optional)" />
+                <span class="help">If an expiration duration is specified, this action will be reverted afterwards. Accepts any english time duration. (Days, Hr, Min...)</span>
+                <input name="message" id="disable-healthchecks-message" type="text" placeholder="Message (optional)" />
+            """
+            buttons: [
+                $.extend _.clone(vex.dialog.buttons.YES), text: 'Disable Healthchecks'
+                vex.dialog.buttons.NO
+            ]
+            callback: (data) =>
+                return unless data
+                duration = $('.vex #disable-healthchecks-expiration').val()
+                message = $('.vex #disable-healthchecks-message').val()
+                if !duration or (duration and @_validateDuration(duration, @promptDisableHealthchecks))
+                    @disableHealthchecks(message, duration).done callback
+
+    promptEnableHealthchecks: (callback) =>
+        vex.dialog.open
+            message: "Turn <strong>on</strong> healthchecks for this request."
+            input: """
+                <input name="message" id="disable-healthchecks-message" type="text" placeholder="Message (optional)" />
+                <input name="duration" id="disable-healthchecks-expiration" type="text" placeholder="Expiration (optional)" />
+                <span class="help">If an expiration duration is specified, this action will be reverted afterwards. Accepts any english time duration. (Days, Hr, Min...)</span>
+            """
+            buttons: [
+                $.extend _.clone(vex.dialog.buttons.YES), text: 'Enable Healthchecks'
+                vex.dialog.buttons.NO
+            ]
+            callback: (data) =>
+                return unless data
+                duration = $('.vex #disable-healthchecks-expiration').val()
+                message = $('.vex #disable-healthchecks-message').val()
+                if !duration or (duration and @_validateDuration(duration, @promptEnableHealthchecks))
+                    @enableHealthchecks(message, duration).done callback
 
     promptUnpause: (callback) =>
         vex.dialog.confirm
             message: unpauseTemplate id: @get "id"
+            input: """
+                <input name="message" id="disable-healthchecks-message" type="text" placeholder="Message (optional)" />
+            """
             callback: (confirmed) =>
                 return unless confirmed
-                @unpause().done callback
+                @unpause(confirmed).done callback
 
     promptRun: (callback) =>
         vex.dialog.prompt
@@ -175,6 +338,7 @@ class Request extends Model
 
                 fileName = @data.filename.trim()
                 commandLineInput = @data.commandLineInput.trim()
+                message = @data.message
 
                 if fileName.length is 0 and @data.autoTail is 'on'
                     $(window.noFilenameError).removeClass('hide')
@@ -195,7 +359,7 @@ class Request extends Model
                     localStorage.setItem('taskRunAutoTail', @data.autoTail)
                     @data.id = @get 'id'
 
-                    @run( @data.commandLineInput ).done callback( @data )
+                    @run( @data.commandLineInput, message ).done callback( @data )
                     return true
 
             afterOpen: =>
@@ -259,17 +423,27 @@ class Request extends Model
     promptRemove: (callback) =>
         vex.dialog.confirm
             message: removeTemplate id: @get "id"
+            input: """
+                <input name="message" id="disable-healthchecks-message" type="text" placeholder="Message (optional)" />
+            """
             callback: (confirmed) =>
                 return if not confirmed
-                @destroy().done callback
+                @destroy(confirmed.message).done callback
 
     promptBounce: (callback) =>
         vex.dialog.confirm
             message: bounceTemplate id: @get "id"
+            input: """
+                <input name="message" id="bounce-message" type="text" placeholder="Message (optional)" />
+            """
             callback: (confirmed) =>
                 return if not confirmed
-                incremental = $('.vex #incremental-bounce').is ':checked'
-                @bounce(incremental).done callback
+                confirmed.incremental = $('.vex #incremental-bounce').is ':checked'
+                confirmed.skipHealthchecks = $('.vex #skip-healthchecks').is ':checked'
+                confirmed.duration = $('.vex #bounce-expiration').val()
+
+                if !confirmed.duration or (confirmed.duration and @_validateDuration(confirmed.duration, @promptBounce))
+                    @bounce(confirmed).done callback
 
     promptExitCooldown: (callback) =>
         vex.dialog.confirm

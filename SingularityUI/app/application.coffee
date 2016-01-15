@@ -112,8 +112,6 @@ class Application
                 Messenger().error
                     message:   "<p>Could not reach the Singularity API. Please make sure SingularityUI is properly set up.</p><p>If running through Brunch, this might be your browser blocking cross-domain requests.</p>"
             else
-                console.log jqxhr.responseText
-
                 try
                   serverMessage = JSON.parse(jqxhr.responseText).message or jqxhr.responseText
                 catch

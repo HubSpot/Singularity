@@ -40,6 +40,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long checkNewTasksEverySeconds = 5;
 
+  private long checkExpiringUserActionEveryMillis = TimeUnit.SECONDS.toMillis(45);
+
   private int checkNewTasksScheduledThreads = 3;
 
   private long checkReconcileWhenRunningEveryMillis = TimeUnit.SECONDS.toMillis(30);
@@ -847,6 +849,14 @@ public class SingularityConfiguration extends Configuration {
 
   public AuthConfiguration getAuthConfiguration() {
     return authConfiguration;
+  }
+
+  public long getCheckExpiringUserActionEveryMillis() {
+    return checkExpiringUserActionEveryMillis;
+  }
+
+  public void setCheckExpiringUserActionEveryMillis(long checkExpiringUserActionEveryMillis) {
+    this.checkExpiringUserActionEveryMillis = checkExpiringUserActionEveryMillis;
   }
 
   public void setAuthConfiguration(AuthConfiguration authConfiguration) {

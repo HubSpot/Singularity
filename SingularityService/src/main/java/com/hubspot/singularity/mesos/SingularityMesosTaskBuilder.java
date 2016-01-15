@@ -206,12 +206,12 @@ class SingularityMesosTaskBuilder {
   private String fillInTaskIdValues(String string, Offer offer, SingularityTaskId taskId) {
     if (!Strings.isNullOrEmpty(string)) {
       string = string.replace("${TASK_REQUEST_ID}", taskId.getRequestId())
-              .replace("${TASK_DEPLOY_ID}", taskId.getDeployId())
-              .replace("${TASK_STARTED_AT}", Long.toString(taskId.getStartedAt()))
-              .replace("${TASK_INSTANCE_NO}", Integer.toString(taskId.getInstanceNo()))
-              .replace("${TASK_HOST}", offer.getHostname())
-              .replace("${TASK_RACK_ID}", slaveAndRackHelper.getRackIdOrDefault(offer))
-              .replace("${TASK_ID}", taskId.getId());
+          .replace("${TASK_DEPLOY_ID}", taskId.getDeployId())
+          .replace("${TASK_STARTED_AT}", Long.toString(taskId.getStartedAt()))
+          .replace("${TASK_INSTANCE_NO}", Integer.toString(taskId.getInstanceNo()))
+          .replace("${TASK_HOST}", offer.getHostname())
+          .replace("${TASK_RACK_ID}", slaveAndRackHelper.getRackIdOrDefault(offer))
+          .replace("${TASK_ID}", taskId.getId());
     }
 
     return string;
@@ -298,11 +298,11 @@ class SingularityMesosTaskBuilder {
     }
 
     bldr.setExecutor(ExecutorInfo.newBuilder()
-            .setCommand(commandBuilder.build())
-            .setExecutorId(ExecutorID.newBuilder().setValue(task.getDeploy().getCustomExecutorId().or(idGenerator.getNextExecutorId())))
-            .setSource(task.getDeploy().getCustomExecutorSource().or(task.getPendingTask().getPendingTaskId().getId()))
-            .addAllResources(buildMesosResources(desiredExecutorResources))
-            .build()
+        .setCommand(commandBuilder.build())
+        .setExecutorId(ExecutorID.newBuilder().setValue(task.getDeploy().getCustomExecutorId().or(idGenerator.getNextExecutorId())))
+        .setSource(task.getDeploy().getCustomExecutorSource().or(task.getPendingTask().getPendingTaskId().getId()))
+        .addAllResources(buildMesosResources(desiredExecutorResources))
+        .build()
         );
 
     if (task.getDeploy().getExecutorData().isPresent()) {
@@ -316,14 +316,14 @@ class SingularityMesosTaskBuilder {
         }
       }
 
-      if (!task.getPendingTask().getCmdLineArgsList().isEmpty()) {
+      if (task.getPendingTask().getCmdLineArgsList().isPresent() && !task.getPendingTask().getCmdLineArgsList().get().isEmpty()) {
         LOG.trace("Adding cmd line args {} to task {} executorData", task.getPendingTask().getCmdLineArgsList(), taskId.getId());
 
         final ImmutableList.Builder<String> extraCmdLineArgsBuilder = ImmutableList.builder();
         if (executorDataBldr.getExtraCmdLineArgs() != null && !executorDataBldr.getExtraCmdLineArgs().isEmpty()) {
           extraCmdLineArgsBuilder.addAll(executorDataBldr.getExtraCmdLineArgs());
         }
-        extraCmdLineArgsBuilder.addAll(task.getPendingTask().getCmdLineArgsList());
+        extraCmdLineArgsBuilder.addAll(task.getPendingTask().getCmdLineArgsList().get());
         executorDataBldr.setExtraCmdLineArgs(extraCmdLineArgsBuilder.build());
       }
 
@@ -353,7 +353,9 @@ class SingularityMesosTaskBuilder {
       commandBldr.addAllArguments(task.getDeploy().getArguments().get());
     }
 
-    commandBldr.addAllArguments(task.getPendingTask().getCmdLineArgsList());
+    if (task.getPendingTask().getCmdLineArgsList().isPresent()) {
+      commandBldr.addAllArguments(task.getPendingTask().getCmdLineArgsList().get());
+    }
 
     if (task.getDeploy().getArguments().isPresent() ||
         // Hopefully temporary workaround for
