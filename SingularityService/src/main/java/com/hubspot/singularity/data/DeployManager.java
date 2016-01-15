@@ -28,6 +28,7 @@ import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityDeployUpdate.DeployEventType;
 import com.hubspot.singularity.SingularityPendingDeploy;
+import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -47,6 +48,7 @@ public class DeployManager extends CuratorAsyncManager {
   private final Transcoder<SingularityRequestDeployState> requestDeployStateTranscoder;
   private final Transcoder<SingularityDeployStatistics> deployStatisticsTranscoder;
   private final Transcoder<SingularityDeployResult> deployStateTranscoder;
+  private final Transcoder<SingularityUpdatePendingDeployRequest> updateRequestTranscoder;
 
   private final IdTranscoder<SingularityDeployKey> deployKeyTranscoder;
 
@@ -54,6 +56,7 @@ public class DeployManager extends CuratorAsyncManager {
 
   private static final String PENDING_ROOT = DEPLOY_ROOT + "/pending";
   private static final String CANCEL_ROOT = DEPLOY_ROOT + "/cancel";
+  private static final String UPDATE_ROOT = DEPLOY_ROOT + "/update";
 
   private static final String BY_REQUEST_ROOT = DEPLOY_ROOT + "/requests";
 
@@ -68,7 +71,8 @@ public class DeployManager extends CuratorAsyncManager {
   @Inject
   public DeployManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, SingularityEventListener singularityEventListener, Transcoder<SingularityDeploy> deployTranscoder,
       Transcoder<SingularityRequestDeployState> requestDeployStateTranscoder, Transcoder<SingularityPendingDeploy> pendingDeployTranscoder, Transcoder<SingularityDeployMarker> deployMarkerTranscoder,
-      Transcoder<SingularityDeployStatistics> deployStatisticsTranscoder, Transcoder<SingularityDeployResult> deployStateTranscoder, IdTranscoder<SingularityDeployKey> deployKeyTranscoder) {
+      Transcoder<SingularityDeployStatistics> deployStatisticsTranscoder, Transcoder<SingularityDeployResult> deployStateTranscoder, IdTranscoder<SingularityDeployKey> deployKeyTranscoder,
+      Transcoder<SingularityUpdatePendingDeployRequest> updateRequestTranscoder) {
     super(curator, configuration, metricRegistry);
 
     this.singularityEventListener = singularityEventListener;
@@ -79,6 +83,7 @@ public class DeployManager extends CuratorAsyncManager {
     this.requestDeployStateTranscoder = requestDeployStateTranscoder;
     this.deployStateTranscoder = deployStateTranscoder;
     this.deployKeyTranscoder = deployKeyTranscoder;
+    this.updateRequestTranscoder = updateRequestTranscoder;
   }
 
   public List<SingularityDeployKey> getDeployIdsFor(String requestId) {
@@ -315,5 +320,21 @@ public class DeployManager extends CuratorAsyncManager {
 
   public Optional<SingularityDeployResult> getDeployResult(String requestId, String deployId) {
     return getData(getDeployResultPath(requestId, deployId), deployStateTranscoder);
+  }
+
+  private String getUpdatePendingDeployPath(SingularityUpdatePendingDeployRequest updateRequest) {
+    return ZKPaths.makePath(UPDATE_ROOT, String.format("%s-%s", updateRequest.getRequestId(), updateRequest.getDeployId()));
+  }
+
+  public SingularityCreateResult createUpdatePendingDeployRequest(SingularityUpdatePendingDeployRequest updateRequest) {
+    return create(getUpdatePendingDeployPath(updateRequest), updateRequest, updateRequestTranscoder);
+  }
+
+  public SingularityDeleteResult deleteUpdatePendingDeployRequest(SingularityUpdatePendingDeployRequest updateRequest) {
+    return delete(getUpdatePendingDeployPath(updateRequest));
+  }
+
+  public List<SingularityUpdatePendingDeployRequest> getPendingDeployUpdates() {
+    return getAsyncChildren(UPDATE_ROOT, updateRequestTranscoder);
   }
 }
