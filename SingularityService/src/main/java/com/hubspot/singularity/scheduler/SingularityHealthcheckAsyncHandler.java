@@ -72,9 +72,11 @@ public class SingularityHealthcheckAsyncHandler extends AsyncCompletionHandler<R
           return;
         }
 
-        healthchecker.enqueueHealthcheck(task);
+        healthchecker.enqueueHealthcheck(task, true);
       } else {
-        newTaskChecker.runNewTaskCheckImmediately(task);
+        healthchecker.markHealthcheckFinished(task.getTaskId().getId());
+
+        newTaskChecker.runNewTaskCheckImmediately(task, healthchecker);
       }
     } catch (Throwable t) {
       LOG.error("Caught throwable while saving health check result for {}, will re-enqueue", task.getTaskId(), t);

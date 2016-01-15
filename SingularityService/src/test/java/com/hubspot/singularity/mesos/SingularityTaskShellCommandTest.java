@@ -14,7 +14,6 @@ import org.junit.Test;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularitySchedulerTestBase;
 import com.hubspot.singularity.SingularityShellCommand;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
@@ -27,6 +26,7 @@ import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 import com.hubspot.singularity.resources.TaskResource;
+import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 import com.hubspot.singularity.scheduler.SingularityTaskShellCommandDispatchPoller;
 
 public class SingularityTaskShellCommandTest extends SingularitySchedulerTestBase {
