@@ -1572,7 +1572,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.bounce(requestId,
         Optional.of(new SingularityBounceRequest(Optional.<Boolean> absent(), Optional.<Boolean> absent(), Optional.of(1L), Optional.of("aid"), Optional.<String> absent())));
 
-    Assert.assertTrue(requestManager.getCleanupRequests().get(0).getMessage().isPresent());
+    Assert.assertTrue(!requestManager.getCleanupRequests().get(0).getMessage().isPresent());
     Assert.assertEquals("aid", requestManager.getCleanupRequests().get(0).getActionId().get());
 
     // creates cleanup tasks:
