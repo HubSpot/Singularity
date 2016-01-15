@@ -43,7 +43,6 @@ import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestLbCleanup;
-import com.hubspot.singularity.SingularitySchedulerTestBase;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -1876,13 +1875,54 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testSkipHealthchecksEdgeCases() {
+    configuration.setNewTaskCheckerBaseDelaySeconds(0);
+    configuration.setHealthcheckIntervalSeconds(0);
+    configuration.setDeployHealthyBySeconds(0);
+    configuration.setKillAfterTasksDoNotRunDefaultSeconds(0);
+    configuration.setHealthcheckMaxRetries(Optional.of(0));
+
+    initRequest();
+    initHCDeploy();
+
+    requestResource.skipHealthchecks(requestId, new SingularitySkipHealthchecksRequest(Optional.of(Boolean.TRUE), Optional.<Long> absent(), Optional.<String> absent(), Optional.<String> absent()));
+
+    SingularityTask firstTask = startTask(firstDeploy, 1);
+
+    Assert.assertTrue(!taskManager.getLastHealthcheck(firstTask.getTaskId()).isPresent());
+
+    finishHealthchecks();
+    finishNewTaskChecksAndCleanup();
+
+    Assert.assertEquals(1, taskManager.getNumActiveTasks());
+
+    requestResource.skipHealthchecks(requestId, new SingularitySkipHealthchecksRequest(Optional.of(Boolean.FALSE), Optional.<Long> absent(), Optional.<String> absent(), Optional.<String> absent()));
+
+    // run new task check ONLY.
+    newTaskChecker.enqueueNewTaskCheck(firstTask, requestManager.getRequest(requestId), healthchecker);
+
+    finishHealthchecks();
+    finishNewTaskChecksAndCleanup();
+
+    // healthcheck will fail
+    Assert.assertTrue(taskManager.getLastHealthcheck(firstTask.getTaskId()).isPresent());
+    Assert.assertEquals(0, taskManager.getNumActiveTasks());
+  }
+
+  @Test
   public void testSkipHealthchecksDuringBounce() {
     initRequest();
     initHCDeploy();
 
-    SingularityTask firstTask = startTask(firstDeploy);
+    SingularityTask firstTask = startTask(firstDeploy, 1);
 
     requestResource.bounce(requestId, Optional.of(new SingularityBounceRequest(Optional.<Boolean> absent(), Optional.of(true), Optional.<Long> absent(), Optional.<String> absent(), Optional.<String>absent())));
+
+    configuration.setNewTaskCheckerBaseDelaySeconds(0);
+    configuration.setHealthcheckIntervalSeconds(0);
+    configuration.setDeployHealthyBySeconds(0);
+    configuration.setKillAfterTasksDoNotRunDefaultSeconds(1);
+    configuration.setHealthcheckMaxRetries(Optional.of(0));
 
     cleaner.drainCleanupQueue();
     resourceOffers();
@@ -1896,13 +1936,14 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     statusUpdate(secondTask, TaskState.TASK_RUNNING);
 
-    SingularityTask thirdTask = startTask(firstDeploy); // not part of bounce
-
     Assert.assertTrue(healthchecker.cancelHealthcheck(firstTask.getTaskId().getId()));
-    Assert.assertTrue(!healthchecker.cancelHealthcheck(secondTask.getTaskId().getId()));
-    Assert.assertTrue(healthchecker.cancelHealthcheck(thirdTask.getTaskId().getId()));
 
-    statusUpdate(thirdTask, TaskState.TASK_KILLED);
+    newTaskChecker.cancelNewTaskCheck(firstTask.getTaskId().getId());
+
+    finishHealthchecks();
+    finishNewTaskChecks();
+
+    Assert.assertTrue(!taskManager.getLastHealthcheck(secondTask.getTaskId()).isPresent());
 
     cleaner.drainCleanupQueue();
     killKilledTasks();
