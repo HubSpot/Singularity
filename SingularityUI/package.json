@@ -26,6 +26,7 @@
     "coffee-script-brunch": ">= 1.0 < 1.8",
     "css-brunch": ">= 1.0 < 1.8",
     "handlebars-brunch": "1.9.1",
+    "handlebars": ">=4.0.0",
     "javascript-brunch": ">= 1.0 < 1.8",
     "less-brunch": "^1.7.2",
     "react": "^0.14.2",
