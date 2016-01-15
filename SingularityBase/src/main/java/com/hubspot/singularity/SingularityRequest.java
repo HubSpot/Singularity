@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hubspot.singularity.JsonHelpers.copyOfList;
 
 import java.util.List;
@@ -29,11 +30,8 @@ public class SingularityRequest {
 
   private final Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule;
 
-  //"use requestType instead"
-  @Deprecated
-  private final Optional<Boolean> daemon;
-
   private final Optional<Integer> instances;
+  private final Optional<Boolean> skipHealthchecks;
 
   private final Optional<Boolean> rackSensitive;
   private final Optional<List<String>> rackAffinity;
@@ -51,19 +49,20 @@ public class SingularityRequest {
 
   @JsonCreator
   public SingularityRequest(@JsonProperty("id") String id, @JsonProperty("requestType") RequestType requestType, @JsonProperty("owners") Optional<List<String>> owners,
-      @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure, @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("daemon") Optional<Boolean> daemon, @JsonProperty("instances") Optional<Integer> instances,
+      @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure, @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("instances") Optional<Integer> instances,
       @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive, @JsonProperty("loadBalanced") Optional<Boolean> loadBalanced,
       @JsonProperty("killOldNonLongRunningTasksAfterMillis") Optional<Long> killOldNonLongRunningTasksAfterMillis, @JsonProperty("scheduleType") Optional<ScheduleType> scheduleType,
       @JsonProperty("quartzSchedule") Optional<String> quartzSchedule, @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity,
-      @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement, @JsonProperty("requiredSlaveAttributes") Optional<Map<String, String>> requiredSlaveAttributes, @JsonProperty("allowedSlaveAttributes") Optional<Map<String, String>> allowedSlaveAttributes,
-      @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis, @JsonProperty("waitAtLeastMillisAfterTaskFinishesForReschedule") Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule, @JsonProperty("group") Optional<String> group,
+      @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement, @JsonProperty("requiredSlaveAttributes") Optional<Map<String, String>> requiredSlaveAttributes,
+      @JsonProperty("allowedSlaveAttributes") Optional<Map<String, String>> allowedSlaveAttributes, @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis,
+      @JsonProperty("waitAtLeastMillisAfterTaskFinishesForReschedule") Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule, @JsonProperty("group") Optional<String> group,
       @JsonProperty("readOnlyGroups") Optional<Set<String>> readOnlyGroups, @JsonProperty("bounceAfterScale") Optional<Boolean> bounceAfterScale,
-      @JsonProperty("emailConfigurationOverrides") Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides) {
-    this.id = id;
+      @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
+      @JsonProperty("emailConfigurationOverrides") Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides, @JsonProperty("daemon") @Deprecated Optional<Boolean> daemon) {
+    this.id = checkNotNull(id, "id cannot be null");
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
     this.schedule = schedule;
-    this.daemon = daemon;
     this.rackSensitive = rackSensitive;
     this.instances = instances;
     this.loadBalanced = loadBalanced;
@@ -80,7 +79,7 @@ public class SingularityRequest {
     this.readOnlyGroups = readOnlyGroups;
     this.bounceAfterScale = bounceAfterScale;
     this.emailConfigurationOverrides = emailConfigurationOverrides;
-
+    this.skipHealthchecks = skipHealthchecks;
     if (requestType == null) {
       this.requestType = RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced);
     } else {
@@ -108,7 +107,8 @@ public class SingularityRequest {
     .setGroup(group)
     .setReadOnlyGroups(readOnlyGroups)
     .setBounceAfterScale(bounceAfterScale)
-    .setEmailConfigurationOverrides(emailConfigurationOverrides);
+    .setEmailConfigurationOverrides(emailConfigurationOverrides)
+    .setSkipHealthchecks(skipHealthchecks);
   }
 
   public String getId() {
@@ -129,11 +129,6 @@ public class SingularityRequest {
 
   public Optional<String> getQuartzSchedule() {
     return quartzSchedule;
-  }
-
-  @Deprecated
-  public Optional<Boolean> getDaemon() {
-    return daemon;
   }
 
   public Optional<Integer> getInstances() {
@@ -200,12 +195,6 @@ public class SingularityRequest {
   }
 
   @JsonIgnore
-  @Deprecated
-  public boolean isDaemon() {
-    return daemon.or(Boolean.TRUE).booleanValue();
-  }
-
-  @JsonIgnore
   public boolean isLongRunning() {
     return requestType.isLongRunning();
   }
@@ -258,6 +247,9 @@ public class SingularityRequest {
 
   public Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> getEmailConfigurationOverrides() {
     return emailConfigurationOverrides;
+}
+  public Optional<Boolean> getSkipHealthchecks() {
+    return skipHealthchecks;
   }
 
   @Override
@@ -273,7 +265,6 @@ public class SingularityRequest {
             ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis +
             ", scheduledExpectedRuntimeMillis=" + scheduledExpectedRuntimeMillis +
             ", waitAtLeastMillisAfterTaskFinishesForReschedule=" + waitAtLeastMillisAfterTaskFinishesForReschedule +
-            ", daemon=" + daemon +
             ", instances=" + instances +
             ", rackSensitive=" + rackSensitive +
             ", rackAffinity=" + rackAffinity +
