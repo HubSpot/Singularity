@@ -1,5 +1,6 @@
 package com.hubspot.singularity;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hubspot.singularity.JsonHelpers.copyOfList;
 
 import java.util.List;
@@ -57,8 +58,8 @@ public class SingularityRequest {
       @JsonProperty("waitAtLeastMillisAfterTaskFinishesForReschedule") Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule, @JsonProperty("group") Optional<String> group,
       @JsonProperty("readOnlyGroups") Optional<Set<String>> readOnlyGroups, @JsonProperty("bounceAfterScale") Optional<Boolean> bounceAfterScale,
       @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
-      @JsonProperty("emailConfigurationOverrides") Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides) {
-    this.id = id;
+      @JsonProperty("emailConfigurationOverrides") Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides, @JsonProperty("daemon") @Deprecated Optional<Boolean> daemon) {
+    this.id = checkNotNull(id, "id cannot be null");
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
     this.schedule = schedule;
@@ -79,7 +80,11 @@ public class SingularityRequest {
     this.bounceAfterScale = bounceAfterScale;
     this.emailConfigurationOverrides = emailConfigurationOverrides;
     this.skipHealthchecks = skipHealthchecks;
-    this.requestType = requestType;
+    if (requestType == null) {
+      this.requestType = RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced);
+    } else {
+      this.requestType = requestType;
+    }
   }
 
   public SingularityRequestBuilder toBuilder() {
