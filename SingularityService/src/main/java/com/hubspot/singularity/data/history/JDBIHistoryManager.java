@@ -10,6 +10,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory;

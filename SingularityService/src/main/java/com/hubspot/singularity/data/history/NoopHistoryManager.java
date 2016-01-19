@@ -8,6 +8,7 @@ import javax.inject.Inject;
 
 import com.google.common.base.Optional;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskHistory;
@@ -50,6 +51,7 @@ public class NoopHistoryManager implements HistoryManager {
       Optional<Long> startedAfter, Optional<OrderDirection> orderDirection, Optional<Integer> limitStart, Integer limitCount) {
     return Collections.emptyList();
   }
+
 
   @Override
   public Optional<SingularityTaskHistory> getTaskHistory(String taskId) {
