@@ -97,11 +97,11 @@ def task_still_running(args, task, history):
 
 def files_json(args, task):
   uri = BROWSE_FOLDER_FORMAT.format(logfetch_base.base_uri(args), task)
-  return get_json_response(uri, args)
+  return get_json_response(uri, args, {}, True)
 
 def logs_folder_files(args, task):
   uri = BROWSE_FOLDER_FORMAT.format(logfetch_base.base_uri(args), task)
-  files_json = get_json_response(uri, args, {'path' : '{0}/logs'.format(task)})
+  files_json = get_json_response(uri, args, {'path' : '{0}/logs'.format(task)}, True)
   if 'files' in files_json:
     files = files_json['files']
     return [f['name'] for f in files if logfetch_base.is_in_date_range(args, f['mtime'])]
