@@ -15,10 +15,10 @@ import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLoc
 
 import com.google.common.base.Optional;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskIdHistory;
-import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
 import com.hubspot.singularity.data.history.SingularityMappers.SingularityRequestIdCount;
 
 @UseStringTemplate3StatementLocator

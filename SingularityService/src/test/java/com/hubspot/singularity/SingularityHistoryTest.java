@@ -28,7 +28,6 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
-import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
 import com.hubspot.singularity.data.history.SingularityHistoryPurger;
 import com.hubspot.singularity.data.history.SingularityRequestHistoryPersister;
 import com.hubspot.singularity.data.history.SingularityTaskHistoryPersister;
@@ -235,7 +234,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     doReturn(Arrays.asList(taskId)).when(taskManagerSpy).getInactiveTaskIdsForRequest(eq(requestId));
 
     // assert that the history works, but more importantly, that we don't NPE
-    Assert.assertEquals(1, taskHistoryHelperWithMockedTaskManager.getBlendedHistory(requestId, 0, 5).size());
+    Assert.assertEquals(1, taskHistoryHelperWithMockedTaskManager.getBlendedHistory(new SingularityTaskHistoryQuery(requestId), 0, 5).size());
   }
 
   @Test

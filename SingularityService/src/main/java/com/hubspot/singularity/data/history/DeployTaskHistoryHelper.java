@@ -6,11 +6,11 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.data.TaskManager;
-import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
 
 @Singleton
 public class DeployTaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHistory, SingularityDeployKey> {

@@ -13,12 +13,15 @@ import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.singularity.ExtendedTaskState;
+import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTaskHistory;
+import com.hubspot.singularity.SingularityTaskHistoryQuery;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.SingularityUser;
@@ -141,7 +144,13 @@ public class HistoryResource extends AbstractHistoryResource {
   @Path("/request/{requestId}/tasks")
   @ApiOperation("Retrieve the history for all tasks of a specific request.")
   public List<SingularityTaskIdHistory> getTaskHistoryForRequest(
-      @ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
+      @ApiParam("Request ID to match") @PathParam("requestId") String requestId,
+      @ApiParam("Optional deploy ID to match") @QueryParam("deployId") Optional<String> deployId,
+      @ApiParam("Optional host to match") @QueryParam("deployId") Optional<String> host,
+      @ApiParam("Optional last task status to match") @QueryParam("lastTaskStatus") Optional<ExtendedTaskState> lastTaskStatus,
+      @ApiParam("Optionally match only tasks started after") @QueryParam("startedAfter") Optional<Long> startedAfter,
+      @ApiParam("Optionally match only tasks started before") @QueryParam("startedBefore") Optional<Long> startedBefore,
+      @ApiParam("Sort direction") @QueryParam("startBefore") Optional<OrderDirection> orderDirection,
       @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
       @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     final Integer limitCount = getLimitCount(count);
@@ -149,7 +158,8 @@ public class HistoryResource extends AbstractHistoryResource {
 
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
-    return taskHistoryHelper.getBlendedHistory(requestId, limitStart, limitCount);
+    return taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(requestId, deployId, host, lastTaskStatus, startedBefore, startedAfter,
+        orderDirection), limitStart, limitCount);
   }
 
   @GET
