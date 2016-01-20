@@ -4,11 +4,11 @@ import java.util.Comparator;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
-import com.google.common.primitives.Longs;
+import com.google.common.collect.ComparisonChain;
 
 public class SingularityTaskHistoryQuery {
 
-  private final String requestId;
+  private final Optional<String> requestId;
   private final Optional<String> deployId;
   private final Optional<String> host;
   private final Optional<ExtendedTaskState> lastTaskStatus;
@@ -17,11 +17,11 @@ public class SingularityTaskHistoryQuery {
   private final Optional<OrderDirection> orderDirection;
 
   public SingularityTaskHistoryQuery(String requestId) {
-    this(requestId, Optional.<String> absent(), Optional.<String> absent(), Optional.<ExtendedTaskState> absent(), Optional.<Long> absent(), Optional.<Long> absent(),
+    this(Optional.of(requestId), Optional.<String> absent(), Optional.<String> absent(), Optional.<ExtendedTaskState> absent(), Optional.<Long> absent(), Optional.<Long> absent(),
         Optional.<OrderDirection> absent());
   }
 
-  public SingularityTaskHistoryQuery(String requestId, Optional<String> deployId, Optional<String> host, Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore,
+  public SingularityTaskHistoryQuery(Optional<String> requestId, Optional<String> deployId, Optional<String> host, Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore,
       Optional<Long> startedAfter, Optional<OrderDirection> orderDirection) {
     this.requestId = requestId;
     this.deployId = deployId;
@@ -32,7 +32,7 @@ public class SingularityTaskHistoryQuery {
     this.orderDirection = orderDirection;
   }
 
-  public String getRequestId() {
+  public Optional<String> getRequestId() {
     return requestId;
   }
 
@@ -67,7 +67,7 @@ public class SingularityTaskHistoryQuery {
       public boolean apply(SingularityTaskIdHistory input) {
         final SingularityTaskId taskId = input.getTaskId();
 
-        if (!taskId.getRequestId().equals(requestId)) {
+        if (requestId.isPresent() && !requestId.get().equals(taskId.getRequestId())) {
           return false;
         }
 
@@ -110,11 +110,15 @@ public class SingularityTaskHistoryQuery {
 
       @Override
       public int compare(SingularityTaskIdHistory o1, SingularityTaskIdHistory o2) {
+        ComparisonChain chain = ComparisonChain.start();
+
         if (localOrderDirection == OrderDirection.ASC) {
-          return Longs.compare(o1.getTaskId().getStartedAt(), o2.getTaskId().getStartedAt());
+          chain = chain.compare(o1.getTaskId().getStartedAt(), o2.getTaskId().getStartedAt());
         } else {
-          return Longs.compare(o2.getTaskId().getStartedAt(), o1.getTaskId().getStartedAt());
+          chain = chain.compare(o2.getTaskId().getStartedAt(), o1.getTaskId().getStartedAt());
         }
+
+        return chain.compare(o1.getTaskId().getRequestId(), o2.getTaskId().getRequestId()).result();
       }
 
     };
@@ -125,5 +129,6 @@ public class SingularityTaskHistoryQuery {
     return "SingularityTaskHistoryQuery [requestId=" + requestId + ", deployId=" + deployId + ", host=" + host + ", lastTaskStatus=" + lastTaskStatus + ", startedBefore=" + startedBefore
         + ", startedAfter=" + startedAfter + ", orderDirection=" + orderDirection + "]";
   }
+
 
 }

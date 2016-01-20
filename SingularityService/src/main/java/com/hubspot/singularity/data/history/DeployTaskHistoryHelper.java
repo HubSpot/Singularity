@@ -32,7 +32,8 @@ public class DeployTaskHistoryHelper extends BlendedHistoryHelper<SingularityTas
 
   @Override
   protected List<SingularityTaskIdHistory> getFromHistory(final SingularityDeployKey deployKey, int historyStart, int numFromHistory) {
-    return historyManager.getTaskIdHistory(deployKey.getRequestId(), Optional.of(deployKey.getDeployId()), Optional.<String> absent(), Optional.<ExtendedTaskState> absent(),
+    return historyManager.getTaskIdHistory(Optional.of(deployKey.getRequestId()), Optional.of(deployKey.getDeployId()), Optional.<String> absent(), Optional.<ExtendedTaskState> absent(),
         Optional.<Long> absent(), Optional.<Long> absent(), Optional.<OrderDirection> absent(), Optional.of(historyStart), numFromHistory);
   }
+
 }
