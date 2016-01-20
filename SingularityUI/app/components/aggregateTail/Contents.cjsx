@@ -14,6 +14,7 @@ Contents = React.createClass
       isLoading: false
       loadingText: ''
       linesToRender: []
+      loadingFromTop: false
 
   componentDidMount: ->
     @scrollNode = ReactDOM.findDOMNode(@refs.scrollContainer)
@@ -22,7 +23,7 @@ Contents = React.createClass
       @startTailingPoll()
 
   componentDidUpdate: (prevProps, prevState) ->
-    if @tailingPoll
+    if @tailingPoll and not @state.loadingFromTop
       @scrollToBottom()
 
     # Stop tailing if the task dies
@@ -47,7 +48,7 @@ Contents = React.createClass
     if $(node).scrollTop() + $(node).innerHeight() >= node.scrollHeight - 20
       if @props.moreToFetch()
         @props.fetchNext()
-      else if @props.taskState not in Utils.TERMINAL_TASK_STATES and @props.logLines.length > 0
+      else if @props.taskState not in Utils.TERMINAL_TASK_STATES and @props.logLines.length > 0 and not @state.loadingFromTop
         @startTailingPoll()
     # Or the top?
     else if $(node).scrollTop() is 0
@@ -89,6 +90,21 @@ Contents = React.createClass
       @setState
         isLoading: false
         loadingText: ''
+        loadingFromTop: false
+
+  loadFromTop: ->
+    # Make sure there isn't one already running
+    @stopTailingPoll()
+    @setState
+      isLoading: true
+      loadingText: 'Loading'
+      loadingFromTop: true
+    @tailingPoll = setInterval =>
+      if @state.linesToRender and @refs.lines.getVisibleRange()[1] < @state.linesToRender.length * 2
+        @stopTailingPoll()
+      else
+        @props.fetchNext()
+    , 2000
 
   # ============================================================================
   # Rendering                                                                  |
