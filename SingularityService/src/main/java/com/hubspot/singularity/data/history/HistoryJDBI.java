@@ -67,58 +67,79 @@ public abstract class HistoryJDBI implements GetHandle {
 
   abstract void close();
 
-  private static final String GET_TASK_ID_HISTORY_QUERY = "SELECT taskId, requestId, updatedAt, lastTaskStatus, runId FROM taskHistory WHERE requestId = :requestId";
+  private static final String GET_TASK_ID_HISTORY_QUERY = "SELECT taskId, requestId, updatedAt, lastTaskStatus, runId FROM taskHistory";
 
-  public List<SingularityTaskIdHistory> getTaskIdHistory(String requestId, Optional<String> deployId, Optional<String> host,
+  private void addWhereOrAnd(StringBuilder sqlBuilder, boolean shouldUseWhere) {
+    if (shouldUseWhere) {
+      sqlBuilder.append(" WHERE ");
+    } else {
+      sqlBuilder.append(" AND ");
+    }
+  }
+
+  public List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> host,
       Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<OrderDirection> orderDirection,
       Optional<Integer> limitStart, Integer limitCount) {
 
-    Map<String, Object> binds = new HashMap<>();
-    binds.put("requestId", requestId);
+    final Map<String, Object> binds = new HashMap<>();
+    final StringBuilder sqlBuilder = new StringBuilder(GET_TASK_ID_HISTORY_QUERY);
 
-    StringBuilder sqlBuilder = new StringBuilder(GET_TASK_ID_HISTORY_QUERY);
+    if (requestId.isPresent()) {
+      addWhereOrAnd(sqlBuilder, binds.isEmpty());
+      sqlBuilder.append("requestId = :requestId");
+      binds.put("requestId", requestId.get());
+    }
 
     if (deployId.isPresent()) {
-      sqlBuilder.append(" AND deployId = :deployId");
+      addWhereOrAnd(sqlBuilder, binds.isEmpty());
+      sqlBuilder.append("deployId = :deployId");
       binds.put("deployId", deployId.get());
     }
 
     if (host.isPresent()) {
-      sqlBuilder.append(" AND host = :host");
+      addWhereOrAnd(sqlBuilder, binds.isEmpty());
+      sqlBuilder.append("host = :host");
       binds.put("host", host.get());
     }
 
     if (lastTaskStatus.isPresent()) {
-      sqlBuilder.append(" AND lastTaskStatus = :lastTaskStatus");
+      addWhereOrAnd(sqlBuilder, binds.isEmpty());
+      sqlBuilder.append("lastTaskStatus = :lastTaskStatus");
       binds.put("lastTaskStatus", lastTaskStatus.get().name());
     }
 
     if (startedBefore.isPresent()) {
-      sqlBuilder.append(" AND startedAt < :startedBefore");
+      addWhereOrAnd(sqlBuilder, binds.isEmpty());
+      sqlBuilder.append("startedAt < :startedBefore");
       binds.put("startedBefore", new Date(startedBefore.get()));
     }
 
     if (startedAfter.isPresent()) {
-      sqlBuilder.append(" AND startedAt > :startedAfter");
+      addWhereOrAnd(sqlBuilder, binds.isEmpty());
+      sqlBuilder.append("startedAt > :startedAfter");
       binds.put("startedAfter", new Date(startedAfter.get()));
     }
 
     sqlBuilder.append(" ORDER BY startedAt ");
     sqlBuilder.append(orderDirection.or(OrderDirection.DESC).name());
 
+    if (!requestId.isPresent()) {
+      sqlBuilder.append(", requestId");
+    }
+
     if (limitStart.isPresent()) {
       sqlBuilder.append(" LIMIT :limitStart, ");
       binds.put("limitStart", limitStart.get());
     } else {
-      sqlBuilder.append("LIMIT ");
+      sqlBuilder.append(" LIMIT ");
     }
 
     sqlBuilder.append(":limitCount");
     binds.put("limitCount", limitCount);
 
-    String sql = sqlBuilder.toString();
+    final String sql = sqlBuilder.toString();
 
-    Query<SingularityTaskIdHistory> query = getHandle().createQuery(sql).mapTo(SingularityTaskIdHistory.class);
+    final Query<SingularityTaskIdHistory> query = getHandle().createQuery(sql).mapTo(SingularityTaskIdHistory.class);
     for (Map.Entry<String, Object> entry : binds.entrySet()) {
       query.bind(entry.getKey(), entry.getValue());
     }
