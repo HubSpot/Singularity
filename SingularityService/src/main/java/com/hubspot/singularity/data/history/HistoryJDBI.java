@@ -94,13 +94,13 @@ public abstract class HistoryJDBI implements GetHandle {
     }
 
     if (startedBefore.isPresent()) {
-      sqlBuilder.append(" AND startedAt \\< :startedBefore");
-      binds.put("startedBefore", startedBefore.get());
+      sqlBuilder.append(" AND startedAt < :startedBefore");
+      binds.put("startedBefore", new Date(startedBefore.get()));
     }
 
     if (startedAfter.isPresent()) {
-      sqlBuilder.append(" AND startedAt \\> :startedAfter");
-      binds.put("startedAfter", startedAfter.get());
+      sqlBuilder.append(" AND startedAt > :startedAfter");
+      binds.put("startedAfter", new Date(startedAfter.get()));
     }
 
     sqlBuilder.append(" ORDER BY startedAt ");
