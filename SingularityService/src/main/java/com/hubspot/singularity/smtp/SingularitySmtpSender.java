@@ -30,8 +30,6 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 import io.dropwizard.lifecycle.Managed;
 
-
-
 @Singleton
 public class SingularitySmtpSender implements Managed {
 
