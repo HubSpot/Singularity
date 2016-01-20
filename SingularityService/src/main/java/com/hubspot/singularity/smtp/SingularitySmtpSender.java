@@ -37,10 +37,6 @@ public class SingularitySmtpSender implements Managed {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularitySmtpSender.class);
 
-  /// Set this to true to log emails being sent. This allows testing locally without setting up an SMTP server
-  /// To find the email html, grep the logs: "grep TheMail -A 10" (change 10 depending on how many lines you need)
-  private static final Boolean LOG_EMAILS_FOR_DEBUG = false;
-
   private final Optional<SMTPConfiguration> maybeSmtpConfiguration;
   private final Optional<ThreadPoolExecutor> mailSenderExecutorService;
   private final SingularityExceptionNotifier exceptionNotifier;
@@ -68,9 +64,9 @@ public class SingularitySmtpSender implements Managed {
   }
 
   public void queueMail(final List<String> toList, final List<String> ccList, final String subject, final String body) {
-    if (LOG_EMAILS_FOR_DEBUG) {
-      LOG.trace("TheMail: " + body);
-    }
+
+    LOG.trace("Sending email to: {}, cc: {}, body: {}", toList, ccList, body); // Log the email for viewing without SMTP server
+
 
     if (toList.isEmpty()) {
       LOG.warn("Couldn't queue email {} because no to address is present", subject);
