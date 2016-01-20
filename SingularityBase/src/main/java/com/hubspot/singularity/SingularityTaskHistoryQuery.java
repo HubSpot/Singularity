@@ -89,11 +89,11 @@ public class SingularityTaskHistoryQuery {
           }
         }
 
-        if (startedAfter.isPresent() && startedAfter.get() < taskId.getStartedAt()) {
+        if (startedAfter.isPresent() && startedAfter.get() >= taskId.getStartedAt()) {
           return false;
         }
 
-        if (startedBefore.isPresent() && startedBefore.get() > taskId.getStartedAt()) {
+        if (startedBefore.isPresent() && startedBefore.get() <= taskId.getStartedAt()) {
           return false;
         }
 

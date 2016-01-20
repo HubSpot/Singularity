@@ -43,7 +43,6 @@ import com.wordnik.swagger.annotations.ApiParam;
 public class HistoryResource extends AbstractHistoryResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/history";
 
-
   private final DeployHistoryHelper deployHistoryHelper;
   private final TaskHistoryHelper taskHistoryHelper;
   private final RequestHistoryHelper requestHistoryHelper;

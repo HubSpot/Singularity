@@ -1,6 +1,7 @@
 package com.hubspot.singularity.data.history;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import com.google.common.base.Optional;
@@ -8,6 +9,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryQuery;
@@ -79,5 +81,35 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
 
     return Optional.absent();
   }
+
+  @Override
+  protected boolean queryUsesZkFirst(SingularityTaskHistoryQuery query) {
+    if (query.getDeployId().isPresent()) {
+      return false;
+    }
+    if (query.getLastTaskStatus().isPresent()) {
+      return false;
+    }
+    if (query.getHost().isPresent()) {
+      return false;
+    }
+    if (query.getStartedAfter().isPresent()) {
+      return false;
+    }
+    if (query.getStartedBefore().isPresent()) {
+      return false;
+    }
+    if (query.getOrderDirection().isPresent() && query.getOrderDirection().get() == OrderDirection.ASC) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
+  protected Comparator<SingularityTaskIdHistory> getComparator(SingularityTaskHistoryQuery query) {
+    return query.getComparator();
+  }
+
+
 
 }
