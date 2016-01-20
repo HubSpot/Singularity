@@ -184,13 +184,14 @@ class SingularityStartup {
       if (simplifiedTaskState != SimplifiedTaskState.DONE) {
         SingularityDeployKey deployKey = new SingularityDeployKey(taskId.getRequestId(), taskId.getDeployId());
         Optional<SingularityPendingDeploy> pendingDeploy = Optional.fromNullable(pendingDeploys.get(deployKey));
+        Optional<SingularityRequestWithState> request = Optional.fromNullable(idToRequest.get(taskId.getRequestId()));
 
         if (!pendingDeploy.isPresent()) {
-          newTaskChecker.enqueueNewTaskCheck(task);
+          newTaskChecker.enqueueNewTaskCheck(task, request, healthchecker);
           enqueuedNewTaskChecks++;
         }
         if (simplifiedTaskState == SimplifiedTaskState.RUNNING) {
-          if (healthchecker.enqueueHealthcheck(task, pendingDeploy, Optional.fromNullable(idToRequest.get(taskId.getRequestId())))) {
+          if (healthchecker.enqueueHealthcheck(task, pendingDeploy, request)) {
             enqueuedHealthchecks++;
           }
         }
