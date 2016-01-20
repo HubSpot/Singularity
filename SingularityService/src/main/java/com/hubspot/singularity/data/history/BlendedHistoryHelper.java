@@ -2,6 +2,7 @@ package com.hubspot.singularity.data.history;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -35,22 +36,43 @@ public abstract class BlendedHistoryHelper<T, Q> {
     return histories;
   }
 
+  protected boolean queryUsesZkFirst(Q id) {
+    return true;
+  }
+
+  protected Comparator<T> getComparator(Q id) {
+    return null;
+  }
+
   public List<T> getBlendedHistory(Q id, Integer limitStart, Integer limitCount) {
     final List<T> fromZk = getFromZk(id);
 
-    final int numFromZk = Math.max(0, Math.min(limitCount, fromZk.size() - limitStart));
+    List<T> returned = null;
 
-    final Integer numFromHistory = limitCount - numFromZk;
-    final Integer historyStart = Math.max(0, limitStart - fromZk.size());
+    if (queryUsesZkFirst(id)) {
+      final int numFromZk = Math.max(0, Math.min(limitCount, fromZk.size() - limitStart));
 
-    List<T> returned = Lists.newArrayListWithCapacity(limitCount);
+      final Integer numFromHistory = limitCount - numFromZk;
+      final Integer historyStart = Math.max(0, limitStart - fromZk.size());
 
-    if (numFromZk > 0) {
-      returned.addAll(fromZk.subList(limitStart, limitStart + numFromZk));
-    }
+      returned = Lists.newArrayListWithCapacity(limitCount);
 
-    if (numFromHistory > 0) {
-      returned.addAll(getFromHistory(id, historyStart, numFromHistory));
+      if (numFromZk > 0) {
+        returned.addAll(fromZk.subList(limitStart, limitStart + numFromZk));
+      }
+
+      if (numFromHistory > 0) {
+        returned.addAll(getFromHistory(id, historyStart, numFromHistory));
+      }
+    } else {
+      returned = Lists.newArrayListWithCapacity(fromZk.size() + limitCount);
+
+      returned.addAll(fromZk);
+      returned.addAll(getFromHistory(id, limitStart, limitCount));
+
+      Collections.sort(returned, getComparator(id));
+
+      returned = returned.subList(0, Math.min(limitCount, returned.size()));
     }
 
     return returned;
