@@ -92,7 +92,9 @@ IndividualTail = React.createClass
       @refs.contents.scrollToTop()
     else
       @props.logLines.reset()
-      @props.logLines.fetchFromStart().done @refs.contents.scrollToTop
+      @props.logLines.fetchFromStart().done =>
+        @refs.contents.scrollToTop()
+        @refs.contents.loadFromTop()
 
   scrollToBottom: ->
     if @props.logLines.state.get('moreToFetch') is true
