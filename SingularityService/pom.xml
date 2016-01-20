@@ -608,6 +608,11 @@
                             <destName>${project.name}.jar</destName>
                             <outputDirectory>/</outputDirectory>
                           </file>
+                          <file>
+                            <source>${project.basedir}/../mysql/migrations.sql</source>
+                            <destName>migrations.sql</destName>
+                            <outputDirectory>/etc/singularity</outputDirectory>
+                          </file>
                         </files>
                       </inline>
                     </assembly>

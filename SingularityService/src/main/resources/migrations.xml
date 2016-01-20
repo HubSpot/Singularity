@@ -4,6 +4,5 @@
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.9
          http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.9.xsd">
-  <include file="mysql/fix-liquibase-changelog-filenames.sql"/>
-  <include file="mysql/singularity.sql"/>
+  <includeAll path="mysql/" />
 </databaseChangeLog>
