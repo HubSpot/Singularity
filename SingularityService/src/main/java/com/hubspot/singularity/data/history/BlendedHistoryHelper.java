@@ -41,7 +41,7 @@ public abstract class BlendedHistoryHelper<T, Q> {
   }
 
   protected Comparator<T> getComparator(Q id) {
-    return null;
+    throw new IllegalStateException("Comparator requested for query which doesn't implement it");
   }
 
   public List<T> getBlendedHistory(Q id, Integer limitStart, Integer limitCount) {
