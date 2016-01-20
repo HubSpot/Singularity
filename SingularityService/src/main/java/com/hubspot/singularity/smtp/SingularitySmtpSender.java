@@ -69,7 +69,7 @@ public class SingularitySmtpSender implements Managed {
 
   public void queueMail(final List<String> toList, final List<String> ccList, final String subject, final String body) {
     if (LOG_EMAILS_FOR_DEBUG) {
-      LOG.debug("TheMail: " + body);
+      LOG.trace("TheMail: " + body);
     }
 
     if (toList.isEmpty()) {
