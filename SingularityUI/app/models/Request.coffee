@@ -204,6 +204,7 @@ class Request extends Model
             contentType: 'application/json'
             data: JSON.stringify(data)
 
+<<<<<<< HEAD
     stepDeploy: (deployId, instances) =>
         data =
             requestId: @get "id"
@@ -221,6 +222,9 @@ class Request extends Model
             url: "#{ config.apiRoot }/deploys/deploy/#{deployId}/request/#{@get('id')}"
 
     _validateDuration: (duration, action) =>
+=======
+    _validateDuration: (duration, action, callback) =>
+>>>>>>> origin/invalid-duraiton-refresh
         if @_parseDuration(duration)
             return true
         else
@@ -228,7 +232,7 @@ class Request extends Model
                 message: 'Invalid duration specified, please try again.'
                 callback: (data) ->
                   if data
-                      action()
+                      action(callback)
             return false
 
     _parseDuration: (duration) =>
@@ -255,7 +259,7 @@ class Request extends Model
                 duration = $('.vex #pause-expiration').val()
                 message = $('.vex #pause-message').val()
 
-                if !duration or (duration and @_validateDuration(duration, @promptPause))
+                if !duration or (duration and @_validateDuration(duration, @promptPause, callback))
                     @pause(killTasks, duration, message).done callback
 
     promptScale: (callback) =>
@@ -283,7 +287,7 @@ class Request extends Model
                 incremental = $('.vex #incremental-bounce').is ':checked'
                 message = $('.vex #scale-message').val()
                 duration = $('.vex #scale-expiration').val()
-                if !duration or (duration and @_validateDuration(duration, @promptScale))
+                if !duration or (duration and @_validateDuration(duration, @promptScale, callback))
                     @scale(data).done =>
                         if bounce
                             @bounce({incremental}).done callback
@@ -321,7 +325,11 @@ class Request extends Model
                 return unless data
                 duration = $('.vex #disable-healthchecks-expiration').val()
                 message = $('.vex #disable-healthchecks-message').val()
+<<<<<<< HEAD
                 if !duration
+=======
+                if !duration or (duration and @_validateDuration(duration, @promptDisableHealthchecks, callback))
+>>>>>>> origin/invalid-duraiton-refresh
                     @disableHealthchecks(message, duration).done callback
                 else if @_validateDuration(duration, @promptDisableHealthchecks)
                     @promptDisableHealthchecksDuration(message, duration, callback)
@@ -343,7 +351,7 @@ class Request extends Model
                 return unless data
                 duration = $('.vex #disable-healthchecks-expiration').val()
                 message = $('.vex #disable-healthchecks-message').val()
-                if !duration or (duration and @_validateDuration(duration, @promptEnableHealthchecks))
+                if !duration or (duration and @_validateDuration(duration, @promptEnableHealthchecks, callback))
                     @enableHealthchecks(message, duration).done callback
 
     promptUnpause: (callback) =>
@@ -478,7 +486,7 @@ class Request extends Model
                 confirmed.skipHealthchecks = $('.vex #skip-healthchecks').is ':checked'
                 confirmed.duration = $('.vex #bounce-expiration').val()
 
-                if !confirmed.duration or (confirmed.duration and @_validateDuration(confirmed.duration, @promptBounce))
+                if !confirmed.duration or (confirmed.duration and @_validateDuration(confirmed.duration, @promptBounce, callback))
                     @bounce(confirmed).done callback
 
     promptExitCooldown: (callback) =>
