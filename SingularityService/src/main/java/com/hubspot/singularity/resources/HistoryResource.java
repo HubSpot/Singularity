@@ -145,11 +145,11 @@ public class HistoryResource extends AbstractHistoryResource {
   public List<SingularityTaskIdHistory> getTaskHistoryForRequest(
       @ApiParam("Request ID to match") @PathParam("requestId") String requestId,
       @ApiParam("Optional deploy ID to match") @QueryParam("deployId") Optional<String> deployId,
-      @ApiParam("Optional host to match") @QueryParam("deployId") Optional<String> host,
+      @ApiParam("Optional host to match") @QueryParam("host") Optional<String> host,
       @ApiParam("Optional last task status to match") @QueryParam("lastTaskStatus") Optional<ExtendedTaskState> lastTaskStatus,
       @ApiParam("Optionally match only tasks started after") @QueryParam("startedAfter") Optional<Long> startedAfter,
       @ApiParam("Optionally match only tasks started before") @QueryParam("startedBefore") Optional<Long> startedBefore,
-      @ApiParam("Sort direction") @QueryParam("startBefore") Optional<OrderDirection> orderDirection,
+      @ApiParam("Sort direction") @QueryParam("orderDirection") Optional<OrderDirection> orderDirection,
       @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
       @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     final Integer limitCount = getLimitCount(count);
