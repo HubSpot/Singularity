@@ -32,7 +32,7 @@ public class RequestHelper {
   }
 
   public long unpause(SingularityRequest request, Optional<String> user, Optional<String> message, Optional<Boolean> skipHealthchecks) {
-    mailer.sendRequestUnpausedMail(request, user);
+    mailer.sendRequestUnpausedMail(request, user, message);
 
     Optional<String> maybeDeployId = deployManager.getInUseDeployId(request.getId());
 

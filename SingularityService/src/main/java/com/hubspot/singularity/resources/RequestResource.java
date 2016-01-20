@@ -518,7 +518,7 @@ public class RequestResource extends AbstractRequestResource {
 
     requestManager.deleteRequest(request, JavaUtils.getUserEmail(user), actionId, message);
 
-    mailer.sendRequestRemovedMail(request, JavaUtils.getUserEmail(user));
+    mailer.sendRequestRemovedMail(request, JavaUtils.getUserEmail(user), message);
 
     return request;
   }
