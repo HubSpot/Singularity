@@ -299,10 +299,13 @@ class Request extends Model
         if durationMillis < 3600000
             vex.dialog.confirm
                 message: '
-                    <strong>We strongly recommend against disabling healthchecks for less than an hour.</strong>
-                    Your task may not have enough time to get into a stable state.
-                    Are you sure you want to do this?
+                    <strong>Are you sure you want to disable healthchecks for less than an hour?</strong>
+                    This may not be enough time for your service to get into a stable state.
                 '
+                buttons: [
+                    $.extend _.clone(vex.dialog.buttons.YES), text: 'Disable Healthchecks'
+                    vex.dialog.buttons.NO
+                ]
                 callback: (data) =>
                     if data
                         @disableHealthchecks(message, duration).done callback
