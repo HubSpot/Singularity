@@ -73,10 +73,6 @@ public class SingularityMailer implements Managed {
 
   private static final Pattern TASK_STATUS_BY_PATTERN = Pattern.compile("(\\w+) by \\w+");
 
-  /// Set this to true to log emails being sent. This allows testing locally without setting up an SMTP server
-  /// To find the email html, grep the logs: "grep TheMail -A 10" (change 10 depending on how many lines you need)
-  private static final Boolean LOG_EMAILS_FOR_DEBUG = false;
-
   @Inject
   public SingularityMailer(
       SingularitySmtpSender smtpSender,
@@ -291,10 +287,6 @@ public class SingularityMailer implements Managed {
 
     final String body = Jade4J.render(taskTemplate, templateProperties);
 
-    if (LOG_EMAILS_FOR_DEBUG) {
-      LOG.debug("TheMail: " + body);
-    }
-
     final Optional<String> user = task.isPresent() ? task.get().getTaskRequest().getPendingTask().getUser() : Optional.<String> absent();
 
     queueMail(emailDestination, request, emailType, user, subject, body);
@@ -394,10 +386,6 @@ public class SingularityMailer implements Managed {
     }
 
     final String body = Jade4J.render(requestModifiedTemplate, templateProperties);
-
-    if (LOG_EMAILS_FOR_DEBUG) {
-      LOG.debug("TheMail: " + body);
-    }
 
     queueMail(emailDestination, request, type.getEmailType(), user, subject, body);
   }
@@ -499,10 +487,6 @@ public class SingularityMailer implements Managed {
     templateProperties.put("cooldownExpiresFormat", DurationFormatUtils.formatDurationHMS(TimeUnit.MINUTES.toMillis(configuration.getCooldownExpiresAfterMinutes())));
 
     final String body = Jade4J.render(requestInCooldownTemplate, templateProperties);
-
-    if (LOG_EMAILS_FOR_DEBUG) {
-      LOG.debug("TheMail: " + body);
-    }
 
     queueMail(emailDestination, request, SingularityEmailType.REQUEST_IN_COOLDOWN, Optional.<String> absent(), subject, body);
   }
@@ -623,10 +607,6 @@ public class SingularityMailer implements Managed {
           }
         }
       }
-    }
-
-    if (LOG_EMAILS_FOR_DEBUG) {
-      LOG.debug("TheMail: " + body);
     }
 
     smtpSender.queueMail(toList, ccList, subject, body);
