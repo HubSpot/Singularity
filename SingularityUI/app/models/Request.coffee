@@ -204,7 +204,6 @@ class Request extends Model
             contentType: 'application/json'
             data: JSON.stringify(data)
 
-<<<<<<< HEAD
     stepDeploy: (deployId, instances) =>
         data =
             requestId: @get "id"
@@ -221,10 +220,7 @@ class Request extends Model
             type: "DELETE"
             url: "#{ config.apiRoot }/deploys/deploy/#{deployId}/request/#{@get('id')}"
 
-    _validateDuration: (duration, action) =>
-=======
     _validateDuration: (duration, action, callback) =>
->>>>>>> origin/invalid-duraiton-refresh
         if @_parseDuration(duration)
             return true
         else
@@ -328,13 +324,9 @@ class Request extends Model
                 return unless data
                 duration = $('.vex #disable-healthchecks-expiration').val()
                 message = $('.vex #disable-healthchecks-message').val()
-<<<<<<< HEAD
                 if !duration
-=======
-                if !duration or (duration and @_validateDuration(duration, @promptDisableHealthchecks, callback))
->>>>>>> origin/invalid-duraiton-refresh
                     @disableHealthchecks(message, duration).done callback
-                else if @_validateDuration(duration, @promptDisableHealthchecks)
+                else if @_validateDuration(duration, @promptDisableHealthchecks, callback)
                     @promptDisableHealthchecksDuration(message, duration, callback)
 
 
