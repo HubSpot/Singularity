@@ -42,7 +42,7 @@
                                 </a>
                             {{else}}
                                 {{#if isTailable}}
-                                    <a href="{{appRoot}}/request/{{ ../task.requestId }}/tail/{{ uiPath }}/?taskIds={{ taskId }}">
+                                    <a href="{{ appRoot }}/task/{{ ../task.taskId }}/tail/{{ substituteTaskId uiPath ../task.taskId }}">
                                         <span class="glyphicon glyphicon-file"></span>{{ name }}
                                     </a>
                                 {{else}}
