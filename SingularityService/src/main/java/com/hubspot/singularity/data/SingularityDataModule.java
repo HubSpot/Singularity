@@ -7,7 +7,6 @@ import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.config.SingularityConfiguration;
-import com.hubspot.singularity.data.dbmigrations.SingularityDbMigrationRunner;
 import com.hubspot.singularity.helpers.RequestHelper;
 
 public class SingularityDataModule extends AbstractModule {
@@ -29,8 +28,6 @@ public class SingularityDataModule extends AbstractModule {
 
     bind(ExecutorIdGenerator.class).in(Scopes.SINGLETON);
     bind(WebhookManager.class).in(Scopes.SINGLETON);
-
-    bind(SingularityDbMigrationRunner.class).in(Scopes.SINGLETON);
   }
 
   @Provides
