@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
@@ -48,7 +47,6 @@ public class SingularityDbMigrationRunner {
       LOG.info("Ran db migration in {}", JavaUtils.duration(start));
     } catch (Exception e) {
       LOG.error("Caught exception while running database migration", e);
-      throw Throwables.propagate(e);
     }
   }
 
