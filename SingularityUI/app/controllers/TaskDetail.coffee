@@ -192,6 +192,7 @@ class TaskDetailController extends Controller
             @collections.alerts.reset(alerts)
 
     refresh: ->
+        console.log "Refresh"
         @resourcesFetched = false
 
         @collections.taskCleanups.fetch()
@@ -199,14 +200,14 @@ class TaskDetailController extends Controller
         @collections.pendingDeploys.fetch()
 
         @models.task.fetch()
-            .done =>
+           .done =>
                 @collections.files.fetch().error @ignore404
                 @fetchResourceUsage() if @models.task.get('isStillRunning')
                 logPath = if @models.task.get('isStillRunning') then config.runningTaskLogPath else config.finishedTaskLogPath
                 logPath = logPath.replace('$TASK_ID', @taskId)
                 logPath = _.initial(logPath.split('/')).join('/')
                 @collections.logDirectory.path = logPath
-                @collections.logDirectory.fetch()
+                @collections.logDirectory.fetch().error @ignore404
             .success =>
                 @getAlerts()
             .error =>
