@@ -137,7 +137,7 @@ You'll be prompted to input an API root. This is the service that SingularityUI 
 You can change the value of this at any point by typing the following in your JS console:
 
 ```javascript
-localStorage.set('apiRootOverride', 'http://docker/singularity/api')
+localStorage.setItem('apiRootOverride', 'http://docker/singularity/api')
 ```
 
 And there you go! You should at this point have SingularityUI running in your browser with it connected to SingularityService. Just let Brunch watch and compile your files as you work and try it out in your browser.
