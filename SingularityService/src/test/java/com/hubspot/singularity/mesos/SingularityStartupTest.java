@@ -10,9 +10,9 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
+import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityRequestBuilder;
-import com.hubspot.singularity.SingularitySchedulerTestBase;
 import com.hubspot.singularity.SingularityTask;
 
 public class SingularityStartupTest extends SingularitySchedulerTestBase {

@@ -29,6 +29,7 @@ import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingDeploy;
+import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
@@ -329,12 +330,18 @@ public class SingularityMesosScheduler implements Scheduler {
       if (task.isPresent()) {
         final Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(taskIdObj.getRequestId());
 
+        Optional<SingularityRequestWithState> requestWithState = Optional.absent();
+
         if (taskState == ExtendedTaskState.TASK_RUNNING) {
-          healthchecker.enqueueHealthcheck(task.get(), pendingDeploy, requestManager.getRequest(taskIdObj.getRequestId()));
+          requestWithState = requestManager.getRequest(taskIdObj.getRequestId());
+          healthchecker.enqueueHealthcheck(task.get(), pendingDeploy, requestWithState);
         }
 
         if (!pendingDeploy.isPresent() || !pendingDeploy.get().getDeployMarker().getDeployId().equals(taskIdObj.getDeployId())) {
-          newTaskChecker.enqueueNewTaskCheck(task.get());
+          if (!requestWithState.isPresent()) {
+            requestWithState = requestManager.getRequest(taskIdObj.getRequestId());
+          }
+          newTaskChecker.enqueueNewTaskCheck(task.get(), requestWithState, healthchecker);
         }
       } else {
         final String message = String.format("Task %s is active but is missing task data", taskId);
