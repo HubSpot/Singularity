@@ -473,7 +473,13 @@ public class TaskManager extends CuratorAsyncManager {
       paths.add(getRequestPath(requestId));
     }
 
-    return getChildrenAsIdsForParents("requestIds", paths, taskIdTranscoder);
+    List<SingularityTaskId> taskIds = getChildrenAsIdsForParents("requestIds", paths, taskIdTranscoder);
+
+    List<SingularityTaskId> activeTaskIds = filterActiveTaskIds(taskIds);
+
+    Iterables.removeAll(taskIds, activeTaskIds);
+
+    return taskIds;
   }
 
   public Optional<SingularityTaskHistory> getTaskHistory(SingularityTaskId taskId) {
