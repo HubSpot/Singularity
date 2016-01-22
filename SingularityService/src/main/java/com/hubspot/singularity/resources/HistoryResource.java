@@ -187,7 +187,7 @@ public class HistoryResource extends AbstractHistoryResource {
   @GET
   @Path("/request/{requestId}/run/{runId}")
   @ApiOperation("Retrieve the history for a task by runId")
-  public Optional<SingularityTaskIdHistory> getTaskHistoryForRequest(
+  public Optional<SingularityTaskIdHistory> getTaskHistoryForRequestAndRunId(
       @ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
       @ApiParam("runId to look up") @PathParam("runId") String runId) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);

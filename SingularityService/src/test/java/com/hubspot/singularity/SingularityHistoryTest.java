@@ -119,6 +119,19 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testHistoryDoesntHaveActiveTasks() {
+    initRequest();
+    initFirstDeploy();
+
+    SingularityTask taskOne = launchTask(request, firstDeploy, 1L, 10L, 1, TaskState.TASK_RUNNING, true);
+    SingularityTask taskTwo = launchTask(request, firstDeploy, 2l, 10L, 2, TaskState.TASK_RUNNING, true);
+    SingularityTask taskThree = launchTask(request, firstDeploy, 3l, 10L, 3, TaskState.TASK_RUNNING, true);
+
+    match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.<String> absent(), Optional.<String> absent(), Optional.<ExtendedTaskState> absent(),
+        Optional.<Long> absent(), Optional.<Long> absent(), Optional.<OrderDirection> absent()), 0, 10), 0);
+  }
+
+  @Test
   public void historyUpdaterTest() {
     initRequest();
     initFirstDeploy();
