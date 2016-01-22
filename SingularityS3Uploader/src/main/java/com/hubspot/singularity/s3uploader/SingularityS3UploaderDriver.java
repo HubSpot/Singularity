@@ -275,6 +275,8 @@ public class SingularityS3UploaderDriver extends WatchServiceHelper implements S
 
         LOG.debug("Deleting expired uploader {}", expiredUploader.getMetadataPath());
         Files.delete(expiredUploader.getMetadataPath());
+      } catch (NoSuchFileException nfe) {
+        LOG.warn("File {} was alrady deleted");
       } catch (IOException e) {
         LOG.warn("Couldn't delete {}", expiredUploader.getMetadataPath(), e);
         exceptionNotifier.notify(e, ImmutableMap.of("metadataPath", expiredUploader.getMetadataPath().toString()));

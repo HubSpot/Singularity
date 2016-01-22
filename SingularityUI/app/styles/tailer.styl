@@ -6,6 +6,32 @@
     width 100vw
     padding 0 20px 0 20px
 
+    .row.unified
+        position fixed
+        width 100%
+        bottom 0
+        top 130px
+
+@media (max-width: 1522px)
+    .tail-root
+        .row.unified
+            top 160px
+
+@media (max-width: 990px)
+    .tail-root
+        .row.unified
+            top 200px
+
+@media (max-width: 862px)
+    .tail-root
+        .row.unified
+            top 250px
+
+@media (max-width: 768px)
+    .tail-root
+        .row.unified
+            top 170px
+
 .tail-row
     height calc(100vh - 130px)
     margin-bottom 0
@@ -279,7 +305,7 @@
 
   .loading
     color $green
-    width 55px
+    width 80px
     float left
 
   .loading:after

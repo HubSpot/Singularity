@@ -1,5 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -12,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Timed;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -66,7 +68,7 @@ public class SingularityHealthchecker {
     this.executorService = executorService;
   }
 
-  public void enqueueHealthcheck(SingularityTask task) {
+  public void enqueueHealthcheck(SingularityTask task, boolean ignoreExisting) {
     final Optional<Integer> healthcheckMaxRetries = task.getTaskRequest().getDeploy().getHealthcheckMaxRetries().or(configuration.getHealthcheckMaxRetries());
 
     if (healthcheckMaxRetries.isPresent() && taskManager.getNumHealthchecks(task.getTaskId()) > healthcheckMaxRetries.get()) {
@@ -80,7 +82,9 @@ public class SingularityHealthchecker {
 
     if (existing != null) {
       boolean canceledExisting = existing.cancel(false);
-      LOG.warn("Found existing overlapping healthcheck for task {} - cancel success: {}", task.getTaskId(), canceledExisting);
+      if (!ignoreExisting) {
+        LOG.warn("Found existing overlapping healthcheck for task {} - cancel success: {}", task.getTaskId(), canceledExisting);
+      }
     }
   }
 
@@ -90,9 +94,25 @@ public class SingularityHealthchecker {
       return false;
     }
 
-    enqueueHealthcheck(task);
+    enqueueHealthcheck(task, true);
 
     return true;
+  }
+
+  public void checkHealthcheck(SingularityTask task) {
+    if (!taskIdToHealthcheck.containsKey(task.getTaskId().getId())) {
+      LOG.info("Enqueueing expected healthcheck for task {}", task.getTaskId());
+      enqueueHealthcheck(task, false);
+    }
+  }
+
+  @VisibleForTesting
+  Collection<ScheduledFuture<?>> getHealthCheckFutures() {
+    return taskIdToHealthcheck.values();
+  }
+
+  public void markHealthcheckFinished(String taskId) {
+    taskIdToHealthcheck.remove(taskId);
   }
 
   public boolean cancelHealthcheck(String taskId) {
@@ -110,14 +130,12 @@ public class SingularityHealthchecker {
   }
 
   private ScheduledFuture<?> enqueueHealthcheckWithDelay(final SingularityTask task, long delaySeconds) {
-    LOG.trace("En-queuing a healthcheck for task {} with delay {}", task.getTaskId(), DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(delaySeconds)));
+    LOG.trace("Enqueuing a healthcheck for task {} with delay {}", task.getTaskId(), DurationFormatUtils.formatDurationHMS(TimeUnit.SECONDS.toMillis(delaySeconds)));
 
     return executorService.schedule(new Runnable() {
 
       @Override
       public void run() {
-        taskIdToHealthcheck.remove(task.getTaskId().getId());
-
         try {
           asyncHealthcheck(task);
         } catch (Throwable t) {
@@ -133,7 +151,7 @@ public class SingularityHealthchecker {
 
   public void reEnqueueOrAbort(SingularityTask task) {
     try {
-      enqueueHealthcheck(task);
+      enqueueHealthcheck(task, true);
     } catch (Throwable t) {
       LOG.error("Caught throwable while re-enqueuing health check for {}, aborting", task.getTaskId(), t);
       exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
