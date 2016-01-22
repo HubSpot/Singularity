@@ -326,19 +326,7 @@ public class SingularityClient {
 
     return Optional.absent();
   }
-
-  private <T> Optional<T> put(String uri, String type, Optional<?> body, Optional<Class<T>> clazz) {
-    try {
-      HttpResponse response = put(uri, type, body);
-      if (clazz.isPresent()) {
-        return Optional.of(response.getAs(clazz.get()));
-      }
-    } catch (Exception e) {
-      LOG.warn("Http put failed", e);
-    }
-    return Optional.absent();
-  }
-
+  
   private HttpResponse put(String uri, String type, Optional<?> body) {
     return executeRequest(uri, type, body, Method.PUT);
   }
