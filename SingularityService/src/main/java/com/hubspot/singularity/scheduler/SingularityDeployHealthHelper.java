@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
@@ -76,9 +77,9 @@ public class SingularityDeployHealthHelper {
     }
   }
 
-  public int getNumHealthyTasks(final SingularityRequest request, final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> activeTasks, final boolean isDeployPending) {
+  public List<SingularityTaskId> getHealthyTasks(final SingularityRequest request, final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> activeTasks, final boolean isDeployPending) {
     if (shouldCheckHealthchecks(request, deploy, activeTasks, isDeployPending)) {
-      return getNumHealthcheckedHealthyTasks(deploy.get(), activeTasks, isDeployPending);
+      return getHealthcheckedHealthyTasks(deploy.get(), activeTasks, isDeployPending);
     } else {
       return getNoHealthcheckHealthyTasks(deploy, activeTasks);
     }
@@ -109,18 +110,19 @@ public class SingularityDeployHealthHelper {
     return DeployHealth.HEALTHY;
   }
 
-  private int getNoHealthcheckHealthyTasks(final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> matchingActiveTasks) {
+  private List<SingularityTaskId> getNoHealthcheckHealthyTasks(final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> matchingActiveTasks) {
     final Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> taskUpdates = taskManager.getTaskHistoryUpdates(matchingActiveTasks);
+    final List<SingularityTaskId> healthyTaskIds = Lists.newArrayListWithCapacity(matchingActiveTasks.size());
 
-    int healthyCount = 0;
     for (SingularityTaskId taskId : matchingActiveTasks) {
       Collection<SingularityTaskHistoryUpdate> updates = taskUpdates.get(taskId);
       SimplifiedTaskState currentState = SingularityTaskHistoryUpdate.getCurrentState(updates);
       if (currentState == SimplifiedTaskState.RUNNING && isRunningTaskHealthy(deploy, updates, taskId)) {
-        healthyCount++;
+        healthyTaskIds.add(taskId);
       }
     }
-    return healthyCount;
+
+    return healthyTaskIds;
   }
 
   private boolean isRunningTaskHealthy(final Optional<SingularityDeploy> deploy, Collection<SingularityTaskHistoryUpdate> updates, SingularityTaskId taskId) {
@@ -155,17 +157,18 @@ public class SingularityDeployHealthHelper {
     return DeployHealth.HEALTHY;
   }
 
-  private int getNumHealthcheckedHealthyTasks(final SingularityDeploy deploy, final Collection<SingularityTaskId> matchingActiveTasks, final boolean isDeployPending) {
-    Map<SingularityTaskId, SingularityTaskHealthcheckResult> healthcheckResults = taskManager.getLastHealthcheck(matchingActiveTasks);
+  private List<SingularityTaskId> getHealthcheckedHealthyTasks(final SingularityDeploy deploy, final Collection<SingularityTaskId> matchingActiveTasks, final boolean isDeployPending) {
+    final Map<SingularityTaskId, SingularityTaskHealthcheckResult> healthcheckResults = taskManager.getLastHealthcheck(matchingActiveTasks);
+    final List<SingularityTaskId> healthyTaskIds = Lists.newArrayListWithCapacity(matchingActiveTasks.size());
 
-    int healthyCount = 0;
     for (SingularityTaskId taskId : matchingActiveTasks) {
       DeployHealth individualTaskHealth = getTaskHealth(deploy, isDeployPending, healthcheckResults, taskId);
       if (individualTaskHealth == DeployHealth.HEALTHY) {
-        healthyCount++;
+        healthyTaskIds.add(taskId);
       }
     }
-    return healthyCount;
+
+    return healthyTaskIds;
   }
 
   private DeployHealth getTaskHealth(SingularityDeploy deploy, boolean isDeployPending, Map<SingularityTaskId, SingularityTaskHealthcheckResult> healthcheckResults, SingularityTaskId taskId) {
