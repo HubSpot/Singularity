@@ -326,7 +326,7 @@ public class SingularityClient {
 
     return Optional.absent();
   }
-  
+
   private HttpResponse put(String uri, String type, Optional<?> body) {
     return executeRequest(uri, type, body, Method.PUT);
   }
@@ -456,7 +456,7 @@ public class SingularityClient {
     final String requestUri = String.format(REQUEST_SCALE_FORMAT, getHost(), contextPath, requestId);
     put(requestUri, String.format("Scale of Request %s", requestId), Optional.of(scaleRequest));
   }
-  
+
   public void runSingularityRequest(String requestId, Optional<SingularityRunNowRequest> runNowRequest) {
     final String requestUri = String.format(REQUEST_RUN_FORMAT, getHost(), contextPath, requestId);
 
