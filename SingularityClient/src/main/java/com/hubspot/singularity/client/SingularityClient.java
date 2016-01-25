@@ -58,6 +58,8 @@ import com.hubspot.singularity.api.SingularityExitCooldownRequest;
 import com.hubspot.singularity.api.SingularityKillTaskRequest;
 import com.hubspot.singularity.api.SingularityPauseRequest;
 import com.hubspot.singularity.api.SingularityRunNowRequest;
+import com.hubspot.singularity.api.SingularityScaleRequest;
+import com.hubspot.singularity.api.SingularityUnpauseRequest;
 
 public class SingularityClient {
 
@@ -103,6 +105,8 @@ public class SingularityClient {
   private static final String REQUEST_DELETE_ACTIVE_FORMAT = REQUESTS_FORMAT + "/request/%s";
   private static final String REQUEST_BOUNCE_FORMAT = REQUESTS_FORMAT + "/request/%s/bounce";
   private static final String REQUEST_PAUSE_FORMAT = REQUESTS_FORMAT + "/request/%s/pause";
+  private static final String REQUEST_UNPAUSE_FORMAT = REQUESTS_FORMAT + "/request/%s/unpause";
+  private static final String REQUEST_SCALE_FORMAT = REQUESTS_FORMAT + "/request/%s/scale";
   private static final String REQUEST_RUN_FORMAT = REQUESTS_FORMAT + "/request/%s/run";
   private static final String REQUEST_EXIT_COOLDOWN_FORMAT = REQUESTS_FORMAT + "/request/%s/exit-cooldown";
 
@@ -209,7 +213,7 @@ public class SingularityClient {
     final long start = System.currentTimeMillis();
 
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-        .setUrl(uri);
+      .setUrl(uri);
 
     if (queryParams.isPresent()) {
       addQueryParams(requestBuilder, queryParams.get());
@@ -240,7 +244,7 @@ public class SingularityClient {
     final long start = System.currentTimeMillis();
 
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-        .setUrl(uri);
+      .setUrl(uri);
 
     if (queryParams.isPresent()) {
       addQueryParams(requestBuilder, queryParams.get());
@@ -273,7 +277,7 @@ public class SingularityClient {
         requestBuilder.setQueryParam(queryParamEntry.getKey()).to((Boolean) queryParamEntry.getValue());
       } else {
         throw new RuntimeException(String.format("The type '%s' of query param %s is not supported. Only String, long, int and boolean values are supported",
-            queryParamEntry.getValue().getClass().getName(), queryParamEntry.getKey()));
+          queryParamEntry.getValue().getClass().getName(), queryParamEntry.getKey()));
       }
     }
   }
@@ -323,9 +327,13 @@ public class SingularityClient {
     return Optional.absent();
   }
 
+  private HttpResponse put(String uri, String type, Optional<?> body) {
+    return executeRequest(uri, type, body, Method.PUT);
+  }
+
   private <T> Optional<T> post(String uri, String type, Optional<?> body, Optional<Class<T>> clazz) {
     try {
-      HttpResponse response = post(uri, type, body);
+      HttpResponse response = executeRequest(uri, type, body, Method.POST);
 
       if (clazz.isPresent()) {
         return Optional.of(response.getAs(clazz.get()));
@@ -338,11 +346,14 @@ public class SingularityClient {
   }
 
   private HttpResponse post(String uri, String type, Optional<?> body) {
-    LOG.info("Posting {} to {}", type, uri);
+    return executeRequest(uri, type, body, Method.POST);
+  }
+
+  private HttpResponse executeRequest(String uri, String type, Optional<?> body, Method method) {
 
     final long start = System.currentTimeMillis();
 
-    HttpRequest.Builder request = HttpRequest.newBuilder().setUrl(uri).setMethod(Method.POST);
+    HttpRequest.Builder request = HttpRequest.newBuilder().setUrl(uri).setMethod(method);
 
     if (body.isPresent()) {
       request.setBody(body.get());
@@ -354,7 +365,7 @@ public class SingularityClient {
 
     checkResponse(type, response);
 
-    LOG.info("Successfully posted {} in {}ms", type, System.currentTimeMillis() - start);
+    LOG.info("Successfully {}ed {} in {}ms", method, type, System.currentTimeMillis() - start);
 
     return response;
   }
@@ -435,6 +446,17 @@ public class SingularityClient {
     post(requestUri, String.format("pause of request %s", requestId), pauseRequest);
   }
 
+  public void unpauseSingularityRequest(String requestId, Optional<SingularityUnpauseRequest> unpauseRequest) {
+    final String requestUri = String.format(REQUEST_UNPAUSE_FORMAT, getHost(), contextPath, requestId);
+
+    post(requestUri, String.format("unpause of request %s", requestId), unpauseRequest);
+  }
+
+  public void scaleSingularityRequest(String requestId, SingularityScaleRequest scaleRequest) {
+    final String requestUri = String.format(REQUEST_SCALE_FORMAT, getHost(), contextPath, requestId);
+    put(requestUri, String.format("Scale of Request %s", requestId), Optional.of(scaleRequest));
+  }
+
   public void runSingularityRequest(String requestId, Optional<SingularityRunNowRequest> runNowRequest) {
     final String requestUri = String.format(REQUEST_RUN_FORMAT, getHost(), contextPath, requestId);
 
@@ -461,7 +483,7 @@ public class SingularityClient {
     final String requestUri = String.format(DEPLOYS_FORMAT, getHost(), contextPath);
 
     HttpResponse response = post(requestUri, String.format("new deploy %s", new SingularityDeployKey(requestId, pendingDeploy.getId())),
-        Optional.of(new SingularityDeployRequest(pendingDeploy, deployUnpause, message)));
+      Optional.of(new SingularityDeployRequest(pendingDeploy, deployUnpause, message)));
 
     return getAndLogRequestAndDeployStatus(response.getAs(SingularityRequestParent.class));
   }
@@ -478,7 +500,7 @@ public class SingularityClient {
     final String requestUri = String.format(DELETE_DEPLOY_FORMAT, getHost(), contextPath, deployId, requestId);
 
     SingularityRequestParent singularityRequestParent = delete(requestUri, "pending deploy", new SingularityDeployKey(requestId, deployId).getId(), Optional.absent(),
-        Optional.of(SingularityRequestParent.class)).get();
+      Optional.of(SingularityRequestParent.class)).get();
 
     return getAndLogRequestAndDeployStatus(singularityRequestParent);
   }
