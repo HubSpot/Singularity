@@ -30,11 +30,15 @@
                     </td>
                     <td class="hidden-xs">
                         {{timestampFromNow pendingTask.pendingTaskId.nextRunAt}}
-                        {{#if pendingTask.pendingTaskId}}
-                            {{#ifTimestampInPast pendingTask.pendingTaskId.nextRunAt}}
-                                <span class="label label-danger">OVERDUE</span>
-                            {{/ifTimestampInPast}}
-                        {{/if}}
+                        {{#ifTimestampSecondsInPast pendingTask.pendingTaskId.nextRunAt ../config.pendingWithinSeconds }}
+                            <span class="label label-danger">OVERDUE</span>
+                        {{else}}
+                            {{#ifTimestampSecondsInFuture pendingTask.pendingTaskId.nextRunAt ../config.pendingWithinSeconds }}
+                                <span class="label label-default">SCHEDULED</span>
+                            {{else}}
+                                <span class="label label-info">PENDING</span>
+                            {{/ifTimestampSecondsInFuture}}
+                        {{/ifTimestampSecondsInPast}}
                     </td>
                     <td>
                         {{humanizeText pendingTask.pendingTaskId.pendingType}}
