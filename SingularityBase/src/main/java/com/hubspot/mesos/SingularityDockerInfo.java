@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
@@ -63,6 +64,7 @@ public class SingularityDockerInfo {
     return true;
   }
 
+  @JsonIgnore
   public List<Long> getLiteralHostPorts() {
     List<Long> literalHostPorts = new ArrayList<>();
     for (SingularityDockerPortMapping mapping : portMappings) {
