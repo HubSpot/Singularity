@@ -152,7 +152,7 @@ public final class MesosUtils {
         for (long port : requestedPorts) {
           if (rangeStartSelection >= port && rangeEndSelection <= port) {
             toRemove.add(port);
-            portsSoFar --;
+            portsSoFar--;
           }
         }
         requestedPorts.removeAll(toRemove);

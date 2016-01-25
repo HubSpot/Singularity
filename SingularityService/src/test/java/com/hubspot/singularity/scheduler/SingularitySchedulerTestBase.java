@@ -81,18 +81,6 @@ import com.hubspot.singularity.resources.RackResource;
 import com.hubspot.singularity.resources.RequestResource;
 import com.hubspot.singularity.resources.SlaveResource;
 import com.hubspot.singularity.resources.TaskResource;
-import com.hubspot.singularity.scheduler.MesosUtilsTest;
-import com.hubspot.singularity.scheduler.SingularityCleaner;
-import com.hubspot.singularity.scheduler.SingularityCooldownChecker;
-import com.hubspot.singularity.scheduler.SingularityDeployChecker;
-import com.hubspot.singularity.scheduler.SingularityExpiringUserActionPoller;
-import com.hubspot.singularity.scheduler.SingularityHealthchecker;
-import com.hubspot.singularity.scheduler.SingularityScheduledJobPoller;
-import com.hubspot.singularity.scheduler.SingularityScheduler;
-import com.hubspot.singularity.scheduler.SingularitySchedulerPriority;
-import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
-import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
-import com.hubspot.singularity.scheduler.TestingLoadBalancerClient;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.ning.http.client.AsyncHttpClient;
 
