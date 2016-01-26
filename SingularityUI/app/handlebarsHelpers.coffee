@@ -77,6 +77,24 @@ Handlebars.registerHelper 'ifTimestampInPast', (timestamp, options) ->
     else
         options.inverse @
 
+Handlebars.registerHelper 'ifTimestampSecondsInPast', (timestamp, seconds, options) ->
+    return options.inverse @ if not timestamp
+    timeObject = moment timestamp
+    past = moment().subtract(seconds, "seconds")
+    if timeObject.isBefore(past)
+        options.fn @
+    else
+        options.inverse @
+
+Handlebars.registerHelper 'ifTimestampSecondsInFuture', (timestamp, seconds, options) ->
+    return options.inverse @ if not timestamp
+    timeObject = moment timestamp
+    future = moment().add(seconds, "seconds")
+    if timeObject.isAfter(future)
+        options.fn @
+    else
+        options.inverse @
+
 # 12345 => 12 seconds
 Handlebars.registerHelper 'timestampDuration', (timestamp) ->
     return '' if not timestamp
