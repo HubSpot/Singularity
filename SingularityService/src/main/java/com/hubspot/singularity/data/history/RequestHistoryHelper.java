@@ -1,6 +1,7 @@
 package com.hubspot.singularity.data.history;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import com.google.common.base.Optional;
@@ -30,6 +31,20 @@ public class RequestHistoryHelper extends BlendedHistoryHelper<SingularityReques
     Collections.sort(requestHistory);
 
     return requestHistory;
+  }
+
+  @Override
+  protected boolean queryUsesZkFirst(String id) {
+    return false;
+  }
+
+  @Override
+  protected Comparator<SingularityRequestHistory> getComparator(String id) {
+    return new Comparator<SingularityRequestHistory>() {
+      @Override public int compare(SingularityRequestHistory o1, SingularityRequestHistory o2) {
+        return Long.compare(o2.getCreatedAt(), o1.getCreatedAt());
+      }
+    };
   }
 
   @Override
