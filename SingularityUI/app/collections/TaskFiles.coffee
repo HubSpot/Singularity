@@ -58,7 +58,7 @@ class TaskFiles extends Collection
             return -1
         else if not a.get('isDirectory') and b.get('isDirectory')
             return 1
-        return a.get('path') - b.get('path')
+        return a.get('name') > b.get('name')
 
     testSandbox: ->
         $.ajax
