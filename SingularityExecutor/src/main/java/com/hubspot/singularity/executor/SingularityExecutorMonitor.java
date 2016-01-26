@@ -432,9 +432,8 @@ public class SingularityExecutorMonitor {
     if (processBuilderFuture != null) {
       task.getLog().info("Canceling process builder future for {}", taskId);
 
-      processBuilderFuture.cancel(true);
-
-      task.getProcessBuilder().cancel();
+      CancelThread cancelThread = new CancelThread(processBuilderFuture, task);
+      cancelThread.start();
 
       return KillState.INTERRUPTING_PRE_PROCESS;
     }
@@ -454,6 +453,26 @@ public class SingularityExecutorMonitor {
     }
 
     return KillState.INCONSISTENT_STATE;
+  }
+
+  private static class CancelThread extends Thread {
+
+    private final ListenableFuture<ProcessBuilder> processBuilderFuture;
+    private final SingularityExecutorTask task;
+
+    public CancelThread(ListenableFuture<ProcessBuilder> processBuilderFuture, SingularityExecutorTask task) {
+      super("SingularityExecutorMonitor-cancel-thread");
+
+      this.processBuilderFuture = processBuilderFuture;
+      this.task = task;
+    }
+
+    @Override
+    public void run() {
+      processBuilderFuture.cancel(true);
+      task.getProcessBuilder().cancel();
+    }
+
   }
 
   private SingularityExecutorTaskProcessCallable buildProcessCallable(final SingularityExecutorTask task, ProcessBuilder processBuilder) {
