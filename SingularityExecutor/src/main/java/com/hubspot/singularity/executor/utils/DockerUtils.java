@@ -7,34 +7,26 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
-import javax.print.Doc;
-
-import jdk.nashorn.internal.codegen.CompilerConstants.Call;
-
-import org.apache.mesos.Protos.Parameter;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
-import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
-import com.spotify.docker.client.ContainerNotFoundException;
 import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.DockerException;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ContainerInfo;
 
 public class DockerUtils {
-  private final SingularityExecutorTaskDefinition taskDefinition;
-  private final Logger log;
+  private static final Logger LOG = LoggerFactory.getLogger(DockerUtils.class);
+
+
   private final SingularityExecutorConfiguration configuration;
   private final DockerClient dockerClient;
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
   @Inject
-  public DockerUtils(SingularityExecutorTaskDefinition taskDefinition, Logger log, SingularityExecutorConfiguration configuration, DockerClient dockerClient) {
-    this.taskDefinition = taskDefinition;
-    this.log = log;
+  public DockerUtils(SingularityExecutorConfiguration configuration, DockerClient dockerClient) {
     this.configuration = configuration;
     this.dockerClient = dockerClient;
   }
@@ -57,7 +49,7 @@ public class DockerUtils {
     try {
       return callWithTimeout(callable);
     } catch (Exception e) {
-      log.error("Caught exception while getting container status", e);
+      LOG.error("Caught exception while getting container status", e);
       throw new DockerException(e);
     }
   }
@@ -73,7 +65,7 @@ public class DockerUtils {
     try {
       callWithTimeout(callable);
     } catch (Exception e) {
-      log.error("Could not pull image due to error", e);
+      LOG.error("Could not pull image due to error", e);
       throw new DockerException(e);
     }
   }
@@ -88,7 +80,7 @@ public class DockerUtils {
     try {
       return callWithTimeout(callable);
     } catch (Exception e) {
-      log.error("Caught exception attempting to list containers", e);
+      LOG.error("Caught exception attempting to list containers", e);
       throw new DockerException(e);
     }
   }
@@ -104,7 +96,7 @@ public class DockerUtils {
     try {
       callWithTimeout(callable);
     } catch (Exception e) {
-      log.error("Caught exception attempting to stop container", e);
+      LOG.error("Caught exception attempting to stop container", e);
       throw new DockerException(e);
     }
   }
@@ -120,7 +112,7 @@ public class DockerUtils {
     try {
       callWithTimeout(callable);
     } catch (Exception e) {
-      log.error("Caught exception attempting to stop container", e);
+      LOG.error("Caught exception attempting to stop container", e);
       throw new DockerException(e);
     }
   }
