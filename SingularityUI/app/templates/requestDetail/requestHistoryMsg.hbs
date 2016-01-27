@@ -1,23 +1,25 @@
 {{! Part of requestBase }}
 
-{{#ifEqual data.[0].eventType 'DELETED'}}
-    <div class="row detail-header">
-        <div class="col-md-12">
-            <h4>
-                <span class="request-state" data-state="DELETED">
-                    Deleted
-                </span>
-                <span class="request-type">
-                    {{humanizeText data.[0].request.requestType }} 
-                </span>                
-            </h4>
-            <h2>
-                {{ data.[0].request.id }} 
-            </h2>
+{{#unless request}}
+    {{#ifEqual data.[0].eventType 'DELETED'}}
+        <div class="row detail-header">
+            <div class="col-md-12">
+                <h4>
+                    <span class="request-state" data-state="DELETED">
+                        Deleted
+                    </span>
+                    <span class="request-type">
+                        {{humanizeText data.[0].request.requestType }} 
+                    </span>                
+                </h4>
+                <h2>
+                    {{ data.[0].request.id }} 
+                </h2>
+            </div>
         </div>
-    </div>
-    <div class='alert alert-warning'>
-        <strong>Note: </strong>This request was deleted {{timestampFromNow data.[0].createdAt}}{{#if data.[0].user}}, by {{data.[0].user}}{{/if}}. All active and scheduled tasks will not run again unless it is reposted to Singularity.
-    </div>
-{{/ifEqual}}
+        <div class='alert alert-warning'>
+            <strong>Note: </strong>This request was deleted {{timestampFromNow data.[0].createdAt}}{{#if data.[0].user}}, by {{data.[0].user}}{{/if}}. All active and scheduled tasks will not run again unless it is reposted to Singularity.
+        </div>
+    {{/ifEqual}}
+{{/unless}}
 
