@@ -39,39 +39,6 @@ public class DockerUtils {
     this.dockerClient = dockerClient;
   }
 
-
-  public boolean cleanDocker() {
-    Callable<Boolean> callable = new Callable<Boolean>() {
-      @Override public Boolean call() throws Exception {
-        String containerName = String.format("%s%s", configuration.getDockerPrefix(), taskDefinition.getTaskId());
-        try {
-          ContainerInfo containerInfo = dockerClient.inspectContainer(containerName);
-          if (containerInfo.state().running()) {
-            dockerClient.stopContainer(containerName, configuration.getDockerStopTimeout());
-          }
-          dockerClient.removeContainer(containerName);
-          log.info("Removed container {}", containerName);
-          return true;
-        } catch (ContainerNotFoundException e) {
-          log.info("Container {} was already removed", containerName);
-          return true;
-        } catch (UncheckedTimeoutException te) {
-          log.error("Timed out trying to reach docker daemon after {} seconds", configuration.getDockerClientTimeLimitSeconds(), te);
-        } catch (Exception e) {
-          log.info("Could not ensure removal of docker container", e);
-        }
-        return false;
-      }
-    };
-
-    try {
-      return callWithTimeout(callable);
-    } catch (Exception e) {
-      log.error("Caught exception while cleaning docker containers", e);
-      return false;
-    }
-  }
-
   public int getPid(final String containerName) throws DockerException {
     return inspectContainer(containerName).state().pid();
   }

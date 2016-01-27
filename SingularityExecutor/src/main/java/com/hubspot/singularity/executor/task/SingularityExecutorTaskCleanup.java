@@ -12,6 +12,8 @@ import com.google.common.collect.ImmutableList;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.utils.DockerUtils;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
+import com.spotify.docker.client.ContainerNotFoundException;
+import com.spotify.docker.client.messages.ContainerInfo;
 
 public class SingularityExecutorTaskCleanup {
 
@@ -34,7 +36,19 @@ public class SingularityExecutorTaskCleanup {
 
     boolean dockerCleanSuccess = true;
     if (isDocker) {
-      dockerCleanSuccess = dockerUtils.cleanDocker();
+      try {
+        String containerName = String.format("%s%s", configuration.getDockerPrefix(), taskDefinition.getTaskId());
+        ContainerInfo containerInfo = dockerUtils.inspectContainer(containerName);
+        if (containerInfo.state().running()) {
+          dockerUtils.stopContainer(containerName, configuration.getDockerStopTimeout());
+        }
+        dockerUtils.removeContainer(containerName, true);
+      } catch (ContainerNotFoundException e) {
+        log.trace("Container for task {} was already removed", taskDefinition.getTaskId());
+      } catch (Exception e) {
+        log.error("Could not ensure removal of container", e);
+        dockerCleanSuccess = false;
+      }
     }
 
     if (!Files.exists(taskDirectory)) {

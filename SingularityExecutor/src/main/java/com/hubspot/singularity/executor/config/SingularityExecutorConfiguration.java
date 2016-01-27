@@ -207,7 +207,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private List<String> shellCommandPrefix = Collections.emptyList();
 
   @JsonProperty
-  private int dockerClientTimeLimitSeconds = 600;
+  private int dockerClientTimeLimitSeconds = 300;
 
   @JsonProperty
   private int dockerClientConnectionPoolSize = 5;
