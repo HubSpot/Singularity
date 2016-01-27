@@ -272,6 +272,24 @@ class Request extends Model
                         else
                             callback()
 
+    promptDisableHealthchecksDuration: (message, duration, callback) =>
+        durationMillis = @_parseDuration(duration)
+        if durationMillis < 3600000
+            vex.dialog.confirm
+                message: '
+                    <strong>Are you sure you want to disable healthchecks for less than an hour?</strong>
+                    This may not be enough time for your service to get into a stable state.
+                '
+                buttons: [
+                    $.extend _.clone(vex.dialog.buttons.YES), text: 'Disable Healthchecks'
+                    vex.dialog.buttons.NO
+                ]
+                callback: (data) =>
+                    if data
+                        @disableHealthchecks(message, duration).done callback
+        else
+            @disableHealthchecks(message, duration).done callback
+
     promptDisableHealthchecks: (callback) =>
         vex.dialog.open
             message: "Turn <strong>off</strong> healthchecks for this request."
@@ -288,8 +306,11 @@ class Request extends Model
                 return unless data
                 duration = $('.vex #disable-healthchecks-expiration').val()
                 message = $('.vex #disable-healthchecks-message').val()
-                if !duration or (duration and @_validateDuration(duration, @promptDisableHealthchecks))
+                if !duration
                     @disableHealthchecks(message, duration).done callback
+                else if @_validateDuration(duration, @promptDisableHealthchecks)
+                    @promptDisableHealthchecksDuration(message, duration, callback)
+
 
     promptEnableHealthchecks: (callback) =>
         vex.dialog.open
