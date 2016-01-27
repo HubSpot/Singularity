@@ -148,6 +148,7 @@ class TasksView extends View
             tasks: tasks
             rowsOnly: true
             decomissioning_tasks: decomTasks
+            config: config
 
         $table = @$ ".table-staged table"
         $tableBody = $table.find "tbody"
