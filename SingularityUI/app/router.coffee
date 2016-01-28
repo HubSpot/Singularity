@@ -21,6 +21,7 @@ NotFoundController = require 'controllers/NotFound'
 DeployDetailController = require 'controllers/DeployDetail'
 
 AggregateTailController = require 'controllers/AggregateTail'
+TaskSearchController = require 'controllers/TaskSearch'
 
 class Router extends Backbone.Router
 
@@ -39,6 +40,7 @@ class Router extends Backbone.Router
         'request/:requestId(/)': 'requestDetail'
         'request/:requestId/deploy/:deployId(/)': 'deployDetail'
         'request/:requestId/tail/*path': 'aggregateTail'
+        'request/:requestId/taskSearch': 'taskSearch'
 
         'request/:requestId/deploy(/)': 'newDeploy'
 
@@ -75,6 +77,9 @@ class Router extends Backbone.Router
 
     requestDetail: (requestId) ->
         app.bootstrapController new RequestDetailController {requestId}
+
+    taskSearch: (requestId) ->
+        app.bootstrapController new TaskSearchController {requestId}
 
     newDeploy: (requestId) ->
         app.bootstrapController new NewDeployController {requestId}
