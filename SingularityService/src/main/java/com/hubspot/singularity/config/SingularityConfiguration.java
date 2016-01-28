@@ -73,6 +73,7 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("database")
   private DataSourceFactory databaseConfiguration;
 
+  @Min(value = 1, message = "Must be positive and non-zero")
   private int defaultBounceExpirationMinutes = 60;
 
   @NotNull

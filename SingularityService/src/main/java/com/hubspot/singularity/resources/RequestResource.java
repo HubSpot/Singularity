@@ -8,7 +8,6 @@ import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -152,7 +151,7 @@ public class RequestResource extends AbstractRequestResource {
   @ApiOperation(value="Bounce a specific Singularity request. A bounce launches replacement task(s), and then kills the original task(s) if the replacement(s) are healthy.",
   response=SingularityRequestParent.class)
   public SingularityRequestParent bounce(@ApiParam("The request ID to bounce") @PathParam("requestId") String requestId,
-      @ApiParam("Bounce request options") Optional<SingularityBounceRequest> maybeBounceRequest) {
+      @ApiParam("Bounce request options") Optional<SingularityBounceRequest> bounceRequest) {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
@@ -163,25 +162,7 @@ public class RequestResource extends AbstractRequestResource {
 
     SlavePlacement placement = requestWithState.getRequest().getSlavePlacement().or(configuration.getDefaultSlavePlacement());
 
-    SingularityBounceRequest bounceRequest;
-
-    if (maybeBounceRequest.isPresent()) {
-      bounceRequest = new SingularityBounceRequest(
-        maybeBounceRequest.get().getIncremental(),
-        maybeBounceRequest.get().getSkipHealthchecks(),
-        maybeBounceRequest.get().getDurationMillis().or(Optional.of(TimeUnit.MINUTES.toMillis(configuration.getDefaultBounceExpirationMinutes()))),
-        maybeBounceRequest.get().getActionId().or(Optional.of(UUID.randomUUID().toString())),
-        maybeBounceRequest.get().getMessage());
-    } else {
-      bounceRequest = new SingularityBounceRequest(
-        Optional.<Boolean>absent(),
-        Optional.<Boolean>absent(),
-        Optional.of(TimeUnit.MINUTES.toMillis(configuration.getDefaultBounceExpirationMinutes())),
-        Optional.of(UUID.randomUUID().toString()),
-        Optional.<String>absent());
-    }
-
-    final boolean isIncrementalBounce = bounceRequest.getIncremental().or(false);
+    final boolean isIncrementalBounce = bounceRequest.isPresent() && bounceRequest.get().getIncremental().or(false);
 
     if (placement != SlavePlacement.GREEDY && placement != SlavePlacement.OPTIMISTIC) {
       int currentActiveSlaveCount = slaveManager.getNumObjectsAtState(MachineState.ACTIVE);
@@ -190,18 +171,28 @@ public class RequestResource extends AbstractRequestResource {
       checkBadRequest(currentActiveSlaveCount >= requiredSlaveCount, "Not enough active slaves to successfully complete a bounce of request %s (minimum required: %s, current: %s). Consider deploying, or changing the slave placement strategy instead.", requestId, requiredSlaveCount, currentActiveSlaveCount);
     }
 
+    final Optional<Boolean> skipHealthchecks = bounceRequest.isPresent() ? bounceRequest.get().getSkipHealthchecks() : Optional.<Boolean> absent();
+
+    Optional<String> message = Optional.absent();
+    Optional<String> actionId = Optional.absent();
+
+    if (bounceRequest.isPresent()) {
+      actionId = bounceRequest.get().getActionId();
+      message = bounceRequest.get().getMessage();
+    }
+
     final String deployId = getAndCheckDeployId(requestId);
 
     SingularityCreateResult createResult = requestManager.createCleanupRequest(
         new SingularityRequestCleanup(JavaUtils.getUserEmail(user), isIncrementalBounce ? RequestCleanupType.INCREMENTAL_BOUNCE : RequestCleanupType.BOUNCE,
-            System.currentTimeMillis(), Optional.<Boolean> absent(), requestId, Optional.of(deployId), bounceRequest.getSkipHealthchecks(), bounceRequest.getMessage(), bounceRequest.getActionId()));
+            System.currentTimeMillis(), Optional.<Boolean> absent(), requestId, Optional.of(deployId), skipHealthchecks, message, actionId));
 
     checkConflict(createResult != SingularityCreateResult.EXISTED, "%s is already bouncing", requestId);
 
-    requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), JavaUtils.getUserEmail(user), bounceRequest.getMessage());
+    requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), JavaUtils.getUserEmail(user), message);
 
     requestManager.saveExpiringObject(new SingularityExpiringBounce(requestId, deployId, JavaUtils.getUserEmail(user),
-        System.currentTimeMillis(), bounceRequest, bounceRequest.getActionId().get()));
+        System.currentTimeMillis(), bounceRequest.or(SingularityBounceRequest.defaultRequest()), actionId.or(UUID.randomUUID().toString())));
 
     return fillEntireRequest(requestWithState);
   }
