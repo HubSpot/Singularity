@@ -204,7 +204,6 @@ class Request extends Model
             contentType: 'application/json'
             data: JSON.stringify(data)
 
-<<<<<<< HEAD
     stepDeploy: (deployId, instances) =>
         data =
             requestId: @get "id"
@@ -221,10 +220,7 @@ class Request extends Model
             type: "DELETE"
             url: "#{ config.apiRoot }/deploys/deploy/#{deployId}/request/#{@get('id')}"
 
-    _validateDuration: (duration, action) =>
-=======
     _validateDuration: (duration, action, callback) =>
->>>>>>> master
         if @_parseDuration(duration)
             return true
         else
