@@ -8,4 +8,8 @@ public class ProcessFailedException extends Exception {
     super(message);
   }
 
+  public ProcessFailedException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
 }
