@@ -19,7 +19,7 @@ class requestActionExpirations extends View
         if request.expiringScale and (request.expiringScale.startMillis + request.expiringScale.expiringAPIRequestObject.durationMillis) > new Date().getTime()
             expirations.push
                 action: "Scale (to #{request.request.instances} instances)"
-                user: request.expiringScale.user.split('@')[0]
+                user: if request.expiringScale.user then request.expiringScale.user.split('@')[0] else ""
                 endMillis: request.expiringScale.startMillis + request.expiringScale.expiringAPIRequestObject.durationMillis
                 canRevert: true
                 cancelText: 'Make Permanent'
@@ -32,7 +32,7 @@ class requestActionExpirations extends View
         if request.expiringBounce and (request.expiringBounce.startMillis + request.expiringBounce.expiringAPIRequestObject.durationMillis) > new Date().getTime()
             expirations.push
                 action: 'Bounce'
-                user: request.expiringBounce.user.split('@')[0]
+                user: if request.expiringBounce.user then request.expiringBounce.user.split('@')[0] else ""
                 endMillis: request.expiringBounce.startMillis + request.expiringBounce.expiringAPIRequestObject.durationMillis
                 canRevert: false
                 cancelText: 'Cancel'
@@ -42,7 +42,7 @@ class requestActionExpirations extends View
         if request.expiringPause and (request.expiringPause.startMillis + request.expiringPause.expiringAPIRequestObject.durationMillis) > new Date().getTime()
             expirations.push
                 action: 'Pause'
-                user: request.expiringPause.user.split('@')[0]
+                user: if request.expiringPause.user then request.expiringPause.user.split('@')[0] else ""
                 endMillis: request.expiringPause.startMillis + request.expiringPause.expiringAPIRequestObject.durationMillis
                 canRevert: true
                 cancelText: 'Make Permanent'
@@ -54,7 +54,7 @@ class requestActionExpirations extends View
         if request.expiringSkipHealthchecks and (request.expiringSkipHealthchecks.startMillis + request.expiringSkipHealthchecks.expiringAPIRequestObject.durationMillis) > new Date().getTime()
             expirations.push
                 action: if request.expiringSkipHealthchecks.expiringAPIRequestObject.skipHealthchecks then 'Disable Healthchecks' else 'Enable Healthchecks'
-                user: request.expiringSkipHealthchecks.user.split('@')[0]
+                user: if request.expiringSkipHealthchecks.user then request.expiringSkipHealthchecks.user.split('@')[0] else ""
                 endMillis: request.expiringSkipHealthchecks.startMillis + request.expiringSkipHealthchecks.expiringAPIRequestObject.durationMillis
                 canRevert: true
                 cancelText: 'Make Permanent'
