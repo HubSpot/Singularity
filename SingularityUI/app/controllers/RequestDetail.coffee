@@ -77,6 +77,8 @@ class RequestDetailController extends Controller
         @subviews.requestHistoryMsg = new SimpleSubview
             collection: @collections.requestHistory
             template:   @templates.requestHistoryMsg
+            extraRenderData: (subView) =>
+                { request: @models.request.toJSON() }
 
         @subviews.stats = new SimpleSubview
             model:      @models.activeDeployStats
