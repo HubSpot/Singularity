@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,7 @@ import org.apache.mesos.Protos.Label;
 import org.apache.mesos.Protos.Labels;
 import org.apache.mesos.Protos.Labels.Builder;
 import org.apache.mesos.Protos.Offer;
+import org.apache.mesos.Protos.Parameter;
 import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskInfo;
@@ -81,12 +83,16 @@ class SingularityMesosTaskBuilder {
     Optional<long[]> ports = Optional.absent();
     Optional<Resource> portsResource = Optional.absent();
 
-    if (desiredTaskResources.getNumPorts() > 0) {
-      portsResource = Optional.of(MesosUtils.getPortsResource(desiredTaskResources.getNumPorts(), availableResources));
+    final Optional<SingularityContainerInfo> containerInfo = taskRequest.getDeploy().getContainerInfo();
+    if (desiredTaskResources.getNumPorts() > 0 || hasLiteralPortMapping(containerInfo)) {
+      List<Long> requestedPorts = new ArrayList<>();
+      if (hasLiteralPortMapping(containerInfo)) {
+        requestedPorts.addAll(containerInfo.get().getDocker().get().getLiteralHostPorts());
+      }
+      portsResource = Optional.of(MesosUtils.getPortsResource(desiredTaskResources.getNumPorts(), availableResources, requestedPorts));
       ports = Optional.of(MesosUtils.getPorts(portsResource.get(), desiredTaskResources.getNumPorts()));
     }
 
-    final Optional<SingularityContainerInfo> containerInfo = taskRequest.getDeploy().getContainerInfo();
     if (containerInfo.isPresent()) {
       prepareContainerInfo(offer, taskId, bldr, containerInfo.get(), ports);
     }
@@ -119,6 +125,10 @@ class SingularityMesosTaskBuilder {
     TaskInfo task = bldr.build();
 
     return new SingularityTask(taskRequest, taskId, offer, task, slaveAndRackHelper.getRackId(offer));
+  }
+
+  private boolean hasLiteralPortMapping(Optional<SingularityContainerInfo> maybeContainerInfo) {
+    return maybeContainerInfo.isPresent() && maybeContainerInfo.get().getDocker().isPresent() && !maybeContainerInfo.get().getDocker().get().getLiteralHostPorts().isEmpty();
   }
 
   private void setEnv(Environment.Builder envBldr, String key, Object value) {
@@ -161,14 +171,14 @@ class SingularityMesosTaskBuilder {
     commandBuilder.setEnvironment(envBldr.build());
   }
 
-  private Optional<DockerInfo.PortMapping> buildPortMapping(final SingularityDockerPortMapping singularityDockerPortMapping, long[] ports) {
+  private Optional<DockerInfo.PortMapping> buildPortMapping(final SingularityDockerPortMapping singularityDockerPortMapping, final Optional<long[]> ports) {
     final int containerPort;
     switch (singularityDockerPortMapping.getContainerPortType()) {
       case LITERAL:
         containerPort = singularityDockerPortMapping.getContainerPort();
         break;
       case FROM_OFFER:
-        containerPort = Ints.checkedCast(ports[singularityDockerPortMapping.getContainerPort()]);
+        containerPort = Ints.checkedCast(ports.get()[singularityDockerPortMapping.getContainerPort()]);
         break;
       default:
         return Optional.absent();
@@ -180,7 +190,7 @@ class SingularityMesosTaskBuilder {
         hostPort = singularityDockerPortMapping.getHostPort();
         break;
       case FROM_OFFER:
-        hostPort = Ints.checkedCast(ports[singularityDockerPortMapping.getHostPort()]);
+        hostPort = Ints.checkedCast(ports.get()[singularityDockerPortMapping.getHostPort()]);
         break;
       default:
         return Optional.absent();
@@ -221,14 +231,22 @@ class SingularityMesosTaskBuilder {
         dockerInfoBuilder.setNetwork(DockerInfo.Network.valueOf(dockerInfo.get().getNetwork().get().toString()));
       }
 
-      if (ports.isPresent() && !dockerInfo.get().getPortMappings().isEmpty()) {
+      if ((dockerInfo.get().hasAllLiteralHostPortMappings() || ports.isPresent()) && !dockerInfo.get().getPortMappings().isEmpty()) {
         for (SingularityDockerPortMapping singularityDockerPortMapping : dockerInfo.get().getPortMappings()) {
-          final Optional<DockerInfo.PortMapping> maybePortMapping = buildPortMapping(singularityDockerPortMapping, ports.get());
+          final Optional<DockerInfo.PortMapping> maybePortMapping = buildPortMapping(singularityDockerPortMapping, ports);
 
           if (maybePortMapping.isPresent()) {
             dockerInfoBuilder.addPortMappings(maybePortMapping.get());
           }
         }
+      }
+
+      if (!dockerInfo.get().getParameters().isEmpty()) {
+        List<Parameter> parameters = new ArrayList<>();
+        for (Map.Entry<String, String> entry : dockerInfo.get().getParameters().entrySet()) {
+          parameters.add(Parameter.newBuilder().setKey(entry.getKey()).setValue(entry.getValue()).build());
+        }
+        dockerInfoBuilder.addAllParameters(parameters);
       }
 
       dockerInfoBuilder.setPrivileged(dockerInfo.get().isPrivileged());

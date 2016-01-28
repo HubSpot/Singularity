@@ -66,7 +66,9 @@ public class S3ArtifactChunkDownloader implements Callable<Path> {
         } catch (TimeoutException te) {
           log.error("Chunk {} (retry {}) for {} timed out after {} - total duration {}", chunk, retryNum, s3Artifact.getFilename(), JavaUtils.duration(timeout), JavaUtils.duration(start));
           future.cancel(true);
-          exceptionNotifier.notify(te, ImmutableMap.of("filename", s3Artifact.getFilename(), "chunk", Integer.toString(chunk), "retry", Integer.toString(retryNum)));
+          if (retryNum == configuration.getS3ChunkRetries()) {
+            exceptionNotifier.notify(te, ImmutableMap.of("filename", s3Artifact.getFilename(), "chunk", Integer.toString(chunk), "retry", Integer.toString(retryNum)));
+          }
         } catch (InterruptedException ie) {
           log.warn("Chunk {} (retry {}) for {} interrupted", chunk, retryNum, s3Artifact.getFilename());
           exceptionNotifier.notify(ie, ImmutableMap.of("filename", s3Artifact.getFilename(), "chunk", Integer.toString(chunk), "retry", Integer.toString(retryNum)));

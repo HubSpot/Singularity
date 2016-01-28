@@ -206,7 +206,7 @@ class TaskDetailController extends Controller
                 logPath = logPath.replace('$TASK_ID', @taskId)
                 logPath = _.initial(logPath.split('/')).join('/')
                 @collections.logDirectory.path = logPath
-                @collections.logDirectory.fetch()
+                @collections.logDirectory.fetch().error @ignore400
             .success =>
                 @getAlerts()
             .error =>

@@ -149,6 +149,7 @@ InterleavedTail = React.createClass
       Promise.all(promises).then =>
         @resetMergedLines()
         @refs.contents.scrollToTop()
+        @refs.contents.loadFromTop()
 
   scrollToBottom: ->
     if _.every(@props.logLines, (logLines) => logLines.state.get('moreToFetch') is true)

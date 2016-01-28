@@ -1,10 +1,12 @@
 package com.hubspot.mesos;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
@@ -51,6 +53,27 @@ public class SingularityDockerInfo {
 
   public List<SingularityDockerPortMapping> getPortMappings() {
     return portMappings;
+  }
+
+  public boolean hasAllLiteralHostPortMappings() {
+    for (SingularityDockerPortMapping mapping : portMappings) {
+      if (mapping.getHostPortType() == SingularityPortMappingType.FROM_OFFER) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  @JsonIgnore
+  public List<Long> getLiteralHostPorts() {
+    List<Long> literalHostPorts = new ArrayList<>();
+    for (SingularityDockerPortMapping mapping : portMappings) {
+      if (mapping.getHostPortType() == SingularityPortMappingType.LITERAL) {
+        long port = mapping.getHostPort();
+        literalHostPorts.add(port);
+      }
+    }
+    return literalHostPorts;
   }
 
   public boolean isForcePullImage() {
