@@ -4,15 +4,19 @@ TaskSearch = require '../components/taskSearch/TaskSearch'
 
 class TaskSearchView extends View
 
-	initialize: (@requestId, opts) ->
-		#
+	requestId: ''
+
+	initialize: (@requestId, @requestLocked, opts) ->
 
 	handleViewChange: =>
 
 	render: ->
       $(@el).addClass("task-search-root")
       ReactDOM.render(
-        <TaskSearch />,
+        <TaskSearch 
+         requestId = {@requestId}
+         requestLocked = {@requestLocked}
+        />,
         @el);
 
 

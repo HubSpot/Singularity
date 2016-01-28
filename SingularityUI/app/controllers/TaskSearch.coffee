@@ -8,7 +8,7 @@ class TaskSearchController extends Controller
 
     initialize: ({@requestLocked, @requestId}) ->
         @title 'Task Search'
-        @view = new TaskSearchView
+        @view = new TaskSearchView @requestId
         @setView @view
 
         #@fetchCollections()
