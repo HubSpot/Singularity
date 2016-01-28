@@ -198,5 +198,4 @@ class Utils
         else
           {}
 
-
 module.exports = Utils

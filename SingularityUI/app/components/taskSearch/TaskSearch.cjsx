@@ -1,5 +1,7 @@
 Utils = require '../../utils'
 
+Enums = require './Enums'
+
 TaskSearch = React.createClass
 
     headerText: 'Search for Tasks'
@@ -22,6 +24,27 @@ TaskSearch = React.createClass
             blah: 'You hit the button!'
         }
 
+    makeFormField: (title, inputType, changeFn, valueAttr) ->
+        return <tr>
+                    <th><b> {title} </b> </th>
+                    <th><input type={inputType} onChange={changeFn} value={valueAttr} size=50 /></th>
+                </tr>
+
+    makeDropDown: (enumeration, forceChooseValue, title, inputType, changeFn, valueAttr) ->
+        dropDownOpts = []
+        if not forceChooseValue
+            dropDownOpts.push(<option key=0 value='noValueChosen'>Any</option>)
+        i = 1
+        for element in enumeration
+            dropDownOpts.push(<option key={i} value={element.value}>{element.user}</option>)
+            i++
+        return <tr>
+                    <th><b> {title} </b></th>
+                    <th><select type={inputType} onChange={changeFn} value={this.state.sortDirection}>
+                        {dropDownOpts}
+                    </select></th>
+                </tr>
+
     onChangeRequestId: (event) ->
         if @props.requestLocked
             return @state
@@ -33,39 +56,15 @@ TaskSearch = React.createClass
         <div>
             <h2> {@headerText} </h2>
             <form onSubmit={@handleSubmit}>
-                <table >
-                    <tr>
-                        <th><b> Request ID </b></th>
-                        <th><input type='requestId' onChange={this.onChangeRequestId} value={this.state.requestId} size=50 /></th>
-                    </tr>
-                    <tr>
-                        <th><b> Deploy ID </b></th>
-                        <th><input type='deployId' onChange={this.onChange} value={this.state.deployId} size=50 /></th>
-                    </tr>
-                    <tr>
-                        <th><b> Host </b></th>
-                        <th><input type='host' onChange={this.onChange} value={this.state.host} size=50 /></th>
-                    </tr>
-                    <tr>
-                        <th><b> Last Task Status </b></th>
-                        <th><input type='lastTaskStatus' onChange={this.onChange} value={this.state.lastTaskStatus} size=50 /></th>
-                    </tr>
-                    <tr>
-                        <th><b> Started Before </b></th>
-                        <th><input type='startedBefore' onChange={this.onChange} value={this.state.startedBefore} size=50 /></th>
-                    </tr>
-                    <tr>
-                        <th><b> Started After </b></th>
-                        <th><input type='startedAfter' onChange={this.onChange} value={this.state.startedAfter} size=50 /></th>
-                    </tr>
-                    <tr>
-                        <th><b> Sort Direction </b></th>
-                        <th><select value={this.state.selectValue} onChange={this.handleChange}>
-                                <option value="Ascending">Ascending</option>
-                                <option value="Descending">Descending</option>
-                        </select></th>
-                    </tr>
-                </table>
+                <table ><tbody>
+                    {@makeFormField 'Request ID', 'requestId', @onChangeRequestId, @state.requestId}
+                    {@makeFormField 'Deploy ID', 'deployId', @onChangeDeployID, @state.deployId}
+                    {@makeFormField 'Host', 'host', @onChangeHost, @state.host}
+                    {@makeDropDown Enums.extendedTaskState(), false, 'Last Task Status', 'lastTaskStatus', @handleChangeLastTaskStatus, @state.lastTaskStatus}
+                    {@makeFormField 'Started Before', 'startedBefore', @onChangeStartedBefore, @state.startedBefore}
+                    {@makeFormField 'Started After', 'startedAfter', @onChangeStartedAfter, @state.startedAfter}
+                    {@makeDropDown Enums.sortDirections(), true, 'Sort Direction', 'sortDirection', @handleChangeSortDirection, @state.sortDirection}
+                </tbody></table>
                 <button>Search</button>
             </form>
         </div>
