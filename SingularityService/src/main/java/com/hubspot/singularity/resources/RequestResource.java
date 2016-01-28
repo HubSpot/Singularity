@@ -181,6 +181,10 @@ public class RequestResource extends AbstractRequestResource {
       message = bounceRequest.get().getMessage();
     }
 
+    if (!actionId.isPresent()) {
+      actionId = Optional.of(UUID.randomUUID().toString());
+    }
+
     final String deployId = getAndCheckDeployId(requestId);
 
     SingularityCreateResult createResult = requestManager.createCleanupRequest(
@@ -192,7 +196,7 @@ public class RequestResource extends AbstractRequestResource {
     requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), JavaUtils.getUserEmail(user), message);
 
     requestManager.saveExpiringObject(new SingularityExpiringBounce(requestId, deployId, JavaUtils.getUserEmail(user),
-        System.currentTimeMillis(), bounceRequest.or(SingularityBounceRequest.defaultRequest()), actionId.or(UUID.randomUUID().toString())));
+        System.currentTimeMillis(), bounceRequest.or(SingularityBounceRequest.defaultRequest()), actionId.get()));
 
     return fillEntireRequest(requestWithState);
   }
