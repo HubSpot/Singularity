@@ -65,7 +65,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
       try {
         dockerUtils.pull(task.getTaskInfo().getContainer().getDocker().getImage());
       } catch (DockerException e) {
-        throw new ProcessFailedException(String.format("Could not pull docker image due to error: %s", e));
+        throw new ProcessFailedException("Could not pull docker image", e);
       }
     }
 

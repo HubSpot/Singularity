@@ -7,9 +7,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.inject.Inject;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.spotify.docker.client.DockerClient;
@@ -18,9 +15,6 @@ import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ContainerInfo;
 
 public class DockerUtils {
-  private static final Logger LOG = LoggerFactory.getLogger(DockerUtils.class);
-
-
   private final SingularityExecutorConfiguration configuration;
   private final DockerClient dockerClient;
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -49,7 +43,6 @@ public class DockerUtils {
     try {
       return callWithTimeout(callable);
     } catch (Exception e) {
-      LOG.error("Caught exception while getting container status", e);
       throw new DockerException(e);
     }
   }
@@ -65,7 +58,6 @@ public class DockerUtils {
     try {
       callWithTimeout(callable);
     } catch (Exception e) {
-      LOG.error("Could not pull image due to error", e);
       throw new DockerException(e);
     }
   }
@@ -80,7 +72,6 @@ public class DockerUtils {
     try {
       return callWithTimeout(callable);
     } catch (Exception e) {
-      LOG.error("Caught exception attempting to list containers", e);
       throw new DockerException(e);
     }
   }
@@ -96,7 +87,6 @@ public class DockerUtils {
     try {
       callWithTimeout(callable);
     } catch (Exception e) {
-      LOG.error("Caught exception attempting to stop container", e);
       throw new DockerException(e);
     }
   }
@@ -112,7 +102,6 @@ public class DockerUtils {
     try {
       callWithTimeout(callable);
     } catch (Exception e) {
-      LOG.error("Caught exception attempting to stop container", e);
       throw new DockerException(e);
     }
   }
