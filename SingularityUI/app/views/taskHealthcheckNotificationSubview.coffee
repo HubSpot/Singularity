@@ -21,8 +21,19 @@ class taskHealthcheckNotificationSubview extends View
         deployId = @model.get('task').taskId.deployId
         deployStatus = @pendingDeploys.find (item) -> item.get('deployMarker') and item.get('deployMarker').requestId is requestId and item.get('deployMarker').deployId is deployId and item.get('currentDeployState') is 'WAITING'
 
+        taskHealthyMessage = "Waiting for successful load balancer update"
+
+        if deployStatus and deployStatus.get('deployProgress')
+            if deployStatus.get('deployProgress').stepComplete
+                instanceNo = @model.get('task').taskId.instanceNo
+                targetInstances = deployStatus.get('deployProgress').targetActiveInstances
+                prevTarget = deployStatus.get('deployProgress').targetActiveInstances - deployStatus.get('deployProgress').deployInstanceCountPerStep
+                if (instanceNo <= targetInstances and instanceNo > prevTarget) or not @model.get('task').taskRequest.request.loadBalanced
+                    taskHealthyMessage = "Waiting for subsequent deploy steps to complete"
+
         data:             @model.toJSON()
-        isDeployPending:  !!deployStatus
+        deployStatus:     deployStatus
+        taskHealthyMessage: taskHealthyMessage
         hasSuccessfulHealthcheck: @model.get('healthcheckResults')?.length > 0 and _.find(@model.get('healthcheckResults'), (item) -> item.statusCode is 200)
         lastHealthcheckFailed: @model.get('healthcheckResults')?.length > 0 and @model.get('healthcheckResults')[0].statusCode isnt 200
         synced:           @model.synced

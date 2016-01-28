@@ -53,6 +53,10 @@ public class SingularityDeployBuilder {
   private Optional<Set<String>> loadBalancerGroups;
   private Optional<Map<String, Object>> loadBalancerOptions;
 
+  private Optional<Integer> deployInstanceCountPerStep;
+  private Optional<Integer> deployStepWaitTimeSeconds;
+  private Optional<Boolean> autoAdvanceDeploySteps;
+
   public SingularityDeployBuilder(String requestId, String id) {
     this.requestId = requestId;
     this.id = id;
@@ -84,12 +88,16 @@ public class SingularityDeployBuilder {
     this.serviceBasePath = Optional.absent();
     this.loadBalancerGroups = Optional.absent();
     this.loadBalancerOptions = Optional.absent();
+    this.deployInstanceCountPerStep = Optional.absent();
+    this.deployStepWaitTimeSeconds = Optional.absent();
+    this.autoAdvanceDeploySteps = Optional.absent();
   }
 
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, customExecutorUser, resources, env,
         uris, metadata, executorData, version, timestamp, labels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckMaxRetries,
-        healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy, healthcheckProtocol);
+        healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy, healthcheckProtocol,
+      deployInstanceCountPerStep, deployStepWaitTimeSeconds, autoAdvanceDeploySteps);
   }
 
   public String getRequestId() {
@@ -357,6 +365,33 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<Integer> getDeployInstanceCountPerStep() {
+    return deployInstanceCountPerStep;
+  }
+
+  public SingularityDeployBuilder setDeployInstanceCountPerStep(Optional<Integer> deployInstanceCountPerStep) {
+    this.deployInstanceCountPerStep = deployInstanceCountPerStep;
+    return this;
+  }
+
+  public Optional<Integer> getDeployStepWaitTimeSeconds() {
+    return deployStepWaitTimeSeconds;
+  }
+
+  public SingularityDeployBuilder setDeployStepWaitTimeSeconds(Optional<Integer> deployStepWaitTimeSeconds) {
+    this.deployStepWaitTimeSeconds = deployStepWaitTimeSeconds;
+    return this;
+  }
+
+  public Optional<Boolean> getAutoAdvanceDeploySteps() {
+    return autoAdvanceDeploySteps;
+  }
+
+  public SingularityDeployBuilder setAutoAdvanceDeploySteps(Optional<Boolean> autoAdvanceDeploySteps) {
+    this.autoAdvanceDeploySteps = autoAdvanceDeploySteps;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeployBuilder{" +
@@ -390,6 +425,8 @@ public class SingularityDeployBuilder {
       ", serviceBasePath=" + serviceBasePath +
       ", loadBalancerGroups=" + loadBalancerGroups +
       ", loadBalancerOptions=" + loadBalancerOptions +
+      ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
+      ", deployStepWaitTimeSeconds=" + deployStepWaitTimeSeconds +
       '}';
   }
 

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
 public class SingularityTaskCleanup {
-
   private final Optional<String> user;
   private final TaskCleanupType cleanupType;
   private final long timestamp;
