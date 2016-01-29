@@ -14,7 +14,7 @@ class TaskSearchView extends View
       $(@el).addClass("task-search-root")
       ReactDOM.render(
         <TaskSearch 
-         requestId = {@requestId}
+         defaultRequestId = {@requestId}
          requestLocked = {@requestLocked}
         />,
         @el);
