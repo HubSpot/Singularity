@@ -126,6 +126,21 @@ public class SingularityCleaner {
 
     final Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestId);
 
+    if (taskCleanup.getCleanupType() == TaskCleanupType.DECOMISSIONING && deployState.get().getPendingDeploy().isPresent()
+        && deployState.get().getPendingDeploy().get().getDeployId().equals(taskCleanup.getTaskId().getDeployId())) {
+      final long timeSinceCleanup = System.currentTimeMillis() - taskCleanup.getTimestamp();
+      final long maxWaitTime = configuration.getPendingDeployHoldTaskDuringDecommissionMillis();
+      final boolean tooOld = (maxWaitTime < 1) || (timeSinceCleanup > maxWaitTime);
+
+      if (!tooOld) {
+        LOG.trace("Not killing {} - part of pending deploy - running time since cleanup {} (max wait time is {})", taskCleanup, timeSinceCleanup, maxWaitTime);
+        return false;
+      } else {
+        LOG.debug("Killing {} - part of pending deploy but running time since cleanup {} exceeded max wait time {}", taskCleanup, timeSinceCleanup, maxWaitTime);
+        return true;
+      }
+    }
+
     if (!deployState.isPresent() || !deployState.get().getActiveDeploy().isPresent()) {
       LOG.debug("Killing a task {} immediately because there is no active deploy state {}", taskCleanup, deployState);
       return true;
@@ -134,7 +149,7 @@ public class SingularityCleaner {
     final String activeDeployId = deployState.get().getActiveDeploy().get().getDeployId();
 
     if (!taskCleanup.getTaskId().getDeployId().equals(activeDeployId)) {
-      LOG.debug("Killing a task {} immediately because it is not part of the active deploy {}", taskCleanup, deployState.get().getActiveDeploy().get());
+      LOG.debug("Killing {} immediately because it is not part of the active deploy {}", taskCleanup, deployState.get().getActiveDeploy().get());
       return true;
     }
 
