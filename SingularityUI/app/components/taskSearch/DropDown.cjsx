@@ -2,21 +2,6 @@ Utils = require '../../utils'
 
 DropDown = React.createClass
 
-	getInitialState: ->
-		if @props.forceChooseValue
-			return {
-				value: @props.defaultValue
-			}
-		else
-			return {
-				value: 'noValueChosen'
-			}
-
-	handleChange: (event) ->
-		@setState {
-			value: event.target.value
-		}
-
 	render: ->
         dropDownOpts = []
         if not @props.forceChooseValue
@@ -27,7 +12,7 @@ DropDown = React.createClass
             i++
         return <tr>
                     <th><b> {@props.title} </b></th>
-                    <th><select type={@props.inputType} onChange={@handleChange} value={@state.value} defaultValue={@props.defaultValue}>
+                    <th><select type={@props.inputType} onChange={@props.updateFn} value={@props.value} defaultValue={@props.defaultValue}>
                         {dropDownOpts}
                     </select></th>
                 </tr>

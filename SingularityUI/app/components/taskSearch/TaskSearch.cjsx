@@ -8,21 +8,56 @@ TaskSearch = React.createClass
 
     headerText: 'Search for Tasks'
 
-    attributeOrEmptyString: (attr) ->
-        if attr
-            return attr
-        else
-            return ''
-
     getInitialState: ->
         return {
+            requestId: @props.initialRequestId
+            deployId: @props.initialDeployId
+            host: @props.initialHost
+            lastTaskStatus: @props.initialTaskStatus
+            startedBefore: @props.initialStartedBefore
+            startedAfter: @props.initialStartedAfter
+            sortDirection: @props.initialSortDirection
         }
 
     handleSubmit: (event) ->
-        @setState {
-            blah: 'You hit the button!'
-        }
+        console.error(@state)
 
+    # Annoying that we need a new function for each property.
+    # Unfortuantely using a curried function doesn't seem to work.
+    updateReqeustId: (event) ->
+        @setState({
+            requestId: event.target.value
+        })
+
+    updateDeployId: (event) ->
+        @setState({
+            deployId: event.target.value
+        })
+
+    updateHost: (event) ->
+        @setState({
+            host: event.target.value
+        })
+
+    updateLastTaskStatus: (event) ->
+        @setState({
+            lastTaskStatus: event.target.value
+        })
+
+    updateStartedBefore: (event) ->
+        @setState({
+            startedBefore: event.target.value
+        })
+
+    updateStartedAfter: (event) ->
+        @setState({
+            startedAfter: event.target.value
+        })
+
+    updateSortDirection: (event) ->
+        @setState({
+            sortDirection: event.target.value
+        })
 
     render: ->
         <div>
@@ -31,36 +66,44 @@ TaskSearch = React.createClass
                 <table ><tbody>
                     <FormField 
                         title = 'Request ID' 
-                        initialValue = @props.defaultRequestId 
+                        value = @state.requestId 
                         inputType = 'requestId'
-                        disabled = @props.requestLocked />
+                        disabled = @props.requestLocked
+                        updateFn = @updateReqeustId />
                     <FormField 
                         title = 'Deploy ID' 
-                        initialValue = @props.defaultDeployId 
-                        inputType = 'deployId' />
+                        value = @state.deployId 
+                        inputType = 'deployId'
+                        updateFn = @updateDeployId />
                     <FormField 
                         title = 'Host' 
-                        initialValue = @props.defaultHost 
-                        inputType = 'host' />
+                        value = @state.host 
+                        inputType = 'host'
+                        updateFn = @updateHost />
                     <DropDown
                         forceChooseValue = false
+                        value = @state.lastTaskStatus
                         choices = Enums.extendedTaskState()
                         inputType = 'lastTaskStatus'
-                        title = 'Last Task Status' />
+                        title = 'Last Task Status'
+                        updateFn = @updateLastTaskStatus />
                     <FormField 
                         title = 'Started Before' 
-                        initialValue = @props.defaultStartedBefore 
-                        inputType = 'startedBefore' />
+                        value = @state.startedBefore 
+                        inputType = 'startedBefore'
+                        updateFn = @updateStartedBefore />
                     <FormField 
                         title = 'Started After' 
-                        initialValue = @props.defaultStartedAfter 
-                        inputType = 'startedAfter' />
+                        value = @state.startedAfter 
+                        inputType = 'startedAfter'
+                        updateFn = @updateStartedAfter />
                     <DropDown
                         forceChooseValue = true
-                        defaultValue = 'ASC'
+                        value = @state.sortDirection
                         choices = Enums.sortDirections()
                         inputType = 'sortDirection'
-                        title = 'Sort Direction' />
+                        title = 'Sort Direction'
+                        updateFn = @updateSortDirection />
                 </tbody></table>
                 <button>Search</button>
             </form>

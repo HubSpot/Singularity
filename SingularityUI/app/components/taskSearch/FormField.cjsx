@@ -2,23 +2,13 @@ Utils = require '../../utils'
 
 FormField = React.createClass
 
-	getInitialState: ->
-		return {
-			value: @props.initialValue
-		}
-
-	handleChange: (event) ->
-		@setState {
-			value: event.target.value
-		}
-
 	render: ->
 		<tr>
             <th><b> {@props.title} </b> </th>
             <th><input 
             		type = {@props.inputType} 
-            		onChange = {@handleChange} 
-            		value = {@state.value} 
+            		onChange = {@props.updateFn} 
+            		value = {@props.value} 
             		size = 50 />
             </th>
         </tr>
