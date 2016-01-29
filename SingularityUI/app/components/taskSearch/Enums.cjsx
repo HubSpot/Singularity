@@ -1,6 +1,8 @@
 class Enums
 
-	@sortDirections: -> return [{user: 'Ascending', value: 'ASC'}, {user: 'Descending', value: 'DESC'}]
+	@sortDirections: -> return [
+						{user: 'Ascending', value: 'ASC'}, 
+						{user: 'Descending', value: 'DESC'}]
 
 	@extendedTaskState:  -> return [
 						{user: 'Cleaning', value: 'TASK_CLEANING'},

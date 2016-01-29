@@ -1,6 +1,8 @@
 Utils = require '../../utils'
-
 Enums = require './Enums'
+
+FormField = require './FormField'
+DropDown = require './DropDown'
 
 TaskSearch = React.createClass
 
@@ -14,9 +16,6 @@ TaskSearch = React.createClass
 
     getInitialState: ->
         return {
-            blah: 'Blah!'
-            text: 'Hello World!!!'
-            requestId: @attributeOrEmptyString(@props.requestId)
         }
 
     handleSubmit: (event) ->
@@ -24,46 +23,44 @@ TaskSearch = React.createClass
             blah: 'You hit the button!'
         }
 
-    makeFormField: (title, inputType, changeFn, valueAttr) ->
-        return <tr>
-                    <th><b> {title} </b> </th>
-                    <th><input type={inputType} onChange={changeFn} value={valueAttr} size=50 /></th>
-                </tr>
-
-    makeDropDown: (enumeration, forceChooseValue, title, inputType, changeFn, valueAttr) ->
-        dropDownOpts = []
-        if not forceChooseValue
-            dropDownOpts.push(<option key=0 value='noValueChosen'>Any</option>)
-        i = 1
-        for element in enumeration
-            dropDownOpts.push(<option key={i} value={element.value}>{element.user}</option>)
-            i++
-        return <tr>
-                    <th><b> {title} </b></th>
-                    <th><select type={inputType} onChange={changeFn} value={this.state.sortDirection}>
-                        {dropDownOpts}
-                    </select></th>
-                </tr>
-
-    onChangeRequestId: (event) ->
-        if @props.requestLocked
-            return @state
-        @setState {
-            requestId: event.target.value
-        }
 
     render: ->
         <div>
             <h2> {@headerText} </h2>
             <form onSubmit={@handleSubmit}>
                 <table ><tbody>
-                    {@makeFormField 'Request ID', 'requestId', @onChangeRequestId, @state.requestId}
-                    {@makeFormField 'Deploy ID', 'deployId', @onChangeDeployID, @state.deployId}
-                    {@makeFormField 'Host', 'host', @onChangeHost, @state.host}
-                    {@makeDropDown Enums.extendedTaskState(), false, 'Last Task Status', 'lastTaskStatus', @handleChangeLastTaskStatus, @state.lastTaskStatus}
-                    {@makeFormField 'Started Before', 'startedBefore', @onChangeStartedBefore, @state.startedBefore}
-                    {@makeFormField 'Started After', 'startedAfter', @onChangeStartedAfter, @state.startedAfter}
-                    {@makeDropDown Enums.sortDirections(), true, 'Sort Direction', 'sortDirection', @handleChangeSortDirection, @state.sortDirection}
+                    <FormField 
+                        title = 'Request ID' 
+                        initialValue = @props.defaultRequestId 
+                        inputType = 'requestId'
+                        disabled = @props.requestLocked />
+                    <FormField 
+                        title = 'Deploy ID' 
+                        initialValue = @props.defaultDeployId 
+                        inputType = 'deployId' />
+                    <FormField 
+                        title = 'Host' 
+                        initialValue = @props.defaultHost 
+                        inputType = 'host' />
+                    <DropDown
+                        forceChooseValue = false
+                        choices = Enums.extendedTaskState()
+                        inputType = 'lastTaskStatus'
+                        title = 'Last Task Status' />
+                    <FormField 
+                        title = 'Started Before' 
+                        initialValue = @props.defaultStartedBefore 
+                        inputType = 'startedBefore' />
+                    <FormField 
+                        title = 'Started After' 
+                        initialValue = @props.defaultStartedAfter 
+                        inputType = 'startedAfter' />
+                    <DropDown
+                        forceChooseValue = true
+                        defaultValue = 'ASC'
+                        choices = Enums.sortDirections()
+                        inputType = 'sortDirection'
+                        title = 'Sort Direction' />
                 </tbody></table>
                 <button>Search</button>
             </form>
