@@ -178,10 +178,10 @@ public class RequestResource extends AbstractRequestResource {
     if (bounceRequest.isPresent()) {
       actionId = bounceRequest.get().getActionId();
       message = bounceRequest.get().getMessage();
+    }
 
-      if (bounceRequest.get().getDurationMillis().isPresent() && !actionId.isPresent()) {
-        actionId = Optional.of(UUID.randomUUID().toString());
-      }
+    if (!actionId.isPresent()) {
+      actionId = Optional.of(UUID.randomUUID().toString());
     }
 
     final String deployId = getAndCheckDeployId(requestId);
@@ -194,10 +194,8 @@ public class RequestResource extends AbstractRequestResource {
 
     requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), JavaUtils.getUserEmail(user), message);
 
-    if (bounceRequest.isPresent() && bounceRequest.get().getDurationMillis().isPresent()) {
-      requestManager.saveExpiringObject(new SingularityExpiringBounce(requestId, deployId, JavaUtils.getUserEmail(user),
-          System.currentTimeMillis(), bounceRequest.get(), actionId.get()));
-    }
+    requestManager.saveExpiringObject(new SingularityExpiringBounce(requestId, deployId, JavaUtils.getUserEmail(user),
+        System.currentTimeMillis(), bounceRequest.or(SingularityBounceRequest.defaultRequest()), actionId.get()));
 
     return fillEntireRequest(requestWithState);
   }
