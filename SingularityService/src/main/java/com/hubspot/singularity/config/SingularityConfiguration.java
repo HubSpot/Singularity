@@ -191,6 +191,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long threadpoolShutdownDelayInSeconds = 1;
 
+  private long taskPersistAfterStartupBufferMillis = TimeUnit.MINUTES.toMillis(1);
+
   @Valid
   @JsonProperty("customExecutor")
   @NotNull
@@ -837,6 +839,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCacheTasksForMillis(long cacheTasksForMillis) {
     this.cacheTasksForMillis = cacheTasksForMillis;
+  }
+
+  public long getTaskPersistAfterStartupBufferMillis() {
+    return taskPersistAfterStartupBufferMillis;
+  }
+
+  public void setTaskPersistAfterStartupBufferMillis(long taskPersistAfterStartupBufferMillis) {
+    this.taskPersistAfterStartupBufferMillis = taskPersistAfterStartupBufferMillis;
   }
 
   public Optional<LDAPConfiguration> getLdapConfiguration() {

@@ -58,9 +58,19 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
       if (activeTaskIds.contains(taskId) || lbCleaningTaskIds.contains(taskId) || isPartofPendingDeploy(pendingDeploys, taskId)) {
         continue;
       }
+
+      final long age = System.currentTimeMillis() - taskId.getStartedAt();
+
+      if (age < configuration.getTaskPersistAfterStartupBufferMillis()) {
+        LOG.debug("Not persisting {}, it has started up too recently {} (buffer: {}) - this prevents race conditions with ZK tx", taskId, JavaUtils.durationFromMillis(age),
+            JavaUtils.durationFromMillis(configuration.getTaskPersistAfterStartupBufferMillis()));
+        continue;
+      }
+
       if (moveToHistoryOrCheckForPurge(taskId)) {
         numTransferred++;
       }
+
       numTotal++;
     }
 
