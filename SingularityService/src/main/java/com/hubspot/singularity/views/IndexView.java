@@ -32,6 +32,7 @@ public class IndexView extends View {
   private final Integer slaveHttpPort;
   private final Integer slaveHttpsPort;
 
+  private final int defaultBounceExpirationMinutes;
   private final long defaultHealthcheckIntervalSeconds;
   private final long defaultHealthcheckTimeoutSeconds;
   private final long defaultDeployHealthTimeoutSeconds;
@@ -77,6 +78,7 @@ public class IndexView extends View {
 
     this.navColor = configuration.getUiConfiguration().getNavColor();
 
+    this.defaultBounceExpirationMinutes = configuration.getDefaultBounceExpirationMinutes();
     this.defaultHealthcheckIntervalSeconds = configuration.getHealthcheckIntervalSeconds();
     this.defaultHealthcheckTimeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
     this.defaultDeployHealthTimeoutSeconds = configuration.getDeployHealthyBySeconds();
@@ -154,6 +156,10 @@ public class IndexView extends View {
     return loadBalancingEnabled;
   }
 
+  public int getDefaultBounceExpirationMinutes() {
+    return defaultBounceExpirationMinutes;
+  }
+
   public long getDefaultHealthcheckIntervalSeconds() {
     return defaultHealthcheckIntervalSeconds;
   }
@@ -213,6 +219,7 @@ public class IndexView extends View {
             ", title='" + title + '\'' +
             ", slaveHttpPort=" + slaveHttpPort +
             ", slaveHttpsPort=" + slaveHttpsPort +
+            ", defaultBounceExpirationMinutes=" + defaultBounceExpirationMinutes +
             ", defaultHealthcheckIntervalSeconds=" + defaultHealthcheckIntervalSeconds +
             ", defaultHealthcheckTimeoutSeconds=" + defaultHealthcheckTimeoutSeconds +
             ", defaultDeployHealthTimeoutSeconds=" + defaultDeployHealthTimeoutSeconds +
