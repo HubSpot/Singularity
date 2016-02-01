@@ -98,23 +98,32 @@ public class S3LogResource extends AbstractHistoryResource {
   }
 
   private Collection<String> getS3PrefixesForTask(SingularityTaskId taskId, Optional<Long> startArg, Optional<Long> endArg) {
-    SingularityTaskHistory history = getTaskHistory(taskId);
-
-    SimplifiedTaskState taskState = SingularityTaskHistoryUpdate.getCurrentState(history.getTaskUpdates());
+    Optional<SingularityTaskHistory> history = getTaskHistory(taskId);
 
     long start = taskId.getStartedAt();
     if (startArg.isPresent()) {
       start = Math.max(startArg.get(), start);
     }
 
-    long end = taskState == SimplifiedTaskState.DONE ? Iterables.getLast(history.getTaskUpdates()).getTimestamp() : System.currentTimeMillis();
+    long end = System.currentTimeMillis();
+
+    if (history.isPresent()) {
+      SimplifiedTaskState taskState = SingularityTaskHistoryUpdate.getCurrentState(history.get().getTaskUpdates());
+
+      if (taskState == SimplifiedTaskState.DONE) {
+        end = Iterables.getLast(history.get().getTaskUpdates()).getTimestamp();
+      }
+    } else if (configuration.isPresent()) {
+      end = start + configuration.get().getMissingTaskDefaultS3SearchPeriodMillis();
+    }
+
     if (endArg.isPresent()) {
       end = Math.min(endArg.get(), end);
     }
 
     Optional<String> tag = Optional.absent();
-    if (history.getTask().getTaskRequest().getDeploy().getExecutorData().isPresent()) {
-      tag = history.getTask().getTaskRequest().getDeploy().getExecutorData().get().getLoggingTag();
+    if (history.isPresent() && history.get().getTask().getTaskRequest().getDeploy().getExecutorData().isPresent()) {
+      tag = history.get().getTask().getTaskRequest().getDeploy().getExecutorData().get().getLoggingTag();
     }
 
     Collection<String> prefixes = SingularityS3FormatHelper.getS3KeyPrefixes(configuration.get().getS3KeyFormat(), taskId, tag, start, end);
