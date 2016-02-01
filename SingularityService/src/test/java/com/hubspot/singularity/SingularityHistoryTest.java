@@ -29,11 +29,11 @@ import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
-import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 import com.hubspot.singularity.data.history.SingularityHistoryPurger;
 import com.hubspot.singularity.data.history.SingularityRequestHistoryPersister;
 import com.hubspot.singularity.data.history.SingularityTaskHistoryPersister;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
+import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 
 import liquibase.Liquibase;
 import liquibase.database.Database;
@@ -198,6 +198,8 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_FINISHED);
 
+    configuration.setTaskPersistAfterStartupBufferMillis(0);
+
     taskHistoryPersister.runActionOnPoll();
 
     Assert.assertEquals(runId, historyManager.getTaskHistory(taskId.getId()).get().getTask().getTaskRequest().getPendingTask().getRunId().get());
@@ -206,6 +208,20 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     parent = requestResource.scheduleImmediately(requestId);
 
     Assert.assertTrue(parent.getPendingRequest().getRunId().isPresent());
+  }
+
+  @Test
+  public void testTaskBufferPersist() {
+    initRequest();
+    initFirstDeploy();
+
+    SingularityTask task = startTask(firstDeploy);
+
+    statusUpdate(task, TaskState.TASK_FINISHED);
+
+    taskHistoryPersister.runActionOnPoll();
+
+    Assert.assertEquals(1, taskManager.getAllTaskIds().size());
   }
 
   @Test
