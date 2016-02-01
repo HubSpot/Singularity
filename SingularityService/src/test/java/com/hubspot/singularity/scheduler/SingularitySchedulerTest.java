@@ -321,7 +321,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
 
     // Add the 'ok' to move to the next step
-    deployResource.updatePendingDeploy(requestId, secondDeployId, new SingularityUpdatePendingDeployRequest(requestId, secondDeployId, 2));
+    deployResource.updatePendingDeploy(new SingularityUpdatePendingDeployRequest(requestId, secondDeployId, 2));
 
     deployChecker.checkDeploys();
 
