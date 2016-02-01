@@ -46,6 +46,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
   private final SingularityMailer mailer;
   private final RequestHelper requestHelper;
   private final List<SingularityExpiringUserActionHandler<?>> handlers;
+  private final SingularityConfiguration configuration;
 
   @Inject
   SingularityExpiringUserActionPoller(SingularityConfiguration configuration, RequestManager requestManager, TaskManager taskManager,
@@ -56,6 +57,7 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
     this.requestHelper = requestHelper;
     this.mailer = mailer;
     this.taskManager = taskManager;
+    this.configuration = configuration;
 
     List<SingularityExpiringUserActionHandler<?>> tempHandlers = Lists.newArrayList();
     tempHandlers.add(new SingularityExpiringBounceHandler());
@@ -85,16 +87,20 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
       final long now = System.currentTimeMillis();
       final long duration = now - expiringObject.getStartMillis();
 
-      return duration > expiringObject.getExpiringAPIRequestObject().getDurationMillis().get();
+      return duration > getDurationMillis(expiringObject);
     }
 
     protected String getMessage(T expiringObject) {
       String msg = String.format("%s expired after %s", getActionName(),
-          JavaUtils.durationFromMillis(expiringObject.getExpiringAPIRequestObject().getDurationMillis().get()));
+          JavaUtils.durationFromMillis(getDurationMillis(expiringObject)));
       if (expiringObject.getExpiringAPIRequestObject().getMessage().isPresent() && expiringObject.getExpiringAPIRequestObject().getMessage().get().length() > 0) {
         msg = String.format("%s (%s)", msg, expiringObject.getExpiringAPIRequestObject().getMessage().get());
       }
       return msg;
+    }
+
+    protected long getDurationMillis(T expiringObject) {
+      return expiringObject.getExpiringAPIRequestObject().getDurationMillis().get();
     }
 
     protected void checkExpiringObjects() {
@@ -128,6 +134,11 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
     @Override
     protected String getActionName() {
       return "Bounce";
+    }
+
+    @Override
+    protected long getDurationMillis(SingularityExpiringBounce expiringBounce) {
+      return expiringBounce.getExpiringAPIRequestObject().getDurationMillis().or(TimeUnit.MINUTES.toMillis(configuration.getDefaultBounceExpirationMinutes()));
     }
 
     @Override
