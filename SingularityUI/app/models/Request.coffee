@@ -211,7 +211,7 @@ class Request extends Model
             targetActiveInstances: instances
         $.ajax
             type: "POST"
-            url: "#{ config.apiRoot }/deploys/deploy/#{deployId}/request/#{@get('id')}"
+            url: "#{ config.apiRoot }/deploys/update"
             contentType: 'application/json'
             data: JSON.stringify data
 
