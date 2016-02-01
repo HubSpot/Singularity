@@ -65,7 +65,7 @@ public class HistoryResource extends AbstractHistoryResource {
   public SingularityTaskHistory getHistoryForTask(@ApiParam("Task ID to look up") @PathParam("taskId") String taskId) {
     SingularityTaskId taskIdObj = getTaskIdObject(taskId);
 
-    return getTaskHistory(taskIdObj);
+    return getTaskHistoryRequired(taskIdObj);
   }
 
   private Integer getLimitCount(Integer countParam) {
