@@ -427,6 +427,7 @@ public class SingularityDeployBuilder {
       ", loadBalancerOptions=" + loadBalancerOptions +
       ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
       ", deployStepWaitTimeSeconds=" + deployStepWaitTimeSeconds +
+      ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +
       '}';
   }
 
