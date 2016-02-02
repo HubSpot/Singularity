@@ -4,12 +4,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Module;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import com.hubspot.singularity.bundles.CorsBundle;
+import com.hubspot.singularity.config.MergingSourceProvider;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 import io.dropwizard.Application;
@@ -23,11 +26,15 @@ import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
 
 public class SingularityService<T extends SingularityConfiguration> extends Application<T> {
+  private static final String SINGULARITY_OVERRIDE_CONFIGURATION_PROPERTY = "singularityOverrideConfiguration";
 
   public static final String API_BASE_PATH = "/api";
 
   @Override
   public void initialize(final Bootstrap<T> bootstrap) {
+    if (!Strings.isNullOrEmpty(System.getProperty(SINGULARITY_OVERRIDE_CONFIGURATION_PROPERTY))) {
+      bootstrap.setConfigurationSourceProvider(new MergingSourceProvider(bootstrap.getConfigurationSourceProvider(), System.getProperty(SINGULARITY_OVERRIDE_CONFIGURATION_PROPERTY), bootstrap.getObjectMapper(), new YAMLFactory()));
+    }
 
     final Iterable<? extends Module> additionalModules = checkNotNull(getGuiceModules(bootstrap), "getGuiceModules() returned null");
     final Iterable<? extends Bundle> additionalBundles = checkNotNull(getDropwizardBundles(bootstrap), "getDropwizardBundles() returned null");
