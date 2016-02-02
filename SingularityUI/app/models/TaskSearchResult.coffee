@@ -6,12 +6,11 @@ class TaskSearchResult extends Model
 
     url: -> 
     	if @requestID
-    		return "#{ config.apiRoot }/request/#{ @requestID }/tasks"
+    		return "#{ config.apiRoot }/history/request/#{ @requestID }/tasks"
     	else
-    		return "#{ config.apiRoot }/tasks"
+    		return "#{ config.apiRoot }/history/tasks"
 
-    initialize: ({ @taskId, @updatedAt, @lastStatus, @runId }) ->
-
+    initialize: ({ @taskId, @updatedAt, @lastTaskState }) ->
     
 
 module.exports = TaskSearchResult

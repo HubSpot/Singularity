@@ -1,16 +1,12 @@
 Controller = require './Controller'
 
 TaskSearchView = require '../views/taskSearch'
+TaskSearchResults = require '../collections/TaskSearchResults'
 
 Utils = require '../utils'
 
 class TaskSearchController extends Controller
 
-    handleSubmit: (params) =>
-        @params = params
-        @formSubmitted = true
-        @setUpView()
-        @view.render()
 
     initialize: ({@requestId}) ->
         @formSubmitted = false
@@ -25,7 +21,6 @@ class TaskSearchController extends Controller
             requestLocked : @requestLocked
         @setView @view
 
-        #@fetchCollections()
         @view.render()
         app.showView @view
 

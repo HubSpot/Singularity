@@ -10,12 +10,12 @@ TaskSearch = React.createClass
     getInitialState: ->
         return {
             requestId: @props.initialRequestId
-            deployId: @props.deployId
-            host: @props.host
-            lastTaskStatus: @props.taskStatus
-            startedBefore: @props.startedBefore
-            startedAfter: @props.startedAfter
-            sortDirection: @props.sortDirection
+            deployId: @props.initialDeployId
+            host: @props.initialHost
+            lastTaskStatus: @props.initialTaskStatus
+            startedBefore: @props.initialStartedBefore
+            startedAfter: @props.initialStartedAfter
+            sortDirection: @props.initialSortDirection
             showForm: true
         }
 
@@ -90,14 +90,14 @@ TaskSearch = React.createClass
             />
         else
             return <TaskSearchResultsPage
-                requestId = @props.requestId
-                requestLocked = @props.requestLocked
-                deployId = @props.deployId
-                host = @props.host
-                lastTaskStatus = @props.lastTaskStatus
-                startedBefore = @props.startedBefore
-                startedAfter = @props.startedAfter
-                sortDirection = @props.sortDirection
+                requestId = @state.requestId
+                requestLocked = @state.requestLocked
+                deployId = @state.deployId
+                host = @state.host
+                lastTaskStatus = @state.lastTaskStatus
+                startedBefore = @state.startedBefore
+                startedAfter = @state.startedAfter
+                sortDirection = @state.sortDirection
                 page = 1
                 count = 10
             />
