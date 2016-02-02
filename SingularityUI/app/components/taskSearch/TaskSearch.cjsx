@@ -1,8 +1,7 @@
 Utils = require '../../utils'
 Enums = require './Enums'
-
-FormField = require './FormField'
-DropDown = require './DropDown'
+TaskSearchForm = require './TaskSearchForm'
+TaskSearchResultsPage = require './TaskSearchResultsPage'
 
 TaskSearch = React.createClass
 
@@ -11,16 +10,20 @@ TaskSearch = React.createClass
     getInitialState: ->
         return {
             requestId: @props.initialRequestId
-            deployId: @props.initialDeployId
-            host: @props.initialHost
-            lastTaskStatus: @props.initialTaskStatus
-            startedBefore: @props.initialStartedBefore
-            startedAfter: @props.initialStartedAfter
-            sortDirection: @props.initialSortDirection
+            deployId: @props.deployId
+            host: @props.host
+            lastTaskStatus: @props.taskStatus
+            startedBefore: @props.startedBefore
+            startedAfter: @props.startedAfter
+            sortDirection: @props.sortDirection
+            showForm: true
         }
 
     handleSubmit: (event) ->
-        console.error(@state)
+        event.preventDefault()
+        @setState({
+            showForm: false
+        })
 
     # Annoying that we need a new function for each property.
     # Unfortuantely using a curried function doesn't seem to work.
@@ -59,54 +62,45 @@ TaskSearch = React.createClass
             sortDirection: event.target.value
         })
 
+    updatePageNumber: (event) ->
+        @setState({
+            pageNumber: event.target.value
+        })
+
     render: ->
-        <div>
-            <h2> {@headerText} </h2>
-            <form onSubmit={@handleSubmit}>
-                <table ><tbody>
-                    <FormField 
-                        title = 'Request ID' 
-                        value = @state.requestId 
-                        inputType = 'requestId'
-                        disabled = @props.requestLocked
-                        updateFn = @updateReqeustId />
-                    <FormField 
-                        title = 'Deploy ID' 
-                        value = @state.deployId 
-                        inputType = 'deployId'
-                        updateFn = @updateDeployId />
-                    <FormField 
-                        title = 'Host' 
-                        value = @state.host 
-                        inputType = 'host'
-                        updateFn = @updateHost />
-                    <DropDown
-                        forceChooseValue = false
-                        value = @state.lastTaskStatus
-                        choices = Enums.extendedTaskState()
-                        inputType = 'lastTaskStatus'
-                        title = 'Last Task Status'
-                        updateFn = @updateLastTaskStatus />
-                    <FormField 
-                        title = 'Started Before' 
-                        value = @state.startedBefore 
-                        inputType = 'startedBefore'
-                        updateFn = @updateStartedBefore />
-                    <FormField 
-                        title = 'Started After' 
-                        value = @state.startedAfter 
-                        inputType = 'startedAfter'
-                        updateFn = @updateStartedAfter />
-                    <DropDown
-                        forceChooseValue = true
-                        value = @state.sortDirection
-                        choices = Enums.sortDirections()
-                        inputType = 'sortDirection'
-                        title = 'Sort Direction'
-                        updateFn = @updateSortDirection />
-                </tbody></table>
-                <button>Search</button>
-            </form>
-        </div>
+        if @state.showForm
+            return <TaskSearchForm
+                headerText = @headerText
+                handleSubmit = @handleSubmit
+                requestId = @state.requestId
+                requestLocked = @props.requestLocked
+                updateReqeustId = @updateReqeustId
+                deployId = @state.deployId
+                updateDeployId = @updateDeployId
+                host = @state.host
+                updateHost = @updateHost
+                lastTaskStatus = @state.lastTaskStatus
+                updateLastTaskStatus = @updateLastTaskStatus
+                startedBefore = @state.startedBefore
+                updateStartedBefore = @updateStartedBefore
+                startedAfter = @state.startedAfter
+                updateStartedAfter = @updateStartedAfter
+                sortDirection = @state.sortDirection
+                updateSortDirection = @updateSortDirection
+            />
+        else
+            return <TaskSearchResultsPage
+                requestId = @props.requestId
+                requestLocked = @props.requestLocked
+                deployId = @props.deployId
+                host = @props.host
+                lastTaskStatus = @props.lastTaskStatus
+                startedBefore = @props.startedBefore
+                startedAfter = @props.startedAfter
+                sortDirection = @props.sortDirection
+                page = 1
+                count = 10
+            />
+
 
 module.exports = TaskSearch

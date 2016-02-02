@@ -4,11 +4,7 @@ TaskSearch = require '../components/taskSearch/TaskSearch'
 
 class TaskSearchView extends View
 
-	requestId: ''
-
-	initialize: (@requestId, @requestLocked, opts) ->
-
-	handleViewChange: =>
+	initialize: ({@requestId, @requestLocked}, opts) ->
 
 	render: ->
       $(@el).addClass("task-search-root")
