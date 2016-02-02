@@ -1,7 +1,7 @@
 Utils = require '../../utils'
 Enums = require './Enums'
 TaskSearchForm = require './TaskSearchForm'
-TaskSearchResultsPage = require './TaskSearchResultsPage'
+TaskSearchSubmitted = require './TaskSearchSubmitted'
 
 TaskSearch = React.createClass
 
@@ -89,7 +89,7 @@ TaskSearch = React.createClass
                 updateSortDirection = @updateSortDirection
             />
         else
-            return <TaskSearchResultsPage
+            return <TaskSearchSubmitted
                 requestId = @state.requestId
                 requestLocked = @state.requestLocked
                 deployId = @state.deployId
