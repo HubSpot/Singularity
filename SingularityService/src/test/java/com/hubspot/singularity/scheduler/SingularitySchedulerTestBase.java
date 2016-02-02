@@ -414,6 +414,11 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     startTasks(num);
   }
 
+  protected SingularityDeploy startFirstDeploy() {
+    firstDeploy = initDeploy(new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100")), System.currentTimeMillis());
+    return firstDeploy;
+  }
+
   protected void initFirstDeploy() {
     firstDeploy = initAndFinishDeploy(request, firstDeployId);
   }

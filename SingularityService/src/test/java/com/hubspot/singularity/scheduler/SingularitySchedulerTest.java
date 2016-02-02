@@ -39,7 +39,6 @@ import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
-import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
@@ -625,6 +624,42 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testDecommissionDoesntKillPendingDeploy() {
+    initRequest();
+
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, "d1").setCommand(Optional.of("cmd")).build(), Optional.<Boolean> absent(), Optional.<String> absent()));
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    deployChecker.checkDeploys();
+    resourceOffers();
+
+    Assert.assertEquals(1, taskManager.getNumActiveTasks());
+
+    slaveResource.decommissionSlave(taskManager.getActiveTasks().get(0).getOffer().getSlaveId().getValue(), Optional.<SingularityMachineChangeRequest> absent());
+
+    scheduler.checkForDecomissions(stateCacheProvider.get());
+
+    cleaner.drainCleanupQueue();
+    killKilledTasks();
+
+    Assert.assertEquals(1, taskManager.getNumActiveTasks());
+    Assert.assertEquals(1, taskManager.getNumCleanupTasks());
+    Assert.assertEquals(0, taskManager.getKilledTaskIdRecords().size());
+
+    configuration.setPendingDeployHoldTaskDuringDecommissionMillis(1);
+
+    try {
+      Thread.sleep(2);
+    } catch (InterruptedException e) {}
+
+    cleaner.drainCleanupQueue();
+    killKilledTasks();
+
+    Assert.assertEquals(0, taskManager.getNumActiveTasks());
+    Assert.assertEquals(0, taskManager.getNumCleanupTasks());
+  }
+
+  @Test
   public void testRetries() {
     SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.RUN_ONCE);
     request = bldr.setNumRetriesOnFailure(Optional.of(2)).build();
@@ -831,7 +866,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   public void testReservedSlaveAttribute() {
     Map<String, List<String>> reservedAttributes = new HashMap<>();
     reservedAttributes.put("reservedKey", Arrays.asList("reservedValue1"));
-    configuration.setReserveSlavesWithAttrbiutes(reservedAttributes);
+    configuration.setReserveSlavesWithAttributes(reservedAttributes);
 
     initRequest();
     initFirstDeploy();
@@ -850,7 +885,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   public void testReservedSlaveWithMatchinRequestAttribute() {
     Map<String, List<String>> reservedAttributes = new HashMap<>();
     reservedAttributes.put("reservedKey", Arrays.asList("reservedValue1"));
-    configuration.setReserveSlavesWithAttrbiutes(reservedAttributes);
+    configuration.setReserveSlavesWithAttributes(reservedAttributes);
 
     Map<String, String> reservedAttributesMap = ImmutableMap.of("reservedKey", "reservedValue1");
     initRequest();
@@ -872,7 +907,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   public void testAllowedSlaveAttributes() {
     Map<String, List<String>> reservedAttributes = new HashMap<>();
     reservedAttributes.put("reservedKey", Arrays.asList("reservedValue1"));
-    configuration.setReserveSlavesWithAttrbiutes(reservedAttributes);
+    configuration.setReserveSlavesWithAttributes(reservedAttributes);
 
     Map<String, String> allowedAttributes = new HashMap<>();
     allowedAttributes.put("reservedKey", "reservedValue1");
