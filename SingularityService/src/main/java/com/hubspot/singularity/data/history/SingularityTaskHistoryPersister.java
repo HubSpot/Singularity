@@ -59,7 +59,7 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
         continue;
       }
 
-      final long age = System.currentTimeMillis() - taskId.getStartedAt();
+      final long age = start - taskId.getStartedAt();
 
       if (age < configuration.getTaskPersistAfterStartupBufferMillis()) {
         LOG.debug("Not persisting {}, it has started up too recently {} (buffer: {}) - this prevents race conditions with ZK tx", taskId, JavaUtils.durationFromMillis(age),
