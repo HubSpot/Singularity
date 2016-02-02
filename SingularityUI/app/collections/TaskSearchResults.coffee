@@ -8,13 +8,11 @@ class TaskSearchResults extends Collection
 
     url: -> 
     	if @requestId
-    		return "#{ config.apiRoot }/request/#{ @requestID }/tasks"
+    		return "#{ config.apiRoot }/history/request/#{ @requestId }/tasks"
     	else
-    		return "#{ config.apiRoot }/tasks"
+    		return "#{ config.apiRoot }/history/tasks"
 
     initialize: (models = [], { @requestId, @deployId, @host, @lastTaskStatus, @startedAfter, @startedBefore, @orderDirection, @count, @page }) ->
 
-    parse: (response) ->
-    	response.results
 
 module.exports = TaskSearchResults

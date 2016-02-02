@@ -58,5 +58,6 @@ class TasksTableController extends Controller
         return if @view.isSorted
 
         @collections.tasks.fetch reset: true
+        debugger
 
 module.exports = TasksTableController
