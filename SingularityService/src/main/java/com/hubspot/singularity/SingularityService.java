@@ -26,14 +26,14 @@ import io.dropwizard.setup.Environment;
 import io.dropwizard.views.ViewBundle;
 
 public class SingularityService<T extends SingularityConfiguration> extends Application<T> {
-  private static final String SINGULARITY_OVERRIDE_CONFIGURATION_PROPERTY = "singularityOverrideConfiguration";
+  private static final String SINGULARITY_DEFAULT_CONFIGURATION_PROPERTY = "singularityDefaultConfiguration";
 
   public static final String API_BASE_PATH = "/api";
 
   @Override
   public void initialize(final Bootstrap<T> bootstrap) {
-    if (!Strings.isNullOrEmpty(System.getProperty(SINGULARITY_OVERRIDE_CONFIGURATION_PROPERTY))) {
-      bootstrap.setConfigurationSourceProvider(new MergingSourceProvider(bootstrap.getConfigurationSourceProvider(), System.getProperty(SINGULARITY_OVERRIDE_CONFIGURATION_PROPERTY), bootstrap.getObjectMapper(), new YAMLFactory()));
+    if (!Strings.isNullOrEmpty(System.getProperty(SINGULARITY_DEFAULT_CONFIGURATION_PROPERTY))) {
+      bootstrap.setConfigurationSourceProvider(new MergingSourceProvider(bootstrap.getConfigurationSourceProvider(), System.getProperty(SINGULARITY_DEFAULT_CONFIGURATION_PROPERTY), bootstrap.getObjectMapper(), new YAMLFactory()));
     }
 
     final Iterable<? extends Module> additionalModules = checkNotNull(getGuiceModules(bootstrap), "getGuiceModules() returned null");

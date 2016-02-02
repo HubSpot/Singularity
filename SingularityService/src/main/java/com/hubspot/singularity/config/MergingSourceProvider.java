@@ -16,24 +16,24 @@ import io.dropwizard.configuration.ConfigurationSourceProvider;
 
 public class MergingSourceProvider implements ConfigurationSourceProvider {
     private final ConfigurationSourceProvider delegate;
-    private final String overridePath;
+    private final String defaultConfigurationPath;
     private final ObjectMapper objectMapper;
     private final YAMLFactory yamlFactory;
 
-    public MergingSourceProvider(ConfigurationSourceProvider delegate, String overridePath, ObjectMapper objectMapper, YAMLFactory yamlFactory) {
+    public MergingSourceProvider(ConfigurationSourceProvider delegate, String defaultConfigurationPath, ObjectMapper objectMapper, YAMLFactory yamlFactory) {
         this.delegate = delegate;
-        this.overridePath = overridePath;
+        this.defaultConfigurationPath = defaultConfigurationPath;
         this.objectMapper = objectMapper;
         this.yamlFactory = yamlFactory;
     }
 
     @Override
     public InputStream open(String path) throws IOException {
-        final JsonNode originalNode = objectMapper.readTree(yamlFactory.createParser(delegate.open(path)));
-        final JsonNode overrideNode = objectMapper.readTree(yamlFactory.createParser(delegate.open(overridePath)));
+        final JsonNode originalNode = objectMapper.readTree(yamlFactory.createParser(delegate.open(defaultConfigurationPath)));
+        final JsonNode overrideNode = objectMapper.readTree(yamlFactory.createParser(delegate.open(path)));
 
         if (!(originalNode instanceof ObjectNode && overrideNode instanceof ObjectNode)) {
-            throw new RuntimeException(String.format("Both %s and %s need to be objects", path, overridePath));
+            throw new RuntimeException(String.format("Both %s and %s need to be YAML objects", defaultConfigurationPath, path));
         }
 
         merge((ObjectNode)originalNode, (ObjectNode)overrideNode);
@@ -55,6 +55,7 @@ public class MergingSourceProvider implements ConfigurationSourceProvider {
             if (oldVal == null || oldVal.isNull()) {
                 to.put(newFieldName, newVal);
             } else if (oldVal.isArray() && newVal.isArray()) {
+                ((ArrayNode) oldVal).removeAll();
                 ((ArrayNode) oldVal).addAll((ArrayNode) newVal);
             } else if (oldVal.isObject() && newVal.isObject()) {
                 merge((ObjectNode) oldVal, (ObjectNode) newVal);
