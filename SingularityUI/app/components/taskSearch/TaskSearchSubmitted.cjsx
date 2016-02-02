@@ -1,7 +1,9 @@
 Utils = require '../../utils'
 TaskSearchResults = require '../../collections/TaskSearchResults'
+LoadingResults = require './LoadingResults'
+DisplayResults = require './DisplayResults'
 
-TaskSearchResultsPage = React.createClass
+TaskSearchSubmitted = React.createClass
 
 	collectionsReset: (event, response) ->
 		@setState({
@@ -29,20 +31,11 @@ TaskSearchResultsPage = React.createClass
 
 	render: ->
 		if @state.loading
-			<div>
-				<h1>Loading Results</h1>
-				<p>{@props.requestId}</p>
-			</div>
+			<LoadingResults />
 		else
-			tasks = []
-			i = 0
-			for task in @collection.models
-				tasks.push(<div key={i}>{task.taskId.id}<br /></div>)
-				i++
-			return <div>
-				<h1>Results Found</h1>
-				{tasks}
-			</div>
+			<DisplayResults
+				collection = @collection
+				/>
 
 
-module.exports = TaskSearchResultsPage
+module.exports = TaskSearchSubmitted
