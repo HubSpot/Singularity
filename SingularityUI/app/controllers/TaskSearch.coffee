@@ -6,9 +6,23 @@ Utils = require '../utils'
 
 class TaskSearchController extends Controller
 
-    initialize: ({@requestLocked, @requestId}) ->
+    handleSubmit: (params) =>
+        @params = params
+        @formSubmitted = true
+        @setUpView()
+        @view.render()
+
+    initialize: ({@requestId}) ->
+        @formSubmitted = false
         @title 'Task Search'
-        @view = new TaskSearchView @requestId
+        @params = {}
+        if @requestId
+        	@requestLocked = true
+        else
+        	@requestLocked = false
+        @view = new TaskSearchView
+            requestId : @requestId
+            requestLocked : @requestLocked
         @setView @view
 
         #@fetchCollections()
