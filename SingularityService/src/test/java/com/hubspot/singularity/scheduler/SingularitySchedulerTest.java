@@ -28,7 +28,6 @@ import com.hubspot.mesos.SingularityContainerType;
 import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerPortMapping;
-import com.hubspot.mesos.SingularityDockerVolumeMode;
 import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.DeployState;
@@ -40,7 +39,6 @@ import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
-import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
@@ -1889,8 +1887,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     configuration.setNewTaskCheckerBaseDelaySeconds(0);
     configuration.setHealthcheckIntervalSeconds(0);
     configuration.setDeployHealthyBySeconds(0);
-    configuration.setKillAfterTasksDoNotRunDefaultSeconds(0);
+    configuration.setKillAfterTasksDoNotRunDefaultSeconds(100);
     configuration.setHealthcheckMaxRetries(Optional.of(0));
+    configuration.setCheckNewTasksEverySeconds(1);
 
     initRequest();
     initHCDeploy();
@@ -1911,6 +1910,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     // run new task check ONLY.
     newTaskChecker.enqueueNewTaskCheck(firstTask, requestManager.getRequest(requestId), healthchecker);
 
+    finishNewTaskChecks();
     finishHealthchecks();
     finishNewTaskChecksAndCleanup();
 
