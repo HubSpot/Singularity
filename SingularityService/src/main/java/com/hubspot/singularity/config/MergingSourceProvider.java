@@ -33,7 +33,7 @@ public class MergingSourceProvider implements ConfigurationSourceProvider {
         final JsonNode overrideNode = objectMapper.readTree(yamlFactory.createParser(delegate.open(path)));
 
         if (!(originalNode instanceof ObjectNode && overrideNode instanceof ObjectNode)) {
-            throw new RuntimeException(String.format("Both %s and %s need to be YAML objects", defaultConfigurationPath, path));
+            throw new SingularityConfigurationMergeException(String.format("Both %s and %s need to be YAML objects", defaultConfigurationPath, path));
         }
 
         merge((ObjectNode)originalNode, (ObjectNode)overrideNode);

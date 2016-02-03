@@ -1,8 +1,8 @@
 package com.hubspot.singularity.config;
 
-import static org.junit.Assert.assertEquals;
+import static junit.framework.TestCase.assertEquals;
 
-import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -10,44 +10,57 @@ import org.junit.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.google.common.base.Charsets;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityTestBaseNoDb;
 
 import io.dropwizard.configuration.ConfigurationSourceProvider;
 
 public class MergingSourceProviderTest extends SingularityTestBaseNoDb {
-    private static final String OVERRIDE_PATH = "override.yaml";
+    private static final String DEFAULT_PATH = "/configs/default.yaml";
+    private static final String OVERRIDE_PATH = "/configs/override.yaml";
+    private static final String JUST_A_STRING_PATH = "/configs/just_a_string.yaml";
+    private static final String DOESNT_EXIST_PATH = "/configs/doesnt_exist.yaml";
 
     private static final YAMLFactory YAML_FACTORY = new YAMLFactory();
 
     @Inject
     private ObjectMapper objectMapper;
 
-    @Test
-    public void testMergedConfigs() throws Exception {
-        final String base = "s3: {s3AccessKey: test-access-key}";
-        final String override = "s3: {s3SecretKey: test-secret-key}";
-        final ConfigurationSourceProvider mergedProvider = new MergingSourceProvider(new TestSourceProvider(base, override), OVERRIDE_PATH, objectMapper, YAML_FACTORY);
+    private ConfigurationSourceProvider buildConfigurationSourceProvider(String baseFilename) {
+        final Class<?> klass = getClass();
 
-        final SingularityConfiguration mergedConfig = objectMapper.readValue(YAML_FACTORY.createParser(mergedProvider.open("config.yaml")), SingularityConfiguration.class);
-
-        assertEquals("test-access-key", mergedConfig.getS3Configuration().get().getS3AccessKey());
-        assertEquals("test-secret-key", mergedConfig.getS3Configuration().get().getS3SecretKey());
+        return new MergingSourceProvider(new ConfigurationSourceProvider() {
+            @Override
+            public InputStream open(String path) throws IOException {
+                final InputStream stream = klass.getResourceAsStream(path);
+                if (stream == null) {
+                    throw new FileNotFoundException("File " + path + " not found in test resources directory");
+                }
+                return stream;
+            }
+        }, baseFilename, objectMapper, YAML_FACTORY);
     }
 
-    private static class TestSourceProvider implements ConfigurationSourceProvider {
-        private final String defaultValue;
-        private final String overrideValue;
+    @Test
+    public void testMergedConfigs() throws Exception {
+        final InputStream mergedConfigStream = buildConfigurationSourceProvider(DEFAULT_PATH).open(OVERRIDE_PATH);
+        final SingularityConfiguration mergedConfig = objectMapper.readValue(YAML_FACTORY.createParser(mergedConfigStream), SingularityConfiguration.class);
 
-        public TestSourceProvider(String defaultValue, String overrideValue) {
-            this.defaultValue = defaultValue;
-            this.overrideValue = overrideValue;
-        }
+        assertEquals(10000, mergedConfig.getCacheTasksMaxSize());
+        assertEquals(500, mergedConfig.getCacheTasksInitialSize());
+        assertEquals(100, mergedConfig.getCheckDeploysEverySeconds());
+        assertEquals("baseuser", mergedConfig.getDatabaseConfiguration().get().getUser());
+        assertEquals("overridepassword", mergedConfig.getDatabaseConfiguration().get().getPassword());
+    }
 
-        @Override
-        public InputStream open(String path) throws IOException {
-            return new ByteArrayInputStream((path.equals(OVERRIDE_PATH) ? overrideValue : defaultValue).getBytes(Charsets.UTF_8));
-        }
+    @Test( expected = SingularityConfigurationMergeException.class )
+    public void testNonObjectFails() throws Exception {
+        buildConfigurationSourceProvider(DEFAULT_PATH).open(JUST_A_STRING_PATH);
+    }
+
+    @Test( expected = FileNotFoundException.class)
+    public void testFileNoExistFail() throws Exception {
+        buildConfigurationSourceProvider(DEFAULT_PATH).open(DOESNT_EXIST_PATH);
+        buildConfigurationSourceProvider(DOESNT_EXIST_PATH).open(OVERRIDE_PATH);
     }
 }

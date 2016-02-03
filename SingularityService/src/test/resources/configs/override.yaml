@@ -1,0 +1,5 @@
+cacheTasksInitialSize: 500
+checkDeploysEverySeconds: 100
+
+database:
+  password: "overridepassword"
