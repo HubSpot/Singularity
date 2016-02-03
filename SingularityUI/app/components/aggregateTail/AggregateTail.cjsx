@@ -37,10 +37,17 @@ AggregateTail = React.createClass
     else
       document.title = "Tail of #{@props.path.replace('$TASK_ID', 'Task Directory')}"
 
+  initialViewingInstancesOnUpdate: ->
+    runningTasks = (task for task in @state.activeTasks when task.lastTaskState == 'TASK_RUNNING')
+    if runningTasks.length > 0
+      return runningTasks
+    else
+      return @state.activeTasks
+
   componentDidUpdate: (prevProps, prevState) ->
     if prevState.activeTasks.length is 0 and @state.activeTasks.length > 0 and not Utils.getQueryParams()?.taskIds and !@props.singleMode
       @setState
-        viewingInstances: _.pluck(@state.activeTasks, 'id').slice(0, 6)
+        viewingInstances: _.pluck(@initialViewingInstancesOnUpdate(), 'id').slice(0, 6)
 
   componentWillUnmount: ->
     Backbone.React.Component.mixin.off(@);
