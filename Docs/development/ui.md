@@ -55,8 +55,9 @@ brunch build [--production]
 # Watch the project and build it when there are changes
 brunch watch
 
-# Same as above, but also start an HTTP server that serves the static files. '-p <number>' (optional) specifies what port it runs on
-brunch watch --server [-p 3333]
+# Same as above, but also start an HTTP server that serves the static files. '-P <number>' (optional) specifies what port it runs on
+brunch watch --server [-P 3333]
+# NOTE - As of February 3, 2016, this has changed - it used to be lowercase p to specify port number, now it's capital P. 
 ```
 
 When you first start, run `npm install` to download all the dependencies. Once that's done, you're ready to roll!
