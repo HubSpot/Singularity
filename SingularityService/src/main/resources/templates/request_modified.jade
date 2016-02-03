@@ -28,6 +28,8 @@ html
               h2(style="font-weight: normal; margin: 0 0 21px; line-height: 1") has been #{ action } by #{ user }
             else
               h2(style="font-weight: normal; margin: 0 0 21px; line-height: 1") has been #{ action }
+            if hasMessage
+              h2(style="font-weight: normal; margin: 0 0 21px; line-height: 1") Message: #{ message }
             if singularityRequestLink
               a(style="background: #08c; color: #fff; padding: 10px 20px; display: inline-block; text-decoration: none; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; border-radius: 3px", href="#{ singularityRequestLink }") View request
 
