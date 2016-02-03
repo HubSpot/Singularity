@@ -1,5 +1,6 @@
 Task = React.createClass
 
-	render: ->
+    render: ->
+        <p>{@props.task.attributes.taskId.id}</p>
 
 module.exports = Task

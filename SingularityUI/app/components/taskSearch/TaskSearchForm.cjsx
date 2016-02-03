@@ -1,13 +1,13 @@
 Utils = require '../../utils'
 
-FormField = require './FormField'
-DropDown = require './DropDown'
+FormField = require '../common/input/FormField'
+DropDown = require '../common/input/DropDown'
 Enums = require './Enums'
 
 TaskSearchForm = React.createClass
 
-	render: ->
-		<div>
+    render: ->
+        <div>
             <h2> {@props.headerText} </h2>
             <form onSubmit={@props.handleSubmit}>
                 <table ><tbody>
@@ -15,7 +15,7 @@ TaskSearchForm = React.createClass
                         title = 'Request ID' 
                         value = @props.requestId 
                         inputType = 'requestId'
-                        disabled = @props.requestLocked
+                        disabled = {'disabled' if @props.requestLocked}
                         updateFn = @props.updateReqeustId />
                     <FormField 
                         title = 'Deploy ID' 
@@ -52,7 +52,7 @@ TaskSearchForm = React.createClass
                         title = 'Sort Direction'
                         updateFn = @props.updateSortDirection />
                 </tbody></table>
-                <button>Search</button>
+                <button className="btn btn-default">Search</button>
             </form>
         </div>
 
