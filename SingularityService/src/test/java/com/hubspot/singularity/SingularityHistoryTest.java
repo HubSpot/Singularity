@@ -5,7 +5,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -91,15 +90,9 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
   }
 
   private SingularityTaskHistory buildTask(long launchTime) {
-    Optional<String> directory = Optional.absent();
-    List<SingularityTaskHealthcheckResult> hcs = Collections.emptyList();
-    List<SingularityLoadBalancerUpdate> upds = Collections.emptyList();
-    List<SingularityTaskHistoryUpdate> historyUpdates = Collections.emptyList();
-    List<SingularityTaskShellCommandHistory> shellHistory = Collections.emptyList();
-
     SingularityTask task = prepTask(request, firstDeploy, launchTime, 1);
 
-    SingularityTaskHistory taskHistory = new SingularityTaskHistory(historyUpdates, directory, hcs, task, upds, shellHistory);
+    SingularityTaskHistory taskHistory = new SingularityTaskHistory(null, Optional.<String> absent(), null, task, null, null, null);
 
     return taskHistory;
   }

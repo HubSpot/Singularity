@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.hubspot.mesos.JavaUtils;
 
 public class SingularityTaskShellCommandHistory {
 
@@ -14,7 +15,7 @@ public class SingularityTaskShellCommandHistory {
   public SingularityTaskShellCommandHistory(@JsonProperty("shellRequest") SingularityTaskShellCommandRequest shellRequest,
       @JsonProperty("shellUpdates") List<SingularityTaskShellCommandUpdate> shellUpdates) {
     this.shellRequest = shellRequest;
-    this.shellUpdates = shellUpdates;
+    this.shellUpdates = JavaUtils.nonNullImmutable(shellUpdates);
   }
 
   public SingularityTaskShellCommandRequest getShellRequest() {
