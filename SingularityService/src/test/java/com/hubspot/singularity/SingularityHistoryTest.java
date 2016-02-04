@@ -5,7 +5,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -29,11 +28,11 @@ import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
 import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
-import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 import com.hubspot.singularity.data.history.SingularityHistoryPurger;
 import com.hubspot.singularity.data.history.SingularityRequestHistoryPersister;
 import com.hubspot.singularity.data.history.SingularityTaskHistoryPersister;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
+import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 
 import liquibase.Liquibase;
 import liquibase.database.Database;
@@ -89,15 +88,9 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
   }
 
   private SingularityTaskHistory buildTask(long launchTime) {
-    Optional<String> directory = Optional.absent();
-    List<SingularityTaskHealthcheckResult> hcs = Collections.emptyList();
-    List<SingularityLoadBalancerUpdate> upds = Collections.emptyList();
-    List<SingularityTaskHistoryUpdate> historyUpdates = Collections.emptyList();
-    List<SingularityTaskShellCommandHistory> shellHistory = Collections.emptyList();
-
     SingularityTask task = prepTask(request, firstDeploy, launchTime, 1);
 
-    SingularityTaskHistory taskHistory = new SingularityTaskHistory(historyUpdates, directory, hcs, task, upds, shellHistory);
+    SingularityTaskHistory taskHistory = new SingularityTaskHistory(null, Optional.<String> absent(), null, task, null, null, null);
 
     return taskHistory;
   }
