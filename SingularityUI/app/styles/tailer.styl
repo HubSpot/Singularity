@@ -327,3 +327,17 @@
 .tailer-tooltip .tooltip-inner
   max-width 400px
   text-align left
+
+.status-changed-stopped
+  animation background-fade-stopped 2s forwards;
+
+@keyframes background-fade-stopped
+    to
+      background #f3dede
+
+.status-changed-finished
+  animation background-fade-finished 2s forwards;
+
+@keyframes background-fade-finished
+    to
+      background #c9e8d6
