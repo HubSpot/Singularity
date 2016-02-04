@@ -21,7 +21,6 @@ TaskSearch = React.createClass
 
     handleSubmit: (event) ->
         event.preventDefault()
-        debugger
         @setState({
             showForm: false
         })
@@ -50,12 +49,12 @@ TaskSearch = React.createClass
 
     updateStartedBefore: (event) ->
         @setState({
-            startedBefore: event.target.value
+            startedBefore: event.date
         })
 
     updateStartedAfter: (event) ->
         @setState({
-            startedAfter: event.target.value
+            startedAfter: event.date
         })
 
     updateSortDirection: (event) ->

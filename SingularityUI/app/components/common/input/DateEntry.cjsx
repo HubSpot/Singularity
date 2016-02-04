@@ -7,7 +7,11 @@ DateEntry = React.createClass
 
     componentDidMount: ->
         id = '#' + @props.id
-        $ -> $(id).datetimepicker()
+        changeFn = @props.updateFn
+        $ -> $(id).datetimepicker({
+                sideBySide: true
+                format: "ddd MMM DD YYYY HH:mm:ss [UTC]ZZ"
+            }).on('dp.change', changeFn) # value will be in event.date
 
     render: ->
         <div className="container">
@@ -18,9 +22,7 @@ DateEntry = React.createClass
                             <FormField 
                                 className = 'form-control'
                                 placeholder = {@props.title}
-                                type = {@props.inputType} 
-                                onChange = {@props.updateFn} 
-                                value = {@props.value}
+                                type = {@props.inputType}
                                 disabled = {@props.disabled}
                                 size = {@props.size} 
                                 id = {@props.id}

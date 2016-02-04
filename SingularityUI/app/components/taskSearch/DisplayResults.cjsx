@@ -33,13 +33,13 @@ DisplayResults = React.createClass
         if @props.collection.startedAfter
             params.push(<div key={key}> <QueryParam
                 paramName = "Started After"
-                paramValue = @props.collection.startedAfter
+                paramValue = @props.collection.startedAfter._d.toString()
                 /></div>)
             key++
         if @props.collection.startedBefore
             params.push(<div key={key}> <QueryParam
                 paramName = "Started Before"
-                paramValue = @props.collection.startedBefore
+                paramValue = @props.collection.startedBefore._d.toString()
                 /></div>)
             key++
         if @props.collection.sortDirection

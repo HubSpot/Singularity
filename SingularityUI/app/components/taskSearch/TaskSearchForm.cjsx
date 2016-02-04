@@ -50,7 +50,7 @@ TaskSearchForm = React.createClass
                 <div className='formGroup'>
                     <label htmlFor="startedBefore">Started Before:</label>
                     <DateEntry 
-                        value = @props.startedBefore 
+                        value = @props.startedBefore
                         inputType = 'date'
                         id = 'startedBefore'
                         updateFn = @props.updateStartedBefore />
@@ -59,7 +59,7 @@ TaskSearchForm = React.createClass
                     <label htmlFor="startedAfter">Started After:</label>
                     <DateEntry 
                         value = @props.startedAfter 
-                        inputType = 'text'
+                        inputType = 'date'
                         id = 'startedAfter'
                         updateFn = @props.updateStartedAfter />
                 </div>
