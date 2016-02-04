@@ -17,16 +17,14 @@ FormField = React.createClass
             return false
 
     render: ->
-        <tr>
-            <th><input 
-                    className = 'form-control'
-                    placeholder = {@props.title}
-                    type = {@props.inputType} 
-                    onChange = {@props.updateFn} 
-                    value = {@props.value}
-                    disabled = {@getDisabled()}
-                    size = {@getSize()} />
-            </th>
-        </tr>
+        <input 
+            className = 'form-control'
+            placeholder = {@props.title}
+            type = {@props.inputType}
+            id = {@props.id}
+            onChange = {@props.updateFn} 
+            value = {@props.value}
+            disabled = {@getDisabled()}
+            />
 
 module.exports = FormField
