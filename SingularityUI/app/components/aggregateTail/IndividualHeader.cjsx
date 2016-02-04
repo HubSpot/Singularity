@@ -8,6 +8,13 @@ IndividualHeader = React.createClass
     if @props.task.task?.taskId? and target
       $(target).tooltip(container: 'body', template: '<div class="tooltip tailer-tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>')
 
+    headerTarget = ReactDOM.findDOMNode(@refs.headerTarget)
+    if @props.taskState and @props.taskState != prevProps.taskState and headerTarget
+      if @props.taskState in ['TASK_KILLED', 'TASK_FAILED', 'TASK_LOST']
+        $(headerTarget).addClass('status-changed-stopped')
+      else if @props.taskState is 'TASK_FINISHED'
+        $(headerTarget).addClass('status-changed-finished')
+
   componentWillUnmount: () ->
     target = ReactDOM.findDOMNode(@refs.ttTarget)
     if @props.task.task?.taskId? and target
@@ -28,7 +35,7 @@ IndividualHeader = React.createClass
     <a className="action-link" onClick={@props.expandTail} title="Show Only this Tail"><span className="glyphicon glyphicon-resize-full"></span></a>
 
   render: ->
-    <div className="individual-header">
+    <div ref="headerTarget" className="individual-header">
       {@renderClose()}
       {@renderExpand()}
       <div ref="ttTarget" className="width-constrained" data-toggle="tooltip" data-placement="bottom" title={@getTooltipText()}>
