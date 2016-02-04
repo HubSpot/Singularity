@@ -17,3 +17,10 @@
         {{/if}}
     </div>
 {{/each}}
+
+{{#if alertSkipHealthchecks}}
+  <div class="alert alert-warning" role="alert">
+      <b>Healthchecks are currently disabled for this request</b>
+      <button type="button" class="btn btn-xs btn-primary" data-action="enableHealthchecks">Enable Healthchecks</button>
+  </div>
+{{/if}}
