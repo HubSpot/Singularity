@@ -51,11 +51,6 @@ class Request extends Model
 
         data
 
-    deletePaused: =>
-        $.ajax
-            url:  "#{ @url() }/paused"
-            type: 'DELETE'
-
     unpause: (data) =>
         $.ajax
             url:  "#{ @url() }/unpause"
