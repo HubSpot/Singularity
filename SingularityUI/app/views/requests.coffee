@@ -63,7 +63,7 @@ class RequestsView extends View
                 o.requestDeployState?.activeDeploy?.user or ''
         res1 = fuzzy.filter(filter, requests, id)
         res2 = fuzzy.filter(filter, requests, user)
-        _.pluck(_.sortBy(_.union(res1, res2), (r) => r.score), 'original')
+        _.pluck(_.sortBy(_.union(res2, res1), (r) => r.score), 'original')
 
     # Returns the array of requests that need to be rendered
     filterCollection: =>
