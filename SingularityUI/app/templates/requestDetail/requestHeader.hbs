@@ -24,76 +24,76 @@
 
         {{! Right side, buttons }}
         <div class="col-md-5 button-container">
-            <a class="btn btn-default" data-request-id="{{ data.id }}" data-action="viewObjectJSON">
+            <button class="btn btn-default" data-request-id="{{ data.id }}" data-action="viewObjectJSON">
                 JSON
-            </a>
+            </button>
 
             {{#unless config.hideNewDeployButton}}
-            <a href="{{appRoot}}/request/{{data.id}}/deploy" class="btn btn-success">
+            <button href="{{appRoot}}/request/{{data.id}}/deploy" class="btn btn-success">
                 Deploy
-            </a>
+            </button>
             {{/unless}}
 
             {{#if data.canBeRunNow}}
                 {{#unless data.deleted}}
-                    <a class="btn btn-primary" data-request-id="{{ data.id }}" data-request-type="{{ data.type }}" data-action="run-request-now">
+                    <button class="btn btn-primary" data-request-id="{{ data.id }}" data-request-type="{{ data.type }}" data-action="run-request-now">
                         Run now
-                    </a>
+                    </button>
                 {{/unless}}
             {{/if}}
 
             {{#if data.inCooldown}}
-                <a class="btn btn-primary" data-request-id="{{ data.id }}" data-request-type="{{ data.type }}" data-action="exit-cooldown">
+                <button class="btn btn-primary" data-request-id="{{ data.id }}" data-request-type="{{ data.type }}" data-action="exit-cooldown">
                     Exit Cooldown
-                </a>
+                </button>
             {{/if}}
 
             {{#if data.canBeScaled}}
-                <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="scale" {{#if scaleDisabled }}disabled{{/if}}>
+                <button class="btn btn-primary" data-request-id="{{ data.id }}" data-action="scale" {{#if scaleDisabled }}disabled{{/if}}>
                     Scale
-                </a>
+                </button>
             {{/if}}
 
             {{#unless data.deleted}}
                 {{#if data.paused}}
-                    <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="unpause" {{#if pauseDisabled }}disabled{{/if}}>
+                    <button class="btn btn-primary" data-request-id="{{ data.id }}" data-action="unpause" {{#if pauseDisabled }}disabled{{/if}}>
                         Unpause
-                    </a>
+                    </button>
                 {{else}}
-                    <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="pause" {{#if pauseDisabled }}disabled{{/if}}>
+                    <button class="btn btn-primary" data-request-id="{{ data.id }}" data-action="pause" {{#if pauseDisabled }}disabled{{/if}}>
                         Pause
-                    </a>
+                    </button>
                 {{/if}}
             {{/unless}}
 
             {{#if data.canBeBounced}}
-                <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="bounce" {{#if bounceDisabled }}disabled{{/if}}>
+                <button class="btn btn-primary" data-request-id="{{ data.id }}" data-action="bounce" {{#if bounceDisabled }}disabled{{/if}}>
                     Bounce
-                </a>
+                </button>
             {{/if}}
 
             {{#unless config.hideNewRequestButton}}
-                <a class="btn btn-primary" href="{{appRoot}}/requests/edit/{{ data.id }}">
+                <button class="btn btn-primary" href="{{appRoot}}/requests/edit/{{ data.id }}">
                     Edit
-                </a>
+                </button>
             {{/unless}}
 
             {{#if canDisableHealthchecks}}
                 {{#if data.request.skipHealthchecks}}
-                  <a class="btn btn-warning" data-request-id="{{ data.id }}" data-action="enableHealthchecks">
+                  <button class="btn btn-warning" data-request-id="{{ data.id }}" data-action="enableHealthchecks">
                       Enable Healthchecks
-                  </a>
+                  </button>
                 {{else}}
-                  <a class="btn btn-primary" data-request-id="{{ data.id }}" data-action="disableHealthchecks">
+                  <button class="btn btn-primary" data-request-id="{{ data.id }}" data-action="disableHealthchecks">
                       Disable Healthchecks
-                  </a>
+                  </button>
                 {{/if}}
             {{/if}}
 
             {{#unless data.deleted}}
-                <a class="btn btn-danger" data-request-id="{{ data.id }}" data-action="remove">
+                <button class="btn btn-danger" data-request-id="{{ data.id }}" data-action="remove">
                     Remove
-                </a>
+                </button>
             {{/unless}}
         </div>
     </div>
