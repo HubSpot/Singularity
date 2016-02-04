@@ -156,8 +156,8 @@ class RequestView extends View
             @trigger 'refreshrequest'
 
     revertPause: (e) =>
-        @model.unpause()
-        @makePausePermanent();
+        @model.promptUnpause =>
+            @makePausePermanent()
 
     revertScale: (e) =>
         @model.scale
