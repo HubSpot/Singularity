@@ -11,6 +11,11 @@ DateEntry = React.createClass
         $ -> $(id).datetimepicker({
                 sideBySide: true
                 format: "ddd MMM DD YYYY HH:mm:ss [UTC]ZZ"
+                # This option is of course not documented at all. 
+                # Probably because it doesn't work very well.
+                # It can be seen in the bootstrap-datetimepicker GitHub.
+                # (Thanks Mayuri Sridhar for the suggestion)
+                timeZone: moment().format('zz')
             }).on('dp.change', changeFn) # value will be in event.date
 
     render: ->
