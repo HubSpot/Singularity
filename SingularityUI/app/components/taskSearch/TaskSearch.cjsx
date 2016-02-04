@@ -21,6 +21,7 @@ TaskSearch = React.createClass
 
     handleSubmit: (event) ->
         event.preventDefault()
+        debugger
         @setState({
             showForm: false
         })
