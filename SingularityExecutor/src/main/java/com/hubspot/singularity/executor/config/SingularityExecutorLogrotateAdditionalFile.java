@@ -9,6 +9,7 @@ public class SingularityExecutorLogrotateAdditionalFile {
     private final Optional<String> extension;
     private final Optional<String> dateformat;
 
+    @JsonCreator
     public static SingularityExecutorLogrotateAdditionalFile fromString(String value) {
         return new SingularityExecutorLogrotateAdditionalFile(value, Optional.<String>absent(), Optional.<String>absent());
     }
