@@ -3,8 +3,10 @@ package com.hubspot.singularity.scheduler;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -377,16 +379,38 @@ public class SingularityDeployChecker {
       return new SingularityDeployResult(DeployState.SUCCEEDED, "Request not deployable");
     }
 
-    if (!inactiveDeployMatchingTasks.isEmpty()) {
-      if (request.isLoadBalanced() && shouldCancelLoadBalancer(pendingDeploy)) {
-        LOG.info("Attempting to cancel pending load balancer request, failing deploy {} regardless", pendingDeploy);
-        sendCancelToLoadBalancer(pendingDeploy);
+    if (pendingDeploy.getDeployProgress().isPresent()) {
+      Set<SingularityTaskId> newInactiveDeployTasks = new HashSet<>();
+      newInactiveDeployTasks.addAll(inactiveDeployMatchingTasks);
+      newInactiveDeployTasks.removeAll(pendingDeploy.getDeployProgress().get().getFailedDeployTasks());
+
+      if (!newInactiveDeployTasks.isEmpty()) {
+        if (deploy.isPresent() && deploy.get().getMaxTaskRetries().isPresent() && inactiveDeployMatchingTasks.size() <= deploy.get().getMaxTaskRetries().get()) {
+          SingularityDeployProgress deployProgress = pendingDeploy.getDeployProgress().get();
+          SingularityDeployProgress newProgress = new SingularityDeployProgress(
+            getNewTargetInstances(deployProgress, request, updatePendingDeployRequest),
+            deployProgress.getDeployInstanceCountPerStep(),
+            deployProgress.getDeployStepWaitTimeSeconds(),
+            false,
+            deployProgress.isAutoAdvanceDeploySteps(),
+            new HashSet<>(inactiveDeployMatchingTasks),
+            System.currentTimeMillis()
+          );
+          updatePendingDeploy(pendingDeploy, pendingDeploy.getLastLoadBalancerUpdate(), DeployState.WAITING, Optional.of(newProgress));
+          requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), pendingDeploy.getDeployMarker().getDeployId(), System.currentTimeMillis(), pendingDeploy.getDeployMarker().getUser(),
+            PendingType.NEXT_DEPLOY_STEP, deploy.isPresent() ? deploy.get().getSkipHealthchecksOnDeploy() : Optional.<Boolean> absent(),
+            pendingDeploy.getDeployMarker().getMessage()));
+          return new SingularityDeployResult(DeployState.WAITING);
+        }
+
+        if (request.isLoadBalanced() && shouldCancelLoadBalancer(pendingDeploy)) {
+          LOG.info("Attempting to cancel pending load balancer request, failing deploy {} regardless", pendingDeploy);
+          sendCancelToLoadBalancer(pendingDeploy);
+        }
+
+        return new SingularityDeployResult(DeployState.FAILED, String.format("Task(s) %s for this deploy failed", inactiveDeployMatchingTasks));
       }
 
-      return new SingularityDeployResult(DeployState.FAILED, String.format("Task(s) %s for this deploy failed", inactiveDeployMatchingTasks));
-    }
-
-    if (pendingDeploy.getDeployProgress().isPresent()) {
       return checkDeployProgress(request, cancelRequest, pendingDeploy, updatePendingDeployRequest, deploy, deployActiveTasks, otherActiveTasks);
     } else {
       return new SingularityDeployResult(DeployState.FAILED, "No deploy progress present for deploy of long running request");
@@ -410,6 +434,7 @@ public class SingularityDeployChecker {
             deployProgress.getDeployStepWaitTimeSeconds(),
             false,
             deployProgress.isAutoAdvanceDeploySteps(),
+            deployProgress.getFailedDeployTasks(),
             System.currentTimeMillis()
         );
         updatePendingDeploy(pendingDeploy, pendingDeploy.getLastLoadBalancerUpdate(), DeployState.WAITING, Optional.of(newProgress));
@@ -519,6 +544,7 @@ public class SingularityDeployChecker {
         deployProgress.getDeployStepWaitTimeSeconds(),
         false,
         deployProgress.isAutoAdvanceDeploySteps(),
+        deployProgress.getFailedDeployTasks(),
         System.currentTimeMillis()
       );
       updatePendingDeploy(pendingDeploy, lbUpdate.or(pendingDeploy.getLastLoadBalancerUpdate()), DeployState.WAITING, Optional.of(newProgress));
@@ -550,6 +576,7 @@ public class SingularityDeployChecker {
         deployProgress.getDeployStepWaitTimeSeconds(),
         true,
         deployProgress.isAutoAdvanceDeploySteps(),
+        deployProgress.getFailedDeployTasks(),
         System.currentTimeMillis()
     );
     DeployState deployState;

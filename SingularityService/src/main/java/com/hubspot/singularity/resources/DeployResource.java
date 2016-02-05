@@ -4,6 +4,8 @@ import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 
+import java.util.Collections;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -26,6 +28,7 @@ import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployProgress;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingDeploy;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -106,6 +109,7 @@ public class DeployResource extends AbstractRequestResource {
           deploy.getDeployStepWaitTimeSeconds().or(configuration.getDefaultDeployStepWaitTimeSeconds()),
           false,
           deploy.getAutoAdvanceDeploySteps().or(true),
+          Collections.<SingularityTaskId>emptySet(),
           System.currentTimeMillis()));
     }
 
