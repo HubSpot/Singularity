@@ -12,6 +12,6 @@
 	<input type="checkbox" name="skip-healthchecks" id="skip-healthchecks"> Skip healthchecks during bounce
 </label>
 <div class="vex-dialog-input expiration-input">
-		<input name="duration" id="bounce-expiration" type="text" placeholder="Expiration (optional)" />
+		<input name="duration" id="bounce-expiration" type="text" placeholder="Expiration (optional - default {{ config.defaultBounceExpirationMinutes }}m)" />
 </div>
 <span class="help">If an expiration duration is specified, this bounce will be aborted if not finished. Accepts any english time duration. (Days, Hr, Min...)</span>

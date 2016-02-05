@@ -29,15 +29,20 @@ class requestActionExpirations extends View
                 revertParam: request.expiringScale.revertToInstances
                 message: request.expiringScale.expiringAPIRequestObject.message
 
-        if request.expiringBounce and (request.expiringBounce.startMillis + request.expiringBounce.expiringAPIRequestObject.durationMillis) > new Date().getTime()
-            expirations.push
-                action: 'Bounce'
-                user: if request.expiringBounce.user then request.expiringBounce.user.split('@')[0] else ""
-                endMillis: request.expiringBounce.startMillis + request.expiringBounce.expiringAPIRequestObject.durationMillis
-                canRevert: false
-                cancelText: 'Cancel'
-                cancelAction: 'cancelBounce'
-                message: request.expiringBounce.expiringAPIRequestObject.message
+        if request.expiringBounce
+            if request.expiringBounce.expiringAPIRequestObject.durationMillis
+                endMillis = request.expiringBounce.startMillis + request.expiringBounce.expiringAPIRequestObject.durationMillis
+            else
+                endMillis = request.expiringBounce.startMillis + (config.defaultBounceExpirationMinutes * 60 * 1000)
+            if endMillis > new Date().getTime()
+                expirations.push
+                    action: 'Bounce'
+                    user: if request.expiringBounce.user then request.expiringBounce.user.split('@')[0] else ""
+                    endMillis: endMillis
+                    canRevert: false
+                    cancelText: 'Cancel'
+                    cancelAction: 'cancelBounce'
+                    message: request.expiringBounce.expiringAPIRequestObject.message
 
         if request.expiringPause and (request.expiringPause.startMillis + request.expiringPause.expiringAPIRequestObject.durationMillis) > new Date().getTime()
             expirations.push

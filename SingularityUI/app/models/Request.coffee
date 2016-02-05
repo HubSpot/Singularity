@@ -453,7 +453,9 @@ class Request extends Model
 
     promptBounce: (callback) =>
         vex.dialog.confirm
-            message: bounceTemplate id: @get "id"
+            message: bounceTemplate
+                id: @get "id"
+                config: config
             input: """
                 <input name="message" id="bounce-message" type="text" placeholder="Message (optional)" />
             """
