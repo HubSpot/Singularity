@@ -54,6 +54,12 @@ class RequestsView extends View
 
         @fuzzySearch = _.memoize(@fuzzySearch)
 
+    adjustedScore: (filter, req) ->
+        if req.original.id.toLowerCase().startsWith(filter.toLowerCase())
+            req.score * 10
+        else
+            req.score
+
     fuzzySearch: (filter, requests) =>
         id =
             extract: (o) ->
@@ -63,7 +69,7 @@ class RequestsView extends View
                 o.requestDeployState?.activeDeploy?.user or ''
         res1 = fuzzy.filter(filter, requests, id)
         res2 = fuzzy.filter(filter, requests, user)
-        _.pluck(_.sortBy(_.union(res2, res1), (r) => r.score), 'original')
+        _.pluck(_.sortBy(_.union(res2, res1), (r) => @adjustedScore(filter, r)), 'original').reverse()
 
     # Returns the array of requests that need to be rendered
     filterCollection: =>
