@@ -180,8 +180,6 @@ public class SingularityNewTaskChecker {
 
       @Override
       public void run() {
-        taskIdToCheck.remove(task.getTaskId().getId());
-
         try {
           Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(task.getTaskId().getRequestId());
 
@@ -190,7 +188,13 @@ public class SingularityNewTaskChecker {
             return;
           }
 
-          checkTask(task, requestWithState, healthchecker);
+          boolean shouldReschedule = checkTask(task, requestWithState, healthchecker);
+
+          if (shouldReschedule) {
+            reEnqueueCheck(task, healthchecker);
+          } else {
+            taskIdToCheck.remove(task.getTaskId().getId());
+          }
         } catch (Throwable t) {
           LOG.error("Uncaught throwable in task check for task {}, re-enqueing", task, t);
           exceptionNotifier.notify(t, ImmutableMap.of("taskId", task.getTaskId().toString()));
@@ -227,7 +231,7 @@ public class SingularityNewTaskChecker {
     UNHEALTHY_KILL_TASK, OBSOLETE, CHECK_IF_OVERDUE, LB_IN_PROGRESS_CHECK_AGAIN, HEALTHY;
   }
 
-  private void checkTask(SingularityTask task, Optional<SingularityRequestWithState> requestWithState, SingularityHealthchecker healthchecker) {
+  private boolean checkTask(SingularityTask task, Optional<SingularityRequestWithState> requestWithState, SingularityHealthchecker healthchecker) {
     final long start = System.currentTimeMillis();
 
     final CheckTaskState state = getTaskState(task, requestWithState, healthchecker);
@@ -241,23 +245,24 @@ public class SingularityNewTaskChecker {
 
           taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(),
               task.getTaskId(), Optional.of(String.format("Task did not become healthy after %s", JavaUtils.durationFromMillis(getKillAfterUnhealthyMillis()))), Optional.<String>absent()));
+          return false;
         } else {
-          reEnqueueCheck(task, healthchecker);
+          return true;
         }
-        break;
       case LB_IN_PROGRESS_CHECK_AGAIN:
-        reEnqueueCheck(task, healthchecker);
-        break;
+        return true;
       case UNHEALTHY_KILL_TASK:
         LOG.info("Killing {} because it failed healthchecks", task.getTaskId());
 
         taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.UNHEALTHY_NEW_TASK, System.currentTimeMillis(),
             task.getTaskId(), Optional.of("Task is not healthy"), Optional.<String> absent()));
-        break;
+        return false;
       case HEALTHY:
       case OBSOLETE:
-        break;
+        return false;
     }
+
+    return false;
   }
 
   private CheckTaskState getTaskState(SingularityTask task, Optional<SingularityRequestWithState> requestWithState, SingularityHealthchecker healthchecker) {
