@@ -121,9 +121,9 @@ class RequestsView extends View
 
             if not @sortAscending
                 requests = requests.reverse()
-
-        if not @sortAttribute? and not @searchFilter?
-            requests.reverse()
+        else
+            if not @searchFilter
+                requests.reverse()
 
         if @state in ['all', 'active', 'activeDeploy', 'noDeploy']
             for request in requests
