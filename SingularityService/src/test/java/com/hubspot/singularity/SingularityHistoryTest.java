@@ -212,6 +212,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_FINISHED);
 
     configuration.setTaskPersistAfterStartupBufferMillis(0);
+    configuration.setTaskPersistAfterFinishBufferMillis(0);
 
     taskHistoryPersister.runActionOnPoll();
 
@@ -228,13 +229,25 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
 
-    SingularityTask task = startTask(firstDeploy);
+    SingularityTask task = launchTask(request, firstDeploy, System.currentTimeMillis(), System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(3), 1, TaskState.TASK_RUNNING);
 
-    statusUpdate(task, TaskState.TASK_FINISHED);
+    statusUpdate(task, TaskState.TASK_FINISHED, Optional.of(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(2)));
 
     taskHistoryPersister.runActionOnPoll();
 
     Assert.assertEquals(1, taskManager.getAllTaskIds().size());
+
+    configuration.setTaskPersistAfterStartupBufferMillis(0);
+
+    taskHistoryPersister.runActionOnPoll();
+
+    Assert.assertEquals(1, taskManager.getAllTaskIds().size());
+
+    configuration.setTaskPersistAfterFinishBufferMillis(0);
+
+    taskHistoryPersister.runActionOnPoll();
+
+    Assert.assertEquals(0, taskManager.getAllTaskIds().size());
   }
 
   @Test

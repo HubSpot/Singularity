@@ -21,6 +21,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTaskHistory;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
@@ -116,6 +117,22 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
     final Optional<SingularityTaskHistory> taskHistory = taskManager.getTaskHistory(object);
 
     if (taskHistory.isPresent()) {
+      long lastUpdateAt = Long.MIN_VALUE;
+
+      for (SingularityTaskHistoryUpdate update : taskHistory.get().getTaskUpdates()) {
+        if (update.getTimestamp() > lastUpdateAt) {
+          lastUpdateAt = update.getTimestamp();
+        }
+      }
+
+      final long timeSinceLastUpdate = System.currentTimeMillis() - lastUpdateAt;
+
+      if (timeSinceLastUpdate < configuration.getTaskPersistAfterFinishBufferMillis()) {
+        LOG.debug("Not persisting {} yet - lastUpdate only happened {} ago, buffer {}", JavaUtils.durationFromMillis(timeSinceLastUpdate),
+            JavaUtils.durationFromMillis(configuration.getTaskPersistAfterFinishBufferMillis()));
+        return false;
+      }
+
       LOG.debug("Moving {} to history", object);
       try {
         historyManager.saveTaskHistory(taskHistory.get());
