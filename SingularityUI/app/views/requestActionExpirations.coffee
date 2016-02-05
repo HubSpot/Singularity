@@ -16,6 +16,8 @@ class requestActionExpirations extends View
         expirations = []
         request = @model.toJSON()
 
+        alertSkipHealthchecks = request.request.skipHealthchecks
+
         if request.expiringScale and (request.expiringScale.startMillis + request.expiringScale.expiringAPIRequestObject.durationMillis) > new Date().getTime()
             expirations.push
                 action: "Scale (to #{request.request.instances} instances)"
@@ -57,6 +59,7 @@ class requestActionExpirations extends View
                 message: request.expiringPause.expiringAPIRequestObject.message
 
         if request.expiringSkipHealthchecks and (request.expiringSkipHealthchecks.startMillis + request.expiringSkipHealthchecks.expiringAPIRequestObject.durationMillis) > new Date().getTime()
+            alertSkipHealthchecks = false
             expirations.push
                 action: if request.expiringSkipHealthchecks.expiringAPIRequestObject.skipHealthchecks then 'Disable Healthchecks' else 'Enable Healthchecks'
                 user: if request.expiringSkipHealthchecks.user then request.expiringSkipHealthchecks.user.split('@')[0] else ""
@@ -71,5 +74,6 @@ class requestActionExpirations extends View
 
         request: request
         data: expirations
+        alertSkipHealthchecks: alertSkipHealthchecks
 
 module.exports = requestActionExpirations
