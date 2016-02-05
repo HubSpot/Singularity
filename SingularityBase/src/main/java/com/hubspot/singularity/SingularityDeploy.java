@@ -63,6 +63,7 @@ public class SingularityDeploy {
   private final Optional<Integer> deployInstanceCountPerStep;
   private final Optional<Integer> deployStepWaitTimeSeconds;
   private final Optional<Boolean> autoAdvanceDeploySteps;
+  private final Optional<Integer> maxTaskRetries;
 
   public static SingularityDeployBuilder newBuilder(String requestId, String id) {
     return new SingularityDeployBuilder(requestId, id);
@@ -101,7 +102,8 @@ public class SingularityDeploy {
       @JsonProperty("healthCheckProtocol") Optional<HealthcheckProtocol> healthcheckProtocol,
       @JsonProperty("deployInstanceCountPerStep") Optional<Integer> deployInstanceCountPerStep,
       @JsonProperty("deployStepWaitTimeMs") Optional<Integer> deployStepWaitTimeSeconds,
-      @JsonProperty("autoAdvanceDeploySteps") Optional<Boolean> autoAdvanceDeploySteps) {
+      @JsonProperty("autoAdvanceDeploySteps") Optional<Boolean> autoAdvanceDeploySteps,
+      @JsonProperty("maxTaskRetries") Optional<Integer> maxTaskRetries) {
     this.requestId = requestId;
 
     this.command = command;
@@ -145,6 +147,7 @@ public class SingularityDeploy {
     this.deployInstanceCountPerStep = deployInstanceCountPerStep;
     this.deployStepWaitTimeSeconds = deployStepWaitTimeSeconds;
     this.autoAdvanceDeploySteps = autoAdvanceDeploySteps;
+    this.maxTaskRetries = maxTaskRetries;
   }
 
   public SingularityDeployBuilder toBuilder() {
@@ -179,7 +182,8 @@ public class SingularityDeploy {
     .setLabels(labels)
     .setDeployInstanceCountPerStep(deployInstanceCountPerStep)
     .setDeployStepWaitTimeSeconds(deployStepWaitTimeSeconds)
-    .setAutoAdvanceDeploySteps(autoAdvanceDeploySteps);
+    .setAutoAdvanceDeploySteps(autoAdvanceDeploySteps)
+    .setMaxTaskRetries(maxTaskRetries);
   }
 
   @ApiModelProperty(required=false, value="Number of seconds that Singularity waits for this service to become healthy (for it to download artifacts, start running, and optionally pass healthchecks.)")
@@ -346,6 +350,11 @@ public class SingularityDeploy {
     return autoAdvanceDeploySteps;
   }
 
+  @ApiModelProperty(required=false, value="allowed at most this many failed tasks to be retried before failing the deploy")
+  public Optional<Integer> getMaxTaskRetries() {
+    return maxTaskRetries;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeploy{" +
@@ -382,6 +391,7 @@ public class SingularityDeploy {
       ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
       ", deployStepWaitTimeSeconds=" + deployStepWaitTimeSeconds +
       ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +
+      ", maxTaskRetries=" + maxTaskRetries +
       '}';
   }
 
