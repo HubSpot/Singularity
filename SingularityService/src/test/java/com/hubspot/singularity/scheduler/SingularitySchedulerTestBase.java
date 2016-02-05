@@ -360,14 +360,20 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void finishNewTaskChecks() {
-    for (Future<?> future : newTaskChecker.getTaskCheckFutures()) {
-      try {
-        future.get();
-      } catch (InterruptedException e) {
-        return;
-      } catch (ExecutionException e) {
-        throw Throwables.propagate(e);
+    while (!newTaskChecker.getTaskCheckFutures().isEmpty()) {
+      for (Future<?> future : newTaskChecker.getTaskCheckFutures()) {
+        try {
+          future.get();
+        } catch (InterruptedException e) {
+          return;
+        } catch (ExecutionException e) {
+          throw Throwables.propagate(e);
+        }
       }
+
+      try {
+        Thread.sleep(10);
+      } catch (InterruptedException ie) {}
     }
   }
 
