@@ -54,11 +54,19 @@ class TaskFiles extends Collection
         taskFiles
 
     comparator: (a, b) ->
+        return @nameComparator(a, b)
+
+    nameComparator: (a, b) ->
         if a.get('isDirectory') and not b.get('isDirectory')
             return -1
         else if not a.get('isDirectory') and b.get('isDirectory')
             return 1
-        return a.get('path') - b.get('path')
+        else if a.get('name') > b.get('name')
+            return 1
+        else if a.get('name') < b.get('name')
+            return -1
+        else
+            return 0
 
     testSandbox: ->
         $.ajax

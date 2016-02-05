@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.4.9-SNAPSHOT</version>
+    <version>0.4.10-SNAPSHOT</version>
   </parent>
 
   <artifactId>SingularityService</artifactId>
@@ -512,7 +512,6 @@
             <artifactId>frontend-maven-plugin</artifactId>
             <configuration>
               <workingDirectory>../SingularityUI</workingDirectory>
-              <nodeDownloadRoot>https://hubspot-boxen-public.s3.amazonaws.com/nodejs/</nodeDownloadRoot>
             </configuration>
             <executions>
               <execution>
@@ -521,8 +520,8 @@
                   <goal>install-node-and-npm</goal>
                 </goals>
                 <configuration>
-                  <nodeVersion>v0.10.28</nodeVersion>
-                  <npmVersion>1.4.9</npmVersion>
+                  <nodeVersion>v4.1.2</nodeVersion>
+                  <npmVersion>2.14.16</npmVersion>
                 </configuration>
               </execution>
               <execution>
