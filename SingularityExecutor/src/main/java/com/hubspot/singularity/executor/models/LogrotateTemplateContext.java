@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
+import com.google.common.io.Files;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorLogrotateAdditionalFile;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
@@ -51,7 +53,7 @@ public class LogrotateTemplateContext {
     final List<LogrotateAdditionalFile> transformed = new ArrayList<>(original.size());
 
     for (SingularityExecutorLogrotateAdditionalFile additionalFile : original) {
-      transformed.add(new LogrotateAdditionalFile(taskDefinition.getTaskDirectoryPath().resolve(additionalFile.getFilename()).toString(), additionalFile.getExtension().or(parseFilenameExtension(additionalFile.getFilename())).orNull(), additionalFile.getDateformat().or(configuration.getLogrotateExtrasDateformat())));
+      transformed.add(new LogrotateAdditionalFile(taskDefinition.getTaskDirectoryPath().resolve(additionalFile.getFilename()).toString(), additionalFile.getExtension().or(Strings.emptyToNull(Files.getFileExtension(additionalFile.getFilename()))), additionalFile.getDateformat().or(configuration.getLogrotateExtrasDateformat())));
     }
 
     return transformed;
