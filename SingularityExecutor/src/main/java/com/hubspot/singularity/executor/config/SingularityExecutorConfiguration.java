@@ -127,7 +127,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
    */
   @NotNull
   @JsonProperty
-  private List<String> s3UploaderAdditionalFiles = Collections.emptyList();
+  private List<SingularityExecutorS3UploaderAdditionalFile> s3UploaderAdditionalFiles = Collections.emptyList();
 
   @Min(1)
   @JsonProperty
@@ -238,11 +238,11 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.logrotateAdditionalFiles = logrotateAdditionalFiles;
   }
 
-  public List<String> getS3UploaderAdditionalFiles() {
+  public List<SingularityExecutorS3UploaderAdditionalFile> getS3UploaderAdditionalFiles() {
     return s3UploaderAdditionalFiles;
   }
 
-  public void setS3UploaderAdditionalFiles(List<String> s3UploaderAdditionalFiles) {
+  public void setS3UploaderAdditionalFiles(List<SingularityExecutorS3UploaderAdditionalFile> s3UploaderAdditionalFiles) {
     this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
   }
 

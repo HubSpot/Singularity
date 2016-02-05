@@ -9,7 +9,14 @@ public class LogrotateAdditionalFile {
 
     @JsonCreator
     public static LogrotateAdditionalFile fromString(String value) {
-        return new LogrotateAdditionalFile(value, null);
+        final int lastPeriodIndex = value.lastIndexOf('.');
+
+        // attempt to autodetect file extension
+        if ((lastPeriodIndex > -1) && !value.substring(lastPeriodIndex + 1).contains("*")) {
+            return new LogrotateAdditionalFile(value, value.substring(lastPeriodIndex + 1));
+        } else {
+            return new LogrotateAdditionalFile(value, null);
+        }
     }
 
     @JsonCreator
@@ -26,7 +33,8 @@ public class LogrotateAdditionalFile {
         return extension;
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         return "LogrotateAdditionalFile[" +
             "filename='" + filename + '\'' +
             ", extension='" + extension + '\'' +
