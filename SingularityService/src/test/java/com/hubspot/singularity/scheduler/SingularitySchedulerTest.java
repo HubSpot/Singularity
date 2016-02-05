@@ -322,7 +322,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(1, deployProgressStepOne.getTargetActiveInstances());
 
     // Add the 'ok' to move to the next step
-    deployResource.updatePendingDeploy(requestId, secondDeployId, new SingularityUpdatePendingDeployRequest(requestId, secondDeployId, 2));
+    deployResource.updatePendingDeploy(new SingularityUpdatePendingDeployRequest(requestId, secondDeployId, 2));
 
     deployChecker.checkDeploys();
 
@@ -403,6 +403,50 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(4, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
     Assert.assertEquals(DeployState.SUCCEEDED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
+  }
+
+  @Test
+  public void testDeployFailsAfterMaxTaskRetries() {
+    initRequest();
+
+    SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, firstDeployId);
+    db.setMaxTaskRetries(Optional.of(1));
+    SingularityDeploy deploy = initDeploy(db, System.currentTimeMillis());
+
+    deployChecker.checkDeploys();
+    Assert.assertTrue(!deployManager.getDeployResult(requestId, firstDeployId).isPresent());
+
+    SingularityTask task = launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_FAILED);
+
+    deployChecker.checkDeploys();
+    Assert.assertEquals(deployManager.getPendingDeploys().get(0).getCurrentDeployState(), DeployState.WAITING);
+
+    SingularityTask taskTryTwo = launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_FAILED);
+
+    deployChecker.checkDeploys();
+    Assert.assertEquals(deployManager.getDeployResult(requestId, firstDeployId).get().getDeployState(), DeployState.FAILED);
+  }
+
+  @Test
+  public void testDeploySucceedsWithTaskRetries() {
+    initRequest();
+
+    SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, firstDeployId);
+    db.setMaxTaskRetries(Optional.of(1));
+    SingularityDeploy deploy = initDeploy(db, System.currentTimeMillis());
+
+    deployChecker.checkDeploys();
+    Assert.assertTrue(!deployManager.getDeployResult(requestId, firstDeployId).isPresent());
+
+    SingularityTask task = launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_FAILED);
+
+    deployChecker.checkDeploys();
+    Assert.assertEquals(deployManager.getPendingDeploys().get(0).getCurrentDeployState(), DeployState.WAITING);
+
+    SingularityTask taskTryTwo = launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_RUNNING);
+
+    deployChecker.checkDeploys();
+    Assert.assertEquals(deployManager.getDeployResult(requestId, firstDeployId).get().getDeployState(), DeployState.SUCCEEDED);
   }
 
   @Test
