@@ -196,6 +196,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long taskPersistAfterStartupBufferMillis = TimeUnit.MINUTES.toMillis(1);
 
+  private long taskPersistAfterFinishBufferMillis = TimeUnit.MINUTES.toMillis(5);
+
   @Valid
   @JsonProperty("customExecutor")
   @NotNull
@@ -850,6 +852,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCacheTasksForMillis(long cacheTasksForMillis) {
     this.cacheTasksForMillis = cacheTasksForMillis;
+  }
+
+  public long getTaskPersistAfterFinishBufferMillis() {
+    return taskPersistAfterFinishBufferMillis;
+  }
+
+  public void setTaskPersistAfterFinishBufferMillis(long taskPersistAfterFinishBufferMillis) {
+    this.taskPersistAfterFinishBufferMillis = taskPersistAfterFinishBufferMillis;
   }
 
   public long getTaskPersistAfterStartupBufferMillis() {
