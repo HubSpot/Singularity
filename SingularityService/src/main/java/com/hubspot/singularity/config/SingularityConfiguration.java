@@ -73,6 +73,9 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("database")
   private DataSourceFactory databaseConfiguration;
 
+  @Min(value = 1, message = "Must be positive and non-zero")
+  private int defaultBounceExpirationMinutes = 60;
+
   @NotNull
   private SlavePlacement defaultSlavePlacement = SlavePlacement.GREEDY;
 
@@ -339,6 +342,14 @@ public class SingularityConfiguration extends Configuration {
 
   public Optional<DataSourceFactory> getDatabaseConfiguration() {
     return Optional.fromNullable(databaseConfiguration);
+  }
+
+  public int getDefaultBounceExpirationMinutes() {
+    return defaultBounceExpirationMinutes;
+  }
+
+  public void setDefaultBounceExpirationMinutes(int defaultBounceExpirationMinutes) {
+    this.defaultBounceExpirationMinutes = defaultBounceExpirationMinutes;
   }
 
   public SlavePlacement getDefaultSlavePlacement() {

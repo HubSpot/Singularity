@@ -3,13 +3,19 @@ jdk:
   - oraclejdk7
   - openjdk7
   - oraclejdk8
-install: mvn -Pbuild-swagger-documentation -DskipTests=true -DskipSingularityWebUI -B -q -fae install
-script: mvn -DskipSingularityWebUI -B -q -fae verify
+install: mvn -Pbuild-swagger-documentation -DskipTests=true -B -q -fae install
+script: mvn -B -q -fae verify
 
 git:
   depth: 100
 
 sudo: false
+
+before_install:
+  - wget https://archive.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.zip
+  - unzip -qq apache-maven-3.3.9-bin.zip
+  - export M2_HOME=$PWD/apache-maven-3.3.9
+  - export PATH=$M2_HOME/bin:$PATH
 
 cache:
   directories:

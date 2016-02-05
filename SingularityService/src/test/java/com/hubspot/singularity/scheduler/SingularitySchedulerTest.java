@@ -2181,8 +2181,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     configuration.setNewTaskCheckerBaseDelaySeconds(0);
     configuration.setHealthcheckIntervalSeconds(0);
     configuration.setDeployHealthyBySeconds(0);
-    configuration.setKillAfterTasksDoNotRunDefaultSeconds(0);
+    configuration.setKillAfterTasksDoNotRunDefaultSeconds(100);
     configuration.setHealthcheckMaxRetries(Optional.of(0));
+    configuration.setCheckNewTasksEverySeconds(1);
 
     initRequest();
     initHCDeploy();
@@ -2203,6 +2204,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     // run new task check ONLY.
     newTaskChecker.enqueueNewTaskCheck(firstTask, requestManager.getRequest(requestId), healthchecker);
 
+    finishNewTaskChecks();
     finishHealthchecks();
     finishNewTaskChecksAndCleanup();
 

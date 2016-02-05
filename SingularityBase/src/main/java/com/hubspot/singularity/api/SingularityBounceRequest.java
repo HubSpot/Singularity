@@ -1,5 +1,7 @@
 package com.hubspot.singularity.api;
 
+import java.util.UUID;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
@@ -16,6 +18,10 @@ public class SingularityBounceRequest extends SingularityExpiringRequestParent {
     super(durationMillis, actionId, message);
     this.incremental = incremental;
     this.skipHealthchecks = skipHealthchecks;
+  }
+
+  public static SingularityBounceRequest defaultRequest() {
+    return new SingularityBounceRequest(Optional.<Boolean>absent(), Optional.<Boolean>absent(), Optional.<Long>absent(), Optional.of(UUID.randomUUID().toString()), Optional.<String>absent());
   }
 
   @ApiModelProperty(required=false, value="If present and set to true, old tasks will be killed as soon as replacement tasks are available, instead of waiting for all replacement tasks to be healthy")
