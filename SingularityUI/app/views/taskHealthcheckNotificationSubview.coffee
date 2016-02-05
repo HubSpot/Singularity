@@ -29,7 +29,7 @@ class taskHealthcheckNotificationSubview extends View
         lastHealthcheckFailed: @model.get('healthcheckResults')?.length > 0 and @model.get('healthcheckResults')[0].statusCode isnt 200
         synced:           @model.synced
         config:           config
-        tooManyRetries: @model.get('healthcheckResults').length >= maxRetries
+        tooManyRetries: @model.get('healthcheckResults').length > maxRetries
         numberFailed: @model.get('healthcheckResults').length
         secondsElapsed: healthTimeoutSeconds
 
