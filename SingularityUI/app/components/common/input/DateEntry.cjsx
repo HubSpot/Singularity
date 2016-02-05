@@ -15,6 +15,8 @@ DateEntry = React.createClass
                 timeZone: moment().format('zz')
             }).on('dp.change', changeFn) # value will be in event.date
 
+    # MUST pass in UNIQUE id in props.
+    # Otherwise the datetime picker will break in ways that aren't even very interesting
     render: ->
         <div className="form-group">
             <div className='input-group date' id={@props.id}>
