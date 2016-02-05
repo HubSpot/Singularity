@@ -54,6 +54,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long cleanupEverySeconds = 5;
 
+  private long checkQueuedMailsEveryMillis = TimeUnit.SECONDS.toMillis(15);
+
   private long closeWaitSeconds = 5;
 
   private String commonHostnameSuffixToOmit;
@@ -199,6 +201,8 @@ public class SingularityConfiguration extends Configuration {
   private long warnIfScheduledJobIsRunningForAtLeastMillis = TimeUnit.DAYS.toMillis(1);
 
   private int warnIfScheduledJobIsRunningPastNextRunPct = 200;
+
+  private long waitToSendTaskCompletedMailBufferMillis = 0;
 
   private long zookeeperAsyncTimeout = 5000;
 
@@ -556,6 +560,14 @@ public class SingularityConfiguration extends Configuration {
 
   public UIConfiguration getUiConfiguration() {
     return uiConfiguration;
+  }
+
+  public long getCheckQueuedMailsEveryMillis() {
+    return checkQueuedMailsEveryMillis;
+  }
+
+  public void setCheckQueuedMailsEveryMillis(long checkQueuedMailsEveryMillis) {
+    this.checkQueuedMailsEveryMillis = checkQueuedMailsEveryMillis;
   }
 
   public long getWarnIfScheduledJobIsRunningForAtLeastMillis() {
@@ -944,6 +956,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setReserveSlavesWithAttributes(Map<String, List<String>> reserveSlavesWithAttributes) {
     this.reserveSlavesWithAttributes = reserveSlavesWithAttributes;
+  }
+
+  public long getWaitToSendTaskCompletedMailBufferMillis() {
+    return waitToSendTaskCompletedMailBufferMillis;
+  }
+
+  public void setWaitToSendTaskCompletedMailBufferMillis(long waitToSendTaskCompletedMailBufferMillis) {
+    this.waitToSendTaskCompletedMailBufferMillis = waitToSendTaskCompletedMailBufferMillis;
   }
 
   public GraphiteConfiguration getGraphiteConfiguration() {
