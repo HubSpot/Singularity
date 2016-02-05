@@ -73,6 +73,7 @@ public class TaskManager extends CuratorAsyncManager {
   private static final String CLEANUP_PATH_ROOT = TASKS_ROOT + "/cleanup";
   private static final String LB_CLEANUP_PATH_ROOT = TASKS_ROOT + "/lbcleanup";
   private static final String DRIVER_KILLED_PATH_ROOT = TASKS_ROOT + "/killed";
+  private static final String FINISHED_TASK_MAIL_QUEUE = TASKS_ROOT + "/mailqueue";
   private static final String SHELL_REQUESTS_QUEUE_PATH_ROOT = TASKS_ROOT + "/shellqueue";
 
   private static final String HISTORY_PATH_ROOT = TASKS_ROOT + "/history";
@@ -173,6 +174,10 @@ public class TaskManager extends CuratorAsyncManager {
 
   private String getShellRequestQueuePath(SingularityTaskShellCommandRequest shellRequest) {
     return ZKPaths.makePath(SHELL_REQUESTS_QUEUE_PATH_ROOT, shellRequest.getId().getId());
+  }
+
+  private String getFinishedTaskMailQueuePath(SingularityTaskId taskId) {
+    return ZKPaths.makePath(FINISHED_TASK_MAIL_QUEUE, taskId.getId());
   }
 
   private String getShellsParentPath(SingularityTaskId taskId) {
@@ -655,6 +660,18 @@ public class TaskManager extends CuratorAsyncManager {
 
   public SingularityCreateResult saveTaskShellCommandRequestToQueue(SingularityTaskShellCommandRequest shellRequest) {
     return save(getShellRequestQueuePath(shellRequest), shellRequest, taskShellCommandRequestTranscoder);
+  }
+
+  public SingularityCreateResult saveTaskFinishedInMailQueue(SingularityTaskId taskId) {
+    return save(getFinishedTaskMailQueuePath(taskId), Optional.<byte[]>absent());
+  }
+
+  public List<SingularityTaskId> getTaskFinishedMailQueue() {
+    return getChildrenAsIds(FINISHED_TASK_MAIL_QUEUE, taskIdTranscoder);
+  }
+
+  public SingularityDeleteResult deleteFinishedTaskMailQueue(SingularityTaskId taskId) {
+    return delete(getFinishedTaskMailQueuePath(taskId));
   }
 
   public SingularityCreateResult saveTaskShellCommandRequestToTask(SingularityTaskShellCommandRequest shellRequest) {

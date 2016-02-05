@@ -62,9 +62,7 @@ public class SingularitySmtpSender implements Managed {
   }
 
   public void queueMail(final List<String> toList, final List<String> ccList, final String subject, final String body) {
-
     LOG.trace("Sending email to: {}, cc: {}, body: {}", toList, ccList, body); // Log the email for viewing without SMTP server
-
 
     if (toList.isEmpty()) {
       LOG.warn("Couldn't queue email {} because no to address is present", subject);

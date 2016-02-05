@@ -34,8 +34,10 @@ import com.hubspot.singularity.SingularityEmailType;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskMetadata;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.api.SingularityPauseRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
@@ -242,38 +244,43 @@ public class SingularityMailer implements Managed {
 
     templateProperties.put("status", "is overdue to finish");
 
-    prepareTaskMail(task, taskId, request, SingularityEmailType.TASK_SCHEDULED_OVERDUE_TO_FINISH, templateProperties.build(), taskManager.getTaskHistoryUpdates(taskId), ExtendedTaskState.TASK_RUNNING);
+    prepareTaskMail(task, taskId, request, SingularityEmailType.TASK_SCHEDULED_OVERDUE_TO_FINISH, templateProperties.build(), taskManager.getTaskHistoryUpdates(taskId),
+        ExtendedTaskState.TASK_RUNNING, Collections.<SingularityTaskMetadata> emptyList());
   }
 
-  public void sendTaskCompletedMail(final Optional<SingularityTask> task, final SingularityTaskId taskId, final SingularityRequest request, final ExtendedTaskState taskState) {
+  public void queueTaskCompletedMail(final Optional<SingularityTask> task, final SingularityTaskId taskId, final SingularityRequest request, final ExtendedTaskState taskState) {
     if (!maybeSmtpConfiguration.isPresent()) {
       LOG.debug("Not sending task completed mail - no SMTP configuration is present");
       return;
     }
 
-    mailPreparerExecutorService.get().submit(new Runnable() {
-
-      @Override
-      public void run() {
-        try {
-          prepareTaskCompletedMail(task, taskId, request, taskState);
-        } catch (Throwable t) {
-          LOG.error("While preparing task completed mail for {}", taskId, t);
-          exceptionNotifier.notify(t, ImmutableMap.of("taskId", taskId.toString()));
-        }
-      }
-    });
+    if (shouldQueueMail(task, taskId, request, taskState)) {
+      taskManager.saveTaskFinishedInMailQueue(taskId);
+    }
   }
 
-  private void prepareTaskMail(Optional<SingularityTask> task, SingularityTaskId taskId, SingularityRequest request, SingularityEmailType emailType, Map<String, Object> extraProperties,
-      Collection<SingularityTaskHistoryUpdate> taskHistory, ExtendedTaskState taskState) {
+  private boolean shouldQueueMail(final Optional<SingularityTask> task, final SingularityTaskId taskId, final SingularityRequest request, final ExtendedTaskState taskState) {
+    final Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdates(taskId);
+    final Optional<SingularityEmailType> emailType = getEmailType(taskState, request, taskHistory);
 
-    final Collection<SingularityEmailDestination> emailDestination = getDestination(request, emailType);
+    if (!emailType.isPresent()) {
+      LOG.debug("No configured emailType for {} and {}", request, taskState);
+      return false;
+    }
+
+    final Collection<SingularityEmailDestination> emailDestination = getDestination(request, emailType.get());
 
     if (emailDestination.isEmpty()) {
       LOG.debug("Not configured to send task mail for {}", emailType);
-      return;
+      return false;
     }
+
+    return true;
+  }
+
+  private void prepareTaskMail(Optional<SingularityTask> task, SingularityTaskId taskId, SingularityRequest request, SingularityEmailType emailType, Map<String, Object> extraProperties,
+      Collection<SingularityTaskHistoryUpdate> taskHistory, ExtendedTaskState taskState, List<SingularityTaskMetadata> taskMetadata) {
+    final Collection<SingularityEmailDestination> emailDestination = getDestination(request, emailType);
 
     final Map<String, Object> templateProperties = Maps.newHashMap();
     populateRequestEmailProperties(templateProperties, request);
@@ -292,16 +299,23 @@ public class SingularityMailer implements Managed {
     queueMail(emailDestination, request, emailType, user, subject, body);
   }
 
-  private void prepareTaskCompletedMail(Optional<SingularityTask> task, SingularityTaskId taskId, SingularityRequest request, ExtendedTaskState taskState) {
-    final Collection<SingularityTaskHistoryUpdate> taskHistory = taskManager.getTaskHistoryUpdates(taskId);
-    final Optional<SingularityEmailType> emailType = getEmailType(taskState, request, taskHistory);
+  public void sendTaskCompletedMail(SingularityTaskHistory taskHistory, SingularityRequest request) {
+    final Optional<SingularityTaskHistoryUpdate> lastUpdate = taskHistory.getLastTaskUpdate();
 
-    if (!emailType.isPresent()) {
-      LOG.debug("No configured emailType for {} and {}", request, taskState);
+    if (!lastUpdate.isPresent()) {
+      LOG.warn("Can't send task completed mail for task {} - no last update", taskHistory.getTask().getTaskId());
       return;
     }
 
-    prepareTaskMail(task, taskId, request, emailType.get(), Collections.<String, Object> emptyMap(), taskHistory, taskState);
+    final Optional<SingularityEmailType> emailType = getEmailType(lastUpdate.get().getTaskState(), request, taskHistory.getTaskUpdates());
+
+    if (!emailType.isPresent()) {
+      LOG.debug("No configured emailType for {} and {}", request, lastUpdate.get().getTaskState());
+      return;
+    }
+
+    prepareTaskMail(Optional.of(taskHistory.getTask()), taskHistory.getTask().getTaskId(), request, emailType.get(), Collections.<String, Object> emptyMap(),
+        taskHistory.getTaskUpdates(), lastUpdate.get().getTaskState(), taskHistory.getTaskMetadata());
   }
 
   private List<SingularityEmailDestination> getDestination(SingularityRequest request, SingularityEmailType type) {

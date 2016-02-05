@@ -3,6 +3,7 @@ package com.hubspot.singularity;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.JavaUtils;
@@ -58,6 +59,11 @@ public class SingularityTaskHistory {
 
   public List<SingularityTaskShellCommandHistory> getShellCommandHistory() {
     return shellCommandHistory;
+  }
+
+  @JsonIgnore
+  public Optional<SingularityTaskHistoryUpdate> getLastTaskUpdate() {
+    return JavaUtils.getLast(getTaskUpdates());
   }
 
   @Override
