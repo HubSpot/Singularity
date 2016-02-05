@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.MesosUtils;
+import com.hubspot.singularity.executor.models.LogrotateAdditionalFile;
 import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandDescriptor;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
@@ -122,14 +123,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @NotNull
   @JsonProperty
-  private List<String> logrotateAdditionalFiles = Collections.emptyList();
+  private List<LogrotateAdditionalFile> logrotateAdditionalFiles = Collections.emptyList();
 
   /**
    * Extra files to backup to S3 besides the service log.
    */
   @NotNull
   @JsonProperty
-  private List<String> s3UploaderAdditionalFiles = Collections.emptyList();
+  private List<SingularityExecutorS3UploaderAdditionalFile> s3UploaderAdditionalFiles = Collections.emptyList();
 
   @Min(1)
   @JsonProperty
@@ -235,19 +236,19 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.shellCommandUserPlaceholder = shellCommandUserPlaceholder;
   }
 
-  public List<String> getLogrotateAdditionalFiles() {
+  public List<LogrotateAdditionalFile> getLogrotateAdditionalFiles() {
     return logrotateAdditionalFiles;
   }
 
-  public void setLogrotateAdditionalFiles(List<String> logrotateAdditionalFiles) {
+  public void setLogrotateAdditionalFiles(List<LogrotateAdditionalFile> logrotateAdditionalFiles) {
     this.logrotateAdditionalFiles = logrotateAdditionalFiles;
   }
 
-  public List<String> getS3UploaderAdditionalFiles() {
+  public List<SingularityExecutorS3UploaderAdditionalFile> getS3UploaderAdditionalFiles() {
     return s3UploaderAdditionalFiles;
   }
 
-  public void setS3UploaderAdditionalFiles(List<String> s3UploaderAdditionalFiles) {
+  public void setS3UploaderAdditionalFiles(List<SingularityExecutorS3UploaderAdditionalFile> s3UploaderAdditionalFiles) {
     this.s3UploaderAdditionalFiles = s3UploaderAdditionalFiles;
   }
 

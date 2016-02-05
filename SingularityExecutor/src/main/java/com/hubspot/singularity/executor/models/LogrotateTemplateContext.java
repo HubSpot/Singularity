@@ -44,12 +44,12 @@ public class LogrotateTemplateContext {
    * Extra files for logrotate to rotate. If these do not exist logrotate will continue without error.
    * @return filenames to rotate.
    */
-  public List<String> getExtrasFiles() {
-    final List<String> original = configuration.getLogrotateAdditionalFiles();
-    final List<String> transformed = new ArrayList<>(original.size());
+  public List<LogrotateAdditionalFile> getExtrasFiles() {
+    final List<LogrotateAdditionalFile> original = configuration.getLogrotateAdditionalFiles();
+    final List<LogrotateAdditionalFile> transformed = new ArrayList<>(original.size());
 
-    for (String filename : original) {
-      transformed.add(taskDefinition.getTaskDirectoryPath().resolve(filename).toString());
+    for (LogrotateAdditionalFile additionalFile : original) {
+      transformed.add(new LogrotateAdditionalFile(taskDefinition.getTaskDirectoryPath().resolve(additionalFile.getFilename()).toString(), additionalFile.getExtension()));
     }
 
     return transformed;
