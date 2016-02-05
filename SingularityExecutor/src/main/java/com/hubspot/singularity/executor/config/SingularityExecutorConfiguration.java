@@ -16,7 +16,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.MesosUtils;
-import com.hubspot.singularity.executor.models.LogrotateAdditionalFile;
 import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandDescriptor;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
@@ -123,7 +122,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @NotNull
   @JsonProperty
-  private List<LogrotateAdditionalFile> logrotateAdditionalFiles = Collections.emptyList();
+  private List<SingularityExecutorLogrotateAdditionalFile> logrotateAdditionalFiles = Collections.emptyList();
 
   /**
    * Extra files to backup to S3 besides the service log.
@@ -236,11 +235,11 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.shellCommandUserPlaceholder = shellCommandUserPlaceholder;
   }
 
-  public List<LogrotateAdditionalFile> getLogrotateAdditionalFiles() {
+  public List<SingularityExecutorLogrotateAdditionalFile> getLogrotateAdditionalFiles() {
     return logrotateAdditionalFiles;
   }
 
-  public void setLogrotateAdditionalFiles(List<LogrotateAdditionalFile> logrotateAdditionalFiles) {
+  public void setLogrotateAdditionalFiles(List<SingularityExecutorLogrotateAdditionalFile> logrotateAdditionalFiles) {
     this.logrotateAdditionalFiles = logrotateAdditionalFiles;
   }
 
