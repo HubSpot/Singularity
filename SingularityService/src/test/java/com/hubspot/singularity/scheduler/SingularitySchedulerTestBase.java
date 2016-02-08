@@ -83,7 +83,6 @@ import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.RackResource;
 import com.hubspot.singularity.resources.RequestResource;
 import com.hubspot.singularity.resources.SlaveResource;
-import com.hubspot.singularity.scheduler.MesosUtilsTest;
 import com.hubspot.singularity.resources.TaskResource;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.ning.http.client.AsyncHttpClient;
@@ -527,7 +526,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
         .setCommand(Optional.of("sleep 1"))
         .setDeployInstanceCountPerStep(deployRate)
         .setAutoAdvanceDeploySteps(autoAdvance)
-        .setDeployStepWaitTimeSeconds(Optional.of(0));
+        .setDeployStepWaitTimeMs(Optional.of(0));
     if (loadBalanced) {
       Set<String> groups = new HashSet<>(Arrays.asList("group"));
       builder

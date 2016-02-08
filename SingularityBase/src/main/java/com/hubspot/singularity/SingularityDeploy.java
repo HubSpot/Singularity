@@ -178,7 +178,7 @@ public class SingularityDeploy {
     .setExecutorData(executorData)
     .setLabels(labels)
     .setDeployInstanceCountPerStep(deployInstanceCountPerStep)
-    .setDeployStepWaitTimeSeconds(deployStepWaitTimeMs)
+    .setDeployStepWaitTimeMs(deployStepWaitTimeMs)
     .setAutoAdvanceDeploySteps(autoAdvanceDeploySteps);
   }
 

@@ -221,37 +221,37 @@ public class SingularityScheduler {
     for (SingularityPendingRequest pendingRequest : pendingRequests) {
       Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(pendingRequest.getRequestId());
 
-      if (isRequestActive(maybeRequest)) {
-        Optional<SingularityRequestDeployState> maybeRequestDeployState = deployManager.getRequestDeployState(pendingRequest.getRequestId());
-        Optional<SingularityPendingDeploy> maybePendingDeploy = deployManager.getPendingDeploy(maybeRequest.get().getRequest().getId());
-        if (shouldScheduleTasks(pendingRequest, maybePendingDeploy, maybeRequestDeployState)) {
-          final List<SingularityTaskId> matchingTaskIds = getMatchingTaskIds(stateCache, maybeRequest.get().getRequest(), pendingRequest);
-
-          final SingularityDeployStatistics deployStatistics = getDeployStatistics(pendingRequest.getRequestId(), pendingRequest.getDeployId());
-
-          final RequestState requestState = checkCooldown(maybeRequest.get(), deployStatistics);
-
-          int numScheduledTasks = scheduleTasks(stateCache, maybeRequest.get().getRequest(), requestState, deployStatistics, pendingRequest, matchingTaskIds, maybePendingDeploy);
-
-          if (numScheduledTasks == 0 && !matchingTaskIds.isEmpty() && maybeRequest.get().getRequest().isScheduled() && pendingRequest.getPendingType() == PendingType.NEXT_DEPLOY_STEP) {
-            LOG.trace("Holding pending request {} because it is scheduled and has an active task", pendingRequest);
-            heldForScheduledActiveTask++;
-            continue;
-          }
-
-          LOG.debug("Pending request {} resulted in {} new scheduled tasks", pendingRequest, numScheduledTasks);
-
-          totalNewScheduledTasks += numScheduledTasks;
-        } else {
-          LOG.debug("Pending request {} was obsolete (request {})", pendingRequest, SingularityRequestWithState.getRequestState(maybeRequest));
-
-          obsoleteRequests++;
-        }
-      } else {
+      if (!isRequestActive(maybeRequest)) {
         LOG.debug("Pending request {} was obsolete (request {})", pendingRequest, SingularityRequestWithState.getRequestState(maybeRequest));
-
         obsoleteRequests++;
+        continue;
       }
+
+      Optional<SingularityRequestDeployState> maybeRequestDeployState = deployManager.getRequestDeployState(pendingRequest.getRequestId());
+      Optional<SingularityPendingDeploy> maybePendingDeploy = deployManager.getPendingDeploy(maybeRequest.get().getRequest().getId());
+      if (!shouldScheduleTasks(pendingRequest, maybePendingDeploy, maybeRequestDeployState)) {
+        LOG.debug("Pending request {} was obsolete (request {})", pendingRequest, SingularityRequestWithState.getRequestState(maybeRequest));
+        obsoleteRequests++;
+        continue;
+      }
+
+      final List<SingularityTaskId> matchingTaskIds = getMatchingTaskIds(stateCache, maybeRequest.get().getRequest(), pendingRequest);
+
+      final SingularityDeployStatistics deployStatistics = getDeployStatistics(pendingRequest.getRequestId(), pendingRequest.getDeployId());
+
+      final RequestState requestState = checkCooldown(maybeRequest.get(), deployStatistics);
+
+      int numScheduledTasks = scheduleTasks(stateCache, maybeRequest.get().getRequest(), requestState, deployStatistics, pendingRequest, matchingTaskIds, maybePendingDeploy);
+
+      if (numScheduledTasks == 0 && !matchingTaskIds.isEmpty() && maybeRequest.get().getRequest().isScheduled() && pendingRequest.getPendingType() == PendingType.NEXT_DEPLOY_STEP) {
+        LOG.trace("Holding pending request {} because it is scheduled and has an active task", pendingRequest);
+        heldForScheduledActiveTask++;
+        continue;
+      }
+
+      LOG.debug("Pending request {} resulted in {} new scheduled tasks", pendingRequest, numScheduledTasks);
+
+      totalNewScheduledTasks += numScheduledTasks;
 
       requestManager.deletePendingRequest(pendingRequest);
     }
@@ -598,23 +598,24 @@ public class SingularityScheduler {
       return 1;
     }
 
-    final int numInstances;
-    if (maybePendingDeploy.isPresent() && !(maybePendingDeploy.get().getCurrentDeployState() == DeployState.CANCELED) && maybePendingDeploy.get().getDeployProgress().isPresent()) {
-      SingularityDeployProgress deployProgress = maybePendingDeploy.get().getDeployProgress().get();
-      if (maybePendingDeploy.get().getDeployMarker().getDeployId().equals(pendingRequest.getDeployId())) {
-        numInstances = deployProgress.getTargetActiveInstances();
-      } else {
-        if (deployProgress.isStepComplete()) {
-          numInstances = request.getInstancesSafe() - deployProgress.getTargetActiveInstances();
-        } else {
-          numInstances = request.getInstancesSafe() - (Math.max(deployProgress.getTargetActiveInstances() - deployProgress.getDeployInstanceCountPerStep(), 0));
-        }
-      }
-    } else {
-      numInstances = request.getInstancesSafe();
+    return numInstancesExpected(request, pendingRequest, maybePendingDeploy) - matchingTaskIds.size();
+  }
+
+  private int numInstancesExpected(SingularityRequest request, SingularityPendingRequest pendingRequest, Optional<SingularityPendingDeploy> maybePendingDeploy) {
+    if (!maybePendingDeploy.isPresent() || (maybePendingDeploy.get().getCurrentDeployState() == DeployState.CANCELED) || maybePendingDeploy.get().getDeployProgress().isPresent()) {
+      return request.getInstancesSafe();
     }
 
-    return numInstances - matchingTaskIds.size();
+    SingularityDeployProgress deployProgress = maybePendingDeploy.get().getDeployProgress().get();
+    if (maybePendingDeploy.get().getDeployMarker().getDeployId().equals(pendingRequest.getDeployId())) {
+      return deployProgress.getTargetActiveInstances();
+    } else {
+      if (deployProgress.isStepComplete()) {
+        return request.getInstancesSafe() - deployProgress.getTargetActiveInstances();
+      } else {
+        return request.getInstancesSafe() - (Math.max(deployProgress.getTargetActiveInstances() - deployProgress.getDeployInstanceCountPerStep(), 0));
+      }
+    }
   }
 
   private List<SingularityPendingTask> getScheduledTaskIds(int numMissingInstances, List<SingularityTaskId> matchingTaskIds, SingularityRequest request, RequestState state,
