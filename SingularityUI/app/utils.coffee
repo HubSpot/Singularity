@@ -198,4 +198,11 @@ class Utils
         else
           {}
 
+    @humanizeText: (text) ->
+        return '' if not text
+        text = text.replace /_/g, ' '
+        text = text.toLowerCase()
+        text = text[0].toUpperCase() + text.substr 1
+        return text
+
 module.exports = Utils
