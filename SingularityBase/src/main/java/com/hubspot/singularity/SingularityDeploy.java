@@ -60,6 +60,11 @@ public class SingularityDeploy {
   private final Optional<Set<String>> loadBalancerGroups;
   private final Optional<Map<String, Object>> loadBalancerOptions;
 
+  private final Optional<Integer> deployInstanceCountPerStep;
+  private final Optional<Integer> deployStepWaitTimeSeconds;
+  private final Optional<Boolean> autoAdvanceDeploySteps;
+  private final Optional<Integer> maxTaskRetries;
+
   public static SingularityDeployBuilder newBuilder(String requestId, String id) {
     return new SingularityDeployBuilder(requestId, id);
   }
@@ -94,7 +99,11 @@ public class SingularityDeploy {
       @JsonProperty("considerHealthyAfterRunningForSeconds") Optional<Long> considerHealthyAfterRunningForSeconds,
       @JsonProperty("loadBalancerOptions") Optional<Map<String, Object>> loadBalancerOptions,
       @JsonProperty("skipHealthchecksOnDeploy") Optional<Boolean> skipHealthchecksOnDeploy,
-      @JsonProperty("healthCheckProtocol") Optional<HealthcheckProtocol> healthcheckProtocol) {
+      @JsonProperty("healthCheckProtocol") Optional<HealthcheckProtocol> healthcheckProtocol,
+      @JsonProperty("deployInstanceCountPerStep") Optional<Integer> deployInstanceCountPerStep,
+      @JsonProperty("deployStepWaitTimeMs") Optional<Integer> deployStepWaitTimeSeconds,
+      @JsonProperty("autoAdvanceDeploySteps") Optional<Boolean> autoAdvanceDeploySteps,
+      @JsonProperty("maxTaskRetries") Optional<Integer> maxTaskRetries) {
     this.requestId = requestId;
 
     this.command = command;
@@ -134,6 +143,11 @@ public class SingularityDeploy {
     this.serviceBasePath = serviceBasePath;
     this.loadBalancerGroups = loadBalancerGroups;
     this.loadBalancerOptions = loadBalancerOptions;
+
+    this.deployInstanceCountPerStep = deployInstanceCountPerStep;
+    this.deployStepWaitTimeSeconds = deployStepWaitTimeSeconds;
+    this.autoAdvanceDeploySteps = autoAdvanceDeploySteps;
+    this.maxTaskRetries = maxTaskRetries;
   }
 
   public SingularityDeployBuilder toBuilder() {
@@ -147,29 +161,29 @@ public class SingularityDeploy {
     .setCustomExecutorSource(customExecutorSource)
     .setCustomExecutorResources(customExecutorResources)
     .setCustomExecutorUser(customExecutorUser)
-
     .setHealthcheckUri(healthcheckUri)
     .setHealthcheckIntervalSeconds(healthcheckIntervalSeconds)
     .setHealthcheckTimeoutSeconds(healthcheckTimeoutSeconds)
     .setSkipHealthchecksOnDeploy(skipHealthchecksOnDeploy)
     .setHealthcheckProtocol(healthcheckProtocol)
-
     .setHealthcheckMaxRetries(healthcheckMaxRetries)
     .setHealthcheckMaxTotalTimeoutSeconds(healthcheckMaxTotalTimeoutSeconds)
-
     .setConsiderHealthyAfterRunningForSeconds(considerHealthyAfterRunningForSeconds)
     .setDeployHealthTimeoutSeconds(deployHealthTimeoutSeconds)
     .setServiceBasePath(serviceBasePath)
     .setLoadBalancerGroups(copyOfSet(loadBalancerGroups))
     .setLoadBalancerOptions(copyOfMap(loadBalancerOptions))
-
     .setMetadata(copyOfMap(metadata))
     .setVersion(version)
     .setTimestamp(timestamp)
     .setEnv(copyOfMap(env))
     .setUris(copyOfList(uris))
     .setExecutorData(executorData)
-    .setLabels(labels);
+    .setLabels(labels)
+    .setDeployInstanceCountPerStep(deployInstanceCountPerStep)
+    .setDeployStepWaitTimeSeconds(deployStepWaitTimeSeconds)
+    .setAutoAdvanceDeploySteps(autoAdvanceDeploySteps)
+    .setMaxTaskRetries(maxTaskRetries);
   }
 
   @ApiModelProperty(required=false, value="Number of seconds that Singularity waits for this service to become healthy (for it to download artifacts, start running, and optionally pass healthchecks.)")
@@ -321,6 +335,26 @@ public class SingularityDeploy {
     return healthcheckMaxTotalTimeoutSeconds;
   }
 
+  @ApiModelProperty(required=false, value="deploy this many instances at a time")
+  public Optional<Integer> getDeployInstanceCountPerStep() {
+    return deployInstanceCountPerStep;
+  }
+
+  @ApiModelProperty(required=false, value="wait this long between deploy steps")
+  public Optional<Integer> getDeployStepWaitTimeSeconds() {
+    return deployStepWaitTimeSeconds;
+  }
+
+  @ApiModelProperty(required=false, value="automatically advance to the next target instance count after `deployStepWaitTimeSeconds` seconds")
+  public Optional<Boolean> getAutoAdvanceDeploySteps() {
+    return autoAdvanceDeploySteps;
+  }
+
+  @ApiModelProperty(required=false, value="allowed at most this many failed tasks to be retried before failing the deploy")
+  public Optional<Integer> getMaxTaskRetries() {
+    return maxTaskRetries;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeploy{" +
@@ -354,6 +388,10 @@ public class SingularityDeploy {
       ", loadBalancerGroups=" + loadBalancerGroups +
       ", loadBalancerOptions=" + loadBalancerOptions +
       ", labels=" + labels +
+      ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
+      ", deployStepWaitTimeSeconds=" + deployStepWaitTimeSeconds +
+      ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +
+      ", maxTaskRetries=" + maxTaskRetries +
       '}';
   }
 
