@@ -16,7 +16,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.mesos.JavaUtils;
@@ -29,8 +28,6 @@ import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployProgress;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
 import com.hubspot.singularity.SingularityPendingDeploy;
-import com.hubspot.singularity.SingularityTaskId;
-import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
@@ -38,7 +35,9 @@ import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTransformHelpers;
+import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
@@ -148,7 +147,7 @@ public class DeployResource extends AbstractRequestResource {
 
     Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestWithState.getRequest().getId());
 
-    checkBadRequest(!deployState.isPresent() || !deployState.get().getPendingDeploy().isPresent() || !deployState.get().getPendingDeploy().get().getDeployId().equals(deployId),
+    checkBadRequest(deployState.isPresent() && deployState.get().getPendingDeploy().isPresent() && deployState.get().getPendingDeploy().get().getDeployId().equals(deployId),
       "Request %s does not have a pending deploy %s", requestId, deployId);
 
     deployManager.createCancelDeployRequest(new SingularityDeployMarker(requestId, deployId, System.currentTimeMillis(), JavaUtils.getUserEmail(user), Optional.<String> absent()));
@@ -169,10 +168,10 @@ public class DeployResource extends AbstractRequestResource {
 
     Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestWithState.getRequest().getId());
 
-    checkBadRequest(!deployState.isPresent() || !deployState.get().getPendingDeploy().isPresent() || !deployState.get().getPendingDeploy().get().getDeployId().equals(updateRequest.getDeployId()),
+    checkBadRequest(deployState.isPresent() && deployState.get().getPendingDeploy().isPresent() && deployState.get().getPendingDeploy().get().getDeployId().equals(updateRequest.getDeployId()),
       "Request %s does not have a pending deploy %s", updateRequest.getRequestId(), updateRequest.getDeployId());
 
-    checkBadRequest(updateRequest.getTargetActiveInstances() > requestWithState.getRequest().getInstancesSafe() || updateRequest.getTargetActiveInstances() < 1,
+    checkBadRequest(updateRequest.getTargetActiveInstances() > 0 && updateRequest.getTargetActiveInstances() <= requestWithState.getRequest().getInstancesSafe(),
       "Cannot update pending deploy to have more instances (%s) than instances set for request (%s), or less than 1 instance", updateRequest.getTargetActiveInstances(), requestWithState.getRequest().getInstancesSafe());
 
     deployManager.createUpdatePendingDeployRequest(updateRequest);
