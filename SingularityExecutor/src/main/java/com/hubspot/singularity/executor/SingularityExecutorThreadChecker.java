@@ -18,15 +18,14 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.executor.SingularityExecutorMonitor.KillState;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCallable;
+import com.hubspot.singularity.executor.utils.DockerUtils;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
-import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.DockerException;
 
 @Singleton
@@ -38,14 +37,14 @@ public class SingularityExecutorThreadChecker {
 
   private final SingularityExecutorConfiguration configuration;
   private final ScheduledExecutorService scheduledExecutorService;
-  private final DockerClient dockerClient;
+  private final DockerUtils dockerUtils;
 
   private SingularityExecutorMonitor monitor;
 
   @Inject
-  public SingularityExecutorThreadChecker(SingularityExecutorConfiguration configuration, DockerClient dockerClient) {
+  public SingularityExecutorThreadChecker(SingularityExecutorConfiguration configuration, DockerUtils dockerUtils) {
     this.configuration = configuration;
-    this.dockerClient = dockerClient;
+    this.dockerUtils = dockerUtils;
 
     this.scheduledExecutorService = Executors.newScheduledThreadPool(configuration.getThreadCheckThreads(), new ThreadFactoryBuilder().setNameFormat("SingularityExecutorThreadCheckerThread-%d").build());
   }
@@ -116,17 +115,15 @@ public class SingularityExecutorThreadChecker {
     if (taskProcess.getTask().getTaskInfo().hasContainer() && taskProcess.getTask().getTaskInfo().getContainer().hasDocker()) {
       try {
         String containerName = String.format("%s%s", configuration.getDockerPrefix(), taskProcess.getTask().getTaskId());
-        int possiblePid = dockerClient.inspectContainer(containerName).state().pid();
+        int possiblePid = dockerUtils.getPid(containerName);
         if (possiblePid == 0) {
-          LOG.warn(String.format("Container %s has pid %s (running: %s). Defaulting to 0 threads running.", containerName, possiblePid, dockerClient.inspectContainer(containerName).state().running()));
+          LOG.warn(String.format("Container %s has pid %s (running: %s). Defaulting to 0 threads running.", containerName, possiblePid, dockerUtils.isContainerRunning(containerName)));
           return 0;
         } else {
           dockerPid = Optional.of(possiblePid);
         }
       } catch (DockerException e) {
         throw new ProcessFailedException(String.format("Could not get docker root pid due to error: %s", e));
-      } catch (UncheckedTimeoutException te) {
-        throw new ProcessFailedException(String.format("Timed out trying to reach docker daemon after %s seconds", configuration.getDockerClientTimeLimitSeconds()));
       }
     }
 
