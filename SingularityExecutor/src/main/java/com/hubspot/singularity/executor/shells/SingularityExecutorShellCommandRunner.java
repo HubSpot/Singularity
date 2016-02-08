@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -39,6 +40,10 @@ public class SingularityExecutorShellCommandRunner {
       super(message);
     }
 
+  }
+
+  public static String convertCommandNameToLogfileName(String str) {
+    return CharMatcher.WHITESPACE.or(CharMatcher.is('/')).replaceFrom(str, '-').toLowerCase();
   }
 
   public SingularityExecutorShellCommandRunner(SingularityTaskShellCommandRequest shellRequest, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorTask task,
@@ -78,7 +83,9 @@ public class SingularityExecutorShellCommandRunner {
       return;
     }
 
-    final String outputFilename = executorConfiguration.getShellCommandOutFile().replace("{TIMESTAMP}", Long.toString(shellRequest.getTimestamp()));
+    final String outputFilename = executorConfiguration.getShellCommandOutFile()
+        .replace("{NAME}", shellRequest.getShellCommand().getLogfileName().or(convertCommandNameToLogfileName(shellRequest.getShellCommand().getName())))
+        .replace("{TIMESTAMP}", Long.toString(shellRequest.getTimestamp()));
 
     shellCommandUpdater.sendUpdate(UpdateType.ACKED, Optional.of(Joiner.on(" ").join(command)), Optional.of(outputFilename));
 
