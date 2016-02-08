@@ -145,8 +145,7 @@ public class DeployResource extends AbstractRequestResource {
     Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestWithState.getRequest().getId());
 
     checkBadRequest(!deployState.isPresent() || !deployState.get().getPendingDeploy().isPresent() || !deployState.get().getPendingDeploy().get().getDeployId().equals(deployId),
-      "Request does not ahve a pending deploy",
-      ImmutableMap.of("requestId", requestId, "deployId", deployId));
+      "Request %s does not have a pending deploy %s", requestId, deployId);
 
     deployManager.createCancelDeployRequest(new SingularityDeployMarker(requestId, deployId, System.currentTimeMillis(), JavaUtils.getUserEmail(user), Optional.<String> absent()));
 
@@ -167,12 +166,10 @@ public class DeployResource extends AbstractRequestResource {
     Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestWithState.getRequest().getId());
 
     checkBadRequest(!deployState.isPresent() || !deployState.get().getPendingDeploy().isPresent() || !deployState.get().getPendingDeploy().get().getDeployId().equals(updateRequest.getDeployId()),
-      "Reuqest does not have a pending deploy",
-      ImmutableMap.of("requestId", updateRequest.getRequestId(), "deployId", updateRequest.getDeployId()));
+      "Request %s does not have a pending deploy %s", updateRequest.getRequestId(), updateRequest.getDeployId());
 
     checkBadRequest(updateRequest.getTargetActiveInstances() > requestWithState.getRequest().getInstancesSafe() || updateRequest.getTargetActiveInstances() < 1,
-      "New target instances must be greater than 0 and less that request instances",
-      ImmutableMap.of("newTargetInstances", updateRequest.getTargetActiveInstances(), "requestInstances", requestWithState.getRequest().getInstancesSafe()));
+      "Cannot update pending deploy to have more instances (%s) than instances set for request (%s), or less than 1 instance", updateRequest.getTargetActiveInstances(), requestWithState.getRequest().getInstancesSafe());
 
     deployManager.createUpdatePendingDeployRequest(updateRequest);
 
