@@ -1,10 +1,7 @@
-Clipboard = require 'clipboard'
-vex = require 'vex.dialog'
-
 class Utils
 
     # Constants
-    @TERMINAL_TASK_STATES: ['TASK_KILLED', 'TASK_LOST', 'TASK_FAILED', 'TASK_FINISHED', 'TASK_ERROR']
+    @TERMINAL_TASK_STATES: ['TASK_KILLED', 'TASK_LOST', 'TASK_FAILED', 'TASK_FINISHED']
     @DECOMMISION_STATES: ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'DECOMISSIONING', 'DECOMISSIONED', 'STARTING_DECOMISSION']
 
     @viewJSON: (model, callback) ->
@@ -55,10 +52,21 @@ class Utils
             afterOpen: ($vexContent) ->
                 $vexContent.parents('.vex').scrollTop 0
 
+                # Dity hack to make ZeroClipboard play along
+                # The Flash element doesn't work if it falls outside the
+                # bounds of the body, even if it's inside the dialog
+                overlayHeight = $vexContent.parents(".vex-overlay").height()
+                $("body").css "min-height", overlayHeight + "px"
+
                 $button = $vexContent.find ".copy-button"
                 $button.attr "data-clipboard-text", $vexContent.find("pre").html()
 
-                clipboard = new Clipboard $button[0]
+                zeroClipboardClient = new ZeroClipboard $button[0]
+
+                zeroClipboardClient.on "ready", =>
+                    zeroClipboardClient.on "aftercopy", =>
+                        $button.val "Copied"
+                        setTimeout (-> $button.val "Copy"), 800
 
     # For .horizontal-description-list
     @setupCopyLinks: ($element) =>
@@ -70,7 +78,7 @@ class Utils
                 text = $item.find('p').html()
                 $copyLink = $ "<a data-clipboard-text='#{ _.escape text }'>Copy</a>"
                 $item.find("h4").append $copyLink
-                new Clipboard $copyLink[0]
+                new ZeroClipboard $copyLink[0]
 
     # Copy anything
     @makeMeCopy: (options) =>
@@ -81,7 +89,7 @@ class Utils
         text = $element.find(textSelector).html()
         $copyLink = $ "<a data-clipboard-text='#{ _.escape text }'>#{linkText}</a>"
         $(options.copyLink).html($copyLink)
-        new Clipboard $copyLink[0]
+        new ZeroClipboard $copyLink[0]
 
     @fixTableColumns: ($table) =>
         $headings = $table.find "th"
@@ -196,60 +204,5 @@ class Utils
         text = text.toLowerCase()
         text = text[0].toUpperCase() + text.substr 1
         return text
-
-    @humanizeFileSize: (bytes) ->
-        k = 1024
-        sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-
-        return '0 B' if bytes is 0
-        i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length-1)
-        return +(bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i]
-
-    @substituteTaskId: (value, taskId) ->
-        value.replace('$TASK_ID', taskId)
-
-    @getLabelClassFromTaskState: (state) ->
-        switch state
-            when 'TASK_STARTING', 'TASK_CLEANING'
-                'warning'
-            when 'TASK_STAGING', 'TASK_LAUNCHED', 'TASK_RUNNING'
-                'info'
-            when 'TASK_FINISHED'
-                'success'
-            when 'TASK_LOST', 'TASK_FAILED', 'TASK_LOST_WHILE_DOWN', 'TASK_ERROR'
-                'danger'
-            when 'TASK_KILLED'
-                'default'
-            else
-                'default'
-
-    @fileName: (filePath) ->
-        filePath.substring(filePath.lastIndexOf('/') + 1)
-
-    @fuzzyAdjustScore: (filter, fuzzyObject) ->
-        if fuzzyObject.original.id.toLowerCase().startsWith(filter.toLowerCase())
-            fuzzyObject.score * 10
-        else if fuzzyObject.original.id.toLowerCase().indexOf(filter.toLowerCase()) > -1
-            fuzzyObject.score * 5
-        else
-            fuzzyObject.score
-
-    @getTaskDataFromTaskId: (taskId) ->
-        splits = taskId.split('-')
-        {
-            id: taskId
-            rackId: splits[splits.length - 1]
-            host: splits[splits.length - 2]
-            instanceNo: splits[splits.length - 3]
-            startedAt: splits[splits.length - 4]
-            deployId: splits[splits.length - 5]
-            requestId: splits[0..splits.length - 6].join '-'
-        }
-
-    # e.g. `myModel.fetch().error Utils.ignore404`
-    @ignore404: (response) -> app.caughtError() if response.status is 404
-
-    # e.g. `myModel.fetch().error Utils.ignore400`
-    @ignore400: (response) -> app.caughtError() if response.status is 400
 
 module.exports = Utils
