@@ -389,7 +389,7 @@ public class SingularityDeployChecker {
     if (pendingDeploy.getDeployProgress().isPresent()) {
       return checkDeployProgress(request, cancelRequest, pendingDeploy, updatePendingDeployRequest, deploy, deployActiveTasks, otherActiveTasks);
     } else {
-      return new SingularityDeployResult(DeployState.FAILED, "No deploy progress present for deploy of long running request");
+      return new SingularityDeployResult(DeployState.FAILED, "No deploy progress data present in Zookeeper. Please reattempt your deploy");
     }
   }
 
