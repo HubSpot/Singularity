@@ -602,7 +602,7 @@ public class SingularityScheduler {
   }
 
   private int numInstancesExpected(SingularityRequest request, SingularityPendingRequest pendingRequest, Optional<SingularityPendingDeploy> maybePendingDeploy) {
-    if (!maybePendingDeploy.isPresent() || (maybePendingDeploy.get().getCurrentDeployState() == DeployState.CANCELED) || maybePendingDeploy.get().getDeployProgress().isPresent()) {
+    if (!maybePendingDeploy.isPresent() || (maybePendingDeploy.get().getCurrentDeployState() == DeployState.CANCELED) || !maybePendingDeploy.get().getDeployProgress().isPresent()) {
       return request.getInstancesSafe();
     }
 
