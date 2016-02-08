@@ -1,5 +1,8 @@
+TaskSearchResults = require '../../collections/TaskSearchResults'
+
 QueryParam = require './QueryParam'
 Task = require './Task'
+
 StripedTable = require '../common/Table'
 TimeStamp = require '../common/TimeStamp'
 TaskStateLabel = require '../common/TaskStateLabel'
@@ -7,56 +10,115 @@ Link = require '../common/Link'
 
 DisplayResults = React.createClass
 
+    collectionsReset: (event, response) ->
+        @setState({
+            loading: false
+        })
+
+    setPropsCloneEqualToProps: ->
+        @propsClone = {
+            requestId: @props.requestId
+            requestLocked: @props.requestLocked
+            deployId: @props.deployId
+            host: @props.host
+            lastTaskStatus: @props.lastTaskStatus
+            startedBefore: @props.startedBefore
+            startedAfter: @props.startedAfter
+            sortDirection: @props.sortDirection
+            page: @props.page
+            count: @props.count
+            requestLocked: @props.requestLocked
+        }
+
+    # Used to detect if any props have changed
+    isPropsCloneEqualToProps: ->
+        result = @propsClone.requestId == @props.requestId
+        result = result and @propsClone.requestLocked == @props.requestLocked
+        result = result and @propsClone.deployId == @props.deployId
+        result = result and @propsClone.host == @props.host
+        result = result and @propsClone.lastTaskStatus == @props.lastTaskStatus
+        result = result and @propsClone.startedBefore == @props.startedBefore
+        result = result and @propsClone.startedAfter == @props.startedAfter
+        result = result and @propsClone.sortDirection == @props.sortDirection
+        result = result and @propsClone.page == @props.page
+        result = result and @propsClone.count == @props.count
+        result = result and @propsClone.requestLocked == @props.requestLocked
+        return result
+
+    getInitialState: ->
+        @setPropsCloneEqualToProps()
+        return {
+            loading: true
+        }
+
+    fetchCollection: ->
+        @setPropsCloneEqualToProps()
+        @collection = new TaskSearchResults [],
+            requestId : @props.requestId
+            deployId : @props.deployId
+            host : @props.host
+            lastTaskStatus : @props.lastTaskStatus
+            startedAfter : @props.startedAfter
+            startedBefore : @props.startedBefore
+            orderDirection : @props.sortDirection
+            count : @props.count
+            page : @props.page
+        @collection.on "add", @collectionsReset
+        @collection.fetch()
+
+    componentWillMount: ->
+        @fetchCollection()
+
     getQueryParams: ->
         params = []
         key = 0
-        if @props.collection.requestId
+        if @collection.requestId
             params.push(<div key={key}> <QueryParam
                 paramName = "Request Id"
-                paramValue = @props.collection.requestId
+                paramValue = @collection.requestId
                 onClick = @props.clearRequestId
                 cantClear = @props.requestLocked
                 /></div>)
             key++
-        if @props.collection.deployId
+        if @collection.deployId
             params.push(<div key={key}> <QueryParam
                 paramName = "Deploy Id"
-                paramValue = @props.collection.deployId
+                paramValue = @collection.deployId
                 onClick = @props.clearDeployId
                 /></div>)
             key++
-        if @props.collection.host
+        if @collection.host
             params.push(<div key={key}> <QueryParam
                 paramName = "Host"
-                paramValue = @props.collection.host
+                paramValue = @collection.host
                 onClick = @props.clearHost
                 /></div>)
             key++
-        if @props.collection.lastTaskStatus
+        if @collection.lastTaskStatus
             params.push(<div key={key}> <QueryParam
                 paramName = "Last Task Status"
-                paramValue = @props.collection.lastTaskStatus
+                paramValue = @collection.lastTaskStatus
                 onClick = @props.clearLastTaskStatus
                 /></div>)
             key++
-        if @props.collection.startedAfter
+        if @collection.startedAfter
             params.push(<div key={key}> <QueryParam
                 paramName = "Started After"
-                paramValue = @props.collection.startedAfter._d.toString()
+                paramValue = @collection.startedAfter._d.toString()
                 onClick = @props.clearStartedAfter
                 /></div>)
             key++
-        if @props.collection.startedBefore
+        if @collection.startedBefore
             params.push(<div key={key}> <QueryParam
                 paramName = "Started Before"
-                paramValue = @props.collection.startedBefore._d.toString()
+                paramValue = @collection.startedBefore._d.toString()
                 onClick = @props.clearStartedBefore
                 /></div>)
             key++
-        if @props.collection.sortDirection
+        if @collection.sortDirection
             params.push(<div key={key}> <QueryParam
                 paramName = "Sort Direction"
-                paramValue = @props.collection.sortDirection
+                paramValue = @collection.sortDirection
                 onClick = @props.clearSortDirection
                 /></div>)
             key++
@@ -67,8 +129,8 @@ DisplayResults = React.createClass
     renderPageButtons: ->
         <nav>
             <ul className="pager">
-                <li className={@props.collection.page == 1 and "previous disabled" or "previous"} onClick={@props.decreasePageNumber}><a href="#">Previous</a></li>
-                <li className="previous disabled"><a href="#">Page {@props.collection.page}</a></li>
+                <li className={@collection.page == 1 and "previous disabled" or "previous"} onClick={@props.decreasePageNumber}><a href="#">Previous</a></li>
+                <li className="previous disabled"><a href="#">Page {@collection.page}</a></li>
                 <li className="previous" onClick={@props.increasePageNumber}><a href="#">Next</a></li>
             </ul>
         </nav>
@@ -77,7 +139,7 @@ DisplayResults = React.createClass
     renderTasks: ->
         taskTableColumns = ["Name", "Last State", "Deploy", "Started", "Updated"]
         taskTableData = []
-        for task in @props.collection.models
+        for task in @collection.models
             taskTableData.push([<Link
                                     text={task.taskId.id}
                                     url={window.config.appRoot + "/task/" + task.taskId.id}
@@ -106,7 +168,8 @@ DisplayResults = React.createClass
 
 
     render: ->
-        return <div>
+        @fetchCollection() unless @isPropsCloneEqualToProps() or @state.loading
+        <div>
             <h1>{@props.headerText}</h1>
             <h2>Query Params</h2>
             {@getQueryParams()}

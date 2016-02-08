@@ -2,6 +2,7 @@ Utils = require '../../utils'
 Enums = require './Enums'
 TaskSearchForm = require './TaskSearchForm'
 TaskSearchSubmitted = require './TaskSearchSubmitted'
+DisplayResults = require './DisplayResults'
 
 TaskSearch = React.createClass
 
@@ -119,6 +120,11 @@ TaskSearch = React.createClass
             startedAfter: ''
         })
 
+    returnToForm: (event) ->
+        @setState({
+            showForm: true
+        })
+
     render: ->
         if @state.showForm
             return <TaskSearchForm
@@ -142,7 +148,7 @@ TaskSearch = React.createClass
                 resetForm = @resetForm
             />
         else
-            return <TaskSearchSubmitted
+            return <DisplayResults
                 headerText = @headerText
                 requestId = @state.requestId
                 requestLocked = @state.requestLocked
@@ -164,6 +170,7 @@ TaskSearch = React.createClass
                 clearStartedBefore = @clearStartedBefore
                 clearSortDirection = @clearSortDirection
                 requestLocked = @props.requestLocked
+                returnToForm = @returnToForm
             />
 
 
