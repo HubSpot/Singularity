@@ -83,9 +83,9 @@ public class SingularityExecutorArtifactFetcher {
       boolean fetchS3ArtifactsLocally = true;
 
       final ImmutableList<S3Artifact> allS3Artifacts = ImmutableList.<S3Artifact>builder()
-              .addAll(executorData.getS3Artifacts())
-              .addAll(executorData.getS3ArtifactSignatures().or(Collections.<S3ArtifactSignature>emptyList()))
-              .build();
+          .addAll(executorData.getS3Artifacts())
+          .addAll(executorData.getS3ArtifactSignatures().or(Collections.<S3ArtifactSignature>emptyList()))
+          .build();
 
       if (executorConfiguration.isUseLocalDownloadService() && (!allS3Artifacts.isEmpty())) {
         final long start = System.currentTimeMillis();
@@ -119,7 +119,7 @@ public class SingularityExecutorArtifactFetcher {
 
     private void extractFiles(SingularityExecutorTask task, ArtifactManager artifactManager, ExecutorData executorData) {
       for (EmbeddedArtifact artifact : executorData.getEmbeddedArtifacts()) {
-        artifactManager.extract(artifact, task.getTaskDefinition().getTaskDirectoryPath());
+        artifactManager.extract(artifact, task.getArtifactPath(artifact, task.getTaskDefinition().getTaskDirectoryPath()));
       }
     }
 
@@ -127,7 +127,8 @@ public class SingularityExecutorArtifactFetcher {
       final List<ListenableFuture<Response>> futures = Lists.newArrayListWithCapacity(s3Artifacts.size());
 
       for (S3Artifact s3Artifact : s3Artifacts) {
-        ArtifactDownloadRequest artifactDownloadRequest = new ArtifactDownloadRequest(task.getTaskDefinition().getTaskDirectory(), s3Artifact);
+        String destination = task.getArtifactPath(s3Artifact, task.getTaskDefinition().getTaskDirectoryPath()).toString();
+        ArtifactDownloadRequest artifactDownloadRequest = new ArtifactDownloadRequest(destination, s3Artifact);
 
         task.getLog().debug("Requesting {} from {}", artifactDownloadRequest, localDownloadUri);
 
@@ -168,9 +169,9 @@ public class SingularityExecutorArtifactFetcher {
       Path fetched = artifactManager.fetch(remoteArtifact);
 
       if (Objects.toString(fetched.getFileName()).endsWith(".tar.gz")) {
-        artifactManager.untar(fetched, task.getTaskDefinition().getTaskDirectoryPath());
+        artifactManager.untar(fetched, task.getArtifactPath(remoteArtifact, task.getTaskDefinition().getTaskDirectoryPath()));
       } else {
-        artifactManager.copy(fetched, task.getTaskDefinition().getTaskAppDirectoryPath());
+        artifactManager.copy(fetched, task.getArtifactPath(remoteArtifact, task.getTaskDefinition().getTaskAppDirectoryPath()));
       }
     }
 
