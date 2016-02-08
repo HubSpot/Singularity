@@ -20,6 +20,7 @@ TaskSearchForm = React.createClass
                         disabled = {'disabled' if @props.requestLocked}
                         updateFn = @props.updateReqeustId />
                 </div>
+                <br />
                 <div className='formGroup'>
                     <label htmlFor="deployId">Deploy ID:</label>
                     <FormField
@@ -28,6 +29,7 @@ TaskSearchForm = React.createClass
                         id = 'deployId'
                         updateFn = @props.updateDeployId />
                 </div>
+                <br />
                 <div className='formGroup'>
                     <label htmlFor="host">Host:</label>
                     <FormField
@@ -36,6 +38,7 @@ TaskSearchForm = React.createClass
                         id = 'host'
                         updateFn = @props.updateHost />
                 </div>
+                <br />
                 <div className='formGroup'>
                     <label htmlFor="lastTaskStatus">Last Task Status:</label>
                     <DropDown
@@ -47,6 +50,7 @@ TaskSearchForm = React.createClass
                         id = 'lastTaskStatus'
                         updateFn = @props.updateLastTaskStatus />
                 </div>
+                <br />
                 <div className='formGroup'>
                     <label htmlFor="startedBefore">Started Before:</label>
                     <DateEntry 
@@ -74,7 +78,9 @@ TaskSearchForm = React.createClass
                         title = 'Sort Direction'
                         updateFn = @props.updateSortDirection />
                 </div>
+                <br />
                 <button type="submit" className="btn btn-default">Search</button>
+                <button type="button" className="btn btn-default" onClick={@props.resetForm}>Clear Form</button>
             </form>
         </div>
 

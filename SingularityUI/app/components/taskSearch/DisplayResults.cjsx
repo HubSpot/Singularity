@@ -14,60 +14,65 @@ DisplayResults = React.createClass
             params.push(<div key={key}> <QueryParam
                 paramName = "Request Id"
                 paramValue = @props.collection.requestId
+                onClick = @props.clearRequestId
+                cantClear = @props.requestLocked
                 /></div>)
             key++
         if @props.collection.deployId
             params.push(<div key={key}> <QueryParam
                 paramName = "Deploy Id"
                 paramValue = @props.collection.deployId
+                onClick = @props.clearDeployId
                 /></div>)
             key++
         if @props.collection.host
             params.push(<div key={key}> <QueryParam
                 paramName = "Host"
                 paramValue = @props.collection.host
+                onClick = @props.clearHost
                 /></div>)
             key++
         if @props.collection.lastTaskStatus
             params.push(<div key={key}> <QueryParam
                 paramName = "Last Task Status"
                 paramValue = @props.collection.lastTaskStatus
+                onClick = @props.clearLastTaskStatus
                 /></div>)
             key++
         if @props.collection.startedAfter
             params.push(<div key={key}> <QueryParam
                 paramName = "Started After"
                 paramValue = @props.collection.startedAfter._d.toString()
+                onClick = @props.clearStartedAfter
                 /></div>)
             key++
         if @props.collection.startedBefore
             params.push(<div key={key}> <QueryParam
                 paramName = "Started Before"
                 paramValue = @props.collection.startedBefore._d.toString()
+                onClick = @props.clearStartedBefore
                 /></div>)
             key++
         if @props.collection.sortDirection
             params.push(<div key={key}> <QueryParam
                 paramName = "Sort Direction"
                 paramValue = @props.collection.sortDirection
-                /></div>)
-            key++
-        if @props.collection.page
-            params.push(<div key={key}> <QueryParam
-                paramName = "Page"
-                paramValue = @props.collection.page
-                /></div>)
-            key++
-        if @props.collection.count
-            params.push(<div key={key}> <QueryParam
-                paramName = "Count"
-                paramValue = @props.collection.count
+                onClick = @props.clearSortDirection
                 /></div>)
             key++
         return params
 
+    # using className="previous" for the next button is necessary to align
+    # it to the left side of the page. This is built into bootstrap
     renderPageButtons: ->
-        #TODO
+        <nav>
+            <ul className="pager">
+                <li className={@props.collection.page == 1 and "previous disabled" or "previous"} onClick={@props.decreasePageNumber}><a href="#">Previous</a></li>
+                <li className="previous disabled"><a href="#">Page {@props.collection.page}</a></li>
+                <li className="previous" onClick={@props.increasePageNumber}><a href="#">Next</a></li>
+            </ul>
+        </nav>
+
 
     renderTasks: ->
         taskTableColumns = ["Name", "Last State", "Deploy", "Started", "Updated"]
@@ -102,7 +107,7 @@ DisplayResults = React.createClass
 
     render: ->
         return <div>
-            <h1>Results Found</h1>
+            <h1>{@props.headerText}</h1>
             <h2>Query Params</h2>
             {@getQueryParams()}
             <h2>Tasks</h2>
