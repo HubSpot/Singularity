@@ -1,5 +1,6 @@
 package com.hubspot.deploy;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -45,7 +46,7 @@ public class EmbeddedArtifact extends Artifact {
     }
 
     EmbeddedArtifact that = (EmbeddedArtifact) o;
-    return Objects.equals(content, that.content);
+    return Arrays.equals(content, that.content);
   }
 
   @Override
