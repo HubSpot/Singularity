@@ -103,7 +103,7 @@ public class DeployResource extends AbstractRequestResource {
       deployProgress = Optional.of(new SingularityDeployProgress(
           Math.min(deploy.getDeployInstanceCountPerStep().or(request.getInstancesSafe()), request.getInstancesSafe()),
           deploy.getDeployInstanceCountPerStep().or(request.getInstancesSafe()),
-          deploy.getDeployStepWaitTimeSeconds().or(configuration.getDefaultDeployStepWaitTimeSeconds()),
+          deploy.getDeployStepWaitTimeMs().or(configuration.getDefaultDeployStepWaitTimeMs()),
           false,
           deploy.getAutoAdvanceDeploySteps().or(true),
           System.currentTimeMillis()));

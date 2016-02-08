@@ -61,7 +61,7 @@ public class SingularityDeploy {
   private final Optional<Map<String, Object>> loadBalancerOptions;
 
   private final Optional<Integer> deployInstanceCountPerStep;
-  private final Optional<Integer> deployStepWaitTimeSeconds;
+  private final Optional<Integer> deployStepWaitTimeMs;
   private final Optional<Boolean> autoAdvanceDeploySteps;
 
   public static SingularityDeployBuilder newBuilder(String requestId, String id) {
@@ -100,7 +100,7 @@ public class SingularityDeploy {
       @JsonProperty("skipHealthchecksOnDeploy") Optional<Boolean> skipHealthchecksOnDeploy,
       @JsonProperty("healthCheckProtocol") Optional<HealthcheckProtocol> healthcheckProtocol,
       @JsonProperty("deployInstanceCountPerStep") Optional<Integer> deployInstanceCountPerStep,
-      @JsonProperty("deployStepWaitTimeMs") Optional<Integer> deployStepWaitTimeSeconds,
+      @JsonProperty("deployStepWaitTimeMs") Optional<Integer> deployStepWaitTimeMs,
       @JsonProperty("autoAdvanceDeploySteps") Optional<Boolean> autoAdvanceDeploySteps) {
     this.requestId = requestId;
 
@@ -143,7 +143,7 @@ public class SingularityDeploy {
     this.loadBalancerOptions = loadBalancerOptions;
 
     this.deployInstanceCountPerStep = deployInstanceCountPerStep;
-    this.deployStepWaitTimeSeconds = deployStepWaitTimeSeconds;
+    this.deployStepWaitTimeMs = deployStepWaitTimeMs;
     this.autoAdvanceDeploySteps = autoAdvanceDeploySteps;
   }
 
@@ -178,7 +178,7 @@ public class SingularityDeploy {
     .setExecutorData(executorData)
     .setLabels(labels)
     .setDeployInstanceCountPerStep(deployInstanceCountPerStep)
-    .setDeployStepWaitTimeSeconds(deployStepWaitTimeSeconds)
+    .setDeployStepWaitTimeSeconds(deployStepWaitTimeMs)
     .setAutoAdvanceDeploySteps(autoAdvanceDeploySteps);
   }
 
@@ -337,11 +337,11 @@ public class SingularityDeploy {
   }
 
   @ApiModelProperty(required=false, value="wait this long between deploy steps")
-  public Optional<Integer> getDeployStepWaitTimeSeconds() {
-    return deployStepWaitTimeSeconds;
+  public Optional<Integer> getDeployStepWaitTimeMs() {
+    return deployStepWaitTimeMs;
   }
 
-  @ApiModelProperty(required=false, value="automatically advance to the next target instance count after `deployStepWaitTimeSeconds` seconds")
+  @ApiModelProperty(required=false, value="automatically advance to the next target instance count after `deployStepWaitTimeMs` seconds")
   public Optional<Boolean> getAutoAdvanceDeploySteps() {
     return autoAdvanceDeploySteps;
   }
@@ -380,7 +380,7 @@ public class SingularityDeploy {
       ", loadBalancerOptions=" + loadBalancerOptions +
       ", labels=" + labels +
       ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
-      ", deployStepWaitTimeSeconds=" + deployStepWaitTimeSeconds +
+      ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
       ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +
       '}';
   }
