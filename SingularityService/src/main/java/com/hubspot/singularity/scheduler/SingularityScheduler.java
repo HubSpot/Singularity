@@ -85,7 +85,7 @@ public class SingularityScheduler {
 
   @Inject
   public SingularityScheduler(TaskRequestManager taskRequestManager, SingularityConfiguration configuration, SingularityCooldown cooldown, DeployManager deployManager,
-      TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager, RackManager rackManager, SingularityMailer mailer) {
+    TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager, RackManager rackManager, SingularityMailer mailer) {
     this.taskRequestManager = taskRequestManager;
     this.configuration = configuration;
     this.deployManager = deployManager;
@@ -98,7 +98,7 @@ public class SingularityScheduler {
   }
 
   private void cleanupTaskDueToDecomission(final Map<String, Optional<String>> requestIdsToUserToReschedule, final Set<SingularityTaskId> matchingTaskIds, SingularityTask task,
-      SingularityMachineAbstraction<?> decommissioningObject) {
+    SingularityMachineAbstraction<?> decommissioningObject) {
     requestIdsToUserToReschedule.put(task.getTaskRequest().getRequest().getId(), decommissioningObject.getCurrentState().getUser());
 
     matchingTaskIds.add(task.getTaskId());
@@ -106,7 +106,7 @@ public class SingularityScheduler {
     LOG.trace("Scheduling a cleanup task for {} due to decomissioning {}", task.getTaskId(), decommissioningObject);
 
     taskManager.createTaskCleanup(new SingularityTaskCleanup(decommissioningObject.getCurrentState().getUser(), TaskCleanupType.DECOMISSIONING, System.currentTimeMillis(),
-        task.getTaskId(), Optional.of(String.format("%s %s is decomissioning", decommissioningObject.getTypeName(), decommissioningObject.getName())), Optional.<String> absent()));
+      task.getTaskId(), Optional.of(String.format("%s %s is decomissioning", decommissioningObject.getTypeName(), decommissioningObject.getName())), Optional.<String>absent()));
   }
 
   private <T extends SingularityMachineAbstraction<T>> Map<T, MachineState> getDefaultMap(List<T> objects) {
@@ -176,7 +176,9 @@ public class SingularityScheduler {
       Optional<String> maybeDeployId = deployManager.getInUseDeployId(requestId);
 
       if (maybeDeployId.isPresent()) {
-        requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, maybeDeployId.get(), start, requestIdAndUser.getValue(), PendingType.DECOMISSIONED_SLAVE_OR_RACK, Optional.<Boolean> absent(), Optional.<String> absent()));
+        requestManager.addToPendingQueue(
+          new SingularityPendingRequest(requestId, maybeDeployId.get(), start, requestIdAndUser.getValue(), PendingType.DECOMISSIONED_SLAVE_OR_RACK, Optional.<Boolean>absent(),
+            Optional.<String>absent()));
       } else {
         LOG.warn("Not rescheduling a request ({}) because of no active deploy", requestId);
       }
@@ -188,7 +190,8 @@ public class SingularityScheduler {
     if (slaves.isEmpty() && racks.isEmpty() && requestIdsToUserToReschedule.isEmpty() && matchingTaskIds.isEmpty()) {
       LOG.trace("Decomission check found nothing");
     } else {
-      LOG.info("Found {} decomissioning slaves, {} decomissioning racks, rescheduling {} requests and scheduling {} tasks for cleanup in {}", slaves.size(), racks.size(), requestIdsToUserToReschedule.size(), matchingTaskIds.size(), JavaUtils.duration(start));
+      LOG.info("Found {} decomissioning slaves, {} decomissioning racks, rescheduling {} requests and scheduling {} tasks for cleanup in {}", slaves.size(), racks.size(),
+        requestIdsToUserToReschedule.size(), matchingTaskIds.size(), JavaUtils.duration(start));
     }
   }
 
@@ -261,15 +264,16 @@ public class SingularityScheduler {
       return requestWithState.getState();
     }
 
-    if (cooldown.hasCooldownExpired(requestWithState.getRequest(), deployStatistics, Optional.<Integer> absent(), Optional.<Long> absent())) {
-      requestManager.exitCooldown(requestWithState.getRequest(), System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
+    if (cooldown.hasCooldownExpired(requestWithState.getRequest(), deployStatistics, Optional.<Integer>absent(), Optional.<Long>absent())) {
+      requestManager.exitCooldown(requestWithState.getRequest(), System.currentTimeMillis(), Optional.<String>absent(), Optional.<String>absent());
       return RequestState.ACTIVE;
     }
 
     return requestWithState.getState();
   }
 
-  private boolean shouldScheduleTasks(SingularityPendingRequest pendingRequest, Optional<SingularityPendingDeploy> maybePendingDeploy, Optional<SingularityRequestDeployState> maybeRequestDeployState) {
+  private boolean shouldScheduleTasks(SingularityPendingRequest pendingRequest, Optional<SingularityPendingDeploy> maybePendingDeploy,
+    Optional<SingularityRequestDeployState> maybeRequestDeployState) {
     if (pendingRequest.getPendingType() == PendingType.NEW_DEPLOY && !maybePendingDeploy.isPresent()) {
       return false;
     }
@@ -335,7 +339,7 @@ public class SingularityScheduler {
       return false;
     }
     return matchesDeployMarker(requestDeployState.getActiveDeploy(), taskRequest.getDeploy().getId())
-        || matchesDeployMarker(requestDeployState.getPendingDeploy(), taskRequest.getDeploy().getId());
+      || matchesDeployMarker(requestDeployState.getPendingDeploy(), taskRequest.getDeploy().getId());
   }
 
   private boolean matchesDeployMarker(Optional<SingularityDeployMarker> deployMarker, String deployId) {
@@ -343,7 +347,8 @@ public class SingularityScheduler {
   }
 
   private void deleteScheduledTasks(final Collection<SingularityPendingTask> scheduledTasks, SingularityPendingRequest pendingRequest) {
-    for (SingularityPendingTask task : Iterables.filter(scheduledTasks, Predicates.and(SingularityPendingTask.matchingRequest(pendingRequest.getRequestId()), SingularityPendingTask.matchingDeploy(pendingRequest.getDeployId())))) {
+    for (SingularityPendingTask task : Iterables
+      .filter(scheduledTasks, Predicates.and(SingularityPendingTask.matchingRequest(pendingRequest.getRequestId()), SingularityPendingTask.matchingDeploy(pendingRequest.getDeployId())))) {
       LOG.debug("Deleting pending task {} in order to reschedule {}", task.getPendingTaskId().getId(), pendingRequest);
       taskManager.deletePendingTask(task.getPendingTaskId());
     }
@@ -361,17 +366,19 @@ public class SingularityScheduler {
   }
 
   private int scheduleTasks(SingularitySchedulerStateCache stateCache, SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics,
-      SingularityPendingRequest pendingRequest, List<SingularityTaskId> matchingTaskIds, Optional<SingularityPendingDeploy> maybePendingDeploy) {
+    SingularityPendingRequest pendingRequest, List<SingularityTaskId> matchingTaskIds, Optional<SingularityPendingDeploy> maybePendingDeploy) {
     if (request.getRequestType() != RequestType.ON_DEMAND) {
       deleteScheduledTasks(stateCache.getScheduledTasks(), pendingRequest);
     }
 
     final int numMissingInstances = getNumMissingInstances(matchingTaskIds, request, pendingRequest, maybePendingDeploy);
 
-    LOG.debug("Missing {} instances of request {} (matching tasks: {}), pending request: {}, pending deploy: {}", numMissingInstances, request.getId(), matchingTaskIds, pendingRequest, maybePendingDeploy);
+    LOG.debug("Missing {} instances of request {} (matching tasks: {}), pending request: {}, pending deploy: {}", numMissingInstances, request.getId(), matchingTaskIds, pendingRequest,
+      maybePendingDeploy);
 
     if (numMissingInstances > 0) {
-      final List<SingularityPendingTask> scheduledTasks = getScheduledTaskIds(numMissingInstances, matchingTaskIds, request, state, deployStatistics, pendingRequest.getDeployId(), pendingRequest, maybePendingDeploy);
+      final List<SingularityPendingTask> scheduledTasks =
+        getScheduledTaskIds(numMissingInstances, matchingTaskIds, request, state, deployStatistics, pendingRequest.getDeployId(), pendingRequest, maybePendingDeploy);
 
       if (!scheduledTasks.isEmpty()) {
         LOG.trace("Scheduling tasks: {}", scheduledTasks);
@@ -397,7 +404,7 @@ public class SingularityScheduler {
 
         LOG.info("Cleaning up task {} due to new request {} - scaling down to {} instances", toCleanup.getId(), request.getId(), request.getInstancesSafe());
 
-        taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.SCALING_DOWN, now, toCleanup, Optional.<String> absent(), Optional.<String> absent()));
+        taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingRequest.getUser(), TaskCleanupType.SCALING_DOWN, now, toCleanup, Optional.<String>absent(), Optional.<String>absent()));
       }
     }
 
@@ -425,7 +432,7 @@ public class SingularityScheduler {
   }
 
   private Optional<PendingType> handleCompletedTaskWithStatistics(Optional<SingularityTask> task, SingularityTaskId taskId, long timestamp, ExtendedTaskState state,
-      SingularityDeployStatistics deployStatistics, SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache) {
+    SingularityDeployStatistics deployStatistics, SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache) {
     final Optional<SingularityRequestWithState> maybeRequestWithState = requestManager.getRequest(taskId.getRequestId());
     final Optional<SingularityPendingDeploy> maybePendingDeploy = deployManager.getPendingDeploy(taskId.getRequestId());
 
@@ -472,11 +479,11 @@ public class SingularityScheduler {
       // TODO send not cooldown anymore email
       LOG.info("Request {} succeeded a task, removing from cooldown", request.getId());
       requestState = RequestState.ACTIVE;
-      requestManager.exitCooldown(request, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
+      requestManager.exitCooldown(request, System.currentTimeMillis(), Optional.<String>absent(), Optional.<String>absent());
     }
 
     SingularityPendingRequest pendingRequest = new SingularityPendingRequest(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId(),
-        System.currentTimeMillis(), Optional.<String> absent(), pendingType, Optional.<Boolean> absent(), Optional.<String> absent());
+      System.currentTimeMillis(), Optional.<String>absent(), pendingType, Optional.<Boolean>absent(), Optional.<String>absent());
 
     scheduleTasks(stateCache, request, requestState, deployStatistics, pendingRequest, getMatchingTaskIds(stateCache, request, pendingRequest), maybePendingDeploy);
 
@@ -494,7 +501,8 @@ public class SingularityScheduler {
   }
 
   @Timed
-  public void handleCompletedTask(Optional<SingularityTask> task, SingularityTaskId taskId, boolean wasActive, long timestamp, ExtendedTaskState state, SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache) {
+  public void handleCompletedTask(Optional<SingularityTask> task, SingularityTaskId taskId, boolean wasActive, long timestamp, ExtendedTaskState state,
+    SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache) {
     final SingularityDeployStatistics deployStatistics = getDeployStatistics(taskId.getRequestId(), taskId.getDeployId());
 
     if (wasActive) {
@@ -584,7 +592,8 @@ public class SingularityScheduler {
     return true;
   }
 
-  private int getNumMissingInstances(List<SingularityTaskId> matchingTaskIds, SingularityRequest request, SingularityPendingRequest pendingRequest, Optional<SingularityPendingDeploy> maybePendingDeploy) {
+  private int getNumMissingInstances(List<SingularityTaskId> matchingTaskIds, SingularityRequest request, SingularityPendingRequest pendingRequest,
+    Optional<SingularityPendingDeploy> maybePendingDeploy) {
     if (request.isOneOff() && pendingRequest.getPendingType() == PendingType.ONEOFF) {
       return 1;
     }
@@ -609,7 +618,7 @@ public class SingularityScheduler {
   }
 
   private List<SingularityPendingTask> getScheduledTaskIds(int numMissingInstances, List<SingularityTaskId> matchingTaskIds, SingularityRequest request, RequestState state,
-      SingularityDeployStatistics deployStatistics, String deployId, SingularityPendingRequest pendingRequest, Optional<SingularityPendingDeploy> maybePendingDeploy) {
+    SingularityDeployStatistics deployStatistics, String deployId, SingularityPendingRequest pendingRequest, Optional<SingularityPendingDeploy> maybePendingDeploy) {
     final Optional<Long> nextRunAt = getNextRunAt(request, state, deployStatistics, pendingRequest.getPendingType(), maybePendingDeploy);
 
     if (!nextRunAt.isPresent()) {
@@ -631,7 +640,8 @@ public class SingularityScheduler {
         nextInstanceNumber++;
       }
 
-      newTasks.add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt.get(), nextInstanceNumber, pendingRequest.getPendingType(), pendingRequest.getTimestamp()),
+      newTasks
+        .add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt.get(), nextInstanceNumber, pendingRequest.getPendingType(), pendingRequest.getTimestamp()),
           pendingRequest.getCmdLineArgsList(), pendingRequest.getUser(), pendingRequest.getRunId(), pendingRequest.getSkipHealthchecks(), pendingRequest.getMessage()));
 
       nextInstanceNumber++;
@@ -640,7 +650,8 @@ public class SingularityScheduler {
     return newTasks;
   }
 
-  private Optional<Long> getNextRunAt(SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics, PendingType pendingType, Optional<SingularityPendingDeploy> maybePendingDeploy) {
+  private Optional<Long> getNextRunAt(SingularityRequest request, RequestState state, SingularityDeployStatistics deployStatistics, PendingType pendingType,
+    Optional<SingularityPendingDeploy> maybePendingDeploy) {
     final long now = System.currentTimeMillis();
 
     long nextRunAt = now;
@@ -673,7 +684,8 @@ public class SingularityScheduler {
     if (pendingType == PendingType.TASK_DONE && request.getWaitAtLeastMillisAfterTaskFinishesForReschedule().or(0L) > 0) {
       nextRunAt = Math.max(nextRunAt, now + request.getWaitAtLeastMillisAfterTaskFinishesForReschedule().get());
 
-      LOG.trace("Adjusted next run of {} to {} (by {}) due to waitAtLeastMillisAfterTaskFinishesForReschedule", request.getId(), nextRunAt, JavaUtils.durationFromMillis(request.getWaitAtLeastMillisAfterTaskFinishesForReschedule().get()));
+      LOG.trace("Adjusted next run of {} to {} (by {}) due to waitAtLeastMillisAfterTaskFinishesForReschedule", request.getId(), nextRunAt,
+        JavaUtils.durationFromMillis(request.getWaitAtLeastMillisAfterTaskFinishesForReschedule().get()));
     }
 
     if (state == RequestState.SYSTEM_COOLDOWN && pendingType != PendingType.NEW_DEPLOY) {
