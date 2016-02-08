@@ -79,8 +79,8 @@ TaskSearchForm = React.createClass
                         updateFn = @props.updateSortDirection />
                 </div>
                 <br />
-                <button type="submit" className="btn btn-default">Search</button>
-                <button type="button" className="btn btn-default" onClick={@props.resetForm}>Clear Form</button>
+                <button type="button" className="btn btn-danger" onClick={@props.resetForm}>Clear Form</button>
+                <button type="submit" className="btn btn-primary navbar-right">Search</button>
             </form>
         </div>
 

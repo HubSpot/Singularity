@@ -171,8 +171,10 @@ DisplayResults = React.createClass
         @fetchCollection() unless @isPropsCloneEqualToProps() or @state.loading
         <div>
             <h1>{@props.headerText}</h1>
-            <h2>Query Params</h2>
+            <h2>Query Parameters</h2>
             {@getQueryParams()}
+            <br />
+            <button className="btn btn-danger" onClick=@props.returnToForm>Modify Query Parameters</button>
             <h2>Tasks</h2>
             {@renderPageButtons()}
             {@renderTasks()}
