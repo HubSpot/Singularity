@@ -15,6 +15,11 @@ DateEntry = React.createClass
                 timeZone: moment().format('zz')
             }).on('dp.change', changeFn) # value will be in event.date
 
+    getValue: ->
+        return unless @props.value
+        time = moment @props.value
+        return time.format "ddd MMM DD YYYY HH:mm:ss [UTC]ZZ"
+
     # MUST pass in UNIQUE id in props.
     # Otherwise the datetime picker will break in ways that aren't even very interesting
     render: ->
@@ -25,7 +30,8 @@ DateEntry = React.createClass
                     placeholder = {@props.title}
                     type = {@props.inputType}
                     disabled = {@props.disabled}
-                    size = {@props.size} 
+                    size = {@props.size}
+                    value = {@getValue()} 
                     id = {@props.id}
                 />
                 <span className="input-group-addon">

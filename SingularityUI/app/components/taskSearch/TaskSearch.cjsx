@@ -1,7 +1,6 @@
 Utils = require '../../utils'
 Enums = require './Enums'
 TaskSearchForm = require './TaskSearchForm'
-TaskSearchSubmitted = require './TaskSearchSubmitted'
 DisplayResults = require './DisplayResults'
 
 TaskSearch = React.createClass
@@ -161,7 +160,7 @@ TaskSearch = React.createClass
                 increasePageNumber = @increasePageNumber
                 decreasePageNumber = @decreasePageNumber
                 page = @state.pageNumber
-                count = 20
+                count = 10
                 clearRequestId = @clearRequestId
                 clearDeployId = @clearDeployId
                 clearHost = @clearHost
