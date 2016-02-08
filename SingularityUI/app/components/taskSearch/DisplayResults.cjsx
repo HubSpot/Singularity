@@ -15,44 +15,29 @@ DisplayResults = React.createClass
             loading: false
         })
 
-    setPropsCloneEqualToProps: ->
-        @propsClone = {
-            requestId: @props.requestId
-            requestLocked: @props.requestLocked
-            deployId: @props.deployId
-            host: @props.host
-            lastTaskStatus: @props.lastTaskStatus
-            startedBefore: @props.startedBefore
-            startedAfter: @props.startedAfter
-            sortDirection: @props.sortDirection
-            page: @props.page
-            count: @props.count
-            requestLocked: @props.requestLocked
-        }
-
     # Used to detect if any props have changed
-    isPropsCloneEqualToProps: ->
-        result = @propsClone.requestId == @props.requestId
-        result = result and @propsClone.requestLocked == @props.requestLocked
-        result = result and @propsClone.deployId == @props.deployId
-        result = result and @propsClone.host == @props.host
-        result = result and @propsClone.lastTaskStatus == @props.lastTaskStatus
-        result = result and @propsClone.startedBefore == @props.startedBefore
-        result = result and @propsClone.startedAfter == @props.startedAfter
-        result = result and @propsClone.sortDirection == @props.sortDirection
-        result = result and @propsClone.page == @props.page
-        result = result and @propsClone.count == @props.count
-        result = result and @propsClone.requestLocked == @props.requestLocked
+    didPropsChange: (nextProps) ->
+        result = nextProps.requestId != @props.requestId
+        result = result or nextProps.requestLocked != @props.requestLocked
+        result = result or nextProps.deployId != @props.deployId
+        result = result or nextProps.host != @props.host
+        result = result or nextProps.lastTaskStatus != @props.lastTaskStatus
+        result = result or nextProps.startedBefore != @props.startedBefore
+        result = result or nextProps.startedAfter != @props.startedAfter
+        result = result or nextProps.sortDirection != @props.sortDirection
+        result = result or nextProps.page != @props.page
+        result = result or nextProps.count != @props.count
+        result = result or nextProps.requestLocked != @props.requestLocked
         return result
 
     getInitialState: ->
-        @setPropsCloneEqualToProps()
+        @willFetch = false
         return {
             loading: true
         }
 
     fetchCollection: ->
-        @setPropsCloneEqualToProps()
+        @willFetch = false
         @collection = new TaskSearchResults [],
             requestId : @props.requestId
             deployId : @props.deployId
@@ -68,6 +53,10 @@ DisplayResults = React.createClass
 
     componentWillMount: ->
         @fetchCollection()
+
+    componentWillReceiveProps: (nextProps) ->
+        if @didPropsChange nextProps
+            @willFetch = true
 
     getQueryParams: ->
         params = []
@@ -168,7 +157,7 @@ DisplayResults = React.createClass
 
 
     render: ->
-        @fetchCollection() unless @isPropsCloneEqualToProps() or @state.loading
+        @fetchCollection() if @willFetch
         <div>
             <h1>{@props.headerText}</h1>
             <h2>Query Parameters</h2>
