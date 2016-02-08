@@ -1,5 +1,7 @@
 package com.hubspot.singularity.executor.task;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
@@ -9,6 +11,7 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskState;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hubspot.deploy.Artifact;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.executor.TemplateManager;
@@ -67,6 +70,19 @@ public class SingularityExecutorTask {
     boolean isDocker = (taskInfo.hasContainer() && taskInfo.getContainer().hasDocker());
 
     taskCleanup.cleanup(cleanupAppTaskDirectory, isDocker);
+  }
+
+  public Path getArtifactPath(Artifact artifact, Path defaultPath) {
+    if (artifact.getTargetFolderRelativeToTask().isPresent()) {
+      Path relativePath = Paths.get(artifact.getTargetFolderRelativeToTask().get());
+      if (!relativePath.isAbsolute()) {
+        return getTaskDefinition().getTaskDirectoryPath().resolve(relativePath);
+      } else {
+        getLog().warn("Absolute targetFolderRelativeToTask {} ignored for artifact {}", relativePath, artifact);
+      }
+    }
+
+    return defaultPath;
   }
 
   public SingularityExecutorTaskLogManager getTaskLogManager() {
