@@ -1,6 +1,6 @@
 package com.hubspot.singularity.resources;
 
-import static com.hubspot.singularity.WebExceptions.badRequest;
+import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 import static com.hubspot.singularity.WebExceptions.checkConflict;
 import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 
@@ -16,6 +16,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.mesos.JavaUtils;
@@ -147,9 +148,8 @@ public class DeployResource extends AbstractRequestResource {
 
     Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestWithState.getRequest().getId());
 
-    if (!deployState.isPresent() || !deployState.get().getPendingDeploy().isPresent() || !deployState.get().getPendingDeploy().get().getDeployId().equals(deployId)) {
-      throw badRequest("Request %s does not have a pending deploy %s", requestId, deployId);
-    }
+    checkBadRequest(!deployState.isPresent() || !deployState.get().getPendingDeploy().isPresent() || !deployState.get().getPendingDeploy().get().getDeployId().equals(deployId),
+      "Request %s does not have a pending deploy %s", requestId, deployId);
 
     deployManager.createCancelDeployRequest(new SingularityDeployMarker(requestId, deployId, System.currentTimeMillis(), JavaUtils.getUserEmail(user), Optional.<String> absent()));
 
@@ -169,13 +169,11 @@ public class DeployResource extends AbstractRequestResource {
 
     Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestWithState.getRequest().getId());
 
-    if (!deployState.isPresent() || !deployState.get().getPendingDeploy().isPresent() || !deployState.get().getPendingDeploy().get().getDeployId().equals(updateRequest.getDeployId())) {
-      throw badRequest("Request %s does not have a pending deploy %s", updateRequest.getRequestId(), updateRequest.getDeployId());
-    }
+    checkBadRequest(!deployState.isPresent() || !deployState.get().getPendingDeploy().isPresent() || !deployState.get().getPendingDeploy().get().getDeployId().equals(updateRequest.getDeployId()),
+      "Request %s does not have a pending deploy %s", updateRequest.getRequestId(), updateRequest.getDeployId());
 
-    if (updateRequest.getTargetActiveInstances() > requestWithState.getRequest().getInstancesSafe()) {
-      throw badRequest("Cannot update pending deploy to have more instances (%s) than instances set for request (%s)");
-    }
+    checkBadRequest(updateRequest.getTargetActiveInstances() > requestWithState.getRequest().getInstancesSafe() || updateRequest.getTargetActiveInstances() < 1,
+      "Cannot update pending deploy to have more instances (%s) than instances set for request (%s), or less than 1 instance", updateRequest.getTargetActiveInstances(), requestWithState.getRequest().getInstancesSafe());
 
     deployManager.createUpdatePendingDeployRequest(updateRequest);
 
