@@ -10,11 +10,13 @@ public class SingularityShellCommand {
   private final String name;
   private final Optional<List<String>> options;
   private final Optional<String> user;
+  private final Optional<String> logfileName;
 
-  public SingularityShellCommand(@JsonProperty("name") String name, @JsonProperty("options") Optional<List<String>> options, @JsonProperty("user") Optional<String> user) {
+  public SingularityShellCommand(@JsonProperty("name") String name, @JsonProperty("options") Optional<List<String>> options, @JsonProperty("user") Optional<String> user, @JsonProperty("logfileName") Optional<String> logfileName) {
     this.name = name;
     this.options = options;
     this.user = user;
+    this.logfileName = logfileName;
   }
 
   public Optional<String> getUser() {
@@ -29,9 +31,16 @@ public class SingularityShellCommand {
     return options;
   }
 
-  @Override
-  public String toString() {
-    return "SingularityShellCommand [name=" + name + ", options=" + options + ", user=" + user + "]";
+  public Optional<String> getLogfileName() {
+    return logfileName;
   }
 
+  @Override public String toString() {
+    return "SingularityShellCommand[" +
+        "name='" + name + '\'' +
+        ", options=" + options +
+        ", user=" + user +
+        ", logfileName=" + logfileName +
+        ']';
+  }
 }

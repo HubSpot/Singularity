@@ -9,6 +9,7 @@ target-eclipse
 bin
 *~
 JavaConsole.java
+.checkstyle
 *.iml
 .idea
 *.pyc

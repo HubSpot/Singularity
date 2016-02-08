@@ -192,7 +192,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @NotEmpty
   @JsonProperty
-  public String shellCommandOutFile = "executor.commands.{TIMESTAMP}.log";
+  public String shellCommandOutFile = "executor.commands.{NAME}.{TIMESTAMP}.log";
 
   @NotEmpty
   @JsonProperty
