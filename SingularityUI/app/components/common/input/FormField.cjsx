@@ -25,6 +25,6 @@ FormField = React.createClass
             onChange = {@props.updateFn} 
             value = {@props.value}
             disabled = {@getDisabled()}
-            />
+        />
 
 module.exports = FormField

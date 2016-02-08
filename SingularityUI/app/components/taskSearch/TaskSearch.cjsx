@@ -5,7 +5,7 @@ TaskSearchSubmitted = require './TaskSearchSubmitted'
 
 TaskSearch = React.createClass
 
-    headerText: 'Search for Tasks'
+    headerText: 'Task Search'
 
     getInitialState: ->
         return {
@@ -16,6 +16,7 @@ TaskSearch = React.createClass
             startedBefore: @props.initialStartedBefore
             startedAfter: @props.initialStartedAfter
             sortDirection: @props.initialSortDirection
+            pageNumber: 1
             showForm: true
         }
 
@@ -28,9 +29,10 @@ TaskSearch = React.createClass
     # Annoying that we need a new function for each property.
     # Unfortuantely using a curried function doesn't seem to work.
     updateReqeustId: (event) ->
-        @setState({
-            requestId: event.target.value
-        })
+        if not @props.requestLocked
+            @setState({
+                requestId: event.target.value
+            })
 
     updateDeployId: (event) ->
         @setState({
@@ -67,6 +69,56 @@ TaskSearch = React.createClass
             pageNumber: event.target.value
         })
 
+    increasePageNumber: (event) ->
+        @setState({
+            pageNumber: @state.pageNumber + 1
+        })
+
+    decreasePageNumber: (event) ->
+        if @state.pageNumber > 1
+            @setState({
+                pageNumber: @state.pageNumber - 1
+            })
+
+    resetForm: ->
+        @setState(@getInitialState())
+
+    clearRequestId: (event) ->
+        if not @props.requestLocked
+            @setState({
+                requestID: ''
+            })
+
+    clearDeployId: (event) ->
+        @setState({
+            deployId: ''
+        })
+
+    clearHost: (event) ->
+        @setState({
+            host: ''
+        })
+
+    clearSortDirection: (event) ->
+        @setState({
+            sortDirection: ''
+        })
+
+    clearLastTaskStatus: (event) ->
+        @setState({
+            lastTaskStatus: ''
+        })
+
+    clearStartedBefore: (event) ->
+        @setState({
+            startedBefore: ''
+        })
+
+    clearStartedAfter: (event) ->
+        @setState({
+            startedAfter: ''
+        })
+
     render: ->
         if @state.showForm
             return <TaskSearchForm
@@ -87,9 +139,11 @@ TaskSearch = React.createClass
                 updateStartedAfter = @updateStartedAfter
                 sortDirection = @state.sortDirection
                 updateSortDirection = @updateSortDirection
+                resetForm = @resetForm
             />
         else
             return <TaskSearchSubmitted
+                headerText = @headerText
                 requestId = @state.requestId
                 requestLocked = @state.requestLocked
                 deployId = @state.deployId
@@ -98,8 +152,18 @@ TaskSearch = React.createClass
                 startedBefore = @state.startedBefore
                 startedAfter = @state.startedAfter
                 sortDirection = @state.sortDirection
-                page = 1
-                count = 10
+                increasePageNumber = @increasePageNumber
+                decreasePageNumber = @decreasePageNumber
+                page = @state.pageNumber
+                count = 20
+                clearRequestId = @clearRequestId
+                clearDeployId = @clearDeployId
+                clearHost = @clearHost
+                clearLastTaskStatus = @clearLastTaskStatus
+                clearStartedAfter = @clearStartedAfter
+                clearStartedBefore = @clearStartedBefore
+                clearSortDirection = @clearSortDirection
+                requestLocked = @props.requestLocked
             />
 
 
