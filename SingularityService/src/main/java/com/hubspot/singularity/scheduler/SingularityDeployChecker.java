@@ -276,20 +276,14 @@ public class SingularityDeployChecker {
   private boolean isDeployOverdue(SingularityPendingDeploy pendingDeploy, Optional<SingularityDeploy> deploy) {
     if (!deploy.isPresent()) {
       LOG.warn("Can't determine if deploy {} is overdue because it was missing", pendingDeploy);
-
       return false;
     }
 
-    final long startTime;
-    if (pendingDeploy.getDeployProgress().isPresent()) {
-      if (pendingDeploy.getDeployProgress().get().isStepComplete()) {
-        return false;
-      } else {
-        startTime = pendingDeploy.getDeployProgress().get().getTimestamp();
-      }
-    } else {
-      startTime = pendingDeploy.getDeployMarker().getTimestamp();
+    if (pendingDeploy.getDeployProgress().isPresent() && pendingDeploy.getDeployProgress().get().isStepComplete()) {
+      return false;
     }
+
+    final long startTime = getStartTime(pendingDeploy);
 
     final long deployDuration = System.currentTimeMillis() - startTime;
 
@@ -303,6 +297,14 @@ public class SingularityDeployChecker {
       LOG.trace("Deploy {} is not yet overdue (duration: {}), allowed: {}", pendingDeploy, DurationFormatUtils.formatDurationHMS(deployDuration), DurationFormatUtils.formatDurationHMS(allowedTime));
 
       return false;
+    }
+  }
+
+  private long getStartTime(SingularityPendingDeploy pendingDeploy) {
+    if (pendingDeploy.getDeployProgress().isPresent()) {
+      return pendingDeploy.getDeployProgress().get().getTimestamp();
+    } else {
+      return pendingDeploy.getDeployMarker().getTimestamp();
     }
   }
 

@@ -134,13 +134,8 @@ public class SingularityCleaner {
 
     final String activeDeployId = deployState.get().getActiveDeploy().get().getDeployId();
 
-    if (!taskCleanup.getTaskId().getDeployId().equals(activeDeployId)) {
-      LOG.debug("Killing a task {} immediately because it is not part of the active deploy {}", taskCleanup, deployState.get().getActiveDeploy().get());
-      return true;
-    }
-
     // check to see if there are enough active tasks out there that have been active for long enough that we can safely shut this task down.
-    final List<SingularityTaskId> matchingTasks = SingularityTaskId.matchingAndNotIn(activeTaskIds, taskCleanup.getTaskId().getRequestId(), taskCleanup.getTaskId().getDeployId(), cleaningTasks);
+    final List<SingularityTaskId> matchingTasks = SingularityTaskId.matchingAndNotIn(activeTaskIds, taskCleanup.getTaskId().getRequestId(), activeDeployId, cleaningTasks);
 
     // For an incremental bounce, shut down old tasks as new ones are started
     final SingularityDeployKey key = SingularityDeployKey.fromTaskId(taskCleanup.getTaskId());
