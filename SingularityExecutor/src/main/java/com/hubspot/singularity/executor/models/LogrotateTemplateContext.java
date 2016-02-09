@@ -3,7 +3,11 @@ package com.hubspot.singularity.executor.models;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Strings;
+import com.google.common.io.Files;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
+import com.hubspot.singularity.executor.config.SingularityExecutorLogrotateAdditionalFile;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
 
 /**
@@ -44,15 +48,25 @@ public class LogrotateTemplateContext {
    * Extra files for logrotate to rotate. If these do not exist logrotate will continue without error.
    * @return filenames to rotate.
    */
-  public List<String> getExtrasFiles() {
-    final List<String> original = configuration.getLogrotateAdditionalFiles();
-    final List<String> transformed = new ArrayList<>(original.size());
+  public List<LogrotateAdditionalFile> getExtrasFiles() {
+    final List<SingularityExecutorLogrotateAdditionalFile> original = configuration.getLogrotateAdditionalFiles();
+    final List<LogrotateAdditionalFile> transformed = new ArrayList<>(original.size());
 
-    for (String filename : original) {
-      transformed.add(taskDefinition.getTaskDirectoryPath().resolve(filename).toString());
+    for (SingularityExecutorLogrotateAdditionalFile additionalFile : original) {
+      transformed.add(new LogrotateAdditionalFile(taskDefinition.getTaskDirectoryPath().resolve(additionalFile.getFilename()).toString(), additionalFile.getExtension().or(Strings.emptyToNull(Files.getFileExtension(additionalFile.getFilename()))), additionalFile.getDateformat().or(configuration.getLogrotateExtrasDateformat())));
     }
 
     return transformed;
+  }
+
+  private Optional<String> parseFilenameExtension(String filename) {
+    final int lastPeriodIndex = filename.lastIndexOf('.');
+
+    if ((lastPeriodIndex > -1) && !filename.substring(lastPeriodIndex + 1).contains("*")) {
+      return Optional.of(filename.substring(lastPeriodIndex + 1));
+    } else {
+      return Optional.absent();
+    }
   }
 
   public String getExtrasDateformat() {

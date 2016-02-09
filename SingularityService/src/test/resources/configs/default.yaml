@@ -1,0 +1,6 @@
+cacheTasksMaxSize: 10000  # override.yaml will not touch this
+cacheTasksInitialSize: 200  # override.yaml will override this to 500
+# override.yaml will override checkDeploysEverySeconds to 100
+
+database:  # override.yaml will override some of this
+  user: "baseuser"

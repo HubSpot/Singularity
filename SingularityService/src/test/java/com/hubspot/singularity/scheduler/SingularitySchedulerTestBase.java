@@ -80,7 +80,6 @@ import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.RackResource;
 import com.hubspot.singularity.resources.RequestResource;
 import com.hubspot.singularity.resources.SlaveResource;
-import com.hubspot.singularity.scheduler.MesosUtilsTest;
 import com.hubspot.singularity.resources.TaskResource;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.ning.http.client.AsyncHttpClient;
@@ -358,14 +357,20 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void finishNewTaskChecks() {
-    for (Future<?> future : newTaskChecker.getTaskCheckFutures()) {
-      try {
-        future.get();
-      } catch (InterruptedException e) {
-        return;
-      } catch (ExecutionException e) {
-        throw Throwables.propagate(e);
+    while (!newTaskChecker.getTaskCheckFutures().isEmpty()) {
+      for (Future<?> future : newTaskChecker.getTaskCheckFutures()) {
+        try {
+          future.get();
+        } catch (InterruptedException e) {
+          return;
+        } catch (ExecutionException e) {
+          throw Throwables.propagate(e);
+        }
       }
+
+      try {
+        Thread.sleep(10);
+      } catch (InterruptedException ie) {}
     }
   }
 
@@ -413,6 +418,11 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     initFirstDeploy();
 
     startTasks(num);
+  }
+
+  protected SingularityDeploy startFirstDeploy() {
+    firstDeploy = initDeploy(new SingularityDeployBuilder(request.getId(), firstDeployId).setCommand(Optional.of("sleep 100")), System.currentTimeMillis());
+    return firstDeploy;
   }
 
   protected void initFirstDeploy() {
