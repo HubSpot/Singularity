@@ -46,12 +46,13 @@ class Router extends Backbone.Router
 
         'tasks/:state/:searchFilter(/)': 'tasksTable'
         'tasks/:state(/)': 'tasksTable'
-        'tasks/taskSearch': 'taskSearch'
         'tasks(/)': 'tasksTable'
 
         'task/:taskId(/)': 'taskDetail'
         'task/:taskId/files(/)*path': 'taskFileBrowser'
         'task/:taskId/tail/*path': 'tail'
+
+        'taskSearch': 'taskSearch'
 
         'racks(/)': 'racks'
         'racks/:state(/)': 'racks'

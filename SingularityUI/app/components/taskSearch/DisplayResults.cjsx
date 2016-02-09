@@ -3,10 +3,13 @@ TaskSearchResults = require '../../collections/TaskSearchResults'
 QueryParam = require './QueryParam'
 Task = require './Task'
 
+
 StripedTable = require '../common/Table'
 TimeStamp = require '../common/TimeStamp'
 TaskStateLabel = require '../common/TaskStateLabel'
 Link = require '../common/Link'
+FormField = require '../common/input/FormField'
+Header = require './Header'
 
 DisplayResults = React.createClass
 
@@ -17,18 +20,17 @@ DisplayResults = React.createClass
 
     # Used to detect if any props have changed
     didPropsChange: (nextProps) ->
-        result = nextProps.requestId != @props.requestId
-        result = result or nextProps.requestLocked != @props.requestLocked
-        result = result or nextProps.deployId != @props.deployId
-        result = result or nextProps.host != @props.host
-        result = result or nextProps.lastTaskStatus != @props.lastTaskStatus
-        result = result or nextProps.startedBefore != @props.startedBefore
-        result = result or nextProps.startedAfter != @props.startedAfter
-        result = result or nextProps.sortDirection != @props.sortDirection
-        result = result or nextProps.page != @props.page
-        result = result or nextProps.count != @props.count
-        result = result or nextProps.requestLocked != @props.requestLocked
-        return result
+        return true unless nextProps.requestId == @props.requestId
+        return true unless nextProps.requestLocked == @props.requestLocked
+        return true unless nextProps.deployId == @props.deployId
+        return true unless nextProps.host == @props.host
+        return true unless nextProps.lastTaskStatus == @props.lastTaskStatus
+        return true unless nextProps.startedBefore == @props.startedBefore
+        return true unless nextProps.startedAfter == @props.startedAfter
+        return true unless nextProps.sortDirection == @props.sortDirection
+        return true unless nextProps.page == @props.page
+        return true unless nextProps.count == @props.count
+        return false
 
     getInitialState: ->
         @willFetch = false
@@ -113,6 +115,29 @@ DisplayResults = React.createClass
             key++
         return params
 
+    updatePageNumber: (event) ->
+        @setState({
+            pageNumberEntered: event.target.value
+        })
+
+    handlePageJump: (event) ->
+        event.preventDefault()
+        @props.setPageNumber(@state.pageNumberEntered)
+
+    renderPageSearch: ->
+        <form role="form" onSubmit={@handlePageJump} className='form-inline text-left'>
+            <div className='form-group'>
+                <label htmlFor="pageNumber" className="sr-only">Jump To Page:</label>
+                <FormField 
+                    value = @state.pageNumberEntered 
+                    inputType = 'number'
+                    id = 'pageNumber'
+                    title = "Jump to Page"
+                    updateFn = @updatePageNumber />
+            </div>
+            <button type="submit" className="btn btn-default">Jump!</button>
+        </form>
+
     # using className="previous" for the next button is necessary to align
     # it to the left side of the page. This is built into bootstrap
     renderPageButtons: ->
@@ -121,6 +146,7 @@ DisplayResults = React.createClass
                 <li className={@collection.page == 1 and "previous disabled" or "previous"} onClick={@props.decreasePageNumber}><a href="#">Previous</a></li>
                 <li className="previous disabled"><a href="#">Page {@collection.page}</a></li>
                 <li className="previous" onClick={@props.increasePageNumber}><a href="#">Next</a></li>
+                {@renderPageSearch()}
             </ul>
         </nav>
 
@@ -159,11 +185,19 @@ DisplayResults = React.createClass
     render: ->
         @fetchCollection() if @willFetch
         <div>
-            <h1>{@props.headerText}</h1>
+            <Header
+                global = {not @props.requestLocked}
+                requestId = @props.requestId
+            />
             <h2>Query Parameters</h2>
-            {@getQueryParams()}
-            <br />
-            <button className="btn btn-danger" onClick=@props.returnToForm>Modify Query Parameters</button>
+            <div className="row">
+                <div className="col-md-6">
+                    <ul className="list-group">
+                        {@getQueryParams()}
+                    </ul>
+                </div>
+            </div>
+            <button className="btn btn-primary" onClick={@props.returnToForm}>Modify Query Parameters</button>
             <h2>Tasks</h2>
             {@renderPageButtons()}
             {@renderTasks()}

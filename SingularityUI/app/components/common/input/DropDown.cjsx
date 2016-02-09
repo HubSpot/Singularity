@@ -4,7 +4,7 @@ DropDown = React.createClass
 
     render: ->
         dropDownOpts = []
-        dropDownOpts.push(<option key=0 value='noValueChosen'></option>)
+        dropDownOpts.push(<option key=0 value=''></option>)
         i = 1
         for element in @props.choices
             dropDownOpts.push(<option key={i} value={element.value}>{element.user}</option>)
