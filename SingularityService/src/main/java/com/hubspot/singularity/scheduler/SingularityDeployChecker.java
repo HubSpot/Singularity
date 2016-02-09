@@ -3,11 +3,14 @@ package com.hubspot.singularity.scheduler;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
+import javax.ws.rs.HEAD;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
@@ -393,16 +396,29 @@ public class SingularityDeployChecker {
       return new SingularityDeployResult(DeployState.SUCCEEDED, "Request not deployable");
     }
 
-    if (!inactiveDeployMatchingTasks.isEmpty()) {
-      if (request.isLoadBalanced() && shouldCancelLoadBalancer(pendingDeploy)) {
-        LOG.info("Attempting to cancel pending load balancer request, failing deploy {} regardless", pendingDeploy);
-        sendCancelToLoadBalancer(pendingDeploy);
+    if (pendingDeploy.getDeployProgress().isPresent()) {
+      Set<SingularityTaskId> newInactiveDeployTasks = new HashSet<>();
+      newInactiveDeployTasks.addAll(inactiveDeployMatchingTasks);
+      newInactiveDeployTasks.removeAll(pendingDeploy.getDeployProgress().get().getFailedDeployTasks());
+
+      if (!newInactiveDeployTasks.isEmpty()) {
+        if (deploy.isPresent() && deploy.get().getMaxTaskRetries().isPresent() && inactiveDeployMatchingTasks.size() <= deploy.get().getMaxTaskRetries().get()) {
+          SingularityDeployProgress newProgress = pendingDeploy.getDeployProgress().get().withFailedTasks(new HashSet<>(inactiveDeployMatchingTasks));
+          updatePendingDeploy(pendingDeploy, pendingDeploy.getLastLoadBalancerUpdate(), DeployState.WAITING, Optional.of(newProgress));
+          requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), pendingDeploy.getDeployMarker().getDeployId(), System.currentTimeMillis(), pendingDeploy.getDeployMarker().getUser(),
+            PendingType.NEXT_DEPLOY_STEP, deploy.isPresent() ? deploy.get().getSkipHealthchecksOnDeploy() : Optional.<Boolean> absent(),
+            pendingDeploy.getDeployMarker().getMessage()));
+          return new SingularityDeployResult(DeployState.WAITING);
+        }
+
+        if (request.isLoadBalanced() && shouldCancelLoadBalancer(pendingDeploy)) {
+          LOG.info("Attempting to cancel pending load balancer request, failing deploy {} regardless", pendingDeploy);
+          sendCancelToLoadBalancer(pendingDeploy);
+        }
+
+        return new SingularityDeployResult(DeployState.FAILED, String.format("Task(s) %s for this deploy failed", inactiveDeployMatchingTasks));
       }
 
-      return new SingularityDeployResult(DeployState.FAILED, String.format("Task(s) %s for this deploy failed", inactiveDeployMatchingTasks));
-    }
-
-    if (pendingDeploy.getDeployProgress().isPresent()) {
       return checkDeployProgress(request, cancelRequest, pendingDeploy, updatePendingDeployRequest, deploy, deployActiveTasks, otherActiveTasks);
     } else {
       return new SingularityDeployResult(DeployState.FAILED, "No deploy progress data present in Zookeeper. Please reattempt your deploy");

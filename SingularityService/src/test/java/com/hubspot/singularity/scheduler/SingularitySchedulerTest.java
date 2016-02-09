@@ -461,6 +461,49 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(DeployState.FAILED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
   }
 
+  public void testDeployFailsAfterMaxTaskRetries() {
+    initRequest();
+
+    SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, firstDeployId);
+    db.setMaxTaskRetries(Optional.of(1));
+    SingularityDeploy deploy = initDeploy(db, System.currentTimeMillis());
+
+    deployChecker.checkDeploys();
+    Assert.assertTrue(!deployManager.getDeployResult(requestId, firstDeployId).isPresent());
+
+    SingularityTask task = launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_FAILED);
+
+    deployChecker.checkDeploys();
+    Assert.assertEquals(deployManager.getPendingDeploys().get(0).getCurrentDeployState(), DeployState.WAITING);
+
+    SingularityTask taskTryTwo = launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_FAILED);
+
+    deployChecker.checkDeploys();
+    Assert.assertEquals(deployManager.getDeployResult(requestId, firstDeployId).get().getDeployState(), DeployState.FAILED);
+  }
+
+  @Test
+  public void testDeploySucceedsWithTaskRetries() {
+    initRequest();
+
+    SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, firstDeployId);
+    db.setMaxTaskRetries(Optional.of(1));
+    SingularityDeploy deploy = initDeploy(db, System.currentTimeMillis());
+
+    deployChecker.checkDeploys();
+    Assert.assertTrue(!deployManager.getDeployResult(requestId, firstDeployId).isPresent());
+
+    SingularityTask task = launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_FAILED);
+
+    deployChecker.checkDeploys();
+    Assert.assertEquals(deployManager.getPendingDeploys().get(0).getCurrentDeployState(), DeployState.WAITING);
+
+    SingularityTask taskTryTwo = launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_RUNNING);
+
+    deployChecker.checkDeploys();
+    Assert.assertEquals(deployManager.getDeployResult(requestId, firstDeployId).get().getDeployState(), DeployState.SUCCEEDED);
+  }
+
   @Test
   public void testLbUpdatesAfterEachDeployStep() {
     initLoadBalancedRequest();
