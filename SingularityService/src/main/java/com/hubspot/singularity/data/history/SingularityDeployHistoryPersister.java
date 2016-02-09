@@ -1,5 +1,8 @@
 package com.hubspot.singularity.data.history;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -43,6 +46,7 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
 
     final List<SingularityDeployKey> allDeployIds = deployManager.getAllDeployIds();
     final Map<String, SingularityRequestDeployState> byRequestId = deployManager.getAllRequestDeployStatesByRequestId();
+    final Map<String, List<SingularityDeployHistory>> deployHistoryByRequest = new HashMap<>();
 
     int numTotal = 0;
     int numTransferred = 0;
@@ -54,18 +58,33 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
         continue;
       }
 
+      if (!deployHistoryByRequest.containsKey(deployKey.getRequestId())) {
+        deployHistoryByRequest.put(deployKey.getRequestId(), new ArrayList<SingularityDeployHistory>());
+      }
+
       Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(deployKey.getRequestId(), deployKey.getDeployId(), true);
 
-      if (!deployHistory.isPresent()) {
+      if (deployHistory.isPresent()) {
+        deployHistoryByRequest.get(deployKey.getRequestId()).add(deployHistory.get());
+      } else {
         LOG.info("Deploy history for key {} not found", deployKey);
-        continue;
       }
+    }
 
-      if (moveToHistoryOrCheckForPurge(deployHistory.get())) {
-        numTransferred++;
+    for (Map.Entry<String, List<SingularityDeployHistory>> entry : deployHistoryByRequest.entrySet()) {
+      final List<SingularityDeployHistory> requestDeployHistory = entry.getValue();
+
+      Collections.sort(requestDeployHistory);
+
+      for (int i=0; i<requestDeployHistory.size(); i++){
+        final SingularityDeployHistory deployHistory = requestDeployHistory.get(i);
+
+        if (moveToHistoryOrCheckForPurge(deployHistory, i)) {
+          numTransferred++;
+        }
+
+        numTotal++;
       }
-
-      numTotal++;
     }
 
     LOG.info("Transferred {} out of {} deploys in {}", numTransferred, numTotal, JavaUtils.duration(start));
@@ -74,6 +93,11 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
   @Override
   protected long getMaxAgeInMillisOfItem() {
     return TimeUnit.HOURS.toMillis(configuration.getDeleteDeploysFromZkWhenNoDatabaseAfterHours());
+  }
+
+  @Override
+  protected Optional<Long> getMaxNumberOfItems() {
+    return configuration.getDeleteAfterDeploysPerRequestWhenNoDatabase();
   }
 
   private boolean shouldTransferDeploy(SingularityRequestDeployState deployState, SingularityDeployKey deployKey) {

@@ -83,11 +83,17 @@ public class SingularityConfiguration extends Configuration {
 
   private long deleteDeploysFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
 
+  private Optional<Long> deleteAfterDeploysPerRequestWhenNoDatabase = Optional.absent();
+
   private long deleteDeadSlavesAfterHours = TimeUnit.DAYS.toHours(7);
 
   private long deleteStaleRequestsFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
 
+  private Optional<Long> maxStaleRequestsInZkWhenNoDatabase = Optional.absent();
+
   private long deleteTasksFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(7);
+
+  private Optional<Long> deleteAfterTasksPerRequestWhenNoDatabase = Optional.absent();
 
   private long deleteUndeliverableWebhooksAfterHours = TimeUnit.DAYS.toHours(7);
 
@@ -924,5 +930,29 @@ public class SingularityConfiguration extends Configuration {
 
   public void setDeleteRemovedRequestsFromLoadBalancer(boolean deleteRemovedRequestsFromLoadBalancer) {
     this.deleteRemovedRequestsFromLoadBalancer = deleteRemovedRequestsFromLoadBalancer;
+  }
+
+  public Optional<Long> getDeleteAfterDeploysPerRequestWhenNoDatabase() {
+    return deleteAfterDeploysPerRequestWhenNoDatabase;
+  }
+
+  public void setDeleteAfterDeploysPerRequestWhenNoDatabase(Optional<Long> deleteAfterDeploysPerRequestWhenNoDatabase) {
+    this.deleteAfterDeploysPerRequestWhenNoDatabase = deleteAfterDeploysPerRequestWhenNoDatabase;
+  }
+
+  public Optional<Long> getMaxStaleRequestsInZkWhenNoDatabase() {
+    return maxStaleRequestsInZkWhenNoDatabase;
+  }
+
+  public void setMaxStaleRequestsInZkWhenNoDatabase(Optional<Long> maxStaleRequestsInZkWhenNoDatabase) {
+    this.maxStaleRequestsInZkWhenNoDatabase = maxStaleRequestsInZkWhenNoDatabase;
+  }
+
+  public Optional<Long> getDeleteAfterTasksPerRequestWhenNoDatabase() {
+    return deleteAfterTasksPerRequestWhenNoDatabase;
+  }
+
+  public void setDeleteAfterTasksPerRequestWhenNoDatabase(Optional<Long> deleteAfterTasksPerRequestWhenNoDatabase) {
+    this.deleteAfterTasksPerRequestWhenNoDatabase = deleteAfterTasksPerRequestWhenNoDatabase;
   }
 }

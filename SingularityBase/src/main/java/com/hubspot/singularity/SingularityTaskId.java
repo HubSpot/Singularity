@@ -65,6 +65,15 @@ public class SingularityTaskId extends SingularityId implements SingularityHisto
 
   };
 
+  public static Comparator<SingularityTaskId> STARTED_AT_COMPARATOR_DESC = new Comparator<SingularityTaskId>() {
+
+    @Override
+    public int compare(SingularityTaskId o1, SingularityTaskId o2) {
+      return Long.compare(o2.startedAt, o1.startedAt);
+    }
+
+  };
+
   public static Predicate<SingularityTaskId> notIn(Collection<SingularityTaskId> exclude) {
     return Predicates.not(Predicates.in(exclude));
   }
