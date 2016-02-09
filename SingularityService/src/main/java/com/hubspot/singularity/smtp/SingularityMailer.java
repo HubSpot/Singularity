@@ -275,7 +275,16 @@ public class SingularityMailer implements Managed {
       return false;
     }
 
-    return true;
+    RateLimitStatus rateLimitStatus = getCurrentRateLimitForMail(request, emailType.get());
+
+    switch (rateLimitStatus) {
+      case RATE_LIMITED:
+        return false;
+      case RATE_LIMITING_DISABLED:
+      case NOT_RATE_LIMITED:
+      default:
+        return true;
+    }
   }
 
   private void prepareTaskMail(Optional<SingularityTask> task, SingularityTaskId taskId, SingularityRequest request, SingularityEmailType emailType, Map<String, Object> extraProperties,
@@ -505,14 +514,18 @@ public class SingularityMailer implements Managed {
     queueMail(emailDestination, request, SingularityEmailType.REQUEST_IN_COOLDOWN, Optional.<String> absent(), subject, body);
   }
 
+  private enum RateLimitStatus {
+    RATE_LIMITING_DISABLED, RATE_LIMITED, NOT_RATE_LIMITED;
+  }
+
   private enum RateLimitResult {
     SEND_MAIL, DONT_SEND_MAIL_IN_COOLDOWN, SEND_COOLDOWN_STARTED_MAIL;
   }
 
-  private RateLimitResult checkRateLimitForMail(SingularityRequest request, SingularityEmailType emailType) {
+  private RateLimitStatus getCurrentRateLimitForMail(SingularityRequest request, SingularityEmailType emailType) {
     if (maybeSmtpConfiguration.get().getRateLimitAfterNotifications() < 1) {
       LOG.trace("Mail rate limit cooldown disabled");
-      return RateLimitResult.SEND_MAIL;
+      return RateLimitStatus.RATE_LIMITING_DISABLED;
     }
 
     final String requestId = request.getId();
@@ -527,11 +540,30 @@ public class SingularityMailer implements Managed {
 
       if (cooldownLeft > 0) {
         LOG.debug("Not sending {} for {} - mail cooldown has {} time left out of {}", emailTypeName, requestId, cooldownLeft, maybeSmtpConfiguration.get().getRateLimitCooldownMillis());
-        return RateLimitResult.DONT_SEND_MAIL_IN_COOLDOWN;
+        return RateLimitStatus.RATE_LIMITED;
       }
 
       metadataManager.removeMailCooldown(requestId, emailTypeName);
     }
+
+    return RateLimitStatus.NOT_RATE_LIMITED;
+  }
+
+  private RateLimitResult checkRateLimitForMail(SingularityRequest request, SingularityEmailType emailType) {
+    RateLimitStatus currentStatus = getCurrentRateLimitForMail(request, emailType);
+
+    switch (currentStatus) {
+      case RATE_LIMITED:
+        return RateLimitResult.DONT_SEND_MAIL_IN_COOLDOWN;
+      case RATE_LIMITING_DISABLED:
+        return RateLimitResult.SEND_MAIL;
+      case NOT_RATE_LIMITED:
+        break;
+    }
+
+    final String requestId = request.getId();
+    final String emailTypeName = emailType.name();
+    final long now = System.currentTimeMillis();
 
     metadataManager.saveMailRecord(request, emailType);
 
