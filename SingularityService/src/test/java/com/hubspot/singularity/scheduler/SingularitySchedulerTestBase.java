@@ -551,7 +551,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
         .setCommand(Optional.of("sleep 1"))
         .setDeployInstanceCountPerStep(deployRate)
         .setAutoAdvanceDeploySteps(autoAdvance)
-        .setDeployStepWaitTimeSeconds(Optional.of(0));
+        .setDeployStepWaitTimeMs(Optional.of(0));
     if (loadBalanced) {
       Set<String> groups = new HashSet<>(Arrays.asList("group"));
       builder
