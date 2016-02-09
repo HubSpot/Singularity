@@ -177,6 +177,10 @@ public class SingularityConfiguration extends Configuration {
   @Valid
   private SentryConfiguration sentryConfiguration;
 
+  @JsonProperty("taskMetadata")
+  @Valid
+  private SingularityTaskMetadataConfiguration taskMetadataConfiguration = new SingularityTaskMetadataConfiguration();
+
   @JsonProperty("smtp")
   @Valid
   private SMTPConfiguration smtpConfiguration;
@@ -194,8 +198,6 @@ public class SingularityConfiguration extends Configuration {
 
   private int warnIfScheduledJobIsRunningPastNextRunPct = 200;
 
-  private long waitToSendTaskCompletedMailBufferMillis = 0;
-
   private long zookeeperAsyncTimeout = 5000;
 
   private int coreThreadpoolSize = 8;
@@ -203,8 +205,6 @@ public class SingularityConfiguration extends Configuration {
   private long threadpoolShutdownDelayInSeconds = 1;
 
   private long taskPersistAfterStartupBufferMillis = TimeUnit.MINUTES.toMillis(1);
-
-  private long taskPersistAfterFinishBufferMillis = TimeUnit.MINUTES.toMillis(5);
 
   @Valid
   @JsonProperty("customExecutor")
@@ -223,7 +223,7 @@ public class SingularityConfiguration extends Configuration {
 
   @JsonProperty("ldap")
   @Valid
-  private LDAPConfiguration ldapConfiguration = null;
+  private LDAPConfiguration ldapConfiguration;
 
   @JsonProperty("auth")
   @NotNull
@@ -886,14 +886,6 @@ public class SingularityConfiguration extends Configuration {
     this.cacheTasksForMillis = cacheTasksForMillis;
   }
 
-  public long getTaskPersistAfterFinishBufferMillis() {
-    return taskPersistAfterFinishBufferMillis;
-  }
-
-  public void setTaskPersistAfterFinishBufferMillis(long taskPersistAfterFinishBufferMillis) {
-    this.taskPersistAfterFinishBufferMillis = taskPersistAfterFinishBufferMillis;
-  }
-
   public long getTaskPersistAfterStartupBufferMillis() {
     return taskPersistAfterStartupBufferMillis;
   }
@@ -942,12 +934,12 @@ public class SingularityConfiguration extends Configuration {
     this.reserveSlavesWithAttributes = reserveSlavesWithAttributes;
   }
 
-  public long getWaitToSendTaskCompletedMailBufferMillis() {
-    return waitToSendTaskCompletedMailBufferMillis;
+  public SingularityTaskMetadataConfiguration getTaskMetadataConfiguration() {
+    return taskMetadataConfiguration;
   }
 
-  public void setWaitToSendTaskCompletedMailBufferMillis(long waitToSendTaskCompletedMailBufferMillis) {
-    this.waitToSendTaskCompletedMailBufferMillis = waitToSendTaskCompletedMailBufferMillis;
+  public void setTaskMetadataConfiguration(SingularityTaskMetadataConfiguration taskMetadataConfiguration) {
+    this.taskMetadataConfiguration = taskMetadataConfiguration;
   }
 
   public GraphiteConfiguration getGraphiteConfiguration() {
