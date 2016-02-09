@@ -157,7 +157,7 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   private String getTaskMetadataPath(SingularityTaskMetadata taskMetadata) {
-    return ZKPaths.makePath(getMetadataParentPath(taskMetadata.getTaskId()), String.format("%-%", taskMetadata.getTimestamp(), taskMetadata.getType()));
+    return ZKPaths.makePath(getMetadataParentPath(taskMetadata.getTaskId()), String.format("%s-%s", taskMetadata.getTimestamp(), taskMetadata.getType()));
   }
 
   private String getHealthcheckParentPath(SingularityTaskId taskId) {
