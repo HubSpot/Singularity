@@ -15,6 +15,7 @@ import com.hubspot.singularity.executor.handlebars.IfPresentHelper;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseLogging;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
+import com.ning.http.client.extra.ThrottleRequestFilter;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerClient;
 
@@ -29,7 +30,6 @@ public class SingularityExecutorModule extends AbstractModule {
 
   @Override
   protected void configure() {
-
   }
 
   @Provides
@@ -39,6 +39,7 @@ public class SingularityExecutorModule extends AbstractModule {
     AsyncHttpClientConfig.Builder configBldr = new AsyncHttpClientConfig.Builder();
     configBldr.setRequestTimeoutInMs((int) configuration.getLocalDownloadServiceTimeoutMillis());
     configBldr.setIdleConnectionTimeoutInMs((int) configuration.getLocalDownloadServiceTimeoutMillis());
+    configBldr.addRequestFilter(new ThrottleRequestFilter(configuration.getLocalDownloadServiceMaxConnections()));
 
     return new AsyncHttpClient(configBldr.build());
   }
