@@ -112,6 +112,8 @@ public class S3LogResource extends AbstractHistoryResource {
 
       if (taskState == SimplifiedTaskState.DONE) {
         end = Iterables.getLast(history.get().getTaskUpdates()).getTimestamp();
+      } else {
+        end = System.currentTimeMillis();
       }
     }
 
