@@ -294,6 +294,56 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testBounceWithLoadBalancer() {
+    initLoadBalancedRequest();
+    initFirstDeploy();
+    configuration.setNewTaskCheckerBaseDelaySeconds(1000000);
+
+    SingularityTask taskOne = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+
+    saveLoadBalancerState(BaragonRequestState.SUCCESS, taskOne.getTaskId(), LoadBalancerRequestType.ADD);
+
+    requestResource.bounce(requestId, Optional.<SingularityBounceRequest> absent());
+
+    cleaner.drainCleanupQueue();
+    resourceOffers();
+
+    Assert.assertEquals(2, taskManager.getNumActiveTasks());
+
+    List<SingularityTaskId> tasks = taskManager.getActiveTaskIds();
+    tasks.remove(taskOne.getTaskId());
+
+    SingularityTaskId taskTwo = tasks.get(0);
+
+    cleaner.drainCleanupQueue();
+
+    runLaunchedTasks();
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertEquals(0, taskManager.getKilledTaskIdRecords().size());
+    Assert.assertEquals(2, taskManager.getNumActiveTasks());
+
+    // add to LB:
+    saveLoadBalancerState(BaragonRequestState.SUCCESS, taskTwo, LoadBalancerRequestType.ADD);
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertEquals(0, taskManager.getKilledTaskIdRecords().size());
+    Assert.assertEquals(2, taskManager.getNumActiveTasks());
+
+    saveLoadBalancerState(BaragonRequestState.SUCCESS, taskOne.getTaskId(), LoadBalancerRequestType.REMOVE);
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertEquals(1, taskManager.getKilledTaskIdRecords().size());
+
+    killKilledTasks();
+
+    Assert.assertEquals(1, taskManager.getNumActiveTasks());
+  }
+
+  @Test
   public void testKilledTaskIdRecords() {
     initScheduledRequest();
     initFirstDeploy();
