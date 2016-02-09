@@ -15,8 +15,9 @@ TaskSearch = React.createClass
             lastTaskStatus: @props.initialTaskStatus
             startedBefore: @props.initialStartedBefore
             startedAfter: @props.initialStartedAfter
-            sortDirection: @props.initialSortDirection
+            sortDirection: @props.initialSortDirection or 'ASC'
             pageNumber: 1
+            count: @props.initialCount or 10
             showForm: true
         }
 
@@ -86,6 +87,11 @@ TaskSearch = React.createClass
                 pageNumber: @state.pageNumber - 1
             })
 
+    updateCount: (newCount) ->
+        @setState({
+            count: newCount
+         })
+
     resetForm: ->
         @setState(@getInitialState())
 
@@ -150,6 +156,8 @@ TaskSearch = React.createClass
                 updateStartedAfter = @updateStartedAfter
                 sortDirection = @state.sortDirection
                 updateSortDirection = @updateSortDirection
+                count = @state.count
+                updateCount = @updateCount
                 resetForm = @resetForm
             />
         else
@@ -166,7 +174,8 @@ TaskSearch = React.createClass
                 setPageNumber = @setPageNumber
                 decreasePageNumber = @decreasePageNumber
                 page = @state.pageNumber
-                count = 10
+                count = @state.count
+                updateCount = @updateCount
                 clearRequestId = @clearRequestId
                 clearDeployId = @clearDeployId
                 clearHost = @clearHost

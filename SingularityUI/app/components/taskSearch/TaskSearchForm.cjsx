@@ -8,6 +8,9 @@ Header = require './Header'
 
 TaskSearchForm = React.createClass
 
+    updateCount: (event) ->
+        @props.updateCount(event.target.value)
+
     render: ->
         <div className='col-xs-5'>
             <Header
@@ -77,6 +80,17 @@ TaskSearchForm = React.createClass
                         id = 'sortDirection'
                         title = 'Sort Direction'
                         updateFn = @props.updateSortDirection />
+                </div>
+                <div className='form-group'>
+                    <label htmlFor="count">Tasks Per Page:</label>
+                    <DropDown
+                        forceChooseValue = true
+                        value = @props.count
+                        choices = {[5, 10, 25, 50]}
+                        inputType = 'number'
+                        id = 'count'
+                        title = 'Tasks Per Page'
+                        updateFn = @updateCount />
                 </div>
                 <button type="button" className="btn btn-danger" onClick={@props.resetForm}>Clear Form</button>
                 <button type="submit" className="btn btn-primary pull-right">Search</button>
