@@ -66,7 +66,7 @@ public class SandboxResource extends AbstractHistoryResource {
 
   private SingularityTaskHistory checkHistory(String taskId) {
     final SingularityTaskId taskIdObj = getTaskIdObject(taskId);
-    final SingularityTaskHistory taskHistory = getTaskHistory(taskIdObj);
+    final SingularityTaskHistory taskHistory = getTaskHistoryRequired(taskIdObj);
 
     if (!taskHistory.getDirectory().isPresent()) {
       logSupport.checkDirectory(taskIdObj);
