@@ -54,6 +54,7 @@ import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.api.SingularityKillTaskRequest;
+import com.hubspot.singularity.api.SingularityTaskMetadataRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
@@ -331,12 +332,13 @@ public class TaskResource {
     @ApiResponse(code=409, message="Metadata with this type/timestamp already existed")
   })
   @Consumes({ MediaType.APPLICATION_JSON })
-  public void postTaskMetadata(@PathParam("taskId") String taskId, final SingularityTaskMetadata taskMetadata) {
+  public void postTaskMetadata(@PathParam("taskId") String taskId, final SingularityTaskMetadataRequest taskMetadataRequest) {
     SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
 
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.WRITE);
 
-    WebExceptions.checkBadRequest(taskMetadata.getTaskId().equals(taskIdObj), "Task metadata taskId %s didn't match API path %s", taskMetadata.getTaskId(), taskId);
+    final SingularityTaskMetadata taskMetadata = new SingularityTaskMetadata(taskIdObj, System.currentTimeMillis(), taskMetadataRequest.getType(), taskMetadataRequest.getTitle(),
+        taskMetadataRequest.getMessage(), JavaUtils.getUserEmail(user));
 
     SingularityCreateResult result = taskManager.saveTaskMetadata(taskMetadata);
 
