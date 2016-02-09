@@ -16,8 +16,10 @@ notifempty
 {{/if}}
 
 {{#if extrasFiles}}
-{{#each extrasFiles}}{{{this}}} {{/each}} {
-  dateformat {{{ extrasDateformat }}}
+{{#each extrasFiles}}{{{filename}}} {
+  dateformat {{{ dateformat }}}{{#if extension}}.{{{ extension}}}{{/if}}
   missingok
 }
+
+{{/each}}
 {{/if}}
