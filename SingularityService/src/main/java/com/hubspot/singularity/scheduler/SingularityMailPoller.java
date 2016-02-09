@@ -51,7 +51,6 @@ public class SingularityMailPoller extends SingularityLeaderOnlyPoller {
     SENT, WAITING, ERROR;
   }
 
-  // TODO add excpetions probably
   private CheckToSendTaskFinishedMailState checkToSendTaskFinishedMail(SingularityTaskId taskId) {
     Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(taskId.getRequestId());
 
@@ -101,13 +100,19 @@ public class SingularityMailPoller extends SingularityLeaderOnlyPoller {
   @Override
   public void runActionOnPoll() {
     for (SingularityTaskId finishedTaskId : taskManager.getTaskFinishedMailQueue()) {
+      CheckToSendTaskFinishedMailState mailSendState = checkToSendTaskFinishedMail(finishedTaskId);
 
-      // TODO call and delete / ignore
-
+      switch (mailSendState) {
+        case SENT:
+          LOG.info("Queued task finished mail for {}", finishedTaskId);
+        case ERROR:
+          taskManager.deleteFinishedTaskMailQueue(finishedTaskId);
+          break;
+        case WAITING:
+          break;
+      }
     }
   }
-
-
 
   @Override
   protected boolean abortsOnError() {
