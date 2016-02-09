@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -104,9 +105,9 @@ public class SingularityMailPoller extends SingularityLeaderOnlyPoller {
 
       switch (mailSendState) {
         case SENT:
-          LOG.info("Queued task finished mail for {}", finishedTaskId);
         case ERROR:
-          taskManager.deleteFinishedTaskMailQueue(finishedTaskId);
+          SingularityDeleteResult result = taskManager.deleteFinishedTaskMailQueue(finishedTaskId);
+          LOG.debug("Task {} mail sent with status {} (delete result {})", finishedTaskId, mailSendState, result);
           break;
         case WAITING:
           break;
