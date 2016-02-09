@@ -38,25 +38,26 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
 
   @Override
   public int hashCode() {
-      return Objects.hashCode(statusCode, durationMillis, responseBody, errorMessage, timestamp);
+    return Objects.hashCode(getTaskId(), statusCode, durationMillis, responseBody, errorMessage, timestamp);
   }
 
   @Override
   public boolean equals(Object other) {
-      if (this == other) {
-          return true;
-      }
-      if (other == null || other.getClass() != this.getClass()) {
-          return false;
-      }
+    if (this == other) {
+        return true;
+    }
+    if (other == null || other.getClass() != this.getClass()) {
+        return false;
+    }
 
-      SingularityTaskHealthcheckResult that = (SingularityTaskHealthcheckResult) other;
+    SingularityTaskHealthcheckResult that = (SingularityTaskHealthcheckResult) other;
 
-      return Objects.equal(this.statusCode, that.statusCode)
-              && Objects.equal(this.durationMillis, that.durationMillis)
-              && Objects.equal(this.responseBody, that.responseBody)
-              && Objects.equal(this.errorMessage, that.errorMessage)
-              && Objects.equal(this.timestamp, that.timestamp);
+    return Objects.equal(this.statusCode, that.statusCode)
+            && Objects.equal(this.getTaskId(), that.getTaskId())
+            && Objects.equal(this.durationMillis, that.durationMillis)
+            && Objects.equal(this.responseBody, that.responseBody)
+            && Objects.equal(this.errorMessage, that.errorMessage)
+            && Objects.equal(this.timestamp, that.timestamp);
   }
 
   public Optional<Integer> getStatusCode() {
@@ -86,7 +87,8 @@ public class SingularityTaskHealthcheckResult extends SingularityTaskIdHolder im
 
   @Override
   public String toString() {
-    return "SingularityTaskHealthcheckResult [statusCode=" + statusCode + ", durationMillis=" + durationMillis + ", timestamp=" + timestamp + ", responseBody=" + responseBody + ", errorMessage=" + errorMessage + ", taskId=" + getTaskId() + "]";
+    return "SingularityTaskHealthcheckResult [statusCode=" + statusCode + ", durationMillis=" + durationMillis + ", timestamp=" + timestamp + ", responseBody="
+        + responseBody + ", errorMessage=" + errorMessage + ", taskId=" + getTaskId() + "]";
   }
 
 }

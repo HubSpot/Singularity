@@ -54,6 +54,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long cleanupEverySeconds = 5;
 
+  private long checkQueuedMailsEveryMillis = TimeUnit.SECONDS.toMillis(15);
+
   private long closeWaitSeconds = 5;
 
   private String commonHostnameSuffixToOmit;
@@ -192,6 +194,8 @@ public class SingularityConfiguration extends Configuration {
 
   private int warnIfScheduledJobIsRunningPastNextRunPct = 200;
 
+  private long waitToSendTaskCompletedMailBufferMillis = 0;
+
   private long zookeeperAsyncTimeout = 5000;
 
   private int coreThreadpoolSize = 8;
@@ -199,6 +203,8 @@ public class SingularityConfiguration extends Configuration {
   private long threadpoolShutdownDelayInSeconds = 1;
 
   private long taskPersistAfterStartupBufferMillis = TimeUnit.MINUTES.toMillis(1);
+
+  private long taskPersistAfterFinishBufferMillis = TimeUnit.MINUTES.toMillis(5);
 
   @Valid
   @JsonProperty("customExecutor")
@@ -540,6 +546,14 @@ public class SingularityConfiguration extends Configuration {
     return uiConfiguration;
   }
 
+  public long getCheckQueuedMailsEveryMillis() {
+    return checkQueuedMailsEveryMillis;
+  }
+
+  public void setCheckQueuedMailsEveryMillis(long checkQueuedMailsEveryMillis) {
+    this.checkQueuedMailsEveryMillis = checkQueuedMailsEveryMillis;
+  }
+
   public long getWarnIfScheduledJobIsRunningForAtLeastMillis() {
     return warnIfScheduledJobIsRunningForAtLeastMillis;
   }
@@ -872,6 +886,14 @@ public class SingularityConfiguration extends Configuration {
     this.cacheTasksForMillis = cacheTasksForMillis;
   }
 
+  public long getTaskPersistAfterFinishBufferMillis() {
+    return taskPersistAfterFinishBufferMillis;
+  }
+
+  public void setTaskPersistAfterFinishBufferMillis(long taskPersistAfterFinishBufferMillis) {
+    this.taskPersistAfterFinishBufferMillis = taskPersistAfterFinishBufferMillis;
+  }
+
   public long getTaskPersistAfterStartupBufferMillis() {
     return taskPersistAfterStartupBufferMillis;
   }
@@ -918,6 +940,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setReserveSlavesWithAttributes(Map<String, List<String>> reserveSlavesWithAttributes) {
     this.reserveSlavesWithAttributes = reserveSlavesWithAttributes;
+  }
+
+  public long getWaitToSendTaskCompletedMailBufferMillis() {
+    return waitToSendTaskCompletedMailBufferMillis;
+  }
+
+  public void setWaitToSendTaskCompletedMailBufferMillis(long waitToSendTaskCompletedMailBufferMillis) {
+    this.waitToSendTaskCompletedMailBufferMillis = waitToSendTaskCompletedMailBufferMillis;
   }
 
   public GraphiteConfiguration getGraphiteConfiguration() {
