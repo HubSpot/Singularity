@@ -21,7 +21,7 @@ DisplayResults = React.createClass
     # Used to detect if any props have changed
     didPropsChange: (nextProps) ->
         return true unless nextProps.requestId == @props.requestId
-        return true unless nextProps.requestLocked == @props.requestLocked
+        return true unless nextProps.global == @props.global
         return true unless nextProps.deployId == @props.deployId
         return true unless nextProps.host == @props.host
         return true unless nextProps.lastTaskStatus == @props.lastTaskStatus
@@ -68,7 +68,7 @@ DisplayResults = React.createClass
                 paramName = "Request Id"
                 paramValue = @collection.requestId
                 onClick = @props.clearRequestId
-                cantClear = @props.requestLocked
+                cantClear = {not @props.global}
                 /></div>)
             key++
         if @collection.deployId
@@ -186,7 +186,7 @@ DisplayResults = React.createClass
         @fetchCollection() if @willFetch
         <div>
             <Header
-                global = {not @props.requestLocked}
+                global = @props.global
                 requestId = @props.requestId
             />
             <h2>Query Parameters</h2>

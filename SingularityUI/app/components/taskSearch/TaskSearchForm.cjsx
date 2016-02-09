@@ -11,7 +11,7 @@ TaskSearchForm = React.createClass
     render: ->
         <div className='col-xs-5'>
             <Header
-                global = {not @props.requestLocked}
+                global = @props.global
                 requestId = @props.requestId
             />
             <form role="form" onSubmit={@props.handleSubmit}>
@@ -21,7 +21,7 @@ TaskSearchForm = React.createClass
                         value = @props.requestId 
                         inputType = 'text'
                         id = 'requestId'
-                        disabled = {'disabled' if @props.requestLocked}
+                        disabled = {'disabled' unless @props.global}
                         updateFn = @props.updateReqeustId />
                 </div>
                 <div className='form-group'>
