@@ -29,7 +29,7 @@ TaskSearch = React.createClass
     # Annoying that we need a new function for each property.
     # Unfortuantely using a curried function doesn't seem to work.
     updateReqeustId: (event) ->
-        if not @props.requestLocked
+        if @props.global
             @setState({
                 requestId: event.target.value
             })
@@ -90,7 +90,7 @@ TaskSearch = React.createClass
         @setState(@getInitialState())
 
     clearRequestId: (event) ->
-        if not @props.requestLocked
+        if @props.global
             @setState({
                 requestId: ''
             })
@@ -136,7 +136,7 @@ TaskSearch = React.createClass
                 header = @header
                 handleSubmit = @handleSubmit
                 requestId = @state.requestId
-                requestLocked = @props.requestLocked
+                global = @props.global
                 updateReqeustId = @updateReqeustId
                 deployId = @state.deployId
                 updateDeployId = @updateDeployId
@@ -156,7 +156,6 @@ TaskSearch = React.createClass
             return <DisplayResults
                 header = @header
                 requestId = @state.requestId
-                requestLocked = @state.requestLocked
                 deployId = @state.deployId
                 host = @state.host
                 lastTaskStatus = @state.lastTaskStatus
@@ -175,7 +174,7 @@ TaskSearch = React.createClass
                 clearStartedAfter = @clearStartedAfter
                 clearStartedBefore = @clearStartedBefore
                 clearSortDirection = @clearSortDirection
-                requestLocked = @props.requestLocked
+                global = @props.global
                 returnToForm = @returnToForm
             />
 

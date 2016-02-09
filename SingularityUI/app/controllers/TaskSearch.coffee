@@ -13,12 +13,12 @@ class TaskSearchController extends Controller
         @title 'Task Search'
         @params = {}
         if @requestId
-        	@requestLocked = true
+        	@global = false
         else
-        	@requestLocked = false
+        	@global = true
         @view = new TaskSearchView
             requestId : @requestId
-            requestLocked : @requestLocked
+            global : @global
         @setView @view
 
         @view.render()

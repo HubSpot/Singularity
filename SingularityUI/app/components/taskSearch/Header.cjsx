@@ -3,7 +3,7 @@ Header = React.createClass
     render: ->
         <div>
             {<a 
-                className='btn btn-primary' 
+                className='btn btn-danger' 
                 href={window.config.appRoot + '/request/' + @props.requestId} 
                 alt={'Return to Request ' + @props.requestId}>
                 <span className='glyphicon glyphicon-arrow-left' aria-hidden='true' /> Back to {@props.requestId}
