@@ -153,6 +153,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private long localDownloadServiceTimeoutMillis = TimeUnit.MINUTES.toMillis(3);
 
+  @Min(1)
+  @JsonProperty
+  private int localDownloadServiceMaxConnections = 25;
+
   @NotNull
   @JsonProperty
   private Optional<Integer> maxTaskThreads = Optional.absent();
@@ -277,6 +281,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public long getIdleExecutorShutdownWaitMillis() {
     return idleExecutorShutdownWaitMillis;
+  }
+
+  public int getLocalDownloadServiceMaxConnections() {
+    return localDownloadServiceMaxConnections;
+  }
+
+  public void setLocalDownloadServiceMaxConnections(int localDownloadServiceMaxConnections) {
+    this.localDownloadServiceMaxConnections = localDownloadServiceMaxConnections;
   }
 
   public long getStopDriverAfterMillis() {
@@ -639,6 +651,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", logrotateConfDirectory='" + logrotateConfDirectory + '\'' +
             ", logrotateToDirectory='" + logrotateToDirectory + '\'' +
             ", logrotateMaxageDays=" + logrotateMaxageDays +
+            ", localDownloadServiceMaxConnections=" + localDownloadServiceMaxConnections +
             ", logrotateCount=" + logrotateCount +
             ", logrotateDateformat='" + logrotateDateformat + '\'' +
             ", logrotateExtrasDateformat='" + logrotateExtrasDateformat + '\'' +
