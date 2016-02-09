@@ -445,8 +445,7 @@ public class SingularityScheduler {
     }
 
     if (taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && requestState != RequestState.SYSTEM_COOLDOWN) {
-
-      mailer.sendTaskCompletedMail(task, taskId, request, state);
+      mailer.queueTaskCompletedMail(task, taskId, request, state);
     } else if (requestState == RequestState.SYSTEM_COOLDOWN) {
       LOG.debug("Not sending a task completed email because task {} is in SYSTEM_COOLDOWN", taskId);
     } else {
