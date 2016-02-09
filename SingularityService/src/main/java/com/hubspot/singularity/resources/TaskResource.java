@@ -46,6 +46,7 @@ import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskMetadata;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.SingularityTransformHelpers;
@@ -319,6 +320,27 @@ public class TaskResource {
   public List<SingularityTaskShellCommandRequest> getQueuedShellCommands() {
     authorizationHelper.checkAdminAuthorization(user);
     return taskManager.getAllQueuedTaskShellCommandRequests();
+  }
+
+  @POST
+  @Path("/task/{taskId}/metadata")
+  @ApiOperation(value="Post metadata about a task that will be persisted along with it and displayed in the UI")
+  @ApiResponses({
+    @ApiResponse(code=400, message="Invalid metadata object"),
+    @ApiResponse(code=404, message="Task doesn't exist"),
+    @ApiResponse(code=409, message="Metadata with this type/timestamp already existed")
+  })
+  @Consumes({ MediaType.APPLICATION_JSON })
+  public void postTaskMetadata(@PathParam("taskId") String taskId, final SingularityTaskMetadata taskMetadata) {
+    SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
+
+    authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.WRITE);
+
+    WebExceptions.checkBadRequest(taskMetadata.getTaskId().equals(taskIdObj), "Task metadata taskId %s didn't match API path %s", taskMetadata.getTaskId(), taskId);
+
+    SingularityCreateResult result = taskManager.saveTaskMetadata(taskMetadata);
+
+    WebExceptions.checkConflict(result == SingularityCreateResult.CREATED, "Task metadata conficted with existing metadata for %s at %s", taskMetadata.getType(), taskMetadata.getTimestamp());
   }
 
   @POST

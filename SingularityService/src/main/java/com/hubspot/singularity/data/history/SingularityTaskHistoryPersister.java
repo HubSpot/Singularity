@@ -97,6 +97,18 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
     final Optional<SingularityTaskHistory> taskHistory = taskManager.getTaskHistory(object);
 
     if (taskHistory.isPresent()) {
+      if (!taskHistory.get().getTaskUpdates().isEmpty()) {
+        final long lastUpdateAt = taskHistory.get().getLastTaskUpdate().get().getTimestamp();
+
+        final long timeSinceLastUpdate = System.currentTimeMillis() - lastUpdateAt;
+
+        if (timeSinceLastUpdate < configuration.getTaskPersistAfterFinishBufferMillis()) {
+          LOG.debug("Not persisting {} yet - lastUpdate only happened {} ago, buffer {}", JavaUtils.durationFromMillis(timeSinceLastUpdate),
+              JavaUtils.durationFromMillis(configuration.getTaskPersistAfterFinishBufferMillis()));
+          return false;
+        }
+      }
+
       LOG.debug("Moving {} to history", object);
       try {
         historyManager.saveTaskHistory(taskHistory.get());
