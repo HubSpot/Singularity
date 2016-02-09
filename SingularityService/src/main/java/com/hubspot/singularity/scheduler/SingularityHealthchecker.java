@@ -169,9 +169,9 @@ public class SingularityHealthchecker {
 
     final String hostname = task.getOffer().getHostname();
 
-    Optional<Long> healthecheckPort = task.getPortByIndex(task.getTaskRequest().getDeploy().getHealthcheckPortIndex().or(0));
+    Optional<Long> healthcheckPort = task.getPortByIndex(task.getTaskRequest().getDeploy().getHealthcheckPortIndex().or(0));
 
-    if (!healthecheckPort.isPresent() || healthecheckPort.get() < 1L) {
+    if (!healthcheckPort.isPresent() || healthcheckPort.get() < 1L) {
       LOG.warn("Couldn't find a port for health check for task {}", task);
       return Optional.absent();
     }
@@ -184,7 +184,7 @@ public class SingularityHealthchecker {
 
     HealthcheckProtocol protocol = task.getTaskRequest().getDeploy().getHealthcheckProtocol().or(DEFAULT_HEALTH_CHECK_SCHEME);
 
-    return Optional.of(String.format("%s://%s:%d/%s", protocol.getProtocol(), hostname, healthecheckPort.get(), uri));
+    return Optional.of(String.format("%s://%s:%d/%s", protocol.getProtocol(), hostname, healthcheckPort.get(), uri));
   }
 
   private void saveFailure(SingularityHealthcheckAsyncHandler handler, String message) {
