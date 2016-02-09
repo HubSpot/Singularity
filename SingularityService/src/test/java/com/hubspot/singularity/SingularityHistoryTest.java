@@ -209,6 +209,8 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
 
+    taskMetadataConfiguration.setTaskPersistAfterFinishBufferMillis(TimeUnit.MINUTES.toMillis(100));
+
     SingularityTask task = launchTask(request, firstDeploy, System.currentTimeMillis(), System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(3), 1, TaskState.TASK_RUNNING);
 
     statusUpdate(task, TaskState.TASK_FINISHED, Optional.of(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(2)));
