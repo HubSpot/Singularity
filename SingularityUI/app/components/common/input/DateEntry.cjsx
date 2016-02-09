@@ -31,7 +31,8 @@ DateEntry = React.createClass
                     type = {@props.inputType}
                     disabled = {@props.disabled}
                     size = {@props.size}
-                    value = {@getValue()} 
+                    value = {@getValue()}
+                    updateFn = {@props.updateFn} 
                     id = {@props.id}
                 />
                 <span className="input-group-addon">

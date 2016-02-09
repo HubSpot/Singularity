@@ -74,6 +74,12 @@ TaskSearch = React.createClass
             pageNumber: @state.pageNumber + 1
         })
 
+    setPageNumber: (pageNumber) ->
+        if pageNumber > 0
+            @setState({
+                pageNumber: pageNumber
+            })
+
     decreasePageNumber: (event) ->
         if @state.pageNumber > 1
             @setState({
@@ -86,7 +92,7 @@ TaskSearch = React.createClass
     clearRequestId: (event) ->
         if not @props.requestLocked
             @setState({
-                requestID: ''
+                requestId: ''
             })
 
     clearDeployId: (event) ->
@@ -127,7 +133,7 @@ TaskSearch = React.createClass
     render: ->
         if @state.showForm
             return <TaskSearchForm
-                headerText = @headerText
+                header = @header
                 handleSubmit = @handleSubmit
                 requestId = @state.requestId
                 requestLocked = @props.requestLocked
@@ -148,7 +154,7 @@ TaskSearch = React.createClass
             />
         else
             return <DisplayResults
-                headerText = @headerText
+                header = @header
                 requestId = @state.requestId
                 requestLocked = @state.requestLocked
                 deployId = @state.deployId
@@ -158,6 +164,7 @@ TaskSearch = React.createClass
                 startedAfter = @state.startedAfter
                 sortDirection = @state.sortDirection
                 increasePageNumber = @increasePageNumber
+                setPageNumber = @setPageNumber
                 decreasePageNumber = @decreasePageNumber
                 page = @state.pageNumber
                 count = 10

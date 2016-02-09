@@ -4,14 +4,18 @@ FormField = require '../common/input/FormField'
 DropDown = require '../common/input/DropDown'
 DateEntry = require '../common/input/DateEntry'
 Enums = require './Enums'
+Header = require './Header'
 
 TaskSearchForm = React.createClass
 
     render: ->
         <div className='col-xs-5'>
-            <h2> {@props.headerText} </h2>
+            <Header
+                global = {not @props.requestLocked}
+                requestId = @props.requestId
+            />
             <form role="form" onSubmit={@props.handleSubmit}>
-                <div className='formGroup'>
+                <div className='form-group'>
                     <label htmlFor="requestId">Request ID:</label>
                     <FormField 
                         value = @props.requestId 
@@ -20,8 +24,7 @@ TaskSearchForm = React.createClass
                         disabled = {'disabled' if @props.requestLocked}
                         updateFn = @props.updateReqeustId />
                 </div>
-                <br />
-                <div className='formGroup'>
+                <div className='form-group'>
                     <label htmlFor="deployId">Deploy ID:</label>
                     <FormField
                         value = @props.deployId 
@@ -29,8 +32,7 @@ TaskSearchForm = React.createClass
                         id = 'deployId'
                         updateFn = @props.updateDeployId />
                 </div>
-                <br />
-                <div className='formGroup'>
+                <div className='form-group'>
                     <label htmlFor="host">Host:</label>
                     <FormField
                         value = @props.host 
@@ -38,8 +40,7 @@ TaskSearchForm = React.createClass
                         id = 'host'
                         updateFn = @props.updateHost />
                 </div>
-                <br />
-                <div className='formGroup'>
+                <div className='form-group'>
                     <label htmlFor="lastTaskStatus">Last Task Status:</label>
                     <DropDown
                         forceChooseValue = false
@@ -50,8 +51,7 @@ TaskSearchForm = React.createClass
                         id = 'lastTaskStatus'
                         updateFn = @props.updateLastTaskStatus />
                 </div>
-                <br />
-                <div className='formGroup'>
+                <div className='form-group'>
                     <label htmlFor="startedBefore">Started Before:</label>
                     <DateEntry 
                         value = @props.startedBefore
@@ -59,7 +59,7 @@ TaskSearchForm = React.createClass
                         id = 'startedBefore'
                         updateFn = @props.updateStartedBefore />
                 </div>
-                <div className='formGroup'>
+                <div className='form-group'>
                     <label htmlFor="startedAfter">Started After:</label>
                     <DateEntry 
                         value = @props.startedAfter 
@@ -67,7 +67,7 @@ TaskSearchForm = React.createClass
                         id = 'startedAfter'
                         updateFn = @props.updateStartedAfter />
                 </div>
-                <div className='formGroup'>
+                <div className='form-group'>
                     <label htmlFor="sortDirection">Sort Direction:</label>
                     <DropDown
                         forceChooseValue = true
@@ -78,9 +78,8 @@ TaskSearchForm = React.createClass
                         title = 'Sort Direction'
                         updateFn = @props.updateSortDirection />
                 </div>
-                <br />
                 <button type="button" className="btn btn-danger" onClick={@props.resetForm}>Clear Form</button>
-                <button type="submit" className="btn btn-primary navbar-right">Search</button>
+                <button type="submit" className="btn btn-primary pull-right">Search</button>
             </form>
         </div>
 

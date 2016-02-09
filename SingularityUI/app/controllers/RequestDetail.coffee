@@ -97,6 +97,8 @@ class RequestDetailController extends Controller
         @subviews.taskHistory = new ExpandableTableSubview
             collection: @collections.taskHistory
             template:   @templates.taskHistory
+            extraRenderData: (subView) =>
+                { request: @models.request.toJSON() }
 
         @subviews.deployHistory = new ExpandableTableSubview
             collection: @collections.deployHistory
