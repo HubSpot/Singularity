@@ -1,8 +1,6 @@
 package com.hubspot.singularity.data.history;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -13,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.TreeMultimap;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeleteResult;
@@ -46,7 +45,7 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
 
     final List<SingularityDeployKey> allDeployIds = deployManager.getAllDeployIds();
     final Map<String, SingularityRequestDeployState> byRequestId = deployManager.getAllRequestDeployStatesByRequestId();
-    final Map<String, List<SingularityDeployHistory>> deployHistoryByRequest = new HashMap<>();
+    final TreeMultimap<String, SingularityDeployHistory> deployHistoryByRequestId = TreeMultimap.create();
 
     int numTotal = 0;
     int numTransferred = 0;
@@ -58,28 +57,19 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
         continue;
       }
 
-      if (!deployHistoryByRequest.containsKey(deployKey.getRequestId())) {
-        deployHistoryByRequest.put(deployKey.getRequestId(), new ArrayList<SingularityDeployHistory>());
-      }
-
       Optional<SingularityDeployHistory> deployHistory = deployManager.getDeployHistory(deployKey.getRequestId(), deployKey.getDeployId(), true);
 
       if (deployHistory.isPresent()) {
-        deployHistoryByRequest.get(deployKey.getRequestId()).add(deployHistory.get());
+        deployHistoryByRequestId.put(deployKey.getRequestId(), deployHistory.get());
       } else {
         LOG.info("Deploy history for key {} not found", deployKey);
       }
     }
 
-    for (Map.Entry<String, List<SingularityDeployHistory>> entry : deployHistoryByRequest.entrySet()) {
-      final List<SingularityDeployHistory> requestDeployHistory = entry.getValue();
-
-      Collections.sort(requestDeployHistory);
-
-      for (int i=0; i<requestDeployHistory.size(); i++){
-        final SingularityDeployHistory deployHistory = requestDeployHistory.get(i);
-
-        if (moveToHistoryOrCheckForPurge(deployHistory, i)) {
+    for (Collection<SingularityDeployHistory> deployHistoryForRequest : deployHistoryByRequestId.asMap().values()) {
+      int i=0;
+      for (SingularityDeployHistory deployHistory : deployHistoryForRequest) {
+        if (moveToHistoryOrCheckForPurge(deployHistory, i++)) {
           numTransferred++;
         }
 
@@ -96,8 +86,8 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
   }
 
   @Override
-  protected Optional<Long> getMaxNumberOfItems() {
-    return configuration.getDeleteAfterDeploysPerRequestWhenNoDatabase();
+  protected Optional<Integer> getMaxNumberOfItems() {
+    return configuration.getMaxStaleDeploysPerRequestWhenNoDatabase();
   }
 
   private boolean shouldTransferDeploy(SingularityRequestDeployState deployState, SingularityDeployKey deployKey) {

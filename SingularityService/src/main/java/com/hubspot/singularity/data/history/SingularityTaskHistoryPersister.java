@@ -1,8 +1,6 @@
 package com.hubspot.singularity.data.history;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -14,7 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
+import com.google.common.collect.TreeMultimap;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeleteResult;
@@ -58,23 +59,17 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
     int numTotal = 0;
     int numTransferred = 0;
 
-    final Map<String, List<SingularityTaskId>> eligbleTaskIdByRequest = new HashMap<>();
+    final Multimap<String, SingularityTaskId> eligibleTaskIdByRequestId = TreeMultimap.create(Ordering.natural(), SingularityTaskId.STARTED_AT_COMPARATOR_DESC);
 
     for (SingularityTaskId taskId : allTaskIds) {
       if (activeTaskIds.contains(taskId) || lbCleaningTaskIds.contains(taskId) || isPartOfPendingDeploy(pendingDeploys, taskId)) {
         continue;
       }
 
-      if (!eligbleTaskIdByRequest.containsKey(taskId.getRequestId())) {
-        eligbleTaskIdByRequest.put(taskId.getRequestId(), new ArrayList<SingularityTaskId>());
-      }
-
-      eligbleTaskIdByRequest.get(taskId.getRequestId()).add(taskId);
+      eligibleTaskIdByRequestId.put(taskId.getRequestId(), taskId);
     }
 
-    for (Map.Entry<String, List<SingularityTaskId>> entry : eligbleTaskIdByRequest.entrySet()) {
-      Collections.sort(entry.getValue(), SingularityTaskId.STARTED_AT_COMPARATOR_DESC);
-
+    for (Map.Entry<String, Collection<SingularityTaskId>> entry : eligibleTaskIdByRequestId.asMap().entrySet()) {
       int i = 0;
       for (SingularityTaskId taskId : entry.getValue()) {
         final long age = start - taskId.getStartedAt();
@@ -85,12 +80,11 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
           continue;
         }
 
-        if (moveToHistoryOrCheckForPurge(taskId, i)) {
+        if (moveToHistoryOrCheckForPurge(taskId, i++)) {
           numTransferred++;
-        } else {
-          numTotal++;
         }
-        i++;
+
+        numTotal++;
       }
     }
 
@@ -113,8 +107,8 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
   }
 
   @Override
-  protected Optional<Long> getMaxNumberOfItems() {
-    return configuration.getDeleteAfterTasksPerRequestWhenNoDatabase();
+  protected Optional<Integer> getMaxNumberOfItems() {
+    return configuration.getMaxStaleTasksPerRequestWhenNoDatabase();
   }
 
   @Override

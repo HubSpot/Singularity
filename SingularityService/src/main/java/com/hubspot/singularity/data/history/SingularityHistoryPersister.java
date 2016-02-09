@@ -40,7 +40,7 @@ public abstract class SingularityHistoryPersister<T extends SingularityHistoryIt
 
   protected abstract long getMaxAgeInMillisOfItem();
 
-  protected abstract Optional<Long> getMaxNumberOfItems();
+  protected abstract Optional<Integer> getMaxNumberOfItems();
 
   protected abstract boolean moveToHistory(T object);
 
@@ -70,8 +70,8 @@ public abstract class SingularityHistoryPersister<T extends SingularityHistoryIt
       return true;
     }
 
-    if (getMaxNumberOfItems().isPresent() && index > getMaxNumberOfItems().get()) {
-      LOG.trace("Deleting {} because it is item number {} (max: {})", index, getMaxNumberOfItems().get());
+    if (getMaxNumberOfItems().isPresent() && index >= getMaxNumberOfItems().get()) {
+      LOG.trace("Deleting {} because it is item number {} (max: {})", object, index, getMaxNumberOfItems().get());
       return true;
     }
 

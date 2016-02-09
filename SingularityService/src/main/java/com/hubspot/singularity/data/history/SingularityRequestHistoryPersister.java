@@ -119,7 +119,7 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
   }
 
   @Override
-  protected Optional<Long> getMaxNumberOfItems() {
+  protected Optional<Integer> getMaxNumberOfItems() {
     return configuration.getMaxStaleRequestsInZkWhenNoDatabase();
   }
 

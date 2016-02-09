@@ -83,17 +83,17 @@ public class SingularityConfiguration extends Configuration {
 
   private long deleteDeploysFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
 
-  private Optional<Long> deleteAfterDeploysPerRequestWhenNoDatabase = Optional.absent();
+  private Optional<Integer> maxStaleDeploysPerRequestWhenNoDatabase = Optional.absent();
 
   private long deleteDeadSlavesAfterHours = TimeUnit.DAYS.toHours(7);
 
   private long deleteStaleRequestsFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
 
-  private Optional<Long> maxStaleRequestsInZkWhenNoDatabase = Optional.absent();
+  private Optional<Integer> maxStaleRequestsInZkWhenNoDatabase = Optional.absent();
 
   private long deleteTasksFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(7);
 
-  private Optional<Long> deleteAfterTasksPerRequestWhenNoDatabase = Optional.absent();
+  private Optional<Integer> maxStaleTasksPerRequestWhenNoDatabase = Optional.absent();
 
   private long deleteUndeliverableWebhooksAfterHours = TimeUnit.DAYS.toHours(7);
 
@@ -932,27 +932,27 @@ public class SingularityConfiguration extends Configuration {
     this.deleteRemovedRequestsFromLoadBalancer = deleteRemovedRequestsFromLoadBalancer;
   }
 
-  public Optional<Long> getDeleteAfterDeploysPerRequestWhenNoDatabase() {
-    return deleteAfterDeploysPerRequestWhenNoDatabase;
+  public Optional<Integer> getMaxStaleDeploysPerRequestWhenNoDatabase() {
+    return maxStaleDeploysPerRequestWhenNoDatabase;
   }
 
-  public void setDeleteAfterDeploysPerRequestWhenNoDatabase(Optional<Long> deleteAfterDeploysPerRequestWhenNoDatabase) {
-    this.deleteAfterDeploysPerRequestWhenNoDatabase = deleteAfterDeploysPerRequestWhenNoDatabase;
+  public void setMaxStaleDeploysPerRequestWhenNoDatabase(Optional<Integer> maxStaleDeploysPerRequestWhenNoDatabase) {
+    this.maxStaleDeploysPerRequestWhenNoDatabase = maxStaleDeploysPerRequestWhenNoDatabase;
   }
 
-  public Optional<Long> getMaxStaleRequestsInZkWhenNoDatabase() {
+  public Optional<Integer> getMaxStaleRequestsInZkWhenNoDatabase() {
     return maxStaleRequestsInZkWhenNoDatabase;
   }
 
-  public void setMaxStaleRequestsInZkWhenNoDatabase(Optional<Long> maxStaleRequestsInZkWhenNoDatabase) {
+  public void setMaxStaleRequestsInZkWhenNoDatabase(Optional<Integer> maxStaleRequestsInZkWhenNoDatabase) {
     this.maxStaleRequestsInZkWhenNoDatabase = maxStaleRequestsInZkWhenNoDatabase;
   }
 
-  public Optional<Long> getDeleteAfterTasksPerRequestWhenNoDatabase() {
-    return deleteAfterTasksPerRequestWhenNoDatabase;
+  public Optional<Integer> getMaxStaleTasksPerRequestWhenNoDatabase() {
+    return maxStaleTasksPerRequestWhenNoDatabase;
   }
 
-  public void setDeleteAfterTasksPerRequestWhenNoDatabase(Optional<Long> deleteAfterTasksPerRequestWhenNoDatabase) {
-    this.deleteAfterTasksPerRequestWhenNoDatabase = deleteAfterTasksPerRequestWhenNoDatabase;
+  public void setMaxStaleTasksPerRequestWhenNoDatabase(Optional<Integer> maxStaleTasksPerRequestWhenNoDatabase) {
+    this.maxStaleTasksPerRequestWhenNoDatabase = maxStaleTasksPerRequestWhenNoDatabase;
   }
 }
