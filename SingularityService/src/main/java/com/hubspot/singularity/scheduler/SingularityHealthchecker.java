@@ -1,6 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -19,6 +20,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.HealthcheckProtocol;
 import com.hubspot.singularity.SingularityAbort;
 import com.hubspot.singularity.SingularityMainModule;
@@ -167,9 +169,9 @@ public class SingularityHealthchecker {
 
     final String hostname = task.getOffer().getHostname();
 
-    Optional<Long> firstPort = task.getFirstPort();
+    Optional<Long> healthecheckPort = task.getPortByIndex(task.getTaskRequest().getDeploy().getHealthcheckPortIndex().or(0));
 
-    if (!firstPort.isPresent() || firstPort.get() < 1L) {
+    if (!healthecheckPort.isPresent() || healthecheckPort.get() < 1L) {
       LOG.warn("Couldn't find a port for health check for task {}", task);
       return Optional.absent();
     }
@@ -182,7 +184,7 @@ public class SingularityHealthchecker {
 
     HealthcheckProtocol protocol = task.getTaskRequest().getDeploy().getHealthcheckProtocol().or(DEFAULT_HEALTH_CHECK_SCHEME);
 
-    return Optional.of(String.format("%s://%s:%d/%s", protocol.getProtocol(), hostname, firstPort.get(), uri));
+    return Optional.of(String.format("%s://%s:%d/%s", protocol.getProtocol(), hostname, healthecheckPort.get(), uri));
   }
 
   private void saveFailure(SingularityHealthcheckAsyncHandler handler, String message) {
