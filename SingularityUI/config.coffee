@@ -45,9 +45,11 @@ exports.config =
             navColor: process.env.SINGULARITY_NAV_COLOR
             defaultCpus: process.env.SINGUALRITY_DEFAULT_CPUS ? 1
             defaultMemory: process.env.SINGULARITY_DEFAULT_MEMORY ? 128
+            defaultBounceExpirationMinutes: process.env.SINGULARITY_DEFAULT_BOUNCE_EXPIRATION_MINUTES ? 60
             defaultHealthcheckIntervalSeconds: process.env.SINGULARITY_DEFAULT_HEALTHCHECK_INTERVAL_SECONDS ? 5
             defaultHealthcheckTimeoutSeconds: process.env.SINGULARITY_HEALTHCHECK_TIMEOUT_SECONDS ? 5
             defaultDeployHealthTimeoutSeconds: process.env.SINGULARITY_DEPLOY_HEALTH_TIMEOUT_SECONDS ? 120
+            defaultHealthcheckMaxRetries: process.env.SINGULARITY_HEALTHCHECK_MAX_RETRIES ? 0
             hideNewDeployButton: process.env.SINGULARITY_HIDE_NEW_DEPLOY_BUTTON ? "false"
             hideNewRequestButton: process.env.SINGULARITY_HIDE_NEW_REQUEST_BUTTON ? "false"
             loadBalancingEnabled: process.env.SINGULARITY_LOAD_BALANCING_ENABLED ? "false"

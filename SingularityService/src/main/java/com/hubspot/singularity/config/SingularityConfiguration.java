@@ -73,6 +73,9 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("database")
   private DataSourceFactory databaseConfiguration;
 
+  @Min(value = 1, message = "Must be positive and non-zero")
+  private int defaultBounceExpirationMinutes = 60;
+
   @NotNull
   private SlavePlacement defaultSlavePlacement = SlavePlacement.GREEDY;
 
@@ -153,6 +156,8 @@ public class SingularityConfiguration extends Configuration {
 
   private int newTaskCheckerBaseDelaySeconds = 1;
 
+  private long pendingDeployHoldTaskDuringDecommissionMillis = TimeUnit.MINUTES.toMillis(10);
+
   private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
 
   @JsonProperty("s3")
@@ -190,6 +195,8 @@ public class SingularityConfiguration extends Configuration {
   private int coreThreadpoolSize = 8;
 
   private long threadpoolShutdownDelayInSeconds = 1;
+
+  private long taskPersistAfterStartupBufferMillis = TimeUnit.MINUTES.toMillis(1);
 
   @Valid
   @JsonProperty("customExecutor")
@@ -291,6 +298,14 @@ public class SingularityConfiguration extends Configuration {
     this.debugCuratorCallOverBytes = debugCuratorCallOverBytes;
   }
 
+  public long getPendingDeployHoldTaskDuringDecommissionMillis() {
+    return pendingDeployHoldTaskDuringDecommissionMillis;
+  }
+
+  public void setPendingDeployHoldTaskDuringDecommissionMillis(long pendingDeployHoldTaskDuringDecommissionMillis) {
+    this.pendingDeployHoldTaskDuringDecommissionMillis = pendingDeployHoldTaskDuringDecommissionMillis;
+  }
+
   public long getDebugCuratorCallOverMillis() {
     return debugCuratorCallOverMillis;
   }
@@ -337,6 +352,14 @@ public class SingularityConfiguration extends Configuration {
 
   public Optional<DataSourceFactory> getDatabaseConfiguration() {
     return Optional.fromNullable(databaseConfiguration);
+  }
+
+  public int getDefaultBounceExpirationMinutes() {
+    return defaultBounceExpirationMinutes;
+  }
+
+  public void setDefaultBounceExpirationMinutes(int defaultBounceExpirationMinutes) {
+    this.defaultBounceExpirationMinutes = defaultBounceExpirationMinutes;
   }
 
   public SlavePlacement getDefaultSlavePlacement() {
@@ -839,6 +862,14 @@ public class SingularityConfiguration extends Configuration {
     this.cacheTasksForMillis = cacheTasksForMillis;
   }
 
+  public long getTaskPersistAfterStartupBufferMillis() {
+    return taskPersistAfterStartupBufferMillis;
+  }
+
+  public void setTaskPersistAfterStartupBufferMillis(long taskPersistAfterStartupBufferMillis) {
+    this.taskPersistAfterStartupBufferMillis = taskPersistAfterStartupBufferMillis;
+  }
+
   public Optional<LDAPConfiguration> getLdapConfiguration() {
     return Optional.fromNullable(ldapConfiguration);
   }
@@ -875,7 +906,7 @@ public class SingularityConfiguration extends Configuration {
     return reserveSlavesWithAttributes;
   }
 
-  public void setReserveSlavesWithAttrbiutes(Map<String, List<String>> reserveSlavesWithAttributes) {
+  public void setReserveSlavesWithAttributes(Map<String, List<String>> reserveSlavesWithAttributes) {
     this.reserveSlavesWithAttributes = reserveSlavesWithAttributes;
   }
 

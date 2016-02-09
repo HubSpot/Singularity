@@ -16,7 +16,33 @@
         </div>
         <div class='{{#unless expanded}}hide{{/unless}}'>
         <div class="well">
-            Beginning on <span class="healthcheck-number">Task running</span>, hit <a class="healthcheck-link" target="_blank" href="http://{{data.task.offer.hostname}}:{{data.ports.[0]}}{{data.task.taskRequest.deploy.healthcheckUri}}">{{data.task.taskRequest.deploy.healthcheckUri}}</a> with a <span class="healthcheck-number">{{#if data.task.taskRequest.deploy.healthcheckTimeoutSeconds}}{{data.task.taskRequest.deploy.healthcheckTimeoutSeconds}}{{else}}{{config.defaultHealthcheckTimeoutSeconds}}{{/if}}</span> second timeout every <span class="healthcheck-number">{{#if data.task.taskRequest.deploy.healthcheckIntervalSeconds}}{{data.task.taskRequest.deploy.healthcheckIntervalSeconds}}{{else}}{{config.defaultHealthcheckIntervalSeconds}}{{/if}}</span> second(s) until <span class="healthcheck-number">HTTP 200</span> is received, or <span class="healthcheck-number">{{#if data.task.taskRequest.deploy.deployHealthTimeoutSeconds}}{{data.task.taskRequest.deploy.deployHealthTimeoutSeconds}}{{else}}{{config.defaultDeployHealthTimeoutSeconds}}{{/if}}</span> seconds have elapsed.
+            Beginning on <span class="healthcheck-number">Task running</span>, hit 
+            <a class="healthcheck-link" target="_blank" href="http://{{data.task.offer.hostname}}:{{data.ports.[0]}}{{data.task.taskRequest.deploy.healthcheckUri}}">{{data.task.taskRequest.deploy.healthcheckUri}}</a> 
+            with a <span class="healthcheck-number">
+            {{#if data.task.taskRequest.deploy.healthcheckTimeoutSeconds}}
+                {{data.task.taskRequest.deploy.healthcheckTimeoutSeconds}}
+            {{else}}
+                {{config.defaultHealthcheckTimeoutSeconds}}
+            {{/if}}
+            </span> second timeout 
+            every <span class="healthcheck-number">
+            {{#if data.task.taskRequest.deploy.healthcheckIntervalSeconds}}
+                {{data.task.taskRequest.deploy.healthcheckIntervalSeconds}}
+            {{else}}
+                {{config.defaultHealthcheckIntervalSeconds}}
+            {{/if}}
+            </span> second(s) 
+            until <span class="healthcheck-number">HTTP 200</span> is received,
+            {{#if data.task.taskRequest.deploy.healthcheckMaxRetries}}
+                <span class="healthcheck-number">{{data.task.taskRequest.deploy.healthcheckMaxRetries}}</span> retries have failed,
+            {{/if}}
+            or <span class="healthcheck-number">
+            {{#if data.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds}}
+                {{data.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds}}
+            {{else}}
+                {{config.defaultDeployHealthTimeoutSeconds}}
+            {{/if}}
+            </span> seconds have elapsed.
         </div>
         {{#ifGT data.healthcheckResults.length 0}}
             <div class="table-container">

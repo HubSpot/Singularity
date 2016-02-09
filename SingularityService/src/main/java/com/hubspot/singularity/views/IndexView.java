@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
+import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
@@ -32,9 +33,11 @@ public class IndexView extends View {
   private final Integer slaveHttpPort;
   private final Integer slaveHttpsPort;
 
+  private final int defaultBounceExpirationMinutes;
   private final long defaultHealthcheckIntervalSeconds;
   private final long defaultHealthcheckTimeoutSeconds;
   private final long defaultDeployHealthTimeoutSeconds;
+  private final Integer defaultHealthcheckMaxRetries;
 
   private final String runningTaskLogPath;
   private final String finishedTaskLogPath;
@@ -77,9 +80,11 @@ public class IndexView extends View {
 
     this.navColor = configuration.getUiConfiguration().getNavColor();
 
+    this.defaultBounceExpirationMinutes = configuration.getDefaultBounceExpirationMinutes();
     this.defaultHealthcheckIntervalSeconds = configuration.getHealthcheckIntervalSeconds();
     this.defaultHealthcheckTimeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
     this.defaultDeployHealthTimeoutSeconds = configuration.getDeployHealthyBySeconds();
+    this.defaultHealthcheckMaxRetries = configuration.getHealthcheckMaxRetries().or(0);
 
     this.runningTaskLogPath = configuration.getUiConfiguration().getRunningTaskLogPath();
     this.finishedTaskLogPath = configuration.getUiConfiguration().getFinishedTaskLogPath();
@@ -154,6 +159,10 @@ public class IndexView extends View {
     return loadBalancingEnabled;
   }
 
+  public int getDefaultBounceExpirationMinutes() {
+    return defaultBounceExpirationMinutes;
+  }
+
   public long getDefaultHealthcheckIntervalSeconds() {
     return defaultHealthcheckIntervalSeconds;
   }
@@ -164,6 +173,10 @@ public class IndexView extends View {
 
   public long getDefaultDeployHealthTimeoutSeconds() {
     return defaultDeployHealthTimeoutSeconds;
+  }
+
+  public Integer getDefaultHealthcheckMaxRetries() {
+    return defaultHealthcheckMaxRetries;
   }
 
   public String getRunningTaskLogPath() {
@@ -213,9 +226,11 @@ public class IndexView extends View {
             ", title='" + title + '\'' +
             ", slaveHttpPort=" + slaveHttpPort +
             ", slaveHttpsPort=" + slaveHttpsPort +
+            ", defaultBounceExpirationMinutes=" + defaultBounceExpirationMinutes +
             ", defaultHealthcheckIntervalSeconds=" + defaultHealthcheckIntervalSeconds +
             ", defaultHealthcheckTimeoutSeconds=" + defaultHealthcheckTimeoutSeconds +
             ", defaultDeployHealthTimeoutSeconds=" + defaultDeployHealthTimeoutSeconds +
+            ", defaultHealthcheckMaxRetries=" + defaultHealthcheckMaxRetries +
             ", runningTaskLogPath='" + runningTaskLogPath + '\'' +
             ", finishedTaskLogPath='" + finishedTaskLogPath + '\'' +
             ", commonHostnameSuffixToOmit='" + commonHostnameSuffixToOmit + '\'' +

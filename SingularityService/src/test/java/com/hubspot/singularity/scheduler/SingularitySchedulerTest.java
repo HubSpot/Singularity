@@ -28,7 +28,6 @@ import com.hubspot.mesos.SingularityContainerType;
 import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerPortMapping;
-import com.hubspot.mesos.SingularityDockerVolumeMode;
 import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.DeployState;
@@ -40,7 +39,6 @@ import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
-import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
@@ -292,6 +290,56 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     killKilledTasks();
 
     Assert.assertEquals(0, taskManager.getNumCleanupTasks());
+    Assert.assertEquals(1, taskManager.getNumActiveTasks());
+  }
+
+  @Test
+  public void testBounceWithLoadBalancer() {
+    initLoadBalancedRequest();
+    initFirstDeploy();
+    configuration.setNewTaskCheckerBaseDelaySeconds(1000000);
+
+    SingularityTask taskOne = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+
+    saveLoadBalancerState(BaragonRequestState.SUCCESS, taskOne.getTaskId(), LoadBalancerRequestType.ADD);
+
+    requestResource.bounce(requestId, Optional.<SingularityBounceRequest> absent());
+
+    cleaner.drainCleanupQueue();
+    resourceOffers();
+
+    Assert.assertEquals(2, taskManager.getNumActiveTasks());
+
+    List<SingularityTaskId> tasks = taskManager.getActiveTaskIds();
+    tasks.remove(taskOne.getTaskId());
+
+    SingularityTaskId taskTwo = tasks.get(0);
+
+    cleaner.drainCleanupQueue();
+
+    runLaunchedTasks();
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertEquals(0, taskManager.getKilledTaskIdRecords().size());
+    Assert.assertEquals(2, taskManager.getNumActiveTasks());
+
+    // add to LB:
+    saveLoadBalancerState(BaragonRequestState.SUCCESS, taskTwo, LoadBalancerRequestType.ADD);
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertEquals(0, taskManager.getKilledTaskIdRecords().size());
+    Assert.assertEquals(2, taskManager.getNumActiveTasks());
+
+    saveLoadBalancerState(BaragonRequestState.SUCCESS, taskOne.getTaskId(), LoadBalancerRequestType.REMOVE);
+
+    cleaner.drainCleanupQueue();
+
+    Assert.assertEquals(1, taskManager.getKilledTaskIdRecords().size());
+
+    killKilledTasks();
+
     Assert.assertEquals(1, taskManager.getNumActiveTasks());
   }
 
@@ -576,6 +624,42 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testDecommissionDoesntKillPendingDeploy() {
+    initRequest();
+
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, "d1").setCommand(Optional.of("cmd")).build(), Optional.<Boolean> absent(), Optional.<String> absent()));
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    deployChecker.checkDeploys();
+    resourceOffers();
+
+    Assert.assertEquals(1, taskManager.getNumActiveTasks());
+
+    slaveResource.decommissionSlave(taskManager.getActiveTasks().get(0).getOffer().getSlaveId().getValue(), Optional.<SingularityMachineChangeRequest> absent());
+
+    scheduler.checkForDecomissions(stateCacheProvider.get());
+
+    cleaner.drainCleanupQueue();
+    killKilledTasks();
+
+    Assert.assertEquals(1, taskManager.getNumActiveTasks());
+    Assert.assertEquals(1, taskManager.getNumCleanupTasks());
+    Assert.assertEquals(0, taskManager.getKilledTaskIdRecords().size());
+
+    configuration.setPendingDeployHoldTaskDuringDecommissionMillis(1);
+
+    try {
+      Thread.sleep(2);
+    } catch (InterruptedException e) {}
+
+    cleaner.drainCleanupQueue();
+    killKilledTasks();
+
+    Assert.assertEquals(0, taskManager.getNumActiveTasks());
+    Assert.assertEquals(0, taskManager.getNumCleanupTasks());
+  }
+
+  @Test
   public void testRetries() {
     SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.RUN_ONCE);
     request = bldr.setNumRetriesOnFailure(Optional.of(2)).build();
@@ -782,7 +866,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   public void testReservedSlaveAttribute() {
     Map<String, List<String>> reservedAttributes = new HashMap<>();
     reservedAttributes.put("reservedKey", Arrays.asList("reservedValue1"));
-    configuration.setReserveSlavesWithAttrbiutes(reservedAttributes);
+    configuration.setReserveSlavesWithAttributes(reservedAttributes);
 
     initRequest();
     initFirstDeploy();
@@ -801,7 +885,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   public void testReservedSlaveWithMatchinRequestAttribute() {
     Map<String, List<String>> reservedAttributes = new HashMap<>();
     reservedAttributes.put("reservedKey", Arrays.asList("reservedValue1"));
-    configuration.setReserveSlavesWithAttrbiutes(reservedAttributes);
+    configuration.setReserveSlavesWithAttributes(reservedAttributes);
 
     Map<String, String> reservedAttributesMap = ImmutableMap.of("reservedKey", "reservedValue1");
     initRequest();
@@ -823,7 +907,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   public void testAllowedSlaveAttributes() {
     Map<String, List<String>> reservedAttributes = new HashMap<>();
     reservedAttributes.put("reservedKey", Arrays.asList("reservedValue1"));
-    configuration.setReserveSlavesWithAttrbiutes(reservedAttributes);
+    configuration.setReserveSlavesWithAttributes(reservedAttributes);
 
     Map<String, String> allowedAttributes = new HashMap<>();
     allowedAttributes.put("reservedKey", "reservedValue1");
@@ -1889,8 +1973,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     configuration.setNewTaskCheckerBaseDelaySeconds(0);
     configuration.setHealthcheckIntervalSeconds(0);
     configuration.setDeployHealthyBySeconds(0);
-    configuration.setKillAfterTasksDoNotRunDefaultSeconds(0);
+    configuration.setKillAfterTasksDoNotRunDefaultSeconds(100);
     configuration.setHealthcheckMaxRetries(Optional.of(0));
+    configuration.setCheckNewTasksEverySeconds(1);
 
     initRequest();
     initHCDeploy();
@@ -1911,6 +1996,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     // run new task check ONLY.
     newTaskChecker.enqueueNewTaskCheck(firstTask, requestManager.getRequest(requestId), healthchecker);
 
+    finishNewTaskChecks();
     finishHealthchecks();
     finishNewTaskChecksAndCleanup();
 
