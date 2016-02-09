@@ -56,6 +56,7 @@ import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.api.SingularityKillTaskRequest;
 import com.hubspot.singularity.api.SingularityTaskMetadataRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
@@ -81,13 +82,15 @@ public class TaskResource {
   private final MesosClient mesosClient;
   private final SingularityAuthorizationHelper authorizationHelper;
   private final Optional<SingularityUser> user;
+  private final SingularityTaskMetadataConfiguration taskMetadataConfiguration;
   private final UIConfiguration uiConfiguration;
 
   @Inject
-  public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient,
+  public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient, SingularityTaskMetadataConfiguration taskMetadataConfiguration,
       SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, UIConfiguration uiConfiguration, RequestManager requestManager) {
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
+    this.taskMetadataConfiguration = taskMetadataConfiguration;
     this.slaveManager = slaveManager;
     this.mesosClient = mesosClient;
     this.requestManager = requestManager;
@@ -327,7 +330,7 @@ public class TaskResource {
   @Path("/task/{taskId}/metadata")
   @ApiOperation(value="Post metadata about a task that will be persisted along with it and displayed in the UI")
   @ApiResponses({
-    @ApiResponse(code=400, message="Invalid metadata object"),
+    @ApiResponse(code=400, message="Invalid metadata object or doesn't match allowed types"),
     @ApiResponse(code=404, message="Task doesn't exist"),
     @ApiResponse(code=409, message="Metadata with this type/timestamp already existed")
   })
@@ -336,6 +339,11 @@ public class TaskResource {
     SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
 
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.WRITE);
+
+    if (taskMetadataConfiguration.getAllowedMetadataTypes().isPresent()) {
+      WebExceptions.checkBadRequest(taskMetadataConfiguration.getAllowedMetadataTypes().get().contains(taskMetadataRequest.getType()), "%s is not one of the allowed metadata types %s",
+          taskMetadataRequest.getType(), taskMetadataConfiguration.getAllowedMetadataTypes().get());
+    }
 
     final SingularityTaskMetadata taskMetadata = new SingularityTaskMetadata(taskIdObj, System.currentTimeMillis(), taskMetadataRequest.getType(), taskMetadataRequest.getTitle(),
         taskMetadataRequest.getMessage(), JavaUtils.getUserEmail(user));

@@ -67,6 +67,7 @@ import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -80,7 +81,6 @@ import com.hubspot.singularity.resources.DeployResource;
 import com.hubspot.singularity.resources.RackResource;
 import com.hubspot.singularity.resources.RequestResource;
 import com.hubspot.singularity.resources.SlaveResource;
-import com.hubspot.singularity.scheduler.MesosUtilsTest;
 import com.hubspot.singularity.resources.TaskResource;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.ning.http.client.AsyncHttpClient;
@@ -124,6 +124,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityCleaner cleaner;
   @Inject
   protected SingularityConfiguration configuration;
+  @Inject
+  protected SingularityTaskMetadataConfiguration taskMetadataConfiguration;
   @Inject
   protected SingularityCooldownChecker cooldownChecker;
   @Inject
