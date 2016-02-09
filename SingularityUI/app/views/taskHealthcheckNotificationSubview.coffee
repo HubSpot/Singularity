@@ -20,6 +20,8 @@ class taskHealthcheckNotificationSubview extends View
         requestId = @model.get('task').taskId.requestId
         deployId = @model.get('task').taskId.deployId
         deployStatus = @pendingDeploys.find (item) -> item.get('deployMarker') and item.get('deployMarker').requestId is requestId and item.get('deployMarker').deployId is deployId and item.get('currentDeployState') is 'WAITING'
+        healthTimeoutSeconds = if @model.get('task').taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds then @model.get('task').taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds else config.defaultDeployHealthTimeoutSeconds
+        maxRetries = if @model.get('task').taskRequest.deploy.healthcheckMaxRetries then @model.get('task').taskRequest.deploy.healthcheckMaxRetries else config.defaultHealthcheckMaxRetries
 
         data:             @model.toJSON()
         isDeployPending:  !!deployStatus
@@ -27,6 +29,9 @@ class taskHealthcheckNotificationSubview extends View
         lastHealthcheckFailed: @model.get('healthcheckResults')?.length > 0 and @model.get('healthcheckResults')[0].statusCode isnt 200
         synced:           @model.synced
         config:           config
+        tooManyRetries: @model.get('healthcheckResults').length > maxRetries and maxRetries != 0
+        numberFailed: @model.get('healthcheckResults').length
+        secondsElapsed: healthTimeoutSeconds
 
     triggerToggleHealthchecks: ->
         @trigger 'toggleHealthchecks'

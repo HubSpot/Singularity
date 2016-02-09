@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
+import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
@@ -36,6 +37,7 @@ public class IndexView extends View {
   private final long defaultHealthcheckIntervalSeconds;
   private final long defaultHealthcheckTimeoutSeconds;
   private final long defaultDeployHealthTimeoutSeconds;
+  private final Optional<Integer> defaultHealthcheckMaxRetries;
 
   private final String runningTaskLogPath;
   private final String finishedTaskLogPath;
@@ -82,6 +84,7 @@ public class IndexView extends View {
     this.defaultHealthcheckIntervalSeconds = configuration.getHealthcheckIntervalSeconds();
     this.defaultHealthcheckTimeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
     this.defaultDeployHealthTimeoutSeconds = configuration.getDeployHealthyBySeconds();
+    this.defaultHealthcheckMaxRetries = configuration.getHealthcheckMaxRetries();
 
     this.runningTaskLogPath = configuration.getUiConfiguration().getRunningTaskLogPath();
     this.finishedTaskLogPath = configuration.getUiConfiguration().getFinishedTaskLogPath();
@@ -170,6 +173,10 @@ public class IndexView extends View {
 
   public long getDefaultDeployHealthTimeoutSeconds() {
     return defaultDeployHealthTimeoutSeconds;
+  }
+
+  public Optional<Integer> getDefaultHealthcheckMaxRetries() {
+    return defaultHealthcheckMaxRetries;
   }
 
   public String getRunningTaskLogPath() {

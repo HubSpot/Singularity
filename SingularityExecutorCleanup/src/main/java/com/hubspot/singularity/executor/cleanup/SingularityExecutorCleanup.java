@@ -43,6 +43,7 @@ import com.hubspot.singularity.executor.task.SingularityExecutorTaskCleanup;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskLogManager;
 import com.hubspot.singularity.executor.task.TaskCleanupResult;
+import com.hubspot.singularity.executor.utils.DockerUtils;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
@@ -50,7 +51,6 @@ import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
 import com.hubspot.singularity.runner.base.shared.ProcessUtils;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
-import com.spotify.docker.client.DockerClient;
 import com.spotify.docker.client.messages.Container;
 import com.spotify.docker.client.messages.ContainerInfo;
 
@@ -66,14 +66,14 @@ public class SingularityExecutorCleanup {
   private final SingularityExecutorCleanupConfiguration cleanupConfiguration;
   private final MesosClient mesosClient;
   private final ProcessUtils processUtils;
-  private final DockerClient dockerClient;
+  private final DockerUtils dockerUtils;
   private final String hostname;
   private final SingularityRunnerExceptionNotifier exceptionNotifier;
 
   @Inject
   public SingularityExecutorCleanup(SingularityClientProvider singularityClientProvider, JsonObjectFileHelper jsonObjectFileHelper, SingularityRunnerBaseConfiguration baseConfiguration,
       SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager, MesosClient mesosClient,
-      DockerClient dockerClient, @Named(SingularityRunnerBaseModule.HOST_NAME_PROPERTY) String hostname, SingularityRunnerExceptionNotifier exceptionNotifier) {
+      DockerUtils dockerUtils, @Named(SingularityRunnerBaseModule.HOST_NAME_PROPERTY) String hostname, SingularityRunnerExceptionNotifier exceptionNotifier) {
     this.jsonObjectFileHelper = jsonObjectFileHelper;
     this.baseConfiguration = baseConfiguration;
     this.executorConfiguration = executorConfiguration;
@@ -82,7 +82,7 @@ public class SingularityExecutorCleanup {
     this.templateManager = templateManager;
     this.mesosClient = mesosClient;
     this.processUtils = new ProcessUtils(LOG);
-    this.dockerClient = dockerClient;
+    this.dockerUtils = dockerUtils;
     this.hostname = hostname;
     this.exceptionNotifier = exceptionNotifier;
   }
@@ -230,7 +230,7 @@ public class SingularityExecutorCleanup {
   private TaskCleanupResult cleanTask(SingularityExecutorTaskDefinition taskDefinition, Optional<SingularityTaskHistory> taskHistory) {
     SingularityExecutorTaskLogManager logManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, baseConfiguration, executorConfiguration, LOG, jsonObjectFileHelper);
 
-    SingularityExecutorTaskCleanup taskCleanup = new SingularityExecutorTaskCleanup(logManager, executorConfiguration, taskDefinition, LOG, dockerClient);
+    SingularityExecutorTaskCleanup taskCleanup = new SingularityExecutorTaskCleanup(logManager, executorConfiguration, taskDefinition, LOG, dockerUtils);
 
     boolean cleanupTaskAppDirectory = !taskDefinition.getExecutorData().getPreserveTaskSandboxAfterFinish().or(Boolean.FALSE);
 
@@ -322,7 +322,7 @@ public class SingularityExecutorCleanup {
 
   private void cleanDocker(Set<String> runningTaskIds) {
     try {
-      for (Container container : dockerClient.listContainers()) {
+      for (Container container : dockerUtils.listContainers()) {
         for (String name : container.names()) {
           if (name.startsWith(executorConfiguration.getDockerPrefix())) {
             if (!runningTaskIds.contains(name.substring(executorConfiguration.getDockerPrefix().length()))) {
@@ -339,12 +339,12 @@ public class SingularityExecutorCleanup {
 
   private void stopContainer(Container container) {
     try {
-      ContainerInfo containerInfo = dockerClient.inspectContainer(container.id());
+      ContainerInfo containerInfo = dockerUtils.inspectContainer(container.id());
       if (containerInfo.state().running()) {
-        dockerClient.stopContainer(container.id(), executorConfiguration.getDockerStopTimeout());
+        dockerUtils.stopContainer(container.id(), executorConfiguration.getDockerStopTimeout());
         LOG.debug("Forcefully stopped container {}", container.names());
       }
-      dockerClient.removeContainer(container.id(), true);
+      dockerUtils.removeContainer(container.id(), true);
       LOG.debug("Removed container {}", container.names());
     } catch (Exception e) {
       LOG.error("Failed to stop or remove container {}", container.names(), e);
