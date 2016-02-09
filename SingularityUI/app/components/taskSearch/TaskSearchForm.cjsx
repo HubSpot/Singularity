@@ -86,7 +86,7 @@ TaskSearchForm = React.createClass
                     <DropDown
                         forceChooseValue = true
                         value = @props.count
-                        choices = {[5, 10, 25, 50]}
+                        choices = {@props.countChoices}
                         inputType = 'number'
                         id = 'count'
                         title = 'Tasks Per Page'
