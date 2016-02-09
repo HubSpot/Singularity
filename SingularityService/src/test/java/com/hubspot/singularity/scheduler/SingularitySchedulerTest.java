@@ -2876,4 +2876,39 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     return deployBuilder;
   }
 
+  @Test
+  public void testPortIndices() {
+    configuration.setNewTaskCheckerBaseDelaySeconds(0);
+    configuration.setHealthcheckIntervalSeconds(0);
+    configuration.setDeployHealthyBySeconds(0);
+    configuration.setKillAfterTasksDoNotRunDefaultSeconds(1);
+    configuration.setHealthcheckMaxRetries(Optional.of(0));
+
+    initRequest();
+    firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId)
+      .setCommand(Optional.of("sleep 100"))
+      .setHealthcheckUri(Optional.of("http://uri"))
+      .setResources(Optional.of(new Resources(1, 64, 3)))
+      .setHealthcheckPortIndex(Optional.of(1)));
+
+    requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build());
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    String[] portRange = {"80:82"};
+    sms.resourceOffers(driver, Arrays.asList(createOffer(20, 20000, "slave1", "host1", Optional.<String> absent(), Collections.<String, String>emptyMap(), portRange)));
+
+    SingularityTaskId firstTaskId = taskManager.getActiveTaskIdsForRequest(requestId).get(0);
+
+    SingularityTask firstTask = taskManager.getTask(firstTaskId).get();
+    statusUpdate(firstTask, TaskState.TASK_RUNNING);
+
+    newTaskChecker.enqueueNewTaskCheck(firstTask, requestManager.getRequest(requestId), healthchecker);
+
+    finishNewTaskChecks();
+    finishHealthchecks();
+    finishNewTaskChecksAndCleanup();
+
+    Assert.assertTrue(taskManager.getLastHealthcheck(firstTask.getTaskId()).get().toString().contains("host1:81"));
+  }
+
 }
