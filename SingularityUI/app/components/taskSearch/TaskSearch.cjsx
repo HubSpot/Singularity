@@ -7,6 +7,10 @@ TaskSearch = React.createClass
 
     headerText: 'Task Search'
 
+    countChoices: [5, 10, 25, 50]
+
+    countDefault: 10
+
     getInitialState: ->
         return {
             requestId: @props.initialRequestId
@@ -17,7 +21,7 @@ TaskSearch = React.createClass
             startedAfter: @props.initialStartedAfter
             sortDirection: @props.initialSortDirection or 'ASC'
             pageNumber: 1
-            count: @props.initialCount or 10
+            count: @props.initialCount or @countDefault
             showForm: true
         }
 
@@ -158,6 +162,7 @@ TaskSearch = React.createClass
                 updateSortDirection = @updateSortDirection
                 count = @state.count
                 updateCount = @updateCount
+                countChoices = @countChoices
                 resetForm = @resetForm
             />
         else
@@ -176,6 +181,8 @@ TaskSearch = React.createClass
                 page = @state.pageNumber
                 count = @state.count
                 updateCount = @updateCount
+                countChoices = @countChoices
+                updateSortDirection = @updateSortDirection
                 clearRequestId = @clearRequestId
                 clearDeployId = @clearDeployId
                 clearHost = @clearHost

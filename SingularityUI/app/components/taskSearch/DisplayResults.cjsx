@@ -9,7 +9,9 @@ TimeStamp = require '../common/TimeStamp'
 TaskStateLabel = require '../common/TaskStateLabel'
 Link = require '../common/Link'
 FormField = require '../common/input/FormField'
+DropDown = require '../common/input/DropDown'
 Header = require './Header'
+Enums = require './Enums'
 
 DisplayResults = React.createClass
 
@@ -123,32 +125,63 @@ DisplayResults = React.createClass
     handlePageJump: (event) ->
         event.preventDefault()
         @props.setPageNumber(@state.pageNumberEntered)
+        @setState({
+            pageNumberEntered: ''
+        })
 
-    renderPageSearch: ->
-        <form role="form" onSubmit={@handlePageJump} className='form-inline text-left'>
-            <div className='form-group'>
-                <label htmlFor="pageNumber" className="sr-only">Jump To Page:</label>
-                <FormField 
-                    value = @state.pageNumberEntered 
-                    inputType = 'number'
-                    id = 'pageNumber'
-                    title = "Jump to Page"
-                    updateFn = @updatePageNumber />
-            </div>
-            <button type="submit" className="btn btn-default">Jump!</button>
-        </form>
+    updateCount: (event) ->
+        @props.updateCount(event.target.value)
 
     # using className="previous" for the next button is necessary to align
     # it to the left side of the page. This is built into bootstrap
-    renderPageButtons: ->
-        <nav>
-            <ul className="pager">
-                <li className={@collection.page == 1 and "previous disabled" or "previous"} onClick={@props.decreasePageNumber}><a href="#">Previous</a></li>
-                <li className="previous disabled"><a href="#">Page {@collection.page}</a></li>
-                <li className="previous" onClick={@props.increasePageNumber}><a href="#">Next</a></li>
-                {@renderPageSearch()}
-            </ul>
-        </nav>
+    renderPageToggles: ->
+        <div className="container-fluid">
+            <nav>
+                <ul className="pager line">
+                    <li className={@collection.page == 1 and "previous disabled" or "previous"} onClick={@props.decreasePageNumber}><a href="#">Previous</a></li>
+                    <li className="previous disabled"><a href="#">Page {@collection.page}</a></li>
+                    <li className="previous" onClick={@props.increasePageNumber}><a href="#">Next</a></li>
+                    <form role="form" onSubmit={@handlePageJump} className='form-inline text-left'>
+                        <div className='form-group'>
+                            <label htmlFor="pageNumber" className="sr-only">Jump To Page:</label>
+                            <FormField 
+                                value = @state.pageNumberEntered 
+                                inputType = 'number'
+                                id = 'pageNumber'
+                                title = "Jump to Page"
+                                updateFn = @updatePageNumber />
+                        </div>
+                        <button type="submit" className="btn btn-default">Jump!</button>
+                        &nbsp;&nbsp;
+                        <div className='form-group'>
+                            <label htmlFor='count'>Tasks Per Page: </label>
+                            &nbsp;&nbsp;
+                            <DropDown
+                                forceChooseValue = true
+                                value = @props.count
+                                choices = {@props.countChoices}
+                                inputType = 'number'
+                                id = 'count'
+                                title = 'Tasks Per Page'
+                                updateFn = @updateCount />
+                        </div>
+                        &nbsp;&nbsp;
+                        <div className='form-group'>
+                            <label htmlFor="sortDirection">Sort Direction:</label>
+                            &nbsp;&nbsp;
+                            <DropDown
+                                forceChooseValue = true
+                                value = @props.sortDirection
+                                choices = Enums.sortDirections()
+                                inputType = 'sortDirection'
+                                id = 'sortDirection'
+                                title = 'Sort Direction'
+                                updateFn = @props.updateSortDirection />
+                        </div>
+                    </form>
+                </ul>
+            </nav>
+        </div>
 
 
     renderTasks: ->
@@ -179,7 +212,7 @@ DisplayResults = React.createClass
                     tableClassOpts="table-striped"
                     columnNames={taskTableColumns}
                     tableRows={taskTableData}
-                    />
+                />
 
 
     render: ->
@@ -199,9 +232,9 @@ DisplayResults = React.createClass
             </div>
             <button className="btn btn-primary" onClick={@props.returnToForm}>Modify Query Parameters</button>
             <h2>Tasks</h2>
-            {@renderPageButtons()}
+            {@renderPageToggles()}
             {@renderTasks()}
-            {@renderPageButtons()}
+            {@renderPageToggles()}
         </div>
 
 module.exports = DisplayResults
