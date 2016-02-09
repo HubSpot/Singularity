@@ -289,7 +289,7 @@ public class SingularityDeploy {
     return healthcheckTimeoutSeconds;
   }
 
-  @ApiModelProperty(required=false, value="Perform healthcheck on this dynamically allocated port (e.g. 0 for first port)")
+  @ApiModelProperty(required=false, value="Perform healthcheck on this dynamically allocated port (e.g. 0 for first port), defaults to first port")
   public Optional<Integer> getHealthcheckPortIndex() {
     return healthcheckPortIndex;
   }
@@ -309,7 +309,7 @@ public class SingularityDeploy {
     return loadBalancerGroups;
   }
 
-  @ApiModelProperty(required=false, value="Send this port to the load balancer api (e.g. 0 for first port)")
+  @ApiModelProperty(required=false, value="Send this port to the load balancer api (e.g. 0 for first port), defaults to first port")
   public Optional<Integer> getLoadBalancerPortIndex() {
     return loadBalancerPortIndex;
   }

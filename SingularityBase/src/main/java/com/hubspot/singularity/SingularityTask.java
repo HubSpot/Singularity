@@ -49,7 +49,7 @@ public class SingularityTask extends SingularityTaskIdHolder {
   @JsonIgnore
   public Optional<Long> getPortByIndex(int index) {
     List<Long> ports = MesosUtils.getAllPorts(mesosTask.getResourcesList());
-    if (index >= ports.size()) {
+    if (index >= ports.size() || index < 0) {
       return Optional.absent();
     } else {
       return Optional.of(ports.get(index));
