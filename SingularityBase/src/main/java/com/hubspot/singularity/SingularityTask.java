@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import java.util.List;
+
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.TaskInfo;
@@ -45,16 +47,13 @@ public class SingularityTask extends SingularityTaskIdHolder {
   }
 
   @JsonIgnore
-  public Optional<Long> getFirstPort() {
-    for (Resource resource : mesosTask.getResourcesList()) {
-      if (resource.getName().equals(MesosUtils.PORTS)) {
-        for (Range range : resource.getRanges().getRangeList()) {
-          return Optional.of(range.getBegin());
-        }
-      }
+  public Optional<Long> getPortByIndex(int index) {
+    List<Long> ports = MesosUtils.getAllPorts(mesosTask.getResourcesList());
+    if (index >= ports.size()) {
+      return Optional.absent();
+    } else {
+      return Optional.of(ports.get(index));
     }
-
-    return Optional.absent();
   }
 
   @Override

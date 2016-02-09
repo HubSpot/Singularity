@@ -46,6 +46,7 @@ public class SingularityDeploy {
   private final Optional<String> healthcheckUri;
   private final Optional<Long> healthcheckIntervalSeconds;
   private final Optional<Long> healthcheckTimeoutSeconds;
+  private final Optional<Integer> healthcheckPortIndex;
   private final Optional<Boolean> skipHealthchecksOnDeploy;
   private final Optional<HealthcheckProtocol> healthcheckProtocol;
 
@@ -58,6 +59,7 @@ public class SingularityDeploy {
 
   private final Optional<String> serviceBasePath;
   private final Optional<Set<String>> loadBalancerGroups;
+  private final Optional<Integer> loadBalancerPortIndex;
   private final Optional<Map<String, Object>> loadBalancerOptions;
 
   private final Optional<Integer> deployInstanceCountPerStep;
@@ -92,10 +94,12 @@ public class SingularityDeploy {
       @JsonProperty("healthcheckUri") Optional<String> healthcheckUri,
       @JsonProperty("healthcheckIntervalSeconds") Optional<Long> healthcheckIntervalSeconds,
       @JsonProperty("healthcheckTimeoutSeconds") Optional<Long> healthcheckTimeoutSeconds,
+      @JsonProperty("healthcheckPortIndex") Optional<Integer> healthcheckPortIndex,
       @JsonProperty("healthcheckMaxRetries") Optional<Integer> healthcheckMaxRetries,
       @JsonProperty("healthcheckMaxTotalTimeoutSeconds") Optional<Long> healthcheckMaxTotalTimeoutSeconds,
       @JsonProperty("serviceBasePath") Optional<String> serviceBasePath,
       @JsonProperty("loadBalancerGroups") Optional<Set<String>> loadBalancerGroups,
+      @JsonProperty("loadBalancerPortIndex") Optional<Integer> loadBalancerPortIndex,
       @JsonProperty("considerHealthyAfterRunningForSeconds") Optional<Long> considerHealthyAfterRunningForSeconds,
       @JsonProperty("loadBalancerOptions") Optional<Map<String, Object>> loadBalancerOptions,
       @JsonProperty("skipHealthchecksOnDeploy") Optional<Boolean> skipHealthchecksOnDeploy,
@@ -130,6 +134,7 @@ public class SingularityDeploy {
     this.healthcheckUri = healthcheckUri;
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
     this.healthcheckTimeoutSeconds = healthcheckTimeoutSeconds;
+    this.healthcheckPortIndex = healthcheckPortIndex;
     this.skipHealthchecksOnDeploy = skipHealthchecksOnDeploy;
     this.healthcheckProtocol = healthcheckProtocol;
 
@@ -142,6 +147,7 @@ public class SingularityDeploy {
 
     this.serviceBasePath = serviceBasePath;
     this.loadBalancerGroups = loadBalancerGroups;
+    this.loadBalancerPortIndex = loadBalancerPortIndex;
     this.loadBalancerOptions = loadBalancerOptions;
 
     this.deployInstanceCountPerStep = deployInstanceCountPerStep;
@@ -164,6 +170,7 @@ public class SingularityDeploy {
     .setHealthcheckUri(healthcheckUri)
     .setHealthcheckIntervalSeconds(healthcheckIntervalSeconds)
     .setHealthcheckTimeoutSeconds(healthcheckTimeoutSeconds)
+    .setHealthcheckPortIndex(healthcheckPortIndex)
     .setSkipHealthchecksOnDeploy(skipHealthchecksOnDeploy)
     .setHealthcheckProtocol(healthcheckProtocol)
     .setHealthcheckMaxRetries(healthcheckMaxRetries)
@@ -172,6 +179,7 @@ public class SingularityDeploy {
     .setDeployHealthTimeoutSeconds(deployHealthTimeoutSeconds)
     .setServiceBasePath(serviceBasePath)
     .setLoadBalancerGroups(copyOfSet(loadBalancerGroups))
+    .setLoadBalancerPortIndex(loadBalancerPortIndex)
     .setLoadBalancerOptions(copyOfMap(loadBalancerOptions))
     .setMetadata(copyOfMap(metadata))
     .setVersion(version)
@@ -295,6 +303,11 @@ public class SingularityDeploy {
     return healthcheckTimeoutSeconds;
   }
 
+  @ApiModelProperty(required=false, value="Perform healthcheck on this dynamically allocated port (e.g. 0 for first port)")
+  public Optional<Integer> getHealthcheckPortIndex() {
+    return healthcheckPortIndex;
+  }
+
   @ApiModelProperty(required=false, value="The base path for the API exposed by the deploy. Used in conjunction with the Load balancer API.")
   public Optional<String> getServiceBasePath() {
     return serviceBasePath;
@@ -308,6 +321,11 @@ public class SingularityDeploy {
   @ApiModelProperty(required=false, value="List of load balancer groups associated with this deployment.")
   public Optional<Set<String>> getLoadBalancerGroups() {
     return loadBalancerGroups;
+  }
+
+  @ApiModelProperty(required=false, value="Send this port to the load balancer api (e.g. 0 for first port)")
+  public Optional<Integer> getLoadBalancerPortIndex() {
+    return loadBalancerPortIndex;
   }
 
   @ApiModelProperty(required=false, value="Map (Key/Value) of options for the load balancer.")
@@ -378,6 +396,7 @@ public class SingularityDeploy {
       ", healthcheckUri=" + healthcheckUri +
       ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
       ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +
+      ", healthcheckPortIndex=" + healthcheckPortIndex +
       ", skipHealthchecksOnDeploy=" + skipHealthchecksOnDeploy +
       ", healthcheckProtocol=" + healthcheckProtocol +
       ", healthcheckMaxRetries=" + healthcheckMaxRetries +
@@ -386,6 +405,7 @@ public class SingularityDeploy {
       ", considerHealthyAfterRunningForSeconds=" + considerHealthyAfterRunningForSeconds +
       ", serviceBasePath=" + serviceBasePath +
       ", loadBalancerGroups=" + loadBalancerGroups +
+      ", loadBalancerPortIndex=" + loadBalancerPortIndex +
       ", loadBalancerOptions=" + loadBalancerOptions +
       ", labels=" + labels +
       ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
