@@ -1,10 +1,10 @@
 RequestTasks = require './RequestTasks'
 PaginableCollection = require './PaginableCollection'
+TaskHistoryItem = require '../models/TaskHistoryItem'
 
 class DeployHistoricalTasks extends PaginableCollection
 
-    model: class TaskHistoryItem extends Backbone.Model
-      ignoreAttributes: ['id']
+    model: TaskHistoryItem
 
     url: -> "#{ config.apiRoot }/history/request/#{ @requestId }/deploy/#{ @deployId }/tasks/inactive"
 
