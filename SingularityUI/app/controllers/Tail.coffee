@@ -31,7 +31,6 @@ class TailController extends Controller
                 ajaxError: @models.ajaxError
                 singleMode: true
                 singleModeTaskId: @taskId
-                routerPath: "#task/#{ @taskId }/tail/#{ @path }"
 
             @setView @view
 
