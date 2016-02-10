@@ -146,6 +146,8 @@ public class SingularityConfiguration extends Configuration {
 
   private int maxRequestIdSize = 100;
 
+  private boolean storeAllMesosTaskInfoForDebugging = false;
+
   @JsonProperty("historyPurging")
   @Valid
   private HistoryPurgingConfiguration historyPurgingConfiguration = new HistoryPurgingConfiguration();
@@ -552,6 +554,14 @@ public class SingularityConfiguration extends Configuration {
 
   public boolean isAllowTestResourceCalls() {
     return allowTestResourceCalls;
+  }
+
+  public boolean isStoreAllMesosTaskInfoForDebugging() {
+    return storeAllMesosTaskInfoForDebugging;
+  }
+
+  public void setStoreAllMesosTaskInfoForDebugging(boolean storeAllMesosTaskInfoForDebugging) {
+    this.storeAllMesosTaskInfoForDebugging = storeAllMesosTaskInfoForDebugging;
   }
 
   public boolean isCompressLargeDataObjects() {
