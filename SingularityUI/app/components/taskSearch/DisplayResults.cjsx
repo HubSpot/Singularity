@@ -43,15 +43,17 @@ DisplayResults = React.createClass
     fetchCollection: ->
         @willFetch = false
         @collection = new TaskSearchResults [],
-            requestId : @props.requestId
-            deployId : @props.deployId
-            host : @props.host
-            lastTaskStatus : @props.lastTaskStatus
-            startedAfter : @props.startedAfter
-            startedBefore : @props.startedBefore
-            orderDirection : @props.sortDirection
-            count : @props.count
-            page : @props.page
+            params: {
+                requestId : @props.requestId
+                deployId : @props.deployId
+                host : @props.host
+                lastTaskStatus : @props.lastTaskStatus
+                startedAfter : @props.startedAfter
+                startedBefore : @props.startedBefore
+                orderDirection : @props.sortDirection
+                count : @props.count
+                page : @props.page
+            }
         @collection.on "add", @collectionsReset
         @collection.fetch()
 
@@ -65,53 +67,53 @@ DisplayResults = React.createClass
     getQueryParams: ->
         params = []
         key = 0
-        if @collection.requestId
+        if @collection.params.requestId
             params.push(<div key={key}> <QueryParam
                 paramName = "Request Id"
-                paramValue = @collection.requestId
+                paramValue = @collection.params.requestId
                 onClick = @props.clearRequestId
                 cantClear = {not @props.global}
                 /></div>)
             key++
-        if @collection.deployId
+        if @collection.params.deployId
             params.push(<div key={key}> <QueryParam
                 paramName = "Deploy Id"
-                paramValue = @collection.deployId
+                paramValue = @collection.params.deployId
                 onClick = @props.clearDeployId
                 /></div>)
             key++
-        if @collection.host
+        if @collection.params.host
             params.push(<div key={key}> <QueryParam
                 paramName = "Host"
-                paramValue = @collection.host
+                paramValue = @collection.params.host
                 onClick = @props.clearHost
                 /></div>)
             key++
-        if @collection.lastTaskStatus
+        if @collection.params.lastTaskStatus
             params.push(<div key={key}> <QueryParam
                 paramName = "Last Task Status"
-                paramValue = @collection.lastTaskStatus
+                paramValue = @collection.params.lastTaskStatus
                 onClick = @props.clearLastTaskStatus
                 /></div>)
             key++
-        if @collection.startedAfter
+        if @collection.params.startedAfter
             params.push(<div key={key}> <QueryParam
                 paramName = "Started After"
-                paramValue = @collection.startedAfter._d.toString()
+                paramValue = @collection.params.startedAfter._d.toString()
                 onClick = @props.clearStartedAfter
                 /></div>)
             key++
-        if @collection.startedBefore
+        if @collection.params.startedBefore
             params.push(<div key={key}> <QueryParam
                 paramName = "Started Before"
-                paramValue = @collection.startedBefore._d.toString()
+                paramValue = @collection.params.startedBefore._d.toString()
                 onClick = @props.clearStartedBefore
                 /></div>)
             key++
-        if @collection.sortDirection
+        if @collection.params.sortDirection
             params.push(<div key={key}> <QueryParam
                 paramName = "Sort Direction"
-                paramValue = @collection.sortDirection
+                paramValue = @collection.params.sortDirection
                 onClick = @props.clearSortDirection
                 /></div>)
             key++
@@ -138,8 +140,8 @@ DisplayResults = React.createClass
         <div className="container-fluid">
             <nav>
                 <ul className="pager line">
-                    <li className={@collection.page == 1 and "previous disabled" or "previous"} onClick={@props.decreasePageNumber}><a href="#">Previous</a></li>
-                    <li className="previous disabled"><a href="#">Page {@collection.page}</a></li>
+                    <li className={@collection.params.page == 1 and "previous disabled" or "previous"} onClick={@props.decreasePageNumber}><a href="#">Previous</a></li>
+                    <li className="previous disabled"><a href="#">Page {@collection.params.page}</a></li>
                     <li className="previous" onClick={@props.increasePageNumber}><a href="#">Next</a></li>
                     <form role="form" onSubmit={@handlePageJump} className='form-inline text-left'>
                         <div className='form-group'>

@@ -27,118 +27,76 @@ TaskSearch = React.createClass
 
     handleSubmit: (event) ->
         event.preventDefault()
-        @setState({
-            showForm: false
-        })
+        @setState showForm: false
 
     # Annoying that we need a new function for each property.
     # Unfortuantely using a curried function doesn't seem to work.
     updateReqeustId: (event) ->
         if @props.global
-            @setState({
-                requestId: event.target.value
-            })
+            @setState requestId: event.target.value
 
     updateDeployId: (event) ->
-        @setState({
-            deployId: event.target.value
-        })
+        @setState deployId: event.target.value
 
     updateHost: (event) ->
-        @setState({
-            host: event.target.value
-        })
+        @setState host: event.target.value
 
     updateLastTaskStatus: (event) ->
-        @setState({
-            lastTaskStatus: event.target.value
-        })
+        @setState lastTaskStatus: event.target.value
 
     updateStartedBefore: (event) ->
-        @setState({
-            startedBefore: event.date
-        })
+        @setState startedBefore: event.date
 
     updateStartedAfter: (event) ->
-        @setState({
-            startedAfter: event.date
-        })
+        @setState startedAfter: event.date
 
     updateSortDirection: (event) ->
-        @setState({
-            sortDirection: event.target.value
-        })
+        @setState sortDirection: event.target.value
 
     updatePageNumber: (event) ->
-        @setState({
-            pageNumber: event.target.value
-        })
+        @setState pageNumber: event.target.value
 
     increasePageNumber: (event) ->
-        @setState({
-            pageNumber: @state.pageNumber + 1
-        })
+        @setState pageNumber: @state.pageNumber + 1
 
     setPageNumber: (pageNumber) ->
         if pageNumber > 0
-            @setState({
-                pageNumber: pageNumber
-            })
+            @setState pageNumber: pageNumber
 
     decreasePageNumber: (event) ->
         if @state.pageNumber > 1
-            @setState({
-                pageNumber: @state.pageNumber - 1
-            })
+            @setState pageNumber: @state.pageNumber - 1
 
     updateCount: (newCount) ->
-        @setState({
-            count: newCount
-         })
+        @setState count: newCount
 
     resetForm: ->
-        @setState(@getInitialState())
+        @setState @getInitialState()
 
     clearRequestId: (event) ->
         if @props.global
-            @setState({
-                requestId: ''
-            })
+            @setState requestId: ''
 
     clearDeployId: (event) ->
-        @setState({
-            deployId: ''
-        })
+        @setState deployId: ''
 
     clearHost: (event) ->
-        @setState({
-            host: ''
-        })
+        @setState host: ''
 
     clearSortDirection: (event) ->
-        @setState({
-            sortDirection: ''
-        })
+        @setState sortDirection: ''
 
     clearLastTaskStatus: (event) ->
-        @setState({
-            lastTaskStatus: ''
-        })
+        @setState lastTaskStatus: ''
 
     clearStartedBefore: (event) ->
-        @setState({
-            startedBefore: ''
-        })
+        @setState startedBefore: ''
 
     clearStartedAfter: (event) ->
-        @setState({
-            startedAfter: ''
-        })
+        @setState startedAfter: ''
 
     returnToForm: (event) ->
-        @setState({
-            showForm: true
-        })
+        @setState showForm: true
 
     render: ->
         if @state.showForm
