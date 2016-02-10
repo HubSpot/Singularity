@@ -12,6 +12,7 @@ FormField = require '../common/input/FormField'
 DropDown = require '../common/input/DropDown'
 Header = require './Header'
 Enums = require './Enums'
+TaskTable = require './TaskTable'
 
 DisplayResults = React.createClass
 
@@ -186,37 +187,6 @@ DisplayResults = React.createClass
         </div>
 
 
-    renderTasks: ->
-        taskTableColumns = ["Name", "Last State", "Deploy", "Started", "Updated"]
-        taskTableData = []
-        for task in @collection.models
-            taskTableData.push([<Link
-                                    text={task.taskId.id}
-                                    url={window.config.appRoot + "/task/" + task.taskId.id}
-                                    altText={task.taskId.id}
-                                />, 
-                                <TaskStateLabel
-                                    taskState={task.lastTaskState}
-                                />,
-                                <Link
-                                    text={task.taskId.deployId}
-                                    url={window.config.appRoot + "/request/" + task.taskId.requestId + "/deploy/" + task.taskId.deployId}
-                                />, 
-                                <TimeStamp 
-                                    timestamp={task.taskId.startedAt} 
-                                    display='timeStampFromNow'} 
-                                />, 
-                                <TimeStamp 
-                                    timestamp={task.updatedAt} 
-                                    display='timeStampFromNow'} 
-                                />])
-        return <StripedTable
-                    tableClassOpts="table-striped"
-                    columnNames={taskTableColumns}
-                    tableRows={taskTableData}
-                />
-
-
     render: ->
         @fetchCollection() if @willFetch
         <div>
@@ -235,7 +205,9 @@ DisplayResults = React.createClass
             <button className="btn btn-primary" onClick={@props.returnToForm}>Modify Query Parameters</button>
             <h2>Tasks</h2>
             {@renderPageToggles()}
-            {@renderTasks()}
+            <TaskTable
+                models = {@collection.models}
+            />
             {@renderPageToggles()}
         </div>
 
