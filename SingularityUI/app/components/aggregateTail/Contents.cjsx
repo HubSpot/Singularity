@@ -33,7 +33,12 @@ Contents = React.createClass
     # Update our loglines components only if needed
     if prevProps.logLines?.length isnt @props.logLines?.length
       @setState
-        linesToRender: @renderLines()
+        linesToRender: @renderLines(@props.offset)
+
+  componentWillReceiveProps: (nextProps) ->
+    if nextProps.offset isnt @props.offset
+      @setState
+        linesToRender: @renderLines(nextProps.offset)
 
   componentWillUnmount: ->
     @stopTailingPoll()
@@ -67,11 +72,6 @@ Contents = React.createClass
   handleKeyDown: (e) ->
     if e.keyCode is 38
       @stopTailingPoll()
-
-  handleHighlight: (e) ->
-    @currentOffset = parseInt $(e.target).attr 'data-offset'
-    @setState
-      linesToRender: @renderLines()
 
   startTailingPoll: ->
     # Make sure there isn't one already running
@@ -118,7 +118,7 @@ Contents = React.createClass
           </div>
       </div>
 
-  renderLines: ->
+  renderLines: (offset) ->
     if @props.logLines and @props.logLines.length > 0
       if @props.colorMap
         colors = @props.colorMap(@props.logLines)
@@ -128,15 +128,16 @@ Contents = React.createClass
       @props.logLines.map((l, i) =>
         link = window.location.href.replace(window.location.search, '').replace(window.location.hash, '')
         link += "?taskIds=#{@props.taskId}##{l.offset}"
+        isHighlighted = l.offset is offset
         <LogLine
           content={l.data}
           offset={l.offset}
           key={i}
           index={i}
-          highlighted={l.offset is @currentOffset}
-          highlight={@handleHighlight}
+          isHighlighted={isHighlighted}
           totalLines={@props.logLines.length}
           offsetLink={link}
+          handleOffsetLink={@props.handleOffsetLink}
           taskId={l.taskId}
           color={colors[l.taskId]}
           search={@props.search} />
@@ -158,6 +159,7 @@ Contents = React.createClass
         <ReactList
           className="infinite"
           ref="lines"
+          highlightOffset={@props.offset}
           itemRenderer={@lineRenderer}
           itemSizeGetter={@getLineHeight}
           length={@state.linesToRender?.length || 0}

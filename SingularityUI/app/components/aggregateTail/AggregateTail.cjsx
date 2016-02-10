@@ -19,6 +19,7 @@ AggregateTail = React.createClass
     color: @getActiveColor()
     splitView: !(params.view is 'unified')
     search: if params.grep then params.grep else ''
+    offset: @props.initialOffset
 
   componentWillMount: ->
     # Automatically map backbone collections and models to the state of this component
@@ -57,6 +58,9 @@ AggregateTail = React.createClass
   # ============================================================================
   # Event Handlers                                                             |
   # ============================================================================
+
+  handleOffsetLink: (offset) ->
+    this.setState {offset}
 
   onWindowBlur: ->
     @blurTimer = _.delay( =>
@@ -187,7 +191,8 @@ AggregateTail = React.createClass
             requestId={@props.requestId}
             taskId={taskId}
             instanceNumber={@getInstanceNumber(taskId)}
-            offset={@props.offset}
+            offset={@state.offset}
+            handleOffsetLink={@handleOffsetLink}
             logLines={@props.logLines[taskId]}
             ajaxError={@props.ajaxError[taskId]}
             activeTasks={@props.activeTasks}
@@ -213,7 +218,7 @@ AggregateTail = React.createClass
           path={@props.path}
           requestId={@props.requestId}
           taskId={@state.viewingInstances[0]}
-          offset={@props.offset}
+          offset={@state.offset}
           logLines={logLines}
           ajaxErrors={ajaxErrors}
           activeTasks={@props.activeTasks}
