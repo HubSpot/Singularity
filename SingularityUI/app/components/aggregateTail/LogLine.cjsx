@@ -1,9 +1,12 @@
 
 LogLine = React.createClass
 
+  shouldComponentUpdate: (nextProps) ->
+    @props.isHighlighted isnt nextProps.isHighlighted
+
   getClassNames: ->
     clazz = 'line'
-    clazz += if @props.highlighted then ' highlightLine' else ''
+    clazz += if @props.isHighlighted then ' highlightLine' else ''
     clazz += if @props.index is 0 then ' first-line' else ''
     clazz += if @props.index >= @props.totalLines - 1 then ' last-line' else ''
     clazz
@@ -37,9 +40,14 @@ LogLine = React.createClass
     sections.map (s, i) =>
       <span key={i} className={if s.match then 'search-match'}>{s.text}</span>
 
+  handleClick: (e) ->
+    e.preventDefault()
+    window.history.pushState({}, window.document.title, @props.offsetLink)  # have to do it this janky way because of the hash
+    @props.handleOffsetLink(@props.offset)
+
   render: ->
     <div className="#{@getClassNames()}" style={backgroundColor: @props.color}>
-      <a target="blank" href="#{@props.offsetLink}" className="offset-link" data-offset="#{@props.offset}">
+      <a href="#{@props.offsetLink}" className="offset-link" data-offset="#{@props.offset}" onClick={@handleClick}>
         <div className="pre-line">
             <span className="glyphicon glyphicon-link" data-offset="#{@props.offset}"></span>
         </div>
