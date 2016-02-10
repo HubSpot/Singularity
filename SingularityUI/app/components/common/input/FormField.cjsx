@@ -10,12 +10,6 @@ FormField = React.createClass
         else
             return @defaultSize
 
-    getDisabled: ->
-        if @props.disabled
-            return true
-        else
-            return false
-
     render: ->
         <input 
             className = 'form-control'
@@ -24,7 +18,7 @@ FormField = React.createClass
             id = {@props.id}
             onChange = {@props.updateFn} 
             value = {@props.value}
-            disabled = {@getDisabled()}
+            disabled = {if @props.disabled then true else false}
         />
 
 module.exports = FormField

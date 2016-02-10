@@ -13,10 +13,10 @@ TaskSearch = React.createClass
 
     getInitialState: ->
         return {
-            requestId: @props.initialRequestId
-            deployId: @props.initialDeployId
-            host: @props.initialHost
-            lastTaskStatus: @props.initialTaskStatus
+            requestId: @props.initialRequestId or ''
+            deployId: @props.initialDeployId or ''
+            host: @props.initialHost or ''
+            lastTaskStatus: @props.initialTaskStatus or ''
             startedBefore: @props.initialStartedBefore or ''
             startedAfter: @props.initialStartedAfter or ''
             sortDirection: @props.initialSortDirection or 'ASC'

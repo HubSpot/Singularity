@@ -7,7 +7,7 @@ DateEntry = React.createClass
         changeFn = @props.updateFn
         $ -> $(id).datetimepicker({
                 sideBySide: true
-                format: "ddd MMM DD YYYY HH:mm:ss [UTC]ZZ"
+                format: window.config.timestampWithSecondsFormat
                 # This option is of course not documented at all. 
                 # Probably because it doesn't work very well.
                 # It can be seen in the bootstrap-datetimepicker GitHub.
@@ -18,7 +18,7 @@ DateEntry = React.createClass
     getValue: ->
         return unless @props.value
         time = moment @props.value
-        return time.format "ddd MMM DD YYYY HH:mm:ss [UTC]ZZ"
+        return time.format window.config.timestampWithSecondsFormat
 
     # MUST pass in UNIQUE id in props.
     # Otherwise the datetime picker will break in ways that aren't even very interesting
