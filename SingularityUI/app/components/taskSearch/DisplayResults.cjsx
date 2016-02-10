@@ -48,8 +48,8 @@ DisplayResults = React.createClass
                 deployId : @props.deployId
                 host : @props.host
                 lastTaskStatus : @props.lastTaskStatus
-                startedBefore : @props.startedBefore.unix() if @props.startedBefore
-                startedAfter : @props.startedAfter.unix() if @props.startedAfter
+                startedBefore : @props.startedBefore.valueOf() if @props.startedBefore
+                startedAfter : @props.startedAfter.valueOf() if @props.startedAfter
                 orderDirection : @props.sortDirection
                 count : @props.count
                 page : @props.page
