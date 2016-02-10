@@ -1,10 +1,10 @@
 Collection = require './collection'
 
-TaskSearchResult = require '../models/TaskSearchResult'
+TaskHistoryItem = require '../models/TaskHistoryItem'
 
 class TaskSearchResults extends Collection
 
-    model: TaskSearchResult
+    model: TaskHistoryItem
 
     getQueryParams: ->
         return $.param(_.pick(@params, _.identity))
