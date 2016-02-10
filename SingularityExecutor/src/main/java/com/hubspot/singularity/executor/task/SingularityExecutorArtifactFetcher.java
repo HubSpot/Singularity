@@ -87,17 +87,19 @@ public class SingularityExecutorArtifactFetcher {
           .addAll(executorData.getS3ArtifactSignatures().or(Collections.<S3ArtifactSignature>emptyList()))
           .build();
 
-      if (executorConfiguration.isUseLocalDownloadService() && (!allS3Artifacts.isEmpty())) {
+      if (executorConfiguration.isUseLocalDownloadService() && !allS3Artifacts.isEmpty()) {
         final long start = System.currentTimeMillis();
 
-        task.getLog().info("Fetching {} (S3) artifacts and {} (S3) artifact signatures from local download service", executorData.getS3Artifacts().size(), executorData.getS3ArtifactSignatures().isPresent() ? executorData.getS3ArtifactSignatures().get().size() : 0);
+        task.getLog().info("Fetching {} (S3) artifacts and {} (S3) artifact signatures from {}", executorData.getS3Artifacts().size(),
+            executorData.getS3ArtifactSignatures().isPresent() ? executorData.getS3ArtifactSignatures().get().size() : 0, localDownloadUri);
 
         try {
           downloadFilesFromLocalDownloadService(allS3Artifacts, task);
 
           fetchS3ArtifactsLocally = false;
 
-          task.getLog().info("Fetched {} (S3) artifacts and {} (S3) artifact signatures from local download service in {}", executorData.getS3Artifacts().size(), executorData.getS3ArtifactSignatures().isPresent() ? executorData.getS3ArtifactSignatures().get().size() : 0, JavaUtils.duration(start));
+          task.getLog().info("Fetched {} (S3) artifacts and {} (S3) artifact signatures from local download service in {}", executorData.getS3Artifacts().size(),
+              executorData.getS3ArtifactSignatures().isPresent() ? executorData.getS3ArtifactSignatures().get().size() : 0, JavaUtils.duration(start));
         } catch (InterruptedException ie) {
           task.getLog().warn("Interrupted while downloading S3 artifacts from local download service");
           throw ie;
@@ -123,8 +125,30 @@ public class SingularityExecutorArtifactFetcher {
       }
     }
 
+    private class FutureHolder {
+
+      private final ListenableFuture<Response> future;
+      private final long start;
+      private final S3Artifact s3Artifact;
+
+      public FutureHolder(ListenableFuture<Response> future, long start, S3Artifact s3Artifact) {
+        this.future = future;
+        this.start = start;
+        this.s3Artifact = s3Artifact;
+      }
+
+      public Response getReponse() throws InterruptedException {
+        try {
+          return future.get();
+        } catch (ExecutionException e) {
+          throw Throwables.propagate(e);
+        }
+      }
+
+    }
+
     private void downloadFilesFromLocalDownloadService(List<? extends S3Artifact> s3Artifacts, SingularityExecutorTask task) throws InterruptedException {
-      final List<ListenableFuture<Response>> futures = Lists.newArrayListWithCapacity(s3Artifacts.size());
+      final List<FutureHolder> futures = Lists.newArrayListWithCapacity(s3Artifacts.size());
 
       for (S3Artifact s3Artifact : s3Artifacts) {
         String destination = task.getArtifactPath(s3Artifact, task.getTaskDefinition().getTaskDirectoryPath()).toString();
@@ -143,21 +167,16 @@ public class SingularityExecutorArtifactFetcher {
         try {
           ListenableFuture<Response> future = localDownloadHttpClient.executeRequest(postRequestBldr.build());
 
-          futures.add(future);
+          futures.add(new FutureHolder(future, System.currentTimeMillis(), s3Artifact));
         } catch (IOException ioe) {
           throw Throwables.propagate(ioe);
         }
       }
 
-      for (ListenableFuture<Response> future : futures) {
-        Response response;
-        try {
-          response = future.get();
-        } catch (ExecutionException e) {
-          throw Throwables.propagate(e);
-        }
+      for (FutureHolder future : futures) {
+        Response response = future.getReponse();
 
-        task.getLog().debug("Future got status code {}", response.getStatusCode());
+        task.getLog().debug("Future for {} got status code {} after {}", future.s3Artifact.getName(), response.getStatusCode(), JavaUtils.duration(future.start));
 
         if (response.getStatusCode() != 200) {
           throw new IllegalStateException("Got status code:" + response.getStatusCode());
