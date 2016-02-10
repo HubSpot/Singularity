@@ -1,6 +1,9 @@
 package com.hubspot.singularity.data.history;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -8,6 +11,7 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeleteResult;
@@ -33,7 +37,7 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
     this.historyManager = historyManager;
   }
 
-  public static class SingularityRequestHistoryParent implements SingularityHistoryItem {
+  public static class SingularityRequestHistoryParent implements SingularityHistoryItem, Comparable<SingularityRequestHistoryParent> {
 
     private final List<SingularityRequestHistory> history;
     private final String requestId;
@@ -59,6 +63,28 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
       return createTime;
     }
 
+    @Override
+    public int compareTo(SingularityRequestHistoryParent o) {
+      return Long.compare(o.getCreateTimestampForCalculatingHistoryAge(), getCreateTimestampForCalculatingHistoryAge());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      SingularityRequestHistoryParent that = (SingularityRequestHistoryParent) o;
+      return createTime == that.createTime &&
+          Objects.equals(history, that.history) &&
+          Objects.equals(requestId, that.requestId);
+    }
+
+    @Override public int hashCode() {
+      return Objects.hash(history, requestId, createTime);
+    }
   }
 
   @Override
@@ -67,28 +93,34 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
 
     final long start = System.currentTimeMillis();
 
-    final List<String> requestIdsWithHistory = requestManager.getRequestIdsWithHistory();
-
     int numHistoryTransferred = 0;
-    int numRequests = 0;
 
-    for (String requestId : requestIdsWithHistory) {
-      numRequests++;
+    final List<SingularityRequestHistoryParent> requestIdsWithHistory = new ArrayList();
 
-      List<SingularityRequestHistory> historyForRequestId = requestManager.getRequestHistory(requestId);
-      SingularityRequestHistoryParent requestHistoryParent = new SingularityRequestHistoryParent(historyForRequestId, requestId);
+    for (String requestId : requestManager.getRequestIdsWithHistory()) {
+      requestIdsWithHistory.add(new SingularityRequestHistoryParent(requestManager.getRequestHistory(requestId), requestId));
+    }
 
-      if (moveToHistoryOrCheckForPurge(requestHistoryParent)) {
+    Collections.sort(requestIdsWithHistory);
+
+    for (int i = 0; i < requestIdsWithHistory.size(); i++) {
+      final SingularityRequestHistoryParent requestHistoryParent = requestIdsWithHistory.get(i);
+      if (moveToHistoryOrCheckForPurge(requestHistoryParent, i)) {
         numHistoryTransferred += requestHistoryParent.history.size();
       }
     }
 
-    LOG.info("Transferred {} history updates for {} requests in {}", numHistoryTransferred, numRequests, JavaUtils.duration(start));
+    LOG.info("Transferred {} history updates for {} requests in {}", numHistoryTransferred, requestIdsWithHistory.size(), JavaUtils.duration(start));
   }
 
   @Override
   protected long getMaxAgeInMillisOfItem() {
     return TimeUnit.HOURS.toMillis(configuration.getDeleteStaleRequestsFromZkWhenNoDatabaseAfterHours());
+  }
+
+  @Override
+  protected Optional<Integer> getMaxNumberOfItems() {
+    return configuration.getMaxStaleRequestsInZkWhenNoDatabase();
   }
 
   @Override

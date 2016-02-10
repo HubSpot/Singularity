@@ -1,6 +1,8 @@
 package com.hubspot.singularity.data.history;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -10,7 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
+import com.google.common.collect.TreeMultimap;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeleteResult;
@@ -58,30 +63,39 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
     int numTotal = 0;
     int numTransferred = 0;
 
+    final Multimap<String, SingularityTaskId> eligibleTaskIdByRequestId = TreeMultimap.create(Ordering.natural(), SingularityTaskId.STARTED_AT_COMPARATOR_DESC);
+
     for (SingularityTaskId taskId : allTaskIds) {
-      if (activeTaskIds.contains(taskId) || lbCleaningTaskIds.contains(taskId) || isPartofPendingDeploy(pendingDeploys, taskId)) {
+      if (activeTaskIds.contains(taskId) || lbCleaningTaskIds.contains(taskId) || isPartOfPendingDeploy(pendingDeploys, taskId)) {
         continue;
       }
 
-      final long age = start - taskId.getStartedAt();
+      eligibleTaskIdByRequestId.put(taskId.getRequestId(), taskId);
+    }
 
-      if (age < configuration.getTaskPersistAfterStartupBufferMillis()) {
-        LOG.debug("Not persisting {}, it has started up too recently {} (buffer: {}) - this prevents race conditions with ZK tx", taskId, JavaUtils.durationFromMillis(age),
-            JavaUtils.durationFromMillis(configuration.getTaskPersistAfterStartupBufferMillis()));
-        continue;
+    for (Map.Entry<String, Collection<SingularityTaskId>> entry : eligibleTaskIdByRequestId.asMap().entrySet()) {
+      int i = 0;
+      for (SingularityTaskId taskId : entry.getValue()) {
+        final long age = start - taskId.getStartedAt();
+
+        if (age < configuration.getTaskPersistAfterStartupBufferMillis()) {
+          LOG.debug("Not persisting {}, it has started up too recently {} (buffer: {}) - this prevents race conditions with ZK tx", taskId, JavaUtils.durationFromMillis(age),
+              JavaUtils.durationFromMillis(configuration.getTaskPersistAfterStartupBufferMillis()));
+          continue;
+        }
+
+        if (moveToHistoryOrCheckForPurge(taskId, i++)) {
+          numTransferred++;
+        }
+
+        numTotal++;
       }
-
-      if (moveToHistoryOrCheckForPurge(taskId)) {
-        numTransferred++;
-      }
-
-      numTotal++;
     }
 
     LOG.info("Transferred {} out of {} inactive task ids (total {}) in {}", numTransferred, numTotal, allTaskIds.size(), JavaUtils.duration(start));
   }
 
-  private boolean isPartofPendingDeploy(List<SingularityPendingDeploy> pendingDeploys, SingularityTaskId taskId) {
+  private boolean isPartOfPendingDeploy(List<SingularityPendingDeploy> pendingDeploys, SingularityTaskId taskId) {
     for (SingularityPendingDeploy pendingDeploy : pendingDeploys) {
       if (pendingDeploy.getDeployMarker().getDeployId().equals(taskId.getDeployId()) && pendingDeploy.getDeployMarker().getRequestId().equals(taskId.getRequestId())) {
         return true;
@@ -94,6 +108,11 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
   @Override
   protected long getMaxAgeInMillisOfItem() {
     return TimeUnit.HOURS.toMillis(configuration.getDeleteTasksFromZkWhenNoDatabaseAfterHours());
+  }
+
+  @Override
+  protected Optional<Integer> getMaxNumberOfItems() {
+    return configuration.getMaxStaleTasksPerRequestWhenNoDatabase();
   }
 
   @Override

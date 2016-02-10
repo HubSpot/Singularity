@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityHistoryItem;
@@ -39,14 +40,16 @@ public abstract class SingularityHistoryPersister<T extends SingularityHistoryIt
 
   protected abstract long getMaxAgeInMillisOfItem();
 
+  protected abstract Optional<Integer> getMaxNumberOfItems();
+
   protected abstract boolean moveToHistory(T object);
 
   protected abstract SingularityDeleteResult purgeFromZk(T object);
 
-  protected boolean moveToHistoryOrCheckForPurge(T object) {
+  protected boolean moveToHistoryOrCheckForPurge(T object, int index) {
     final long start = System.currentTimeMillis();
 
-    if (moveToHistoryOrCheckForPurgeAndShouldDelete(object)) {
+    if (moveToHistoryOrCheckForPurgeAndShouldDelete(object, index)) {
       SingularityDeleteResult deleteResult = purgeFromZk(object);
       LOG.debug("{} {} (deleted: {}) in {}", persistsHistoryInsteadOfPurging() ? "Persisted" : "Purged", object, deleteResult, JavaUtils.duration(start));
       return true;
@@ -55,7 +58,7 @@ public abstract class SingularityHistoryPersister<T extends SingularityHistoryIt
     return false;
   }
 
-  private boolean moveToHistoryOrCheckForPurgeAndShouldDelete(T object) {
+  private boolean moveToHistoryOrCheckForPurgeAndShouldDelete(T object, int index) {
     if (persistsHistoryInsteadOfPurging()) {
       return moveToHistory(object);
     }
@@ -64,6 +67,11 @@ public abstract class SingularityHistoryPersister<T extends SingularityHistoryIt
 
     if (age > getMaxAgeInMillisOfItem()) {
       LOG.trace("Deleting {} because it is {} old (max : {})", object, JavaUtils.durationFromMillis(age), JavaUtils.durationFromMillis(getMaxAgeInMillisOfItem()));
+      return true;
+    }
+
+    if (getMaxNumberOfItems().isPresent() && index >= getMaxNumberOfItems().get()) {
+      LOG.trace("Deleting {} because it is item number {} (max: {})", object, index, getMaxNumberOfItems().get());
       return true;
     }
 
