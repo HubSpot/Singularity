@@ -99,6 +99,8 @@ class RequestDetailController extends Controller
         @subviews.taskHistory = new PaginatedTableServersideView
             collection: @collections.taskHistory
             template:   @templates.taskHistory
+            extraRenderData: (subView) =>
+                { request: @models.request.toJSON() }
 
         @subviews.deployHistory = new PaginatedTableServersideView
             collection: @collections.deployHistory
