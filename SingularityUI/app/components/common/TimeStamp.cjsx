@@ -1,12 +1,12 @@
 TimeStamp = React.createClass
 
     timeStampFromNow: ->
-        return '' if not @props.timestamp
-        timeObject = moment @props.timestamp
+        return '' if not @props.prop.timestamp
+        timeObject = moment @props.prop.timestamp
         return <div>{timeObject.fromNow()} ({ timeObject.format window.config.timestampFormat})</div>
 
     render: ->
-        if @props.display == 'timeStampFromNow'
+        if @props.prop.display == 'timeStampFromNow'
             return @timeStampFromNow()
 
 module.exports = TimeStamp

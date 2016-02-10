@@ -3,16 +3,11 @@ TaskSearchResults = require '../../collections/TaskSearchResults'
 QueryParam = require './QueryParam'
 Task = require './Task'
 
-
-StripedTable = require '../common/Table'
-TimeStamp = require '../common/TimeStamp'
-TaskStateLabel = require '../common/TaskStateLabel'
-Link = require '../common/Link'
 FormField = require '../common/input/FormField'
 DropDown = require '../common/input/DropDown'
 Header = require './Header'
 Enums = require './Enums'
-TaskTable = require './TaskTable'
+TaskTable = require '../common/task/TaskTable'
 
 DisplayResults = React.createClass
 
