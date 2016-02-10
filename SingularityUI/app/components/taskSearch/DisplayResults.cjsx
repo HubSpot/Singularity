@@ -48,8 +48,8 @@ DisplayResults = React.createClass
                 deployId : @props.deployId
                 host : @props.host
                 lastTaskStatus : @props.lastTaskStatus
-                startedAfter : @props.startedAfter
-                startedBefore : @props.startedBefore
+                startedBefore : @props.startedBefore.unix() if @props.startedBefore
+                startedAfter : @props.startedAfter.unix() if @props.startedAfter
                 orderDirection : @props.sortDirection
                 count : @props.count
                 page : @props.page
@@ -70,7 +70,7 @@ DisplayResults = React.createClass
         if @collection.params.requestId
             params.push(<div key={key}> <QueryParam
                 paramName = "Request Id"
-                paramValue = @collection.params.requestId
+                paramValue = @props.requestId
                 onClick = @props.clearRequestId
                 cantClear = {not @props.global}
                 /></div>)
@@ -78,42 +78,42 @@ DisplayResults = React.createClass
         if @collection.params.deployId
             params.push(<div key={key}> <QueryParam
                 paramName = "Deploy Id"
-                paramValue = @collection.params.deployId
+                paramValue = @props.deployId
                 onClick = @props.clearDeployId
                 /></div>)
             key++
         if @collection.params.host
             params.push(<div key={key}> <QueryParam
                 paramName = "Host"
-                paramValue = @collection.params.host
+                paramValue = @props.host
                 onClick = @props.clearHost
                 /></div>)
             key++
         if @collection.params.lastTaskStatus
             params.push(<div key={key}> <QueryParam
                 paramName = "Last Task Status"
-                paramValue = @collection.params.lastTaskStatus
+                paramValue = @props.lastTaskStatus
                 onClick = @props.clearLastTaskStatus
                 /></div>)
             key++
         if @collection.params.startedAfter
             params.push(<div key={key}> <QueryParam
                 paramName = "Started After"
-                paramValue = @collection.params.startedAfter._d.toString()
+                paramValue = @props.startedAfter._d.toString()
                 onClick = @props.clearStartedAfter
                 /></div>)
             key++
         if @collection.params.startedBefore
             params.push(<div key={key}> <QueryParam
                 paramName = "Started Before"
-                paramValue = @collection.params.startedBefore._d.toString()
+                paramValue = @props.startedBefore._d.toString()
                 onClick = @props.clearStartedBefore
                 /></div>)
             key++
         if @collection.params.sortDirection
             params.push(<div key={key}> <QueryParam
                 paramName = "Sort Direction"
-                paramValue = @collection.params.sortDirection
+                paramValue = @props.sortDirection
                 onClick = @props.clearSortDirection
                 /></div>)
             key++
