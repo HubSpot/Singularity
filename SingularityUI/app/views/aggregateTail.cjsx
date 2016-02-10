@@ -24,7 +24,7 @@ class AggregateTailView extends View
         <AggregateTail
           requestId={@requestId}
           path={@path}
-          offset={@offset}
+          initialOffset={@offset}
           ajaxError={@ajaxError}
           logLines={@logLines}
           activeTasks={@activeTasks}
