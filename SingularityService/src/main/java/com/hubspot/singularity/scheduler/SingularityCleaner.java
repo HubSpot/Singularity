@@ -126,6 +126,21 @@ public class SingularityCleaner {
 
     final Optional<SingularityRequestDeployState> deployState = deployManager.getRequestDeployState(requestId);
 
+    if (taskCleanup.getCleanupType() == TaskCleanupType.DECOMISSIONING && deployState.get().getPendingDeploy().isPresent()
+        && deployState.get().getPendingDeploy().get().getDeployId().equals(taskCleanup.getTaskId().getDeployId())) {
+      final long timeSinceCleanup = System.currentTimeMillis() - taskCleanup.getTimestamp();
+      final long maxWaitTime = configuration.getPendingDeployHoldTaskDuringDecommissionMillis();
+      final boolean tooOld = (maxWaitTime < 1) || (timeSinceCleanup > maxWaitTime);
+
+      if (!tooOld) {
+        LOG.trace("Not killing {} - part of pending deploy - running time since cleanup {} (max wait time is {})", taskCleanup, timeSinceCleanup, maxWaitTime);
+        return false;
+      } else {
+        LOG.debug("Killing {} - part of pending deploy but running time since cleanup {} exceeded max wait time {}", taskCleanup, timeSinceCleanup, maxWaitTime);
+        return true;
+      }
+    }
+
     if (!deployState.isPresent() || !deployState.get().getActiveDeploy().isPresent()) {
       LOG.debug("Killing a task {} immediately because there is no active deploy state {}", taskCleanup, deployState);
       return true;
@@ -134,7 +149,7 @@ public class SingularityCleaner {
     final String activeDeployId = deployState.get().getActiveDeploy().get().getDeployId();
 
     if (!taskCleanup.getTaskId().getDeployId().equals(activeDeployId)) {
-      LOG.debug("Killing a task {} immediately because it is not part of the active deploy {}", taskCleanup, deployState.get().getActiveDeploy().get());
+      LOG.debug("Killing {} immediately because it is not part of the active deploy {}", taskCleanup, deployState.get().getActiveDeploy().get());
       return true;
     }
 
@@ -144,12 +159,12 @@ public class SingularityCleaner {
     // For an incremental bounce, shut down old tasks as new ones are started
     final SingularityDeployKey key = SingularityDeployKey.fromTaskId(taskCleanup.getTaskId());
     if (taskCleanup.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
-      int healthyReplaceMentTasks = numHealthyTasks(request, activeDeployId, matchingTasks);
-      if (healthyReplaceMentTasks + incrementalBounceCleaningTasks.count(key) <= request.getInstancesSafe()) {
+      int healthyReplacementTasks = getNumHealthyTasks(request, activeDeployId, matchingTasks);
+      if (healthyReplacementTasks + incrementalBounceCleaningTasks.count(key) <= request.getInstancesSafe()) {
         LOG.trace("Not killing a task {} yet, only {} matching out of a required {}", taskCleanup, matchingTasks.size(), request.getInstancesSafe() - incrementalBounceCleaningTasks.count(key));
         return false;
       } else {
-        LOG.debug("Killing a task {}, {} replacement tasks are healthy", taskCleanup, healthyReplaceMentTasks);
+        LOG.debug("Killing a task {}, {} replacement tasks are healthy", taskCleanup, healthyReplacementTasks);
         incrementalBounceCleaningTasks.remove(key);
         return true;
       }
@@ -166,19 +181,68 @@ public class SingularityCleaner {
 
     switch (deployHealth) {
       case HEALTHY:
+        for (SingularityTaskId taskId : matchingTasks) {
+          DeployHealth lbHealth = getLbHealth(request, taskId);
+
+          if (lbHealth != DeployHealth.HEALTHY) {
+            LOG.trace("Not killing a task {}, waiting for new replacement tasks to be added to LB (current state: {})", taskCleanup, lbHealth);
+            return false;
+          }
+        }
+
         LOG.debug("Killing a task {}, all replacement tasks are healthy", taskCleanup);
         return true;
       case WAITING:
       case UNHEALTHY:
       default:
-        LOG.trace("Not killing a task {}, waiting for new replacement tasks to be healthy (current state: {})", taskCleanup, deployState);
+        LOG.trace("Not killing a task {}, waiting for new replacement tasks to be healthy (current state: {})", taskCleanup, deployHealth);
         return false;
     }
   }
 
-  private int numHealthyTasks(SingularityRequest request, String activeDeployId, List<SingularityTaskId> matchingTasks) {
+  private int getNumHealthyTasks(SingularityRequest request, String activeDeployId, List<SingularityTaskId> matchingTasks) {
     Optional<SingularityDeploy> deploy = deployManager.getDeploy(request.getId(), activeDeployId);
-    return deployHealthHelper.getNumHealthyTasks(request, deploy, matchingTasks, false);
+
+    List<SingularityTaskId> healthyTasks = deployHealthHelper.getHealthyTasks(request, deploy, matchingTasks, false);
+
+    int numHealthyTasks = 0;
+
+    for (SingularityTaskId taskId : healthyTasks) {
+      DeployHealth lbHealth = getLbHealth(request, taskId);
+
+      if (lbHealth == DeployHealth.HEALTHY) {
+        numHealthyTasks++;
+      }
+    }
+
+    return numHealthyTasks;
+  }
+
+  private DeployHealth getLbHealth(SingularityRequest request, SingularityTaskId taskId) {
+    if (!request.isLoadBalanced()) {
+      return DeployHealth.HEALTHY;
+    }
+
+    Optional<SingularityLoadBalancerUpdate> update = taskManager.getLoadBalancerState(taskId, LoadBalancerRequestType.ADD);
+
+    if (!update.isPresent()) {
+      return DeployHealth.WAITING;
+    }
+
+    switch (update.get().getLoadBalancerState()) {
+      case SUCCESS:
+        return DeployHealth.HEALTHY;
+      case CANCELED:
+      case CANCELING:
+      case UNKNOWN:
+      case INVALID_REQUEST_NOOP:
+      case FAILED:
+        return DeployHealth.UNHEALTHY;
+      case WAITING:
+        return DeployHealth.WAITING;
+    }
+
+    return DeployHealth.WAITING;
   }
 
   private boolean isObsolete(long start, long cleanupRequest) {
