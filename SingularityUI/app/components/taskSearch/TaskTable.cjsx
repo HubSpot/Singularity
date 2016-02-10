@@ -1,4 +1,7 @@
-StripedTable = require '../common/Table'
+StripedTable = require '../Table'
+TimeStamp = require '../TimeStamp'
+TaskStateLabel = require './TaskStateLabel'
+Link = require '../Link'
 
 TaskTable = React.createClass
 
@@ -8,30 +11,40 @@ TaskTable = React.createClass
         for task in @props.models
             taskTableData.push([
                 {
-                    component:'link'
-                    text: task.taskId.id
-                    url: "#{window.config.appRoot}/task/#{task.taskId.id}"
-                    altText: task.taskId.id
+                    component: Link
+                    prop: {
+                        text: task.taskId.id
+                        url: "#{window.config.appRoot}/task/#{task.taskId.id}"
+                        altText: task.taskId.id
+                    }
                 },
                 {
-                    component: 'taskStateLabel'
-                    taskState: task.lastTaskState
+                    component: TaskStateLabel
+                    prop: {
+                        taskState: task.lastTaskState
+                    }
                 },
                 {
-                    component: 'link'
-                    text: task.taskId.deployId
-                    url: "#{window.config.appRoot}/request/#{task.taskId.requestId}/deploy/#{task.taskId.deployId}"
-                    altText: task.taskId.deployId
+                    component: Link
+                    prop: {
+                        text: task.taskId.deployId
+                        url: "#{window.config.appRoot}/request/#{task.taskId.requestId}/deploy/#{task.taskId.deployId}"
+                        altText: task.taskId.deployId
+                    }
                 },
                 {
-                    component: 'timestamp'
-                    timestamp: task.taskId.startedAt
-                    display: 'timeStampFromNow' 
+                    component: TimeStamp
+                    prop: {
+                        timestamp: task.taskId.startedAt
+                        display: 'timeStampFromNow'
+                    } 
                 },
                 {
-                    component: 'timestamp'
-                    timestamp: task.updatedAt
-                    display: 'timeStampFromNow'
+                    component: TimeStamp
+                    prop: {
+                        timestamp: task.updatedAt
+                        display: 'timeStampFromNow'
+                    }
                 }
             ])
         return <StripedTable

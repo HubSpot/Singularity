@@ -1,9 +1,5 @@
 Utils = require '../../utils'
 
-TimeStamp = require '../common/TimeStamp'
-TaskStateLabel = require '../common/TaskStateLabel'
-Link = require '../common/Link'
-
 Table = React.createClass
 
     renderTableHeader: ->
@@ -14,28 +10,15 @@ Table = React.createClass
             key++
         return header
 
-    renderElement: (element) ->
-        if element.component == 'link'
-            <Link
-                text={element.text}
-                url={element.url}
-                altText={element.altText}
-            />
-        else if element.component == 'taskStateLabel'
-            <TaskStateLabel
-                taskState={element.taskState}
-            />
-        else if element.component == 'timestamp'
-            <TimeStamp
-                timestamp=element.timestamp 
-                display=element.display
-            />
-
     renderTableRow: (elements) ->
         data = []
         key = 0
         for element in elements
-            data.push(<td key={key}>{@renderElement element}</td>)
+            data.push(<td key={key}>
+                <element.component
+                    prop=element.prop
+                />
+            </td>)
             key++
         return data
 
