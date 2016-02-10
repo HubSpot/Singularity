@@ -17,8 +17,8 @@ TaskSearch = React.createClass
             deployId: @props.initialDeployId
             host: @props.initialHost
             lastTaskStatus: @props.initialTaskStatus
-            startedBefore: @props.initialStartedBefore
-            startedAfter: @props.initialStartedAfter
+            startedBefore: @props.initialStartedBefore or ''
+            startedAfter: @props.initialStartedAfter or ''
             sortDirection: @props.initialSortDirection or 'ASC'
             pageNumber: 1
             count: @props.initialCount or @countDefault
