@@ -5,10 +5,10 @@ Model = require './model'
 class TaskSearchResult extends Model
 
     url: -> 
-    	if @requestID
-    		return "#{ config.apiRoot }/history/request/#{ @requestID }/tasks"
-    	else
-    		return "#{ config.apiRoot }/history/tasks"
+        if @requestID
+            return "#{ config.apiRoot }/history/request/#{ @requestID }/tasks"
+        else
+            return "#{ config.apiRoot }/history/tasks"
 
     initialize: ({ @taskId, @updatedAt, @lastTaskState }) ->
     

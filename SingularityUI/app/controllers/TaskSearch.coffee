@@ -1,7 +1,6 @@
 Controller = require './Controller'
 
 TaskSearchView = require '../views/taskSearch'
-TaskSearchResults = require '../collections/TaskSearchResults'
 
 Utils = require '../utils'
 
@@ -13,9 +12,9 @@ class TaskSearchController extends Controller
         @title 'Task Search'
         @params = {}
         if @requestId
-        	@global = false
+            @global = false
         else
-        	@global = true
+            @global = true
         @view = new TaskSearchView
             requestId : @requestId
             global : @global
