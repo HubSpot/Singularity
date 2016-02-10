@@ -126,6 +126,7 @@ IndividualTail = React.createClass
         logLines={@state.logLines}
         ajaxError={@state.ajaxError}
         offset={@props.offset}
+        handleOffsetLink={@props.handleOffsetLink}
         fetchNext={@fetchNext}
         fetchPrevious={@fetchPrevious}
         taskState={_.last(@state.task.taskUpdates)?.taskState}

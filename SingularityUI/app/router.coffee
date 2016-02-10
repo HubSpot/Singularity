@@ -89,7 +89,7 @@ class Router extends Backbone.Router
         app.bootstrapController new TaskDetailController {taskId, filePath}
 
     tail: (taskId, path = '') ->
-        offset = window.location.hash.substr(1) || null
+        offset = parseInt(window.location.hash.substr(1)) || null
         app.bootstrapController new TailController {taskId, path, offset}
 
     racks: (state = 'all') ->
@@ -105,7 +105,7 @@ class Router extends Backbone.Router
         app.bootstrapController new DeployDetailController {requestId, deployId}
 
     aggregateTail: (requestId, path = '') ->
-        offset = window.location.hash.substr(1) || null
+        offset = parseInt(window.location.hash.substr(1)) || null
         app.bootstrapController new AggregateTailController {requestId, path, offset}
 
 module.exports = Router
