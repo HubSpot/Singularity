@@ -99,14 +99,14 @@ DisplayResults = React.createClass
         if @collection.params.startedAfter
             params.push(<div key={key}> <QueryParam
                 paramName = "Started After"
-                paramValue = @props.startedAfter._d.toString()
+                paramValue = {@props.startedAfter.format window.config.timestampWithSecondsFormat}
                 onClick = @props.clearStartedAfter
                 /></div>)
             key++
         if @collection.params.startedBefore
             params.push(<div key={key}> <QueryParam
                 paramName = "Started Before"
-                paramValue = @props.startedBefore._d.toString()
+                paramValue = {@props.startedBefore.format window.config.timestampWithSecondsFormat}
                 onClick = @props.clearStartedBefore
                 /></div>)
             key++
