@@ -158,7 +158,7 @@ public class HistoryPersisterTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(taskManager.getTaskHistory(taskThree.getTaskId()).isPresent());
     Assert.assertTrue(taskManager.getTaskHistory(taskFour.getTaskId()).isPresent());
 
-    configuration.setMaxStaleTasksPerRequestWhenNoDatabase(Optional.of(2));
+    configuration.setMaxStaleTasksPerRequestInZkWhenNoDatabase(Optional.of(2));
 
     taskHistoryPersister.runActionOnPoll();
 
@@ -252,7 +252,7 @@ public class HistoryPersisterTest extends SingularitySchedulerTestBase {
     SingularityDeploy requestTwoDeployOne = initAndFinishDeploy(requestTwo, "r2d1");
     SingularityDeploy requestTwoDeployTwo = initAndFinishDeploy(requestTwo, "r2d2");  // r2d2 is the active deploy, not eligible for purging
 
-    configuration.setMaxStaleDeploysPerRequestWhenNoDatabase(Optional.of(2));
+    configuration.setMaxStaleDeploysPerRequestInZkWhenNoDatabase(Optional.of(2));
 
     deployHistoryPersister.runActionOnPoll();
 
