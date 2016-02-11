@@ -112,7 +112,7 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
 
   @Override
   protected Optional<Integer> getMaxNumberOfItems() {
-    return configuration.getMaxStaleTasksPerRequestWhenNoDatabase();
+    return configuration.getMaxStaleTasksPerRequestInZkWhenNoDatabase();
   }
 
   @Override

@@ -7,7 +7,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
 
-public class SingularityRequestHistory implements Comparable<SingularityRequestHistory> {
+public class SingularityRequestHistory implements Comparable<SingularityRequestHistory>, SingularityHistoryItem {
 
   private final long createdAt;
   private final Optional<String> user;
@@ -84,6 +84,12 @@ public class SingularityRequestHistory implements Comparable<SingularityRequestH
 
   public Optional<String> getMessage() {
     return message;
+  }
+
+  @Override
+  @JsonIgnore
+  public long getCreateTimestampForCalculatingHistoryAge() {
+    return createdAt;
   }
 
   @Override

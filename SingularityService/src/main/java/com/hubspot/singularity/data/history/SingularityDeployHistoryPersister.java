@@ -87,7 +87,7 @@ public class SingularityDeployHistoryPersister extends SingularityHistoryPersist
 
   @Override
   protected Optional<Integer> getMaxNumberOfItems() {
-    return configuration.getMaxStaleDeploysPerRequestWhenNoDatabase();
+    return configuration.getMaxStaleDeploysPerRequestInZkWhenNoDatabase();
   }
 
   private boolean shouldTransferDeploy(SingularityRequestDeployState deployState, SingularityDeployKey deployKey) {
