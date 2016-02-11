@@ -89,7 +89,7 @@ public class SingularityConfiguration extends Configuration {
 
   private long deleteStaleRequestsFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
 
-  private Optional<Integer> maxStaleRequestsInZkWhenNoDatabase = Optional.absent();
+  private Optional<Integer> maxRequestHistoryUpdatesPerRequestInZkWhenNoDatabase = Optional.absent();
 
   private long deleteTasksFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(7);
 
@@ -940,12 +940,12 @@ public class SingularityConfiguration extends Configuration {
     this.maxStaleDeploysPerRequestInZkWhenNoDatabase = maxStaleDeploysPerRequestInZkWhenNoDatabase;
   }
 
-  public Optional<Integer> getMaxStaleRequestsInZkWhenNoDatabase() {
-    return maxStaleRequestsInZkWhenNoDatabase;
+  public Optional<Integer> getMaxRequestHistoryUpdatesPerRequestInZkWhenNoDatabase() {
+    return maxRequestHistoryUpdatesPerRequestInZkWhenNoDatabase;
   }
 
-  public void setMaxStaleRequestsInZkWhenNoDatabase(Optional<Integer> maxStaleRequestsInZkWhenNoDatabase) {
-    this.maxStaleRequestsInZkWhenNoDatabase = maxStaleRequestsInZkWhenNoDatabase;
+  public void setMaxRequestHistoryUpdatesPerRequestInZkWhenNoDatabase(Optional<Integer> maxRequestHistoryUpdatesPerRequestInZkWhenNoDatabase) {
+    this.maxRequestHistoryUpdatesPerRequestInZkWhenNoDatabase = maxRequestHistoryUpdatesPerRequestInZkWhenNoDatabase;
   }
 
   public Optional<Integer> getMaxStaleTasksPerRequestInZkWhenNoDatabase() {
