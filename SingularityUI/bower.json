@@ -43,7 +43,8 @@
     "fuzzy": "~0.1.1",
     "fuse.js": "~1.2.2",
     "juration": "*",
-    "eonasdan-bootstrap-datetimepicker": "~4.17.37"
+    "eonasdan-bootstrap-datetimepicker": "~4.17.37",
+    "classnames": "~2.2.3"
   },
   "resolutions": {
     "backbone": "~1.1.2",
