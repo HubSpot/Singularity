@@ -3,12 +3,8 @@ Utils = require '../../utils'
 Table = React.createClass
 
     renderTableHeader: ->
-        header = []
-        key = 0
-        for columnName in @props.columnNames
-            header.push(<th key={key}>{columnName}</th>)
-            key++
-        return header
+        @props.columnNames.map (columnName, key) =>
+            <th key={key}>{columnName}</th>
 
     renderTableRow: (elements) ->
         elements.map (element, key) =>

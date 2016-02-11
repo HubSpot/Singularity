@@ -5,7 +5,6 @@ Form = React.createClass
     renderFormGroups: ->
         @props.formGroups.map (group, key) =>
             ComponentClass = group.component
-            #debugger
             return <div className='form-group' key={key}>
                 <label htmlFor=group.id>{group.title}:</label>
                 <ComponentClass
