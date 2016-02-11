@@ -1,5 +1,6 @@
 package com.hubspot.singularity.data.history;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -8,17 +9,16 @@ import javax.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityHistoryItem;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
-import com.hubspot.singularity.data.history.SingularityRequestHistoryPersister.SingularityRequestHistoryParent;
 
 @Singleton
-public class SingularityRequestHistoryPersister extends SingularityHistoryPersister<SingularityRequestHistoryParent> {
+public class SingularityRequestHistoryPersister extends SingularityHistoryPersister<SingularityRequestHistory> {
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityRequestHistoryPersister.class);
 
@@ -33,57 +33,29 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
     this.historyManager = historyManager;
   }
 
-  public static class SingularityRequestHistoryParent implements SingularityHistoryItem {
-
-    private final List<SingularityRequestHistory> history;
-    private final String requestId;
-    private final long createTime;
-
-    public SingularityRequestHistoryParent(List<SingularityRequestHistory> history, String requestId) {
-      this.history = history;
-      this.requestId = requestId;
-
-      long newestTimestamp = 0;
-
-      for (SingularityRequestHistory historyItem : history) {
-        if (historyItem.getCreatedAt() > newestTimestamp) {
-          newestTimestamp = historyItem.getCreatedAt();
-        }
-      }
-
-      createTime = newestTimestamp;
-    }
-
-    @Override
-    public long getCreateTimestampForCalculatingHistoryAge() {
-      return createTime;
-    }
-
-  }
-
   @Override
   public void runActionOnPoll() {
     LOG.info("Checking request history for persistence");
 
     final long start = System.currentTimeMillis();
 
-    final List<String> requestIdsWithHistory = requestManager.getRequestIdsWithHistory();
-
     int numHistoryTransferred = 0;
-    int numRequests = 0;
 
-    for (String requestId : requestIdsWithHistory) {
-      numRequests++;
+    final List<String> requestIds = requestManager.getRequestIdsWithHistory();
 
-      List<SingularityRequestHistory> historyForRequestId = requestManager.getRequestHistory(requestId);
-      SingularityRequestHistoryParent requestHistoryParent = new SingularityRequestHistoryParent(historyForRequestId, requestId);
+    for (String requestId : requestIds) {
+      final List<SingularityRequestHistory> requestHistoryItems = requestManager.getRequestHistory(requestId);
+      Collections.sort(requestHistoryItems);  // default ordering is createdAt descending
 
-      if (moveToHistoryOrCheckForPurge(requestHistoryParent)) {
-        numHistoryTransferred += requestHistoryParent.history.size();
+      int i = 0;
+      for (SingularityRequestHistory requestHistory : requestHistoryItems) {
+        if (moveToHistoryOrCheckForPurge(requestHistory, i++)) {
+          numHistoryTransferred++;
+        }
       }
     }
 
-    LOG.info("Transferred {} history updates for {} requests in {}", numHistoryTransferred, numRequests, JavaUtils.duration(start));
+    LOG.info("Transferred {} history updates for {} requests in {}", numHistoryTransferred, requestIds.size(), JavaUtils.duration(start));
   }
 
   @Override
@@ -92,24 +64,27 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
   }
 
   @Override
-  protected boolean moveToHistory(SingularityRequestHistoryParent object) {
-    for (SingularityRequestHistory requestHistory : object.history) {
-      try {
-        historyManager.saveRequestHistoryUpdate(requestHistory);
-      } catch (Throwable t) {
-        LOG.warn("Failed to persist {} into History", requestHistory, t);
-        return false;
-      }
+  protected Optional<Integer> getMaxNumberOfItems() {
+    return configuration.getMaxRequestHistoryUpdatesPerRequestInZkWhenNoDatabase();
+  }
 
-      requestManager.deleteHistoryItem(requestHistory);
+  @Override
+  protected boolean moveToHistory(SingularityRequestHistory object) {
+    try {
+      historyManager.saveRequestHistoryUpdate(object);
+    } catch (Throwable t) {
+      LOG.warn("Failed to persist {} into History", object, t);
+      return false;
     }
+
+    requestManager.deleteHistoryItem(object);
 
     return true;
   }
 
   @Override
-  protected SingularityDeleteResult purgeFromZk(SingularityRequestHistoryParent object) {
-    return requestManager.deleteHistoryParent(object.requestId);
+  protected SingularityDeleteResult purgeFromZk(SingularityRequestHistory object) {
+    return requestManager.deleteHistoryItem(object);
   }
 
 }
