@@ -1,7 +1,6 @@
 TaskSearchResults = require '../../collections/TaskSearchResults'
 
 QueryParam = require './QueryParam'
-Task = require './Task'
 
 FormField = require '../common/atomicFormItems/FormField'
 DropDown = require '../common/atomicFormItems/DropDown'
