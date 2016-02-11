@@ -4,7 +4,7 @@ DateEntry = React.createClass
 
     componentDidMount: ->
         id = '#' + @props.id
-        changeFn = @props.updateFn
+        changeFn = @props.prop.updateFn
         $ -> $(id).datetimepicker({
                 sideBySide: true
                 format: window.config.timestampWithSecondsFormat
@@ -16,8 +16,8 @@ DateEntry = React.createClass
             }).on('dp.change', changeFn) # value will be in event.date
 
     getValue: ->
-        return unless @props.value
-        time = moment @props.value
+        return unless @props.prop.value
+        time = moment @props.prop.value
         return time.format window.config.timestampWithSecondsFormat
 
     # MUST pass in UNIQUE id in props.
@@ -26,14 +26,15 @@ DateEntry = React.createClass
         <div className="form-group">
             <div className='input-group date' id={@props.id}>
                 <FormField 
-                    className = 'form-control'
-                    placeholder = {@props.title}
-                    type = {@props.inputType}
-                    disabled = {@props.disabled}
-                    size = {@props.size}
-                    value = {@getValue()}
-                    updateFn = {@props.updateFn} 
                     id = {@props.id}
+                    prop = {{
+                        updateFn: @props.prop.updateFn
+                        value: @getValue()
+                        size: @props.prop.size
+                        disabled: @props.prop.disabled
+                        type: @props.prop.inputType
+                        placeholder: @props.prop.placeholder
+                    }}
                 />
                 <span className="input-group-addon">
                     <span className="glyphicon glyphicon-calendar"></span>
