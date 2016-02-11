@@ -1,5 +1,7 @@
 package com.hubspot.singularity.s3.base;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
@@ -29,40 +31,21 @@ public class ArtifactDownloadRequest {
 
   @Override
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((s3Artifact == null) ? 0 : s3Artifact.hashCode());
-    result = prime * result + ((targetDirectory == null) ? 0 : targetDirectory.hashCode());
-    return result;
+    return Objects.hash(targetDirectory, s3Artifact);
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
+  public boolean equals(Object o) {
+    if (this == o) {
       return true;
     }
-    if (obj == null) {
+    if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    ArtifactDownloadRequest other = (ArtifactDownloadRequest) obj;
-    if (s3Artifact == null) {
-      if (other.s3Artifact != null) {
-        return false;
-      }
-    } else if (!s3Artifact.equals(other.s3Artifact)) {
-      return false;
-    }
-    if (targetDirectory == null) {
-      if (other.targetDirectory != null) {
-        return false;
-      }
-    } else if (!targetDirectory.equals(other.targetDirectory)) {
-      return false;
-    }
-    return true;
+
+    ArtifactDownloadRequest that = (ArtifactDownloadRequest) o;
+    return Objects.equals(s3Artifact, that.s3Artifact) &&
+        Objects.equals(targetDirectory, that.targetDirectory);
   }
 
   @Override

@@ -1,13 +1,15 @@
 package com.hubspot.deploy;
 
+import java.util.Objects;
+
 import com.google.common.base.Optional;
 
 public abstract class RemoteArtifact extends Artifact {
 
   private final Optional<Long> filesize;
 
-  public RemoteArtifact(String name, String filename, Optional<String> md5sum, Optional<Long> filesize) {
-    super(name, filename, md5sum);
+  public RemoteArtifact(String name, String filename, Optional<String> md5sum, Optional<Long> filesize, Optional<String> targetFolderRelativeToTask) {
+    super(name, filename, md5sum, targetFolderRelativeToTask);
     this.filesize = filesize;
   }
 
@@ -16,38 +18,28 @@ public abstract class RemoteArtifact extends Artifact {
   }
 
   @Override
-  public int hashCode() {
-    final int prime = 31;
-    int result = super.hashCode();
-    result = prime * result + ((filesize == null) ? 0 : filesize.hashCode());
-    return result;
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    if (!super.equals(o)) {
+      return false;
+    }
+    RemoteArtifact that = (RemoteArtifact) o;
+    return Objects.equals(filesize, that.filesize);
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (!super.equals(obj)) {
-      return false;
-    }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    RemoteArtifact other = (RemoteArtifact) obj;
-    if (filesize == null) {
-      if (other.filesize != null) {
-        return false;
-      }
-    } else if (!filesize.equals(other.filesize)) {
-      return false;
-    }
-    return true;
+  public int hashCode() {
+    return Objects.hash(super.hashCode(), filesize);
   }
 
   @Override
   public String toString() {
-    return "RemoteArtifact [filesize=" + filesize + "]";
+    return "RemoteArtifact [filesize=" + filesize + ", parent=" + super.toString() + "]";
   }
 
 }
