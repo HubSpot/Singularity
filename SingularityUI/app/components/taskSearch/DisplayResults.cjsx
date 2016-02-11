@@ -3,11 +3,11 @@ TaskSearchResults = require '../../collections/TaskSearchResults'
 QueryParam = require './QueryParam'
 Task = require './Task'
 
-FormField = require '../common/input/FormField'
-DropDown = require '../common/input/DropDown'
+FormField = require '../common/atomicFormItems/FormField'
+DropDown = require '../common/atomicFormItems/DropDown'
 Header = require './Header'
 Enums = require './Enums'
-TaskTable = require '../common/task/TaskTable'
+TaskTable = require '../common/TaskTable'
 
 DisplayResults = React.createClass
 
@@ -143,11 +143,12 @@ DisplayResults = React.createClass
                         <div className='form-group'>
                             <label htmlFor="pageNumber" className="sr-only">Jump To Page:</label>
                             <FormField 
-                                value = @state.pageNumberEntered 
-                                inputType = 'number'
                                 id = 'pageNumber'
-                                title = "Jump to Page"
-                                updateFn = @updatePageNumber />
+                                prop = {{
+                                    value: @state.pageNumberEntered 
+                                    inputType: 'number'
+                                    updateFn: @updatePageNumber
+                                }} />
                         </div>
                         <button type="submit" className="btn btn-default">Jump!</button>
                         &nbsp;&nbsp;
@@ -155,26 +156,28 @@ DisplayResults = React.createClass
                             <label htmlFor='count'>Tasks Per Page: </label>
                             &nbsp;&nbsp;
                             <DropDown
-                                forceChooseValue = true
-                                value = @props.count
-                                choices = {@props.countChoices}
-                                inputType = 'number'
                                 id = 'count'
-                                title = 'Tasks Per Page'
-                                updateFn = @updateCount />
+                                prop = {{
+                                    forceChooseValue: true
+                                    value: @props.count
+                                    choices: @props.countChoices
+                                    inputType: 'number'
+                                    updateFn: @updateCount
+                                }} />
                         </div>
                         &nbsp;&nbsp;
                         <div className='form-group'>
                             <label htmlFor="sortDirection">Sort Direction:</label>
                             &nbsp;&nbsp;
                             <DropDown
-                                forceChooseValue = true
-                                value = @props.sortDirection
-                                choices = Enums.sortDirections()
-                                inputType = 'sortDirection'
                                 id = 'sortDirection'
-                                title = 'Sort Direction'
-                                updateFn = @props.updateSortDirection />
+                                prop = {{
+                                    forceChooseValue: true
+                                    value: @props.sortDirection
+                                    choices: Enums.sortDirections()
+                                    inputType: 'sortDirection'
+                                    updateFn: @props.updateSortDirection
+                                }} />
                         </div>
                     </form>
                 </ul>

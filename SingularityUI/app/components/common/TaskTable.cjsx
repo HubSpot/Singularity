@@ -1,7 +1,7 @@
-StripedTable = require '../Table'
-TimeStamp = require '../TimeStamp'
-TaskStateLabel = require './TaskStateLabel'
-Link = require '../Link'
+Table = require './Table'
+TimeStamp = require './atomicDisplayItems/TimeStamp'
+TaskStateLabel = require './atomicDisplayItems/TaskStateLabel'
+Link = require './atomicDisplayItems/Link'
 
 TaskTable = React.createClass
 
@@ -47,7 +47,7 @@ TaskTable = React.createClass
                     }
                 }
             ])
-        return <StripedTable
+        return <Table
                     tableClassOpts="table-striped"
                     columnNames={taskTableColumns}
                     tableRows={taskTableData}
