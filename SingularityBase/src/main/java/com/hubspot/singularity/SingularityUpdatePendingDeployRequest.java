@@ -27,7 +27,8 @@ public class SingularityUpdatePendingDeployRequest {
     return targetActiveInstances;
   }
 
-  @Override public String toString() {
+  @Override
+  public String toString() {
     return "SingularityUpdatePendingDeployRequest{" +
       "requestId=" + requestId +
       ", deployId=" + deployId +
