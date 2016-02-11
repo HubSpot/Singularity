@@ -1,6 +1,6 @@
 IconButton = require '../IconButton'
 
-QueryParam = React.createClass
+QueryParameter = React.createClass
 
     getClassName: ->
         classNames {
@@ -20,4 +20,4 @@ QueryParam = React.createClass
                             onClick={@props.clearFn} 
                         /> unless @props.cantClear}
                 </li>
-module.exports = QueryParam
+module.exports = QueryParameter
