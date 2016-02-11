@@ -1,4 +1,5 @@
 FormField = require './FormField'
+Glyphicon = require '../Glyphicon'
 
 DateEntry = React.createClass
 
@@ -37,7 +38,7 @@ DateEntry = React.createClass
                     }}
                 />
                 <span className="input-group-addon">
-                    <span className="glyphicon glyphicon-calendar"></span>
+                    <Glyphicon iconClass="glyphicon-calendar"/>
                 </span>
             </div>
         </div>
