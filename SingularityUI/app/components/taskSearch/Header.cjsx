@@ -1,4 +1,4 @@
-Glyphicon = require '../common/Glyphicon'
+Glyphicon = require '../common/atomicDisplayItems/Glyphicon'
 
 Header = React.createClass
 

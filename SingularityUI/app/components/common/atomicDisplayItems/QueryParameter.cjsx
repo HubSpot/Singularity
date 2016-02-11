@@ -1,4 +1,4 @@
-IconButton = require '../IconButton'
+IconButton = require './IconButton'
 
 QueryParameter = React.createClass
 

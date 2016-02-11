@@ -1,5 +1,5 @@
 FormField = require './FormField'
-Glyphicon = require '../Glyphicon'
+Glyphicon = require '../atomicDisplayItems/Glyphicon'
 
 DateEntry = React.createClass
 
