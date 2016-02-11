@@ -39,6 +39,7 @@ public class SingularityDeployBuilder {
   private Optional<String> healthcheckUri;
   private Optional<Long> healthcheckIntervalSeconds;
   private Optional<Long> healthcheckTimeoutSeconds;
+  private Optional<Integer> healthcheckPortIndex;
   private Optional<Boolean> skipHealthchecksOnDeploy;
   private Optional<HealthcheckProtocol> healthcheckProtocol;
 
@@ -51,6 +52,7 @@ public class SingularityDeployBuilder {
 
   private Optional<String> serviceBasePath;
   private Optional<Set<String>> loadBalancerGroups;
+  private Optional<Integer> loadBalancerPortIndex;
   private Optional<Map<String, Object>> loadBalancerOptions;
 
   private Optional<Integer> deployInstanceCountPerStep;
@@ -80,6 +82,7 @@ public class SingularityDeployBuilder {
     this.healthcheckUri = Optional.absent();
     this.healthcheckIntervalSeconds = Optional.absent();
     this.healthcheckTimeoutSeconds = Optional.absent();
+    this.healthcheckPortIndex = Optional.absent();
     this.skipHealthchecksOnDeploy = Optional.absent();
     this.deployHealthTimeoutSeconds = Optional.absent();
     this.healthcheckProtocol = Optional.absent();
@@ -88,6 +91,7 @@ public class SingularityDeployBuilder {
     this.considerHealthyAfterRunningForSeconds = Optional.absent();
     this.serviceBasePath = Optional.absent();
     this.loadBalancerGroups = Optional.absent();
+    this.loadBalancerPortIndex = Optional.absent();
     this.loadBalancerOptions = Optional.absent();
     this.deployInstanceCountPerStep = Optional.absent();
     this.deployStepWaitTimeMs = Optional.absent();
@@ -97,9 +101,8 @@ public class SingularityDeployBuilder {
 
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, customExecutorUser, resources,
-      env,
-      uris, metadata, executorData, version, timestamp, labels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckMaxRetries,
-      healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy, healthcheckProtocol,
+      env, uris, metadata, executorData, version, timestamp, labels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
+      healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy, healthcheckProtocol,
       deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries);
   }
 
@@ -296,6 +299,15 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<Integer> getHealthcheckPortIndex() {
+    return healthcheckPortIndex;
+  }
+
+  public SingularityDeployBuilder setHealthcheckPortIndex(Optional<Integer> healthcheckPortIndex) {
+    this.healthcheckPortIndex = healthcheckPortIndex;
+    return this;
+  }
+
   public Optional<String> getServiceBasePath() {
     return serviceBasePath;
   }
@@ -311,6 +323,15 @@ public class SingularityDeployBuilder {
 
   public SingularityDeployBuilder setLoadBalancerGroups(Optional<Set<String>> loadBalancerGroups) {
     this.loadBalancerGroups = loadBalancerGroups;
+    return this;
+  }
+
+  public Optional<Integer> getLoadBalancerPortIndex() {
+    return loadBalancerPortIndex;
+  }
+
+  public SingularityDeployBuilder setLoadBalancerPortIndex(Optional<Integer> loadBalancerPortIndex) {
+    this.loadBalancerPortIndex = loadBalancerPortIndex;
     return this;
   }
 
@@ -428,6 +449,7 @@ public class SingularityDeployBuilder {
       ", healthcheckUri=" + healthcheckUri +
       ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
       ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +
+      ", healthcheckPortIndex=" + healthcheckPortIndex +
       ", skipHealthchecksOnDeploy=" + skipHealthchecksOnDeploy +
       ", healthcheckProtocol=" + healthcheckProtocol +
       ", healthcheckMaxRetries=" + healthcheckMaxRetries +
@@ -436,6 +458,7 @@ public class SingularityDeployBuilder {
       ", considerHealthyAfterRunningForSeconds=" + considerHealthyAfterRunningForSeconds +
       ", serviceBasePath=" + serviceBasePath +
       ", loadBalancerGroups=" + loadBalancerGroups +
+      ", loadBalancerPortIndex=" + loadBalancerPortIndex +
       ", loadBalancerOptions=" + loadBalancerOptions +
       ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
       ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
