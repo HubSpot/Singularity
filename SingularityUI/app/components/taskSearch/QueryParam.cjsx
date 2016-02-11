@@ -1,14 +1,22 @@
+IconButton = require '../common/IconButton'
+
 QueryParam = React.createClass
 
     getClassName: ->
-        name="list-group-item"
-        if @props.cantClear
-            name += " disabled"
-        return name
+        classNames {
+            "list-group-item": true
+            "disabled": @props.cantClear
+        }
 
     render: ->
-        return  <li className={@getClassName()}>
+        return  <li className={classNames {
+                                "list-group-item": true
+                                "disabled": @props.cantClear
+                    }}>
                         <b>{@props.paramName}:</b> {@props.paramValue} 
-                        {<span className="remove-query-param glyphicon glyphicon-remove pull-right" onClick={@props.onClick} /> unless @props.cantClear}
+                        {<IconButton 
+                            className={['remove-query-param', 'pull-right', 'glyphicon-remove']} 
+                            onClick={@props.onClick} 
+                        /> unless @props.cantClear}
                 </li>
 module.exports = QueryParam
