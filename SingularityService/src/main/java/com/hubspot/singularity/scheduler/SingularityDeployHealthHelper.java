@@ -221,60 +221,41 @@ public class SingularityDeployHealthHelper {
     return DeployHealth.HEALTHY;
   }
 
-  public List<SingularityDeployFailure> getTaskFailures(final SingularityRequest request, final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> activeTasks,
-    final boolean isDeployPending) {
+  public List<SingularityDeployFailure> getTaskFailures(final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> activeTasks) {
     List<SingularityDeployFailure> failures = new ArrayList<>();
     Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> taskUpdates = taskManager.getTaskHistoryUpdates(activeTasks);
-    if (shouldCheckHealthchecks(request, deploy, activeTasks, isDeployPending)) {
-      Map<SingularityTaskId, SingularityTaskHealthcheckResult> healthcheckResults = taskManager.getLastHealthcheck(activeTasks);
+    Map<SingularityTaskId, SingularityTaskHealthcheckResult> healthcheckResults = taskManager.getLastHealthcheck(activeTasks);
 
-      for (SingularityTaskId taskId : activeTasks) {
-        Optional<SingularityDeployFailure> maybeFailure = getHealthcheckedTaskFailure(deploy.get(), taskUpdates, healthcheckResults, taskId);
-        if (maybeFailure.isPresent()) {
-          failures.add(maybeFailure.get());
-        }
-      }
-    } else {
-      for (SingularityTaskId taskId : activeTasks) {
-        Optional<SingularityDeployFailure> maybeFailure = getNonHealthcheckedTaskFailure(taskUpdates, taskId);
-        if (maybeFailure.isPresent()) {
-          failures.add(maybeFailure.get());
-        }
+    for (SingularityTaskId taskId : activeTasks) {
+      Optional<SingularityDeployFailure> maybeFailure = getTaskFailure(deploy.get(), taskUpdates, healthcheckResults, taskId);
+      if (maybeFailure.isPresent()) {
+        failures.add(maybeFailure.get());
       }
     }
     return failures;
   }
 
-  private Optional<SingularityDeployFailure> getHealthcheckedTaskFailure(SingularityDeploy deploy, Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> taskUpdates,
+  private Optional<SingularityDeployFailure> getTaskFailure(SingularityDeploy deploy, Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> taskUpdates,
     Map<SingularityTaskId, SingularityTaskHealthcheckResult> healthcheckResults, SingularityTaskId taskId) {
     SingularityTaskHealthcheckResult healthcheckResult = healthcheckResults.get(taskId);
+    Optional<SingularityDeployFailure> maybeFailure;
+    if (healthcheckResult == null) {
+      maybeFailure = getNonHealthcheckedTaskFailure(taskUpdates, taskId);
+    } else {
+      maybeFailure = getHealthcheckedTaskFailure(deploy, taskUpdates, healthcheckResult, taskId);
+    }
+    return maybeFailure;
+  }
+
+  private Optional<SingularityDeployFailure> getHealthcheckedTaskFailure(SingularityDeploy deploy, Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> taskUpdates,
+    SingularityTaskHealthcheckResult healthcheckResult, SingularityTaskId taskId) {
     Collection<SingularityTaskHistoryUpdate> updates = taskUpdates.get(taskId);
-    SingularityTaskHistoryUpdate lastUpdate = Iterables.getLast(updates);
 
-    LOG.info(lastUpdate.toString());
-    LOG.info(String.format("%s", healthcheckResult));
-
-    if (lastUpdate.getTaskState().isSuccess()) {
-      return Optional.of(new SingularityDeployFailure(SingularityDeployFailureReason.TASK_EXPECTED_RUNNING_FINISHED, Optional.of(taskId),
-        Optional.of(String.format("Task was expected to maintain TASK_RUNNING state but finished. (%s)", lastUpdate.getStatusMessage().or("")))));
-    } else if (lastUpdate.getTaskState().isDone()) {
-      return Optional.of(new SingularityDeployFailure(SingularityDeployFailureReason.TASK_FAILED_ON_STARTUP, Optional.of(taskId),
-        Optional.of(String.format("Task not currently in running state, task state was '%s' (%s)", lastUpdate.getTaskState(), lastUpdate.getStatusMessage().or("")))));
-    }
-
-    long runningAt = getRunningAt(updates);
-
-    if (runningAt <= 0) {
-      return Optional.of(new SingularityDeployFailure(SingularityDeployFailureReason.TASK_NEVER_ENTERED_RUNNING, Optional.of(taskId),
-        Optional.of(String.format("Task never entered running state, last state was '%s' (%s)", lastUpdate.getTaskState(), lastUpdate.getStatusMessage().or("")))));
-    }
-
-    if (healthcheckResult == null || !healthcheckResult.isFailed()) {
+    if (!healthcheckResult.isFailed()) {
       return Optional.absent();
     }
 
     final Optional<Integer> healthcheckMaxRetries = deploy.getHealthcheckMaxRetries().or(configuration.getHealthcheckMaxRetries());
-
     if (healthcheckMaxRetries.isPresent() && taskManager.getNumHealthchecks(taskId) > healthcheckMaxRetries.get()) {
       String message = String.format("%s failed %s healthchecks, the max for the deploy.", taskId, healthcheckMaxRetries.get());
       if (healthcheckResult.getStatusCode().isPresent()) {
@@ -283,8 +264,9 @@ public class SingularityDeployHealthHelper {
       return Optional.of(new SingularityDeployFailure(SingularityDeployFailureReason.TASK_FAILED_HEALTH_CHECKS, Optional.of(taskId), Optional.of(message)));
     }
 
+    long runningAt = getRunningAt(updates);
     final long durationSinceRunning = System.currentTimeMillis() - runningAt;
-    if (isRunningLongerthanThreshold(deploy, durationSinceRunning)) {
+    if (isRunningLongerThanThreshold(deploy, durationSinceRunning)) {
       return Optional.of(new SingularityDeployFailure(SingularityDeployFailureReason.TASK_FAILED_HEALTH_CHECKS, Optional.of(taskId),
         Optional.of(String.format("%s has been running for %s and has yet to pass healthchecks", taskId, JavaUtils.durationFromMillis(durationSinceRunning)))));
     }
@@ -292,7 +274,7 @@ public class SingularityDeployHealthHelper {
     return Optional.absent();
   }
 
-  private boolean isRunningLongerthanThreshold(SingularityDeploy deploy, long durationSinceRunning) {
+  private boolean isRunningLongerThanThreshold(SingularityDeploy deploy, long durationSinceRunning) {
     long relevantTimeoutSeconds = deploy.getHealthcheckMaxTotalTimeoutSeconds().or(configuration.getHealthcheckMaxTotalTimeoutSeconds()).or(deploy.getDeployHealthTimeoutSeconds()).or(
       configuration.getDeployHealthyBySeconds());
     return durationSinceRunning > TimeUnit.SECONDS.toMillis(relevantTimeoutSeconds);
