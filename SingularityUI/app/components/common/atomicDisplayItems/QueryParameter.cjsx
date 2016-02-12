@@ -16,8 +16,11 @@ QueryParameter = React.createClass
                         <b>{@props.paramName}:</b> {@props.paramValue} 
                         {<IconButton 
                             ariaLabel='Remove this parameter'
-                            className={['remove-query-param', 'pull-right', 'glyphicon-remove']} 
-                            onClick={@props.clearFn} 
+                            iconClass='remove'
+                            className={['remove-query-param', 'pull-right']}
+                            btnClass='default'
+                            btn = false
+                            onClick={@props.clearFn}
                         /> unless @props.cantClear}
                 </li>
 module.exports = QueryParameter

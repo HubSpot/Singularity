@@ -40,7 +40,7 @@ DateEntry = React.createClass
                     }}
                 />
                 <span className="input-group-addon">
-                    <Glyphicon iconClass="glyphicon-calendar"/>
+                    <Glyphicon iconClass="calendar"/>
                 </span>
             </div>
         </div>

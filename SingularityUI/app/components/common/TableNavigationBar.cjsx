@@ -56,22 +56,22 @@ TableNavigationBar = React.createClass
             <li 
             aria-label = 'Previous'
             onClick = @props.decreasePageNumber>
-                <IconButton className = {classNames {
+                <IconButton
+                iconClass = 'chevron-left'
+                btnClass = 'default'
+                className = {classNames {
                     'disabled': @props.currentPage == 1
-                    'glyphicon-chevron-left': true
-                    'btn-default': true
-                    'btn': true
                 }}/>
             </li>
             {@pageNumbersToDisplay().map @renderPageNumber}
             <li
             aria-label = 'Next'
             onClick = @props.increasePageNumber>
-                <IconButton className = {classNames {
+                <IconButton
+                iconClass = 'chevron-right'
+                btnClass = 'default'
+                className = {classNames {
                     disabled: @props.numberOfPages and @props.currentPage == @props.numberOfPages
-                    'btn': true
-                    'btn-default': true
-                    'glyphicon-chevron-right': true 
                 }}/>
             </li>
         </div>
