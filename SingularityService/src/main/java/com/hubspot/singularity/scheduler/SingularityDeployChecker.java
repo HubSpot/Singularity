@@ -632,7 +632,7 @@ public class SingularityDeployChecker {
 
   private List<SingularityDeployFailure> getDeployFailures(SingularityRequest request, Optional<SingularityDeploy> deploy, SingularityPendingDeploy pendingDeploy, DeployState state, Collection<SingularityTaskId> matchingTasks) {
     List<SingularityDeployFailure> failures = new ArrayList<>();
-    failures.addAll(deployHealthHelper.getTaskFailures(request, deploy, matchingTasks, true));
+    failures.addAll(deployHealthHelper.getTaskFailures(deploy, matchingTasks));
 
     if (state == DeployState.OVERDUE) {
       int targetInstances = pendingDeploy.getDeployProgress().isPresent() ? pendingDeploy.getDeployProgress().get().getTargetActiveInstances() :request.getInstancesSafe();
