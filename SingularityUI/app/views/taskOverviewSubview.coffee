@@ -72,7 +72,10 @@ class taskOverviewSubview extends View
                             vex.dialog.buttons.NO
                         ]
                         input: """
-                            <input name="wait-for-replacement-task" id="wait-for-replacement-task" type="checkbox" #{checked} /> Wait for replacement task to start before killing this task
+                            <label name="wait-for-replacement-task-label" id="wait-for-replacement-task-label" for="wait-for-replacement-task">
+                                <input name="wait-for-replacement-task" id="wait-for-replacement-task" type="checkbox" #{checked} /> 
+                                Wait for replacement task to start before killing this task
+                            </label>
                             <input name="message" type="text" placeholder="Message (optional)" />
                         """
                         message: templ id: @model.taskId
