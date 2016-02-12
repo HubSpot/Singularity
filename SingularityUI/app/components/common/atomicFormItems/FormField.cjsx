@@ -10,10 +10,10 @@ FormField = React.createClass
             id = {@props.id}
             onChange = {@props.prop.updateFn} 
             value = {@props.prop.value}
-            disabled = {if @props.prop.disabled then true else false}
+            disabled = @props.prop.disabled
             min = @props.prop.min
             max = @props.prop.max
-            required = {if @props.prop.required then true else false} 
+            required = @props.prop.required
         />
 
 module.exports = FormField
