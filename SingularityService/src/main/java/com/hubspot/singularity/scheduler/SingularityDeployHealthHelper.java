@@ -267,7 +267,7 @@ public class SingularityDeployHealthHelper {
 
     final Optional<Integer> healthcheckMaxRetries = deploy.getHealthcheckMaxRetries().or(configuration.getHealthcheckMaxRetries());
     if (healthcheckMaxRetries.isPresent() && taskManager.getNumHealthchecks(taskId) > healthcheckMaxRetries.get()) {
-      String message = String.format("Instance %s failed %s healthchecks, the max for the deploy.", taskId.getInstanceNo(), healthcheckMaxRetries.get());
+      String message = String.format("Instance %s failed %s healthchecks, the max for the deploy.", taskId.getInstanceNo(), healthcheckMaxRetries.get() + 1);
       if (healthcheckResult.getStatusCode().isPresent()) {
         message = String.format("%s Last check returned with status code %s", message, healthcheckResult.getStatusCode().get());
       }
@@ -277,8 +277,11 @@ public class SingularityDeployHealthHelper {
     long runningAt = getRunningAt(updates);
     final long durationSinceRunning = System.currentTimeMillis() - runningAt;
     if (isRunningLongerThanThreshold(deploy, durationSinceRunning)) {
-      return Optional.of(new SingularityDeployFailure(SingularityDeployFailureReason.TASK_FAILED_HEALTH_CHECKS, Optional.of(taskId),
-        Optional.of(String.format("Instance %s has been running for %s and has yet to pass healthchecks", taskId.getInstanceNo(), JavaUtils.durationFromMillis(durationSinceRunning)))));
+      String message = String.format("Instance %s has been running for %s and has yet to pass healthchecks.", taskId.getInstanceNo(), JavaUtils.durationFromMillis(durationSinceRunning));
+      if (healthcheckResult.getStatusCode().isPresent()) {
+        message = String.format("%s Last check returned with status code %s", message, healthcheckResult.getStatusCode().get());
+      }
+      return Optional.of(new SingularityDeployFailure(SingularityDeployFailureReason.TASK_FAILED_HEALTH_CHECKS, Optional.of(taskId), Optional.of(message)));
     }
 
     return Optional.absent();
