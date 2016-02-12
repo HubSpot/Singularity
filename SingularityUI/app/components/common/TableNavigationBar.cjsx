@@ -21,11 +21,11 @@ TableNavigationBar = React.createClass
 
     updatePageNumber: (event) ->
         @setState({
-            pageNumberEntered: event.target.value
+            pageNumberEntered: parseInt(event.target.value)
         })
 
     updateNumberPerPage: (event) ->
-        @props.setNumberPerPage event.target.value
+        @props.setNumberPerPage parseInt(event.target.value)
 
     pageNumbersToDisplay: ->
         pagesAround = @props.numberOfPagesAroundCurrentPage and @props.numberOfPagesAroundCurrentPage or 0
