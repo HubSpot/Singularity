@@ -443,7 +443,8 @@ public class SingularityDeployChecker {
 
     if (cancelRequest.isPresent()) {
       LOG.info("Canceling a deploy {} due to cancel request {}", pendingDeploy, cancelRequest.get());
-      return new SingularityDeployResult(DeployState.CANCELED, Optional.of(String.format("Canceled due to request by %s at %s", cancelRequest.get().getUser(), cancelRequest.get().getTimestamp())),
+      String userMessage = cancelRequest.get().getUser().isPresent() ? String.format(" by %s", cancelRequest.get().getUser().get()) : "";
+      return new SingularityDeployResult(DeployState.CANCELED, Optional.of(String.format("Canceled due to request%s at %s", userMessage, cancelRequest.get().getTimestamp())),
         pendingDeploy.getLastLoadBalancerUpdate(), SingularityDeployFailure.cancelled(), System.currentTimeMillis());
     }
 
