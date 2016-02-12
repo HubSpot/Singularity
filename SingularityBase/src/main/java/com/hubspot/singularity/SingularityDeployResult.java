@@ -35,7 +35,7 @@ public class SingularityDeployResult {
 
   @JsonCreator
   public SingularityDeployResult(@JsonProperty("deployState") DeployState deployState, @JsonProperty("message") Optional<String> message, @JsonProperty("lbUpdate") Optional<SingularityLoadBalancerUpdate> lbUpdate,
-    @JsonProperty("deployFailure") List<SingularityDeployFailure> deployFailures, @JsonProperty("timestamp") long timestamp) {
+    @JsonProperty("deployFailures") List<SingularityDeployFailure> deployFailures, @JsonProperty("timestamp") long timestamp) {
     this.deployState = deployState;
     this.lbUpdate = lbUpdate;
     this.message = message;
