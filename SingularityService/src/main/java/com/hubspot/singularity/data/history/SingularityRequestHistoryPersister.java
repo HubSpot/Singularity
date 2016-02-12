@@ -3,6 +3,7 @@ package com.hubspot.singularity.data.history;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -66,6 +67,34 @@ public class SingularityRequestHistoryPersister extends SingularityHistoryPersis
     @Override
     public int compareTo(SingularityRequestHistoryParent o) {
       return Longs.compare(this.getCreateTimestampForCalculatingHistoryAge(), o.getCreateTimestampForCalculatingHistoryAge());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      SingularityRequestHistoryParent that = (SingularityRequestHistoryParent) o;
+      return createTime == that.createTime &&
+          Objects.equals(history, that.history) &&
+          Objects.equals(requestId, that.requestId);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(history, requestId, createTime);
+    }
+
+    @Override
+    public String toString() {
+      return "SingularityRequestHistoryParent[" +
+          "history=" + history +
+          ", requestId='" + requestId + '\'' +
+          ", createTime=" + createTime +
+          ']';
     }
   }
 
