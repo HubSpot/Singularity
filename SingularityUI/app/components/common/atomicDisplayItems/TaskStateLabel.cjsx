@@ -1,9 +1,9 @@
-Utils = require '../../utils'
+Utils = require '../../../utils'
 
 TaskStateLabel = React.createClass
 
     getLabelClass: ->
-        switch @props.taskState
+        switch @props.prop.taskState
             when 'TASK_STARTING', 'TASK_CLEANING'
                 'warning'
             when 'TASK_STAGING', 'TASK_LAUNCHED', 'TASK_RUNNING'
@@ -20,7 +20,7 @@ TaskStateLabel = React.createClass
 
     render: ->
         <span className={@getClass()}>
-            {Utils.humanizeText @props.taskState}
+            {Utils.humanizeText @props.prop.taskState}
         </span>
 
 module.exports = TaskStateLabel

@@ -1,13 +1,14 @@
 FormField = require './FormField'
+Glyphicon = require '../atomicDisplayItems/Glyphicon'
 
 DateEntry = React.createClass
 
     componentDidMount: ->
         id = '#' + @props.id
-        changeFn = @props.updateFn
+        changeFn = @props.prop.updateFn
         $ -> $(id).datetimepicker({
                 sideBySide: true
-                format: "ddd MMM DD YYYY HH:mm:ss [UTC]ZZ"
+                format: window.config.timestampWithSecondsFormat
                 # This option is of course not documented at all. 
                 # Probably because it doesn't work very well.
                 # It can be seen in the bootstrap-datetimepicker GitHub.
@@ -16,9 +17,9 @@ DateEntry = React.createClass
             }).on('dp.change', changeFn) # value will be in event.date
 
     getValue: ->
-        return unless @props.value
-        time = moment @props.value
-        return time.format "ddd MMM DD YYYY HH:mm:ss [UTC]ZZ"
+        return unless @props.prop.value
+        time = moment @props.prop.value
+        return time.format window.config.timestampWithSecondsFormat
 
     # MUST pass in UNIQUE id in props.
     # Otherwise the datetime picker will break in ways that aren't even very interesting
@@ -26,17 +27,20 @@ DateEntry = React.createClass
         <div className="form-group">
             <div className='input-group date' id={@props.id}>
                 <FormField 
-                    className = 'form-control'
-                    placeholder = {@props.title}
-                    type = {@props.inputType}
-                    disabled = {@props.disabled}
-                    size = {@props.size}
-                    value = {@getValue()}
-                    updateFn = {@props.updateFn} 
                     id = {@props.id}
+                    prop = {{
+                        updateFn: @props.prop.updateFn
+                        value: @getValue()
+                        size: @props.prop.size
+                        disabled: @props.prop.disabled
+                        type: @props.prop.inputType
+                        placeholder: @props.prop.placeholder
+                        required: @props.prop.required
+                        customClass: @props.prop.customClass
+                    }}
                 />
                 <span className="input-group-addon">
-                    <span className="glyphicon glyphicon-calendar"></span>
+                    <Glyphicon iconClass="glyphicon-calendar"/>
                 </span>
             </div>
         </div>

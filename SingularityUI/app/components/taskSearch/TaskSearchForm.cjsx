@@ -1,8 +1,9 @@
 Utils = require '../../utils'
 
-FormField = require '../common/input/FormField'
-DropDown = require '../common/input/DropDown'
-DateEntry = require '../common/input/DateEntry'
+Form = require '../common/Form'
+FormField = require '../common/atomicFormItems/FormField'
+DropDown = require '../common/atomicFormItems/DropDown'
+DateEntry = require '../common/atomicFormItems/DateEntry'
 Enums = require './Enums'
 Header = require './Header'
 
@@ -11,90 +12,109 @@ TaskSearchForm = React.createClass
     updateCount: (event) ->
         @props.updateCount(event.target.value)
 
+    getFormGroups: ->
+        [
+            {
+                component: FormField
+                title: 'Request ID'
+                id: 'requestId'
+                prop: {
+                    value: @props.requestId
+                    inputType: 'text'
+                    disabled: not @props.global
+                    updateFn: @props.updateReqeustId
+                }
+            },
+            {
+                component: FormField
+                title: 'Deploy ID'
+                id: 'deployId'
+                prop: {
+                    value: @props.deployId
+                    inputType: 'text'
+                    updateFn: @props.updateDeployId
+                }
+            },
+            {
+                component: FormField
+                title: 'Host'
+                id: 'host'
+                prop: {
+                    value: @props.host
+                    inputType: 'text'
+                    updateFn: @props.updateHost
+                }
+            },
+            {
+                component: DropDown
+                title: 'Last Task Status'
+                id: 'lastTaskStatus'
+                prop: {
+                    value: @props.lastTaskStatus
+                    forceChooseValue: false
+                    choices: Enums.extendedTaskState()
+                    inputType: 'text'
+                    updateFn: @props.updateLastTaskStatus
+                }
+            },
+            {
+                component: DateEntry
+                title: 'Started Before'
+                id: 'startedBefore'
+                prop: {
+                    value: @props.startedBefore
+                    inputType: 'datetime'
+                    updateFn: @props.updateStartedBefore
+                }
+            },
+            {
+                component: DateEntry
+                title: 'Started After'
+                id: 'startedAfter'
+                prop: {
+                    value: @props.startedAfter
+                    inputType: 'datetime'
+                    updateFn: @props.updateStartedAfter
+                }
+            },
+            {
+                component: DropDown
+                title: 'Sort Direction'
+                id: 'sortDirection'
+                prop: {
+                    value: @props.sortDirection
+                    inputType: 'text'
+                    choices: Enums.sortDirections()
+                    forceChooseValue: true
+                    updateFn: @props.updateSortDirection
+                }
+            },
+            {
+                component: DropDown
+                title: 'Tasks Per Page'
+                id: 'count'
+                prop: {
+                    value: @props.count
+                    choices: @props.countChoices
+                    inputType: 'number'
+                    forceChooseValue: true
+                    updateFn: @updateCount
+                }
+            }
+        ]
+
     render: ->
         <div className='col-xs-5'>
-            <Header
-                global = @props.global
-                requestId = @props.requestId
-            />
-            <form role="form" onSubmit={@props.handleSubmit}>
-                <div className='form-group'>
-                    <label htmlFor="requestId">Request ID:</label>
-                    <FormField 
-                        value = @props.requestId 
-                        inputType = 'text'
-                        id = 'requestId'
-                        disabled = {'disabled' unless @props.global}
-                        updateFn = @props.updateReqeustId />
-                </div>
-                <div className='form-group'>
-                    <label htmlFor="deployId">Deploy ID:</label>
-                    <FormField
-                        value = @props.deployId 
-                        inputType = 'text'
-                        id = 'deployId'
-                        updateFn = @props.updateDeployId />
-                </div>
-                <div className='form-group'>
-                    <label htmlFor="host">Host:</label>
-                    <FormField
-                        value = @props.host 
-                        inputType = 'text'
-                        id = 'host'
-                        updateFn = @props.updateHost />
-                </div>
-                <div className='form-group'>
-                    <label htmlFor="lastTaskStatus">Last Task Status:</label>
-                    <DropDown
-                        forceChooseValue = false
-                        value = @props.lastTaskStatus
-                        choices = Enums.extendedTaskState()
-                        inputType = 'lastTaskStatus'
-                        title = 'Last Task Status'
-                        id = 'lastTaskStatus'
-                        updateFn = @props.updateLastTaskStatus />
-                </div>
-                <div className='form-group'>
-                    <label htmlFor="startedBefore">Started Before:</label>
-                    <DateEntry 
-                        value = @props.startedBefore
-                        inputType = 'date'
-                        id = 'startedBefore'
-                        updateFn = @props.updateStartedBefore />
-                </div>
-                <div className='form-group'>
-                    <label htmlFor="startedAfter">Started After:</label>
-                    <DateEntry 
-                        value = @props.startedAfter 
-                        inputType = 'date'
-                        id = 'startedAfter'
-                        updateFn = @props.updateStartedAfter />
-                </div>
-                <div className='form-group'>
-                    <label htmlFor="sortDirection">Sort Direction:</label>
-                    <DropDown
-                        forceChooseValue = true
-                        value = @props.sortDirection
-                        choices = Enums.sortDirections()
-                        inputType = 'sortDirection'
-                        id = 'sortDirection'
-                        title = 'Sort Direction'
-                        updateFn = @props.updateSortDirection />
-                </div>
-                <div className='form-group'>
-                    <label htmlFor="count">Tasks Per Page:</label>
-                    <DropDown
-                        forceChooseValue = true
-                        value = @props.count
-                        choices = {@props.countChoices}
-                        inputType = 'number'
-                        id = 'count'
-                        title = 'Tasks Per Page'
-                        updateFn = @updateCount />
-                </div>
-                <button type="button" className="btn btn-danger" onClick={@props.resetForm}>Clear Form</button>
-                <button type="submit" className="btn btn-primary pull-right">Search</button>
-            </form>
+        <Header
+            global = @props.global
+            requestId = @props.requestId
+        />
+        <Form
+            formGroups = {@getFormGroups()}
+            submitButtonText = "Search"
+            resetForm = {@props.resetForm}
+            handleSubmit = {@props.handleSubmit}
+        />
         </div>
 
 module.exports = TaskSearchForm
