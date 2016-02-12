@@ -255,6 +255,16 @@ public class SingularityDeployHealthHelper {
       return Optional.absent();
     }
 
+    SingularityTaskHistoryUpdate lastUpdate = Iterables.getLast(updates);
+    if (lastUpdate.getTaskState().isDone()) {
+      if (lastUpdate.getTaskState().isSuccess()) {
+        return Optional.of(new SingularityDeployFailure(SingularityDeployFailureReason.TASK_EXPECTED_RUNNING_FINISHED, Optional.of(taskId),
+          Optional.of(String.format("Task was expected to maintain TASK_RUNNING state but finished. (%s)", lastUpdate.getStatusMessage().or("")))));
+      } else {
+        return Optional.of(new SingularityDeployFailure(SingularityDeployFailureReason.TASK_FAILED_ON_STARTUP, Optional.of(taskId), lastUpdate.getStatusMessage()));
+      }
+    }
+
     final Optional<Integer> healthcheckMaxRetries = deploy.getHealthcheckMaxRetries().or(configuration.getHealthcheckMaxRetries());
     if (healthcheckMaxRetries.isPresent() && taskManager.getNumHealthchecks(taskId) > healthcheckMaxRetries.get()) {
       String message = String.format("%s failed %s healthchecks, the max for the deploy.", taskId, healthcheckMaxRetries.get());
