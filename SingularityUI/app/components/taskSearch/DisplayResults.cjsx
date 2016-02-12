@@ -4,6 +4,7 @@ QueryParameters = require '../common/QueryParameters'
 FormField = require '../common/atomicFormItems/FormField'
 DropDown = require '../common/atomicFormItems/DropDown'
 TaskTable = require '../common/TaskTable'
+TableNavigationBar = require '../common/TableNavigationBar'
 
 Header = require './Header'
 Enums = require './Enums'
@@ -11,9 +12,9 @@ Enums = require './Enums'
 DisplayResults = React.createClass
 
     collectionsReset: (event, response) ->
-        @setState({
-            loading: false
-        })
+            @setState({
+                loading: false
+            })
 
     # Used to detect if any props have changed
     didPropsChange: (nextProps) ->
@@ -100,75 +101,20 @@ DisplayResults = React.createClass
             }
         ]
 
-    updatePageNumber: (event) ->
-        @setState({
-            pageNumberEntered: event.target.value
-        })
-
-    handlePageJump: (event) ->
-        event.preventDefault()
-        @props.setPageNumber(@state.pageNumberEntered)
-        @setState({
-            pageNumberEntered: ''
-        })
-
-    updateCount: (event) ->
-        @props.updateCount(event.target.value)
-
-    # using className="previous" for the next button is necessary to align
-    # it to the left side of the page. This is built into bootstrap
-    renderPageToggles: ->
-        <div className="container-fluid">
-            <nav>
-                <ul className="pager line">
-                    <li className={classNames 'previous', {'disabled': @collection.params.page == 1}} onClick={@props.decreasePageNumber}><a href="#">Previous</a></li>
-                    <li className="previous disabled"><a href="#">Page {@collection.params.page}</a></li>
-                    <li className="previous" onClick={@props.increasePageNumber}><a href="#">Next</a></li>
-                    <form role="form" onSubmit={@handlePageJump} className='form-inline text-left'>
-                        <div className='form-group'>
-                            <label htmlFor="pageNumber" className="sr-only">Jump To Page:</label>
-                            <FormField 
-                                id = 'pageNumber'
-                                prop = {{
-                                    value: @state.pageNumberEntered 
-                                    inputType: 'number'
-                                    updateFn: @updatePageNumber
-                                }} />
-                        </div>
-                        <button type="submit" className="btn btn-default">Jump!</button>
-                        &nbsp;&nbsp;
-                        <div className='form-group'>
-                            <label htmlFor='count'>Tasks Per Page: </label>
-                            &nbsp;&nbsp;
-                            <DropDown
-                                id = 'count'
-                                prop = {{
-                                    forceChooseValue: true
-                                    value: @props.count
-                                    choices: @props.countChoices
-                                    inputType: 'number'
-                                    updateFn: @updateCount
-                                }} />
-                        </div>
-                        &nbsp;&nbsp;
-                        <div className='form-group'>
-                            <label htmlFor="sortDirection">Sort Direction:</label>
-                            &nbsp;&nbsp;
-                            <DropDown
-                                id = 'sortDirection'
-                                prop = {{
-                                    forceChooseValue: true
-                                    value: @props.sortDirection
-                                    choices: Enums.sortDirections()
-                                    inputType: 'sortDirection'
-                                    updateFn: @props.updateSortDirection
-                                }} />
-                        </div>
-                    </form>
-                </ul>
-            </nav>
-        </div>
-
+    renderPageNavBar: ->
+        <TableNavigationBar
+            currentPage = @collection.params.page
+            decreasePageNumber = @props.decreasePageNumber
+            increasePageNumber = @props.increasePageNumber
+            setPageNumber = @props.setPageNumber
+            numberPerPage = @props.count
+            objectsBeingDisplayed = "Tasks"
+            numberPerPageChoices = @props.countChoices
+            setNumberPerPage = @props.updateCount
+            sortDirection = @props.sortDirection
+            sortDirectionChoices = Enums.sortDirections()
+            setSortDirection = @props.updateSortDirection
+        />
 
     render: ->
         @fetchCollection() if @willFetch
@@ -184,11 +130,11 @@ DisplayResults = React.createClass
             />
             <button className="btn btn-primary" onClick={@props.returnToForm}>Modify Query Parameters</button>
             <h2>Tasks</h2>
-            {@renderPageToggles()}
+            {@renderPageNavBar()}
             <TaskTable
                 models = {@collection.models}
             />
-            {@renderPageToggles()}
+            {@renderPageNavBar()}
         </div>
 
 module.exports = DisplayResults

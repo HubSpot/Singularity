@@ -25,11 +25,12 @@ DropDown = React.createClass
     # or a mixture
     render: ->
         return <select  id=@props.id 
-                        className='form-control' 
-                        type={@props.prop.inputType} 
-                        onChange={@props.prop.updateFn} 
-                        value={@props.prop.value} 
-                        defaultValue={@props.prop.defaultValue}>
+                        className = {classNames 'form-control', @props.prop.customClass}
+                        type = {@props.prop.inputType} 
+                        onChange = {@props.prop.updateFn} 
+                        value = {@props.prop.value} 
+                        defaultValue = {@props.prop.defaultValue}
+                        required = {if @props.prop.required then true else false}>
                     {<option key=0 value='' /> unless @props.prop.forceChooseValue}
                     {@dropDownOpts()}
                 </select>

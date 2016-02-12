@@ -35,6 +35,8 @@ DateEntry = React.createClass
                         disabled: @props.prop.disabled
                         type: @props.prop.inputType
                         placeholder: @props.prop.placeholder
+                        required: @props.prop.required
+                        customClass: @props.prop.customClass
                     }}
                 />
                 <span className="input-group-addon">

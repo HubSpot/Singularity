@@ -63,7 +63,7 @@ TaskSearchForm = React.createClass
                 id: 'startedBefore'
                 prop: {
                     value: @props.startedBefore
-                    inputType: 'date'
+                    inputType: 'datetime'
                     updateFn: @props.updateStartedBefore
                 }
             },
@@ -73,7 +73,7 @@ TaskSearchForm = React.createClass
                 id: 'startedAfter'
                 prop: {
                     value: @props.startedAfter
-                    inputType: 'date'
+                    inputType: 'datetime'
                     updateFn: @props.updateStartedAfter
                 }
             },
