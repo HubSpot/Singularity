@@ -35,7 +35,7 @@ public abstract class SingularityHistoryPersister<T extends SingularityHistoryIt
 
   @Override
   protected boolean isEnabled() {
-    return persistsHistoryInsteadOfPurging() || getMaxAgeInMillisOfItem() > 0;
+    return persistsHistoryInsteadOfPurging() || getMaxAgeInMillisOfItem() > 0 || getMaxNumberOfItems().isPresent();
   }
 
   protected abstract long getMaxAgeInMillisOfItem();
