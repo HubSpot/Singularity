@@ -34,13 +34,33 @@
             </a>
         </div>
     </div>
-    {{#if data.deployResult.message}}
+    
+    {{#if data.deployResult.deployFailures}}
         <div class="row">
             <div class="col-md-12">
-                <div class="well text-muted">
-                    {{ data.deployResult.message }}
+                <div class="panel panel-default">
+                    <div class="panel-heading text-muted">{{ data.deployResult.message }}</div>
+                    <div class="panel-body">
+                        {{#each data.deployResult.deployFailures}}
+                            {{#if taskId}}
+                                <a href="{{appRoot}}/task/{{ taskId.id }}" class="list-group-item">{{humanizeText reason }} (Instance {{taskId.instanceNo}}){{#if message}}: {{ message }}{{/if}}</a>
+                            {{else}}
+                                <li class="list-group-item">{{humanizeText reason }}{{#if message}}: {{ message }}{{/if}}</li>
+                            {{/if}}
+                        {{/each}}
+                    </div>
                 </div>
             </div>
         </div>
+    {{else}}
+        {{#if data.deployResult.message}}
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="well text-muted">
+                        {{ data.deployResult.message }}
+                    </div>
+                </div>
+            </div>
+        {{/if}}
     {{/if}}
 </header>
