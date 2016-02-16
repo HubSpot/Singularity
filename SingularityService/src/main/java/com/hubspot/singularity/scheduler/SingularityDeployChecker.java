@@ -422,7 +422,8 @@ public class SingularityDeployChecker {
   }
 
   private boolean canRetryTasks(Optional<SingularityDeploy> deploy, Collection<SingularityTaskId> inactiveDeployMatchingTasks) {
-    return deploy.isPresent() && deploy.get().getMaxTaskRetries().isPresent() && inactiveDeployMatchingTasks.size() <= deploy.get().getMaxTaskRetries().get();
+    int maxRetries = deploy.get().getMaxTaskRetries().or(configuration.getDefaultDeployMaxTaskRetries());
+    return deploy.isPresent() && maxRetries > 0 && inactiveDeployMatchingTasks.size() <= maxRetries;
   }
 
   private Set<SingularityTaskId> getNewInactiveDeployTasks(SingularityPendingDeploy pendingDeploy, Collection<SingularityTaskId> inactiveDeployMatchingTasks) {
