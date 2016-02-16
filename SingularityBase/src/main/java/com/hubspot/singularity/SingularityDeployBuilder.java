@@ -55,6 +55,11 @@ public class SingularityDeployBuilder {
   private Optional<Integer> loadBalancerPortIndex;
   private Optional<Map<String, Object>> loadBalancerOptions;
 
+  private Optional<Integer> deployInstanceCountPerStep;
+  private Optional<Integer> deployStepWaitTimeMs;
+  private Optional<Boolean> autoAdvanceDeploySteps;
+  private Optional<Integer> maxTaskRetries;
+
   public SingularityDeployBuilder(String requestId, String id) {
     this.requestId = requestId;
     this.id = id;
@@ -88,12 +93,17 @@ public class SingularityDeployBuilder {
     this.loadBalancerGroups = Optional.absent();
     this.loadBalancerPortIndex = Optional.absent();
     this.loadBalancerOptions = Optional.absent();
+    this.deployInstanceCountPerStep = Optional.absent();
+    this.deployStepWaitTimeMs = Optional.absent();
+    this.autoAdvanceDeploySteps = Optional.absent();
+    this.maxTaskRetries = Optional.absent();
   }
 
   public SingularityDeploy build() {
-    return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, customExecutorUser, resources, env,
-        uris, metadata, executorData, version, timestamp, labels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
-        healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy, healthcheckProtocol);
+    return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, customExecutorUser, resources,
+      env, uris, metadata, executorData, version, timestamp, labels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
+      healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy, healthcheckProtocol,
+      deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries);
   }
 
   public String getRequestId() {
@@ -379,6 +389,42 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<Integer> getDeployInstanceCountPerStep() {
+    return deployInstanceCountPerStep;
+  }
+
+  public SingularityDeployBuilder setDeployInstanceCountPerStep(Optional<Integer> deployInstanceCountPerStep) {
+    this.deployInstanceCountPerStep = deployInstanceCountPerStep;
+    return this;
+  }
+
+  public Optional<Integer> getDeployStepWaitTimeMs() {
+    return deployStepWaitTimeMs;
+  }
+
+  public SingularityDeployBuilder setDeployStepWaitTimeMs(Optional<Integer> deployStepWaitTimeMs) {
+    this.deployStepWaitTimeMs = deployStepWaitTimeMs;
+    return this;
+  }
+
+  public Optional<Boolean> getAutoAdvanceDeploySteps() {
+    return autoAdvanceDeploySteps;
+  }
+
+  public SingularityDeployBuilder setAutoAdvanceDeploySteps(Optional<Boolean> autoAdvanceDeploySteps) {
+    this.autoAdvanceDeploySteps = autoAdvanceDeploySteps;
+    return this;
+  }
+
+  public Optional<Integer> getMaxTaskRetries() {
+    return maxTaskRetries;
+  }
+
+  public SingularityDeployBuilder setMaxTaskRetries(Optional<Integer> maxTaskRetries) {
+    this.maxTaskRetries = maxTaskRetries;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeployBuilder{" +
@@ -414,6 +460,10 @@ public class SingularityDeployBuilder {
       ", loadBalancerGroups=" + loadBalancerGroups +
       ", loadBalancerPortIndex=" + loadBalancerPortIndex +
       ", loadBalancerOptions=" + loadBalancerOptions +
+      ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
+      ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
+      ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +
+      ", maxTaskRetries=" + maxTaskRetries +
       '}';
   }
 

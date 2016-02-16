@@ -15,13 +15,15 @@ public class SingularityLoadBalancerUpdate {
   private final LoadBalancerMethod method;
   private final LoadBalancerRequestId loadBalancerRequestId;
 
+
   public enum LoadBalancerMethod {
     PRE_ENQUEUE, ENQUEUE, CHECK_STATE, CANCEL, DELETE;
   }
 
   @JsonCreator
-  public SingularityLoadBalancerUpdate(@JsonProperty("state") BaragonRequestState loadBalancerState, @JsonProperty("loadBalancerRequestId") LoadBalancerRequestId loadBalancerRequestId, @JsonProperty("message") Optional<String> message,
-      @JsonProperty("timestamp") long timestamp, @JsonProperty("method") LoadBalancerMethod method, @JsonProperty("uri") Optional<String> uri) {
+  public SingularityLoadBalancerUpdate(@JsonProperty("state") BaragonRequestState loadBalancerState, @JsonProperty("loadBalancerRequestId") LoadBalancerRequestId loadBalancerRequestId,
+    @JsonProperty("message") Optional<String> message,
+    @JsonProperty("timestamp") long timestamp, @JsonProperty("method") LoadBalancerMethod method, @JsonProperty("uri") Optional<String> uri) {
     this.loadBalancerState = loadBalancerState;
     this.message = message;
     this.timestamp = timestamp;
@@ -54,9 +56,15 @@ public class SingularityLoadBalancerUpdate {
     return loadBalancerRequestId;
   }
 
+  public static SingularityLoadBalancerUpdate preEnqueue(LoadBalancerRequestId lbRequestId) {
+    return new SingularityLoadBalancerUpdate(BaragonRequestState.UNKNOWN, lbRequestId, Optional.<String>absent(), System.currentTimeMillis(), LoadBalancerMethod.PRE_ENQUEUE,
+      Optional.<String>absent());
+  }
+
   @Override
   public String toString() {
-    return "SingularityLoadBalancerUpdate [loadBalancerState=" + loadBalancerState + ", message=" + message + ", timestamp=" + timestamp + ", uri=" + uri + ", method=" + method + ", loadBalancerRequestId=" + loadBalancerRequestId + "]";
+    return "SingularityLoadBalancerUpdate [loadBalancerState=" + loadBalancerState + ", message=" + message + ", timestamp=" + timestamp + ", uri=" + uri + ", method=" + method
+      + ", loadBalancerRequestId=" + loadBalancerRequestId + "]";
   }
 
 }
