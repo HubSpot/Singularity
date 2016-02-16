@@ -1,5 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -12,10 +13,13 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityDeploy;
+import com.hubspot.singularity.SingularityDeployFailure;
+import com.hubspot.singularity.SingularityDeployFailureReason;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
@@ -215,5 +219,106 @@ public class SingularityDeployHealthHelper {
       return DeployHealth.WAITING;
     }
     return DeployHealth.HEALTHY;
+  }
+
+  public List<SingularityDeployFailure> getTaskFailures(final Optional<SingularityDeploy> deploy, final Collection<SingularityTaskId> activeTasks) {
+    List<SingularityDeployFailure> failures = new ArrayList<>();
+    Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> taskUpdates = taskManager.getTaskHistoryUpdates(activeTasks);
+    Map<SingularityTaskId, SingularityTaskHealthcheckResult> healthcheckResults = taskManager.getLastHealthcheck(activeTasks);
+
+    for (SingularityTaskId taskId : activeTasks) {
+      Optional<SingularityDeployFailure> maybeFailure = getTaskFailure(deploy.get(), taskUpdates, healthcheckResults, taskId);
+      if (maybeFailure.isPresent()) {
+        failures.add(maybeFailure.get());
+      }
+    }
+    return failures;
+  }
+
+  private Optional<SingularityDeployFailure> getTaskFailure(SingularityDeploy deploy, Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> taskUpdates,
+    Map<SingularityTaskId, SingularityTaskHealthcheckResult> healthcheckResults, SingularityTaskId taskId) {
+    SingularityTaskHealthcheckResult healthcheckResult = healthcheckResults.get(taskId);
+    Optional<SingularityDeployFailure> maybeFailure;
+    if (healthcheckResult == null) {
+      maybeFailure = getNonHealthcheckedTaskFailure(taskUpdates, taskId);
+    } else {
+      maybeFailure = getHealthcheckedTaskFailure(deploy, taskUpdates, healthcheckResult, taskId);
+    }
+    return maybeFailure;
+  }
+
+  private Optional<SingularityDeployFailure> getHealthcheckedTaskFailure(SingularityDeploy deploy, Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> taskUpdates,
+    SingularityTaskHealthcheckResult healthcheckResult, SingularityTaskId taskId) {
+    Collection<SingularityTaskHistoryUpdate> updates = taskUpdates.get(taskId);
+
+    if (!healthcheckResult.isFailed()) {
+      return Optional.absent();
+    }
+
+    SingularityTaskHistoryUpdate lastUpdate = Iterables.getLast(updates);
+    if (lastUpdate.getTaskState().isDone()) {
+      if (lastUpdate.getTaskState().isSuccess()) {
+        return Optional.of(new SingularityDeployFailure(SingularityDeployFailureReason.TASK_EXPECTED_RUNNING_FINISHED, Optional.of(taskId),
+          Optional.of(String.format("Task was expected to maintain TASK_RUNNING state but finished. (%s)", lastUpdate.getStatusMessage().or("")))));
+      } else {
+        return Optional.of(new SingularityDeployFailure(SingularityDeployFailureReason.TASK_FAILED_ON_STARTUP, Optional.of(taskId), lastUpdate.getStatusMessage()));
+      }
+    }
+
+    final Optional<Integer> healthcheckMaxRetries = deploy.getHealthcheckMaxRetries().or(configuration.getHealthcheckMaxRetries());
+    if (healthcheckMaxRetries.isPresent() && taskManager.getNumHealthchecks(taskId) > healthcheckMaxRetries.get()) {
+      String message = String.format("Instance %s failed %s healthchecks, the max for the deploy.", taskId.getInstanceNo(), healthcheckMaxRetries.get() + 1);
+      if (healthcheckResult.getStatusCode().isPresent()) {
+        message = String.format("%s Last check returned with status code %s", message, healthcheckResult.getStatusCode().get());
+      }
+      return Optional.of(new SingularityDeployFailure(SingularityDeployFailureReason.TASK_FAILED_HEALTH_CHECKS, Optional.of(taskId), Optional.of(message)));
+    }
+
+    long runningAt = getRunningAt(updates);
+    final long durationSinceRunning = System.currentTimeMillis() - runningAt;
+    if (isRunningLongerThanThreshold(deploy, durationSinceRunning)) {
+      String message = String.format("Instance %s has been running for %s and has yet to pass healthchecks.", taskId.getInstanceNo(), JavaUtils.durationFromMillis(durationSinceRunning));
+      if (healthcheckResult.getStatusCode().isPresent()) {
+        message = String.format("%s Last check returned with status code %s", message, healthcheckResult.getStatusCode().get());
+      }
+      return Optional.of(new SingularityDeployFailure(SingularityDeployFailureReason.TASK_FAILED_HEALTH_CHECKS, Optional.of(taskId), Optional.of(message)));
+    }
+
+    return Optional.absent();
+  }
+
+  private boolean isRunningLongerThanThreshold(SingularityDeploy deploy, long durationSinceRunning) {
+    long relevantTimeoutSeconds = deploy.getHealthcheckMaxTotalTimeoutSeconds().or(configuration.getHealthcheckMaxTotalTimeoutSeconds()).or(deploy.getDeployHealthTimeoutSeconds()).or(
+      configuration.getDeployHealthyBySeconds());
+    return durationSinceRunning > TimeUnit.SECONDS.toMillis(relevantTimeoutSeconds);
+  }
+
+  private long getRunningAt(Collection<SingularityTaskHistoryUpdate> updates) {
+    long runningAt = 0;
+
+    for (SingularityTaskHistoryUpdate update : updates) {
+      if (update.getTaskState() == ExtendedTaskState.TASK_RUNNING) {
+        runningAt = update.getTimestamp();
+        break;
+      }
+    }
+
+    return runningAt;
+  }
+
+  private Optional<SingularityDeployFailure> getNonHealthcheckedTaskFailure(Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> taskUpdates, SingularityTaskId taskId) {
+    List<SingularityTaskHistoryUpdate> updates = taskUpdates.get(taskId);
+    SingularityTaskHistoryUpdate lastUpdate = Iterables.getLast(updates);
+
+    if (lastUpdate.getTaskState().isSuccess()) {
+      return Optional.of(new SingularityDeployFailure(SingularityDeployFailureReason.TASK_EXPECTED_RUNNING_FINISHED, Optional.of(taskId),
+        Optional.of(String.format("Task was expected to maintain TASK_RUNNING state but finished. (%s)", lastUpdate.getStatusMessage().or("")))));
+    } else if (lastUpdate.getTaskState().isDone()) {
+      return Optional.of(new SingularityDeployFailure(SingularityDeployFailureReason.TASK_FAILED_ON_STARTUP, Optional.of(taskId), lastUpdate.getStatusMessage()));
+    } else if (SingularityTaskHistoryUpdate.getCurrentState(updates) == SimplifiedTaskState.WAITING) {
+      return Optional.of(new SingularityDeployFailure(SingularityDeployFailureReason.TASK_NEVER_ENTERED_RUNNING, Optional.of(taskId),
+        Optional.of(String.format("Task never entered running state, last state was %s (%s)", lastUpdate.getTaskState().getDisplayName(), lastUpdate.getStatusMessage().or("")))));
+    }
+    return Optional.absent();
   }
 }
