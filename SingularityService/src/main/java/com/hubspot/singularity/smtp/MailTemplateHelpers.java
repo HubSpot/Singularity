@@ -3,6 +3,7 @@ package com.hubspot.singularity.smtp;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -29,7 +30,6 @@ public class MailTemplateHelpers {
 
   private static final Logger LOG = LoggerFactory.getLogger(MailTemplateHelpers.class);
 
-  private static final String TASK_DATE_PATTERN = "MMM dd HH:mm:ss";
   private static final String TASK_LINK_FORMAT = "%s/task/%s";
   private static final String REQUEST_LINK_FORMAT = "%s/request/%s";
   private static final String LOG_LINK_FORMAT = "%s/task/%s/tail/%s";
@@ -38,9 +38,13 @@ public class MailTemplateHelpers {
 
   private final Optional<String> uiBaseUrl;
   private final Optional<SMTPConfiguration> smtpConfiguration;
+  private String taskDatePattern;
+  private TimeZone timeZone;
 
   @Inject
   public MailTemplateHelpers(SandboxManager sandboxManager, SingularityConfiguration singularityConfiguration) {
+    taskDatePattern = singularityConfiguration.getDefaultDatePattern();
+    timeZone = singularityConfiguration.getTimeZone();
     this.uiBaseUrl = singularityConfiguration.getUiConfiguration().getBaseUrl();
     this.sandboxManager = sandboxManager;
     this.smtpConfiguration = singularityConfiguration.getSmtpConfiguration();
@@ -52,7 +56,7 @@ public class MailTemplateHelpers {
     for (SingularityTaskHistoryUpdate taskUpdate : taskHistory) {
       output.add(
           new SingularityMailTaskHistoryUpdate(
-              DateFormatUtils.formatUTC(taskUpdate.getTimestamp(), TASK_DATE_PATTERN),
+              DateFormatUtils.format(taskUpdate.getTimestamp(), taskDatePattern, timeZone),
               WordUtils.capitalize(taskUpdate.getTaskState().getDisplayName()),
               taskUpdate.getStatusMessage().or("")));
     }

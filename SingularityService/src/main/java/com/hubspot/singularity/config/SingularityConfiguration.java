@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.TimeZone;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
@@ -75,6 +76,8 @@ public class SingularityConfiguration extends Configuration {
 
   @Min(value = 1, message = "Must be positive and non-zero")
   private int defaultBounceExpirationMinutes = 60;
+
+  private String defaultDatePattern = "MMM dd h:mm:ss a";
 
   @NotNull
   private SlavePlacement defaultSlavePlacement = SlavePlacement.GREEDY;
@@ -184,6 +187,8 @@ public class SingularityConfiguration extends Configuration {
   private SMTPConfiguration smtpConfiguration;
 
   private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toSeconds(10);
+
+  private TimeZone timeZone = TimeZone.getTimeZone("UTC");
 
   @JsonProperty("ui")
   @Valid
@@ -954,5 +959,21 @@ public class SingularityConfiguration extends Configuration {
 
   public void setMaxStaleTasksPerRequestInZkWhenNoDatabase(Optional<Integer> maxStaleTasksPerRequestInZkWhenNoDatabase) {
     this.maxStaleTasksPerRequestInZkWhenNoDatabase = maxStaleTasksPerRequestInZkWhenNoDatabase;
+  }
+
+  public String getDefaultDatePattern() {
+    return defaultDatePattern;
+  }
+
+  public void setDefaultDatePattern(String defaultDatePattern) {
+    this.defaultDatePattern = defaultDatePattern;
+  }
+
+  public TimeZone getTimeZone() {
+    return timeZone;
+  }
+
+  public void setTimeZone(TimeZone timeZone) {
+    this.timeZone = timeZone;
   }
 }
