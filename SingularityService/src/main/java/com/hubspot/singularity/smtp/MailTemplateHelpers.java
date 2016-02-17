@@ -38,8 +38,8 @@ public class MailTemplateHelpers {
 
   private final Optional<String> uiBaseUrl;
   private final Optional<SMTPConfiguration> smtpConfiguration;
-  private String taskDatePattern;
-  private TimeZone timeZone;
+  private final String taskDatePattern;
+  private final TimeZone timeZone;
 
   @Inject
   public MailTemplateHelpers(SandboxManager sandboxManager, SingularityConfiguration singularityConfiguration) {
