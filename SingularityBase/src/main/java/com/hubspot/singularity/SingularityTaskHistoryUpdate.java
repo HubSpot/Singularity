@@ -2,8 +2,6 @@ package com.hubspot.singularity;
 
 import javax.annotation.Nonnull;
 
-import org.apache.mesos.Protos;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
@@ -17,8 +15,7 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
   private final long timestamp;
   private final ExtendedTaskState taskState;
   private final Optional<String> statusMessage;
-  private final Optional<Protos.TaskStatus.Source> mesosSource;
-  private final Optional<Protos.TaskStatus.Reason> mesosReason;
+  private final Optional<String> statusReason;
 
   public enum SimplifiedTaskState {
     UNKNOWN, WAITING, RUNNING, DONE
@@ -54,14 +51,13 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
   }
 
   @JsonCreator
-  public SingularityTaskHistoryUpdate(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("timestamp") long timestamp, @JsonProperty("taskState") ExtendedTaskState taskState, @JsonProperty("statusMessage") Optional<String> statusMessage, @JsonProperty("mesosSource") Optional<Protos.TaskStatus.Source> mesosSource, @JsonProperty("mesosReason") Optional<Protos.TaskStatus.Reason> mesosReason) {
+  public SingularityTaskHistoryUpdate(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("timestamp") long timestamp, @JsonProperty("taskState") ExtendedTaskState taskState, @JsonProperty("statusMessage") Optional<String> statusMessage, @JsonProperty("statusReason") Optional<String> statusReason) {
     super(taskId);
 
     this.timestamp = timestamp;
     this.taskState = taskState;
     this.statusMessage = statusMessage;
-    this.mesosSource = mesosSource;
-    this.mesosReason = mesosReason;
+    this.statusReason = statusReason;
   }
 
   @Override
@@ -75,7 +71,7 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(getTaskId(), timestamp, taskState, statusMessage);
+    return Objects.hashCode(getTaskId(), timestamp, taskState, statusMessage, statusReason);
   }
 
   @Override
@@ -92,7 +88,8 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
     return Objects.equal(this.getTaskId(), that.getTaskId())
         && Objects.equal(this.timestamp, that.timestamp)
         && Objects.equal(this.taskState, that.taskState)
-        && Objects.equal(statusMessage, statusMessage);
+        && Objects.equal(this.statusMessage, that.statusMessage)
+        && Objects.equal(this.statusReason, that.statusReason);
   }
 
   public long getTimestamp() {
@@ -107,17 +104,16 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
     return statusMessage;
   }
 
-  public Optional<Protos.TaskStatus.Source> getMesosSource() {
-    return mesosSource;
+  public Optional<String> getStatusReason() {
+    return statusReason;
   }
 
-  public Optional<Protos.TaskStatus.Reason> getMesosReason() {
-    return mesosReason;
+  @Override public String toString() {
+    return "SingularityTaskHistoryUpdate[" +
+        "timestamp=" + timestamp +
+        ", taskState=" + taskState +
+        ", statusMessage=" + statusMessage +
+        ", statusReason=" + statusReason +
+        ']';
   }
-
-  @Override
-  public String toString() {
-    return "SingularityTaskHistoryUpdate [taskId=" + getTaskId() + ", timestamp=" + timestamp + ", taskState=" + taskState + ", statusMessage=" + statusMessage + "]";
-  }
-
 }
