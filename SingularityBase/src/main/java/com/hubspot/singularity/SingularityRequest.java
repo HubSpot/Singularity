@@ -206,7 +206,7 @@ public class SingularityRequest {
 
   @JsonIgnore
   public boolean isOneOff() {
-    return requestType == RequestType.ON_DEMAND || requestType == RequestType.RUN_ONCE;
+    return requestType == RequestType.ON_DEMAND;
   }
 
   @JsonIgnore
