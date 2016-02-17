@@ -361,7 +361,7 @@ public class SingularityMesosScheduler implements Scheduler {
     }
 
     final SingularityTaskHistoryUpdate taskUpdate =
-        new SingularityTaskHistoryUpdate(taskIdObj, timestamp, taskState, status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String>absent());
+        new SingularityTaskHistoryUpdate(taskIdObj, timestamp, taskState, status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String>absent(), status.hasReason() ? Optional.of(status.getReason().name()) : Optional.<String>absent());
     final SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(taskUpdate);
 
     logSupport.checkDirectory(taskIdObj);
