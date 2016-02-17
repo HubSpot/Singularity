@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -400,7 +401,7 @@ public class SingularityMailer implements Managed {
     final long now = System.currentTimeMillis();
     final long future = now + durationMillis.get();
 
-    additionalProperties.put("expireFormat", new Date(future));
+    additionalProperties.put("expireFormat", DateFormatUtils.format(new Date(future), configuration.getDefaultDatePattern(), configuration.getTimeZone()));
   }
 
   public void sendRequestPausedMail(SingularityRequest request, Optional<SingularityPauseRequest> pauseRequest, Optional<String> user) {
