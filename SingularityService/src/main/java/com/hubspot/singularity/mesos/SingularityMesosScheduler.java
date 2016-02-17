@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -301,6 +302,22 @@ public class SingularityMesosScheduler implements Scheduler {
     }
   }
 
+  private Optional<String> getStatusMessage(Protos.TaskStatus status, Optional<SingularityTask> task) {
+    if (status.hasMessage() && !Strings.isNullOrEmpty(status.getMessage())) {
+      return Optional.of(status.getMessage());
+    } else if (status.hasReason() && status.getReason() == Protos.TaskStatus.Reason.REASON_MEMORY_LIMIT) {
+      if (task.isPresent()) {
+        final double memory = MesosUtils.getMemory(task.get().getMesosTask().getResourcesList());
+        if (memory > 0) {
+          return Optional.of(String.format("Task exceeded memory limit of %s MB", MesosUtils.getMemory(task.get().getMesosTask().getResourcesList())));
+        }
+      }
+      return Optional.of("Task exceeded memory limit");
+    }
+
+    return Optional.absent();
+  }
+
   @Override
   @Timed
   public void statusUpdate(SchedulerDriver driver, Protos.TaskStatus status) {
@@ -360,8 +377,10 @@ public class SingularityMesosScheduler implements Scheduler {
       }
     }
 
+    final Optional<String> statusMessage = getStatusMessage(status, task);
+
     final SingularityTaskHistoryUpdate taskUpdate =
-        new SingularityTaskHistoryUpdate(taskIdObj, timestamp, taskState, status.hasMessage() ? Optional.of(status.getMessage()) : Optional.<String>absent(), status.hasReason() ? Optional.of(status.getReason().name()) : Optional.<String>absent());
+        new SingularityTaskHistoryUpdate(taskIdObj, timestamp, taskState, statusMessage, status.hasReason() ? Optional.of(status.getReason().name()) : Optional.<String>absent());
     final SingularityCreateResult taskHistoryUpdateCreateResult = taskManager.saveTaskHistoryUpdate(taskUpdate);
 
     logSupport.checkDirectory(taskIdObj);
