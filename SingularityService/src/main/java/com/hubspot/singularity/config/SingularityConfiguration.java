@@ -79,7 +79,7 @@ public class SingularityConfiguration extends Configuration {
   @Min(value = 1, message = "Must be positive and non-zero")
   private int defaultBounceExpirationMinutes = 60;
 
-  private String defaultDatePattern = "MMM dd h:mm:ss a";
+  private String defaultDatePattern = "MMM dd h:mm:ss a zzz";
 
   @NotNull
   private SlavePlacement defaultSlavePlacement = SlavePlacement.GREEDY;
