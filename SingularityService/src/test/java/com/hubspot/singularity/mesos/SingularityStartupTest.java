@@ -122,7 +122,7 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testOneOffDoesntGetRescheduled() {
+  public void testOnDemandDoesntGetRescheduled() {
     saveRequest(new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND).build());
     deploy(firstDeployId);
     deployChecker.checkDeploys();
@@ -142,4 +142,24 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(requestManager.getPendingRequests().get(0).getPendingType() == PendingType.ONEOFF);
   }
 
+  @Test
+  public void testRunOnceDoesntGetRescheduled() {
+    saveRequest(new SingularityRequestBuilder(requestId, RequestType.RUN_ONCE).build());
+    deploy(firstDeployId);
+    deployChecker.checkDeploys();
+
+    Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
+    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+
+    startup.checkSchedulerForInconsistentState();
+
+    Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
+    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, System.currentTimeMillis(), Optional.<String> absent(), PendingType.ONEOFF, Optional.<Boolean> absent(), Optional.<String> absent()));
+
+    startup.checkSchedulerForInconsistentState();
+
+    Assert.assertTrue(requestManager.getPendingRequests().get(0).getPendingType() == PendingType.ONEOFF);
+  }
 }
