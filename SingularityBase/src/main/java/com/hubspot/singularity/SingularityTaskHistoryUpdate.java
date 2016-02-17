@@ -2,6 +2,8 @@ package com.hubspot.singularity;
 
 import javax.annotation.Nonnull;
 
+import org.apache.mesos.Protos;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
@@ -15,6 +17,8 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
   private final long timestamp;
   private final ExtendedTaskState taskState;
   private final Optional<String> statusMessage;
+  private final Optional<Protos.TaskStatus.Source> mesosSource;
+  private final Optional<Protos.TaskStatus.Reason> mesosReason;
 
   public enum SimplifiedTaskState {
     UNKNOWN, WAITING, RUNNING, DONE
@@ -50,12 +54,14 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
   }
 
   @JsonCreator
-  public SingularityTaskHistoryUpdate(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("timestamp") long timestamp, @JsonProperty("taskState") ExtendedTaskState taskState, @JsonProperty("statusMessage") Optional<String> statusMessage) {
+  public SingularityTaskHistoryUpdate(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("timestamp") long timestamp, @JsonProperty("taskState") ExtendedTaskState taskState, @JsonProperty("statusMessage") Optional<String> statusMessage, @JsonProperty("mesosSource") Optional<Protos.TaskStatus.Source> mesosSource, @JsonProperty("mesosReason") Optional<Protos.TaskStatus.Reason> mesosReason) {
     super(taskId);
 
     this.timestamp = timestamp;
     this.taskState = taskState;
     this.statusMessage = statusMessage;
+    this.mesosSource = mesosSource;
+    this.mesosReason = mesosReason;
   }
 
   @Override
@@ -99,6 +105,14 @@ public class SingularityTaskHistoryUpdate extends SingularityTaskIdHolder implem
 
   public Optional<String> getStatusMessage() {
     return statusMessage;
+  }
+
+  public Optional<Protos.TaskStatus.Source> getMesosSource() {
+    return mesosSource;
+  }
+
+  public Optional<Protos.TaskStatus.Reason> getMesosReason() {
+    return mesosReason;
   }
 
   @Override
