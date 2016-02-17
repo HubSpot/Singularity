@@ -27,7 +27,7 @@
     "bootstrap": "~3.3.0",
     "backbone": "~1.2.3",
     "jquery": "~1.11.1",
-    "moment": "moment/moment#>=2.7.0",
+    "moment": "moment/moment#~2.7.0",
     "zeroclipboard": "~2.1.5",
     "vex": "v2.3.0-plus-beforeClose-hook",
     "messenger": "~1.4.1",
@@ -43,7 +43,6 @@
     "fuzzy": "~0.1.1",
     "fuse.js": "~1.2.2",
     "juration": "*",
-    "eonasdan-bootstrap-datetimepicker": "~4.17.37",
     "classnames": "~2.2.3"
   },
   "resolutions": {
