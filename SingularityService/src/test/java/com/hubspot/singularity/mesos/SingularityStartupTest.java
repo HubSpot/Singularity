@@ -148,18 +148,15 @@ public class SingularityStartupTest extends SingularitySchedulerTestBase {
     deploy(firstDeployId);
     deployChecker.checkDeploys();
 
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    resourceOffers();
+
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
     Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
 
     startup.checkSchedulerForInconsistentState();
 
+    // assert that SingularityStartup does not enqueue a SingularityPendingRequest (pendingType=STARTUP) for the RUN_ONCE request
     Assert.assertTrue(requestManager.getPendingRequests().isEmpty());
-    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
-
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, System.currentTimeMillis(), Optional.<String> absent(), PendingType.ONEOFF, Optional.<Boolean> absent(), Optional.<String> absent()));
-
-    startup.checkSchedulerForInconsistentState();
-
-    Assert.assertTrue(requestManager.getPendingRequests().get(0).getPendingType() == PendingType.ONEOFF);
   }
 }
