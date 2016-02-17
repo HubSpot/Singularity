@@ -79,7 +79,7 @@ public class SingularityConfiguration extends Configuration {
   @Min(value = 1, message = "Must be positive and non-zero")
   private int defaultBounceExpirationMinutes = 60;
 
-  private String defaultDatePattern = "MMM dd h:mm:ss a zzz";
+  private String mailerDatePattern = "MMM dd h:mm:ss a zzz";
 
   @NotNull
   private SlavePlacement defaultSlavePlacement = SlavePlacement.GREEDY;
@@ -200,7 +200,7 @@ public class SingularityConfiguration extends Configuration {
 
   private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toSeconds(10);
 
-  private TimeZone timeZone = TimeZone.getTimeZone("UTC");
+  private TimeZone mailerTimeZone = TimeZone.getTimeZone("UTC");
 
   @JsonProperty("ui")
   @Valid
@@ -1013,19 +1013,19 @@ public class SingularityConfiguration extends Configuration {
     this.maxStaleTasksPerRequestInZkWhenNoDatabase = maxStaleTasksPerRequestInZkWhenNoDatabase;
   }
 
-  public String getDefaultDatePattern() {
-    return defaultDatePattern;
+  public String getMailerDatePattern() {
+    return mailerDatePattern;
   }
 
-  public void setDefaultDatePattern(String defaultDatePattern) {
-    this.defaultDatePattern = defaultDatePattern;
+  public void setMailerDatePattern(String mailerDatePattern) {
+    this.mailerDatePattern = mailerDatePattern;
   }
 
-  public TimeZone getTimeZone() {
-    return timeZone;
+  public TimeZone getMailerTimeZone() {
+    return mailerTimeZone;
   }
 
-  public void setTimeZone(TimeZone timeZone) {
-    this.timeZone = timeZone;
+  public void setMailerTimeZone(TimeZone mailerTimeZone) {
+    this.mailerTimeZone = mailerTimeZone;
   }
 }
