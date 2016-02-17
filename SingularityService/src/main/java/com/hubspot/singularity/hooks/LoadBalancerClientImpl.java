@@ -181,10 +181,10 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     final List<UpstreamInfo> upstreams = Lists.newArrayListWithCapacity(tasks.size());
 
     for (SingularityTask task : tasks) {
-      final Optional<Long> maybeFirstPort = task.getFirstPort();
+      final Optional<Long> maybeLoadBalancerPort = task.getPortByIndex(task.getTaskRequest().getDeploy().getLoadBalancerPortIndex().or(0));
 
-      if (maybeFirstPort.isPresent()) {
-        String upstream = String.format("%s:%d", task.getOffer().getHostname(), maybeFirstPort.get());
+      if (maybeLoadBalancerPort.isPresent()) {
+        String upstream = String.format("%s:%d", task.getOffer().getHostname(), maybeLoadBalancerPort.get());
         upstreams.add(new UpstreamInfo(upstream, Optional.of(requestId), task.getRackId()));
       } else {
         LOG.warn("Task {} is missing port but is being passed to LB  ({})", task.getTaskId(), task);
