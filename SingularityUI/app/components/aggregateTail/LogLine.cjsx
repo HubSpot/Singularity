@@ -2,14 +2,7 @@
 LogLine = React.createClass
 
   shouldComponentUpdate: (nextProps) ->
-    @props.isHighlighted isnt nextProps.isHighlighted
-
-  getClassNames: ->
-    clazz = 'line'
-    clazz += if @props.isHighlighted then ' highlightLine' else ''
-    clazz += if @props.index is 0 then ' first-line' else ''
-    clazz += if @props.index >= @props.totalLines - 1 then ' last-line' else ''
-    clazz
+    (@props.offset isnt nextProps.offset) or (@props.isHighlighted isnt nextProps.isHighlighted) or (@props.content isnt nextProps.content)
 
   highlightContent: (content) ->
     search = @props.search
@@ -38,7 +31,9 @@ LogLine = React.createClass
       match: false
 
     sections.map (s, i) =>
-      <span key={i} className={if s.match then 'search-match'}>{s.text}</span>
+      spanClass = classNames
+        'search-match': s.match
+      <span key={i} className={spanClass}>{s.text}</span>
 
   handleClick: (e) ->
     e.preventDefault()
@@ -46,7 +41,13 @@ LogLine = React.createClass
     @props.handleOffsetLink(@props.offset)
 
   render: ->
-    <div className="#{@getClassNames()}" style={backgroundColor: @props.color}>
+    divClass = classNames
+      line: true
+      highlightLine: @props.isHighlighted
+      'first-line': @props.index is 0
+      'last-line': @props.index >= @props.totalLines - 1
+
+    <div className={divClass} style={backgroundColor: @props.color}>
       <a href="#{@props.offsetLink}" className="offset-link" data-offset="#{@props.offset}" onClick={@handleClick}>
         <div className="pre-line">
             <span className="glyphicon glyphicon-link" data-offset="#{@props.offset}"></span>
