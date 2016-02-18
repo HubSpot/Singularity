@@ -3,7 +3,7 @@ Glyphicon = require '../atomicDisplayItems/Glyphicon'
 
 DateEntry = React.createClass
 
-    componentDidMount: ->
+    initializeDateTimePicker: ->
         id = '#' + @props.id
         changeFn = @props.prop.updateFn
         $ -> $(id).datetimepicker({
@@ -39,7 +39,7 @@ DateEntry = React.createClass
                         customClass: @props.prop.customClass
                     }}
                 />
-                <span className="input-group-addon">
+                <span className="input-group-addon" onMouseOver={@initializeDateTimePicker}>
                     <Glyphicon iconClass="calendar"/>
                 </span>
             </div>
