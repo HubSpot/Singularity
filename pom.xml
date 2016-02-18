@@ -9,14 +9,14 @@
   </parent>
 
   <artifactId>Singularity</artifactId>
-  <version>0.4.10-SNAPSHOT</version>
+  <version>0.4.10</version>
   <packaging>pom</packaging>
 
   <scm>
     <connection>scm:git:git@github.com:HubSpot/Singularity.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/HubSpot/Singularity.git</developerConnection>
     <url>git@github.com:HubSpot/Singularity.git</url>
-    <tag>HEAD</tag>
+    <tag>Singularity-0.4.10</tag>
   </scm>
 
   <developers>
