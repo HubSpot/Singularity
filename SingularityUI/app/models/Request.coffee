@@ -1,7 +1,10 @@
 Model = require './model'
 
+Racks = require '../collections/Racks'
+
 pauseTemplate = require '../templates/vex/requestPause'
 scaleTemplate = require '../templates/vex/requestScale'
+scaleEvenNumbersTemplate = require '../templates/vex/requestScaleConfirmRacks'
 unpauseTemplate = require '../templates/vex/requestUnpause'
 runTemplate = require '../templates/vex/requestRun'
 removeTemplate = require '../templates/vex/requestRemove'
@@ -253,7 +256,51 @@ class Request extends Model
                 if !duration or (duration and @_validateDuration(duration, @promptPause, callback))
                     @pause(killTasks, duration, message).done callback
 
-    promptScale: (callback) =>
+    callScale: (data, bounce, incremental, message, duration, callback) =>
+        @scale(data).done =>
+            if bounce
+                @bounce({incremental}).done callback
+            else
+                callback()
+
+    promptScaleEvenNumberRacks: (data, mod, bounce, incremental, message, duration, callback) =>
+        vex.dialog.open
+            message: scaleEvenNumbersTemplate
+                instances: parseInt(data.instances)
+                notOneInstance: parseInt(data.instances) != 1
+                racks: @racks.length
+                notOneRack: @racks.length != 1
+                mod: mod
+                modNotOne: mod != 1
+                lower: parseInt(data.instances) - mod
+                default: parseInt(data.instances)
+                higher: parseInt(data.instances) + @racks.length - mod
+                config: config
+            input: """
+                
+            """
+            buttons: [
+                $.extend _.clone(vex.dialog.buttons.YES), text: "Scale"
+                vex.dialog.buttons.NO
+            ]
+            callback: (newData) =>
+                return unless newData
+                debugger
+
+    checkScaleEvenNumberRacks: (data, bounce, incremental, message, duration, callback) =>
+        if @attributes.request.rackSensitive
+            if not @racks
+                @racks = new Racks []
+                @racks.fetch { async: false }
+            mod = data.instances %% @racks.length
+            if mod == 0
+                @callScale data, bounce, incremental, message, duration, callback
+            else
+                @promptScaleEvenNumberRacks data, mod, bounce, incremental, message, duration, callback
+        else
+            @callScale data, bounce, incremental, message, duration, callback
+
+    promptScale: (callback, stuff) =>
         vex.dialog.open
             message: "Enter the desired number of instances to run for request:"
             input:
@@ -279,11 +326,8 @@ class Request extends Model
                 message = $('.vex #scale-message').val()
                 duration = $('.vex #scale-expiration').val()
                 if !duration or (duration and @_validateDuration(duration, @promptScale, callback))
-                    @scale(data).done =>
-                        if bounce
-                            @bounce({incremental}).done callback
-                        else
-                            callback()
+                    @checkScaleEvenNumberRacks data, bounce, incremental, message, duration, callback
+                    
 
     promptDisableHealthchecksDuration: (message, duration, callback) =>
         durationMillis = @_parseDuration(duration)
