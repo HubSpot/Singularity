@@ -1,0 +1,35 @@
+<p>
+    We cannot distribute {{ instances }} 
+    {{#if notOneInstance}}
+        instances
+    {{else}}
+        instance
+    {{/if}}
+    evenly across our {{ racks }} 
+    {{#if notOneRack}}
+        racks.
+    {{else}}
+        rack.
+    {{/if}}
+    This will result in increased load on {{mod}} 
+    {{#if modNotOne}}
+        racks.
+    {{else}}
+        rack.
+    {{/if}}
+</p>
+<p>
+    We suggest scaling to 
+    {{#if lower}}
+        either <strong>{{ lower }}</strong> or
+    {{/if}}
+    <strong>{{ higher }}</strong> instances.
+    How many instances would you like to scale to?
+</p>
+<div id="instances">
+    {{#if lower}}
+        <input type="radio" name="instances" id="lower" value="{{ lower }}"> <label for="lower" id="lower-label">{{ lower }} instances</label><br/>
+    {{/if}}
+    <input type="radio" name="instances" id="default" value="{{ default }}" checked> <label for="default" id="default-label">{{ default }} instances</label><br/>
+    <input type="radio" name="instances" id="higher" value="{{ higher }}"> <label for="higher" id="higher-label">{{ higher }} instances</label><br/>
+</div>
