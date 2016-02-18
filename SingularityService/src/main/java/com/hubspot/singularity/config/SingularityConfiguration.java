@@ -77,8 +77,6 @@ public class SingularityConfiguration extends Configuration {
   @Min(value = 1, message = "Must be positive and non-zero")
   private int defaultBounceExpirationMinutes = 60;
 
-  private String mailerDatePattern = "MMM dd h:mm:ss a zzz";
-
   @NotNull
   private SlavePlacement defaultSlavePlacement = SlavePlacement.GREEDY;
 
@@ -187,8 +185,6 @@ public class SingularityConfiguration extends Configuration {
   private SMTPConfiguration smtpConfiguration;
 
   private long startNewReconcileEverySeconds = TimeUnit.MINUTES.toSeconds(10);
-
-  private TimeZone mailerTimeZone = TimeZone.getTimeZone("UTC");
 
   @JsonProperty("ui")
   @Valid
@@ -959,21 +955,5 @@ public class SingularityConfiguration extends Configuration {
 
   public void setMaxStaleTasksPerRequestInZkWhenNoDatabase(Optional<Integer> maxStaleTasksPerRequestInZkWhenNoDatabase) {
     this.maxStaleTasksPerRequestInZkWhenNoDatabase = maxStaleTasksPerRequestInZkWhenNoDatabase;
-  }
-
-  public String getMailerDatePattern() {
-    return mailerDatePattern;
-  }
-
-  public void setMailerDatePattern(String mailerDatePattern) {
-    this.mailerDatePattern = mailerDatePattern;
-  }
-
-  public TimeZone getMailerTimeZone() {
-    return mailerTimeZone;
-  }
-
-  public void setMailerTimeZone(TimeZone mailerTimeZone) {
-    this.mailerTimeZone = mailerTimeZone;
   }
 }
