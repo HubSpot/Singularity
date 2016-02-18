@@ -423,8 +423,10 @@ public class SingularityMailer implements Managed {
 
     final long now = System.currentTimeMillis();
     final long future = now + durationMillis.get();
-
-    additionalProperties.put("expireFormat", DateFormatUtils.format(new Date(future), configuration.getMailerDatePattern(), configuration.getMailerTimeZone()));
+    if (maybeSmtpConfiguration.isPresent()) {
+      SMTPConfiguration smtpConfiguration = maybeSmtpConfiguration.get();
+      additionalProperties.put("expireFormat", DateFormatUtils.format(new Date(future), smtpConfiguration.getMailerDatePattern(), smtpConfiguration.getMailerTimeZone()));
+    }
   }
 
   public void sendRequestPausedMail(SingularityRequest request, Optional<SingularityPauseRequest> pauseRequest, Optional<String> user) {
