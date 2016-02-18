@@ -29,9 +29,9 @@
             </button>
 
             {{#unless config.hideNewDeployButton}}
-            <button href="{{appRoot}}/request/{{data.id}}/deploy" class="btn btn-success">
+            <a href="{{appRoot}}/request/{{data.id}}/deploy" class="btn btn-success">
                 Deploy
-            </button>
+            </a>
             {{/unless}}
 
             {{#if data.canBeRunNow}}
@@ -73,9 +73,9 @@
             {{/if}}
 
             {{#unless config.hideNewRequestButton}}
-                <button class="btn btn-primary" href="{{appRoot}}/requests/edit/{{ data.id }}">
+                <a class="btn btn-primary" href="{{appRoot}}/requests/edit/{{ data.id }}">
                     Edit
-                </button>
+                </a>
             {{/unless}}
 
             {{#if canDisableHealthchecks}}
