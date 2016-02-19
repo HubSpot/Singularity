@@ -198,5 +198,13 @@ class Utils
         else
           {}
 
+    @fuzzyAdjustScore: (filter, fuzzyObject) ->
+        if fuzzyObject.original.id.toLowerCase().startsWith(filter.toLowerCase())
+            fuzzyObject.score * 10
+        else if fuzzyObject.original.id.toLowerCase().indexOf(filter.toLowerCase()) > -1
+            fuzzyObject.score * 5
+        else
+            fuzzyObject.score
+
 
 module.exports = Utils
