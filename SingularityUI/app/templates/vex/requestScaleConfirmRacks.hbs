@@ -30,6 +30,12 @@
     {{#if lower}}
         <input type="radio" name="instances" id="lower" value="{{ lower }}"> <label for="lower" id="lower-label">{{ lower }} instances</label><br/>
     {{/if}}
-    <input type="radio" name="instances" id="default" value="{{ default }}" checked> <label for="default" id="default-label">{{ default }} instances</label><br/>
+    <input type="radio" name="instances" id="default" value="{{ instances }}" checked> <label for="default" id="default-label">{{ instances }}
+    {{#if notOneInstance}}
+        instances
+    {{else}}
+        instance
+    {{/if}}
+    </label><br/>
     <input type="radio" name="instances" id="higher" value="{{ higher }}"> <label for="higher" id="higher-label">{{ higher }} instances</label><br/>
 </div>
