@@ -46,6 +46,14 @@ class TasksView extends View
 
         @fuzzySearch = _.memoize(@fuzzySearch)
 
+    adjustedScore: (filter, task) ->
+        if task.original.id.toLowerCase().startsWith(filter.toLowerCase())
+            task.score * 10
+        else if task.original.id.toLowerCase().indexOf(filter.toLowerCase()) > -1
+            task.score * 5
+        else
+            task.score
+
     fuzzySearch: (filter, tasks) =>
         host =
             extract: (o) ->
@@ -55,7 +63,7 @@ class TasksView extends View
                 "#{o.id}"
         res1 = fuzzy.filter(filter, tasks, host)
         res2 = fuzzy.filter(filter, tasks, id)
-        _.pluck(_.sortBy(_.union(res1, res2), (r) => r.score), 'original')
+        _.pluck(_.sortBy(_.union(res1, res2), (t) => @adjustedScore(filter, t)), 'original')
 
     # Returns the array of tasks that need to be rendered
     filterCollection: =>
