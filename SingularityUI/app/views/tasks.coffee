@@ -5,6 +5,8 @@ Slaves = require '../collections/Slaves'
 
 killTemplate = require '../templates/vex/taskKill'
 
+Utils = require '../utils'
+
 class TasksView extends View
 
     isSorted: false
@@ -55,7 +57,7 @@ class TasksView extends View
                 "#{o.id}"
         res1 = fuzzy.filter(filter, tasks, host)
         res2 = fuzzy.filter(filter, tasks, id)
-        _.pluck(_.sortBy(_.union(res1, res2), (r) => r.score), 'original')
+        _.pluck(_.sortBy(_.union(res1, res2), (t) => Utils.fuzzyAdjustScore(filter, t)), 'original')
 
     # Returns the array of tasks that need to be rendered
     filterCollection: =>
