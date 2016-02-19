@@ -1,6 +1,7 @@
 package com.hubspot.singularity.mesos;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 import javax.inject.Singleton;
 
@@ -67,7 +68,7 @@ public class SingularityDriver {
     if (configuration.getCredentialPrincipal().isPresent() && configuration.getCredentialSecret().isPresent()) {
       Credential credential = Credential.newBuilder()
         .setPrincipal(configuration.getCredentialPrincipal().get())
-        .setSecret(ByteString.copyFrom(configuration.getCredentialSecret().get().getBytes()))
+        .setSecret(ByteString.copyFrom(configuration.getCredentialSecret().get().getBytes("UTF-8")))
         .build();
       this.driver = new MesosSchedulerDriver(scheduler, frameworkInfo, configuration.getMaster(), credential);
     } else {
