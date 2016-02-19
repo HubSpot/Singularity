@@ -52,7 +52,7 @@ def fetch_logs(args):
       all_logs += download_s3_logs(args)
     if not args.skip_live:
       all_logs += download_live_logs(args)
-    if not args.download_only
+    if not args.download_only:
       grep_files(args, all_logs)
   except KeyboardInterrupt:
     exit('Stopping logfetch...', 'magenta')
@@ -65,7 +65,7 @@ def cat_logs(args):
       all_logs += download_s3_logs(args)
     if not args.skip_live:
       all_logs += download_live_logs(args)
-    if not args.download_only
+    if not args.download_only:
       cat_files(args, all_logs)
   except KeyboardInterrupt:
     exit('Stopping logcat...', 'magenta')
