@@ -271,11 +271,18 @@ class Request extends Model
                 @callScale scaleData.data, scaleData.bounce, scaleData.incremental, scaleData.message, scaleData.duration, scaleData.callback
 
     checkScaleEvenNumberRacks: (data, bounce, incremental, message, duration, callback) =>
-        return 0 unless @attributes.request.rackSensitive
-        if not @racks
-            @racks = new Racks []
-            @racks.fetch { async: false }
-        return data.instances %% @racks.length
+        mod = data.instances %% @racks.length
+        if mod
+            @promptScaleEvenNumberRacks 
+                callback: callback
+                data: data
+                mod: mod 
+                bounce: bounce
+                incremental: incremental
+                message: message
+                duration: duration
+        else
+            @callScale data, bounce, incremental, message, duration, callback
 
     promptScale: (callback, stuff) =>
         vex.dialog.open
@@ -303,16 +310,16 @@ class Request extends Model
                 message = $('.vex #scale-message').val()
                 duration = $('.vex #scale-expiration').val()
                 if !duration or (duration and @_validateDuration(duration, @promptScale, callback))
-                    mod = @checkScaleEvenNumberRacks data, bounce, incremental, message, duration, callback
-                    if mod
-                        @promptScaleEvenNumberRacks 
-                            callback: callback
-                            data: data
-                            mod: mod 
-                            bounce: bounce
-                            incremental: incremental
-                            message: message
-                            duration: duration 
+                    if @attributes.request.rackSensitive
+                        if @racks
+                            @checkScaleEvenNumberRacks data, bounce, incremental, message, duration, callback
+                        else
+                            @racks = new Racks []
+                            @racks.fetch
+                                success: () => @checkScaleEvenNumberRacks data, bounce, incremental, message, duration, callback
+                                error: () => 
+                                    app.caughtError() # Since we scale anyway, don't show the error
+                                    @callScale data, bounce, incremental, message, duration, callback
                     else
                         @callScale data, bounce, incremental, message, duration, callback
                     
