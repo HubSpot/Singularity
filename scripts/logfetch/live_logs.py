@@ -72,7 +72,7 @@ def download_live_logs(args):
       sys.stderr.write(colored('\nStarting {0} live logs downloads\n'.format(len(async_requests)), 'cyan'))
     callbacks.goal = len(async_requests)
     grequests.map(async_requests, stream=True, size=args.num_parallel_fetches)
-  if zipped_files:
+  if zipped_files and not args.download_only:
     if not args.silent:
       sys.stderr.write(colored('\nUnpacking {0} log(s)\n'.format(len(zipped_files)), 'cyan'))
     all_logs = all_logs + logfetch_base.unpack_logs(args, zipped_files)
