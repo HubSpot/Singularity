@@ -245,18 +245,17 @@ class Request extends Model
             else
                 callback()
 
-    promptScaleEvenNumberRacks: (data, mod, bounce, incremental, message, duration, callback) =>
+    promptScaleEvenNumberRacks: (scaleData) =>
         vex.dialog.open
             message: scaleEvenNumbersTemplate
-                instances: parseInt(data.instances)
-                notOneInstance: parseInt(data.instances) != 1
+                instances: parseInt(scaleData.data.instances)
+                notOneInstance: parseInt(scaleData.data.instances) != 1
                 racks: @racks.length
                 notOneRack: @racks.length != 1
-                mod: mod
-                modNotOne: mod != 1
-                lower: parseInt(data.instances) - mod
-                default: parseInt(data.instances)
-                higher: parseInt(data.instances) + @racks.length - mod
+                mod: scaleData.mod
+                modNotOne: scaleData.mod != 1
+                lower: parseInt(scaleData.data.instances) - scaleData.mod
+                higher: parseInt(scaleData.data.instances) + @racks.length - scaleData.mod
                 config: config
             input: """
                 
@@ -265,22 +264,18 @@ class Request extends Model
                 $.extend _.clone(vex.dialog.buttons.YES), text: "Scale"
                 vex.dialog.buttons.NO
             ]
-            callback: (newData) =>
-                return unless newData
-                debugger
+            scaleData: scaleData # Not sure why this is necessary, callback for whatever reason doesn't have access to the function's variables
+            callback: (data) =>
+                return unless data
+                scaleData.data.instances = data.instances
+                @callScale scaleData.data, scaleData.bounce, scaleData.incremental, scaleData.message, scaleData.duration, scaleData.callback
 
     checkScaleEvenNumberRacks: (data, bounce, incremental, message, duration, callback) =>
-        if @attributes.request.rackSensitive
-            if not @racks
-                @racks = new Racks []
-                @racks.fetch { async: false }
-            mod = data.instances %% @racks.length
-            if mod == 0
-                @callScale data, bounce, incremental, message, duration, callback
-            else
-                @promptScaleEvenNumberRacks data, mod, bounce, incremental, message, duration, callback
-        else
-            @callScale data, bounce, incremental, message, duration, callback
+        return 0 unless @attributes.request.rackSensitive
+        if not @racks
+            @racks = new Racks []
+            @racks.fetch { async: false }
+        return data.instances %% @racks.length
 
     promptScale: (callback, stuff) =>
         vex.dialog.open
@@ -308,7 +303,18 @@ class Request extends Model
                 message = $('.vex #scale-message').val()
                 duration = $('.vex #scale-expiration').val()
                 if !duration or (duration and @_validateDuration(duration, @promptScale, callback))
-                    @checkScaleEvenNumberRacks data, bounce, incremental, message, duration, callback
+                    mod = @checkScaleEvenNumberRacks data, bounce, incremental, message, duration, callback
+                    if mod
+                        @promptScaleEvenNumberRacks 
+                            callback: callback
+                            data: data
+                            mod: mod 
+                            bounce: bounce
+                            incremental: incremental
+                            message: message
+                            duration: duration 
+                    else
+                        @callScale data, bounce, incremental, message, duration, callback
                     
 
     promptDisableHealthchecksDuration: (message, duration, callback) =>
