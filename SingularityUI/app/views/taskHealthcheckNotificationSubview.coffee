@@ -14,7 +14,7 @@ class taskHealthcheckNotificationSubview extends View
 
     render: =>
         return if not @model.synced
-        return if @model.attributes.lastKnownState is "TASK_FAILED"
+        return if @model.attributes.lastKnownState is 'TASK_FAILED'
         @$el.html @template @renderData()
 
     renderData: =>
