@@ -284,7 +284,7 @@ class Request extends Model
         else
             @callScale data, bounce, incremental, message, duration, callback
 
-    promptScale: (callback, stuff) =>
+    promptScale: (callback) =>
         vex.dialog.open
             message: "Enter the desired number of instances to run for request:"
             input:
