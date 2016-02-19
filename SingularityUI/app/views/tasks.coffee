@@ -81,7 +81,7 @@ class TasksView extends View
                 return value
             if not @sortAscending
                 tasks = tasks.reverse()
-        else
+        else if not @searchFilter
             tasks.reverse() unless @state is 'scheduled'
 
         @currentTasks = tasks
