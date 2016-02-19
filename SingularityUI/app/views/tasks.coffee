@@ -57,7 +57,7 @@ class TasksView extends View
                 "#{o.id}"
         res1 = fuzzy.filter(filter, tasks, host)
         res2 = fuzzy.filter(filter, tasks, id)
-        _.pluck(_.sortBy(_.union(res1, res2), (t) => Utils.fuzzyAdjustScore(filter, t)), 'original')
+        _.pluck(_.sortBy(_.union(res1, res2), (t) => Utils.fuzzyAdjustScore(filter, t)), 'original').reverse()
 
     # Returns the array of tasks that need to be rendered
     filterCollection: =>
@@ -81,7 +81,7 @@ class TasksView extends View
                 return value
             if not @sortAscending
                 tasks = tasks.reverse()
-        else
+        else if not @searchFilter
             tasks.reverse() unless @state is 'scheduled'
 
         @currentTasks = tasks
