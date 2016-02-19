@@ -57,6 +57,8 @@ class RequestsView extends View
     adjustedScore: (filter, req) ->
         if req.original.id.toLowerCase().startsWith(filter.toLowerCase())
             req.score * 10
+        else if req.original.id.toLowerCase().indexOf(filter.toLowerCase()) > -1
+            req.score * 5
         else
             req.score
 
