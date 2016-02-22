@@ -41,6 +41,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
+import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 /**
@@ -64,10 +65,12 @@ public class SingularityNewTaskChecker {
 
   private final SingularityAbort abort;
   private final SingularityExceptionNotifier exceptionNotifier;
+  private final SingularityDeployHealthHelper deployHealthHelper;
 
   @Inject
   public SingularityNewTaskChecker(@Named(SingularityMainModule.NEW_TASK_THREADPOOL_NAME) ScheduledExecutorService executorService, RequestManager requestManager,
-      SingularityConfiguration configuration, LoadBalancerClient lbClient, TaskManager taskManager, SingularityExceptionNotifier exceptionNotifier, SingularityAbort abort) {
+      SingularityConfiguration configuration, LoadBalancerClient lbClient, TaskManager taskManager, SingularityExceptionNotifier exceptionNotifier, SingularityAbort abort,
+      SingularityDeployHealthHelper deployHealthHelper) {
     this.configuration = configuration;
     this.requestManager = requestManager;
     this.taskManager = taskManager;
@@ -79,6 +82,7 @@ public class SingularityNewTaskChecker {
     this.executorService = executorService;
 
     this.exceptionNotifier = exceptionNotifier;
+    this.deployHealthHelper = deployHealthHelper;
   }
 
   private boolean hasHealthcheck(SingularityTask task, Optional<SingularityRequestWithState> requestWithState) {
@@ -283,15 +287,17 @@ public class SingularityNewTaskChecker {
     }
 
     if (hasHealthcheck(task, requestWithState)) {
-      Optional<SingularityTaskHealthcheckResult> healthCheck = taskManager.getLastHealthcheck(task.getTaskId());
+      Optional<SingularityTaskHealthcheckResult> maybeHealthCheck = taskManager.getLastHealthcheck(task.getTaskId());
 
-      if (!healthCheck.isPresent()) {
-        healthchecker.checkHealthcheck(task);
-        return CheckTaskState.CHECK_IF_OVERDUE;
-      }
-
-      if (healthCheck.get().isFailed()) {
-        return CheckTaskState.UNHEALTHY_KILL_TASK;
+      DeployHealth health = deployHealthHelper.getTaskHealth(task.getTaskRequest().getDeploy(), false, maybeHealthCheck, task.getTaskId());
+      switch (health) {
+        case WAITING:
+          healthchecker.checkHealthcheck(task);
+          return CheckTaskState.CHECK_IF_OVERDUE;
+        case UNHEALTHY:
+          return CheckTaskState.UNHEALTHY_KILL_TASK;
+        case HEALTHY:
+          break;
       }
     }
 
