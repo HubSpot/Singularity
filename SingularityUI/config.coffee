@@ -1,7 +1,7 @@
 path = require 'path'
 fs =   require 'fs'
 
-handlebars = require 'handlebars-brunch/node_modules/handlebars'
+handlebars = require 'handlebars'
 
 # Brunch settings
 exports.config =
