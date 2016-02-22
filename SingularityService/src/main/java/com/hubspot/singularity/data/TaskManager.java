@@ -560,6 +560,10 @@ public class TaskManager extends CuratorAsyncManager {
     return getTaskCheckCache(taskId, false);
   }
 
+  public boolean taskExistsInZk(SingularityTaskId taskId) {
+    return checkExists(getTaskPath(taskId)).isPresent();
+  }
+
   public List<SingularityPendingTaskId> getPendingTaskIds() {
     return getChildrenAsIds(PENDING_PATH_ROOT, pendingTaskIdTranscoder);
   }
