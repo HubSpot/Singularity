@@ -85,11 +85,17 @@ public class SingularityConfiguration extends Configuration {
 
   private long deleteDeploysFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
 
+  private Optional<Integer> maxStaleDeploysPerRequestInZkWhenNoDatabase = Optional.absent();
+
   private long deleteDeadSlavesAfterHours = TimeUnit.DAYS.toHours(7);
 
   private long deleteStaleRequestsFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
 
+  private Optional<Integer> maxRequestsWithHistoryInZkWhenNoDatabase = Optional.absent();
+
   private long deleteTasksFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(7);
+
+  private Optional<Integer> maxStaleTasksPerRequestInZkWhenNoDatabase = Optional.absent();
 
   private long deleteUndeliverableWebhooksAfterHours = TimeUnit.DAYS.toHours(7);
 
@@ -934,5 +940,29 @@ public class SingularityConfiguration extends Configuration {
 
   public void setDeleteRemovedRequestsFromLoadBalancer(boolean deleteRemovedRequestsFromLoadBalancer) {
     this.deleteRemovedRequestsFromLoadBalancer = deleteRemovedRequestsFromLoadBalancer;
+  }
+
+  public Optional<Integer> getMaxStaleDeploysPerRequestInZkWhenNoDatabase() {
+    return maxStaleDeploysPerRequestInZkWhenNoDatabase;
+  }
+
+  public void setMaxStaleDeploysPerRequestInZkWhenNoDatabase(Optional<Integer> maxStaleDeploysPerRequestInZkWhenNoDatabase) {
+    this.maxStaleDeploysPerRequestInZkWhenNoDatabase = maxStaleDeploysPerRequestInZkWhenNoDatabase;
+  }
+
+  public Optional<Integer> getMaxRequestsWithHistoryInZkWhenNoDatabase() {
+    return maxRequestsWithHistoryInZkWhenNoDatabase;
+  }
+
+  public void setMaxRequestsWithHistoryInZkWhenNoDatabase(Optional<Integer> maxRequestsWithHistoryInZkWhenNoDatabase) {
+    this.maxRequestsWithHistoryInZkWhenNoDatabase = maxRequestsWithHistoryInZkWhenNoDatabase;
+  }
+
+  public Optional<Integer> getMaxStaleTasksPerRequestInZkWhenNoDatabase() {
+    return maxStaleTasksPerRequestInZkWhenNoDatabase;
+  }
+
+  public void setMaxStaleTasksPerRequestInZkWhenNoDatabase(Optional<Integer> maxStaleTasksPerRequestInZkWhenNoDatabase) {
+    this.maxStaleTasksPerRequestInZkWhenNoDatabase = maxStaleTasksPerRequestInZkWhenNoDatabase;
   }
 }

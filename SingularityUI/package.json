@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "bower": "^1.7.6",
-    "brunch": "^2.2.2",
+    "brunch": "~2.2.2",
     "clean-css-brunch": "^2.0.0",
     "coffee-script-brunch": "^2.0.0",
     "css-brunch": "^2.0.0",
