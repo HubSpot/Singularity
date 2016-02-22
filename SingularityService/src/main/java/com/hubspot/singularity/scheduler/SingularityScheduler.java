@@ -229,7 +229,7 @@ public class SingularityScheduler {
 
       Optional<SingularityRequestDeployState> maybeRequestDeployState = deployManager.getRequestDeployState(pendingRequest.getRequestId());
       Optional<SingularityPendingDeploy> maybePendingDeploy = deployManager.getPendingDeploy(maybeRequest.get().getRequest().getId());
-      if (!shouldScheduleTasks(pendingRequest, maybePendingDeploy, maybeRequestDeployState)) {
+      if (!shouldScheduleTasks(maybeRequest.get().getRequest(), pendingRequest, maybePendingDeploy, maybeRequestDeployState)) {
         LOG.debug("Pending request {} was obsolete (request {})", pendingRequest, SingularityRequestWithState.getRequestState(maybeRequest));
         obsoleteRequests++;
         continue;
@@ -243,7 +243,7 @@ public class SingularityScheduler {
 
       int numScheduledTasks = scheduleTasks(stateCache, maybeRequest.get().getRequest(), requestState, deployStatistics, pendingRequest, matchingTaskIds, maybePendingDeploy);
 
-      if (numScheduledTasks == 0 && !matchingTaskIds.isEmpty() && maybeRequest.get().getRequest().isScheduled() && pendingRequest.getPendingType() == PendingType.NEXT_DEPLOY_STEP) {
+      if (numScheduledTasks == 0 && !matchingTaskIds.isEmpty() && maybeRequest.get().getRequest().isScheduled() && pendingRequest.getPendingType() == PendingType.NEW_DEPLOY) {
         LOG.trace("Holding pending request {} because it is scheduled and has an active task", pendingRequest);
         heldForScheduledActiveTask++;
         continue;
@@ -272,9 +272,9 @@ public class SingularityScheduler {
     return requestWithState.getState();
   }
 
-  private boolean shouldScheduleTasks(SingularityPendingRequest pendingRequest, Optional<SingularityPendingDeploy> maybePendingDeploy,
+  private boolean shouldScheduleTasks(SingularityRequest request, SingularityPendingRequest pendingRequest, Optional<SingularityPendingDeploy> maybePendingDeploy,
     Optional<SingularityRequestDeployState> maybeRequestDeployState) {
-    if (pendingRequest.getPendingType() == PendingType.NEW_DEPLOY && !maybePendingDeploy.isPresent()) {
+    if (request.isDeployable() && pendingRequest.getPendingType() == PendingType.NEW_DEPLOY && !maybePendingDeploy.isPresent()) {
       return false;
     }
 
