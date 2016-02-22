@@ -17,6 +17,9 @@ public class S3Configuration {
   @NotNull
   private int waitForS3LinksSeconds = 1;
 
+  @NotNull
+  private long missingTaskDefaultS3SearchPeriodMillis = TimeUnit.DAYS.toMillis(3);
+
   /**
    * Links to logs will expire after given number of milliseconds.
    * A new link is generated for every /logs API call.
@@ -62,6 +65,14 @@ public class S3Configuration {
 
   public int getWaitForS3LinksSeconds() {
     return waitForS3LinksSeconds;
+  }
+
+  public long getMissingTaskDefaultS3SearchPeriodMillis() {
+    return missingTaskDefaultS3SearchPeriodMillis;
+  }
+
+  public void setMissingTaskDefaultS3SearchPeriodMillis(long missingTaskDefaultS3SearchPeriodMillis) {
+    this.missingTaskDefaultS3SearchPeriodMillis = missingTaskDefaultS3SearchPeriodMillis;
   }
 
   public void setWaitForS3LinksSeconds(int waitForS3LinksSeconds) {

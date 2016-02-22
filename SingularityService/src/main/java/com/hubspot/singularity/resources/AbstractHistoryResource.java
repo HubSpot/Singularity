@@ -39,7 +39,7 @@ public abstract class AbstractHistoryResource {
     }
   }
 
-  protected SingularityTaskHistory getTaskHistory(SingularityTaskId taskId) {
+  protected Optional<SingularityTaskHistory> getTaskHistory(SingularityTaskId taskId) {
     authorizationHelper.checkForAuthorizationByRequestId(taskId.getRequestId(), user, SingularityAuthorizationScope.READ);
 
     Optional<SingularityTaskHistory> history = taskManager.getTaskHistory(taskId);
@@ -47,6 +47,12 @@ public abstract class AbstractHistoryResource {
     if (!history.isPresent()) {
       history = historyManager.getTaskHistory(taskId.getId());
     }
+
+    return history;
+  }
+
+  protected SingularityTaskHistory getTaskHistoryRequired(SingularityTaskId taskId) {
+    Optional<SingularityTaskHistory> history = getTaskHistory(taskId);
 
     checkNotFound(history.isPresent(), "No history for task %s", taskId);
 

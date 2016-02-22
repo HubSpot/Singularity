@@ -158,6 +158,8 @@ public class SingularityConfiguration extends Configuration {
 
   private int newTaskCheckerBaseDelaySeconds = 1;
 
+  private long pendingDeployHoldTaskDuringDecommissionMillis = TimeUnit.MINUTES.toMillis(10);
+
   private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
 
   @JsonProperty("s3")
@@ -300,6 +302,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setDebugCuratorCallOverBytes(long debugCuratorCallOverBytes) {
     this.debugCuratorCallOverBytes = debugCuratorCallOverBytes;
+  }
+
+  public long getPendingDeployHoldTaskDuringDecommissionMillis() {
+    return pendingDeployHoldTaskDuringDecommissionMillis;
+  }
+
+  public void setPendingDeployHoldTaskDuringDecommissionMillis(long pendingDeployHoldTaskDuringDecommissionMillis) {
+    this.pendingDeployHoldTaskDuringDecommissionMillis = pendingDeployHoldTaskDuringDecommissionMillis;
   }
 
   public long getDebugCuratorCallOverMillis() {
@@ -910,7 +920,7 @@ public class SingularityConfiguration extends Configuration {
     return reserveSlavesWithAttributes;
   }
 
-  public void setReserveSlavesWithAttrbiutes(Map<String, List<String>> reserveSlavesWithAttributes) {
+  public void setReserveSlavesWithAttributes(Map<String, List<String>> reserveSlavesWithAttributes) {
     this.reserveSlavesWithAttributes = reserveSlavesWithAttributes;
   }
 
