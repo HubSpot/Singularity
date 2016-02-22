@@ -127,7 +127,7 @@ public class SingularityExecutorThreadChecker {
           dockerPid = Optional.of(possiblePid);
         }
       } catch (DockerException e) {
-        throw new ProcessFailedException(String.format("Could not get docker root pid due to error: %s", e));
+        throw new ProcessFailedException("Could not get docker root pid due to error", e);
       }
     }
 
