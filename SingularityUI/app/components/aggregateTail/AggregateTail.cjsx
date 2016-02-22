@@ -2,7 +2,6 @@ Header = require './Header'
 IndividualTail = require './IndividualTail'
 InterleavedTail = require './InterleavedTail'
 Utils = require '../../utils'
-LogLines = require '../../collections/LogLines'
 Help = require './Help'
 
 AggregateTail = React.createClass

@@ -20,23 +20,12 @@ class LogLines extends Collection
     # How much we request at a time (before growing it)
     baseRequestLength: 30000
 
-    # TODO, hope to get rid of this
-    serverMax: 65536
-
-    requestLengthGrowthFactor: 1.75
-    maxRequestLength: @::serverMax # @::baseRequestLength * 100
-
-    # Request a larger chunk at start
-    initialRequestLength: @::baseRequestLength * 3
-
     # Store collection state on a model so it can be observed by others (events)
     state: new Backbone.Model
         # Did we fetch all `requestLength` last time? If it is it likely means
         # there's more to fetch
         moreToFetch: undefined
         moreToFetchAtBeginning: undefined
-
-        currentRequestLength: @::baseRequestLength
 
     url: => "#{ config.apiRoot }/sandbox/#{ @taskId }/read"
 
@@ -84,7 +73,7 @@ class LogLines extends Collection
     fetchPrevious: ->
         @fetch(
             data:
-                offset: orZero @getMinOffset() - @state.get('currentRequestLength')
+                offset: orZero @getMinOffset() - @baseRequestLength
         ).error (error) =>
           app.caughtError() if error.status is 404
     fetchNext: =>
@@ -108,7 +97,7 @@ class LogLines extends Collection
     fetch: (params = {}) ->
         defaultParams =
             remove: false
-            data: _.extend {@path, length: @state.get('currentRequestLength'), grep: @grep}, params.data
+            data: _.extend {@path, length: @baseRequestLength, grep: @grep}, params.data
 
         request = super(_.extend params, defaultParams)
 
@@ -124,59 +113,39 @@ class LogLines extends Collection
 
     parse: (result, options) =>
         @nextOffset = result.nextOffset
-        offset = result.offset
-        whiteSpace = /^\s*$/
 
-        @_previousParseTimestamp = @_parseTimestamp
-        @_parseTimestamp = (new Date).getTime()
-
-        # Return empty list if all we got is white space
-        if result.data.match whiteSpace
-            @shrinkRequestLength()
+        # bail early if no new data
+        if result.data.length is 0
             return []
 
-        # We have more stuff to fetch if we got `requestLength` data back
-        # and (we're going forwards or we're at the start)
-        requestedLength = options.data.length
-
-        isMovingForward = offset >= @getMaxOffset()
-        isMovingBackward = offset <= @getMinOffset()
-
-        moreToFetch = result.data.length is requestedLength or result.data.length is @serverMax
-        moreToFetch = moreToFetch and (isMovingForward or @getMinOffset() is 0)
-        @state.set('moreToFetch', moreToFetch)
-
-        # Determine if we still need to fetch more at the top of the file
-        if offset is 0
-            @state.set('moreToFetchAtBeginning', false)
-        else if @state.get('moreToFetchAtBeginning') is undefined
-            @state.set('moreToFetchAtBeginning', true)
-
-        # Grow the request length (page size) if we are not tailing
-        if (@state.get('moreToFetch') and isMovingForward) or (@state.set('moreToFetchAtBeginning') and isMovingBackward)
-            @growRequestLength(@_previousParseTimestamp, @_parseTimestamp)
-        else
-            @shrinkRequestLength()
-
+        @state.set('moreToFetch', (result.data.length is options.data.length) and ((offset >= @getMaxOffset()) or @getMinOffset() is 0))
+        @state.set('moreToFetchAtBeginning', offset > 0 and @getMinOffset() > 0)
 
         # split on newlines
-        lines = result.data.split @delimiter
+        lines = _.initial(result.data.match /[^\n]*(\n|$)/g)
 
-        # always omit last element (either it's blank or an incomplete line)
-        lines = _.initial(lines) unless not @state.get('moreToFetch')
+        # If out batch lines up with the end and the last line doesn't end with a newline, append the first line
+        if result.offset > 0 and result.offset is @getMaxOffset()
+            origLine = @at(-1)
+            unless origLine.get('data').endsWith '\n'
+                origLine.set
+                    data: origLine.get('data') + lines[0]
+                lines = _.rest(lines)
 
-        # omit the first (incomplete) element unless we're at the beginning of the file
-        if offset > 0 and lines.length > 0
-            offset += lines[0].length + 1
-            lines = _.rest lines
-
-        # remove last line if empty, or if it only has whitespace
-        if lines[lines.length - 1].match whiteSpace or not lines[lines.length - 1]
-            lines = _.initial lines
+        # If our batch lines up with the beginning and doesn't end with a newline, prepend the last line
+        if result.offset + result.data.length is @getMinOffset()
+            origLine = @at(0)
+            lastLine = _.last(lines)
+            unless lastLine.endsWith '\n'
+                origLine.set
+                    data: lastLine + origLine.get('data')
+                    offset: origLine.get('offset') - lastLine.length
+                lines = _.initial(lines)
 
         # create the objects for LogLine models
         @lastTimestamp = null
         @firstTimestamp = null
+        offset = result.offset
         res = lines.map (data) =>
           tryTimestamp = moment data # Try builtin ISO 8601 timetamp strings
           tryTimestampCustom = moment data, 'HH:mm:ss.SSS' # Try custom format
@@ -192,7 +161,7 @@ class LogLines extends Collection
               @timestampIndex++
 
           line = {data, offset, timestamp, @timestampIndex, @taskId}
-          offset += data.length + 1
+          offset += data.length
 
           line
 
@@ -202,26 +171,6 @@ class LogLines extends Collection
               res.timestamp = @firstTimestamp.subtract(1, 'ms')
 
         res
-
-    growRequestLength: (previousParseTimestamp, lastParseTimestamp) ->
-        return if !previousParseTimestamp? or !lastParseTimestamp?
-
-        # Only grow the request length if we request quickly in succession
-        delta = lastParseTimestamp - previousParseTimestamp
-
-        if delta < 5000 and @state.get('currentRequestLength') <= @maxRequestLength
-            newRequestLength = parseInt(@state.get('currentRequestLength') * @requestLengthGrowthFactor, 10)
-            newRequestLength = @maxRequestLength if newRequestLength > @maxRequestLength
-
-            @state.set('currentRequestLength', newRequestLength)
-
-    shrinkRequestLength: ->
-        return if @state.get('currentRequestLength') <= @baseRequestLength
-
-        newRequestLength = parseInt(@state.get('currentRequestLength') / @requestLengthGrowthFactor, 10)
-        newRequestLength = @baseRequestLength if newRequestLength < @baseRequestLength
-
-        @state.set('currentRequestLength', newRequestLength)
 
 
     # Static Methods -----------------------------------------------------------

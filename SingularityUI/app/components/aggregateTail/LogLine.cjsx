@@ -2,7 +2,7 @@
 LogLine = React.createClass
 
   shouldComponentUpdate: (nextProps) ->
-    (@props.offset isnt nextProps.offset) or (@props.isHighlighted isnt nextProps.isHighlighted) or (@props.content isnt nextProps.content)
+    (@props.offset isnt nextProps.offset) or (@props.isHighlighted isnt nextProps.isHighlighted) or (@props.content isnt nextProps.content) or (@props.isLastLine isnt nextProps.isLastLine) or (@props.isFirstLine isnt nextProps.isFirstLine)
 
   highlightContent: (content) ->
     search = @props.search
@@ -44,8 +44,8 @@ LogLine = React.createClass
     divClass = classNames
       line: true
       highlightLine: @props.isHighlighted
-      'first-line': @props.index is 0
-      'last-line': @props.index >= @props.totalLines - 1
+      'first-line': @props.isFirstLine
+      'last-line': @props.isLastLine
 
     <div className={divClass} style={backgroundColor: @props.color}>
       <a href="#{@props.offsetLink}" className="offset-link" data-offset="#{@props.offset}" onClick={@handleClick}>

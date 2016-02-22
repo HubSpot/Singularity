@@ -129,13 +129,16 @@ Contents = React.createClass
         link = window.location.href.replace(window.location.search, '').replace(window.location.hash, '')
         link += "?taskIds=#{@props.taskId}##{l.offset}"
         isHighlighted = l.offset is offset
+        isFirstLine = i is 0
+        isLastLine = i is @props.logLines.length - 1
         <LogLine
           content={l.data}
           offset={l.offset}
           key={i}
           index={i}
           isHighlighted={isHighlighted}
-          totalLines={@props.logLines.length}
+          isLastLine={isLastLine}
+          isFirstLine={isFirstLine}
           offsetLink={link}
           handleOffsetLink={@props.handleOffsetLink}
           taskId={l.taskId}
