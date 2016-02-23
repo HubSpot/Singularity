@@ -57,7 +57,7 @@ Contents = React.createClass
         @startTailingPoll()
     # Or the top?
     else if $(node).scrollTop() is 0
-      if not @tailingPoll
+      if not @tailingPoll and @props.logLines[0]?.offset > 0
         @setState
           isLoading: true
           loadingText: 'Fetching'

@@ -65,13 +65,15 @@ IndividualTail = React.createClass
     _.defer(@props.logLines.fetchNext)
 
   fetchPrevious: (callback) ->
-    @prevLines = @props.logLines.toJSON().length
+    @prevLineCount = @props.logLines.length
     _.defer( =>
-      @props.logLines.fetchPrevious().done =>
-        newLines = @props.logLines.toJSON().length - @prevLines
-        if newLines > 0
-          @scrollToLine(newLines)
-        callback()
+      xhr = @props.logLines.fetchPrevious()
+      if xhr
+        xhr.done =>
+          newLines = @props.logLines.length - @prevLineCount
+          if newLines > 0
+            @scrollToLine(newLines)
+          callback()
     )
 
   isTailing: ->
