@@ -1,8 +1,8 @@
 TaskSearchResults = require '../../collections/TaskSearchResults'
 
 QueryParameters = require '../common/QueryParameters'
-FormField = require '../common/atomicFormItems/FormField'
-DropDown = require '../common/atomicFormItems/DropDown'
+FormField = require '../common/formItems/FormField'
+DropDown = require '../common/formItems/DropDown'
 TaskTable = require '../common/TaskTable'
 TableNavigationBar = require '../common/TableNavigationBar'
 

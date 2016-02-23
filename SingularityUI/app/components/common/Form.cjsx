@@ -1,4 +1,4 @@
-FormField = require './atomicFormItems/FormField'
+FormField = require './formItems/FormField'
 
 Form = React.createClass
 
