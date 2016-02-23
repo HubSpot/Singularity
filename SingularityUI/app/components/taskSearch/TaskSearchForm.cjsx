@@ -1,9 +1,9 @@
 Utils = require '../../utils'
 
 Form = require '../common/Form'
-FormField = require '../common/atomicFormItems/FormField'
-DropDown = require '../common/atomicFormItems/DropDown'
-DateEntry = require '../common/atomicFormItems/DateEntry'
+FormField = require '../common/formItems/FormField'
+DropDown = require '../common/formItems/DropDown'
+DateEntry = require '../common/formItems/DateEntry'
 Enums = require './Enums'
 
 TaskSearchForm = React.createClass
@@ -55,22 +55,22 @@ TaskSearchForm = React.createClass
             },
             {
                 component: DateEntry
-                title: 'Started Before'
-                id: 'startedBefore'
-                prop: {
-                    value: @props.startedBefore
-                    inputType: 'datetime'
-                    updateFn: @props.updateStartedBefore
-                }
-            },
-            {
-                component: DateEntry
                 title: 'Started After'
                 id: 'startedAfter'
                 prop: {
                     value: @props.startedAfter
                     inputType: 'datetime'
                     updateFn: @props.updateStartedAfter
+                }
+            },
+            {
+                component: DateEntry
+                title: 'Started Before'
+                id: 'startedBefore'
+                prop: {
+                    value: @props.startedBefore
+                    inputType: 'datetime'
+                    updateFn: @props.updateStartedBefore
                 }
             }
         ]
@@ -81,6 +81,11 @@ TaskSearchForm = React.createClass
                 formGroups = {@getFormGroups()}
                 submitButtonText = "Search"
                 resetForm = {@props.resetForm}
+                additionalButton = {{
+                    functionality: @props.resetFormToCurrentParams
+                    buttonStyle: 'danger'
+                    text: 'Revert To Query Params'
+                }}
                 handleSubmit = {@props.handleSubmit}
             />
         </div>

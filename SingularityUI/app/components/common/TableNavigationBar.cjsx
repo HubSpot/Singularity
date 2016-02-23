@@ -1,7 +1,7 @@
 Glyphicon = require './atomicDisplayItems/Glyphicon'
 IconButton = require './atomicDisplayItems/IconButton'
-FormField = require './atomicFormItems/FormField'
-DropDown = require './atomicFormItems/DropDown'
+FormField = require './formItems/FormField'
+DropDown = require './formItems/DropDown'
 
 TableNavigationBar = React.createClass
 
