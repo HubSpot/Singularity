@@ -231,7 +231,7 @@ public class SingularityNewTaskChecker {
     taskIdToCheck.put(task.getTaskId().getId(), future);
   }
 
-  private enum CheckTaskState {
+  public enum CheckTaskState {
     UNHEALTHY_KILL_TASK, OBSOLETE, CHECK_IF_OVERDUE, LB_IN_PROGRESS_CHECK_AGAIN, HEALTHY;
   }
 
@@ -269,7 +269,8 @@ public class SingularityNewTaskChecker {
     return false;
   }
 
-  private CheckTaskState getTaskState(SingularityTask task, Optional<SingularityRequestWithState> requestWithState, SingularityHealthchecker healthchecker) {
+  @VisibleForTesting
+  CheckTaskState getTaskState(SingularityTask task, Optional<SingularityRequestWithState> requestWithState, SingularityHealthchecker healthchecker) {
     if (!taskManager.isActiveTask(task.getTaskId().getId())) {
       return CheckTaskState.OBSOLETE;
     }
