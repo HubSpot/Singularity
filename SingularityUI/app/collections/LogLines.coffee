@@ -2,8 +2,6 @@ Collection = require './collection'
 
 LogLine = require '../models/LogLine'
 
-orZero = (value) => if value < 0 then 0 else value
-
 class LogLines extends Collection
 
     model: LogLine
@@ -26,6 +24,8 @@ class LogLines extends Collection
         # there's more to fetch
         moreToFetch: undefined
         moreToFetchAtBeginning: undefined
+        pendingFetchPrev: false
+        pendingFetchNext: false
 
     url: => "#{ config.apiRoot }/sandbox/#{ @taskId }/read"
 
@@ -49,8 +49,7 @@ class LogLines extends Collection
             data: {@path, length: @baseRequestLength}
 
         promise.done (response) =>
-            offset = response.offset - @baseRequestLength
-            offset = orZero offset
+            offset = Math.max(0, response.offset - @baseRequestLength)
             @ajaxError.set present: false
 
             request = @fetch data:
@@ -71,18 +70,29 @@ class LogLines extends Collection
         promise
 
     fetchPrevious: ->
+        return if @state.get('pendingFetchPrev')
+        @state.set('pendingFetchPrev', true)
+
         @fetch(
             data:
-                offset: orZero @getMinOffset() - @baseRequestLength
+                offset: Math.max(0, @getMinOffset() - @baseRequestLength)
+                length: Math.min(@getMinOffset(), @baseRequestLength)
         ).error (error) =>
           app.caughtError() if error.status is 404
+        .done =>
+          @state.set('pendingFetchPrev', false)
+
     fetchNext: =>
+        return if @state.get('pendingFetchNext')
+        @state.set('pendingFetchNext', true)
+
         @fetch(data:
             offset: @nextOffset or @getMaxOffset()
         ).error (error) =>
           # Don't throw an error if the task ends while we're tailing
           app.caughtError() if error.status is 404
-        @nextOffset = null
+        .done =>
+            @state.set('pendingFetchNext', false)
 
     fetchFromStart: =>
         @fetch data:
@@ -112,24 +122,25 @@ class LogLines extends Collection
         super
 
     parse: (result, options) =>
-        @nextOffset = result.nextOffset
+        @nextOffset = result.nextOffset or result.offset + result.data.length
 
         # bail early if no new data
         if result.data.length is 0
             return []
 
-        @state.set('moreToFetch', (result.data.length is options.data.length) and ((offset >= @getMaxOffset()) or @getMinOffset() is 0))
-        @state.set('moreToFetchAtBeginning', offset > 0 and @getMinOffset() > 0)
-
         # split on newlines
         lines = _.initial(result.data.match /[^\n]*(\n|$)/g)
 
-        # If out batch lines up with the end and the last line doesn't end with a newline, append the first line
+        @state.set('moreToFetch', (result.data.length is options.data.length) and ((result.offset >= @getMaxOffset()) or @getMinOffset() is 0) and lines.length > 1)
+        @state.set('moreToFetchAtBeginning', result.offset > 0 and @getMinOffset() > 0)
+
+        # If our batch lines up with the end and the last line doesn't end with a newline, append the first line
         if result.offset > 0 and result.offset is @getMaxOffset()
             origLine = @at(-1)
             unless origLine.get('data').endsWith '\n'
                 origLine.set
                     data: origLine.get('data') + lines[0]
+                result.offset += lines[0].length
                 lines = _.rest(lines)
 
         # If our batch lines up with the beginning and doesn't end with a newline, prepend the last line
