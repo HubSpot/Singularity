@@ -5,12 +5,8 @@ FormField = require '../common/atomicFormItems/FormField'
 DropDown = require '../common/atomicFormItems/DropDown'
 DateEntry = require '../common/atomicFormItems/DateEntry'
 Enums = require './Enums'
-Header = require './Header'
 
 TaskSearchForm = React.createClass
-
-    updateCount: (event) ->
-        @props.updateCount(event.target.value)
 
     getFormGroups: ->
         [
@@ -76,45 +72,17 @@ TaskSearchForm = React.createClass
                     inputType: 'datetime'
                     updateFn: @props.updateStartedAfter
                 }
-            },
-            {
-                component: DropDown
-                title: 'Sort Direction'
-                id: 'sortDirection'
-                prop: {
-                    value: @props.sortDirection
-                    inputType: 'text'
-                    choices: Enums.sortDirections()
-                    forceChooseValue: true
-                    updateFn: @props.updateSortDirection
-                }
-            },
-            {
-                component: DropDown
-                title: 'Tasks Per Page'
-                id: 'count'
-                prop: {
-                    value: @props.count
-                    choices: @props.countChoices
-                    inputType: 'number'
-                    forceChooseValue: true
-                    updateFn: @updateCount
-                }
             }
         ]
 
     render: ->
         <div className='col-xs-5'>
-        <Header
-            global = @props.global
-            requestId = @props.requestId
-        />
-        <Form
-            formGroups = {@getFormGroups()}
-            submitButtonText = "Search"
-            resetForm = {@props.resetForm}
-            handleSubmit = {@props.handleSubmit}
-        />
+            <Form
+                formGroups = {@getFormGroups()}
+                submitButtonText = "Search"
+                resetForm = {@props.resetForm}
+                handleSubmit = {@props.handleSubmit}
+            />
         </div>
 
 module.exports = TaskSearchForm
