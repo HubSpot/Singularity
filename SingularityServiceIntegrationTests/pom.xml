@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.4.11-SNAPSHOT</version>
+    <version>0.4.12-SNAPSHOT</version>
   </parent>
 
   <artifactId>SingularityServiceIntegrationTests</artifactId>
@@ -13,6 +13,8 @@
   <properties>
     <singularity.mysql.password>hellscape</singularity.mysql.password>
     <singularity.mysql.database>Singularity</singularity.mysql.database>
+    <singularity.mailhog.smtp.port>1025</singularity.mailhog.smtp.port>
+    <singularity.mailhog.http.port>8025</singularity.mailhog.http.port>
   </properties>
 
   <dependencies>
@@ -255,6 +257,20 @@
                   </run>
                 </image>
                 <image>
+                  <name>mailhog/mailhog</name>
+                  <alias>singularity-mailhog</alias>
+                  <run>
+                    <ports>
+                      <port>singularity.mailhog.smtp.port:1025</port>
+                      <port>singularity.mailhog.http.port:8025</port>
+                    </ports>
+                    <wait>
+                      <log>Creating API v2</log>
+                      <time>5000</time>
+                    </wait>
+                  </run>
+                </image>
+                <image>
                   <name>hubspot/singularityservice:${project.version}</name>
                   <alias>singularity-service</alias>
                   <run>
@@ -266,6 +282,7 @@
                       <link>singularity-test-slave2</link>
                       <link>singularity-test-slave3</link>
                       <link>singularity-mysql</link>
+                      <link>singularity-mailhog</link>
                     </links>
                     <ports>
                       <port>singularity.port:7099</port>
@@ -279,6 +296,8 @@
                       <SINGULARITY_DB_URL>jdbc:mysql://singularity-mysql:3306/${singularity.mysql.database}</SINGULARITY_DB_URL>
                       <SINGULARITY_DB_MIGRATE>1</SINGULARITY_DB_MIGRATE>
                       <SINGULARITY_PERSIST_HISTORY_EVERY_SECONDS>30</SINGULARITY_PERSIST_HISTORY_EVERY_SECONDS>
+                      <SINGULARITY_SMTP_HOST>singularity-mailhog</SINGULARITY_SMTP_HOST>
+                      <SINGULARITY_SMTP_PORT>${singularity.mailhog.smtp.port}</SINGULARITY_SMTP_PORT>
                     </env>
                     <wait>
                       <log>SingularityStartup: Finished startup</log>
