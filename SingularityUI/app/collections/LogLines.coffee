@@ -131,7 +131,7 @@ class LogLines extends Collection
         # split on newlines
         lines = _.initial(result.data.match /[^\n]*(\n|$)/g)
 
-        @state.set('moreToFetch', (result.data.length is options.data.length) and ((result.offset >= @getMaxOffset()) or @getMinOffset() is 0) and lines.length > 1)
+        @state.set('moreToFetch', (result.data.length is options.data.length) and (result.offset >= @getMaxOffset()) or @getMinOffset() is 0)
         @state.set('moreToFetchAtBeginning', result.offset > 0 and @getMinOffset() > 0)
 
         # If our batch lines up with the end and the last line doesn't end with a newline, append the first line
