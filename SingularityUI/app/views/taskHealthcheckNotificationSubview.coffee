@@ -23,8 +23,19 @@ class taskHealthcheckNotificationSubview extends View
         healthTimeoutSeconds = if @model.get('task').taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds then @model.get('task').taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds else config.defaultDeployHealthTimeoutSeconds
         maxRetries = if @model.get('task').taskRequest.deploy.healthcheckMaxRetries then @model.get('task').taskRequest.deploy.healthcheckMaxRetries else config.defaultHealthcheckMaxRetries
 
+        taskHealthyMessage = "Waiting for successful load balancer update"
+
+        if deployStatus and deployStatus.get('deployProgress')
+            if deployStatus.get('deployProgress').stepComplete
+                instanceNo = @model.get('task').taskId.instanceNo
+                targetInstances = deployStatus.get('deployProgress').targetActiveInstances
+                prevTarget = deployStatus.get('deployProgress').targetActiveInstances - deployStatus.get('deployProgress').deployInstanceCountPerStep
+                if (instanceNo <= targetInstances and instanceNo > prevTarget) or not @model.get('task').taskRequest.request.loadBalanced
+                    taskHealthyMessage = "Waiting for subsequent deploy steps to complete"
+
         data:             @model.toJSON()
-        isDeployPending:  !!deployStatus
+        deployStatus:     deployStatus
+        taskHealthyMessage: taskHealthyMessage
         hasSuccessfulHealthcheck: @model.get('healthcheckResults')?.length > 0 and _.find(@model.get('healthcheckResults'), (item) -> item.statusCode is 200)
         lastHealthcheckFailed: @model.get('healthcheckResults')?.length > 0 and @model.get('healthcheckResults')[0].statusCode isnt 200
         synced:           @model.synced

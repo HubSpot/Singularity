@@ -81,6 +81,10 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean defaultValueForKillTasksOfPausedRequests = true;
 
+  private int defaultDeployStepWaitTimeMs = 0;
+
+  private int defaultDeployMaxTaskRetries = 0;
+
   private long deleteDeploysFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
 
   private Optional<Integer> maxStaleDeploysPerRequestInZkWhenNoDatabase = Optional.absent();
@@ -370,6 +374,22 @@ public class SingularityConfiguration extends Configuration {
 
   public SlavePlacement getDefaultSlavePlacement() {
     return defaultSlavePlacement;
+  }
+
+  public int getDefaultDeployStepWaitTimeMs() {
+    return defaultDeployStepWaitTimeMs;
+  }
+
+  public void setDefaultDeployStepWaitTimeMs(int defaultDeployStepWaitTimeMs) {
+    this.defaultDeployStepWaitTimeMs = defaultDeployStepWaitTimeMs;
+  }
+
+  public int getDefaultDeployMaxTaskRetries() {
+    return defaultDeployMaxTaskRetries;
+  }
+
+  public void setDefaultDeployMaxTaskRetries(int defaultDeployMaxTaskRetries) {
+    this.defaultDeployMaxTaskRetries = defaultDeployMaxTaskRetries;
   }
 
   public long getDeleteDeploysFromZkWhenNoDatabaseAfterHours() {
