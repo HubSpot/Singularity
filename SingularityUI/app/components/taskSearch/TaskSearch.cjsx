@@ -34,6 +34,7 @@ TaskSearch = React.createClass
         @setState 
             showForm: false
             queryParams: @state.form
+            pageNumber: 1 # If you narrow down your search you most likely want to go back to page 1
 
     # Annoying that we need a new function for each property.
     # Unfortuantely using a curried function doesn't seem to work.
