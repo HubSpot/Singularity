@@ -6,7 +6,6 @@ DropDown = require '../common/atomicFormItems/DropDown'
 TaskTable = require '../common/TaskTable'
 TableNavigationBar = require '../common/TableNavigationBar'
 
-Header = require './Header'
 Enums = require './Enums'
 
 DisplayResults = React.createClass
@@ -118,17 +117,7 @@ DisplayResults = React.createClass
 
     render: ->
         @fetchCollection() if @willFetch
-        <div>
-            <Header
-                global = @props.global
-                requestId = @props.requestId
-            />
-            <h2>Query Parameters</h2>
-            <QueryParameters
-                colSize = "md-6"
-                parameters = {@getQueryParams()}
-            />
-            <button className="btn btn-primary" onClick={@props.returnToForm}>Modify Query Parameters</button>
+        <div className='col-lg-12'>
             <h2>Tasks</h2>
             {@renderPageNavBar()}
             <TaskTable
