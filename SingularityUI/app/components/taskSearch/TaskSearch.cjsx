@@ -75,7 +75,8 @@ TaskSearch = React.createClass
             form: form
 
     resetForm: ->
-        @setState @getInitialState()
+        @setState 
+            form: @getInitialState().form
 
     resetFormToCurrentParams: (event) ->
         @setState
