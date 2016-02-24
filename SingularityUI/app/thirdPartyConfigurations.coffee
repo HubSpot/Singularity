@@ -1,3 +1,9 @@
+vex = require 'vex-js'
+moment = require 'moment'
+ZeroClipboard = require 'ZeroClipboard'
+Handlebars = require 'handlebars'
+Messenger = require 'messenger'
+
 # Set Vex default className
 vex.defaultOptions.className = 'vex-theme-default'
 

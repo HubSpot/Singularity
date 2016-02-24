@@ -12,29 +12,52 @@
     "npm": "~2.14.16"
   },
   "bin": {
-    "bower": "./node_modules/bower/bin/bower",
-    "brunch": "./node_modules/brunch/bin/brunch"
+    "bower": "./node_modules/bower/bin/bower"
   },
   "scripts": {
     "start": "brunch watch --server"
   },
   "dependencies": {
     "bower": "^1.7.6",
-    "brunch": "~2.2.2",
-    "clean-css-brunch": "^2.0.0",
-    "coffee-script-brunch": "^2.0.0",
-    "css-brunch": "^2.0.0",
-    "handlebars-brunch": "^2.0.1",
-    "javascript-brunch": "^2.0.0",
-    "less-brunch": "^2.0.0",
-    "react": "^0.14.2",
-    "react-coffee-brunch": "^1.7.2",
-    "stylus-brunch": "^2.0.0",
-    "uglify-js-brunch": "^2.0.0"
+    "backbone-react-component": "^0.10.0",
+    "bootstrap": "~3.3.0",
+    "backbone": "~1.2.3",
+    "jquery": "~1.11.1",
+    "moment": "~2.7.0",
+    "zeroclipboard": "~2.1.5",
+    "vex": "git://github.com/HubSpot/vex#v2.3.0-plus-beforeClose-hook",
+    "messenger": "git://github.com/HubSpot/messenger#set-main-field",
+    "typeahead.js": "~0.10.4",
+    "backbone.localstorage": "~1.1.9",
+    "underscore": "~1.8.0",
+    "sortable": "git://github.com/HubSpot/sortable.git#v0.6.0",
+    "datatables": "~1.10.7",
+    "datatables-bootstrap3-plugin": "~0.4.0",
+    "select2": "~3.5.1",
+    "react": "~0.14.2",
+    "react-list": "~0.7.3",
+    "fuzzy": "~0.1.1",
+    "fuse.js": "~1.2.2",
+    "juration": "*"
   },
   "license": "Apache 2.0",
   "devDependencies": {
+    "cjsx-loader": "^2.1.0",
+    "coffee-loader": "^0.7.2",
+    "coffee-script": "^1.10.0",
     "del": "^2.2.0",
-    "gulp": "^3.9.1"
+    "exports-loader": "^0.6.3",
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.0",
+    "gulp-connect": "^2.3.1",
+    "gulp-mustache": "^2.2.0",
+    "gulp-stylus": "^2.3.0",
+    "gulp-webpack": "^1.5.0",
+    "gulp-webserver": "^0.9.1",
+    "handlebars": "^4.0.5",
+    "handlebars-template-loader": "^0.5.5",
+    "imports-loader": "^0.6.5",
+    "nib": "^1.1.0",
+    "webpack": "^1.12.14"
   }
 }

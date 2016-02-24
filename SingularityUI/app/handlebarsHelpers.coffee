@@ -1,3 +1,5 @@
+Handlebars = require 'handlebars'
+
 Handlebars.registerHelper 'appRoot', ->
     config.appRoot
 

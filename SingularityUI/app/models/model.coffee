@@ -1,3 +1,5 @@
+Backbone = require 'backbone'
+
 # Base model. Extend meeeeeee!!111
 class Model extends Backbone.Model
 

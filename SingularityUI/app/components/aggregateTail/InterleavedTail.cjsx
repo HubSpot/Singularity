@@ -1,4 +1,5 @@
-
+React = require 'react'
+BackboneReactComponent = require 'backbone-react-component'
 InterleavedHeader = require "./InterleavedHeader"
 Contents = require "./Contents"
 
@@ -6,7 +7,7 @@ TaskHistory = require '../../models/TaskHistory'
 LogLines = require '../../collections/LogLines'
 
 InterleavedTail = React.createClass
-  mixins: [Backbone.React.Component.mixin]
+  mixins: [BackboneReactComponent.mixin]
 
   # ============================================================================
   # Lifecycle Methods                                                          |
@@ -26,7 +27,7 @@ InterleavedTail = React.createClass
     models = {}
     models.ajaxError = @props.ajaxErrors[0]
 
-    Backbone.React.Component.mixin.on(@, {
+    BackboneReactComponent.mixin.on(@, {
       models: models
     });
 
@@ -60,7 +61,7 @@ InterleavedTail = React.createClass
         )
 
   componentWillUnmount: ->
-    Backbone.React.Component.mixin.off(@)
+    BackboneReactComponent.mixin.off(@)
 
   # ============================================================================
   # Event Handlers                                                             |

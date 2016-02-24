@@ -2,6 +2,13 @@
 window.utils = require 'utils'
 window.app = require 'application'
 
+Messenger = require 'messenger'
+
+require 'bootstrap'
+
+vex = require 'vex'
+vex.dialog = require 'vex.dialog'
+
 apiRootPromptTemplate = require './templates/vex/apiRootPrompt'
 
 # Set up third party configurations
