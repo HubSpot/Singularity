@@ -1,3 +1,4 @@
+React = require 'react'
 LogLine = require './LogLine'
 Loader = require './Loader'
 

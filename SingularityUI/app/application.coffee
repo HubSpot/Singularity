@@ -5,6 +5,8 @@ User = require 'models/User'
 NavView = require 'views/nav'
 GlobalSearchView = require 'views/globalSearch'
 
+Sortable = require 'sortable'
+
 class Application
 
     # Holds `nav`, `globalSearch`, and `current`

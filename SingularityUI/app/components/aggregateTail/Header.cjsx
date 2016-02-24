@@ -1,3 +1,4 @@
+React = require 'react'
 
 Header = React.createClass
 

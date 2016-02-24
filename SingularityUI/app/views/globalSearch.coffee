@@ -2,6 +2,8 @@ View = require './view'
 
 Requests = require '../collections/Requests'
 
+typeahead = require 'typeahead.js'
+
 class GlobalSearchView extends View
 
     lastSearchQuery: ''
