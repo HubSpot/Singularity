@@ -16,8 +16,7 @@
     "brunch": "./node_modules/brunch/bin/brunch"
   },
   "scripts": {
-    "start": "brunch watch --server",
-    "postinstall": "bower install --allow-root && brunch build --production"
+    "start": "brunch watch --server"
   },
   "dependencies": {
     "bower": "^1.7.6",
@@ -32,5 +31,10 @@
     "react-coffee-brunch": "^1.7.2",
     "stylus-brunch": "^2.0.0",
     "uglify-js-brunch": "^2.0.0"
+  },
+  "license": "Apache 2.0",
+  "devDependencies": {
+    "del": "^2.2.0",
+    "gulp": "^3.9.1"
   }
 }
