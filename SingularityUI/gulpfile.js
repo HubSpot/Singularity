@@ -107,4 +107,4 @@ gulp.task('watch', function () {
   gulp.watch('app/**/*.{coffee,cjsx}', ['scripts'])
 })
 
-gulp.task("default", ["serve", "watch"]);
+gulp.task("default", ["build"]);
