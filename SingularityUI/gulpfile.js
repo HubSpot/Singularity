@@ -11,7 +11,7 @@ var concat = require('gulp-concat');
 
 var connect = require('gulp-connect');
 
-var serverBase = process.env.SINGULARITY_BASE_URI || ''
+var serverBase = process.env.SINGULARITY_BASE_URI || '/singularity'
 
 var templateData = {
   staticRoot: process.env.SINGULARITY_STATIC_URI || (serverBase + '/static'),
@@ -42,45 +42,8 @@ var templateData = {
 
 var dest = path.resolve(__dirname, '../SingularityService/target/generated-resources/assets');
 
-var gwebpack = require('gulp-webpack');
-var webpack = require('webpack');
-var webpackConfig = {
-  entry: './app/initialize.coffee',
-  output: {
-    path: dest,
-    filename: 'app.js'
-  },
-  debug: true,
-  module: {
-    loaders: [
-      { test: /\.cjsx$/, loaders: ['coffee', 'cjsx']},
-      { test: /\.coffee$/, loader: 'coffee'},
-      { test: /\.hbs/, loader: "handlebars-template-loader" },
-      { test: /[\/]messenger\.js$/, loader: 'exports?Messenger'},
-      { test: /[\/]sortable\.js$/, loader: 'exports?Sortable'}
-    ]
-  },
-  resolve: {
-    root: path.resolve('./app'),
-    extensions: ['', '.js', '.cjsx', '.coffee', '.hbs'],
-    alias: {
-      'handlebars': 'handlebars/runtime.js',
-      'vex': 'vex-js/js/vex.js',
-      'vex.dialog': 'vex-js/js/vex.dialog.js',
-      'sortable': 'sortable/js/sortable.js',
-      'datatables': 'datatables/media/js/jquery.dataTables.js',
-      'bootstrap': 'bootstrap/dist/js/bootstrap.js'
-    }
-  },
-  plugins: [
-    new webpack.ProvidePlugin({
-      $: 'jquery',
-      '_': 'underscore',
-      jQuery: 'jquery',
-      'window.jQuery': 'jquery'
-    })
-  ]
-}
+var webpack = require('gulp-webpack');
+var webpackConfig = require('./webpack.config')(dest);
 
 gulp.task("clean", function() {
   return del([
@@ -88,9 +51,15 @@ gulp.task("clean", function() {
     path.resolve(dest, 'index.html')], {force: true});
 });
 
+gulp.task('fonts', function() {
+  return gulp.src([
+    './node_modules/bootstrap/dist/fonts/*.{eot,svg,ttf,woff,svg,woff2}'
+  ]).pipe(gulp.dest(dest + '/static/fonts'));
+});
+
 gulp.task('scripts', function () {
   return gulp.src(webpackConfig.entry)
-    .pipe(gwebpack(webpackConfig))
+    .pipe(webpack(webpackConfig))
     .pipe(gulp.dest(dest + '/static/js'))
 });
 
@@ -111,10 +80,10 @@ gulp.task('styles', function () {
 })
 
 gulp.task('build', ['clean'], function () {
-  gulp.start(['scripts', 'html', 'styles']);
+  gulp.start(['scripts', 'html', 'styles', 'fonts']);
 });
 
-gulp.task('serve', ['scripts', 'html', 'styles'], function () {
+gulp.task('serve', ['build'], function () {
   connect.server({
     root: dest,
     port: 3334,
@@ -124,7 +93,7 @@ gulp.task('serve', ['scripts', 'html', 'styles'], function () {
 
 gulp.task('watch', function () {
   gulp.watch('app/**/*.styl', ['styles'])
-  gulp.watch('app/**/*.coffee', ['scripts'])
+  gulp.watch('app/**/*.{coffee,cjsx}', ['scripts'])
 })
 
-gulp.task("default", ["clean", "serve", "watch"]);
+gulp.task("default", ["serve", "watch"]);

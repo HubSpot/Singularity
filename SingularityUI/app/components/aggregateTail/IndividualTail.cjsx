@@ -6,7 +6,7 @@ Contents = require "./Contents"
 TaskHistory = require '../../models/TaskHistory'
 
 IndividualTail = React.createClass
-  mixins: [BackboneReactComponent.mixin]
+  mixins: [Backbone.React.Component.mixin]
 
   # ============================================================================
   # Lifecycle Methods                                                          |
@@ -20,7 +20,7 @@ IndividualTail = React.createClass
     @props.logLines.grep = @props.search
 
     # Automatically map backbone collections and models to the state of this component
-    BackboneReactComponent.mixin.on(@, {
+    Backbone.React.Component.mixin.on(@, {
       collections: {
         logLines: @props.logLines
       },
@@ -43,7 +43,7 @@ IndividualTail = React.createClass
       @props.logLines.fetchInitialData().done _.delay(@refs.contents.scrollToBottom, 200)
 
   componentWillUnmount: ->
-    BackboneReactComponent.mixin.off(@)
+    Backbone.React.Component.mixin.off(@)
     @stopTaskStatusPoll()
 
   # ============================================================================

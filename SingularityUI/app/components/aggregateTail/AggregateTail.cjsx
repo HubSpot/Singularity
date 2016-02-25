@@ -1,4 +1,5 @@
 React = require 'react'
+ReactDOM = require 'react-dom'
 BackboneReactComponent = require 'backbone-react-component'
 Header = require './Header'
 IndividualTail = require './IndividualTail'
@@ -6,9 +7,10 @@ InterleavedTail = require './InterleavedTail'
 Utils = require '../../utils'
 LogLines = require '../../collections/LogLines'
 Help = require './Help'
+vex = require 'vex-helper'
 
 AggregateTail = React.createClass
-  mixins: [BackboneReactComponent.mixin]
+  mixins: [Backbone.React.Component.mixin]
 
   # ============================================================================
   # Lifecycle Methods                                                          |
@@ -24,7 +26,7 @@ AggregateTail = React.createClass
 
   componentWillMount: ->
     # Automatically map backbone collections and models to the state of this component
-    BackboneReactComponent.mixin.on(@, {
+    Backbone.React.Component.mixin.on(@, {
       collections: {
         activeTasks: @props.activeTasks
       }
@@ -52,7 +54,7 @@ AggregateTail = React.createClass
         viewingInstances: _.pluck(@initialViewingInstancesOnUpdate(), 'id').slice(0, 6)
 
   componentWillUnmount: ->
-    BackboneReactComponent.mixin.off(@);
+    Backbone.React.Component.mixin.off(@);
     $(window).off("blur", @onWindowBlur)
     $(window).off("focus", @onWindowFocus)
 

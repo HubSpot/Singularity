@@ -1,5 +1,6 @@
 View = require './view'
-
+React = require 'react'
+ReactDOM = require 'react-dom'
 AggregateTail = require '../components/aggregateTail/AggregateTail'
 
 class AggregateTailView extends View

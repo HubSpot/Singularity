@@ -9,6 +9,8 @@ bounceTemplate = require '../templates/vex/requestBounce'
 exitCooldownTemplate = require '../templates/vex/exitCooldown'
 TaskHistory = require '../models/TaskHistory'
 
+vex = require 'vex-helper'
+
 class Request extends Model
 
     ## toggle between creating additional properties during parse
