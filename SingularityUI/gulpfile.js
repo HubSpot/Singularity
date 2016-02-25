@@ -70,7 +70,11 @@ gulp.task('html', function () {
 });
 
 gulp.task('styles', function () {
-  return gulp.src('app/**/*.styl')
+  return gulp.src([
+      'node_modules/vex-js/css/*.css',
+      'node_modules/messenger/build/css/*.css',
+      'node_modules/bootstrap/dist/css/bootstrap.css',
+      'app/**/*.styl'])
     .pipe(stylus({
       use: nib(),
       'include css': true

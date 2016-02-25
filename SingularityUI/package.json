@@ -11,14 +11,11 @@
     "node": "~4.1.2",
     "npm": "~2.14.16"
   },
-  "bin": {
-    "bower": "./node_modules/bower/bin/bower"
-  },
+  "bin": {},
   "scripts": {
     "start": "brunch watch --server"
   },
   "dependencies": {
-    "bower": "^1.7.6",
     "backbone-react-component": "^0.10.0",
     "bootstrap": "~3.3.0",
     "backbone": "~1.2.3",
