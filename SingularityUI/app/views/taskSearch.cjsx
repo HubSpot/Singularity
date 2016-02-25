@@ -1,3 +1,4 @@
+React = require 'react'
 View = require './view'
 
 TaskSearch = require '../components/taskSearch/TaskSearch'

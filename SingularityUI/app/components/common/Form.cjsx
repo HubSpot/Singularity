@@ -1,3 +1,4 @@
+React = require 'react'
 FormField = require './atomicFormItems/FormField'
 
 Form = React.createClass
