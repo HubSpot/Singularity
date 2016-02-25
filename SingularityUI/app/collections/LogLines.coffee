@@ -22,6 +22,7 @@ class LogLines extends Collection
     state: new Backbone.Model
         # Did we fetch all `requestLength` last time? If it is it likely means
         # there's more to fetch
+        reachedEndOfFile: false
         moreToFetch: undefined
         moreToFetchAtBeginning: undefined
         pendingFetchPrev: false
@@ -58,7 +59,9 @@ class LogLines extends Collection
                 length: @initialRequestLength
 
             @trigger 'initialdata'
-            request.done callback
+            request.done =>
+                @state.set 'reachedEndOfFile', true
+                callback()
 
         promise.error (response) =>
             # If we get a 400, the file has likely not been generated
@@ -118,11 +121,16 @@ class LogLines extends Collection
         @state.set
             moreToFetch: undefined
             moreToFetchAtBeginning: undefined
+            reachedEndOfFile: false
 
         super
 
     parse: (result, options) =>
-        @nextOffset = result.nextOffset or result.offset + result.data.length
+        if result.offset >= @getMaxOffset()
+            @nextOffset = result.nextOffset or result.offset + result.data.length
+            @state.set('reachedEndOfFile', result.data.length is 0 and options.data.length > 0)
+        else
+            @nextOffset = null
 
         # bail early if no new data
         if result.data.length is 0
