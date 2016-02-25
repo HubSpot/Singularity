@@ -1,4 +1,5 @@
 Handlebars = require 'handlebars'
+moment = require 'moment'
 
 Handlebars.registerHelper 'appRoot', ->
     config.appRoot

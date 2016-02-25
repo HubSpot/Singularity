@@ -14,6 +14,8 @@ stepDeployTemplate = require '../templates/vex/stepDeploy'
 cancelDeployTemplate = require '../templates/vex/cancelDeploy'
 TaskHistory = require '../models/TaskHistory'
 
+vex = require 'vex-helper'
+
 class Request extends Model
 
     ## toggle between creating additional properties during parse

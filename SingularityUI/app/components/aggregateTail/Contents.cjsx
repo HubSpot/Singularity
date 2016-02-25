@@ -1,4 +1,6 @@
 React = require 'react'
+ReactDOM = require 'react-dom'
+ReactList = require 'react-list'
 LogLine = require './LogLine'
 Loader = require './Loader'
 

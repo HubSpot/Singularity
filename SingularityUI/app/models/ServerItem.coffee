@@ -1,4 +1,6 @@
 Model = require './model'
+moment = require 'moment'
+vex = require 'vex-helper'
 
 # Not used by itself. Subclassed by Rack & Slave
 class ServerItem extends Model

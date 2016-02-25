@@ -1,6 +1,6 @@
 vex = require 'vex-js'
 moment = require 'moment'
-ZeroClipboard = require 'ZeroClipboard'
+ZeroClipboard = require 'zeroclipboard'
 Handlebars = require 'handlebars'
 Messenger = require 'messenger'
 

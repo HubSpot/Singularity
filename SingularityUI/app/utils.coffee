@@ -1,3 +1,6 @@
+ZeroClipboard = require 'zeroclipboard'
+vex = require 'vex-helper'
+
 class Utils
 
     # Constants
