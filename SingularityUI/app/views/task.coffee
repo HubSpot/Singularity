@@ -2,7 +2,7 @@ View = require './view'
 Task = require '../models/Task'
 TaskFiles = require '../collections/TaskFiles'
 TaskHistory = require '../models/TaskHistory'
-vex = require 'vex-helper'
+vex = require 'vex.dialog'
 
 commandRedirectTemplate = require '../templates/vex/taskCommandRedirect'
 

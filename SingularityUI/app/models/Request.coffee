@@ -9,7 +9,7 @@ bounceTemplate = require '../templates/vex/requestBounce'
 exitCooldownTemplate = require '../templates/vex/exitCooldown'
 TaskHistory = require '../models/TaskHistory'
 
-vex = require 'vex-helper'
+vex = require 'vex.dialog'
 
 class Request extends Model
 

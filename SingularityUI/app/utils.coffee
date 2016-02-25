@@ -1,5 +1,5 @@
 ZeroClipboard = require 'zeroclipboard'
-vex = require 'vex-helper'
+vex = require 'vex.dialog'
 
 class Utils
 

@@ -2,7 +2,7 @@ View = require './view'
 AutoTailer = require './AutoTailer'
 Request = require '../models/Request'
 Utils = require '../utils'
-vex = require 'vex-helper'
+vex = require 'vex.dialog'
 
 class RequestsView extends View
 
