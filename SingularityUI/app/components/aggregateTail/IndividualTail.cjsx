@@ -62,8 +62,8 @@ IndividualTail = React.createClass
   moreToFetch: ->
     @props.logLines.state.get('moreToFetch')
 
-  moreToFetchAtBeginning: ->
-    @props.logLines.state.get('moreToFetchAtBeginning')
+  reachedStartOfFile: ->
+    @props.logLines.getMinOffset() is 0
 
   reachedEndOfFile: ->
     @props.logLines.state.get('reachedEndOfFile')
@@ -140,7 +140,7 @@ IndividualTail = React.createClass
         fetchPrevious={@fetchPrevious}
         taskState={_.last(@state.task.taskUpdates)?.taskState}
         moreToFetch={@moreToFetch}
-        moreToFetchAtBeginning={@moreToFetchAtBeginning}
+        reachedStartOfFile={@reachedStartOfFile}
         reachedEndOfFile={@reachedEndOfFile}
         activeColor={@props.activeColor}
         search={@props.search} />
