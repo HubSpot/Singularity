@@ -83,7 +83,16 @@ Contents = React.createClass
       isLoading: true
       loadingText: 'Tailing'
     @tailingPoll = setInterval =>
-      @props.fetchNext()
+      if @props.reachedEndOfFile() and @props.moreToFetchAtBeginning() and @scrollNode.scrollHeight <= $(@scrollNode).innerHeight()
+        @setState
+          isLoading: true
+          loadingText: 'Loading'
+        @props.fetchPrevious( => )
+      else
+        @setState
+          isLoading: true
+          loadingText: 'Tailing'
+        @props.fetchNext()
     , 2000
 
   stopTailingPoll: ->
