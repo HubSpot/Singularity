@@ -1,10 +1,8 @@
 Link = React.createClass
 
     render: ->
-        <span title={@props.prop.altText}>
-            <a href={@props.prop.url}>
-                {@props.prop.text}
-            </a>
-        </span>
+        <a href={@props.prop.url} title={@props.prop.title} onClick={@props.prop.onClickFn} className={@props.prop.className} key={@props.key}>
+            {@props.prop.text}
+        </a>
 
 module.exports = Link
