@@ -9,7 +9,7 @@
     <title>{{ title }}</title>
     <link rel="shortcut icon" href="{{{staticRoot}}}/images/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <link rel="stylesheet" href="{{{staticRoot}}}/css/app.css">
+    <link rel="stylesheet" href="{{{staticRoot}}}/css/app.css" type="text/css">
 
     <script>
         window.config = {
@@ -44,7 +44,6 @@
         };
     </script>
     <script src="{{{staticRoot}}}/js/app.js"></script>
-    <script>require('initialize');</script>
 </head>
 {{#navColor}}
 <body class="env-color-{{{.}}}">
