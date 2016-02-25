@@ -69,10 +69,16 @@ gulp.task('html', function () {
     .pipe(gulp.dest(dest))
 });
 
+gulp.task('images', function () {
+  return gulp.src('node_modules/select2/*.{gif,png}')
+    .pipe(gulp.dest(dest + '/static/css'));
+});
+
 gulp.task('styles', function () {
   return gulp.src([
       'node_modules/vex-js/css/*.css',
       'node_modules/messenger/build/css/*.css',
+      'node_modules/select2/*.css',
       'node_modules/bootstrap/dist/css/bootstrap.css',
       'app/**/*.styl'])
     .pipe(stylus({
@@ -84,7 +90,7 @@ gulp.task('styles', function () {
 })
 
 gulp.task('build', ['clean'], function () {
-  gulp.start(['scripts', 'html', 'styles', 'fonts']);
+  gulp.start(['scripts', 'html', 'styles', 'fonts', 'images']);
 });
 
 gulp.task('serve', ['build'], function () {
