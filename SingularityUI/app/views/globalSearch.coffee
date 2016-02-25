@@ -3,6 +3,7 @@ View = require './view'
 Requests = require '../collections/Requests'
 
 typeahead = require 'typeahead.js'
+fuzzy = require 'fuzzy'
 
 class GlobalSearchView extends View
 

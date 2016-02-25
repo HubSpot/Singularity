@@ -1,6 +1,5 @@
 vex = require 'vex'
 moment = require 'moment'
-ZeroClipboard = require 'zeroclipboard'
 Handlebars = require 'handlebars'
 Messenger = require 'messenger'
 
@@ -38,11 +37,6 @@ Messenger.options =
         type: 'error'
         hideAfter: false
         showCloseButton: true
-
-# ZeroClipboard options
-ZeroClipboard.config
-    debug: false
-    swfPath: "#{ config.staticRoot }/swf/ZeroClipboard.swf"
 
 # Overwrite Handlebars logging
 Handlebars.logger.log = (stuff...) =>

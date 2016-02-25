@@ -3,6 +3,7 @@ AutoTailer = require './AutoTailer'
 Request = require '../models/Request'
 Utils = require '../utils'
 vex = require 'vex.dialog'
+fuzzy = require 'fuzzy'
 
 class RequestsView extends View
 
