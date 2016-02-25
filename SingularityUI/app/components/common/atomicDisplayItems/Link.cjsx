@@ -1,3 +1,5 @@
+React = require 'react'
+
 Link = React.createClass
 
     render: ->

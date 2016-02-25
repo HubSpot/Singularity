@@ -1,3 +1,4 @@
+React = require 'react'
 Table = require './Table'
 TimeStamp = require './atomicDisplayItems/TimeStamp'
 TaskStateLabel = require './atomicDisplayItems/TaskStateLabel'

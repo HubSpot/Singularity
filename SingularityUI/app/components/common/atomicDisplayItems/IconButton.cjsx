@@ -1,3 +1,5 @@
+React = require 'react'
+
 IconButton = React.createClass
 
     render: ->
