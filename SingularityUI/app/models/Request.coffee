@@ -14,7 +14,7 @@ stepDeployTemplate = require '../templates/vex/stepDeploy'
 cancelDeployTemplate = require '../templates/vex/cancelDeploy'
 TaskHistory = require '../models/TaskHistory'
 
-vex = require 'vex-helper'
+vex = require 'vex.dialog'
 
 class Request extends Model
 

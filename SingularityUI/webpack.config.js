@@ -23,6 +23,7 @@ module.exports = function (dest) {
       extensions: ['', '.js', '.cjsx', '.coffee', '.hbs'],
       alias: {
         'vex': 'vex-js/js/vex.js',
+        'vex.dialog': 'vex-helper.coffee',
         'handlebars': 'handlebars/runtime.js',
         'sortable': 'sortable/js/sortable.js',
         'datatables': 'datatables/media/js/jquery.dataTables.js',

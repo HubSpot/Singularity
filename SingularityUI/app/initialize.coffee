@@ -6,7 +6,7 @@ Messenger = require 'messenger'
 
 require 'bootstrap'
 
-vex = require 'vex-helper'
+vex = require 'vex.dialog'
 
 apiRootPromptTemplate = require './templates/vex/apiRootPrompt'
 

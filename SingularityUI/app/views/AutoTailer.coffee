@@ -6,7 +6,7 @@ RequestTasks = require '../collections/RequestTasks'
 autoTailWaitingTemplate = require 'templates/vex/autoTailingWaiting'
 autoTailFailureTemplate = require 'templates/vex/autoTailingFailure'
 
-vex = require 'vex-helper'
+vex = require 'vex.dialog'
 
 interval = (a, b) -> setInterval(b, a)  # f u javascript
 timeout = (a, b) -> setTimeout(b, a)

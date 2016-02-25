@@ -1,4 +1,4 @@
-vex = require 'vex-js'
+vex = require 'vex'
 moment = require 'moment'
 ZeroClipboard = require 'zeroclipboard'
 Handlebars = require 'handlebars'

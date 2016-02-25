@@ -6,7 +6,7 @@ IndividualTail = require './IndividualTail'
 InterleavedTail = require './InterleavedTail'
 Utils = require '../../utils'
 Help = require './Help'
-vex = require 'vex-helper'
+vex = require 'vex.dialog'
 
 AggregateTail = React.createClass
   mixins: [Backbone.React.Component.mixin]
