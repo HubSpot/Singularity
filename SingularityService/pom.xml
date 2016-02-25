@@ -409,6 +409,29 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-index.html-template</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/target/generated-resources/com/hubspot/singularity/views</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>../SingularityUI/app/assets/</directory>
+                  <includes>
+                    <include>index.mustache</include>
+                  </includes>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
 
     <pluginManagement>
@@ -541,16 +564,13 @@
                 </goals>
               </execution>
               <execution>
-                <id>bower install</id>
-                <goals>
-                  <goal>bower</goal>
-                </goals>
-              </execution>
-              <execution>
                 <id>gulp build</id>
                 <goals>
                   <goal>gulp</goal>
                 </goals>
+                <configuration>
+                  <arguments>build</arguments>
+                </configuration>
               </execution>
             </executions>
           </plugin>
