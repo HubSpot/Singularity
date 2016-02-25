@@ -20,7 +20,7 @@ $ ->
 	if config.apiRoot
 		app.initialize()
 	else
-		# In the event that the apiRoot isn't set (running through Brunch server)
+		# In the event that the apiRoot isn't set (running locally)
 		# prompt the user for it and refresh
 		vex.dialog.prompt
 			message: apiRootPromptTemplate()
