@@ -6,11 +6,11 @@ Header = require './Header'
 
 TaskSearch = React.createClass
 
-    headerText: 'Task Search'
+    countChoices: [5, 10, 25]
 
-    countChoices: [5, 10, 25, 50]
+    defaultCount: 10
 
-    countDefault: 10
+    defaultSortDirection: 'DESC'
 
     getInitialState: ->
         return {
@@ -21,18 +21,16 @@ TaskSearch = React.createClass
                 lastTaskStatus: @props.initialTaskStatus or ''
                 startedBefore: @props.initialStartedBefore or ''
                 startedAfter: @props.initialStartedAfter or ''
-            sortDirection: @props.initialSortDirection or 'ASC'
+            sortDirection: @props.initialSortDirection or @defaultSortDirection
             queryParams:
                 requestId: @props.initialRequestId or ''
             pageNumber: 1
-            count: @props.initialCount or @countDefault
-            showForm: true
+            count: @props.initialCount or @defaultCount
         }
 
     handleSubmit: (event) ->
         event.preventDefault()
-        @setState 
-            showForm: false
+        @setState
             queryParams: @state.form
             pageNumber: 1 # If you narrow down your search you most likely want to go back to page 1
 
@@ -76,15 +74,13 @@ TaskSearch = React.createClass
             form: form
 
     resetForm: ->
-        @setState 
-            form: @getInitialState().form
-
-    resetFormToCurrentParams: (event) ->
-        @setState
-            form: @state.queryParams
+        @setState @getInitialState()
 
     updateSortDirection: (event) ->
-        @setState sortDirection: event.target.value
+        if @state.sortDirection is Enums.sortDirections()[0].value
+            @setState sortDirection: Enums.sortDirections()[1].value
+        else
+            @setState sortDirection: Enums.sortDirections()[0].value
 
     updatePageNumber: (event) ->
         @setState pageNumber: event.target.value
@@ -125,42 +121,44 @@ TaskSearch = React.createClass
     clearStartedAfter: (event) ->
         @setState startedAfter: ''
 
-    returnToForm: (event) ->
-        @setState showForm: true
-
     render: ->
         <div>
             <Header
                 global = @props.global
                 requestId = @props.initialRequestId
             />
+            <h2> Search Parameters </h2>
             <TaskSearchForm
-                header = @header
                 handleSubmit = @handleSubmit
                 requestId = @state.form.requestId
+                requestIdCurrentSearch = @state.queryParams.requestId
                 global = @props.global
                 updateReqeustId = @updateReqeustId
                 deployId = @state.form.deployId
                 updateDeployId = @updateDeployId
+                deployIdCurrentSearch = @state.queryParams.deployId
                 host = @state.form.host
                 updateHost = @updateHost
+                hostCurrentSearch = @state.queryParams.host
                 lastTaskStatus = @state.form.lastTaskStatus
                 updateLastTaskStatus = @updateLastTaskStatus
-                startedBefore = @state.form.startedBefore
-                updateStartedBefore = @updateStartedBefore
+                lastTaskStatusCurrentSearch = @state.queryParams.lastTaskStatus
                 startedAfter = @state.form.startedAfter
                 updateStartedAfter = @updateStartedAfter
+                startedAfterCurrentSearch = {@state.queryParams.startedAfter.format window.config.timestampFormat if @state.queryParams.startedAfter}
+                startedBefore = @state.form.startedBefore
+                updateStartedBefore = @updateStartedBefore
+                startedBeforeCurrentSearch = {@state.queryParams.startedBefore.format window.config.timestampFormat if @state.queryParams.startedBefore}
                 resetForm = @resetForm
-                resetFormToCurrentParams = @resetFormToCurrentParams
             />
+            <h2>Tasks</h2>
             <DisplayResults
-                header = @header
                 requestId = @state.queryParams.requestId
                 deployId = @state.queryParams.deployId
                 host = @state.queryParams.host
                 lastTaskStatus = @state.queryParams.lastTaskStatus
-                startedBefore = @state.queryParams.startedBefore
                 startedAfter = @state.queryParams.startedAfter
+                startedBefore = @state.queryParams.startedBefore
                 sortDirection = @state.sortDirection
                 increasePageNumber = @increasePageNumber
                 setPageNumber = @setPageNumber
@@ -178,7 +176,6 @@ TaskSearch = React.createClass
                 clearStartedBefore = @clearStartedBefore
                 clearSortDirection = @clearSortDirection
                 global = @props.global
-                returnToForm = @returnToForm
             />
         </div>
 

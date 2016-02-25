@@ -59,47 +59,6 @@ DisplayResults = React.createClass
         if @didPropsChange nextProps
             @willFetch = true
 
-    getQueryParams: ->
-        [
-            {
-                show: @collection.params.requestId
-                name: "Request Id"
-                value: @props.requestId
-                clearFn: @props.clearRequestId
-                cantClear: not @props.global
-            },
-            {
-                show: @collection.params.deployId
-                name: "Deploy Id"
-                value: @props.deployId
-                clearFn: @props.clearDeployId
-            },
-            {
-                show: @collection.params.host
-                name: "Host"
-                value: @props.host
-                clearFn: @props.clearHost
-            },
-            {
-                show: @collection.params.lastTaskStatus
-                name: "Last Task Status"
-                value: @props.lastTaskStatus
-                clearFn: @props.clearLastTaskStatus
-            },
-            {
-                show: @collection.params.startedBefore
-                name: "Started Before"
-                value: @props.startedBefore.format window.config.timestampWithSecondsFormat if @props.startedBefore
-                clearFn: @props.clearStartedBefore
-            },
-            {
-                show: @collection.params.startedAfter
-                name: "Started After"
-                value: @props.startedAfter.format window.config.timestampWithSecondsFormat if @props.startedAfter
-                clearFn: @props.clearStartedAfter
-            }
-        ]
-
     renderPageNavBar: ->
         <TableNavigationBar
             currentPage = @collection.params.page
@@ -117,13 +76,20 @@ DisplayResults = React.createClass
 
     render: ->
         @fetchCollection() if @willFetch
-        <div className='col-lg-12'>
-            <h2>Tasks</h2>
-            {@renderPageNavBar()}
+        <div className='col-xl-12'>
             <TaskTable
                 models = {@collection.models}
+                sortDirection = @props.sortDirection
+                sortDirectionAscending = Enums.sortDirections()[0].value
+                sortBy = 'Started'
+                sortableByStarted = true
+                sortByStarted = @props.updateSortDirection
+                rowsPerPageChoices = @props.countChoices
+                setRowsPerPage = @props.updateCount
+                pageNumber = @collection.params.page
+                pageDown = @props.decreasePageNumber
+                pageUp = @props.increasePageNumber
             />
-            {@renderPageNavBar()}
         </div>
 
 module.exports = DisplayResults
