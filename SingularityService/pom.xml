@@ -539,9 +539,18 @@
                 <goals>
                   <goal>npm</goal>
                 </goals>
-                <configuration>
-                  <arguments>install</arguments>
-                </configuration>
+              </execution>
+              <execution>
+                <id>bower install</id>
+                <goals>
+                  <goal>bower</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>gulp build</id>
+                <goals>
+                  <goal>gulp</goal>
+                </goals>
               </execution>
             </executions>
           </plugin>
