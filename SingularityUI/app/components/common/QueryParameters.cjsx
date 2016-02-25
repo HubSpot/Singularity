@@ -1,3 +1,4 @@
+React = require 'react'
 QueryParameter = require "./atomicDisplayItems/QueryParameter"
 
 QueryParameters = React.createClass

@@ -1,3 +1,4 @@
+React = require 'react'
 TaskSearchResults = require '../../collections/TaskSearchResults'
 
 QueryParameters = require '../common/QueryParameters'

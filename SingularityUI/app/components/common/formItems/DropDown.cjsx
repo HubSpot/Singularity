@@ -1,3 +1,4 @@
+React = require 'react'
 Utils = require '../../../utils'
 
 DropDown = React.createClass

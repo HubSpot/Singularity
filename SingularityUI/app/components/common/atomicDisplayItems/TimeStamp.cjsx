@@ -1,3 +1,5 @@
+React = require 'react'
+
 TimeStamp = React.createClass
 
     timeStampFromNow: ->
