@@ -9,6 +9,7 @@ module.exports = function (dest) {
       filename: 'app.js'
     },
     debug: true,
+    devtool: 'source-map',
     module: {
       loaders: [
         { test: /\.cjsx$/, loaders: ['coffee', 'cjsx']},
