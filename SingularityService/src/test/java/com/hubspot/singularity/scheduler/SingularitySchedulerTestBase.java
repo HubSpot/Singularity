@@ -483,7 +483,6 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
     deployManager.saveDeploy(request, secondDeployMarker, secondDeploy);
 
-
     startDeploy(secondDeployMarker, System.currentTimeMillis());
 
     return secondDeployMarker;
