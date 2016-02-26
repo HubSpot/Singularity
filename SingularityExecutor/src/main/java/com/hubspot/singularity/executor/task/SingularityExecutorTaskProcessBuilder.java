@@ -9,7 +9,6 @@ import org.apache.mesos.Protos.TaskState;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
@@ -17,9 +16,10 @@ import com.hubspot.singularity.executor.models.DockerContext;
 import com.hubspot.singularity.executor.models.EnvironmentContext;
 import com.hubspot.singularity.executor.models.RunnerContext;
 import com.hubspot.singularity.executor.task.SingularityExecutorArtifactFetcher.SingularityExecutorTaskArtifactFetcher;
+import com.hubspot.singularity.executor.utils.DockerUtils;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
-import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.DockerException;
 
 public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBuilder> {
 
@@ -38,7 +38,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
 
   private Optional<SingularityExecutorTaskArtifactFetcher> taskArtifactFetcher;
 
-  private DockerClient dockerClient;
+  private DockerUtils dockerUtils;
 
   public SingularityExecutorTaskProcessBuilder(SingularityExecutorTask task,
                                                ExecutorUtils executorUtils,
@@ -46,7 +46,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
                                                TemplateManager templateManager,
                                                SingularityExecutorConfiguration configuration,
                                                ExecutorData executorData, String executorPid,
-                                               DockerClient dockerClient) {
+                                               DockerUtils dockerUtils) {
     this.executorData = executorData;
     this.task = task;
     this.executorUtils = executorUtils;
@@ -55,7 +55,7 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     this.configuration = configuration;
     this.executorPid = executorPid;
     this.taskArtifactFetcher = Optional.absent();
-    this.dockerClient = dockerClient;
+    this.dockerUtils = dockerUtils;
   }
 
   @Override
@@ -63,9 +63,9 @@ public class SingularityExecutorTaskProcessBuilder implements Callable<ProcessBu
     if (task.getTaskInfo().hasContainer() && task.getTaskInfo().getContainer().hasDocker()) {
       executorUtils.sendStatusUpdate(task.getDriver(), task.getTaskInfo(), TaskState.TASK_STARTING, String.format("Pulling image... (executor pid: %s)", executorPid), task.getLog());
       try {
-        dockerClient.pull(task.getTaskInfo().getContainer().getDocker().getImage());
-      } catch (UncheckedTimeoutException te) {
-        throw new ProcessFailedException(String.format("Timed out trying to reach docker daemon after %s seconds", configuration.getDockerClientTimeLimitSeconds()));
+        dockerUtils.pull(task.getTaskInfo().getContainer().getDocker().getImage());
+      } catch (DockerException e) {
+        throw new ProcessFailedException("Could not pull docker image", e);
       }
     }
 

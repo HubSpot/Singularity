@@ -9,6 +9,8 @@ bounceTemplate = require '../templates/vex/requestBounce'
 exitCooldownTemplate = require '../templates/vex/exitCooldown'
 TaskHistory = require '../models/TaskHistory'
 
+vex = require 'vex.dialog'
+
 class Request extends Model
 
     ## toggle between creating additional properties during parse
@@ -48,11 +50,6 @@ class Request extends Model
         data.canBeScaled = data.state in ['ACTIVE', 'SYSTEM_COOLDOWN'] and data.hasActiveDeploy and data.type in ['WORKER', 'SERVICE']
 
         data
-
-    deletePaused: =>
-        $.ajax
-            url:  "#{ @url() }/paused"
-            type: 'DELETE'
 
     unpause: (data) =>
         $.ajax

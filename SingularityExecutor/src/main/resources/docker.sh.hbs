@@ -94,7 +94,7 @@ echo "LOG_HOME=/mnt/mesos/sandbox/logs" >> docker.env
 echo "MESOS_TASK_ID={{{bashEscaped runContext.taskId}}}" >> docker.env
 {{#each envContext.containerVolumes}}
 {{#if mode}}raw_mode{{@index}}={{{ mode }}}{{/if}}
-DOCKER_VOLUMES+=( -v "{{{ hostPath }}}:{{{ containerPath }}}{{#if mode}}:${raw_mode{{@index}},,}{{/if}}" )
+DOCKER_VOLUMES+=( -v "{{#if hostPath}}{{{ hostPath }}}:{{{ containerPath }}}{{else}}{{{ containerPath }}}:{{{ containerPath }}}{{/if}}{{#if mode}}:${raw_mode{{@index}},,}{{/if}}" )
 {{/each}}
 
 # set up network config
