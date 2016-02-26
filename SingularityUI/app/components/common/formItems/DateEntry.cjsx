@@ -1,5 +1,8 @@
+React = require 'react'
+moment = require 'moment'
 FormField = require './FormField'
 Glyphicon = require '../atomicDisplayItems/Glyphicon'
+datetimepicker = require 'eonasdan-bootstrap-datetimepicker'
 
 DateEntry = React.createClass
 
@@ -18,11 +21,6 @@ DateEntry = React.createClass
         $ -> $(id).datetimepicker({
                 sideBySide: true
                 format: window.config.timestampFormat
-                # This option is of course not documented at all. 
-                # Probably because it doesn't work very well.
-                # It can be seen in the bootstrap-datetimepicker GitHub.
-                # (Thanks Mayuri Sridhar for the suggestion)
-                timeZone: moment().format('zz')
             }).on('dp.change', changeFn) # value will be in event.date
 
     getValue: ->

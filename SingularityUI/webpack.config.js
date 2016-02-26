@@ -16,6 +16,7 @@ module.exports = function (dest) {
         { test: /\.coffee$/, loader: 'coffee'},
         { test: /\.hbs/, loader: "handlebars-template-loader" },
         { test: /[\/]messenger\.js$/, loader: 'exports?Messenger'},
+        { test: /[\/]bootstrap-datetimepicker\.js/, loader: 'imports?moment' },
         { test: /[\/]sortable\.js$/, loader: 'exports?Sortable'}
       ]
     },
