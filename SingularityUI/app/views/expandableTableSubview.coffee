@@ -23,9 +23,20 @@ class ExpandableTableSubview extends View
             'click [data-action="expand"]': 'expand'
             'click [data-action="shrink"]': 'startShrink'
 
-    initialize: ({@collection, @template}) ->
+    initialize: (@params) ->
+        { @collection, @template } = @params
         for eventName in ['sync', 'reset']
             @listenTo @collection, eventName, @render
+
+    renderData: ->
+        data =
+            config:    config
+            data:      _.pluck @collection.models, 'attributes'
+            synced:    @collection.synced
+        if @params.extraRenderData?
+            _.extend data, @params.extraRenderData(this)
+
+        data
 
     render: ->
         # If we've already rendered stuff and now we're trying to render
@@ -49,10 +60,7 @@ class ExpandableTableSubview extends View
         # For after the render
         haveButtons = @$('.table-subview-buttons').length
 
-        @$el.html @template
-            synced:  @collection.synced
-            data:    _.pluck @collection.models, 'attributes'
-            config: config
+        @$el.html @template @renderData()
 
         @$('.actions-column a[title]').tooltip()
 

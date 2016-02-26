@@ -1,3 +1,7 @@
+Sortable = require 'sortable'
+
+DataTables = require 'datatables'
+
 class View extends Backbone.View
 
     # Keep track of any subviews we may have
