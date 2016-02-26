@@ -42,7 +42,7 @@ var templateData = {
 
 var dest = path.resolve(__dirname, '../SingularityService/target/generated-resources/assets');
 
-var webpack = require('gulp-webpack');
+var webpack = require('webpack-stream');
 var webpackConfig = require('./webpack.config')(dest);
 
 gulp.task("clean", function() {

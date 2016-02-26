@@ -19,7 +19,7 @@ jQuery.ajax = (opts) ->
     _oldAjax.call jQuery, opts
 
 # Eat M/D/Y & 24h-time, yanks! Mwahahahahaha!
-moment.lang 'en',
+moment.locale 'en',
     longDateFormat:
         LT : "HH:mm"
         L : "DD/MM/YYYY"
