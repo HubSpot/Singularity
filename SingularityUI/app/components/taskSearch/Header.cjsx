@@ -11,7 +11,7 @@ Header = React.createClass
                 alt={'Return to Request ' + @props.requestId}>
                 <Glyphicon iconClass='arrow-left' /> Back to {@props.requestId}
             </a> unless @props.global}
-            <h1>{'Global' if @props.global} Task Search</h1>
+            <h1>{'Global' if @props.global} Historical Tasks</h1>
         </div>
 
 module.exports = Header

@@ -7,22 +7,24 @@ QueryParameter = React.createClass
     getClassName: ->
         classNames {
             "list-group-item": true
-            "disabled": @props.cantClear
+            "disabled": @props.prop.cantClear
         }
 
     render: ->
         return  <li className={classNames {
                                 "list-group-item": true
-                                "disabled": @props.cantClear
+                                "disabled": @props.prop.cantClear
                     }}>
-                        <b>{@props.paramName}:</b> {@props.paramValue} 
+                        <b>{@props.prop.paramName}:</b> {@props.prop.paramValue} 
                         {<IconButton 
-                            ariaLabel='Remove this parameter'
-                            iconClass='remove'
-                            className={['remove-query-param', 'pull-right']}
-                            btnClass='default'
-                            btn = false
-                            onClick={@props.clearFn}
-                        /> unless @props.cantClear}
+                            prop = {{
+                                ariaLabel: 'Remove this parameter'
+                                iconClass: 'remove'
+                                className: ['remove-query-param', 'pull-right']
+                                btnClass:'default'
+                                btn: false
+                                onClick: @props.prop.clearFn
+                            }}
+                        /> unless @props.prop.cantClear}
                 </li>
 module.exports = QueryParameter

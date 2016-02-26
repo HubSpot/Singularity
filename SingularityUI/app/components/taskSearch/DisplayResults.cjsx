@@ -2,20 +2,13 @@ React = require 'react'
 TaskSearchResults = require '../../collections/TaskSearchResults'
 
 QueryParameters = require '../common/QueryParameters'
-FormField = require '../common/atomicFormItems/FormField'
-DropDown = require '../common/atomicFormItems/DropDown'
+FormField = require '../common/formItems/FormField'
+DropDown = require '../common/formItems/DropDown'
 TaskTable = require '../common/TaskTable'
-TableNavigationBar = require '../common/TableNavigationBar'
 
-Header = require './Header'
 Enums = require './Enums'
 
 DisplayResults = React.createClass
-
-    collectionsReset: (event, response) ->
-            @setState({
-                loading: false
-            })
 
     # Used to detect if any props have changed
     didPropsChange: (nextProps) ->
@@ -51,8 +44,8 @@ DisplayResults = React.createClass
                 count : @props.count
                 page : @props.page
             }
-        @collection.on "add", @collectionsReset
-        @collection.fetch()
+        @collection.fetch
+            success: () => @setState {loading: false}
 
     componentWillMount: ->
         @fetchCollection()
@@ -60,47 +53,8 @@ DisplayResults = React.createClass
     componentWillReceiveProps: (nextProps) ->
         if @didPropsChange nextProps
             @willFetch = true
-
-    getQueryParams: ->
-        [
-            {
-                show: @collection.params.requestId
-                name: "Request Id"
-                value: @props.requestId
-                clearFn: @props.clearRequestId
-                cantClear: not @props.global
-            },
-            {
-                show: @collection.params.deployId
-                name: "Deploy Id"
-                value: @props.deployId
-                clearFn: @props.clearDeployId
-            },
-            {
-                show: @collection.params.host
-                name: "Host"
-                value: @props.host
-                clearFn: @props.clearHost
-            },
-            {
-                show: @collection.params.lastTaskStatus
-                name: "Last Task Status"
-                value: @props.lastTaskStatus
-                clearFn: @props.clearLastTaskStatus
-            },
-            {
-                show: @collection.params.startedBefore
-                name: "Started Before"
-                value: @props.startedBefore.format window.config.timestampWithSecondsFormat if @props.startedBefore
-                clearFn: @props.clearStartedBefore
-            },
-            {
-                show: @collection.params.startedAfter
-                name: "Started After"
-                value: @props.startedAfter.format window.config.timestampWithSecondsFormat if @props.startedAfter
-                clearFn: @props.clearStartedAfter
-            }
-        ]
+            @setState
+                loading: true
 
     renderPageNavBar: ->
         <TableNavigationBar
@@ -119,23 +73,21 @@ DisplayResults = React.createClass
 
     render: ->
         @fetchCollection() if @willFetch
-        <div>
-            <Header
-                global = @props.global
-                requestId = @props.requestId
-            />
-            <h2>Query Parameters</h2>
-            <QueryParameters
-                colSize = "md-6"
-                parameters = {@getQueryParams()}
-            />
-            <button className="btn btn-primary" onClick={@props.returnToForm}>Modify Query Parameters</button>
-            <h2>Tasks</h2>
-            {@renderPageNavBar()}
+        <div className='col-xl-12'>
             <TaskTable
                 models = {@collection.models}
+                sortDirection = @props.sortDirection
+                sortDirectionAscending = Enums.sortDirections()[0].value
+                sortBy = 'Started'
+                sortableByStarted = true
+                sortByStarted = @props.updateSortDirection
+                rowsPerPageChoices = @props.countChoices
+                setRowsPerPage = @props.updateCount
+                pageNumber = @collection.params.page
+                pageDown = @props.decreasePageNumber
+                pageUp = @props.increasePageNumber
+                emptyTableMessage = {if @state.loading then 'Loading Tasks...' else 'No Tasks'}
             />
-            {@renderPageNavBar()}
         </div>
 
 module.exports = DisplayResults
