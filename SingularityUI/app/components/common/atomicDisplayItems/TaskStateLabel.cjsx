@@ -17,10 +17,10 @@ TaskStateLabel = React.createClass
                 'default'
 
     getClass: ->
-        return 'label label-' + @getLabelClass()
+        return classNames 'label', "label-#{@getLabelClass()}", @props.prop.className
 
     render: ->
-        <span className={@getClass()}>
+        <span className={@getClass()} label="Task State: #{Utils.humanizeText @props.prop.taskState}">
             {Utils.humanizeText @props.prop.taskState}
         </span>
 
