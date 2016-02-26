@@ -1,7 +1,6 @@
 React = require 'react'
 Utils = require '../../utils'
 
-Form = require '../common/Form'
 FormField = require '../common/formItems/FormField'
 DropDown = require '../common/formItems/DropDown'
 DateEntry = require '../common/formItems/DateEntry'
@@ -45,84 +44,106 @@ TaskSearchForm = React.createClass
             {<span className='badge current-query-param'>{@props.lastTaskStatusCurrentSearch}</span> if @props.lastTaskStatusCurrentSearch}
         </div>
 
-    getFormGroups: ->
-        [
-            {
-                component: FormField
-                title: @getRequestIdTitle()
-                id: 'requestId'
-                prop:
-                    value: @props.requestId
-                    inputType: 'text'
-                    disabled: not @props.global
-                    updateFn: @props.updateReqeustId
-            },
-            {
-                component: FormField
-                title: @getDeployIdTitle()
-                id: 'deployId'
-                prop:
-                    value: @props.deployId
-                    inputType: 'text'
-                    updateFn: @props.updateDeployId
-            },
-            {
-                component: FormField
-                title: @getHostTitle()
-                id: 'host'
-                prop:
-                    value: @props.host
-                    inputType: 'text'
-                    updateFn: @props.updateHost
-            },
-            {
-                component: LinkedFormItem
-                id: 'executionStartedBetween'
-                title: @getStartedBetweenTitle()
-                prop:
-                    customClass: 'form-inline'
-                    formItem1:
-                        component: DateEntry
-                        title: 'Started After'
-                        id: 'startedAfter'
-                        prop:
-                            customClass: 'col-xs-5 pull-left'
-                            value: @props.startedAfter
-                            inputType: 'datetime'
-                            updateFn: @props.updateStartedAfter
-                    separator: '-'
-                    formItem2:
-                        component: DateEntry
-                        title: 'Started Before'
-                        id: 'startedBefore'
-                        prop:
-                            customClass: 'col-xs-5 pull-right'
-                            value: @props.startedBefore
-                            inputType: 'datetime'
-                            updateFn: @props.updateStartedBefore
-            },
-            {
-                component: DropDown
-                title: @getLastTaskStatusTitle()
-                id: 'lastTaskStatus'
-                prop:
-                    value: @props.lastTaskStatus
-                    choices: Enums.extendedTaskState()
-                    inputType: 'text'
-                    updateFn: @props.updateLastTaskStatus
-            }
-        ]
-
     render: ->
+        render: ->
         <div className='jumbotron col-md-12'>
-            <Form
-                formGroups = {@getFormGroups()}
-                submitButtonText = 'Search'
-                resetForm = {@props.resetForm}
-                handleSubmit = {@props.handleSubmit}
-                inputSize = 4
-                className = 'form-vertical'
-            />
+            <form role='form' onSubmit={@props.handleSubmit} className='form-vertical'>
+                <div className='row'>
+                    <div className='col-md-4'>
+                        <label htmlFor='requestId'>{@getRequestIdTitle()}</label>
+                        <FormField
+                            title = @getRequestIdTitle()
+                            id = 'requestId'
+                            prop = {{
+                                value: @props.requestId
+                                inputType: 'text'
+                                disabled: not @props.global
+                                updateFn: @props.updateReqeustId
+                            }}
+                        />
+                    </div>
+                    <div className='col-md-4'>
+                        <label htmlFor='deployId'>{@getDeployIdTitle()}</label>
+                        <FormField
+                            title = @getDeployIdTitle()
+                            id = 'deployId'
+                            prop = {{
+                                value: @props.deployId
+                                inputType: 'text'
+                                updateFn: @props.updateDeployId
+                            }}
+                        />
+                    </div>
+                    <div className='col-md-4'>
+                        <label htmlFor='host'>{@getHostTitle()}</label>
+                        <FormField
+                            title = @getHostTitle()
+                            id = 'host'
+                            prop = {{
+                                value: @props.host
+                                inputType: 'text'
+                                updateFn: @props.updateHost
+                            }}
+                        />
+                    </div>
+                </div>
+                <div className='row'>
+                    <div className='col-md-4'>
+                        <label htmlFor='executionStartedBetween'>{@getStartedBetweenTitle()}</label>
+                        <LinkedFormItem
+                            id = 'executionStartedBetween'
+                            title = @getStartedBetweenTitle()
+                            prop = {{
+                                customClass: 'form-inline'
+                                formItem1:
+                                    component: DateEntry
+                                    title: 'Started After'
+                                    id: 'startedAfter'
+                                    prop:
+                                        customClass: 'col-xs-5 pull-left'
+                                        value: @props.startedAfter
+                                        inputType: 'datetime'
+                                        updateFn: @props.updateStartedAfter
+                                separator: '-'
+                                formItem2:
+                                    component: DateEntry
+                                    title: 'Started Before'
+                                    id: 'startedBefore'
+                                    prop:
+                                        customClass: 'col-xs-5 pull-right'
+                                        value: @props.startedBefore
+                                        inputType: 'datetime'
+                                        updateFn: @props.updateStartedBefore
+                            }}
+                        />
+                    </div>
+                    <div className='col-md-4'>
+                        <label htmlFor='lastTaskStatus'>{@getLastTaskStatusTitle()}</label>
+                        <DropDown
+                            id = 'lastTaskStatus'
+                            prop = {{
+                                value: @props.lastTaskStatus
+                                choices: Enums.extendedTaskState()
+                                inputType: 'text'
+                                updateFn: @props.updateLastTaskStatus
+                            }}
+                        />
+                    </div>
+                    <label htmlFor='buttons'>&nbsp;</label>
+                    <div className='col-md-4' id='buttons'>
+                        <div className='pull-right'>
+                            <div className='col-md-3'>
+                                <button type='submit' className='btn btn-primary'>Search</button>
+                            </div>
+                        </div>
+                        <div className='pull-right'>
+                            <div className='col-md-3'>
+                                <button type='button' className='btn btn-danger' onClick=@props.resetForm>Clear</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
         </div>
 
 module.exports = TaskSearchForm

@@ -7,7 +7,7 @@ Header = require './Header'
 
 TaskSearch = React.createClass
 
-    countChoices: [5, 10, 25]
+    countChoices: [5, 10, 25, 100]
 
     defaultCount: 10
 

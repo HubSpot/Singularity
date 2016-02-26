@@ -11,11 +11,6 @@ Enums = require './Enums'
 
 DisplayResults = React.createClass
 
-    collectionsReset: (event, response) ->
-            @setState({
-                loading: false
-            })
-
     # Used to detect if any props have changed
     didPropsChange: (nextProps) ->
         return true unless nextProps.requestId == @props.requestId
@@ -50,8 +45,8 @@ DisplayResults = React.createClass
                 count : @props.count
                 page : @props.page
             }
-        @collection.on "add", @collectionsReset
-        @collection.fetch()
+        @collection.fetch
+            success: () => @setState {loading: false}
 
     componentWillMount: ->
         @fetchCollection()
@@ -59,6 +54,8 @@ DisplayResults = React.createClass
     componentWillReceiveProps: (nextProps) ->
         if @didPropsChange nextProps
             @willFetch = true
+            @setState
+                loading: true
 
     renderPageNavBar: ->
         <TableNavigationBar
@@ -90,6 +87,7 @@ DisplayResults = React.createClass
                 pageNumber = @collection.params.page
                 pageDown = @props.decreasePageNumber
                 pageUp = @props.increasePageNumber
+                emptyTableMessage = {if @state.loading then 'Loading Tasks...' else 'No Tasks'}
             />
         </div>
 
