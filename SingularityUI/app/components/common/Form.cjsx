@@ -2,21 +2,12 @@ FormField = require './formItems/FormField'
 
 Form = React.createClass
 
-    ###rowify: (input) ->
-        offset = 0
-        for idx in [0 ... input.length] 
-            do (idx) =>
-                if idx %% @props.inputSize is 0
-                    input.splice(idx, idx + @props.inputSize).wrapAll("<div className='row'></div>")
-    ###
-
     renderFormGroups: ->
         groups = []
-        key = 0
         @props.formGroups.map (group, field) =>
             ComponentClass = group.component
             groups.push (
-                <div className="col-md-#{@props.inputSize}" key={key}>
+                <div className="col-md-#{@props.inputSize}" key={field}>
                     <div className='form-group'>
                         <label htmlFor=group.id>{group.title}</label>
                         <ComponentClass
@@ -24,8 +15,6 @@ Form = React.createClass
                             prop = group.prop />
                     </div>
                 </div>)
-            key++
-        #@rowify groups
         return groups
 
     render: ->
