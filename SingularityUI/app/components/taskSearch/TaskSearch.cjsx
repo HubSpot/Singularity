@@ -1,3 +1,4 @@
+React = require 'react'
 Utils = require '../../utils'
 Enums = require './Enums'
 TaskSearchForm = require './TaskSearchForm'

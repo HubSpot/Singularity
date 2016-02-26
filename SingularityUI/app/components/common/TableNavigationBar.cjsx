@@ -1,3 +1,5 @@
+React = require 'react'
+classNames = require 'classnames'
 Glyphicon = require './atomicDisplayItems/Glyphicon'
 IconButton = require './atomicDisplayItems/IconButton'
 FormField = require './formItems/FormField'

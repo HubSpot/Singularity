@@ -1,9 +1,13 @@
+React = require 'react'
+ReactDOM = require 'react-dom'
+BackboneReactComponent = require 'backbone-react-component'
 Header = require './Header'
 IndividualTail = require './IndividualTail'
 InterleavedTail = require './InterleavedTail'
 Utils = require '../../utils'
 LogLines = require '../../collections/LogLines'
 Help = require './Help'
+vex = require 'vex.dialog'
 
 AggregateTail = React.createClass
   mixins: [Backbone.React.Component.mixin]

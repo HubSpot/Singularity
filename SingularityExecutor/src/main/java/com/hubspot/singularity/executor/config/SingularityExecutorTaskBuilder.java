@@ -19,12 +19,12 @@ import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.task.SingularityExecutorArtifactFetcher;
 import com.hubspot.singularity.executor.task.SingularityExecutorTask;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
+import com.hubspot.singularity.executor.utils.DockerUtils;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseModule;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
-import com.spotify.docker.client.DockerClient;
 
 import ch.qos.logback.classic.Logger;
 
@@ -39,7 +39,7 @@ public class SingularityExecutorTaskBuilder {
   private final SingularityExecutorConfiguration executorConfiguration;
   private final SingularityS3Configuration s3Configuration;
   private final SingularityExecutorArtifactFetcher artifactFetcher;
-  private final DockerClient dockerClient;
+  private final DockerUtils dockerUtils;
 
   private final SingularityExecutorLogging executorLogging;
   private final ExecutorUtils executorUtils;
@@ -51,7 +51,7 @@ public class SingularityExecutorTaskBuilder {
   @Inject
   public SingularityExecutorTaskBuilder(ObjectMapper jsonObjectMapper, JsonObjectFileHelper jsonObjectFileHelper, TemplateManager templateManager,
       SingularityExecutorLogging executorLogging, SingularityRunnerBaseConfiguration baseConfiguration, SingularityExecutorConfiguration executorConfiguration, @Named(SingularityRunnerBaseModule.PROCESS_NAME) String executorPid,
-      ExecutorUtils executorUtils, SingularityExecutorArtifactFetcher artifactFetcher, DockerClient dockerClient, SingularityS3Configuration s3Configuration) {
+      ExecutorUtils executorUtils, SingularityExecutorArtifactFetcher artifactFetcher, DockerUtils dockerUtils, SingularityS3Configuration s3Configuration) {
     this.jsonObjectFileHelper = jsonObjectFileHelper;
     this.jsonObjectMapper = jsonObjectMapper;
     this.templateManager = templateManager;
@@ -59,7 +59,7 @@ public class SingularityExecutorTaskBuilder {
     this.baseConfiguration = baseConfiguration;
     this.executorConfiguration = executorConfiguration;
     this.artifactFetcher = artifactFetcher;
-    this.dockerClient = dockerClient;
+    this.dockerUtils = dockerUtils;
     this.executorPid = executorPid;
     this.executorUtils = executorUtils;
     this.s3Configuration = s3Configuration;
@@ -79,7 +79,7 @@ public class SingularityExecutorTaskBuilder {
 
     jsonObjectFileHelper.writeObject(taskDefinition, executorConfiguration.getTaskDefinitionPath(taskId), log);
 
-    return new SingularityExecutorTask(driver, executorUtils, baseConfiguration, executorConfiguration, taskDefinition, executorPid, artifactFetcher, taskInfo, templateManager, jsonObjectMapper, log, jsonObjectFileHelper, dockerClient, s3Configuration);
+    return new SingularityExecutorTask(driver, executorUtils, baseConfiguration, executorConfiguration, taskDefinition, executorPid, artifactFetcher, taskInfo, templateManager, jsonObjectMapper, log, jsonObjectFileHelper, dockerUtils, s3Configuration);
   }
 
   private ExecutorData readExecutorData(ObjectMapper objectMapper, Protos.TaskInfo taskInfo) {

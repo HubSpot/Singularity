@@ -1,4 +1,5 @@
 FormField = require './formItems/FormField'
+React = require 'react'
 
 Form = React.createClass
 

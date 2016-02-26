@@ -1,3 +1,6 @@
+React = require 'react'
+classNames = require 'classnames'
+
 IconButton = React.createClass
 
     render: ->

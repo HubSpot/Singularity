@@ -83,11 +83,17 @@ public class SingularityConfiguration extends Configuration {
 
   private long deleteDeploysFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
 
+  private Optional<Integer> maxStaleDeploysPerRequestInZkWhenNoDatabase = Optional.absent();
+
   private long deleteDeadSlavesAfterHours = TimeUnit.DAYS.toHours(7);
 
   private long deleteStaleRequestsFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(14);
 
+  private Optional<Integer> maxRequestsWithHistoryInZkWhenNoDatabase = Optional.absent();
+
   private long deleteTasksFromZkWhenNoDatabaseAfterHours = TimeUnit.DAYS.toHours(7);
+
+  private Optional<Integer> maxStaleTasksPerRequestInZkWhenNoDatabase = Optional.absent();
 
   private long deleteUndeliverableWebhooksAfterHours = TimeUnit.DAYS.toHours(7);
 
@@ -156,6 +162,8 @@ public class SingularityConfiguration extends Configuration {
 
   private int newTaskCheckerBaseDelaySeconds = 1;
 
+  private long pendingDeployHoldTaskDuringDecommissionMillis = TimeUnit.MINUTES.toMillis(10);
+
   private long persistHistoryEverySeconds = TimeUnit.HOURS.toSeconds(1);
 
   @JsonProperty("s3")
@@ -193,6 +201,8 @@ public class SingularityConfiguration extends Configuration {
   private int coreThreadpoolSize = 8;
 
   private long threadpoolShutdownDelayInSeconds = 1;
+
+  private long taskPersistAfterStartupBufferMillis = TimeUnit.MINUTES.toMillis(1);
 
   @Valid
   @JsonProperty("customExecutor")
@@ -292,6 +302,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setDebugCuratorCallOverBytes(long debugCuratorCallOverBytes) {
     this.debugCuratorCallOverBytes = debugCuratorCallOverBytes;
+  }
+
+  public long getPendingDeployHoldTaskDuringDecommissionMillis() {
+    return pendingDeployHoldTaskDuringDecommissionMillis;
+  }
+
+  public void setPendingDeployHoldTaskDuringDecommissionMillis(long pendingDeployHoldTaskDuringDecommissionMillis) {
+    this.pendingDeployHoldTaskDuringDecommissionMillis = pendingDeployHoldTaskDuringDecommissionMillis;
   }
 
   public long getDebugCuratorCallOverMillis() {
@@ -850,6 +868,14 @@ public class SingularityConfiguration extends Configuration {
     this.cacheTasksForMillis = cacheTasksForMillis;
   }
 
+  public long getTaskPersistAfterStartupBufferMillis() {
+    return taskPersistAfterStartupBufferMillis;
+  }
+
+  public void setTaskPersistAfterStartupBufferMillis(long taskPersistAfterStartupBufferMillis) {
+    this.taskPersistAfterStartupBufferMillis = taskPersistAfterStartupBufferMillis;
+  }
+
   public Optional<LDAPConfiguration> getLdapConfiguration() {
     return Optional.fromNullable(ldapConfiguration);
   }
@@ -886,7 +912,7 @@ public class SingularityConfiguration extends Configuration {
     return reserveSlavesWithAttributes;
   }
 
-  public void setReserveSlavesWithAttrbiutes(Map<String, List<String>> reserveSlavesWithAttributes) {
+  public void setReserveSlavesWithAttributes(Map<String, List<String>> reserveSlavesWithAttributes) {
     this.reserveSlavesWithAttributes = reserveSlavesWithAttributes;
   }
 
@@ -904,5 +930,29 @@ public class SingularityConfiguration extends Configuration {
 
   public void setDeleteRemovedRequestsFromLoadBalancer(boolean deleteRemovedRequestsFromLoadBalancer) {
     this.deleteRemovedRequestsFromLoadBalancer = deleteRemovedRequestsFromLoadBalancer;
+  }
+
+  public Optional<Integer> getMaxStaleDeploysPerRequestInZkWhenNoDatabase() {
+    return maxStaleDeploysPerRequestInZkWhenNoDatabase;
+  }
+
+  public void setMaxStaleDeploysPerRequestInZkWhenNoDatabase(Optional<Integer> maxStaleDeploysPerRequestInZkWhenNoDatabase) {
+    this.maxStaleDeploysPerRequestInZkWhenNoDatabase = maxStaleDeploysPerRequestInZkWhenNoDatabase;
+  }
+
+  public Optional<Integer> getMaxRequestsWithHistoryInZkWhenNoDatabase() {
+    return maxRequestsWithHistoryInZkWhenNoDatabase;
+  }
+
+  public void setMaxRequestsWithHistoryInZkWhenNoDatabase(Optional<Integer> maxRequestsWithHistoryInZkWhenNoDatabase) {
+    this.maxRequestsWithHistoryInZkWhenNoDatabase = maxRequestsWithHistoryInZkWhenNoDatabase;
+  }
+
+  public Optional<Integer> getMaxStaleTasksPerRequestInZkWhenNoDatabase() {
+    return maxStaleTasksPerRequestInZkWhenNoDatabase;
+  }
+
+  public void setMaxStaleTasksPerRequestInZkWhenNoDatabase(Optional<Integer> maxStaleTasksPerRequestInZkWhenNoDatabase) {
+    this.maxStaleTasksPerRequestInZkWhenNoDatabase = maxStaleTasksPerRequestInZkWhenNoDatabase;
   }
 }

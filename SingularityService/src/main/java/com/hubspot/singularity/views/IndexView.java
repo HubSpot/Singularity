@@ -37,7 +37,7 @@ public class IndexView extends View {
   private final long defaultHealthcheckIntervalSeconds;
   private final long defaultHealthcheckTimeoutSeconds;
   private final long defaultDeployHealthTimeoutSeconds;
-  private final Optional<Integer> defaultHealthcheckMaxRetries;
+  private final Integer defaultHealthcheckMaxRetries;
 
   private final String runningTaskLogPath;
   private final String finishedTaskLogPath;
@@ -84,7 +84,7 @@ public class IndexView extends View {
     this.defaultHealthcheckIntervalSeconds = configuration.getHealthcheckIntervalSeconds();
     this.defaultHealthcheckTimeoutSeconds = configuration.getHealthcheckTimeoutSeconds();
     this.defaultDeployHealthTimeoutSeconds = configuration.getDeployHealthyBySeconds();
-    this.defaultHealthcheckMaxRetries = configuration.getHealthcheckMaxRetries();
+    this.defaultHealthcheckMaxRetries = configuration.getHealthcheckMaxRetries().or(0);
 
     this.runningTaskLogPath = configuration.getUiConfiguration().getRunningTaskLogPath();
     this.finishedTaskLogPath = configuration.getUiConfiguration().getFinishedTaskLogPath();
@@ -175,7 +175,7 @@ public class IndexView extends View {
     return defaultDeployHealthTimeoutSeconds;
   }
 
-  public Optional<Integer> getDefaultHealthcheckMaxRetries() {
+  public Integer getDefaultHealthcheckMaxRetries() {
     return defaultHealthcheckMaxRetries;
   }
 
@@ -230,6 +230,7 @@ public class IndexView extends View {
             ", defaultHealthcheckIntervalSeconds=" + defaultHealthcheckIntervalSeconds +
             ", defaultHealthcheckTimeoutSeconds=" + defaultHealthcheckTimeoutSeconds +
             ", defaultDeployHealthTimeoutSeconds=" + defaultDeployHealthTimeoutSeconds +
+            ", defaultHealthcheckMaxRetries=" + defaultHealthcheckMaxRetries +
             ", runningTaskLogPath='" + runningTaskLogPath + '\'' +
             ", finishedTaskLogPath='" + finishedTaskLogPath + '\'' +
             ", commonHostnameSuffixToOmit='" + commonHostnameSuffixToOmit + '\'' +

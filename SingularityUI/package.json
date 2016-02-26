@@ -11,26 +11,52 @@
     "node": "~4.1.2",
     "npm": "~2.14.16"
   },
-  "bin": {
-    "bower": "./node_modules/bower/bin/bower",
-    "brunch": "./node_modules/brunch/bin/brunch"
-  },
+  "bin": {},
   "scripts": {
-    "start": "brunch watch --server",
-    "postinstall": "bower install --allow-root && brunch build --production"
+    "start": "brunch watch --server"
   },
   "dependencies": {
-    "bower": "^1.7.6",
-    "brunch": "^2.2.2",
-    "clean-css-brunch": "^2.0.0",
-    "coffee-script-brunch": "^2.0.0",
-    "css-brunch": "^2.0.0",
-    "handlebars-brunch": "^2.0.1",
-    "javascript-brunch": "^2.0.0",
-    "less-brunch": "^2.0.0",
-    "react": "^0.14.2",
-    "react-coffee-brunch": "^1.7.2",
-    "stylus-brunch": "^2.0.0",
-    "uglify-js-brunch": "^2.0.0"
+    "backbone": "~1.2.3",
+    "backbone-react-component": "^0.10.0",
+    "backbone.localstorage": "~1.1.9",
+    "bootstrap": "~3.3.0",
+    "classnames": "^2.2.3",
+    "clipboard": "^1.5.8",
+    "datatables": "~1.10.7",
+    "datatables-bootstrap3-plugin": "~0.4.0",
+    "fuse.js": "~1.2.2",
+    "fuzzy": "~0.1.1",
+    "jquery": "~1.11.1",
+    "juration": "*",
+    "messenger": "git://github.com/HubSpot/messenger#set-main-field",
+    "moment": "2.11.2",
+    "react": "~0.14.2",
+    "react-list": "~0.7.3",
+    "select2": "~3.5.1",
+    "sortable": "git://github.com/HubSpot/sortable.git#v0.6.0",
+    "typeahead.js": "~0.10.4",
+    "underscore": "~1.8.0",
+    "vex": "git://github.com/HubSpot/vex#v2.3.0-plus-beforeClose-hook",
+    "zeroclipboard": "~2.1.5"
+  },
+  "license": "Apache 2.0",
+  "devDependencies": {
+    "cjsx-loader": "^2.1.0",
+    "coffee-loader": "^0.7.2",
+    "coffee-script": "^1.10.0",
+    "del": "^2.2.0",
+    "exports-loader": "^0.6.3",
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.0",
+    "gulp-connect": "^2.3.1",
+    "gulp-mustache": "^2.2.0",
+    "gulp-stylus": "^2.3.0",
+    "gulp-webpack": "^1.5.0",
+    "gulp-webserver": "^0.9.1",
+    "handlebars": "^4.0.5",
+    "handlebars-template-loader": "^0.5.5",
+    "imports-loader": "^0.6.5",
+    "nib": "^1.1.0",
+    "webpack": "^1.12.14"
   }
 }

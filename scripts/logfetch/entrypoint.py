@@ -52,7 +52,8 @@ def fetch_logs(args):
       all_logs += download_s3_logs(args)
     if not args.skip_live:
       all_logs += download_live_logs(args)
-    grep_files(args, all_logs)
+    if not args.download_only:
+      grep_files(args, all_logs)
   except KeyboardInterrupt:
     exit('Stopping logfetch...', 'magenta')
 
@@ -64,7 +65,8 @@ def cat_logs(args):
       all_logs += download_s3_logs(args)
     if not args.skip_live:
       all_logs += download_live_logs(args)
-    cat_files(args, all_logs)
+    if not args.download_only:
+      cat_files(args, all_logs)
   except KeyboardInterrupt:
     exit('Stopping logcat...', 'magenta')
 
@@ -148,6 +150,7 @@ def fetch():
   parser.add_argument("--search", dest="search", help="run logsearch on the local cache of downloaded files", action='store_true')
   parser.add_argument("-V", "--verbose", dest="verbose", help="Print more verbose output", action='store_true')
   parser.add_argument("--silent", dest="silent", help="No stderr (progress, file names, etc) output", action='store_true')
+  parser.add_argument("-D" ,"--download-only", dest="download_only", help="Only download files, don't unzip or grep", action='store_true')
 
   args = parser.parse_args(remaining_argv)
 
@@ -277,6 +280,7 @@ def cat():
   parser.add_argument("-U", "--use-cache", dest="use_cache", help="Use cache for live logs, don't re-download them", action='store_true')
   parser.add_argument("-V", "--verbose", dest="verbose", help="Print more verbose output", action='store_true')
   parser.add_argument("--silent", dest="silent", help="No stderr (progress, file names, etc) output", action='store_true')
+  parser.add_argument("-D" ,"--download-only", dest="download_only", help="Only download files, don't unzip or grep", action='store_true')
 
   args = parser.parse_args(remaining_argv)
 

@@ -1,3 +1,4 @@
+React = require 'react'
 FormField = require './FormField'
 Glyphicon = require '../atomicDisplayItems/Glyphicon'
 

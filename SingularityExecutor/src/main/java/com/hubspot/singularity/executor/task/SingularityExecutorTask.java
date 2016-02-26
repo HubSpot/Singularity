@@ -13,11 +13,11 @@ import com.hubspot.deploy.ExecutorData;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
+import com.hubspot.singularity.executor.utils.DockerUtils;
 import com.hubspot.singularity.executor.utils.ExecutorUtils;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
 import com.hubspot.singularity.s3.base.config.SingularityS3Configuration;
-import com.spotify.docker.client.DockerClient;
 
 import ch.qos.logback.classic.Logger;
 
@@ -39,7 +39,7 @@ public class SingularityExecutorTask {
   private final SingularityExecutorArtifactVerifier artifactVerifier;
 
   public SingularityExecutorTask(ExecutorDriver driver, ExecutorUtils executorUtils, SingularityRunnerBaseConfiguration baseConfiguration, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorTaskDefinition taskDefinition, String executorPid,
-      SingularityExecutorArtifactFetcher artifactFetcher, Protos.TaskInfo taskInfo, TemplateManager templateManager, ObjectMapper objectMapper, Logger log, JsonObjectFileHelper jsonObjectFileHelper, DockerClient dockerClient, SingularityS3Configuration s3Configuration) {
+      SingularityExecutorArtifactFetcher artifactFetcher, Protos.TaskInfo taskInfo, TemplateManager templateManager, ObjectMapper objectMapper, Logger log, JsonObjectFileHelper jsonObjectFileHelper, DockerUtils dockerUtils, SingularityS3Configuration s3Configuration) {
     this.driver = driver;
     this.taskInfo = taskInfo;
     this.log = log;
@@ -54,8 +54,8 @@ public class SingularityExecutorTask {
     this.taskDefinition = taskDefinition;
 
     this.taskLogManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, baseConfiguration, executorConfiguration, log, jsonObjectFileHelper);
-    this.taskCleanup = new SingularityExecutorTaskCleanup(taskLogManager, executorConfiguration, taskDefinition, log, dockerClient);
-    this.processBuilder = new SingularityExecutorTaskProcessBuilder(this, executorUtils, artifactFetcher, templateManager, executorConfiguration, taskDefinition.getExecutorData(), executorPid, dockerClient);
+    this.taskCleanup = new SingularityExecutorTaskCleanup(taskLogManager, executorConfiguration, taskDefinition, log, dockerUtils);
+    this.processBuilder = new SingularityExecutorTaskProcessBuilder(this, executorUtils, artifactFetcher, templateManager, executorConfiguration, taskDefinition.getExecutorData(), executorPid, dockerUtils);
     this.artifactVerifier = new SingularityExecutorArtifactVerifier(taskDefinition, log, executorConfiguration, s3Configuration);
   }
 

@@ -1,4 +1,5 @@
-
+React = require 'react'
+BackboneReactComponent = require 'backbone-react-component'
 InterleavedHeader = require "./InterleavedHeader"
 Contents = require "./Contents"
 

@@ -1,3 +1,4 @@
+_ = require 'underscore'
 View = require './view'
 
 class NavView extends View
