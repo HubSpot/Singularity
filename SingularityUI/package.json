@@ -50,15 +50,14 @@
     "exports-loader": "^0.6.3",
     "gulp": "^3.9.1",
     "gulp-concat": "^2.6.0",
-    "gulp-connect": "^2.3.1",
     "gulp-mustache": "^2.2.0",
     "gulp-stylus": "^2.3.0",
-    "gulp-webserver": "^0.9.1",
+    "gulp-util": "^3.0.7",
     "handlebars": "^4.0.5",
     "handlebars-template-loader": "^0.5.5",
-    "imports-loader": "^0.6.5",
     "nib": "^1.1.0",
     "webpack": "^1.12.14",
+    "webpack-dev-server": "^1.14.1",
     "webpack-stream": "^3.1.0"
   }
 }
