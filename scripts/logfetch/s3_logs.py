@@ -5,7 +5,6 @@ import logfetch_base
 import time
 from termcolor import colored
 import callbacks
-from singularity_request import get_json_response
 
 TASK_FORMAT = '/task/{0}'
 S3LOGS_URI_FORMAT = '{0}/logs{1}'
@@ -22,43 +21,30 @@ def download_s3_logs(args):
   callbacks.progress = 0
   logs = logs_for_all_requests(args)
   async_requests = []
-  zipped_files = []
   all_logs = []
   for log_file in logs:
     filename = log_file['key'].rsplit("/", 1)[1]
     if logfetch_base.is_in_date_range(args, int(str(log_file['lastModified'])[0:-3])):
       if not args.logtype or log_matches(args, filename):
-        if args.verbose and not args.silent:
-          sys.stderr.write(colored('Including log {0}'.format(filename), 'blue') + '\n')
+        logfetch_base.log(colored('Including log {0}'.format(filename), 'blue') + '\n', args, True)
         if not already_downloaded(args.dest, filename):
           async_requests.append(
             grequests.AsyncRequest('GET', log_file['getUrl'], callback=callbacks.generate_callback(log_file['getUrl'], args.dest, filename, args.chunk_size, args.verbose, args.silent), headers=args.headers)
           )
         else:
-          if args.verbose and not args.silent:
-            sys.stderr.write(colored('Log already downloaded {0}'.format(filename), 'blue') + '\n')
-          all_logs.append('{0}/{1}'.format(args.dest, filename.replace('.gz', '.log')))
-        zipped_files.append('{0}/{1}'.format(args.dest, filename))
+          logfetch_base.log(colored('Log already downloaded {0}'.format(filename), 'blue') + '\n', args, True)
+        all_logs.append('{0}/{1}'.format(args.dest, filename))
       else:
-        if args.verbose and not args.silent:
-          sys.stderr.write(colored('Excluding {0} log does not match logtype argument {1}'.format(filename, args.logtype), 'magenta') + '\n')
+        logfetch_base.log(colored('Excluding {0} log does not match logtype argument {1}'.format(filename, args.logtype), 'magenta') + '\n', args, True)
     else:
-      if args.verbose and not args.silent:
-        sys.stderr.write(colored('Excluding {0}, not in date range'.format(filename), 'magenta') + '\n')
+      logfetch_base.log(colored('Excluding {0}, not in date range'.format(filename), 'magenta') + '\n', args, True)
   if async_requests:
-    if not args.silent:
-      sys.stderr.write(colored('Starting {0} S3 Downloads with {1} parallel fetches\n'.format(len(async_requests), args.num_parallel_fetches), 'cyan'))
+    logfetch_base.log(colored('Starting {0} S3 Downloads with {1} parallel fetches\n'.format(len(async_requests), args.num_parallel_fetches), 'cyan'), args, False)
     callbacks.goal = len(async_requests)
     grequests.map(async_requests, stream=True, size=args.num_parallel_fetches)
-    if not args.silent and not args.download_only:
-      sys.stderr.write(colored('\nUnpacking {0} S3 log(s)\n'.format(len(async_requests)), 'cyan'))
   else:
-    if not args.silent:
-      sys.stderr.write(colored('No S3 logs to download\n', 'cyan'))
-  if not args.download_only:
-    all_logs = all_logs + logfetch_base.unpack_logs(args, zipped_files)
-  if not args.silent:
-    sys.stderr.write(colored('All S3 logs up to date\n', 'cyan'))
+    logfetch_base.log(colored('No S3 logs to download\n', 'cyan'), args, False)
+  logfetch_base.log(colored('All S3 logs up to date\n', 'cyan'), args, False)
   return all_logs
 
 def already_downloaded(dest, filename):
@@ -67,21 +53,20 @@ def already_downloaded(dest, filename):
 def logs_for_all_requests(args):
   s3_params = {'start': int(time.mktime(args.start.timetuple()) * 1000), 'end': int(time.mktime(args.end.timetuple()) * 1000)}
   if args.taskId:
-    return get_json_response(s3_task_logs_uri(args, args.taskId), args, s3_params)
+    return logfetch_base.get_json_response(s3_task_logs_uri(args, args.taskId), args, s3_params)
   else:
     tasks = logfetch_base.tasks_for_requests(args)
     logs = []
     tasks_progress = 0
     tasks_goal = len(tasks)
     for task in tasks:
-      s3_logs = get_json_response(s3_task_logs_uri(args, task), args, s3_params)
+      s3_logs = logfetch_base.get_json_response(s3_task_logs_uri(args, task), args, s3_params)
       logs = logs + s3_logs if s3_logs else logs
       tasks_progress += 1
       logfetch_base.update_progress_bar(tasks_progress, tasks_goal, 'S3 Log Finder', args.silent)
-    if not args.silent:
-      sys.stderr.write(colored('\nAlso searching s3 history...\n', 'cyan'))
+    logfetch_base.log(colored('\nAlso searching s3 history...\n', 'cyan'), args, False)
     for request in logfetch_base.all_requests(args):
-      s3_logs = get_json_response(s3_request_logs_uri(args, request), args, s3_params)
+      s3_logs = logfetch_base.get_json_response(s3_request_logs_uri(args, request), args, s3_params)
       logs = logs + s3_logs if s3_logs else logs
     return [dict(t) for t in set([tuple(l.items()) for l in logs])] # remove any duplicates
 
