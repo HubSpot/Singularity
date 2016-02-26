@@ -69,13 +69,16 @@ Table = React.createClass
         if @props.customPaging then @props.pageNumber else @state.pageNumber
 
     pageUpDisabled: ->
-        return (@props.customPaging and @props.isLastPage) or (@state.pageNumber * @state.rowsPerPage >= @props.tableRows.length and not @props.customPaging)
+        return (@props.customPaging and (@props.isLastPage or @props.tableRows.length < @rowsPerPage())) or 
+            (@state.pageNumber * @state.rowsPerPage >= @props.tableRows.length and not @props.customPaging)
 
     pageDown: ->
+        return if @pageNumber() is 1
         return @props.pageDown() if @props.customPaging
         @setState {pageNumber: @state.pageNumber - 1} if @state.pageNumber > 1
 
     pageUp: ->
+        return if @pageUpDisabled()
         return @props.pageUp() if @props.customPaging
         @setState {pageNumber: @state.pageNumber + 1} unless @pageUpDisabled()
 
