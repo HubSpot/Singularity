@@ -1,3 +1,5 @@
+React = require 'react'
+
 PlainText = React.createClass
 
     render: ->
