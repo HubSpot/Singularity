@@ -1,4 +1,6 @@
 React = require 'react'
+classNames = require 'classnames'
+
 Glyphicon = React.createClass
 
     render: ->
