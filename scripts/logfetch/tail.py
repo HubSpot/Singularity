@@ -8,6 +8,7 @@ import threading
 from grep import grep_command
 from termcolor import colored
 from singularity_request import get_json_response
+from logfetch_base import log
 
 TAIL_LOG_FORMAT = '{0}/sandbox/{1}/read'
 READ_INTERVAL = 5
@@ -21,13 +22,10 @@ def start_tail(args):
     tasks = [str(t) for t in logfetch_base.tasks_for_requests(args)]
   else:
     tasks = [args.taskId]
-  if args.verbose:
-    sys.stderr.write(colored('Tailing logs for tasks:\n', 'green'))
-    if not args.silent:
-      for t in tasks:
-        sys.stderr.write(colored('{0}\n'.format(t), 'yellow'))
-  if not args.silent:
-    sys.stderr.write(colored('ctrl+c to exit\n', 'cyan'))
+  log(colored('Tailing logs for tasks:\n', 'green'), args, True)
+  for t in tasks:
+    log(colored('{0}\n'.format(t), 'yellow'), args, True)
+  log(colored('ctrl+c to exit\n', 'cyan'), args, False)
   try:
     threads = []
     for task in tasks:
@@ -39,8 +37,7 @@ def start_tail(args):
       if not t.isAlive:
         break
   except KeyboardInterrupt:
-    if not args.silent:
-      sys.stderr.write(colored('Stopping tail', 'magenta') + '\n')
+    log(colored('Stopping tail', 'magenta') + '\n', args, False)
     sys.exit(0)
 
 def logs_folder_files(args, task):
