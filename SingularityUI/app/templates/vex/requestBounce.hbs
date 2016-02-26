@@ -4,8 +4,10 @@
 	Bouncing a request will cause replacement tasks to be scheduled
 	(and under normal conditions) executed immediately.
 </p>
+<label for="no-incremental-bounce" id="no-incremental-bounce-label">
+    <input type="radio" name="incremental" id="no-incremental-bounce" value="false" checked> Kill old tasks once ALL new tasks are healthy<br>
+</label>
 <label for="incremental-bounce" id="incremental-bounce-label">
-    <input type="radio" name="incremental" value="false" checked> Kill old tasks once ALL new tasks are healthy<br>
     <input type="radio" name="incremental" id="incremental-bounce" value="true"> Kill old tasks as new tasks become healthy
 </label>
 <label for="skip-healthchecks" id="skip-healthchecks-label">

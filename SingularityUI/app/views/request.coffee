@@ -40,6 +40,9 @@ class RequestView extends View
             'click [data-action="revertScale"]': 'revertScale'
             'click [data-action="revertSkipHealthchecks"]': 'revertSkipHealthchecks'
 
+            'click [data-action="stepDeploy"]': 'stepDeploy'
+            'click [data-action="cancelDeploy"]': 'cancelDeploy'
+
     initialize: ({@requestId}) ->
 
     render: ->
@@ -192,5 +195,13 @@ class RequestView extends View
             $target.attr 'data-starred', 'false'
         else
             $target.attr 'data-starred', 'true'
+
+    stepDeploy: (e) =>
+        @model.promptStepDeploy =>
+            @trigger 'refreshrequest'
+
+    cancelDeploy: (e) =>
+        @model.promptCancelDeploy =>
+            @trigger 'refreshrequest'
 
 module.exports = RequestView

@@ -50,12 +50,13 @@ def download_s3_logs(args):
       sys.stderr.write(colored('Starting {0} S3 Downloads with {1} parallel fetches\n'.format(len(async_requests), args.num_parallel_fetches), 'cyan'))
     callbacks.goal = len(async_requests)
     grequests.map(async_requests, stream=True, size=args.num_parallel_fetches)
-    if not args.silent:
+    if not args.silent and not args.download_only:
       sys.stderr.write(colored('\nUnpacking {0} S3 log(s)\n'.format(len(async_requests)), 'cyan'))
   else:
     if not args.silent:
       sys.stderr.write(colored('No S3 logs to download\n', 'cyan'))
-  all_logs = all_logs + logfetch_base.unpack_logs(args, zipped_files)
+  if not args.download_only:
+    all_logs = all_logs + logfetch_base.unpack_logs(args, zipped_files)
   if not args.silent:
     sys.stderr.write(colored('All S3 logs up to date\n', 'cyan'))
   return all_logs

@@ -29,9 +29,9 @@
             </button>
 
             {{#unless config.hideNewDeployButton}}
-            <button href="{{appRoot}}/request/{{data.id}}/deploy" class="btn btn-success">
+            <a href="{{appRoot}}/request/{{data.id}}/deploy" class="btn btn-success">
                 Deploy
-            </button>
+            </a>
             {{/unless}}
 
             {{#if data.canBeRunNow}}
@@ -73,9 +73,9 @@
             {{/if}}
 
             {{#unless config.hideNewRequestButton}}
-                <button class="btn btn-primary" href="{{appRoot}}/requests/edit/{{ data.id }}">
+                <a class="btn btn-primary" href="{{appRoot}}/requests/edit/{{ data.id }}">
                     Edit
-                </button>
+                </a>
             {{/unless}}
 
             {{#if canDisableHealthchecks}}
@@ -103,10 +103,42 @@
         <b>Request is bouncing:</b> {{ runningInstanceCount }} of {{ data.instances }} replacement tasks are currently running.
     </div>
     {{/if}}
+
     {{#if isDeploying}}
-    <div class="alert alert-warning" role="alert">
-        <b>Deploy <a href="{{appRoot}}/request/{{ data.id }}/deploy/{{ data.pendingDeploy.id }}">{{data.pendingDeploy.id}}</a> is pending:</b> {{ deployingInstanceCount }} of {{ data.instances }} new tasks are currently running.
-    </div>
+        <div class="well">
+            <p>
+                <b>Deploy </b><code><a href="{{appRoot}}/request/{{ data.id }}/deploy/{{ data.pendingDeploy.id }}">{{data.pendingDeploy.id}}</a></code><b> is pending:</b>
+                {{#if data.pendingDeployState.deployProgress}}
+                    {{#ifEqual data.pendingDeployState.deployProgress.targetActiveInstances data.instances}}
+                        {{ deployingInstanceCount }} of {{ data.instances }} new tasks are currently running.{{#ifEqual deployingInstanceCount data.instances}} Waiting for new tasks to become healthy.{{/ifEqual}}
+                    {{else}}
+                        {{#if data.pendingDeployState.deployProgress.stepComplete}}
+                            {{#if data.pendingDeployState.deployProgress.autoAdvanceDeploySteps}}
+                                Finished deploying {{data.pendingDeployState.deployProgress.targetActiveInstances}} of {{ data.instances }} total instances, next deploy step {{timestampFromNow nextDeployStepTimestamp}}
+                            {{else}}
+                                Finished deploying {{data.pendingDeployState.deployProgress.targetActiveInstances}} of {{ data.instances }} total instances, waiting for manual trigger of next deploy step.
+                            {{/if}}
+                        {{else}}
+                            Trying to deploy {{data.pendingDeployState.deployProgress.targetActiveInstances}} of {{ data.instances }} instances, {{ deployingInstanceCount }} of {{data.pendingDeployState.deployProgress.targetActiveInstances}} new tasks are currently running.
+                        {{/if}}
+                    {{/ifEqual}}
+                {{else}}
+                    {{ deployingInstanceCount }} of {{ data.instances }} new tasks are currently running.
+                {{/if}}
+                <span class="pull-right">
+                    {{#if data.pendingDeployState.deployProgress}}
+                        {{#ifNotEqual data.pendingDeployState.deployProgress.targetActiveInstances data.instances}}
+                            <a style="text-align: right;" class="btn btn-primary" data-action="stepDeploy">
+                                Advance Deploy
+                            </a>
+                        {{/ifNotEqual}}
+                    {{/if}}
+                    <a class="btn btn-warning" style="text-align: right;" data-action="cancelDeploy">
+                        Cancel Deploy
+                    </a>
+                </span>
+            </p>
+        </div>
     {{/if}}
 
     {{! Active deploy well }}

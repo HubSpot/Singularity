@@ -191,6 +191,21 @@ public class SingularityValidator {
 
     checkForIllegalResources(request, deploy);
 
+    if (deploy.getResources().isPresent()) {
+      if (deploy.getHealthcheckPortIndex().isPresent()) {
+        checkBadRequest(deploy.getHealthcheckPortIndex().get() >= 0, "healthcheckPortIndex must be greater than 0");
+        checkBadRequest(deploy.getResources().get().getNumPorts() > deploy.getHealthcheckPortIndex().get(), String
+          .format("Must request %s ports for healthcheckPortIndex %s, only requested %s", deploy.getHealthcheckPortIndex().get() + 1, deploy.getHealthcheckPortIndex().get(),
+            deploy.getResources().get().getNumPorts()));
+      }
+      if (deploy.getLoadBalancerPortIndex().isPresent()) {
+        checkBadRequest(deploy.getLoadBalancerPortIndex().get() >= 0, "loadBalancerPortIndex must be greater than 0");
+        checkBadRequest(deploy.getResources().get().getNumPorts() > deploy.getLoadBalancerPortIndex().get(), String
+          .format("Must request %s ports for loadBalancerPortIndex %s, only requested %s", deploy.getLoadBalancerPortIndex().get() + 1, deploy.getLoadBalancerPortIndex().get(),
+            deploy.getResources().get().getNumPorts()));
+      }
+    }
+
     checkBadRequest(deploy.getCommand().isPresent() && !deploy.getExecutorData().isPresent() ||
         deploy.getExecutorData().isPresent() && deploy.getCustomExecutorCmd().isPresent() && !deploy.getCommand().isPresent() ||
         deploy.getContainerInfo().isPresent(),
