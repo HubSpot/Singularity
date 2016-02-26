@@ -39,7 +39,7 @@
     "vex": "git://github.com/HubSpot/vex#v2.3.0-plus-beforeClose-hook",
     "zeroclipboard": "~2.1.5"
   },
-  "license": "Apache 2.0",
+  "license": "Apache-2.0",
   "devDependencies": {
     "cjsx-loader": "^2.1.0",
     "coffee-loader": "^0.7.2",
