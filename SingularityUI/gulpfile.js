@@ -1,4 +1,5 @@
 var gulp = require('gulp');
+var gutil = require('gulp-util');
 var path = require('path');
 var del = require('del');
 var child_process = require('child_process');
@@ -8,8 +9,6 @@ var stylus = require('gulp-stylus');
 var nib = require('nib');
 
 var concat = require('gulp-concat');
-
-var connect = require('gulp-connect');
 
 var serverBase = process.env.SINGULARITY_BASE_URI || '/singularity'
 
@@ -44,6 +43,7 @@ var dest = path.resolve(__dirname, '../SingularityService/target/generated-resou
 
 var webpack = require('webpack-stream');
 var webpackConfig = require('./webpack.config');
+var WebpackDevServer = require('webpack-dev-server');
 
 gulp.task("clean", function() {
   return del([
@@ -95,11 +95,13 @@ gulp.task('build', ['clean'], function () {
   gulp.start(['scripts', 'html', 'styles', 'fonts', 'images']);
 });
 
-gulp.task('serve', ['build'], function () {
-  connect.server({
-    root: dest,
-    port: 3334,
-    fallback: dest + '/index.html'
+gulp.task('serve', ['html', 'styles', 'fonts', 'images'], function () {
+  new WebpackDevServer(require('webpack')(webpackConfig), {
+    contentBase: dest,
+    historyApiFallback: true
+  }).listen(3334, "localhost", function (err) {
+    if(err) throw new gutil.PluginError("webpack-dev-server", err);
+    gutil.log("[webpack-dev-server]", "Development server running on port 3334");
   })
 })
 
