@@ -5,7 +5,6 @@ QueryParameters = require '../common/QueryParameters'
 FormField = require '../common/formItems/FormField'
 DropDown = require '../common/formItems/DropDown'
 TaskTable = require '../common/TaskTable'
-TableNavigationBar = require '../common/TableNavigationBar'
 
 Enums = require './Enums'
 
