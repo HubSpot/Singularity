@@ -1,6 +1,6 @@
 React = require 'react'
 OverlayTrigger = require 'react-bootstrap/lib/OverlayTrigger'
-ToolTip = require 'react-bootstrap/lib/ToolTip'
+ToolTip = require 'react-bootstrap/lib/Tooltip'
 
 Link = React.createClass
 
