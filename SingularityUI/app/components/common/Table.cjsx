@@ -9,13 +9,13 @@ Utils = require '../../utils'
 # with functions that trigger sorting by those columns
 Table = React.createClass
 
+    ourRowsPerPageChoices: [5, 10, 15, 20]
+
     getInitialState: ->
         {
             rowsPerPage: 5
             pageNumber: 1
         }
-
-    ourRowsPerPageChoices: [5, 10, 15, 20]
 
     rowsPerPage: ->
         if @props.rowsPerPage then @props.rowsPerPage else @state.rowsPerPage
@@ -169,7 +169,7 @@ Table = React.createClass
     renderTableData: ->
         @props.tableRows.map (tableRow, key) =>
             return unless @displayThisRow key
-            <tr key={key} dataId={tableRow.dataId} dataCollection={tableRow.dataCollection}>{@renderTableRow tableRow.data}</tr>
+            <tr key={key} data-id={tableRow.dataId} data-collection={tableRow.dataCollection}>{@renderTableRow tableRow.data}</tr>
 
 
     ### 
@@ -183,22 +183,24 @@ Table = React.createClass
             - If provided, you must provide @props.setRowsPerPage, @props.increasePage, @props.decreasePage, @props.pageNumber
     ###
     getClassName: ->
-        return "table table-container #{@props.tableClassOpts}"
+        return "table #{@props.tableClassOpts}"
 
     render: ->
         return @renderEmptyTable() if @props.tableRows.length is 0 and @pageNumber() is 1
         <div>
             {@renderRowsPerPageChoices()}
-            <table className={@getClassName()}>
-                <thead>
-                    <tr>
-                        {@renderTableHeader()}
-                    </tr>
-                </thead>
-                <tbody>
-                    {@renderTableData()}
-                </tbody>
-            </table>
+            <div className='table-container'>
+                <table className={@getClassName()}>
+                    <thead>
+                        <tr>
+                            {@renderTableHeader()}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {@renderTableData()}
+                    </tbody>
+                </table>
+            </div>
             {@renderPageButtons()}
         </div>
 
