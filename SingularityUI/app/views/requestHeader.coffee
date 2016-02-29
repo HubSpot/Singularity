@@ -22,14 +22,18 @@ class requestHeaderSubview extends View
             requestId: @model.get('id')
 
         deployingInstanceCount = 0
+        nextDeployStepTimestamp = 0
 
         if !!@model.get('pendingDeploy')
             deployingInstanceCount = @activeTasks.where({deployId: @model.get('pendingDeploy').id, lastTaskState: 'TASK_RUNNING'}).length
+        if !!@model.get('pendingDeployState')
+            nextDeployStepTimestamp = @model.get('pendingDeployState').deployProgress.timestamp + (@model.get('pendingDeployState').deployProgress.deployStepWaitTimeMs)
 
         isBouncing: bounces?.length > 0 and @taskCleanups.synced and @activeTasks.synced
         runningInstanceCount: @activeTasks.where({lastTaskState: 'TASK_RUNNING'}).length
         deployingInstanceCount: deployingInstanceCount
         isDeploying: !!@model.get('pendingDeploy') and @model.synced and @activeTasks.synced
+        nextDeployStepTimestamp: nextDeployStepTimestamp
         config: config
         data:      @model.toJSON()
         synced:    @model.synced

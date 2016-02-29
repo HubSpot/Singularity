@@ -7,6 +7,8 @@ runTemplate = require '../templates/vex/requestRun'
 removeTemplate = require '../templates/vex/requestRemove'
 bounceTemplate = require '../templates/vex/requestBounce'
 exitCooldownTemplate = require '../templates/vex/exitCooldown'
+stepDeployTemplate = require '../templates/vex/stepDeploy'
+cancelDeployTemplate = require '../templates/vex/cancelDeploy'
 TaskHistory = require '../models/TaskHistory'
 
 vex = require 'vex.dialog'
@@ -198,6 +200,22 @@ class Request extends Model
             url:  @url()
             contentType: 'application/json'
             data: JSON.stringify(data)
+
+    stepDeploy: (deployId, instances) =>
+        data =
+            requestId: @get "id"
+            deployId: deployId
+            targetActiveInstances: instances
+        $.ajax
+            type: "POST"
+            url: "#{ config.apiRoot }/deploys/update"
+            contentType: 'application/json'
+            data: JSON.stringify data
+
+    cancelDeploy: (deployId) =>
+        $.ajax
+            type: "DELETE"
+            url: "#{ config.apiRoot }/deploys/deploy/#{deployId}/request/#{@get('id')}"
 
     _validateDuration: (duration, action, callback) =>
         if @_parseDuration(duration)
@@ -471,6 +489,31 @@ class Request extends Model
             callback: (confirmed) =>
                 return if not confirmed
                 @exitCooldown().done callback
+
+    promptStepDeploy: (callback) =>
+        pendingDeploy = @get "pendingDeployState"
+        nextInstances = pendingDeploy.deployProgress.targetActiveInstances + pendingDeploy.deployProgress.deployInstanceCountPerStep
+        maxInstances = @get "instances"
+        if maxInstances < nextInstances
+            nextInstances = maxInstances
+        vex.dialog.confirm
+            message: "<h3>Advance Deploy</h3>"
+            input: stepDeployTemplate
+                id: pendingDeploy.deployMarker.deployId
+                placeholder: nextInstances
+                maxInstances: @get "instances"
+            callback: (data) =>
+                return unless data
+                @stepDeploy(pendingDeploy.deployMarker.deployId, data.instances).done callback
+
+    promptCancelDeploy: (callback) =>
+        pendingDeploy = @get "pendingDeployState"
+        vex.dialog.confirm
+            message: cancelDeployTemplate
+                id: pendingDeploy.deployMarker.deployId
+            callback: (confirmed) =>
+                return unless confirmed
+                @cancelDeploy(pendingDeploy.deployMarker.deployId).done callback
 
 
 module.exports = Request

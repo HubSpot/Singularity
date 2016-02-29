@@ -36,7 +36,12 @@ Contents = React.createClass
     # Update our loglines components only if needed
     if prevProps.logLines?.length isnt @props.logLines?.length
       @setState
-        linesToRender: @renderLines()
+        linesToRender: @renderLines(@props.offset)
+
+  componentWillReceiveProps: (nextProps) ->
+    if nextProps.offset isnt @props.offset
+      @setState
+        linesToRender: @renderLines(nextProps.offset)
 
   componentWillUnmount: ->
     @stopTailingPoll()
@@ -55,7 +60,7 @@ Contents = React.createClass
         @startTailingPoll()
     # Or the top?
     else if $(node).scrollTop() is 0
-      if not @tailingPoll
+      if not @tailingPoll and @props.logLines[0]?.offset > 0
         @setState
           isLoading: true
           loadingText: 'Fetching'
@@ -71,11 +76,6 @@ Contents = React.createClass
     if e.keyCode is 38
       @stopTailingPoll()
 
-  handleHighlight: (e) ->
-    @currentOffset = parseInt $(e.target).attr 'data-offset'
-    @setState
-      linesToRender: @renderLines()
-
   startTailingPoll: ->
     # Make sure there isn't one already running
     @stopTailingPoll()
@@ -83,7 +83,16 @@ Contents = React.createClass
       isLoading: true
       loadingText: 'Tailing'
     @tailingPoll = setInterval =>
-      @props.fetchNext()
+      if @props.reachedEndOfFile() and not @props.reachedStartOfFile() and @scrollNode.scrollHeight <= $(@scrollNode).innerHeight()
+        @setState
+          isLoading: true
+          loadingText: 'Loading'
+        @props.fetchPrevious( => )
+      else
+        @setState
+          isLoading: true
+          loadingText: 'Tailing'
+        @props.fetchNext()
     , 2000
 
   stopTailingPoll: ->
@@ -121,7 +130,7 @@ Contents = React.createClass
           </div>
       </div>
 
-  renderLines: ->
+  renderLines: (offset) ->
     if @props.logLines and @props.logLines.length > 0
       if @props.colorMap
         colors = @props.colorMap(@props.logLines)
@@ -131,15 +140,19 @@ Contents = React.createClass
       @props.logLines.map((l, i) =>
         link = window.location.href.replace(window.location.search, '').replace(window.location.hash, '')
         link += "?taskIds=#{@props.taskId}##{l.offset}"
+        isHighlighted = l.offset is offset
+        isFirstLine = i is 0
+        isLastLine = i is @props.logLines.length - 1
         <LogLine
           content={l.data}
           offset={l.offset}
           key={i}
           index={i}
-          highlighted={l.offset is @currentOffset}
-          highlight={@handleHighlight}
-          totalLines={@props.logLines.length}
+          isHighlighted={isHighlighted}
+          isLastLine={isLastLine}
+          isFirstLine={isFirstLine}
           offsetLink={link}
+          handleOffsetLink={@props.handleOffsetLink}
           taskId={l.taskId}
           color={colors[l.taskId]}
           search={@props.search} />
@@ -161,6 +174,7 @@ Contents = React.createClass
         <ReactList
           className="infinite"
           ref="lines"
+          highlightOffset={@props.offset}
           itemRenderer={@lineRenderer}
           itemSizeGetter={@getLineHeight}
           length={@state.linesToRender?.length || 0}
