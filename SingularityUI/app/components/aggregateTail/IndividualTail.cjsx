@@ -61,17 +61,25 @@ IndividualTail = React.createClass
   moreToFetch: ->
     @props.logLines.state.get('moreToFetch')
 
+  reachedStartOfFile: ->
+    @props.logLines.getMinOffset() is 0
+
+  reachedEndOfFile: ->
+    @props.logLines.state.get('reachedEndOfFile')
+
   fetchNext: ->
     _.defer(@props.logLines.fetchNext)
 
   fetchPrevious: (callback) ->
-    @prevLines = @props.logLines.toJSON().length
+    @prevLineCount = @props.logLines.length
     _.defer( =>
-      @props.logLines.fetchPrevious().done =>
-        newLines = @props.logLines.toJSON().length - @prevLines
-        if newLines > 0
-          @scrollToLine(newLines)
-        callback()
+      xhr = @props.logLines.fetchPrevious()
+      if xhr
+        xhr.done =>
+          newLines = @props.logLines.length - @prevLineCount
+          if newLines > 0
+            @scrollToLine(newLines)
+          callback()
     )
 
   isTailing: ->
@@ -126,10 +134,13 @@ IndividualTail = React.createClass
         logLines={@state.logLines}
         ajaxError={@state.ajaxError}
         offset={@props.offset}
+        handleOffsetLink={@props.handleOffsetLink}
         fetchNext={@fetchNext}
         fetchPrevious={@fetchPrevious}
         taskState={_.last(@state.task.taskUpdates)?.taskState}
         moreToFetch={@moreToFetch}
+        reachedStartOfFile={@reachedStartOfFile}
+        reachedEndOfFile={@reachedEndOfFile}
         activeColor={@props.activeColor}
         search={@props.search} />
     </div>
