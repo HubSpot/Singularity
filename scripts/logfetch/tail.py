@@ -7,8 +7,7 @@ import fnmatch
 import threading
 from grep import grep_command
 from termcolor import colored
-from singularity_request import get_json_response
-from logfetch_base import log
+from logfetch_base import log, get_json_response
 
 TAIL_LOG_FORMAT = '{0}/sandbox/{1}/read'
 READ_INTERVAL = 5
