@@ -78,6 +78,7 @@ TaskTable = React.createClass
                     {
                         component: Link
                         className: 'actions-column'
+                        id: "linkForTask#{task.taskId.id}"
                         prop: {
                             text: <Glyphicon
                                 iconClass = 'link'
@@ -85,11 +86,15 @@ TaskTable = React.createClass
                             url: "#{window.config.appRoot}/task/#{task.taskId.id}"
                             altText: "Task #{task.taskId.id}"
                             title: "Go To Task"
+                            overlayTrigger: true
+                            overlayTriggerPlacement: 'top'
+                            overlayToolTipContent: 'Go To Task'
+                            overlayId: "overlayForLinkToTask#{task.taskId.id}"
                         }
                     },
                     {
                         component: Link
-                        className: 'hidden-sm hidden-xs'
+                        className: 'hidden-sm hidden-xs long-link'
                         prop: {
                             text: task.taskId.requestId
                             url: "#{window.config.appRoot}/request/#{task.taskId.requestId}/"
@@ -145,6 +150,10 @@ TaskTable = React.createClass
                             url: "#{window.config.appRoot}/request/#{task.taskId.requestId}/tail/stdout/?taskIds=#{task.taskId.id}"
                             title: 'Log'
                             altText: "Logs for task #{task.taskId.id}"
+                            overlayTrigger: true
+                            overlayTriggerPlacement: 'top'
+                            overlayToolTipContent: 'Logs'
+                            overlayId: "overlayForLogsOfTask#{task.taskId.id}"
                         }
                     },
                     {
@@ -156,6 +165,11 @@ TaskTable = React.createClass
                             title: 'JSON'
                             onClickFn: viewJsonFn
                             altText: "View JSON for task #{task.taskId.id}"
+                            id: task.taskId.id
+                            overlayTrigger: true
+                            overlayTriggerPlacement: 'top'
+                            overlayToolTipContent: 'JSON'
+                            overlayId: "overlayForJSONOfTask#{task.taskId.id}"
                         }
                     }
             ]})
@@ -174,6 +188,7 @@ TaskTable = React.createClass
                     pageNumber = @props.pageNumber
                     pageDown = @props.pageDown
                     pageUp = @props.pageUp
+                    dataCollection = 'taskHistory'
                 />
 
 module.exports = TaskTable
