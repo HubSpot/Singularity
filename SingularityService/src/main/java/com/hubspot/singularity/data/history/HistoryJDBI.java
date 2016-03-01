@@ -15,7 +15,6 @@ import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLoc
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.OrderDirection;
@@ -81,7 +80,6 @@ public abstract class HistoryJDBI implements GetHandle {
     }
   }
 
-  @Timed
   public List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> host,
       Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<OrderDirection> orderDirection,
       Optional<Integer> limitStart, Integer limitCount) {

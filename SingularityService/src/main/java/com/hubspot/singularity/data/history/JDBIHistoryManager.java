@@ -6,6 +6,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.DeployState;
@@ -38,6 +39,7 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
+  @Timed
   public List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> host, Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore,
       Optional<Long> startedAfter, Optional<OrderDirection> orderDirection, Optional<Integer> limitStart, Integer limitCount) {
     return history.getTaskIdHistory(requestId, deployId, host, lastTaskStatus, startedBefore, startedAfter, orderDirection, limitStart, limitCount);
