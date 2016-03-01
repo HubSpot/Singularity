@@ -670,7 +670,7 @@ public class SingularityScheduler {
           final Date scheduleFrom = new Date(now);
           if(request.getScheduleTypeSafe() == ScheduleType.RFC5545)
           {
-            final RecurrenceRule recurrenceRule = new RecurrenceRule(request.getSchedule());
+            final RecurrenceRule recurrenceRule = new RecurrenceRule(request.getSchedule().toString());
           }
           else {
             final CronExpression cronExpression = new CronExpression(request.getQuartzScheduleSafe());
