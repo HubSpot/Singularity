@@ -127,7 +127,8 @@ public abstract class HistoryJDBI implements GetHandle {
     sqlBuilder.append(orderDirection.or(OrderDirection.DESC).name());
 
     if (!requestId.isPresent()) {
-      sqlBuilder.append(", requestId");
+      sqlBuilder.append(", requestId ");
+      sqlBuilder.append(orderDirection.or(OrderDirection.DESC).name());
     }
 
     if (limitStart.isPresent()) {
