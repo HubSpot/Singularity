@@ -12,6 +12,8 @@ import org.skife.jdbi.v2.sqlobject.SqlUpdate;
 import org.skife.jdbi.v2.sqlobject.customizers.Define;
 import org.skife.jdbi.v2.sqlobject.mixins.GetHandle;
 import org.skife.jdbi.v2.sqlobject.stringtemplate.UseStringTemplate3StatementLocator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.hubspot.singularity.ExtendedTaskState;
@@ -23,6 +25,7 @@ import com.hubspot.singularity.data.history.SingularityMappers.SingularityReques
 
 @UseStringTemplate3StatementLocator
 public abstract class HistoryJDBI implements GetHandle {
+  private static final Logger LOG = LoggerFactory.getLogger(HistoryJDBI.class);
 
   @SqlUpdate("INSERT INTO requestHistory (requestId, request, createdAt, requestState, user, message) VALUES (:requestId, :request, :createdAt, :requestState, :user, :message)")
   abstract void insertRequestHistory(@Bind("requestId") String requestId, @Bind("request") byte[] request, @Bind("createdAt") Date createdAt, @Bind("requestState") String requestState, @Bind("user") String user, @Bind("message") String message);
@@ -138,6 +141,8 @@ public abstract class HistoryJDBI implements GetHandle {
     binds.put("limitCount", limitCount);
 
     final String sql = sqlBuilder.toString();
+
+    LOG.trace("Generated sql for task search: {}", sql);
 
     final Query<SingularityTaskIdHistory> query = getHandle().createQuery(sql).mapTo(SingularityTaskIdHistory.class);
     for (Map.Entry<String, Object> entry : binds.entrySet()) {
