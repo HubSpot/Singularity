@@ -1,14 +1,23 @@
 package com.hubspot.singularity.scheduler;
 
 import java.text.ParseException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
 
+import com.hubspot.singularity.ScheduleType;
+import org.dmfs.rfc5545.DateTime;
+import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
+import org.dmfs.rfc5545.recur.RecurrenceRule;
+import org.dmfs.rfc5545.recur.RecurrenceRuleIterator;
 import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +36,7 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
+
 
 @Singleton
 public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
@@ -109,28 +119,78 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
       if (deployStatistics.isPresent() && deployStatistics.get().getAverageRuntimeMillis().isPresent()) {
         return deployStatistics.get().getAverageRuntimeMillis();
       }
-
-      final CronExpression cronExpression;
-
+      long nextRunAtTimestamp = 0;
+      final long now = System.currentTimeMillis();
       try {
-        cronExpression = new CronExpression(request.getRequest().getQuartzScheduleSafe());
-      } catch (ParseException e) {
-        LOG.warn("Unable to parse cron for {} ({})", taskId, request.getRequest().getQuartzScheduleSafe(), e);
+        if(request.getRequest().getScheduleTypeSafe() == ScheduleType.RFC5545)
+        {
+          final String schedule = request.getRequest().getSchedule().toString().trim();
+          final RecurrenceRule recurrenceRule = new RecurrenceRule(schedule);
+          if (recurrenceRule.isInfinite()) {
+            // set limit at 2100-01-01 00:00:00
+            recurrenceRule.setUntil(new DateTime(2100, 1, 1, 0, 0, 0));
+          }
+
+          Pattern pattern = Pattern.compile("DTSTART=([0-9]{8}T[0-9]{6})");
+          Matcher matcher = pattern.matcher(schedule);
+          DateTime startDateTime;
+          LocalDateTime dtStart;
+          if (matcher.find()) {
+            dtStart = LocalDateTime.parse(matcher.group(1),
+                    DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss"));
+          } else {
+            dtStart = LocalDateTime.now();
+            dtStart = dtStart.withSecond(0);
+          }
+
+          startDateTime = new DateTime(dtStart.getYear(), (dtStart.getMonthValue() - 1), dtStart.getDayOfMonth(),
+                  dtStart.getHour(), dtStart.getMinute(), dtStart.getSecond());
+          RecurrenceRuleIterator timeIterator = recurrenceRule.iterator(startDateTime);
+          nextRunAtTimestamp = 0;
+          while (timeIterator.hasNext()) {
+            nextRunAtTimestamp = timeIterator.nextMillis();
+            if (nextRunAtTimestamp >= now) {
+              break;
+            } else {
+              nextRunAtTimestamp = 0;
+            }
+          }
+          if (nextRunAtTimestamp <= 0) {
+            String msg = String.format("No next run date found for %s (%s)", taskId, request.getRequest().getScheduleTypeSafe());
+            LOG.warn(msg);
+            exceptionNotifier.notify(msg, ImmutableMap.of("taskId", taskId.toString()));
+            return Optional.absent();
+          }
+        }
+        else {
+          final CronExpression cronExpression;
+          cronExpression = new CronExpression(request.getRequest().getQuartzScheduleSafe());
+
+          final Date startDate = new Date(taskId.getStartedAt());
+          final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(startDate);
+
+          if (nextRunAtDate == null) {
+            String msg = String.format("No next run date found for %s (%s)", taskId, request.getRequest().getQuartzScheduleSafe());
+            LOG.warn(msg);
+            exceptionNotifier.notify(msg, ImmutableMap.of("taskId", taskId.toString()));
+            return Optional.absent();
+          }
+          nextRunAtTimestamp = nextRunAtDate.getTime();
+        }
+      } catch (ParseException|InvalidRecurrenceRuleException e) {
+
+        if(request.getRequest().getScheduleTypeSafe() == ScheduleType.RFC5545)
+        {
+          LOG.warn("Unable to parse RFC 5545 RECUR for {} ({})", taskId, request.getRequest().getScheduleTypeSafe(), e);
+        }
+        else{
+          LOG.warn("Unable to parse cron for {} ({})", taskId, request.getRequest().getQuartzScheduleSafe(), e);
+        }
         exceptionNotifier.notify(e, ImmutableMap.of("taskId", taskId.toString()));
         return Optional.absent();
       }
 
-      final Date startDate = new Date(taskId.getStartedAt());
-      final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(startDate);
-
-      if (nextRunAtDate == null) {
-        String msg = String.format("No next run date found for %s (%s)", taskId, request.getRequest().getQuartzScheduleSafe());
-        LOG.warn(msg);
-        exceptionNotifier.notify(msg, ImmutableMap.of("taskId", taskId.toString()));
-        return Optional.absent();
-      }
-
-      return Optional.of(nextRunAtDate.getTime() - taskId.getStartedAt());
+      return Optional.of(nextRunAtTimestamp - taskId.getStartedAt());
     }
   }
 
