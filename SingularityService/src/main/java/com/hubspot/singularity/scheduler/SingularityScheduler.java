@@ -710,9 +710,12 @@ public class SingularityScheduler {
               {
                 break;
               }
-              if (nextRunAtTimestamp <= 0) {
-                return Optional.absent();
+              else{
+                nextRunAtTimestamp = 0;
               }
+            }
+            if (nextRunAtTimestamp <= 0) {
+              return Optional.absent();
             }
           }
           else {
