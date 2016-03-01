@@ -13,9 +13,9 @@
   <packaging>pom</packaging>
 
   <scm>
-    <connection>scm:git:git@github.com:HubSpot/Singularity.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/HubSpot/Singularity.git</developerConnection>
-    <url>git@github.com:HubSpot/Singularity.git</url>
+    <connection>scm:git:git@github.com:grepsr/Singularity.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/grepsr/Singularity.git</developerConnection>
+    <url>git@github.com:grepsr/Singularity.git</url>
     <tag>HEAD</tag>
   </scm>
 

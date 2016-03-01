@@ -380,6 +380,12 @@
       <version>0.9.4</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.dmfs</groupId>
+      <artifactId>rfc5545-datetime</artifactId>
+      <version>0.2.2</version>
+    </dependency>
+
   </dependencies>
 
   <build>
