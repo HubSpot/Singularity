@@ -73,7 +73,6 @@ import com.hubspot.singularity.data.TaskRequestManager;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.hubspot.singularity.ScheduleType;
 import org.dmfs.rfc5545.recur.RecurrenceRule;
-import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 
 @Singleton
 public class SingularityScheduler {
