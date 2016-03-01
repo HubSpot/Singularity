@@ -143,7 +143,7 @@ public abstract class HistoryJDBI implements GetHandle {
 
     final String sql = sqlBuilder.toString();
 
-    LOG.trace("Generated sql for task search: {}", sql);
+    LOG.trace("Generated sql for task search: {}, binds: {}", sql, binds);
 
     final Query<SingularityTaskIdHistory> query = getHandle().createQuery(sql).mapTo(SingularityTaskIdHistory.class);
     for (Map.Entry<String, Object> entry : binds.entrySet()) {
