@@ -374,6 +374,12 @@
       <artifactId>api-all</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.dmfs</groupId>
+      <artifactId>lib-recur</artifactId>
+      <version>0.9.4</version>
+    </dependency>
+
   </dependencies>
 
   <build>

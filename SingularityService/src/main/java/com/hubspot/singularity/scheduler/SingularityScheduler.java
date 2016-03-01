@@ -67,6 +67,7 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.hubspot.singularity.ScheduleType;
+import org.dmfs.rfc5545.recur.RecurrenceRule;
 
 @Singleton
 public class SingularityScheduler {
@@ -672,30 +673,31 @@ public class SingularityScheduler {
       if (pendingType == PendingType.IMMEDIATE || pendingType == PendingType.RETRY) {
         LOG.info("Scheduling requested immediate run of {}", request.getId());
       } else {
-          if(request.getScheduleTypeSafe() == ScheduleType.ISO8601)
-          {
+        if(request.getScheduleTypeSafe() == ScheduleType.ISO8601)
+        {
 
+        }
+        else {
+          try {
+            final CronExpression cronExpression = new CronExpression(request.getQuartzScheduleSafe());
+
+
+            final Date scheduleFrom = new Date(now);
+            final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(scheduleFrom);
+
+            if (nextRunAtDate == null) {
+                return Optional.absent();
+            }
+
+            LOG.trace("Calculating nextRunAtDate for {} (schedule: {}): {} (from: {})", request.getId(), request.getSchedule(), nextRunAtDate, scheduleFrom);
+
+            nextRunAt = Math.max(nextRunAtDate.getTime(), now); // don't create a schedule that is overdue as this is used to indicate that singularity is not fulfilling requests.
+
+            LOG.trace("Scheduling next run of {} (schedule: {}) at {} (from: {})", request.getId(), request.getSchedule(), nextRunAtDate, scheduleFrom);
+          } catch (ParseException pe) {
+            throw Throwables.propagate(pe);
           }
-          else {
-              try {
-                  final CronExpression cronExpression = new CronExpression(request.getQuartzScheduleSafe());
-
-                  final Date scheduleFrom = new Date(now);
-                  final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(scheduleFrom);
-
-                  if (nextRunAtDate == null) {
-                      return Optional.absent();
-                  }
-
-                  LOG.trace("Calculating nextRunAtDate for {} (schedule: {}): {} (from: {})", request.getId(), request.getSchedule(), nextRunAtDate, scheduleFrom);
-
-                  nextRunAt = Math.max(nextRunAtDate.getTime(), now); // don't create a schedule that is overdue as this is used to indicate that singularity is not fulfilling requests.
-
-                  LOG.trace("Scheduling next run of {} (schedule: {}) at {} (from: {})", request.getId(), request.getSchedule(), nextRunAtDate, scheduleFrom);
-              } catch (ParseException pe) {
-                  throw Throwables.propagate(pe);
-              }
-          }
+        }
       }
     }
 
