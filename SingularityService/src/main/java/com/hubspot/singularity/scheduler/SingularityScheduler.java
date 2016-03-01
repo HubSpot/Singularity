@@ -673,9 +673,9 @@ public class SingularityScheduler {
       if (pendingType == PendingType.IMMEDIATE || pendingType == PendingType.RETRY) {
         LOG.info("Scheduling requested immediate run of {}", request.getId());
       } else {
-        if(request.getScheduleTypeSafe() == ScheduleType.ISO8601)
+        if(request.getScheduleTypeSafe() == ScheduleType.RFC5545)
         {
-
+          
         }
         else {
           try {
