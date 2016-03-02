@@ -37,3 +37,4 @@ scripts/dist
 scripts/.venv
 
 .pmdruleset.xml
+build.sh

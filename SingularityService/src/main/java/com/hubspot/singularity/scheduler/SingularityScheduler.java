@@ -701,7 +701,7 @@ public class SingularityScheduler {
             org.joda.time.DateTime dtStart;
             if(matcher.find())
             {
-              DateTimeFormatter formatter = DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss");
+              DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss");
               dtStart = formatter.parseDateTime(matcher.group(1));
             }
             else{
