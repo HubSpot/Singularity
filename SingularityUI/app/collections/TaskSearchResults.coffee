@@ -10,8 +10,8 @@ class TaskSearchResults extends Collection
         return $.param(_.pick(@params, _.identity))
 
     url: -> 
-        if @requestId
-            return "#{ config.apiRoot }/history/request/#{ @requestId }/tasks?#{ @getQueryParams() }"
+        if @params.requestId
+            return "#{ config.apiRoot }/history/request/#{ @params.requestId }/tasks?#{ @getQueryParams() }"
         else
             return "#{ config.apiRoot }/history/tasks?#{ @getQueryParams() }"
 
