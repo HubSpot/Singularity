@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -212,6 +213,51 @@ public abstract class CuratorAsyncManager extends CuratorManager {
   protected <T extends SingularityId> List<T> exists(final String pathNameForLogs, final Collection<String> paths, final IdTranscoder<T> idTranscoder) {
     try {
       return existsThrows(pathNameForLogs, paths, idTranscoder);
+    } catch (Throwable t) {
+      throw Throwables.propagate(t);
+    }
+  }
+
+  private <T extends SingularityId> List<T> notExistsThrows(final String pathNameforLogs, final Map<String, T> pathsMap) throws Exception {
+    if (pathsMap.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    final List<T> objects = Lists.newArrayListWithCapacity(pathsMap.size());
+
+    final CountDownLatch latch = new CountDownLatch(pathsMap.size());
+
+    final BackgroundCallback callback = new BackgroundCallback() {
+
+      @Override
+      public void processResult(CuratorFramework client, CuratorEvent event) throws Exception {
+        if (event.getStat() == null) {
+          objects.add(pathsMap.get(event.getPath()));
+          latch.countDown();
+          return;
+        }
+        latch.countDown();
+      }
+    };
+
+    final long start = System.currentTimeMillis();
+
+    try {
+      for (String path : pathsMap.keySet()) {
+        curator.checkExists().inBackground(callback).forPath(path);
+      }
+
+      checkLatch(latch, pathNameforLogs);
+    } finally {
+      log(OperationType.READ, Optional.<Integer> of(objects.size()), Optional.<Integer> absent(), start, pathNameforLogs);
+    }
+
+    return objects;
+  }
+
+  protected <T extends SingularityId> List<T> notExists(final String pathNameForLogs, final Map<String, T> pathsMap) {
+    try {
+      return notExistsThrows(pathNameForLogs, pathsMap);
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }

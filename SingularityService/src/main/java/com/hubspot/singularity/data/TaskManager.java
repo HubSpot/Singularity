@@ -448,9 +448,17 @@ public class TaskManager extends CuratorAsyncManager {
       paths.add(getActivePath(taskId.getId()));
     }
 
-    final List<SingularityTaskId> activeTaskIds = exists(ACTIVE_PATH_ROOT, paths, taskIdTranscoder);
+    return exists(ACTIVE_PATH_ROOT, paths, taskIdTranscoder);
+  }
 
-    return activeTaskIds;
+  public List<SingularityTaskId> filterInactiveTaskIds(List<SingularityTaskId> taskIds) {
+    final Map<String, SingularityTaskId> pathsMap = Maps.newHashMap();
+
+    for (SingularityTaskId taskId : taskIds) {
+      pathsMap.put(getActivePath(taskId.getId()), taskId);
+    }
+
+    return notExists(ACTIVE_PATH_ROOT, pathsMap);
   }
 
   private List<SingularityTaskId> getTaskIdsForRequest(String requestId, TaskFilter taskFilter) {
@@ -493,11 +501,7 @@ public class TaskManager extends CuratorAsyncManager {
 
     List<SingularityTaskId> taskIds = getChildrenAsIdsForParents("requestIds", paths, taskIdTranscoder);
 
-    List<SingularityTaskId> activeTaskIds = filterActiveTaskIds(taskIds);
-
-    Iterables.removeAll(taskIds, activeTaskIds);
-
-    return taskIds;
+    return filterInactiveTaskIds(taskIds);
   }
 
   public Optional<SingularityTaskHistory> getTaskHistory(SingularityTaskId taskId) {
