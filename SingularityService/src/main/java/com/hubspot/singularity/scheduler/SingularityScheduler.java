@@ -1,8 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
 import java.text.ParseException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -73,6 +71,8 @@ import com.hubspot.singularity.data.TaskRequestManager;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.hubspot.singularity.ScheduleType;
 import org.dmfs.rfc5545.recur.RecurrenceRule;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.DateTimeFormat;
 
 @Singleton
 public class SingularityScheduler {
@@ -688,19 +688,19 @@ public class SingularityScheduler {
             Pattern pattern = Pattern.compile("DTSTART=([0-9]{8}T[0-9]{6})");
             Matcher matcher = pattern.matcher(schedule);
             DateTime startDateTime;
-            LocalDateTime dtStart;
+            org.joda.time.DateTime dtStart;
             if(matcher.find())
             {
-              dtStart = LocalDateTime.parse(matcher.group(1),
-                      DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss"));
+              DateTimeFormatter formatter = DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss");
+              dtStart = formatter.parseDateTime(matcher.group(1));
             }
             else{
-              dtStart = LocalDateTime.now();
-              dtStart = dtStart.withSecond(0);
+              dtStart = org.joda.time.DateTime.now();
+              dtStart = dtStart.withSecondOfMinute(0);
             }
 
-            startDateTime = new DateTime(dtStart.getYear(),(dtStart.getMonthValue() - 1), dtStart.getDayOfMonth(),
-                    dtStart.getHour(), dtStart.getMinute(), dtStart.getSecond());
+            startDateTime = new DateTime(dtStart.getYear(),(dtStart.getMonthOfYear() - 1), dtStart.getDayOfMonth(),
+                    dtStart.getHourOfDay(), dtStart.getMinuteOfHour(), dtStart.getSecondOfMinute());
             RecurrenceRuleIterator timeIterator = recurrenceRule.iterator(startDateTime);
             nextRunAtTimestamp = 0;
             while(timeIterator.hasNext())
