@@ -36,7 +36,6 @@ import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.DateTimeFormat;
 
 
 @Singleton
@@ -125,7 +124,7 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
       try {
         if(request.getRequest().getScheduleTypeSafe() == ScheduleType.RFC5545)
         {
-          final String schedule = request.getRequest().getSchedule().toString().trim();
+          final String schedule = request.getRequest().getSchedule().get();
           final RecurrenceRule recurrenceRule = new RecurrenceRule(schedule);
           if (recurrenceRule.isInfinite()) {
             // set limit at 2100-01-01 00:00:00
@@ -138,7 +137,7 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
           org.joda.time.DateTime dtStart;
           if(matcher.find())
           {
-            DateTimeFormatter formatter = DateTimeFormat.forPattern("dd/MM/yyyy HH:mm:ss");
+            DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss");
             dtStart = formatter.parseDateTime(matcher.group(1));
           }
           else{
@@ -185,7 +184,7 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
 
         if(request.getRequest().getScheduleTypeSafe() == ScheduleType.RFC5545)
         {
-          LOG.warn("Unable to parse RFC 5545 RECUR for {} ({})", taskId, request.getRequest().getScheduleTypeSafe(), e);
+          LOG.warn("Unable to parse RFC 5545 RECUR for {} ({})", taskId, request.getRequest().getSchedule().get(), e);
         }
         else{
           LOG.warn("Unable to parse cron for {} ({})", taskId, request.getRequest().getQuartzScheduleSafe(), e);
