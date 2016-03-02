@@ -676,7 +676,8 @@ public class SingularityScheduler {
           final Date scheduleFrom = new Date(now);
           if(request.getScheduleTypeSafe() == ScheduleType.RFC5545)
           {
-            final String schedule = request.getSchedule().toString().trim();
+            final String schedule = request.getSchedule().toString();
+            LOG.trace("The schedule is {}", schedule);
             final RecurrenceRule recurrenceRule = new RecurrenceRule(schedule);
             if(recurrenceRule.isInfinite())
             {
