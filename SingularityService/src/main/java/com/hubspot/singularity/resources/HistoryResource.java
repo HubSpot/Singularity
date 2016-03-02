@@ -153,7 +153,11 @@ public class HistoryResource extends AbstractHistoryResource {
       @ApiParam("Sort direction") @QueryParam("orderDirection") Optional<OrderDirection> orderDirection,
       @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
       @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
-    authorizationHelper.checkAdminAuthorization(user);
+    if (requestId.isPresent()) {
+      authorizationHelper.checkForAuthorizationByRequestId(requestId.get(), user, SingularityAuthorizationScope.READ);
+    } else {
+      authorizationHelper.checkAdminAuthorization(user);
+    }
 
     final Integer limitCount = getLimitCount(count);
     final Integer limitStart = getLimitStart(limitCount, page);
