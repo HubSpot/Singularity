@@ -376,13 +376,12 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> getTaskHistoryUpdates(Collection<SingularityTaskId> taskIds) {
-    Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> map = Maps.newHashMapWithExpectedSize(taskIds.size());
-
+    Map<String, SingularityTaskId> pathsMap = Maps.newHashMap();
     for (SingularityTaskId taskId : taskIds) {
-      map.put(taskId, getTaskHistoryUpdates(taskId));
+      pathsMap.put(getHistoryPath(taskId), taskId);
     }
 
-    return map;
+    return getAsychNestedChildrenAsMap(HISTORY_PATH_ROOT, pathsMap, UPDATES_PATH, taskHistoryUpdateTranscoder);
   }
 
   public int getNumHealthchecks(SingularityTaskId taskId) {

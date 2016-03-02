@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -21,6 +22,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hubspot.singularity.SingularityId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
@@ -282,6 +284,63 @@ public abstract class CuratorAsyncManager extends CuratorManager {
   protected <T> List<T> getAsyncChildren(final String parent, final Transcoder<T> transcoder) {
     try {
       return getAsyncChildrenThrows(parent, transcoder);
+    } catch (Throwable t) {
+      throw Throwables.propagate(t);
+    }
+  }
+
+  protected <T, Q> Map<T, List<Q>> getAsychNestedChildrenAsMapThrows(final String pathNameForLogs, final Map<String, T> parentPathsMap, final String subpath, final Transcoder<Q> transcoder) throws Exception {
+    final Map<String, T> allPathsMap = Maps.newHashMap();
+    for (Map.Entry<String, T> entry : parentPathsMap.entrySet()) {
+      for (String child : getChildren(ZKPaths.makePath(entry.getKey(), subpath))) {
+        allPathsMap.put(ZKPaths.makePath(entry.getKey(), subpath, child), entry.getValue());
+      }
+    }
+
+    final ConcurrentHashMap<T, List<Q>> resultsMap = new ConcurrentHashMap<>();
+    final CountDownLatch latch = new CountDownLatch(allPathsMap.size());
+    final AtomicInteger bytes = new AtomicInteger();
+    final BackgroundCallback callback = new BackgroundCallback() {
+
+      @Override
+      public void processResult(CuratorFramework client, CuratorEvent event) throws Exception {
+        if (event.getData() == null || event.getData().length == 0) {
+          LOG.trace("Expected active node {} but it wasn't there", event.getPath());
+          latch.countDown();
+          return;
+        }
+
+        bytes.getAndAdd(event.getData().length);
+
+        final Q object = transcoder.fromBytes(event.getData());
+
+        if (allPathsMap.get(event.getPath()) != null) {
+          resultsMap.putIfAbsent(allPathsMap.get(event.getPath()), new ArrayList<Q>());
+          resultsMap.get(allPathsMap.get(event.getPath())).add(object);
+        }
+
+        latch.countDown();
+      }
+    };
+
+    final long start = System.currentTimeMillis();
+
+    try {
+      for (String path : allPathsMap.keySet()) {
+        curator.getData().inBackground(callback).forPath(path);
+      }
+
+      checkLatch(latch, pathNameForLogs);
+    } finally {
+      log(OperationType.READ, Optional.of(resultsMap.size()), Optional.of(bytes.get()), start, pathNameForLogs);
+    }
+
+    return resultsMap;
+  }
+
+  protected <T, Q> Map<T, List<Q>> getAsychNestedChildrenAsMap(final String pathNameForLogs, final Map<String, T> parentPathsMap, final String subpath, final Transcoder<Q> transcoder) {
+    try {
+      return getAsychNestedChildrenAsMapThrows(pathNameForLogs, parentPathsMap, subpath, transcoder);
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
