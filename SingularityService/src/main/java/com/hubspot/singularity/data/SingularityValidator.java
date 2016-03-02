@@ -131,17 +131,12 @@ public class SingularityValidator {
     String quartzSchedule = null;
 
     if (request.isScheduled()) {
+
+      String originalSchedule = request.getQuartzScheduleSafe();
+
       checkBadRequest(request.getQuartzSchedule().isPresent() || request.getSchedule().isPresent(), "Specify at least one of schedule or quartzSchedule");
 
-<<<<<<< HEAD
-      final String originalSchedule = request.getQuartzScheduleSafe();
-
-      if (request.getQuartzSchedule().isPresent() && !request.getSchedule().isPresent()) {
-        checkBadRequest(request.getScheduleType().or(ScheduleType.QUARTZ) == ScheduleType.QUARTZ, "If using quartzSchedule specify scheduleType QUARTZ or leave it blank");
-      }
-=======
       if(request.getScheduleType().or(ScheduleType.QUARTZ) != ScheduleType.RFC5545) {
->>>>>>> singularity scheduler
 
         if (request.getQuartzSchedule().isPresent() && !request.getSchedule().isPresent()) {
           checkBadRequest(request.getScheduleType().or(ScheduleType.QUARTZ) == ScheduleType.QUARTZ, "If using quartzSchedule specify scheduleType QUARTZ or leave it blank");
@@ -158,6 +153,7 @@ public class SingularityValidator {
         checkBadRequest(isValidCronSchedule(quartzSchedule), "Schedule %s (from: %s) was not valid", quartzSchedule, originalSchedule);
       }
       else{
+        originalSchedule = request.getSchedule().get();
         checkBadRequest(isValidRFC5545Schedule(originalSchedule), "Schedule %s was not valid", originalSchedule);
       }
     } else {

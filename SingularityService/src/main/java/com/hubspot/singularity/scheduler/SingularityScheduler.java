@@ -686,8 +686,7 @@ public class SingularityScheduler {
           final Date scheduleFrom = new Date(now);
           if(request.getScheduleTypeSafe() == ScheduleType.RFC5545)
           {
-            final String schedule = request.getSchedule().toString();
-            LOG.trace("The schedule is {}", schedule);
+            final String schedule = request.getSchedule().get();
             final RecurrenceRule recurrenceRule = new RecurrenceRule(schedule);
             if(recurrenceRule.isInfinite())
             {
@@ -695,6 +694,7 @@ public class SingularityScheduler {
               recurrenceRule.setUntil(new DateTime(2100, 1, 1, 0, 0, 0));
             }
 
+            // DTSTART is RFC5545 but NOT in the recur string, but its a nice to have? :)
             Pattern pattern = Pattern.compile("DTSTART=([0-9]{8}T[0-9]{6})");
             Matcher matcher = pattern.matcher(schedule);
             DateTime startDateTime;
