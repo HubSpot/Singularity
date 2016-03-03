@@ -296,9 +296,9 @@ public class TaskResource {
         task.getTaskId(), message, actionId);
 
     if (override.isPresent() && override.get().booleanValue()) {
-      taskManager.saveTaskCleanup(taskCleanup);
+      taskManager.saveTaskCleanup(taskCleanup, task.getTaskRequest().getPendingTask().getRunId());
     } else {
-      SingularityCreateResult result = taskManager.createTaskCleanup(taskCleanup);
+      SingularityCreateResult result = taskManager.createTaskCleanup(taskCleanup, task.getTaskRequest().getPendingTask().getRunId());
 
       while (result == SingularityCreateResult.EXISTED) {
         Optional<SingularityTaskCleanup> cleanup = taskManager.getTaskCleanup(taskId);
@@ -307,7 +307,7 @@ public class TaskResource {
           throw new WebApplicationException(Response.status(Status.CONFLICT).entity(cleanup.get()).type(MediaType.APPLICATION_JSON).build());
         }
 
-        result = taskManager.createTaskCleanup(taskCleanup);
+        result = taskManager.createTaskCleanup(taskCleanup, task.getTaskRequest().getPendingTask().getRunId());
       }
     }
 
