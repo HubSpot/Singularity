@@ -22,8 +22,12 @@ public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHis
     long updatedAt = taskId.getStartedAt();
 
     if (updates != null && !updates.isEmpty()) {
-      Collections.sort(updates);
-      SingularityTaskHistoryUpdate lastUpdate = Iterables.getLast(updates);
+      SingularityTaskHistoryUpdate lastUpdate = updates.get(0);
+      for (SingularityTaskHistoryUpdate update : updates.subList(1, updates.size())) {
+        if (update.getTimestamp() > lastUpdate.getTimestamp()) {
+          lastUpdate = update;
+        }
+      }
       lastTaskState = lastUpdate.getTaskState();
       updatedAt = lastUpdate.getTimestamp();
     }
