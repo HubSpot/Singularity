@@ -78,6 +78,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
         try {
           if (event.getData() == null || event.getData().length == 0) {
             LOG.trace("Expected active node {} but it wasn't there", event.getPath());
+            return;
           }
 
           bytes.getAndAdd(event.getData().length);
@@ -131,6 +132,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
         try {
           if (event.getChildren() == null || event.getChildren().size() == 0) {
             LOG.trace("Expected children for node {} - but found none", event.getPath());
+            return;
           }
           synchronizedObjects.addAll(Lists.transform(event.getChildren(), Transcoders.getFromStringFunction(idTranscoder)));
         } finally {
@@ -300,6 +302,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
         try {
           if (event.getData() == null || event.getData().length == 0) {
             LOG.trace("Expected active node {} but it wasn't there", event.getPath());
+            return;
           }
           bytes.getAndAdd(event.getData().length);
 
