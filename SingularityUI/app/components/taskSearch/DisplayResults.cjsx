@@ -33,8 +33,7 @@ DisplayResults = React.createClass
     getEmptyTableMessage: ->
         if @props.holdOffOnSearching
             '''
-                No search performed yet. 
-                Enter parameters and click search to view tasks.
+                Enter parameters above to view tasks.
             '''
         else if @state.loading
             'Loading Tasks...'
