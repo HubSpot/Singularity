@@ -10,8 +10,8 @@ Enums = require './Enums'
 
 DisplayResults = React.createClass
 
-    # Used to detect if any props have changed
-    didPropsChange: (nextProps) ->
+    # Used to detect if any query params have changed
+    didQueryParamsChange: (nextProps) ->
         return true unless nextProps.requestId == @props.requestId
         return true unless nextProps.global == @props.global
         return true unless nextProps.deployId == @props.deployId
@@ -63,7 +63,8 @@ DisplayResults = React.createClass
         @fetchCollection()
 
     componentWillReceiveProps: (nextProps) ->
-        if @didPropsChange nextProps
+        # Note that if adding another query param you MUST update @didQueryParamsChange
+        if @didQueryParamsChange(nextProps) or (@props.holdOffOnSearching and not nextProps.holdOffOnSearching)
             @willFetch = true
             @setState
                 loading: true
