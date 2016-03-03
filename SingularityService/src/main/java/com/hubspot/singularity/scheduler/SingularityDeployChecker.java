@@ -207,7 +207,7 @@ public class SingularityDeployChecker {
   private void cleanupTasks(SingularityDeployMarker deployMarker, SingularityDeployResult deployResult, Iterable<SingularityTaskId> tasksToKill) {
     for (SingularityTaskId matchingTask : tasksToKill) {
       taskManager.createTaskCleanup(new SingularityTaskCleanup(deployMarker.getUser(), deployResult.getDeployState().getCleanupType(), deployResult.getTimestamp(), matchingTask,
-        Optional.of(String.format("Deploy %s - %s", deployMarker.getDeployId(), deployResult.getDeployState().name())), Optional.<String> absent()));
+        Optional.of(String.format("Deploy %s - %s", deployMarker.getDeployId(), deployResult.getDeployState().name())), Optional.<String> absent()), Optional.<String> absent()); // runId arg is absent, one off tasks that have a runId will never hit this spot
     }
   }
 
@@ -591,7 +591,7 @@ public class SingularityDeployChecker {
     for (SingularityTaskId taskId : tasksToShutDown(deployProgress, otherActiveTasks, request)) {
       taskManager.createTaskCleanup(
         new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.DEPLOY_STEP_FINISHED, System.currentTimeMillis(), taskId, Optional.of(message),
-          Optional.<String> absent()));
+          Optional.<String> absent()), Optional.<String> absent()); // runId arg is absent, one off tasks that have a runId will never hit this spot
     }
     return new SingularityDeployResult(deployState);
   }
