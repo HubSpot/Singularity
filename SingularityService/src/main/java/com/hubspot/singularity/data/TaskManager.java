@@ -381,7 +381,7 @@ public class TaskManager extends CuratorAsyncManager {
       pathsMap.put(getHistoryPath(taskId), taskId);
     }
 
-    return getAsychNestedChildrenAsMap(HISTORY_PATH_ROOT, pathsMap, UPDATES_PATH, taskHistoryUpdateTranscoder);
+    return getAsynchNestedChildrenAsMap(HISTORY_PATH_ROOT, pathsMap, UPDATES_PATH, taskHistoryUpdateTranscoder);
   }
 
   public int getNumHealthchecks(SingularityTaskId taskId) {
