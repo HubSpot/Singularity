@@ -30,8 +30,21 @@ DisplayResults = React.createClass
             loading: true
         }
 
+    getEmptyTableMessage: ->
+        if @props.holdOffOnSearching
+            '''
+                No Search Performed Yet. 
+                You may perform a search with no query parameters.
+                Please be aware that a search without Request ID is VERY expensive.
+            '''
+        else if @state.loading
+            'Loading Tasks...'
+        else
+            'No Tasks Found'
+
     fetchCollection: ->
-        @willFetch = false
+        unless @props.holdOffOnSearching
+            @willFetch = false
         @collection = new TaskSearchResults [],
             params: {
                 requestId : @props.requestId
@@ -44,8 +57,9 @@ DisplayResults = React.createClass
                 count : @props.count
                 page : @props.page
             }
-        @collection.fetch
-            success: () => @setState {loading: false}
+        unless @props.holdOffOnSearching
+            @collection.fetch
+                success: () => @setState {loading: false}
 
     componentWillMount: ->
         @fetchCollection()
@@ -86,7 +100,7 @@ DisplayResults = React.createClass
                 pageNumber = @collection.params.page
                 pageDown = @props.decreasePageNumber
                 pageUp = @props.increasePageNumber
-                emptyTableMessage = {if @state.loading then 'Loading Tasks...' else 'No Tasks'}
+                emptyTableMessage = {@getEmptyTableMessage()}
             />
         </div>
 

@@ -17,16 +17,12 @@ TaskSearch = React.createClass
         return {
             form:
                 requestId: @props.initialRequestId or ''
-                deployId: @props.initialDeployId or ''
-                host: @props.initialHost or ''
-                lastTaskStatus: @props.initialTaskStatus or ''
-                startedBefore: @props.initialStartedBefore or ''
-                startedAfter: @props.initialStartedAfter or ''
             sortDirection: @props.initialSortDirection or @defaultSortDirection
             queryParams:
                 requestId: @props.initialRequestId or ''
             pageNumber: 1
             count: @props.initialCount or @defaultCount
+            hasDoneAnySearch: false
         }
 
     handleSubmit: (event) ->
@@ -34,6 +30,15 @@ TaskSearch = React.createClass
         @setState
             queryParams: @state.form
             pageNumber: 1 # If you narrow down your search you most likely want to go back to page 1
+            hasDoneAnySearch: true
+
+    isAnyQueryParams: ->
+        @state.queryParams.requestId or 
+        @state.queryParams.deployId or 
+        @state.queryParams.host or 
+        @state.queryParams.lastTaskStatus or 
+        @state.queryParams.startedBefore or
+        @state.queryParams.startedAfter
 
     # Annoying that we need a new function for each property.
     # Unfortuantely using a curried function doesn't seem to work.
@@ -177,6 +182,8 @@ TaskSearch = React.createClass
                 clearStartedBefore = @clearStartedBefore
                 clearSortDirection = @clearSortDirection
                 global = @props.global
+                hasDoneAnySearch = @state.hasDoneAnySearch
+                holdOffOnSearching = {not (@isAnyQueryParams() or @state.hasDoneAnySearch)}
             />
         </div>
 
