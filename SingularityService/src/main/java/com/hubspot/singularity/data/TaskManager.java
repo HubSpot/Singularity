@@ -385,7 +385,7 @@ public class TaskManager extends CuratorAsyncManager {
       pathsMap.put(getHistoryPath(taskId), taskId);
     }
 
-    return getAsyncAsMap(HISTORY_PATH_ROOT, pathsMap, UPDATES_PATH, taskHistoryUpdateTranscoder);
+    return getAsyncNestedChildDataAsMap(HISTORY_PATH_ROOT, pathsMap, UPDATES_PATH, taskHistoryUpdateTranscoder);
   }
 
   public int getNumHealthchecks(SingularityTaskId taskId) {
@@ -425,19 +425,19 @@ public class TaskManager extends CuratorAsyncManager {
       String updatePath = getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState());
       String updatesPath = getUpdatesPath(taskHistoryUpdate.getTaskId());
       String historyPath = getHistoryPath(taskHistoryUpdate.getTaskId());
-      String reqeustPath = getRequestPath(taskHistoryUpdate.getTaskId().getRequestId());
+      String requestPath = getRequestPath(taskHistoryUpdate.getTaskId().getRequestId());
 
       SingularityTaskIdHistory taskIdHistory = new SingularityTaskIdHistory(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTimestamp(), Optional.of(taskHistoryUpdate.getTaskState()), runId);
       CuratorTransactionFinal transaction;
 
-      if (exists(reqeustPath)) {
+      if (exists(requestPath)) {
         if (exists(historyPath)) {
           transaction = curator.inTransaction().setData().forPath(historyPath, taskIdHistoryTranscoder.toBytes(taskIdHistory)).and();
         } else {
           transaction = curator.inTransaction().create().forPath(historyPath, taskIdHistoryTranscoder.toBytes(taskIdHistory)).and();
         }
       } else {
-        transaction = curator.inTransaction().create().forPath(reqeustPath).and();
+        transaction = curator.inTransaction().create().forPath(requestPath).and();
         if (exists(historyPath)) {
           transaction.setData().forPath(historyPath, taskIdHistoryTranscoder.toBytes(taskIdHistory)).and();
         } else {
