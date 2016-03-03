@@ -1,3 +1,4 @@
+
 package com.hubspot.singularity.data;
 
 import java.util.ArrayList;
@@ -5,6 +6,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -20,6 +23,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.hubspot.singularity.SingularityId;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
@@ -71,25 +75,21 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
       @Override
       public void processResult(CuratorFramework client, CuratorEvent event) throws Exception {
-        if (event.getData() == null || event.getData().length == 0) {
-          LOG.trace("Expected active node {} but it wasn't there", event.getPath());
+        try {
+          if (event.getData() == null || event.getData().length == 0) {
+            LOG.trace("Expected active node {} but it wasn't there", event.getPath());
+          }
 
+          bytes.getAndAdd(event.getData().length);
+          final T object = transcoder.fromBytes(event.getData());
+          synchronizedObjects.add(object);
+
+          if (cache.isPresent()) {
+            cache.get().set(event.getPath(), object);
+          }
+        } finally {
           latch.countDown();
-
-          return;
         }
-
-        bytes.getAndAdd(event.getData().length);
-
-        final T object = transcoder.fromBytes(event.getData());
-
-        synchronizedObjects.add(object);
-
-        if (cache.isPresent()) {
-          cache.get().set(event.getPath(), object);
-        }
-
-        latch.countDown();
       }
     };
 
@@ -128,17 +128,14 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
       @Override
       public void processResult(CuratorFramework client, CuratorEvent event) throws Exception {
-        if (event.getChildren() == null || event.getChildren().size() == 0) {
-          LOG.trace("Expected children for node {} - but found none", event.getPath());
-
+        try {
+          if (event.getChildren() == null || event.getChildren().size() == 0) {
+            LOG.trace("Expected children for node {} - but found none", event.getPath());
+          }
+          synchronizedObjects.addAll(Lists.transform(event.getChildren(), Transcoders.getFromStringFunction(idTranscoder)));
+        } finally {
           latch.countDown();
-
-          return;
         }
-
-        synchronizedObjects.addAll(Lists.transform(event.getChildren(), Transcoders.getFromStringFunction(idTranscoder)));
-
-        latch.countDown();
       }
     };
 
@@ -182,15 +179,13 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
       @Override
       public void processResult(CuratorFramework client, CuratorEvent event) throws Exception {
-        if (event.getStat() == null) {
+        try {
+          if (event.getStat() != null) {
+            objects.add(Transcoders.getFromStringFunction(idTranscoder).apply(ZKPaths.getNodeFromPath(event.getPath())));
+          }
+        } finally {
           latch.countDown();
-
-          return;
         }
-
-        objects.add(Transcoders.getFromStringFunction(idTranscoder).apply(ZKPaths.getNodeFromPath(event.getPath())));
-
-        latch.countDown();
       }
     };
 
@@ -212,6 +207,52 @@ public abstract class CuratorAsyncManager extends CuratorManager {
   protected <T extends SingularityId> List<T> exists(final String pathNameForLogs, final Collection<String> paths, final IdTranscoder<T> idTranscoder) {
     try {
       return existsThrows(pathNameForLogs, paths, idTranscoder);
+    } catch (Throwable t) {
+      throw Throwables.propagate(t);
+    }
+  }
+
+  private <T extends SingularityId> List<T> notExistsThrows(final String pathNameforLogs, final Map<String, T> pathsMap) throws Exception {
+    if (pathsMap.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    final List<T> objects = Lists.newArrayListWithCapacity(pathsMap.size());
+
+    final CountDownLatch latch = new CountDownLatch(pathsMap.size());
+
+    final BackgroundCallback callback = new BackgroundCallback() {
+
+      @Override
+      public void processResult(CuratorFramework client, CuratorEvent event) throws Exception {
+        try {
+          if (event.getStat() == null) {
+            objects.add(pathsMap.get(event.getPath()));
+          }
+        } finally {
+          latch.countDown();
+        }
+      }
+    };
+
+    final long start = System.currentTimeMillis();
+
+    try {
+      for (String path : pathsMap.keySet()) {
+        curator.checkExists().inBackground(callback).forPath(path);
+      }
+
+      checkLatch(latch, pathNameforLogs);
+    } finally {
+      log(OperationType.READ, Optional.<Integer> of(objects.size()), Optional.<Integer> absent(), start, pathNameforLogs);
+    }
+
+    return objects;
+  }
+
+  protected <T extends SingularityId> List<T> notExists(final String pathNameForLogs, final Map<String, T> pathsMap) {
+    try {
+      return notExistsThrows(pathNameForLogs, pathsMap);
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
@@ -241,5 +282,60 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     }
   }
 
-}
+  protected <T, Q> Map<T, List<Q>> getAsyncNestedChildDataAsMapThrows(final String pathNameForLogs, final Map<String, T> parentPathsMap, final String subpath, final Transcoder<Q> transcoder) throws Exception {
+    final Map<String, T> allPathsMap = Maps.newHashMap();
+    for (Map.Entry<String, T> entry : parentPathsMap.entrySet()) {
+      for (String child : getChildren(ZKPaths.makePath(entry.getKey(), subpath))) {
+        allPathsMap.put(ZKPaths.makePath(entry.getKey(), subpath, child), entry.getValue());
+      }
+    }
 
+    final ConcurrentHashMap<T, List<Q>> resultsMap = new ConcurrentHashMap<>();
+    final CountDownLatch latch = new CountDownLatch(allPathsMap.size());
+    final AtomicInteger bytes = new AtomicInteger();
+    final BackgroundCallback callback = new BackgroundCallback() {
+
+      @Override
+      public void processResult(CuratorFramework client, CuratorEvent event) throws Exception {
+        try {
+          if (event.getData() == null || event.getData().length == 0) {
+            LOG.trace("Expected active node {} but it wasn't there", event.getPath());
+          }
+          bytes.getAndAdd(event.getData().length);
+
+          final Q object = transcoder.fromBytes(event.getData());
+
+          if (allPathsMap.get(event.getPath()) != null) {
+            resultsMap.putIfAbsent(allPathsMap.get(event.getPath()), new ArrayList<Q>());
+            resultsMap.get(allPathsMap.get(event.getPath())).add(object);
+          }
+        } finally {
+          latch.countDown();
+        }
+      }
+    };
+
+    final long start = System.currentTimeMillis();
+
+    try {
+      for (String path : allPathsMap.keySet()) {
+        curator.getData().inBackground(callback).forPath(path);
+      }
+
+      checkLatch(latch, pathNameForLogs);
+    } finally {
+      log(OperationType.READ, Optional.of(resultsMap.size()), Optional.of(bytes.get()), start, pathNameForLogs);
+    }
+
+    return resultsMap;
+  }
+
+  protected <T, Q> Map<T, List<Q>> getAsyncNestedChildDataAsMap(final String pathNameForLogs, final Map<String, T> parentPathsMap, final String subpath, final Transcoder<Q> transcoder) {
+    try {
+      return getAsyncNestedChildDataAsMapThrows(pathNameForLogs, parentPathsMap, subpath, transcoder);
+    } catch (Throwable t) {
+      throw Throwables.propagate(t);
+    }
+  }
+
+}
