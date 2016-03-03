@@ -33,9 +33,8 @@ DisplayResults = React.createClass
     getEmptyTableMessage: ->
         if @props.holdOffOnSearching
             '''
-                No Search Performed Yet. 
-                You may perform a search with no query parameters.
-                Please be aware that a search without Request ID is VERY expensive.
+                No search performed yet. 
+                Enter parameters and click search to view tasks.
             '''
         else if @state.loading
             'Loading Tasks...'
