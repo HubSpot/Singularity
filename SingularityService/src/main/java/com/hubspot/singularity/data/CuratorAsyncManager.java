@@ -287,7 +287,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     }
   }
 
-  protected <T, Q> Map<T, List<Q>> getAsychNestedChildrenAsMapThrows(final String pathNameForLogs, final Map<String, T> parentPathsMap, final String subpath, final Transcoder<Q> transcoder) throws Exception {
+  protected <T, Q> Map<T, List<Q>> getAsynchNestedChildrenAsMapThrows(final String pathNameForLogs, final Map<String, T> parentPathsMap, final String subpath, final Transcoder<Q> transcoder) throws Exception {
     final Map<String, T> allPathsMap = Maps.newHashMap();
     for (Map.Entry<String, T> entry : parentPathsMap.entrySet()) {
       for (String child : getChildren(ZKPaths.makePath(entry.getKey(), subpath))) {
@@ -336,9 +336,9 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     return resultsMap;
   }
 
-  protected <T, Q> Map<T, List<Q>> getAsychNestedChildrenAsMap(final String pathNameForLogs, final Map<String, T> parentPathsMap, final String subpath, final Transcoder<Q> transcoder) {
+  protected <T, Q> Map<T, List<Q>> getAsynchNestedChildrenAsMap(final String pathNameForLogs, final Map<String, T> parentPathsMap, final String subpath, final Transcoder<Q> transcoder) {
     try {
-      return getAsychNestedChildrenAsMapThrows(pathNameForLogs, parentPathsMap, subpath, transcoder);
+      return getAsynchNestedChildrenAsMapThrows(pathNameForLogs, parentPathsMap, subpath, transcoder);
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
