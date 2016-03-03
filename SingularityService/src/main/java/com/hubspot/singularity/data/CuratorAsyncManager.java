@@ -235,8 +235,6 @@ public abstract class CuratorAsyncManager extends CuratorManager {
       public void processResult(CuratorFramework client, CuratorEvent event) throws Exception {
         if (event.getStat() == null) {
           objects.add(pathsMap.get(event.getPath()));
-          latch.countDown();
-          return;
         }
         latch.countDown();
       }
