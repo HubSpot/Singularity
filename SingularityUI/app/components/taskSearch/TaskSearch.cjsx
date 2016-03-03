@@ -17,9 +17,19 @@ TaskSearch = React.createClass
         return {
             form:
                 requestId: @props.initialRequestId or ''
+                deployId: @props.initialDeployId or ''
+                host: @props.initialHost or ''
+                lastTaskStatus: @props.initialTaskStatus or ''
+                startedBefore: @props.initialStartedBefore or ''
+                startedAfter: @props.initialStartedAfter or ''
             sortDirection: @props.initialSortDirection or @defaultSortDirection
             queryParams:
                 requestId: @props.initialRequestId or ''
+                deployId: @props.initialDeployId or ''
+                host: @props.initialHost or ''
+                lastTaskStatus: @props.initialTaskStatus or ''
+                startedBefore: @props.initialStartedBefore or ''
+                startedAfter: @props.initialStartedAfter or ''
             pageNumber: 1
             count: @props.initialCount or @defaultCount
             hasDoneAnySearch: false
