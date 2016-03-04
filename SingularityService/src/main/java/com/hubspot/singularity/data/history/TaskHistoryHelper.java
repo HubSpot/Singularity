@@ -15,6 +15,7 @@ import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryQuery;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskIdHistory;
+import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 
@@ -24,12 +25,14 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
   private final TaskManager taskManager;
   private final RequestManager requestManager;
   private final HistoryManager historyManager;
+  private final SingularityConfiguration configuration;
 
   @Inject
-  public TaskHistoryHelper(TaskManager taskManager, HistoryManager historyManager, RequestManager requestManager) {
+  public TaskHistoryHelper(TaskManager taskManager, HistoryManager historyManager, RequestManager requestManager, SingularityConfiguration configuration) {
     this.taskManager = taskManager;
     this.historyManager = historyManager;
     this.requestManager = requestManager;
+    this.configuration = configuration;
   }
 
   private List<SingularityTaskIdHistory> getFromZk(List<String> requestIds) {
@@ -95,6 +98,9 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
 
   @Override
   protected boolean queryUsesZkFirst(SingularityTaskHistoryQuery query) {
+    if (configuration.isTaskHistoryQueryUsesZkFirst()) {
+      return true;
+    }
     if (!query.getRequestId().isPresent()) {
       return false;
     }

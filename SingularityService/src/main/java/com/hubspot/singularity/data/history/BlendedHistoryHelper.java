@@ -1,11 +1,18 @@
 package com.hubspot.singularity.data.history;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
+import org.apache.commons.collections.ArrayStack;
+
+import com.google.common.collect.BoundType;
 import com.google.common.collect.Lists;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -65,17 +72,68 @@ public abstract class BlendedHistoryHelper<T, Q> {
         returned.addAll(getFromHistory(id, historyStart, numFromHistory));
       }
     } else {
-      returned = Lists.newArrayListWithCapacity(fromZk.size() + limitCount);
-
-      returned.addAll(fromZk);
-      returned.addAll(getFromHistory(id, limitStart, limitCount));
-
-      Collections.sort(returned, getComparator(id));
-
-      returned = returned.subList(0, Math.min(limitCount, returned.size()));
+      returned = getOrderedFromHistory(id, limitStart, limitCount, fromZk);
     }
 
     return returned;
+  }
+
+  private List<T> getOrderedFromHistory(Q id, Integer limitStart, Integer limitCount, List<T> fromZk) {
+    SortedMap<T, Boolean> returnedMap = new TreeMap<>(getComparator(id));
+    for (T item : fromZk) {
+      returnedMap.put(item, false);
+    }
+
+    int historyLimitStart = 0;
+    List<T> fromHistory = getFromHistory(id, historyLimitStart, limitCount);
+    for (T item : fromHistory) {
+      returnedMap.put(item, true);
+    }
+
+    int currentStartIndex = 0;
+    while (!foundAllFromHistoryAndTrimResults(returnedMap, currentStartIndex, getLastRelevantHistoryItemIndex(returnedMap, currentStartIndex), limitStart, limitCount, fromHistory.size())) {
+      if (returnedMap.isEmpty()) {
+        return getFromHistory(id, limitStart - currentStartIndex, limitCount);
+      } else {
+        historyLimitStart += limitCount;
+        fromHistory = getFromHistory(id, historyLimitStart, limitCount);
+        for (T item : fromHistory) {
+          returnedMap.put(item, true);
+        }
+      }
+    }
+    return new ArrayList<>(returnedMap.keySet());
+  }
+
+  private int getLastRelevantHistoryItemIndex(SortedMap<T, Boolean> returnedMap, Integer currentStartIndex) {
+    int highestHistoryItemIndex = 0;
+    int index = 0;
+    for (Map.Entry<T, Boolean> entry : returnedMap.entrySet()) {
+      if (entry.getValue()) {
+        highestHistoryItemIndex = index;
+      }
+      index ++;
+    }
+    return currentStartIndex + highestHistoryItemIndex;
+  }
+
+  private boolean foundAllFromHistoryAndTrimResults(SortedMap<T, Boolean> returnedMap, Integer currentStartIndex, Integer lastRelevantHistoryItemIndex, Integer limitStart, Integer limitCount, int numFromHistory) {
+    boolean foundAllFromHistory = false;
+    List<T> toRemove = new ArrayList<>();
+    if (numFromHistory == 0 || lastRelevantHistoryItemIndex > limitStart + limitCount) {
+      List<T> current = new ArrayList<>(returnedMap.keySet());
+      toRemove.addAll(current.subList(0, Math.min(limitStart - currentStartIndex, current.size())));
+      toRemove.addAll(current.subList(Math.min(limitStart - currentStartIndex + limitCount, current.size()), current.size()));
+      foundAllFromHistory = true;
+    } else {
+      toRemove = toRemove.subList(0, Math.min(Math.min(lastRelevantHistoryItemIndex, limitStart - currentStartIndex), toRemove.size()));
+      currentStartIndex += toRemove.size();
+    }
+    for (T item : toRemove) {
+      returnedMap.remove(item);
+    }
+
+    return foundAllFromHistory;
   }
 
 }
