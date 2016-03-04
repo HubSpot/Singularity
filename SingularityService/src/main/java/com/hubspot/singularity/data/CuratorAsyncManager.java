@@ -152,7 +152,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
       return Collections.emptyList();
     }
 
-    final List<T> existsObjects = Lists.newArrayListWithCapacity(paths.size());
+    final List<T> objects = Lists.newArrayListWithCapacity(paths.size());
 
     final CountDownLatch latch = new CountDownLatch(paths.size());
 
@@ -162,7 +162,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
       public void processResult(CuratorFramework client, CuratorEvent event) throws Exception {
         try {
           if (event.getStat() != null) {
-            existsObjects.add(Transcoders.getFromStringFunction(idTranscoder).apply(ZKPaths.getNodeFromPath(event.getPath())));
+            objects.add(Transcoders.getFromStringFunction(idTranscoder).apply(ZKPaths.getNodeFromPath(event.getPath())));
           }
         } finally {
           latch.countDown();
@@ -170,7 +170,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
       }
     };
 
-    return queryAndReturnResultsThrows(existsObjects, paths, callback, latch, pathNameforLogs, new AtomicInteger(), CuratorQueryMethod.GET_DATA);
+    return queryAndReturnResultsThrows(objects, paths, callback, latch, pathNameforLogs, new AtomicInteger(), CuratorQueryMethod.GET_DATA);
   }
 
   protected <T extends SingularityId> List<T> exists(final String pathNameForLogs, final Collection<String> paths, final IdTranscoder<T> idTranscoder) {
@@ -186,7 +186,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
       return Collections.emptyList();
     }
 
-    final List<T> notExistsObjects = Lists.newArrayListWithCapacity(pathsMap.size());
+    final List<T> objects = Lists.newArrayListWithCapacity(pathsMap.size());
 
     final CountDownLatch latch = new CountDownLatch(pathsMap.size());
 
@@ -196,7 +196,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
       public void processResult(CuratorFramework client, CuratorEvent event) throws Exception {
         try {
           if (event.getStat() == null) {
-            notExistsObjects.add(pathsMap.get(event.getPath()));
+            objects.add(pathsMap.get(event.getPath()));
           }
         } finally {
           latch.countDown();
@@ -204,7 +204,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
       }
     };
 
-    return queryAndReturnResultsThrows(notExistsObjects, pathsMap.keySet(), callback, latch, pathNameforLogs, new AtomicInteger(), CuratorQueryMethod.CHECK_EXISTS);
+    return queryAndReturnResultsThrows(objects, pathsMap.keySet(), callback, latch, pathNameforLogs, new AtomicInteger(), CuratorQueryMethod.CHECK_EXISTS);
   }
 
   protected <T extends SingularityId> List<T> notExists(final String pathNameForLogs, final Map<String, T> pathsMap) {
