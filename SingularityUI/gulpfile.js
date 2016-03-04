@@ -80,7 +80,11 @@ gulp.task('styles', function () {
       'node_modules/messenger/build/css/*.css',
       'node_modules/select2/*.css',
       'node_modules/bootstrap/dist/css/bootstrap.css',
+<<<<<<< HEAD
       'node_modules/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.css',
+=======
+      'node_modules/sortable/css/sortable-theme-bootstrap.css',
+>>>>>>> die-brunch
       'app/**/*.styl'
     ])
     .pipe(stylus({
