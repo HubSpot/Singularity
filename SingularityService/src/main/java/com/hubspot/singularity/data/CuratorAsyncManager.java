@@ -1,4 +1,3 @@
-
 package com.hubspot.singularity.data;
 
 import java.util.ArrayList;
@@ -36,6 +35,10 @@ public abstract class CuratorAsyncManager extends CuratorManager {
 
   public CuratorAsyncManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry) {
     super(curator, configuration, metricRegistry);
+  }
+
+  private enum CuratorQueryMethod {
+    GET_DATA, CHECK_EXISTS, GET_CHILDREN
   }
 
   private <T> List<T> getAsyncChildrenThrows(final String parent, final Transcoder<T> transcoder) throws Exception {
@@ -94,19 +97,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
       }
     };
 
-    final long start = System.currentTimeMillis();
-
-    try {
-      for (String path : paths) {
-        curator.getData().inBackground(callback).forPath(path);
-      }
-
-      checkLatch(latch, pathNameForLogs);
-    } finally {
-      log(OperationType.READ, Optional.<Integer> of(objects.size()), Optional.<Integer> of(bytes.get()), start, pathNameForLogs);
-    }
-
-    return objects;
+    return queryAndReturnResultsThrows(objects, paths, callback, latch, pathNameForLogs, bytes, CuratorQueryMethod.GET_DATA);
   }
 
   private void checkLatch(CountDownLatch latch, String path) throws InterruptedException {
@@ -141,19 +132,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
       }
     };
 
-    final long start = System.currentTimeMillis();
-
-    try {
-      for (String parent : parents) {
-        curator.getChildren().inBackground(callback).forPath(parent);
-      }
-
-      checkLatch(latch, pathNameforLogs);
-    } finally {
-      log(OperationType.READ, Optional.<Integer> of(objects.size()), Optional.<Integer> absent(), start, pathNameforLogs);
-    }
-
-    return objects;
+    return queryAndReturnResultsThrows(synchronizedObjects, parents, callback, latch, pathNameforLogs, new AtomicInteger(), CuratorQueryMethod.GET_CHILDREN);
   }
 
   protected <T extends SingularityId> List<T> getChildrenAsIdsForParents(final String pathNameforLogs, final Collection<String> parents, final IdTranscoder<T> idTranscoder) {
@@ -173,7 +152,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
       return Collections.emptyList();
     }
 
-    final List<T> objects = Lists.newArrayListWithCapacity(paths.size());
+    final List<T> existsObjects = Lists.newArrayListWithCapacity(paths.size());
 
     final CountDownLatch latch = new CountDownLatch(paths.size());
 
@@ -183,7 +162,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
       public void processResult(CuratorFramework client, CuratorEvent event) throws Exception {
         try {
           if (event.getStat() != null) {
-            objects.add(Transcoders.getFromStringFunction(idTranscoder).apply(ZKPaths.getNodeFromPath(event.getPath())));
+            existsObjects.add(Transcoders.getFromStringFunction(idTranscoder).apply(ZKPaths.getNodeFromPath(event.getPath())));
           }
         } finally {
           latch.countDown();
@@ -191,19 +170,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
       }
     };
 
-    final long start = System.currentTimeMillis();
-
-    try {
-      for (String path : paths) {
-        curator.checkExists().inBackground(callback).forPath(path);
-      }
-
-      checkLatch(latch, pathNameforLogs);
-    } finally {
-      log(OperationType.READ, Optional.<Integer> of(objects.size()), Optional.<Integer> absent(), start, pathNameforLogs);
-    }
-
-    return objects;
+    return queryAndReturnResultsThrows(existsObjects, paths, callback, latch, pathNameforLogs, new AtomicInteger(), CuratorQueryMethod.GET_DATA);
   }
 
   protected <T extends SingularityId> List<T> exists(final String pathNameForLogs, final Collection<String> paths, final IdTranscoder<T> idTranscoder) {
@@ -219,7 +186,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
       return Collections.emptyList();
     }
 
-    final List<T> objects = Lists.newArrayListWithCapacity(pathsMap.size());
+    final List<T> notExistsObjects = Lists.newArrayListWithCapacity(pathsMap.size());
 
     final CountDownLatch latch = new CountDownLatch(pathsMap.size());
 
@@ -229,7 +196,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
       public void processResult(CuratorFramework client, CuratorEvent event) throws Exception {
         try {
           if (event.getStat() == null) {
-            objects.add(pathsMap.get(event.getPath()));
+            notExistsObjects.add(pathsMap.get(event.getPath()));
           }
         } finally {
           latch.countDown();
@@ -237,19 +204,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
       }
     };
 
-    final long start = System.currentTimeMillis();
-
-    try {
-      for (String path : pathsMap.keySet()) {
-        curator.checkExists().inBackground(callback).forPath(path);
-      }
-
-      checkLatch(latch, pathNameforLogs);
-    } finally {
-      log(OperationType.READ, Optional.<Integer> of(objects.size()), Optional.<Integer> absent(), start, pathNameforLogs);
-    }
-
-    return objects;
+    return queryAndReturnResultsThrows(notExistsObjects, pathsMap.keySet(), callback, latch, pathNameforLogs, new AtomicInteger(), CuratorQueryMethod.CHECK_EXISTS);
   }
 
   protected <T extends SingularityId> List<T> notExists(final String pathNameForLogs, final Map<String, T> pathsMap) {
@@ -318,19 +273,7 @@ public abstract class CuratorAsyncManager extends CuratorManager {
       }
     };
 
-    final long start = System.currentTimeMillis();
-
-    try {
-      for (String path : allPathsMap.keySet()) {
-        curator.getData().inBackground(callback).forPath(path);
-      }
-
-      checkLatch(latch, pathNameForLogs);
-    } finally {
-      log(OperationType.READ, Optional.of(resultsMap.size()), Optional.of(bytes.get()), start, pathNameForLogs);
-    }
-
-    return resultsMap;
+    return queryAndReturnResultsThrows(resultsMap, allPathsMap.keySet(), callback, latch, pathNameForLogs, bytes, CuratorQueryMethod.GET_DATA);
   }
 
   protected <T, Q> Map<T, List<Q>> getAsyncNestedChildDataAsMap(final String pathNameForLogs, final Map<String, T> parentPathsMap, final String subpath, final Transcoder<Q> transcoder) {
@@ -339,6 +282,33 @@ public abstract class CuratorAsyncManager extends CuratorManager {
     } catch (Throwable t) {
       throw Throwables.propagate(t);
     }
+  }
+
+  private <T> T queryAndReturnResultsThrows(final T results, final Collection<String> paths, final BackgroundCallback callback, final CountDownLatch latch, final String pathNameForLogs, final AtomicInteger bytes, final CuratorQueryMethod method) throws Exception {
+    final long start = System.currentTimeMillis();
+
+    try {
+      for (String path : paths) {
+        switch (method) {
+          case GET_DATA:
+            curator.getData().inBackground(callback).forPath(path);
+            break;
+          case GET_CHILDREN:
+            curator.getChildren().inBackground(callback).forPath(path);
+            break;
+          case CHECK_EXISTS:
+          default:
+            curator.checkExists().inBackground(callback).forPath(path);
+            break;
+        }
+      }
+
+      checkLatch(latch, pathNameForLogs);
+    } finally {
+      log(OperationType.READ, Optional.of(paths.size()), bytes.get() > 0 ? Optional.of(bytes.get()) : Optional.<Integer>absent(), start, pathNameForLogs);
+    }
+
+    return results;
   }
 
 }
