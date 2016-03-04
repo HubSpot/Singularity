@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 import javax.inject.Singleton;
 
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
+import org.dmfs.rfc5545.recur.RecurrenceRule;
 import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
@@ -36,7 +37,6 @@ import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
-import org.dmfs.rfc5545.recur.RecurrenceRule;
 
 @Singleton
 public class SingularityValidator {
@@ -277,12 +277,12 @@ public class SingularityValidator {
   private boolean isValidCronSchedule(String schedule) {
     return CronExpression.isValidExpression(schedule);
   }
+
   private boolean isValidRFC5545Schedule(String schedule) {
     try {
-      RecurrenceRule recurrenceRule = new RecurrenceRule(schedule);
+      new RecurrenceRule(schedule);
       return true;
-    }catch (InvalidRecurrenceRuleException ex)
-    {
+    } catch (InvalidRecurrenceRuleException ex) {
       return false;
     }
   }
