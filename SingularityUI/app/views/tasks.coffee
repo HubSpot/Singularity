@@ -8,6 +8,8 @@ killTemplate = require '../templates/vex/taskKill'
 
 Utils = require '../utils'
 
+vex = require 'vex'
+
 class TasksView extends View
 
     isSorted: false
