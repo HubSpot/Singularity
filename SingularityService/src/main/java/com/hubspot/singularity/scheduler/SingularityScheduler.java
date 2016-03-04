@@ -9,14 +9,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
 
-import org.dmfs.rfc5545.DateTime;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
-import org.dmfs.rfc5545.recur.RecurrenceRuleIterator;
 import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,11 +64,9 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
+import com.hubspot.singularity.helpers.RFC5545Schedule;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.hubspot.singularity.ScheduleType;
-import org.dmfs.rfc5545.recur.RecurrenceRule;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.DateTimeFormat;
 
 @Singleton
 public class SingularityScheduler {
@@ -671,67 +665,27 @@ public class SingularityScheduler {
         LOG.info("Scheduling requested immediate run of {}", request.getId());
       } else {
         try {
-          long nextRunAtTimestamp = 0;
           Date nextRunAtDate = null;
-          final Date scheduleFrom = new Date(now);
-          if(request.getScheduleTypeSafe() == ScheduleType.RFC5545)
-          {
-            final String schedule = request.getSchedule().get();
-            final RecurrenceRule recurrenceRule = new RecurrenceRule(schedule);
-            if(recurrenceRule.isInfinite())
-            {
-              // set limit at 2100-01-01 00:00:00
-              recurrenceRule.setUntil(new DateTime(2100, 1, 1, 0, 0, 0));
-            }
-
-            // DTSTART is RFC5545 but NOT in the recur string, but its a nice to have? :)
-            Pattern pattern = Pattern.compile("DTSTART=([0-9]{8}T[0-9]{6})");
-            Matcher matcher = pattern.matcher(schedule);
-            DateTime startDateTime;
-            org.joda.time.DateTime dtStart;
-            if(matcher.find())
-            {
-              DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss");
-              dtStart = formatter.parseDateTime(matcher.group(1));
-            }
-            else{
-              dtStart = org.joda.time.DateTime.now();
-              dtStart = dtStart.withSecondOfMinute(0);
-            }
-
-            startDateTime = new DateTime(dtStart.getYear(),(dtStart.getMonthOfYear() - 1), dtStart.getDayOfMonth(),
-                    dtStart.getHourOfDay(), dtStart.getMinuteOfHour(), dtStart.getSecondOfMinute());
-            RecurrenceRuleIterator timeIterator = recurrenceRule.iterator(startDateTime);
-            nextRunAtTimestamp = 0;
-            while(timeIterator.hasNext())
-            {
-              nextRunAtTimestamp = timeIterator.nextMillis();
-              if(nextRunAtTimestamp >= now)
-              {
-                break;
-              }
-              else{
-                nextRunAtTimestamp = 0;
-              }
-            }
-            if (nextRunAtTimestamp <= 0) {
-              return Optional.absent();
-            }
-          }
-          else {
+          long nextRunAtTimestamp = 0;
+          Date scheduleFrom = null;
+          if (request.getScheduleTypeSafe() == ScheduleType.RFC5545) {
+            final RFC5545Schedule rfc5545Schedule = new RFC5545Schedule(request.getSchedule().get());
+            nextRunAtDate = rfc5545Schedule.getNextValidTime();
+            scheduleFrom = new Date(rfc5545Schedule.getStartDateTime().getMillis());
+          } else {
+            scheduleFrom = new Date(now);
             final CronExpression cronExpression = new CronExpression(request.getQuartzScheduleSafe());
             nextRunAtDate = cronExpression.getNextValidTimeAfter(scheduleFrom);
-            if (nextRunAtDate == null) {
-              return Optional.absent();
-            }
-            nextRunAtTimestamp = nextRunAtDate.getTime();
           }
-
+          if (nextRunAtDate == null) {
+            return Optional.absent();
+          }
+          nextRunAtTimestamp = nextRunAtDate.getTime();
           LOG.trace("Calculating nextRunAtDate for {} (schedule: {}): {} (from: {})", request.getId(), request.getSchedule(), nextRunAtDate, scheduleFrom);
           nextRunAt = Math.max(nextRunAtTimestamp, now); // don't create a schedule that is overdue as this is used to indicate that singularity is not fulfilling requests.
           LOG.trace("Scheduling next run of {} (schedule: {}) at {} (from: {})", request.getId(), request.getSchedule(), nextRunAtDate, scheduleFrom);
 
-        } catch (ParseException|InvalidRecurrenceRuleException pe) {
+        } catch (ParseException | InvalidRecurrenceRuleException pe) {
           throw Throwables.propagate(pe);
         }
       }
@@ -752,5 +706,4 @@ public class SingularityScheduler {
 
     return Optional.of(nextRunAt);
   }
-
 }
