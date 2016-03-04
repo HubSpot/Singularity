@@ -131,7 +131,6 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
             recurrenceRule.setUntil(new DateTime(2100, 1, 1, 0, 0, 0));
           }
 
-          // DTSTART is RFC5545 but NOT in the recur string, but its a nice to have
           Pattern pattern = Pattern.compile("DTSTART=([0-9]{8}T[0-9]{6})");
           Matcher matcher = pattern.matcher(schedule);
           DateTime startDateTime;
