@@ -248,8 +248,7 @@ public class SingularityNewTaskChecker {
           LOG.info("Killing {} because it did not become healthy after {}", task.getTaskId(), JavaUtils.durationFromMillis(getKillAfterUnhealthyMillis()));
 
           taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.OVERDUE_NEW_TASK, System.currentTimeMillis(),
-              task.getTaskId(), Optional.of(String.format("Task did not become healthy after %s", JavaUtils.durationFromMillis(getKillAfterUnhealthyMillis()))),
-              Optional.<String>absent()), task.getTaskRequest().getPendingTask().getRunId());
+              task.getTaskId(), Optional.of(String.format("Task did not become healthy after %s", JavaUtils.durationFromMillis(getKillAfterUnhealthyMillis()))), Optional.<String>absent()));
           return false;
         } else {
           return true;
@@ -260,7 +259,7 @@ public class SingularityNewTaskChecker {
         LOG.info("Killing {} because it failed healthchecks", task.getTaskId());
 
         taskManager.createTaskCleanup(new SingularityTaskCleanup(Optional.<String> absent(), TaskCleanupType.UNHEALTHY_NEW_TASK, System.currentTimeMillis(),
-            task.getTaskId(), Optional.of("Task is not healthy"), Optional.<String> absent()), task.getTaskRequest().getPendingTask().getRunId());
+            task.getTaskId(), Optional.of("Task is not healthy"), Optional.<String> absent()));
         return false;
       case HEALTHY:
       case OBSOLETE:
