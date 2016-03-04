@@ -3,6 +3,12 @@ Task = require '../models/Task'
 
 class taskHealthcheckNotificationSubview extends View
 
+    noHealthcheckMessageStates: [
+        'TASK_FAILED',
+        'TASK_FINISHED',
+        'TASK_LOST'
+    ]
+
     events: ->
         _.extend super,
             'click [data-action="viewHealthchecks"]': 'triggerToggleHealthchecks'
@@ -14,7 +20,7 @@ class taskHealthcheckNotificationSubview extends View
 
     render: =>
         return if not @model.synced
-        return if @model.attributes.lastKnownState is 'TASK_FAILED'
+        return if @model.attributes.lastKnownState in @noHealthcheckMessageStates
         @$el.html @template @renderData()
 
     renderData: =>
