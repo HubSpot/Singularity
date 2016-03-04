@@ -240,6 +240,8 @@ public class SingularityConfiguration extends Configuration {
   @Valid
   private GraphiteConfiguration graphiteConfiguration = new GraphiteConfiguration();
 
+  private boolean taskHistoryQueryUsesZkFirst = false;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -974,5 +976,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setMaxStaleTasksPerRequestInZkWhenNoDatabase(Optional<Integer> maxStaleTasksPerRequestInZkWhenNoDatabase) {
     this.maxStaleTasksPerRequestInZkWhenNoDatabase = maxStaleTasksPerRequestInZkWhenNoDatabase;
+  }
+
+  public boolean isTaskHistoryQueryUsesZkFirst() {
+    return taskHistoryQueryUsesZkFirst;
+  }
+
+  public void setTaskHistoryQueryUsesZkFirst(boolean taskHistoryQueryUsesZkFirst) {
+    this.taskHistoryQueryUsesZkFirst = taskHistoryQueryUsesZkFirst;
   }
 }
