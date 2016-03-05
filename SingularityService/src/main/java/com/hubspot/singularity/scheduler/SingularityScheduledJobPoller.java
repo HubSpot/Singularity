@@ -115,7 +115,6 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
       }
       Date nextRunAtDate = null;
       long nextRunAtTimestamp = 0;
-      final long now = System.currentTimeMillis();
       String scheduleExpression = null;
       try {
         if(request.getRequest().getScheduleTypeSafe() == ScheduleType.RFC5545)
