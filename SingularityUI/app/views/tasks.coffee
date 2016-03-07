@@ -64,7 +64,7 @@ class TasksView extends View
                 "#{o.id}"
         res1 = fuzzy.filter(filter, tasks, host)
         res2 = fuzzy.filter(filter, tasks, id)
-        _.pluck(_.sortBy(_.union(res1, res2), (t) => Utils.fuzzyAdjustScore(filter, t)), 'original').reverse()
+        _.uniq(_.pluck(_.sortBy(_.union(res1, res2), (t) => Utils.fuzzyAdjustScore(filter, t)), 'original').reverse())
 
     # Returns the array of tasks that need to be rendered
     filterCollection: =>
