@@ -11,7 +11,7 @@ TasksTableView = require '../views/tasks'
 
 class TasksTableController extends Controller
 
-    initialize: ({@state, @searchFilter}) ->
+    initialize: ({@state, @requestsSubFilter, @searchFilter}) ->
         @title 'Tasks'
 
         if @state is 'decommissioning'
@@ -24,8 +24,7 @@ class TasksTableController extends Controller
             @collections.tasks = new Tasks [], {@state}
         @collections.taskCleanups = new TaskCleanups
         @collections.taskKillRecords = new TaskKillRecords
-
-        @setView new TasksTableView _.extend {@state, @searchFilter},
+        @setView new TasksTableView _.extend {@state, @requestsSubFilter, @searchFilter},
             collection: @collections.tasks
             pendingTasks: @collections.tasksPending
             cleaningTasks: @collections.taskCleanups
