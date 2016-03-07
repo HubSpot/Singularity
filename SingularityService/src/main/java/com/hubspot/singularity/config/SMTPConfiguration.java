@@ -1,8 +1,9 @@
 package com.hubspot.singularity.config;
 
+import java.util.List;
+import java.util.TimeZone;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -39,6 +40,9 @@ public class SMTPConfiguration {
   private String from = "singularity-no-reply@example.com";
 
   @JsonProperty
+  private String mailerDatePattern = "MMM dd h:mm:ss a zzz";
+
+  @JsonProperty
   private int mailMaxThreads = 3;
 
   @NotNull
@@ -65,6 +69,9 @@ public class SMTPConfiguration {
   // Files to tail when sending a task email.
   @JsonProperty
   private List<String> taskEmailTailFiles = Arrays.asList("stdout", "stderr");
+
+  @JsonProperty
+  private TimeZone mailerTimeZone = TimeZone.getTimeZone("UTC");
 
   @JsonProperty("emails")
   private Map<SingularityEmailType, List<SingularityEmailDestination>> emailConfiguration = Maps.newHashMap(ImmutableMap.<SingularityEmailType, List<SingularityEmailDestination>>builder()
@@ -200,5 +207,21 @@ public class SMTPConfiguration {
 
   public void setTaskEmailTailFiles(List<String> taskEmailTailFiles) {
     this.taskEmailTailFiles = taskEmailTailFiles;
+  }
+
+  public String getMailerDatePattern() {
+    return mailerDatePattern;
+  }
+
+  public void setMailerDatePattern(String mailerDatePattern) {
+    this.mailerDatePattern = mailerDatePattern;
+  }
+
+  public TimeZone getMailerTimeZone() {
+    return mailerTimeZone;
+  }
+
+  public void setMailerTimeZone(TimeZone mailerTimeZone) {
+    this.mailerTimeZone = mailerTimeZone;
   }
 }
