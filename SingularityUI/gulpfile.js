@@ -80,6 +80,7 @@ gulp.task('styles', function () {
       'node_modules/messenger/build/css/*.css',
       'node_modules/select2/*.css',
       'node_modules/bootstrap/dist/css/bootstrap.css',
+      'node_modules/sortable/css/sortable-theme-bootstrap.css',
       'app/**/*.styl'
     ])
     .pipe(stylus({
