@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.collect.Lists;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -18,6 +21,7 @@ import com.hubspot.singularity.data.TaskManager;
 
 public abstract class BlendedHistoryHelper<T, Q> {
 
+  private static final Logger LOG = LoggerFactory.getLogger(BlendedHistoryHelper.class);
   protected abstract List<T> getFromZk(Q id);
   protected abstract List<T> getFromHistory(Q id, int historyStart, int numFromHistory);
 
@@ -127,6 +131,10 @@ public abstract class BlendedHistoryHelper<T, Q> {
     }
     for (T item : toRemove) {
       returnedMap.remove(item);
+    }
+
+    if (!foundAllFromHistory) {
+      LOG.trace("Current start index is {}, querying for more history", currentStartIndex);
     }
 
     return foundAllFromHistory;
