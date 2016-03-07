@@ -1,8 +1,7 @@
-Collection = require './collection'
-
+PaginableCollection = require './PaginableCollection'
 TaskHistoryItem = require '../models/TaskHistoryItem'
 
-class TaskSearchResults extends Collection
+class HistoricalTasks extends PaginableCollection
 
     model: TaskHistoryItem
 
@@ -17,5 +16,13 @@ class TaskSearchResults extends Collection
 
     initialize: (models = [], { @params }) ->
 
+    comparator: (task0, task1) =>
+      -(task0.get("updatedAt") - task1.get("updatedAt"))
 
-module.exports = TaskSearchResults
+    parse: (data) ->
+      for task in data
+          task.id = task.taskId.id
+      data
+
+
+module.exports = HistoricalTasks
