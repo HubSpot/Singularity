@@ -16,7 +16,7 @@ class TasksView extends View
 
     templateBase:  require '../templates/tasksTable/tasksBase'
 
-    templateRequestFilter: require '../templates/requestsTable/requestsFilter'
+    templateRequestFilter: require '../templates/requestTypeFilter'
 
     # Figure out which template we'll use for the table based on the filter
     bodyTemplateMap:
