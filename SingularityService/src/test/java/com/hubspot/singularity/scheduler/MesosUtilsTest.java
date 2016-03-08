@@ -111,6 +111,15 @@ public class MesosUtilsTest {
     Assert.assertEquals(numPorts + requestedPorts.size(), MesosUtils.getNumPorts(Collections.singletonList(resource)));
   }
 
+  @Test
+  public void testGetZeroPortsFromResource() {
+    String[] rangesOverlappingRequestPorts = {"23:28"};
+    int numPorts = 0;
+    List<Long> requestedPorts = Arrays.asList(25L, 27L);
+    Resource resource = MesosUtils.getPortsResource(numPorts, buildOffer(rangesOverlappingRequestPorts).getResourcesList(), requestedPorts);
+    Assert.assertEquals(0, MesosUtils.getPorts(resource, numPorts).length);
+  }
+
   public static Resource buildPortRanges(String... ranges) {
     Resource.Builder resources = Resource.newBuilder()
         .setType(Type.RANGES)
