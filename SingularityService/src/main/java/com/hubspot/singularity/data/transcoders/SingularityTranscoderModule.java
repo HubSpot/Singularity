@@ -38,6 +38,7 @@ import com.hubspot.singularity.SingularityTaskMetadata;
 import com.hubspot.singularity.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.SingularityTaskShellCommandUpdate;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
+import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
 import com.hubspot.singularity.expiring.SingularityExpiringPause;
@@ -60,6 +61,7 @@ public class SingularityTranscoderModule implements Module {
     bindTranscoder(binder).asJson(SingularityPendingDeploy.class);
     bindTranscoder(binder).asJson(SingularityPendingTask.class);
     bindTranscoder(binder).asJson(SingularityPendingRequest.class);
+    bindTranscoder(binder).asJson(SingularityUpdatePendingDeployRequest.class);
     bindTranscoder(binder).asJson(SingularityHostState.class);
     bindTranscoder(binder).asJson(SingularityRack.class);
     bindTranscoder(binder).asJson(SingularityRequest.class);

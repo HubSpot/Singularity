@@ -18,6 +18,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.client.MesosClient;
 import com.hubspot.mesos.json.MesosMasterStateObject;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -135,8 +136,8 @@ class SingularityStartup {
   private void checkActiveRequest(SingularityRequestWithState requestWithState, Map<SingularityDeployKey, SingularityPendingTaskId> deployKeyToPendingTaskId, final long timestamp) {
     final SingularityRequest request = requestWithState.getRequest();
 
-    if (request.isOneOff()) {
-      return;
+    if (request.getRequestType() == RequestType.ON_DEMAND || request.getRequestType() == RequestType.RUN_ONCE) {
+      return;  // There's no situation where we'd want to schedule an On Demand or Run Once request at startup, so don't even bother with them.
     }
 
     Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(request.getId());

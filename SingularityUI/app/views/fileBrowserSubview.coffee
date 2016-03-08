@@ -38,10 +38,6 @@ class FileBrowserSubview extends View
             task:                   @task.toJSON()
             emptySandboxMessage:    emptySandboxMessage
 
-        # make sure body is large enough so we can fit the browser
-        minHeight = @$el.offset().top + $(window).height()
-        $('body').css 'min-height', "#{ minHeight }px"
-
         scroll = => $(window).scrollTop @$el.offset().top - 20
         if @scrollAfterRender
             @scrollAfterRender = false

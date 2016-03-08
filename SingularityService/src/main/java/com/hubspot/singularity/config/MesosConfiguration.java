@@ -39,6 +39,9 @@ public class MesosConfiguration {
   private int maxMemoryMbPerInstance = 24000;
   private int maxMemoryMbPerRequest = 450000;
 
+  private Optional<String> credentialPrincipal = Optional.absent();
+  private Optional<String> credentialSecret = Optional.absent();
+
   public int getMaxNumInstancesPerRequest() {
     return maxNumInstancesPerRequest;
   }
@@ -165,5 +168,21 @@ public class MesosConfiguration {
 
   public void setSlaveHttpsPort(Optional<Integer> slaveHttpsPort) {
     this.slaveHttpsPort = slaveHttpsPort;
+  }
+
+  public Optional<String> getCredentialPrincipal() {
+    return credentialPrincipal;
+  }
+
+  public void setCredentialPrincipal(Optional<String> credentialPrincipal) {
+    this.credentialPrincipal = credentialPrincipal;
+  }
+
+  public Optional<String> getCredentialSecret() {
+    return credentialSecret;
+  }
+
+  public void setCredentialSecret(Optional<String> credentialSecret) {
+    this.credentialSecret = credentialSecret;
   }
 }

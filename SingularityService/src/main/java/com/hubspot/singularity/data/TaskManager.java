@@ -605,7 +605,7 @@ public class TaskManager extends CuratorAsyncManager {
       msg = String.format("%s (%s)", msg, task.getTaskRequest().getPendingTask().getMessage().get());
     }
 
-    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(task.getTaskId(), now, ExtendedTaskState.TASK_LAUNCHED, Optional.of(msg)));
+    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(task.getTaskId(), now, ExtendedTaskState.TASK_LAUNCHED, Optional.of(msg), Optional.<String>absent()));
     saveLastActiveTaskStatus(new SingularityTaskStatusHolder(task.getTaskId(), Optional.<TaskStatus>absent(), now, serverId, Optional.of(task.getOffer().getSlaveId().getValue())));
 
     try {
@@ -733,7 +733,7 @@ public class TaskManager extends CuratorAsyncManager {
       msg.append(cleanup.getMessage().get());
     }
 
-    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(cleanup.getTaskId(), cleanup.getTimestamp(), ExtendedTaskState.TASK_CLEANING, Optional.of(msg.toString())));
+    saveTaskHistoryUpdate(new SingularityTaskHistoryUpdate(cleanup.getTaskId(), cleanup.getTimestamp(), ExtendedTaskState.TASK_CLEANING, Optional.of(msg.toString()), Optional.<String>absent()));
   }
 
   public SingularityCreateResult createTaskCleanup(SingularityTaskCleanup cleanup) {
