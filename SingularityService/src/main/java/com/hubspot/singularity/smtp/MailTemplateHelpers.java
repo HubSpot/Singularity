@@ -123,8 +123,13 @@ public class MailTemplateHelpers {
 
     final Optional<MesosFileChunkObject> logChunkObject;
 
+    Optional<Long> maybeOffset = getMaybeOffset(slaveHostname, fullPath, filename, directory);
+
+    if (!maybeOffset.isPresent()) {
+      return Optional.absent();
+    }
     try {
-      logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.<Long>absent(), Optional.of(logLength));
+      logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.of(Math.min(0, maybeOffset.get() - logLength)), Optional.of(logLength));
     } catch (RuntimeException e) {
       LOG.error("Sandboxmanager failed to read {}/{} on slave {}", directory.get(), filename, slaveHostname, e);
       return Optional.absent();
@@ -136,6 +141,23 @@ public class MailTemplateHelpers {
       LOG.error("Failed to get {} log for {}", filename, taskId.getId());
       return Optional.absent();
     }
+  }
+
+  private Optional<Long> getMaybeOffset(String slaveHostname, String fullPath, String filename, Optional<String> directory) {
+    Optional<MesosFileChunkObject> logChunkObject;
+    try {
+      logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.<Long>absent(), Optional.<Long>absent());
+    } catch (RuntimeException e) {
+      LOG.error("Sandboxmanager failed to read {}/{} on slave {}", directory.get(), filename, slaveHostname, e);
+      return Optional.absent();
+    }
+    if (logChunkObject.isPresent()) {
+      return Optional.of(logChunkObject.get().getOffset());
+    } else {
+      LOG.error("Failed to get offset for log file {}", fullPath);
+      return Optional.absent();
+    }
+
   }
 
   public String getFileName(String path) {
