@@ -36,6 +36,8 @@ scheduler:
   environment:
     - DOCKER_HOST
     - LOAD_BALANCER_URI=http://localhost:8080/baragon/v2/request
+    - SINGULARITY_SMTP_HOST=localhost
+    - SINGULARITY_SMTP_PORT=1025
 
 baragonservice:
   image: hubspot/baragonservice:0.1.11
@@ -52,3 +54,7 @@ baragonagent:
     NGINX_PORT: 80
     BARAGON_PORT: 8882
     BARAGON_AGENT_GROUP: test
+
+mailhog:
+  image: mailhog/mailhog
+  net: host
