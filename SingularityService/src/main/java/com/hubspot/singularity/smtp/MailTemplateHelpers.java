@@ -19,6 +19,7 @@ import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityEmailType;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskMetadata;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -46,15 +47,31 @@ public class MailTemplateHelpers {
     this.smtpConfiguration = singularityConfiguration.getSmtpConfiguration();
   }
 
+  public List<SingularityMailTaskMetadata> getJadeTaskMetadata(Collection<SingularityTaskMetadata> taskMetadata) {
+    List<SingularityMailTaskMetadata> output = Lists.newArrayListWithCapacity(taskMetadata.size());
+
+    for (SingularityTaskMetadata metadataElement : taskMetadata) {
+      output.add(
+              new SingularityMailTaskMetadata(
+                      DateFormatUtils.formatUTC(metadataElement.getTimestamp(), TASK_DATE_PATTERN),
+                      metadataElement.getType(),
+                      metadataElement.getTitle(),
+                      metadataElement.getUser().or(""),
+                      metadataElement.getMessage().or("")));
+    }
+
+    return output;
+  }
+
   public List<SingularityMailTaskHistoryUpdate> getJadeTaskHistory(Collection<SingularityTaskHistoryUpdate> taskHistory) {
     List<SingularityMailTaskHistoryUpdate> output = Lists.newArrayListWithCapacity(taskHistory.size());
 
     for (SingularityTaskHistoryUpdate taskUpdate : taskHistory) {
       output.add(
-          new SingularityMailTaskHistoryUpdate(
-              DateFormatUtils.formatUTC(taskUpdate.getTimestamp(), TASK_DATE_PATTERN),
-              WordUtils.capitalize(taskUpdate.getTaskState().getDisplayName()),
-              taskUpdate.getStatusMessage().or("")));
+              new SingularityMailTaskHistoryUpdate(
+                      DateFormatUtils.formatUTC(taskUpdate.getTimestamp(), TASK_DATE_PATTERN),
+                      WordUtils.capitalize(taskUpdate.getTaskState().getDisplayName()),
+                      taskUpdate.getStatusMessage().or("")));
     }
 
     return output;
