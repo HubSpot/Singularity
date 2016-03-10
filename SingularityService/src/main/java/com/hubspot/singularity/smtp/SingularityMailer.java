@@ -135,7 +135,7 @@ public class SingularityMailer implements Managed {
     templateProperties.put("numRetries", request.getNumRetriesOnFailure().or(0));
   }
 
-  private void populateTaskEmailProperties(Map<String, Object> templateProperties, SingularityTaskId taskId, Collection<SingularityTaskHistoryUpdate> taskHistory, ExtendedTaskState taskState) {
+  private void populateTaskEmailProperties(Map<String, Object> templateProperties, SingularityTaskId taskId, Collection<SingularityTaskHistoryUpdate> taskHistory, ExtendedTaskState taskState, List<SingularityTaskMetadata> taskMetadata) {
     Optional<SingularityTask> task = taskManager.getTask(taskId);
     Optional<String> directory = taskManager.getDirectory(taskId);
 
@@ -162,6 +162,8 @@ public class SingularityMailer implements Managed {
     templateProperties.put("taskStateKilled", taskState == ExtendedTaskState.TASK_KILLED);
     templateProperties.put("taskStateRunning", taskState == ExtendedTaskState.TASK_RUNNING);
 
+    templateProperties.put("taskHasMetadata", !taskMetadata.isEmpty());
+    templateProperties.put("taskMetadata", mailTemplateHelpers.getJadeTaskMetadata(taskMetadata));
     templateProperties.put("taskUpdates", mailTemplateHelpers.getJadeTaskHistory(taskHistory));
     templateProperties.put("taskRan", mailTemplateHelpers.didTaskRun(taskHistory));
   }
@@ -294,7 +296,7 @@ public class SingularityMailer implements Managed {
 
     final Map<String, Object> templateProperties = Maps.newHashMap();
     populateRequestEmailProperties(templateProperties, request);
-    populateTaskEmailProperties(templateProperties, taskId, taskHistory, taskState);
+    populateTaskEmailProperties(templateProperties, taskId, taskHistory, taskState, taskMetadata);
     templateProperties.putAll(extraProperties);
 
     final String subject = mailTemplateHelpers.getSubjectForTaskHistory(taskId, taskState, emailType, taskHistory);

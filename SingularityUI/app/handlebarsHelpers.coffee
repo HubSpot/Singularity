@@ -24,6 +24,9 @@ Handlebars.registerHelper "ifAll", (conditions..., options)->
         return options.inverse @ unless condition?
     options.fn @
 
+Handlebars.registerHelper 'ifNotEmptyArray', (arr, options) ->
+    if arr is [] then options.inverse @ else options.fn @
+
 Handlebars.registerHelper 'percentageOf', (v1, v2) ->
     (v1/v2) * 100
 
