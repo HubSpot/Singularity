@@ -30,4 +30,3 @@ database:
 logging:
   loggers:
     "com.hubspot.singularity" : TRACE
-
