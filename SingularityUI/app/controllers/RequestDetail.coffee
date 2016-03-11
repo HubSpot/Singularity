@@ -6,7 +6,7 @@ RequestDeployStatus    = require '../models/RequestDeployStatus'
 Tasks                  = require '../collections/Tasks'
 TaskCleanups           = require '../collections/TaskCleanups'
 RequestTasks           = require '../collections/RequestTasks'
-RequestHistoricalTasks = require '../collections/RequestHistoricalTasks'
+HistoricalTasks = require '../collections/HistoricalTasks'
 RequestDeployHistory   = require '../collections/RequestDeployHistory'
 RequestHistory         = require '../collections/RequestHistory'
 Requests               = require '../collections/Requests'
@@ -55,7 +55,7 @@ class RequestDetailController extends Controller
             state:     'scheduled'
 
         @collections.requestHistory  = new RequestHistory         [], {@requestId}
-        @collections.taskHistory     = new RequestHistoricalTasks [], {@requestId}
+        @collections.taskHistory     = new HistoricalTasks [], {params: {requestId: @requestId}}
         @collections.deployHistory   = new RequestDeployHistory   [], {@requestId}
 
         # For starring (never fetched here)

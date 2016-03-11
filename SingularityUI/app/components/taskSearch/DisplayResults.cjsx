@@ -1,5 +1,5 @@
 React = require 'react'
-TaskSearchResults = require '../../collections/TaskSearchResults'
+HistoricalTasks = require '../../collections/HistoricalTasks'
 
 QueryParameters = require '../common/QueryParameters'
 FormField = require '../common/formItems/FormField'
@@ -43,7 +43,7 @@ DisplayResults = React.createClass
     fetchCollection: ->
         unless @props.holdOffOnSearching
             @willFetch = false
-        @collection = new TaskSearchResults [],
+        @collection = new HistoricalTasks [],
             params: {
                 requestId : @props.requestId
                 deployId : @props.deployId
