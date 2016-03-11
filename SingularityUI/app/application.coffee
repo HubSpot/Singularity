@@ -120,8 +120,7 @@ class Application
                         Messenger().error
                             message:    '''
                                             <p>Expected JSON but received something else (possibly html). The response has been saved to your js console.</p>
-                                            <p>One possible cause is an http redirect to an html web page, which could happen if your session has expired.</p>
-                                            <p>Please log in again, then repeat this request.</p>
+                                            <p>One possible cause is an http redirect to an html web page.</p>
                                         '''
                         throw new Error "Expected JSON in response but received something else"
                     serverMessage = jqxhr.responseText
