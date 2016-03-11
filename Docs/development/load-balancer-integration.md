@@ -13,7 +13,7 @@ Singularity supports integration with a Load Balancer API (LB API) like [Baragon
 
 Singularity POSTs a LoadBalancerRequest (LBR) with an id (LBR ID) and tasks to add and/or remove from load balancers. Singularity expects the LB API to be asynchronous and store state about operations using the provided LBR ID, which the LB API relies on Singularity to supply and should not infer context from. Singularity expects the LB API to respond to all LBR (POST, GET, or DELETE) with a LoadBalancerResponse JSON object which has the following fields:
 
-- LoadBalancerState (LBS) (one of FAILED, WAITING, SUCCESS, CANCELING, CANCELED)
+- LoadBalancerState (LBS) (one of FAILED, WAITING, SUCCESS, CANCELING, CANCELED, INVALID_REQUEST_NOOP)
 - LoadBalancerRequestId (echos back the LBR ID)
 
 Singularity makes a POST request to start a change of state (add or remove tasks from load balancers), but can handle any LBS response from any request. 

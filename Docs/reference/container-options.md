@@ -8,7 +8,7 @@ The default [mesos containerizer](http://mesos.apache.org/documentation/latest/m
 ###Mesos Docker Containerizer
 The [docker containerizer](https://mesos.apache.org/documentation/latest/docker-containerizer/) that ships with Mesos, will manage the starting and stopping of your docker container as well as mapping ports, adding environment variables, and mapping volumes in the container to the Mesos sandbox for that task. You can enable this containerizer by adding `docker` to the arguments of `--containerizers` when running `mesos-slave`.
 
-To use Singularity with the Docker containerizer, add a [`containerInfo` field](reference/api.md#model-SingularityContainerInfo) with a `type` of `DOCKER` to the [SingularityDeploy](reference/api.md#model-SingularityDeploy) object when creating a deploy (without specifying a `customExecutorCmd`). The Singularity deploy object's [`containerInfo` field](reference/api.md#model-SingularityContainerInfo) mirrors the Mesos `containerInfo` definition:
+To use Singularity with the Docker containerizer, add a [`containerInfo` field](api.md#model-SingularityContainerInfo) with a `type` of `DOCKER` to the [SingularityDeploy](api.md#model-SingularityDeploy) object when creating a deploy (without specifying a `customExecutorCmd`). The Singularity deploy object's [`containerInfo` field](api.md#model-SingularityContainerInfo) mirrors the Mesos `containerInfo` definition:
 
 ```
 {
@@ -60,7 +60,7 @@ A few special notes and environment variables that are set:
 - The container name will be a configured prefix (`se-` by default) and the the task id (`SingularityExcutorCleanup` uses this to optionally clean up old contaienrs that are managed by Singularity)
 - SingularityExecutor will explicitly try to pull the image (ie, must be from a repository reachable by the slave)
 
-Here is an example deploy you can use with the [docker-compose](development/docker.md) setup to get you started:
+Here is an example deploy you can use with the [docker-compose](../development/developing-with-docker.md) setup to get you started:
 
 ```
 {
