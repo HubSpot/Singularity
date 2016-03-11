@@ -128,7 +128,7 @@ public class MailTemplateHelpers {
       return Optional.absent();
     }
     try {
-      logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.of(Math.min(0, maybeOffset.get() - logLength)), Optional.of(logLength));
+      logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.of(Math.max(0, maybeOffset.get() - logLength)), Optional.of(logLength));
     } catch (RuntimeException e) {
       LOG.error("Sandboxmanager failed to read {}/{} on slave {}", directory.get(), filename, slaveHostname, e);
       return Optional.absent();
