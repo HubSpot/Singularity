@@ -113,9 +113,18 @@ class Application
                     message:   "<p>Could not reach the Singularity API. Please make sure SingularityUI is properly set up.</p><p>If running through Brunch, this might be your browser blocking cross-domain requests.</p>"
             else
                 try
-                  serverMessage = JSON.parse(jqxhr.responseText).message or jqxhr.responseText
+                    serverMessage = JSON.parse(jqxhr.responseText).message or jqxhr.responseText
                 catch
-                  serverMessage = jqxhr.responseText
+                    if jqxhr.status is 200
+                        console.error jqxhr
+                        Messenger().error
+                            message:    '''
+                                            <p>Expected JSON but received something else (possibly html). The response has been saved to your js console.</p>
+                                            <p>One possible cause is an http redirect to an html web page, which could happen if your session has expired.</p>
+                                            <p>Please log in again, then repeat this request.</p>
+                                        '''
+                        throw new Error "Expected JSON in response but received something else"
+                    serverMessage = jqxhr.responseText
 
                 serverMessage = _.escape serverMessage
                 id = "message_" + Date.now()
