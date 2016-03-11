@@ -2,7 +2,7 @@ View = require './view'
 
 class SimpleSubview extends View
 
-    currentPage: 0
+    currentPage: 1
 
     events: ->
         _.extend super,
@@ -24,7 +24,7 @@ class SimpleSubview extends View
         super.afterRender()
 
     renderData: ->
-        metadataElements = @getMetadataElementsOfCategory()
+        metadataElements = @getMetadataElementsOfLevel()
         metadataElementsOnPage = @getMetadataElementsOnPage metadataElements
         data =
             config:    config
@@ -32,26 +32,20 @@ class SimpleSubview extends View
             metadataElementToDisplay: metadataElementsOnPage
             alertClass: @params.alertClass
             currentPage: @currentPage
-            isNotFirstPage: @currentPage > 0
+            isNotFirstPage: @currentPage > 1
             isNotLastPage: @getUpperBound() < metadataElements.length - 1
 
         data
 
-    metadataElementCategoryIs: (metadataElement, category) ->
-        return true
-
     getLowerBound: () ->
-        @currentPage * @numberPerPage
+        (@currentPage - 1) * @numberPerPage
 
     getUpperBound: () ->
-        if @currentPage is 0
-            @numberPerPage - 1 #otherwise you multiply by 0, subtract 1, and get -1
-        else
-            @currentPage * (@numberPerPage + 1) - 1
+        @currentPage * @numberPerPage - 1
 
-    getMetadataElementsOfCategory: () ->
+    getMetadataElementsOfLevel: () ->
         metadataElements = @model.attributes.taskMetadata.filter (metadataElement) =>
-            @metadataElementCategoryIs metadataElement, @params.category
+            metadataElement.level is @params.level
 
     getMetadataElementsOnPage: (metadataElements) ->
         if @getUpperBound() >= metadataElements.length
@@ -61,12 +55,12 @@ class SimpleSubview extends View
 
     increasePage: (event) ->
         event.preventDefault()
-        @currentPage = @currentPage + 1 unless @currentPage + 1 >= @getMetadataElementsOfCategory().length
+        @currentPage = @currentPage + 1 unless @getUpperBound() >= @getMetadataElementsOfLevel().length - 1
         @render()
 
     decreasePage: (event) ->
         event.preventDefault()
-        @currentPage-- unless @currentPage < 1
+        @currentPage-- unless @currentPage < 2
         @render()
 
 module.exports = SimpleSubview

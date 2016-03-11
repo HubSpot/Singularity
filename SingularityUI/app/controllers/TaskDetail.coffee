@@ -37,7 +37,7 @@ class TaskDetailController extends Controller
         alerts:                     require '../templates/alerts'
         latestLog:                  require '../templates/taskDetail/taskLatestLog'
         shellCommands:              require '../templates/taskDetail/taskShellCommands'
-        taskInfoMetadata:           require '../templates/taskDetail/taskInfoMetadata'
+        taskMetadataTable:          require '../templates/taskDetail/taskMetadataTable'
 
     initialize: ({@taskId, @filePath}) ->
         @title @taskId
@@ -80,17 +80,17 @@ class TaskDetailController extends Controller
             template:       @templates.healthcheckNotification
             pendingDeploys: @collections.pendingDeploys
 
-        @subviews.taskFailureMetadata = new TaskMetadataAlertSubview
+        @subviews.taskErrorMetadata = new TaskMetadataAlertSubview
             model: @models.task
             template: @templates.taskMetadataAlert
-            category: 'FAILURE'
+            level: 'ERROR'
             alertClass: 'danger'
             numberPerPage: 5
 
-        @subviews.taskWarningMetadata = new TaskMetadataAlertSubview
+        @subviews.taskWarnMetadata = new TaskMetadataAlertSubview
             model: @models.task
             template: @templates.taskMetadataAlert
-            category: 'WARNING'
+            level: 'WARN'
             alertClass: 'warning'
             numberPerPage: 1
 
@@ -141,9 +141,9 @@ class TaskDetailController extends Controller
             model: @models.task
             template: @templates.shellCommands
 
-        @subviews.taskInfoMetadata = new SimpleSubview
+        @subviews.taskMetadataTable = new SimpleSubview
             model: @models.task
-            template: @templates.taskInfoMetadata
+            template: @templates.taskMetadataTable
 
         #
         # Getting stuff in gear

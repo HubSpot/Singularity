@@ -57,7 +57,8 @@ public class MailTemplateHelpers {
                       metadataElement.getType(),
                       metadataElement.getTitle(),
                       metadataElement.getUser().or(""),
-                      metadataElement.getMessage().or("")));
+                      metadataElement.getMessage().or(""),
+                      metadataElement.getLevel().toString()));
     }
 
     return output;
