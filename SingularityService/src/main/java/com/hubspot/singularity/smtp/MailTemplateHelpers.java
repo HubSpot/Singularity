@@ -52,13 +52,13 @@ public class MailTemplateHelpers {
 
     for (SingularityTaskMetadata metadataElement : taskMetadata) {
       output.add(
-              new SingularityMailTaskMetadata(
-                      DateFormatUtils.formatUTC(metadataElement.getTimestamp(), TASK_DATE_PATTERN),
-                      metadataElement.getType(),
-                      metadataElement.getTitle(),
-                      metadataElement.getUser().or(""),
-                      metadataElement.getMessage().or(""),
-                      metadataElement.getLevel().toString()));
+          new SingularityMailTaskMetadata(
+              DateFormatUtils.formatUTC(metadataElement.getTimestamp(), TASK_DATE_PATTERN),
+              metadataElement.getType(),
+              metadataElement.getTitle(),
+              metadataElement.getUser().or(""),
+              metadataElement.getMessage().or(""),
+              metadataElement.getLevel().toString()));
     }
 
     return output;
@@ -69,10 +69,10 @@ public class MailTemplateHelpers {
 
     for (SingularityTaskHistoryUpdate taskUpdate : taskHistory) {
       output.add(
-              new SingularityMailTaskHistoryUpdate(
-                      DateFormatUtils.formatUTC(taskUpdate.getTimestamp(), TASK_DATE_PATTERN),
-                      WordUtils.capitalize(taskUpdate.getTaskState().getDisplayName()),
-                      taskUpdate.getStatusMessage().or("")));
+          new SingularityMailTaskHistoryUpdate(
+              DateFormatUtils.formatUTC(taskUpdate.getTimestamp(), TASK_DATE_PATTERN),
+              WordUtils.capitalize(taskUpdate.getTaskState().getDisplayName()),
+              taskUpdate.getStatusMessage().or("")));
     }
 
     return output;
