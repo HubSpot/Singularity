@@ -9,15 +9,17 @@ import com.google.common.collect.ComparisonChain;
 
 public class SingularityTaskMetadata extends SingularityTaskIdHolder implements Comparable<SingularityTaskMetadata> {
 
+  private static final MetadataLevel DEFAULT_METADATA_LEVEL = MetadataLevel.INFO;
   private final long timestamp;
   private final String type;
   private final String title;
+  private final MetadataLevel level;
   private final Optional<String> message;
   private final Optional<String> user;
 
   @JsonCreator
   public SingularityTaskMetadata(@JsonProperty("taskId") SingularityTaskId taskId, @JsonProperty("timestamp") long timestamp, @JsonProperty("type") String type, @JsonProperty("title") String title,
-      @JsonProperty("message") Optional<String> message, @JsonProperty("user") Optional<String> user) {
+      @JsonProperty("message") Optional<String> message, @JsonProperty("user") Optional<String> user, @JsonProperty("level") Optional<MetadataLevel> level) {
     super(taskId);
     Preconditions.checkNotNull(type);
     Preconditions.checkState(!type.contains("/"));
@@ -26,6 +28,7 @@ public class SingularityTaskMetadata extends SingularityTaskIdHolder implements 
     this.title = title;
     this.message = message;
     this.user = user;
+    this.level = level.or(DEFAULT_METADATA_LEVEL);
   }
 
   public long getTimestamp() {
@@ -48,11 +51,13 @@ public class SingularityTaskMetadata extends SingularityTaskIdHolder implements 
     return user;
   }
 
+  public MetadataLevel getLevel() { return level; }
+
   @Override
   public int compareTo(SingularityTaskMetadata o) {
     return ComparisonChain.start()
         .compare(timestamp, o.getTimestamp())
-        .compare(type, o.getType())
+        .compare(type, o.getType()).compare(level, o.getLevel())
         .compare(getTaskId().getId(), o.getTaskId().getId())
         .result();
   }
@@ -78,12 +83,13 @@ public class SingularityTaskMetadata extends SingularityTaskIdHolder implements 
             && Objects.equal(this.title, that.title)
             && Objects.equal(this.message, that.message)
             && Objects.equal(this.timestamp, that.timestamp)
-            && Objects.equal(this.getTaskId(), that.getTaskId());
+            && Objects.equal(this.getTaskId(), that.getTaskId())
+            && Objects.equal(this.level, that.level);
   }
 
   @Override
   public String toString() {
-    return "SingularityTaskMetadata [timestamp=" + timestamp + ", type=" + type + ", title=" + title + ", message=" + message + ", user=" + user + ", taskId=" + getTaskId() + "]";
+    return "SingularityTaskMetadata [timestamp=" + timestamp + ", type=" + type + ", title=" + title + ", message=" + message + ", user=" + user + ", taskId=" + getTaskId() + ", level=" + getLevel() + "]";
   }
 
 }
