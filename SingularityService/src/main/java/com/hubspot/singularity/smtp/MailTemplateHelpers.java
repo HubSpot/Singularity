@@ -3,6 +3,7 @@ package com.hubspot.singularity.smtp;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -19,7 +20,6 @@ import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityEmailType;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskMetadata;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -30,49 +30,51 @@ public class MailTemplateHelpers {
 
   private static final Logger LOG = LoggerFactory.getLogger(MailTemplateHelpers.class);
 
-  private static final String TASK_DATE_PATTERN = "MMM dd HH:mm:ss";
   private static final String TASK_LINK_FORMAT = "%s/task/%s";
   private static final String REQUEST_LINK_FORMAT = "%s/request/%s";
   private static final String LOG_LINK_FORMAT = "%s/task/%s/tail/%s";
+  private static final String DEFAULT_TIMESTAMP_FORMAT = "MMM dd h:mm:ss a zzz";
 
   private final SandboxManager sandboxManager;
 
   private final Optional<String> uiBaseUrl;
   private final Optional<SMTPConfiguration> smtpConfiguration;
+  private final Optional<String> taskDatePattern;
+  private final Optional<TimeZone> timeZone;
 
   @Inject
   public MailTemplateHelpers(SandboxManager sandboxManager, SingularityConfiguration singularityConfiguration) {
     this.uiBaseUrl = singularityConfiguration.getUiConfiguration().getBaseUrl();
     this.sandboxManager = sandboxManager;
     this.smtpConfiguration = singularityConfiguration.getSmtpConfiguration();
-  }
-
-  public List<SingularityMailTaskMetadata> getJadeTaskMetadata(Collection<SingularityTaskMetadata> taskMetadata) {
-    List<SingularityMailTaskMetadata> output = Lists.newArrayListWithCapacity(taskMetadata.size());
-
-    for (SingularityTaskMetadata metadataElement : taskMetadata) {
-      output.add(
-              new SingularityMailTaskMetadata(
-                      DateFormatUtils.formatUTC(metadataElement.getTimestamp(), TASK_DATE_PATTERN),
-                      metadataElement.getType(),
-                      metadataElement.getTitle(),
-                      metadataElement.getUser().or(""),
-                      metadataElement.getMessage().or(""),
-                      metadataElement.getLevel().toString()));
+    if (this.smtpConfiguration.isPresent()) {
+      this.taskDatePattern = Optional.of(this.smtpConfiguration.get().getMailerDatePattern());
+      this.timeZone = Optional.of(this.smtpConfiguration.get().getMailerTimeZone());
+    } else {
+      this.taskDatePattern = Optional.absent();
+      this.timeZone = Optional.absent();
     }
-
-    return output;
   }
 
   public List<SingularityMailTaskHistoryUpdate> getJadeTaskHistory(Collection<SingularityTaskHistoryUpdate> taskHistory) {
     List<SingularityMailTaskHistoryUpdate> output = Lists.newArrayListWithCapacity(taskHistory.size());
 
     for (SingularityTaskHistoryUpdate taskUpdate : taskHistory) {
+      String date;
+      if (taskDatePattern.isPresent() && timeZone.isPresent()) {
+        date = DateFormatUtils.format(taskUpdate.getTimestamp(), taskDatePattern.get(), timeZone.get());
+      } else if (taskDatePattern.isPresent()) {
+        date = DateFormatUtils.formatUTC(taskUpdate.getTimestamp(), taskDatePattern.get());
+      } else if (timeZone.isPresent()) {
+        date = DateFormatUtils.format(taskUpdate.getTimestamp(), DEFAULT_TIMESTAMP_FORMAT, timeZone.get());
+      } else {
+        date = DateFormatUtils.format(taskUpdate.getTimestamp(), DEFAULT_TIMESTAMP_FORMAT);
+      }
       output.add(
-              new SingularityMailTaskHistoryUpdate(
-                      DateFormatUtils.formatUTC(taskUpdate.getTimestamp(), TASK_DATE_PATTERN),
-                      WordUtils.capitalize(taskUpdate.getTaskState().getDisplayName()),
-                      taskUpdate.getStatusMessage().or("")));
+          new SingularityMailTaskHistoryUpdate(
+              date,
+              WordUtils.capitalize(taskUpdate.getTaskState().getDisplayName()),
+              taskUpdate.getStatusMessage().or("")));
     }
 
     return output;
@@ -120,8 +122,13 @@ public class MailTemplateHelpers {
 
     final Optional<MesosFileChunkObject> logChunkObject;
 
+    Optional<Long> maybeOffset = getMaybeOffset(slaveHostname, fullPath, filename, directory);
+
+    if (!maybeOffset.isPresent()) {
+      return Optional.absent();
+    }
     try {
-      logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.of(0L), Optional.of(logLength));
+      logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.of(Math.max(0, maybeOffset.get() - logLength)), Optional.of(logLength));
     } catch (RuntimeException e) {
       LOG.error("Sandboxmanager failed to read {}/{} on slave {}", directory.get(), filename, slaveHostname, e);
       return Optional.absent();
@@ -133,6 +140,23 @@ public class MailTemplateHelpers {
       LOG.error("Failed to get {} log for {}", filename, taskId.getId());
       return Optional.absent();
     }
+  }
+
+  private Optional<Long> getMaybeOffset(String slaveHostname, String fullPath, String filename, Optional<String> directory) {
+    Optional<MesosFileChunkObject> logChunkObject;
+    try {
+      logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.<Long>absent(), Optional.<Long>absent());
+    } catch (RuntimeException e) {
+      LOG.error("Sandboxmanager failed to read {}/{} on slave {}", directory.get(), filename, slaveHostname, e);
+      return Optional.absent();
+    }
+    if (logChunkObject.isPresent()) {
+      return Optional.of(logChunkObject.get().getOffset());
+    } else {
+      LOG.error("Failed to get offset for log file {}", fullPath);
+      return Optional.absent();
+    }
+
   }
 
   public String getFileName(String path) {
