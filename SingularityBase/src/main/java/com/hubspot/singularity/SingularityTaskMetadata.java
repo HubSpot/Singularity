@@ -57,7 +57,8 @@ public class SingularityTaskMetadata extends SingularityTaskIdHolder implements 
   public int compareTo(SingularityTaskMetadata o) {
     return ComparisonChain.start()
         .compare(timestamp, o.getTimestamp())
-        .compare(type, o.getType()).compare(level, o.getLevel())
+        .compare(type, o.getType())
+        .compare(level, o.getLevel())
         .compare(getTaskId().getId(), o.getTaskId().getId())
         .result();
   }
