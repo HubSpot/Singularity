@@ -1,6 +1,6 @@
 ## Singularity Extras for Mesos Slaves
 
-*This document assumes you've already followed the steps from [install.md](install.md)*
+*This document assumes you've already followed the steps from [install.md](../getting-started/install.md)*
 
 - `SingularityExecutor`, a custom Mesos executor. This executor provides numerous benefits over the default Mesos executor, including:
   - Thread usage limits

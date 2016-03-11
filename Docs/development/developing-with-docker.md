@@ -18,7 +18,7 @@ Then simply run `docker-compose up` and it will start containers for...
 - Singularity UI => [http://localhost:7099/singularity](http://localhost:7099/singularity)
 - Baragon UI => [http://localhost:8080/baragon/v2/ui](http://localhost:8080/baragon/v2/ui)
 
-*if using [boot2docker](http://boot2docker.io/) or another vm, replace localhost with the ip of your vm*
+*if using [boot2docker](http://boot2docker.io/) or another vm, replace `localhost` with the ip of your vm*
 
 The docker-compose example clsuter will always run off of the most recent release tag.
 
@@ -52,7 +52,7 @@ Singularity uses the docker-maven-plugin for building its images. There are a fe
 
 ### Logs and Entering Containers
 
-If you are not attached to the docker-compose process, you can check the output of your containers using `docekr logs`. Start by checking `docker ps` to see what containers are running. Generally they will have names like `singularity_(process name)`. From there you can run `docker logs (name)` to see the stdout for that container.
+If you are not attached to the docker-compose process, you can check the output of your containers using `docker logs`. Start by checking `docker ps` to see what containers are running. Generally they will have names like `singularity_(process name)`. From there you can run `docker logs (name)` to see the stdout for that container.
 
 Need to see more than stdout? You can also get a shell inside the container and poke around. Once you know the name of your container, you can run `docker exec -it (name) /bin/bash` to get am interactive shell inside the running container.
 
