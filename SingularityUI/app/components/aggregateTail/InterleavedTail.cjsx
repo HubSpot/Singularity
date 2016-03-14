@@ -80,6 +80,12 @@ InterleavedTail = React.createClass
       logLines.state.get('moreToFetch')
     )
 
+  reachedStartOfFile: ->
+    _.some(@props.logLines, (logLines) -> logLines.getMinOffset() is 0)
+
+  reachedEndOfFile: ->
+    _.some(@props.logLines, (logLines) -> logLines.state.get('reachedEndOfFile'))
+
   fetchNext: ->
     promises = []
     oldLineCount = @props.logLines.map (logLines) => {taskId: logLines.taskId, length: logLines.length}
@@ -207,6 +213,8 @@ InterleavedTail = React.createClass
         fetchPrevious={@fetchPrevious}
         taskState={''}
         moreToFetch={@moreToFetch}
+        reachedStartOfFile={@reachedStartOfFile}
+        reachedEndOfFile={@reachedEndOfFile}
         activeColor={@props.activeColor}
         colorMap={@taskIdToColorMap}
         search={@props.search} />

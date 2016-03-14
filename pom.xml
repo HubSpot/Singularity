@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>basepom</artifactId>
-    <version>12.9</version>
+    <version>15.3</version>
   </parent>
 
   <artifactId>Singularity</artifactId>
@@ -32,6 +32,7 @@
 
   <properties>
     <singularity.jar.name.format>${project.artifactId}-${project.version}</singularity.jar.name.format>
+    <basepom.jar.name.format>${singularity.jar.name.format}</basepom.jar.name.format>
 
     <!-- build the docs for releases -->
     <basepom.release.profiles>oss-release,build-swagger-documentation</basepom.release.profiles>
@@ -288,14 +289,6 @@
               <version>${project.version}</version>
             </dependency>
           </dependencies>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-shade-plugin</artifactId>
-          <configuration>
-            <createDependencyReducedPom>true</createDependencyReducedPom>
-            <finalName>${singularity.jar.name.format}</finalName>
-          </configuration>
         </plugin>
         <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
         <plugin>
