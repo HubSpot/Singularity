@@ -97,8 +97,6 @@ class RequestFormBase extends FormBaseView
             
             requestObject.rackAffinity = @getSelect2Val "#rackAffinity-#{ type }"
 
-            debugger
-
         if type in ['SCHEDULED', 'ON_DEMAND', 'RUN_ONCE']
             killOld = parseInt @$("#killOldNRL-#{ type }").val()
             requestObject.killOldNonLongRunningTasksAfterMillis = killOld if killOld
