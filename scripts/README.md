@@ -131,7 +131,7 @@ An offline version of `logfetch` that will aid in searching through your directo
 |-e , --end|Search for logs no newer than this, can be an integer number of days or date in format “%Y-%m-%d %H:%M:%S” or “%Y-%m-%d”, leaving off h-m-s will be inclusive for the current day (23:59:59)| None (now)|
 |-z , --local-zone|Specify times for `-s` and `-e` in your local time zone. If this is not set, times are assumed to be in UTC|unset/false|
 |-p, --file-pattern|Should match the executor.s3.uploader.pattern setting, determines if we can match on file name for s3 logs|`%requestId/%Y/%m/%taskId_%index-%s-%filename`|
-|-g, --grep|Grep string for searching log files(Only for `logfetch`)||
+|-g, --grep|Grep string for searching log files||
 |-l, --logtype|Glob matcher for type of log file to download| None (match all)|
 |-V, --verbose|More verbose output|false|
 |--silent|No output except for log content, overrides -V|false|
