@@ -3,6 +3,7 @@ package com.hubspot.singularity.smtp;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -30,21 +31,30 @@ public class MailTemplateHelpers {
 
   private static final Logger LOG = LoggerFactory.getLogger(MailTemplateHelpers.class);
 
-  private static final String TASK_DATE_PATTERN = "MMM dd HH:mm:ss";
   private static final String TASK_LINK_FORMAT = "%s/task/%s";
   private static final String REQUEST_LINK_FORMAT = "%s/request/%s";
   private static final String LOG_LINK_FORMAT = "%s/task/%s/tail/%s";
+  private static final String DEFAULT_TIMESTAMP_FORMAT = "MMM dd h:mm:ss a zzz";
 
   private final SandboxManager sandboxManager;
 
   private final Optional<String> uiBaseUrl;
   private final Optional<SMTPConfiguration> smtpConfiguration;
+  private final Optional<String> taskDatePattern;
+  private final Optional<TimeZone> timeZone;
 
   @Inject
   public MailTemplateHelpers(SandboxManager sandboxManager, SingularityConfiguration singularityConfiguration) {
     this.uiBaseUrl = singularityConfiguration.getUiConfiguration().getBaseUrl();
     this.sandboxManager = sandboxManager;
     this.smtpConfiguration = singularityConfiguration.getSmtpConfiguration();
+    if (this.smtpConfiguration.isPresent()) {
+      this.taskDatePattern = Optional.of(this.smtpConfiguration.get().getMailerDatePattern());
+      this.timeZone = Optional.of(this.smtpConfiguration.get().getMailerTimeZone());
+    } else {
+      this.taskDatePattern = Optional.absent();
+      this.timeZone = Optional.absent();
+    }
   }
 
   public List<SingularityMailTaskMetadata> getJadeTaskMetadata(Collection<SingularityTaskMetadata> taskMetadata) {
@@ -68,9 +78,19 @@ public class MailTemplateHelpers {
     List<SingularityMailTaskHistoryUpdate> output = Lists.newArrayListWithCapacity(taskHistory.size());
 
     for (SingularityTaskHistoryUpdate taskUpdate : taskHistory) {
+      String date;
+      if (taskDatePattern.isPresent() && timeZone.isPresent()) {
+        date = DateFormatUtils.format(taskUpdate.getTimestamp(), taskDatePattern.get(), timeZone.get());
+      } else if (taskDatePattern.isPresent()) {
+        date = DateFormatUtils.formatUTC(taskUpdate.getTimestamp(), taskDatePattern.get());
+      } else if (timeZone.isPresent()) {
+        date = DateFormatUtils.format(taskUpdate.getTimestamp(), DEFAULT_TIMESTAMP_FORMAT, timeZone.get());
+      } else {
+        date = DateFormatUtils.format(taskUpdate.getTimestamp(), DEFAULT_TIMESTAMP_FORMAT);
+      }
       output.add(
           new SingularityMailTaskHistoryUpdate(
-              DateFormatUtils.formatUTC(taskUpdate.getTimestamp(), TASK_DATE_PATTERN),
+              date,
               WordUtils.capitalize(taskUpdate.getTaskState().getDisplayName()),
               taskUpdate.getStatusMessage().or("")));
     }

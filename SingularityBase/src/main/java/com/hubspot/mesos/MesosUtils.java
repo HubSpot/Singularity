@@ -80,6 +80,10 @@ public final class MesosUtils {
 
   public static long[] getPorts(Resource portsResource, int numPorts) {
     long[] ports = new long[numPorts];
+    if (numPorts == 0) {
+      return ports;
+    }
+
     int idx = 0;
 
     for (Range r : portsResource.getRanges().getRangeList()) {
