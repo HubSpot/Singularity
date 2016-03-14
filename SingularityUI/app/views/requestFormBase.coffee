@@ -92,8 +92,12 @@ class RequestFormBase extends FormBaseView
             requestObject.waitAtLeastMillisAfterTaskFinishesForReschedule = waitAtLeast if waitAtLeast
 
             requestObject.rackSensitive = @$("#rack-sensitive-#{ type }").is ':checked'
+
+            requestObject.hideEvenNumberAcrossRacksHint = @$("#hide-distribute-across-racks-hint-#{ type }").is ':checked'
             
             requestObject.rackAffinity = @getSelect2Val "#rackAffinity-#{ type }"
+
+            debugger
 
         if type in ['SCHEDULED', 'ON_DEMAND', 'RUN_ONCE']
             killOld = parseInt @$("#killOldNRL-#{ type }").val()
