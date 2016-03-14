@@ -1,0 +1,31 @@
+{{#if synced}}
+    {{#if metadataElementToDisplay}}
+        {{#each metadataElementToDisplay}}
+            <div class="alert alert-{{../alertClass}}">
+                <h4>{{ title }}</h4>
+                <p>
+                    <b>
+                        {{timestampFromNow timestamp}}
+                        Type {{ type }}
+                        {{#if user}}
+                            By {{ user }}
+                        {{/if}}
+                    </b>
+                </p>
+                {{#if message}}
+                    <p>{{ message }}</p>
+                {{/if}}
+            </div>
+        {{/each}}
+        <div class="col-md-12 text-center">
+            <div class="pagination">
+                {{#if isNotFirstPage}}
+                    <li><a data-action="decrease-page"><span class="glyphicon glyphicon-menu-left" aria-hidden="true" /></a></li>
+                {{/if}}
+                {{#if isNotLastPage}}
+                    <li><a data-action="increase-page"><span class="glyphicon glyphicon-menu-right" aria-hidden="true" /></a></li>
+                {{/if}}
+            </div>
+        </div>
+    {{/if}}
+{{/if}}

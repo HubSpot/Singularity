@@ -1,0 +1,76 @@
+{{#if data.taskMetadata}}
+    <div class="page-header">
+        <h2>
+            Metadata
+            <small>
+                <a data-action="expandToggle">
+                    {{#if expanded}}
+                        collapse
+                    {{else}}
+                        view
+                    {{/if}}
+                </a>
+            </small>
+        </h2>
+    </div>
+    <div class='{{#unless expanded}}hide{{/unless}}'>
+        <div class="table-container">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>
+                            Title
+                        </th>
+                        <th>
+                            Level
+                        </th>
+                        <th>
+                            Type
+                        </th>
+                        <th>
+                            Time
+                        </th>
+                        <th>
+                            User
+                        </th>
+                        <th>
+                            Message
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each data.taskMetadata}}
+                        <tr>
+                            <td>
+                                {{ title }}
+                            </td>
+                            <td>
+                                {{ level }}
+                            </td>
+                            <td>
+                                {{ type }}
+                            </td>
+                            <td data-value="{{ timestamp }}">
+                                {{timestampFromNow timestamp}}
+                            </td>
+                            <td>
+                                {{#if user}}
+                                    {{ user }}
+                                {{else}}
+                                    &mdash;
+                                {{/if}}
+                            </td>
+                            <td>
+                                {{#if message}}
+                                    {{ message }}
+                                {{else}}
+                                    &mdash;
+                                {{/if}}
+                            </td>
+                        </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{{/if}}

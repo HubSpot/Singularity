@@ -20,6 +20,7 @@ import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityEmailType;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskMetadata;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -54,6 +55,23 @@ public class MailTemplateHelpers {
       this.taskDatePattern = Optional.absent();
       this.timeZone = Optional.absent();
     }
+  }
+
+  public List<SingularityMailTaskMetadata> getJadeTaskMetadata(Collection<SingularityTaskMetadata> taskMetadata) {
+    List<SingularityMailTaskMetadata> output = Lists.newArrayListWithCapacity(taskMetadata.size());
+
+    for (SingularityTaskMetadata metadataElement : taskMetadata) {
+      output.add(
+          new SingularityMailTaskMetadata(
+              DateFormatUtils.formatUTC(metadataElement.getTimestamp(), TASK_DATE_PATTERN),
+              metadataElement.getType(),
+              metadataElement.getTitle(),
+              metadataElement.getUser().or(""),
+              metadataElement.getMessage().or(""),
+              metadataElement.getLevel().toString()));
+    }
+
+    return output;
   }
 
   public List<SingularityMailTaskHistoryUpdate> getJadeTaskHistory(Collection<SingularityTaskHistoryUpdate> taskHistory) {
