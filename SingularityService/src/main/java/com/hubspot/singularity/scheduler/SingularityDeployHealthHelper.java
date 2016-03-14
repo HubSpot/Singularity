@@ -153,7 +153,7 @@ public class SingularityDeployHealthHelper {
     Map<SingularityTaskId, SingularityTaskHealthcheckResult> healthcheckResults = taskManager.getLastHealthcheck(matchingActiveTasks);
 
     for (SingularityTaskId taskId : matchingActiveTasks) {
-      DeployHealth individualTaskHealth = getTaskHealth(deploy, isDeployPending, healthcheckResults, taskId);
+      DeployHealth individualTaskHealth = getTaskHealth(deploy, isDeployPending, Optional.fromNullable(healthcheckResults.get(taskId)), taskId);
       if (individualTaskHealth != DeployHealth.HEALTHY) {
         return individualTaskHealth;
       }
@@ -166,7 +166,7 @@ public class SingularityDeployHealthHelper {
     final List<SingularityTaskId> healthyTaskIds = Lists.newArrayListWithCapacity(matchingActiveTasks.size());
 
     for (SingularityTaskId taskId : matchingActiveTasks) {
-      DeployHealth individualTaskHealth = getTaskHealth(deploy, isDeployPending, healthcheckResults, taskId);
+      DeployHealth individualTaskHealth = getTaskHealth(deploy, isDeployPending, Optional.fromNullable(healthcheckResults.get(taskId)), taskId);
       if (individualTaskHealth == DeployHealth.HEALTHY) {
         healthyTaskIds.add(taskId);
       }
@@ -175,13 +175,11 @@ public class SingularityDeployHealthHelper {
     return healthyTaskIds;
   }
 
-  private DeployHealth getTaskHealth(SingularityDeploy deploy, boolean isDeployPending, Map<SingularityTaskId, SingularityTaskHealthcheckResult> healthcheckResults, SingularityTaskId taskId) {
-    SingularityTaskHealthcheckResult healthcheckResult = healthcheckResults.get(taskId);
-
-    if (healthcheckResult == null) {
+  public DeployHealth getTaskHealth(SingularityDeploy deploy, boolean isDeployPending, Optional<SingularityTaskHealthcheckResult> healthcheckResult, SingularityTaskId taskId) {
+    if (!healthcheckResult.isPresent()) {
       LOG.debug("No healthcheck present for {}", taskId);
       return DeployHealth.WAITING;
-    } else if (healthcheckResult.isFailed()) {
+    } else if (healthcheckResult.get().isFailed()) {
       LOG.debug("Found a failed healthcheck: {}", healthcheckResult);
 
       final Optional<Integer> healthcheckMaxRetries = deploy.getHealthcheckMaxRetries().or(configuration.getHealthcheckMaxRetries());
