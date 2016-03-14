@@ -1,4 +1,5 @@
-
+React = require 'react'
+ReactDOM = require 'react-dom'
 StatusIndicator = require './StatusIndicator'
 
 IndividualHeader = React.createClass

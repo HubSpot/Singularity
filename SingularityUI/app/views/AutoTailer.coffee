@@ -1,10 +1,12 @@
-RequestHistoricalTasks = require '../collections/RequestHistoricalTasks'
+HistoricalTasks = require '../collections/HistoricalTasks'
 
 TaskFiles = require '../collections/TaskFiles'
 RequestTasks = require '../collections/RequestTasks'
 
 autoTailWaitingTemplate = require 'templates/vex/autoTailingWaiting'
 autoTailFailureTemplate = require 'templates/vex/autoTailingFailure'
+
+vex = require 'vex.dialog'
 
 interval = (a, b) -> setInterval(b, a)  # f u javascript
 timeout = (a, b) -> setTimeout(b, a)
@@ -16,7 +18,7 @@ class AutoTailer extends Backbone.View
 
     initialize: ({@requestId, @autoTailFilename, @autoTailTimestamp}) ->
 
-        @history     = new RequestHistoricalTasks [], {@requestId}
+        @history     = new HistoricalTasks [], {params: {requestId: @requestId}}
 
         @activeTasks = new RequestTasks [],
             requestId: @requestId

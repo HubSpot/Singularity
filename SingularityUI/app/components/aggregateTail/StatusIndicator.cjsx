@@ -1,4 +1,4 @@
-
+React = require 'react'
 Utils = require '../../utils'
 
 StatusIndicator = React.createClass

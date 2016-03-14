@@ -2,6 +2,12 @@
 window.utils = require 'utils'
 window.app = require 'application'
 
+Messenger = require 'messenger'
+
+require 'bootstrap'
+
+vex = require 'vex.dialog'
+
 apiRootPromptTemplate = require './templates/vex/apiRootPrompt'
 
 # Set up third party configurations
@@ -14,7 +20,7 @@ $ ->
 	if config.apiRoot
 		app.initialize()
 	else
-		# In the event that the apiRoot isn't set (running through Brunch server)
+		# In the event that the apiRoot isn't set (running locally)
 		# prompt the user for it and refresh
 		vex.dialog.prompt
 			message: apiRootPromptTemplate()
