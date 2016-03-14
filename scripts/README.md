@@ -40,7 +40,7 @@ Two commands exist for downloading logs.
 |-p, --file-pattern|Should match the executor.s3.uploader.pattern setting, determines if we can match on file name for s3 logs|`%requestId/%Y/%m/%taskId_%index-%s-%filename`|
 |-N, --no-name-fetch-off|If a logtype matcher is specified, but the s3 log pattern does not include file name, don't download any s3 files| None (fetch all)|
 |-D, --download-only|Only download logs in their current state, don't unzip or grep||
-|-g, --grep|Grep string for searching log files(Only for `logfetch`)||
+|-g, --grep|Grep string for searching log files(Only for `logfetch`, `logsearch`)||
 |-l, --logtype|Glob matcher for type of log file to download| None (match all)|
 |-S, --skip-s3|Don't search/download s3 logs|false|
 |-L, --skip-live|Don't search/download live logs|false|
