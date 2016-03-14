@@ -116,13 +116,12 @@ class Application
                     serverMessage = JSON.parse(jqxhr.responseText).message or jqxhr.responseText
                 catch
                     if jqxhr.status is 200
-                        console.error jqxhr
+                        console.error jqxhr.responseText
                         Messenger().error
-                            message:    '''
-                                            <p>Expected JSON but received something else (possibly html). The response has been saved to your js console.</p>
-                                            <p>One possible cause is an http redirect to an html web page.</p>
-                                        '''
-                        throw new Error "Expected JSON in response but received something else"
+                            message:    """
+                                            <p>Expected JSON but received #{if jqxhr.responseText.startsWith '<!DOCTYPE html>' then 'html' else 'something else'}. The response has been saved to your js console.</p>
+                                        """
+                        throw new Error "Expected JSON in response but received #{if jqxhr.responseText.startsWith '<!DOCTYPE html>' then 'html' else 'something else'}"
                     serverMessage = jqxhr.responseText
 
                 serverMessage = _.escape serverMessage
