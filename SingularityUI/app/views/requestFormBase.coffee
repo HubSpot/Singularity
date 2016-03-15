@@ -17,13 +17,16 @@ class RequestFormBase extends FormBaseView
             { 
                 name: 'owners', selector: '#owners'
                 options:
-                    tags: true
+                    tags: []
                     containerCssClass: 'select-owners hide-select2-spinner'
                     dropdownCssClass: 'hidden'
+                    selectOnBlur: true
             }
             { 
                 name: 'rackAffinity', selector: "#rackAffinity-#{type}"
-                options: tags: racks
+                options:
+                    tags: racks
+                    selectOnBlur: true
             }
         ]
 
