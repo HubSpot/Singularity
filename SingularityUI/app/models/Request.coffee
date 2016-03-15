@@ -66,6 +66,16 @@ class Request extends Model
                 message: data.message
             )
 
+    hideEvenNumberAcrossRacksHint: (callback) ->
+        @attributes.request.hideEvenNumberAcrossRacksHint = true
+        ajaxPromise = $.ajax(
+            type: 'POST'
+            url: "#{ config.apiRoot }/requests"
+            contentType: 'application/json'
+            data: JSON.stringify @attributes.request
+        )
+        ajaxPromise.then callback
+
     pause: (killTasks, duration, message) =>
         data =
             user:      app.getUsername()
@@ -259,9 +269,16 @@ class Request extends Model
                 if !duration or (duration and @_validateDuration(duration, @promptPause, callback))
                     @pause(killTasks, duration, message).done callback
 
-    callScale: (data, bounce, incremental, message, duration, callback) =>
+    callScale: (data, bounce, incremental, message, duration, callback, setHideEvenNumberAcrossRacksHintTrue) =>
         @scale(data).done =>
-            if bounce
+            if setHideEvenNumberAcrossRacksHintTrue
+                @attributes.request.instances = data.instances
+                @hideEvenNumberAcrossRacksHint () =>
+                    if bounce 
+                        @bounce({incremental}).done callback
+                    else
+                        callback()
+            else if bounce 
                 @bounce({incremental}).done callback
             else
                 callback()
@@ -289,10 +306,11 @@ class Request extends Model
             callback: (data) =>
                 return unless data
                 scaleData.data.instances = data.instances
-                @callScale scaleData.data, scaleData.bounce, scaleData.incremental, scaleData.message, scaleData.duration, scaleData.callback
+                @callScale scaleData.data, scaleData.bounce, scaleData.incremental, scaleData.message, scaleData.duration, scaleData.callback, data.optOut
+                
 
     checkScaleEvenNumberRacks: (data, bounce, incremental, message, duration, callback) =>
-        mod = data.instances %% @racks.length
+        mod = data.instances %% 2
         if mod
             @promptScaleEvenNumberRacks 
                 callback: callback
@@ -303,7 +321,7 @@ class Request extends Model
                 message: message
                 duration: duration
         else
-            @callScale data, bounce, incremental, message, duration, callback
+            @callScale data, bounce, incremental, message, duration, callback, false
 
     promptScale: (callback) =>
         vex.dialog.open
@@ -340,9 +358,9 @@ class Request extends Model
                                 success: () => @checkScaleEvenNumberRacks data, bounce, incremental, message, duration, callback
                                 error: () => 
                                     app.caughtError() # Since we scale anyway, don't show the error
-                                    @callScale data, bounce, incremental, message, duration, callback
+                                    @callScale data, bounce, incremental, message, duration, callback, false
                     else
-                        @callScale data, bounce, incremental, message, duration, callback
+                        @callScale data, bounce, incremental, message, duration, callback, false
                     
 
     promptDisableHealthchecksDuration: (message, duration, callback) =>
