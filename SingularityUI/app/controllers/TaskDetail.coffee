@@ -17,6 +17,7 @@ PaginatedTableClientsideView = require '../views/paginatedTableClientsideView'
 OverviewSubview = require '../views/taskOverviewSubview'
 HealthcheckNotification = require '../views/taskHealthcheckNotificationSubview'
 SimpleSubview = require '../views/simpleSubview'
+TaskMetadataAlertSubview = require '../views/taskMetadataAlertSubview'
 ShellCommands = require '../views/taskShellCommandsSubview'
 LatestLog = require '../views/taskLatestLogSubview'
 
@@ -27,6 +28,7 @@ class TaskDetailController extends Controller
     templates:
         overview:                   require '../templates/taskDetail/taskOverview'
         healthcheckNotification:    require '../templates/taskDetail/taskHealthcheckNotification'
+        taskMetadataAlert:          require '../templates/taskDetail/taskMetadataAlert'
         history:                    require '../templates/taskDetail/taskHistory'
         logs:                       require '../templates/taskDetail/taskS3Logs'
         lbUpdates:                  require '../templates/taskDetail/taskLbUpdates'
@@ -37,6 +39,7 @@ class TaskDetailController extends Controller
         alerts:                     require '../templates/alerts'
         latestLog:                  require '../templates/taskDetail/taskLatestLog'
         shellCommands:              require '../templates/taskDetail/taskShellCommands'
+        taskMetadataTable:          require '../templates/taskDetail/taskMetadataTable'
 
     initialize: ({@taskId, @filePath}) ->
         @title @taskId
@@ -78,6 +81,20 @@ class TaskDetailController extends Controller
             model:          @models.task
             template:       @templates.healthcheckNotification
             pendingDeploys: @collections.pendingDeploys
+
+        @subviews.taskErrorMetadata = new TaskMetadataAlertSubview
+            model: @models.task
+            template: @templates.taskMetadataAlert
+            level: 'ERROR'
+            alertClass: 'danger'
+            numberPerPage: 5
+
+        @subviews.taskWarnMetadata = new TaskMetadataAlertSubview
+            model: @models.task
+            template: @templates.taskMetadataAlert
+            level: 'WARN'
+            alertClass: 'warning'
+            numberPerPage: 1
 
         @subviews.history = new SimpleSubview
             model:    @models.task
@@ -125,6 +142,10 @@ class TaskDetailController extends Controller
         @subviews.shellCommands = new ShellCommands
             model: @models.task
             template: @templates.shellCommands
+
+        @subviews.taskMetadataTable = new SimpleSubview
+            model: @models.task
+            template: @templates.taskMetadataTable
 
         #
         # Getting stuff in gear

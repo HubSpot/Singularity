@@ -348,7 +348,7 @@ public class TaskResource {
     WebExceptions.checkNotFound(taskManager.taskExistsInZk(taskIdObj), "Task {} not found in ZooKeeper (can not save metadata to tasks which have been persisted", taskIdObj);
 
     final SingularityTaskMetadata taskMetadata = new SingularityTaskMetadata(taskIdObj, System.currentTimeMillis(), taskMetadataRequest.getType(), taskMetadataRequest.getTitle(),
-        taskMetadataRequest.getMessage(), JavaUtils.getUserEmail(user));
+        taskMetadataRequest.getMessage(), JavaUtils.getUserEmail(user), taskMetadataRequest.getLevel());
 
     SingularityCreateResult result = taskManager.saveTaskMetadata(taskMetadata);
 
