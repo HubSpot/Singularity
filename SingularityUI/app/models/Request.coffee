@@ -310,7 +310,7 @@ class Request extends Model
                 
 
     checkScaleEvenNumberRacks: (data, bounce, incremental, message, duration, callback) =>
-        mod = data.instances %% 2
+        mod = data.instances %% @racks.length
         if mod
             @promptScaleEvenNumberRacks 
                 callback: callback
