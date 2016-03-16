@@ -38,6 +38,11 @@ module.exports = {
       '_': 'underscore',
       jQuery: 'jquery',
       'window.jQuery': 'jquery'
+    }),
+    new webpack.optimize.UglifyJsPlugin({
+      compress: {
+        warnings: false
+      }
     })
   ]
 };

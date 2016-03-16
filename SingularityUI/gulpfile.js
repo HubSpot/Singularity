@@ -97,6 +97,8 @@ gulp.task('build', ['clean'], function () {
 });
 
 gulp.task('serve', ['html', 'styles', 'fonts', 'images'], function () {
+  gulp.watch('app/**/*.styl', ['styles'])
+
   new WebpackDevServer(require('webpack')(webpackConfig), {
     contentBase: dest,
     historyApiFallback: true
@@ -104,11 +106,6 @@ gulp.task('serve', ['html', 'styles', 'fonts', 'images'], function () {
     if(err) throw new gutil.PluginError("webpack-dev-server", err);
     gutil.log("[webpack-dev-server]", "Development server running on port 3334");
   })
-})
-
-gulp.task('watch', function () {
-  gulp.watch('app/**/*.styl', ['styles'])
-  gulp.watch('app/**/*.{coffee,cjsx}', ['scripts'])
 })
 
 gulp.task("default", ["build"]);
