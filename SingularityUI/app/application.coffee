@@ -115,9 +115,16 @@ class Application
                     message:   "<p>Could not reach the Singularity API. Please make sure SingularityUI is properly set up.</p><p>If running through locally, this might be your browser blocking cross-domain requests.</p>"
             else
                 try
-                  serverMessage = JSON.parse(jqxhr.responseText).message or jqxhr.responseText
+                    serverMessage = JSON.parse(jqxhr.responseText).message or jqxhr.responseText
                 catch
-                  serverMessage = jqxhr.responseText
+                    if jqxhr.status is 200
+                        console.error jqxhr.responseText
+                        Messenger().error
+                            message:    """
+                                            <p>Expected JSON but received #{if jqxhr.responseText.startsWith '<!DOCTYPE html>' then 'html' else 'something else'}. The response has been saved to your js console.</p>
+                                        """
+                        throw new Error "Expected JSON in response but received #{if jqxhr.responseText.startsWith '<!DOCTYPE html>' then 'html' else 'something else'}"
+                    serverMessage = jqxhr.responseText
 
                 serverMessage = _.escape serverMessage
                 id = "message_" + Date.now()
