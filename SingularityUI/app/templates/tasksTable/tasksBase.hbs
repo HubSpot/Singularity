@@ -24,6 +24,12 @@
     <div class="col-md-12">
         <input disabled type="search" class="big-search-box" placeholder="Loading tasks..." value="{{ searchFilter }}" required maxlength="128">
     </div>
+
+    <div class="col-md-12">
+        <div class="requests-filter-container">
+            {{> requestsFilter}}
+        </div>
+    </div>
 </div>
 
 <div class="row">

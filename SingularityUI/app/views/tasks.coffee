@@ -13,6 +13,8 @@ class TasksView extends View
 
     templateBase:  require '../templates/tasksTable/tasksBase'
 
+    templateRequestFilter: require '../templates/requestTypeFilter'
+
     # Figure out which template we'll use for the table based on the filter
     bodyTemplateMap:
         active:          require '../templates/tasksTable/tasksActiveBody'
@@ -39,7 +41,9 @@ class TasksView extends View
 
             'click th[data-sort-attribute]': 'sortTable'
 
-    initialize: ({@state, @searchFilter, @cleaningTasks, @taskKillRecords}) ->
+            'click [data-filter]': 'changeRequestFilters'
+
+    initialize: ({@state, @requestsSubFilter, @searchFilter, @cleaningTasks, @taskKillRecords}) ->
         @bodyTemplate = @bodyTemplateMap[@state]
 
         @listenTo @collection, 'sync', @render
@@ -66,6 +70,24 @@ class TasksView extends View
         # Only show tasks that match the search query
         if @searchFilter
             tasks = @fuzzySearch(@searchFilter, tasks)
+
+        # Only show tasks of requests that match the clicky filters
+        if @requestsSubFilter isnt 'all'
+            tasks = _.filter tasks, (task) =>
+                filter = false
+
+                if @requestsSubFilter.indexOf('SERVICE') isnt -1
+                    filter = filter or task.taskRequest.request.requestType == 'SERVICE'
+                if @requestsSubFilter.indexOf('WORKER') isnt -1
+                    filter = filter or task.taskRequest.request.requestType == 'WORKER'
+                if @requestsSubFilter.indexOf('SCHEDULED') isnt -1
+                    filter = filter or task.taskRequest.request.requestType == 'SCHEDULED'
+                if @requestsSubFilter.indexOf('ON_DEMAND') isnt -1
+                    filter = filter or task.taskRequest.request.requestType == 'ON_DEMAND'
+                if @requestsSubFilter.indexOf('RUN_ONCE') isnt -1
+                    filter = filter or task.taskRequest.request.requestType == 'RUN_ONCE'
+
+                filter
 
         # Sort the table if the user clicked on the table heading things
         if @sortAttribute?
@@ -98,11 +120,13 @@ class TasksView extends View
             tasksFilter: @state
             searchFilter: @searchFilter
             collectionSynced: @collection.synced
+            requestsSubFilter: @requestsSubFilter
             haveTasks: @collection.length and @collection.synced
 
         partials =
             partials:
                 tasksBody: @bodyTemplate
+                requestsFilter: @templateRequestFilter
 
         @$el.html @templateBase context, partials
 
@@ -207,7 +231,7 @@ class TasksView extends View
                 @renderTableChunk()
 
     updateUrl: =>
-        app.router.navigate "/tasks/#{ @state }/#{ @searchFilter }", { replace: true }
+        app.router.navigate "/tasks/#{ @state }/#{ @requestsSubFilter }/#{ @searchFilter }", { replace: true }
 
     viewJson: (e) ->
         task =
@@ -273,5 +297,30 @@ class TasksView extends View
         if @searchFilter isnt previousSearchFilter
             @updateUrl()
             @renderTable()
+
+    changeRequestFilters: (event) ->
+        event.preventDefault()
+
+        filter = $(event.currentTarget).data 'filter'
+
+        if not event.metaKey
+            # Select individual filters
+            @requestsSubFilter = filter
+        else
+            # Select multiple filters
+            currentFilter = if @requestsSubFilter is 'all' then 'SERVICE-WORKER-SCHEDULED-ON_DEMAND-RUN_ONCE' else  @requestsSubFilter
+
+            currentFilter = currentFilter.split '-'
+            needToAdd = not _.contains currentFilter, filter
+
+            if needToAdd
+                currentFilter.push filter
+            else
+                currentFilter = _.without currentFilter, filter
+
+            @requestsSubFilter = currentFilter.join '-'
+
+        @updateUrl()
+        @render()
 
 module.exports = TasksView
