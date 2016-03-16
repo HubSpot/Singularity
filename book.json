@@ -11,9 +11,9 @@
     "releases": ["0.4.11", "0.4.10", "0.4.9", "0.4.8", "0.4.7", "0.4.6", "0.4.5"]
   },
   "plugins": ["github", "-sharing", "-highlight", "copy-code-button"],
-    "pluginsConfig": {
-        "github": {
-            "url": "https://github.com/HubSpot/Singularity"
-        }
-    }
+  "pluginsConfig": {
+      "github": {
+          "url": "https://github.com/HubSpot/Singularity"
+      }
+  }
 }
