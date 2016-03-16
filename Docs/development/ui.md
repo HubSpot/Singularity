@@ -4,7 +4,7 @@ This document is intended for people who want to work on SingularityUI independe
 
 If you're here just looking for information on how to build SingularityUI, please note that the Maven build process is configured to automatically build and package the UI into SingularityService.
 
-The compiled static files are placed in [`../SingularityService/target/generated-resources/static/`](../SingularityService/target/generated-resources/static/).
+The compiled static files are placed in `../SingularityService/target/generated-resources/static/`.
 
 ## Contents
 

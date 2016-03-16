@@ -1,3 +1,5 @@
+![Singularity](Docs/images/singularity.png)
+
 [![Build Status](https://travis-ci.org/HubSpot/Singularity.svg?branch=master)](https://travis-ci.org/HubSpot/Singularity)
 
 ## Overview ##
