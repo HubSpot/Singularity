@@ -8,7 +8,7 @@ The default [mesos containerizer](http://mesos.apache.org/documentation/latest/m
 ###Mesos Docker Containerizer
 The [docker containerizer](https://mesos.apache.org/documentation/latest/docker-containerizer/) that ships with Mesos, will manage the starting and stopping of your docker container as well as mapping ports, adding environment variables, and mapping volumes in the container to the Mesos sandbox for that task. You can enable this containerizer by adding `docker` to the arguments of `--containerizers` when running `mesos-slave`.
 
-To use Singularity with the Docker containerizer, add a [`containerInfo` field](api.md#model-SingularityContainerInfo) with a `type` of `DOCKER` to the [SingularityDeploy](api.md#model-SingularityDeploy) object when creating a deploy (without specifying a `customExecutorCmd`). The Singularity deploy object's [`containerInfo` field](api.md#model-SingularityContainerInfo) mirrors the Mesos `containerInfo` definition:
+To use Singularity with the Docker containerizer, add a [`containerInfo` field](apidocs/models.md#model-SingularityContainerInfo) with a `type` of `DOCKER` to the [SingularityDeploy](apidocs/models.md#model-SingularityDeploy) object when creating a deploy (without specifying a `customExecutorCmd`). The Singularity deploy object's [`containerInfo` field](apidocs/models.md#model-SingularityContainerInfo) mirrors the Mesos `containerInfo` definition:
 
 ```
 {
