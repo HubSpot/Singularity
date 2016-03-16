@@ -1,4 +1,4 @@
-
+React = require 'react'
 ColorLegend = require './ColorLegend'
 
 InterleavedHeader = React.createClass
