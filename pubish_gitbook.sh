@@ -2,6 +2,7 @@
 
 set -e
 
+mvn -Pbuild-swagger-documentation -DskipTests=true -B -q -fae install
 python Docs/split_api_docs.py
 gitbook build
 cp SingularityUI/app/assets/static/images/favicon.ico _book/gitbook/images/favicon.ico
