@@ -2,6 +2,7 @@
 
 set -e
 
+python Docs/split_api_docs.py
 gitbook build
 cp SingularityUI/app/assets/static/images/favicon.ico _book/gitbook/images/favicon.ico
 cd _book

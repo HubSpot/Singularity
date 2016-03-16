@@ -15,7 +15,7 @@ For a more thorough explanation of the concepts behind Singularity and Mesos cli
 ### Features###
 
  - [Native Docker Support](Docs/reference/container-options.md)
- - [JSON REST API and Java Client](Docs/reference/api.md)
+ - [JSON REST API and Java Client](Docs/reference/apidocs/api-index.md)
  - [Fully featured web application (replaces and improves Mesos Master UI)](Docs/about/ui.md)
  - Rich load balancer integration with [Baragon](https://github.com/HubSpot/Baragon)
  - [Deployments, automatic rollbacks, and healthchecks](Docs/about/how-it-works.md#deploys)
@@ -71,7 +71,7 @@ Then simply run `docker-compose up` and it will start containers for...
 
 #### Deployment ####
 
- - [API](Docs/reference/api.md)
+ - [API](Docs/reference/apidocs/api-index.md)
  - [Configuration](Docs/reference/configuration.md)
  - [Examples](Docs/getting-started/basic-examples.md)
  - [`Request` and `Deploy` Concepts](Docs/about/requests-and-deploys.md)
