@@ -1,3 +1,6 @@
+Clipboard = require 'clipboard'
+vex = require 'vex.dialog'
+
 class Utils
 
     # Constants
@@ -52,21 +55,10 @@ class Utils
             afterOpen: ($vexContent) ->
                 $vexContent.parents('.vex').scrollTop 0
 
-                # Dity hack to make ZeroClipboard play along
-                # The Flash element doesn't work if it falls outside the
-                # bounds of the body, even if it's inside the dialog
-                overlayHeight = $vexContent.parents(".vex-overlay").height()
-                $("body").css "min-height", overlayHeight + "px"
-
                 $button = $vexContent.find ".copy-button"
                 $button.attr "data-clipboard-text", $vexContent.find("pre").html()
 
-                zeroClipboardClient = new ZeroClipboard $button[0]
-
-                zeroClipboardClient.on "ready", =>
-                    zeroClipboardClient.on "aftercopy", =>
-                        $button.val "Copied"
-                        setTimeout (-> $button.val "Copy"), 800
+                clipboard = new Clipboard $button[0]
 
     # For .horizontal-description-list
     @setupCopyLinks: ($element) =>
@@ -78,7 +70,7 @@ class Utils
                 text = $item.find('p').html()
                 $copyLink = $ "<a data-clipboard-text='#{ _.escape text }'>Copy</a>"
                 $item.find("h4").append $copyLink
-                new ZeroClipboard $copyLink[0]
+                new Clipboard $copyLink[0]
 
     # Copy anything
     @makeMeCopy: (options) =>
@@ -89,7 +81,7 @@ class Utils
         text = $element.find(textSelector).html()
         $copyLink = $ "<a data-clipboard-text='#{ _.escape text }'>#{linkText}</a>"
         $(options.copyLink).html($copyLink)
-        new ZeroClipboard $copyLink[0]
+        new Clipboard $copyLink[0]
 
     @fixTableColumns: ($table) =>
         $headings = $table.find "th"

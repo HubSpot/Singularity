@@ -1,5 +1,6 @@
 View = require './view'
-
+React = require 'react'
+ReactDOM = require 'react-dom'
 AggregateTail = require '../components/aggregateTail/AggregateTail'
 
 class AggregateTailView extends View
@@ -15,10 +16,6 @@ class AggregateTailView extends View
 
     render: () ->
       $(@el).addClass("tail-root")
-
-      # Some stuff in the app can change this stuff. We wanna reset it.
-      $('html, body').css 'min-height', '0px'
-      $('#global-zeroclipboard-html-bridge').css 'top', '1px'
 
       ReactDOM.render(
         <AggregateTail

@@ -1,6 +1,7 @@
 FormBaseView = require './formBaseView'
 
 Deploy = require 'models/Deploy'
+moment = require 'moment'
 
 class NewDeployView extends FormBaseView
 

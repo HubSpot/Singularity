@@ -1,4 +1,5 @@
 View = require './view'
+select2 = require 'select2'
 
 class FormBaseView extends View
 
