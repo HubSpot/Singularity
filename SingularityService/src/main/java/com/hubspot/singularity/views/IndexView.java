@@ -56,6 +56,8 @@ public class IndexView extends View {
 
   private final String timestampWithSecondsFormat;
 
+  private final String redirectOnUnauthorizedUrl;
+
   public IndexView(String singularityUriBase, String appRoot, SingularityConfiguration configuration, ObjectMapper mapper) {
     super("index.mustache");
 
@@ -96,6 +98,8 @@ public class IndexView extends View {
     this.taskS3LogOmitPrefix = configuration.getUiConfiguration().getTaskS3LogOmitPrefix();
 
     this.warnIfScheduledJobIsRunningPastNextRunPct = configuration.getWarnIfScheduledJobIsRunningPastNextRunPct();
+
+    this.redirectOnUnauthorizedUrl = configuration.getUiConfiguration().getRedirectOnUnauthorizedUrl();
 
     ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
     try {
@@ -241,6 +245,7 @@ public class IndexView extends View {
             ", shellCommands='" + shellCommands + '\'' +
             ", timestampFormat='" + timestampFormat + '\'' +
             ", timestampWithSecondsFormat='" + timestampWithSecondsFormat + '\'' +
+            ", redirectOnUnauthorizedUrl='" + redirectOnUnauthorizedUrl + '\'' +
             ']';
   }
 }

@@ -77,6 +77,9 @@ public class UIConfiguration {
   @NotEmpty
   private String timestampWithSecondsFormat = "lll:ss";
 
+  @JsonProperty
+  private String redirectOnUnauthorizedUrl = "";
+
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
   }
@@ -183,5 +186,13 @@ public class UIConfiguration {
 
   public void setTimestampWithSecondsFormat(String timestampWithSecondsFormat) {
     this.timestampWithSecondsFormat = timestampWithSecondsFormat;
+  }
+
+  public String getRedirectOnUnauthorizedUrl() {
+    return redirectOnUnauthorizedUrl;
+  }
+
+  public void setRedirectOnUnauthorizedUrl(String redirectOnUnauthorizedUrl) {
+    this.redirectOnUnauthorizedUrl = redirectOnUnauthorizedUrl;
   }
 }
