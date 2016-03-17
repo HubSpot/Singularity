@@ -108,7 +108,7 @@ class Application
                 Messenger().info
                     message:   "Singularity is deploying, your requests cannot be handled. Things should resolve in a few seconds so just hang tight!"
             else if jqxhr.status is 401 and config.redirectOnUnauthorizedURL
-                window.location.href = config.redirectOnUnauthorizedURL.replace('{URL}', encodeURI(window.location.href))
+                window.location.href = config.redirectOnUnauthorizedURL.replace('{URL}', encodeURIComponent(window.location.href))
             else if jqxhr.statusText is 'timeout'
                 Messenger().error
                     message:   "<p>A <code>#{ jqxhr.statusText }</code> error occurred while accessing:</p><pre>#{ url }</pre>"
