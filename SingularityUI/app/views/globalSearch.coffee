@@ -20,7 +20,7 @@ class GlobalSearchView extends View
             focusBody = $(event.target).is 'body'
             focusInput = $(event.target).is @$ 'input[type="search"]'
 
-            modifierKey = event.metaKey or event.shiftKey
+            modifierKey = event.metaKey or event.shiftKey or event.ctrlKey
             sPressed = event.keyCode in [83, 84] and not modifierKey
             escPressed = event.keyCode is 27
 
