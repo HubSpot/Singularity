@@ -24,7 +24,7 @@ Mesos frameworks have two major components. A **scheduler component** that regis
 
 The *Mesos master* determines how many resources are offered to each framework and the *framework scheduler* selects which of the offered resources to use to run the required tasks. Mesos slaves do not directly run the tasks but delegate the running to the appropriate *executor* that has knowledge about the nature of the allocated task and the special handling that might be required.
 
-![Singularity Components](../images/Singularity_Framework_Components.png)
+![Singularity Components](../images/framework_components.png)
 
 As depicted in the figure, Singularity implements the two basic framework components as well as a few more to solve common complex / tedious problems such as task cleanup and log tailing / archiving without requiring developers to implement it for each task they want to run:
 
