@@ -1,4 +1,5 @@
-
+React = require 'react'
+BackboneReactComponent = require 'backbone-react-component'
 IndividualHeader = require "./IndividualHeader"
 Contents = require "./Contents"
 

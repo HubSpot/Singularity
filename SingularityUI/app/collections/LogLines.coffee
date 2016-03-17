@@ -2,6 +2,8 @@ Collection = require './collection'
 
 LogLine = require '../models/LogLine'
 
+moment = require 'moment'
+
 class LogLines extends Collection
 
     model: LogLine

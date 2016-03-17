@@ -1,3 +1,8 @@
+vex = require 'vex'
+moment = require 'moment'
+Handlebars = require 'handlebars'
+Messenger = require 'messenger'
+
 # Set Vex default className
 vex.defaultOptions.className = 'vex-theme-default'
 
@@ -14,7 +19,7 @@ jQuery.ajax = (opts) ->
     _oldAjax.call jQuery, opts
 
 # Eat M/D/Y & 24h-time, yanks! Mwahahahahaha!
-moment.lang 'en',
+moment.locale 'en',
     longDateFormat:
         LT : "HH:mm"
         L : "DD/MM/YYYY"
@@ -32,11 +37,6 @@ Messenger.options =
         type: 'error'
         hideAfter: false
         showCloseButton: true
-
-# ZeroClipboard options
-ZeroClipboard.config
-    debug: false
-    swfPath: "#{ config.staticRoot }/swf/ZeroClipboard.swf"
 
 # Overwrite Handlebars logging
 Handlebars.logger.log = (stuff...) =>
