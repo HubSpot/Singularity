@@ -40,7 +40,7 @@ class View extends Backbone.View
         app.router.navigate url, trigger: true
 
     afterRender: ->
-      $('p').linkify()
+      $('.linkify').linkify()
       
       Sortable.init()
 

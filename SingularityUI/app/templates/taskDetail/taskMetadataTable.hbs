@@ -53,14 +53,14 @@
                             <td data-value="{{ timestamp }}">
                                 {{timestampFromNow timestamp}}
                             </td>
-                            <td>
+                            <td class='linkify'>
                                 {{#if user}}
                                     {{ user }}
                                 {{else}}
                                     &mdash;
                                 {{/if}}
                             </td>
-                            <td>
+                            <td class='linkify'>
                                 {{#if message}}
                                     {{ message }}
                                 {{else}}
