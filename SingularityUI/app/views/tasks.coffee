@@ -2,6 +2,7 @@ View = require './view'
 
 Request = require '../models/Request'
 Slaves = require '../collections/Slaves'
+fuzzy = require 'fuzzy'
 
 killTemplate = require '../templates/vex/taskKill'
 
