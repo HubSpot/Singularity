@@ -1,8 +1,6 @@
+# Singularity Mesos Framework [![Build Status](https://travis-ci.org/HubSpot/Singularity.svg?branch=master)](https://travis-ci.org/HubSpot/Singularity)
+
 ![Singularity](Docs/images/singularity.png)
-
-[![Build Status](https://travis-ci.org/HubSpot/Singularity.svg?branch=master)](https://travis-ci.org/HubSpot/Singularity)
-
-## Overview ##
 
 Singularity is an API and web application for running and scheduling [Apache Mesos](http://mesos.apache.org/) tasks — including long running processes, scheduled jobs, and one-off tasks.
 
@@ -12,7 +10,7 @@ For a more thorough explanation of the concepts behind Singularity and Mesos cli
 
 ----------
 
-### Features###
+### Features
 
  - [Native Docker Support](Docs/reference/container-options.md)
  - [JSON REST API and Java Client](Docs/reference/apidocs/api-index.md)
@@ -26,7 +24,7 @@ For a more thorough explanation of the concepts behind Singularity and Mesos cli
 
 ----------
 
-### Try It Out! ###
+### Try It Out!
 
 If you want to give Singularity a try, you can install [docker](https://docs.docker.com/installation/) and [docker-compose](https://docs.docker.com/compose/#installation-and-set-up) to run our example cluster.
 
@@ -48,28 +46,28 @@ Then simply run `docker-compose up` and it will start containers for...
 
 ----------
 
-## Getting Started ##
-##### Requirements #####
+## Getting Started
+##### Requirements
 
  - [Mesos](http://mesos.apache.org/gettingstarted/)
  - [ZooKeeper](https://zookeeper.apache.org/doc/r3.4.6/zookeeperStarted.html) 
  - Java 7+
  - [MySQL](http://dev.mysql.com/usingmysql/get_started.html) (optional)
 
-##### Contact #####
+##### Contact
 
 - [singularity-users@googlegroups.com](mailto:singularity-users@googlegroups.com) // [singularity-users](https://groups.google.com/forum/#!topic/singularity-users/)
 - \#singularity-framework on freenode
 
 ----------
 
-## Reference ##
+## Reference
 
-#### Install ####
+#### Install
 
  - [Installation Instructions](Docs/getting-started/install.md)
 
-#### Deployment ####
+#### Deployment
 
  - [API](Docs/reference/apidocs/api-index.md)
  - [Configuration](Docs/reference/configuration.md)
@@ -77,7 +75,7 @@ Then simply run `docker-compose up` and it will start containers for...
  - [`Request` and `Deploy` Concepts](Docs/about/requests-and-deploys.md)
  - [Custom Executor Components](Docs/about/how-it-works.md#optional-components)
 
-#### Development ####
+#### Development
 
 - [Local Development with Docker](Docs/development/developing-with-docker.md)
 - [Hacking on the UI](Docs/development/ui.md)
