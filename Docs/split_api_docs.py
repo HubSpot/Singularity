@@ -14,7 +14,7 @@ with open(os.path.join(os.path.dirname(__file__),'reference/api.md')) as alldocs
     in_models = False
     in_models_index = False
     for line in alldocs:
-        line = line.rstrip()
+        line = line.rstrip().replace('#model', 'models.md#model')
         if line.startswith('Models:'):
             in_models_index = True
         if line.startswith('### <a name="endpoint-'):

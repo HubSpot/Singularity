@@ -20,7 +20,7 @@ Retrieve the list of logs stored in S3 for a specific task.
 | end | false | End timestamp (mills, 13 digit) | long |
 
 ###### Response
-[List[SingularityS3Log]](#model-SingularityS3Log)
+[List[SingularityS3Log]](models.md#model-SingularityS3Log)
 
 
 ###### Errors
@@ -50,7 +50,7 @@ Retrieve the list of logs stored in S3 for a specific deploy.
 | end | false | End timestamp (mills, 13 digit) | long |
 
 ###### Response
-[List[SingularityS3Log]](#model-SingularityS3Log)
+[List[SingularityS3Log]](models.md#model-SingularityS3Log)
 
 
 ###### Errors
@@ -79,7 +79,7 @@ Retrieve the list of logs stored in S3 for a specific request.
 | end | false | End timestamp (mills, 13 digit) | long |
 
 ###### Response
-[List[SingularityS3Log]](#model-SingularityS3Log)
+[List[SingularityS3Log]](models.md#model-SingularityS3Log)
 
 
 ###### Errors

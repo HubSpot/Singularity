@@ -22,7 +22,7 @@ Retrieve part of the contents of a file in a specific task&#39;s sandbox.
 | length | false | Maximum number of bytes to read | long |
 
 ###### Response
-[MesosFileChunkObject](#model-MesosFileChunkObject)
+[MesosFileChunkObject](models.md#model-MesosFileChunkObject)
 
 
 ###### Errors
@@ -50,7 +50,7 @@ Retrieve information about a specific task&#39;s sandbox.
 | path | false | The path to browse from | string |
 
 ###### Response
-[SingularitySandbox](#model-SingularitySandbox)
+[SingularitySandbox](models.md#model-SingularitySandbox)
 
 
 ###### Errors

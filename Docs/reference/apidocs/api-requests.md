@@ -16,10 +16,10 @@ Unpause a Singularity Request, scheduling new tasks immediately
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityUnpauseRequest](#model-linkType)</a> |
+| body | false |  | [SingularityUnpauseRequest](models.md#model-linkType)</a> |
 
 ###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
+[SingularityRequestParent](models.md#model-SingularityRequestParent)
 
 
 ###### Errors
@@ -44,10 +44,10 @@ Update the skipHealthchecks field for the request, possibly temporarily
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | SkipHealtchecks options | [SingularitySkipHealthchecksRequest](#model-linkType)</a> |
+| body | false | SkipHealtchecks options | [SingularitySkipHealthchecksRequest](models.md#model-linkType)</a> |
 
 ###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
+[SingularityRequestParent](models.md#model-SingularityRequestParent)
 
 
 ###### Errors
@@ -70,7 +70,7 @@ Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks req
 | requestId | true | The Request ID | string |
 
 ###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
+[SingularityRequestParent](models.md#model-SingularityRequestParent)
 
 
 ###### Errors
@@ -95,10 +95,10 @@ Scale the number of instances up or down for a specific Request
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | Object to hold number of instances to request | [SingularityScaleRequest](#model-linkType)</a> |
+| body | false | Object to hold number of instances to request | [SingularityScaleRequest](models.md#model-linkType)</a> |
 
 ###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
+[SingularityRequestParent](models.md#model-SingularityRequestParent)
 
 
 ###### Errors
@@ -121,7 +121,7 @@ Delete/cancel the expiring scale. This makes the scale request permanent.
 | requestId | true | The Request ID | string |
 
 ###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
+[SingularityRequestParent](models.md#model-SingularityRequestParent)
 
 
 ###### Errors
@@ -146,10 +146,10 @@ Schedule a one-off or scheduled Singularity request for immediate execution.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityRunNowRequest](#model-linkType)</a> |
+| body | false |  | [SingularityRunNowRequest](models.md#model-linkType)</a> |
 
 ###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
+[SingularityRequestParent](models.md#model-SingularityRequestParent)
 
 
 ###### Errors
@@ -174,10 +174,10 @@ Pause a Singularity request, future tasks will not run until it is manually unpa
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | Pause Request Options | [SingularityPauseRequest](#model-linkType)</a> |
+| body | false | Pause Request Options | [SingularityPauseRequest](models.md#model-linkType)</a> |
 
 ###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
+[SingularityRequestParent](models.md#model-SingularityRequestParent)
 
 
 ###### Errors
@@ -200,7 +200,7 @@ Delete/cancel the expiring pause. This makes the pause request permanent.
 | requestId | true | The Request ID | string |
 
 ###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
+[SingularityRequestParent](models.md#model-SingularityRequestParent)
 
 
 ###### Errors
@@ -225,10 +225,10 @@ Immediately exits cooldown, scheduling new tasks immediately
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityExitCooldownRequest](#model-linkType)</a> |
+| body | false |  | [SingularityExitCooldownRequest](models.md#model-linkType)</a> |
 
 ###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
+[SingularityRequestParent](models.md#model-SingularityRequestParent)
 
 
 ###### Errors
@@ -253,10 +253,10 @@ Bounce a specific Singularity request. A bounce launches replacement task(s), an
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | Bounce request options | [SingularityBounceRequest](#model-linkType)</a> |
+| body | false | Bounce request options | [SingularityBounceRequest](models.md#model-linkType)</a> |
 
 ###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
+[SingularityRequestParent](models.md#model-SingularityRequestParent)
 
 
 ###### Errors
@@ -279,7 +279,7 @@ Delete/cancel the expiring bounce. This makes the bounce request permanent.
 | requestId | true | The Request ID | string |
 
 ###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
+[SingularityRequestParent](models.md#model-SingularityRequestParent)
 
 
 ###### Errors
@@ -302,7 +302,7 @@ Retrieve a specific Request by ID
 | requestId | true | Request ID | string |
 
 ###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
+[SingularityRequestParent](models.md#model-SingularityRequestParent)
 
 
 ###### Errors
@@ -327,10 +327,10 @@ Delete a specific Request by ID and return the deleted Request
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | Delete options | [SingularityDeleteRequestRequest](#model-linkType)</a> |
+| body | false | Delete options | [SingularityDeleteRequestRequest](models.md#model-linkType)</a> |
 
 ###### Response
-[SingularityRequest](#model-SingularityRequest)
+[SingularityRequest](models.md#model-SingularityRequest)
 
 
 ###### Errors
@@ -349,7 +349,7 @@ Retrieve the list of pending requests
 - No parameters
 
 ###### Response
-[List[SingularityPendingRequest]](#model-SingularityPendingRequest)
+[List[SingularityPendingRequest]](models.md#model-SingularityPendingRequest)
 
 
 ###### Errors
@@ -368,7 +368,7 @@ Retrieve the list of requests being cleaned up
 - No parameters
 
 ###### Response
-[List[SingularityRequestCleanup]](#model-SingularityRequestCleanup)
+[List[SingularityRequestCleanup]](models.md#model-SingularityRequestCleanup)
 
 
 ###### Errors
@@ -387,7 +387,7 @@ Retrieve the list of paused requests
 - No parameters
 
 ###### Response
-[List[SingularityRequestParent]](#model-SingularityRequestParent)
+[List[SingularityRequestParent]](models.md#model-SingularityRequestParent)
 
 
 ###### Errors
@@ -406,7 +406,7 @@ Retrieve the list of tasks being cleaned from load balancers.
 - No parameters
 
 ###### Response
-[UNKNOWN[string]](#model-UNKNOWN[string])
+[UNKNOWN[string]](models.md#model-UNKNOWN[string])
 
 
 ###### Errors
@@ -425,7 +425,7 @@ Retreive the list of finished requests (Scheduled requests which have exhausted 
 - No parameters
 
 ###### Response
-[List[SingularityRequestParent]](#model-SingularityRequestParent)
+[List[SingularityRequestParent]](models.md#model-SingularityRequestParent)
 
 
 ###### Errors
@@ -444,7 +444,7 @@ Retrieve the list of requests in system cooldown
 - No parameters
 
 ###### Response
-[List[SingularityRequestParent]](#model-SingularityRequestParent)
+[List[SingularityRequestParent]](models.md#model-SingularityRequestParent)
 
 
 ###### Errors
@@ -463,7 +463,7 @@ Retrieve the list of active requests
 - No parameters
 
 ###### Response
-[List[SingularityRequestParent]](#model-SingularityRequestParent)
+[List[SingularityRequestParent]](models.md#model-SingularityRequestParent)
 
 
 ###### Errors
@@ -482,7 +482,7 @@ Retrieve the list of all requests
 - No parameters
 
 ###### Response
-[List[SingularityRequestParent]](#model-SingularityRequestParent)
+[List[SingularityRequestParent]](models.md#model-SingularityRequestParent)
 
 
 ###### Errors
@@ -502,10 +502,10 @@ Create or update a Singularity Request
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false | The Singularity request to create or update | [SingularityRequest](#model-linkType)</a> |
+| body | false | The Singularity request to create or update | [SingularityRequest](models.md#model-linkType)</a> |
 
 ###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
+[SingularityRequestParent](models.md#model-SingularityRequestParent)
 
 
 ###### Errors
