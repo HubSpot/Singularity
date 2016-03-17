@@ -14,7 +14,7 @@ Retrieve the history for a specific task.
 | taskId | true | Task ID to look up | string |
 
 ###### Response
-[SingularityTaskHistory](#model-SingularityTaskHistory)
+[SingularityTaskHistory](models.md#model-SingularityTaskHistory)
 
 
 ###### Errors
@@ -39,7 +39,7 @@ Search for requests.
 | page | false | Which page of items to view | int |
 
 ###### Response
-[UNKNOWN[string]](#model-UNKNOWN[string])
+[UNKNOWN[string]](models.md#model-UNKNOWN[string])
 
 
 ###### Errors
@@ -62,7 +62,7 @@ Retrieve the history for all active tasks of a specific request.
 | requestId | true | Request ID to look up | string |
 
 ###### Response
-[List[SingularityTaskIdHistory]](#model-SingularityTaskIdHistory)
+[List[SingularityTaskIdHistory]](models.md#model-SingularityTaskIdHistory)
 
 
 ###### Errors
@@ -91,7 +91,7 @@ Retrieve the history for all tasks of a specific request.
 | page | false | Which page of items to view | int |
 
 ###### Response
-[List[SingularityTaskIdHistory]](#model-SingularityTaskIdHistory)
+[List[SingularityTaskIdHistory]](models.md#model-SingularityTaskIdHistory)
 
 
 ###### Errors
@@ -115,7 +115,7 @@ Retrieve the history for a task by runId
 | runId | true | runId to look up | string |
 
 ###### Response
-[SingularityTaskIdHistory](#model-SingularityTaskIdHistory)
+[SingularityTaskIdHistory](models.md#model-SingularityTaskIdHistory)
 
 
 ###### Errors
@@ -144,7 +144,7 @@ Retrieve the history for a task by runId
 | page | false | Which page of items to view | int |
 
 ###### Response
-[List[SingularityRequestHistory]](#model-SingularityRequestHistory)
+[List[SingularityRequestHistory]](models.md#model-SingularityRequestHistory)
 
 
 ###### Errors
@@ -173,7 +173,7 @@ Retrieve the history for a task by runId
 | page | false | Which page of items to view | int |
 
 ###### Response
-[List[SingularityDeployHistory]](#model-SingularityDeployHistory)
+[List[SingularityDeployHistory]](models.md#model-SingularityDeployHistory)
 
 
 ###### Errors
@@ -203,7 +203,7 @@ Retrieve the task history for a specific deploy.
 | page | false | Which page of items to view | int |
 
 ###### Response
-[List[SingularityTaskIdHistory]](#model-SingularityTaskIdHistory)
+[List[SingularityTaskIdHistory]](models.md#model-SingularityTaskIdHistory)
 
 
 ###### Errors
@@ -227,7 +227,7 @@ Retrieve the task history for a specific deploy.
 | deployId | true | Deploy ID | string |
 
 ###### Response
-[List[SingularityTaskIdHistory]](#model-SingularityTaskIdHistory)
+[List[SingularityTaskIdHistory]](models.md#model-SingularityTaskIdHistory)
 
 
 ###### Errors
@@ -251,7 +251,7 @@ Retrieve the history for a specific deploy.
 | deployId | true | Deploy ID | string |
 
 ###### Response
-[SingularityDeployHistory](#model-SingularityDeployHistory)
+[SingularityDeployHistory](models.md#model-SingularityDeployHistory)
 
 
 ###### Errors

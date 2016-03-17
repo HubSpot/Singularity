@@ -61,7 +61,7 @@ Retrieve information about the current state of Singularity.
 | includeRequestIds | false |  | boolean |
 
 ###### Response
-[SingularityState](#model-SingularityState)
+[SingularityState](models.md#model-SingularityState)
 
 
 ###### Errors

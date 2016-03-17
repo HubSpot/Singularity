@@ -16,7 +16,7 @@ Freeze a specific rack
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
+| body | false |  | [SingularityMachineChangeRequest](models.md#model-linkType)</a> |
 
 ###### Response
 
@@ -44,7 +44,7 @@ Begin decommissioning a specific active rack
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
+| body | false |  | [SingularityMachineChangeRequest](models.md#model-linkType)</a> |
 
 ###### Response
 
@@ -72,7 +72,7 @@ Activate a decomissioning rack, canceling decomission without erasing history
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
+| body | false |  | [SingularityMachineChangeRequest](models.md#model-linkType)</a> |
 
 ###### Response
 
@@ -98,7 +98,7 @@ Retrieve the history of a given rack
 | rackId | true | Rack ID | string |
 
 ###### Response
-[List[SingularityMachineStateHistoryUpdate]](#model-SingularityMachineStateHistoryUpdate)
+[List[SingularityMachineStateHistoryUpdate]](models.md#model-SingularityMachineStateHistoryUpdate)
 
 
 ###### Errors
@@ -144,7 +144,7 @@ Retrieve the list of all known racks, optionally filtering by a particular state
 | state | false | Optionally specify a particular state to filter racks by | string |
 
 ###### Response
-[List[SingularityRack]](#model-SingularityRack)
+[List[SingularityRack]](models.md#model-SingularityRack)
 
 
 ###### Errors

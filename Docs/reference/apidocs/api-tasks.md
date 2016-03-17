@@ -14,7 +14,7 @@ Retrieve statistics about a specific active task.
 | taskId | true |  | string |
 
 ###### Response
-[MesosTaskStatisticsObject](#model-MesosTaskStatisticsObject)
+[MesosTaskStatisticsObject](models.md#model-MesosTaskStatisticsObject)
 
 
 ###### Errors
@@ -39,10 +39,10 @@ Run a configured shell command against the given task
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityShellCommand](#model-linkType)</a> |
+| body | false |  | [SingularityShellCommand](models.md#model-linkType)</a> |
 
 ###### Response
-[SingularityTaskShellCommandRequest](#model-SingularityTaskShellCommandRequest)
+[SingularityTaskShellCommandRequest](models.md#model-SingularityTaskShellCommandRequest)
 
 
 ###### Errors
@@ -66,7 +66,7 @@ Get the cleanup object for the task, if it exists
 | taskId | true |  | string |
 
 ###### Response
-[SingularityTaskCleanup](#model-SingularityTaskCleanup)
+[SingularityTaskCleanup](models.md#model-SingularityTaskCleanup)
 
 
 ###### Errors
@@ -89,7 +89,7 @@ Retrieve information about a specific active task.
 | taskId | true |  | string |
 
 ###### Response
-[SingularityTask](#model-SingularityTask)
+[SingularityTask](models.md#model-SingularityTask)
 
 
 ###### Errors
@@ -114,10 +114,10 @@ Attempt to kill task, optionally overriding an existing cleanup request (that ma
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityKillTaskRequest](#model-linkType)</a> |
+| body | false |  | [SingularityKillTaskRequest](models.md#model-linkType)</a> |
 
 ###### Response
-[SingularityTaskCleanup](#model-SingularityTaskCleanup)
+[SingularityTaskCleanup](models.md#model-SingularityTaskCleanup)
 
 
 ###### Errors
@@ -140,7 +140,7 @@ Retrieve information about a pending task.
 | pendingTaskId | true |  | string |
 
 ###### Response
-[SingularityTaskRequest](#model-SingularityTaskRequest)
+[SingularityTaskRequest](models.md#model-SingularityTaskRequest)
 
 
 ###### Errors
@@ -163,7 +163,7 @@ Retrieve list of scheduled tasks for a specific request.
 | requestId | true |  | string |
 
 ###### Response
-[List[SingularityTaskRequest]](#model-SingularityTaskRequest)
+[List[SingularityTaskRequest]](models.md#model-SingularityTaskRequest)
 
 
 ###### Errors
@@ -182,7 +182,7 @@ Retrieve list of scheduled task IDs.
 - No parameters
 
 ###### Response
-[UNKNOWN[SingularityPendingTaskId]](#model-UNKNOWN[SingularityPendingTaskId])
+[UNKNOWN[SingularityPendingTaskId]](models.md#model-UNKNOWN[SingularityPendingTaskId])
 
 
 ###### Errors
@@ -201,7 +201,7 @@ Retrieve list of scheduled tasks.
 - No parameters
 
 ###### Response
-[List[SingularityTaskRequest]](#model-SingularityTaskRequest)
+[List[SingularityTaskRequest]](models.md#model-SingularityTaskRequest)
 
 
 ###### Errors
@@ -220,7 +220,7 @@ Retrieve the list of tasks being cleaned from load balancers.
 - No parameters
 
 ###### Response
-[UNKNOWN[SingularityTaskId]](#model-UNKNOWN[SingularityTaskId])
+[UNKNOWN[SingularityTaskId]](models.md#model-UNKNOWN[SingularityTaskId])
 
 
 ###### Errors
@@ -239,7 +239,7 @@ Retrieve the list of killed tasks.
 - No parameters
 
 ###### Response
-[UNKNOWN[SingularityKilledTaskIdRecord]](#model-UNKNOWN[SingularityKilledTaskIdRecord])
+[UNKNOWN[SingularityKilledTaskIdRecord]](models.md#model-UNKNOWN[SingularityKilledTaskIdRecord])
 
 
 ###### Errors
@@ -258,7 +258,7 @@ Retrieve the list of cleaning tasks.
 - No parameters
 
 ###### Response
-[UNKNOWN[SingularityTaskCleanup]](#model-UNKNOWN[SingularityTaskCleanup])
+[UNKNOWN[SingularityTaskCleanup]](models.md#model-UNKNOWN[SingularityTaskCleanup])
 
 
 ###### Errors
@@ -281,7 +281,7 @@ Retrieve list of active tasks on a specific slave.
 | slaveId | true |  | string |
 
 ###### Response
-[UNKNOWN[SingularityTask]](#model-UNKNOWN[SingularityTask])
+[UNKNOWN[SingularityTask]](models.md#model-UNKNOWN[SingularityTask])
 
 
 ###### Errors
@@ -300,7 +300,7 @@ Retrieve the list of active tasks.
 - No parameters
 
 ###### Response
-[UNKNOWN[SingularityTask]](#model-UNKNOWN[SingularityTask])
+[UNKNOWN[SingularityTask]](models.md#model-UNKNOWN[SingularityTask])
 
 
 ###### Errors

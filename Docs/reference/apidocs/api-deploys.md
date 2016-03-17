@@ -11,10 +11,10 @@ Update the target active instance count for a pending deploy
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | true |  | [SingularityUpdatePendingDeployRequest](#model-linkType)</a> |
+| body | true |  | [SingularityUpdatePendingDeployRequest](models.md#model-linkType)</a> |
 
 ###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
+[SingularityRequestParent](models.md#model-SingularityRequestParent)
 
 
 ###### Errors
@@ -33,7 +33,7 @@ Retrieve the list of current pending deploys
 - No parameters
 
 ###### Response
-[List[SingularityPendingDeploy]](#model-SingularityPendingDeploy)
+[List[SingularityPendingDeploy]](models.md#model-SingularityPendingDeploy)
 
 
 ###### Errors
@@ -57,7 +57,7 @@ Cancel a pending deployment (best effort - the deploy may still succeed or fail)
 | deployId | true | The Singularity Deploy Id that should be removed. | string |
 
 ###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
+[SingularityRequestParent](models.md#model-SingularityRequestParent)
 
 
 ###### Errors
@@ -77,10 +77,10 @@ Start a new deployment for a Request
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | true |  | [SingularityDeployRequest](#model-linkType)</a> |
+| body | true |  | [SingularityDeployRequest](models.md#model-linkType)</a> |
 
 ###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
+[SingularityRequestParent](models.md#model-SingularityRequestParent)
 
 
 ###### Errors

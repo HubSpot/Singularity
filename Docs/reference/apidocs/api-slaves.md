@@ -16,7 +16,7 @@ Freeze tasks on a specific slave
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
+| body | false |  | [SingularityMachineChangeRequest](models.md#model-linkType)</a> |
 
 ###### Response
 
@@ -44,7 +44,7 @@ Begin decommissioning a specific active slave
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
+| body | false |  | [SingularityMachineChangeRequest](models.md#model-linkType)</a> |
 
 ###### Response
 
@@ -72,7 +72,7 @@ Activate a decomissioning slave, canceling decomission without erasing history
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
+| body | false |  | [SingularityMachineChangeRequest](models.md#model-linkType)</a> |
 
 ###### Response
 
@@ -98,7 +98,7 @@ Retrieve the history of a given slave
 | slaveId | true | Slave ID | string |
 
 ###### Response
-[List[SingularityMachineStateHistoryUpdate]](#model-SingularityMachineStateHistoryUpdate)
+[List[SingularityMachineStateHistoryUpdate]](models.md#model-SingularityMachineStateHistoryUpdate)
 
 
 ###### Errors
@@ -144,7 +144,7 @@ Retrieve the list of all known slaves, optionally filtering by a particular stat
 | state | false | Optionally specify a particular state to filter slaves by | string |
 
 ###### Response
-[List[SingularitySlave]](#model-SingularitySlave)
+[List[SingularitySlave]](models.md#model-SingularitySlave)
 
 
 ###### Errors

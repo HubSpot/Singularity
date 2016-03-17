@@ -37,7 +37,7 @@ Retrieve a list of queued task updates for a specific webhook.
 | webhookId | true |  | string |
 
 ###### Response
-[List[SingularityTaskHistoryUpdate]](#model-SingularityTaskHistoryUpdate)
+[List[SingularityTaskHistoryUpdate]](models.md#model-SingularityTaskHistoryUpdate)
 
 
 ###### Errors
@@ -60,7 +60,7 @@ Retrieve a list of queued request updates for a specific webhook.
 | webhookId | true |  | string |
 
 ###### Response
-[List[SingularityRequestHistory]](#model-SingularityRequestHistory)
+[List[SingularityRequestHistory]](models.md#model-SingularityRequestHistory)
 
 
 ###### Errors
@@ -83,7 +83,7 @@ Retrieve a list of queued deploy updates for a specific webhook.
 | webhookId | true |  | string |
 
 ###### Response
-[List[SingularityDeployUpdate]](#model-SingularityDeployUpdate)
+[List[SingularityDeployUpdate]](models.md#model-SingularityDeployUpdate)
 
 
 ###### Errors
@@ -103,7 +103,7 @@ Add a new webhook.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| body | false |  | [SingularityWebhook](#model-linkType)</a> |
+| body | false |  | [SingularityWebhook](models.md#model-linkType)</a> |
 
 ###### Response
 string
@@ -125,7 +125,7 @@ Retrieve a list of active webhooks.
 - No parameters
 
 ###### Response
-[List[SingularityWebhook]](#model-SingularityWebhook)
+[List[SingularityWebhook]](models.md#model-SingularityWebhook)
 
 
 ###### Errors
