@@ -36,7 +36,8 @@ var templateData = {
   warnIfScheduledJobIsRunningPastNextRunPct: process.env.SINGULARITY_WARN_IF_SCHEDULED_JOB_IS_RUNNING_PAST_NEXT_RUN_PCT || 200,
   shellCommands: process.env.SINGULARITY_SHELL_COMMANDS || "[]",
   timestampFormat: process.env.SINGULARITY_TIMESTAMP_FORMAT || 'lll',
-  timestampWithSecondsFormat: process.env.SINGULARITY_TIMESTAMP_WITH_SECONDS_FORMAT || 'lll:ss'
+  timestampWithSecondsFormat: process.env.SINGULARITY_TIMESTAMP_WITH_SECONDS_FORMAT || 'lll:ss',
+  redirectOnUnauthorizedUrl: process.env.SINGULARITY_REDIRECT_ON_UNAUTHORIZED_URL || ''
 }
 
 var dest = path.resolve(__dirname, '../SingularityService/target/generated-resources/assets');
