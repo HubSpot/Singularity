@@ -3,7 +3,7 @@
         {{#each metadataElementToDisplay}}
             <div class="alert alert-{{../alertClass}}">
                 <h4>{{ title }}</h4>
-                <p>
+                <p class='linkify'>
                     <b>
                         {{timestampFromNow timestamp}}
                         Type {{ type }}
@@ -13,7 +13,7 @@
                     </b>
                 </p>
                 {{#if message}}
-                    <p>{{ message }}</p>
+                    <p class='linkify'>{{ message }}</p>
                 {{/if}}
             </div>
         {{/each}}
