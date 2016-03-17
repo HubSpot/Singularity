@@ -1,6 +1,8 @@
 {
   "title": "Singularity",
-
+  "structure": {
+    "readme": "intro.md"
+  },
   "links": {
     "home": null,
     "about": false,
