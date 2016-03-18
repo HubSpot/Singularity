@@ -18,7 +18,7 @@ The compiled static files are placed in `../SingularityService/target/generated-
 
 ## Developer overview
 
-SingularityUI is a static app that relies on SingularityService for its data.
+SingularityUI is a single page webapp that relies on SingularityService for its data.
 
 The app is built using Gulp (i.e. compiling CoffeeScript, etc), with npm being used to manage its dependencies (e.g. jQuery, Backbone).
 
@@ -46,10 +46,7 @@ npm install
 # Build the app
 gulp build
 
-# Watch the project and build it when there are changes
-gulp watch
-
-# Same as above, but also start an HTTP server that serves the static files.
+# Serve the app locally at localhost:3334 and rebuild whenever files are changed.
 gulp serve
 ```
 
@@ -89,8 +86,8 @@ name: SingularityUI
 
 routes:
 
-  # Redirect static assets to local server (assuming it is on port 3333)
-  ".*/static/.*": "http://localhost:3333/"
+  # Redirect static assets to local server (assuming it is on port 3334)
+  ".*/static/.*": "http://localhost:3334/"
 
   # Redirect any API calls to the QA Singularity service (the slash after the domain is necessary)
   ".*/api/.*": "http://docker/"
