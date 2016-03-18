@@ -43,7 +43,11 @@ public class UIConfiguration {
   private String title = "Singularity";
 
   @JsonProperty
+<<<<<<< HEAD
   private Optional<String> navColor = "";
+=======
+  private Optional<String> navColor;
+>>>>>>> unauthorized_redirect
 
   @JsonProperty
   private String baseUrl;
@@ -69,7 +73,7 @@ public class UIConfiguration {
   private String rootUrlMode = RootUrlMode.INDEX_CATCHALL.name();
 
   @NotNull
-  private Optional<String> taskS3LogOmitPrefix = "";
+  private Optional<String> taskS3LogOmitPrefix;
 
   @NotEmpty
   private String timestampFormat = "lll";
@@ -78,7 +82,7 @@ public class UIConfiguration {
   private String timestampWithSecondsFormat = "lll:ss";
 
   @JsonProperty
-  private Optional<String> redirectOnUnauthorizedUrl = "";
+  private Optional<String> redirectOnUnauthorizedUrl;
 
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
