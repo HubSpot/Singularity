@@ -130,9 +130,9 @@ html
               h3(style="margin: 0; font-size: 20px; line-height: 1") Metadata
             each taskMetadataElement, i in taskMetadata
               h4(style="margin: 0; margin-top: 5; font-size: 20px; line-height: 1")
-                #{taskMetadataElement.level}: #{taskMetadataElement.type} - #{taskMetadataElement.date}
+                #{ taskMetadataElement.level }: #{ taskMetadataElement.type } - #{ taskMetadataElement.date }
                 if taskMetadataElement.user
-                  - #{taskMetadataElement.user}
-              p(style="margin: 0; margin-top: 5; line-height: 1") <b> #{taskMetadataElement.title} </b>
+                  |  by #{ taskMetadataElement.user }
+              p(style="margin: 0; margin-top: 5; line-height: 1") <b> #{ taskMetadataElement.title } </b>
               if taskMetadataElement.message
-                p(style="margin-bottom: 5") <b>Message: </b> #{taskMetadataElement.message}
+                p(style="margin-bottom: 5") <b>Message: </b> #{ taskMetadataElement.message }
