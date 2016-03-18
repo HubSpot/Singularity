@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -13,10 +14,12 @@ import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.helpers.NOPLogger;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -26,6 +29,7 @@ import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCallable;
 import com.hubspot.singularity.executor.utils.DockerUtils;
 import com.hubspot.singularity.runner.base.shared.ProcessFailedException;
+import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.spotify.docker.client.DockerException;
 
 @Singleton
@@ -136,7 +140,15 @@ public class SingularityExecutorThreadChecker {
             return Files.readAllLines(Paths.get(String.format(configuration.getCgroupsMesosCpuTasksFormat(), matcher.group(1))), Charsets.UTF_8).size();
           }
         }
-        throw new RuntimeException("Unable to parse cgroup container from " + procCgroupPath.toString());
+        LOG.warn("Unable to parse cgroup container from {}, attempting to count threads using pstree", procCgroupPath.toString());
+        SimpleProcessManager checkThreadsProcessManager = new SimpleProcessManager(NOPLogger.NOP_LOGGER);
+        List<String> cmd = ImmutableList.of("/bin/sh", "-c",String.format("pstree %s -p | wc -l", dockerPid.or(taskProcess.getCurrentPid().get())));
+        List<String> output = checkThreadsProcessManager.runCommandWithOutput(cmd);
+        if (output.isEmpty()) {
+          throw new ProcessFailedException("Unable to parse cgroup container from {}" + procCgroupPath.toString() + ". Output from ps was empty");
+        } else {
+          return Integer.parseInt(output.get(0));
+        }
       } else {
         throw new RuntimeException(procCgroupPath.toString() + " does not exist");
       }
