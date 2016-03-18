@@ -18,12 +18,24 @@ class taskHealthcheckNotificationSubview extends View
         @listenTo @model, 'sync', @render
         @listenTo @pendingDeploys, 'sync', @render
 
+    deployFailureKilledTask: =>
+        updates = @model.get('taskUpdates')
+        return false unless updates
+        for update in updates
+            return true if update.statusMessage and update.statusMessage.indexOf('DEPLOY_FAILED') isnt -1
+        return false
+
     render: =>
         return if not @model.synced
         return if @model.attributes.lastKnownState in @noHealthcheckMessageStates
-        @$el.html @template @renderData()
+        @$el.html @template @renderData
 
     renderData: =>
+        updates = @model.get('taskUpdates')
+        deployFailureKilledTask = false
+        if updates
+            for update in updates
+                deployFailureKilledTask = true if update.statusMessage and update.statusMessage.indexOf('DEPLOY_FAILED') isnt -1
         requestId = @model.get('task').taskId.requestId
         deployId = @model.get('task').taskId.deployId
         deployStatus = @pendingDeploys.find (item) -> item.get('deployMarker') and item.get('deployMarker').requestId is requestId and item.get('deployMarker').deployId is deployId and item.get('currentDeployState') is 'WAITING'
@@ -45,11 +57,19 @@ class taskHealthcheckNotificationSubview extends View
         taskHealthyMessage: taskHealthyMessage
         hasSuccessfulHealthcheck: @model.get('healthcheckResults')?.length > 0 and _.find(@model.get('healthcheckResults'), (item) -> item.statusCode is 200)
         lastHealthcheckFailed: @model.get('healthcheckResults')?.length > 0 and @model.get('healthcheckResults')[0].statusCode isnt 200
+        healthcheckFailureReasonMessage: @healthcheckFailureReasonMessage()
         synced:           @model.synced
         config:           config
         tooManyRetries: @model.get('healthcheckResults').length > maxRetries and maxRetries != 0
         numberFailed: @model.get('healthcheckResults').length
         secondsElapsed: healthTimeoutSeconds
+        doNotDisplayHealthcheckNotification: deployFailureKilledTask
+
+    healthcheckFailureReasonMessage: () ->
+        healthcheckResults = @model.get('healthcheckResults')
+        if healthcheckResults.length > 0
+            if healthcheckResults[0].errorMessage.toLowerCase().indexOf('connection refused') isnt -1
+                return 'a connection was refused. This is probably the connection to the host your app is running on.'
 
     triggerToggleHealthchecks: ->
         @trigger 'toggleHealthchecks'
