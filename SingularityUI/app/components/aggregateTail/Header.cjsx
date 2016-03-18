@@ -1,3 +1,5 @@
+React = require 'react'
+ReactDOM = require 'react-dom'
 
 Header = React.createClass
 

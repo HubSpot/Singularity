@@ -1,3 +1,4 @@
+React = require 'react'
 
 Help = React.createClass
 
