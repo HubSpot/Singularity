@@ -428,4 +428,8 @@ public class SingularityMesosScheduler implements Scheduler {
     LOG.warn("Error from mesos: {}", message);
   }
 
+  public boolean isConnected() {
+    return schedulerDriverSupplier.get().isPresent();
+  }
+
 }
