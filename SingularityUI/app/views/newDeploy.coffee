@@ -59,7 +59,7 @@ class NewDeployView extends FormBaseView
         $(event.currentTarget).parent().remove()
 
 
-    submit: ->
+    submit: (event) ->
         event.preventDefault()
         return if @$('button[type="submit"]').attr 'disabled'
         @$("[data-alert-location='form']").remove()
