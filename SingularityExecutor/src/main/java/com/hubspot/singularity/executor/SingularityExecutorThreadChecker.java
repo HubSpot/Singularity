@@ -140,14 +140,18 @@ public class SingularityExecutorThreadChecker {
             return Files.readAllLines(Paths.get(String.format(configuration.getCgroupsMesosCpuTasksFormat(), matcher.group(1))), Charsets.UTF_8).size();
           }
         }
-        LOG.warn("Unable to parse cgroup container from {}, attempting to count threads using pstree", procCgroupPath.toString());
-        SimpleProcessManager checkThreadsProcessManager = new SimpleProcessManager(NOPLogger.NOP_LOGGER);
-        List<String> cmd = ImmutableList.of("/bin/sh", "-c",String.format("pstree %s -p | wc -l", dockerPid.or(taskProcess.getCurrentPid().get())));
-        List<String> output = checkThreadsProcessManager.runCommandWithOutput(cmd);
-        if (output.isEmpty()) {
-          throw new ProcessFailedException("Unable to parse cgroup container from {}" + procCgroupPath.toString() + ". Output from ps was empty");
+        if (configuration.isFallBackToPstreeThreadCheck()) {
+          LOG.warn("Unable to parse cgroup container from {}, attempting to count threads using pstree", procCgroupPath.toString());
+          SimpleProcessManager checkThreadsProcessManager = new SimpleProcessManager(NOPLogger.NOP_LOGGER);
+          List<String> cmd = ImmutableList.of("/bin/sh", "-c", String.format("pstree %s -p | wc -l", dockerPid.or(taskProcess.getCurrentPid().get())));
+          List<String> output = checkThreadsProcessManager.runCommandWithOutput(cmd);
+          if (output.isEmpty()) {
+            throw new ProcessFailedException("Unable to parse cgroup container from {}" + procCgroupPath.toString() + ". Output from ps was empty");
+          } else {
+            return Integer.parseInt(output.get(0));
+          }
         } else {
-          return Integer.parseInt(output.get(0));
+          throw new ProcessFailedException("Unable to parse cgroup container from {}" + procCgroupPath.toString());
         }
       } else {
         throw new RuntimeException(procCgroupPath.toString() + " does not exist");

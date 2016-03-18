@@ -216,6 +216,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private int dockerClientConnectionPoolSize = 5;
 
+  @JsonProperty
+  private boolean fallBackToPstreeThreadCheck = true;
+
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
   }
@@ -616,6 +619,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.dockerClientConnectionPoolSize = dockerClientConnectionPoolSize;
   }
 
+  public boolean isFallBackToPstreeThreadCheck() {
+    return fallBackToPstreeThreadCheck;
+  }
+
+  public void setFallBackToPstreeThreadCheck(boolean fallBackToPstreeThreadCheck) {
+    this.fallBackToPstreeThreadCheck = fallBackToPstreeThreadCheck;
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration[" +
@@ -668,6 +679,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", shellCommandPrefix='" + shellCommandPrefix + '\'' +
             ", dockerClientTimeLimitMs='" + dockerClientTimeLimitSeconds + '\'' +
             ", dockerClientConnectionPoolSize='" + dockerClientConnectionPoolSize + '\'' +
+            ", fallBackToPstreeThreadCheck='" + fallBackToPstreeThreadCheck + '\'' +
             ']';
   }
 }
