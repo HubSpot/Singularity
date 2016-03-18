@@ -134,6 +134,7 @@ class TaskDetailController extends Controller
 
         app.showView @view
 
+
     fetchResourceUsage: ->
         @models.resourceUsage?.fetch()
             .done =>
@@ -191,6 +192,14 @@ class TaskDetailController extends Controller
         else
             @collections.alerts.reset(alerts)
 
+    fetchDeployDetails: ->
+        @models.deploy = new DeployDetails
+            deployId: @models.task.attributes.task.taskId.deployId
+            requestId: @models.task.attributes.task.taskId.requestId
+        @models.deploy.fetch()
+            .error =>
+                app.caughtError()
+
     refresh: ->
         @resourcesFetched = false
 
@@ -209,6 +218,11 @@ class TaskDetailController extends Controller
                 @collections.logDirectory.fetch().error @ignore400
             .success =>
                 @getAlerts()
+                if @deployFailureKilledTask()
+                    @models.task.doNotDisplayHealthcheckNotification = true
+                else
+                    @models.task.doNotDisplayHealthcheckNotification = false
+                @fetchDeployDetails()
             .error =>
                 # If this 404s the task doesn't exist
                 app.caughtError()
