@@ -1,50 +1,47 @@
-<h3>
+<h2>
     New deploy for <a href="{{appRoot}}/request/{{ model.id }}">{{ model.id }}</a>
-</h3>
+</h2>
 
 <div class="row new-form">
-    <form class="col-md-5">
+    <form class="col-md-8">
         <div class="form-group required">
             <label for="id">Deploy ID</label>
             <input type="text" id="id" class="form-control">
         </div>
 
-        <fieldset>
-            <div class="form-group">
-                <label>Executor type</label>
+        <h3>Executor Info</h3>
 
-                <div>
-                    <div id="executor-type" class="btn-group">
-                        <button class="btn btn-default active" data-executor="default">
-                            Default
-                        </button>
-                        <button class="btn btn-default" data-executor="custom">
-                            Custom
-                        </button> 
-                        <button class="btn btn-default" data-executor="container">
-                            Docker
-                        </button>
-                    </div>
+        <div class="form-group required">
+            <label for="executor-type">Executor type</label>
+            <select id="executor-type" class="form-control">
+                <option value="default">Default</option>
+                <option value="custom">Custom</option>
+            </select>
+        </div>
+
+        <div class="default-executor">
+            <fieldset id="default-expandable" class='expandable'>
+                <h4>Default Executor Settings</h4>
+                <div class="form-group">
+                  <label for="command">Command to execute</label>
+                  <input type="text" id="command" class="form-control" placeholder="eg: rm -rf /">
                 </div>
-            </div>
-        </fieldset>
-        
-        <fieldset id="default-expandable" class='expandable'>
-            <div class="form-group required">
-              <label for="command">Command to execute</label>
-              <input type="text" id="command" class="form-control" placeholder="eg: rm -rf /">
-            </div>
-        
-            <label>Artifacts</label>
 
-            <div class="multi-input">
-                <input type="text" class="form-control artifact-uri" placeholder="eg: http://s3.example/my-artifact">
-            </div>
-        </fieldset>
+                <label for="cmd-line-args">Arguments</label>
+                <div class="multi-input">
+                    <input id="cmd-line-args" type="text" class="form-control cmd-line-arg">
+                </div>
+            
+                <label for=artifacts" >Artifacts</label>
+                <div class="multi-input">
+                    <input id="artifacts" type="text" class="form-control artifact-uri" placeholder="eg: http://s3.example/my-artifact">
+                </div>
+            </fieldset>
+        </div>
 
-        <div id="custom-expandable" class="expandable hide">
+        <div class="custom-executor hide">
             <fieldset>
-                <h4>Custom executor details</h4>
+                <h4>Custom Executor Settingss</h4>
 
                 <div class="form-group required">
                     <label for="custom-executor-command">Custom executor command</label>
@@ -54,36 +51,89 @@
                 <div class="form-group">
                     <label for="extra-args">Extra command args</label>
                     <div class="multi-input">
-                        <input type="text" class="form-control extra-arg" placeholder="eg: -jar MyThing.jar">
+                        <input type="text" id="extra-args" class="form-control extra-arg" placeholder="eg: -jar MyThing.jar">
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="user">User</label>
-                    <input type="text" class="form-control" id="user" placeholder="default: root">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="user">User</label>
+                            <input type="text" class="form-control" id="user" placeholder="default: root">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="kill-after-millis">Kill processes after (milisec)</label>
+                            <input type="text" class="form-control" id="kill-after-millis" placeholder="default: 120000">
+                        </div>
+                    </div>
                 </div>
-
-                <div class="form-group">
-                    <label for="kill-after-millis">Kill processes after (milisec)</label>
-                    <input type="text" class="form-control" id="kill-after-millis" placeholder="default: 120000">
-                </div>
-
-                <div class="form-group">
-                    <label for="logging-extra-fields">Successful exit codes</label>
-                    <div class="multi-input">
-                        <input type="text" class="form-control successful-exit-code">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="logging-extra-fields">Successful exit codes</label>
+                            <div class="multi-input">
+                                <input type="text" class="form-control successful-exit-code">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="max-task-threads">Max Task Threads</label>
+                            <input type="text" class="form-control" id="max-task-threads">
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="logging-tag">Logging tag</label>
-                    <input type="text" class="form-control" id="logging-tag">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="logging-tag">Logging tag</label>
+                            <input type="text" class="form-control" id="logging-tag">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="logging-extra-fields">Logging extra fields</label>
+                            <div class="multi-input">
+                                <input type="text" class="form-control extra-field" placeholder="format: key=value">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="logging-extra-fields">Logging extra fields</label>
-                    <div class="multi-input">
-                        <input type="text" class="form-control extra-field" placeholder="format: key=value">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="preserve-sandbox">
+                                <input type="checkbox" id="preserve-sandbox">
+                                Preserve task sandbox after finish
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="skip-lr-compress">
+                                <input type="checkbox" id="skip-lr-compress">
+                                Skip lorotate compress
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="logging-s3-bucket">Logging S3 Bucket</label>
+                            <input type="text" class="form-control" id="logging-s3-bucket">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="max-open-files">Max Open Files</label>
+                            <input type="text" class="form-control" id="max-open-files">
+                        </div>
                     </div>
                 </div>
 
@@ -121,43 +171,73 @@
             </fieldset>
         </div>
 
-        <div id="container-expandable" class="expandable hide">
-            <fieldset>
-                <div class="form-group required">
-                  <label for="docker">Docker image</label>
-                  <input type="text" id="docker" class="form-control" placeholder="eg: registry.hub.docker.com/centos/centos6:latest">
-
-                  <label for="dockernetwork">Docker Network</label>
-                  <select id="dockernetwork" class="form-control">
-                    <option value="NONE">None</option>
-                    <option value="BRIDGE">Bridge</option>
-                    <option value="HOST">Host</option>
-                  </select>
-                </div>
-            </fieldset>
-
-            <div id="docker-port-mappings"></div>
-
-            <div id="docker-port-button-row" class="row">
-                <div class="col-sm-6">
-                    <button class="btn btn-success btn-block">
-                        <span class="glyphicon glyphicon-plus"></span>
-                        Docker Port Mapping
-                    </button>
-                </div>
-            </div>
+        <h3>Container Info</h3>
+        <div class="form-group required">
+            <label for="container-type">Container type</label>
+            <select id="container-type" class="form-control">
+                <option value="mesos">Mesos</option>
+                <option value="docker">Docker</option>
+            </select>
         </div>
 
-        {{#if model.request.loadBalanced}}
-            <div class="form-group required">
-                <label for="service-base-path">Service base path</label>
-                <input type="text" id="service-base-path" class="form-control" placeholder="eg: /singularity/api/v2">
-            </div>
-        {{/if}}
+        <div class="container-info hide">
+            <fieldset>
+                <h4>Dokcer Settings</h4>
+                <div class="form-group required">
+                    <label for="docker">Docker image</label>
+                    <input type="text" id="docker" class="form-control" placeholder="eg: centos6:latest">
+                </div>
 
+                <div class="form-group">
+                    <label for="dockernetwork">Docker Network</label>
+                    <select id="dockernetwork" class="form-control">
+                        <option value="NONE">None</option>
+                        <option value="BRIDGE">Bridge</option>
+                        <option value="HOST">Host</option>
+                    </select>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="privileged">
+                                <input type="checkbox" id="privileged">
+                                Privileged
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="force-pull">
+                                <input type="checkbox" id="force-pull">
+                                Force Pull Image
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="docker-port-mappings"></div>
+
+                ###### TODO DOCEKR VOLUMES #########
+                <div id="docker-volumes"></div> 
+
+                <div class="multi-input">
+                    <input type="text" class="form-control docker-parameter" placeholder="format: key=value">
+                </div>
+
+                <div id="docker-port-button-row" class="row">
+                    <div class="col-sm-6">
+                        <button class="btn btn-success btn-block">
+                            <span class="glyphicon glyphicon-plus"></span>
+                            Docker Port Mapping
+                        </button>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+
+        <h3>Resources</h3>
         <fieldset>
-            <h4>Resources</h4>
-
             <div class="row">
                 <div class="col-sm-4 form-group">
                     <label for="cpus">CPUs</label>
@@ -183,68 +263,107 @@
         </fieldset>
         
         {{#if model.daemon}}
-            <h3>Advanced</h3>
+            <h3>Deploy Health</h3>
         
             <fieldset>
-                <h4>Healthcheck</h4>
-                <div class="form-group">
-                    <label for="healthcheck-uri">Healthcheck URI</label>
-                    <input type="text" id="healthcheck-uri" class="form-control">
-                </div>
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label for="healthcheck-interval">HC interval (sec)</label>
-                            <input type="text" id="healthcheck-interval" class="form-control" placeholder="default: 5">
+                {{#ifEqual model.type 'SERVICE'}}
+                    <h4>Healthcheck</h4>
+                    <div class="form-group">
+                        <label for="healthcheck-uri">Healthcheck URI</label>
+                        <input type="text" id="healthcheck-uri" class="form-control">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="healthcheck-interval">HC interval (sec)</label>
+                                <input type="text" id="healthcheck-interval" class="form-control" placeholder="default: 5">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="healthcheck-timeout">HC timeout (sec)</label>
+                                <input type="text" id="healthcheck-timeout" class="form-control" placeholder="default: 5">
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label for="healthcheck-timeout">HC timeout (sec)</label>
-                            <input type="text" id="healthcheck-timeout" class="form-control" placeholder="default: 5">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="healthcheck-port-index">HC Port Index</label>
+                                <input type="text" id="healthcheck-port-index" class="form-control" placeholder="default: 0 (first allocated port)">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="total-healthcheck-timeout">Total Healthcheck Timeout (sec)</label>
+                                <input type="text" id="total-healthcheck-timeout" class="form-control" placeholder="default: None">
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label for="consider-healthy-after">Healthy after (sec)</label>
-                            <input type="text" id="consider-healthy-after" class="form-control" placeholder="default: 5">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="deploy-healthcheck-timeout">Deploy healthcheck timeout (sec)</label>
+                                <input type="text" id="deploy-healthcheck-timeout" class="form-control" placeholder="default: 120">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="hc-protocol">HC Protocol</label>
+                                <select id="hc-protocol" class="form-control">
+                                    <option value="HTTP">HTTP</option>
+                                    <option value="HTTPS">HTTPS</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="skip-healthcheck">
-                                <input type="checkbox" id="skip-healthcheck">
-                                Skip healthcheck on deploy
-                            </label>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="skip-healthcheck">
+                                    <input type="checkbox" id="skip-healthcheck">
+                                    Skip healthcheck on deploy
+                                </label>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="deploy-healthcheck-timeout">Deploy healthcheck timeout (sec)</label>
-                            <input type="text" id="deploy-healthcheck-timeout" class="form-control" placeholder="default: 120">
+                {{else}}
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="consider-healthy-after">Consider Healthy After Running For (sec)</label>
+                                <input type="text" id="consider-healthy-after" class="form-control" placeholder="default: 5">
+                            </div>
                         </div>
                     </div>
-                </div>
+                {{/ifEqual}}
             </fieldset>
 
-            <fieldset>
-                <h4>Load balancer</h4>
-
-                <div class="form-group {{#if model.request.loadBalanced}}required{{/if}}">
-                    <label>Load balancer groups</label>
-                    <div class="multi-input">
-                        <input type="text" class="form-control lb-group">
+            {{#if model.request.loadBalanced}}
+                <h3>Load Balancer</h3>
+                <fieldset>
+                    <div class="form-group required">
+                        <label for="service-base-path">Service base path</label>
+                        <input type="text" id="service-base-path" class="form-control" placeholder="eg: /singularity/api/v2">
                     </div>
-                </div>
-                <div class="form-group">
-                    <label>Load balancer options</label>
-                    <div class="multi-input">
-                        <input type="text" class="form-control lb-option" placeholder="format: key=value">
+                    <div class="form-group {{#if model.request.loadBalanced}}required{{/if}}">
+                        <label>Load balancer groups</label>
+                        <div class="multi-input">
+                            <input type="text" class="form-control lb-group">
+                        </div>
                     </div>
-                </div>
-            </fieldset>
+                    <div class="form-group">
+                        <label>Load balancer options</label>
+                        <div class="multi-input">
+                            <input type="text" class="form-control lb-option" placeholder="format: key=value">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="lb-port-index">Load balancer port index</label>
+                        <input type="text" id="lb-port-index" class="form-control" placeholder="default: 0 (first allocated port)">
+                    </div>
+                </fieldset>
+            {{/if}}
         {{/if}}
 
         <div id="button-row">
@@ -259,7 +378,7 @@
         </div>
     </form>
 
-    <div id="help-column" class="col-md-6 col-md-offset-1">
-        
+    <div id="help-column" class="col-md-4 col-md-offset-1">
+
     </div>
 </div>

@@ -17,7 +17,8 @@ class NewDeployView extends FormBaseView
 
     events: ->
         _.extend super,
-            'click #executor-type button':          'changeExecutor'
+            'change #executor-type':                'changeExecutor'
+            'change #container-type':               'changeContainer'
             'click #artifact-button-row button':    'addArtifact'
             'click .remove-button':                 'removeArtifact'
             'click #docker-port-button-row button': 'addPortMap'
@@ -25,15 +26,23 @@ class NewDeployView extends FormBaseView
 
     changeExecutor: (event) ->
         event.preventDefault()
+        executorType = event.currentTarget.options[event.currentTarget.selectedIndex].value
 
-        $target = $ event.currentTarget
-        @$('.expandable').addClass 'hide'
-        $target.parents('.btn-group').find('.active').removeClass 'active'
+        if executorType is 'default'
+            $('.custom-executor').addClass('hide')
+            $('.default-executor').removeClass('hide')
+        else
+            $('.custom-executor').removeClass('hide')
+            $('.default-executor').addClass('hide')
 
-        executorType = $target.data 'executor'
+    changeContainer: (event) ->
+        event.preventDefault()
+        containerType = event.currentTarget.options[event.currentTarget.selectedIndex].value
 
-        @$("\##{ executorType }-expandable").removeClass 'hide'
-        $target.addClass 'active'
+        if containerType is 'docker'
+            $('.container-info').removeClass('hide')
+        else
+            $('.container-info').addClass('hide')
 
     addArtifact: (event) ->
         event.preventDefault()
@@ -93,6 +102,7 @@ class NewDeployView extends FormBaseView
         
         if executor is 'default'
             deployObject.uris    = @multiList '.artifact-uri'
+            deployObject.arguments = @multiList '.cmd-line-arg'
             deployObject.command = command
         else if executor is 'container'
             deployObject.containerInfo = {}
@@ -100,6 +110,7 @@ class NewDeployView extends FormBaseView
             deployObject.containerInfo.docker = {}
             deployObject.containerInfo.docker.image = @$('#docker').val()
             deployObject.containerInfo.docker.network = @$('#dockernetwork').val()
+            deployObject.containerInfo.docker.parameters = @multiMap '.docker-paramter'
             $dockerPorts = $('.docker-port')
             if $dockerPorts.length
                 for $dockerPort in $dockerPorts
