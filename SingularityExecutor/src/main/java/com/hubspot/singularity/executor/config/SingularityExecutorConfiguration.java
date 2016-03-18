@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.MesosUtils;
+import com.hubspot.singularity.executor.models.ThreadCheckerType;
 import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandDescriptor;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
@@ -215,6 +216,12 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @JsonProperty
   private int dockerClientConnectionPoolSize = 5;
+
+  @JsonProperty
+  private ThreadCheckerType threadCheckerType = ThreadCheckerType.CGROUP;
+
+  @JsonProperty
+  private Optional<ThreadCheckerType> fallbackThreadCheckerType = Optional.absent();
 
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
@@ -616,6 +623,22 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.dockerClientConnectionPoolSize = dockerClientConnectionPoolSize;
   }
 
+  public ThreadCheckerType getThreadCheckerType() {
+    return threadCheckerType;
+  }
+
+  public void setThreadCheckerType(ThreadCheckerType threadCheckerType) {
+    this.threadCheckerType = threadCheckerType;
+  }
+
+  public Optional<ThreadCheckerType> getFallbackThreadCheckerType() {
+    return fallbackThreadCheckerType;
+  }
+
+  public void setFallbackThreadCheckerType(Optional<ThreadCheckerType> fallbackThreadCheckerType) {
+    this.fallbackThreadCheckerType = fallbackThreadCheckerType;
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration[" +
@@ -668,6 +691,8 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", shellCommandPrefix='" + shellCommandPrefix + '\'' +
             ", dockerClientTimeLimitMs='" + dockerClientTimeLimitSeconds + '\'' +
             ", dockerClientConnectionPoolSize='" + dockerClientConnectionPoolSize + '\'' +
+            ", threadCheckerType='" + threadCheckerType + '\'' +
+            ", fallbackThreadCheckerType='" + fallbackThreadCheckerType + '\'' +
             ']';
   }
 }
