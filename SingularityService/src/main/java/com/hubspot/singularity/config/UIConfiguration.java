@@ -68,7 +68,7 @@ public class UIConfiguration {
   @JsonProperty
   private String rootUrlMode = RootUrlMode.INDEX_CATCHALL.name();
 
-  @NotNull
+  @JsonProperty
   private Optional<String> taskS3LogOmitPrefix;
 
   @NotEmpty
