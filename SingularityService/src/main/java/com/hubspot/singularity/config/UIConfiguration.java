@@ -43,11 +43,7 @@ public class UIConfiguration {
   private String title = "Singularity";
 
   @JsonProperty
-<<<<<<< HEAD
-  private Optional<String> navColor = "";
-=======
   private Optional<String> navColor;
->>>>>>> unauthorized_redirect
 
   @JsonProperty
   private String baseUrl;
