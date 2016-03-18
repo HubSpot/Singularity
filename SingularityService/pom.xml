@@ -403,6 +403,7 @@
                   <mustacheFileRoot>${basedir}/../SingularityUI/app/assets/api-docs</mustacheFileRoot>
                   <outputPath>${project.build.directory}/classes/assets/api-docs/index.html</outputPath>
                   <apiSortComparator>com.hubspot.singularity.swagger.ApiSortComparator</apiSortComparator>
+                  <swaggerDirectory>${project.build.directory}/classes/assets/api-docs</swaggerDirectory>
                 </apiSource>
               </apiSources>
             </configuration>
