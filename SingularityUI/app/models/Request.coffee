@@ -91,19 +91,14 @@ class Request extends Model
             contentType: 'application/json'
             data: JSON.stringify data
 
-    run: (confirmedOrPromptData, message) ->
+    run: (cmdLineArgs, message) ->
         options =
             url: "#{ @url() }/run"
             type: 'POST'
             contentType: 'application/json'
             data: {}
 
-        if typeof confirmedOrPromptData is 'string'
-          if confirmedOrPromptData != ''
-            options.data.commandLineArgs = [confirmedOrPromptData]
-          else
-            options.data.commandLineArgs = []
-          options.processData = false
+        options.data.commandLineArgs = cmdLineArgs
 
         if message
             options.data.message = message
@@ -433,12 +428,17 @@ class Request extends Model
                 @unpause(confirmed).done callback
 
     promptRun: (callback) =>
+        try
+            lastCommands = JSON.parse(localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id))
+        catch e
+            console.error('Could not parse previous commands JSON')
+            lastCommands = [lastCommands.length - 1]
         vex.dialog.prompt
             message: "<h3>Run Task</h3>"
             input: runTemplate
                 id: @get "id"
                 prefix: @localStorageCommandLineInputKeyPrefix
-                commands: localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
+                commands: if lastCommands? then lastCommands[lastCommands.length - 1] else []
 
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.YES), text: 'Run now'
@@ -449,7 +449,6 @@ class Request extends Model
                 return if @data is false
 
                 fileName = @data.filename.trim()
-                commandLineInput = @data.commandLineInput.trim()
                 message = @data.message
 
                 if fileName.length is 0 and @data.autoTail is 'on'
@@ -457,16 +456,15 @@ class Request extends Model
                     return false
 
                 else
-                    history = localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
-
-                    if history?
-                        last = history.split(",")[history.split(",").length - 1]
-                        history += ","
-                    else
-                        history = ""
-
-                    if commandLineInput != last
-                        localStorage.setItem(@localStorageCommandLineInputKeyPrefix + @id, history + commandLineInput) if commandLineInput?
+                    if @data.commandLineInput?
+                        try
+                            history = JSON.parse(localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id))
+                        catch e
+                            console.error('Could not parse previous command history')
+                            history = []
+                        if history and @data.commandLineInput != history[-1]
+                            history.push(@data.commandLineInput)
+                            localStorage.setItem(@localStorageCommandLineInputKeyPrefix + @id, JSON.stringify(history))
                     localStorage.setItem('taskRunRedirectFilename', fileName) if filename?
                     localStorage.setItem('taskRunAutoTail', @data.autoTail)
                     @data.id = @get 'id'
@@ -477,26 +475,44 @@ class Request extends Model
             afterOpen: =>
                 $('#filename').val localStorage.getItem('taskRunRedirectFilename')
                 $('#autoTail').prop 'checked', (localStorage.getItem('taskRunAutoTail') is 'on')
-                cmdString = localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
-                commands = if cmdString then cmdString.split(",").reverse() else []
-                $('#commandLineInput').val commands[0]
-                localStorage.setItem(@localStorageCommandLineInputKeyPrefix + "historyIndex", 0);
-                localStorage.setItem(@localStorageCommandLineInputKeyPrefix + "historyLength", commands.length);
+                $('#add-cmd-line-arg').on('click', { removeCmdLineArg: @removeCmdLineArg }, @addCmdLineArg)
+                $('.remove-button').click @removeCmdLineArg
 
             callback: (data) =>
+                if typeof data.commandLineInput is 'string'
+                    if data.commandLineInput != ''
+                        data.commandLineInput = [data.commandLineInput.trim()]
+                    else
+                        data.commandLineInput = []
+                if data.commandLineInput.length == 1 and data.commandLineInput[0] == ''
+                    data.commandLineInput = []
                 @data = data
 
+    addCmdLineArg: (event) ->
+        event.preventDefault()
+        $container = $('#cmd-line-inputs')
+        $container.append """
+        <div class="cmd-line-arg">
+            <div class="remove-button"></div>
+            <input id="commandLineInput" name="commandLineInput" type="text" class="vex-dialog-prompt-input" placeholder=""/>
+        </div>
+        """
+        $('.remove-button').click event.data.removeCmdLineArg
+
+    removeCmdLineArg: (event) ->
+        event.preventDefault()
+        $(event.currentTarget).parent().remove()
 
     promptRerun: (taskId, callback) =>
         task = new TaskHistory {taskId}
         task.fetch()
             .done =>
-                command = task.attributes.task.taskRequest.pendingTask.cmdLineArgsList
+                commands = task.attributes.task.taskRequest.pendingTask.cmdLineArgsList
                 vex.dialog.prompt
                     message: "<h3>Rerun Task</h3>"
                     input: runTemplate
                         id: @get "id"
-                        command: command
+                        commands: commands
                     buttons: [
                         $.extend _.clone(vex.dialog.buttons.YES), text: 'Run now'
                         vex.dialog.buttons.NO
@@ -522,14 +538,16 @@ class Request extends Model
 
                     afterOpen: =>
                         $('#filename').val localStorage.getItem('taskRunRedirectFilename')
-                        if command is ""
-                            history = localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
-                            if !!history
-                                history = history.split(",")
-                                $('#commandLineInput').val history[history.length - 1]
                         $('#autoTail').prop 'checked', (localStorage.getItem('taskRunAutoTail') is 'on')
+                        $('#add-cmd-line-arg').on('click', { removeCmdLineArg: @removeCmdLineArg }, @addCmdLineArg)
+                        $('.remove-button').click @removeCmdLineArg
 
                     callback: (data) =>
+                        if typeof data.commandLineInput is 'string'
+                            if data.commandLineInput != ''
+                                data.commandLineInput = [data.commandLineInput.trim()]
+                            else
+                                data.commandLineInput = []
                         @data = data
 
     promptRemove: (callback) =>
