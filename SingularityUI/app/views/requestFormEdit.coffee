@@ -28,6 +28,7 @@ class RequestFormEdit extends RequestFormBaseView
         if @requestType is 'SERVICE' or 'WORKER'
             @$("#instances-#{@requestType}").val request.request.instances
             @$("#rack-sensitive-#{@requestType}").prop 'checked', request.request.rackSensitive
+            @$("#hide-distribute-across-racks-hint-#{@requestType}").prop 'checked', request.request.hideEvenNumberAcrossRacksHint
             @$("#load-balanced").prop 'checked', request.request.loadBalanced
 
         if @requestType in ['SCHEDULED','ON_DEMAND','RUN_ONCE']
