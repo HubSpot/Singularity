@@ -43,7 +43,7 @@
                     <div class="panel-body">
                         {{#each data.deployResult.deployFailures}}
                             {{#if taskId}}
-                                <a href="{{appRoot}}/task/{{ taskId.id }}" class="list-group-item">{{humanizeText reason }} (Instance {{taskId.instanceNo}}){{#if message}}: {{ message }}{{/if}}</a>
+                                <a href="{{appRoot}}/task/{{ taskId.id }}" class="list-group-item"><b>{{taskId.id}}</b>: {{humanizeText reason }} (Instance {{taskId.instanceNo}}){{#if message}}: {{ message }}{{/if}}</a>
                             {{else}}
                                 <li class="list-group-item">{{humanizeText reason }}{{#if message}}: {{ message }}{{/if}}</li>
                             {{/if}}
