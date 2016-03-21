@@ -399,14 +399,18 @@
             {{/if}}
         {{/if}}
 
-        <div class="well">
-            <div class="form-group">
-                <label for="deploy-to-unpause">
-                    <input type="checkbox" id="deploy-to-unpause">
-                    Unpause on successful deploy
-                </label>
-            </div>
-        </div>
+        {{#if model.daemon}}
+            {{#if model.paused}}
+                <div class="well">
+                    <div class="form-group">
+                        <label for="deploy-to-unpause">
+                            <input type="checkbox" id="deploy-to-unpause">
+                            Unpause on successful deploy
+                        </label>
+                    </div>
+                </div>
+            {{/if}}
+        {{/if}}
 
         <div id="button-row">
             <span>
