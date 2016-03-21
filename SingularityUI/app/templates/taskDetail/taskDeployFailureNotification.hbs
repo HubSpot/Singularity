@@ -26,8 +26,6 @@
                 {{/ifDeployFailureCausedTaskToBeKilled}}
                 {{#if deploy.deployResult.deployFailures.length}}
                     The deploy failure was caused by:
-                {{else}}
-                    The reason for the deploy failure is unknown.
                 {{/if}}
             </p>
             {{#if deploy.deployResult.deployFailures.length}}
