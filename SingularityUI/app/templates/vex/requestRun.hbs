@@ -2,17 +2,31 @@
 <pre>{{ id }}</pre>
 
 <p>Additional command line input: <small>(optional)</small></p>
-<div class="vex-dialog-input">
-	<input id='commandLineInput' name="commandLineInput" type="text" class="vex-dialog-prompt-input" placeholder="" value="{{ command }}">
+<div class="vex-dialog-input" id="cmd-line-inputs">
+    {{#each commands}}
+        <div class="cmd-line-arg">
+            <div class="remove-button"></div>
+            <input id="commandLineInput" name="commandLineInput" type="text" class="vex-dialog-prompt-input" placeholder="" value="{{ this }}"/>
+        </div>
+    {{else}}
+        <div class="cmd-line-arg">
+            <div class="remove-button"></div>
+            <input id="commandLineInput" name="commandLineInput" type="text" class="vex-dialog-prompt-input" placeholder=""/>
+        </div>
+    {{/each}}
 </div>
+<button id="add-cmd-line-arg" class="btn btn-success btn-block">
+    <span class="glyphicon glyphicon-plus"></span>
+    Argument
+</button>
 <p>Message: <small>(optional)</small></p>
 <div class="vex-dialog-input">
-	<input name="message" id="run-message" type="text" />
+    <input name="message" id="run-message" type="text" />
 </div>
 <hr class='border-color-light-gray'>
 
 <p><label class='label-light'><input id="autoTail" name="autoTail" type="checkbox"> Wait for task to start, then start tailing:</label></p>
 <div id="noFilenameError" class="alert alert-warning hide" role="alert">Please enter a filename or uncheck the box</div>
 <div class="vex-dialog-input">
-	<input id='filename' name="filename" type="text" class="vex-dialog-prompt-input" placeholder="e.g. service.log" value="">
+    <input id='filename' name="filename" type="text" class="vex-dialog-prompt-input" placeholder="e.g. service.log" value="">
 </div>
