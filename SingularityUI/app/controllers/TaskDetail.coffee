@@ -15,7 +15,6 @@ ExpandableTableSubview = require '../views/expandableTableSubview'
 OverviewSubview = require '../views/taskOverviewSubview'
 HealthcheckNotification = require '../views/taskHealthcheckNotificationSubview'
 SimpleSubview = require '../views/simpleSubview'
-TaskMetadataAlertSubview = require '../views/taskMetadataAlertSubview'
 ShellCommands = require '../views/taskShellCommandsSubview'
 LatestLog = require '../views/taskLatestLogSubview'
 
@@ -24,20 +23,19 @@ TaskView = require '../views/task'
 class TaskDetailController extends Controller
 
     templates:
-        overview:                   require '../templates/taskDetail/taskOverview'
-        healthcheckNotification:    require '../templates/taskDetail/taskHealthcheckNotification'
-        taskMetadataAlert:          require '../templates/taskDetail/taskMetadataAlert'
-        history:                    require '../templates/taskDetail/taskHistory'
-        logs:                       require '../templates/taskDetail/taskS3Logs'
-        lbUpdates:                  require '../templates/taskDetail/taskLbUpdates'
-        healthChecks:               require '../templates/taskDetail/taskHealthChecks'
-        info:                       require '../templates/taskDetail/taskInfo'
-        environment:                require '../templates/taskDetail/taskEnvironment'
-        resourceUsage:              require '../templates/taskDetail/taskResourceUsage'
-        alerts:                     require '../templates/alerts'
-        latestLog:                  require '../templates/taskDetail/taskLatestLog'
-        shellCommands:              require '../templates/taskDetail/taskShellCommands'
-        taskMetadataTable:          require '../templates/taskDetail/taskMetadataTable'
+        overview:                     require '../templates/taskDetail/taskOverview'
+        deployFailureNotification:    require '../templates/taskDetail/taskDeployFailureNotification'
+        healthcheckNotification:      require '../templates/taskDetail/taskHealthcheckNotification'
+        history:                      require '../templates/taskDetail/taskHistory'
+        logs:                         require '../templates/taskDetail/taskS3Logs'
+        lbUpdates:                    require '../templates/taskDetail/taskLbUpdates'
+        healthChecks:                 require '../templates/taskDetail/taskHealthChecks'
+        info:                         require '../templates/taskDetail/taskInfo'
+        environment:                  require '../templates/taskDetail/taskEnvironment'
+        resourceUsage:                require '../templates/taskDetail/taskResourceUsage'
+        alerts:                       require '../templates/alerts'
+        latestLog:                    require '../templates/taskDetail/taskLatestLog'
+        shellCommands:                require '../templates/taskDetail/taskShellCommands'
 
     initialize: ({@taskId, @filePath}) ->
         @title @taskId
@@ -75,24 +73,16 @@ class TaskDetailController extends Controller
             model:      @models.task
             template:   @templates.overview
 
+        @subviews.deployFailureNotification = new SimpleSubview
+            model: @models.task
+            template: @templates.deployFailureNotification
+            extraRenderData: (subView) =>
+                { deploy: if @deploy then @deploy.toJSON() else '' }
+
         @subviews.healthcheckNotification = new HealthcheckNotification
             model:          @models.task
             template:       @templates.healthcheckNotification
             pendingDeploys: @collections.pendingDeploys
-
-        @subviews.taskErrorMetadata = new TaskMetadataAlertSubview
-            model: @models.task
-            template: @templates.taskMetadataAlert
-            level: 'ERROR'
-            alertClass: 'danger'
-            numberPerPage: 5
-
-        @subviews.taskWarnMetadata = new TaskMetadataAlertSubview
-            model: @models.task
-            template: @templates.taskMetadataAlert
-            level: 'WARN'
-            alertClass: 'warning'
-            numberPerPage: 1
 
         @subviews.history = new SimpleSubview
             model:    @models.task
@@ -140,10 +130,6 @@ class TaskDetailController extends Controller
         @subviews.shellCommands = new ShellCommands
             model: @models.task
             template: @templates.shellCommands
-
-        @subviews.taskMetadataTable = new SimpleSubview
-            model: @models.task
-            template: @templates.taskMetadataTable
 
         #
         # Getting stuff in gear
@@ -214,10 +200,17 @@ class TaskDetailController extends Controller
             @collections.alerts.reset(alerts)
 
     fetchDeployDetails: ->
-        @models.deploy = new DeployDetails
+        if @dontFetchDeployDetails
+            dontFetchDeployDetails = false
+            return
+        @deploy = new DeployDetails
             deployId: @models.task.attributes.task.taskId.deployId
             requestId: @models.task.attributes.task.taskId.requestId
-        @models.deploy.fetch()
+        @deploy.fetch()
+            .success =>
+                console.log "Done"
+                @dontFetchDeployDetails = true
+                @refresh()
             .error =>
                 app.caughtError()
 
@@ -239,10 +232,6 @@ class TaskDetailController extends Controller
                 @collections.logDirectory.fetch().error @ignore400
             .success =>
                 @getAlerts()
-                if @deployFailureKilledTask()
-                    @models.task.doNotDisplayHealthcheckNotification = true
-                else
-                    @models.task.doNotDisplayHealthcheckNotification = false
                 @fetchDeployDetails()
             .error =>
                 # If this 404s the task doesn't exist

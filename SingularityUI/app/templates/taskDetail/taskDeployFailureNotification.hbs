@@ -1,0 +1,46 @@
+{{#ifEqual deploy.deployResult.deployState "FAILED"}}
+    {{#ifCauseOfFailure data deploy }}
+        <div class="alert alert-danger" role="alert">
+            <p>This task casued <a href='{{appRoot}}/request/{{deploy.requestId}}/deploy/{{deploy.deployId}}'>Deploy {{deploy.deployId}}</a> to fail. Cause: {{causeOfDeployFailure data deploy }}</p>
+            {{#ifGT deploy.deployResult.deployFailures.length 1}}
+                <p>The deploy failure was also caused by:</p>
+                <ul>
+                    {{#each deploy.deployResult.deployFailures}}
+                        {{#if taskId}}
+                            {{#ifNotEqual taskId.id ../data.taskId}}
+                                <li><a href='{{appRoot}}/task/{{taskId.id}}'>{{taskId.id}}</a>: {{humanizeText reason}} {{#if message}}({{ message }}){{/if}}</li>
+                            {{/ifNotEqual}}
+                        {{else}}
+                            <li>{{humanizeText reason}} {{#if message}}({{ message }}){{/if}}</li>
+                        {{/if}}
+                    {{/each}}
+                </ul>
+            {{/ifGT}}
+        </div>
+    {{else}}
+        <div class="alert alert-warning" role="alert">
+            <p>
+                <a href='{{appRoot}}/request/{{deploy.requestId}}/deploy/{{deploy.deployId}}'>Deploy {{deploy.deployId}}</a> failed.
+                {{#ifDeployFailureCausedTaskToBeKilled data}}
+                    This task was killed as a result of the failing deploy.
+                {{/ifDeployFailureCausedTaskToBeKilled}}
+                {{#if deploy.deployResult.deployFailures.length}}
+                    The deploy failure was caused by:
+                {{else}}
+                    The reason for the deploy failure is unknown.
+                {{/if}}
+            </p>
+            {{#if deploy.deployResult.deployFailures.length}}
+                <ul>
+                    {{#each deploy.deployResult.deployFailures}}
+                        {{#if taskId}}
+                            <li><a href='{{appRoot}}/task/{{taskId.id}}'>{{taskId.id}}</a>: {{humanizeText reason}} {{#if message}}({{ message }}){{/if}}</li>
+                        {{else}}
+                            <li>{{humanizeText reason}} {{#if message}}({{ message }}){{/if}}</li>
+                        {{/if}}
+                    {{/each}}
+                </ul>
+            {{/if}}
+        </div>
+    {{/ifCauseOfFailure}}
+{{/ifEqual}}

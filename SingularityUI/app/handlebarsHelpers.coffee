@@ -132,6 +132,36 @@ Handlebars.registerHelper 'humanizeFileSize', (bytes) ->
     i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length-1)
     return +(bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i]
 
+Handlebars.registerHelper 'ifCauseOfFailure', (task, deploy, options) ->
+    thisTaskFailedTheDeploy = false
+    deploy.deployResult.deployFailures.map (failure) ->
+        if failure.taskId and failure.taskId.id is task.taskId
+            thisTaskFailedTheDeploy = true
+    if thisTaskFailedTheDeploy
+        options.fn @
+    else
+        options.inverse @
+
+Handlebars.registerHelper 'ifDeployFailureCausedTaskToBeKilled', (task, options) ->
+    deployFailed = false
+    taskKilled = false
+    task.taskUpdates.map (update) ->
+        if update.statusMessage and update.statusMessage.indexOf 'DEPLOY_FAILED' isnt -1
+            deployFailed = true
+        if update.taskState is 'TASK_KILLED'
+            taskKilled = true
+    if deployFailed and taskKilled
+        options.fn @
+    else
+        options.inverse @
+
+Handlebars.registerHelper 'causeOfDeployFailure', (task, deploy) ->
+    failureCause = ''
+    deploy.deployResult.deployFailures.map (failure) ->
+        if failure.taskId and failure.taskId.id is task.taskId
+            failureCause = Handlebars.helpers.humanizeText failure.reason
+    return failureCause if failureCause
+
 # 'sbacanu@hubspot.com' => 'sbacanu'
 # 'seb'                 => 'seb'
 Handlebars.registerHelper 'usernameFromEmail', (email) ->

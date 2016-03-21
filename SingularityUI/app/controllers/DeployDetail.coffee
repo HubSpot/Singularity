@@ -1,8 +1,8 @@
 Controller = require './Controller'
 
 DeployDetails           = require '../models/DeployDetails'
-HistoricalTasks   = require '../collections/HistoricalTasks'
-DeployActiveTasks   = require '../collections/DeployActiveTasks'
+DeployHistoricalTasks   = require '../collections/DeployHistoricalTasks'
+DeployActiveTasks       = require '../collections/DeployActiveTasks'
 HealthCheckResult       = require '../models/HealthCheckResult'
 DeployTasksHealthChecks = require '../collections/DeployTasksHealthChecks'
 
@@ -29,10 +29,9 @@ class DeployDetailController extends Controller
       deployId: @deployId
       requestId: @requestId
 
-    @collections.taskHistory = new HistoricalTasks [],
-      params:
-        requestId: @requestId
-        deployId: @deployId
+    @collections.taskHistory = new DeployHistoricalTasks [],
+      requestId: @requestId
+      deployId: @deployId
 
     @collections.activeTasks = new DeployActiveTasks [],
       requestId: @requestId
