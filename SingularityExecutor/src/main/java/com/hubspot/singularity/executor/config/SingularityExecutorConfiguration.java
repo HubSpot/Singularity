@@ -221,10 +221,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private int dockerClientConnectionPoolSize = 5;
 
   @JsonProperty
-  private boolean fallBackToPstreeThreadCheck = false;
+  private ThreadCheckerType threadCheckerType = ThreadCheckerType.CGROUP;
 
   @JsonProperty
-  private ThreadCheckerType threadCheckerType = ThreadCheckerType.CGROUP;
+  private Optional<ThreadCheckerType> fallbackThreadCheckerType = Optional.absent();
 
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
@@ -634,20 +634,20 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.dockerClientConnectionPoolSize = dockerClientConnectionPoolSize;
   }
 
-  public boolean isFallBackToPstreeThreadCheck() {
-    return fallBackToPstreeThreadCheck;
-  }
-
-  public void setFallBackToPstreeThreadCheck(boolean fallBackToPstreeThreadCheck) {
-    this.fallBackToPstreeThreadCheck = fallBackToPstreeThreadCheck;
-  }
-
   public ThreadCheckerType getThreadCheckerType() {
     return threadCheckerType;
   }
 
   public void setThreadCheckerType(ThreadCheckerType threadCheckerType) {
     this.threadCheckerType = threadCheckerType;
+  }
+
+  public Optional<ThreadCheckerType> getFallbackThreadCheckerType() {
+    return fallbackThreadCheckerType;
+  }
+
+  public void setFallbackThreadCheckerType(Optional<ThreadCheckerType> fallbackThreadCheckerType) {
+    this.fallbackThreadCheckerType = fallbackThreadCheckerType;
   }
 
   @Override
@@ -705,8 +705,8 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", shellCommandPrefix='" + shellCommandPrefix + '\'' +
             ", dockerClientTimeLimitMs='" + dockerClientTimeLimitSeconds + '\'' +
             ", dockerClientConnectionPoolSize='" + dockerClientConnectionPoolSize + '\'' +
-            ", fallBackToPstreeThreadCheck='" + fallBackToPstreeThreadCheck + '\'' +
             ", threadCheckerType='" + threadCheckerType + '\'' +
+            ", fallbackThreadCheckerType='" + fallbackThreadCheckerType + '\'' +
             ']';
   }
 }

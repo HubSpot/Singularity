@@ -39,6 +39,7 @@ public class SingularityExecutorThreadChecker {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityExecutorThreadChecker.class);
 
   private static Pattern CGROUP_CPU_REGEX = Pattern.compile("^\\d+:cpu:/(.*)$");
+  private static Pattern PROC_STATUS_THREADS_REGEX = Pattern.compile("Threads:\\s*(\\d+)\\s*$");
 
   private final SingularityExecutorConfiguration configuration;
   private final ScheduledExecutorService scheduledExecutorService;
@@ -137,40 +138,86 @@ public class SingularityExecutorThreadChecker {
     }
 
     try {
-      if (configuration.getThreadCheckerType() == ThreadCheckerType.CGROUP) {
-        final Path procCgroupPath = Paths.get(String.format(configuration.getProcCgroupFormat(), dockerPid.or(taskProcess.getCurrentPid().get())));
-        if (Files.exists(procCgroupPath)) {
-          for (String line : Files.readAllLines(procCgroupPath, Charsets.UTF_8)) {
-            final Matcher matcher = CGROUP_CPU_REGEX.matcher(line);
-            if (matcher.matches()) {
-              return Files.readAllLines(Paths.get(String.format(configuration.getCgroupsMesosCpuTasksFormat(), matcher.group(1))), Charsets.UTF_8).size();
-            }
-          }
-          if (configuration.isFallBackToPstreeThreadCheck()) {
-            LOG.warn("Unable to parse cgroup container from {}, attempting to count threads using pstree", procCgroupPath.toString());
-            return getNumThreadsFromPs(taskProcess, dockerPid);
+      Optional<Integer> numThreads = getNumThreads(configuration.getThreadCheckerType(), taskProcess, dockerPid);
+      if (numThreads.isPresent()) {
+        return numThreads.get();
+      } else {
+        if (configuration.getFallbackThreadCheckerType().isPresent()) {
+          numThreads = getNumThreads(configuration.getFallbackThreadCheckerType().get(), taskProcess, dockerPid);
+          if (numThreads.isPresent()) {
+            return numThreads.get();
           } else {
-            throw new ProcessFailedException("Unable to parse cgroup container from {}" + procCgroupPath.toString());
+            throw new RuntimeException(String.format("Could not get num threads using %s or %s thread checkers", configuration.getThreadCheckerType(), configuration.getFallbackThreadCheckerType().get()));
           }
         } else {
-          throw new RuntimeException(procCgroupPath.toString() + " does not exist");
+          throw new RuntimeException(String.format("Could not get num threads using %s thread checker", configuration.getThreadCheckerType()));
         }
-      } else {
-        return getNumThreadsFromPs(taskProcess, dockerPid);
       }
     } catch (IOException e) {
       throw Throwables.propagate(e);
     }
   }
 
-  private int getNumThreadsFromPs(SingularityExecutorTaskProcessCallable taskProcess, Optional<Integer> dockerPid) throws InterruptedException, ProcessFailedException {
+  private Optional<Integer> getNumThreads(ThreadCheckerType type, SingularityExecutorTaskProcessCallable taskProcess, Optional<Integer> dockerPid) throws InterruptedException, ProcessFailedException, IOException {
+    Optional<Integer> numThreads;
+    switch (type) {
+      case CGROUP:
+        numThreads = getNumThreadsFromCgroup(taskProcess, dockerPid);
+        break;
+      case PS:
+        numThreads = getNumThreadsFromCommand(taskProcess, dockerPid, "ps hH p %s | wc -l");
+        break;
+      case PROC_STATUS:
+      default:
+        numThreads = getNumThreadsFromProcStatus(taskProcess, dockerPid);
+        break;
+    }
+    return numThreads;
+  }
+
+  private Optional<Integer> getNumThreadsFromCommand(SingularityExecutorTaskProcessCallable taskProcess, Optional<Integer> dockerPid, String commandFormat) throws InterruptedException, ProcessFailedException {
     SimpleProcessManager checkThreadsProcessManager = new SimpleProcessManager(NOPLogger.NOP_LOGGER);
-    List<String> cmd = ImmutableList.of("/bin/sh", "-c", String.format("pstree %s -p | wc -l", dockerPid.or(taskProcess.getCurrentPid().get())));
+    List<String> cmd = ImmutableList.of("/bin/sh", "-c", String.format(commandFormat, dockerPid.or(taskProcess.getCurrentPid().get())));
     List<String> output = checkThreadsProcessManager.runCommandWithOutput(cmd);
     if (output.isEmpty()) {
-      throw new ProcessFailedException("Output from ps was empty");
+      LOG.warn("Output from ls was empty ({})", cmd);
+      return Optional.absent();
     } else {
-      return Integer.parseInt(output.get(0));
+      return Optional.of(Integer.parseInt(output.get(0)));
+    }
+  }
+
+  private Optional<Integer> getNumThreadsFromProcStatus(SingularityExecutorTaskProcessCallable taskProcess, Optional<Integer> dockerPid) throws InterruptedException, IOException {
+    final Path procStatusPath = Paths.get(String.format("/proc/%s/status", dockerPid.or(taskProcess.getCurrentPid().get())));
+    if (Files.exists(procStatusPath)) {
+      for (String line : Files.readAllLines(procStatusPath, Charsets.UTF_8)) {
+        final Matcher matcher = PROC_STATUS_THREADS_REGEX.matcher(line);
+        if (matcher.matches()) {
+          return Optional.of(Integer.parseInt(matcher.group(1)));
+        }
+      }
+      LOG.warn("Unable to parse threads from proc status file {}", procStatusPath);
+      return Optional.absent();
+    } else {
+      LOG.warn("Proc status file does not exist for pid {}", dockerPid.or(taskProcess.getCurrentPid().get()));
+      return Optional.absent();
+    }
+  }
+
+  private Optional<Integer> getNumThreadsFromCgroup(SingularityExecutorTaskProcessCallable taskProcess, Optional<Integer> dockerPid) throws InterruptedException, IOException {
+    final Path procCgroupPath = Paths.get(String.format(configuration.getProcCgroupFormat(), dockerPid.or(taskProcess.getCurrentPid().get())));
+    if (Files.exists(procCgroupPath)) {
+      for (String line : Files.readAllLines(procCgroupPath, Charsets.UTF_8)) {
+        final Matcher matcher = CGROUP_CPU_REGEX.matcher(line);
+        if (matcher.matches()) {
+          return Optional.of(Files.readAllLines(Paths.get(String.format(configuration.getCgroupsMesosCpuTasksFormat(), matcher.group(1))), Charsets.UTF_8).size());
+        }
+      }
+      LOG.warn("Unable to parse cgroup container from {}", procCgroupPath.toString());
+      return Optional.absent();
+    } else {
+      LOG.warn("cgroup {} does not exist", procCgroupPath.toString());
+      return Optional.absent();
     }
   }
 
