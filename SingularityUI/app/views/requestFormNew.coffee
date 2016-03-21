@@ -14,6 +14,7 @@ class RequestFormNew extends RequestFormBaseView
         serverRequest.done  (response) =>
             @lockdown = false
             @alert "Your Request <a href='#{ config.appRoot }/request/#{ response.id }'>#{ response.id }</a> has been created"
+            Backbone.history.navigate "/request/#{ response.id }", {trigger: true}
 
         serverRequest.error (response) =>
             @postSave()
