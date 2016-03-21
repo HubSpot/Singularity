@@ -404,12 +404,15 @@ class Request extends Model
                 $('.remove-button').click @removeCmdLineArg
 
             callback: (data) =>
-                if typeof data.commandLineInput is 'string'
-                    if data.commandLineInput != ''
-                        data.commandLineInput = [data.commandLineInput.trim()]
-                    else
+                if data.commandLineInput
+                    if typeof data.commandLineInput is 'string'
+                        if data.commandLineInput != ''
+                            data.commandLineInput = [data.commandLineInput.trim()]
+                        else
+                            data.commandLineInput = []
+                    if data.commandLineInput.length == 1 and data.commandLineInput[0] == ''
                         data.commandLineInput = []
-                if data.commandLineInput.length == 1 and data.commandLineInput[0] == ''
+                else
                     data.commandLineInput = []
                 @data = data
 
@@ -468,11 +471,16 @@ class Request extends Model
                         $('.remove-button').click @removeCmdLineArg
 
                     callback: (data) =>
-                        if typeof data.commandLineInput is 'string'
-                            if data.commandLineInput != ''
-                                data.commandLineInput = [data.commandLineInput.trim()]
-                            else
+                        if data.commandLineInput
+                            if typeof data.commandLineInput is 'string'
+                                if data.commandLineInput != ''
+                                    data.commandLineInput = [data.commandLineInput.trim()]
+                                else
+                                    data.commandLineInput = []
+                            if data.commandLineInput.length == 1 and data.commandLineInput[0] == ''
                                 data.commandLineInput = []
+                        else
+                            data.commandLineInput = []
                         @data = data
 
     promptRemove: (callback) =>
