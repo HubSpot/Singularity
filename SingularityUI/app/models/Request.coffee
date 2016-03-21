@@ -357,7 +357,7 @@ class Request extends Model
             lastCommands = JSON.parse(localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id))
         catch e
             console.error('Could not parse previous commands JSON')
-            lastCommands = [lastCommands.length - 1]
+            lastCommands = []
         vex.dialog.prompt
             message: "<h3>Run Task</h3>"
             input: runTemplate
@@ -376,7 +376,7 @@ class Request extends Model
                 fileName = @data.filename.trim()
                 message = @data.message
 
-                if fileName.length is 0 and @data.autoTail is 'on'
+                if fileName and fileName.length is 0 and @data.autoTail is 'on'
                     $(window.noFilenameError).removeClass('hide')
                     return false
 
@@ -449,7 +449,7 @@ class Request extends Model
                         fileName = @data.filename.trim()
                         commandLineInput = @data.commandLineInput.trim()
 
-                        if fileName.length is 0 and @data.autoTail is 'on'
+                        if fileName and fileName.length is 0 and @data.autoTail is 'on'
                             $(window.noFilenameError).removeClass('hide')
                             return false
 
