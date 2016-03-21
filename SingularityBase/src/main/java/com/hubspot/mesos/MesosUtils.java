@@ -13,7 +13,6 @@ import java.util.Random;
 import org.apache.mesos.Protos.MasterInfo;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.Resource;
-import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.TaskState;
 import org.apache.mesos.Protos.Value;
 import org.apache.mesos.Protos.Value.Range;
@@ -80,6 +79,10 @@ public final class MesosUtils {
 
   public static long[] getPorts(Resource portsResource, int numPorts) {
     long[] ports = new long[numPorts];
+    if (numPorts == 0) {
+      return ports;
+    }
+
     int idx = 0;
 
     for (Range r : portsResource.getRanges().getRangeList()) {

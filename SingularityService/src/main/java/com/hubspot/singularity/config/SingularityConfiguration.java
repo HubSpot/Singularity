@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.TimeZone;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
@@ -155,6 +156,8 @@ public class SingularityConfiguration extends Configuration {
   private int maxTasksPerOffer = 0;
 
   private int maxRequestIdSize = 100;
+
+  private boolean storeAllMesosTaskInfoForDebugging = false;
 
   @JsonProperty("historyPurging")
   @Valid
@@ -578,6 +581,14 @@ public class SingularityConfiguration extends Configuration {
 
   public boolean isAllowTestResourceCalls() {
     return allowTestResourceCalls;
+  }
+
+  public boolean isStoreAllMesosTaskInfoForDebugging() {
+    return storeAllMesosTaskInfoForDebugging;
+  }
+
+  public void setStoreAllMesosTaskInfoForDebugging(boolean storeAllMesosTaskInfoForDebugging) {
+    this.storeAllMesosTaskInfoForDebugging = storeAllMesosTaskInfoForDebugging;
   }
 
   public boolean isCompressLargeDataObjects() {

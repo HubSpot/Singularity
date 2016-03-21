@@ -10,7 +10,7 @@ class RequestsView extends View
     isSorted: false
 
     templateBase:   require '../templates/requestsTable/requestsBase'
-    templateFilter: require '../templates/requestsTable/requestsFilter'
+    templateFilter: require '../templates/requestTypeFilter'
 
     # Figure out which template we'll use for the table based on the filter
     bodyTemplateMap:
@@ -66,7 +66,7 @@ class RequestsView extends View
                 o.requestDeployState?.activeDeploy?.user or ''
         res1 = fuzzy.filter(filter, requests, id)
         res2 = fuzzy.filter(filter, requests, user)
-        _.pluck(_.sortBy(_.union(res2, res1), (r) => Utils.fuzzyAdjustScore(filter, r)), 'original').reverse()
+        _.uniq(_.pluck(_.sortBy(_.union(res2, res1), (r) => Utils.fuzzyAdjustScore(filter, r)), 'original').reverse())
 
     # Returns the array of requests that need to be rendered
     filterCollection: =>

@@ -72,6 +72,7 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SingularitySlaveAndRackManager slaveAndRackManager;
   private final SingularitySchedulerPriority schedulerPriority;
   private final SingularityLogSupport logSupport;
+  private final SingularityTaskSizeOptimizer taskSizeOptimizer;
 
   private final SingularityExceptionNotifier exceptionNotifier;
 
@@ -85,7 +86,7 @@ public class SingularityMesosScheduler implements Scheduler {
   SingularityMesosScheduler(MesosConfiguration mesosConfiguration, SingularityConfiguration configuration, TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager,
       SingularitySchedulerPriority schedulerPriority, SingularityNewTaskChecker newTaskChecker, SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, RequestManager requestManager,
       Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager, SingularityExceptionNotifier exceptionNotifier,SingularityMesosFrameworkMessageHandler messageHandler,
-      @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier, final IdTranscoder<SingularityTaskId> taskIdTranscoder, CustomExecutorConfiguration customExecutorConfiguration) {
+      @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier, SingularityTaskSizeOptimizer taskSizeOptimizer, final IdTranscoder<SingularityTaskId> taskIdTranscoder, CustomExecutorConfiguration customExecutorConfiguration) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
     this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0);
     this.taskManager = taskManager;
@@ -95,6 +96,7 @@ public class SingularityMesosScheduler implements Scheduler {
     this.slaveAndRackManager = slaveAndRackManager;
     this.scheduler = scheduler;
     this.messageHandler = messageHandler;
+    this.taskSizeOptimizer = taskSizeOptimizer;
     this.mesosTaskBuilder = mesosTaskBuilder;
     this.logSupport = logSupport;
     this.stateCacheProvider = stateCacheProvider;
@@ -236,11 +238,13 @@ public class SingularityMesosScheduler implements Scheduler {
       if (matchesResources && slaveMatchState.isMatchAllowed()) {
         final SingularityTask task = mesosTaskBuilder.buildTask(offerHolder.getOffer(), offerHolder.getCurrentResources(), taskRequest, taskResources, executorResources);
 
-        LOG.trace("Accepted and built task {}", task);
+        final SingularityTask zkTask = taskSizeOptimizer.getSizeOptimizedTask(task);
+
+        LOG.trace("Accepted and built task {}", zkTask);
 
         LOG.info("Launching task {} slot on slave {} ({})", task.getTaskId(), offerHolder.getOffer().getSlaveId().getValue(), offerHolder.getOffer().getHostname());
 
-        taskManager.createTaskAndDeletePendingTask(task);
+        taskManager.createTaskAndDeletePendingTask(zkTask);
 
         schedulerPriority.notifyTaskLaunched(task.getTaskId());
 
@@ -261,7 +265,6 @@ public class SingularityMesosScheduler implements Scheduler {
   public void offerRescinded(SchedulerDriver driver, Protos.OfferID offerId) {
     LOG.info("Offer {} rescinded", offerId);
   }
-
 
   /**
    * 1- we have a previous update, and this is a duplicate of it (ignore) 2- we don't have a
@@ -303,11 +306,8 @@ public class SingularityMesosScheduler implements Scheduler {
     if (status.hasMessage() && !Strings.isNullOrEmpty(status.getMessage())) {
       return Optional.of(status.getMessage());
     } else if (status.hasReason() && status.getReason() == Protos.TaskStatus.Reason.REASON_MEMORY_LIMIT) {
-      if (task.isPresent()) {
-        final double memory = MesosUtils.getMemory(task.get().getMesosTask().getResourcesList());
-        if (memory > 0) {
-          return Optional.of(String.format("Task exceeded memory limit of %s MB", MesosUtils.getMemory(task.get().getMesosTask().getResourcesList())));
-        }
+      if (task.isPresent() && task.get().getTaskRequest().getDeploy().getResources().isPresent()) {
+          return Optional.of(String.format("Task exceeded memory limit of %s MB", task.get().getTaskRequest().getDeploy().getResources().get().getMemoryMb()));
       }
       return Optional.of("Task exceeded memory limit");
     }

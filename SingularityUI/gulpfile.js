@@ -70,9 +70,14 @@ gulp.task('html', function () {
     .pipe(gulp.dest(dest))
 });
 
-gulp.task('images', function () {
+gulp.task('css-images', function () {
   return gulp.src('node_modules/select2/*.{gif,png}')
     .pipe(gulp.dest(dest + '/static/css'));
+});
+
+gulp.task('images', function () {
+  return gulp.src('app/assets/static/images/*.ico')
+    .pipe(gulp.dest(dest + '/static/images'));
 });
 
 gulp.task('styles', function () {
@@ -93,10 +98,10 @@ gulp.task('styles', function () {
 })
 
 gulp.task('build', ['clean'], function () {
-  gulp.start(['scripts', 'html', 'styles', 'fonts', 'images']);
+  gulp.start(['scripts', 'html', 'styles', 'fonts', 'images', 'css-images']);
 });
 
-gulp.task('serve', ['html', 'styles', 'fonts', 'images'], function () {
+gulp.task('serve', ['html', 'styles', 'fonts', 'images', 'css-images'], function () {
   gulp.watch('app/**/*.styl', ['styles'])
 
   new WebpackDevServer(require('webpack')(webpackConfig), {
