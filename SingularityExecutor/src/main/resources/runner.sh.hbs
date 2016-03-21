@@ -45,7 +45,11 @@ echo "Ensuring {{{ logDir }}} is owned by {{{ user }}} with 0750"
 sudo chown -R {{{ user }}} {{{ logDir }}}
 sudo chmod -R 0750 {{{ logDir }}}
 
-echo "Ensuring {{{ taskAppDirectory }}} is owned by {{{ user }}}"
+echo "Ensuring {{{ taskAppDirectory }}} exists and is owned by {{{ user }}}"
+if [[ ! -d {{{ taskAppDirectory }}} ]]; then
+    echo "Creating {{{ taskAppDirectory }}} directory"
+    mkdir -p {{{ taskAppDirectory }}}
+fi
 sudo chown -R {{{ user }}} {{{ taskAppDirectory }}}
 
 cd {{{ taskAppDirectory }}}/
