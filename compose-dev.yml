@@ -26,6 +26,7 @@ slave:
     MESOS_IP: 127.0.0.1
     MESOS_CONTAINERIZERS: docker,mesos
     MESOS_ATTRIBUTES: "example:value;myNumber:1"
+    MESOS_ISOLATION: cgroups/cpu,cgroups/mem
   volumes:
     - /var/run/docker.sock:/var/run/docker.sock
     - /sys:/sys
