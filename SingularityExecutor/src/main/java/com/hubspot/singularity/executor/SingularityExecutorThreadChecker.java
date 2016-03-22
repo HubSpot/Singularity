@@ -142,16 +142,8 @@ public class SingularityExecutorThreadChecker {
       if (numThreads.isPresent()) {
         return numThreads.get();
       } else {
-        if (configuration.getFallbackThreadCheckerType().isPresent()) {
-          numThreads = getNumThreads(configuration.getFallbackThreadCheckerType().get(), taskProcess, dockerPid);
-          if (numThreads.isPresent()) {
-            return numThreads.get();
-          } else {
-            throw new RuntimeException(String.format("Could not get num threads using %s or %s thread checkers", configuration.getThreadCheckerType(), configuration.getFallbackThreadCheckerType().get()));
-          }
-        } else {
-          throw new RuntimeException(String.format("Could not get num threads using %s thread checker", configuration.getThreadCheckerType()));
-        }
+        LOG.warn("Could not get num threads using {} thread checker", configuration.getThreadCheckerType());
+        return 0;
       }
     } catch (IOException e) {
       throw Throwables.propagate(e);
