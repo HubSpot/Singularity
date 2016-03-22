@@ -82,7 +82,7 @@ class NewDeployView extends FormBaseView
         event.preventDefault()
         $(event.currentTarget).parent().remove()
 
-    parseIntList = (list) ->
+    parseIntList: (list) ->
         return undefined if not list
         _.map list, (string) -> parseInt string
 
