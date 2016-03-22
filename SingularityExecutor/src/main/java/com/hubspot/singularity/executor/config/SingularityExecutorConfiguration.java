@@ -221,10 +221,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private int dockerClientConnectionPoolSize = 5;
 
   @JsonProperty
-  private ThreadCheckerType threadCheckerType = ThreadCheckerType.CGROUP;
-
-  @JsonProperty
-  private Optional<ThreadCheckerType> fallbackThreadCheckerType = Optional.absent();
+  private ThreadCheckerType threadCheckerType = ThreadCheckerType.PS;
 
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
@@ -642,14 +639,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.threadCheckerType = threadCheckerType;
   }
 
-  public Optional<ThreadCheckerType> getFallbackThreadCheckerType() {
-    return fallbackThreadCheckerType;
-  }
-
-  public void setFallbackThreadCheckerType(Optional<ThreadCheckerType> fallbackThreadCheckerType) {
-    this.fallbackThreadCheckerType = fallbackThreadCheckerType;
-  }
-
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration[" +
@@ -704,7 +693,6 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", dockerClientTimeLimitMs='" + dockerClientTimeLimitSeconds + '\'' +
             ", dockerClientConnectionPoolSize='" + dockerClientConnectionPoolSize + '\'' +
             ", threadCheckerType='" + threadCheckerType + '\'' +
-            ", fallbackThreadCheckerType='" + fallbackThreadCheckerType + '\'' +
             ']';
   }
 }
