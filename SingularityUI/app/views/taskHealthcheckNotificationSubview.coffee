@@ -28,14 +28,10 @@ class taskHealthcheckNotificationSubview extends View
     render: =>
         return if not @model.synced
         return if @model.attributes.lastKnownState in @noHealthcheckMessageStates
-        @$el.html @template @renderData
+        @$el.html @template @renderData()
 
     renderData: =>
         updates = @model.get('taskUpdates')
-        deployFailureKilledTask = false
-        if updates
-            for update in updates
-                deployFailureKilledTask = true if update.statusMessage and update.statusMessage.indexOf('DEPLOY_FAILED') isnt -1
         requestId = @model.get('task').taskId.requestId
         deployId = @model.get('task').taskId.deployId
         deployStatus = @pendingDeploys.find (item) -> item.get('deployMarker') and item.get('deployMarker').requestId is requestId and item.get('deployMarker').deployId is deployId and item.get('currentDeployState') is 'WAITING'
@@ -63,7 +59,7 @@ class taskHealthcheckNotificationSubview extends View
         tooManyRetries: @model.get('healthcheckResults').length > maxRetries and maxRetries != 0
         numberFailed: @model.get('healthcheckResults').length
         secondsElapsed: healthTimeoutSeconds
-        doNotDisplayHealthcheckNotification: deployFailureKilledTask
+        doNotDisplayHealthcheckNotification: @deployFailureKilledTask()
 
     healthcheckFailureReasonMessage: () ->
         healthcheckResults = @model.get('healthcheckResults')
