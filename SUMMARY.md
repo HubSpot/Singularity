@@ -1,0 +1,40 @@
+# Summary
+
+* About Singularity
+  * [How It Works](Docs/about/how-it-works.md)
+  * [Requests and Deploys](Docs/about/requests-and-deploys.md)
+  * [Singularity UI](Docs/about/ui.md)
+  * [Adopters](Docs/about/adopters.md)
+* Getting Started
+  * [Try It Out](Docs/getting-started/try-it-out.md)
+  * [Install](Docs/getting-started/install.md)
+  * [Examples](Docs/getting-started/basic-examples.md)
+* Developing
+  * [Developing Using Docker](Docs/development/developing-with-docker.md)
+  * [UI](Docs/development/ui.md)
+  * [Load Balancer Integration](Docs/development/load-balancer-integration.md)
+  * [Basepom](Docs/development/basepom.md)
+* [Releases](Docs/releases/index.md)
+* Feature Docs
+  * [Choosing Custom Ports](Docs/features/custom-ports.md)
+  * [Expiring Actions](Docs/features/expiring-actions.md)
+  * [Shell Commands](Docs/features/shell-commands.md)
+* Reference
+  * [Configuration](Docs/reference/configuration.md)
+  * [Container Options](Docs/reference/container-options.md)
+  * [Database](Docs/reference/database.md)
+  * [Webhooks](Docs/reference/webhooks.md)
+  * [Slave Extras](Docs/reference/slave-extras.md)
+  * [API](Docs/reference/apidocs/api-index.md)
+    * [/api/sandbox](Docs/reference/apidocs/api-sandbox.md)
+    * [/api/slaves](Docs/reference/apidocs/api-slaves.md)
+    * [/api/history](Docs/reference/apidocs/api-history.md)
+    * [/api/state](Docs/reference/apidocs/api-state.md)
+    * [/api/logs](Docs/reference/apidocs/api-logs.md)
+    * [/api/tasks](Docs/reference/apidocs/api-tasks.md)
+    * [/api/test](Docs/reference/apidocs/api-test.md)
+    * [/api/webhooks](Docs/reference/apidocs/api-webhooks.md)
+    * [/api/racks](Docs/reference/apidocs/api-racks.md)
+    * [/api/requests](Docs/reference/apidocs/api-requests.md)
+    * [/api/deploys](Docs/reference/apidocs/api-deploys.md)
+    * [Models](Docs/reference/apidocs/models.md)

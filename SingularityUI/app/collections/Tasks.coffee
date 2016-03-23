@@ -14,7 +14,7 @@ class Tasks extends Collection
         cleaning:  undefined
 
     propertyFilterMap:
-        active: ['offer.hostname', 'taskId', 'mesosTask.resources', 'rackId']
+        active: ['offer.hostname', 'taskId', 'mesosTask.resources', 'rackId', 'taskRequest.request.requestType']
 
     url: ->
         requestFilter = if @requestId? then "/request/#{ @requestId }" else ''

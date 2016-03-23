@@ -1,0 +1,14 @@
+cookbook
+eclipse
+EmbedSingularityExample
+mysql
+node_modules
+scripts
+Singularity*
+target
+vagrant
+.travis.yml
+compose-dev.yml
+docker-compose.yml
+pom.xml
+dev

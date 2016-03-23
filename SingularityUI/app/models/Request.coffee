@@ -1,7 +1,10 @@
 Model = require './model'
 
+Racks = require '../collections/Racks'
+
 pauseTemplate = require '../templates/vex/requestPause'
 scaleTemplate = require '../templates/vex/requestScale'
+scaleEvenNumbersTemplate = require '../templates/vex/requestScaleConfirmRacks'
 unpauseTemplate = require '../templates/vex/requestUnpause'
 runTemplate = require '../templates/vex/requestRun'
 removeTemplate = require '../templates/vex/requestRemove'
@@ -12,6 +15,7 @@ cancelDeployTemplate = require '../templates/vex/cancelDeploy'
 TaskHistory = require '../models/TaskHistory'
 
 vex = require 'vex.dialog'
+juration = require 'juration'
 
 class Request extends Model
 
@@ -61,6 +65,16 @@ class Request extends Model
             data: JSON.stringify(
                 message: data.message
             )
+
+    hideEvenNumberAcrossRacksHint: (callback) ->
+        @attributes.request.hideEvenNumberAcrossRacksHint = true
+        ajaxPromise = $.ajax(
+            type: 'POST'
+            url: "#{ config.apiRoot }/requests"
+            contentType: 'application/json'
+            data: JSON.stringify @attributes.request
+        )
+        ajaxPromise.then callback
 
     pause: (killTasks, duration, message) =>
         data =
@@ -255,6 +269,60 @@ class Request extends Model
                 if !duration or (duration and @_validateDuration(duration, @promptPause, callback))
                     @pause(killTasks, duration, message).done callback
 
+    callScale: (data, bounce, incremental, message, duration, callback, setHideEvenNumberAcrossRacksHintTrue) =>
+        @scale(data).done =>
+            if setHideEvenNumberAcrossRacksHintTrue
+                @attributes.request.instances = data.instances
+                @hideEvenNumberAcrossRacksHint () =>
+                    if bounce 
+                        @bounce({incremental}).done callback
+                    else
+                        callback()
+            else if bounce 
+                @bounce({incremental}).done callback
+            else
+                callback()
+
+    promptScaleEvenNumberRacks: (scaleData) =>
+        vex.dialog.open
+            message: scaleEvenNumbersTemplate
+                instances: parseInt(scaleData.data.instances)
+                notOneInstance: parseInt(scaleData.data.instances) != 1
+                racks: @racks.length
+                notOneRack: @racks.length != 1
+                mod: scaleData.mod
+                modNotOne: scaleData.mod != 1
+                lower: parseInt(scaleData.data.instances) - scaleData.mod
+                higher: parseInt(scaleData.data.instances) + @racks.length - scaleData.mod
+                config: config
+            input: """
+                
+            """
+            buttons: [
+                $.extend _.clone(vex.dialog.buttons.YES), text: "Scale"
+                vex.dialog.buttons.NO
+            ]
+            scaleData: scaleData # Not sure why this is necessary, callback for whatever reason doesn't have access to the function's variables
+            callback: (data) =>
+                return unless data
+                scaleData.data.instances = data.instances
+                @callScale scaleData.data, scaleData.bounce, scaleData.incremental, scaleData.message, scaleData.duration, scaleData.callback, data.optOut
+                
+
+    checkScaleEvenNumberRacks: (data, bounce, incremental, message, duration, callback) =>
+        mod = data.instances %% @racks.length
+        if mod
+            @promptScaleEvenNumberRacks 
+                callback: callback
+                data: data
+                mod: mod 
+                bounce: bounce
+                incremental: incremental
+                message: message
+                duration: duration
+        else
+            @callScale data, bounce, incremental, message, duration, callback, false
+
     promptScale: (callback) =>
         vex.dialog.open
             message: "Enter the desired number of instances to run for request:"
@@ -281,11 +349,19 @@ class Request extends Model
                 message = $('.vex #scale-message').val()
                 duration = $('.vex #scale-expiration').val()
                 if !duration or (duration and @_validateDuration(duration, @promptScale, callback))
-                    @scale(data).done =>
-                        if bounce
-                            @bounce({incremental}).done callback
+                    if @attributes.request.rackSensitive and not @attributes.request.hideEvenNumberAcrossRacksHint
+                        if @racks
+                            @checkScaleEvenNumberRacks data, bounce, incremental, message, duration, callback
                         else
-                            callback()
+                            @racks = new Racks []
+                            @racks.fetch
+                                success: () => @checkScaleEvenNumberRacks data, bounce, incremental, message, duration, callback
+                                error: () => 
+                                    app.caughtError() # Since we scale anyway, don't show the error
+                                    @callScale data, bounce, incremental, message, duration, callback, false
+                    else
+                        @callScale data, bounce, incremental, message, duration, callback, false
+                    
 
     promptDisableHealthchecksDuration: (message, duration, callback) =>
         durationMillis = @_parseDuration(duration)

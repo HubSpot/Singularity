@@ -44,7 +44,8 @@ class Router extends Backbone.Router
 
         'request/:requestId/deploy(/)': 'newDeploy'
 
-        'tasks/:state/:searchFilter(/)': 'tasksTable'
+        'tasks/:state/:requestsSubFilter/:searchFilter(/)': 'tasksTable'
+        'tasks/:state/:requestsSubFilter(/)': 'tasksTable'
         'tasks/:state(/)': 'tasksTable'
         'tasks(/)': 'tasksTable'
 
@@ -86,8 +87,8 @@ class Router extends Backbone.Router
     newDeploy: (requestId) ->
         app.bootstrapController new NewDeployController {requestId}
 
-    tasksTable: (state = 'active', searchFilter = '') ->
-        app.bootstrapController new TasksTableController {state, searchFilter}
+    tasksTable: (state = 'active', requestsSubFilter = 'all', searchFilter = '') ->
+        app.bootstrapController new TasksTableController {state, requestsSubFilter, searchFilter}
 
     taskDetail: (taskId) ->
         app.bootstrapController new TaskDetailController {taskId, filePath:null}
