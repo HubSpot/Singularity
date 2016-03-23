@@ -208,7 +208,6 @@ class TaskDetailController extends Controller
             requestId: @models.task.attributes.task.taskId.requestId
         @deploy.fetch()
             .success =>
-                console.log "Done"
                 @dontFetchDeployDetails = true
                 @refresh()
             .error =>
