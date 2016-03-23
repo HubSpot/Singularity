@@ -2,7 +2,7 @@ Controller = require './Controller'
 
 DeployDetails           = require '../models/DeployDetails'
 DeployHistoricalTasks   = require '../collections/DeployHistoricalTasks'
-DeployActiveTasks       = require '../collections/DeployActiveTasks'
+DeployActiveTasks   = require '../collections/DeployActiveTasks'
 HealthCheckResult       = require '../models/HealthCheckResult'
 DeployTasksHealthChecks = require '../collections/DeployTasksHealthChecks'
 
