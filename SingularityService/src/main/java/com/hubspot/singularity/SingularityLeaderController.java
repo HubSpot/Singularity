@@ -23,6 +23,7 @@ import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.StateManager;
+import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
 import io.dropwizard.lifecycle.Managed;
@@ -37,16 +38,16 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
   private final SingularityAbort abort;
   private final SingularityExceptionNotifier exceptionNotifier;
   private final HostAndPort hostAndPort;
-
   private final long saveStateEveryMs;
-
   private final StatePoller statePoller;
+  private final SingularityMesosScheduler scheduler;
 
   private volatile boolean master;
 
+
   @Inject
   public SingularityLeaderController(StateManager stateManager, SingularityConfiguration configuration, SingularityDriverManager driverManager, SingularityAbort abort, SingularityExceptionNotifier exceptionNotifier,
-      @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort) {
+      @Named(SingularityMainModule.HTTP_HOST_AND_PORT) HostAndPort hostAndPort, SingularityMesosScheduler scheduler) {
     this.driverManager = driverManager;
     this.stateManager = stateManager;
     this.abort = abort;
@@ -55,8 +56,10 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
     this.hostAndPort = hostAndPort;
     this.saveStateEveryMs = TimeUnit.SECONDS.toMillis(configuration.getSaveStateEverySeconds());
     this.statePoller = new StatePoller();
+    this.scheduler = scheduler;
 
     this.master = false;
+
   }
 
   @Override
@@ -145,7 +148,7 @@ public class SingularityLeaderController implements Managed, LeaderLatchListener
       mesosMaster = MesosUtils.getMasterHostAndPort(mesosMasterInfo.get());
     }
 
-    return new SingularityHostState(master, uptime, driverStatus.name(), millisSinceLastOfferTimestamp, hostAndPort.getHostText(), hostAndPort.getHostText(), mesosMaster);
+    return new SingularityHostState(master, uptime, driverStatus.name(), millisSinceLastOfferTimestamp, hostAndPort.getHostText(), hostAndPort.getHostText(), mesosMaster, scheduler.isConnected());
   }
 
   // This thread lives inside of this class solely so that we can instantly update the state when the leader latch changes.

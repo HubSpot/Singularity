@@ -4,7 +4,7 @@ This document is intended for people who want to work on SingularityUI independe
 
 If you're here just looking for information on how to build SingularityUI, please note that the Maven build process is configured to automatically build and package the UI into SingularityService.
 
-The compiled static files are placed in [`../SingularityService/target/generated-resources/static/`](../SingularityService/target/generated-resources/static/).
+The compiled static files are placed in `../SingularityService/target/generated-resources/static/`.
 
 ## Contents
 
@@ -18,7 +18,7 @@ The compiled static files are placed in [`../SingularityService/target/generated
 
 ## Developer overview
 
-SingularityUI is a static app that relies on SingularityService for its data.
+SingularityUI is a single page webapp that relies on SingularityService for its data.
 
 The app is built using Gulp (i.e. compiling CoffeeScript, etc), with npm being used to manage its dependencies (e.g. jQuery, Backbone).
 
@@ -46,10 +46,7 @@ npm install
 # Build the app
 gulp build
 
-# Watch the project and build it when there are changes
-gulp watch
-
-# Same as above, but also start an HTTP server that serves the static files.
+# Serve the app locally at localhost:3334 and rebuild whenever files are changed.
 gulp serve
 ```
 
@@ -59,7 +56,7 @@ When you first start, run `npm install` to download all the dependencies. Once t
 
 So far you have SingularityUI with all its dependencies installed. You're able to run SingularityUI and have it served using `gulp serve`. What we need now is a running SingularityService to pull information from.
 
-If you don't have one already (e.g. your team might be running one you can use), you can easily run your own via [Docker](docker.md). If running via docker, it is helpful to add the host that docker is running on to your `/etc/hosts` file as `docker` so we can reference it by hostname. If using `boot2docker` this is your `boot2docker ip`. We will reference the hostname as `docker` in the examples below.
+If you don't have one already (e.g. your team might be running one you can use), you can easily run your own via [Docker](developing-with-docker.md). If running via docker, it is helpful to add the host that docker is running on to your `/etc/hosts` file as `docker` so we can reference it by hostname. If using `boot2docker` this is your `boot2docker ip`. We will reference the hostname as `docker` in the examples below.
 
 
 Once the cluster is up and running, the API's root is available at [`http://docker/singularity/api`](http://docker/singularity/api) by default.
@@ -89,8 +86,8 @@ name: SingularityUI
 
 routes:
 
-  # Redirect static assets to local server (assuming it is on port 3333)
-  ".*/static/.*": "http://localhost:3333/"
+  # Redirect static assets to local server (assuming it is on port 3334)
+  ".*/static/.*": "http://localhost:3334/"
 
   # Redirect any API calls to the QA Singularity service (the slash after the domain is necessary)
   ".*/api/.*": "http://docker/"

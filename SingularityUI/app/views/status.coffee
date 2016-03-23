@@ -11,6 +11,13 @@ class StatusView extends View
         @lastState = _.clone @model.toJSON()
 
     render: =>
+        isLeaderConnected = false
+        hasLeader = false
+        for host in @model.attributes.hostStates
+           if host.driverStatus is 'DRIVER_RUNNING'
+               hasLeader = true
+               if host.mesosConnected
+                   isLeaderConnected = true
         @$el.html @template
             state:  @model.toJSON()
             synced: @model.synced
@@ -18,6 +25,8 @@ class StatusView extends View
             requests: @model.requestDetail().requests
             totalRequests: @model.requestDetail().total
             totalTasks: @model.taskDetail().total
+            hasLeader: hasLeader
+            isLeaderConnected: isLeaderConnected
 
         if @lastState?
             changedNumbers = {}
