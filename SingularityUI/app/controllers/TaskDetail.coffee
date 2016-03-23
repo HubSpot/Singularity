@@ -223,16 +223,12 @@ class TaskDetailController extends Controller
             @collections.alerts.reset(alerts)
 
     fetchDeployDetails: ->
-        if @dontFetchDeployDetails
-            dontFetchDeployDetails = false
-            return
         @deploy = new DeployDetails
             deployId: @models.task.attributes.task.taskId.deployId
             requestId: @models.task.attributes.task.taskId.requestId
         @deploy.fetch()
             .success =>
-                @dontFetchDeployDetails = true
-                @refresh()
+                @subviews.deployFailureNotification.render()
             .error =>
                 app.caughtError()
 
