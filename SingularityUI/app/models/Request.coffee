@@ -525,7 +525,7 @@ class Request extends Model
                         return if @data is false
 
                         fileName = @data.filename.trim()
-                        commandLineInput = @data.commandLineInput.trim()
+                        message = @data.message
 
                         if fileName and fileName.length is 0 and @data.autoTail is 'on'
                             $(window.noFilenameError).removeClass('hide')
@@ -536,7 +536,7 @@ class Request extends Model
                             localStorage.setItem('taskRunAutoTail', @data.autoTail)
                             @data.id = @get 'id'
 
-                            @run( @data.commandLineInput ).done callback( @data )
+                            @run( @data.commandLineInput, message ).done callback( @data )
                             return true
 
                     afterOpen: =>
