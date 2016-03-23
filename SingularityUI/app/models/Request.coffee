@@ -451,7 +451,7 @@ class Request extends Model
                 fileName = @data.filename.trim()
                 message = @data.message
 
-                if fileName and fileName.length is 0 and @data.autoTail is 'on'
+                if ((fileName and fileName.length is 0) or not filename) and @data.autoTail is 'on'
                     $(window.noFilenameError).removeClass('hide')
                     return false
 
