@@ -63,8 +63,8 @@ class taskHealthcheckNotificationSubview extends View
 
     healthcheckFailureReasonMessage: () -> # For now this only looks for connection refused, but feel free to improve the logic to detect more reasons.
         healthcheckResults = @model.get('healthcheckResults')
-        if healthcheckResults.length > 0
-            if healthcheckResults[0].errorMessage.toLowerCase().indexOf('connection refused') isnt -1
+        if healthcheckResults and healthcheckResults.length > 0
+            if healthcheckResults[0].errorMessage and healthcheckResults[0].errorMessage.toLowerCase().indexOf('connection refused') isnt -1
                 portIndex = @model.attributes.task.taskRequest.deploy.healthcheckPortIndex or 0
                 port = if @model.attributes.ports.length > portIndex then @model.attributes.ports[portIndex] else false
                 return "a refused connection. It is possible your app did not start properly or was not listening on the anticipated port (#{port}). Please check the logs for more details."
