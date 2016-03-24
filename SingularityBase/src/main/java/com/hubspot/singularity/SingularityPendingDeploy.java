@@ -10,16 +10,16 @@ public class SingularityPendingDeploy {
   private final Optional<SingularityLoadBalancerUpdate> lastLoadBalancerUpdate;
   private final DeployState currentDeployState;
   private final Optional<SingularityDeployProgress> deployProgress;
-  private final Optional<SingularityRequest> newRequestData;
+  private final Optional<SingularityRequest> updatedRequest;
 
   @JsonCreator
   public SingularityPendingDeploy(@JsonProperty("deployMarker") SingularityDeployMarker deployMarker, @JsonProperty("lastLoadBalancerUpdate") Optional<SingularityLoadBalancerUpdate> lastLoadBalancerUpdate,
-      @JsonProperty("currentDeployState") DeployState currentDeployState, @JsonProperty("deployProgress") Optional<SingularityDeployProgress> deployProgress, @JsonProperty("newRequestData") Optional<SingularityRequest> newRequestData) {
+      @JsonProperty("currentDeployState") DeployState currentDeployState, @JsonProperty("deployProgress") Optional<SingularityDeployProgress> deployProgress, @JsonProperty("updatedRequest") Optional<SingularityRequest> updatedRequest) {
     this.deployMarker = deployMarker;
     this.lastLoadBalancerUpdate = lastLoadBalancerUpdate;
     this.currentDeployState = currentDeployState;
     this.deployProgress = deployProgress;
-    this.newRequestData = newRequestData;
+    this.updatedRequest = updatedRequest;
   }
 
   public SingularityDeployMarker getDeployMarker() {
@@ -38,13 +38,14 @@ public class SingularityPendingDeploy {
     return deployProgress;
   }
 
-  public Optional<SingularityRequest> getNewRequestData() {
-    return newRequestData;
+  public Optional<SingularityRequest> getUpdatedRequest() {
+    return updatedRequest;
   }
 
   @Override
   public String toString() {
-    return "SingularityPendingDeploy [deployMarker=" + deployMarker + ", lastLoadBalancerUpdate=" + lastLoadBalancerUpdate + ", currentDeployState=" + currentDeployState + ", deployProgress=" + deployProgress + ", newRequestData=" + newRequestData + "]";
+    return "SingularityPendingDeploy [deployMarker=" + deployMarker + ", lastLoadBalancerUpdate=" + lastLoadBalancerUpdate + ", currentDeployState=" + currentDeployState + ", deployProgress=" + deployProgress + ", updatedRequest=" + updatedRequest
+      + "]";
   }
 
 }

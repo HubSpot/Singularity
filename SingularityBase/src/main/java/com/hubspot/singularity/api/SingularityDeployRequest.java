@@ -13,18 +13,18 @@ public class SingularityDeployRequest {
   private final Optional<Boolean> unpauseOnSuccessfulDeploy;
   private final SingularityDeploy deploy;
   private final Optional<String> message;
-  private final Optional<SingularityRequest> newRequestData;
+  private final Optional<SingularityRequest> updatedRequest;
 
   @JsonCreator
   public SingularityDeployRequest(
       @JsonProperty("deploy") SingularityDeploy deploy,
       @JsonProperty("unpauseOnSuccessfulDeploy") Optional<Boolean> unpauseOnSuccessfulDeploy,
       @JsonProperty("message") Optional<String> message,
-      @JsonProperty("newRequestData") Optional<SingularityRequest> newRequestData) {
+      @JsonProperty("updatedRequest") Optional<SingularityRequest> updatedRequest) {
     this.deploy = deploy;
     this.unpauseOnSuccessfulDeploy = unpauseOnSuccessfulDeploy;
     this.message = message;
-    this.newRequestData = newRequestData;
+    this.updatedRequest = updatedRequest;
   }
 
   public SingularityDeployRequest(SingularityDeploy deploy, Optional<Boolean> unpauseOnSuccessfulDeploy, Optional<String> message) {
@@ -47,8 +47,8 @@ public class SingularityDeployRequest {
   }
 
   @ApiModelProperty(required=false, value="use this request data for this deploy, and update the request on successful deploy")
-  public Optional<SingularityRequest> getNewRequestData() {
-    return newRequestData;
+  public Optional<SingularityRequest> getUpdatedRequest() {
+    return updatedRequest;
   }
 
   @JsonIgnore
@@ -58,7 +58,7 @@ public class SingularityDeployRequest {
 
   @Override
   public String toString() {
-    return "SingularityDeployRequest [unpauseOnSuccessfulDeploy=" + unpauseOnSuccessfulDeploy + ", deploy=" + deploy + ", message=" + message + ", newRequestData=" + newRequestData + "]";
+    return "SingularityDeployRequest [unpauseOnSuccessfulDeploy=" + unpauseOnSuccessfulDeploy + ", deploy=" + deploy + ", message=" + message + ", updatedRequest=" + updatedRequest + "]";
   }
 
 }

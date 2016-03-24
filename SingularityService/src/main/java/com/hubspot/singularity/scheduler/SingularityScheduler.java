@@ -442,7 +442,7 @@ public class SingularityScheduler {
     }
 
     RequestState requestState = maybeRequestWithState.get().getState();
-    final SingularityRequest request = maybePendingDeploy.isPresent() ? maybePendingDeploy.get().getNewRequestData().or(maybeRequestWithState.get().getRequest()) : maybeRequestWithState.get().getRequest();
+    final SingularityRequest request = maybePendingDeploy.isPresent() ? maybePendingDeploy.get().getUpdatedRequest().or(maybeRequestWithState.get().getRequest()) : maybeRequestWithState.get().getRequest();
 
     final Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(request.getId());
 

@@ -105,7 +105,7 @@ public class RequestResource extends AbstractRequestResource {
     checkConflict(!requestManager.cleanupRequestExists(request.getId()), "Request %s is currently cleaning. Try again after a few moments", request.getId());
 
     Optional<SingularityPendingDeploy> maybePendingDeploy = deployManager.getPendingDeploy(request.getId());
-    checkConflict(!(maybePendingDeploy.isPresent() && maybePendingDeploy.get().getNewRequestData().isPresent()), "Request %s has a pending deploy that may change the request data. Try again when the deploy has finished", request.getId());
+    checkConflict(!(maybePendingDeploy.isPresent() && maybePendingDeploy.get().getUpdatedRequest().isPresent()), "Request %s has a pending deploy that may change the request data. Try again when the deploy has finished", request.getId());
 
     Optional<SingularityRequest> oldRequest = oldRequestWithState.isPresent() ? Optional.of(oldRequestWithState.get().getRequest()) : Optional.<SingularityRequest> absent();
 

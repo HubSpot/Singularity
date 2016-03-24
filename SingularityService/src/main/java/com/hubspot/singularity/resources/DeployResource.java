@@ -90,28 +90,26 @@ public class DeployResource extends AbstractRequestResource {
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
 
-    SingularityRequest newRequestData = requestWithState.getRequest();
-    boolean hasUpdatedRequest = false;
-    if (deployRequest.getNewRequestData().isPresent()) {
-      newRequestData = validator.checkSingularityRequest(deployRequest.getNewRequestData().get(), Optional.of(requestWithState.getRequest()), Optional.<SingularityDeploy>absent(), Optional.of(deploy));
-      hasUpdatedRequest = true;
+    SingularityRequest request = requestWithState.getRequest();
+    if (deployRequest.getUpdatedRequest().isPresent()) {
+      request = validator.checkSingularityRequest(deployRequest.getUpdatedRequest().get(), Optional.of(requestWithState.getRequest()), Optional.<SingularityDeploy>absent(), Optional.of(deploy));
     }
 
     if (!deployRequest.isUnpauseOnSuccessfulDeploy()) {
       checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to deploy (it must be manually unpaused first)", requestWithState.getRequest().getId());
     }
 
-    deploy = validator.checkDeploy(newRequestData, deploy);
+    deploy = validator.checkDeploy(request, deploy);
 
     final long now = System.currentTimeMillis();
 
     SingularityDeployMarker deployMarker = new SingularityDeployMarker(requestId, deploy.getId(), now, deployUser, deployRequest.getMessage());
 
     Optional<SingularityDeployProgress> deployProgress = Optional.absent();
-    if (newRequestData.isLongRunning()) {
+    if (request.isLongRunning()) {
       deployProgress = Optional.of(new SingularityDeployProgress(
-          Math.min(deploy.getDeployInstanceCountPerStep().or(newRequestData.getInstancesSafe()), newRequestData.getInstancesSafe()),
-          deploy.getDeployInstanceCountPerStep().or(newRequestData.getInstancesSafe()),
+          Math.min(deploy.getDeployInstanceCountPerStep().or(request.getInstancesSafe()), request.getInstancesSafe()),
+          deploy.getDeployInstanceCountPerStep().or(request.getInstancesSafe()),
           deploy.getDeployStepWaitTimeMs().or(configuration.getDefaultDeployStepWaitTimeMs()),
           false,
           deploy.getAutoAdvanceDeploySteps().or(true),
@@ -119,23 +117,23 @@ public class DeployResource extends AbstractRequestResource {
           System.currentTimeMillis()));
     }
 
-    SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING, deployProgress, hasUpdatedRequest ? Optional.of(newRequestData) : Optional.<SingularityRequest>absent());
+    SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING, deployProgress, deployRequest.getUpdatedRequest());
 
     checkConflict(deployManager.createPendingDeploy(pendingDeployObj) != SingularityCreateResult.EXISTED,
         "Pending deploy already in progress for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orNull());
 
-    deployManager.saveDeploy(newRequestData, deployMarker, deploy);
+    deployManager.saveDeploy(request, deployMarker, deploy);
 
     if (requestWithState.getState() == RequestState.PAUSED) {
-      requestManager.deployToUnpause(newRequestData, now, deployUser, deployRequest.getMessage());
+      requestManager.deployToUnpause(request, now, deployUser, deployRequest.getMessage());
     }
 
-    if (newRequestData.isDeployable()) {
+    if (request.isDeployable()) {
       requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), now, deployUser, PendingType.NEW_DEPLOY,
           deployRequest.getDeploy().getSkipHealthchecksOnDeploy(), deployRequest.getMessage()));
     }
 
-    return fillEntireRequest(requestWithState, Optional.of(newRequestData));
+    return fillEntireRequest(requestWithState, Optional.of(request));
   }
 
   @DELETE
