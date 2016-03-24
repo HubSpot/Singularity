@@ -1,5 +1,11 @@
 <div class="page-header">
-    <h2>Task history</h2>
+    <h2>Task history
+    {{#if data.length}}
+        <a class="btn btn-primary" href="{{ appRoot }}/request/{{ request.id }}/taskSearch">
+            <span class="glyphicon glyphicon-search" aria-hidden="true" /> Search
+        </a>
+    {{/if}}
+    </h2>
 </div>
 {{#if data.length}}
     <div class="table-container">

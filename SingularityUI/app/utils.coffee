@@ -190,6 +190,13 @@ class Utils
         else
           {}
 
+    @humanizeText: (text) ->
+        return '' if not text
+        text = text.replace /_/g, ' '
+        text = text.toLowerCase()
+        text = text[0].toUpperCase() + text.substr 1
+        return text
+
     @fuzzyAdjustScore: (filter, fuzzyObject) ->
         if fuzzyObject.original.id.toLowerCase().startsWith(filter.toLowerCase())
             fuzzyObject.score * 10
@@ -197,6 +204,5 @@ class Utils
             fuzzyObject.score * 5
         else
             fuzzyObject.score
-
 
 module.exports = Utils
