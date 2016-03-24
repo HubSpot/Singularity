@@ -4,7 +4,7 @@ As of 0.4.12, Singularity has better support for searching historical tasks. A g
 
 `/api/history/tasks` -> Retrieve the history sorted by startedAt for all inactive tasks.
 
-... and the above endpoint as well `/api/history/request/{requestId}/tasks` now take additonal query parameters:
+The above endpoint as well as `/api/history/request/{requestId}/tasks` now take additonal query parameters:
 
 - `requestId`: Optional request id to match (only for `/api/history/tasks` endpoint as it is already specified in the path for `/request/{requestId}/tasks`)
 - `deployId`: Optional deploy id to match
@@ -13,8 +13,8 @@ As of 0.4.12, Singularity has better support for searching historical tasks. A g
 - `startedAfter`: Optionally match only tasks started after this time (13 digit unix timestamp)
 - `startedBefore`: Optionally match only tasks started before this time (13 digit unix timestamp)
 - `orderDirection`: Sort direction (by `startedAt`), can be ASC or DESC, defaults to DESC (newest tasks first)
-- `count`: Maximum number of items to return
-- `page`: Page of items to view (e.g. page 1 is the first `count` items, page 2 is the next `count` items)
+- `count`: Maximum number of items to return, defaults to 100 and has a maximum value of 1000
+- `page`: Page of items to view (e.g. page 1 is the first `count` items, page 2 is the next `count` items), defaults to 1
 
 For clusters using mysql that have a large number of tasks in the history, a relevant  configuration option of `taskHistoryQueryUsesZkFirst` has been added in the base Singularity Configuration. This option can be used to either prefer efficiency or exact ordering when searching through task history, it defaults to `false`.
 
