@@ -18,9 +18,14 @@ class taskHealthcheckNotificationSubview extends View
         @listenTo @model, 'sync', @render
         @listenTo @pendingDeploys, 'sync', @render
 
-    deployFailureKilledTask: =>
+    outsideDeployFailureKilledTask: => # True if a deploy failure caused by a different task killed this task
         updates = @model.get('taskUpdates')
         return false unless updates
+        thisTaskFailedDeploy = false
+        if @deploy and @deploy.attributes.deployResult and @deploy.attributes.deployResult.deployFailures
+            @deploy.attributes.deployResult.deployFailures.map (failure) =>
+                thisTaskFailedDeploy = true if failure.taskId and failure.taskId.id is @model.attributes.taskId
+        return false if thisTaskFailedDeploy
         for update in updates
             return true if update.statusMessage and update.statusMessage.indexOf('DEPLOY_FAILED') isnt -1
         return false
@@ -59,7 +64,7 @@ class taskHealthcheckNotificationSubview extends View
         tooManyRetries: @model.get('healthcheckResults').length > maxRetries and maxRetries != 0
         numberFailed: @model.get('healthcheckResults').length
         secondsElapsed: healthTimeoutSeconds
-        doNotDisplayHealthcheckNotification: @deployFailureKilledTask()
+        doNotDisplayHealthcheckNotification: @outsideDeployFailureKilledTask()
 
     healthcheckFailureReasonMessage: () -> # For now this only looks for connection refused, but feel free to improve the logic to detect more reasons.
         healthcheckResults = @model.get('healthcheckResults')
