@@ -229,21 +229,29 @@ public class SingularityScheduler {
 
       Optional<SingularityRequestDeployState> maybeRequestDeployState = deployManager.getRequestDeployState(pendingRequest.getRequestId());
       Optional<SingularityPendingDeploy> maybePendingDeploy = deployManager.getPendingDeploy(maybeRequest.get().getRequest().getId());
-      if (!shouldScheduleTasks(maybeRequest.get().getRequest(), pendingRequest, maybePendingDeploy, maybeRequestDeployState)) {
+
+      final SingularityRequest updatedRequest;
+      if (maybePendingDeploy.isPresent() && pendingRequest.getDeployId().equals(maybePendingDeploy.get().getDeployMarker().getDeployId())) {
+        updatedRequest = maybePendingDeploy.get().getUpdatedRequest().or(maybeRequest.get().getRequest());
+      } else {
+        updatedRequest = maybeRequest.get().getRequest();
+      }
+
+      if (!shouldScheduleTasks(updatedRequest, pendingRequest, maybePendingDeploy, maybeRequestDeployState)) {
         LOG.debug("Pending request {} was obsolete (request {})", pendingRequest, SingularityRequestWithState.getRequestState(maybeRequest));
         obsoleteRequests++;
         continue;
       }
 
-      final List<SingularityTaskId> matchingTaskIds = getMatchingTaskIds(stateCache, maybeRequest.get().getRequest(), pendingRequest);
+      final List<SingularityTaskId> matchingTaskIds = getMatchingTaskIds(stateCache, updatedRequest, pendingRequest);
 
       final SingularityDeployStatistics deployStatistics = getDeployStatistics(pendingRequest.getRequestId(), pendingRequest.getDeployId());
 
-      final RequestState requestState = checkCooldown(maybeRequest.get(), deployStatistics);
+      final RequestState requestState = checkCooldown(maybeRequest.get().getState(), updatedRequest, deployStatistics);
 
-      int numScheduledTasks = scheduleTasks(stateCache, maybeRequest.get().getRequest(), requestState, deployStatistics, pendingRequest, matchingTaskIds, maybePendingDeploy);
+      int numScheduledTasks = scheduleTasks(stateCache, updatedRequest, requestState, deployStatistics, pendingRequest, matchingTaskIds, maybePendingDeploy);
 
-      if (numScheduledTasks == 0 && !matchingTaskIds.isEmpty() && maybeRequest.get().getRequest().isScheduled() && pendingRequest.getPendingType() == PendingType.NEW_DEPLOY) {
+      if (numScheduledTasks == 0 && !matchingTaskIds.isEmpty() && updatedRequest.isScheduled() && pendingRequest.getPendingType() == PendingType.NEW_DEPLOY) {
         LOG.trace("Holding pending request {} because it is scheduled and has an active task", pendingRequest);
         heldForScheduledActiveTask++;
         continue;
@@ -259,17 +267,17 @@ public class SingularityScheduler {
     LOG.info("Scheduled {} new tasks ({} obsolete requests, {} held) in {}", totalNewScheduledTasks, obsoleteRequests, heldForScheduledActiveTask, JavaUtils.duration(start));
   }
 
-  private RequestState checkCooldown(SingularityRequestWithState requestWithState, SingularityDeployStatistics deployStatistics) {
-    if (requestWithState.getState() != RequestState.SYSTEM_COOLDOWN) {
-      return requestWithState.getState();
+  private RequestState checkCooldown(RequestState requestState, SingularityRequest request, SingularityDeployStatistics deployStatistics) {
+    if (requestState != RequestState.SYSTEM_COOLDOWN) {
+      return requestState;
     }
 
-    if (cooldown.hasCooldownExpired(requestWithState.getRequest(), deployStatistics, Optional.<Integer>absent(), Optional.<Long>absent())) {
-      requestManager.exitCooldown(requestWithState.getRequest(), System.currentTimeMillis(), Optional.<String>absent(), Optional.<String>absent());
+    if (cooldown.hasCooldownExpired(request, deployStatistics, Optional.<Integer>absent(), Optional.<Long>absent())) {
+      requestManager.exitCooldown(request, System.currentTimeMillis(), Optional.<String>absent(), Optional.<String>absent());
       return RequestState.ACTIVE;
     }
 
-    return requestWithState.getState();
+    return requestState;
   }
 
   private boolean shouldScheduleTasks(SingularityRequest request, SingularityPendingRequest pendingRequest, Optional<SingularityPendingDeploy> maybePendingDeploy,
