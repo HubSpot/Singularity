@@ -12,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Singleton;
 import javax.ws.rs.HEAD;
 
-import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

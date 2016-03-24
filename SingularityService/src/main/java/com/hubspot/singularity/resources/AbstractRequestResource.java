@@ -2,8 +2,6 @@ package com.hubspot.singularity.resources;
 
 import static com.hubspot.singularity.WebExceptions.checkNotFound;
 
-import org.apache.zookeeper.Op;
-
 import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityDeploy;
