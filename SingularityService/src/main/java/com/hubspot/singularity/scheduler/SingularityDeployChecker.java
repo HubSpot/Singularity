@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Singleton;
 import javax.ws.rs.HEAD;
 
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,7 +138,7 @@ public class SingularityDeployChecker {
     final Optional<SingularityUpdatePendingDeployRequest> updatePendingDeployRequest = findUpdateRequest(updateRequests, pendingDeploy);
 
     final SingularityRequestWithState requestWithState = maybeRequestWithState.get();
-    final SingularityRequest request = requestWithState.getRequest();
+    final SingularityRequest request = pendingDeploy.getNewRequestData().or(requestWithState.getRequest());
 
     final List<SingularityTaskId> requestTasks = taskManager.getTaskIdsForRequest(request.getId());
     final List<SingularityTaskId> activeTasks = taskManager.filterActiveTaskIds(requestTasks);
@@ -260,6 +261,10 @@ public class SingularityDeployChecker {
       }
     }
 
+    if (pendingDeploy.getNewRequestData().isPresent() && deployResult.getDeployState() == DeployState.SUCCEEDED) {
+      requestManager.update(pendingDeploy.getNewRequestData().get(), System.currentTimeMillis(), pendingDeploy.getDeployMarker().getUser(), Optional.<String>absent());
+    }
+
     removePendingDeploy(pendingDeploy);
   }
 
@@ -327,7 +332,7 @@ public class SingularityDeployChecker {
 
   private void updatePendingDeploy(SingularityPendingDeploy pendingDeploy, Optional<SingularityLoadBalancerUpdate> lbUpdate, DeployState deployState,
     Optional<SingularityDeployProgress> deployProgress) {
-    SingularityPendingDeploy copy = new SingularityPendingDeploy(pendingDeploy.getDeployMarker(), lbUpdate, deployState, deployProgress);
+    SingularityPendingDeploy copy = new SingularityPendingDeploy(pendingDeploy.getDeployMarker(), lbUpdate, deployState, deployProgress, pendingDeploy.getNewRequestData());
 
     deployManager.savePendingDeploy(copy);
   }

@@ -87,25 +87,31 @@ public class DeployResource extends AbstractRequestResource {
     final String requestId = checkNotNullBadRequest(deploy.getRequestId(), "DeployRequest must have a non-null requestId");
 
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
-    SingularityRequest request = requestWithState.getRequest();
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
+
+    SingularityRequest newRequestData = requestWithState.getRequest();
+    boolean hasUpdatedRequest = false;
+    if (deployRequest.getNewRequestData().isPresent()) {
+      newRequestData = validator.checkSingularityRequest(deployRequest.getNewRequestData().get(), Optional.of(requestWithState.getRequest()), Optional.<SingularityDeploy>absent(), Optional.of(deploy));
+      hasUpdatedRequest = true;
+    }
 
     if (!deployRequest.isUnpauseOnSuccessfulDeploy()) {
       checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to deploy (it must be manually unpaused first)", requestWithState.getRequest().getId());
     }
 
-    deploy = validator.checkDeploy(request, deploy);
+    deploy = validator.checkDeploy(newRequestData, deploy);
 
     final long now = System.currentTimeMillis();
 
     SingularityDeployMarker deployMarker = new SingularityDeployMarker(requestId, deploy.getId(), now, deployUser, deployRequest.getMessage());
 
     Optional<SingularityDeployProgress> deployProgress = Optional.absent();
-    if (request.isLongRunning()) {
+    if (newRequestData.isLongRunning()) {
       deployProgress = Optional.of(new SingularityDeployProgress(
-          Math.min(deploy.getDeployInstanceCountPerStep().or(request.getInstancesSafe()), request.getInstancesSafe()),
-          deploy.getDeployInstanceCountPerStep().or(request.getInstancesSafe()),
+          Math.min(deploy.getDeployInstanceCountPerStep().or(newRequestData.getInstancesSafe()), newRequestData.getInstancesSafe()),
+          deploy.getDeployInstanceCountPerStep().or(newRequestData.getInstancesSafe()),
           deploy.getDeployStepWaitTimeMs().or(configuration.getDefaultDeployStepWaitTimeMs()),
           false,
           deploy.getAutoAdvanceDeploySteps().or(true),
@@ -113,23 +119,23 @@ public class DeployResource extends AbstractRequestResource {
           System.currentTimeMillis()));
     }
 
-    SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING, deployProgress);
+    SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING, deployProgress, hasUpdatedRequest ? Optional.of(newRequestData) : Optional.<SingularityRequest>absent());
 
     checkConflict(deployManager.createPendingDeploy(pendingDeployObj) != SingularityCreateResult.EXISTED,
         "Pending deploy already in progress for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orNull());
 
-    deployManager.saveDeploy(request, deployMarker, deploy);
+    deployManager.saveDeploy(newRequestData, deployMarker, deploy);
 
     if (requestWithState.getState() == RequestState.PAUSED) {
-      requestManager.deployToUnpause(request, now, deployUser, deployRequest.getMessage());
+      requestManager.deployToUnpause(newRequestData, now, deployUser, deployRequest.getMessage());
     }
 
-    if (request.isDeployable()) {
+    if (newRequestData.isDeployable()) {
       requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), now, deployUser, PendingType.NEW_DEPLOY,
           deployRequest.getDeploy().getSkipHealthchecksOnDeploy(), deployRequest.getMessage()));
     }
 
-    return fillEntireRequest(requestWithState);
+    return fillEntireRequest(requestWithState, Optional.of(newRequestData));
   }
 
   @DELETE
