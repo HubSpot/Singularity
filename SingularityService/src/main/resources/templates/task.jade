@@ -103,6 +103,11 @@ html
             dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ slaveHostname }
             dt(style="font-weight: bold; margin: 0 0 9px") Directory
             dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ taskDirectory }
+            if extraCmdLineArguments
+              dt(style="font-weight: bold; margin: 0 0 9px") Extra Cmd Line Arguments (for Task)
+              dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px")
+                each cmdLineArg, i in extraCmdLineArguments
+                  p #{ cmdLineArg }
 
         //- Files
         div
