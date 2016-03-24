@@ -206,6 +206,8 @@ class TaskDetailController extends Controller
         @deploy.fetch()
             .success =>
                 @subviews.deployFailureNotification.render()
+                @subviews.healthcheckNotification.deploy = @deploy
+                @subviews.healthcheckNotification.render()
             .error =>
                 app.caughtError()
 
