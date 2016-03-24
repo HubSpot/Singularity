@@ -110,6 +110,7 @@ class TaskDetailController extends Controller
             model:           @models.task
             # If we've been given a path we want the files, so scroll directly to it
             scrollWhenReady: @filePath isnt null
+            slaveOffline: false
 
         @subviews.s3Logs = new PaginatedTableClientsideView
             collection:     @collections.s3Logs
@@ -204,9 +205,8 @@ class TaskDetailController extends Controller
                 return u.taskState == 'TASK_KILLED'
             if decomMessage.length > 0 and killedMessage.length > 0
                 alerts.push
-                  title: 'Alert:',
-                  message: 'This task was killed due to a slave decommissioning.',
-                  level: 'danger'
+                  message: 'This task was replaced then killed by Singularity due to a slave decommissioning.',
+                  level: 'warning'
 
         if deployPromise
             deployPromise.done =>
@@ -229,7 +229,10 @@ class TaskDetailController extends Controller
                 logPath = logPath.replace('$TASK_ID', @taskId)
                 logPath = _.initial(logPath.split('/')).join('/')
                 @collections.logDirectory.path = logPath
-                @collections.logDirectory.fetch().error @ignore400
+                @collections.logDirectory.fetch().error (response) =>
+                    @ignore400 response
+                    @ignore404 response
+                    @subviews.fileBrowser.slaveOffline = true and @subviews.fileBrowser.render() if response.status is 404
             .success =>
                 @getAlerts()
             .error =>
