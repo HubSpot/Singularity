@@ -26,20 +26,21 @@ TaskView = require '../views/task'
 class TaskDetailController extends Controller
 
     templates:
-        overview:                   require '../templates/taskDetail/taskOverview'
-        healthcheckNotification:    require '../templates/taskDetail/taskHealthcheckNotification'
-        taskMetadataAlert:          require '../templates/taskDetail/taskMetadataAlert'
-        history:                    require '../templates/taskDetail/taskHistory'
-        logs:                       require '../templates/taskDetail/taskS3Logs'
-        lbUpdates:                  require '../templates/taskDetail/taskLbUpdates'
-        healthChecks:               require '../templates/taskDetail/taskHealthChecks'
-        info:                       require '../templates/taskDetail/taskInfo'
-        environment:                require '../templates/taskDetail/taskEnvironment'
-        resourceUsage:              require '../templates/taskDetail/taskResourceUsage'
-        alerts:                     require '../templates/alerts'
-        latestLog:                  require '../templates/taskDetail/taskLatestLog'
-        shellCommands:              require '../templates/taskDetail/taskShellCommands'
-        taskMetadataTable:          require '../templates/taskDetail/taskMetadataTable'
+        overview:                     require '../templates/taskDetail/taskOverview'
+        deployFailureNotification:    require '../templates/taskDetail/taskDeployFailureNotification'
+        healthcheckNotification:      require '../templates/taskDetail/taskHealthcheckNotification'
+        taskMetadataAlert:            require '../templates/taskDetail/taskMetadataAlert'
+        history:                      require '../templates/taskDetail/taskHistory'
+        logs:                         require '../templates/taskDetail/taskS3Logs'
+        lbUpdates:                    require '../templates/taskDetail/taskLbUpdates'
+        healthChecks:                 require '../templates/taskDetail/taskHealthChecks'
+        info:                         require '../templates/taskDetail/taskInfo'
+        environment:                  require '../templates/taskDetail/taskEnvironment'
+        resourceUsage:                require '../templates/taskDetail/taskResourceUsage'
+        alerts:                       require '../templates/alerts'
+        latestLog:                    require '../templates/taskDetail/taskLatestLog'
+        shellCommands:                require '../templates/taskDetail/taskShellCommands'
+        taskMetadataTable:            require '../templates/taskDetail/taskMetadataTable'
 
     initialize: ({@taskId, @filePath}) ->
         @title @taskId
@@ -76,6 +77,12 @@ class TaskDetailController extends Controller
             collection: @collections.taskCleanups
             model:      @models.task
             template:   @templates.overview
+
+        @subviews.deployFailureNotification = new SimpleSubview
+            model: @models.task
+            template: @templates.deployFailureNotification
+            extraRenderData: (subView) =>
+                { deploy: if @deploy then @deploy.toJSON() else '' }
 
         @subviews.healthcheckNotification = new HealthcheckNotification
             model:          @models.task
@@ -158,6 +165,7 @@ class TaskDetailController extends Controller
 
         app.showView @view
 
+
     fetchResourceUsage: ->
         @models.resourceUsage?.fetch()
             .done =>
@@ -214,6 +222,16 @@ class TaskDetailController extends Controller
         else
             @collections.alerts.reset(alerts)
 
+    fetchDeployDetails: ->
+        @deploy = new DeployDetails
+            deployId: @models.task.attributes.task.taskId.deployId
+            requestId: @models.task.attributes.task.taskId.requestId
+        @deploy.fetch()
+            .success =>
+                @subviews.deployFailureNotification.render()
+            .error =>
+                app.caughtError()
+
     refresh: ->
         @resourcesFetched = false
 
@@ -235,6 +253,7 @@ class TaskDetailController extends Controller
                     @subviews.fileBrowser.slaveOffline = true and @subviews.fileBrowser.render() if response.status is 404
             .success =>
                 @getAlerts()
+                @fetchDeployDetails()
             .error =>
                 # If this 404s the task doesn't exist
                 app.caughtError()
