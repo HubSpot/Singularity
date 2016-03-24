@@ -20,4 +20,4 @@ For clusters using mysql that have a large number of tasks in the history, a rel
 
 - When `false` the setting will prefer correct ordering. This may require multiple database calls, since Singularity needs to determine the overall order of items base on persisted (in mysql) and non-persisted (still in zookeeper) tasks. The overall search may be less efficient, but the ordering is guranteed to be correct.
 
-- When `true` the setting will prefer efficiency. In this case, it will be assumed that all task histories in zookeeper (not yet persisted) come before those in mysql (persisted). This results in faster results and fewer queries, but orderig is not guaranteed to be correct between persisted and non-persisted items.
+- When `true` the setting will prefer efficiency. In this case, it will be assumed that all task histories in zookeeper (not yet persisted) come before those in mysql (persisted). This results in faster results and fewer queries, but ordering is not guaranteed to be correct between persisted and non-persisted items.
