@@ -2,6 +2,7 @@ View = require './view'
 
 Deploy = require '../models/Deploy'
 TaskFiles = require '../collections/TaskFiles'
+TaskHistory = require '../models/TaskHistory'
 
 AutoTailer = require './AutoTailer'
 
@@ -78,10 +79,10 @@ class RequestView extends View
         @model.promptRemove =>
             app.router.navigate 'requests', trigger: true
 
-    runRequest: (e) =>
-        @model.promptRun (data) =>
+    runRequest: (e, taskId) => # If taskId is provided, rerun the task. Else run the task.
+        callback = (data) =>
             # If user wants to redirect to a file after the task starts
-            if data.autoTail is 'on'
+            if data.afterStart is 'autoTail'
                 autoTailer = new AutoTailer({
                     requestId: @requestId
                     autoTailFilename: data.filename
@@ -93,23 +94,17 @@ class RequestView extends View
             else
                 @trigger 'refreshrequest'
                 setTimeout ( => @trigger 'refreshrequest'), 2500
+        if taskId
+            task = new TaskHistory {taskId}
+            task.fetch()
+                .done =>
+                    @model.promptRun callback, task
+        else 
+            @model.promptRun callback
 
     rerunTask: (e) =>
         taskId = e.target.getAttribute 'data-taskId'
-        @model.promptRerun taskId, (data) =>
-            # If user wants to redirect to a file after the task starts
-            if data.autoTail is 'on'
-                autoTailer = new AutoTailer({
-                    requestId: @requestId
-                    autoTailFilename: data.filename
-                    autoTailTimestamp: +new Date()
-                })
-
-                autoTailer.startAutoTailPolling()
-
-            else
-                @trigger 'refreshrequest'
-                setTimeout ( => @trigger 'refreshrequest'), 2500
+        @runRequest e, taskId
 
     scaleRequest: (e) =>
         @model.promptScale =>

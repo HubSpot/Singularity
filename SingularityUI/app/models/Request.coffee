@@ -427,18 +427,22 @@ class Request extends Model
                 return unless confirmed
                 @unpause(confirmed).done callback
 
-    promptRun: (callback) =>
-        try
-            lastCommands = JSON.parse(localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id))
-        catch e
-            console.error('Could not parse previous commands JSON')
-            lastCommands = []
+    promptRun: (callback, task) => #task is an optional parameter - if it's provided this will rerun it, else this will run a new task
+        if task
+            commands = task.attributes.task.taskRequest.pendingTask.cmdLineArgsList
+        else
+            try
+                lastCommands = JSON.parse(localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id))
+            catch e
+                console.error('Could not parse previous commands JSON')
+                lastCommands = []
+            commands = if lastCommands? then lastCommands[lastCommands.length - 1] else []
         vex.dialog.prompt
-            message: "<h3>Run Task</h3>"
+            message: "<h3>#{if task then 'Rer' else 'R'}un Task</h3>"
             input: runTemplate
                 id: @get "id"
                 prefix: @localStorageCommandLineInputKeyPrefix
-                commands: if lastCommands? then lastCommands[lastCommands.length - 1] else []
+                commands: commands
 
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.YES), text: 'Run now'
@@ -451,12 +455,12 @@ class Request extends Model
                 fileName = @data.filename.trim()
                 message = @data.message
 
-                if ((fileName and fileName.length is 0) or not fileName) and @data.autoTail is 'on'
+                if ((fileName and fileName.length is 0) or not fileName) and @data.afterStart is 'autoTail'
                     $(window.noFilenameError).removeClass('hide')
                     return false
 
                 else
-                    if @data.commandLineInput?
+                    if not task and @data.commandLineInput?
                         try
                             history = JSON.parse(localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id))
                         catch e
@@ -466,17 +470,23 @@ class Request extends Model
                             history.push(@data.commandLineInput)
                             localStorage.setItem(@localStorageCommandLineInputKeyPrefix + @id, JSON.stringify(history))
                     localStorage.setItem('taskRunRedirectFilename', fileName) if filename?
-                    localStorage.setItem('taskRunAutoTail', @data.autoTail)
+                    localStorage.setItem('taskRunAutoTail', @data.afterStart is 'autoTail')
                     @data.id = @get 'id'
 
                     @run( @data.commandLineInput, message ).done callback( @data )
                     return true
 
             afterOpen: =>
-                $('#filename').val localStorage.getItem('taskRunRedirectFilename')
-                $('#autoTail').prop 'checked', (localStorage.getItem('taskRunAutoTail') is 'on')
+                $('#filename').val localStorage.getItem('taskRunRedirectFilename') or 'service.log'
+                $('#autoTail').prop 'checked', (localStorage.getItem('taskRunAutoTail'))
+                $('#browse-to-sandbox').prop 'checked', (not localStorage.getItem('taskRunAutoTail'))
                 $('#add-cmd-line-arg').on('click', { removeCmdLineArg: @removeCmdLineArg }, @addCmdLineArg)
                 $('.remove-button').click @removeCmdLineArg
+                $('#stay-on-request-page').on('click', () => $('#filename').addClass('hide'))
+                $('#browse-to-sandbox').on('click', () => $('#filename').addClass('hide'))
+                $('#autoTail').on('click', () => $('#filename').removeClass('hide'))
+                $('#filename').removeClass('hide') if localStorage.getItem('taskRunAutoTail')
+                console.log @#$('#cmd-line-inputs').addClass('hide') unless [using default mesos executor]
 
             callback: (data) =>
                 if data.commandLineInput
@@ -505,58 +515,6 @@ class Request extends Model
     removeCmdLineArg: (event) ->
         event.preventDefault()
         $(event.currentTarget).parent().remove()
-
-    promptRerun: (taskId, callback) =>
-        task = new TaskHistory {taskId}
-        task.fetch()
-            .done =>
-                commands = task.attributes.task.taskRequest.pendingTask.cmdLineArgsList
-                vex.dialog.prompt
-                    message: "<h3>Rerun Task</h3>"
-                    input: runTemplate
-                        id: @get "id"
-                        commands: commands
-                    buttons: [
-                        $.extend _.clone(vex.dialog.buttons.YES), text: 'Run now'
-                        vex.dialog.buttons.NO
-                    ]
-
-                    beforeClose: =>
-                        return if @data is false
-
-                        fileName = @data.filename.trim()
-                        message = @data.message
-
-                        if ((fileName and fileName.length is 0) or not fileName) and @data.autoTail is 'on'
-                            $(window.noFilenameError).removeClass('hide')
-                            return false
-
-                        else
-                            localStorage.setItem('taskRunRedirectFilename', fileName) if filename?
-                            localStorage.setItem('taskRunAutoTail', @data.autoTail)
-                            @data.id = @get 'id'
-
-                            @run( @data.commandLineInput, message ).done callback( @data )
-                            return true
-
-                    afterOpen: =>
-                        $('#filename').val localStorage.getItem('taskRunRedirectFilename')
-                        $('#autoTail').prop 'checked', (localStorage.getItem('taskRunAutoTail') is 'on')
-                        $('#add-cmd-line-arg').on('click', { removeCmdLineArg: @removeCmdLineArg }, @addCmdLineArg)
-                        $('.remove-button').click @removeCmdLineArg
-
-                    callback: (data) =>
-                        if data.commandLineInput
-                            if typeof data.commandLineInput is 'string'
-                                if data.commandLineInput != ''
-                                    data.commandLineInput = [data.commandLineInput.trim()]
-                                else
-                                    data.commandLineInput = []
-                            if data.commandLineInput.length == 1 and data.commandLineInput[0] == ''
-                                data.commandLineInput = []
-                        else
-                            data.commandLineInput = []
-                        @data = data
 
     promptRemove: (callback) =>
         vex.dialog.confirm
