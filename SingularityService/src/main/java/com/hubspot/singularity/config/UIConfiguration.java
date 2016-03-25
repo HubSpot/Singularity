@@ -43,7 +43,8 @@ public class UIConfiguration {
   private String title = "Singularity";
 
   @JsonProperty
-  private Optional<String> navColor;
+  @NotNull
+  private Optional<String> navColor = Optional.absent();
 
   @JsonProperty
   private String baseUrl;
@@ -69,7 +70,8 @@ public class UIConfiguration {
   private String rootUrlMode = RootUrlMode.INDEX_CATCHALL.name();
 
   @JsonProperty
-  private Optional<String> taskS3LogOmitPrefix;
+  @NotNull
+  private Optional<String> taskS3LogOmitPrefix = Optional.absent();
 
   @NotEmpty
   private String timestampFormat = "lll";
@@ -78,7 +80,8 @@ public class UIConfiguration {
   private String timestampWithSecondsFormat = "lll:ss";
 
   @JsonProperty
-  private Optional<String> redirectOnUnauthorizedUrl;
+  @NotNull
+  private Optional<String> redirectOnUnauthorizedUrl = Optional.absent();
 
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
