@@ -329,7 +329,7 @@ class RequestsView extends View
         request.promptRun (data) =>
 
             # If user wants to redirect to a file after the task starts
-            if data.autoTail is 'on'
+            if data.afterStart is 'autoTail'
                 autoTailer = new AutoTailer({
                     requestId: id
                     autoTailFilename: data.filename
