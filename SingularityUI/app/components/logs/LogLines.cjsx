@@ -1,11 +1,19 @@
 React = require 'react'
-ReactDOM = require 'react-dom'
 Waypoint = require 'react-waypoint'
 LogLine = require './LogLine'
 Humanize = require 'humanize'
 LogLines = require '../../collections/LogLines'
 
-Utils = require '../../utils'
+{ connect } = require 'react-redux'
+{ taskGroupTop, taskGroupBottom } = require '../../actions/log'
+
+scrollThreshold = 100
+
+sum = (numbers) ->
+  total = 0
+  for n in numbers
+    total += n
+  total
 
 class LogLines extends React.Component
   @propTypes:
@@ -13,26 +21,47 @@ class LogLines extends React.Component
     onEnterBottom: React.PropTypes.func.isRequired
     onLeaveTop: React.PropTypes.func.isRequired
     onLeaveBottom: React.PropTypes.func.isRequired
-    onPermalinkClick: React.PropTypes.func.isRequired
 
     taskGroupId: React.PropTypes.number.isRequired
     logLines: React.PropTypes.array.isRequired
-    search: React.PropTypes.string.isRequired
 
     initialDataLoaded: React.PropTypes.bool.isRequired
     reachedStartOfFile: React.PropTypes.bool.isRequired
     reachedEndOfFile: React.PropTypes.bool.isRequired
     bytesRemainingBefore: React.PropTypes.number.isRequired
     bytesRemainingAfter: React.PropTypes.number.isRequired
-    permalinkEnabled: React.PropTypes.bool.isRequired
     activeColor: React.PropTypes.string.isRequired
+
+  constructor: (props) ->
+    super(props)
+    @state = {
+      atTop: false
+      atBottom: false
+    }
+
+  componentDidMount: ->
+    window.addEventListener 'resize', @handleScroll
+
+  componentWillUnmount: ->
+    window.removeEventListener 'resize', @handleScroll
 
   componentWillUpdate: ->
     @shouldScrollToBottom = @refs.tailContents.scrollTop + @refs.tailContents.offsetHeight is @refs.tailContents.scrollHeight
 
-  componentDidUpdate: ->
+  componentDidUpdate: (prevProps, prevState) ->
     if @shouldScrollToBottom
       @refs.tailContents.scrollTop = @refs.tailContents.scrollHeight
+
+    if prevState.atTop != @state.atTop
+      if @state.atTop
+        @props.onEnterTop(@props.taskGroupId)
+      else
+        @props.onLeaveTop(@props.taskGroupId)
+    if prevState.atBottom != @state.atBottom
+      if @state.atBottom
+        @props.onEnterBottom(@props.taskGroupId)
+      else
+        @props.onLeaveBottom(@props.taskGroupId)
 
   renderLoadingPrevious: ->
     if @props.initialDataLoaded
@@ -47,11 +76,8 @@ class LogLines extends React.Component
         content={data}
         key={offset}
         offset={offset}
-        isHighlighted={offset is @props.initialOffset}
-        onPermalinkClick={@props.onPermalinkClick}
         taskId={taskId}
-        permalinkEnabled={@props.permalinkEnabled}
-        search={@props.search} />
+        isHighlighted={offset is @props.initialOffset} />
 
   renderLoadingMore: ->
     if @props.initialDataLoaded
@@ -60,20 +86,47 @@ class LogLines extends React.Component
       else
         <div>Loading more... ({Humanize.filesize(@props.bytesRemainingAfter)} remaining)</div>
 
-  handleEnterTop: => @props.onEnterTop(@props.taskGroupId)
-  handleEnterBottom: => @props.onEnterBottom(@props.taskGroupId)
-  handleLeaveTop: => @props.onLeaveTop(@props.taskGroupId)
-  handleLeaveBottom: => @props.onLeaveBottom(@props.taskGroupId)
+  handleScroll: =>
+    newState = {}
+    if @state.atTop and @refs.tailContents.scrollTop > @props.scrollThreshold
+      newState.atTop = false
+      @props.onLeaveTop(@props.taskGroupId)
+    else if not @state.atTop and @refs.tailContents.scrollTop < @props.scrollThreshold
+      newState.atTop = true
+      @props.onEnterTop(@props.taskGroupId)
+
+    if @state.atBottom and (@refs.tailContents.scrollTop + @refs.tailContents.clientHeight) > (@refs.tailContents.scrollHeight - scrollThreshold)
+      newState.atBottom = false
+      @props.onLeaveBottom(@props.taskGroupId)
+    else if not @state.atBottom and (@refs.tailContents.scrollTop + @refs.tailContents.clientHeight) < (@refs.tailContents.scrollHeight - scrollThreshold)
+      newState.atBottom = true
+      @props.onEnterBottom(@props.taskGroupId)
 
   render: ->
     <div className="contents-container">
-      <div className="tail-contents #{@props.activeColor}" tabIndex="1" ref="tailContents">
+      <div className="tail-contents #{@props.activeColor}" tabIndex="1" ref="tailContents" onScroll={@handleScroll}>
         {@renderLoadingPrevious()}
-        <Waypoint onEnter={@handleEnterTop} onLeave={@handleLeaveTop} />
         {@renderLogLines()}
-        <Waypoint onEnter={@handleEnterBottom} onLeave={@handleLeaveBottom} />
         {@renderLoadingMore()}
       </div>
     </div>
 
-module.exports = LogLines
+mapStateToProps = (state, ownProps) ->
+  taskGroup = state.taskGroups[ownProps.taskGroupId]
+  tasks = taskGroup.taskIds.map (taskId) -> state.tasks[taskId]
+
+  logLines: taskGroup.logLines
+  activeColor: state.activeColor
+  initialDataLoaded: _.all(_.pluck(tasks, 'initialDataLoaded'))
+  reachedStartOfFile: _.all(tasks.map (task) -> task.minOffset is 0)
+  reachedEndOfFile: _.all(tasks.map (task) -> task.maxOffset >= task.filesize)
+  bytesRemainingBefore: sum(_.pluck(tasks, 'minOffset'))
+  bytesRemainingAfter: sum(tasks.map (task) -> Math.max(task.filesize - task.maxOffset, 0))
+
+mapDispatchToProps = (dispatch, ownProps) ->
+  onEnterTop: -> dispatch(taskGroupTop(ownProps.taskGroupId, true))
+  onLeaveTop: -> dispatch(taskGroupTop(ownProps.taskGroupId, false))
+  onEnterBottom: -> dispatch(taskGroupBottom(ownProps.taskGroupId, true))
+  onLeaveBottom: -> dispatch(taskGroupBottom(ownProps.taskGroupId, false))
+
+module.exports = connect(mapStateToProps, mapDispatchToProps)(LogLines)

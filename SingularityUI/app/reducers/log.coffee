@@ -88,7 +88,8 @@ taskGroups = (state=[], action) ->
           continue
         else
           newTaskGroup = Object.assign({}, taskGroup)
-          newTaskGroup.taskIds = taskGroup.filter (taskId) -> taskId isnt action.taskId
+          newTaskGroup.taskIds = taskGroup.taskIds.filter (taskId) -> taskId isnt action.taskId
+          newTaskGroup.logLines = taskGroup.logLines.filter (logLine) -> logLine.taskId isnt action.taskId
           newState.push(newTaskGroup)
       else
         newState.push(taskGroup)
@@ -109,7 +110,7 @@ taskGroups = (state=[], action) ->
     offset = action.offset
     lines = _.initial(action.data.match /[^\n]*(\n|$)/g).map (data) ->
       offset += data.length
-      {data, offset: offset - data.length}
+      {data, offset: offset - data.length, taskId: action.taskId}
 
     if taskGroup.search
       lines = filterLogLines(lines, taskGroup.search)
@@ -144,9 +145,9 @@ viewMode = (state='custom', action) ->
     return action.viewMode
   return state
 
-currentSearch = (state='', action) ->
-  if action.type is 'LOG_SET_SEARCH'
-    return action.currentSearch
+search = (state='', action) ->
+  if action.type is 'LOG_INIT'
+    return action.search
   return state
 
 logRequestLength = (state=30000, action) ->
@@ -154,9 +155,9 @@ logRequestLength = (state=30000, action) ->
 
 activeRequest = (state={}, action) ->
   if action.type is 'LOG_INIT'
-    return {requestId: action.requestId}
+    return Object.assign({}, state, {requestId: action.requestId})
   if action.type is 'REQUEST_ACTIVE_TASKS'
     return Object.assign({}, state, {activeTasks: action.tasks})
   return state
 
-module.exports = combineReducers({tasks, taskGroups, activeRequest, path, activeColor, colors, viewMode, currentSearch, logRequestLength})
+module.exports = combineReducers({tasks, taskGroups, activeRequest, path, activeColor, colors, viewMode, search, logRequestLength})

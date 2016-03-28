@@ -1,40 +1,36 @@
 React = require 'react'
+Interval = require 'react-interval'
 Header = require './Header'
 TaskGroupContainer = require './TaskGroupContainer'
-BackboneReactComponent = require 'backbone-react-component'
 
 { connect } = require 'react-redux'
 
-class LogContainer extends React.Component
-  mixins: [Backbone.React.Component.mixin]
+{ updateGroups } = require '../../actions/log'
 
+class LogContainer extends React.Component
   @propTypes:
     taskGroups: React.PropTypes.array.isRequired
-    tasks: React.PropTypes.object.isRequired
-    path: React.PropTypes.string.isRequired
+    ready: React.PropTypes.bool.isRequired
 
-  renderTaskIdGroups: ->
-    componentProps = @props
+    updateGroups: React.PropTypes.func.isRequired
+
+  renderTaskGroups: ->
     @props.taskGroups.map (taskGroup, i) ->
-      <TaskGroupContainer
-        key={i}
-        taskGroupId={i}
-        {...componentProps} />
+      <TaskGroupContainer key={i} taskGroupId={i}/>
 
   render: ->
     <div>
-      <Header {...@props} taskIdCount={Object.keys(@props.tasks).length} />
+      <Interval enabled={@props.ready} timeout={1000} callback={@props.updateGroups} />
+      <Header />
       <div className="row tail-row">
-        {@renderTaskIdGroups()}
+        {@renderTaskGroups()}
       </div>
     </div>
 
-mapStateToProps = (state, ownProps) ->
-  colors: state.colors
-  activeColor: state.activeColor
-  requestId: state.requestId
+mapStateToProps = (state) ->
   taskGroups: state.taskGroups
-  tasks: state.tasks
-  path: state.path
+  ready: _.all(_.pluck(state.taskGroups, 'ready'))
 
-module.exports = connect(mapStateToProps)(LogContainer)
+mapDispatchToProps = { updateGroups }
+
+module.exports = connect(mapStateToProps, mapDispatchToProps)(LogContainer)

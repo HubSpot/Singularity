@@ -1,19 +1,18 @@
 React = require 'react'
 classNames = require 'classnames'
 
+{ connect } = require 'react-redux'
+{ clickPermalink } = require '../../actions/log'
+
 class LogLine extends React.Component
   @propTypes:
     offset: React.PropTypes.number.isRequired
     isHighlighted: React.PropTypes.bool.isRequired
     content: React.PropTypes.string.isRequired
-    onPermalinkClick: React.PropTypes.func.isRequired
-    permalinkEnabled: React.PropTypes.bool.isRequired
-    search: React.PropTypes.string
+    taskId: React.PropTypes.string.isRequired
 
-  shouldComponentUpdate: (nextProps) ->
-    (@props.offset isnt nextProps.offset) or
-    (@props.isHighlighted isnt nextProps.isHighlighted) or
-    (@props.search isnt nextProps.search)
+    search: React.PropTypes.string
+    clickPermalink: React.PropTypes.func.isRequired
 
   highlightContent: (content) ->
     search = @props.search
@@ -46,29 +45,26 @@ class LogLine extends React.Component
         'search-match': s.match
       <span key={i} className={spanClass}>{s.text}</span>
 
-  handlePermalinkClick: (e) ->
-    e.preventDefault()
-    @props.onPermalinkClick(@props.offset)
-
-  renderPermalink: ->
-    if @props.permalinkEnabled
-      <a href="##{@props.offset}" className="offset-link" onClick={@handlePermalinkClick}>
-        <div className="pre-line">
-            <span className="glyphicon glyphicon-link" data-offset="#{@props.offset}"></span>
-        </div>
-      </a>
-
   render: ->
     divClass = classNames
       line: true
       highlightLine: @props.isHighlighted
 
     <div className={divClass} style={backgroundColor: @props.color}>
-      {@renderPermalink()}
+      <a href="##{@props.offset}" className="offset-link" onClick={=> @props.clickPermalink(@props.offset)}>
+        <div className="pre-line">
+            <span className="glyphicon glyphicon-link" data-offset="#{@props.offset}"></span>
+        </div>
+      </a>
       <span>
         {@props.offset} | 
         {@highlightContent(@props.content)}
       </span>
     </div>
 
-module.exports = LogLine
+mapStateToProps = (state, ownProps) ->
+  search: state.search
+
+mapDispatchToProps = { clickPermalink }
+
+module.exports = connect(mapStateToProps, mapDispatchToProps)(LogLine)
