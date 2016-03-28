@@ -38,9 +38,7 @@ class LogViewer extends Controller
     # create log view
     @view = new LogView @store
 
-    @setView @view
-
-    @view.render()
+    @setView @view  # does nothing
     app.showView @view
 
 module.exports = LogViewer
