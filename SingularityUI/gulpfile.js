@@ -59,7 +59,7 @@ gulp.task('fonts', function() {
 });
 
 gulp.task('scripts', function () {
-  return gulp.src(webpackConfig.entry)
+  return gulp.src(webpackConfig.entry.app)
     .pipe(webpack(webpackConfig))
     .pipe(gulp.dest(dest + '/static/js'))
 });
