@@ -1,5 +1,3 @@
-Q = require 'q'
-
 fetchTasksForRequest = (requestId, state='active') ->
   params = {
     property: 'taskId'

@@ -1,4 +1,5 @@
 Q = require 'q'
+
 { fetchTasksForRequest } = require './activeTasks'
 
 fetchData = (taskId, path, offset=undefined, length=0) ->

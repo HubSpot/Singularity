@@ -43,11 +43,6 @@ class Header extends React.Component
       </a>
     </span>
 
-  renderHelpButton: ->
-    <a className="help-link" onClick={@props.toggleHelp} title="Show Help">
-      <span className="glyphicon glyphicon-question-sign"></span>
-    </a>
-
   render: ->
       <div className="tail-header">
         <div className="row">
@@ -72,7 +67,6 @@ class Header extends React.Component
             <ColorDropdown />
             {@renderViewButtons()}
             {@renderAnchorButtons()}
-            {@renderHelpButton()}
           </div>
         </div>
       </div>
