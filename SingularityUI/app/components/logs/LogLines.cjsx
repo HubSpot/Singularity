@@ -1,7 +1,7 @@
 React = require 'react'
 Waypoint = require 'react-waypoint'
 LogLine = require './LogLine'
-Humanize = require 'humanize'
+Humanize = require 'humanize-plus'
 LogLines = require '../../collections/LogLines'
 
 { connect } = require 'react-redux'
