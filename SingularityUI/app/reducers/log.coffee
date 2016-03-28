@@ -29,6 +29,7 @@ tasks = (state={}, action) ->
     newState = Object.assign({}, state)
     for taskId in action.taskIds
       newState[taskId] = {
+        path: action.path.replace('$TASK_ID', taskId)
         minOffset: 0
         maxOffset: 0
         filesize: 0
