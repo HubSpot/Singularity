@@ -21,8 +21,10 @@ import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
+import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
@@ -39,13 +41,16 @@ import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularityRequestWithState;
+import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
+import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
 import com.hubspot.singularity.expiring.SingularityExpiringBounce;
@@ -66,6 +71,7 @@ public class SingularityCleaner {
   private final LoadBalancerClient lbClient;
   private final SingularityExceptionNotifier exceptionNotifier;
   private final RequestHistoryHelper requestHistoryHelper;
+  private final SlaveManager slaveManager;
 
   private final SingularityConfiguration configuration;
   private final long killNonLongRunningTasksInCleanupAfterMillis;
@@ -73,7 +79,7 @@ public class SingularityCleaner {
   @Inject
   public SingularityCleaner(TaskManager taskManager, SingularityDeployHealthHelper deployHealthHelper, DeployManager deployManager, RequestManager requestManager,
       SingularityDriverManager driverManager, SingularityConfiguration configuration, LoadBalancerClient lbClient, SingularityExceptionNotifier exceptionNotifier,
-      RequestHistoryHelper requestHistoryHelper) {
+      RequestHistoryHelper requestHistoryHelper, SlaveManager slaveManager) {
     this.taskManager = taskManager;
     this.lbClient = lbClient;
     this.deployHealthHelper = deployHealthHelper;
@@ -82,6 +88,7 @@ public class SingularityCleaner {
     this.driverManager = driverManager;
     this.exceptionNotifier = exceptionNotifier;
     this.requestHistoryHelper = requestHistoryHelper;
+    this.slaveManager = slaveManager;
 
     this.configuration = configuration;
 
@@ -451,6 +458,7 @@ public class SingularityCleaner {
 
     final Multiset<SingularityDeployKey> incrementalBounceCleaningTasks = HashMultiset.create(cleanupTasks.size());
     final Set<SingularityDeployKey> isBouncing = new HashSet<>(cleanupTasks.size());
+    final List<SingularitySlave> activeSlaves = slaveManager.getObjectsFiltered(MachineState.ACTIVE);
 
     final List<SingularityTaskId> cleaningTasks = Lists.newArrayListWithCapacity(cleanupTasks.size());
     for (SingularityTaskCleanup cleanupTask : cleanupTasks) {
@@ -473,6 +481,8 @@ public class SingularityCleaner {
       if (!isValidTask(cleanupTask)) {
         LOG.info("Couldn't find a matching active task for cleanup task {}, deleting..", cleanupTask);
         taskManager.deleteCleanupTask(cleanupTask.getTaskId().getId());
+      } else if (decommissionedSlaveReactivated(activeSlaves, cleanupTask)) {
+        removeDecommission(cleanupTask);
       } else if (shouldKillTask(cleanupTask, activeTaskIds, cleaningTasks, incrementalBounceCleaningTasks) && checkLBStateAndShouldKillTask(cleanupTask)) {
         driverManager.killAndRecord(cleanupTask.getTaskId(), cleanupTask.getCleanupType());
 
@@ -495,6 +505,38 @@ public class SingularityCleaner {
     }
 
     LOG.info("Killed {} tasks in {}", killedTasks, JavaUtils.duration(start));
+  }
+
+  private boolean decommissionedSlaveReactivated(List<SingularitySlave> activeSlaves, SingularityTaskCleanup cleanupTask) {
+    if (cleanupTask.getCleanupType() == TaskCleanupType.DECOMISSIONING) {
+      for (SingularitySlave slave : activeSlaves) {
+        if (cleanupTask.getTaskId().getSanitizedHost().equals(JavaUtils.getReplaceHyphensWithUnderscores(slave.getHost()))) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private void removeDecommission(SingularityTaskCleanup cleanupTask) {
+    taskManager.deleteCleanupTask(cleanupTask.getTaskId().getId());
+    if (!taskManager.getTaskCleanup(cleanupTask.getTaskId().getId()).isPresent()) {
+      LOG.info("No other task cleanups found, removing task cleanup update for {}", cleanupTask.getTaskId());
+      List<SingularityTaskHistoryUpdate> historyUpdates = taskManager.getTaskHistoryUpdates(cleanupTask.getTaskId());
+      Collections.sort(historyUpdates);
+      if (Iterables.getLast(historyUpdates).getTaskState() == ExtendedTaskState.TASK_CLEANING) {
+        Optional<SingularityTaskHistoryUpdate> maybePreviousHistoryUpdate = historyUpdates.size() > 1 ? Optional.of(historyUpdates.get(historyUpdates.size() - 2)) : Optional.<SingularityTaskHistoryUpdate>absent();
+        taskManager.deleteTaskHistoryUpdate(cleanupTask.getTaskId(), ExtendedTaskState.TASK_CLEANING, maybePreviousHistoryUpdate);
+      }
+    }
+    Optional<SingularityPendingRequest> pendingRequest = requestManager.getPendingRequest(cleanupTask.getTaskId().getRequestId(), cleanupTask.getTaskId().getDeployId());
+    if (pendingRequest.isPresent() && pendingRequest.get().getActionId().isPresent() && pendingRequest.get().getActionId().equals(cleanupTask.getActionId())) {
+      LOG.info("Discarding pending request for {} ({})", cleanupTask.getTaskId().getRequestId(), pendingRequest.get());
+      requestManager.deletePendingRequest(pendingRequest.get());
+    }
+
+    requestManager.addToPendingQueue(new SingularityPendingRequest(cleanupTask.getTaskId().getRequestId(), cleanupTask.getTaskId().getDeployId(), System.currentTimeMillis(), cleanupTask.getUser(),
+      PendingType.SLAVE_REACTIVATED, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String>absent(), cleanupTask.getActionId()));
   }
 
   private boolean checkLBStateAndShouldKillTask(SingularityTaskCleanup cleanupTask) {
