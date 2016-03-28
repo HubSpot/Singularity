@@ -1,7 +1,6 @@
 Controller = require './Controller'
 
 LogLines = require '../collections/LogLines'
-MergedLogLines = require '../collections/MergedLogLines'
 
 LogView = require '../views/logView'
 
