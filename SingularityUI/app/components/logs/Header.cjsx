@@ -21,7 +21,10 @@ class Header extends React.Component
 
   renderBreadcrumbs: ->
     @props.path.split('/').map (subpath, i) ->
-      <li key={i}>{subpath}</li>
+      if subpath is '$TASK_ID'
+        <li key={i}><span className="label label-info">Task ID</span></li>
+      else
+        <li key={i}>{subpath}</li>
 
   renderViewButtons: ->
     if @props.taskIdCount > 1
