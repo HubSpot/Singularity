@@ -198,5 +198,9 @@ class Utils
         else
             fuzzyObject.score
 
+    @getInstanceNumberFromTaskId: (taskId) ->
+        splits = taskId.split('-')
+        splits[splits.length - 3]
+
 
 module.exports = Utils
