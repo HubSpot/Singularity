@@ -86,7 +86,7 @@ updateGroups = ->
 
 taskGroupFetchNext = (taskGroupId) ->
   (dispatch, getState) ->
-    {tasks, taskGroups, logRequestLength} = getState()
+    {tasks, taskGroups, logRequestLength, maxLines} = getState()
 
     promises = taskGroups[taskGroupId].taskIds.map (taskId) ->
       {maxOffset, path, initialDataLoaded} = tasks[taskId]
@@ -95,7 +95,7 @@ taskGroupFetchNext = (taskGroupId) ->
         xhr.done ({data, offset, nextOffset}) ->
           if data.length > 0
             nextOffset = nextOffset || offset + data.length
-            dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, true))
+            dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, true, maxLines))
       else
         Promise.resolve() # reject("initialDataLoaded is false for task #{taskId}")
 
@@ -103,7 +103,7 @@ taskGroupFetchNext = (taskGroupId) ->
 
 taskGroupFetchPrevious = (taskGroupId) ->
   (dispatch, getState) ->
-    {tasks, taskGroups, logRequestLength} = getState()
+    {tasks, taskGroups, logRequestLength, maxLines} = getState()
 
     promises = taskGroups[taskGroupId].taskIds.map (taskId) ->
       {minOffset, path, initialDataLoaded} = tasks[taskId]
@@ -112,13 +112,13 @@ taskGroupFetchPrevious = (taskGroupId) ->
         xhr.done ({data, offset, nextOffset}) ->
           if data.length > 0
             nextOffset = nextOffset || offset + data.length
-            dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, false))
+            dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, false, maxLines))
       else
         Promise.resolve() # reject("initialDataLoaded is false for task #{taskId}")
 
     Promise.all(promises)
 
-taskData = (taskGroupId, taskId, data, offset, nextOffset, append) ->
+taskData = (taskGroupId, taskId, data, offset, nextOffset, append, maxLines) ->
   {
     taskGroupId
     taskId
@@ -126,6 +126,7 @@ taskData = (taskGroupId, taskId, data, offset, nextOffset, append) ->
     offset
     nextOffset
     append
+    maxLines
     type: 'LOG_TASK_DATA'
   }
 
