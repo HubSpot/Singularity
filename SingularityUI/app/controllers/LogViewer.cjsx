@@ -27,7 +27,7 @@ class LogViewer extends Controller
 
     @store = Redux.createStore(rootReducer, initialState, Redux.compose(Redux.applyMiddleware(thunk.default, logger())))
 
-    if taskIds
+    if taskIds.length > 0
         initPromise = @store.dispatch(LogActions.initialize(@requestId, @path, search, taskIds))
     else
         initPromise = @store.dispatch(LogActions.initializeUsingActiveTasks(@requestId, @path, search))

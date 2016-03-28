@@ -190,28 +190,6 @@ class Utils
         else
           {}
 
-    @humanizeText: (text) ->
-        return '' if not text
-        text = text.replace /_/g, ' '
-        text = text.toLowerCase()
-        text = text[0].toUpperCase() + text.substr 1
-        return text
-
-    @getLabelClassFromTaskState: (state) ->
-        switch state
-            when 'TASK_STARTING', 'TASK_CLEANING'
-                'warning'
-            when 'TASK_STAGING', 'TASK_LAUNCHED', 'TASK_RUNNING'
-                'info'
-            when 'TASK_FINISHED'
-                'success'
-            when 'TASK_LOST', 'TASK_FAILED', 'TASK_LOST_WHILE_DOWN'
-                'danger'
-            when 'TASK_KILLED'
-                'default'
-            else
-                'default'
-
     @fuzzyAdjustScore: (filter, fuzzyObject) ->
         if fuzzyObject.original.id.toLowerCase().startsWith(filter.toLowerCase())
             fuzzyObject.score * 10
@@ -219,5 +197,10 @@ class Utils
             fuzzyObject.score * 5
         else
             fuzzyObject.score
+
+    @getInstanceNumberFromTaskId: (taskId) ->
+        splits = taskId.split('-')
+        splits[splits.length - 3]
+
 
 module.exports = Utils

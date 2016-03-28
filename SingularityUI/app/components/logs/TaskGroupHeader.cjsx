@@ -1,5 +1,7 @@
 React = require 'react'
 
+{ getInstanceNumberFromTaskId } = require '../../utils'
+
 class TaskGroupHeader extends React.Component
   @propTypes:
     taskIds: React.PropTypes.array.isRequired
@@ -7,15 +9,11 @@ class TaskGroupHeader extends React.Component
   toggleLegend: ->
     # TODO
 
-  getInstanceNumberFromTaskId: (taskId) ->
-    splits = taskId.split('-')
-    splits[splits.length - 3]
-
   renderInstanceInfo: ->
     if @props.taskIds.length > 1
-      <span className="instance-link">Viewing Instances {@props.taskIds.map(@getInstanceNumberFromTaskId).join(', ')}</span>
+      <span className="instance-link">Viewing Instances {@props.taskIds.map(getInstanceNumberFromTaskId).join(', ')}</span>
     else
-      <a href={"#{config.appRoot}/task/#{@props.taskIds[0]}"}>Instance {@getInstanceNumberFromTaskId(@props.taskIds[0])}</a>
+      <a href={"#{config.appRoot}/task/#{@props.taskIds[0]}"}>Instance {getInstanceNumberFromTaskId(@props.taskIds[0])}</a>
 
   renderTaskLegend: ->
     if @props.taskIds.length > 1

@@ -118,7 +118,10 @@ class Router extends Backbone.Router
         initialOffset = parseInt(window.location.hash.substr(1), 10) || null
 
         params = Utils.getQueryParams()
-        taskIds = (params.taskIds || '').split(',')
+        if params.taskIds
+            taskIds = params.taskIds.split(',')
+        else
+            taskIds = []
         viewMode = params.viewMode || 'split'
         search = params.search || ''
 

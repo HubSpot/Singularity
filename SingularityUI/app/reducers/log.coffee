@@ -1,5 +1,7 @@
 { combineReducers } = require 'redux'
 
+{ getInstanceNumberFromTaskId } = require '../utils'
+
 updateTask = (state, taskId, update) ->
   newState = Object.assign({}, state)
   newState[taskId] = Object.assign({}, state[taskId], update)
@@ -80,8 +82,7 @@ taskGroups = (state=[], action) ->
       pendingRequests: false
     }
   else if action.type is 'LOG_ADD_TASK_GROUP'
-    newState = Object.assign([], state)
-    newState.push({
+    newState = state.concat({
       taskIds: action.taskIds,
       logLines: [],
       top: false,
@@ -90,7 +91,8 @@ taskGroups = (state=[], action) ->
       ready: false
       pendingRequests: false
     })
-    return newState
+
+    return _.sortBy(newState, (taskGroup) -> getInstanceNumberFromTaskId(taskGroup.taskIds[0]))
   else if action.type is 'LOG_REMOVE_TASK'
     newState = []
     for taskGroup in state
