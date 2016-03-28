@@ -117,8 +117,12 @@ taskGroups = (state=[], action) ->
 
     if action.append
       logLines = state[action.taskGroupId].logLines.concat(lines)
+      if logLines.length > action.maxLines
+        logLines = logLines.slice(logLines.length - action.maxLines)
     else
       logLines = lines.concat(state[action.taskGroupId].logLines)
+      if logLines.length > action.maxLines
+        logLines = logLines.slice(0, action.maxLines)
 
     return updateTaskGroup(state, action.taskGroupId, {logLines})
 
@@ -153,6 +157,9 @@ search = (state='', action) ->
 logRequestLength = (state=30000, action) ->
   return state
 
+maxLines = (state=1000, action) ->
+  return state
+
 activeRequest = (state={}, action) ->
   if action.type is 'LOG_INIT'
     return Object.assign({}, state, {requestId: action.requestId})
@@ -160,4 +167,4 @@ activeRequest = (state={}, action) ->
     return Object.assign({}, state, {activeTasks: action.tasks})
   return state
 
-module.exports = combineReducers({tasks, taskGroups, activeRequest, path, activeColor, colors, viewMode, search, logRequestLength})
+module.exports = combineReducers({tasks, taskGroups, activeRequest, path, activeColor, colors, viewMode, search, logRequestLength, maxLines})

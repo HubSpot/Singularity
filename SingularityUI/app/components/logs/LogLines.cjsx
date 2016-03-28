@@ -7,7 +7,7 @@ LogLines = require '../../collections/LogLines'
 { connect } = require 'react-redux'
 { taskGroupTop, taskGroupBottom } = require '../../actions/log'
 
-scrollThreshold = 100
+SCROLL_THRESHOLD = 10
 
 sum = (numbers) ->
   total = 0
@@ -52,17 +52,6 @@ class LogLines extends React.Component
     if @shouldScrollToBottom
       @refs.tailContents.scrollTop = @refs.tailContents.scrollHeight
 
-    if prevState.atTop != @state.atTop
-      if @state.atTop
-        @props.onEnterTop(@props.taskGroupId)
-      else
-        @props.onLeaveTop(@props.taskGroupId)
-    if prevState.atBottom != @state.atBottom
-      if @state.atBottom
-        @props.onEnterBottom(@props.taskGroupId)
-      else
-        @props.onLeaveBottom(@props.taskGroupId)
-
   renderLoadingPrevious: ->
     if @props.initialDataLoaded
       if @props.reachedStartOfFile
@@ -87,20 +76,29 @@ class LogLines extends React.Component
         <div>Loading more... ({Humanize.filesize(@props.bytesRemainingAfter)} remaining)</div>
 
   handleScroll: =>
+    changedState = false
     newState = {}
-    if @state.atTop and @refs.tailContents.scrollTop > @props.scrollThreshold
+
+    if @state.atTop and @refs.tailContents.scrollTop > SCROLL_THRESHOLD
+      changedState = true
       newState.atTop = false
       @props.onLeaveTop(@props.taskGroupId)
-    else if not @state.atTop and @refs.tailContents.scrollTop < @props.scrollThreshold
+    else if not @state.atTop and @refs.tailContents.scrollTop < SCROLL_THRESHOLD
+      changedState = true
       newState.atTop = true
       @props.onEnterTop(@props.taskGroupId)
 
-    if @state.atBottom and (@refs.tailContents.scrollTop + @refs.tailContents.clientHeight) > (@refs.tailContents.scrollHeight - scrollThreshold)
+    if @state.atBottom and @refs.tailContents.scrollTop + @refs.tailContents.clientHeight < @refs.tailContents.scrollHeight - SCROLL_THRESHOLD
+      changedState = true
       newState.atBottom = false
       @props.onLeaveBottom(@props.taskGroupId)
-    else if not @state.atBottom and (@refs.tailContents.scrollTop + @refs.tailContents.clientHeight) < (@refs.tailContents.scrollHeight - scrollThreshold)
+    else if not @state.atBottom and @refs.tailContents.scrollTop + @refs.tailContents.clientHeight > @refs.tailContents.scrollHeight - SCROLL_THRESHOLD
+      changedState = true
       newState.atBottom = true
       @props.onEnterBottom(@props.taskGroupId)
+
+    if changedState
+      @setState Object.assign({}, @state, newState)
 
   render: ->
     <div className="contents-container">
