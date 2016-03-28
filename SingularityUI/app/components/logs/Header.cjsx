@@ -4,10 +4,7 @@ SearchDropdown = require './SearchDropdown'
 TasksDropdown = require './TasksDropdown'
 
 { connect } = require 'react-redux'
-{ switchViewMode } = require '../../actions/log'
-
-scrollToBottom = ->
-scrollToTop = ->
+{ switchViewMode, scrollToTop, scrollToBottom } = require '../../actions/log'
 
 class Header extends React.Component
   @propTypes:

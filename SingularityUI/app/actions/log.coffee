@@ -199,6 +199,18 @@ toggleTaskLog = (taskId) ->
         dispatch(taskGroupFetchPrevious(taskGroupId)).then ->
           dispatch(taskGroupReady(taskGroupId))
 
+scrollToTop = () ->
+  (dispatch, getState) ->
+    getState().taskGroups.map (taskGroup, taskGroupId) ->
+      dispatch({taskGroupId, type: 'LOG_SCROLL_TO_TOP'})
+      dispatch(taskGroupFetchNext(taskGroupId))
+
+scrollToBottom = () ->
+  (dispatch, getState) ->
+    getState().taskGroups.map (taskGroup, taskGroupId) ->
+      dispatch({taskGroupId, type: 'LOG_SCROLL_TO_BOTTOM'})
+      dispatch(taskGroupFetchPrevious(taskGroupId))
+
 module.exports = {
   initialize
   initializeUsingActiveTasks
@@ -213,4 +225,6 @@ module.exports = {
   switchViewMode
   setCurrentSearch
   toggleTaskLog
+  scrollToTop
+  scrollToBottom
 }

@@ -56,6 +56,16 @@ tasks = (state={}, action) ->
     })
   else if action.type is 'LOG_TASK_FILESIZE'
     return updateTask(state, action.taskId, {filesize: action.filesize})
+  else if action.type is 'LOG_SCROLL_TO_TOP'
+    newState = {}
+    for taskId of state
+      newState[taskId] = Object.assign({}, state[taskId], {minOffset: 0, maxOffset: 0})
+    return newState
+  else if action.type is 'LOG_SCROLL_TO_BOTTOM'
+    newState = {}
+    for taskId of state
+      newState[taskId] = Object.assign({}, state[taskId], {minOffset: state[taskId].filesize, maxOffset: state[taskId].filesize})
+    return newState
   return state
 
 taskGroups = (state=[], action) ->
@@ -105,6 +115,8 @@ taskGroups = (state=[], action) ->
     return updateTaskGroup(state, action.taskGroupId, {bottom: action.visible})
   else if action.type is 'LOG_TASK_GROUP_READY'
     return updateTaskGroup(state, action.taskGroupId, {ready: true})
+  else if action.type in ['LOG_SCROLL_TO_TOP', 'LOG_SCROLL_TO_BOTTOM']
+    return updateTaskGroup(state, action.taskGroupId, {logLines: []})
   else if action.type is 'LOG_TASK_DATA'
     taskGroup = state[action.taskGroupId]
 
