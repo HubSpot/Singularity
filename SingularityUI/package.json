@@ -26,13 +26,20 @@
     "datatables-bootstrap3-plugin": "~0.4.0",
     "fuse.js": "~1.2.2",
     "fuzzy": "~0.1.1",
+    "humanize-plus": "^1.8.1",
     "jquery": "~1.11.1",
     "juration": "*",
     "messenger": "git://github.com/HubSpot/messenger#set-main-field",
     "moment": "2.11.2",
+    "q": "^1.4.1",
     "react": "~0.14.2",
     "react-dom": "~0.14.2",
     "react-list": "~0.7.3",
+    "react-redux": "^4.4.1",
+    "react-waypoint": "^1.3.0",
+    "redux": "^3.3.1",
+    "redux-logger": "^2.6.1",
+    "redux-thunk": "^2.0.1",
     "select2": "~3.5.1",
     "sortable": "git://github.com/HubSpot/sortable.git#v0.6.0",
     "typeahead.js": "~0.10.4",
@@ -56,6 +63,7 @@
     "nib": "^1.1.0",
     "webpack": "^1.12.14",
     "webpack-dev-server": "^1.14.1",
+    "webpack-merge": "^0.8.4",
     "webpack-stream": "^3.1.0"
   }
 }
