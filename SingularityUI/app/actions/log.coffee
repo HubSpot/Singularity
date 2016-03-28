@@ -186,7 +186,8 @@ toggleTaskLog = (taskId) ->
   (dispatch, getState) ->
     {search, path, tasks, viewMode} = getState()
     if tasks[taskId]
-      dispatch({taskId, type: 'LOG_REMOVE_TASK'})
+      if Object.keys(tasks).length > 1
+        dispatch({taskId, type: 'LOG_REMOVE_TASK'})
     else
       if viewMode is 'split'
         dispatch(addTaskGroup(path, search, [taskId]))
