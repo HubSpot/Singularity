@@ -6,11 +6,18 @@ TasksDropdown = require './TasksDropdown'
 { connect } = require 'react-redux'
 { switchViewMode } = require '../../actions/log'
 
+scrollToBottom = ->
+scrollToTop = ->
+
 class Header extends React.Component
   @propTypes:
     requestId: React.PropTypes.string.isRequired
     path: React.PropTypes.string.isRequired
     taskIdCount: React.PropTypes.number.isRequired
+    viewMode: React.PropTypes.string.isRequired
+
+    scrollToBottom: React.PropTypes.func.isRequired
+    scrollToTop: React.PropTypes.func.isRequired
 
   toggleHelp: ->
     # TODO
@@ -62,7 +69,7 @@ class Header extends React.Component
           <div className="col-md-3 hidden-xs tail-buttons">
             <SearchDropdown />
             <TasksDropdown />
-            <ColorDropdown colors={@props.colors} activeColor={@props.activeColor} />
+            <ColorDropdown />
             {@renderViewButtons()}
             {@renderAnchorButtons()}
             {@renderHelpButton()}
@@ -71,12 +78,14 @@ class Header extends React.Component
       </div>
 
 mapStateToProps = (state) ->
+  taskIdCount: Object.keys(state.tasks).length
+  path: state.path
   viewMode: state.viewMode
   requestId: state.activeRequest.requestId
 
 mapDispatchToProps = (dispatch) ->
   switchViewMode: (viewMode) -> dispatch(switchViewMode(viewMode))
-  scrollToBottom: -> dispatch()
-  scrollToTop: -> dispatch()
+  scrollToBottom: -> dispatch(scrollToBottom())
+  scrollToTop: -> dispatch(scrollToTop())
 
 module.exports = connect(mapStateToProps, mapDispatchToProps)(Header)

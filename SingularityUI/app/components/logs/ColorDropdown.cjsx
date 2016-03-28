@@ -13,7 +13,7 @@ class ColorDropdown extends React.Component
       className = classNames
         active: @props.activeColor is colorClass
       <li key={index} className={className}>
-        <a onClick={=> @props.setLogColor(colorClass)}>
+        <a onClick={=> @props.selectLogColor(colorClass)}>
           {color}
         </a>
       </li>
@@ -29,9 +29,10 @@ class ColorDropdown extends React.Component
       </ul>
     </div>
 
-mapStateToProps = (state, ownProps) -> ownProps
+mapStateToProps = (state) ->
+  colors: state.colors
+  activeColor: state.activeColor
 
-mapDispatchToProps = (dispatch) ->
-  setLogColor: (color) -> dispatch(selectLogColor(color))
+mapDispatchToProps = { selectLogColor }
 
 module.exports = connect(mapStateToProps, mapDispatchToProps)(ColorDropdown)

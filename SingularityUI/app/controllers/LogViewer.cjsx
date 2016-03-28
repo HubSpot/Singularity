@@ -35,9 +35,6 @@ class LogViewer extends Controller
     initPromise.then =>
         @store.dispatch(ActiveTasks.updateActiveTasks(@requestId))
 
-    setInterval @update, 1000
-    setInterval @updateFilesizes, 10000
-
     # create log view
     @view = new LogView @store
 
@@ -45,9 +42,5 @@ class LogViewer extends Controller
 
     @view.render()
     app.showView @view
-
-  update: => @store.dispatch(LogActions.updateGroups())
-
-  updateFilesizes: => @store.dispatch(LogActions.updateFilesizes())
 
 module.exports = LogViewer

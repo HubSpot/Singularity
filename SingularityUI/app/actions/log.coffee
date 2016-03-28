@@ -32,8 +32,7 @@ initialize = (requestId, path, search, taskIds) ->
           dispatch(initTask(taskGroupId, taskId, offset, resolvedPath))
 
       Promise.all(taskPromises).then ->
-        fetchPromises = dispatch(taskGroupFetchPrevious(taskGroupId))
-        Promise.all(fetchPromises).then ->
+        dispatch(taskGroupFetchPrevious(taskGroupId)).then ->
           dispatch(taskGroupReady(taskGroupId))
 
     Promise.all(groupPromises)
@@ -88,7 +87,7 @@ updateGroups = ->
 taskGroupFetchNext = (taskGroupId) ->
   (dispatch, getState) ->
     {tasks, taskGroups, logRequestLength} = getState()
-    dispatch({taskGroupId, type: 'LOG_TASK_GROUP_REQUEST_START'})
+
     promises = taskGroups[taskGroupId].taskIds.map (taskId) ->
       {maxOffset, path, initialDataLoaded} = tasks[taskId]
       if initialDataLoaded
@@ -99,13 +98,14 @@ taskGroupFetchNext = (taskGroupId) ->
             dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, true))
       else
         Promise.resolve() # reject("initialDataLoaded is false for task #{taskId}")
-    Promise.all(promises).then ->
-      dispatch({taskGroupId, type: 'LOG_TASK_GROUP_REQUEST_END'})
+
+    Promise.all(promises)
 
 taskGroupFetchPrevious = (taskGroupId) ->
   (dispatch, getState) ->
     {tasks, taskGroups, logRequestLength} = getState()
-    taskGroups[taskGroupId].taskIds.map (taskId) ->
+
+    promises = taskGroups[taskGroupId].taskIds.map (taskId) ->
       {minOffset, path, initialDataLoaded} = tasks[taskId]
       if minOffset > 0 and initialDataLoaded
         xhr = fetchData(taskId, path, Math.max(minOffset - logRequestLength, 0), Math.min(logRequestLength, minOffset - logRequestLength))
@@ -115,6 +115,8 @@ taskGroupFetchPrevious = (taskGroupId) ->
             dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, false))
       else
         Promise.resolve() # reject("initialDataLoaded is false for task #{taskId}")
+
+    Promise.all(promises)
 
 taskData = (taskGroupId, taskId, data, offset, nextOffset, append) ->
   {
@@ -162,7 +164,7 @@ selectLogColor = (color) ->
 
 switchViewMode = (newViewMode) ->
   (dispatch, getState) ->
-    { taskGroups, path, requestId, search, viewMode } = getState()
+    { taskGroups, path, activeRequest, search, viewMode } = getState()
 
     if newViewMode in ['custom', viewMode]
       return
@@ -170,25 +172,25 @@ switchViewMode = (newViewMode) ->
     taskIds = _.flatten(_.pluck(taskGroups, 'taskIds'))
 
     dispatch({viewMode: newViewMode, type: 'LOG_SWITCH_VIEW_MODE'})
-
-    initialize(requestId, path, search, newViewMode, taskIds)(dispatch)
+    dispatch(initialize(activeRequest.requestId, path, search, taskIds))
 
 setCurrentSearch = (newSearch) ->
   (dispatch, getState) ->
-    {requestId, path, taskGroups, currentSearch} = getState()
+    {activeRequest, path, taskGroups, currentSearch} = getState()
     if newSearch != currentSearch
-      initialize(requestId, path, newSearch, _.pluck(taskGroups, 'taskIds'))(dispatch)
+      dispatch(initialize(activeRequest.requestId, path, newSearch, _.flatten(_.pluck(taskGroups, 'taskIds'))))
 
 toggleTaskLog = (taskId) ->
   (dispatch, getState) ->
-    {path, taskGroups, tasks, viewMode} = getState()
+    {search, path, tasks, viewMode} = getState()
     if tasks[taskId]
       dispatch({taskId, type: 'LOG_REMOVE_TASK'})
     else
-      if viewMode is 'unified'
-        taskGroupId = 0
+      if viewMode is 'split'
+        dispatch(addTaskGroup(path, search, [taskId]))
+        taskGroupId = getState().taskGroups.length - 1
       else
-        taskGroupId = dispatch(addTaskGroup(path, '', [taskId]))
+        taskGroupId = 0
       resolvedPath = path.replace('$TASK_ID', taskId)
       fetchData(taskId, resolvedPath).done ({offset}) ->
         dispatch(initTask(taskGroupId, taskId, offset, resolvedPath))
