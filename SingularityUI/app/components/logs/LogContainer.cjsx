@@ -2,7 +2,6 @@ React = require 'react'
 Header = require './Header'
 TaskGroupContainer = require './TaskGroupContainer'
 BackboneReactComponent = require 'backbone-react-component'
-MergedLogLines = require '../../collections/MergedLogLines'
 
 { connect } = require 'react-redux'
 
