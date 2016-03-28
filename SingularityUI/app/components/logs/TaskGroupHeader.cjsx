@@ -15,7 +15,7 @@ class TaskGroupHeader extends React.Component
     if @props.taskIds.length > 1
       <span className="instance-link">Viewing Instances {@props.taskIds.map(@getInstanceNumberFromTaskId).join(', ')}</span>
     else
-      <span>Instance {@getInstanceNumberFromTaskId(@props.taskIds[0])}</span>
+      <a href={"#{config.appRoot}/task/#{@props.taskIds[0]}"}>Instance {@getInstanceNumberFromTaskId(@props.taskIds[0])}</a>
 
   renderTaskLegend: ->
     if @props.taskIds.length > 1
