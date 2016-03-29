@@ -442,7 +442,7 @@ class Request extends Model
                 lastCommands = []
             commands = if lastCommands? then lastCommands[lastCommands.length - 1] else []
         vex.dialog.prompt
-            message: "<h3>#{if task then 'Rer' else 'R'}un Task</h3>"
+            message: "<h3>#{if task then 'Rerun' else 'Run'} Task</h3>"
             input: runTemplate
                 id: @get "id"
                 prefix: @localStorageCommandLineInputKeyPrefix
