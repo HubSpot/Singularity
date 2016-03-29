@@ -63,7 +63,12 @@ class Task extends Model
 
     promptRun: (callback) =>
         # We tell the Request to run
-        requestModel = new Request id: @get('request').id
+        request = @get('request')
+        if request
+            id = request.id
+        else # Pending tasks don't have a request attribute
+            id = @get('pendingTask').pendingTaskId.requestId
+        requestModel = new Request id: id
         requestModel.promptRun => callback()
 
 

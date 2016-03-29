@@ -13,6 +13,7 @@ exitCooldownTemplate = require '../templates/vex/exitCooldown'
 stepDeployTemplate = require '../templates/vex/stepDeploy'
 cancelDeployTemplate = require '../templates/vex/cancelDeploy'
 TaskHistory = require '../models/TaskHistory'
+AutoTailer = require '../views/AutoTailer'
 
 vex = require 'vex.dialog'
 juration = require 'juration'
@@ -479,7 +480,18 @@ class Request extends Model
                     if @data.afterStart in ['browse-to-sandbox', 'autoTail']
                         @data.runId = uuid.v4()
 
-                    @run( @data.commandLineInput, message, @data.runId ).done callback( @data )
+                    doneFn = =>
+                        if @data.afterStart is 'autoTail'
+                            autoTailer = new AutoTailer({
+                                requestId: @id
+                                autoTailFilename: @data.filename
+                                autoTailTimestamp: +new Date()
+                            })
+
+                            autoTailer.startAutoTailPolling()
+                        callback( @data )
+
+                    @run( @data.commandLineInput, message, @data.runId ).done doneFn
                     return true
 
             afterOpen: =>
