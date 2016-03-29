@@ -9,7 +9,7 @@ class FileBrowserSubview extends View
     events: ->
         'click [data-directory-path]':  'navigate'
 
-    initialize: ({ @scrollWhenReady }) ->
+    initialize: ({ @scrollWhenReady, @slaveOffline }) ->
         @listenTo @collection, 'sync',  @render
         @listenTo @collection, 'error', @catchAjaxError
         @listenTo @model, 'sync', @render
@@ -29,6 +29,8 @@ class FileBrowserSubview extends View
             switch _.last(@task.get('taskUpdates')).taskState
                 when 'TASK_LAUNCHED', 'TASK_STAGING', 'TASK_STARTING' then emptySandboxMessage = 'Could not browse files. The task is still starting up.'
                 when 'TASK_KILLED', 'TASK_FAILED', 'TASK_LOST', 'TASK_FINISHED' then emptySandboxMessage = 'No files exist in task directory. It may have been cleaned up.'
+
+        emptySandboxMessage = "Task files are not availible because #{@task.attributes.task.taskId.sanitizedHost} is offline." if @slaveOffline
 
         @$el.html @template
             synced:                 @collection.synced and @task.synced
