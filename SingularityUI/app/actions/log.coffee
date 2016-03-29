@@ -92,7 +92,7 @@ taskGroupFetchNext = (taskGroupId) ->
     promises = taskGroups[taskGroupId].taskIds.map (taskId) ->
       {maxOffset, path, initialDataLoaded} = tasks[taskId]
       if initialDataLoaded
-        xhr = fetchData(taskId, path, maxOffset, maxOffset + logRequestLength)
+        xhr = fetchData(taskId, path, maxOffset, logRequestLength)
         xhr.done ({data, offset, nextOffset}) ->
           if data.length > 0
             nextOffset = nextOffset || offset + data.length
@@ -109,7 +109,7 @@ taskGroupFetchPrevious = (taskGroupId) ->
     promises = taskGroups[taskGroupId].taskIds.map (taskId) ->
       {minOffset, path, initialDataLoaded} = tasks[taskId]
       if minOffset > 0 and initialDataLoaded
-        xhr = fetchData(taskId, path, Math.max(minOffset - logRequestLength, 0), Math.min(logRequestLength, minOffset - logRequestLength))
+        xhr = fetchData(taskId, path, Math.max(minOffset - logRequestLength, 0), Math.min(logRequestLength, minOffset))
         xhr.done ({data, offset, nextOffset}) ->
           if data.length > 0
             nextOffset = nextOffset || offset + data.length
