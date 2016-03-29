@@ -151,6 +151,9 @@ public class SingularityMailer implements Managed {
 
     if (task.isPresent()) {
       templateProperties.put("slaveHostname", task.get().getOffer().getHostname());
+      if (task.get().getTaskRequest().getPendingTask().getCmdLineArgsList().isPresent()) {
+        templateProperties.put("extraCmdLineArguments", task.get().getTaskRequest().getPendingTask().getCmdLineArgsList().get());
+      }
     }
 
     boolean needsBeenPrefix = taskState == ExtendedTaskState.TASK_LOST || taskState == ExtendedTaskState.TASK_KILLED;
