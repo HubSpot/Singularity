@@ -4,8 +4,6 @@ Deploy = require '../models/Deploy'
 TaskFiles = require '../collections/TaskFiles'
 TaskHistory = require '../models/TaskHistory'
 
-AutoTailer = require './AutoTailer'
-
 class RequestView extends View
 
     template: require '../templates/requestDetail/requestBase'
