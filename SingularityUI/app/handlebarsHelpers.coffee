@@ -1,3 +1,7 @@
+Handlebars = require 'handlebars'
+moment = require 'moment'
+Utils = require './utils'
+
 Handlebars.registerHelper 'appRoot', ->
     config.appRoot
 
@@ -142,17 +146,7 @@ Handlebars.registerHelper 'filename', (value) ->
     value.substring(value.lastIndexOf('/') + 1)
 
 Handlebars.registerHelper 'getLabelClass', (state) ->
-    switch state
-        when 'TASK_STARTING', 'TASK_CLEANING'
-            'warning'
-        when 'TASK_STAGING', 'TASK_LAUNCHED', 'TASK_RUNNING'
-            'info'
-        when 'TASK_FINISHED'
-            'success'
-        when 'TASK_KILLED', 'TASK_LOST', 'TASK_FAILED', 'TASK_LOST_WHILE_DOWN'
-            'danger'
-        else
-            'default'
+    Utils.getLabelClassFromTaskState state
 
 Handlebars.registerHelper 'trimS3File', (filename, taskId) ->
     unless config.taskS3LogOmitPrefix

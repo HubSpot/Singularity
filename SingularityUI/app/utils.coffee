@@ -1,3 +1,6 @@
+Clipboard = require 'clipboard'
+vex = require 'vex.dialog'
+
 class Utils
 
     # Constants
@@ -52,21 +55,10 @@ class Utils
             afterOpen: ($vexContent) ->
                 $vexContent.parents('.vex').scrollTop 0
 
-                # Dity hack to make ZeroClipboard play along
-                # The Flash element doesn't work if it falls outside the
-                # bounds of the body, even if it's inside the dialog
-                overlayHeight = $vexContent.parents(".vex-overlay").height()
-                $("body").css "min-height", overlayHeight + "px"
-
                 $button = $vexContent.find ".copy-button"
                 $button.attr "data-clipboard-text", $vexContent.find("pre").html()
 
-                zeroClipboardClient = new ZeroClipboard $button[0]
-
-                zeroClipboardClient.on "ready", =>
-                    zeroClipboardClient.on "aftercopy", =>
-                        $button.val "Copied"
-                        setTimeout (-> $button.val "Copy"), 800
+                clipboard = new Clipboard $button[0]
 
     # For .horizontal-description-list
     @setupCopyLinks: ($element) =>
@@ -78,7 +70,7 @@ class Utils
                 text = $item.find('p').html()
                 $copyLink = $ "<a data-clipboard-text='#{ _.escape text }'>Copy</a>"
                 $item.find("h4").append $copyLink
-                new ZeroClipboard $copyLink[0]
+                new Clipboard $copyLink[0]
 
     # Copy anything
     @makeMeCopy: (options) =>
@@ -89,7 +81,7 @@ class Utils
         text = $element.find(textSelector).html()
         $copyLink = $ "<a data-clipboard-text='#{ _.escape text }'>#{linkText}</a>"
         $(options.copyLink).html($copyLink)
-        new ZeroClipboard $copyLink[0]
+        new Clipboard $copyLink[0]
 
     @fixTableColumns: ($table) =>
         $headings = $table.find "th"
@@ -198,6 +190,28 @@ class Utils
         else
           {}
 
+    @humanizeText: (text) ->
+        return '' if not text
+        text = text.replace /_/g, ' '
+        text = text.toLowerCase()
+        text = text[0].toUpperCase() + text.substr 1
+        return text
+
+    @getLabelClassFromTaskState: (state) ->
+        switch state
+            when 'TASK_STARTING', 'TASK_CLEANING'
+                'warning'
+            when 'TASK_STAGING', 'TASK_LAUNCHED', 'TASK_RUNNING'
+                'info'
+            when 'TASK_FINISHED'
+                'success'
+            when 'TASK_LOST', 'TASK_FAILED', 'TASK_LOST_WHILE_DOWN'
+                'danger'
+            when 'TASK_KILLED'
+                'default'
+            else
+                'default'
+
     @fuzzyAdjustScore: (filter, fuzzyObject) ->
         if fuzzyObject.original.id.toLowerCase().startsWith(filter.toLowerCase())
             fuzzyObject.score * 10
@@ -205,6 +219,5 @@ class Utils
             fuzzyObject.score * 5
         else
             fuzzyObject.score
-
 
 module.exports = Utils

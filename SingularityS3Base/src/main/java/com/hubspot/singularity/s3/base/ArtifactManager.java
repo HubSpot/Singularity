@@ -191,6 +191,7 @@ public class ArtifactManager extends SimpleProcessManager {
     log.info("Copying {} to {}", source, destination);
 
     try {
+      Files.createDirectories(destination);
       Files.copy(source, destination.resolve(source.getFileName()));
     } catch (IOException e) {
       throw Throwables.propagate(e);

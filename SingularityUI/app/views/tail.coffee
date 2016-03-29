@@ -58,11 +58,6 @@ class TailView extends View
         # FireFox support
         @$contents.on 'DOMMouseScroll', @handleScroll
 
-
-        # Some stuff in the app can change this stuff. We wanna reset it
-        $('html, body').css 'min-height', '0px'
-        $('#global-zeroclipboard-html-bridge').css 'top', '1px'
-
     renderLines: ->
         # So we want to either prepend (fetchPrevious) or append (fetchNext) the lines
         # Well, or just render them if we're starting fresh

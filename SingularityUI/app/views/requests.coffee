@@ -2,13 +2,15 @@ View = require './view'
 AutoTailer = require './AutoTailer'
 Request = require '../models/Request'
 Utils = require '../utils'
+vex = require 'vex.dialog'
+fuzzy = require 'fuzzy'
 
 class RequestsView extends View
 
     isSorted: false
 
     templateBase:   require '../templates/requestsTable/requestsBase'
-    templateFilter: require '../templates/requestsTable/requestsFilter'
+    templateFilter: require '../templates/requestTypeFilter'
 
     # Figure out which template we'll use for the table based on the filter
     bodyTemplateMap:

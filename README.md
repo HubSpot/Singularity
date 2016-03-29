@@ -1,3 +1,5 @@
+![Singularity](Docs/images/singularity.png)
+
 [![Build Status](https://travis-ci.org/HubSpot/Singularity.svg?branch=master)](https://travis-ci.org/HubSpot/Singularity)
 
 ## Overview ##
@@ -6,21 +8,21 @@ Singularity is an API and web application for running and scheduling [Apache Mes
 
 It focuses on a batteries-included approach: Singularity and its components provide an entire Platform as a Service (PaaS) to end-users. It has many features which have been introduced to reduce developer friction and ensure proper operation and reliable deployment of tasks. Users may even be unfamiliar with and shielded from the details of Mesos.
 
-For a more thorough explanation of the concepts behind Singularity and Mesos click [here](Docs/details.md).
+For a more thorough explanation of the concepts behind Singularity and Mesos click [here](Docs/about/how-it-works.md).
 
 ----------
 
 ### Features###
 
- - [Native Docker Support](Docs/containers.md)
- - [JSON REST API and Java Client](Docs/reference/api.md)
- - [Fully featured web application (replaces and improves Mesos Master UI)](Docs/ui.md)
+ - [Native Docker Support](Docs/reference/container-options.md)
+ - [JSON REST API and Java Client](Docs/reference/apidocs/api-index.md)
+ - [Fully featured web application (replaces and improves Mesos Master UI)](Docs/about/ui.md)
  - Rich load balancer integration with [Baragon](https://github.com/HubSpot/Baragon)
- - [Deployments, automatic rollbacks, and healthchecks](Docs/details.md#user-content-deploys)
- - [Webhooks for third party integrations](Docs/webhooks.md)
+ - [Deployments, automatic rollbacks, and healthchecks](Docs/about/how-it-works.md#deploys)
+ - [Webhooks for third party integrations](Docs/reference/webhooks.md)
  - Configurable email alerts to service owners
- - [Historical deployment and task data](Docs/database.md)
- - [Custom executor with extended log features](Docs/details.md#user-content-optional-components)
+ - [Historical deployment and task data](Docs/reference/database.md)
+ - [Custom executor with extended log features](Docs/about/how-it-works.md#optional-components)
 
 ----------
 
@@ -65,24 +67,23 @@ Then simply run `docker-compose up` and it will start containers for...
 
 #### Install ####
 
- - [Installation Instructions](Docs/install.md)
+ - [Installation Instructions](Docs/getting-started/install.md)
 
 #### Deployment ####
 
- - [API](Docs/reference/api.md)
+ - [API](Docs/reference/apidocs/api-index.md)
  - [Configuration](Docs/reference/configuration.md)
- - [Examples](Docs/reference/examples.md)
- - [`Request` and `Deploy` Concepts](Docs/reference/reqeusts_and_deploys.md)
- - [Custom Executor Components](Docs/details.md#user-content-optional-components)
+ - [Examples](Docs/getting-started/basic-examples.md)
+ - [`Request` and `Deploy` Concepts](Docs/about/requests-and-deploys.md)
+ - [Custom Executor Components](Docs/about/how-it-works.md#optional-components)
 
 #### Development ####
 
-- [Local Development with Docker](Docs/development/docker.md)
+- [Local Development with Docker](Docs/development/developing-with-docker.md)
 - [Hacking on the UI](Docs/development/ui.md)
 - [Understanding the basepom / Maven structure](Docs/development/basepom.md)
-- [Third-party load balancer API design requirements](Docs/development/lbs.md)
-- [Publishing releases (for committers)](Docs/development/maven.md)
+- [Third-party load balancer API design requirements](Docs/development/load-balancer-integration.md)
 
 ----------
 
-Singularity is built and used by a number of different companies. Check out the list of adopters [here](Docs/adopters.md). 
+Singularity is built and used by a number of different companies. Check out the list of adopters [here](Docs/about/adopters.md). 

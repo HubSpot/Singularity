@@ -5,6 +5,7 @@ killTemplate = require '../templates/vex/taskKill'
 killOverrideTemplate = require '../templates/vex/taskKillOverride'
 killDestroyTemplate = require '../templates/vex/taskKillDestroy'
 
+vex = require 'vex.dialog'
 
 class taskOverviewSubview extends View
 

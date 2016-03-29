@@ -4,7 +4,7 @@ This document is intended for people who want to work on SingularityUI independe
 
 If you're here just looking for information on how to build SingularityUI, please note that the Maven build process is configured to automatically build and package the UI into SingularityService.
 
-The compiled static files are placed in [`../SingularityService/target/generated-resources/static/`](../SingularityService/target/generated-resources/static/).
+The compiled static files are placed in `../SingularityService/target/generated-resources/static/`.
 
 ## Contents
 
@@ -18,9 +18,9 @@ The compiled static files are placed in [`../SingularityService/target/generated
 
 ## Developer overview
 
-SingularityUI is a static app that relies on SingularityService for its data.
+SingularityUI is a single page webapp that relies on SingularityService for its data.
 
-The app is built using Brunch (i.e. compiling CoffeeScript, etc), with Bower being used to manage its dependencies (e.g. jQuery, Backbone).
+The app is built using Gulp (i.e. compiling CoffeeScript, etc), with npm being used to manage its dependencies (e.g. jQuery, Backbone).
 
 We recommend you familiarise yourself with the following if you haven't used them before:
 
@@ -34,39 +34,29 @@ We recommend you familiarise yourself with the following if you haven't used the
 You will need to have the following:
 
 * [nodejs](http://nodejs.org/) with [npm](https://www.npmjs.org/).
-* [Brunch](http://brunch.io) & [Bower](http://bower.io), installable via `npm install -g brunch bower`.
+* [gulp](http://gulpjs.com/), installable via `npm install --global gulp-cli`.
 
 Below are some commands you might find useful when working on SingularityUI:
 
 ```bash
 # cd Singularity/SingularityUI
-# Install NPM deps, Bower deps, and do one production build
+# Install NPM deps
 npm install
 
-# Install just the Bower dependencies
-bower install
+# Build the app
+gulp build
 
-# Remove dependencies (reinstall them using 'npm install')
-rm -rf node_modules bower_components
-
-# Build SingularityUI. '--production' (optional) optimises the output files
-brunch build [--production]
-
-# Watch the project and build it when there are changes
-brunch watch
-
-# Same as above, but also start an HTTP server that serves the static files. '-P <number>' (optional) specifies what port it runs on
-brunch watch --server [-P 3333]
-# NOTE - As of February 3, 2016, this has changed - it used to be lowercase p to specify port number, now it's capital P. 
+# Serve the app locally at localhost:3334 and rebuild whenever files are changed.
+gulp serve
 ```
 
 When you first start, run `npm install` to download all the dependencies. Once that's done, you're ready to roll!
 
 ## Developing locally
 
-So far you have SingularityUI with all its dependencies installed. You're able to run SingularityUI and have it served using `brunch watch --server`. What we need now is a running SingularityService to pull information from.
+So far you have SingularityUI with all its dependencies installed. You're able to run SingularityUI and have it served using `gulp serve`. What we need now is a running SingularityService to pull information from.
 
-If you don't have one already (e.g. your team might be running one you can use), you can easily run your own via [Docker](docker.md). If running via docker, it is helpful to add the host that docker is running on to your `/etc/hosts` file as `docker` so we can reference it by hostname. If using `boot2docker` this is your `boot2docker ip`. We will reference the hostname as `docker` in the examples below.
+If you don't have one already (e.g. your team might be running one you can use), you can easily run your own via [Docker](developing-with-docker.md). If running via docker, it is helpful to add the host that docker is running on to your `/etc/hosts` file as `docker` so we can reference it by hostname. If using `boot2docker` this is your `boot2docker ip`. We will reference the hostname as `docker` in the examples below.
 
 
 Once the cluster is up and running, the API's root is available at [`http://docker/singularity/api`](http://docker/singularity/api) by default.
@@ -96,8 +86,8 @@ name: SingularityUI
 
 routes:
 
-  # Redirect static assets to local brunch server (assuming it is on port 3333)
-  ".*/static/.*": "http://localhost:3333/"
+  # Redirect static assets to local server (assuming it is on port 3334)
+  ".*/static/.*": "http://localhost:3334/"
 
   # Redirect any API calls to the QA Singularity service (the slash after the domain is necessary)
   ".*/api/.*": "http://docker/"
@@ -125,11 +115,11 @@ Assuming you used the second command, you can now access SingularityUI by going 
 If you're confused as to what's going on here, all your requests are being processed by vee so that:
 
 * Requests to `localhost:4001/singularity/api` are sent to the server at `docker`.
-* All other requests, including static files, are sent to the Brunch server running locally.
+* All other requests, including static files, are sent to the gulp server running locally.
 
 ### Connecting to the API
 
-So far you have SingularityUI being served by Brunch, and SingularityService running somewhere. If you have a proxy like vee running too, please replace the ports/URIs that follow with the ones you're using for the proxy.
+So far you have SingularityUI being served by gulp, and SingularityService running somewhere. If you have a proxy like vee running too, please replace the ports/URIs that follow with the ones you're using for the proxy.
 
 Open up SingularityUI in your browser by going to [`http://localhost:3333`](http://localhost:3333).
 
@@ -141,7 +131,7 @@ You can change the value of this at any point by typing the following in your JS
 localStorage.setItem('apiRootOverride', 'http://docker/singularity/api')
 ```
 
-And there you go! You should at this point have SingularityUI running in your browser with it connected to SingularityService. Just let Brunch watch and compile your files as you work and try it out in your browser.
+And there you go! You should at this point have SingularityUI running in your browser with it connected to SingularityService. Just let gulp watch and compile your files as you work and try it out in your browser.
 
 While we're on the topic of localStorage overrides, another useful one you can use disables the auto-refresh which will stop the page re-rendering so you can properly inspect the DOM:
 

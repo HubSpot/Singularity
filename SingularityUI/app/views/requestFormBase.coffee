@@ -17,13 +17,16 @@ class RequestFormBase extends FormBaseView
             { 
                 name: 'owners', selector: '#owners'
                 options:
-                    tags: true
+                    tags: []
                     containerCssClass: 'select-owners hide-select2-spinner'
                     dropdownCssClass: 'hidden'
+                    selectOnBlur: true
             }
             { 
                 name: 'rackAffinity', selector: "#rackAffinity-#{type}"
-                options: tags: racks
+                options:
+                    tags: racks
+                    selectOnBlur: true
             }
         ]
 
@@ -92,6 +95,8 @@ class RequestFormBase extends FormBaseView
             requestObject.waitAtLeastMillisAfterTaskFinishesForReschedule = waitAtLeast if waitAtLeast
 
             requestObject.rackSensitive = @$("#rack-sensitive-#{ type }").is ':checked'
+
+            requestObject.hideEvenNumberAcrossRacksHint = @$("#hide-distribute-across-racks-hint-#{ type }").is ':checked'
             
             requestObject.rackAffinity = @getSelect2Val "#rackAffinity-#{ type }"
 

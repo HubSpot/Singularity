@@ -13,6 +13,7 @@ import org.mockito.Matchers;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
@@ -20,7 +21,6 @@ import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityTestBaseNoDb;
 import com.hubspot.singularity.data.history.HistoryManager;
-import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
 import com.hubspot.singularity.data.history.RequestHistoryHelper;
 
 public class BlendedHistoryTest extends SingularityTestBaseNoDb {

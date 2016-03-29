@@ -1,7 +1,10 @@
 Model = require './model'
 
+Racks = require '../collections/Racks'
+
 pauseTemplate = require '../templates/vex/requestPause'
 scaleTemplate = require '../templates/vex/requestScale'
+scaleEvenNumbersTemplate = require '../templates/vex/requestScaleConfirmRacks'
 unpauseTemplate = require '../templates/vex/requestUnpause'
 runTemplate = require '../templates/vex/requestRun'
 removeTemplate = require '../templates/vex/requestRemove'
@@ -10,6 +13,9 @@ exitCooldownTemplate = require '../templates/vex/exitCooldown'
 stepDeployTemplate = require '../templates/vex/stepDeploy'
 cancelDeployTemplate = require '../templates/vex/cancelDeploy'
 TaskHistory = require '../models/TaskHistory'
+
+vex = require 'vex.dialog'
+juration = require 'juration'
 
 class Request extends Model
 
@@ -60,6 +66,16 @@ class Request extends Model
                 message: data.message
             )
 
+    hideEvenNumberAcrossRacksHint: (callback) ->
+        @attributes.request.hideEvenNumberAcrossRacksHint = true
+        ajaxPromise = $.ajax(
+            type: 'POST'
+            url: "#{ config.apiRoot }/requests"
+            contentType: 'application/json'
+            data: JSON.stringify @attributes.request
+        )
+        ajaxPromise.then callback
+
     pause: (killTasks, duration, message) =>
         data =
             user:      app.getUsername()
@@ -75,19 +91,14 @@ class Request extends Model
             contentType: 'application/json'
             data: JSON.stringify data
 
-    run: (confirmedOrPromptData, message) ->
+    run: (cmdLineArgs, message) ->
         options =
             url: "#{ @url() }/run"
             type: 'POST'
             contentType: 'application/json'
             data: {}
 
-        if typeof confirmedOrPromptData is 'string'
-          if confirmedOrPromptData != ''
-            options.data.commandLineArgs = [confirmedOrPromptData]
-          else
-            options.data.commandLineArgs = []
-          options.processData = false
+        options.data.commandLineArgs = cmdLineArgs
 
         if message
             options.data.message = message
@@ -253,6 +264,60 @@ class Request extends Model
                 if !duration or (duration and @_validateDuration(duration, @promptPause, callback))
                     @pause(killTasks, duration, message).done callback
 
+    callScale: (data, bounce, incremental, message, duration, callback, setHideEvenNumberAcrossRacksHintTrue) =>
+        @scale(data).done =>
+            if setHideEvenNumberAcrossRacksHintTrue
+                @attributes.request.instances = data.instances
+                @hideEvenNumberAcrossRacksHint () =>
+                    if bounce 
+                        @bounce({incremental}).done callback
+                    else
+                        callback()
+            else if bounce 
+                @bounce({incremental}).done callback
+            else
+                callback()
+
+    promptScaleEvenNumberRacks: (scaleData) =>
+        vex.dialog.open
+            message: scaleEvenNumbersTemplate
+                instances: parseInt(scaleData.data.instances)
+                notOneInstance: parseInt(scaleData.data.instances) != 1
+                racks: @racks.length
+                notOneRack: @racks.length != 1
+                mod: scaleData.mod
+                modNotOne: scaleData.mod != 1
+                lower: parseInt(scaleData.data.instances) - scaleData.mod
+                higher: parseInt(scaleData.data.instances) + @racks.length - scaleData.mod
+                config: config
+            input: """
+                
+            """
+            buttons: [
+                $.extend _.clone(vex.dialog.buttons.YES), text: "Scale"
+                vex.dialog.buttons.NO
+            ]
+            scaleData: scaleData # Not sure why this is necessary, callback for whatever reason doesn't have access to the function's variables
+            callback: (data) =>
+                return unless data
+                scaleData.data.instances = data.instances
+                @callScale scaleData.data, scaleData.bounce, scaleData.incremental, scaleData.message, scaleData.duration, scaleData.callback, data.optOut
+                
+
+    checkScaleEvenNumberRacks: (data, bounce, incremental, message, duration, callback) =>
+        mod = data.instances %% @racks.length
+        if mod
+            @promptScaleEvenNumberRacks 
+                callback: callback
+                data: data
+                mod: mod 
+                bounce: bounce
+                incremental: incremental
+                message: message
+                duration: duration
+        else
+            @callScale data, bounce, incremental, message, duration, callback, false
+
     promptScale: (callback) =>
         vex.dialog.open
             message: "Enter the desired number of instances to run for request:"
@@ -279,11 +344,19 @@ class Request extends Model
                 message = $('.vex #scale-message').val()
                 duration = $('.vex #scale-expiration').val()
                 if !duration or (duration and @_validateDuration(duration, @promptScale, callback))
-                    @scale(data).done =>
-                        if bounce
-                            @bounce({incremental}).done callback
+                    if @attributes.request.rackSensitive and not @attributes.request.hideEvenNumberAcrossRacksHint
+                        if @racks
+                            @checkScaleEvenNumberRacks data, bounce, incremental, message, duration, callback
                         else
-                            callback()
+                            @racks = new Racks []
+                            @racks.fetch
+                                success: () => @checkScaleEvenNumberRacks data, bounce, incremental, message, duration, callback
+                                error: () => 
+                                    app.caughtError() # Since we scale anyway, don't show the error
+                                    @callScale data, bounce, incremental, message, duration, callback, false
+                    else
+                        @callScale data, bounce, incremental, message, duration, callback, false
+                    
 
     promptDisableHealthchecksDuration: (message, duration, callback) =>
         durationMillis = @_parseDuration(duration)
@@ -355,12 +428,17 @@ class Request extends Model
                 @unpause(confirmed).done callback
 
     promptRun: (callback) =>
+        try
+            lastCommands = JSON.parse(localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id))
+        catch e
+            console.error('Could not parse previous commands JSON')
+            lastCommands = []
         vex.dialog.prompt
             message: "<h3>Run Task</h3>"
             input: runTemplate
                 id: @get "id"
                 prefix: @localStorageCommandLineInputKeyPrefix
-                commands: localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
+                commands: if lastCommands? then lastCommands[lastCommands.length - 1] else []
 
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.YES), text: 'Run now'
@@ -371,24 +449,22 @@ class Request extends Model
                 return if @data is false
 
                 fileName = @data.filename.trim()
-                commandLineInput = @data.commandLineInput.trim()
                 message = @data.message
 
-                if fileName.length is 0 and @data.autoTail is 'on'
+                if ((fileName and fileName.length is 0) or not fileName) and @data.autoTail is 'on'
                     $(window.noFilenameError).removeClass('hide')
                     return false
 
                 else
-                    history = localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
-
-                    if history?
-                        last = history.split(",")[history.split(",").length - 1]
-                        history += ","
-                    else
-                        history = ""
-
-                    if commandLineInput != last
-                        localStorage.setItem(@localStorageCommandLineInputKeyPrefix + @id, history + commandLineInput) if commandLineInput?
+                    if @data.commandLineInput?
+                        try
+                            history = JSON.parse(localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id))
+                        catch e
+                            console.error('Could not parse previous command history')
+                            history = []
+                        if history and @data.commandLineInput != history[-1]
+                            history.push(@data.commandLineInput)
+                            localStorage.setItem(@localStorageCommandLineInputKeyPrefix + @id, JSON.stringify(history))
                     localStorage.setItem('taskRunRedirectFilename', fileName) if filename?
                     localStorage.setItem('taskRunAutoTail', @data.autoTail)
                     @data.id = @get 'id'
@@ -399,26 +475,47 @@ class Request extends Model
             afterOpen: =>
                 $('#filename').val localStorage.getItem('taskRunRedirectFilename')
                 $('#autoTail').prop 'checked', (localStorage.getItem('taskRunAutoTail') is 'on')
-                cmdString = localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
-                commands = if cmdString then cmdString.split(",").reverse() else []
-                $('#commandLineInput').val commands[0]
-                localStorage.setItem(@localStorageCommandLineInputKeyPrefix + "historyIndex", 0);
-                localStorage.setItem(@localStorageCommandLineInputKeyPrefix + "historyLength", commands.length);
+                $('#add-cmd-line-arg').on('click', { removeCmdLineArg: @removeCmdLineArg }, @addCmdLineArg)
+                $('.remove-button').click @removeCmdLineArg
 
             callback: (data) =>
+                if data.commandLineInput
+                    if typeof data.commandLineInput is 'string'
+                        if data.commandLineInput != ''
+                            data.commandLineInput = [data.commandLineInput.trim()]
+                        else
+                            data.commandLineInput = []
+                    if data.commandLineInput.length == 1 and data.commandLineInput[0] == ''
+                        data.commandLineInput = []
+                else
+                    data.commandLineInput = []
                 @data = data
 
+    addCmdLineArg: (event) ->
+        event.preventDefault()
+        $container = $('#cmd-line-inputs')
+        $container.append """
+        <div class="cmd-line-arg">
+            <div class="remove-button"></div>
+            <input id="commandLineInput" name="commandLineInput" type="text" class="vex-dialog-prompt-input" placeholder=""/>
+        </div>
+        """
+        $('.remove-button').click event.data.removeCmdLineArg
+
+    removeCmdLineArg: (event) ->
+        event.preventDefault()
+        $(event.currentTarget).parent().remove()
 
     promptRerun: (taskId, callback) =>
         task = new TaskHistory {taskId}
         task.fetch()
             .done =>
-                command = task.attributes.task.taskRequest.pendingTask.cmdLineArgsList
+                commands = task.attributes.task.taskRequest.pendingTask.cmdLineArgsList
                 vex.dialog.prompt
                     message: "<h3>Rerun Task</h3>"
                     input: runTemplate
                         id: @get "id"
-                        command: command
+                        commands: commands
                     buttons: [
                         $.extend _.clone(vex.dialog.buttons.YES), text: 'Run now'
                         vex.dialog.buttons.NO
@@ -428,9 +525,9 @@ class Request extends Model
                         return if @data is false
 
                         fileName = @data.filename.trim()
-                        commandLineInput = @data.commandLineInput.trim()
+                        message = @data.message
 
-                        if fileName.length is 0 and @data.autoTail is 'on'
+                        if ((fileName and fileName.length is 0) or not fileName) and @data.autoTail is 'on'
                             $(window.noFilenameError).removeClass('hide')
                             return false
 
@@ -439,19 +536,26 @@ class Request extends Model
                             localStorage.setItem('taskRunAutoTail', @data.autoTail)
                             @data.id = @get 'id'
 
-                            @run( @data.commandLineInput ).done callback( @data )
+                            @run( @data.commandLineInput, message ).done callback( @data )
                             return true
 
                     afterOpen: =>
                         $('#filename').val localStorage.getItem('taskRunRedirectFilename')
-                        if command is ""
-                            history = localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id)
-                            if !!history
-                                history = history.split(",")
-                                $('#commandLineInput').val history[history.length - 1]
                         $('#autoTail').prop 'checked', (localStorage.getItem('taskRunAutoTail') is 'on')
+                        $('#add-cmd-line-arg').on('click', { removeCmdLineArg: @removeCmdLineArg }, @addCmdLineArg)
+                        $('.remove-button').click @removeCmdLineArg
 
                     callback: (data) =>
+                        if data.commandLineInput
+                            if typeof data.commandLineInput is 'string'
+                                if data.commandLineInput != ''
+                                    data.commandLineInput = [data.commandLineInput.trim()]
+                                else
+                                    data.commandLineInput = []
+                            if data.commandLineInput.length == 1 and data.commandLineInput[0] == ''
+                                data.commandLineInput = []
+                        else
+                            data.commandLineInput = []
                         @data = data
 
     promptRemove: (callback) =>

@@ -1,6 +1,6 @@
 # Singularity REST API
 
-Version: 0.4.10-SNAPSHOT
+Version: 0.4.12-SNAPSHOT
 
 Endpoints:
 - [`/api/deploys`](#endpoint-/api/deploys) - Manages Singularity Deploys for existing requests
@@ -61,8 +61,10 @@ Models:
 - [`SingularityContainerInfo`](#model-SingularityContainerInfo)
 - [`SingularityDeleteRequestRequest`](#model-SingularityDeleteRequestRequest)
 - [`SingularityDeploy`](#model-SingularityDeploy)
+- [`SingularityDeployFailure`](#model-SingularityDeployFailure)
 - [`SingularityDeployHistory`](#model-SingularityDeployHistory)
 - [`SingularityDeployMarker`](#model-SingularityDeployMarker)
+- [`SingularityDeployProgress`](#model-SingularityDeployProgress)
 - [`SingularityDeployRequest`](#model-SingularityDeployRequest)
 - [`SingularityDeployResult`](#model-SingularityDeployResult)
 - [`SingularityDeployStatistics`](#model-SingularityDeployStatistics)
@@ -111,6 +113,7 @@ Models:
 - [`SingularityTaskShellCommandRequestId`](#model-SingularityTaskShellCommandRequestId)
 - [`SingularityTaskShellCommandUpdate`](#model-SingularityTaskShellCommandUpdate)
 - [`SingularityUnpauseRequest`](#model-SingularityUnpauseRequest)
+- [`SingularityUpdatePendingDeployRequest`](#model-SingularityUpdatePendingDeployRequest)
 - [`SingularityVolume`](#model-SingularityVolume)
 - [`SingularityWebhook`](#model-SingularityWebhook)
 - [`SlaveID`](#model-SlaveID)
@@ -127,6 +130,29 @@ Models:
 #### Overview
 Manages Singularity Deploys for existing requests
 
+#### **POST** `/api/deploys/update`
+
+Update the target active instance count for a pending deploy
+
+
+###### Parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | true |  | [SingularityUpdatePendingDeployRequest](#model-linkType)</a> |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 400    | Deploy is not in the pending state pending or is not not present | - |
+
+
+- - -
 #### **GET** `/api/deploys/pending`
 
 Retrieve the list of current pending deploys
@@ -198,6 +224,37 @@ Start a new deployment for a Request
 #### Overview
 Manages historical data for tasks, requests, and deploys.
 
+#### **GET** `/api/history/tasks`
+
+Retrieve the history sorted by startedAt for all inactive tasks.
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | false | Optional Request ID to match | string |
+| deployId | false | Optional deploy ID to match | string |
+| host | false | Optional host to match | string |
+| lastTaskStatus | false | Optional last task status to match | string |
+| startedAfter | false | Optionally match only tasks started after | long |
+| startedBefore | false | Optionally match only tasks started before | long |
+| orderDirection | false | Sort direction | string |
+| count | false | Maximum number of items to return | int |
+| page | false | Which page of items to view | int |
+
+###### Response
+[List[SingularityTaskIdHistory]](#model-SingularityTaskIdHistory)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **GET** `/api/history/task/{taskId}`
 
 Retrieve the history for a specific task.
@@ -271,7 +328,7 @@ Retrieve the history for all active tasks of a specific request.
 - - -
 #### **GET** `/api/history/request/{requestId}/tasks`
 
-Retrieve the history for all tasks of a specific request.
+Retrieve the history sorted by startedAt for all inactive tasks of a specific request.
 
 
 ###### Parameters
@@ -279,11 +336,17 @@ Retrieve the history for all tasks of a specific request.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| requestId | true | Request ID to look up | string |
+| requestId | true | Request ID to match | string |
 **query**
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
+| deployId | false | Optional deploy ID to match | string |
+| host | false | Optional host to match | string |
+| lastTaskStatus | false | Optional last task status to match | string |
+| startedAfter | false | Optionally match only tasks started after | long |
+| startedBefore | false | Optionally match only tasks started before | long |
+| orderDirection | false | Sort direction | string |
 | count | false | Maximum number of items to return | int |
 | page | false | Which page of items to view | int |
 
@@ -324,7 +387,7 @@ Retrieve the history for a task by runId
 - - -
 #### **GET** `/api/history/request/{requestId}/requests`
 
-
+Get request history for a single request
 
 
 ###### Parameters
@@ -353,7 +416,7 @@ Retrieve the history for a task by runId
 - - -
 #### **GET** `/api/history/request/{requestId}/deploys`
 
-
+Get deploy history for a single request
 
 
 ###### Parameters
@@ -1599,29 +1662,6 @@ Get the cleanup object for the task, if it exists
 
 
 - - -
-#### **GET** `/api/tasks/task/{taskId}`
-
-Retrieve information about a specific active task.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| taskId | true |  | string |
-
-###### Response
-[SingularityTask](#model-SingularityTask)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
 #### **DELETE** `/api/tasks/task/{taskId}`
 
 Attempt to kill task, optionally overriding an existing cleanup request (that may be waiting for replacement tasks to become healthy)
@@ -1647,6 +1687,29 @@ Attempt to kill task, optionally overriding an existing cleanup request (that ma
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
 | 409    | Task already has a cleanup request (can be overridden with override=true) | - |
+
+
+- - -
+#### **GET** `/api/tasks/task/{taskId}`
+
+Retrieve information about a specific active task.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true |  | string |
+
+###### Response
+[SingularityTask](#model-SingularityTask)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
 
 
 - - -
@@ -2075,25 +2138,6 @@ Retrieve a list of queued deploy updates for a specific webhook.
 
 
 - - -
-#### **GET** `/api/webhooks`
-
-Retrieve a list of active webhooks.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityWebhook]](#model-SingularityWebhook)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
 #### **POST** `/api/webhooks`
 
 Add a new webhook.
@@ -2108,6 +2152,25 @@ Add a new webhook.
 
 ###### Response
 string
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/webhooks`
+
+Retrieve a list of active webhooks.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityWebhook]](#model-SingularityWebhook)
 
 
 ###### Errors
@@ -2139,8 +2202,8 @@ string
 | urisCount | int | optional |  |
 | argumentsList | Array[string] | optional |  |
 | containerOrBuilder | [ContainerInfoOrBuilder](#model-ContainerInfoOrBuilder) | optional |  |
-| user | string | optional |  |
 | container | [ContainerInfo](#model-ContainerInfo) | optional |  |
+| user | string | optional |  |
 | value | string | optional |  |
 | initialized | boolean | optional |  |
 | environment | [Environment](#model-Environment) | optional |  |
@@ -2151,8 +2214,8 @@ string
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
 | environmentOrBuilder | [EnvironmentOrBuilder](#model-EnvironmentOrBuilder) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
-| valueBytes | [ByteString](#model-ByteString) | optional |  |
 | unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
+| valueBytes | [ByteString](#model-ByteString) | optional |  |
 | initializationErrorString | string | optional |  |
 
 
@@ -2240,12 +2303,12 @@ string
 | labels | [Labels](#model-Labels) | optional |  |
 | locationBytes | [ByteString](#model-ByteString) | optional |  |
 | initialized | boolean | optional |  |
+| nameBytes | [ByteString](#model-ByteString) | optional |  |
 | name | string | optional |  |
 | environment | string | optional |  |
-| nameBytes | [ByteString](#model-ByteString) | optional |  |
 | ports | [Ports](#model-Ports) | optional |  |
-| environmentBytes | [ByteString](#model-ByteString) | optional |  |
 | visibility | [Visibility](#model-Visibility) | optional |  Allowable values: FRAMEWORK, CLUSTER, EXTERNAL |
+| environmentBytes | [ByteString](#model-ByteString) | optional |  |
 | serializedSize | int | optional |  |
 | portsOrBuilder | [PortsOrBuilder](#model-PortsOrBuilder) | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
@@ -2320,6 +2383,7 @@ string
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| targetFolderRelativeToTask | string | optional |  |
 | md5sum | string | optional |  |
 | filename | string | optional |  |
 | name | string | optional |  |
@@ -2425,8 +2489,8 @@ string
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
 | discovery | [DiscoveryInfo](#model-DiscoveryInfo) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
-| resourcesCount | int | optional |  |
 | unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
+| resourcesCount | int | optional |  |
 | initializationErrorString | string | optional |  |
 | discoveryOrBuilder | [DiscoveryInfoOrBuilder](#model-DiscoveryInfoOrBuilder) | optional |  |
 
@@ -2440,8 +2504,8 @@ string
 | data | [ByteString](#model-ByteString) | optional |  |
 | source | string | optional |  |
 | containerOrBuilder | [ContainerInfoOrBuilder](#model-ContainerInfoOrBuilder) | optional |  |
-| executorId | [ExecutorID](#model-ExecutorID) | optional |  |
 | container | [ContainerInfo](#model-ContainerInfo) | optional |  |
+| executorId | [ExecutorID](#model-ExecutorID) | optional |  |
 | name | string | optional |  |
 | nameBytes | [ByteString](#model-ByteString) | optional |  |
 | sourceBytes | [ByteString](#model-ByteString) | optional |  |
@@ -2459,6 +2523,7 @@ string
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| targetFolderRelativeToTask | string | optional |  |
 | md5sum | string | optional |  |
 | url | string | optional |  |
 | filename | string | optional |  |
@@ -2777,6 +2842,7 @@ string
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| targetFolderRelativeToTask | string | optional |  |
 | s3Bucket | string | optional |  |
 | md5sum | string | optional |  |
 | filename | string | optional |  |
@@ -2789,6 +2855,7 @@ string
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| targetFolderRelativeToTask | string | optional |  |
 | s3Bucket | string | optional |  |
 | md5sum | string | optional |  |
 | filename | string | optional |  |
@@ -2835,31 +2902,46 @@ string
 | uris | Array[string] | optional | List of URIs to download before executing the deploy command. |
 | containerInfo | [SingularityContainerInfo](#model-SingularityContainerInfo) | optional | Container information for deployment into a container. |
 | arguments | Array[string] | optional | Command arguments. |
+| autoAdvanceDeploySteps | boolean | optional | automatically advance to the next target instance count after `deployStepWaitTimeMs` seconds |
 | serviceBasePath | string | optional | The base path for the API exposed by the deploy. Used in conjunction with the Load balancer API. |
 | customExecutorUser | string | optional | User to run custom executor as |
 | customExecutorSource | string | optional | Custom Mesos executor source. |
 | metadata | [Map[string,string]](#model-Map[string,string]) | optional | Map of metadata key/value pairs associated with the deployment. |
 | healthcheckTimeoutSeconds | long | optional | Single healthcheck HTTP timeout in seconds. |
 | healthcheckMaxRetries | int | optional | Maximum number of times to retry an individual healthcheck before failing the deploy. |
+| healthcheckPortIndex | int | optional | Perform healthcheck on this dynamically allocated port (e.g. 0 for first port), defaults to first port |
 | healthcheckProtocol | [HealthcheckProtocol](#model-HealthcheckProtocol) | optional | Healthcheck protocol - HTTP or HTTPS |
 | healthcheckMaxTotalTimeoutSeconds | long | optional | Maximum amount of time to wait before failing a deploy for healthchecks to pass. |
 | labels | [Map[string,string]](#model-Map[string,string]) | optional | Labels for tasks associated with this deploy |
 | healthcheckUri | string | optional | Deployment Healthcheck URI, if specified will be called after TASK_RUNNING. |
 | requestId | string | required | Singularity Request Id which is associated with this deploy. |
 | loadBalancerGroups | [Set](#model-Set) | optional | List of load balancer groups associated with this deployment. |
+| deployStepWaitTimeMs | int | optional | wait this long between deploy steps |
 | skipHealthchecksOnDeploy | boolean | optional | Allows skipping of health checks when deploying. |
 | healthcheckIntervalSeconds | long | optional | Time to wait after a failed healthcheck to try again in seconds. |
 | command | string | optional | Command to execute for this deployment. |
 | executorData | [ExecutorData](#model-ExecutorData) | optional | Executor specific information |
 | timestamp | long | optional | Deploy timestamp. |
+| deployInstanceCountPerStep | int | optional | deploy this many instances at a time |
 | considerHealthyAfterRunningForSeconds | long | optional | Number of seconds that a service must be healthy to consider the deployment to be successful. |
 | loadBalancerOptions | [Map[string,Object]](#model-Map[string,Object]) | optional | Map (Key/Value) of options for the load balancer. |
+| maxTaskRetries | int | optional | allowed at most this many failed tasks to be retried before failing the deploy |
+| loadBalancerPortIndex | int | optional | Send this port to the load balancer api (e.g. 0 for first port), defaults to first port |
 | customExecutorCmd | string | optional | Custom Mesos executor |
 | env | [Map[string,string]](#model-Map[string,string]) | optional | Map of environment variable definitions. |
 | customExecutorResources | [Resources](#model-Resources) | optional | Resources to allocate for custom mesos executor |
 | version | string | optional | Deploy version |
 | id | string | required | Singularity deploy id. |
 | deployHealthTimeoutSeconds | long | optional | Number of seconds that Singularity waits for this service to become healthy (for it to download artifacts, start running, and optionally pass healthchecks.) |
+
+
+## <a name="model-SingularityDeployFailure"></a> SingularityDeployFailure
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| taskId | [SingularityTaskId](#model-SingularityTaskId) | optional |  |
+| message | string | optional |  |
+| reason | [SingularityDeployFailureReason](#model-SingularityDeployFailureReason) | optional |  Allowable values: TASK_FAILED_ON_STARTUP, TASK_FAILED_HEALTH_CHECKS, TASK_COULD_NOT_BE_SCHEDULED, TASK_NEVER_ENTERED_RUNNING, TASK_EXPECTED_RUNNING_FINISHED, DEPLOY_CANCELLED, DEPLOY_OVERDUE, FAILED_TO_SAVE_DEPLOY_STATE, LOAD_BALANCER_UPDATE_FAILED, PENDING_DEPLOY_REMOVED |
 
 
 ## <a name="model-SingularityDeployHistory"></a> SingularityDeployHistory
@@ -2883,6 +2965,19 @@ string
 | deployId | string | optional |  |
 
 
+## <a name="model-SingularityDeployProgress"></a> SingularityDeployProgress
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| autoAdvanceDeploySteps | boolean | optional |  |
+| stepComplete | boolean | optional |  |
+| deployStepWaitTimeMs | long | optional |  |
+| timestamp | long | optional |  |
+| deployInstanceCountPerStep | int | optional |  |
+| failedDeployTasks | [Set](#model-Set) | optional |  |
+| targetActiveInstances | int | optional |  |
+
+
 ## <a name="model-SingularityDeployRequest"></a> SingularityDeployRequest
 
 | name | type | required | description |
@@ -2898,6 +2993,7 @@ string
 |------|------|----------|-------------|
 | lbUpdate | [SingularityLoadBalancerUpdate](#model-SingularityLoadBalancerUpdate) | optional |  |
 | deployState | [DeployState](#model-DeployState) | optional |  Allowable values: SUCCEEDED, FAILED_INTERNAL_STATE, CANCELING, WAITING, OVERDUE, FAILED, CANCELED |
+| deployFailures | [Array[SingularityDeployFailure]](#model-SingularityDeployFailure) | optional |  |
 | message | string | optional |  |
 | timestamp | long | optional |  |
 
@@ -2964,8 +3060,8 @@ string
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| user | string | optional |  |
 | requestId | string | optional |  |
+| user | string | optional |  |
 | startMillis | long | optional |  |
 | deployId | string | optional |  |
 | actionId | string | optional |  |
@@ -2976,8 +3072,8 @@ string
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| user | string | optional |  |
 | requestId | string | optional |  |
+| user | string | optional |  |
 | startMillis | long | optional |  |
 | actionId | string | optional |  |
 | expiringAPIRequestObject | [T](#model-T) | optional |  |
@@ -2988,8 +3084,8 @@ string
 | name | type | required | description |
 |------|------|----------|-------------|
 | revertToInstances | int | optional |  |
-| user | string | optional |  |
 | requestId | string | optional |  |
+| user | string | optional |  |
 | startMillis | long | optional |  |
 | actionId | string | optional |  |
 | expiringAPIRequestObject | [T](#model-T) | optional |  |
@@ -2999,8 +3095,8 @@ string
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| user | string | optional |  |
 | requestId | string | optional |  |
+| user | string | optional |  |
 | startMillis | long | optional |  |
 | actionId | string | optional |  |
 | expiringAPIRequestObject | [T](#model-T) | optional |  |
@@ -3013,6 +3109,7 @@ string
 |------|------|----------|-------------|
 | hostAddress | string | optional |  |
 | hostname | string | optional |  |
+| mesosConnected | boolean | optional |  |
 | driverStatus | string | optional |  |
 | master | boolean | optional |  |
 | mesosMaster | string | optional |  |
@@ -3075,6 +3172,7 @@ string
 | name | type | required | description |
 |------|------|----------|-------------|
 | currentDeployState | [DeployState](#model-DeployState) | optional |  Allowable values: SUCCEEDED, FAILED_INTERNAL_STATE, CANCELING, WAITING, OVERDUE, FAILED, CANCELED |
+| deployProgress | [SingularityDeployProgress](#model-SingularityDeployProgress) | optional |  |
 | lastLoadBalancerUpdate | [SingularityLoadBalancerUpdate](#model-SingularityLoadBalancerUpdate) | optional |  |
 | deployMarker | [SingularityDeployMarker](#model-SingularityDeployMarker) | optional |  |
 
@@ -3092,7 +3190,7 @@ string
 | deployId | string | optional |  |
 | actionId | string | optional |  |
 | cmdLineArgsList | Array[string] | optional |  |
-| pendingType | [PendingType](#model-PendingType) | optional |  Allowable values: IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE, STARTUP, CANCEL_BOUNCE, TASK_BOUNCE |
+| pendingType | [PendingType](#model-PendingType) | optional |  Allowable values: IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, NEXT_DEPLOY_STEP, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE, STARTUP, CANCEL_BOUNCE, TASK_BOUNCE, DEPLOY_CANCELLED |
 
 
 ## <a name="model-SingularityPendingTask"></a> SingularityPendingTask
@@ -3114,7 +3212,7 @@ string
 | nextRunAt | long | optional |  |
 | requestId | string | optional |  |
 | deployId | string | optional |  |
-| pendingType | [PendingType](#model-PendingType) | optional |  Allowable values: IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE, STARTUP, CANCEL_BOUNCE, TASK_BOUNCE |
+| pendingType | [PendingType](#model-PendingType) | optional |  Allowable values: IMMEDIATE, ONEOFF, BOUNCE, NEW_DEPLOY, NEXT_DEPLOY_STEP, UNPAUSED, RETRY, UPDATED_REQUEST, DECOMISSIONED_SLAVE_OR_RACK, TASK_DONE, STARTUP, CANCEL_BOUNCE, TASK_BOUNCE, DEPLOY_CANCELLED |
 | instanceNo | int | optional |  |
 | createdAt | long | optional |  |
 | id | string | optional |  |
@@ -3133,6 +3231,7 @@ string
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| hideEvenNumberAcrossRacksHint | boolean | optional |  |
 | readOnlyGroups | [Set](#model-Set) | optional |  |
 | schedule | string | optional |  |
 | skipHealthchecks | boolean | optional |  |
@@ -3253,6 +3352,7 @@ string
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| logfileName | string | optional |  |
 | user | string | optional |  |
 | options | Array[string] | optional |  |
 | name | string | optional |  |
@@ -3337,7 +3437,7 @@ string
 |------|------|----------|-------------|
 | taskId | [SingularityTaskId](#model-SingularityTaskId) | optional |  |
 | user | string | optional |  |
-| cleanupType | [TaskCleanupType](#model-TaskCleanupType) | optional |  Allowable values: USER_REQUESTED, USER_REQUESTED_TASK_BOUNCE, DECOMISSIONING, SCALING_DOWN, BOUNCING, INCREMENTAL_BOUNCE, DEPLOY_FAILED, NEW_DEPLOY_SUCCEEDED, DEPLOY_CANCELED, UNHEALTHY_NEW_TASK, OVERDUE_NEW_TASK |
+| cleanupType | [TaskCleanupType](#model-TaskCleanupType) | optional |  Allowable values: USER_REQUESTED, USER_REQUESTED_TASK_BOUNCE, DECOMISSIONING, SCALING_DOWN, BOUNCING, INCREMENTAL_BOUNCE, DEPLOY_FAILED, NEW_DEPLOY_SUCCEEDED, DEPLOY_STEP_FINISHED, DEPLOY_CANCELED, UNHEALTHY_NEW_TASK, OVERDUE_NEW_TASK |
 | message | string | optional |  |
 | timestamp | long | optional |  |
 | actionId | string | optional |  |
@@ -3372,6 +3472,7 @@ string
 | name | type | required | description |
 |------|------|----------|-------------|
 | taskId | [SingularityTaskId](#model-SingularityTaskId) | optional |  |
+| statusReason | string | optional |  |
 | statusMessage | string | optional |  |
 | taskState | [ExtendedTaskState](#model-ExtendedTaskState) | optional |  Allowable values: TASK_LAUNCHED, TASK_STAGING, TASK_STARTING, TASK_RUNNING, TASK_CLEANING, TASK_FINISHED, TASK_FAILED, TASK_KILLED, TASK_LOST, TASK_LOST_WHILE_DOWN, TASK_ERROR |
 | timestamp | long | optional |  |
@@ -3457,6 +3558,15 @@ string
 | skipHealthchecks | boolean | optional | If set to true, instructs new tasks that are scheduled immediately while unpausing to skip healthchecks |
 | message | string | optional | A message to show to users about why this action was taken |
 | actionId | string | optional | An id to associate with this action for metadata purposes |
+
+
+## <a name="model-SingularityUpdatePendingDeployRequest"></a> SingularityUpdatePendingDeployRequest
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| requestId | string | optional |  |
+| deployId | string | optional |  |
+| targetActiveInstances | int | optional |  |
 
 
 ## <a name="model-SingularityVolume"></a> SingularityVolume

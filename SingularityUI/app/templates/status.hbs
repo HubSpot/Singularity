@@ -1,5 +1,17 @@
 {{#if synced}}
 <div class="row page-width-normal">
+    {{#unless hasLeader}}
+        <div class="alert alert-danger" role="alert">
+            <b>No Leading Scheduler Instance</b>
+            <p>There is currently no leading scheduler instance! Ensure that all scheduler instances are running connected to zookeeper.</p>
+        </div>
+    {{/unless}}
+    {{#unless isLeaderConnected}}
+        <div class="alert alert-danger" role="alert">
+            <b>No Connection To Mesos Master</b>
+            <p>The leading scheduler instance currently has no connection to the mesos master. Ensure that the scheduler can reach the mesos master and check the mesos master logs for possible framework registration errors.</p>
+        </div>
+    {{/unless}}
     <div class="col-md-6 col-sm-6">
         <div>
             <a class='headline-link' href="{{appRoot}}/requests"><h2>Requests</h2></a>
@@ -182,6 +194,7 @@
                 <tr>
                     <th>Hostname</th>
                     <th>Driver status</th>
+                    <th>Connected</th>
                     <th class="hidden-xs">Uptime</th>
                     <th class="hidden-xs">Time since last offer</th>
                 </tr>
@@ -191,6 +204,15 @@
                 <tr>
                     <td>{{ hostname }}</td>
                     <td class='{{#ifEqual driverStatus 'DRIVER_NOT_STARTED'}}text-muted{{/ifEqual}}{{#ifEqual driverStatus 'DRIVER_RUNNING'}}color-success{{/ifEqual}}'>{{humanizeText driverStatus }}
+                    </td>
+                    <td>
+                        {{#ifEqual driverStatus 'DRIVER_RUNNING'}}
+                           {{#if mesosConnected }}
+                                <span class="glyphicon glyphicon-ok color-success"/>
+                           {{else}}
+                                <span class="glyphicon glyphicon-remove color-error"/>
+                           {{/if}}
+                        {{/ifEqual}}
                     </td>
                     <td data-value="{{ uptime }}" class="hidden-xs">
                         {{timestampDuration uptime}}

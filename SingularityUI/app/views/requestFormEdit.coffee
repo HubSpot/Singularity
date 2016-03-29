@@ -28,6 +28,7 @@ class RequestFormEdit extends RequestFormBaseView
         if @requestType is 'SERVICE' or 'WORKER'
             @$("#instances-#{@requestType}").val request.request.instances
             @$("#rack-sensitive-#{@requestType}").prop 'checked', request.request.rackSensitive
+            @$("#hide-distribute-across-racks-hint-#{@requestType}").prop 'checked', request.request.hideEvenNumberAcrossRacksHint
             @$("#load-balanced").prop 'checked', request.request.loadBalanced
 
         if @requestType in ['SCHEDULED','ON_DEMAND','RUN_ONCE']
@@ -67,6 +68,7 @@ class RequestFormEdit extends RequestFormBaseView
         serverRequest.done  (response) =>
             @lockdown = false
             @alert "Your Request <a href='#{ config.appRoot }/request/#{ response.id }'>#{ response.id }</a> has been updated"
+            Backbone.history.navigate "/request/#{ response.id }", {trigger: true}
 
         serverRequest.error (response) =>
             @postSave()
