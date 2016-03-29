@@ -13,7 +13,7 @@ exitCooldownTemplate = require '../templates/vex/exitCooldown'
 stepDeployTemplate = require '../templates/vex/stepDeploy'
 cancelDeployTemplate = require '../templates/vex/cancelDeploy'
 TaskHistory = require '../models/TaskHistory'
-AutoTailer = require '../views/AutoTailer'
+TaskPoller = require '../views/TaskPoller'
 
 vex = require 'vex.dialog'
 juration = require 'juration'
@@ -474,7 +474,7 @@ class Request extends Model
                             history.push(@data.commandLineInput)
                             localStorage.setItem(@localStorageCommandLineInputKeyPrefix + @id, JSON.stringify(history))
                     localStorage.setItem('taskRunRedirectFilename', fileName) if filename?
-                    localStorage.setItem('taskRunAutoTail', @data.afterStart is 'autoTail')
+                    localStorage.setItem('taskRunAfterStart', @data.afterStart)
                     @data.id = @get 'id'
 
                     if @data.afterStart in ['browse-to-sandbox', 'autoTail']
@@ -482,28 +482,40 @@ class Request extends Model
 
                     doneFn = =>
                         if @data.afterStart is 'autoTail'
-                            autoTailer = new AutoTailer({
+                            taskPoller = new TaskPoller({
                                 requestId: @id
                                 autoTailFilename: @data.filename
-                                autoTailTimestamp: +new Date()
+                                taskPollTimestamp: +new Date()
+                                pollingType: 'autoTail'
                             })
 
-                            autoTailer.startAutoTailPolling()
+                            taskPoller.startTaskPolling()
+                        else if @data.afterStart is 'browse-to-sandbox'
+                            taskPoller = new TaskPoller({
+                                requestId: @id
+                                taskPollTimestamp: +new Date()
+                                pollingType: 'browse-to-sandbox'
+                            })
+
+                            taskPoller.startTaskPolling()
+
                         callback( @data )
 
                     @run( @data.commandLineInput, message, @data.runId ).done doneFn
                     return true
 
             afterOpen: =>
+                taskRunAfterStart = localStorage.getItem('taskRunAfterStart')
                 $('#filename').val localStorage.getItem('taskRunRedirectFilename') or 'service.log'
-                $('#autoTail').prop 'checked', (localStorage.getItem('taskRunAutoTail'))
-                $('#browse-to-sandbox').prop 'checked', (not localStorage.getItem('taskRunAutoTail'))
+                $('#autoTail').prop 'checked', (taskRunAfterStart is 'autoTail')
+                $('#browse-to-sandbox').prop 'checked', (taskRunAfterStart is 'browse-to-sandbox')
+                $('#stay-on-request-page').prop 'checked', (taskRunAfterStart is 'stay-on-request-page' or not taskRunAfterStart)
                 $('#add-cmd-line-arg').on('click', { removeCmdLineArg: @removeCmdLineArg }, @addCmdLineArg)
                 $('.remove-button').click @removeCmdLineArg
                 $('#stay-on-request-page').on('click', () => $('#filename').addClass('hide'))
                 $('#browse-to-sandbox').on('click', () => $('#filename').addClass('hide'))
                 $('#autoTail').on('click', () => $('#filename').removeClass('hide'))
-                $('#filename').removeClass('hide') if localStorage.getItem('taskRunAutoTail')
+                $('#filename').removeClass('hide') if taskRunAfterStart is 'autoTail'
 
             callback: (data) =>
                 if data.commandLineInput
