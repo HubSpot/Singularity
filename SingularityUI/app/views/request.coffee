@@ -81,17 +81,7 @@ class RequestView extends View
 
     runRequest: (e, taskId) => # If taskId is provided, rerun the task. Else run the task.
         callback = (data) =>
-            # If user wants to redirect to a file after the task starts
-            if data.afterStart is 'autoTail'
-                autoTailer = new AutoTailer({
-                    requestId: @requestId
-                    autoTailFilename: data.filename
-                    autoTailTimestamp: +new Date()
-                })
-
-                autoTailer.startAutoTailPolling()
-
-            else
+            unless data.afterStart in ['browse-to-sandbox', 'autoTail']
                 @trigger 'refreshrequest'
                 setTimeout ( => @trigger 'refreshrequest'), 2500
         if taskId
