@@ -15,6 +15,8 @@ cancelDeployTemplate = require '../templates/vex/cancelDeploy'
 TaskHistory = require '../models/TaskHistory'
 TaskPoller = require '../views/TaskPoller'
 
+Utils = require '../utils'
+
 vex = require 'vex.dialog'
 juration = require 'juration'
 uuid = require 'node-uuid'
@@ -447,6 +449,7 @@ class Request extends Model
                 id: @get "id"
                 prefix: @localStorageCommandLineInputKeyPrefix
                 commands: commands
+                defaultFileName: Utils.fileName(config.runningTaskLogPath)
 
             buttons: [
                 $.extend _.clone(vex.dialog.buttons.YES), text: 'Run now'
@@ -506,7 +509,7 @@ class Request extends Model
 
             afterOpen: =>
                 taskRunAfterStart = localStorage.getItem('taskRunAfterStart')
-                $('#filename').val localStorage.getItem('taskRunRedirectFilename') or 'service.log'
+                $('#filename').val localStorage.getItem('taskRunRedirectFilename') or Utils.fileName(config.runningTaskLogPath)
                 $('#autoTail').prop 'checked', (taskRunAfterStart is 'autoTail')
                 $('#browse-to-sandbox').prop 'checked', (taskRunAfterStart is 'browse-to-sandbox' or not taskRunAfterStart)
                 $('#stay-on-request-page').prop 'checked', (taskRunAfterStart is 'stay-on-request-page')
