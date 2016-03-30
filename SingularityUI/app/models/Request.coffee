@@ -512,10 +512,10 @@ class Request extends Model
                 $('#filename').val localStorage.getItem('taskRunRedirectFilename') or Utils.fileName(config.runningTaskLogPath)
                 $('#autoTail').prop 'checked', (taskRunAfterStart is 'autoTail')
                 $('#browse-to-sandbox').prop 'checked', (taskRunAfterStart is 'browse-to-sandbox' or not taskRunAfterStart)
-                $('#stay-on-request-page').prop 'checked', (taskRunAfterStart is 'stay-on-request-page')
+                $('#stay-on-page').prop 'checked', (taskRunAfterStart is 'stay-on-page')
                 $('#add-cmd-line-arg').on('click', { removeCmdLineArg: @removeCmdLineArg }, @addCmdLineArg)
                 $('.remove-button').click @removeCmdLineArg
-                $('#stay-on-request-page').on('click', () => $('#filename').addClass('hide'))
+                $('#stay-on-page').on('click', () => $('#filename').addClass('hide'))
                 $('#browse-to-sandbox').on('click', () => $('#filename').addClass('hide'))
                 $('#autoTail').on('click', () => $('#filename').removeClass('hide'))
                 $('#filename').removeClass('hide') if taskRunAfterStart is 'autoTail'
