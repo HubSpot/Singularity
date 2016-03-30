@@ -497,6 +497,7 @@ class Request extends Model
                         doneFn = =>
                             if @data.afterStart is 'autoTail'
                                 taskPoller = new TaskPoller({
+                                    runId: @data.runId
                                     requestId: @id
                                     autoTailFilename: @data.filename
                                     taskPollTimestamp: +new Date()
@@ -506,6 +507,7 @@ class Request extends Model
                                 taskPoller.startTaskPolling()
                             else if @data.afterStart is 'browse-to-sandbox'
                                 taskPoller = new TaskPoller({
+                                    runId: @data.runId
                                     requestId: @id
                                     taskPollTimestamp: +new Date()
                                     pollingType: 'browse-to-sandbox'
