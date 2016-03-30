@@ -140,18 +140,18 @@ taskFilesize = (taskId, filesize) ->
   }
 
 taskGroupTop = (taskGroupId, visible) ->
-  {
-    taskGroupId
-    visible
-    type: 'LOG_TASK_GROUP_TOP'
-  }
+  (dispatch, getState) ->
+    if getState().taskGroups[taskGroupId].top != visible
+      dispatch({taskGroupId, visible, type: 'LOG_TASK_GROUP_TOP'})
+      if visible
+        dispatch(taskGroupFetchPrevious(taskGroupId))
 
 taskGroupBottom = (taskGroupId, visible) ->
-  {
-    taskGroupId
-    visible
-    type: 'LOG_TASK_GROUP_BOTTOM'
-  }
+  (dispatch, getState) ->
+    if getState().taskGroups[taskGroupId].bottom != visible
+      dispatch({taskGroupId, visible, type: 'LOG_TASK_GROUP_BOTTOM'})
+      if visible
+        dispatch(taskGroupFetchNext(taskGroupId))
 
 clickPermalink = (offset) ->
   {

@@ -2,8 +2,11 @@ React = require 'react'
 
 { getInstanceNumberFromTaskId } = require '../../utils'
 
+{ connect } = require 'react-redux'
+
 class TaskGroupHeader extends React.Component
   @propTypes:
+    taskGroupId: React.PropTypes.number.isRequired
     taskIds: React.PropTypes.array.isRequired
 
   toggleLegend: ->
@@ -26,6 +29,8 @@ class TaskGroupHeader extends React.Component
       {@renderInstanceInfo()}
       {@renderTaskLegend()}
     </div>
-    # TODO: renderLegend()
 
-module.exports = TaskGroupHeader
+mapStateToProps = (state, ownProps) ->
+  taskIds: state.taskGroups[ownProps.taskGroupId].taskIds
+
+module.exports = connect(mapStateToProps)(TaskGroupHeader)

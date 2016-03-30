@@ -20,7 +20,7 @@ class LogContainer extends React.Component
 
   render: ->
     <div>
-      <Interval enabled={@props.ready} timeout={1000} callback={@props.updateGroups} />
+      <Interval enabled={@props.ready} timeout={2000} callback={@props.updateGroups} />
       <Header />
       <div className="row tail-row">
         {@renderTaskGroups()}

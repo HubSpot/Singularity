@@ -37,7 +37,6 @@ mapStateToProps = (state) ->
   activeTasks: state.activeRequest.activeTasks
   taskIds: state.tasks
 
-mapDispatchToProps = (dispatch) ->
-  onToggleViewingInstance: (taskId) -> dispatch(toggleTaskLog(taskId))
+mapDispatchToProps = { toggleTaskLog }
 
 module.exports = connect(mapStateToProps, mapDispatchToProps)(TasksDropdown)

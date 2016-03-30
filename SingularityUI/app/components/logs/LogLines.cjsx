@@ -7,8 +7,6 @@ LogLines = require '../../collections/LogLines'
 { connect } = require 'react-redux'
 { taskGroupTop, taskGroupBottom } = require '../../actions/log'
 
-SCROLL_THRESHOLD = 10
-
 sum = (numbers) ->
   total = 0
   for n in numbers
@@ -17,10 +15,8 @@ sum = (numbers) ->
 
 class LogLines extends React.Component
   @propTypes:
-    onEnterTop: React.PropTypes.func.isRequired
-    onEnterBottom: React.PropTypes.func.isRequired
-    onLeaveTop: React.PropTypes.func.isRequired
-    onLeaveBottom: React.PropTypes.func.isRequired
+    taskGroupTop: React.PropTypes.func.isRequired
+    taskGroupBottom: React.PropTypes.func.isRequired
 
     taskGroupId: React.PropTypes.number.isRequired
     logLines: React.PropTypes.array.isRequired
@@ -32,25 +28,16 @@ class LogLines extends React.Component
     bytesRemainingAfter: React.PropTypes.number.isRequired
     activeColor: React.PropTypes.string.isRequired
 
-  constructor: (props) ->
-    super(props)
-    @state = {
-      atTop: false
-      atBottom: false
-    }
-
   componentDidMount: ->
     window.addEventListener 'resize', @handleScroll
 
   componentWillUnmount: ->
     window.removeEventListener 'resize', @handleScroll
 
-  componentWillUpdate: ->
-    @shouldScrollToBottom = @refs.tailContents.scrollTop + @refs.tailContents.offsetHeight is @refs.tailContents.scrollHeight
-
   componentDidUpdate: (prevProps, prevState) ->
-    if @shouldScrollToBottom
-      @refs.tailContents.scrollTop = @refs.tailContents.scrollHeight
+    if prevProps.updatedAt isnt @props.updatedAt
+      if @props.prependedLineCount > 0
+        @refs.tailContents.scrollTop += 20 * @props.prependedLineCount
 
   renderLoadingPrevious: ->
     if @props.initialDataLoaded
@@ -76,29 +63,17 @@ class LogLines extends React.Component
         <div>Loading more... ({Humanize.filesize(@props.bytesRemainingAfter)} remaining)</div>
 
   handleScroll: =>
-    changedState = false
-    newState = {}
+    {scrollTop, scrollHeight, clientHeight} = @refs.tailContents
 
-    if @state.atTop and @refs.tailContents.scrollTop > SCROLL_THRESHOLD
-      changedState = true
-      newState.atTop = false
-      @props.onLeaveTop(@props.taskGroupId)
-    else if not @state.atTop and @refs.tailContents.scrollTop < SCROLL_THRESHOLD
-      changedState = true
-      newState.atTop = true
-      @props.onEnterTop(@props.taskGroupId)
+    if scrollTop < clientHeight
+      @props.taskGroupTop(@props.taskGroupId, true)
+    else
+      @props.taskGroupTop(@props.taskGroupId, false)
 
-    if @state.atBottom and @refs.tailContents.scrollTop + @refs.tailContents.clientHeight < @refs.tailContents.scrollHeight - SCROLL_THRESHOLD
-      changedState = true
-      newState.atBottom = false
-      @props.onLeaveBottom(@props.taskGroupId)
-    else if not @state.atBottom and @refs.tailContents.scrollTop + @refs.tailContents.clientHeight > @refs.tailContents.scrollHeight - SCROLL_THRESHOLD
-      changedState = true
-      newState.atBottom = true
-      @props.onEnterBottom(@props.taskGroupId)
-
-    if changedState
-      @setState Object.assign({}, @state, newState)
+    if scrollTop + clientHeight > scrollHeight - clientHeight
+      @props.taskGroupBottom(@props.taskGroupId, true)
+    else
+      @props.taskGroupBottom(@props.taskGroupId, false)
 
   render: ->
     <div className="contents-container">
@@ -114,17 +89,17 @@ mapStateToProps = (state, ownProps) ->
   tasks = taskGroup.taskIds.map (taskId) -> state.tasks[taskId]
 
   logLines: taskGroup.logLines
+  updatedAt: taskGroup.updatedAt
+  prependedLineCount: taskGroup.prependedLineCount
   activeColor: state.activeColor
+  top: taskGroup.top
+  bottom: taskGroup.bottom
   initialDataLoaded: _.all(_.pluck(tasks, 'initialDataLoaded'))
   reachedStartOfFile: _.all(tasks.map (task) -> task.minOffset is 0)
   reachedEndOfFile: _.all(tasks.map (task) -> task.maxOffset >= task.filesize)
   bytesRemainingBefore: sum(_.pluck(tasks, 'minOffset'))
   bytesRemainingAfter: sum(tasks.map (task) -> Math.max(task.filesize - task.maxOffset, 0))
 
-mapDispatchToProps = (dispatch, ownProps) ->
-  onEnterTop: -> dispatch(taskGroupTop(ownProps.taskGroupId, true))
-  onLeaveTop: -> dispatch(taskGroupTop(ownProps.taskGroupId, false))
-  onEnterBottom: -> dispatch(taskGroupBottom(ownProps.taskGroupId, true))
-  onLeaveBottom: -> dispatch(taskGroupBottom(ownProps.taskGroupId, false))
+mapDispatchToProps = { taskGroupTop, taskGroupBottom }
 
 module.exports = connect(mapStateToProps, mapDispatchToProps)(LogLines)
