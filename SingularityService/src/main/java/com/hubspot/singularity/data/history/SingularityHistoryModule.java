@@ -131,5 +131,6 @@ public class SingularityHistoryModule extends AbstractModule {
     public HistoryJDBI get() {
       return dbi.onDemand(HistoryJDBI.class);
     }
+
   }
 }

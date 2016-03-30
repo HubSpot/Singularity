@@ -1,4 +1,5 @@
 React = require 'react'
+classNames = require 'classnames'
 
 LogLine = React.createClass
 

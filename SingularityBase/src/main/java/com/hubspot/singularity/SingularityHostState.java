@@ -17,6 +17,7 @@ public class SingularityHostState {
   private final String hostname;
 
   private final String mesosMaster;
+  private final boolean mesosConnected;
 
   @JsonCreator
   public SingularityHostState(@JsonProperty("master") boolean master,
@@ -25,7 +26,8 @@ public class SingularityHostState {
       @JsonProperty("millisSinceLastOffer") Optional<Long> millisSinceLastOffer,
       @JsonProperty("hostAddress") String hostAddress,
       @JsonProperty("hostname") String hostname,
-      @JsonProperty("mesosMaster") String mesosMaster) {
+      @JsonProperty("mesosMaster") String mesosMaster,
+      @JsonProperty("mesosConnected") boolean mesosConnected) {
     this.master = master;
     this.uptime = uptime;
     this.driverStatus = driverStatus;
@@ -33,6 +35,7 @@ public class SingularityHostState {
     this.hostAddress = hostAddress;
     this.hostname = hostname;
     this.mesosMaster = mesosMaster;
+    this.mesosConnected = mesosConnected;
   }
 
   public String getHostAddress() {
@@ -63,10 +66,14 @@ public class SingularityHostState {
     return mesosMaster;
   }
 
+  public boolean isMesosConnected() {
+    return mesosConnected;
+  }
+
   @Override
   public String toString() {
     return "SingularityHostState [master=" + master + ", uptime=" + uptime + ", driverStatus=" + driverStatus + ", millisSinceLastOffer=" + millisSinceLastOffer + ", hostAddress=" + hostAddress + ", hostname=" + hostname + ", mesosMaster="
-        + mesosMaster + "]";
+        + mesosMaster + ", mesosConnected=" + mesosConnected + "]";
   }
 
 }

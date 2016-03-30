@@ -1,0 +1,21 @@
+{
+  "title": "Singularity",
+  "structure": {
+    "readme": "intro.md"
+  },
+  "links": {
+    "home": null,
+    "about": false,
+    "issues": "https://github.com/HubSpot/Singularity/issues",
+    "contribute": "https://github.com/HubSpot/Singularity"
+  },
+  "variables": {
+    "releases": ["0.4.12", "0.4.11", "0.4.10", "0.4.9", "0.4.8", "0.4.7", "0.4.6", "0.4.5"]
+  },
+  "plugins": ["github", "-sharing", "-highlight", "copy-code-button"],
+  "pluginsConfig": {
+      "github": {
+          "url": "https://github.com/HubSpot/Singularity"
+      }
+  }
+}

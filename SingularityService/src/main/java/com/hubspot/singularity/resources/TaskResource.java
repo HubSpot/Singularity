@@ -307,7 +307,7 @@ public class TaskResource {
     }
 
     if (cleanupType == TaskCleanupType.USER_REQUESTED_TASK_BOUNCE) {
-      requestManager.addToPendingQueue(new SingularityPendingRequest(task.getTaskId().getRequestId(), task.getTaskRequest().getDeploy().getId(), now, JavaUtils.getUserEmail(user),
+      requestManager.addToPendingQueue(new SingularityPendingRequest(task.getTaskId().getRequestId(), task.getTaskId().getDeployId(), now, JavaUtils.getUserEmail(user),
           PendingType.TASK_BOUNCE, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), message, actionId));
     }
 

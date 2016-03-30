@@ -57,34 +57,30 @@
       </div>
 
       <div id="SERVICE-expandable" class="expandable hide">
-        <div class="row">
-          <div class="col-sm-4">
-            <div class="form-group">
-              <label for="instances-SERVICE" class="col-sm-6">Instances</label>
-              <div class="col-sm-6">
-                <input type="text" id="instances-SERVICE" class="form-control" placeholder="1">
-              </div>
-            </div>
-          </div>
-          <div class="col-sm-4">
-            <div class="form-group">
-              <label for="rack-sensitive-SERVICE" data-tooltip='rack-sensitive'>
-                <input type="checkbox" id="rack-sensitive-SERVICE">
-                Rack sensitive
-              </label>
-            </div>
-          </div>
-          {{#if config.loadBalancingEnabled }}
-            <div class="col-sm-4">
-              <div class="form-group">
-                <label data-tooltip='cannot-change' for="load-balanced"{{#if model.id}} class="subtle"{{/if}}>
-                  <input {{#if model.id}}disabled="disabled"{{/if}} type="checkbox" id="load-balanced">
-                  Load balanced
-                </label>
-              </div>
-            </div>
-          {{/if}}
+        <div class="form-group">
+          <label for="instances-SERVICE">Instances</label>
+          <input type="text" id="instances-SERVICE" class="form-control" placeholder="1">
         </div>
+        <div class="form-group">
+          <label for="rack-sensitive-SERVICE" data-tooltip='rack-sensitive'>
+            <input type="checkbox" id="rack-sensitive-SERVICE">
+            Rack sensitive
+          </label>
+        </div>
+        <div class="form-group">
+          <label for="hide-distribute-across-racks-hint-SERVICE" data-tooltip='hide-distribute-across-racks-hint'>
+            <input type="checkbox" id="hide-distribute-across-racks-hint-SERVICE">
+            Hide Distribute Evenly Across Racks Hint
+          </label>
+        </div>
+        {{#if config.loadBalancingEnabled }}
+          <div class="form-group">
+            <label data-tooltip='cannot-change' for="load-balanced"{{#if model.id}} class="subtle"{{/if}}>
+              <input {{#if model.id}}disabled="disabled"{{/if}} type="checkbox" id="load-balanced">
+              Load balanced
+            </label>
+          </div>
+        {{/if}}
         <div class="form-group">
           <label for="rackAffinity-SERVICE">Rack Affinity <span class='form-label-tip'>separate multiple racks with commas</span></label>
           <input data-type='rack-affinity' type="text" id="rackAffinity-SERVICE" class="tagging-input">
@@ -92,24 +88,22 @@
       </div>
 
       <div id="WORKER-expandable" class="expandable hide">
-        <div class='row'>
-          <div class="col-sm-4">
-            <div class="form-group">
-              <label for="instances-WORKER" class="col-sm-6">Instances</label>
-              <div class="col-sm-6">
-                <input type="text" id="instances-WORKER" class="form-control" placeholder="1">
-              </div>
-            </div>
-          </div>
-          <div class="col-sm-4">
-            <div class="form-group">
-              <label for="rack-sensitive-WORKER" data-tooltip='rack-sensitive'>
-                <input type="checkbox" id="rack-sensitive-WORKER" checked>
-                Rack sensitive
+        <div class="form-group">
+            <label for="instances-WORKER">Instances</label>
+            <input type="text" id="instances-WORKER" class="form-control" placeholder="1">
+        </div>
+        <div class="form-group">
+          <label for="rack-sensitive-WORKER" data-tooltip='rack-sensitive'>
+            <input type="checkbox" id="rack-sensitive-WORKER">
+            Rack sensitive
+          </label>
+        </div>
+        <div class="form-group">
+              <label for="hide-distribute-across-racks-hint-WORKER" data-tooltip='hide-distribute-across-racks-hint'>
+                <input type="checkbox" id="hide-distribute-across-racks-hint-WORKER">
+                Hide Distribute Evenly Across Racks Hint
               </label>
             </div>
-          </div>
-        </div>
         <div class="form-group">
           <label for="waitAtLeast-WORKER">Task rescheduling delay</label>
           <div class="input-group">
