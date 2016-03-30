@@ -212,6 +212,9 @@ class Utils
             else
                 'default'
 
+    @fileName: (filePath) ->
+        filePath.substring(filePath.lastIndexOf('/') + 1)
+
     @fuzzyAdjustScore: (filter, fuzzyObject) ->
         if fuzzyObject.original.id.toLowerCase().startsWith(filter.toLowerCase())
             fuzzyObject.score * 10

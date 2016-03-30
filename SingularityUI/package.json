@@ -32,6 +32,7 @@
     "linkifyjs": "~2.0.0-beta.9",
     "messenger": "git://github.com/HubSpot/messenger#set-main-field",
     "moment": "2.11.2",
+    "node-uuid": "^1.4.7",
     "react": "~0.14.2",
     "react-bootstrap": "^0.28.3",
     "react-dom": "~0.14.2",
