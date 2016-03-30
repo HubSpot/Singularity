@@ -467,7 +467,6 @@ class Request extends Model
                 message: "<h3>#{if task then 'Rerun' else 'Run'} Task</h3>"
                 input: runTemplate
                     id: @get "id"
-                    prefix: @localStorageCommandLineInputKeyPrefix
                     commands: commands
                     defaultFileName: Utils.fileName(config.runningTaskLogPath)
 
