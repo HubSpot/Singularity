@@ -13,6 +13,7 @@ class Header extends React.Component
     taskIdCount: React.PropTypes.number.isRequired
     viewMode: React.PropTypes.string.isRequired
 
+    switchViewMode: React.PropTypes.func.isRequired
     scrollToBottom: React.PropTypes.func.isRequired
     scrollToTop: React.PropTypes.func.isRequired
 
@@ -77,9 +78,6 @@ mapStateToProps = (state) ->
   viewMode: state.viewMode
   requestId: state.activeRequest.requestId
 
-mapDispatchToProps = (dispatch) ->
-  switchViewMode: (viewMode) -> dispatch(switchViewMode(viewMode))
-  scrollToBottom: -> dispatch(scrollToBottom())
-  scrollToTop: -> dispatch(scrollToTop())
+mapDispatchToProps = { switchViewMode, scrollToBottom, scrollToTop }
 
 module.exports = connect(mapStateToProps, mapDispatchToProps)(Header)

@@ -2,6 +2,19 @@
 
 { getInstanceNumberFromTaskId } = require '../utils'
 
+buildTaskGroup = (taskIds, search) ->
+  {
+    taskIds,
+    search,
+    logLines: [],
+    prependedLineCount: 0,
+    updatedAt: +new Date(),
+    top: false,
+    bottom: false,
+    ready: false
+    pendingRequests: false
+  }
+
 updateTask = (state, taskId, update) ->
   newState = Object.assign({}, state)
   newState[taskId] = Object.assign({}, state[taskId], update)
@@ -13,8 +26,7 @@ updateTaskGroup = (state, taskGroupId, update) ->
   return newState
 
 filterLogLines = (lines, search) ->
-  _.filter lines, ({data}) ->
-    new RegExp(search).test(data)
+  _.filter lines, ({data}) -> new RegExp(search).test(data)
 
 tasks = (state={}, action) ->
   if action.type is 'LOG_INIT'
@@ -72,26 +84,9 @@ tasks = (state={}, action) ->
 
 taskGroups = (state=[], action) ->
   if action.type is 'LOG_INIT'
-    return action.taskIdGroups.map (taskIds) -> {
-      taskIds,
-      logLines: [],
-      top: false,
-      bottom: false,
-      search: action.search,
-      ready: false
-      pendingRequests: false
-    }
+    return action.taskIdGroups.map (taskIds) -> buildTaskGroup(taskIds, action.search)
   else if action.type is 'LOG_ADD_TASK_GROUP'
-    newState = state.concat({
-      taskIds: action.taskIds,
-      logLines: [],
-      top: false,
-      bottom: false,
-      search: action.search,
-      ready: false
-      pendingRequests: false
-    })
-
+    newState = state.concat(buildTaskGroup(action.taskIds, action.search))
     return _.sortBy(newState, (taskGroup) -> getInstanceNumberFromTaskId(taskGroup.taskIds[0]))
   else if action.type is 'LOG_REMOVE_TASK'
     newState = []
@@ -130,16 +125,20 @@ taskGroups = (state=[], action) ->
     if taskGroup.search
       lines = filterLogLines(lines, taskGroup.search)
 
+    prependedLineCount = 0
+    updatedAt = +new Date()
+
     if action.append
       logLines = state[action.taskGroupId].logLines.concat(lines)
       if logLines.length > action.maxLines
         logLines = logLines.slice(logLines.length - action.maxLines)
     else
       logLines = lines.concat(state[action.taskGroupId].logLines)
+      prependedLineCount = Math.min(lines.length, action.maxLines)
       if logLines.length > action.maxLines
         logLines = logLines.slice(0, action.maxLines)
 
-    return updateTaskGroup(state, action.taskGroupId, {logLines})
+    return updateTaskGroup(state, action.taskGroupId, {logLines, prependedLineCount, updatedAt})
 
     return newState
   return state
