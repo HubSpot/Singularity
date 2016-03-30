@@ -11,7 +11,9 @@ vex = require 'vex.dialog'
 interval = (a, b) -> setInterval(b, a)  # f u javascript
 timeout = (a, b) -> setTimeout(b, a)
 
-TIMEOUT = 5 * 60 * 1000
+TIMEOUT_MINUTES = 1 # Modify this
+TIMEOUT_SECONDS = TIMEOUT_MINUTES * 60 # Don't modify this (unless you want a timeout less than a minute)
+TIMEOUT_MILLISECONDS = TIMEOUT_SECONDS * 1000 # Don't modify this
 
 POLLING_TYPES = ['autoTail', 'browse-to-sandbox']
 
@@ -52,13 +54,13 @@ class TaskPoller extends Backbone.View
                 @history.fetch()
                 @activeTasks.fetch()
 
-        @taskTimeout = timeout 60000, =>
+        @taskTimeout = timeout TIMEOUT_MILLISECONDS, =>
             @stopTaskPolling()
             vex.close()
             vex.dialog.alert
                 message: taskPollingFailureTemplate
                     autoTailFilename: if @pollingType is 'autoTail' then @autoTailFilename else ''
-                    timeout: Math.floor(TIMEOUT / 60000)
+                    timeout: TIMEOUT_MINUTES
                 buttons: [
                     $.extend _.clone(vex.dialog.buttons.YES), text: 'OK'
                 ]
