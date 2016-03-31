@@ -1,2 +1,7 @@
 <h3>Failure</h3>
-{{#if autoTailFilename}}<code>{{ autoTailFilename }}</code>{{else}}Task{{/if}} did not exist after {{ timeout }} minute(s).
+{{#ifEqual problem 'TIMEOUT'}}
+    {{#if autoTailFilename}}<code>{{ autoTailFilename }}</code>{{else}}Task{{/if}} did not exist after {{ timeout }} minute(s).
+{{/ifEqual}}
+{{#ifEqual problem 'FILE_WONT_EXIST'}}
+    The task has entered a terminal state and <code>{{ autoTailFilename }}</code> does not exist. You're doomed.
+{{/ifEqual}}

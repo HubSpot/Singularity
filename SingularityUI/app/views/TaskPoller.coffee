@@ -1,6 +1,7 @@
 HistoricalTasks = require '../collections/HistoricalTasks'
-TaskHistoryItem = require '../models/TaskHistoryItem' # For completed tasks
-TaskId = require '../models/TaskId' # For running tasks
+TaskHistoryItem = require '../models/TaskHistoryItem' # To find completed tasks
+TaskId = require '../models/TaskId' # To find running tasks
+Task = require '../models/Task' # To find files of running tasks
 
 TaskFiles = require '../collections/TaskFiles'
 
@@ -49,8 +50,7 @@ class TaskPoller extends Backbone.View
         @taskPollInterval = interval 2000, =>
             if @pollingType is 'autoTail' and @autoTailTaskFiles
                 @autoTailTaskFiles.fetch().error -> app.caughtError()  # we don't care about errors in this situation
-            else
-                @fetchTasks()
+            @fetchTasks()
 
         @taskTimeout = timeout TIMEOUT_MILLISECONDS, =>
             @stopTaskPolling()
@@ -59,6 +59,22 @@ class TaskPoller extends Backbone.View
                 message: taskPollingFailureTemplate
                     autoTailFilename: if @pollingType is 'autoTail' then @autoTailFilename else ''
                     timeout: TIMEOUT_MINUTES
+                    problem: 'TIMEOUT'
+                buttons: [
+                    $.extend _.clone(vex.dialog.buttons.YES), text: 'OK'
+                ]
+
+    lastFileCheck: =>
+        vex.close()
+        if @autoTailTaskFiles and @autoTailTaskFiles.findWhere({name: @autoTailFilename})
+            @stopTaskPolling()
+            app.router.navigate "#task/#{@taskPollTaskId}/tail/#{@taskPollTaskId}/#{@autoTailFilename}", trigger: true
+        else
+            @stopTaskPolling()
+            vex.dialog.alert
+                message: taskPollingFailureTemplate
+                    autoTailFilename: @autoTailFilename
+                    problem: 'FILE_WONT_EXIST'
                 buttons: [
                     $.extend _.clone(vex.dialog.buttons.YES), text: 'OK'
                 ]
@@ -69,11 +85,14 @@ class TaskPoller extends Backbone.View
         if @pollingType is 'browse-to-sandbox'
             @browseToSandbox()
         else if @pollingType is 'autoTail'
-            $('.task-poller-checklist').addClass 'waiting-for-file'
-            @autoTailTaskFiles = new TaskFiles [], taskId: @taskPollTaskId
+            unless @notFirstFound
+                @notFirstFound = true
+                $('.task-poller-checklist').addClass 'waiting-for-file'
+                @autoTailTaskFiles = new TaskFiles [], taskId: @taskPollTaskId
+            @lastFileCheck() if task is @possiblyCompleteTask
 
     fetchTasks: =>
-        @fetchTask @possiblyRunningTask
+        @fetchTask @possiblyRunningTask unless @taskPollTaskId # If we've already found a task we only care if the task is in a terminal state
         @fetchTask @possiblyCompleteTask
 
     fetchTask: (task) =>
