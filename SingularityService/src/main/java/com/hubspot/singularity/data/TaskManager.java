@@ -433,6 +433,16 @@ public class TaskManager extends CuratorAsyncManager {
     return getChildrenAsIds(getRequestPath(requestId), taskIdTranscoder);
   }
 
+  public Optional<SingularityTaskId> getTaskByRunId(String requestId, String runId) {
+    Map<SingularityTaskId, SingularityTask> activeTasks = getTasks(getActiveTaskIdsForRequest(requestId));
+    for (Map.Entry<SingularityTaskId, SingularityTask> entry : activeTasks.entrySet()) {
+      if (entry.getValue().getTaskRequest().getPendingTask().getRunId().isPresent() && entry.getValue().getTaskRequest().getPendingTask().getRunId().get().equals(runId)) {
+        return Optional.of(entry.getKey());
+      }
+    }
+    return Optional.absent();
+  }
+
   private enum TaskFilter {
     ACTIVE, INACTIVE;
   }

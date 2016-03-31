@@ -43,6 +43,8 @@ import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
+import com.hubspot.singularity.SingularityTask;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SlavePlacement;
@@ -264,6 +266,15 @@ public class RequestResource extends AbstractRequestResource {
     checkConflict(result != SingularityCreateResult.EXISTED, "%s is already pending, please try again soon", requestId);
 
     return SingularityPendingRequestParent.fromSingularityRequestParent(fillEntireRequest(requestWithState), pendingRequest);
+  }
+
+  @GET
+  @Path("/request/{requestId}/run/{runId}")
+  @ApiOperation("Retrieve an active task by runId")
+  public Optional<SingularityTaskId> getTaskByRunId(@PathParam("requestId") String requestId, @PathParam("runId") String runId) {
+    SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
+    authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.READ);
+    return taskManager.getTaskByRunId(requestId, runId);
   }
 
   @POST
