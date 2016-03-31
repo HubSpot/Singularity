@@ -87,9 +87,13 @@ public class DeployResource extends AbstractRequestResource {
     final String requestId = checkNotNullBadRequest(deploy.getRequestId(), "DeployRequest must have a non-null requestId");
 
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
-    SingularityRequest request = requestWithState.getRequest();
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
+
+    SingularityRequest request = requestWithState.getRequest();
+    if (deployRequest.getUpdatedRequest().isPresent()) {
+      request = validator.checkSingularityRequest(deployRequest.getUpdatedRequest().get(), Optional.of(requestWithState.getRequest()), Optional.<SingularityDeploy>absent(), Optional.of(deploy));
+    }
 
     if (!deployRequest.isUnpauseOnSuccessfulDeploy()) {
       checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to deploy (it must be manually unpaused first)", requestWithState.getRequest().getId());
@@ -113,7 +117,7 @@ public class DeployResource extends AbstractRequestResource {
           System.currentTimeMillis()));
     }
 
-    SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING, deployProgress);
+    SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING, deployProgress, deployRequest.getUpdatedRequest());
 
     checkConflict(deployManager.createPendingDeploy(pendingDeployObj) != SingularityCreateResult.EXISTED,
         "Pending deploy already in progress for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orNull());
@@ -129,7 +133,7 @@ public class DeployResource extends AbstractRequestResource {
           deployRequest.getDeploy().getSkipHealthchecksOnDeploy(), deployRequest.getMessage()));
     }
 
-    return fillEntireRequest(requestWithState);
+    return fillEntireRequest(requestWithState, Optional.of(request));
   }
 
   @DELETE
