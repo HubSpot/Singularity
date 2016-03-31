@@ -223,4 +223,10 @@ class Utils
         else
             fuzzyObject.score
 
+    # e.g. `myModel.fetch().error Utils.ignore404`
+    @ignore404: (response) -> app.caughtError() if response.status is 404
+
+    # e.g. `myModel.fetch().error Utils.ignore400`
+    @ignore400: (response) -> app.caughtError() if response.status is 400
+
 module.exports = Utils

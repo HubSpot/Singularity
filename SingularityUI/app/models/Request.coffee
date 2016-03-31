@@ -1,6 +1,7 @@
 Model = require './model'
 
 Racks = require '../collections/Racks'
+HistoricalTasks = require '../collections/HistoricalTasks'
 
 pauseTemplate = require '../templates/vex/requestPause'
 scaleTemplate = require '../templates/vex/requestScale'
@@ -433,105 +434,121 @@ class Request extends Model
                 return unless confirmed
                 @unpause(confirmed).done callback
 
+    getMostRecentlyRunTask: (callback) =>
+        @commands = []
+        historicalTasks = new HistoricalTasks [],
+            params:
+                requestId: @get "id"
+        historicalTasksFetch = historicalTasks.fetch()
+        historicalTasksFetch.success () =>
+            if historicalTasks.models.length
+                taskId = historicalTasks.models[0].attributes.taskId.id
+                task = new TaskHistory {taskId}
+                taskFetch = task.fetch()
+                taskFetch.success () =>
+                    @commands = task.attributes.task.taskRequest.pendingTask.cmdLineArgsList
+                    callback()
+                taskFetch.error () =>
+                    app.caughtError() # Don't actually error if we can't find previous args, just don't populate
+                    callback()
+            else
+                callback() # If this is the first task being run for this reqeust
+        historicalTasksFetch.error () =>
+            app.caughtError()
+            callback() # Don't actually error if we can't find previous args, just don't populate
+
     promptRun: (callback, task) => #task is an optional parameter - if it's provided this will rerun it, else this will run a new task
-        if task
-            commands = task.attributes.task.taskRequest.pendingTask.cmdLineArgsList
-        else
-            try
-                lastCommands = JSON.parse(localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id))
-            catch e
-                console.error('Could not parse previous commands JSON')
-                lastCommands = []
-            commands = if lastCommands? then lastCommands[lastCommands.length - 1] else []
-        vex.dialog.prompt
-            message: "<h3>#{if task then 'Rerun' else 'Run'} Task</h3>"
-            input: runTemplate
-                id: @get "id"
-                prefix: @localStorageCommandLineInputKeyPrefix
-                commands: commands
-                defaultFileName: Utils.fileName(config.runningTaskLogPath)
+        showDialog = () =>
+            if task
+                commands = task.attributes.task.taskRequest.pendingTask.cmdLineArgsList
+            else
+                commands = @commands
+            vex.dialog.prompt
+                message: "<h3>#{if task then 'Rerun' else 'Run'} Task</h3>"
+                input: runTemplate
+                    id: @get "id"
+                    commands: commands
+                    defaultFileName: Utils.fileName(config.runningTaskLogPath)
 
-            buttons: [
-                $.extend _.clone(vex.dialog.buttons.YES), text: 'Run now'
-                vex.dialog.buttons.NO
-            ]
+                buttons: [
+                    $.extend _.clone(vex.dialog.buttons.YES), text: 'Run now'
+                    vex.dialog.buttons.NO
+                ]
 
-            beforeClose: =>
-                return if @data is false
+                beforeClose: =>
+                    return if @data is false
 
-                fileName = @data.filename.trim()
-                message = @data.message
+                    fileName = @data.filename.trim()
+                    message = @data.message
 
-                if ((fileName and fileName.length is 0) or not fileName) and @data.afterStart is 'autoTail'
-                    $(window.noFilenameError).removeClass('hide')
-                    return false
+                    if ((fileName and fileName.length is 0) or not fileName) and @data.afterStart is 'autoTail'
+                        # Error - what file are we supposed to tail if none is provided?
+                        $(window.noFilenameError).removeClass('hide')
+                        return false
 
-                else
-                    if not task and @data.commandLineInput?
-                        try
-                            history = JSON.parse(localStorage.getItem(@localStorageCommandLineInputKeyPrefix + @id))
-                        catch e
-                            console.error('Could not parse previous command history')
-                            history = []
-                        if history and @data.commandLineInput != history[-1]
-                            history.push(@data.commandLineInput)
-                            localStorage.setItem(@localStorageCommandLineInputKeyPrefix + @id, JSON.stringify(history))
-                    localStorage.setItem('taskRunRedirectFilename', fileName) if filename?
-                    localStorage.setItem('taskRunAfterStart', @data.afterStart)
-                    @data.id = @get 'id'
+                    else
+                        localStorage.setItem('taskRunRedirectFilename', fileName) if filename?
+                        localStorage.setItem('taskRunAfterStart', @data.afterStart)
+                        @data.id = @get 'id'
 
-                    if @data.afterStart in ['browse-to-sandbox', 'autoTail']
-                        @data.runId = uuid.v4()
+                        if @data.afterStart in ['browse-to-sandbox', 'autoTail']
+                            @data.runId = uuid.v4()
 
-                    doneFn = =>
-                        if @data.afterStart is 'autoTail'
-                            taskPoller = new TaskPoller({
-                                requestId: @id
-                                autoTailFilename: @data.filename
-                                taskPollTimestamp: +new Date()
-                                pollingType: 'autoTail'
-                            })
+                        doneFn = =>
+                            if @data.afterStart is 'autoTail'
+                                taskPoller = new TaskPoller({
+                                    runId: @data.runId
+                                    requestId: @id
+                                    autoTailFilename: @data.filename
+                                    taskPollTimestamp: +new Date()
+                                    pollingType: 'autoTail'
+                                })
 
-                            taskPoller.startTaskPolling()
-                        else if @data.afterStart is 'browse-to-sandbox'
-                            taskPoller = new TaskPoller({
-                                requestId: @id
-                                taskPollTimestamp: +new Date()
-                                pollingType: 'browse-to-sandbox'
-                            })
+                                taskPoller.startTaskPolling()
+                            else if @data.afterStart is 'browse-to-sandbox'
+                                taskPoller = new TaskPoller({
+                                    runId: @data.runId
+                                    requestId: @id
+                                    taskPollTimestamp: +new Date()
+                                    pollingType: 'browse-to-sandbox'
+                                })
 
-                            taskPoller.startTaskPolling()
+                                taskPoller.startTaskPolling()
 
-                        callback( @data )
+                            callback( @data )
 
-                    @run( @data.commandLineInput, message, @data.runId ).done doneFn
-                    return true
+                        @run( @data.commandLineInput, message, @data.runId ).done doneFn
+                        return true
 
-            afterOpen: =>
-                taskRunAfterStart = localStorage.getItem('taskRunAfterStart')
-                $('#filename').val localStorage.getItem('taskRunRedirectFilename') or Utils.fileName(config.runningTaskLogPath)
-                $('#autoTail').prop 'checked', (taskRunAfterStart is 'autoTail')
-                $('#browse-to-sandbox').prop 'checked', (taskRunAfterStart is 'browse-to-sandbox' or not taskRunAfterStart)
-                $('#stay-on-page').prop 'checked', (taskRunAfterStart is 'stay-on-page')
-                $('#add-cmd-line-arg').on('click', { removeCmdLineArg: @removeCmdLineArg }, @addCmdLineArg)
-                $('.remove-button').click @removeCmdLineArg
-                $('#stay-on-page').on('click', () => $('#filename').addClass('hide'))
-                $('#browse-to-sandbox').on('click', () => $('#filename').addClass('hide'))
-                $('#autoTail').on('click', () => $('#filename').removeClass('hide'))
-                $('#filename').removeClass('hide') if taskRunAfterStart is 'autoTail'
+                afterOpen: =>
+                    taskRunAfterStart = localStorage.getItem('taskRunAfterStart')
+                    $('#filename').val localStorage.getItem('taskRunRedirectFilename') or Utils.fileName(config.runningTaskLogPath)
+                    $('#autoTail').prop 'checked', (taskRunAfterStart is 'autoTail')
+                    $('#browse-to-sandbox').prop 'checked', (taskRunAfterStart is 'browse-to-sandbox' or not taskRunAfterStart)
+                    $('#stay-on-page').prop 'checked', (taskRunAfterStart is 'stay-on-page')
+                    $('#add-cmd-line-arg').on('click', { removeCmdLineArg: @removeCmdLineArg }, @addCmdLineArg)
+                    $('.remove-button').click @removeCmdLineArg
+                    $('#stay-on-page').on('click', () => $('#filename').addClass('hide'))
+                    $('#browse-to-sandbox').on('click', () => $('#filename').addClass('hide'))
+                    $('#autoTail').on('click', () => $('#filename').removeClass('hide'))
+                    $('#filename').removeClass('hide') if taskRunAfterStart is 'autoTail'
 
-            callback: (data) =>
-                if data.commandLineInput
-                    if typeof data.commandLineInput is 'string'
-                        if data.commandLineInput != ''
-                            data.commandLineInput = [data.commandLineInput.trim()]
-                        else
+                callback: (data) =>
+                    if data.commandLineInput
+                        if typeof data.commandLineInput is 'string'
+                            if data.commandLineInput != ''
+                                data.commandLineInput = [data.commandLineInput.trim()]
+                            else
+                                data.commandLineInput = []
+                        if data.commandLineInput.length == 1 and data.commandLineInput[0] == ''
                             data.commandLineInput = []
-                    if data.commandLineInput.length == 1 and data.commandLineInput[0] == ''
+                    else
                         data.commandLineInput = []
-                else
-                    data.commandLineInput = []
-                @data = data
+                    @data = data
+        if task
+            showDialog()
+        else
+            @getMostRecentlyRunTask showDialog
 
     addCmdLineArg: (event) ->
         event.preventDefault()
