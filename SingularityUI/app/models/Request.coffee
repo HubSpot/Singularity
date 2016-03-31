@@ -528,10 +528,10 @@ class Request extends Model
                     $('#stay-on-page').prop 'checked', (taskRunAfterStart is 'stay-on-page')
                     $('#add-cmd-line-arg').on('click', { removeCmdLineArg: @removeCmdLineArg }, @addCmdLineArg)
                     $('.remove-button').click @removeCmdLineArg
-                    $('#stay-on-page').on('click', () => $('#filename').addClass('hide'))
-                    $('#browse-to-sandbox').on('click', () => $('#filename').addClass('hide'))
-                    $('#autoTail').on('click', () => $('#filename').removeClass('hide'))
-                    $('#filename').removeClass('hide') if taskRunAfterStart is 'autoTail'
+                    $('#stay-on-page').on('click', () => $('#filename').prop('disabled', true))
+                    $('#browse-to-sandbox').on('click', () => $('#filename').prop('disabled', true))
+                    $('#autoTail').on('click', () => $('#filename').prop('disabled', false))
+                    $('#filename').prop 'disabled', false if taskRunAfterStart is 'autoTail'
 
                 callback: (data) =>
                     if data.commandLineInput
