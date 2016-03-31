@@ -10,13 +10,13 @@ taskPollingFailureTemplate = require 'templates/vex/taskPollingFailure'
 Utils = require '../utils'
 
 vex = require 'vex.dialog'
+moment = require 'moment'
 
 interval = (a, b) -> setInterval(b, a)  # f u javascript
 timeout = (a, b) -> setTimeout(b, a)
 
-TIMEOUT_MINUTES = 1 # Modify this
-TIMEOUT_SECONDS = TIMEOUT_MINUTES * 60 # Don't modify this (unless you want a timeout less than a minute)
-TIMEOUT_MILLISECONDS = TIMEOUT_SECONDS * 1000 # Don't modify this
+TIMEOUT_MINUTES = 1
+TIMEOUT_MILLISECONDS = moment.duration(TIMEOUT_MINUTES, 'minutes').asMilliseconds()
 
 POLLING_TYPES = ['autoTail', 'browse-to-sandbox']
 
@@ -92,13 +92,8 @@ class TaskPoller extends Backbone.View
     fetchTask: =>
         taskFetch = @task.fetch()
         taskFetch.error (error) ->
-            Utils.ignore404 error
-            if error.status is 404
-                console.log '''
-                    The task poller has not found the task yet.
-                    Unfortunatley, some browsers automatically log all http errors.
-                    You may safely ignore the above 404.
-                '''
+            Utils.ignore404 error # 404 is expected unless the task is in a terminal state
+            console.log 'The above 404 was expected and may safely be ignored.' if error.status is 404
         taskFetch.success @taskFound
 
     browseToSandbox: =>
