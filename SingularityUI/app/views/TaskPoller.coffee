@@ -75,6 +75,7 @@ class TaskPoller extends Backbone.View
                 message: taskPollingFailureTemplate
                     autoTailFilename: @autoTailFilename
                     problem: 'FILE_WONT_EXIST'
+                    taskLink: "#{ config.appRoot }/task/#{ @taskPollTaskId }"
                 buttons: [
                     $.extend _.clone(vex.dialog.buttons.YES), text: 'OK'
                 ]
