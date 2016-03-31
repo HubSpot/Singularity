@@ -1,8 +1,8 @@
 HistoricalTasks = require '../collections/HistoricalTasks'
-TaskHistoryItem = require '../models/TaskHistoryItem'
+TaskHistoryItem = require '../models/TaskHistoryItem' # For completed tasks
+TaskId = require '../models/TaskId' # For running tasks
 
 TaskFiles = require '../collections/TaskFiles'
-RequestTasks = require '../collections/RequestTasks'
 
 taskPollerWaitingTemplate = require 'templates/vex/taskPollerWaiting'
 taskPollingFailureTemplate = require 'templates/vex/taskPollingFailure'
@@ -27,17 +27,16 @@ class TaskPoller extends Backbone.View
         if @pollingType not in POLLING_TYPES
             throw new Error "#{@pollingType} is not a valid polling type for the task poller. Valid polling types are: #{POLLING_TYPES}"
 
-        @task = new TaskHistoryItem {
-            requestId: @requestId
-            runId: @runId
-        }
+        @possiblyRunningTask = new TaskId {
+                requestId: @requestId
+                runId: @runId
+            }
+        @possiblyCompleteTask = new TaskHistoryItem {
+                requestId: @requestId
+                runId: @runId
+            }
 
-        @activeTasks = new RequestTasks [],
-            requestId: @requestId
-            state:    'active'
-
-        @fetchTask()
-        @activeTasks.fetch().error    Utils.ignore404
+        @fetchTasks()
 
 
     # Start polling for task changes, and check
@@ -47,14 +46,11 @@ class TaskPoller extends Backbone.View
         @showTaskPollWaitingDialog()
         @stopTaskPolling()
 
-        @listenTo @activeTasks, 'reset', @handleActiveTasksAdd
-
         @taskPollInterval = interval 2000, =>
             if @pollingType is 'autoTail' and @autoTailTaskFiles
                 @autoTailTaskFiles.fetch().error -> app.caughtError()  # we don't care about errors in this situation
             else
-                @activeTasks.fetch()
-                @fetchTask()
+                @fetchTasks()
 
         @taskTimeout = timeout TIMEOUT_MILLISECONDS, =>
             @stopTaskPolling()
@@ -67,34 +63,27 @@ class TaskPoller extends Backbone.View
                     $.extend _.clone(vex.dialog.buttons.YES), text: 'OK'
                 ]
 
-    handleActiveTasksAdd: (tasks) =>
+    taskFound: (task) =>
         timestamp = @taskPollTimestamp
-        matchingTask = tasks.find (task) -> task.get('taskId').startedAt > timestamp
-        if matchingTask
-            @taskPollTaskId = matchingTask.get('id')
-            if @pollingType is 'browse-to-sandbox'
-                @browseToSandbox()
-            else if @pollingType is 'autoTail'
-                $('.task-poller-checklist').addClass 'waiting-for-file'
-                @autoTailTaskFiles = new TaskFiles [], taskId: @taskPollTaskId
-                @listenTo @autoTailTaskFiles, 'add', @handleTaskFilesAdd
-            @stopListening @activeTasks, 'reset'
-
-    taskFound: =>
-        timestamp = @taskPollTimestamp
-        @taskPollTaskId = @task.get('taskId').id
+        @taskPollTaskId = if task.id then task.id else task.get('taskId').id
         if @pollingType is 'browse-to-sandbox'
             @browseToSandbox()
         else if @pollingType is 'autoTail'
             $('.task-poller-checklist').addClass 'waiting-for-file'
             @autoTailTaskFiles = new TaskFiles [], taskId: @taskPollTaskId
 
-    fetchTask: =>
-        taskFetch = @task.fetch()
+    fetchTasks: =>
+        @fetchTask @possiblyRunningTask
+        @fetchTask @possiblyCompleteTask
+
+    fetchTask: (task) =>
+        taskFetch = task.fetch()
         taskFetch.error (error) ->
             Utils.ignore404 error # 404 is expected unless the task is in a terminal state
-            console.log 'The above 404 was expected and may safely be ignored.' if error.status is 404
-        taskFetch.success @taskFound
+            # Some browsers will log the http error no matter what, so let the user know that it's ok
+            # Not all browsers explicitly say it's a 404, but most say some variant of 'not found'
+            console.log "This 'not found' error was expected and may safely be ignored." if error.status is 404
+        taskFetch.success () => @taskFound task
 
     browseToSandbox: =>
         @stopTaskPolling()
@@ -112,7 +101,6 @@ class TaskPoller extends Backbone.View
             clearInterval @taskPollInterval
         if @taskTimeout
             clearTimeout @taskTimeout
-        @stopListening @activeTasks, 'add', @handleActiveTasksAdd
         if @pollingType is 'autoTail'
             if @autoTailTaskFiles
                 @stopListening @autoTailTaskFiles, 'add', @handleTaskFilesAdd
