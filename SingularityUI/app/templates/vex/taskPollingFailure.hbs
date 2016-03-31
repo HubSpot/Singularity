@@ -3,5 +3,5 @@
     {{#if autoTailFilename}}<code>{{ autoTailFilename }}</code>{{else}}Task{{/if}} did not exist after {{ timeout }} minute(s).
 {{/ifEqual}}
 {{#ifEqual problem 'FILE_WONT_EXIST'}}
-    The task has entered a terminal state and <code>{{ autoTailFilename }}</code> does not exist. You're doomed.
+    The task has entered a terminal state and <code>{{ autoTailFilename }}</code> does not exist. It never will.
 {{/ifEqual}}
