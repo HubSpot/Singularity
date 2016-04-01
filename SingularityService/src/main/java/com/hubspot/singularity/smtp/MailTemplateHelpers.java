@@ -107,8 +107,11 @@ public class MailTemplateHelpers {
     return logTails;
   }
 
-  private String getLogErrorRegex() {
-    if (this.smtpConfiguration.isPresent() && !this.smtpConfiguration.get().getTaskLogErrorRegex().equals("")) {
+  private String getLogErrorRegex(final Optional<SingularityTask> task) {
+    if (task.isPresent() && task.get().getTaskRequest().getRequest().getTaskLogErrorRegex().isPresent()
+    && !task.get().getTaskRequest().getRequest().getTaskLogErrorRegex().get().equals("")) {
+      return task.get().getTaskRequest().getRequest().getTaskLogErrorRegex().get();
+    } else if (this.smtpConfiguration.isPresent() && !this.smtpConfiguration.get().getTaskLogErrorRegex().equals("")) {
       return this.smtpConfiguration.get().getTaskLogErrorRegex();
     } else {
       return DEFAULT_TASK_LOG_ERROR_REGEX;
@@ -134,7 +137,7 @@ public class MailTemplateHelpers {
     final Optional<MesosFileChunkObject> logChunkObject;
 
     LOG.trace("Getting offset (maybe) for task {} file {}", taskId.getId(), fullPath);
-    Optional<Long> maybeOffset = getMaybeOffset(slaveHostname, fullPath, logLength);
+    Optional<Long> maybeOffset = getMaybeOffset(slaveHostname, fullPath, logLength, task);
 
     if (!maybeOffset.isPresent()) {
       LOG.trace("Failed to find logs or error finding logs for task {} file {}", taskId.getId(), fullPath);
@@ -156,9 +159,9 @@ public class MailTemplateHelpers {
   }
 
   // Searches through the file,
-  private Optional<Long> getMaybeOffset(final String slaveHostname, final String fullPath, final Long logLength) {
+  private Optional<Long> getMaybeOffset(final String slaveHostname, final String fullPath, final Long logLength, Optional<SingularityTask> task) {
     long offset = 0;
-    String regex = getLogErrorRegex();
+    String regex = getLogErrorRegex(task);
     long length = logLength + regex.length(); // Get extra so that we can be sure to find the error
     Pattern pattern = Pattern.compile(regex);
     Optional<MesosFileChunkObject> logChunkObject;
