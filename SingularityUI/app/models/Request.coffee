@@ -487,7 +487,7 @@ class Request extends Model
                         return false
 
                     else
-                        localStorage.setItem('taskRunRedirectFilename', fileName) if filename?
+                        localStorage.setItem('taskRunRedirectFilename', fileName) if fileName?
                         localStorage.setItem('taskRunAfterStart', @data.afterStart)
                         @data.id = @get 'id'
 
