@@ -478,7 +478,7 @@ class Request extends Model
                 beforeClose: =>
                     return if @data is false
 
-                    fileName = @data.filename.trim()
+                    fileName = @data.filename.trim() if @data.filename
                     message = @data.message
 
                     if ((fileName and fileName.length is 0) or not fileName) and @data.afterStart is 'autoTail'
