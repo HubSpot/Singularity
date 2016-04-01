@@ -36,7 +36,7 @@ public class MailTemplateHelpers {
   private static final String REQUEST_LINK_FORMAT = "%s/request/%s";
   private static final String LOG_LINK_FORMAT = "%s/task/%s/tail/%s";
   private static final String DEFAULT_TIMESTAMP_FORMAT = "MMM dd h:mm:ss a zzz";
-  private static final String LOG_ERROR_REGEX = "ERROR";
+  private static final String DEFAULT_TASK_LOG_ERROR_REGEX = "ERROR";
 
   private final SandboxManager sandboxManager;
 
@@ -108,7 +108,11 @@ public class MailTemplateHelpers {
   }
 
   private String getLogErrorRegex() {
-    return LOG_ERROR_REGEX;
+    if (this.smtpConfiguration.isPresent() && !this.smtpConfiguration.get().getTaskLogErrorRegex().equals("")) {
+      return this.smtpConfiguration.get().getTaskLogErrorRegex();
+    } else {
+      return DEFAULT_TASK_LOG_ERROR_REGEX;
+    }
   }
 
   private Optional<String> getTaskLogFile(final SingularityTaskId taskId, final String filename, final Optional<SingularityTask> task, final Optional<String> directory) {

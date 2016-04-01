@@ -70,6 +70,10 @@ public class SMTPConfiguration {
   @JsonProperty
   private List<String> taskEmailTailFiles = Arrays.asList("stdout", "stderr");
 
+  @NotNull
+  @JsonProperty
+  private String taskLogErrorRegex = "";
+
   @JsonProperty
   private TimeZone mailerTimeZone = TimeZone.getTimeZone("UTC");
 
@@ -224,4 +228,8 @@ public class SMTPConfiguration {
   public void setMailerTimeZone(TimeZone mailerTimeZone) {
     this.mailerTimeZone = mailerTimeZone;
   }
+
+  public String getTaskLogErrorRegex() { return taskLogErrorRegex; }
+
+  public void setTaskLogErrorRegex(String taskLogErrorRegex) { this.taskLogErrorRegex = taskLogErrorRegex; }
 }
