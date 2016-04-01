@@ -1,5 +1,4 @@
 Model = require './model'
-Request = require './Request'
 
 endsWith = (needle, haystack) ->
     position = haystack.length - needle.length
@@ -68,6 +67,7 @@ class Task extends Model
             id = request.id
         else # Pending tasks don't have a request attribute
             id = @get('pendingTask').pendingTaskId.requestId
+        Request = require './Request' # Why can't I do this at the top of the page?
         requestModel = new Request id: id
         requestModel.promptRun => callback()
 
