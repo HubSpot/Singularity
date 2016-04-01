@@ -143,7 +143,7 @@ Handlebars.registerHelper 'substituteTaskId', (value, taskId) ->
     value.replace('$TASK_ID', taskId)
 
 Handlebars.registerHelper 'filename', (value) ->
-    value.substring(value.lastIndexOf('/') + 1)
+    Utils.fileName(value)
 
 Handlebars.registerHelper 'getLabelClass', (state) ->
     Utils.getLabelClassFromTaskState state
