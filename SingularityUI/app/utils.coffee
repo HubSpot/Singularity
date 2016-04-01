@@ -212,6 +212,9 @@ class Utils
             else
                 'default'
 
+    @fileName: (filePath) ->
+        filePath.substring(filePath.lastIndexOf('/') + 1)
+
     @fuzzyAdjustScore: (filter, fuzzyObject) ->
         if fuzzyObject.original.id.toLowerCase().startsWith(filter.toLowerCase())
             fuzzyObject.score * 10
@@ -219,5 +222,11 @@ class Utils
             fuzzyObject.score * 5
         else
             fuzzyObject.score
+
+    # e.g. `myModel.fetch().error Utils.ignore404`
+    @ignore404: (response) -> app.caughtError() if response.status is 404
+
+    # e.g. `myModel.fetch().error Utils.ignore400`
+    @ignore400: (response) -> app.caughtError() if response.status is 400
 
 module.exports = Utils
