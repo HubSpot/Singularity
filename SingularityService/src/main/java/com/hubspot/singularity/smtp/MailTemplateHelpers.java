@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -20,7 +22,6 @@ import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityEmailType;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskMetadata;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -35,6 +36,7 @@ public class MailTemplateHelpers {
   private static final String REQUEST_LINK_FORMAT = "%s/request/%s";
   private static final String LOG_LINK_FORMAT = "%s/task/%s/tail/%s";
   private static final String DEFAULT_TIMESTAMP_FORMAT = "MMM dd h:mm:ss a zzz";
+  private static final String LOG_ERROR_REGEX = "ERROR";
 
   private final SandboxManager sandboxManager;
 
@@ -57,42 +59,23 @@ public class MailTemplateHelpers {
     }
   }
 
-  public String humanizeTimestamp(long timestamp) {
-    if (taskDatePattern.isPresent() && timeZone.isPresent()) {
-      return DateFormatUtils.format(timestamp, taskDatePattern.get(), timeZone.get());
-    } else if (taskDatePattern.isPresent()) {
-      return DateFormatUtils.formatUTC(timestamp, taskDatePattern.get());
-    } else if (timeZone.isPresent()) {
-      return DateFormatUtils.format(timestamp, DEFAULT_TIMESTAMP_FORMAT, timeZone.get());
-    } else {
-      return DateFormatUtils.format(timestamp, DEFAULT_TIMESTAMP_FORMAT);
-    }
-  }
-
-  public List<SingularityMailTaskMetadata> getJadeTaskMetadata(Collection<SingularityTaskMetadata> taskMetadata) {
-    List<SingularityMailTaskMetadata> output = Lists.newArrayListWithCapacity(taskMetadata.size());
-
-    for (SingularityTaskMetadata metadataElement : taskMetadata) {
-      output.add(
-          new SingularityMailTaskMetadata(
-              humanizeTimestamp(metadataElement.getTimestamp()),
-              metadataElement.getType(),
-              metadataElement.getTitle(),
-              metadataElement.getUser().or(""),
-              metadataElement.getMessage().or(""),
-              metadataElement.getLevel().toString()));
-    }
-
-    return output;
-  }
-
   public List<SingularityMailTaskHistoryUpdate> getJadeTaskHistory(Collection<SingularityTaskHistoryUpdate> taskHistory) {
     List<SingularityMailTaskHistoryUpdate> output = Lists.newArrayListWithCapacity(taskHistory.size());
 
     for (SingularityTaskHistoryUpdate taskUpdate : taskHistory) {
+      String date;
+      if (taskDatePattern.isPresent() && timeZone.isPresent()) {
+        date = DateFormatUtils.format(taskUpdate.getTimestamp(), taskDatePattern.get(), timeZone.get());
+      } else if (taskDatePattern.isPresent()) {
+        date = DateFormatUtils.formatUTC(taskUpdate.getTimestamp(), taskDatePattern.get());
+      } else if (timeZone.isPresent()) {
+        date = DateFormatUtils.format(taskUpdate.getTimestamp(), DEFAULT_TIMESTAMP_FORMAT, timeZone.get());
+      } else {
+        date = DateFormatUtils.format(taskUpdate.getTimestamp(), DEFAULT_TIMESTAMP_FORMAT);
+      }
       output.add(
           new SingularityMailTaskHistoryUpdate(
-              humanizeTimestamp(taskUpdate.getTimestamp()),
+              date,
               WordUtils.capitalize(taskUpdate.getTaskState().getDisplayName()),
               taskUpdate.getStatusMessage().or("")));
     }
@@ -124,6 +107,10 @@ public class MailTemplateHelpers {
     return logTails;
   }
 
+  private String getLogErrorRegex() {
+    return LOG_ERROR_REGEX;
+  }
+
   private Optional<String> getTaskLogFile(final SingularityTaskId taskId, final String filename, final Optional<SingularityTask> task, final Optional<String> directory) {
     if (!smtpConfiguration.isPresent()) {
       LOG.warn("Tried to get a task log file without SMTP configuration set up.");
@@ -142,8 +129,15 @@ public class MailTemplateHelpers {
 
     final Optional<MesosFileChunkObject> logChunkObject;
 
+    LOG.trace("Getting offset (maybe) for task {} file {}", taskId.getId(), fullPath);
+    Optional<Long> maybeOffset = getMaybeOffset(slaveHostname, fullPath, logLength);
+
+    if (!maybeOffset.isPresent()) {
+      LOG.trace("Failed to find logs or error finding logs for task {} file {}", taskId.getId(), fullPath);
+      return Optional.absent();
+    }
     try {
-      logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.of(0L), Optional.of(logLength));
+      logChunkObject = sandboxManager.read(slaveHostname, fullPath, maybeOffset, Optional.of(logLength));
     } catch (RuntimeException e) {
       LOG.error("Sandboxmanager failed to read {}/{} on slave {}", directory.get(), filename, slaveHostname, e);
       return Optional.absent();
@@ -154,6 +148,44 @@ public class MailTemplateHelpers {
     } else {
       LOG.error("Failed to get {} log for {}", filename, taskId.getId());
       return Optional.absent();
+    }
+  }
+
+  // Searches through the file,
+  private Optional<Long> getMaybeOffset(final String slaveHostname, final String fullPath, final Long logLength) {
+    long offset = 0;
+    String regex = getLogErrorRegex();
+    long length = logLength + regex.length(); // Get extra so that we can be sure to find the error
+    Pattern pattern = Pattern.compile(regex);
+    Optional<MesosFileChunkObject> logChunkObject;
+    Optional<MesosFileChunkObject> previous = Optional.absent();
+
+    while (true) { //Continue until we reach the end of the file, at which point we return from within the while loop
+      try {
+        logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.of(offset), Optional.of(length));
+      } catch (RuntimeException e) {
+        LOG.error("Sandboxmanager failed to read {} on slave {}", fullPath, slaveHostname, e);
+        return Optional.absent();
+      }
+      if (logChunkObject.isPresent()) {
+        if (logChunkObject.get().getData().equals("")) { // Passed end of file
+          if (previous.isPresent()) { // If there was any log, get the bottom bytes of it
+            long end = previous.get().getOffset() + previous.get().getData().length();
+            return Optional.of(end - logLength);
+          }
+          return Optional.absent();
+        }
+        Matcher matcher = pattern.matcher(logChunkObject.get().getData());
+        if (matcher.find()) {
+          return Optional.of(offset + matcher.start());
+        } else {
+          offset += logLength;
+        }
+      } else { // Couldn't read anything
+        LOG.error("Failed to get errors for log file {}", fullPath);
+        return Optional.absent();
+      }
+      previous = logChunkObject;
     }
   }
 
