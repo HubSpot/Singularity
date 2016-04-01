@@ -1,5 +1,5 @@
 Model = require './model'
-Request = require './Request'
+Request = require './request'
 
 endsWith = (needle, haystack) ->
     position = haystack.length - needle.length
