@@ -480,10 +480,14 @@ public class SingularityClient {
   //
 
   public SingularityRequestParent createDeployForSingularityRequest(String requestId, SingularityDeploy pendingDeploy, Optional<Boolean> deployUnpause, Optional<String> message) {
+    return createDeployForSingularityRequest(requestId, pendingDeploy, deployUnpause, message, Optional.<SingularityRequest>absent());
+  }
+
+  public SingularityRequestParent createDeployForSingularityRequest(String requestId, SingularityDeploy pendingDeploy, Optional<Boolean> deployUnpause, Optional<String> message, Optional<SingularityRequest> updatedRequest) {
     final String requestUri = String.format(DEPLOYS_FORMAT, getHost(), contextPath);
 
     HttpResponse response = post(requestUri, String.format("new deploy %s", new SingularityDeployKey(requestId, pendingDeploy.getId())),
-        Optional.of(new SingularityDeployRequest(pendingDeploy, deployUnpause, message)));
+        Optional.of(new SingularityDeployRequest(pendingDeploy, deployUnpause, message, updatedRequest)));
 
     return getAndLogRequestAndDeployStatus(response.getAs(SingularityRequestParent.class));
   }
