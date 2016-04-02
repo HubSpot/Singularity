@@ -22,6 +22,7 @@ import org.mockito.Mockito;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
@@ -71,10 +72,13 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
+import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation.ReconciliationState;
 import com.sun.jersey.api.ConflictException;
 
 public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
+  @Inject
+  private SingularityValidator validator;
 
   public SingularitySchedulerTest() {
     super(false);
@@ -2903,6 +2907,41 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     finishNewTaskChecksAndCleanup();
 
     Assert.assertTrue(taskManager.getLastHealthcheck(firstTask.getTaskId()).get().toString().contains("host1:81"));
+  }
+
+  @Test
+  public void testCronScheduleChanges() throws Exception {
+    final String requestId = "test-change-cron";
+    final String oldSchedule = "*/5 * * * *";
+    final String oldScheduleQuartz = "0 */5 * * * ?";
+    final String newSchedule = "*/30 * * * *";
+    final String newScheduleQuartz = "0 */30 * * * ?";
+
+    SingularityRequest request = new SingularityRequestBuilder(requestId, RequestType.SCHEDULED)
+        .setSchedule(Optional.of(oldSchedule))
+        .build();
+
+    request = validator.checkSingularityRequest(request, Optional.<SingularityRequest>absent(), Optional.<SingularityDeploy>absent(), Optional.<SingularityDeploy>absent());
+
+    saveRequest(request);
+
+    Assert.assertEquals(oldScheduleQuartz, requestManager.getRequest(requestId).get().getRequest().getQuartzScheduleSafe());
+
+    initAndFinishDeploy(request, "1");
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    final SingularityRequest newRequest = request.toBuilder().setSchedule(Optional.of(newSchedule)).build();
+
+    final SingularityDeploy newDeploy = new SingularityDeployBuilder(request.getId(), "2").setCommand(Optional.of("sleep 100")).build();
+
+    deployResource.deploy(new SingularityDeployRequest(newDeploy, Optional.<Boolean>absent(), Optional.<String>absent(), Optional.of(newRequest)));
+
+    deployChecker.checkDeploys();
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    Assert.assertEquals(newScheduleQuartz, requestManager.getRequest(requestId).get().getRequest().getQuartzScheduleSafe());
   }
 
   @Test
