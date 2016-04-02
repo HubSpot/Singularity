@@ -98,6 +98,10 @@ public class DeployResource extends AbstractRequestResource {
       updatedValidatedRequest = Optional.absent();
     }
 
+    if (updatedValidatedRequest.isPresent()) {
+      request = updatedValidatedRequest.get();
+    }
+
     if (!deployRequest.isUnpauseOnSuccessfulDeploy()) {
       checkConflict(requestWithState.getState() != RequestState.PAUSED, "Request %s is paused. Unable to deploy (it must be manually unpaused first)", requestWithState.getRequest().getId());
     }
