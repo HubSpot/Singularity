@@ -2931,7 +2931,10 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
-    final SingularityRequest newRequest = request.toBuilder().setSchedule(Optional.of(newSchedule)).build();
+    final SingularityRequest newRequest = request.toBuilder()
+        .setSchedule(Optional.of(newSchedule))
+        .setQuartzSchedule(Optional.<String>absent())
+        .build();
 
     final SingularityDeploy newDeploy = new SingularityDeployBuilder(request.getId(), "2").setCommand(Optional.of("sleep 100")).build();
 
