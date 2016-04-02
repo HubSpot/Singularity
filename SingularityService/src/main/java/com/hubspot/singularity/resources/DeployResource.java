@@ -91,8 +91,11 @@ public class DeployResource extends AbstractRequestResource {
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
 
     SingularityRequest request = requestWithState.getRequest();
+    final Optional<SingularityRequest> updatedValidatedRequest;
     if (deployRequest.getUpdatedRequest().isPresent()) {
-      request = validator.checkSingularityRequest(deployRequest.getUpdatedRequest().get(), Optional.of(requestWithState.getRequest()), Optional.<SingularityDeploy>absent(), Optional.of(deploy));
+      updatedValidatedRequest = Optional.of(validator.checkSingularityRequest(deployRequest.getUpdatedRequest().get(), Optional.of(requestWithState.getRequest()), Optional.<SingularityDeploy>absent(), Optional.of(deploy)));
+    } else {
+      updatedValidatedRequest = Optional.absent();
     }
 
     if (!deployRequest.isUnpauseOnSuccessfulDeploy()) {
@@ -117,7 +120,7 @@ public class DeployResource extends AbstractRequestResource {
           System.currentTimeMillis()));
     }
 
-    SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING, deployProgress, deployRequest.getUpdatedRequest());
+    SingularityPendingDeploy pendingDeployObj = new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate> absent(), DeployState.WAITING, deployProgress, updatedValidatedRequest);
 
     checkConflict(deployManager.createPendingDeploy(pendingDeployObj) != SingularityCreateResult.EXISTED,
         "Pending deploy already in progress for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orNull());
