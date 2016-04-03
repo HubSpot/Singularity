@@ -11,8 +11,8 @@ class TasksDropdown extends React.Component
     if @props.activeTasks and @props.taskIds
       tasks = _.sortBy(@props.activeTasks, (t) => t.taskId.instanceNo).map (task, i) =>
         <li key={i}>
-          <a onClick={() => @props.onToggleViewingInstance(task.taskId.id)}>
-            <span className="glyphicon glyphicon-#{if @props.taskIds[task.taskId.id] then 'check' else 'unchecked'}"></span>
+          <a onClick={() => @props.toggleTaskLog(task.taskId.id)}>
+            <span className="glyphicon glyphicon-#{if task.taskId.id in @props.taskIds then 'check' else 'unchecked'}"></span>
             <span> Instance {task.taskId.instanceNo}</span>
           </a>
         </li>
@@ -35,7 +35,7 @@ class TasksDropdown extends React.Component
 
 mapStateToProps = (state) ->
   activeTasks: state.activeRequest.activeTasks
-  taskIds: state.tasks
+  taskIds: state.taskIds
 
 mapDispatchToProps = { toggleTaskLog }
 

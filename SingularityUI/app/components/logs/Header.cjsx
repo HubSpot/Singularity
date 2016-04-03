@@ -73,7 +73,7 @@ class Header extends React.Component
       </div>
 
 mapStateToProps = (state) ->
-  taskIdCount: Object.keys(state.tasks).length
+  taskIdCount: state.taskIds.length
   path: state.path
   viewMode: state.viewMode
   requestId: state.activeRequest.requestId
