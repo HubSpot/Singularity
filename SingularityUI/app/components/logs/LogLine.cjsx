@@ -57,8 +57,7 @@ class LogLine extends React.Component
         </div>
       </a>
       <span>
-        {@props.offset} | 
-        {@highlightContent(@props.content)}
+        {@props.offset} | {@props.timestamp} | {@highlightContent(@props.content)}
       </span>
     </div>
 

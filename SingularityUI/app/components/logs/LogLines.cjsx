@@ -36,8 +36,8 @@ class LogLines extends React.Component
 
   componentDidUpdate: (prevProps, prevState) ->
     if prevProps.updatedAt isnt @props.updatedAt
-      if @props.prependedLineCount > 0
-        @refs.tailContents.scrollTop += 20 * @props.prependedLineCount
+      if @props.prependedLineCount > 0 or @props.linesRemovedFromTop > 0
+        @refs.tailContents.scrollTop += 20 * (@props.prependedLineCount - @props.linesRemovedFromTop)
 
   renderLoadingPrevious: ->
     if @props.initialDataLoaded
@@ -47,12 +47,13 @@ class LogLines extends React.Component
         <div>Loading previous... ({Humanize.filesize(@props.bytesRemainingBefore)} remaining)</div>
 
   renderLogLines: ->
-    @props.logLines.map ({data, offset, taskId}) =>
+    @props.logLines.map ({data, offset, taskId, timestamp}) =>
       <LogLine
         content={data}
         key={offset}
         offset={offset}
         taskId={taskId}
+        timestamp={timestamp}
         isHighlighted={offset is @props.initialOffset} />
 
   renderLoadingMore: ->
@@ -86,19 +87,19 @@ class LogLines extends React.Component
 
 mapStateToProps = (state, ownProps) ->
   taskGroup = state.taskGroups[ownProps.taskGroupId]
-  tasks = taskGroup.taskIds.map (taskId) -> state.tasks[taskId]
 
   logLines: taskGroup.logLines
   updatedAt: taskGroup.updatedAt
   prependedLineCount: taskGroup.prependedLineCount
+  linesRemovedFromTop: taskGroup.linesRemovedFromTop
   activeColor: state.activeColor
   top: taskGroup.top
   bottom: taskGroup.bottom
-  initialDataLoaded: _.all(_.pluck(tasks, 'initialDataLoaded'))
-  reachedStartOfFile: _.all(tasks.map (task) -> task.minOffset is 0)
-  reachedEndOfFile: _.all(tasks.map (task) -> task.maxOffset >= task.filesize)
-  bytesRemainingBefore: sum(_.pluck(tasks, 'minOffset'))
-  bytesRemainingAfter: sum(tasks.map (task) -> Math.max(task.filesize - task.maxOffset, 0))
+  initialDataLoaded: _.all(_.pluck(taskGroup.tasks, 'initialDataLoaded'))
+  reachedStartOfFile: _.all(taskGroup.tasks.map ({minOffset}) -> minOffset is 0)
+  reachedEndOfFile: _.all(taskGroup.tasks.map ({maxOffset, filesize}) -> maxOffset >= filesize)
+  bytesRemainingBefore: sum(_.pluck(taskGroup.tasks, 'minOffset'))
+  bytesRemainingAfter: sum(taskGroup.tasks.map ({filesize, maxOffset}) -> Math.max(filesize - maxOffset, 0))
 
 mapDispatchToProps = { taskGroupTop, taskGroupBottom }
 

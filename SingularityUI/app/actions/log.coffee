@@ -48,11 +48,9 @@ init = (requestId, taskIdGroups, path, search) ->
     type: 'LOG_INIT'
   }
 
-addTaskGroup = (path, search, taskIds) ->
+addTaskGroup = (taskIds) ->
   {
-    path
     taskIds
-    search
     type: 'LOG_ADD_TASK_GROUP'
   }
 
@@ -73,9 +71,10 @@ taskGroupReady = (taskGroupId) ->
 
 updateFilesizes = ->
   (dispatch, getState) ->
-    for taskId, {path} of getState().tasks
-      fetchData(taskId, path).done ({offset}) ->
-        dispatch(taskFilesize(taskId, offset))
+    getState().taskGroups.map (taskGroup) ->
+      taskGroup.tasks.map ({taskId, path}) ->
+        fetchData(taskId, path).done ({offset}) ->
+          dispatch(taskFilesize(taskId, offset))
 
 updateGroups = ->
   (dispatch, getState) ->
@@ -88,10 +87,9 @@ updateGroups = ->
 
 taskGroupFetchNext = (taskGroupId) ->
   (dispatch, getState) ->
-    {tasks, taskGroups, logRequestLength, maxLines} = getState()
+    {taskGroups, logRequestLength, maxLines} = getState()
 
-    promises = taskGroups[taskGroupId].taskIds.map (taskId) ->
-      {maxOffset, path, initialDataLoaded} = tasks[taskId]
+    promises = taskGroups[taskGroupId].tasks.map ({taskId, maxOffset, path, initialDataLoaded}) ->
       if initialDataLoaded
         xhr = fetchData(taskId, path, maxOffset, logRequestLength)
         xhr.done ({data, offset, nextOffset}) ->
@@ -105,10 +103,9 @@ taskGroupFetchNext = (taskGroupId) ->
 
 taskGroupFetchPrevious = (taskGroupId) ->
   (dispatch, getState) ->
-    {tasks, taskGroups, logRequestLength, maxLines} = getState()
+    {taskGroups, logRequestLength, maxLines} = getState()
 
-    promises = taskGroups[taskGroupId].taskIds.map (taskId) ->
-      {minOffset, path, initialDataLoaded} = tasks[taskId]
+    promises = taskGroups[taskGroupId].tasks.map ({taskId, minOffset, path, initialDataLoaded}) ->
       if minOffset > 0 and initialDataLoaded
         xhr = fetchData(taskId, path, Math.max(minOffset - logRequestLength, 0), Math.min(logRequestLength, minOffset))
         xhr.done ({data, offset, nextOffset}) ->
@@ -185,13 +182,12 @@ setCurrentSearch = (newSearch) ->
 
 toggleTaskLog = (taskId) ->
   (dispatch, getState) ->
-    {search, path, tasks, viewMode} = getState()
-    if tasks[taskId]
-      if Object.keys(tasks).length > 1
+    {search, path, taskIds, viewMode} = getState()
+    if taskIds.length > 0 and taskId in taskIds
         dispatch({taskId, type: 'LOG_REMOVE_TASK'})
     else
       if viewMode is 'split'
-        dispatch(addTaskGroup(path, search, [taskId]))
+        dispatch(addTaskGroup(path, [taskId]))
         taskGroupId = getState().taskGroups.length - 1
       else
         taskGroupId = 0

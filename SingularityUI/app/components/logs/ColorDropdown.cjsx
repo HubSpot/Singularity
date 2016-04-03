@@ -19,7 +19,6 @@ class ColorDropdown extends React.Component
       </li>
 
   render: ->
-    console.log @props
     <div className="btn-group" title="Select Color Scheme">
       <button type="button" className="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         <span className="glyphicon glyphicon-adjust"></span> <span className="caret"></span>
