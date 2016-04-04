@@ -209,7 +209,7 @@ public class MailTemplateHelpers {
       }
       previous = logChunkObject;
     }
-    LOG.trace("File is too big to search for an error (Greater than {} bytes). Tailing bottom of file instead", MAX_LOG_SEARCH_OFFSET);
+    LOG.trace("Searched through the first {} bytes of file {} and didn't find an error. Tailing bottom of file instead", MAX_LOG_SEARCH_OFFSET, fullPath);
     return getEndOfFileOffset(slaveHostname, fullPath, logLength);
   }
 
