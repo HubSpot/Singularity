@@ -49,7 +49,9 @@ class TaskPoller extends Backbone.View
 
         @taskPollInterval = interval 2000, =>
             if @pollingType is 'autoTail' and @autoTailTaskFiles
-                @autoTailTaskFiles.fetch().error -> app.caughtError()  # we don't care about errors in this situation
+                @autoTailTaskFiles.fetch()
+                    .error => app.caughtError()  # we don't care about errors in this situation
+                    .success => @checkIfTaskFilesExist()
             @fetchTasks()
 
         @taskTimeout = timeout TIMEOUT_MILLISECONDS, =>
@@ -66,10 +68,7 @@ class TaskPoller extends Backbone.View
 
     lastFileCheck: =>
         vex.close()
-        if @autoTailTaskFiles and @autoTailTaskFiles.findWhere({name: @autoTailFilename})
-            @stopTaskPolling()
-            app.router.navigate "#task/#{@taskPollTaskId}/tail/#{@taskPollTaskId}/#{@autoTailFilename}", trigger: true
-        else
+        unless @checkIfTaskFilesExist()
             @stopTaskPolling()
             vex.dialog.alert
                 message: taskPollingFailureTemplate
@@ -110,8 +109,8 @@ class TaskPoller extends Backbone.View
         app.router.navigate "#task/#{@taskPollTaskId}", trigger: true
         vex.close()
 
-    handleTaskFilesAdd: =>
-        if @pollingType is 'autoTail' and @autoTailTaskFiles.findWhere({name: @autoTailFilename})
+    checkIfTaskFilesExist: =>
+        if @pollingType is 'autoTail' and @autoTailTaskFiles and @autoTailTaskFiles.findWhere({name: @autoTailFilename})
             @stopTaskPolling()
             app.router.navigate "#task/#{@taskPollTaskId}/tail/#{@taskPollTaskId}/#{@autoTailFilename}", trigger: true
             vex.close()
@@ -121,10 +120,6 @@ class TaskPoller extends Backbone.View
             clearInterval @taskPollInterval
         if @taskTimeout
             clearTimeout @taskTimeout
-        if @pollingType is 'autoTail'
-            if @autoTailTaskFiles
-                @stopListening @autoTailTaskFiles, 'add', @handleTaskFilesAdd
-            @autoTailTaskFiles = null
 
     ## Prompt for cancelling the redirect after it's been initiated
     showTaskPollWaitingDialog: ->
