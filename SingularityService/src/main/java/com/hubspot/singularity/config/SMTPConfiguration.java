@@ -72,7 +72,11 @@ public class SMTPConfiguration {
 
   @NotNull
   @JsonProperty
-  private String taskLogErrorRegex = "";
+  private Optional<String> taskLogErrorRegex = Optional.of("ERROR");
+
+  @NotNull
+  @JsonProperty
+  private Long maxTaskLogSearchOffset = 100000L;
 
   @JsonProperty
   private TimeZone mailerTimeZone = TimeZone.getTimeZone("UTC");
@@ -229,7 +233,11 @@ public class SMTPConfiguration {
     this.mailerTimeZone = mailerTimeZone;
   }
 
-  public String getTaskLogErrorRegex() { return taskLogErrorRegex; }
+  public Optional<String> getTaskLogErrorRegex() { return taskLogErrorRegex; }
 
-  public void setTaskLogErrorRegex(String taskLogErrorRegex) { this.taskLogErrorRegex = taskLogErrorRegex; }
+  public void setTaskLogErrorRegex(Optional<String> taskLogErrorRegex) { this.taskLogErrorRegex = taskLogErrorRegex; }
+
+  public Long getMaxTaskLogSearchOffset() { return maxTaskLogSearchOffset; }
+
+  public void setMaxTaskLogSearchOffset(Long maxTaskLogSearchOffset) { this.maxTaskLogSearchOffset = maxTaskLogSearchOffset; }
 }
