@@ -31,6 +31,6 @@ class TaskGroupHeader extends React.Component
     </div>
 
 mapStateToProps = (state, ownProps) ->
-  taskIds: state.taskGroups[ownProps.taskGroupId].taskIds
+  taskIds: _.pluck(state.taskGroups[ownProps.taskGroupId].tasks, 'taskId')
 
 module.exports = connect(mapStateToProps)(TaskGroupHeader)
