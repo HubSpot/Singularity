@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -36,7 +37,8 @@ public class MailTemplateHelpers {
   private static final String REQUEST_LINK_FORMAT = "%s/request/%s";
   private static final String LOG_LINK_FORMAT = "%s/task/%s/tail/%s";
   private static final String DEFAULT_TIMESTAMP_FORMAT = "MMM dd h:mm:ss a zzz";
-  private static final String DEFAULT_TASK_LOG_ERROR_REGEX = "ERROR";
+  private static final Optional<String> DEFAULT_TASK_LOG_ERROR_REGEX = Optional.of("ERROR");
+  private static final Long MAX_LOG_SEARCH_OFFSET = 1000000L;
 
   private final SandboxManager sandboxManager;
 
@@ -107,12 +109,12 @@ public class MailTemplateHelpers {
     return logTails;
   }
 
-  private String getLogErrorRegex(final Optional<SingularityTask> task) {
+  private Optional<String> getLogErrorRegex(final Optional<SingularityTask> task) {
     if (task.isPresent() && task.get().getTaskRequest().getRequest().getTaskLogErrorRegex().isPresent()
     && !task.get().getTaskRequest().getRequest().getTaskLogErrorRegex().get().equals("")) {
-      return task.get().getTaskRequest().getRequest().getTaskLogErrorRegex().get();
+      return task.get().getTaskRequest().getRequest().getTaskLogErrorRegex();
     } else if (this.smtpConfiguration.isPresent() && !this.smtpConfiguration.get().getTaskLogErrorRegex().equals("")) {
-      return this.smtpConfiguration.get().getTaskLogErrorRegex();
+      return Optional.of(this.smtpConfiguration.get().getTaskLogErrorRegex());
     } else {
       return DEFAULT_TASK_LOG_ERROR_REGEX;
     }
@@ -158,16 +160,29 @@ public class MailTemplateHelpers {
     }
   }
 
-  // Searches through the file,
+  // Searches through the file, looking for first error
   private Optional<Long> getMaybeOffset(final String slaveHostname, final String fullPath, final Long logLength, Optional<SingularityTask> task) {
     long offset = 0;
-    String regex = getLogErrorRegex(task);
+    Optional<String> maybeRegex = getLogErrorRegex(task);
+    String regex;
+    if (maybeRegex.isPresent()) {
+      regex = maybeRegex.get();
+    } else {
+      LOG.trace("No task log error regex provided. Reading from bottom of file instead.");
+      return getEndOfFileOffset(slaveHostname, fullPath, logLength);
+    }
     long length = logLength + regex.length(); // Get extra so that we can be sure to find the error
-    Pattern pattern = Pattern.compile(regex);
+    Pattern pattern;
+    try {
+      pattern = Pattern.compile(regex);
+    } catch (PatternSyntaxException e) {
+      LOG.error("Invalid task log error regex supplied: \"{}\". Reading from bottom of file instead. Received exception: {}", regex, e);
+      return getEndOfFileOffset(slaveHostname, fullPath, logLength);
+    }
     Optional<MesosFileChunkObject> logChunkObject;
     Optional<MesosFileChunkObject> previous = Optional.absent();
 
-    while (true) { //Continue until we reach the end of the file, at which point we return from within the while loop
+    while (offset <= MAX_LOG_SEARCH_OFFSET) {
       try {
         logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.of(offset), Optional.of(length));
       } catch (RuntimeException e) {
@@ -189,11 +204,30 @@ public class MailTemplateHelpers {
           offset += logLength;
         }
       } else { // Couldn't read anything
-        LOG.error("Failed to get errors for log file {}", fullPath);
+        LOG.error("Failed to read log file {}", fullPath);
         return Optional.absent();
       }
       previous = logChunkObject;
     }
+    LOG.trace("File is too big to search for an error (Greater than {} bytes). Tailing bottom of file instead", MAX_LOG_SEARCH_OFFSET);
+    return getEndOfFileOffset(slaveHostname, fullPath, logLength);
+  }
+
+  private Optional<Long> getEndOfFileOffset(final String slaveHostname, final String fullPath, final long logLength) {
+    Optional<MesosFileChunkObject> logChunkObject;
+    try {
+      logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.<Long>absent(), Optional.<Long>absent());
+    } catch (RuntimeException e) {
+      LOG.error("Sandboxmanager failed to read {} on slave {}", fullPath, slaveHostname, e);
+      return Optional.absent();
+    }
+    if (logChunkObject.isPresent()) {
+      return Optional.of(Math.max(0, logChunkObject.get().getOffset() - logLength));
+    } else {
+      LOG.error("Failed to get offset for log file {}", fullPath);
+      return Optional.absent();
+    }
+
   }
 
   public String getFileName(String path) {
