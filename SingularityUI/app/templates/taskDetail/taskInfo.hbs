@@ -44,6 +44,14 @@
                 </div>
             </li>
         {{/if}}
+        {{#if data.task.rackId }}
+            <li class="col-md-4">
+                <div>
+                    <h4>Rack ID</h4>
+                    <p>{{ data.task.rackId }}</p>
+                </div>
+            </li>
+        {{/if}}
         {{#if data.task.taskRequest.deploy.executorData.extraCmdLineArgs}}
             <li class="col-md-4">
                 <div>
