@@ -1,6 +1,6 @@
 # Singularity REST API
 
-Version: 0.4.12-SNAPSHOT
+Version: 0.6.0-SNAPSHOT
 
 Endpoints:
 - [`/api/deploys`](#endpoint-/api/deploys) - Manages Singularity Deploys for existing requests
@@ -904,6 +904,30 @@ Delete/cancel the expiring scale. This makes the scale request permanent.
 
 
 - - -
+#### **GET** `/api/requests/request/{requestId}/run/{runId}`
+
+Retrieve an active task by runId
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true |  | string |
+| runId | true |  | string |
+
+###### Response
+[SingularityTaskId](#model-SingularityTaskId)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **POST** `/api/requests/request/{requestId}/run`
 
 Schedule a one-off or scheduled Singularity request for immediate execution.
@@ -1662,6 +1686,29 @@ Get the cleanup object for the task, if it exists
 
 
 - - -
+#### **GET** `/api/tasks/task/{taskId}`
+
+Retrieve information about a specific active task.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true |  | string |
+
+###### Response
+[SingularityTask](#model-SingularityTask)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **DELETE** `/api/tasks/task/{taskId}`
 
 Attempt to kill task, optionally overriding an existing cleanup request (that may be waiting for replacement tasks to become healthy)
@@ -1687,29 +1734,6 @@ Attempt to kill task, optionally overriding an existing cleanup request (that ma
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
 | 409    | Task already has a cleanup request (can be overridden with override=true) | - |
-
-
-- - -
-#### **GET** `/api/tasks/task/{taskId}`
-
-Retrieve information about a specific active task.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| taskId | true |  | string |
-
-###### Response
-[SingularityTask](#model-SingularityTask)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
 
 
 - - -
@@ -2138,6 +2162,25 @@ Retrieve a list of queued deploy updates for a specific webhook.
 
 
 - - -
+#### **GET** `/api/webhooks`
+
+Retrieve a list of active webhooks.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityWebhook]](#model-SingularityWebhook)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **POST** `/api/webhooks`
 
 Add a new webhook.
@@ -2152,25 +2195,6 @@ Add a new webhook.
 
 ###### Response
 string
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/webhooks`
-
-Retrieve a list of active webhooks.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityWebhook]](#model-SingularityWebhook)
 
 
 ###### Errors
@@ -2202,8 +2226,8 @@ Retrieve a list of active webhooks.
 | urisCount | int | optional |  |
 | argumentsList | Array[string] | optional |  |
 | containerOrBuilder | [ContainerInfoOrBuilder](#model-ContainerInfoOrBuilder) | optional |  |
-| container | [ContainerInfo](#model-ContainerInfo) | optional |  |
 | user | string | optional |  |
+| container | [ContainerInfo](#model-ContainerInfo) | optional |  |
 | value | string | optional |  |
 | initialized | boolean | optional |  |
 | environment | [Environment](#model-Environment) | optional |  |
@@ -2228,8 +2252,8 @@ Retrieve a list of active webhooks.
 | argumentsCount | int | optional |  |
 | argumentsList | Array[string] | optional |  |
 | containerOrBuilder | [ContainerInfoOrBuilder](#model-ContainerInfoOrBuilder) | optional |  |
-| container | [ContainerInfo](#model-ContainerInfo) | optional |  |
 | user | string | optional |  |
+| container | [ContainerInfo](#model-ContainerInfo) | optional |  |
 | value | string | optional |  |
 | environment | [Environment](#model-Environment) | optional |  |
 | userBytes | [ByteString](#model-ByteString) | optional |  |
@@ -2303,12 +2327,12 @@ Retrieve a list of active webhooks.
 | labels | [Labels](#model-Labels) | optional |  |
 | locationBytes | [ByteString](#model-ByteString) | optional |  |
 | initialized | boolean | optional |  |
-| nameBytes | [ByteString](#model-ByteString) | optional |  |
 | name | string | optional |  |
+| nameBytes | [ByteString](#model-ByteString) | optional |  |
 | environment | string | optional |  |
 | ports | [Ports](#model-Ports) | optional |  |
-| visibility | [Visibility](#model-Visibility) | optional |  Allowable values: FRAMEWORK, CLUSTER, EXTERNAL |
 | environmentBytes | [ByteString](#model-ByteString) | optional |  |
+| visibility | [Visibility](#model-Visibility) | optional |  Allowable values: FRAMEWORK, CLUSTER, EXTERNAL |
 | serializedSize | int | optional |  |
 | portsOrBuilder | [PortsOrBuilder](#model-PortsOrBuilder) | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
@@ -2328,8 +2352,8 @@ Retrieve a list of active webhooks.
 | labels | [Labels](#model-Labels) | optional |  |
 | locationBytes | [ByteString](#model-ByteString) | optional |  |
 | name | string | optional |  |
-| environment | string | optional |  |
 | nameBytes | [ByteString](#model-ByteString) | optional |  |
+| environment | string | optional |  |
 | ports | [Ports](#model-Ports) | optional |  |
 | visibility | [Visibility](#model-Visibility) | optional |  Allowable values: FRAMEWORK, CLUSTER, EXTERNAL |
 | environmentBytes | [ByteString](#model-ByteString) | optional |  |
@@ -2479,8 +2503,8 @@ Retrieve a list of active webhooks.
 | initialized | boolean | optional |  |
 | name | string | optional |  |
 | nameBytes | [ByteString](#model-ByteString) | optional |  |
-| frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
 | sourceBytes | [ByteString](#model-ByteString) | optional |  |
+| frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
 | command | [CommandInfo](#model-CommandInfo) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](#model-FrameworkIDOrBuilder) | optional |  |
 | executorIdOrBuilder | [ExecutorIDOrBuilder](#model-ExecutorIDOrBuilder) | optional |  |
@@ -2489,8 +2513,8 @@ Retrieve a list of active webhooks.
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
 | discovery | [DiscoveryInfo](#model-DiscoveryInfo) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
-| unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | resourcesCount | int | optional |  |
+| unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | initializationErrorString | string | optional |  |
 | discoveryOrBuilder | [DiscoveryInfoOrBuilder](#model-DiscoveryInfoOrBuilder) | optional |  |
 
@@ -2504,13 +2528,13 @@ Retrieve a list of active webhooks.
 | data | [ByteString](#model-ByteString) | optional |  |
 | source | string | optional |  |
 | containerOrBuilder | [ContainerInfoOrBuilder](#model-ContainerInfoOrBuilder) | optional |  |
-| container | [ContainerInfo](#model-ContainerInfo) | optional |  |
 | executorId | [ExecutorID](#model-ExecutorID) | optional |  |
+| container | [ContainerInfo](#model-ContainerInfo) | optional |  |
 | name | string | optional |  |
 | nameBytes | [ByteString](#model-ByteString) | optional |  |
+| frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
 | sourceBytes | [ByteString](#model-ByteString) | optional |  |
 | command | [CommandInfo](#model-CommandInfo) | optional |  |
-| frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](#model-FrameworkIDOrBuilder) | optional |  |
 | executorIdOrBuilder | [ExecutorIDOrBuilder](#model-ExecutorIDOrBuilder) | optional |  |
 | resourcesList | [List[Resource]](#model-List[Resource]) | optional |  |
@@ -2556,21 +2580,21 @@ Retrieve a list of active webhooks.
 | parserForType | [com.google.protobuf.Parser&lt;com.google.protobuf.DescriptorProtos$FileOptions&gt;](#model-com.google.protobuf.Parser&lt;com.google.protobuf.DescriptorProtos$FileOptions&gt;) | optional |  |
 | javaPackageBytes | [ByteString](#model-ByteString) | optional |  |
 | goPackageBytes | [ByteString](#model-ByteString) | optional |  |
-| uninterpretedOptionCount | int | optional |  |
 | javaGenericServices | boolean | optional |  |
+| uninterpretedOptionCount | int | optional |  |
 | javaOuterClassnameBytes | [ByteString](#model-ByteString) | optional |  |
 | initialized | boolean | optional |  |
 | javaOuterClassname | string | optional |  |
-| serializedSize | int | optional |  |
 | pyGenericServices | boolean | optional |  |
+| serializedSize | int | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
+| goPackage | string | optional |  |
 | uninterpretedOptionList | [List[UninterpretedOption]](#model-List[UninterpretedOption]) | optional |  |
 | javaPackage | string | optional |  |
-| goPackage | string | optional |  |
-| uninterpretedOptionOrBuilderList | [List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]](#model-List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]) | optional |  |
-| unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | javaGenerateEqualsAndHash | boolean | optional |  |
+| unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
+| uninterpretedOptionOrBuilderList | [List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]](#model-List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]) | optional |  |
 | initializationErrorString | string | optional |  |
 | ccGenericServices | boolean | optional |  |
 
@@ -3060,8 +3084,8 @@ Retrieve a list of active webhooks.
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| requestId | string | optional |  |
 | user | string | optional |  |
+| requestId | string | optional |  |
 | startMillis | long | optional |  |
 | deployId | string | optional |  |
 | actionId | string | optional |  |
@@ -3072,8 +3096,8 @@ Retrieve a list of active webhooks.
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| requestId | string | optional |  |
 | user | string | optional |  |
+| requestId | string | optional |  |
 | startMillis | long | optional |  |
 | actionId | string | optional |  |
 | expiringAPIRequestObject | [T](#model-T) | optional |  |
@@ -3084,8 +3108,8 @@ Retrieve a list of active webhooks.
 | name | type | required | description |
 |------|------|----------|-------------|
 | revertToInstances | int | optional |  |
-| requestId | string | optional |  |
 | user | string | optional |  |
+| requestId | string | optional |  |
 | startMillis | long | optional |  |
 | actionId | string | optional |  |
 | expiringAPIRequestObject | [T](#model-T) | optional |  |
@@ -3095,8 +3119,8 @@ Retrieve a list of active webhooks.
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| requestId | string | optional |  |
 | user | string | optional |  |
+| requestId | string | optional |  |
 | startMillis | long | optional |  |
 | actionId | string | optional |  |
 | expiringAPIRequestObject | [T](#model-T) | optional |  |
@@ -3667,8 +3691,8 @@ Retrieve a list of active webhooks.
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
 | discovery | [DiscoveryInfo](#model-DiscoveryInfo) | optional |  |
-| unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | resourcesCount | int | optional |  |
+| unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | initializationErrorString | string | optional |  |
 | discoveryOrBuilder | [DiscoveryInfoOrBuilder](#model-DiscoveryInfoOrBuilder) | optional |  |
 
