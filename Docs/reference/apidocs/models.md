@@ -127,8 +127,8 @@ Models:
 | defaultInstanceForType | [CommandInfo](models.md#model-CommandInfo) | optional |  |
 | urisOrBuilderList | [List[? extends org.apache.mesos.Protos$CommandInfo$URIOrBuilder]](models.md#model-List[? extends org.apache.mesos.Protos$CommandInfo$URIOrBuilder]) | optional |  |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$CommandInfo&gt;](models.md#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$CommandInfo&gt;) | optional |  |
-| urisCount | int | optional |  |
 | argumentsCount | int | optional |  |
+| urisCount | int | optional |  |
 | argumentsList | Array[string] | optional |  |
 | containerOrBuilder | [ContainerInfoOrBuilder](models.md#model-ContainerInfoOrBuilder) | optional |  |
 | user | string | optional |  |
@@ -232,12 +232,12 @@ Models:
 | labels | [Labels](models.md#model-Labels) | optional |  |
 | locationBytes | [ByteString](models.md#model-ByteString) | optional |  |
 | initialized | boolean | optional |  |
-| nameBytes | [ByteString](models.md#model-ByteString) | optional |  |
 | name | string | optional |  |
+| nameBytes | [ByteString](models.md#model-ByteString) | optional |  |
 | environment | string | optional |  |
 | ports | [Ports](models.md#model-Ports) | optional |  |
-| visibility | [Visibility](models.md#model-Visibility) | optional |  Allowable values: FRAMEWORK, CLUSTER, EXTERNAL |
 | environmentBytes | [ByteString](models.md#model-ByteString) | optional |  |
+| visibility | [Visibility](models.md#model-Visibility) | optional |  Allowable values: FRAMEWORK, CLUSTER, EXTERNAL |
 | serializedSize | int | optional |  |
 | portsOrBuilder | [PortsOrBuilder](models.md#model-PortsOrBuilder) | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](models.md#model-Map[FieldDescriptor,Object]) | optional |  |
@@ -257,8 +257,8 @@ Models:
 | labels | [Labels](models.md#model-Labels) | optional |  |
 | locationBytes | [ByteString](models.md#model-ByteString) | optional |  |
 | name | string | optional |  |
-| environment | string | optional |  |
 | nameBytes | [ByteString](models.md#model-ByteString) | optional |  |
+| environment | string | optional |  |
 | ports | [Ports](models.md#model-Ports) | optional |  |
 | visibility | [Visibility](models.md#model-Visibility) | optional |  Allowable values: FRAMEWORK, CLUSTER, EXTERNAL |
 | environmentBytes | [ByteString](models.md#model-ByteString) | optional |  |
@@ -312,6 +312,7 @@ Models:
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| targetFolderRelativeToTask | string | optional |  |
 | md5sum | string | optional |  |
 | filename | string | optional |  |
 | name | string | optional |  |
@@ -407,8 +408,8 @@ Models:
 | initialized | boolean | optional |  |
 | name | string | optional |  |
 | nameBytes | [ByteString](models.md#model-ByteString) | optional |  |
-| frameworkId | [FrameworkID](models.md#model-FrameworkID) | optional |  |
 | sourceBytes | [ByteString](models.md#model-ByteString) | optional |  |
+| frameworkId | [FrameworkID](models.md#model-FrameworkID) | optional |  |
 | command | [CommandInfo](models.md#model-CommandInfo) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](models.md#model-FrameworkIDOrBuilder) | optional |  |
 | executorIdOrBuilder | [ExecutorIDOrBuilder](models.md#model-ExecutorIDOrBuilder) | optional |  |
@@ -417,8 +418,8 @@ Models:
 | allFields | [Map[FieldDescriptor,Object]](models.md#model-Map[FieldDescriptor,Object]) | optional |  |
 | discovery | [DiscoveryInfo](models.md#model-DiscoveryInfo) | optional |  |
 | descriptorForType | [Descriptor](models.md#model-Descriptor) | optional |  |
-| unknownFields | [UnknownFieldSet](models.md#model-UnknownFieldSet) | optional |  |
 | resourcesCount | int | optional |  |
+| unknownFields | [UnknownFieldSet](models.md#model-UnknownFieldSet) | optional |  |
 | initializationErrorString | string | optional |  |
 | discoveryOrBuilder | [DiscoveryInfoOrBuilder](models.md#model-DiscoveryInfoOrBuilder) | optional |  |
 
@@ -436,9 +437,9 @@ Models:
 | container | [ContainerInfo](models.md#model-ContainerInfo) | optional |  |
 | name | string | optional |  |
 | nameBytes | [ByteString](models.md#model-ByteString) | optional |  |
-| command | [CommandInfo](models.md#model-CommandInfo) | optional |  |
-| sourceBytes | [ByteString](models.md#model-ByteString) | optional |  |
 | frameworkId | [FrameworkID](models.md#model-FrameworkID) | optional |  |
+| sourceBytes | [ByteString](models.md#model-ByteString) | optional |  |
+| command | [CommandInfo](models.md#model-CommandInfo) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](models.md#model-FrameworkIDOrBuilder) | optional |  |
 | executorIdOrBuilder | [ExecutorIDOrBuilder](models.md#model-ExecutorIDOrBuilder) | optional |  |
 | resourcesList | [List[Resource]](models.md#model-List[Resource]) | optional |  |
@@ -451,6 +452,7 @@ Models:
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| targetFolderRelativeToTask | string | optional |  |
 | md5sum | string | optional |  |
 | url | string | optional |  |
 | filename | string | optional |  |
@@ -583,8 +585,8 @@ Models:
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| commandOrBuilder | [CommandInfoOrBuilder](models.md#model-CommandInfoOrBuilder) | optional |  |
 | gracePeriodSeconds | double | optional |  |
+| commandOrBuilder | [CommandInfoOrBuilder](models.md#model-CommandInfoOrBuilder) | optional |  |
 | httpOrBuilder | [HTTPOrBuilder](models.md#model-HTTPOrBuilder) | optional |  |
 | consecutiveFailures | int | optional |  |
 | intervalSeconds | double | optional |  |
@@ -668,8 +670,8 @@ Models:
 | serializedSize | int | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](models.md#model-Map[FieldDescriptor,Object]) | optional |  |
 | descriptorForType | [Descriptor](models.md#model-Descriptor) | optional |  |
-| uninterpretedOptionList | [List[UninterpretedOption]](models.md#model-List[UninterpretedOption]) | optional |  |
 | messageSetWireFormat | boolean | optional |  |
+| uninterpretedOptionList | [List[UninterpretedOption]](models.md#model-List[UninterpretedOption]) | optional |  |
 | unknownFields | [UnknownFieldSet](models.md#model-UnknownFieldSet) | optional |  |
 | uninterpretedOptionOrBuilderList | [List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]](models.md#model-List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]) | optional |  |
 | initializationErrorString | string | optional |  |
@@ -689,8 +691,8 @@ Models:
 | hostname | string | optional |  |
 | attributesCount | int | optional |  |
 | initialized | boolean | optional |  |
-| attributesList | [List[Attribute]](models.md#model-List[Attribute]) | optional |  |
 | idOrBuilder | [OfferIDOrBuilder](models.md#model-OfferIDOrBuilder) | optional |  |
+| attributesList | [List[Attribute]](models.md#model-List[Attribute]) | optional |  |
 | frameworkId | [FrameworkID](models.md#model-FrameworkID) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](models.md#model-FrameworkIDOrBuilder) | optional |  |
 | serializedSize | int | optional |  |
@@ -700,8 +702,8 @@ Models:
 | hostnameBytes | [ByteString](models.md#model-ByteString) | optional |  |
 | descriptorForType | [Descriptor](models.md#model-Descriptor) | optional |  |
 | attributesOrBuilderList | [List[? extends org.apache.mesos.Protos$AttributeOrBuilder]](models.md#model-List[? extends org.apache.mesos.Protos$AttributeOrBuilder]) | optional |  |
-| unknownFields | [UnknownFieldSet](models.md#model-UnknownFieldSet) | optional |  |
 | resourcesCount | int | optional |  |
+| unknownFields | [UnknownFieldSet](models.md#model-UnknownFieldSet) | optional |  |
 | id | [OfferID](models.md#model-OfferID) | optional |  |
 | initializationErrorString | string | optional |  |
 
@@ -769,6 +771,7 @@ Models:
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| targetFolderRelativeToTask | string | optional |  |
 | s3Bucket | string | optional |  |
 | md5sum | string | optional |  |
 | filename | string | optional |  |
@@ -781,6 +784,7 @@ Models:
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| targetFolderRelativeToTask | string | optional |  |
 | s3Bucket | string | optional |  |
 | md5sum | string | optional |  |
 | filename | string | optional |  |
@@ -1034,6 +1038,7 @@ Models:
 |------|------|----------|-------------|
 | hostAddress | string | optional |  |
 | hostname | string | optional |  |
+| mesosConnected | boolean | optional |  |
 | driverStatus | string | optional |  |
 | master | boolean | optional |  |
 | mesosMaster | string | optional |  |
@@ -1155,6 +1160,7 @@ Models:
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| hideEvenNumberAcrossRacksHint | boolean | optional |  |
 | readOnlyGroups | [Set](models.md#model-Set) | optional |  |
 | schedule | string | optional |  |
 | skipHealthchecks | boolean | optional |  |
@@ -1566,8 +1572,8 @@ Models:
 |------|------|----------|-------------|
 | commandOrBuilder | [CommandInfoOrBuilder](models.md#model-CommandInfoOrBuilder) | optional |  |
 | defaultInstanceForType | [TaskInfo](models.md#model-TaskInfo) | optional |  |
-| taskIdOrBuilder | [TaskIDOrBuilder](models.md#model-TaskIDOrBuilder) | optional |  |
 | taskId | [TaskID](models.md#model-TaskID) | optional |  |
+| taskIdOrBuilder | [TaskIDOrBuilder](models.md#model-TaskIDOrBuilder) | optional |  |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$TaskInfo&gt;](models.md#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$TaskInfo&gt;) | optional |  |
 | slaveIdOrBuilder | [SlaveIDOrBuilder](models.md#model-SlaveIDOrBuilder) | optional |  |
 | resourcesOrBuilderList | [List[? extends org.apache.mesos.Protos$ResourceOrBuilder]](models.md#model-List[? extends org.apache.mesos.Protos$ResourceOrBuilder]) | optional |  |
@@ -1590,8 +1596,8 @@ Models:
 | allFields | [Map[FieldDescriptor,Object]](models.md#model-Map[FieldDescriptor,Object]) | optional |  |
 | descriptorForType | [Descriptor](models.md#model-Descriptor) | optional |  |
 | discovery | [DiscoveryInfo](models.md#model-DiscoveryInfo) | optional |  |
-| unknownFields | [UnknownFieldSet](models.md#model-UnknownFieldSet) | optional |  |
 | resourcesCount | int | optional |  |
+| unknownFields | [UnknownFieldSet](models.md#model-UnknownFieldSet) | optional |  |
 | initializationErrorString | string | optional |  |
 | discoveryOrBuilder | [DiscoveryInfoOrBuilder](models.md#model-DiscoveryInfoOrBuilder) | optional |  |
 
