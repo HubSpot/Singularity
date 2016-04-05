@@ -1,6 +1,6 @@
 ### Incremental Deploys
 
-As of `0.4.12` Singularity supports an incremental deploy for finer-grained control when rolling out new changes. This deploy is enabled via a few extra fields on the `SingularityDeploy` object when starting a deploy:
+As of `0.5.0` Singularity supports an incremental deploy for finer-grained control when rolling out new changes. This deploy is enabled via a few extra fields on the `SingularityDeploy` object when starting a deploy:
 
 - `deployInstanceCountPerStep`: Deploy this many instances at a time until the total instance count for the request is reached is reached (`Optional<Integer>`, default is all instances at once)
 - `deployStepWaitTimeMs`: Wait this many milliseconds between deploy steps before continuing to deploy the next `deployInstanceCountPerStep` instances (`Optional<Integer>`, default is 0, i.e. continue immediately)
