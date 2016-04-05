@@ -20,33 +20,30 @@
 <header class='detail-header'>
     <div class="row">
         {{! Left side }}
-        <div class="col-md-12">
-            {{#with data.task.taskRequest}}
+        <div class="col-md-10">
+            {{#with data.task}}
+                <div style='font-weight: 500;'>
                 <ul class="breadcrumb">
                     <li>
                         Request
-                        <a href="{{appRoot}}/request/{{ request.id }}">
-                            {{ request.id }}
+                        <a href="{{appRoot}}/request/{{ taskRequest.request.id }}">
+                            {{ taskRequest.request.id }}
                         </a>
                     </li>
                     <li>
                         Deploy
-                        <a href="{{appRoot}}/request/{{ request.id }}/deploy/{{ deploy.id }}">
-                            {{ deploy.id }}
+                        <a href="{{appRoot}}/request/{{ taskRequest.request.id }}/deploy/{{ taskRequest.deploy.id }}">
+                            {{ taskRequest.deploy.id }}
                         </a>
                     </li>
+                    <li>
+                        Instance {{ taskId.instanceNo }}
+                    </li>
                 </ul>
+                </div>
             {{/with}}
         </div>
-    </div>
-    <div class="row">
-        <div class="col-md-7">
-            <h3>
-                {{ data.task.taskId.id }}
-            </h3>
-        </div>
-        {{! Right side, buttons }}
-        <div class="col-md-4 button-container">
+        <div class="col-md-2 button-container">
             <a class="btn btn-default" data-action="viewObjectJSON">
                 JSON
             </a>
@@ -70,13 +67,17 @@
 </header>
 
 {{#if data.taskUpdates}}
-    {{#withLast data.taskUpdates}}
-        <div class="well text-muted">
-            {{humanizeText taskState}} as of
+    <div class="well text-muted">
+        {{#withLast data.taskUpdates}}
+            <span class="label label-{{getLabelClass taskState}}">{{humanizeText taskState}}</span>
+            as of
             {{timestampFromNow timestamp}}
+            <span style="float: right;">
+                {{ ../data.task.offer.hostname }}
+            </span>
             {{#if statusMessage}}
-                &mdash; {{ statusMessage }}
+                <br />{{ statusMessage }}
             {{/if}}
-        </div>
-    {{/withLast}}
+        {{/withLast}}
+    </div>
 {{/if}}
