@@ -72,11 +72,11 @@ public class SMTPConfiguration {
 
   @NotNull
   @JsonProperty
-  private Optional<String> taskLogErrorRegex = Optional.of("ERROR|EXCEPTION");
+  private Optional<String> taskLogErrorRegex = Optional.absent();
 
   @NotNull
   @JsonProperty
-  private Optional<Boolean> taskLogErrorRegexCaseSensitive = Optional.of(false);
+  private Optional<Boolean> taskLogErrorRegexCaseSensitive = Optional.absent();
 
   @NotNull
   @JsonProperty
