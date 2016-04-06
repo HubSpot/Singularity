@@ -191,12 +191,12 @@ public class SingularityRequest {
   }
 
   @JsonIgnore
-  public String getQuartzScheduleSafe() {
+  public Optional<String> getQuartzScheduleOrSchedule() {
     if (quartzSchedule.isPresent()) {
-      return quartzSchedule.get();
+      return quartzSchedule;
+    } else {
+      return schedule;
     }
-
-    return schedule.get();
   }
 
   @JsonIgnore

@@ -112,10 +112,20 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
 
       final CronExpression cronExpression;
 
+      Optional<String> maybeSchedule = request.getRequest().getQuartzScheduleOrSchedule();
+      if (!maybeSchedule.isPresent()) {
+        String msg = String.format("Cron doesn't exist for {}", taskId.toString());
+        LOG.warn(msg);
+        exceptionNotifier.notify(msg, ImmutableMap.of("taskId", taskId.toString()));
+        return Optional.absent();
+      }
+
+      String schedule = maybeSchedule.get();
+
       try {
-        cronExpression = new CronExpression(request.getRequest().getQuartzScheduleSafe());
+        cronExpression = new CronExpression(schedule);
       } catch (ParseException e) {
-        LOG.warn("Unable to parse cron for {} ({})", taskId, request.getRequest().getQuartzScheduleSafe(), e);
+        LOG.warn("Unable to parse cron for {} ({})", taskId, schedule, e);
         exceptionNotifier.notify(e, ImmutableMap.of("taskId", taskId.toString()));
         return Optional.absent();
       }
@@ -124,7 +134,7 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
       final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(startDate);
 
       if (nextRunAtDate == null) {
-        String msg = String.format("No next run date found for %s (%s)", taskId, request.getRequest().getQuartzScheduleSafe());
+        String msg = String.format("No next run date found for %s (%s)", taskId, schedule);
         LOG.warn(msg);
         exceptionNotifier.notify(msg, ImmutableMap.of("taskId", taskId.toString()));
         return Optional.absent();

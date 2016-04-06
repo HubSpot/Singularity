@@ -662,7 +662,12 @@ public class SingularityScheduler {
         LOG.info("Scheduling requested immediate run of {}", request.getId());
       } else {
         try {
-          final CronExpression cronExpression = new CronExpression(request.getQuartzScheduleSafe());
+          Optional<String> maybeSchedule = request.getQuartzScheduleOrSchedule();
+          if (!maybeSchedule.isPresent()) {
+            LOG.warn("Scheduled Reqeust {} doesn't have a schedule.", request.getId());
+            return Optional.absent();
+          }
+          final CronExpression cronExpression = new CronExpression(maybeSchedule.get());
 
           final Date scheduleFrom = new Date(now);
           final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(scheduleFrom);
