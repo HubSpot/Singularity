@@ -127,12 +127,39 @@ public class MailTemplateHelpers {
     return logTails;
   }
 
-  private Optional<String> getLogErrorRegex(final Optional<SingularityTask> task) {
+  private Optional<Pattern> getLogErrorRegex(final Optional<SingularityTask> task) {
+    Optional<String> maybeRegex;
+    SMTPConfiguration configuration = smtpConfiguration.get();
     if (task.isPresent() && task.get().getTaskRequest().getRequest().getTaskLogErrorRegex().isPresent()
     && !task.get().getTaskRequest().getRequest().getTaskLogErrorRegex().get().equals("")) {
-      return task.get().getTaskRequest().getRequest().getTaskLogErrorRegex();
+      maybeRegex = task.get().getTaskRequest().getRequest().getTaskLogErrorRegex();
     } else {
-      return smtpConfiguration.get().getTaskLogErrorRegex();
+      maybeRegex = configuration.getTaskLogErrorRegex();
+    }
+    if (!maybeRegex.isPresent()) {
+      LOG.trace("No task log error regex provided.");
+      return Optional.absent();
+    }
+    String regex = maybeRegex.get();
+
+    Boolean caseSensitive;
+    if (task.isPresent() && task.get().getTaskRequest().getRequest().getTaskLogErrorRegexCaseSensitive().isPresent()) {
+      caseSensitive = task.get().getTaskRequest().getRequest().getTaskLogErrorRegexCaseSensitive().get();
+    } else if (configuration.getTaskLogErrorRegexCaseSensitive().isPresent()) {
+      caseSensitive = configuration.getTaskLogErrorRegexCaseSensitive().get();
+    } else {
+      caseSensitive = true;
+    }
+
+    try {
+      if (caseSensitive) {
+        return Optional.of(Pattern.compile(regex));
+      } else {
+        return Optional.of(Pattern.compile(regex, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
+      }
+    } catch (PatternSyntaxException e) {
+      LOG.error("Invalid task log error regex supplied: \"{}\". Received exception: {}", regex, e);
+      return Optional.absent();
     }
   }
 
@@ -180,22 +207,15 @@ public class MailTemplateHelpers {
   private Optional<Long> getMaybeTaskLogReadOffset(final String slaveHostname, final String fullPath, final Long logLength, Optional<SingularityTask> task) {
     long offset = 0;
     long maxOffset = smtpConfiguration.get().getMaxTaskLogSearchOffset();
-    Optional<String> maybeRegex = getLogErrorRegex(task);
-    String regex;
-    if (maybeRegex.isPresent()) {
-      regex = maybeRegex.get();
-    } else {
-      LOG.trace("No task log error regex provided. Reading from bottom of file instead.");
-      return getMaybeTaskLogEndOfFileOffset(slaveHostname, fullPath, logLength);
-    }
-    long length = logLength + regex.length(); // Get extra so that we can be sure to find the error
+    Optional<Pattern> maybePattern = getLogErrorRegex(task);
     Pattern pattern;
-    try {
-      pattern = Pattern.compile(regex);
-    } catch (PatternSyntaxException e) {
-      LOG.error("Invalid task log error regex supplied: \"{}\". Reading from bottom of file instead. Received exception: {}", regex, e);
+    if (maybePattern.isPresent()) {
+      pattern = maybePattern.get();
+    } else {
+      LOG.trace("Could not get regex pattern. Reading from bottom of file instead.");
       return getMaybeTaskLogEndOfFileOffset(slaveHostname, fullPath, logLength);
     }
+    long length = logLength + pattern.toString().length(); // Get extra so that we can be sure to find the error
     Optional<MesosFileChunkObject> logChunkObject;
     Optional<MesosFileChunkObject> previous = Optional.absent();
 

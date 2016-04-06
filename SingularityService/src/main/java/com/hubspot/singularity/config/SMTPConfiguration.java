@@ -72,7 +72,11 @@ public class SMTPConfiguration {
 
   @NotNull
   @JsonProperty
-  private Optional<String> taskLogErrorRegex = Optional.of("ERROR");
+  private Optional<String> taskLogErrorRegex = Optional.absent();
+
+  @NotNull
+  @JsonProperty
+  private Optional<Boolean> taskLogErrorRegexCaseSensitive = Optional.absent();
 
   @NotNull
   @JsonProperty
@@ -236,6 +240,10 @@ public class SMTPConfiguration {
   public Optional<String> getTaskLogErrorRegex() { return taskLogErrorRegex; }
 
   public void setTaskLogErrorRegex(Optional<String> taskLogErrorRegex) { this.taskLogErrorRegex = taskLogErrorRegex; }
+
+  public Optional<Boolean> getTaskLogErrorRegexCaseSensitive() { return taskLogErrorRegexCaseSensitive; }
+
+  public void setTaskLogErrorRegexCaseSensitive(Optional<Boolean> taskLogErrorRegexCaseSensitive) { this.taskLogErrorRegexCaseSensitive = taskLogErrorRegexCaseSensitive; }
 
   public Long getMaxTaskLogSearchOffset() { return maxTaskLogSearchOffset; }
 
