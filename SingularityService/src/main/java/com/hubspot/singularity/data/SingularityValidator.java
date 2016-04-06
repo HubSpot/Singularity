@@ -126,7 +126,11 @@ public class SingularityValidator {
     String quartzSchedule = null;
 
     if (request.isScheduled()) {
-      final String originalSchedule = request.getQuartzScheduleSafe();
+      final Optional<String> maybeOriginalSchedule = request.getQuartzScheduleOrSchedule();
+
+      checkBadRequest(maybeOriginalSchedule.isPresent(), "Specify at least one of schedule or quartzSchedule");
+
+      final String originalSchedule = maybeOriginalSchedule.get();
 
       checkBadRequest(request.getQuartzSchedule().isPresent() || request.getSchedule().isPresent(), "Specify at least one of schedule or quartzSchedule");
 
