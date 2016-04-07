@@ -72,11 +72,8 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
-<<<<<<< HEAD
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker.CheckTaskState;
-=======
 import com.hubspot.singularity.data.SingularityValidator;
->>>>>>> update_on_deploy
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation.ReconciliationState;
 import com.sun.jersey.api.ConflictException;
 
