@@ -14,7 +14,7 @@
         {{/if}}
             {{#with data.task}}
                 <ul class="breadcrumb medium-weight">
-                    <li>
+                    <li class="breadcrumb-wide">
                         Request
                         <a href="{{appRoot}}/request/{{ taskRequest.request.id }}">
                             {{ taskRequest.request.id }}
@@ -29,9 +29,6 @@
                     <li>
                         Instance {{ taskId.instanceNo }}
                     </li>
-                    <span style="float: right;">
-                        Host: {{ ../data.task.offer.hostname }}
-                    </span>
                 </ul>
             {{/with}}
         </div>
