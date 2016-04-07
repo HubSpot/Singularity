@@ -69,8 +69,8 @@ public class SingularityAuthorizationHelper {
 
   public void checkAdminAuthorization(Optional<SingularityUser> user) {
     if (authEnabled) {
-      if (user.isPresent() && !adminGroups.isEmpty()) {
-        checkForbidden(groupsIntersect(user.get().getGroups(), adminGroups), "%s must be part of one or more admin groups: %s", user.get().getId(), JavaUtils.COMMA_JOINER.join(adminGroups));
+      if (!adminGroups.isEmpty()) {
+        checkForbidden(user.isPresent() && groupsIntersect(user.get().getGroups(), adminGroups), "%s must be part of one or more admin groups: %s", user.get().getId(), JavaUtils.COMMA_JOINER.join(adminGroups));
       }
     }
   }
