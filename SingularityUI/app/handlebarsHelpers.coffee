@@ -183,3 +183,19 @@ Handlebars.registerHelper 'ifShellRequestHasOutputFilename', (statuses, options)
       if status.outputFilename
         return options.fn @
     return options.inverse @
+
+Handlebars.registerHelper 'reverseEach', (context, options) ->
+  ret = ''
+  if context and context.length > 0
+    i = context.length - 1
+    while i >= 0
+      ret += options.fn(context[i])
+      i--
+  else
+    ret = options.inverse(this)
+  ret
+
+Handlebars.registerHelper 'ifCurrentState', (state, updates, options) ->
+    lastState = _.last updates
+    if lastState.taskState is state then options.fn @ else options.inverse @
+
