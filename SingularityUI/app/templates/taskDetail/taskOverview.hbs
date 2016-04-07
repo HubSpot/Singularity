@@ -1,38 +1,39 @@
 {{! Part of taskBase }}
 <header class='detail-header'>
+        {{#with data.task}}
+            <ul class="breadcrumb">
+                <li class="breadcrumb-wide">
+                    Request
+                    <a href="{{appRoot}}/request/{{ taskRequest.request.id }}">
+                        {{ taskRequest.request.id }}
+                    </a>
+                </li>
+                <li>
+                    Deploy
+                    <a href="{{appRoot}}/request/{{ taskRequest.request.id }}/deploy/{{ taskRequest.deploy.id }}">
+                        {{ taskRequest.deploy.id }}
+                    </a>
+                </li>
+                <li>
+                    Instance {{ taskId.instanceNo }}
+                </li>
+                <span class="pull-right">
+                    <strong>Hostname: </strong>{{ ../data.task.offer.hostname }}
+                </span>
+            </ul>
+        {{/with}}
     <div class="row">
         {{! Left side }}
         {{#if data.taskUpdates}}
             {{#withLast data.taskUpdates}}
-                <div class="col-md-2 task-state-header">
-                    <h3><span class="label label-{{getLabelClass taskState}} task-state-header-label">{{humanizeText taskState}}</span></h3>
+                <div class="col-xs-6 task-state-header">
+                    <h3><span class="label label-{{getLabelClass taskState}} task-state-header-label">{{humanizeText taskState}}{{#if ../data.isStillRunning}}{{#if ../data.cleanup}} ({{humanizeText ../data.cleanup.cleanupType}}){{/if}}{{/if}}</span></h3>
                 </div>
             {{/withLast}}
-            <div class="col-md-{{#if data.isStillRunning}}7{{else}}9{{/if}}">
+        <div class="col-xs-6 button-container">
         {{else}}
-            <div class="col-md-{{#if data.isStillRunning}}8{{else}}10{{/if}}">
+        <div class="col-xs-12 button-container">
         {{/if}}
-            {{#with data.task}}
-                <ul class="breadcrumb medium-weight">
-                    <li class="breadcrumb-wide">
-                        Request
-                        <a href="{{appRoot}}/request/{{ taskRequest.request.id }}">
-                            {{ taskRequest.request.id }}
-                        </a>
-                    </li>
-                    <li>
-                        Deploy
-                        <a href="{{appRoot}}/request/{{ taskRequest.request.id }}/deploy/{{ taskRequest.deploy.id }}">
-                            {{ taskRequest.deploy.id }}
-                        </a>
-                    </li>
-                    <li>
-                        Instance {{ taskId.instanceNo }}
-                    </li>
-                </ul>
-            {{/with}}
-        </div>
-        <div class="col-md-{{#if data.isStillRunning}}3{{else}}1{{/if}} button-container">
             <a class="btn btn-default" data-action="viewObjectJSON">
                 JSON
             </a>
@@ -56,19 +57,11 @@
 </header>
 
 {{#if data.isStillRunning}}
-    {{! If there's a TaskCleanup object associated with this task, display its info }}
-    {{#if data.cleanup}}
-        <div class="alert alert-warning" role="alert">
-            <b>Task is cleaning:</b> {{ data.cleanup.cleanupType }}
-            {{#if data.cleanup.message}}
-                ({{ data.cleanup.message }})
-            {{/if}}
-        </div>
-    {{else}}
+    {{#unless data.cleanup}}
         {{#if data.isCleaning}}
             <div class="alert alert-warning" role="alert">
                 <b>Task is terminating:</b> To issue a non-graceful termination (kill -term), click Destroy Task.
             </div>
         {{/if}}
-    {{/if}}
+    {{/unless}}
 {{/if}}
