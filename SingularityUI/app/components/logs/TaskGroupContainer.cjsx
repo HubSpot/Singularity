@@ -36,6 +36,12 @@ class TaskGroupContainer extends React.Component
 
 
 mapStateToProps = (state, ownProps) ->
+  unless ownProps.taskGroupId of state.taskGroups
+    return {
+      initialDataLoaded: false
+      fileExists: false
+      terminated: false
+    }
   taskGroup = state.taskGroups[ownProps.taskGroupId]
   tasks = taskGroup.taskIds.map (taskId) -> state.tasks[taskId]
 

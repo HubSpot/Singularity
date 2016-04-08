@@ -18,7 +18,7 @@ class TaskGroupHeader extends React.Component
     if @props.tasks.length > 1
       console.log @props.tasks
       <span className="instance-link">Viewing Instances {@props.tasks.map(({taskId}) -> getInstanceNumberFromTaskId(taskId)).join(', ')}</span>
-    else
+    else if @props.tasks.length > 0
       <span>
         <div className="width-constrained">
           <a className="instance-link" href={"#{config.appRoot}/task/#{@props.tasks[0].taskId}"}>Instance {getInstanceNumberFromTaskId(@props.tasks[0].taskId)}</a>
@@ -28,6 +28,8 @@ class TaskGroupHeader extends React.Component
           {@props.tasks[0].lastTaskStatus}
         </div>
       </span>
+    else
+      <div className="width-constrained" />
 
   renderTaskLegend: ->
     if @props.tasks.length > 1
@@ -56,6 +58,11 @@ class TaskGroupHeader extends React.Component
     </div>
 
 mapStateToProps = (state, ownProps) ->
+  unless ownProps.taskGroupId of state.taskGroups
+    return {
+      taskGroupsCount: state.taskGroups.length
+      tasks: []
+    }
   taskGroupsCount: state.taskGroups.length
   tasks: state.taskGroups[ownProps.taskGroupId].taskIds.map (taskId) -> state.tasks[taskId]
 
