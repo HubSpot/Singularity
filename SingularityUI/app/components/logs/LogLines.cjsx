@@ -56,7 +56,8 @@ class LogLines extends React.Component
         offset={offset}
         taskId={taskId}
         timestamp={timestamp}
-        isHighlighted={offset is @props.initialOffset} />
+        isHighlighted={offset is @props.initialOffset}
+        color={@props.colorMap[taskId]} />
 
   renderLoadingMore: ->
     if @props.initialDataLoaded
@@ -91,6 +92,13 @@ mapStateToProps = (state, ownProps) ->
   taskGroup = state.taskGroups[ownProps.taskGroupId]
   tasks = taskGroup.taskIds.map (taskId) -> state.tasks[taskId]
 
+  colorMap = {}
+  if taskGroup.taskIds.length > 1
+    i = 0
+    for taskId in taskGroup.taskIds
+      colorMap[taskId] = "hsla(#{(360 / taskGroup.taskIds.length) * i}, 100%, 50%, 0.1)"
+      i++
+
   logLines: taskGroup.logLines
   updatedAt: taskGroup.updatedAt
   prependedLineCount: taskGroup.prependedLineCount
@@ -103,6 +111,7 @@ mapStateToProps = (state, ownProps) ->
   reachedEndOfFile: _.all(tasks.map ({maxOffset, filesize}) -> maxOffset >= filesize)
   bytesRemainingBefore: sum(_.pluck(tasks, 'minOffset'))
   bytesRemainingAfter: sum(tasks.map ({filesize, maxOffset}) -> Math.max(filesize - maxOffset, 0))
+  colorMap: colorMap
 
 mapDispatchToProps = { taskGroupTop, taskGroupBottom }
 

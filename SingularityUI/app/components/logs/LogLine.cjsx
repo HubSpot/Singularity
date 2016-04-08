@@ -11,6 +11,7 @@ class LogLine extends React.Component
     content: React.PropTypes.string.isRequired
     taskId: React.PropTypes.string.isRequired
     showDebugInfo: React.PropTypes.bool
+    color: React.PropTypes.string
 
     search: React.PropTypes.string
     clickPermalink: React.PropTypes.func.isRequired

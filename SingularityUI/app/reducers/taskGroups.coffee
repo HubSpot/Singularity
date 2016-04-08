@@ -35,16 +35,18 @@ updateTaskGroup = (state, taskGroupId, update) ->
 filterLogLines = (lines, search) ->
   _.filter lines, ({data}) -> new RegExp(search).test(data)
 
-parseLineTimestamp = (line) ->
-  match = line.match(/^\d{2}:\d{2}:\d{2}\.\d{3}/)
-  if match
-    return moment(match, 'HH:mm:ss.SSS').valueOf()
-  else
-    match = line.match(/^[A-Z ]+\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3})\]/)
-    if match
-      return moment(match[1], 'YYYY-MM-DD HH:mm:ss,SSS').valueOf()
+TIMESTAMP_REGEX = [
+  [/^(\d{2}:\d{2}:\d{2}\.\d{3})/, 'HH:mm:ss.SSS']
+  [/^[A-Z ]+\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3})/, 'YYYY-MM-DD HH:mm:ss,SSS']
+  [/^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3})/, 'YYYY-MM-DD HH:mm:ss,SSS']
+]
 
-    return null
+parseLineTimestamp = (line) ->
+  for group in TIMESTAMP_REGEX
+    match = line.match(group[0])
+    if match
+      return moment(match, group[1]).valueOf()
+  return null
 
 buildEmptyBuffer = (taskId, offset) -> { offset, taskId, data: '' }
 
