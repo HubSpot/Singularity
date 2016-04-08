@@ -16,7 +16,6 @@ class TaskGroupHeader extends React.Component
 
   renderInstanceInfo: ->
     if @props.tasks.length > 1
-      console.log @props.tasks
       <span className="instance-link">Viewing Instances {@props.tasks.map(({taskId}) -> getInstanceNumberFromTaskId(taskId)).join(', ')}</span>
     else if @props.tasks.length > 0
       <span>
