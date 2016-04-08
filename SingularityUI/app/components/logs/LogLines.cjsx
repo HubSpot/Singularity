@@ -52,7 +52,7 @@ class LogLines extends React.Component
     @props.logLines.map ({data, offset, taskId, timestamp}) =>
       <LogLine
         content={data}
-        key={offset}
+        key={taskId + '_' + offset}
         offset={offset}
         taskId={taskId}
         timestamp={timestamp}
