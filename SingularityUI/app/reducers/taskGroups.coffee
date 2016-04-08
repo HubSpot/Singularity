@@ -36,10 +36,14 @@ filterLogLines = (lines, search) ->
   _.filter lines, ({data}) -> new RegExp(search).test(data)
 
 parseLineTimestamp = (line) ->
-  match = line.match(/^\d{2}:\d{2}:\d{2}.\d{3}/)
+  match = line.match(/^\d{2}:\d{2}:\d{2}\.\d{3}/)
   if match
     return moment(match, 'HH:mm:ss.SSS').valueOf()
   else
+    match = line.match(/^[A-Z ]+\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3})\]/)
+    if match
+      return moment(match[1], 'YYYY-MM-DD HH:mm:ss,SSS').valueOf()
+
     return null
 
 buildEmptyBuffer = (taskId, offset) -> { offset, taskId, data: '' }
