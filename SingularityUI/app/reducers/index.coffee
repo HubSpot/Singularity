@@ -1,7 +1,8 @@
 { combineReducers } = require 'redux'
 
 taskGroups = require './taskGroups'
-taskIds = require './taskIds'
+activeRequest = require './activeRequest'
+tasks = require './tasks'
 
 path = (state='', action) ->
   if action.type is 'LOG_INIT'
@@ -34,11 +35,12 @@ logRequestLength = (state=30000, action) ->
 maxLines = (state=1000, action) ->
   return state
 
-activeRequest = (state={}, action) ->
+showDebugInfo = (state=false, action) ->
   if action.type is 'LOG_INIT'
-    return Object.assign({}, state, {requestId: action.requestId})
-  if action.type is 'REQUEST_ACTIVE_TASKS'
-    return Object.assign({}, state, {activeTasks: action.tasks})
+    return Boolean(window.localStorage.showDebugInfo) || false
+  if action.type is 'LOG_DEBUG_INFO'
+    window.localStorage.showDebugInfo = action.value
+    return action.value
   return state
 
-module.exports = combineReducers({taskGroups, taskIds, activeRequest, path, activeColor, colors, viewMode, search, logRequestLength, maxLines})
+module.exports = combineReducers({showDebugInfo, taskGroups, tasks, activeRequest, path, activeColor, colors, viewMode, search, logRequestLength, maxLines})

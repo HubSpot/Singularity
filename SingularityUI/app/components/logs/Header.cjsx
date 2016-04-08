@@ -4,18 +4,18 @@ SearchDropdown = require './SearchDropdown'
 TasksDropdown = require './TasksDropdown'
 
 { connect } = require 'react-redux'
-{ switchViewMode, scrollToTop, scrollToBottom } = require '../../actions/log'
+{ switchViewMode, scrollAllToTop, scrollAllToBottom } = require '../../actions/log'
 
 class Header extends React.Component
   @propTypes:
     requestId: React.PropTypes.string.isRequired
     path: React.PropTypes.string.isRequired
-    taskIdCount: React.PropTypes.number.isRequired
+    multipleTasks: React.PropTypes.bool.isRequired
     viewMode: React.PropTypes.string.isRequired
 
     switchViewMode: React.PropTypes.func.isRequired
-    scrollToBottom: React.PropTypes.func.isRequired
-    scrollToTop: React.PropTypes.func.isRequired
+    scrollAllToBottom: React.PropTypes.func.isRequired
+    scrollAllToTop: React.PropTypes.func.isRequired
 
   toggleHelp: ->
     # TODO
@@ -28,21 +28,22 @@ class Header extends React.Component
         <li key={i}>{subpath}</li>
 
   renderViewButtons: ->
-    if @props.taskIdCount > 1
+    if @props.multipleTasks
       <div className="btn-group" role="group" title="Select View Type">
         <button type="button" className="btn btn-sm btn-default no-margin #{if @props.viewMode is 'unified' then 'active'}" onClick={=> @props.switchViewMode('unified')}>Unified</button>
         <button type="button" className="btn btn-sm btn-default no-margin #{if @props.viewMode is 'split' then 'active'}" onClick={=> @props.switchViewMode('split')}>Split</button>
       </div>
 
   renderAnchorButtons: ->
-    <span>
-      <a className="btn btn-default btn-sm tail-bottom-button" onClick={@props.scrollToBottom} title="Scroll All to Bottom">
-        <span className="glyphicon glyphicon-chevron-down"></span>
-      </a>
-      <a className="btn btn-default btn-sm tail-top-button" onClick={@props.scrollToTop} title="Scroll All to Top">
-        <span className="glyphicon glyphicon-chevron-up"></span>
-      </a>
-    </span>
+    if @props.taskGroupCount > 1
+      <span>
+        <a className="btn btn-default btn-sm tail-bottom-button" onClick={@props.scrollAllToBottom} title="Scroll All to Bottom">
+          <span className="glyphicon glyphicon-chevron-down"></span>
+        </a>
+        <a className="btn btn-default btn-sm tail-top-button" onClick={@props.scrollAllToTop} title="Scroll All to Top">
+          <span className="glyphicon glyphicon-chevron-up"></span>
+        </a>
+      </span>
 
   render: ->
       <div className="tail-header">
@@ -73,11 +74,12 @@ class Header extends React.Component
       </div>
 
 mapStateToProps = (state) ->
-  taskIdCount: state.taskIds.length
+  taskGroupCount: state.taskGroups.length
+  multipleTasks: state.taskGroups.length > 1 or (state.taskGroups.length > 0 and state.taskGroups[0].taskIds.length > 1)
   path: state.path
   viewMode: state.viewMode
   requestId: state.activeRequest.requestId
 
-mapDispatchToProps = { switchViewMode, scrollToBottom, scrollToTop }
+mapDispatchToProps = { switchViewMode, scrollAllToBottom, scrollAllToTop }
 
 module.exports = connect(mapStateToProps, mapDispatchToProps)(Header)

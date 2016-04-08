@@ -10,6 +10,7 @@ class LogLine extends React.Component
     isHighlighted: React.PropTypes.bool.isRequired
     content: React.PropTypes.string.isRequired
     taskId: React.PropTypes.string.isRequired
+    showDebugInfo: React.PropTypes.bool
 
     search: React.PropTypes.string
     clickPermalink: React.PropTypes.func.isRequired
@@ -17,7 +18,10 @@ class LogLine extends React.Component
   highlightContent: (content) ->
     search = @props.search
     if not search or _.isEmpty(search)
-      return content
+      if @props.showDebugInfo
+        return "#{ @props.offset } | #{ @props.timestamp } | #{ content }"
+      else
+        return content
 
     regex = RegExp(search, 'g')
     matches = []
@@ -57,12 +61,13 @@ class LogLine extends React.Component
         </div>
       </a>
       <span>
-        {@props.offset} | {@props.timestamp} | {@highlightContent(@props.content)}
+        {@highlightContent(@props.content)}
       </span>
     </div>
 
 mapStateToProps = (state, ownProps) ->
   search: state.search
+  showDebugInfo: state.showDebugInfo
 
 mapDispatchToProps = { clickPermalink }
 

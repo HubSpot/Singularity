@@ -38,6 +38,8 @@ class LogLines extends React.Component
     if prevProps.updatedAt isnt @props.updatedAt
       if @props.prependedLineCount > 0 or @props.linesRemovedFromTop > 0
         @refs.tailContents.scrollTop += 20 * (@props.prependedLineCount - @props.linesRemovedFromTop)
+      else
+        @handleScroll()
 
   renderLoadingPrevious: ->
     if @props.initialDataLoaded
@@ -78,7 +80,7 @@ class LogLines extends React.Component
 
   render: ->
     <div className="contents-container">
-      <div className="tail-contents #{@props.activeColor}" tabIndex="1" ref="tailContents" onScroll={@handleScroll}>
+      <div className="tail-contents #{@props.activeColor}" ref="tailContents" onScroll={@handleScroll}>
         {@renderLoadingPrevious()}
         {@renderLogLines()}
         {@renderLoadingMore()}
@@ -87,6 +89,7 @@ class LogLines extends React.Component
 
 mapStateToProps = (state, ownProps) ->
   taskGroup = state.taskGroups[ownProps.taskGroupId]
+  tasks = taskGroup.taskIds.map (taskId) -> state.tasks[taskId]
 
   logLines: taskGroup.logLines
   updatedAt: taskGroup.updatedAt
@@ -95,11 +98,11 @@ mapStateToProps = (state, ownProps) ->
   activeColor: state.activeColor
   top: taskGroup.top
   bottom: taskGroup.bottom
-  initialDataLoaded: _.all(_.pluck(taskGroup.tasks, 'initialDataLoaded'))
-  reachedStartOfFile: _.all(taskGroup.tasks.map ({minOffset}) -> minOffset is 0)
-  reachedEndOfFile: _.all(taskGroup.tasks.map ({maxOffset, filesize}) -> maxOffset >= filesize)
-  bytesRemainingBefore: sum(_.pluck(taskGroup.tasks, 'minOffset'))
-  bytesRemainingAfter: sum(taskGroup.tasks.map ({filesize, maxOffset}) -> Math.max(filesize - maxOffset, 0))
+  initialDataLoaded: _.all(_.pluck(tasks, 'initialDataLoaded'))
+  reachedStartOfFile: _.all(tasks.map ({minOffset}) -> minOffset is 0)
+  reachedEndOfFile: _.all(tasks.map ({maxOffset, filesize}) -> maxOffset >= filesize)
+  bytesRemainingBefore: sum(_.pluck(tasks, 'minOffset'))
+  bytesRemainingAfter: sum(tasks.map ({filesize, maxOffset}) -> Math.max(filesize - maxOffset, 0))
 
 mapDispatchToProps = { taskGroupTop, taskGroupBottom }
 
