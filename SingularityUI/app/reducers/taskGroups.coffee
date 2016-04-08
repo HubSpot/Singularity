@@ -37,7 +37,7 @@ filterLogLines = (lines, search) ->
 
 TIMESTAMP_REGEX = [
   [/^(\d{2}:\d{2}:\d{2}\.\d{3})/, 'HH:mm:ss.SSS']
-  [/^[A-Z ]+\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3})/, 'YYYY-MM-DD HH:mm:ss,SSS']
+  [/^[A-Z \[]+(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3})/, 'YYYY-MM-DD HH:mm:ss,SSS']
   [/^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3})/, 'YYYY-MM-DD HH:mm:ss,SSS']
 ]
 
