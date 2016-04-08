@@ -5,32 +5,50 @@ TaskGroupContainer = require './TaskGroupContainer'
 
 { connect } = require 'react-redux'
 
-{ updateGroups } = require '../../actions/log'
+{ updateGroups, updateTaskStatuses } = require '../../actions/log'
 
 class LogContainer extends React.Component
   @propTypes:
-    taskGroups: React.PropTypes.array.isRequired
+    taskGroupsCount: React.PropTypes.number.isRequired
     ready: React.PropTypes.bool.isRequired
 
     updateGroups: React.PropTypes.func.isRequired
+    updateTaskStatuses: React.PropTypes.func.isRequired
 
   renderTaskGroups: ->
-    @props.taskGroups.map (taskGroup, i) ->
-      <TaskGroupContainer key={i} taskGroupId={i}/>
+    rows = []
+
+    row = []
+    for i in [1..Math.min(@props.taskGroupsCount, 3)]
+      row.push <TaskGroupContainer key={i - 1} taskGroupId={i - 1} taskGroupContainerCount={Math.min(@props.taskGroupsCount, 3)} />
+
+    rows.push row
+
+    if @props.taskGroupsCount > 3
+      row = []
+      for i in [4..Math.min(@props.taskGroupsCount, 6)]
+        row.push <TaskGroupContainer key={i - 1} taskGroupId={i - 1} taskGroupContainerCount={Math.min(@props.taskGroupsCount, 6) - 3} />
+      rows.push row
+
+    rowClassName = 'row tail-row'
+
+    if rows.length > 1
+      rowClassName = 'row tail-row-half'
+
+    rows.map (row, i) -> <div key={i} className={rowClassName}>{row}</div>
 
   render: ->
     <div>
       <Interval enabled={@props.ready} timeout={2000} callback={@props.updateGroups} />
+      <Interval enabled={true} timeout={10000} callback={@props.updateTaskStatuses} />
       <Header />
-      <div className="row tail-row">
-        {@renderTaskGroups()}
-      </div>
+      {@renderTaskGroups()}
     </div>
 
 mapStateToProps = (state) ->
-  taskGroups: state.taskGroups
+  taskGroupsCount: state.taskGroups.length
   ready: _.all(_.pluck(state.taskGroups, 'ready'))
 
-mapDispatchToProps = { updateGroups }
+mapDispatchToProps = { updateGroups, updateTaskStatuses }
 
 module.exports = connect(mapStateToProps, mapDispatchToProps)(LogContainer)
