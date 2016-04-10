@@ -4,19 +4,12 @@
 
 moment = require 'moment'
 
-buildTask = (taskId, offset=0) ->
-  {
-    taskId
-    minOffset: offset
-    maxOffset: offset
-    filesize: offset
-    initialDataLoaded: false
-  }
-
 buildTaskGroup = (taskIds, search) ->
-  taskGroup = {
+  {
+    taskIds
     search
     logLines: []
+    taskBuffer: {}
     prependedLineCount: 0
     linesRemovedFromTop: 0
     updatedAt: +new Date()
@@ -24,22 +17,15 @@ buildTaskGroup = (taskIds, search) ->
     bottom: false
     ready: false
     pendingRequests: false
-    tasks: taskIds.map(buildTask)
-    taskIdLookup: buildTaskLookup(taskIds)
+    detectedTimestamp: false
   }
 
-buildTaskLookup = (tasks) ->
-  lookup = {}
-  tasks.map (taskId, i) -> lookup[taskId] = i
-  return lookup
-
-updateTask = (state, taskId, update) ->
-  newTasks = Object.assign([], state.tasks)
-  index = state.taskIdLookup[taskId]
-  newTasks[index] = Object.assign({}, state.tasks[index], update)
-  newState = Object.assign({}, state)
-  newState.tasks = newTasks
-  return newState
+resetTaskGroup = () -> {
+  logLines: []
+  taskBuffer: {}
+  top: false
+  bottom: false
+}
 
 updateTaskGroup = (state, taskGroupId, update) ->
   newState = Object.assign([], state)
@@ -49,6 +35,20 @@ updateTaskGroup = (state, taskGroupId, update) ->
 filterLogLines = (lines, search) ->
   _.filter lines, ({data}) -> new RegExp(search).test(data)
 
+TIMESTAMP_REGEX = [
+  [/^(\d{2}:\d{2}:\d{2}\.\d{3})/, 'HH:mm:ss.SSS']
+  [/^[A-Z \[]+(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3})/, 'YYYY-MM-DD HH:mm:ss,SSS']
+  [/^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d{3})/, 'YYYY-MM-DD HH:mm:ss,SSS']
+]
+
+parseLineTimestamp = (line) ->
+  for group in TIMESTAMP_REGEX
+    match = line.match(group[0])
+    if match
+      return moment(match, group[1]).valueOf()
+  return null
+
+buildEmptyBuffer = (taskId, offset) -> { offset, taskId, data: '' }
 
 ACTIONS = {
   # The logger is being initialized
@@ -64,42 +64,19 @@ ACTIONS = {
   LOG_REMOVE_TASK: (state, {taskId}) ->
     newState = []
     for taskGroup in state
-      if taskGroup.tasks[taskId]
-        if taskGroup.taskIdsLookup.length is 1
+      if taskId in taskGroup.taskIds
+        if taskGroup.taskIds.length is 1
           continue
 
         # remove task
-        newTasks = Object.assign({}, taskGroup.tasks)
-        delete newTasks[taskId]
-
-        # update lookup map
-        newTaskLookup = buildTaskLookup(newTasks)
+        newTaskIds = _.without(taskGroup.taskIds, taskId)
 
         # remove task loglines
         newLogLines = taskGroup.logLines.filter (logLine) -> logLine.taskId isnt taskId
 
-        newTaskGroup = Object.assign({}, taskGroup)
-        newTaskGroup.tasks = newTasks
-        newTaskGroup.taskIdLookup = newTaskLookup
-        newTaskGroup.logLines = newLogLines
-        
-        newState.push(newTaskGroup)
+        newState.push(Object.assign({}, taskGroup, {tasksIds: newTasksIds, logLines: newLogLines}))
       else
         newState.push(taskGroup)
-    return newState
-
-  # A task has been initialized
-  LOG_TASK_INIT: (state, {taskGroupId, taskId, path, offset}) ->
-    newTaskGroup = Object.assign({}, state[taskGroupId])
-    newTaskGroup = updateTask(newTaskGroup, taskId, {
-      path
-      minOffset: offset
-      maxOffset: offset
-      filesize: offset
-      initialDataLoaded: true
-    })
-    newState = Object.assign([], state)
-    newState[taskGroupId] = newTaskGroup
     return newState
 
   # The logger has either entered or exited the top
@@ -108,65 +85,104 @@ ACTIONS = {
 
   # The logger has either entered or exited the bottom
   LOG_TASK_GROUP_BOTTOM: (state, {taskGroupId, visible}) ->
-    updateTaskGroup(state, taskGroupId, {bottom: visible})
+    return updateTaskGroup(state, taskGroupId, {bottom: visible})
 
   # An entire task group is ready
   LOG_TASK_GROUP_READY: (state, {taskGroupId}) ->
     return updateTaskGroup(state, taskGroupId, {ready: true})
 
+  LOG_REMOVE_TASK_GROUP: (state, {taskGroupId}) ->
+    newState = []
+    for i in [0..state.length-1]
+      unless i is taskGroupId
+        newState.push(state[i])
+    return newState
+
+  LOG_EXPAND_TASK_GROUP: (state, {taskGroupId}) ->
+    return [state[taskGroupId]]
+
   # The logger has been asked to scroll to the top
-  LOG_SCROLL_TO_TOP: (state, {}) ->
+  LOG_SCROLL_ALL_GROUPS_TO_TOP: (state) ->
     return state.map (taskGroup) ->
-      Object.assign({}, taskGroup, {
-        tasks: taskGroup.tasks.map (task) -> Object.assign({}, task, {minOffset: 0, maxOffset: 0, prependedLineCount: 0})
-        logLines: []
-        top: false
-        bottom: false
-      })
+      Object.assign({}, taskGroup, resetTaskGroup())
 
-  # The logger has been asked to scroll to the bottom
-  LOG_SCROLL_TO_BOTTOM: (state, {}) ->
-    return state.map (taskGroup) ->
-      Object.assign({}, taskGroup, {
-        tasks: taskGroup.tasks.map (task) -> Object.assign({}, task, {minOffset: task.filesize, maxOffset: task.filesize, prependedLineCount: 0})
-        logLines: []
-        top: false
-        bottom: false
-      })
+  LOG_SCROLL_TO_TOP: (state, {taskGroupId}) ->
+    newState = Object.assign([], state)
+    newState[taskGroupId] = Object.assign({}, state[taskGroupId], resetTaskGroup())
+    return newState
 
-  # We've received new filesize information for a task
-  LOG_TASK_FILESIZE: (state, {taskGroupId, taskId, filesize}) ->
-    newTaskGroup = Object.assign({}, state[taskGroupId])
-    newTaskGroup.tasks = updateTask(state[taskGroupId], taskId, {filesize})
-    return updateTaskGroup(state, taskGroupId, newTaskGroup)
+  LOG_SCROLL_ALL_TO_TOP: (state) ->
+    state.map (taskGroup) -> Object.assign({}, taskGroup, resetTaskGroup())
+
+  LOG_SCROLL_TO_BOTTOM: (state, {taskGroupId}) ->
+    newState = Object.assign([], state)
+    newState[taskGroupId] = Object.assign({}, state[taskGroupId], resetTaskGroup())
+    return newState
+
+  LOG_SCROLL_ALL_TO_BOTTOM: (state) ->
+    state.map (taskGroup) -> Object.assign({}, taskGroup, resetTaskGroup())
 
   # We've received logging data for a task
   LOG_TASK_DATA: (state, {taskGroupId, taskId, offset, nextOffset, maxLines, data, append}) ->
+    taskGroup = state[taskGroupId]
+
     # bail early if no data
-    if data.length is 0
+    if data.length is 0 and task.loadedData
       return state
 
-    taskGroup = state[taskGroupId]
-    task = taskGroup.tasks[taskGroup.taskIdLookup[taskId]]
-
-    # split task data into separate lines
+    # split task data into separate lines, attempt to parse timestamp
     currentOffset = offset
     lines = _.initial(data.match /[^\n]*(\n|$)/g).map (data) ->
       currentOffset += data.length
-      parsedTimestamp = moment(data)
-      unless parsedTimestamp.isValid()
-        parsedTimestamp = moment(data, 'HH:mm:ss.SSS')
-      if parsedTimestamp.isValid()
-        timestamp = parsedTimestamp.valueOf()
-      else
-        timestamp = null
+
+      timestamp = parseLineTimestamp(data)
+
+      if timestamp
+        detectedTimestamp = true
+
       {timestamp, data, offset: currentOffset - data.length, taskId}
+
+    # task buffers
+    taskBuffer = taskGroup.taskBuffer[taskId] || buildEmptyBuffer(taskId, 0)
+
+    if append
+      if taskBuffer.offset + taskBuffer.data.length is offset
+        firstLine = _.first(lines)
+        lines = _.rest(lines)
+        taskBuffer = {offset: taskBuffer.offset, data: taskBuffer.data + firstLine.data, taskId}
+        if taskBuffer.data.endsWith('\n')
+          taskBuffer.timestamp = parseLineTimestamp(taskBuffer.data)
+          lines.unshift(taskBuffer)
+          taskBuffer = buildEmptyBuffer(taskId, nextOffset)
+      if lines.length > 0
+        lastLine = _.last(lines)
+        if not lastLine.data.endsWith('\n')
+          taskBuffer = lastLine
+          lines = _.initial(lines)
+    else
+      if nextOffset is taskBuffer.offset
+        lastLine = _.last(lines)
+        lines = _.initial(lines)
+        taskBuffer = {offset: nextOffset - lastLine.data.length, data: lastLine.data + taskBuffer.data, taskId}
+        if lines.length > 0
+          taskBuffer.timestamp = parseLineTimestamp(taskBuffer.data)
+          lines.push(taskBuffer)
+          taskBuffer = buildEmptyBuffer(taskId, offset)
+      if lines.length > 0
+        firstLine = _.first(lines)
+        if firstLine.offset > 0
+          taskBuffer = firstLine
+          lines = _.rest(lines)
+
+    newTaskBuffer = Object.assign({}, taskGroup.taskBuffer)
+    newTaskBuffer[taskId] = taskBuffer
 
     # backfill old timestamps
     if taskGroup.logLines.length > 0
       lastTimestamp = _.last(taskGroup.logLines).timestamp
     else
       lastTimestamp = 0
+
     lines = lines.map (line) ->
       if line.timestamp
         lastTimestamp = line.timestamp
@@ -174,34 +190,15 @@ ACTIONS = {
         line.timestamp = lastTimestamp
       return line
 
-    newLogLines = Object.assign([], taskGroup.logLines)
-
     prependedLineCount = 0
     updatedAt = +new Date()
 
-    # merge in tail
-    if offset > 0 and offset is task.maxOffset and not _.last(taskGroup.logLines).data.endsWith('\n')
-      newLastLine = Object.assign({}, _.last(taskGroup.logLines))
-
-      newLastLine.data = newLastLine.data + lines[0].data
-
-      newLogLines = _.initial(newLogLines).concat(newLastLine)
-      lines = _.rest(lines)
-
-    # merge in head
-    if offset + data.length is task.minOffset
-      newFirstLine = Object.assign({}, taskGroup.logLines[0])
-      lastLine = _.last(lines)
-      unless lastLine.data.endsWith('\n')
-        newFirstLine.data = lastLine.data + newFirstLine.data
-        newFirstLine.offset = newFirstLine.offset - lastLine.data.length
-        lines = _.initial(lines)
-
-    # TODO: find a better location
+    # search
     if taskGroup.search
       lines = filterLogLines(lines, taskGroup.search)
 
     # merge lines
+    newLogLines = Object.assign([], taskGroup.logLines)
     if append
       newLogLines = newLogLines.concat(lines)
       if newLogLines.length > maxLines
@@ -212,17 +209,13 @@ ACTIONS = {
       if newLogLines.length > maxLines
         newLogLines = newLogLines.slice(0, maxLines)
 
-    newLogLines = _.sortBy(newLogLines, ({timestamp, offset}) -> [timestamp, offset])
+    # sort lines by timestamp if unified view
+    if taskGroup.taskIds.length > 1
+      newLogLines = _.sortBy(newLogLines, ({timestamp, offset}) -> [timestamp, offset])
 
     # update state
     newState = Object.assign([], state)
-    newState[taskGroupId] = Object.assign({}, state[taskGroupId], {logLines: newLogLines, prependedLineCount, updatedAt})
-    newState[taskGroupId] = updateTask(newState[taskGroupId], taskId, {
-      minOffset: _.min(newLogLines.map (line) -> line.offset),
-      maxOffset: _.max(newLogLines.map (line) -> line.offset + line.data.length),
-      filesize: Math.max(task.filesize, nextOffset)
-    })
-
+    newState[taskGroupId] = Object.assign({}, state[taskGroupId], {taskBuffer: newTaskBuffer, logLines: newLogLines, prependedLineCount, updatedAt})
     return newState
 }
 

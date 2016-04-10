@@ -7,6 +7,10 @@ fetchData = (taskId, path, offset=undefined, length=0) ->
   $.ajax
     url: "#{ config.apiRoot }/sandbox/#{ taskId }/read?#{$.param({path, length, offset})}"
 
+fetchTaskHistory = (taskId) ->
+  $.ajax
+    url: "#{ config.apiRoot }/history/task/#{ taskId }"
+
 initializeUsingActiveTasks = (requestId, path, search) ->
   (dispatch) ->
     deferred = Q.defer()
@@ -28,12 +32,20 @@ initialize = (requestId, path, search, taskIds) ->
     dispatch(init(requestId, taskIdGroups, path, search))
 
     groupPromises = taskIdGroups.map (taskIds, taskGroupId) ->
-      taskPromises = taskIds.map (taskId) ->
+      taskInitPromises = taskIds.map (taskId) ->
         resolvedPath = path.replace('$TASK_ID', taskId)
         fetchData(taskId, resolvedPath).done ({offset}) ->
-          dispatch(initTask(taskGroupId, taskId, offset, resolvedPath))
+          dispatch(initTask(taskId, offset, resolvedPath, true))
+        .error ({status}) ->
+          if status is 404
+            app.caughtError()
+            dispatch(taskFileDoesNotExist(taskGroupId, taskId))
+            Promise.resolve()
 
-      Promise.all(taskPromises).then ->
+      taskStatusPromises = taskIds.map (taskId) ->
+        dispatch(updateTaskStatus(taskGroupId, taskId))
+
+      Promise.all(taskInitPromises, taskStatusPromises).then ->
         dispatch(taskGroupFetchPrevious(taskGroupId)).then ->
           dispatch(taskGroupReady(taskGroupId))
 
@@ -54,13 +66,20 @@ addTaskGroup = (taskIds) ->
     type: 'LOG_ADD_TASK_GROUP'
   }
 
-initTask = (taskGroupId, taskId, offset, path) ->
+initTask = (taskId, offset, path, exists) ->
+  {
+    taskId
+    offset
+    path
+    exists
+    type: 'LOG_TASK_INIT'
+  }
+
+taskFileDoesNotExist = (taskGroupId, taskId) ->
   {
     taskId
     taskGroupId
-    offset
-    path
-    type: 'LOG_TASK_INIT'
+    type: 'LOG_TASK_FILE_DOES_NOT_EXIST'
   }
 
 taskGroupReady = (taskGroupId) ->
@@ -69,12 +88,23 @@ taskGroupReady = (taskGroupId) ->
     type: 'LOG_TASK_GROUP_READY'
   }
 
+taskHistory = (taskGroupId, taskId, taskHistory) ->
+  {
+    taskGroupId
+    taskId
+    taskHistory
+    type: 'LOG_TASK_HISTORY'
+  }
+
+getTasks = (taskGroup, tasks) ->
+  taskGroup.taskIds.map (taskId) -> tasks[taskId]
+
 updateFilesizes = ->
   (dispatch, getState) ->
-    getState().taskGroups.map (taskGroup) ->
-      taskGroup.tasks.map ({taskId, path}) ->
-        fetchData(taskId, path).done ({offset}) ->
-          dispatch(taskFilesize(taskId, offset))
+    { tasks } = getState()
+    for taskId of tasks
+      fetchData(taskId, tasks[taskId.path]).done ({offset}) ->
+        dispatch(taskFilesize(taskId, offset))
 
 updateGroups = ->
   (dispatch, getState) ->
@@ -85,16 +115,34 @@ updateGroups = ->
         if taskGroup.bottom
           dispatch(taskGroupFetchNext(taskGroupId))
 
+updateTaskStatuses = ->
+  (dispatch, getState) ->
+    {tasks, taskGroups} = getState()
+    taskGroups.map (taskGroup, taskGroupId) ->
+      getTasks(taskGroup, tasks).map ({taskId, terminated}) ->
+        if terminated
+          Promise.resolve()
+        else
+          dispatch(updateTaskStatus(taskGroupId, taskId))
+
+updateTaskStatus = (taskGroupId, taskId) ->
+  (dispatch, getState) ->
+    fetchTaskHistory(taskId, ['taskUpdates']).done (data) ->
+      dispatch(taskHistory(taskGroupId, taskId, data))
+
 taskGroupFetchNext = (taskGroupId) ->
   (dispatch, getState) ->
-    {taskGroups, logRequestLength, maxLines} = getState()
+    {tasks, taskGroups, logRequestLength, maxLines} = getState()
 
-    promises = taskGroups[taskGroupId].tasks.map ({taskId, maxOffset, path, initialDataLoaded}) ->
+    taskGroup = taskGroups[taskGroupId]
+
+    promises = getTasks(taskGroup, tasks).map ({taskId, maxOffset, path, initialDataLoaded, terminated}) ->
+      return Promise.resolve() if terminated
       if initialDataLoaded
         xhr = fetchData(taskId, path, maxOffset, logRequestLength)
         xhr.done ({data, offset, nextOffset}) ->
           if data.length > 0
-            nextOffset = nextOffset || offset + data.length
+            nextOffset = offset + data.length
             dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, true, maxLines))
       else
         Promise.resolve() # reject("initialDataLoaded is false for task #{taskId}")
@@ -103,9 +151,12 @@ taskGroupFetchNext = (taskGroupId) ->
 
 taskGroupFetchPrevious = (taskGroupId) ->
   (dispatch, getState) ->
-    {taskGroups, logRequestLength, maxLines} = getState()
+    {tasks, taskGroups, logRequestLength, maxLines} = getState()
 
-    promises = taskGroups[taskGroupId].tasks.map ({taskId, minOffset, path, initialDataLoaded}) ->
+    taskGroup = taskGroups[taskGroupId]
+
+    promises = getTasks(taskGroup, tasks).map (task) ->
+      {taskId, minOffset, path, initialDataLoaded} = task
       if minOffset > 0 and initialDataLoaded
         xhr = fetchData(taskId, path, Math.max(minOffset - logRequestLength, 0), Math.min(logRequestLength, minOffset))
         xhr.done ({data, offset, nextOffset}) ->
@@ -117,7 +168,7 @@ taskGroupFetchPrevious = (taskGroupId) ->
 
     Promise.all(promises)
 
-taskData = (taskGroupId, taskId, data, offset, nextOffset, append, maxLines) ->
+taskData = (taskGroupId, taskId, data, offset, nextOffset, append, maxLines, buffer) ->
   {
     taskGroupId
     taskId
@@ -126,6 +177,7 @@ taskData = (taskGroupId, taskId, data, offset, nextOffset, append, maxLines) ->
     nextOffset
     append
     maxLines
+    buffer
     type: 'LOG_TASK_DATA'
   }
 
@@ -174,7 +226,7 @@ switchViewMode = (newViewMode) ->
     dispatch({viewMode: newViewMode, type: 'LOG_SWITCH_VIEW_MODE'})
     dispatch(initialize(activeRequest.requestId, path, search, taskIds))
 
-setCurrentSearch = (newSearch) ->
+setCurrentSearch = (newSearch) ->  # TODO: can we do something less heavyweight?
   (dispatch, getState) ->
     {activeRequest, path, taskGroups, currentSearch} = getState()
     if newSearch != currentSearch
@@ -182,31 +234,56 @@ setCurrentSearch = (newSearch) ->
 
 toggleTaskLog = (taskId) ->
   (dispatch, getState) ->
-    {search, path, taskIds, viewMode} = getState()
-    if taskIds.length > 0 and taskId in taskIds
+    {search, path, tasks, viewMode} = getState()
+    if taskId of tasks and Object.keys(tasks).length > 1
         dispatch({taskId, type: 'LOG_REMOVE_TASK'})
     else
       if viewMode is 'split'
-        dispatch(addTaskGroup(path, [taskId]))
-        taskGroupId = getState().taskGroups.length - 1
-      else
-        taskGroupId = 0
-      resolvedPath = path.replace('$TASK_ID', taskId)
-      fetchData(taskId, resolvedPath).done ({offset}) ->
-        dispatch(initTask(taskGroupId, taskId, offset, resolvedPath))
-        dispatch(taskGroupFetchPrevious(taskGroupId)).then ->
-          dispatch(taskGroupReady(taskGroupId))
+        dispatch(addTaskGroup([taskId]))
 
-scrollToTop = () ->
+      resolvedPath = path.replace('$TASK_ID', taskId)
+
+      fetchData(taskId, resolvedPath).done ({offset}) ->
+        dispatch(initTask(taskId, offset, resolvedPath, true))
+
+        getState().taskGroups.map (taskGroup, taskGroupId) ->
+          if taskId in taskGroup.taskIds
+            dispatch(updateTaskStatus(taskGroupId, taskId))
+            dispatch(taskGroupFetchPrevious(taskGroupId)).then ->
+              dispatch(taskGroupReady(taskGroupId))
+
+removeTaskGroup = (taskGroupId) ->
   (dispatch, getState) ->
+    { taskIds } = getState().taskGroups[taskGroupId]
+    dispatch({taskGroupId, taskIds, type: 'LOG_REMOVE_TASK_GROUP'})
+
+expandTaskGroup = (taskGroupId) ->
+  (dispatch, getState) ->
+    { taskIds } = getState().taskGroups[taskGroupId]
+    dispatch({taskGroupId, taskIds, type: 'LOG_EXPAND_TASK_GROUP'})
+
+scrollToTop = (taskGroupId) ->
+  (dispatch, getState) ->
+    { taskIds } = getState().taskGroups[taskGroupId]
+    dispatch({taskGroupId, taskIds, type: 'LOG_SCROLL_TO_TOP'})
+    dispatch(taskGroupFetchNext(taskGroupId))
+
+scrollAllToTop = () ->
+  (dispatch, getState) ->
+    dispatch({type: 'LOG_SCROLL_ALL_TO_TOP'})
     getState().taskGroups.map (taskGroup, taskGroupId) ->
-      dispatch({taskGroupId, type: 'LOG_SCROLL_TO_TOP'})
       dispatch(taskGroupFetchNext(taskGroupId))
 
-scrollToBottom = () ->
+scrollToBottom = (taskGroupId) ->
   (dispatch, getState) ->
+    { taskIds } = getState().taskGroups[taskGroupId]
+    dispatch({taskGroupId, taskIds, type: 'LOG_SCROLL_TO_BOTTOM'})
+    dispatch(taskGroupFetchPrevious(taskGroupId))
+
+scrollAllToBottom = () ->
+  (dispatch, getState) ->
+    dispatch({type: 'LOG_SCROLL_ALL_TO_BOTTOM'})
     getState().taskGroups.map (taskGroup, taskGroupId) ->
-      dispatch({taskGroupId, type: 'LOG_SCROLL_TO_BOTTOM'})
       dispatch(taskGroupFetchPrevious(taskGroupId))
 
 module.exports = {
@@ -216,6 +293,7 @@ module.exports = {
   taskGroupFetchPrevious
   clickPermalink
   updateGroups
+  updateTaskStatuses
   updateFilesizes
   taskGroupTop
   taskGroupBottom
@@ -224,5 +302,9 @@ module.exports = {
   setCurrentSearch
   toggleTaskLog
   scrollToTop
+  scrollAllToTop
   scrollToBottom
+  scrollAllToBottom
+  removeTaskGroup
+  expandTaskGroup
 }

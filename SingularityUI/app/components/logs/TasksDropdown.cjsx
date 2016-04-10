@@ -35,7 +35,7 @@ class TasksDropdown extends React.Component
 
 mapStateToProps = (state) ->
   activeTasks: state.activeRequest.activeTasks
-  taskIds: state.taskIds
+  taskIds: _.flatten(_.pluck(state.taskGroups, 'taskIds'))
 
 mapDispatchToProps = { toggleTaskLog }
 
