@@ -191,6 +191,7 @@ ACTIONS = {
       return line
 
     prependedLineCount = 0
+    linesRemovedFromTop = 0
     updatedAt = +new Date()
 
     # search
@@ -202,6 +203,7 @@ ACTIONS = {
     if append
       newLogLines = newLogLines.concat(lines)
       if newLogLines.length > maxLines
+        linesRemovedFromTop = newLogLines.length - maxLines
         newLogLines = newLogLines.slice(newLogLines.length - maxLines)
     else
       newLogLines = lines.concat(newLogLines)
@@ -215,7 +217,7 @@ ACTIONS = {
 
     # update state
     newState = Object.assign([], state)
-    newState[taskGroupId] = Object.assign({}, state[taskGroupId], {taskBuffer: newTaskBuffer, logLines: newLogLines, prependedLineCount, updatedAt})
+    newState[taskGroupId] = Object.assign({}, state[taskGroupId], {taskBuffer: newTaskBuffer, logLines: newLogLines, prependedLineCount, linesRemovedFromTop, updatedAt})
     return newState
 }
 
