@@ -2,6 +2,8 @@ package com.hubspot.mesos;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -10,20 +12,22 @@ public class Resources {
     checkNotNull(a, "first argument of Resources.add() is null");
     checkNotNull(b, "second argument of Resources.add() is null");
 
-    return new Resources(a.getCpus() + b.getCpus(), a.getMemoryMb() + b.getMemoryMb(), a.getNumPorts() + b.getNumPorts());
+    return new Resources(a.getCpus() + b.getCpus(), a.getMemoryMb() + b.getMemoryMb(), a.getNumPorts() + b.getNumPorts(), a.getDiskMb() + b.getDiskMb());
   }
 
-  public static final Resources EMPTY_RESOURCES = new Resources(0, 0, 0);
+  public static final Resources EMPTY_RESOURCES = new Resources(0, 0, 0, 0);
 
   private final double cpus;
   private final double memoryMb;
   private final int numPorts;
+  private final double diskMb;
 
   @JsonCreator
-  public Resources(@JsonProperty("cpus") double cpus, @JsonProperty("memoryMb") double memoryMb, @JsonProperty("numPorts") int numPorts) {
+  public Resources(@JsonProperty("cpus") double cpus, @JsonProperty("memoryMb") double memoryMb, @JsonProperty("numPorts") int numPorts, @JsonProperty("diskMb") double diskMb) {
     this.cpus = cpus;
     this.memoryMb = memoryMb;
     this.numPorts = numPorts;
+    this.diskMb = diskMb;
   }
 
   public int getNumPorts() {
@@ -38,9 +42,18 @@ public class Resources {
     return memoryMb;
   }
 
+  public double getDiskMb() {
+    return diskMb;
+  }
+
   @Override
   public String toString() {
-    return "Resources [cpus=" + cpus + ", memoryMb=" + memoryMb + ", numPorts=" + numPorts + "]";
+    return "Resources[" +
+        "cpus=" + cpus +
+        ", memoryMb=" + memoryMb +
+        ", numPorts=" + numPorts +
+        ", diskMb=" + diskMb +
+        ']';
   }
 
   @Override
@@ -48,37 +61,18 @@ public class Resources {
     if (this == o) {
       return true;
     }
-
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-
     Resources resources = (Resources) o;
-
-    if (Double.compare(resources.cpus, cpus) != 0) {
-      return false;
-    }
-
-    if (Double.compare(resources.memoryMb, memoryMb) != 0) {
-      return false;
-    }
-
-    if (numPorts != resources.numPorts) {
-      return false;
-    }
-
-    return true;
+    return Double.compare(resources.cpus, cpus) == 0 &&
+        Double.compare(resources.memoryMb, memoryMb) == 0 &&
+        numPorts == resources.numPorts &&
+        Double.compare(resources.diskMb, diskMb) == 0;
   }
 
   @Override
   public int hashCode() {
-    int result;
-    long temp;
-    temp = Double.doubleToLongBits(cpus);
-    result = (int) (temp ^ (temp >>> 32));
-    temp = Double.doubleToLongBits(memoryMb);
-    result = 31 * result + (int) (temp ^ (temp >>> 32));
-    result = 31 * result + numPorts;
-    return result;
+    return Objects.hash(cpus, memoryMb, numPorts, diskMb);
   }
 }
