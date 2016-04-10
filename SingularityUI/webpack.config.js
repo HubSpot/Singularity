@@ -4,7 +4,31 @@ var path = require('path');
 dest = path.resolve(__dirname, '../SingularityService/target/generated-resources/assets');
 
 module.exports = {
-  entry: './app/initialize.coffee',
+  entry: {
+    app: './app/initialize.coffee',
+    vendor: [
+      'react',
+      'jquery',
+      'underscore',
+      'clipboard',
+      'select2',
+      'handlebars',
+      'moment',
+      'messenger',
+      'bootstrap',
+      'classnames',
+      'react-interval',
+      'react-waypoint',
+      'backbone-react-component',
+      'react-dom',
+      'fuzzy',
+      'datatables',
+      'sortable',
+      'juration',
+      'backbone',
+      'vex-js'
+    ],
+  },
   output: {
     path: dest,
     filename: 'app.js'
@@ -43,6 +67,7 @@ module.exports = {
       compress: {
         warnings: false
       }
-    })
+    }),
+    new webpack.optimize.CommonsChunkPlugin('vendor', 'vendor.bundle.js'),
   ]
 };
