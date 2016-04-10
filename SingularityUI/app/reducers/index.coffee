@@ -32,7 +32,7 @@ search = (state='', action) ->
 logRequestLength = (state=30000, action) ->
   return state
 
-maxLines = (state=1000, action) ->
+maxLines = (state=100000, action) ->
   return state
 
 showDebugInfo = (state=false, action) ->
