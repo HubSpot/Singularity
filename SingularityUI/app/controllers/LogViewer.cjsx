@@ -13,7 +13,6 @@ ActiveTasks = require '../actions/activeTasks'
 
 class LogViewer extends Controller
   initialize: ({@requestId, @path, @initialOffset, taskIds, viewMode, search}) ->
-    window.lv = @
     @title 'Tail of ' + @path
 
     initialState = {
@@ -40,5 +39,6 @@ class LogViewer extends Controller
 
     @setView @view  # does nothing
     app.showView @view
+    window.getStateJSON = () => JSON.stringify(@store.getState())
 
 module.exports = LogViewer

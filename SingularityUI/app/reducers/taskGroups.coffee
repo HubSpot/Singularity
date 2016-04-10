@@ -89,7 +89,7 @@ ACTIONS = {
 
   # An entire task group is ready
   LOG_TASK_GROUP_READY: (state, {taskGroupId}) ->
-    return updateTaskGroup(state, taskGroupId, {ready: true})
+    return updateTaskGroup(state, taskGroupId, {ready: true, updatedAt: +new Date()})
 
   LOG_REMOVE_TASK_GROUP: (state, {taskGroupId}) ->
     newState = []
@@ -121,6 +121,16 @@ ACTIONS = {
 
   LOG_SCROLL_ALL_TO_BOTTOM: (state) ->
     state.map (taskGroup) -> Object.assign({}, taskGroup, resetTaskGroup())
+
+  LOG_REQUEST_START: (state, {taskGroupId}) ->
+    newState = Object.assign([], state)
+    newState[taskGroupId] = Object.assign({}, state[taskGroupId], {pendingRequests: true})
+    return newState
+
+  LOG_REQUEST_END: (state, {taskGroupId}) ->
+    newState = Object.assign([], state)
+    newState[taskGroupId] = Object.assign({}, state[taskGroupId], {pendingRequests: false})
+    return newState
 
   # We've received logging data for a task
   LOG_TASK_DATA: (state, {taskGroupId, taskId, offset, nextOffset, maxLines, data, append}) ->
@@ -191,6 +201,7 @@ ACTIONS = {
       return line
 
     prependedLineCount = 0
+    linesRemovedFromTop = 0
     updatedAt = +new Date()
 
     # search
@@ -202,6 +213,7 @@ ACTIONS = {
     if append
       newLogLines = newLogLines.concat(lines)
       if newLogLines.length > maxLines
+        linesRemovedFromTop = newLogLines.length - maxLines
         newLogLines = newLogLines.slice(newLogLines.length - maxLines)
     else
       newLogLines = lines.concat(newLogLines)
@@ -215,7 +227,7 @@ ACTIONS = {
 
     # update state
     newState = Object.assign([], state)
-    newState[taskGroupId] = Object.assign({}, state[taskGroupId], {taskBuffer: newTaskBuffer, logLines: newLogLines, prependedLineCount, updatedAt})
+    newState[taskGroupId] = Object.assign({}, state[taskGroupId], {taskBuffer: newTaskBuffer, logLines: newLogLines, prependedLineCount, linesRemovedFromTop, updatedAt})
     return newState
 }
 
