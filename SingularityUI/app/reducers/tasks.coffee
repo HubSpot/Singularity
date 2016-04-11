@@ -50,7 +50,7 @@ ACTIONS = {
       initialDataLoaded: true
     })
   LOG_TASK_FILE_DOES_NOT_EXIST: (state, {taskId}) ->
-    updateTask(state, taskId, {exists: false})
+    updateTask(state, taskId, {exists: false, initialDataLoaded: true})
   LOG_SCROLL_TO_TOP: (state, {taskIds}) ->
     newState = Object.assign({}, state)
     for taskId in taskIds

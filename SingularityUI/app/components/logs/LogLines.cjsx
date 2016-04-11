@@ -1,5 +1,4 @@
 React = require 'react'
-Waypoint = require 'react-waypoint'
 LogLine = require './LogLine'
 Humanize = require 'humanize-plus'
 LogLines = require '../../collections/LogLines'
@@ -35,7 +34,9 @@ class LogLines extends React.Component
     window.removeEventListener 'resize', @handleScroll
 
   componentDidUpdate: (prevProps, prevState) ->
-    if prevProps.updatedAt isnt @props.updatedAt
+    if @props.tailing
+      @refs.tailContents.scrollTop = @refs.tailContents.scrollHeight
+    else if prevProps.updatedAt isnt @props.updatedAt
       if @props.prependedLineCount > 0 or @props.linesRemovedFromTop > 0
         @refs.tailContents.scrollTop += 20 * (@props.prependedLineCount - @props.linesRemovedFromTop)
       else
@@ -101,6 +102,7 @@ mapStateToProps = (state, ownProps) ->
 
   logLines: taskGroup.logLines
   updatedAt: taskGroup.updatedAt
+  tailing: taskGroup.tailing
   prependedLineCount: taskGroup.prependedLineCount
   linesRemovedFromTop: taskGroup.linesRemovedFromTop
   activeColor: state.activeColor

@@ -1,4 +1,5 @@
 React = require 'react'
+TaskStatusIndicator = require './TaskStatusIndicator'
 
 { getInstanceNumberFromTaskId } = require '../../utils'
 
@@ -22,10 +23,7 @@ class TaskGroupHeader extends React.Component
         <div className="width-constrained">
           <a className="instance-link" href={"#{config.appRoot}/task/#{@props.tasks[0].taskId}"}>Instance {getInstanceNumberFromTaskId(@props.tasks[0].taskId)}</a>
         </div>
-        <div className="status">
-          <div className="indicator bg-info running"></div>
-          {@props.tasks[0].lastTaskStatus}
-        </div>
+        <TaskStatusIndicator status={@props.tasks[0].lastTaskStatus} />
       </span>
     else
       <div className="width-constrained" />
