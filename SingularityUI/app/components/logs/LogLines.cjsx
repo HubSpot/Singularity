@@ -44,9 +44,7 @@ class LogLines extends React.Component
 
   renderLoadingPrevious: ->
     if @props.initialDataLoaded
-      if @props.reachedStartOfFile
-        <div>At beginning of file</div>
-      else
+      if not @props.reachedStartOfFile
         <div>Loading previous... ({Humanize.filesize(@props.bytesRemainingBefore)} remaining)</div>
 
   renderLogLines: ->
@@ -61,11 +59,14 @@ class LogLines extends React.Component
         color={@props.colorMap[taskId]} />
 
   renderLoadingMore: ->
+    if @props.terminated
+      return null
     if @props.initialDataLoaded
       if @props.reachedEndOfFile
         <div>Tailing...</div>
       else
         <div>Loading more... ({Humanize.filesize(@props.bytesRemainingAfter)} remaining)</div>
+
 
   handleScroll: =>
     {scrollTop, scrollHeight, clientHeight} = @refs.tailContents
@@ -109,6 +110,7 @@ mapStateToProps = (state, ownProps) ->
   top: taskGroup.top
   bottom: taskGroup.bottom
   initialDataLoaded: _.all(_.pluck(tasks, 'initialDataLoaded'))
+  terminated: _.all(_.pluck(tasks, 'terminated'))
   reachedStartOfFile: _.all(tasks.map ({minOffset}) -> minOffset is 0)
   reachedEndOfFile: _.all(tasks.map ({maxOffset, filesize}) -> maxOffset >= filesize)
   bytesRemainingBefore: sum(_.pluck(tasks, 'minOffset'))
