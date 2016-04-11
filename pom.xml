@@ -40,8 +40,8 @@
     <dropwizard.guicier.version>0.7.1.2</dropwizard.guicier.version>
     <baragon.version>0.2.0</baragon.version>
     <horizon.version>0.0.24</horizon.version>
-    <mesos.docker.tag>0.23.0-1.0.ubuntu1404</mesos.docker.tag>
-    <mesos.version>0.23.0</mesos.version>
+    <mesos.docker.tag>0.27.2-2.0.15.ubuntu1404</mesos.docker.tag>
+    <mesos.version>0.27.2</mesos.version>
     <singularitybase.image.revision>1</singularitybase.image.revision>
   </properties>
 
