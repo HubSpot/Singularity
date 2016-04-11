@@ -56,7 +56,7 @@ class LogLine extends React.Component
       highlightLine: @props.isHighlighted
 
     <div className={divClass} style={backgroundColor: @props.color}>
-      <a href="##{@props.offset}" className="offset-link" onClick={=> @props.clickPermalink(@props.offset)}>
+      <a href="#{config.appRoot}/task/#{@props.taskId}/tail/#{@props.path}##{@props.offset}" className="offset-link" onClick={=> @props.clickPermalink(@props.offset)}>
         <div className="pre-line">
             <span className="glyphicon glyphicon-link" data-offset="#{@props.offset}"></span>
         </div>
@@ -69,6 +69,7 @@ class LogLine extends React.Component
 mapStateToProps = (state, ownProps) ->
   search: state.search
   showDebugInfo: state.showDebugInfo
+  path: state.path
 
 mapDispatchToProps = { clickPermalink }
 

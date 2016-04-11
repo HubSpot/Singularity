@@ -2,6 +2,7 @@ React = require 'react'
 TaskGroupHeader = require './TaskGroupHeader'
 LogLines = require './LogLines'
 LoadingSpinner = require './LoadingSpinner'
+FileNotFound = require './FileNotFound'
 classNames = require 'classnames'
 
 { connect } = require 'react-redux'
@@ -19,11 +20,10 @@ class TaskGroupContainer extends React.Component
     return (12 / @props.taskGroupContainerCount)
 
   renderLogLines: ->
-    if @props.initialDataLoaded
-      if @props.fileExists
-        return <LogLines taskGroupId={@props.taskGroupId} />
-      else
-        return <h3>File does not exist</h3>
+    if @props.logDataLoaded
+      return <LogLines taskGroupId={@props.taskGroupId} />
+    else if @props.initialDataLoaded and not @props.fileExists
+      return <div className="tail-contents"><FileNotFound fileName={@props.path} /></div>
     else
       return <LoadingSpinner centered={true}>Loading logs...</LoadingSpinner>
 
@@ -40,13 +40,16 @@ mapStateToProps = (state, ownProps) ->
     return {
       initialDataLoaded: false
       fileExists: false
+      logDataLoaded: false
       terminated: false
     }
   taskGroup = state.taskGroups[ownProps.taskGroupId]
   tasks = taskGroup.taskIds.map (taskId) -> state.tasks[taskId]
 
-  initialDataLoaded: _.all(_.pluck(tasks, 'logDataLoaded'))
+  initialDataLoaded: _.all(_.pluck(tasks, 'initialDataLoaded'))
+  logDataLoaded: _.all(_.pluck(tasks, 'logDataLoaded'))
   fileExists: _.any(_.pluck(tasks, 'exists'))
   terminated: _.all(_.pluck(tasks, 'terminated'))
+  path: state.path
 
 module.exports = connect(mapStateToProps)(TaskGroupContainer)

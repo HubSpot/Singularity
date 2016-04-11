@@ -15,16 +15,18 @@ buildTaskGroup = (taskIds, search) ->
     updatedAt: +new Date()
     top: false
     bottom: false
+    tailing: false
     ready: false
     pendingRequests: false
     detectedTimestamp: false
   }
 
-resetTaskGroup = () -> {
+resetTaskGroup = (tailing=false) -> {
   logLines: []
   taskBuffer: {}
   top: false
   bottom: false
+  tailing
 }
 
 updateTaskGroup = (state, taskGroupId, update) ->
@@ -81,11 +83,11 @@ ACTIONS = {
 
   # The logger has either entered or exited the top
   LOG_TASK_GROUP_TOP: (state, {taskGroupId, visible}) ->
-    return updateTaskGroup(state, taskGroupId, {top: visible})
+    return updateTaskGroup(state, taskGroupId, {top: visible, tailing: false})
 
   # The logger has either entered or exited the bottom
   LOG_TASK_GROUP_BOTTOM: (state, {taskGroupId, visible}) ->
-    return updateTaskGroup(state, taskGroupId, {bottom: visible})
+    return updateTaskGroup(state, taskGroupId, {bottom: visible, tailing: false})
 
   # An entire task group is ready
   LOG_TASK_GROUP_READY: (state, {taskGroupId}) ->
@@ -116,11 +118,11 @@ ACTIONS = {
 
   LOG_SCROLL_TO_BOTTOM: (state, {taskGroupId}) ->
     newState = Object.assign([], state)
-    newState[taskGroupId] = Object.assign({}, state[taskGroupId], resetTaskGroup())
+    newState[taskGroupId] = Object.assign({}, state[taskGroupId], resetTaskGroup(true))
     return newState
 
   LOG_SCROLL_ALL_TO_BOTTOM: (state) ->
-    state.map (taskGroup) -> Object.assign({}, taskGroup, resetTaskGroup())
+    state.map (taskGroup) -> Object.assign({}, taskGroup, resetTaskGroup(true))
 
   LOG_REQUEST_START: (state, {taskGroupId}) ->
     newState = Object.assign([], state)
@@ -138,7 +140,9 @@ ACTIONS = {
 
     # bail early if no data
     if data.length is 0 and task.loadedData
-      return state
+      newState = Object.assign([], state)
+      newState[taskGroupId] = Object.assign({}, taskGroup, {tailing: append and data.length is 0})
+      return newState
 
     # split task data into separate lines, attempt to parse timestamp
     currentOffset = offset
