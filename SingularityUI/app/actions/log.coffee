@@ -140,13 +140,14 @@ taskGroupFetchNext = (taskGroupId) ->
     {tasks, taskGroups, logRequestLength, maxLines} = getState()
 
     taskGroup = taskGroups[taskGroupId]
+    tasks = getTasks(taskGroup, tasks)
 
+    # bail early if there's already a pending request
     if taskGroup.pendingRequests
       return Promise.resolve()
 
     dispatch({taskGroupId, type: 'LOG_REQUEST_START'})
-    promises = getTasks(taskGroup, tasks).map ({taskId, maxOffset, path, initialDataLoaded, terminated}) ->
-      return Promise.resolve() if terminated
+    promises = tasks.map ({taskId, maxOffset, path, initialDataLoaded}) ->
       if initialDataLoaded
         xhr = fetchData(taskId, path, maxOffset, logRequestLength)
         xhr.done ({data, offset, nextOffset}) ->
@@ -165,20 +166,21 @@ taskGroupFetchPrevious = (taskGroupId) ->
     taskGroup = taskGroups[taskGroupId]
     tasks = getTasks(taskGroup, tasks)
 
+    # bail early if all tasks are at the top
     if _.all(tasks.map ({minOffset}) -> minOffset is 0)
       return Promise.resolve()
 
+    # bail early if there's already a pending request
     if taskGroup.pendingRequests
       return Promise.resolve()
 
     dispatch({taskGroupId, type: 'LOG_REQUEST_START'})
-    promises = tasks.map (task) ->
-      {taskId, minOffset, path, initialDataLoaded} = task
+    promises = tasks.map ({taskId, minOffset, path, initialDataLoaded}) ->
       if minOffset > 0 and initialDataLoaded
         xhr = fetchData(taskId, path, Math.max(minOffset - logRequestLength, 0), Math.min(logRequestLength, minOffset))
         xhr.done ({data, offset, nextOffset}) ->
           if data.length > 0
-            nextOffset = nextOffset || offset + data.length
+            nextOffset = offset + data.length
             dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, false, maxLines))
       else
         Promise.resolve() # reject("initialDataLoaded is false for task #{taskId}")
