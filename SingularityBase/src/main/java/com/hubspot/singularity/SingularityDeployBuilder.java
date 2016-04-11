@@ -54,6 +54,9 @@ public class SingularityDeployBuilder {
   private Optional<Set<String>> loadBalancerGroups;
   private Optional<Integer> loadBalancerPortIndex;
   private Optional<Map<String, Object>> loadBalancerOptions;
+  private Optional<Set<String>> loadBalancerDomains;
+  private Optional<List<String>> loadBalancerAdditionalRoutes;
+  private Optional<String> loadBalancerTemplate;
 
   private Optional<Integer> deployInstanceCountPerStep;
   private Optional<Integer> deployStepWaitTimeMs;
@@ -93,6 +96,9 @@ public class SingularityDeployBuilder {
     this.loadBalancerGroups = Optional.absent();
     this.loadBalancerPortIndex = Optional.absent();
     this.loadBalancerOptions = Optional.absent();
+    this.loadBalancerDomains = Optional.absent();
+    this.loadBalancerAdditionalRoutes = Optional.absent();
+    this.loadBalancerTemplate = Optional.absent();
     this.deployInstanceCountPerStep = Optional.absent();
     this.deployStepWaitTimeMs = Optional.absent();
     this.autoAdvanceDeploySteps = Optional.absent();
@@ -102,8 +108,8 @@ public class SingularityDeployBuilder {
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, customExecutorUser, resources,
       env, uris, metadata, executorData, version, timestamp, labels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
-      healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy, healthcheckProtocol,
-      deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries);
+      healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, loadBalancerDomains, loadBalancerAdditionalRoutes,
+      loadBalancerTemplate, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries);
   }
 
   public String getRequestId() {
@@ -344,6 +350,33 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<Set<String>> getLoadBalancerDomains() {
+    return loadBalancerDomains;
+  }
+
+  public SingularityDeployBuilder setLoadBalancerDomains(Optional<Set<String>> loadBalancerDomains) {
+    this.loadBalancerDomains = loadBalancerDomains;
+    return this;
+  }
+
+  public Optional<List<String>> getLoadBalancerAdditionalRoutes() {
+    return loadBalancerAdditionalRoutes;
+  }
+
+  public SingularityDeployBuilder setLoadBalancerAdditionalRoutes(Optional<List<String>> loadBalancerAdditionalRoutes) {
+    this.loadBalancerAdditionalRoutes = loadBalancerAdditionalRoutes;
+    return this;
+  }
+
+  public Optional<String> getLoadBalancerTemplate() {
+    return loadBalancerTemplate;
+  }
+
+  public SingularityDeployBuilder setLoadBalancerTemplate(Optional<String> loadBalancerTemplate) {
+    this.loadBalancerTemplate = loadBalancerTemplate;
+    return this;
+  }
+
   public Optional<Map<String, String>> getLabels() {
     return labels;
   }
@@ -460,6 +493,9 @@ public class SingularityDeployBuilder {
       ", loadBalancerGroups=" + loadBalancerGroups +
       ", loadBalancerPortIndex=" + loadBalancerPortIndex +
       ", loadBalancerOptions=" + loadBalancerOptions +
+      ", loadBalancerDomains=" + loadBalancerDomains +
+      ", loadBalancerAdditionalRoutes=" + loadBalancerAdditionalRoutes +
+      ", loadBalancerTemplate=" + loadBalancerTemplate +
       ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
       ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
       ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +
