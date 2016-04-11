@@ -13,6 +13,7 @@ import org.apache.curator.framework.api.transaction.CuratorTransactionFinal;
 import org.apache.curator.utils.ZKPaths;
 import org.apache.mesos.Protos.TaskStatus;
 import org.apache.zookeeper.KeeperException;
+import org.apache.zookeeper.KeeperException.NodeExistsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +48,7 @@ import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskIdHistory;
 import com.hubspot.singularity.SingularityTaskIdHolder;
 import com.hubspot.singularity.SingularityTaskMetadata;
 import com.hubspot.singularity.SingularityTaskShellCommandHistory;
@@ -376,13 +378,12 @@ public class TaskManager extends CuratorAsyncManager {
   }
 
   public Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> getTaskHistoryUpdates(Collection<SingularityTaskId> taskIds) {
-    Map<SingularityTaskId, List<SingularityTaskHistoryUpdate>> map = Maps.newHashMapWithExpectedSize(taskIds.size());
-
+    Map<String, SingularityTaskId> pathsMap = Maps.newHashMap();
     for (SingularityTaskId taskId : taskIds) {
-      map.put(taskId, getTaskHistoryUpdates(taskId));
+      pathsMap.put(getHistoryPath(taskId), taskId);
     }
 
-    return map;
+    return getAsyncNestedChildDataAsMap(HISTORY_PATH_ROOT, pathsMap, UPDATES_PATH, taskHistoryUpdateTranscoder);
   }
 
   public int getNumHealthchecks(SingularityTaskId taskId) {
@@ -429,6 +430,16 @@ public class TaskManager extends CuratorAsyncManager {
     return getChildrenAsIds(getRequestPath(requestId), taskIdTranscoder);
   }
 
+  public Optional<SingularityTaskId> getTaskByRunId(String requestId, String runId) {
+    Map<SingularityTaskId, SingularityTask> activeTasks = getTasks(getActiveTaskIdsForRequest(requestId));
+    for (Map.Entry<SingularityTaskId, SingularityTask> entry : activeTasks.entrySet()) {
+      if (entry.getValue().getTaskRequest().getPendingTask().getRunId().isPresent() && entry.getValue().getTaskRequest().getPendingTask().getRunId().get().equals(runId)) {
+        return Optional.of(entry.getKey());
+      }
+    }
+    return Optional.absent();
+  }
+
   private enum TaskFilter {
     ACTIVE, INACTIVE;
   }
@@ -448,9 +459,17 @@ public class TaskManager extends CuratorAsyncManager {
       paths.add(getActivePath(taskId.getId()));
     }
 
-    final List<SingularityTaskId> activeTaskIds = exists(ACTIVE_PATH_ROOT, paths, taskIdTranscoder);
+    return exists(ACTIVE_PATH_ROOT, paths, taskIdTranscoder);
+  }
 
-    return activeTaskIds;
+  public List<SingularityTaskId> filterInactiveTaskIds(List<SingularityTaskId> taskIds) {
+    final Map<String, SingularityTaskId> pathsMap = Maps.newHashMap();
+
+    for (SingularityTaskId taskId : taskIds) {
+      pathsMap.put(getActivePath(taskId.getId()), taskId);
+    }
+
+    return notExists(ACTIVE_PATH_ROOT, pathsMap);
   }
 
   private List<SingularityTaskId> getTaskIdsForRequest(String requestId, TaskFilter taskFilter) {
@@ -483,6 +502,17 @@ public class TaskManager extends CuratorAsyncManager {
 
   public List<SingularityTaskId> getInactiveTaskIdsForDeploy(String requestId, final String deployId) {
     return getTaskIdsForDeploy(requestId, deployId, TaskFilter.INACTIVE);
+  }
+
+  public List<SingularityTaskId> getInactiveTaskIds(List<String> requestIds) {
+    List<String> paths = Lists.newArrayListWithCapacity(requestIds.size());
+    for (String requestId : requestIds) {
+      paths.add(getRequestPath(requestId));
+    }
+
+    List<SingularityTaskId> taskIds = getChildrenAsIdsForParents("requestIds", paths, taskIdTranscoder);
+
+    return filterInactiveTaskIds(taskIds);
   }
 
   public Optional<SingularityTaskHistory> getTaskHistory(SingularityTaskId taskId) {

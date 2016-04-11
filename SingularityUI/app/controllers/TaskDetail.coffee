@@ -24,20 +24,21 @@ TaskView = require '../views/task'
 class TaskDetailController extends Controller
 
     templates:
-        overview:                   require '../templates/taskDetail/taskOverview'
-        healthcheckNotification:    require '../templates/taskDetail/taskHealthcheckNotification'
-        taskMetadataAlert:          require '../templates/taskDetail/taskMetadataAlert'
-        history:                    require '../templates/taskDetail/taskHistory'
-        logs:                       require '../templates/taskDetail/taskS3Logs'
-        lbUpdates:                  require '../templates/taskDetail/taskLbUpdates'
-        healthChecks:               require '../templates/taskDetail/taskHealthChecks'
-        info:                       require '../templates/taskDetail/taskInfo'
-        environment:                require '../templates/taskDetail/taskEnvironment'
-        resourceUsage:              require '../templates/taskDetail/taskResourceUsage'
-        alerts:                     require '../templates/alerts'
-        latestLog:                  require '../templates/taskDetail/taskLatestLog'
-        shellCommands:              require '../templates/taskDetail/taskShellCommands'
-        taskMetadataTable:          require '../templates/taskDetail/taskMetadataTable'
+        overview:                     require '../templates/taskDetail/taskOverview'
+        deployFailureNotification:    require '../templates/taskDetail/taskDeployFailureNotification'
+        healthcheckNotification:      require '../templates/taskDetail/taskHealthcheckNotification'
+        taskMetadataAlert:            require '../templates/taskDetail/taskMetadataAlert'
+        history:                      require '../templates/taskDetail/taskHistory'
+        logs:                         require '../templates/taskDetail/taskS3Logs'
+        lbUpdates:                    require '../templates/taskDetail/taskLbUpdates'
+        healthChecks:                 require '../templates/taskDetail/taskHealthChecks'
+        info:                         require '../templates/taskDetail/taskInfo'
+        environment:                  require '../templates/taskDetail/taskEnvironment'
+        resourceUsage:                require '../templates/taskDetail/taskResourceUsage'
+        alerts:                       require '../templates/alerts'
+        latestLog:                    require '../templates/taskDetail/taskLatestLog'
+        shellCommands:                require '../templates/taskDetail/taskShellCommands'
+        taskMetadataTable:            require '../templates/taskDetail/taskMetadataTable'
 
     initialize: ({@taskId, @filePath}) ->
         @title @taskId
@@ -75,6 +76,12 @@ class TaskDetailController extends Controller
             model:      @models.task
             template:   @templates.overview
 
+        @subviews.deployFailureNotification = new SimpleSubview
+            model: @models.task
+            template: @templates.deployFailureNotification
+            extraRenderData: (subView) =>
+                { deploy: if @deploy then @deploy.toJSON() else '' }
+
         @subviews.healthcheckNotification = new HealthcheckNotification
             model:          @models.task
             template:       @templates.healthcheckNotification
@@ -108,6 +115,7 @@ class TaskDetailController extends Controller
             model:           @models.task
             # If we've been given a path we want the files, so scroll directly to it
             scrollWhenReady: @filePath isnt null
+            slaveOffline: false
 
         @subviews.s3Logs = new ExpandableTableSubview
             collection: @collections.s3Logs
@@ -154,6 +162,7 @@ class TaskDetailController extends Controller
         @refresh()
 
         app.showView @view
+
 
     fetchResourceUsage: ->
         @models.resourceUsage?.fetch()
@@ -202,15 +211,26 @@ class TaskDetailController extends Controller
                 return u.taskState == 'TASK_KILLED'
             if decomMessage.length > 0 and killedMessage.length > 0
                 alerts.push
-                  title: 'Alert:',
-                  message: 'This task was killed due to a slave decommissioning.',
-                  level: 'danger'
+                  message: 'This task was replaced then killed by Singularity due to a slave decommissioning.',
+                  level: 'warning'
 
         if deployPromise
             deployPromise.done =>
                 @collections.alerts.reset(alerts)
         else
             @collections.alerts.reset(alerts)
+
+    fetchDeployDetails: ->
+        @deploy = new DeployDetails
+            deployId: @models.task.attributes.task.taskId.deployId
+            requestId: @models.task.attributes.task.taskId.requestId
+        @deploy.fetch()
+            .success =>
+                @subviews.deployFailureNotification.render()
+                @subviews.healthcheckNotification.deploy = @deploy
+                @subviews.healthcheckNotification.render()
+            .error =>
+                app.caughtError()
 
     refresh: ->
         @resourcesFetched = false
@@ -227,9 +247,13 @@ class TaskDetailController extends Controller
                 logPath = logPath.replace('$TASK_ID', @taskId)
                 logPath = _.initial(logPath.split('/')).join('/')
                 @collections.logDirectory.path = logPath
-                @collections.logDirectory.fetch().error @ignore400
+                @collections.logDirectory.fetch().error (response) =>
+                    @ignore400 response
+                    @ignore404 response
+                    @subviews.fileBrowser.slaveOffline = true and @subviews.fileBrowser.render() if response.status is 404
             .success =>
                 @getAlerts()
+                @fetchDeployDetails()
             .error =>
                 # If this 404s the task doesn't exist
                 app.caughtError()
