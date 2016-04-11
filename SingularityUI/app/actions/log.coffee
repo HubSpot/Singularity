@@ -33,14 +33,19 @@ initialize = (requestId, path, search, taskIds) ->
 
     groupPromises = taskIdGroups.map (taskIds, taskGroupId) ->
       taskInitPromises = taskIds.map (taskId) ->
+        taskInitDeferred = Q.defer()
         resolvedPath = path.replace('$TASK_ID', taskId)
         fetchData(taskId, resolvedPath).done ({offset}) ->
           dispatch(initTask(taskId, offset, resolvedPath, true))
+          taskInitDeferred.resolve()
         .error ({status}) ->
           if status is 404
             app.caughtError()
             dispatch(taskFileDoesNotExist(taskGroupId, taskId))
-            Promise.resolve()
+            taskInitDeferred.resolve()
+          else
+            taskInitDeferred.reject()
+        return taskInitDeferred.promise
 
       taskStatusPromises = taskIds.map (taskId) ->
         dispatch(updateTaskStatus(taskGroupId, taskId))

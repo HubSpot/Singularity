@@ -24,7 +24,12 @@ class LogViewer extends Controller
         }
     }
 
-    @store = Redux.createStore(rootReducer, initialState, Redux.compose(Redux.applyMiddleware(thunk.default, logger())))
+    middlewares = [thunk.default]
+
+    if window.localStorage.enableReduxLogging
+        middlewares.push(logger())
+
+    @store = Redux.createStore(rootReducer, initialState, Redux.compose(Redux.applyMiddleware.apply(this, middlewares)))
 
     if taskIds.length > 0
         initPromise = @store.dispatch(LogActions.initialize(@requestId, @path, search, taskIds))
