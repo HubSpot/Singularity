@@ -4,9 +4,6 @@ React = require 'react'
 { connect } = require 'react-redux'
 
 class TasksDropdown extends React.Component
-  handleTasksKeyDown: ->
-    # TODO
-
   renderListItems: ->
     if @props.activeTasks and @props.taskIds
       tasks = _.sortBy(@props.activeTasks, (t) => t.taskId.instanceNo).map (task, i) =>
@@ -25,7 +22,7 @@ class TasksDropdown extends React.Component
 
   render: ->
     <div className="btn-group" title="Select Instances">
-      <button type="button" className="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" onKeyDown={@handleTasksKeyDown}>
+      <button type="button" className="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         <span className="glyphicon glyphicon-tasks"></span> <span className="caret"></span>
       </button>
       <ul className="dropdown-menu">

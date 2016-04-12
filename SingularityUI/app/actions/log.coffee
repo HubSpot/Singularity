@@ -259,8 +259,12 @@ setCurrentSearch = (newSearch) ->  # TODO: can we do something less heavyweight?
 toggleTaskLog = (taskId) ->
   (dispatch, getState) ->
     {search, path, tasks, viewMode} = getState()
-    if taskId of tasks and Object.keys(tasks).length > 1
+    if taskId of tasks
+      # only remove task if it's not the last one
+      if Object.keys(tasks).length > 1
         dispatch({taskId, type: 'LOG_REMOVE_TASK'})
+      else
+        return
     else
       if viewMode is 'split'
         dispatch(addTaskGroup([taskId], search))
