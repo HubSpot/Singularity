@@ -65,9 +65,10 @@ init = (requestId, taskIdGroups, path, search) ->
     type: 'LOG_INIT'
   }
 
-addTaskGroup = (taskIds) ->
+addTaskGroup = (taskIds, search) ->
   {
     taskIds
+    search
     type: 'LOG_ADD_TASK_GROUP'
   }
 
@@ -262,7 +263,7 @@ toggleTaskLog = (taskId) ->
         dispatch({taskId, type: 'LOG_REMOVE_TASK'})
     else
       if viewMode is 'split'
-        dispatch(addTaskGroup([taskId]))
+        dispatch(addTaskGroup([taskId], search))
 
       resolvedPath = path.replace('$TASK_ID', taskId)
 
