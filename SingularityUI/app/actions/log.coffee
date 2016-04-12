@@ -187,7 +187,7 @@ taskGroupFetchPrevious = (taskGroupId) ->
 
     Promise.all(promises).then -> dispatch({taskGroupId, type: 'LOG_REQUEST_END'})
 
-taskData = (taskGroupId, taskId, data, offset, nextOffset, append, maxLines, buffer) ->
+taskData = (taskGroupId, taskId, data, offset, nextOffset, append, maxLines) ->
   {
     taskGroupId
     taskId
@@ -196,7 +196,6 @@ taskData = (taskGroupId, taskId, data, offset, nextOffset, append, maxLines, buf
     nextOffset
     append
     maxLines
-    buffer
     type: 'LOG_TASK_DATA'
   }
 
