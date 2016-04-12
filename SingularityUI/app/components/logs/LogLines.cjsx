@@ -34,10 +34,10 @@ class LogLines extends React.Component
     window.removeEventListener 'resize', @handleScroll
 
   componentDidUpdate: (prevProps, prevState) ->
-    if @props.tailing
-      @refs.tailContents.scrollTop = @refs.tailContents.scrollHeight
-    else if prevProps.updatedAt isnt @props.updatedAt
-      if @props.prependedLineCount > 0 or @props.linesRemovedFromTop > 0
+    if prevProps.updatedAt isnt @props.updatedAt
+      if @props.tailing
+        @refs.tailContents.scrollTop = @refs.tailContents.scrollHeight
+      else if @props.prependedLineCount > 0 or @props.linesRemovedFromTop > 0
         @refs.tailContents.scrollTop += 20 * (@props.prependedLineCount - @props.linesRemovedFromTop)
       else
         @handleScroll()
@@ -77,7 +77,7 @@ class LogLines extends React.Component
       @props.taskGroupTop(@props.taskGroupId, false)
 
     if scrollTop + clientHeight > scrollHeight - clientHeight
-      @props.taskGroupBottom(@props.taskGroupId, true)
+      @props.taskGroupBottom(@props.taskGroupId, true, (scrollTop + clientHeight > scrollHeight - 20))
     else
       @props.taskGroupBottom(@props.taskGroupId, false)
 
