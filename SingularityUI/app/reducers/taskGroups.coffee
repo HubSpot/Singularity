@@ -24,8 +24,8 @@ buildTaskGroup = (taskIds, search) ->
 resetTaskGroup = (tailing=false) -> {
   logLines: []
   taskBuffer: {}
-  top: false
-  bottom: false
+  top: true
+  bottom: true
   updatedAt: +new Date()
   tailing
 }
@@ -59,8 +59,8 @@ ACTIONS = {
     return taskIdGroups.map (taskIds) -> buildTaskGroup(taskIds, search)
 
   # Add a group of tasks to the logger
-  LOG_ADD_TASK_GROUP: (state, {taskIds}) ->
-    newState = state.concat(buildTaskGroup(taskIds, state.search))
+  LOG_ADD_TASK_GROUP: (state, {taskIds, search}) ->
+    newState = state.concat(buildTaskGroup(taskIds, search))
     return _.sortBy(newState, (taskGroup) -> getInstanceNumberFromTaskId(taskGroup.taskIds[0]))
 
   # Remove a task from the logger
