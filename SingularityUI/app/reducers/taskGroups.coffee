@@ -26,6 +26,7 @@ resetTaskGroup = (tailing=false) -> {
   taskBuffer: {}
   top: false
   bottom: false
+  updatedAt: +new Date()
   tailing
 }
 
@@ -87,11 +88,14 @@ ACTIONS = {
 
   # The logger has either entered or exited the bottom
   LOG_TASK_GROUP_BOTTOM: (state, {taskGroupId, visible}) ->
-    return updateTaskGroup(state, taskGroupId, {bottom: visible, tailing: false})
+    return updateTaskGroup(state, taskGroupId, {bottom: visible})
 
   # An entire task group is ready
   LOG_TASK_GROUP_READY: (state, {taskGroupId}) ->
-    return updateTaskGroup(state, taskGroupId, {ready: true, updatedAt: +new Date()})
+    return updateTaskGroup(state, taskGroupId, {ready: true, updatedAt: +new Date(), tailing: true})
+
+  LOG_TASK_GROUP_TAILING: (state, {taskGroupId, tailing}) ->
+    return updateTaskGroup(state, taskGroupId, {tailing})
 
   LOG_REMOVE_TASK_GROUP: (state, {taskGroupId}) ->
     newState = []
@@ -140,9 +144,7 @@ ACTIONS = {
 
     # bail early if no data
     if data.length is 0 and task.loadedData
-      newState = Object.assign([], state)
-      newState[taskGroupId] = Object.assign({}, taskGroup, {tailing: append and data.length is 0})
-      return newState
+      return state
 
     # split task data into separate lines, attempt to parse timestamp
     currentOffset = offset
