@@ -45,7 +45,10 @@ class LogLines extends React.Component
   renderLoadingPrevious: ->
     if @props.initialDataLoaded
       if not @props.reachedStartOfFile
-        <div>Loading previous... ({Humanize.filesize(@props.bytesRemainingBefore)} remaining)</div>
+        if @props.search
+          <div>Searching for '{@props.search}'... ({Humanize.filesize(@props.bytesRemainingBefore)} remaining)</div>
+        else
+          <div>Loading previous... ({Humanize.filesize(@props.bytesRemainingBefore)} remaining)</div>
 
   renderLogLines: ->
     @props.logLines.map ({data, offset, taskId, timestamp}) =>
@@ -63,9 +66,15 @@ class LogLines extends React.Component
       return null
     if @props.initialDataLoaded
       if @props.reachedEndOfFile
-        <div>Tailing...</div>
+        if @props.search
+          <div>Tailing for '{@props.search}'...</div>
+        else
+          <div>Tailing...</div>
       else
-        <div>Loading more... ({Humanize.filesize(@props.bytesRemainingAfter)} remaining)</div>
+        if @props.search
+          <div>Searching for '{@props.search}'... ({Humanize.filesize(@props.bytesRemainingAfter)} remaining)</div>
+        else
+          <div>Loading more... ({Humanize.filesize(@props.bytesRemainingAfter)} remaining)</div>
 
 
   handleScroll: =>
@@ -116,6 +125,7 @@ mapStateToProps = (state, ownProps) ->
   bytesRemainingBefore: sum(_.pluck(tasks, 'minOffset'))
   bytesRemainingAfter: sum(tasks.map ({filesize, maxOffset}) -> Math.max(filesize - maxOffset, 0))
   colorMap: colorMap
+  search: state.search
 
 mapDispatchToProps = { taskGroupTop, taskGroupBottom }
 
