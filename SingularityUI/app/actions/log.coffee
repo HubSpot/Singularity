@@ -117,7 +117,7 @@ updateGroups = ->
       unless taskGroup.pendingRequests
         if taskGroup.top
           dispatch(taskGroupFetchPrevious(taskGroupId))
-        if taskGroup.bottom
+        if taskGroup.bottom or taskGroup.tailing
           dispatch(taskGroupFetchNext(taskGroupId))
 
 updateTaskStatuses = ->
@@ -187,7 +187,7 @@ taskGroupFetchPrevious = (taskGroupId) ->
 
     Promise.all(promises).then -> dispatch({taskGroupId, type: 'LOG_REQUEST_END'})
 
-taskData = (taskGroupId, taskId, data, offset, nextOffset, append, maxLines, buffer) ->
+taskData = (taskGroupId, taskId, data, offset, nextOffset, append, maxLines) ->
   {
     taskGroupId
     taskId
@@ -196,7 +196,6 @@ taskData = (taskGroupId, taskId, data, offset, nextOffset, append, maxLines, buf
     nextOffset
     append
     maxLines
-    buffer
     type: 'LOG_TASK_DATA'
   }
 
@@ -214,9 +213,14 @@ taskGroupTop = (taskGroupId, visible) ->
       if visible
         dispatch(taskGroupFetchPrevious(taskGroupId))
 
-taskGroupBottom = (taskGroupId, visible) ->
+taskGroupBottom = (taskGroupId, visible, tailing=false) ->
   (dispatch, getState) ->
-    if getState().taskGroups[taskGroupId].bottom != visible
+    { taskGroups, tasks } = getState()
+    taskGroup = taskGroups[taskGroupId]
+    if taskGroup.tailing != tailing
+      if tailing is false or _.all(getTasks(taskGroup, tasks).map(({maxOffset, filesize}) -> maxOffset >= filesize))
+        dispatch({taskGroupId, tailing, type: 'LOG_TASK_GROUP_TAILING'})
+    if taskGroup.bottom != visible
       dispatch({taskGroupId, visible, type: 'LOG_TASK_GROUP_BOTTOM'})
       if visible
         dispatch(taskGroupFetchNext(taskGroupId))
