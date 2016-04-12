@@ -17,9 +17,6 @@ class Header extends React.Component
     scrollAllToBottom: React.PropTypes.func.isRequired
     scrollAllToTop: React.PropTypes.func.isRequired
 
-  toggleHelp: ->
-    # TODO
-
   renderBreadcrumbs: ->
     @props.path.split('/').map (subpath, i) ->
       if subpath is '$TASK_ID'
