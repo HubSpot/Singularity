@@ -24,8 +24,8 @@ buildTaskGroup = (taskIds, search) ->
 resetTaskGroup = (tailing=false) -> {
   logLines: []
   taskBuffer: {}
-  top: false
-  bottom: false
+  top: true
+  bottom: true
   updatedAt: +new Date()
   tailing
 }
@@ -59,15 +59,15 @@ ACTIONS = {
     return taskIdGroups.map (taskIds) -> buildTaskGroup(taskIds, search)
 
   # Add a group of tasks to the logger
-  LOG_ADD_TASK_GROUP: (state, {taskIds}) ->
-    newState = state.concat(buildTaskGroup(taskIds, state.search))
-    return _.sortBy(newState, (taskGroup) -> getInstanceNumberFromTaskId(taskGroup.taskIds[0]))
+  LOG_ADD_TASK_GROUP: (state, {taskIds, search}) ->
+    return _.sortBy(state.concat(buildTaskGroup(taskIds, search)), (taskGroup) -> getInstanceNumberFromTaskId(taskGroup.taskIds[0]))
 
   # Remove a task from the logger
   LOG_REMOVE_TASK: (state, {taskId}) ->
     newState = []
     for taskGroup in state
       if taskId in taskGroup.taskIds
+        # remove task group if it only has one task
         if taskGroup.taskIds.length is 1
           continue
 
@@ -92,7 +92,7 @@ ACTIONS = {
 
   # An entire task group is ready
   LOG_TASK_GROUP_READY: (state, {taskGroupId}) ->
-    return updateTaskGroup(state, taskGroupId, {ready: true, updatedAt: +new Date(), tailing: true})
+    return updateTaskGroup(state, taskGroupId, {ready: true, updatedAt: +new Date(), top: true, bottom: true, tailing: true})
 
   LOG_TASK_GROUP_TAILING: (state, {taskGroupId, tailing}) ->
     return updateTaskGroup(state, taskGroupId, {tailing})
@@ -107,36 +107,23 @@ ACTIONS = {
   LOG_EXPAND_TASK_GROUP: (state, {taskGroupId}) ->
     return [state[taskGroupId]]
 
-  # The logger has been asked to scroll to the top
-  LOG_SCROLL_ALL_GROUPS_TO_TOP: (state) ->
-    return state.map (taskGroup) ->
-      Object.assign({}, taskGroup, resetTaskGroup())
-
   LOG_SCROLL_TO_TOP: (state, {taskGroupId}) ->
-    newState = Object.assign([], state)
-    newState[taskGroupId] = Object.assign({}, state[taskGroupId], resetTaskGroup())
-    return newState
+    return updateTaskGroup(state, taskGroupId, resetTaskGroup())
 
   LOG_SCROLL_ALL_TO_TOP: (state) ->
-    state.map (taskGroup) -> Object.assign({}, taskGroup, resetTaskGroup())
+    return state.map (taskGroup) -> Object.assign({}, taskGroup, resetTaskGroup())
 
   LOG_SCROLL_TO_BOTTOM: (state, {taskGroupId}) ->
-    newState = Object.assign([], state)
-    newState[taskGroupId] = Object.assign({}, state[taskGroupId], resetTaskGroup(true))
-    return newState
+    return updateTaskGroup(state, taskGroupId, resetTaskGroup(true))
 
   LOG_SCROLL_ALL_TO_BOTTOM: (state) ->
-    state.map (taskGroup) -> Object.assign({}, taskGroup, resetTaskGroup(true))
+    return state.map (taskGroup) -> Object.assign({}, taskGroup, resetTaskGroup(true))
 
   LOG_REQUEST_START: (state, {taskGroupId}) ->
-    newState = Object.assign([], state)
-    newState[taskGroupId] = Object.assign({}, state[taskGroupId], {pendingRequests: true})
-    return newState
+    return updateTaskGroup(state, taskGroupId, {pendingRequests: true})
 
   LOG_REQUEST_END: (state, {taskGroupId}) ->
-    newState = Object.assign([], state)
-    newState[taskGroupId] = Object.assign({}, state[taskGroupId], {pendingRequests: false})
-    return newState
+    return updateTaskGroup(state, taskGroupId, {pendingRequests: false})
 
   # We've received logging data for a task
   LOG_TASK_DATA: (state, {taskGroupId, taskId, offset, nextOffset, maxLines, data, append}) ->
