@@ -92,7 +92,7 @@ ACTIONS = {
 
   # An entire task group is ready
   LOG_TASK_GROUP_READY: (state, {taskGroupId}) ->
-    return updateTaskGroup(state, taskGroupId, {ready: true, updatedAt: +new Date(), tailing: true})
+    return updateTaskGroup(state, taskGroupId, {ready: true, updatedAt: +new Date(), top: true, bottom: true, tailing: true})
 
   LOG_TASK_GROUP_TAILING: (state, {taskGroupId, tailing}) ->
     return updateTaskGroup(state, taskGroupId, {tailing})
