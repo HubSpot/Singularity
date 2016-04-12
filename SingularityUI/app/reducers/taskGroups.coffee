@@ -26,6 +26,7 @@ resetTaskGroup = (tailing=false) -> {
   taskBuffer: {}
   top: false
   bottom: false
+  updatedAt: +new Date()
   tailing
 }
 
