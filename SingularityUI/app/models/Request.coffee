@@ -351,7 +351,7 @@ class Request extends Model
                 message = $('.vex #scale-message').val()
                 duration = $('.vex #scale-expiration').val()
                 if !duration or (duration and @_validateDuration(duration, @promptScale, callback))
-                    if @attributes.request.rackSensitive and not @attributes.request.hideEvenNumberAcrossRacksHint
+                    if @attributes.request.requestType is 'SERVICE' and @attributes.request.rackSensitive and not @attributes.request.hideEvenNumberAcrossRacksHint
                         if @racks
                             @checkScaleEvenNumberRacks data, bounce, incremental, message, duration, callback
                         else
