@@ -41,7 +41,6 @@ public class SingularityRequestBuilder {
   private Optional<Set<String>> readOnlyGroups;
   private Optional<Boolean> bounceAfterScale;
   private Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides;
-  private Optional<List<String>> expectedCommandLineArguments;
   private Optional<Boolean> hideEvenNumberAcrossRacksHint;
 
   public SingularityRequestBuilder(String id, RequestType requestType) {
@@ -67,14 +66,13 @@ public class SingularityRequestBuilder {
     this.bounceAfterScale = Optional.absent();
     this.emailConfigurationOverrides = Optional.absent();
     this.skipHealthchecks = Optional.absent();
-    this.expectedCommandLineArguments = Optional.absent();
     this.hideEvenNumberAcrossRacksHint = Optional.absent();
   }
 
   public SingularityRequest build() {
     return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule,
         rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readOnlyGroups,
-        bounceAfterScale, skipHealthchecks, emailConfigurationOverrides, Optional.<Boolean>absent(), expectedCommandLineArguments, hideEvenNumberAcrossRacksHint);
+        bounceAfterScale, skipHealthchecks, emailConfigurationOverrides, Optional.<Boolean>absent(), hideEvenNumberAcrossRacksHint);
   }
 
   public Optional<Boolean> getSkipHealthchecks() {
@@ -257,13 +255,6 @@ public class SingularityRequestBuilder {
     return this;
   }
 
-  public SingularityRequestBuilder setExpectedCommandLineArguments(Optional<List<String>> expectedCommandLineArguments) {
-    this.expectedCommandLineArguments = expectedCommandLineArguments;
-    return this;
-  }
-
-  public Optional<List<String>> getExpectedCommandLineArguments() { return expectedCommandLineArguments; }
-
   public Optional<Boolean> getHideEvenNumberAcrossRacksHint() { return hideEvenNumberAcrossRacksHint; }
 
   public SingularityRequestBuilder setHideEvenNumberAcrossRacksHint(Optional<Boolean> hideEvenNumberAcrossRacksHint) {
@@ -296,7 +287,6 @@ public class SingularityRequestBuilder {
             ", bounceAfterScale=" + bounceAfterScale +
             ", emailConfigurationOverrides=" + emailConfigurationOverrides +
             ", skipHealthchecks=" + skipHealthchecks +
-            ", expectedCommandLineArguments=" + expectedCommandLineArguments +
             ", hideEvenNumberAcrossRacksHint=" + hideEvenNumberAcrossRacksHint +
             ']';
   }
@@ -332,14 +322,13 @@ public class SingularityRequestBuilder {
             Objects.equals(bounceAfterScale, that.bounceAfterScale) &&
             Objects.equals(skipHealthchecks, that.skipHealthchecks) &&
             Objects.equals(emailConfigurationOverrides, that.emailConfigurationOverrides) &&
-            Objects.equals(expectedCommandLineArguments, that.expectedCommandLineArguments) &&
             Objects.equals(hideEvenNumberAcrossRacksHint, that.hideEvenNumberAcrossRacksHint);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis,
-        scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, expectedCommandLineArguments,
+        scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement,
         requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale, skipHealthchecks, emailConfigurationOverrides, hideEvenNumberAcrossRacksHint);
   }
 

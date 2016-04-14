@@ -47,8 +47,6 @@ public class SingularityRequest {
 
   private final Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides;
 
-  private final Optional<List<String>> expectedCommandLineArguments;
-
   private final Optional<Boolean> hideEvenNumberAcrossRacksHint;
 
   @JsonCreator
@@ -63,8 +61,7 @@ public class SingularityRequest {
       @JsonProperty("readOnlyGroups") Optional<Set<String>> readOnlyGroups, @JsonProperty("bounceAfterScale") Optional<Boolean> bounceAfterScale,
       @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
       @JsonProperty("emailConfigurationOverrides") Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides,
-      @JsonProperty("daemon") @Deprecated Optional<Boolean> daemon, @JsonProperty("expectedCommandLineArguments") Optional<List<String>> expectedCommandLineArguments,
-      @JsonProperty("hideEvenNumberAcrossRacks") Optional<Boolean> hideEvenNumberAcrossRacksHint) {
+      @JsonProperty("daemon") @Deprecated Optional<Boolean> daemon, @JsonProperty("hideEvenNumberAcrossRacks") Optional<Boolean> hideEvenNumberAcrossRacksHint) {
     this.id = checkNotNull(id, "id cannot be null");
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
@@ -86,7 +83,6 @@ public class SingularityRequest {
     this.bounceAfterScale = bounceAfterScale;
     this.emailConfigurationOverrides = emailConfigurationOverrides;
     this.skipHealthchecks = skipHealthchecks;
-    this.expectedCommandLineArguments = expectedCommandLineArguments;
     this.hideEvenNumberAcrossRacksHint = hideEvenNumberAcrossRacksHint;
     if (requestType == null) {
       this.requestType = RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced);
@@ -117,7 +113,6 @@ public class SingularityRequest {
     .setBounceAfterScale(bounceAfterScale)
     .setEmailConfigurationOverrides(emailConfigurationOverrides)
     .setSkipHealthchecks(skipHealthchecks)
-    .setExpectedCommandLineArguments(expectedCommandLineArguments)
     .setHideEvenNumberAcrossRacksHint(hideEvenNumberAcrossRacksHint);
   }
 
@@ -262,8 +257,6 @@ public class SingularityRequest {
     return skipHealthchecks;
   }
 
-  public Optional<List<String>> getExpectedCommandLineArguments() { return expectedCommandLineArguments; }
-
   public Optional<Boolean> getHideEvenNumberAcrossRacksHint() { return hideEvenNumberAcrossRacksHint; }
 
   @Override
@@ -290,7 +283,6 @@ public class SingularityRequest {
             ", readOnlyGroups=" + readOnlyGroups +
             ", bounceAfterScale=" + bounceAfterScale +
             ", emailConfigurationOverrides=" + emailConfigurationOverrides +
-            ", expectedCommandLineArguments=" + expectedCommandLineArguments +
             ", hideEvenNumberAcrossRacksHint=" + hideEvenNumberAcrossRacksHint +
             ']';
   }
@@ -325,12 +317,11 @@ public class SingularityRequest {
             Objects.equals(readOnlyGroups, request.readOnlyGroups) &&
             Objects.equals(bounceAfterScale, request.bounceAfterScale) &&
             Objects.equals(emailConfigurationOverrides, request.emailConfigurationOverrides) &&
-            Objects.equals(expectedCommandLineArguments, request.expectedCommandLineArguments) &&
             Objects.equals(hideEvenNumberAcrossRacksHint, request.hideEvenNumberAcrossRacksHint);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides, expectedCommandLineArguments, hideEvenNumberAcrossRacksHint);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides, hideEvenNumberAcrossRacksHint);
   }
 }
