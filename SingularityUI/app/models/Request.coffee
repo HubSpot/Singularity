@@ -458,7 +458,6 @@ class Request extends Model
             callback() # Don't actually error if we can't find previous args, just don't populate
 
     getCommandLineArgs: (callback) =>
-        console.log "Get command line args"
         fetchThis = @fetch()
         fetchThis.done =>
             if @attributes and @attributes.activeDeploy and @attributes.activeDeploy.expectedTaskCommandLineArguments
