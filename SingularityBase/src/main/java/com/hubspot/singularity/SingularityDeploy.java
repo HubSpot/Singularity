@@ -61,6 +61,9 @@ public class SingularityDeploy {
   private final Optional<Set<String>> loadBalancerGroups;
   private final Optional<Integer> loadBalancerPortIndex;
   private final Optional<Map<String, Object>> loadBalancerOptions;
+  private final Optional<Set<String>> loadBalancerDomains;
+  private final Optional<List<String>> loadBalancerAdditionalRoutes;
+  private final Optional<String> loadBalancerTemplate;
 
   private final Optional<Integer> deployInstanceCountPerStep;
   private final Optional<Integer> deployStepWaitTimeMs;
@@ -103,6 +106,9 @@ public class SingularityDeploy {
       @JsonProperty("loadBalancerPortIndex") Optional<Integer> loadBalancerPortIndex,
       @JsonProperty("considerHealthyAfterRunningForSeconds") Optional<Long> considerHealthyAfterRunningForSeconds,
       @JsonProperty("loadBalancerOptions") Optional<Map<String, Object>> loadBalancerOptions,
+      @JsonProperty("loadBalancerDomains") Optional<Set<String>> loadBalancerDomains,
+      @JsonProperty("loadBalancerAdditionalRoutes") Optional<List<String>> loadBalancerAdditionalRoutes,
+      @JsonProperty("loadBalancerTemplate") Optional<String> loadBalancerTemplate,
       @JsonProperty("skipHealthchecksOnDeploy") Optional<Boolean> skipHealthchecksOnDeploy,
       @JsonProperty("healthCheckProtocol") Optional<HealthcheckProtocol> healthcheckProtocol,
       @JsonProperty("deployInstanceCountPerStep") Optional<Integer> deployInstanceCountPerStep,
@@ -151,6 +157,9 @@ public class SingularityDeploy {
     this.loadBalancerGroups = loadBalancerGroups;
     this.loadBalancerPortIndex = loadBalancerPortIndex;
     this.loadBalancerOptions = loadBalancerOptions;
+    this.loadBalancerDomains = loadBalancerDomains;
+    this.loadBalancerAdditionalRoutes = loadBalancerAdditionalRoutes;
+    this.loadBalancerTemplate = loadBalancerTemplate;
 
     this.deployInstanceCountPerStep = deployInstanceCountPerStep;
     this.deployStepWaitTimeMs = deployStepWaitTimeMs;
@@ -184,6 +193,9 @@ public class SingularityDeploy {
     .setLoadBalancerGroups(copyOfSet(loadBalancerGroups))
     .setLoadBalancerPortIndex(loadBalancerPortIndex)
     .setLoadBalancerOptions(copyOfMap(loadBalancerOptions))
+    .setLoadBalancerDomains(copyOfSet(loadBalancerDomains))
+    .setLoadBalancerAdditionalRoutes(copyOfList(loadBalancerAdditionalRoutes))
+    .setLoadBalancerTemplate(loadBalancerTemplate)
     .setMetadata(copyOfMap(metadata))
     .setVersion(version)
     .setTimestamp(timestamp)
@@ -337,6 +349,21 @@ public class SingularityDeploy {
     return loadBalancerOptions;
   }
 
+  @ApiModelProperty(required=false, value="List of domains to host this service on, for use with the load balancer api")
+  public Optional<Set<String>> getLoadBalancerDomains() {
+    return loadBalancerDomains;
+  }
+
+  @ApiModelProperty(required=false, value="Additional routes besides serviceBasePath used by this service")
+  public Optional<List<String>> getLoadBalancerAdditionalRoutes() {
+    return loadBalancerAdditionalRoutes;
+  }
+
+  @ApiModelProperty(required=false, value="Name of load balancer template to use if not using the default template")
+  public Optional<String> getLoadBalancerTemplate() {
+    return loadBalancerTemplate;
+  }
+
   @ApiModelProperty(required=false, value="Labels for tasks associated with this deploy")
   public Optional<Map<String, String>> getLabels() {
     return labels;
@@ -414,6 +441,9 @@ public class SingularityDeploy {
       ", loadBalancerGroups=" + loadBalancerGroups +
       ", loadBalancerPortIndex=" + loadBalancerPortIndex +
       ", loadBalancerOptions=" + loadBalancerOptions +
+      ", loadBalancerDomain=" + loadBalancerDomains +
+      ", loadBalancerAdditionalRoutes=" + loadBalancerAdditionalRoutes +
+      ", loadBalancerTemplate=" + loadBalancerTemplate +
       ", labels=" + labels +
       ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
       ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
