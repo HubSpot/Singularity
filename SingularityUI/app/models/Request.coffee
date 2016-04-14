@@ -460,8 +460,8 @@ class Request extends Model
     getCommandLineArgs: (callback) =>
         fetchThis = @fetch()
         fetchThis.done =>
-            if @attributes and @attributes.request and @attributes.request.expectedCommandLineArguments
-                @commands = @attributes.request.expectedCommandLineArguments
+            if @attributes and @attributes.activeDeploy and @attributes.activeDeploy.expectedTaskCommandLineArguments
+                @commands = @attributes.activeDeploy.expectedTaskCommandLineArguments
                 callback()
             else
                 @getMostRecentlyRunTask callback
