@@ -69,7 +69,7 @@ public class SingularityDeploy {
   private final Optional<Integer> deployStepWaitTimeMs;
   private final Optional<Boolean> autoAdvanceDeploySteps;
   private final Optional<Integer> maxTaskRetries;
-  private final Optional<List<String>> expectedRunTaskNowCommandLineArguments;
+  private final Optional<List<String>> expectedRunNowArguments;
 
   public static SingularityDeployBuilder newBuilder(String requestId, String id) {
     return new SingularityDeployBuilder(requestId, id);
@@ -115,7 +115,7 @@ public class SingularityDeploy {
       @JsonProperty("deployStepWaitTimeMs") Optional<Integer> deployStepWaitTimeMs,
       @JsonProperty("autoAdvanceDeploySteps") Optional<Boolean> autoAdvanceDeploySteps,
       @JsonProperty("maxTaskRetries") Optional<Integer> maxTaskRetries,
-      @JsonProperty("expectedRunTaskNowCommandLineArguments") Optional<List<String>> expectedRunTaskNowCommandLineArguments) {
+      @JsonProperty("expectedRunNowArguments") Optional<List<String>> expectedRunNowArguments) {
     this.requestId = requestId;
 
     this.command = command;
@@ -165,7 +165,7 @@ public class SingularityDeploy {
     this.deployStepWaitTimeMs = deployStepWaitTimeMs;
     this.autoAdvanceDeploySteps = autoAdvanceDeploySteps;
     this.maxTaskRetries = maxTaskRetries;
-    this.expectedRunTaskNowCommandLineArguments = expectedRunTaskNowCommandLineArguments;
+    this.expectedRunNowArguments = expectedRunNowArguments;
   }
 
   public SingularityDeployBuilder toBuilder() {
@@ -207,7 +207,7 @@ public class SingularityDeploy {
     .setDeployStepWaitTimeMs(deployStepWaitTimeMs)
     .setAutoAdvanceDeploySteps(autoAdvanceDeploySteps)
     .setMaxTaskRetries(maxTaskRetries)
-    .setExpectedRunTaskNowCommandLineArguments(expectedRunTaskNowCommandLineArguments);
+    .setExpectedRunNowArguments(expectedRunNowArguments);
   }
 
   @ApiModelProperty(required=false, value="Number of seconds that Singularity waits for this service to become healthy (for it to download artifacts, start running, and optionally pass healthchecks.)")
@@ -405,7 +405,7 @@ public class SingularityDeploy {
   }
 
   @ApiModelProperty(required=false, value="Command Line Arguments to autopopulate in the UI run task now dialog")
-  public Optional<List<String>> getExpectedRunTaskNowCommandLineArguments() { return expectedRunTaskNowCommandLineArguments; }
+  public Optional<List<String>> getExpectedRunNowArguments() { return expectedRunNowArguments; }
 
   @Override
   public String toString() {
@@ -449,7 +449,7 @@ public class SingularityDeploy {
       ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
       ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +
       ", maxTaskRetries=" + maxTaskRetries +
-      ", expectedRunTaskNowCommandLineArguments=" + expectedRunTaskNowCommandLineArguments +
+      ", expectedRunNowArguments=" + expectedRunNowArguments +
       '}';
   }
 
