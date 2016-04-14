@@ -1,5 +1,6 @@
 package com.hubspot.singularity.resources;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.DELETE;
@@ -21,6 +22,7 @@ import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SingularityWebhook;
+import com.hubspot.singularity.SingularityWebhookSummary;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.WebhookManager;
 import com.wordnik.swagger.annotations.Api;
@@ -48,6 +50,24 @@ public class WebhookResource {
   public List<SingularityWebhook> getActiveWebhooks() {
     authorizationHelper.checkAdminAuthorization(user);
     return webhookManager.getActiveWebhooks();
+  }
+
+  @GET
+  @Path("/summary")
+  @ApiOperation("Retrieve a summary of each active webhook")
+  public List<SingularityWebhookSummary> getActiveWebhookSummaries() {
+    authorizationHelper.checkAdminAuthorization(user);
+    List<SingularityWebhookSummary> webhookSummaries = new ArrayList<SingularityWebhookSummary>();
+    for (SingularityWebhook webhook : webhookManager.getActiveWebhooks()) {
+      String webhookUrl = JavaUtils.urlEncode(webhook.getId());
+      webhookSummaries.add(new SingularityWebhookSummary(
+              webhook,
+              webhookManager.getQueuedDeployUpdatesForHook(webhookUrl),
+              webhookManager.getQueuedRequestHistoryForHook(webhookUrl),
+              webhookManager.getQueuedTaskUpdatesForHook(webhookUrl)
+      ));
+    }
+    return webhookSummaries;
   }
 
   @POST
