@@ -457,6 +457,18 @@ class Request extends Model
             app.caughtError()
             callback() # Don't actually error if we can't find previous args, just don't populate
 
+    getCommandLineArgs: (callback) =>
+        console.log "Get command line args"
+        fetchThis = @fetch()
+        fetchThis.done =>
+            if @attributes and @attributes.activeDeploy and @attributes.activeDeploy.expectedTaskCommandLineArguments
+                @commands = @attributes.activeDeploy.expectedTaskCommandLineArguments
+                callback()
+            else
+                @getMostRecentlyRunTask callback
+        fetchThis.error =>
+            app.caughtError()
+
     promptRun: (callback, task) => #task is an optional parameter - if it's provided this will rerun it, else this will run a new task
         showDialog = () =>
             if task
@@ -548,7 +560,7 @@ class Request extends Model
         if task
             showDialog()
         else
-            @getMostRecentlyRunTask showDialog
+            @getCommandLineArgs showDialog
 
     addCmdLineArg: (event) ->
         event.preventDefault()

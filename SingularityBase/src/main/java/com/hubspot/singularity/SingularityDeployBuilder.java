@@ -59,6 +59,7 @@ public class SingularityDeployBuilder {
   private Optional<Integer> deployStepWaitTimeMs;
   private Optional<Boolean> autoAdvanceDeploySteps;
   private Optional<Integer> maxTaskRetries;
+  private Optional<List<String>> expectedTaskCommandLineArguments;
 
   public SingularityDeployBuilder(String requestId, String id) {
     this.requestId = requestId;
@@ -97,13 +98,14 @@ public class SingularityDeployBuilder {
     this.deployStepWaitTimeMs = Optional.absent();
     this.autoAdvanceDeploySteps = Optional.absent();
     this.maxTaskRetries = Optional.absent();
+    this.expectedTaskCommandLineArguments = Optional.absent();
   }
 
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, customExecutorUser, resources,
       env, uris, metadata, executorData, version, timestamp, labels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
       healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, skipHealthchecksOnDeploy, healthcheckProtocol,
-      deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries);
+      deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries, expectedTaskCommandLineArguments);
   }
 
   public String getRequestId() {
@@ -425,6 +427,13 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<List<String>> getExpectedTaskCommandLineArguments() { return expectedTaskCommandLineArguments; }
+
+  public SingularityDeployBuilder setExpectedTaskCommandLineArguments(Optional<List<String>> expectedTaskCommandLineArguments) {
+    this.expectedTaskCommandLineArguments = expectedTaskCommandLineArguments;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeployBuilder{" +
@@ -464,6 +473,7 @@ public class SingularityDeployBuilder {
       ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
       ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +
       ", maxTaskRetries=" + maxTaskRetries +
+      ", expectedTaskCommandLineArguments=" + expectedTaskCommandLineArguments +
       '}';
   }
 
