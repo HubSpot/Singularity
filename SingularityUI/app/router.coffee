@@ -23,6 +23,8 @@ LogViewerController = require 'controllers/LogViewer'
 
 Utils = require './utils'
 
+WebhooksController = require 'controllers/Webhooks'
+
 class Router extends Backbone.Router
 
     routes:
@@ -57,6 +59,8 @@ class Router extends Backbone.Router
 
         'slaves/:state(/)': 'slaves'
         'slaves(/)': 'slaves'
+
+        'webhooks(/)': 'webhooks'
 
         '*anything': 'notFound'
 
@@ -126,5 +130,8 @@ class Router extends Backbone.Router
         search = params.search || ''
 
         app.bootstrapController new LogViewerController {requestId, path, initialOffset, taskIds, viewMode, search}
+
+    webhooks: () ->
+        app.bootstrapController new WebhooksController
 
 module.exports = Router
