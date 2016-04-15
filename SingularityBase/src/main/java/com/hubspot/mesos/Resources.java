@@ -22,6 +22,10 @@ public class Resources {
   private final int numPorts;
   private final double diskMb;
 
+  public Resources(double cpus, double memoryMb, int numPorts) {
+    this(cpus, memoryMb, numPorts, 0);
+  }
+
   @JsonCreator
   public Resources(@JsonProperty("cpus") double cpus, @JsonProperty("memoryMb") double memoryMb, @JsonProperty("numPorts") int numPorts, @JsonProperty("diskMb") double diskMb) {
     this.cpus = cpus;
