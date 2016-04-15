@@ -23,6 +23,8 @@ DeployDetailController = require 'controllers/DeployDetail'
 AggregateTailController = require 'controllers/AggregateTail'
 TaskSearchController = require 'controllers/TaskSearch'
 
+WebhooksController = require 'controllers/Webhooks'
+
 class Router extends Backbone.Router
 
     routes:
@@ -60,6 +62,8 @@ class Router extends Backbone.Router
 
         'slaves/:state(/)': 'slaves'
         'slaves(/)': 'slaves'
+
+        'webhooks(/)': 'webhooks'
 
         '*anything': 'notFound'
 
@@ -115,5 +119,8 @@ class Router extends Backbone.Router
     aggregateTail: (requestId, path = '') ->
         offset = parseInt(window.location.hash.substr(1), 10) || null
         app.bootstrapController new AggregateTailController {requestId, path, offset}
+
+    webhooks: () ->
+        app.bootstrapController new WebhooksController
 
 module.exports = Router
