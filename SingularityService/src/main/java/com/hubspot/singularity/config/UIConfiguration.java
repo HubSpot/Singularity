@@ -43,7 +43,8 @@ public class UIConfiguration {
   private String title = "Singularity";
 
   @JsonProperty
-  private String navColor = "";
+  @NotNull
+  private Optional<String> navColor = Optional.absent();
 
   @JsonProperty
   private String baseUrl;
@@ -68,14 +69,19 @@ public class UIConfiguration {
   @JsonProperty
   private String rootUrlMode = RootUrlMode.INDEX_CATCHALL.name();
 
+  @JsonProperty
   @NotNull
-  private String taskS3LogOmitPrefix = "";
+  private Optional<String> taskS3LogOmitPrefix = Optional.absent();
 
   @NotEmpty
   private String timestampFormat = "lll";
 
   @NotEmpty
   private String timestampWithSecondsFormat = "lll:ss";
+
+  @JsonProperty
+  @NotNull
+  private Optional<String> redirectOnUnauthorizedUrl = Optional.absent();
 
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
@@ -109,11 +115,11 @@ public class UIConfiguration {
     this.baseUrl = baseUrl;
   }
 
-  public String getNavColor() {
+  public Optional<String> getNavColor() {
     return navColor;
   }
 
-  public void setNavColor(String navColor) {
+  public void setNavColor(Optional<String> navColor) {
     this.navColor = navColor;
   }
 
@@ -161,11 +167,11 @@ public class UIConfiguration {
     return finishedTaskLogPath;
   }
 
-  public String getTaskS3LogOmitPrefix() {
+  public Optional<String> getTaskS3LogOmitPrefix() {
     return taskS3LogOmitPrefix;
   }
 
-  public void setTaskS3LogOmitPrefix(String taskS3LogOmitPrefix) {
+  public void setTaskS3LogOmitPrefix(Optional<String> taskS3LogOmitPrefix) {
     this.taskS3LogOmitPrefix = taskS3LogOmitPrefix;
   }
 
@@ -183,5 +189,13 @@ public class UIConfiguration {
 
   public void setTimestampWithSecondsFormat(String timestampWithSecondsFormat) {
     this.timestampWithSecondsFormat = timestampWithSecondsFormat;
+  }
+
+  public Optional<String> getRedirectOnUnauthorizedUrl() {
+    return redirectOnUnauthorizedUrl;
+  }
+
+  public void setRedirectOnUnauthorizedUrl(Optional<String> redirectOnUnauthorizedUrl) {
+    this.redirectOnUnauthorizedUrl = redirectOnUnauthorizedUrl;
   }
 }

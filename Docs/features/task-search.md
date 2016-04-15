@@ -1,6 +1,6 @@
 #### Task Search
 
-As of 0.4.12, Singularity has better support for searching historical tasks. A global task search endpoint was added:
+As of `0.5.0`, Singularity has better support for searching historical tasks. A global task search endpoint was added:
 
 `/api/history/tasks` -> Retrieve the history sorted by startedAt for all inactive tasks.
 

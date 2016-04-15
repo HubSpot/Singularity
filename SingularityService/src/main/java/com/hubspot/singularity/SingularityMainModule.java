@@ -47,6 +47,7 @@ import com.hubspot.singularity.config.S3GroupOverrideConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
 import com.hubspot.singularity.guice.DropwizardMetricRegistryProvider;
@@ -211,6 +212,12 @@ public class SingularityMainModule implements Module {
   @Singleton
   public Optional<SentryConfiguration> sentryConfiguration(final SingularityConfiguration config) {
     return config.getSentryConfiguration();
+  }
+
+  @Provides
+  @Singleton
+  public SingularityTaskMetadataConfiguration taskMetadataConfiguration(SingularityConfiguration config) {
+    return config.getTaskMetadataConfiguration();
   }
 
   @Provides

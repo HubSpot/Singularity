@@ -131,6 +131,30 @@ Delete/cancel the expiring scale. This makes the scale request permanent.
 
 
 - - -
+#### **GET** `/api/requests/request/{requestId}/run/{runId}`
+
+Retrieve an active task by runId
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true |  | string |
+| runId | true |  | string |
+
+###### Response
+[SingularityTaskId](models.md#model-SingularityTaskId)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **POST** `/api/requests/request/{requestId}/run`
 
 Schedule a one-off or scheduled Singularity request for immediate execution.
