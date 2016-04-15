@@ -9,6 +9,7 @@ var stylus = require('gulp-stylus');
 var nib = require('nib');
 
 var concat = require('gulp-concat');
+var merge = require('webpack-merge');
 
 var serverBase = process.env.SINGULARITY_BASE_URI || '/singularity'
 
@@ -59,7 +60,7 @@ gulp.task('fonts', function() {
 });
 
 gulp.task('scripts', function () {
-  return gulp.src(webpackConfig.entry)
+  return gulp.src(webpackConfig.entry.app)
     .pipe(webpack(webpackConfig))
     .pipe(gulp.dest(dest + '/static/js'))
 });
@@ -105,7 +106,7 @@ gulp.task('build', ['clean'], function () {
 gulp.task('serve', ['html', 'styles', 'fonts', 'images', 'css-images'], function () {
   gulp.watch('app/**/*.styl', ['styles'])
 
-  new WebpackDevServer(require('webpack')(webpackConfig), {
+  new WebpackDevServer(require('webpack')(merge(webpackConfig, {devtool: 'eval'})), {
     contentBase: dest,
     historyApiFallback: true
   }).listen(3334, "localhost", function (err) {
