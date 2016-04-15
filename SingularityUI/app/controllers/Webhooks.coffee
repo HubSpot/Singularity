@@ -12,13 +12,14 @@ class WebhooksController extends Controller
 
         @setView new WebhooksView
             collections: @collections
-            fetchedWebhooks: false
+            fetched: false
 
-        app.showView @view
-        @refresh()
+        @collections.webhooks.fetch().done =>
+            app.showView @view
+            @view.fetched = true
 
     refresh: ->
-        @collections.webhooks.fetch()
-            .done => @view.fetchedWebhooks = true
+        @collections.webhooks.fetch().done =>
+            @view.fetched = true
 
 module.exports = WebhooksController

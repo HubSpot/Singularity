@@ -9,6 +9,44 @@ Utils = require '../../utils'
 # with functions that trigger sorting by those columns
 Table = React.createClass
 
+    propTypes:
+        columnHeads: React.PropTypes.arrayOf(React.PropTypes.shape({
+            data: React.PropTypes.string
+            className: React.PropTypes.string
+            doSort: React.PropTypes.func
+            sortable: React.PropTypes.boolean
+            sortAttr: React.PropTypes.string
+        })).isRequired
+
+        tableRows: React.PropTypes.arrayOf(React.PropTypes.shape({
+            dataId: React.PropTypes.string.isRequired
+            className: React.PropTypes.string
+            data: React.PropTypes.arrayOf(React.PropTypes.shape({
+                component: React.PropTypes.func.isRequired
+                prop: React.PropTypes.object
+                id: React.PropTypes.string
+                className: React.PropTypes.string
+            })).isRequired
+        })).isRequired
+
+        tableClassOpts: React.PropTypes.string
+
+        sortDirection: React.PropTypes.any
+        sortDirectionAscending: React.PropTypes.any
+        sortBy: React.PropTypes.string
+        customSorting: React.PropTypes.bool
+
+        emptyTableMessage: React.PropTypes.string
+
+        customPaging: React.PropTypes.bool
+        rowsPerPageChoices: React.PropTypes.arrayOf(React.PropTypes.number)
+        setRowsPerPage: React.PropTypes.func
+        pageNumber: React.PropTypes.number
+        pageDown: React.PropTypes.func
+        pageUp: React.PropTypes.func
+
+        dataCollection: React.PropTypes.string
+
     ourRowsPerPageChoices: [5, 10, 15, 20]
 
     getInitialState: ->
