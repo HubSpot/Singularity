@@ -183,6 +183,7 @@ class Application
 
     hasAdminRights: ->
         return false unless @user
+        return true unless @user.authEnabled
         return @user.get('admin')
 
     getUsername: =>
