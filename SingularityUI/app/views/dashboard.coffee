@@ -123,22 +123,45 @@ class DashboardView extends View
     changeUser: =>
         app.deployUserPrompt()
 
+    getRequest: (id) =>
+        maybeRequest = @collection.models.filter (model) ->
+            model.id is id
+        if maybeRequest
+            return maybeRequest[0]
+        else
+            return
+
     viewJson: (e) ->
         id = $(e.target).parents('tr').data 'request-id'
-        utils.viewJSON @collection.get id
+        request = @getRequest id
+        unless request
+            Messenger().error
+                message: "<p>Could not find request #{id}. Perhaps someone removed it?</p>"
+            return
+        utils.viewJSON request
 
     removeRequest: (e) ->
         $row = $(e.target).parents 'tr'
         id = $row.data('request-id')
-
-        @collection.get(id).promptRemove =>
+        request = @getRequest id
+        unless request
+            Messenger().error
+                message: "<p>Could not find request #{id}. Perhaps someone removed it first?</p>"
+            return
+        request.promptRemove =>
             $row.remove()
 
     unpauseRequest: (e) ->
         $row = $(e.target).parents 'tr'
         id = $row.data('request-id')
 
-        @collection.get(id).promptUnpause =>
+        request = @getRequest id
+        unless request
+            Messenger().error
+                message: "<p>Could not find request #{id}. Perhaps someone removed it?</p>"
+            return
+
+        request.promptUnpause =>
             $row.remove()
             @trigger 'refreshrequest'
 
