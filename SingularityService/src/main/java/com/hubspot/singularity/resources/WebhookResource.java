@@ -23,6 +23,7 @@ import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SingularityWebhook;
+import com.hubspot.singularity.SingularityWebhookSummary;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.WebhookManager;
 import com.wordnik.swagger.annotations.Api;
@@ -55,7 +56,7 @@ public class WebhookResource {
   @GET
   @Path("/summary")
   @ApiOperation("Retrieve a summary of each active webhook")
-  public Map<SingularityWebhook, Integer> getWebhooksWithQueueSize() {
+  public List<SingularityWebhookSummary> getWebhooksWithQueueSize() {
     authorizationHelper.checkAdminAuthorization(user);
     return webhookManager.getWebhooksWithQueueSize();
   }
