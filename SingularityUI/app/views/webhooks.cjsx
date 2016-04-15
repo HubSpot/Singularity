@@ -7,13 +7,13 @@ View = require './view'
 
 class WebhooksView extends View
 
-    initialize: ({@collections, @fetchedWebhooks}, opts) ->
+    initialize: ({@collections, @fetched}, opts) ->
 
     render: ->
         $(@el).addClass("webhooks-root")
         ReactDOM.render(
             <Webhooks
-                fetchedWebhooks = {@fetchedWebhooks}
+                fetched = @fetched
                 collections = {@collections}
             />,
             @el);
