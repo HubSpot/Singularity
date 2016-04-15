@@ -134,7 +134,8 @@ class DashboardView extends View
         id = $(e.target).parents('tr').data 'request-id'
         request = @getRequest id
         unless request
-            console.error ("Could not find request #{id}. Perhaps someone removed it?")
+            Messenger().error
+                message: "<p>Could not find request #{id}. Perhaps someone removed it?</p>"
             return
         utils.viewJSON request
 
@@ -143,7 +144,8 @@ class DashboardView extends View
         id = $row.data('request-id')
         request = @getRequest id
         unless request
-            console.error ("Could not find request #{id}. Perhaps someone removed it first?")
+            Messenger().error
+                message: "<p>Could not find request #{id}. Perhaps someone removed it first?</p>"
             return
         request.promptRemove =>
             $row.remove()
@@ -154,7 +156,8 @@ class DashboardView extends View
 
         request = @getRequest id
         unless request
-            console.error ("Could not find request #{id}. Perhaps someone removed it?")
+            Messenger().error
+                message: "<p>Could not find request #{id}. Perhaps someone removed it?</p>"
             return
 
         request.promptUnpause =>
