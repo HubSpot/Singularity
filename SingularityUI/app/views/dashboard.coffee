@@ -11,6 +11,9 @@ class DashboardView extends View
             'click [data-action="unstar"]': 'unstar'
             'click [data-action="change-user"]': 'changeUser'
             'click th[data-sort-attribute]': 'sortTable'
+            'click [data-action="viewJSON"]': 'viewJson'
+            'click [data-action="remove"]': 'removeRequest'
+            'click [data-action="unpause"]': 'unpauseRequest'
 
     initialize: =>
         @listenTo app.user, 'change', @render
@@ -118,5 +121,24 @@ class DashboardView extends View
 
     changeUser: =>
         app.deployUserPrompt()
+
+    viewJson: (e) ->
+        id = $(e.target).parents('tr').data 'request-id'
+        utils.viewJSON @collection.get id
+
+    removeRequest: (e) ->
+        $row = $(e.target).parents 'tr'
+        id = $row.data('request-id')
+
+        @collection.get(id).promptRemove =>
+            $row.remove()
+
+    unpauseRequest: (e) ->
+        $row = $(e.target).parents 'tr'
+        id = $row.data('request-id')
+
+        @collection.get(id).promptUnpause =>
+            $row.remove()
+            @trigger 'refreshrequest'
 
 module.exports = DashboardView
