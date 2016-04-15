@@ -1,6 +1,8 @@
 package com.hubspot.singularity.data;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -132,6 +134,14 @@ public class WebhookManager extends CuratorAsyncManager implements SingularityEv
 
   public List<SingularityRequestHistory> getQueuedRequestHistoryForHook(String webhookId) {
     return getAsyncChildren(getEnqueuePathForWebhook(webhookId, WebhookType.REQUEST), requestHistoryTranscoder);
+  }
+
+  public Map<SingularityWebhook, Integer> getWebhooksWithQueueSize() {
+    Map<SingularityWebhook, Integer> queueCounts = new HashMap<>();
+    for (SingularityWebhook webhook : getActiveWebhooks()) {
+      queueCounts.put(webhook, getNumChildren(getEnqueuePathForWebhook(webhook.getId(), webhook.getType())));
+    }
+    return queueCounts;
   }
 
   // TODO consider caching the list of hooks (at the expense of needing to refresh the cache and not
