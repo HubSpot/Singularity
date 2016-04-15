@@ -179,7 +179,7 @@ class Application
 
     setupUser: (callback) ->
         @user = new User
-        @user.fetch().done callback # This is not synchronous and does not use local storage
+        @user.fetch().done callback
 
     hasAdminRights: ->
         return false unless @user
