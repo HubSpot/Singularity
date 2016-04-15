@@ -67,6 +67,9 @@ module.exports = {
         warnings: false
       }
     }),
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': '"production"'
+    }),
     new webpack.optimize.CommonsChunkPlugin('vendor', 'vendor.bundle.js'),
   ]
 };
