@@ -23,7 +23,7 @@ class ColorDropdown extends React.Component
       <button type="button" className="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         <span className="glyphicon glyphicon-adjust"></span> <span className="caret"></span>
       </button>
-      <ul className="dropdown-menu">
+      <ul className="dropdown-menu dropdown-menu-right">
         {@renderColorChoices()}
       </ul>
     </div>
