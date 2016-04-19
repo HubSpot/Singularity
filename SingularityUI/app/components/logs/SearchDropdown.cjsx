@@ -37,7 +37,7 @@ class SearchDropdown extends React.Component
       <button ref="searchButton" id="searchDDToggle" type="button" className="btn btn-#{if @props.search is '' then 'default' else 'info'} btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" onClick={@handleSearchToggle}>
         <span className="glyphicon glyphicon-search"></span> <span className="caret"></span>
       </button>
-      <ul className="dropdown-menu">
+      <ul className="dropdown-menu dropdown-menu-right">
         <li>
           <div className="input-group log-search">
             <input ref="searchInput" type="text" className="form-control" placeholder="Grep Logs" value={@state.searchValue} onKeyDown={@handleSearchKeyDown} onChange={(e) => @setState({searchValue: e.target.value})} />
