@@ -39,6 +39,7 @@ Table = React.createClass
         emptyTableMessage: React.PropTypes.string
 
         customPaging: React.PropTypes.bool
+        defaultRowsPerPage: React.PropTypes.number
         rowsPerPageChoices: React.PropTypes.arrayOf(React.PropTypes.number)
         setRowsPerPage: React.PropTypes.func
         pageNumber: React.PropTypes.number
@@ -47,11 +48,11 @@ Table = React.createClass
 
         dataCollection: React.PropTypes.string
 
-    ourRowsPerPageChoices: [5, 10, 15, 20]
+    defaultRowsPerPageChoices: [5, 10, 15, 20]
 
     getInitialState: ->
         {
-            rowsPerPage: 5
+            rowsPerPage: if @props.defaultRowsPerPage then @props.defaultRowsPerPage else 5
             pageNumber: 1
         }
 
@@ -64,7 +65,7 @@ Table = React.createClass
             rowsPerPage: rows
 
     rowsPerPageChoices: ->
-        if @props.rowsPerPageChoices then @props.rowsPerPageChoices else @ourRowsPerPageChoices
+        if @props.rowsPerPageChoices then @props.rowsPerPageChoices else @defaultRowsPerPageChoices
 
     renderRowsPerPageChoices: ->
         choices = []
@@ -132,7 +133,7 @@ Table = React.createClass
                         alt: 'pageDown'
                         className: {
                             'col-xs-5': true
-                            'disabled': @pageNumber() is 1
+                            'hide': @pageNumber() is 1
                         }
                         onClick: @pageDown
                     }}
@@ -147,7 +148,7 @@ Table = React.createClass
                         alt: 'pageUp'
                         className: {
                             'col-xs-5': true
-                            'disabled': @pageUpDisabled()
+                            'hide': @pageUpDisabled()
                         }
                         onClick: @pageUp
                     }}
