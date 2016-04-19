@@ -242,6 +242,10 @@ public class SingularityMailer implements Managed {
   }
 
   public void sendTaskOverdueMail(final Optional<SingularityTask> task, final SingularityTaskId taskId, final SingularityRequest request, final long runTime, final long expectedRuntime) {
+    if (!maybeSmtpConfiguration.isPresent()) {
+      LOG.debug("Not sending task overdue mail - no SMTP configuration is present");
+      return;
+    }
     final Builder<String, Object> templateProperties = ImmutableMap.<String, Object>builder();
 
     templateProperties.put("runTime", DurationFormatUtils.formatDurationHMS(runTime));
@@ -315,6 +319,10 @@ public class SingularityMailer implements Managed {
   }
 
   public void sendTaskCompletedMail(SingularityTaskHistory taskHistory, SingularityRequest request) {
+    if (!maybeSmtpConfiguration.isPresent()) {
+      LOG.debug("Not sending task completed mail - no SMTP configuration is present");
+      return;
+    }
     final Optional<SingularityTaskHistoryUpdate> lastUpdate = taskHistory.getLastTaskUpdate();
 
     if (!lastUpdate.isPresent()) {
@@ -435,6 +443,10 @@ public class SingularityMailer implements Managed {
   }
 
   public void sendRequestPausedMail(SingularityRequest request, Optional<SingularityPauseRequest> pauseRequest, Optional<String> user) {
+    if (!maybeSmtpConfiguration.isPresent()) {
+      LOG.debug("Not sending request paused mail - no SMTP configuration is present");
+      return;
+    }
     Map<String, Object> additionalProperties = new HashMap<>();
 
     Boolean killTasks = Boolean.TRUE;
@@ -457,10 +469,18 @@ public class SingularityMailer implements Managed {
   }
 
   public void sendRequestUnpausedMail(SingularityRequest request, Optional<String> user, Optional<String> message) {
+    if (!maybeSmtpConfiguration.isPresent()) {
+      LOG.debug("Not sending request unpaused mail - no SMTP configuration is present");
+      return;
+    }
     sendRequestMail(request, RequestMailType.UNPAUSED, user, message, Optional.<Map<String, Object>> absent());
   }
 
   public void sendRequestScaledMail(SingularityRequest request, Optional<SingularityScaleRequest> newScaleRequest, Optional<Integer> formerInstances, Optional<String> user) {
+    if (!maybeSmtpConfiguration.isPresent()) {
+      LOG.debug("Not sending request scaled mail - no SMTP configuration is present");
+      return;
+    }
     Map<String, Object> additionalProperties = new HashMap<>();
 
     Optional<String> message = Optional.absent();
@@ -477,6 +497,10 @@ public class SingularityMailer implements Managed {
   }
 
   public void sendRequestRemovedMail(SingularityRequest request, Optional<String> user, Optional<String> message) {
+    if (!maybeSmtpConfiguration.isPresent()) {
+      LOG.debug("Not sending request removed mail - no SMTP configuration is present");
+      return;
+    }
     sendRequestMail(request, RequestMailType.REMOVED, user, message, Optional.<Map<String, Object>> absent());
   }
 
