@@ -371,11 +371,6 @@ public class SingularityMailer implements Managed {
   }
 
   private void sendRequestMail(final SingularityRequest request, final RequestMailType type, final Optional<String> user, final Optional<String> message, final Optional<Map<String, Object>> additionalProperties) {
-    if (!maybeSmtpConfiguration.isPresent()) {
-      LOG.debug("Not sending request mail - no SMTP configuration is present");
-      return;
-    }
-
     mailPreparerExecutorService.get().submit(new Runnable() {
 
       @Override
