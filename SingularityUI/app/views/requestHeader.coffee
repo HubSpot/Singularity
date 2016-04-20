@@ -26,7 +26,7 @@ class requestHeaderSubview extends View
 
         if !!@model.get('pendingDeploy')
             deployingInstanceCount = @activeTasks.where({deployId: @model.get('pendingDeploy').id, lastTaskState: 'TASK_RUNNING'}).length
-        if !!@model.get('pendingDeployState')
+        if !!@model.get('pendingDeployState') and @model.get('pendingDeployState').deployProgress
             nextDeployStepTimestamp = @model.get('pendingDeployState').deployProgress.timestamp + (@model.get('pendingDeployState').deployProgress.deployStepWaitTimeMs)
 
         isBouncing: bounces?.length > 0 and @taskCleanups.synced and @activeTasks.synced
