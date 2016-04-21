@@ -6,6 +6,7 @@ PlainText = require '../common/atomicDisplayItems/PlainText'
 TimeStamp = require '../common/atomicDisplayItems/TimeStamp'
 Link = require '../common/atomicDisplayItems/Link'
 Glyphicon = require '../common/atomicDisplayItems/Glyphicon'
+vex = require 'vex'
 
 Webhooks = React.createClass
 
@@ -40,13 +41,34 @@ Webhooks = React.createClass
     ]
 
     newWebhook: () =>
-        #console#.log "new webhook"
+        #c#onsole.log "new webhook"
 
     editWebhook: (webhook) =>
-        #console#.log "edit #{webhook.attributes.webhook.id}"
+        #c#onsole.log "edit #{webhook.attributes.webhook.id}"
 
     deleteWebhook: (webhook) =>
-        #console#.log "delete #{webhook.attributes.webhook.id}"
+        #c#onsole.log "Delete Webhook"
+
+    promptDeleteWebhook: (webhook) =>
+        deleteWebhook = @deleteWebhook
+        newWebhook = @newWebhook
+        vex.dialog.confirm
+            message: "<div class='delete-webhook' />" # This is not react
+            afterOpen: =>
+                ReactDOM.render(
+                    <button
+                        className = 'btn btn-success'
+                        alt = "Create a new webhook"
+                        title = "newWebhook"
+                        onClick = { (event) =>
+                            event.preventDefault()
+                            newWebhook()
+                        }> New Webhook </button>,
+                    $(".delete-webhook").get(0)
+                )
+            callback: (confirmed) =>
+                return unless confirmed
+                deleteWebhook webhook
 
     getWebhookTableData: ->
         data = []
@@ -110,7 +132,7 @@ Webhooks = React.createClass
                         text: <Glyphicon
                             iconClass = 'trash'
                         />
-                        onClickFn: => @deleteWebhook(webhook)
+                        onClickFn: => @promptDeleteWebhook(webhook)
                         title: 'Delete'
                         altText: "Delete this webhook"
                         overlayTrigger: true
