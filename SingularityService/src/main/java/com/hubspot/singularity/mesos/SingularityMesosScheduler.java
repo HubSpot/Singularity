@@ -307,7 +307,12 @@ public class SingularityMesosScheduler implements Scheduler {
       return Optional.of(status.getMessage());
     } else if (status.hasReason() && status.getReason() == Protos.TaskStatus.Reason.REASON_MEMORY_LIMIT) {
       if (task.isPresent() && task.get().getTaskRequest().getDeploy().getResources().isPresent()) {
-          return Optional.of(String.format("Task exceeded memory limit of %s MB", task.get().getTaskRequest().getDeploy().getResources().get().getMemoryMb()));
+        if (task.get().getTaskRequest().getDeploy().getResources().get().getDiskMb() > 0) {
+          return Optional.of(String.format("Task exceeded one or more memory limits (%s MB mem, %s MB disk).", task.get().getTaskRequest().getDeploy().getResources().get().getMemoryMb(), task.get().getTaskRequest().getDeploy().getResources().get().getDiskMb()));
+        } else {
+          return Optional.of(String.format("Task exceeded memory limit (%s MB mem).", task.get().getTaskRequest().getDeploy().getResources().get().getMemoryMb()));
+        }
+
       }
       return Optional.of("Task exceeded memory limit");
     }
