@@ -268,6 +268,7 @@ public abstract class CuratorManager {
 
       return Optional.of(object);
     } catch (NoNodeException nne) {
+      LOG.trace("No node found for path {}", path);
       return Optional.absent();
     } catch (Throwable t) {
       throw Throwables.propagate(t);
