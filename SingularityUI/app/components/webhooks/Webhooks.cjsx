@@ -6,7 +6,6 @@ PlainText = require '../common/atomicDisplayItems/PlainText'
 TimeStamp = require '../common/atomicDisplayItems/TimeStamp'
 Link = require '../common/atomicDisplayItems/Link'
 Glyphicon = require '../common/atomicDisplayItems/Glyphicon'
-Dialog = require '../common/Dialog'
 
 Webhooks = React.createClass
 
@@ -42,7 +41,6 @@ Webhooks = React.createClass
 
     newWebhook: () =>
         #console#.log "new webhook"
-
 
     editWebhook: (webhook) =>
         #console#.log "edit #{webhook.attributes.webhook.id}"
@@ -132,7 +130,11 @@ Webhooks = React.createClass
                     <span className='h1'>Webhooks</span>
                 </div>
                 <div className='col-md-2 button-container'>
-                    {@getNewWebhookButton()}
+                    <button
+                        className = 'btn btn-success'
+                        alt = "Create a new webhook"
+                        title = "newWebhook"
+                        onClick = {@newWebhook}> New Webhook </button>
                 </div>
             </div>
             <Table 
