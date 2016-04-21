@@ -234,7 +234,7 @@ public class SingularityMesosScheduler implements Scheduler {
       LOG.trace("Attempting to match task {} resources {} ({} for task + {} for executor) with remaining offer resources {}", taskRequest.getPendingTask().getPendingTaskId(), totalResources, taskResources, executorResources, offerHolder.getCurrentResources());
 
       final boolean matchesResources = MesosUtils.doesOfferMatchResources(totalResources, offerHolder.getCurrentResources(), requestedPorts);
-      final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder.getOffer(), taskRequest, stateCache, getUpdatedRequest(taskRequest));
+      final SlaveMatchState slaveMatchState = slaveAndRackManager.doesOfferMatch(offerHolder.getOffer(), taskRequest, stateCache);
 
       if (matchesResources && slaveMatchState.isMatchAllowed()) {
         final SingularityTask task = mesosTaskBuilder.buildTask(offerHolder.getOffer(), offerHolder.getCurrentResources(), taskRequest, taskResources, executorResources);
@@ -260,15 +260,6 @@ public class SingularityMesosScheduler implements Scheduler {
     }
 
     return Optional.absent();
-  }
-
-  private Optional<SingularityRequest> getUpdatedRequest(SingularityTaskRequest taskRequest) {
-    final Optional<SingularityPendingDeploy> pendingDeploy = deployManager.getPendingDeploy(taskRequest.getRequest().getId());
-    if (pendingDeploy.isPresent() && pendingDeploy.get().getDeployMarker().getDeployId().equals(taskRequest.getDeploy().getId())) {
-      return pendingDeploy.get().getUpdatedRequest();
-    } else {
-      return Optional.absent();
-    }
   }
 
   @Override
