@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.primitives.Longs;
 
-public class SingularityTaskShellCommandRequest implements Comparable<SingularityTaskShellCommandRequest> {
+public class SingularityTaskShellCommandRequest extends SingularityFrameworkMessage implements Comparable<SingularityTaskShellCommandRequest> {
 
   private final SingularityTaskId taskId;
   private final Optional<String> user;

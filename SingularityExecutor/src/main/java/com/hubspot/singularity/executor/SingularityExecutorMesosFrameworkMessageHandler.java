@@ -10,8 +10,11 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.singularity.SingularityFrameworkMessage;
+import com.hubspot.singularity.SingularityTaskDestroyFrameworkMessage;
 import com.hubspot.singularity.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.SingularityTaskShellCommandUpdate.UpdateType;
+import com.hubspot.singularity.executor.SingularityExecutorMonitor.KillState;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandRunner;
 import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandUpdater;
@@ -35,33 +38,58 @@ public class SingularityExecutorMesosFrameworkMessageHandler {
 
   public void handleMessage(byte[] data) {
     try {
-      SingularityTaskShellCommandRequest shellRequest = objectMapper.readValue(data, SingularityTaskShellCommandRequest.class);
-
-      Optional<SingularityExecutorTask> matchingTask = monitor.getTask(shellRequest.getTaskId().getId());
-
-      if (!matchingTask.isPresent()) {
-        LOG.warn("Missing task for {}, ignoring shell request", shellRequest.getTaskId());
-        return;
+      SingularityFrameworkMessage message = objectMapper.readValue(data, SingularityFrameworkMessage.class);
+      if (message.getClass().equals(SingularityTaskShellCommandRequest.class)) {
+        handleShellRequest((SingularityTaskShellCommandRequest) message);
+      } else if (message.getClass().equals(SingularityTaskDestroyFrameworkMessage.class)) {
+        handleTaskDestroyMessage((SingularityTaskDestroyFrameworkMessage) message);
+      } else {
+        throw new IOException(String.format("Do not know how to handle framework message of class %s", message.getClass()));
       }
-
-      matchingTask.get().getLog().info("Received shell request {}", shellRequest);
-
-      SingularityExecutorShellCommandUpdater updater = new SingularityExecutorShellCommandUpdater(objectMapper, shellRequest, matchingTask.get());
-
-      Optional<SingularityExecutorTaskProcessCallable> taskProcess = monitor.getTaskProcess(shellRequest.getTaskId().getId());
-
-      if (!taskProcess.isPresent()) {
-        updater.sendUpdate(UpdateType.INVALID, Optional.of("No task process found"), Optional.<String>absent());
-        return;
-      }
-
-      SingularityExecutorShellCommandRunner shellRunner = new SingularityExecutorShellCommandRunner(shellRequest, executorConfiguration, matchingTask.get(),
-          taskProcess.get(), monitor.getShellCommandExecutorServiceForTask(shellRequest.getTaskId().getId()), updater);
-
-      shellRunner.start();
     } catch (IOException e) {
-      LOG.warn("Framework message {} not a shell request", new String(data, UTF_8));
+      LOG.error("Do not know how to handle framework message {}", new String(data, UTF_8), e);
     }
+  }
+
+  private void handleTaskDestroyMessage(SingularityTaskDestroyFrameworkMessage taskDestroyMessage) {
+    KillState killState = monitor.requestKill(taskDestroyMessage.getTaskId().getId(), taskDestroyMessage.getUser(), true);
+
+    switch (killState) {
+      case DIDNT_EXIST:
+      case INCONSISTENT_STATE:
+        LOG.warn("Couldn't destroy task {} due to killState {}", taskDestroyMessage.getTaskId(), killState);
+        break;
+      case DESTROYING_PROCESS:
+      case INTERRUPTING_PRE_PROCESS:
+      case KILLING_PROCESS:
+        LOG.info("Requested destroy of task {} with killState {}", taskDestroyMessage.getTaskId(), killState);
+        break;
+    }
+  }
+
+  private void handleShellRequest(SingularityTaskShellCommandRequest shellRequest) {
+    Optional<SingularityExecutorTask> matchingTask = monitor.getTask(shellRequest.getTaskId().getId());
+
+    if (!matchingTask.isPresent()) {
+      LOG.warn("Missing task for {}, ignoring shell request", shellRequest.getTaskId());
+      return;
+    }
+
+    matchingTask.get().getLog().info("Received shell request {}", shellRequest);
+
+    SingularityExecutorShellCommandUpdater updater = new SingularityExecutorShellCommandUpdater(objectMapper, shellRequest, matchingTask.get());
+
+    Optional<SingularityExecutorTaskProcessCallable> taskProcess = monitor.getTaskProcess(shellRequest.getTaskId().getId());
+
+    if (!taskProcess.isPresent()) {
+      updater.sendUpdate(UpdateType.INVALID, Optional.of("No task process found"), Optional.<String>absent());
+      return;
+    }
+
+    SingularityExecutorShellCommandRunner shellRunner = new SingularityExecutorShellCommandRunner(shellRequest, executorConfiguration, matchingTask.get(),
+      taskProcess.get(), monitor.getShellCommandExecutorServiceForTask(shellRequest.getTaskId().getId()), updater);
+
+    shellRunner.start();
   }
 
 }
