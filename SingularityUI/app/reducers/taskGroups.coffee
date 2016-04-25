@@ -138,6 +138,8 @@ ACTIONS = {
     lines = _.initial(data.match /[^\n]*(\n|$)/g).map (data) ->
       currentOffset += data.length
 
+      data = data.replace('\r', '')  # carriage return screws stuff up
+
       timestamp = parseLineTimestamp(data)
 
       if timestamp
