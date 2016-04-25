@@ -232,6 +232,7 @@ Table = React.createClass
             - Either way you must provide a doSort function for each column marked as sortable. However,
               if you are customSorting the function will take no arguments. Otherwise it will take a boolean
               true if sort direction is ascending, false if descending.
+              YOUR doSort FUNCTION MAY HAVE TO CALL forceUpdate() TO BE ABLE TO SEE THE SORTED COLLECTION
         - @props.customPaging indicates that you will be providing your own functions to handle table pages
             - If provided, you must provide @props.setRowsPerPage, @props.increasePage, @props.decreasePage, @props.pageNumber
     ###
