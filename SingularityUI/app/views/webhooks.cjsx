@@ -13,7 +13,7 @@ class WebhooksView extends View
         $(@el).addClass("webhooks-root")
         ReactDOM.render(
             <Webhooks
-                fetched = @fetched
+                fetched = {@fetched}
                 collections = {@collections}
             />,
             @el);

@@ -9,6 +9,8 @@ Utils = require '../../utils'
 # with functions that trigger sorting by those columns
 Table = React.createClass
 
+    defaultSortDirectionAscending: true
+
     propTypes:
         columnHeads: React.PropTypes.arrayOf(React.PropTypes.shape({
             data: React.PropTypes.string
@@ -85,17 +87,26 @@ Table = React.createClass
         </div>
 
     sortDirection: ->
-        if @props.customSorting then @props.sortDirection else @state.SortDirection
+        if @props.customSorting then @props.sortDirection else @state.sortDirectionAscending
 
     sortBy: ->
-        if @props.customSorting then @props.sortBy else @state.SortBy
+        if @props.customSorting then @props.sortBy else @state.sortBy
 
     sortDirectionAscending: ->
-        if @props.customSorting then @props.sortDirectionAscending else 'ASC'
+        if @props.customSorting then @props.sortDirectionAscending else true
 
     makeColumnHeadSortFn: (columnHead) ->
-        if @props.customSorting then columnHead.doSort else () ->
-            # TODO
+        if @props.customSorting then columnHead.doSort else () =>
+            if @state.sortBy is columnHead.data
+                newSortDirectionAscending = not @state.sortDirectionAscending
+            else
+                newSortDirectionAscending = @defaultSortDirectionAscending
+            @setState {
+                sortDirectionAscending: newSortDirectionAscending
+                sortBy: columnHead.data
+            }
+            columnHead.doSort newSortDirectionAscending
+            @forceUpdate()
 
     getSortableColumnHeadGlyphicon: (columnHead) ->
         return unless @sortBy() is columnHead.data
@@ -214,10 +225,13 @@ Table = React.createClass
     ### 
         - Use @props.tableClassOpts to declare things like striped or bordered
         - Use @props.customSorting if the API for models this table will display
-          sorts the models on its own and @props.customPaging if it'll page them on its own
+          keeps track of sort direction on its own and @props.customPaging if it'll page them on its own
         - @props.customSorting indicates that you will be providing your own functions to sort the table rows
             - If provided, you must provide @props.sortBy, @props.sortDirection, @props.sortDirectionAscending,
-              and a doSort function for each column you mark as sortable.
+              for each column you mark as sortable.
+            - Either way you must provide a doSort function for each column marked as sortable. However,
+              if you are customSorting the function will take no arguments. Otherwise it will take a boolean
+              true if sort direction is ascending, false if descending.
         - @props.customPaging indicates that you will be providing your own functions to handle table pages
             - If provided, you must provide @props.setRowsPerPage, @props.increasePage, @props.decreasePage, @props.pageNumber
     ###
