@@ -1,6 +1,6 @@
 Controller = require './Controller'
 
-WebhooksView = require '../views/Webhooks'
+WebhooksView = require '../views/webhooks'
 
 WebhookSummaries = require '../collections/WebhookSummaries'
 
