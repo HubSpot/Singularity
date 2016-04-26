@@ -83,7 +83,7 @@ Webhooks = React.createClass
             uri: uri
             type: type
         }
-        data.user = app.user.user.id if app.user.authenticated
+        data.user = app.user.attributes.user.id if app.user.attributes.authenticated
         $.ajax
             url: "#{ config.apiRoot }/webhooks"
             type: "POST"
