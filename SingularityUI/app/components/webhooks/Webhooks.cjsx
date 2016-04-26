@@ -25,7 +25,7 @@ Webhooks = React.createClass
         sortBy = @sortBy # JS is annoying
         [
             {
-                data: 'URI'
+                data: 'URL'
                 sortable: true
                 doSort: (sortDirectionAscending) => sortBy 'uri', sortDirectionAscending
             },
@@ -96,12 +96,16 @@ Webhooks = React.createClass
         vex.dialog.open
             message: "<div class='new-webhook' />"
             afterOpen: =>
-                @validateInput = (input) => false
+                @validateInput = (input) =>
+                    try
+                        new URL input
+                        return true
+                    catch err
+                        return false
                 @renderedForm = ReactDOM.render(
                     <NewWebhookForm
                         getErrors = {() => @errors}
                         webhookTypes = {@webhookTypes}
-                        validateInput = {@validateInput}
                         setType = {(selected) => @type = selected} 
                         setUri = {(uri) => @uri = uri} />,
                     $(".new-webhook").get(0)
@@ -111,14 +115,16 @@ Webhooks = React.createClass
                 @errors = []
                 uriValidated = @validateInput @uri
                 @errors.push 'Please select a type' unless @type
-                @errors.push 'Invalid URI entered' unless uriValidated
+                @errors.push 'Invalid URL entered' unless uriValidated
                 @renderedForm.forceUpdate() unless uriValidated and @type
                 return false unless uriValidated
                 return false unless @type
+                @type = ''
+                @uri = ''
                 return true
             callback: (data) =>
                 @data = data
-                return unless data and @validateInput @uri and @type
+                return unless @type and data and @validateInput @uri
                 type = @type
                 newWebhook @uri, type
 
