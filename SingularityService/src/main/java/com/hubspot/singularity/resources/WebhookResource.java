@@ -77,7 +77,7 @@ public class WebhookResource {
   @ApiOperation("Delete a specific webhook.")
   public SingularityDeleteResult deleteWebhook(@PathParam("webhookId") String webhookId) {
     authorizationHelper.checkAdminAuthorization(user);
-    return webhookManager.deleteWebhook(webhookId);
+    return webhookManager.deleteWebhook(JavaUtils.urlEncode(webhookId));
   }
 
   @GET
@@ -85,7 +85,7 @@ public class WebhookResource {
   @ApiOperation("Retrieve a list of queued deploy updates for a specific webhook.")
   public List<SingularityDeployUpdate> getQueuedDeployUpdates(@PathParam("webhookId") String webhookId) {
     authorizationHelper.checkAdminAuthorization(user);
-    return webhookManager.getQueuedDeployUpdatesForHook(webhookId);
+    return webhookManager.getQueuedDeployUpdatesForHook(JavaUtils.urlEncode(webhookId));
   }
 
   @GET
@@ -93,7 +93,7 @@ public class WebhookResource {
   @ApiOperation("Retrieve a list of queued request updates for a specific webhook.")
   public List<SingularityRequestHistory> getQueuedRequestUpdates(@PathParam("webhookId") String webhookId) {
     authorizationHelper.checkAdminAuthorization(user);
-    return webhookManager.getQueuedRequestHistoryForHook(webhookId);
+    return webhookManager.getQueuedRequestHistoryForHook(JavaUtils.urlEncode(webhookId));
   }
 
   @GET
@@ -101,7 +101,7 @@ public class WebhookResource {
   @ApiOperation("Retrieve a list of queued task updates for a specific webhook.")
   public List<SingularityTaskHistoryUpdate> getQueuedTaskUpdates(@PathParam("webhookId") String webhookId) {
     authorizationHelper.checkAdminAuthorization(user);
-    return webhookManager.getQueuedTaskUpdatesForHook(webhookId);
+    return webhookManager.getQueuedTaskUpdatesForHook(JavaUtils.urlEncode(webhookId));
   }
 
 }
