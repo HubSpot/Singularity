@@ -114,10 +114,10 @@ public class SingularityClient {
   private static final String DELETE_DEPLOY_FORMAT = DEPLOYS_FORMAT + "/deploy/%s/request/%s";
 
   private static final String WEBHOOKS_FORMAT = "http://%s/%s/webhooks";
-  private static final String WEBHOOKS_DELETE_FORMAT = WEBHOOKS_FORMAT +"/%s";
-  private static final String WEBHOOKS_GET_QUEUED_DEPLOY_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/deploy/%s";
-  private static final String WEBHOOKS_GET_QUEUED_REQUEST_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/request/%s";
-  private static final String WEBHOOKS_GET_QUEUED_TASK_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/task/%s";
+  private static final String WEBHOOKS_DELETE_FORMAT = WEBHOOKS_FORMAT +"?webhookId=%s";
+  private static final String WEBHOOKS_GET_QUEUED_DEPLOY_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/deploy?webhookId=%s";
+  private static final String WEBHOOKS_GET_QUEUED_REQUEST_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/request?webhookId=%s";
+  private static final String WEBHOOKS_GET_QUEUED_TASK_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/task?webhookId=%s";
 
   private static final String SANDBOX_FORMAT = "http://%s/%s/sandbox";
   private static final String SANDBOX_BROWSE_FORMAT = SANDBOX_FORMAT + "/%s/browse";

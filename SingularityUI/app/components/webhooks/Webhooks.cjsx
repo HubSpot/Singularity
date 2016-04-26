@@ -58,7 +58,7 @@ Webhooks = React.createClass
 
     deleteWebhook: (webhook) ->
         $.ajax
-            url: "#{ config.apiRoot }/webhooks/#{ webhook.attributes.webhook.id }"
+            url: "#{ config.apiRoot }/webhooks/?webhookId=#{webhook.attributes.webhook.id}"
             type: "DELETE"
             success: () => @props.collections.webhooks.fetch().done => @forceUpdate()
 
