@@ -15,6 +15,8 @@ Webhooks = React.createClass
 
     rowsPerPageChoices: [10, 20, 30, 40]
 
+    webhookTypes: ['REQUEST', 'DEPLOY', 'TASK']
+
     sortBy: (field, sortDirectionAscending) ->
         @props.collections.webhooks.sortBy field, sortDirectionAscending
         @forceUpdate()
@@ -23,7 +25,7 @@ Webhooks = React.createClass
         sortBy = @sortBy # JS is annoying
         [
             {
-                data: 'URI'
+                data: 'URL'
                 sortable: true
                 doSort: (sortDirectionAscending) => sortBy 'uri', sortDirectionAscending
             },
@@ -91,20 +93,39 @@ Webhooks = React.createClass
 
     promptNewWebhook: ->
         newWebhook = (uri, type) => @newWebhook uri, type
-        defaultSelectedType = 'REQUEST'
         vex.dialog.open
             message: "<div class='new-webhook' />"
             afterOpen: =>
-                ReactDOM.render(
-                    <NewWebhookForm 
-                        defaultSelectedType = {defaultSelectedType}
-                        selectVex = {(selected) => @type = selected} 
+                @validateInput = (input) =>
+                    try
+                        new URL input
+                        return true
+                    catch err
+                        return false
+                @renderedForm = ReactDOM.render(
+                    <NewWebhookForm
+                        getErrors = {() => @errors}
+                        webhookTypes = {@webhookTypes}
+                        setType = {(selected) => @type = selected} 
                         setUri = {(uri) => @uri = uri} />,
                     $(".new-webhook").get(0)
                 )
+            beforeClose: =>
+                return true unless @data
+                @errors = []
+                uriValidated = @validateInput @uri
+                @errors.push 'Please select a type' unless @type
+                @errors.push 'Invalid URL entered' unless uriValidated
+                @renderedForm.forceUpdate() unless uriValidated and @type
+                return false unless uriValidated
+                return false unless @type
+                @type = ''
+                @uri = ''
+                return true
             callback: (data) =>
-                return unless data
-                type = @type or defaultSelectedType
+                @data = data
+                return unless @type and data and @validateInput @uri
+                type = @type
                 newWebhook @uri, type
 
     getWebhookTableData: ->
