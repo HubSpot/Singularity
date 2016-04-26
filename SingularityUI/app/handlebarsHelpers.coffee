@@ -25,6 +25,12 @@ Handlebars.registerHelper "ifAll", (conditions..., options)->
         return options.inverse @ unless condition?
     options.fn @
 
+Handlebars.registerHelper "ifHasAdminRights", (options) ->
+    if app.hasAdminRights()
+        return options.fn @
+    else
+        return options.inverse @
+
 Handlebars.registerHelper 'percentageOf', (v1, v2) ->
     (v1/v2) * 100
 

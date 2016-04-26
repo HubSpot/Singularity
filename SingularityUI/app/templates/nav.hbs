@@ -26,14 +26,16 @@
                 <li {{#ifEqual fragment "tasks"}}class="active"{{/ifEqual}}>
                     <a href="{{appRoot}}/tasks">Tasks</a>
                 </li>
-                <li class="dropdown">
-                    <a class="dropdown-toggle" data-toggle="dropdown">Admin <b class="caret"></b></a>
-                    <ul class="dropdown-menu">
-                        <li><a href="{{appRoot}}/racks">Racks</a></li>
-                        <li><a href="{{appRoot}}/slaves">Slaves</a></li>
-                        <li><a href="{{appRoot}}/taskSearch">Task Search</a></li>
-                    </ul>
-                </li>
+                {{#ifHasAdminRights}}
+                    <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown">Admin <b class="caret"></b></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="{{appRoot}}/racks">Racks</a></li>
+                            <li><a href="{{appRoot}}/slaves">Slaves</a></li>
+                            <li><a href="{{appRoot}}/taskSearch">Task Search</a></li>
+                        </ul>
+                    </li>
+                {{/ifHasAdminRights}}
                 <li>
                     <a target="_blank" href="{{apiDocs}}/">API Docs (beta)</a>
                 </li>
