@@ -6,6 +6,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -14,7 +15,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployKey;
+import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingTask;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskRequest;
 
@@ -47,6 +50,7 @@ public class TaskRequestManager {
     final List<SingularityTaskRequest> taskRequests = Lists.newArrayListWithCapacity(matchingRequests.size());
 
     for (SingularityRequestWithState request : matchingRequests) {
+      Optional<SingularityPendingDeploy> maybePendingDeploy = deployManager.getPendingDeploy(request.getRequest().getId());
       for (SingularityPendingTask task : requestIdToPendingTaskId.get(request.getRequest().getId())) {
         SingularityDeploy foundDeploy = matchingDeploys.get(deployKeys.get(task));
 
@@ -60,7 +64,9 @@ public class TaskRequestManager {
           continue;
         }
 
-        taskRequests.add(new SingularityTaskRequest(request.getRequest(), foundDeploy, task));
+        Optional<SingularityRequest> updatedRequest = maybePendingDeploy.isPresent() && maybePendingDeploy.get().getDeployMarker().getDeployId().equals(task.getPendingTaskId().getDeployId()) ? maybePendingDeploy.get().getUpdatedRequest() : Optional.<SingularityRequest>absent();
+
+        taskRequests.add(new SingularityTaskRequest(updatedRequest.or(request.getRequest()), foundDeploy, task));
       }
     }
 
