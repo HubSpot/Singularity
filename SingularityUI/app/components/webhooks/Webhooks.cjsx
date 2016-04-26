@@ -15,6 +15,8 @@ Webhooks = React.createClass
 
     rowsPerPageChoices: [10, 20, 30, 40]
 
+    webhookTypes: ['REQUEST', 'DEPLOY', 'TASK']
+
     sortBy: (field, sortDirectionAscending) ->
         @props.collections.webhooks.sortBy field, sortDirectionAscending
         @forceUpdate()
@@ -91,20 +93,33 @@ Webhooks = React.createClass
 
     promptNewWebhook: ->
         newWebhook = (uri, type) => @newWebhook uri, type
-        defaultSelectedType = 'REQUEST'
         vex.dialog.open
             message: "<div class='new-webhook' />"
             afterOpen: =>
-                ReactDOM.render(
-                    <NewWebhookForm 
-                        defaultSelectedType = {defaultSelectedType}
-                        selectVex = {(selected) => @type = selected} 
+                @validateInput = (input) => false
+                @renderedForm = ReactDOM.render(
+                    <NewWebhookForm
+                        getErrors = {() => @errors}
+                        webhookTypes = {@webhookTypes}
+                        validateInput = {@validateInput}
+                        setType = {(selected) => @type = selected} 
                         setUri = {(uri) => @uri = uri} />,
                     $(".new-webhook").get(0)
                 )
+            beforeClose: =>
+                return true unless @data
+                @errors = []
+                uriValidated = @validateInput @uri
+                @errors.push 'Please select a type' unless @type
+                @errors.push 'Invalid URI entered' unless uriValidated
+                @renderedForm.forceUpdate() unless uriValidated and @type
+                return false unless uriValidated
+                return false unless @type
+                return true
             callback: (data) =>
-                return unless data
-                type = @type or defaultSelectedType
+                @data = data
+                return unless data and @validateInput @uri and @type
+                type = @type
                 newWebhook @uri, type
 
     getWebhookTableData: ->

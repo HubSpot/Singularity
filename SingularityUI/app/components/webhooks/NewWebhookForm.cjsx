@@ -1,56 +1,59 @@
 React = require 'react'
+Utils = require '../../utils'
 FormField = require '../common/formItems/FormField'
 
 NewWebhookForm = React.createClass
 
     getInitialState: ->
-        selected: @props.defaultSelectedType
+        selected: ''
         uri: ''
 
     select: (selected) ->
         @setState {selected: selected}
-        @props.selectVex selected
+        @props.setType selected
 
     updateUri: (event) ->
         @setState
             uri: event.target.value
         @props.setUri event.target.value
 
+    buttons: ->
+        buttons = []
+        @props.webhookTypes.map (type, key) =>
+            buttons.push (
+                <button
+                    key = {key}
+                    data-type = {type}
+                    className = "btn btn-default #{if @state.selected is type then 'active' else ''}"
+                    onClick = {(event) =>
+                        event.preventDefault()
+                        @select type
+                    }
+                >
+                    {Utils.humanizeText type}
+                </button>
+            )
+        buttons
+
+    alert: ->
+        errors = @props.getErrors()
+        return null unless errors and errors.length > 0
+        formattedErrors = []
+        if errors.length > 1
+            errors.map (error, key) ->
+                formattedErrors.push <li key={key}>{error}</li>
+        <div className='alert alert-danger'>
+            {if errors.length is 1 then errors[0] else <ul>{formattedErrors}</ul>}
+        </div>
+
     render: ->
         <div>
+            {@alert()}
+            <h3> New Webhook </h3>
             <div className='form-group'>
                 <label>Type</label>
                 <br />
-                <button
-                    data-type = "REQUEST" 
-                    className = "btn btn-default #{if @state.selected is 'REQUEST' then 'active' else ''}"
-                    onClick = {(event) =>
-                        event.preventDefault()
-                        @select 'REQUEST'
-                    }
-                >
-                    Request
-                </button>
-                <button 
-                    data-type = "DEPLOY" 
-                    className = "btn btn-default #{if @state.selected is 'DEPLOY' then 'active' else ''}"
-                    onClick = {(event) =>
-                        event.preventDefault()
-                        @select 'DEPLOY'
-                    }
-                >
-                    Deploy
-                </button>
-                <button 
-                    data-type = "TASK" 
-                    className = "btn btn-default #{if @state.selected is 'TASK' then 'active' else ''}"
-                    onClick = {(event) =>
-                        event.preventDefault()
-                        @select 'TASK'
-                    }
-                >
-                    Task
-                </button>
+                {@buttons()}
             </div>
             <div className='form-group'>
                 <label>URI</label>
