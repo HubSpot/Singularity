@@ -25,6 +25,7 @@ import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.SingularityWebhookSummary;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.WebhookManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -38,12 +39,14 @@ public class WebhookResource {
   private final WebhookManager webhookManager;
   private final Optional<SingularityUser> user;
   private final SingularityAuthorizationHelper authorizationHelper;
+  private final SingularityValidator validator;
 
   @Inject
-  public WebhookResource(WebhookManager webhookManager, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user) {
+  public WebhookResource(WebhookManager webhookManager, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, SingularityValidator validator) {
     this.webhookManager = webhookManager;
     this.authorizationHelper = authorizationHelper;
     this.user = user;
+    this.validator = validator;
   }
 
   @GET
@@ -65,6 +68,7 @@ public class WebhookResource {
   @ApiOperation("Add a new webhook.")
   public SingularityCreateResult addWebhook(SingularityWebhook webhook) {
     authorizationHelper.checkAdminAuthorization(user);
+    validator.checkSingularityWebhook(webhook);
     return webhookManager.addWebhook(webhook);
   }
 
