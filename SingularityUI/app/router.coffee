@@ -19,8 +19,9 @@ NotFoundController = require 'controllers/NotFound'
 
 DeployDetailController = require 'controllers/DeployDetail'
 
-TaskSearchController = require 'controllers/TaskSearch'
 LogViewerController = require 'controllers/LogViewer'
+
+TaskSearchController = require 'controllers/TaskSearch'
 
 Utils = require './utils'
 
