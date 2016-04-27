@@ -223,14 +223,14 @@ class Utils
         else
             fuzzyObject.score
 
+    @getInstanceNumberFromTaskId: (taskId) ->
+        splits = taskId.split('-')
+        splits[splits.length - 3]
+
     # e.g. `myModel.fetch().error Utils.ignore404`
     @ignore404: (response) -> app.caughtError() if response.status is 404
 
     # e.g. `myModel.fetch().error Utils.ignore400`
     @ignore400: (response) -> app.caughtError() if response.status is 400
-
-    @getInstanceNumberFromTaskId: (taskId) ->
-        splits = taskId.split('-')
-        splits[splits.length - 3]
 
 module.exports = Utils
