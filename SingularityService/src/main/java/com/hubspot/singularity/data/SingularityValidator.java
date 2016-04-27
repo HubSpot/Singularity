@@ -179,7 +179,7 @@ public class SingularityValidator {
     try {
       new URI(webhook.getUri());
     } catch (URISyntaxException e) {
-      checkBadRequest(false, "Invalid URI provided");
+      WebExceptions.badRequest("Invalid URI provided");
     }
 
     return webhook;
