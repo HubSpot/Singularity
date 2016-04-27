@@ -53,6 +53,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.expiring.SingularityExpiringPause;
 import com.hubspot.singularity.hooks.LoadBalancerClient;
 import com.hubspot.singularity.scheduler.SingularityDeployHealthHelper.DeployHealth;
 
@@ -253,6 +254,7 @@ public class SingularityDeployChecker {
     if (requestWithState.getState() == RequestState.DEPLOYING_TO_UNPAUSE) {
       if (deployResult.getDeployState() == DeployState.SUCCEEDED) {
         requestManager.activate(request, RequestHistoryType.DEPLOYED_TO_UNPAUSE, deployResult.getTimestamp(), pendingDeploy.getDeployMarker().getUser(), Optional.<String> absent());
+        requestManager.deleteExpiringObject(SingularityExpiringPause.class, request.getId());
       } else {
         requestManager.pause(request, deployResult.getTimestamp(), pendingDeploy.getDeployMarker().getUser(), Optional.<String> absent());
       }
@@ -415,7 +417,8 @@ public class SingularityDeployChecker {
         sendCancelToLoadBalancer(pendingDeploy);
       }
 
-      return getDeployResultWithFailures(request, deploy, pendingDeploy, DeployState.FAILED, String.format("%s task(s) for this deploy failed", inactiveDeployMatchingTasks.size()), inactiveDeployMatchingTasks);
+      int maxRetries = deploy.get().getMaxTaskRetries().or(configuration.getDefaultDeployMaxTaskRetries());
+      return getDeployResultWithFailures(request, deploy, pendingDeploy, DeployState.FAILED, String.format("%s task(s) for this deploy failed", inactiveDeployMatchingTasks.size() - maxRetries), inactiveDeployMatchingTasks);
     }
 
     return checkDeployProgress(request, cancelRequest, pendingDeploy, updatePendingDeployRequest, deploy, deployActiveTasks, otherActiveTasks);

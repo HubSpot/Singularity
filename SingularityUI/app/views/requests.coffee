@@ -1,5 +1,4 @@
 View = require './view'
-AutoTailer = require './AutoTailer'
 Request = require '../models/Request'
 Utils = require '../utils'
 vex = require 'vex.dialog'
@@ -328,17 +327,7 @@ class RequestsView extends View
 
         request.promptRun (data) =>
 
-            # If user wants to redirect to a file after the task starts
-            if data.autoTail is 'on'
-                autoTailer = new AutoTailer({
-                    requestId: id
-                    autoTailFilename: data.filename
-                    autoTailTimestamp: +new Date()
-                })
-
-                autoTailer.startAutoTailPolling()
-
-            else
+            unless data.afterStart in ['browse-to-sandbox', 'autoTail']
                 $row.addClass 'flash'
                 setTimeout (=> $row.removeClass 'flash'), 500
 

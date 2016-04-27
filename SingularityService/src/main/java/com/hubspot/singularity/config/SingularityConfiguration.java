@@ -55,6 +55,8 @@ public class SingularityConfiguration extends Configuration {
 
   private long cleanupEverySeconds = 5;
 
+  private long checkQueuedMailsEveryMillis = TimeUnit.SECONDS.toMillis(15);
+
   private long closeWaitSeconds = 5;
 
   private String commonHostnameSuffixToOmit;
@@ -186,6 +188,10 @@ public class SingularityConfiguration extends Configuration {
   @Valid
   private SentryConfiguration sentryConfiguration;
 
+  @JsonProperty("taskMetadata")
+  @Valid
+  private SingularityTaskMetadataConfiguration taskMetadataConfiguration = new SingularityTaskMetadataConfiguration();
+
   @JsonProperty("smtp")
   @Valid
   private SMTPConfiguration smtpConfiguration;
@@ -228,7 +234,7 @@ public class SingularityConfiguration extends Configuration {
 
   @JsonProperty("ldap")
   @Valid
-  private LDAPConfiguration ldapConfiguration = null;
+  private LDAPConfiguration ldapConfiguration;
 
   @JsonProperty("auth")
   @NotNull
@@ -242,6 +248,8 @@ public class SingularityConfiguration extends Configuration {
   @NotNull
   @Valid
   private GraphiteConfiguration graphiteConfiguration = new GraphiteConfiguration();
+
+  private boolean taskHistoryQueryUsesZkFirst = false;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -557,6 +565,14 @@ public class SingularityConfiguration extends Configuration {
 
   public UIConfiguration getUiConfiguration() {
     return uiConfiguration;
+  }
+
+  public long getCheckQueuedMailsEveryMillis() {
+    return checkQueuedMailsEveryMillis;
+  }
+
+  public void setCheckQueuedMailsEveryMillis(long checkQueuedMailsEveryMillis) {
+    this.checkQueuedMailsEveryMillis = checkQueuedMailsEveryMillis;
   }
 
   public long getWarnIfScheduledJobIsRunningForAtLeastMillis() {
@@ -947,6 +963,14 @@ public class SingularityConfiguration extends Configuration {
     this.reserveSlavesWithAttributes = reserveSlavesWithAttributes;
   }
 
+  public SingularityTaskMetadataConfiguration getTaskMetadataConfiguration() {
+    return taskMetadataConfiguration;
+  }
+
+  public void setTaskMetadataConfiguration(SingularityTaskMetadataConfiguration taskMetadataConfiguration) {
+    this.taskMetadataConfiguration = taskMetadataConfiguration;
+  }
+
   public GraphiteConfiguration getGraphiteConfiguration() {
     return graphiteConfiguration;
   }
@@ -985,5 +1009,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setMaxStaleTasksPerRequestInZkWhenNoDatabase(Optional<Integer> maxStaleTasksPerRequestInZkWhenNoDatabase) {
     this.maxStaleTasksPerRequestInZkWhenNoDatabase = maxStaleTasksPerRequestInZkWhenNoDatabase;
+  }
+
+  public boolean isTaskHistoryQueryUsesZkFirst() {
+    return taskHistoryQueryUsesZkFirst;
+  }
+
+  public void setTaskHistoryQueryUsesZkFirst(boolean taskHistoryQueryUsesZkFirst) {
+    this.taskHistoryQueryUsesZkFirst = taskHistoryQueryUsesZkFirst;
   }
 }

@@ -70,6 +70,7 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
+import com.hubspot.singularity.scheduler.SingularityNewTaskChecker.CheckTaskState;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation.ReconciliationState;
 
 public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
@@ -2759,6 +2760,32 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     deployChecker.checkDeploys();
 
     Assert.assertEquals(DeployState.FAILED, deployManager.getDeployResult(requestId, deployId).get().getDeployState());
+  }
+
+  @Test
+  public void testNewTaskCheckerRespectsDeployHealthcheckRetries() {
+    initRequest();
+
+    final String deployId = "new_task_healthcheck";
+
+    SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId);
+    db.setHealthcheckMaxRetries(Optional.of(1));
+    db.setHealthcheckUri(Optional.of("http://uri"));
+
+    SingularityDeploy deploy = initAndFinishDeploy(request, db);
+
+    SingularityTask task = launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_RUNNING);
+
+    Assert.assertEquals(CheckTaskState.CHECK_IF_OVERDUE, newTaskChecker.getTaskState(task, requestManager.getRequest(requestId), healthchecker));
+    Assert.assertTrue(taskManager.getCleanupTaskIds().isEmpty());
+
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(500), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.<String> absent(), Optional.<String> absent(), task.getTaskId()));
+
+    Assert.assertEquals(CheckTaskState.CHECK_IF_OVERDUE, newTaskChecker.getTaskState(task, requestManager.getRequest(requestId), healthchecker));
+
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(500), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.<String> absent(), Optional.<String> absent(), task.getTaskId()));
+
+    Assert.assertEquals(CheckTaskState.UNHEALTHY_KILL_TASK, newTaskChecker.getTaskState(task, requestManager.getRequest(requestId), healthchecker));
   }
 
   @Test

@@ -5,7 +5,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -28,12 +27,11 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.HistoryPurgingConfiguration;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.history.HistoryManager;
-import com.hubspot.singularity.data.history.HistoryManager.OrderDirection;
+import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 import com.hubspot.singularity.data.history.SingularityHistoryPurger;
 import com.hubspot.singularity.data.history.SingularityRequestHistoryPersister;
 import com.hubspot.singularity.data.history.SingularityTaskHistoryPersister;
 import com.hubspot.singularity.data.history.TaskHistoryHelper;
-import com.hubspot.singularity.scheduler.SingularitySchedulerTestBase;
 
 import liquibase.Liquibase;
 import liquibase.database.Database;
@@ -57,6 +55,9 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
   @Inject
   protected SingularityTestAuthenticator testAuthenticator;
+
+  @Inject
+  protected TaskHistoryHelper taskHistoryHelper;
 
   public SingularityHistoryTest() {
     super(true);
@@ -89,15 +90,9 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
   }
 
   private SingularityTaskHistory buildTask(long launchTime) {
-    Optional<String> directory = Optional.absent();
-    List<SingularityTaskHealthcheckResult> hcs = Collections.emptyList();
-    List<SingularityLoadBalancerUpdate> upds = Collections.emptyList();
-    List<SingularityTaskHistoryUpdate> historyUpdates = Collections.emptyList();
-    List<SingularityTaskShellCommandHistory> shellHistory = Collections.emptyList();
-
     SingularityTask task = prepTask(request, firstDeploy, launchTime, 1);
 
-    SingularityTaskHistory taskHistory = new SingularityTaskHistory(historyUpdates, directory, hcs, task, upds, shellHistory);
+    SingularityTaskHistory taskHistory = new SingularityTaskHistory(null, Optional.<String> absent(), null, task, null, null, null);
 
     return taskHistory;
   }
@@ -110,6 +105,24 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     }
   }
 
+
+  private List<SingularityTaskIdHistory> getTaskHistoryForRequest(String requestId, int start, int limit) {
+    return historyManager.getTaskIdHistory(Optional.of(requestId), Optional.<String> absent(), Optional.<String> absent(), Optional.<ExtendedTaskState> absent(),
+        Optional.<Long> absent(), Optional.<Long> absent(), Optional.<OrderDirection> absent(), Optional.of(start), limit);
+  }
+
+  @Test
+  public void testHistoryDoesntHaveActiveTasks() {
+    initRequest();
+    initFirstDeploy();
+
+    SingularityTask taskOne = launchTask(request, firstDeploy, 1L, 10L, 1, TaskState.TASK_RUNNING, true);
+    SingularityTask taskTwo = launchTask(request, firstDeploy, 2l, 10L, 2, TaskState.TASK_RUNNING, true);
+    SingularityTask taskThree = launchTask(request, firstDeploy, 3l, 10L, 3, TaskState.TASK_RUNNING, true);
+
+    match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.<String> absent(), Optional.<String> absent(), Optional.<ExtendedTaskState> absent(),
+        Optional.<Long> absent(), Optional.<Long> absent(), Optional.<OrderDirection> absent()), 0, 10), 0);
+  }
 
   @Test
   public void historyUpdaterTest() {
@@ -127,13 +140,13 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     Assert.assertTrue(historyManager.getTaskHistory(taskHistory.getTask().getTaskId().getId()).get().getTask() != null);
 
-    Assert.assertEquals(1, historyManager.getTaskHistoryForRequest(requestId, 0, 100).size());
+    Assert.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 100).size());
 
     SingularityHistoryPurger purger = new SingularityHistoryPurger(historyPurgingConfiguration, historyManager);
 
     purger.runActionOnPoll();
 
-    Assert.assertEquals(1, historyManager.getTaskHistoryForRequest(requestId, 0, 100).size());
+    Assert.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 100).size());
 
     Assert.assertTrue(!historyManager.getTaskHistory(taskHistory.getTask().getTaskId().getId()).isPresent());
   }
@@ -145,7 +158,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     saveTasks(3, System.currentTimeMillis());
 
-    Assert.assertEquals(3, historyManager.getTaskHistoryForRequest(requestId, 0, 10).size());
+    Assert.assertEquals(3, getTaskHistoryForRequest(requestId, 0, 10).size());
 
     HistoryPurgingConfiguration historyPurgingConfiguration = new HistoryPurgingConfiguration();
     historyPurgingConfiguration.setEnabled(true);
@@ -156,26 +169,26 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
 
     purger.runActionOnPoll();
 
-    Assert.assertEquals(3, historyManager.getTaskHistoryForRequest(requestId, 0, 10).size());
+    Assert.assertEquals(3, getTaskHistoryForRequest(requestId, 0, 10).size());
 
     historyPurgingConfiguration.setDeleteTaskHistoryAfterTasksPerRequest(1);
 
     purger.runActionOnPoll();
 
-    Assert.assertEquals(1, historyManager.getTaskHistoryForRequest(requestId, 0, 10).size());
+    Assert.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 10).size());
 
     historyPurgingConfiguration.setDeleteTaskHistoryAfterTasksPerRequest(25);
     historyPurgingConfiguration.setDeleteTaskHistoryAfterDays(100);
 
     purger.runActionOnPoll();
 
-    Assert.assertEquals(1, historyManager.getTaskHistoryForRequest(requestId, 0, 10).size());
+    Assert.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 10).size());
 
     saveTasks(100, System.currentTimeMillis() - TimeUnit.DAYS.toMillis(200));
 
     purger.runActionOnPoll();
 
-    Assert.assertEquals(1, historyManager.getTaskHistoryForRequest(requestId, 0, 10).size());
+    Assert.assertEquals(1, getTaskHistoryForRequest(requestId, 0, 10).size());
   }
 
   @Test
@@ -199,11 +212,12 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_FINISHED);
 
     configuration.setTaskPersistAfterStartupBufferMillis(0);
+    taskMetadataConfiguration.setTaskPersistAfterFinishBufferMillis(0);
 
     taskHistoryPersister.runActionOnPoll();
 
     Assert.assertEquals(runId, historyManager.getTaskHistory(taskId.getId()).get().getTask().getTaskRequest().getPendingTask().getRunId().get());
-    Assert.assertEquals(runId, historyManager.getTaskHistoryForRequest(requestId, 0, 10).get(0).getRunId().get());
+    Assert.assertEquals(runId, getTaskHistoryForRequest(requestId, 0, 10).get(0).getRunId().get());
 
     parent = requestResource.scheduleImmediately(requestId);
 
@@ -215,19 +229,33 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     initRequest();
     initFirstDeploy();
 
-    SingularityTask task = startTask(firstDeploy);
+    taskMetadataConfiguration.setTaskPersistAfterFinishBufferMillis(TimeUnit.MINUTES.toMillis(100));
 
-    statusUpdate(task, TaskState.TASK_FINISHED);
+    SingularityTask task = launchTask(request, firstDeploy, System.currentTimeMillis(), System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(3), 1, TaskState.TASK_RUNNING);
+
+    statusUpdate(task, TaskState.TASK_FINISHED, Optional.of(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(2)));
 
     taskHistoryPersister.runActionOnPoll();
 
     Assert.assertEquals(1, taskManager.getAllTaskIds().size());
+
+    configuration.setTaskPersistAfterStartupBufferMillis(0);
+
+    taskHistoryPersister.runActionOnPoll();
+
+    Assert.assertEquals(1, taskManager.getAllTaskIds().size());
+
+    taskMetadataConfiguration.setTaskPersistAfterFinishBufferMillis(0);
+
+    taskHistoryPersister.runActionOnPoll();
+
+    Assert.assertEquals(0, taskManager.getAllTaskIds().size());
   }
 
   @Test
   public void testPersisterRaceCondition() {
     final TaskManager taskManagerSpy = spy(taskManager);
-    final TaskHistoryHelper taskHistoryHelperWithMockedTaskManager = new TaskHistoryHelper(taskManagerSpy, historyManager);
+    final TaskHistoryHelper taskHistoryHelperWithMockedTaskManager = new TaskHistoryHelper(taskManagerSpy, historyManager, requestManager, configuration);
 
     initScheduledRequest();
     initFirstDeploy();
@@ -247,7 +275,185 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     doReturn(Arrays.asList(taskId)).when(taskManagerSpy).getInactiveTaskIdsForRequest(eq(requestId));
 
     // assert that the history works, but more importantly, that we don't NPE
-    Assert.assertEquals(1, taskHistoryHelperWithMockedTaskManager.getBlendedHistory(requestId, 0, 5).size());
+    Assert.assertEquals(1, taskHistoryHelperWithMockedTaskManager.getBlendedHistory(new SingularityTaskHistoryQuery(requestId), 0, 5).size());
+  }
+
+  @Test
+  public void testTaskSearchByRequest() {
+    initOnDemandRequest();
+    initFirstDeploy();
+
+    SingularityTask taskOne = launchTask(request, firstDeploy, 10000L, 10L, 1, TaskState.TASK_RUNNING, true);
+    SingularityTask taskThree = launchTask(request, firstDeploy, 20000l, 10L, 2, TaskState.TASK_RUNNING, true);
+    SingularityTask taskFive = launchTask(request, firstDeploy, 30000l, 10L, 3, TaskState.TASK_RUNNING, true);
+
+    requestId = "test-request-2";
+
+    initOnDemandRequest();
+    initFirstDeploy();
+
+    SingularityTask taskTwo = launchTask(request, firstDeploy, 15000L, 10L, 1, TaskState.TASK_RUNNING, true);
+    SingularityTask taskFour = launchTask(request, firstDeploy, 25000l, 10L, 2, TaskState.TASK_RUNNING, true);
+    SingularityTask taskSix = launchTask(request, firstDeploy, 35000l, 10L, 3, TaskState.TASK_RUNNING, true);
+    SingularityTask taskSeven  = launchTask(request, firstDeploy, 70000l, 10L, 7, TaskState.TASK_RUNNING, true);
+
+    statusUpdate(taskOne, TaskState.TASK_FAILED);
+    statusUpdate(taskTwo, TaskState.TASK_FINISHED);
+    statusUpdate(taskSix, TaskState.TASK_KILLED);
+    statusUpdate(taskFour, TaskState.TASK_LOST);
+
+    taskHistoryPersister.runActionOnPoll();
+
+    statusUpdate(taskThree, TaskState.TASK_FAILED);
+    statusUpdate(taskFive, TaskState.TASK_FINISHED);
+    statusUpdate(taskSeven, TaskState.TASK_KILLED);
+
+    match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.<String> absent(), Optional.<String> absent(), Optional.<String> absent(),
+        Optional.<ExtendedTaskState> absent(), Optional.<Long> absent(), Optional.<Long> absent(), Optional.<OrderDirection> absent()), 0, 3), 3,
+        taskSeven, taskSix, taskFive);
+
+    taskHistoryPersister.runActionOnPoll();
+
+    match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.<String> absent(), Optional.<String> absent(), Optional.<String> absent(),
+        Optional.<ExtendedTaskState> absent(), Optional.of(70000L), Optional.of(20000L), Optional.of(OrderDirection.ASC)), 0, 3), 3,
+        taskFour, taskFive, taskSix);
+  }
+
+  @Test
+  public void testTaskSearchQueryInZkOnly() {
+    initOnDemandRequest();
+    initFirstDeploy();
+
+    SingularityTask taskOne = launchTask(request, firstDeploy, 1L, 10L, 1, TaskState.TASK_RUNNING, true);
+    SingularityTask taskTwo = launchTask(request, firstDeploy, 2l, 10L, 2, TaskState.TASK_RUNNING, true);
+    SingularityTask taskThree = launchTask(request, firstDeploy, 3l, 10L, 3, TaskState.TASK_RUNNING, true);
+
+    SingularityDeployMarker marker = initSecondDeploy();
+    finishDeploy(marker, secondDeploy);
+
+    SingularityTask taskFour = launchTask(request, secondDeploy, 4L, 10L, 4, TaskState.TASK_RUNNING, true);
+    SingularityTask taskFive = launchTask(request, secondDeploy, 5l, 10L, 5, TaskState.TASK_RUNNING, true);
+    SingularityTask taskSix = launchTask(request, secondDeploy, 6l, 10L, 6, TaskState.TASK_RUNNING, true);
+    SingularityTask taskSeven  = launchTask(request, secondDeploy, 7l, 10L, 7, TaskState.TASK_RUNNING, true);
+
+    statusUpdate(taskOne, TaskState.TASK_FAILED);
+    statusUpdate(taskTwo, TaskState.TASK_FINISHED);
+    statusUpdate(taskSix, TaskState.TASK_KILLED);
+    statusUpdate(taskFour, TaskState.TASK_LOST);
+
+    statusUpdate(taskThree, TaskState.TASK_FAILED);
+    statusUpdate(taskFive, TaskState.TASK_FINISHED);
+    statusUpdate(taskSeven, TaskState.TASK_KILLED);
+
+    match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.<String> absent(), Optional.<String> absent(),
+        Optional.<ExtendedTaskState> absent(), Optional.<Long> absent(), Optional.<Long> absent(), Optional.<OrderDirection> absent()), 0, 3), 3,
+        taskSeven, taskSix, taskFive);
+
+    match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.of(secondDeployId), Optional.of("host4"),
+        Optional.<ExtendedTaskState> absent(), Optional.<Long> absent(), Optional.<Long> absent(), Optional.<OrderDirection> absent()), 0, 3), 1,
+        taskFour);
+
+    match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.of(firstDeployId), Optional.<String> absent(),
+        Optional.of(ExtendedTaskState.TASK_FAILED), Optional.<Long> absent(), Optional.<Long> absent(), Optional.of(OrderDirection.ASC)), 0, 3), 2,
+        taskOne, taskThree);
+
+    match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.<String> absent(), Optional.<String> absent(),
+        Optional.of(ExtendedTaskState.TASK_LOST), Optional.<Long> absent(), Optional.<Long> absent(), Optional.<OrderDirection> absent()), 0, 3), 1,
+        taskFour);
+
+    match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.<String> absent(), Optional.<String> absent(),
+        Optional.<ExtendedTaskState> absent(), Optional.of(7L), Optional.of(2L), Optional.of(OrderDirection.ASC)), 0, 3), 3,
+        taskThree, taskFour, taskFive);
+
+    match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.<String> absent(), Optional.<String> absent(),
+        Optional.<ExtendedTaskState> absent(), Optional.of(7L), Optional.of(2L), Optional.of(OrderDirection.ASC)), 1, 3), 3,
+        taskFour, taskFive, taskSix);
+  }
+
+  @Test
+  public void testTaskSearchQueryBlended() {
+    initOnDemandRequest();
+    initFirstDeploy();
+
+    SingularityTask taskOne = launchTask(request, firstDeploy, 10000L, 10L, 1, TaskState.TASK_RUNNING, true);
+    SingularityTask taskTwo = launchTask(request, firstDeploy, 20000l, 10L, 2, TaskState.TASK_RUNNING, true);
+    SingularityTask taskThree = launchTask(request, firstDeploy, 30000l, 10L, 3, TaskState.TASK_RUNNING, true);
+
+    SingularityDeployMarker marker = initSecondDeploy();
+    finishDeploy(marker, secondDeploy);
+
+    SingularityTask taskFour = launchTask(request, secondDeploy, 40000L, 10L, 4, TaskState.TASK_RUNNING, true);
+    SingularityTask taskFive = launchTask(request, secondDeploy, 50000l, 10L, 5, TaskState.TASK_RUNNING, true);
+    SingularityTask taskSix = launchTask(request, secondDeploy, 60000l, 10L, 6, TaskState.TASK_RUNNING, true);
+    SingularityTask taskSeven = launchTask(request, secondDeploy, 70000l, 10L, 7, TaskState.TASK_RUNNING, true);
+
+    statusUpdate(taskOne, TaskState.TASK_FAILED);
+    statusUpdate(taskTwo, TaskState.TASK_FINISHED);
+    statusUpdate(taskSix, TaskState.TASK_KILLED);
+    statusUpdate(taskFour, TaskState.TASK_LOST);
+
+    taskHistoryPersister.runActionOnPoll();
+
+    statusUpdate(taskThree, TaskState.TASK_FAILED);
+    statusUpdate(taskFive, TaskState.TASK_FINISHED);
+    statusUpdate(taskSeven, TaskState.TASK_KILLED);
+
+    match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.of(firstDeployId), Optional.of("host1"),
+        Optional.<ExtendedTaskState> absent(), Optional.<Long> absent(), Optional.<Long> absent(), Optional.<OrderDirection> absent()), 0, 3), 1,
+        taskOne);
+
+    match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.of(firstDeployId), Optional.<String> absent(),
+        Optional.of(ExtendedTaskState.TASK_FAILED), Optional.<Long> absent(), Optional.<Long> absent(), Optional.of(OrderDirection.ASC)), 0, 3), 2,
+        taskOne, taskThree);
+
+    match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.<String> absent(), Optional.<String> absent(),
+        Optional.of(ExtendedTaskState.TASK_LOST), Optional.<Long> absent(), Optional.<Long> absent(), Optional.<OrderDirection> absent()), 0, 3), 1,
+        taskFour);
+
+    match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.<String> absent(), Optional.<String> absent(),
+        Optional.<ExtendedTaskState> absent(), Optional.of(70000L), Optional.of(20000L), Optional.of(OrderDirection.DESC)), 0, 3), 3,
+        taskSix, taskFive, taskFour);
+
+    taskHistoryPersister.runActionOnPoll();
+
+    match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.<String> absent(), Optional.<String> absent(),
+        Optional.<ExtendedTaskState> absent(), Optional.<Long> absent(), Optional.<Long> absent(), Optional.<OrderDirection> absent()), 0, 3), 3,
+        taskSeven, taskSix, taskFive);
+
+    match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.<String> absent(), Optional.<String> absent(),
+        Optional.<ExtendedTaskState> absent(), Optional.<Long> absent(), Optional.<Long> absent(), Optional.<OrderDirection> absent()), 2, 1), 1,
+        taskFive);
+
+    match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.of(secondDeployId), Optional.of("host4"),
+        Optional.<ExtendedTaskState> absent(), Optional.<Long> absent(), Optional.<Long> absent(), Optional.<OrderDirection> absent()), 0, 3), 1,
+        taskFour);
+
+    match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.of(firstDeployId), Optional.<String> absent(),
+        Optional.of(ExtendedTaskState.TASK_FAILED), Optional.<Long> absent(), Optional.<Long> absent(), Optional.of(OrderDirection.ASC)), 0, 3), 2,
+        taskOne, taskThree);
+
+    match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.<String> absent(), Optional.<String> absent(),
+        Optional.of(ExtendedTaskState.TASK_LOST), Optional.<Long> absent(), Optional.<Long> absent(), Optional.<OrderDirection> absent()), 0, 3), 1,
+        taskFour);
+
+    match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.<String> absent(), Optional.<String> absent(),
+        Optional.<ExtendedTaskState> absent(), Optional.of(70000L), Optional.of(20000L), Optional.of(OrderDirection.ASC)), 0, 3), 3,
+        taskThree, taskFour, taskFive);
+
+    match(taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), Optional.<String> absent(), Optional.<String> absent(),
+        Optional.<ExtendedTaskState> absent(), Optional.of(70000L), Optional.of(20000L), Optional.of(OrderDirection.ASC)), 1, 3), 3,
+        taskFour, taskFive, taskSix);
+  }
+
+  private void match(List<SingularityTaskIdHistory> history, int num, SingularityTask... tasks) {
+    Assert.assertEquals(num, history.size());
+
+    for (int i = 0; i < tasks.length; i++) {
+      SingularityTaskIdHistory idHistory = history.get(i);
+      SingularityTask task = tasks[i];
+
+      Assert.assertEquals(task.getTaskId(), idHistory.getTaskId());
+    }
   }
 
   @Test

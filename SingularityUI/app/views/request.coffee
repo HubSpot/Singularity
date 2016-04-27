@@ -2,8 +2,7 @@ View = require './view'
 
 Deploy = require '../models/Deploy'
 TaskFiles = require '../collections/TaskFiles'
-
-AutoTailer = require './AutoTailer'
+TaskHistory = require '../models/TaskHistory'
 
 class RequestView extends View
 
@@ -78,38 +77,22 @@ class RequestView extends View
         @model.promptRemove =>
             app.router.navigate 'requests', trigger: true
 
-    runRequest: (e) =>
-        @model.promptRun (data) =>
-            # If user wants to redirect to a file after the task starts
-            if data.autoTail is 'on'
-                autoTailer = new AutoTailer({
-                    requestId: @requestId
-                    autoTailFilename: data.filename
-                    autoTailTimestamp: +new Date()
-                })
-
-                autoTailer.startAutoTailPolling()
-
-            else
+    runRequest: (e, taskId) => # If taskId is provided, rerun the task. Else run the task.
+        callback = (data) =>
+            unless data.afterStart in ['browse-to-sandbox', 'autoTail']
                 @trigger 'refreshrequest'
                 setTimeout ( => @trigger 'refreshrequest'), 2500
+        if taskId
+            task = new TaskHistory {taskId}
+            task.fetch()
+                .done =>
+                    @model.promptRun callback, task
+        else 
+            @model.promptRun callback
 
     rerunTask: (e) =>
         taskId = e.target.getAttribute 'data-taskId'
-        @model.promptRerun taskId, (data) =>
-            # If user wants to redirect to a file after the task starts
-            if data.autoTail is 'on'
-                autoTailer = new AutoTailer({
-                    requestId: @requestId
-                    autoTailFilename: data.filename
-                    autoTailTimestamp: +new Date()
-                })
-
-                autoTailer.startAutoTailPolling()
-
-            else
-                @trigger 'refreshrequest'
-                setTimeout ( => @trigger 'refreshrequest'), 2500
+        @runRequest e, taskId
 
     scaleRequest: (e) =>
         @model.promptScale =>

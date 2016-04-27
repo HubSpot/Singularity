@@ -103,6 +103,12 @@ html
             dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ slaveHostname }
             dt(style="font-weight: bold; margin: 0 0 9px") Directory
             dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px") #{ taskDirectory }
+            if extraCmdLineArguments
+              dt(style="font-weight: bold; margin: 0 0 9px") Extra Cmd Line Arguments (for Task)
+              dd(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px")
+                ul
+                  each cmdLineArg, i in extraCmdLineArguments
+                    li #{ cmdLineArg }
 
         //- Files
         div
@@ -122,3 +128,21 @@ html
                       #{ log.log }
                 else
                   | #{ log.path } not available. The task either did not start, output anything, or the slave hosting the log files was unavailable over http.
+
+        //- Metadata
+        if taskHasMetadata
+          div(style="padding-bottom: 20px")
+            div(style="padding-bottom: 12px; margin: 15px 0; border-bottom: 1px solid #eee")
+              h3(style="margin: 0; font-size: 20px; line-height: 1") Metadata
+            each taskMetadataElement, i in taskMetadata
+              strong(style="margin: 0; margin-top: 5; line-height: 1")
+                #{ taskMetadataElement.level } (#{ taskMetadataElement.type }) - #{ taskMetadataElement.date }
+              if taskMetadataElement.user
+                p
+                  strong(style="margin: 0; line-height: 1") by
+                  //- Note the extra space on the next line
+                  |   #{ taskMetadataElement.user }
+              div(style="background: #eee; display: block; margin: 0 0 17px; padding: 10px 14px; border-radius: 3px")
+                p(style="margin: 0; margin-top: 5; line-height: 1") <b> #{ taskMetadataElement.title } </b>
+                if taskMetadataElement.message
+                  p #{ taskMetadataElement.message }

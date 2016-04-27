@@ -1,5 +1,6 @@
 Handlebars = require 'handlebars'
 moment = require 'moment'
+Utils = require './utils'
 
 Handlebars.registerHelper 'appRoot', ->
     config.appRoot
@@ -132,6 +133,36 @@ Handlebars.registerHelper 'humanizeFileSize', (bytes) ->
     i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length-1)
     return +(bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i]
 
+Handlebars.registerHelper 'ifCauseOfFailure', (task, deploy, options) ->
+    thisTaskFailedTheDeploy = false
+    deploy.deployResult.deployFailures.map (failure) ->
+        if failure.taskId and failure.taskId.id is task.taskId
+            thisTaskFailedTheDeploy = true
+    if thisTaskFailedTheDeploy
+        options.fn @
+    else
+        options.inverse @
+
+Handlebars.registerHelper 'ifDeployFailureCausedTaskToBeKilled', (task, options) ->
+    deployFailed = false
+    taskKilled = false
+    task.taskUpdates.map (update) ->
+        if update.statusMessage and update.statusMessage.indexOf 'DEPLOY_FAILED' isnt -1
+            deployFailed = true
+        if update.taskState is 'TASK_KILLED'
+            taskKilled = true
+    if deployFailed and taskKilled
+        options.fn @
+    else
+        options.inverse @
+
+Handlebars.registerHelper 'causeOfDeployFailure', (task, deploy) ->
+    failureCause = ''
+    deploy.deployResult.deployFailures.map (failure) ->
+        if failure.taskId and failure.taskId.id is task.taskId
+            failureCause = Handlebars.helpers.humanizeText failure.reason
+    return failureCause if failureCause
+
 # 'sbacanu@hubspot.com' => 'sbacanu'
 # 'seb'                 => 'seb'
 Handlebars.registerHelper 'usernameFromEmail', (email) ->
@@ -142,20 +173,10 @@ Handlebars.registerHelper 'substituteTaskId', (value, taskId) ->
     value.replace('$TASK_ID', taskId)
 
 Handlebars.registerHelper 'filename', (value) ->
-    value.substring(value.lastIndexOf('/') + 1)
+    Utils.fileName(value)
 
 Handlebars.registerHelper 'getLabelClass', (state) ->
-    switch state
-        when 'TASK_STARTING', 'TASK_CLEANING'
-            'warning'
-        when 'TASK_STAGING', 'TASK_LAUNCHED', 'TASK_RUNNING'
-            'info'
-        when 'TASK_FINISHED'
-            'success'
-        when 'TASK_KILLED', 'TASK_LOST', 'TASK_FAILED', 'TASK_LOST_WHILE_DOWN'
-            'danger'
-        else
-            'default'
+    Utils.getLabelClassFromTaskState state
 
 Handlebars.registerHelper 'trimS3File', (filename, taskId) ->
     unless config.taskS3LogOmitPrefix

@@ -37,7 +37,8 @@ var templateData = {
   warnIfScheduledJobIsRunningPastNextRunPct: process.env.SINGULARITY_WARN_IF_SCHEDULED_JOB_IS_RUNNING_PAST_NEXT_RUN_PCT || 200,
   shellCommands: process.env.SINGULARITY_SHELL_COMMANDS || "[]",
   timestampFormat: process.env.SINGULARITY_TIMESTAMP_FORMAT || 'lll',
-  timestampWithSecondsFormat: process.env.SINGULARITY_TIMESTAMP_WITH_SECONDS_FORMAT || 'lll:ss'
+  timestampWithSecondsFormat: process.env.SINGULARITY_TIMESTAMP_WITH_SECONDS_FORMAT || 'lll:ss',
+  redirectOnUnauthorizedUrl: process.env.SINGULARITY_REDIRECT_ON_UNAUTHORIZED_URL || ''
 }
 
 var dest = path.resolve(__dirname, '../SingularityService/target/generated-resources/assets');
@@ -86,6 +87,7 @@ gulp.task('styles', function () {
       'node_modules/messenger/build/css/*.css',
       'node_modules/select2/*.css',
       'node_modules/bootstrap/dist/css/bootstrap.css',
+      'node_modules/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.css',
       'node_modules/sortable/css/sortable-theme-bootstrap.css',
       'app/**/*.styl'
     ])

@@ -70,6 +70,7 @@ import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
@@ -126,6 +127,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityCleaner cleaner;
   @Inject
   protected SingularityConfiguration configuration;
+  @Inject
+  protected SingularityTaskMetadataConfiguration taskMetadataConfiguration;
   @Inject
   protected SingularityCooldownChecker cooldownChecker;
   @Inject
@@ -389,6 +392,25 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     requestManager.activate(request, RequestHistoryType.CREATED, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
   }
 
+  protected void initOnDemandRequest() {
+    initRequestWithType(RequestType.ON_DEMAND, false);
+  }
+
+  protected void initRequestWithType(RequestType requestType, boolean isLoadBalanced) {
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, requestType);
+
+    bldr.setLoadBalanced(Optional.of(isLoadBalanced));
+
+    if (requestType == RequestType.SCHEDULED) {
+      bldr.setQuartzSchedule(Optional.of(schedule));
+    }
+
+    request = bldr.build();
+
+    saveRequest(request);
+
+  }
+
   protected void protectedInitRequest(boolean isLoadBalanced, boolean isScheduled) {
     RequestType requestType = RequestType.WORKER;
 
@@ -396,17 +418,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
       requestType = RequestType.SCHEDULED;
     }
 
-    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, requestType);
-
-    bldr.setLoadBalanced(Optional.of(isLoadBalanced));
-
-    if (isScheduled) {
-      bldr.setQuartzSchedule(Optional.of(schedule));
-    }
-
-    request = bldr.build();
-
-    saveRequest(request);
+    initRequestWithType(requestType, isLoadBalanced);
   }
 
   protected void initRequest() {
@@ -465,13 +477,15 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     return deploy;
   }
 
-  protected void initSecondDeploy() {
+  protected SingularityDeployMarker initSecondDeploy() {
     secondDeployMarker = new SingularityDeployMarker(requestId, secondDeployId, System.currentTimeMillis(), Optional.<String> absent(), Optional.<String> absent());
     secondDeploy = new SingularityDeployBuilder(requestId, secondDeployId).setCommand(Optional.of("sleep 100")).build();
 
     deployManager.saveDeploy(request, secondDeployMarker, secondDeploy);
 
     startDeploy(secondDeployMarker, System.currentTimeMillis());
+
+    return secondDeployMarker;
   }
 
   protected void startDeploy(SingularityDeployMarker deployMarker, long timestamp) {
@@ -480,6 +494,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void finishDeploy(SingularityDeployMarker marker, SingularityDeploy deploy) {
+    deployManager.deletePendingDeploy(requestId);
+
     deployManager.saveDeployResult(marker, Optional.of(deploy), new SingularityDeployResult(DeployState.SUCCEEDED));
 
     deployManager.saveNewRequestDeployState(new SingularityRequestDeployState(requestId, Optional.of(marker), Optional.<SingularityDeployMarker> absent()));

@@ -1,19 +1,19 @@
 # Singularity REST API
 
-Version: 0.4.12-SNAPSHOT
+Version: 0.6.0-SNAPSHOT
 
 Endpoints:
+- [`/api/deploys`](#endpoint-/api/deploys) - Manages Singularity Deploys for existing requests
+- [`/api/history`](#endpoint-/api/history) - Manages historical data for tasks, requests, and deploys.
+- [`/api/logs`](#endpoint-/api/logs) - Manages Singularity task logs stored in S3.
+- [`/api/racks`](#endpoint-/api/racks) - Manages Singularity racks.
+- [`/api/requests`](#endpoint-/api/requests) - Manages Singularity Requests, the parent object for any deployed task
 - [`/api/sandbox`](#endpoint-/api/sandbox) - Provides a proxy to Mesos sandboxes.
 - [`/api/slaves`](#endpoint-/api/slaves) - Manages Singularity slaves.
-- [`/api/history`](#endpoint-/api/history) - Manages historical data for tasks, requests, and deploys.
 - [`/api/state`](#endpoint-/api/state) - Provides information about the current state of Singularity.
-- [`/api/logs`](#endpoint-/api/logs) - Manages Singularity task logs stored in S3.
 - [`/api/tasks`](#endpoint-/api/tasks) - Manages Singularity tasks.
 - [`/api/test`](#endpoint-/api/test) - Misc testing endpoints.
 - [`/api/webhooks`](#endpoint-/api/webhooks) - Manages Singularity webhooks.
-- [`/api/racks`](#endpoint-/api/racks) - Manages Singularity racks.
-- [`/api/requests`](#endpoint-/api/requests) - Manages Singularity Requests, the parent object for any deployed task
-- [`/api/deploys`](#endpoint-/api/deploys) - Manages Singularity Deploys for existing requests
 
 Models:
 - [`ByteString`](#model-ByteString)
@@ -126,6 +126,1193 @@ Models:
 - - -
 
 ## Endpoints
+### <a name="endpoint-/api/deploys"></a> /api/deploys
+#### Overview
+Manages Singularity Deploys for existing requests
+
+#### **POST** `/api/deploys/update`
+
+Update the target active instance count for a pending deploy
+
+
+###### Parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | true |  | [SingularityUpdatePendingDeployRequest](#model-linkType)</a> |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 400    | Deploy is not in the pending state pending or is not not present | - |
+
+
+- - -
+#### **GET** `/api/deploys/pending`
+
+Retrieve the list of current pending deploys
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityPendingDeploy]](#model-SingularityPendingDeploy)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **DELETE** `/api/deploys/deploy/{deployId}/request/{requestId}`
+
+Cancel a pending deployment (best effort - the deploy may still succeed or fail)
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The Singularity Request Id from which the deployment is removed. | string |
+| deployId | true | The Singularity Deploy Id that should be removed. | string |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 400    | Deploy is not in the pending state pending or is not not present | - |
+
+
+- - -
+#### **POST** `/api/deploys`
+
+Start a new deployment for a Request
+
+
+###### Parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | true |  | [SingularityDeployRequest](#model-linkType)</a> |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 400    | Deploy object is invalid | - |
+| 409    | A current deploy is in progress. It may be canceled by calling DELETE | - |
+
+
+- - -
+### <a name="endpoint-/api/history"></a> /api/history
+#### Overview
+Manages historical data for tasks, requests, and deploys.
+
+#### **GET** `/api/history/tasks`
+
+Retrieve the history sorted by startedAt for all inactive tasks.
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | false | Optional Request ID to match | string |
+| deployId | false | Optional deploy ID to match | string |
+| host | false | Optional host to match | string |
+| lastTaskStatus | false | Optional last task status to match | string |
+| startedAfter | false | Optionally match only tasks started after | long |
+| startedBefore | false | Optionally match only tasks started before | long |
+| orderDirection | false | Sort direction | string |
+| count | false | Maximum number of items to return | int |
+| page | false | Which page of items to view | int |
+
+###### Response
+[List[SingularityTaskIdHistory]](#model-SingularityTaskIdHistory)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/history/task/{taskId}`
+
+Retrieve the history for a specific task.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true | Task ID to look up | string |
+
+###### Response
+[SingularityTaskHistory](#model-SingularityTaskHistory)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/history/requests/search`
+
+Search for requests.
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestIdLike | false | Request ID prefix to search for | string |
+| count | false | Maximum number of items to return | int |
+| page | false | Which page of items to view | int |
+
+###### Response
+[UNKNOWN[string]](#model-UNKNOWN[string])
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/history/request/{requestId}/tasks/active`
+
+Retrieve the history for all active tasks of a specific request.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | Request ID to look up | string |
+
+###### Response
+[List[SingularityTaskIdHistory]](#model-SingularityTaskIdHistory)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/history/request/{requestId}/tasks`
+
+Retrieve the history sorted by startedAt for all inactive tasks of a specific request.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | Request ID to match | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| deployId | false | Optional deploy ID to match | string |
+| host | false | Optional host to match | string |
+| lastTaskStatus | false | Optional last task status to match | string |
+| startedAfter | false | Optionally match only tasks started after | long |
+| startedBefore | false | Optionally match only tasks started before | long |
+| orderDirection | false | Sort direction | string |
+| count | false | Maximum number of items to return | int |
+| page | false | Which page of items to view | int |
+
+###### Response
+[List[SingularityTaskIdHistory]](#model-SingularityTaskIdHistory)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/history/request/{requestId}/run/{runId}`
+
+Retrieve the history for a task by runId
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | Request ID to look up | string |
+| runId | true | runId to look up | string |
+
+###### Response
+[SingularityTaskIdHistory](#model-SingularityTaskIdHistory)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/history/request/{requestId}/requests`
+
+Get request history for a single request
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | Request ID to look up | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| count | false | Naximum number of items to return | int |
+| page | false | Which page of items to view | int |
+
+###### Response
+[List[SingularityRequestHistory]](#model-SingularityRequestHistory)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/history/request/{requestId}/deploys`
+
+Get deploy history for a single request
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | Request ID to look up | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| count | false | Maximum number of items to return | int |
+| page | false | Which page of items to view | int |
+
+###### Response
+[List[SingularityDeployHistory]](#model-SingularityDeployHistory)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/history/request/{requestId}/deploy/{deployId}/tasks/inactive`
+
+Retrieve the task history for a specific deploy.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | Request ID for deploy | string |
+| deployId | true | Deploy ID | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| count | false | Maximum number of items to return | int |
+| page | false | Which page of items to view | int |
+
+###### Response
+[List[SingularityTaskIdHistory]](#model-SingularityTaskIdHistory)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/history/request/{requestId}/deploy/{deployId}/tasks/active`
+
+Retrieve the task history for a specific deploy.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | Request ID for deploy | string |
+| deployId | true | Deploy ID | string |
+
+###### Response
+[List[SingularityTaskIdHistory]](#model-SingularityTaskIdHistory)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/history/request/{requestId}/deploy/{deployId}`
+
+Retrieve the history for a specific deploy.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | Request ID for deploy | string |
+| deployId | true | Deploy ID | string |
+
+###### Response
+[SingularityDeployHistory](#model-SingularityDeployHistory)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+### <a name="endpoint-/api/logs"></a> /api/logs
+#### Overview
+Manages Singularity task logs stored in S3.
+
+#### **GET** `/api/logs/task/{taskId}`
+
+Retrieve the list of logs stored in S3 for a specific task.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true | The task ID to search for | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| start | false | Start timestamp (millis, 13 digit) | long |
+| end | false | End timestamp (mills, 13 digit) | long |
+
+###### Response
+[List[SingularityS3Log]](#model-SingularityS3Log)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/logs/request/{requestId}/deploy/{deployId}`
+
+Retrieve the list of logs stored in S3 for a specific deploy.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The request ID to search for | string |
+| deployId | true | The deploy ID to search for | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| start | false | Start timestamp (millis, 13 digit) | long |
+| end | false | End timestamp (mills, 13 digit) | long |
+
+###### Response
+[List[SingularityS3Log]](#model-SingularityS3Log)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/logs/request/{requestId}`
+
+Retrieve the list of logs stored in S3 for a specific request.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The request ID to search for | string |
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| start | false | Start timestamp (millis, 13 digit) | long |
+| end | false | End timestamp (mills, 13 digit) | long |
+
+###### Response
+[List[SingularityS3Log]](#model-SingularityS3Log)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+### <a name="endpoint-/api/racks"></a> /api/racks
+#### Overview
+Manages Singularity racks.
+
+#### **POST** `/api/racks/rack/{rackId}/freeze`
+
+Freeze a specific rack
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| rackId | true | Rack ID | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/racks/rack/{rackId}/decommission`
+
+Begin decommissioning a specific active rack
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| rackId | true | Active rack ID | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/racks/rack/{rackId}/activate`
+
+Activate a decomissioning rack, canceling decomission without erasing history
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| rackId | true | Active rackId | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/racks/rack/{rackId}`
+
+Retrieve the history of a given rack
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| rackId | true | Rack ID | string |
+
+###### Response
+[List[SingularityMachineStateHistoryUpdate]](#model-SingularityMachineStateHistoryUpdate)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **DELETE** `/api/racks/rack/{rackId}`
+
+Remove a known rack, erasing history. This operation will cancel decomissioning of racks
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| rackId | true | Rack ID | string |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/racks/`
+
+Retrieve the list of all known racks, optionally filtering by a particular state
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| state | false | Optionally specify a particular state to filter racks by | string |
+
+###### Response
+[List[SingularityRack]](#model-SingularityRack)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+### <a name="endpoint-/api/requests"></a> /api/requests
+#### Overview
+Manages Singularity Requests, the parent object for any deployed task
+
+#### **POST** `/api/requests/request/{requestId}/unpause`
+
+Unpause a Singularity Request, scheduling new tasks immediately
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The request ID to unpause | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityUnpauseRequest](#model-linkType)</a> |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 409    | Request is not paused | - |
+
+
+- - -
+#### **PUT** `/api/requests/request/{requestId}/skipHealthchecks`
+
+Update the skipHealthchecks field for the request, possibly temporarily
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The Request ID to scale | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false | SkipHealtchecks options | [SingularitySkipHealthchecksRequest](#model-linkType)</a> |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 404    | No Request with that ID | - |
+
+
+- - -
+#### **DELETE** `/api/requests/request/{requestId}/skipHealthchecks`
+
+Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks request permanent.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The Request ID | string |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 404    | No Request or expiring skipHealthchecks request for that ID | - |
+
+
+- - -
+#### **PUT** `/api/requests/request/{requestId}/scale`
+
+Scale the number of instances up or down for a specific Request
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The Request ID to scale | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false | Object to hold number of instances to request | [SingularityScaleRequest](#model-linkType)</a> |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 404    | No Request with that ID | - |
+
+
+- - -
+#### **DELETE** `/api/requests/request/{requestId}/scale`
+
+Delete/cancel the expiring scale. This makes the scale request permanent.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The Request ID | string |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 404    | No Request or expiring scale request for that ID | - |
+
+
+- - -
+#### **GET** `/api/requests/request/{requestId}/run/{runId}`
+
+Retrieve an active task by runId
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true |  | string |
+| runId | true |  | string |
+
+###### Response
+[SingularityTaskId](#model-SingularityTaskId)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/requests/request/{requestId}/run`
+
+Schedule a one-off or scheduled Singularity request for immediate execution.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The request ID to run | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityRunNowRequest](#model-linkType)</a> |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 400    | Singularity Request is not scheduled or one-off | - |
+
+
+- - -
+#### **POST** `/api/requests/request/{requestId}/pause`
+
+Pause a Singularity request, future tasks will not run until it is manually unpaused. API can optionally choose to kill existing tasks
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The request ID to pause | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false | Pause Request Options | [SingularityPauseRequest](#model-linkType)</a> |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 409    | Request is already paused or being cleaned | - |
+
+
+- - -
+#### **DELETE** `/api/requests/request/{requestId}/pause`
+
+Delete/cancel the expiring pause. This makes the pause request permanent.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The Request ID | string |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 404    | No Request or expiring pause request for that ID | - |
+
+
+- - -
+#### **POST** `/api/requests/request/{requestId}/exit-cooldown`
+
+Immediately exits cooldown, scheduling new tasks immediately
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityExitCooldownRequest](#model-linkType)</a> |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 409    | Request is not in cooldown | - |
+
+
+- - -
+#### **POST** `/api/requests/request/{requestId}/bounce`
+
+Bounce a specific Singularity request. A bounce launches replacement task(s), and then kills the original task(s) if the replacement(s) are healthy.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The request ID to bounce | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false | Bounce request options | [SingularityBounceRequest](#model-linkType)</a> |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **DELETE** `/api/requests/request/{requestId}/bounce`
+
+Delete/cancel the expiring bounce. This makes the bounce request permanent.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The Request ID | string |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 404    | No Request or expiring bounce request for that ID | - |
+
+
+- - -
+#### **GET** `/api/requests/request/{requestId}`
+
+Retrieve a specific Request by ID
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | Request ID | string |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 404    | No Request with that ID | - |
+
+
+- - -
+#### **DELETE** `/api/requests/request/{requestId}`
+
+Delete a specific Request by ID and return the deleted Request
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The request ID to delete. | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false | Delete options | [SingularityDeleteRequestRequest](#model-linkType)</a> |
+
+###### Response
+[SingularityRequest](#model-SingularityRequest)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 404    | No Request with that ID | - |
+
+
+- - -
+#### **GET** `/api/requests/queued/pending`
+
+Retrieve the list of pending requests
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityPendingRequest]](#model-SingularityPendingRequest)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/requests/queued/cleanup`
+
+Retrieve the list of requests being cleaned up
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityRequestCleanup]](#model-SingularityRequestCleanup)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/requests/paused`
+
+Retrieve the list of paused requests
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityRequestParent]](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/requests/lbcleanup`
+
+Retrieve the list of tasks being cleaned from load balancers.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[UNKNOWN[string]](#model-UNKNOWN[string])
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/requests/finished`
+
+Retreive the list of finished requests (Scheduled requests which have exhausted their schedules)
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityRequestParent]](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/requests/cooldown`
+
+Retrieve the list of requests in system cooldown
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityRequestParent]](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/requests/active`
+
+Retrieve the list of active requests
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityRequestParent]](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/requests`
+
+Retrieve the list of all requests
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityRequestParent]](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **POST** `/api/requests`
+
+Create or update a Singularity Request
+
+
+###### Parameters
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false | The Singularity request to create or update | [SingularityRequest](#model-linkType)</a> |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 400    | Request object is invalid | - |
+| 409    | Request object is being cleaned. Try again shortly | - |
+
+
+- - -
 ### <a name="endpoint-/api/sandbox"></a> /api/sandbox
 #### Overview
 Provides a proxy to Mesos sandboxes.
@@ -346,270 +1533,6 @@ Retrieve the list of all known slaves, optionally filtering by a particular stat
 
 
 - - -
-### <a name="endpoint-/api/history"></a> /api/history
-#### Overview
-Manages historical data for tasks, requests, and deploys.
-
-#### **GET** `/api/history/task/{taskId}`
-
-Retrieve the history for a specific task.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| taskId | true | Task ID to look up | string |
-
-###### Response
-[SingularityTaskHistory](#model-SingularityTaskHistory)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/history/requests/search`
-
-Search for requests.
-
-
-###### Parameters
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestIdLike | false | Request ID prefix to search for | string |
-| count | false | Maximum number of items to return | int |
-| page | false | Which page of items to view | int |
-
-###### Response
-[UNKNOWN[string]](#model-UNKNOWN[string])
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/history/request/{requestId}/tasks/active`
-
-Retrieve the history for all active tasks of a specific request.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | Request ID to look up | string |
-
-###### Response
-[List[SingularityTaskIdHistory]](#model-SingularityTaskIdHistory)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/history/request/{requestId}/tasks`
-
-Retrieve the history for all tasks of a specific request.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | Request ID to look up | string |
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| count | false | Maximum number of items to return | int |
-| page | false | Which page of items to view | int |
-
-###### Response
-[List[SingularityTaskIdHistory]](#model-SingularityTaskIdHistory)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/history/request/{requestId}/run/{runId}`
-
-Retrieve the history for a task by runId
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | Request ID to look up | string |
-| runId | true | runId to look up | string |
-
-###### Response
-[SingularityTaskIdHistory](#model-SingularityTaskIdHistory)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/history/request/{requestId}/requests`
-
-
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | Request ID to look up | string |
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| count | false | Naximum number of items to return | int |
-| page | false | Which page of items to view | int |
-
-###### Response
-[List[SingularityRequestHistory]](#model-SingularityRequestHistory)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/history/request/{requestId}/deploys`
-
-
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | Request ID to look up | string |
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| count | false | Maximum number of items to return | int |
-| page | false | Which page of items to view | int |
-
-###### Response
-[List[SingularityDeployHistory]](#model-SingularityDeployHistory)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/history/request/{requestId}/deploy/{deployId}/tasks/inactive`
-
-Retrieve the task history for a specific deploy.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | Request ID for deploy | string |
-| deployId | true | Deploy ID | string |
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| count | false | Maximum number of items to return | int |
-| page | false | Which page of items to view | int |
-
-###### Response
-[List[SingularityTaskIdHistory]](#model-SingularityTaskIdHistory)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/history/request/{requestId}/deploy/{deployId}/tasks/active`
-
-Retrieve the task history for a specific deploy.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | Request ID for deploy | string |
-| deployId | true | Deploy ID | string |
-
-###### Response
-[List[SingularityTaskIdHistory]](#model-SingularityTaskIdHistory)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/history/request/{requestId}/deploy/{deployId}`
-
-Retrieve the history for a specific deploy.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | Request ID for deploy | string |
-| deployId | true | Deploy ID | string |
-
-###### Response
-[SingularityDeployHistory](#model-SingularityDeployHistory)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
 ### <a name="endpoint-/api/state"></a> /api/state
 #### Overview
 Provides information about the current state of Singularity.
@@ -675,98 +1598,6 @@ Retrieve information about the current state of Singularity.
 
 ###### Response
 [SingularityState](#model-SingularityState)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-### <a name="endpoint-/api/logs"></a> /api/logs
-#### Overview
-Manages Singularity task logs stored in S3.
-
-#### **GET** `/api/logs/task/{taskId}`
-
-Retrieve the list of logs stored in S3 for a specific task.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| taskId | true | The task ID to search for | string |
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| start | false | Start timestamp (millis, 13 digit) | long |
-| end | false | End timestamp (mills, 13 digit) | long |
-
-###### Response
-[List[SingularityS3Log]](#model-SingularityS3Log)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/logs/request/{requestId}/deploy/{deployId}`
-
-Retrieve the list of logs stored in S3 for a specific deploy.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | The request ID to search for | string |
-| deployId | true | The deploy ID to search for | string |
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| start | false | Start timestamp (millis, 13 digit) | long |
-| end | false | End timestamp (mills, 13 digit) | long |
-
-###### Response
-[List[SingularityS3Log]](#model-SingularityS3Log)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/logs/request/{requestId}`
-
-Retrieve the list of logs stored in S3 for a specific request.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | The request ID to search for | string |
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| start | false | Start timestamp (millis, 13 digit) | long |
-| end | false | End timestamp (mills, 13 digit) | long |
-
-###### Response
-[List[SingularityS3Log]](#model-SingularityS3Log)
 
 
 ###### Errors
@@ -1331,6 +2162,25 @@ Retrieve a list of queued deploy updates for a specific webhook.
 
 
 - - -
+#### **GET** `/api/webhooks`
+
+Retrieve a list of active webhooks.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityWebhook]](#model-SingularityWebhook)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **POST** `/api/webhooks`
 
 Add a new webhook.
@@ -1354,795 +2204,6 @@ string
 
 
 - - -
-#### **GET** `/api/webhooks`
-
-Retrieve a list of active webhooks.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityWebhook]](#model-SingularityWebhook)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-### <a name="endpoint-/api/racks"></a> /api/racks
-#### Overview
-Manages Singularity racks.
-
-#### **POST** `/api/racks/rack/{rackId}/freeze`
-
-Freeze a specific rack
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| rackId | true | Rack ID | string |
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **POST** `/api/racks/rack/{rackId}/decommission`
-
-Begin decommissioning a specific active rack
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| rackId | true | Active rack ID | string |
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **POST** `/api/racks/rack/{rackId}/activate`
-
-Activate a decomissioning rack, canceling decomission without erasing history
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| rackId | true | Active rackId | string |
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false |  | [SingularityMachineChangeRequest](#model-linkType)</a> |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/racks/rack/{rackId}`
-
-Retrieve the history of a given rack
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| rackId | true | Rack ID | string |
-
-###### Response
-[List[SingularityMachineStateHistoryUpdate]](#model-SingularityMachineStateHistoryUpdate)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **DELETE** `/api/racks/rack/{rackId}`
-
-Remove a known rack, erasing history. This operation will cancel decomissioning of racks
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| rackId | true | Rack ID | string |
-
-###### Response
-
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/racks/`
-
-Retrieve the list of all known racks, optionally filtering by a particular state
-
-
-###### Parameters
-**query**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| state | false | Optionally specify a particular state to filter racks by | string |
-
-###### Response
-[List[SingularityRack]](#model-SingularityRack)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-### <a name="endpoint-/api/requests"></a> /api/requests
-#### Overview
-Manages Singularity Requests, the parent object for any deployed task
-
-#### **POST** `/api/requests/request/{requestId}/unpause`
-
-Unpause a Singularity Request, scheduling new tasks immediately
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | The request ID to unpause | string |
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false |  | [SingularityUnpauseRequest](#model-linkType)</a> |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 409    | Request is not paused | - |
-
-
-- - -
-#### **PUT** `/api/requests/request/{requestId}/skipHealthchecks`
-
-Update the skipHealthchecks field for the request, possibly temporarily
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | The Request ID to scale | string |
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false | SkipHealtchecks options | [SingularitySkipHealthchecksRequest](#model-linkType)</a> |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 404    | No Request with that ID | - |
-
-
-- - -
-#### **DELETE** `/api/requests/request/{requestId}/skipHealthchecks`
-
-Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks request permanent.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | The Request ID | string |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 404    | No Request or expiring skipHealthchecks request for that ID | - |
-
-
-- - -
-#### **PUT** `/api/requests/request/{requestId}/scale`
-
-Scale the number of instances up or down for a specific Request
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | The Request ID to scale | string |
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false | Object to hold number of instances to request | [SingularityScaleRequest](#model-linkType)</a> |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 404    | No Request with that ID | - |
-
-
-- - -
-#### **DELETE** `/api/requests/request/{requestId}/scale`
-
-Delete/cancel the expiring scale. This makes the scale request permanent.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | The Request ID | string |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 404    | No Request or expiring scale request for that ID | - |
-
-
-- - -
-#### **POST** `/api/requests/request/{requestId}/run`
-
-Schedule a one-off or scheduled Singularity request for immediate execution.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | The request ID to run | string |
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false |  | [SingularityRunNowRequest](#model-linkType)</a> |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 400    | Singularity Request is not scheduled or one-off | - |
-
-
-- - -
-#### **POST** `/api/requests/request/{requestId}/pause`
-
-Pause a Singularity request, future tasks will not run until it is manually unpaused. API can optionally choose to kill existing tasks
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | The request ID to pause | string |
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false | Pause Request Options | [SingularityPauseRequest](#model-linkType)</a> |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 409    | Request is already paused or being cleaned | - |
-
-
-- - -
-#### **DELETE** `/api/requests/request/{requestId}/pause`
-
-Delete/cancel the expiring pause. This makes the pause request permanent.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | The Request ID | string |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 404    | No Request or expiring pause request for that ID | - |
-
-
-- - -
-#### **POST** `/api/requests/request/{requestId}/exit-cooldown`
-
-Immediately exits cooldown, scheduling new tasks immediately
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true |  | string |
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false |  | [SingularityExitCooldownRequest](#model-linkType)</a> |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 409    | Request is not in cooldown | - |
-
-
-- - -
-#### **POST** `/api/requests/request/{requestId}/bounce`
-
-Bounce a specific Singularity request. A bounce launches replacement task(s), and then kills the original task(s) if the replacement(s) are healthy.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | The request ID to bounce | string |
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false | Bounce request options | [SingularityBounceRequest](#model-linkType)</a> |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **DELETE** `/api/requests/request/{requestId}/bounce`
-
-Delete/cancel the expiring bounce. This makes the bounce request permanent.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | The Request ID | string |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 404    | No Request or expiring bounce request for that ID | - |
-
-
-- - -
-#### **GET** `/api/requests/request/{requestId}`
-
-Retrieve a specific Request by ID
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | Request ID | string |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 404    | No Request with that ID | - |
-
-
-- - -
-#### **DELETE** `/api/requests/request/{requestId}`
-
-Delete a specific Request by ID and return the deleted Request
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | The request ID to delete. | string |
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false | Delete options | [SingularityDeleteRequestRequest](#model-linkType)</a> |
-
-###### Response
-[SingularityRequest](#model-SingularityRequest)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 404    | No Request with that ID | - |
-
-
-- - -
-#### **GET** `/api/requests/queued/pending`
-
-Retrieve the list of pending requests
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityPendingRequest]](#model-SingularityPendingRequest)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/requests/queued/cleanup`
-
-Retrieve the list of requests being cleaned up
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityRequestCleanup]](#model-SingularityRequestCleanup)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/requests/paused`
-
-Retrieve the list of paused requests
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityRequestParent]](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/requests/lbcleanup`
-
-Retrieve the list of tasks being cleaned from load balancers.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[UNKNOWN[string]](#model-UNKNOWN[string])
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/requests/finished`
-
-Retreive the list of finished requests (Scheduled requests which have exhausted their schedules)
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityRequestParent]](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/requests/cooldown`
-
-Retrieve the list of requests in system cooldown
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityRequestParent]](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/requests/active`
-
-Retrieve the list of active requests
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityRequestParent]](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **GET** `/api/requests`
-
-Retrieve the list of all requests
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityRequestParent]](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **POST** `/api/requests`
-
-Create or update a Singularity Request
-
-
-###### Parameters
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | false | The Singularity request to create or update | [SingularityRequest](#model-linkType)</a> |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 400    | Request object is invalid | - |
-| 409    | Request object is being cleaned. Try again shortly | - |
-
-
-- - -
-### <a name="endpoint-/api/deploys"></a> /api/deploys
-#### Overview
-Manages Singularity Deploys for existing requests
-
-#### **POST** `/api/deploys/update`
-
-Update the target active instance count for a pending deploy
-
-
-###### Parameters
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | true |  | [SingularityUpdatePendingDeployRequest](#model-linkType)</a> |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 400    | Deploy is not in the pending state pending or is not not present | - |
-
-
-- - -
-#### **GET** `/api/deploys/pending`
-
-Retrieve the list of current pending deploys
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityPendingDeploy]](#model-SingularityPendingDeploy)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
-#### **DELETE** `/api/deploys/deploy/{deployId}/request/{requestId}`
-
-Cancel a pending deployment (best effort - the deploy may still succeed or fail)
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| requestId | true | The Singularity Request Id from which the deployment is removed. | string |
-| deployId | true | The Singularity Deploy Id that should be removed. | string |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 400    | Deploy is not in the pending state pending or is not not present | - |
-
-
-- - -
-#### **POST** `/api/deploys`
-
-Start a new deployment for a Request
-
-
-###### Parameters
-**body**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| body | true |  | [SingularityDeployRequest](#model-linkType)</a> |
-
-###### Response
-[SingularityRequestParent](#model-SingularityRequestParent)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| 400    | Deploy object is invalid | - |
-| 409    | A current deploy is in progress. It may be canceled by calling DELETE | - |
-
-
-- - -
 
 ## Data Types
 
@@ -2161,8 +2222,8 @@ Start a new deployment for a Request
 | defaultInstanceForType | [CommandInfo](#model-CommandInfo) | optional |  |
 | urisOrBuilderList | [List[? extends org.apache.mesos.Protos$CommandInfo$URIOrBuilder]](#model-List[? extends org.apache.mesos.Protos$CommandInfo$URIOrBuilder]) | optional |  |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$CommandInfo&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$CommandInfo&gt;) | optional |  |
-| urisCount | int | optional |  |
 | argumentsCount | int | optional |  |
+| urisCount | int | optional |  |
 | argumentsList | Array[string] | optional |  |
 | containerOrBuilder | [ContainerInfoOrBuilder](#model-ContainerInfoOrBuilder) | optional |  |
 | user | string | optional |  |
@@ -2266,12 +2327,12 @@ Start a new deployment for a Request
 | labels | [Labels](#model-Labels) | optional |  |
 | locationBytes | [ByteString](#model-ByteString) | optional |  |
 | initialized | boolean | optional |  |
-| nameBytes | [ByteString](#model-ByteString) | optional |  |
 | name | string | optional |  |
+| nameBytes | [ByteString](#model-ByteString) | optional |  |
 | environment | string | optional |  |
 | ports | [Ports](#model-Ports) | optional |  |
-| visibility | [Visibility](#model-Visibility) | optional |  Allowable values: FRAMEWORK, CLUSTER, EXTERNAL |
 | environmentBytes | [ByteString](#model-ByteString) | optional |  |
+| visibility | [Visibility](#model-Visibility) | optional |  Allowable values: FRAMEWORK, CLUSTER, EXTERNAL |
 | serializedSize | int | optional |  |
 | portsOrBuilder | [PortsOrBuilder](#model-PortsOrBuilder) | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
@@ -2291,8 +2352,8 @@ Start a new deployment for a Request
 | labels | [Labels](#model-Labels) | optional |  |
 | locationBytes | [ByteString](#model-ByteString) | optional |  |
 | name | string | optional |  |
-| environment | string | optional |  |
 | nameBytes | [ByteString](#model-ByteString) | optional |  |
+| environment | string | optional |  |
 | ports | [Ports](#model-Ports) | optional |  |
 | visibility | [Visibility](#model-Visibility) | optional |  Allowable values: FRAMEWORK, CLUSTER, EXTERNAL |
 | environmentBytes | [ByteString](#model-ByteString) | optional |  |
@@ -2346,6 +2407,7 @@ Start a new deployment for a Request
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| targetFolderRelativeToTask | string | optional |  |
 | md5sum | string | optional |  |
 | filename | string | optional |  |
 | name | string | optional |  |
@@ -2441,8 +2503,8 @@ Start a new deployment for a Request
 | initialized | boolean | optional |  |
 | name | string | optional |  |
 | nameBytes | [ByteString](#model-ByteString) | optional |  |
-| frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
 | sourceBytes | [ByteString](#model-ByteString) | optional |  |
+| frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
 | command | [CommandInfo](#model-CommandInfo) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](#model-FrameworkIDOrBuilder) | optional |  |
 | executorIdOrBuilder | [ExecutorIDOrBuilder](#model-ExecutorIDOrBuilder) | optional |  |
@@ -2451,8 +2513,8 @@ Start a new deployment for a Request
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
 | discovery | [DiscoveryInfo](#model-DiscoveryInfo) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
-| unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | resourcesCount | int | optional |  |
+| unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | initializationErrorString | string | optional |  |
 | discoveryOrBuilder | [DiscoveryInfoOrBuilder](#model-DiscoveryInfoOrBuilder) | optional |  |
 
@@ -2470,9 +2532,9 @@ Start a new deployment for a Request
 | container | [ContainerInfo](#model-ContainerInfo) | optional |  |
 | name | string | optional |  |
 | nameBytes | [ByteString](#model-ByteString) | optional |  |
-| command | [CommandInfo](#model-CommandInfo) | optional |  |
-| sourceBytes | [ByteString](#model-ByteString) | optional |  |
 | frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
+| sourceBytes | [ByteString](#model-ByteString) | optional |  |
+| command | [CommandInfo](#model-CommandInfo) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](#model-FrameworkIDOrBuilder) | optional |  |
 | executorIdOrBuilder | [ExecutorIDOrBuilder](#model-ExecutorIDOrBuilder) | optional |  |
 | resourcesList | [List[Resource]](#model-List[Resource]) | optional |  |
@@ -2485,6 +2547,7 @@ Start a new deployment for a Request
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| targetFolderRelativeToTask | string | optional |  |
 | md5sum | string | optional |  |
 | url | string | optional |  |
 | filename | string | optional |  |
@@ -2617,8 +2680,8 @@ Start a new deployment for a Request
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| commandOrBuilder | [CommandInfoOrBuilder](#model-CommandInfoOrBuilder) | optional |  |
 | gracePeriodSeconds | double | optional |  |
+| commandOrBuilder | [CommandInfoOrBuilder](#model-CommandInfoOrBuilder) | optional |  |
 | httpOrBuilder | [HTTPOrBuilder](#model-HTTPOrBuilder) | optional |  |
 | consecutiveFailures | int | optional |  |
 | intervalSeconds | double | optional |  |
@@ -2702,8 +2765,8 @@ Start a new deployment for a Request
 | serializedSize | int | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
-| uninterpretedOptionList | [List[UninterpretedOption]](#model-List[UninterpretedOption]) | optional |  |
 | messageSetWireFormat | boolean | optional |  |
+| uninterpretedOptionList | [List[UninterpretedOption]](#model-List[UninterpretedOption]) | optional |  |
 | unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | uninterpretedOptionOrBuilderList | [List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]](#model-List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]) | optional |  |
 | initializationErrorString | string | optional |  |
@@ -2723,8 +2786,8 @@ Start a new deployment for a Request
 | hostname | string | optional |  |
 | attributesCount | int | optional |  |
 | initialized | boolean | optional |  |
-| attributesList | [List[Attribute]](#model-List[Attribute]) | optional |  |
 | idOrBuilder | [OfferIDOrBuilder](#model-OfferIDOrBuilder) | optional |  |
+| attributesList | [List[Attribute]](#model-List[Attribute]) | optional |  |
 | frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](#model-FrameworkIDOrBuilder) | optional |  |
 | serializedSize | int | optional |  |
@@ -2734,8 +2797,8 @@ Start a new deployment for a Request
 | hostnameBytes | [ByteString](#model-ByteString) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
 | attributesOrBuilderList | [List[? extends org.apache.mesos.Protos$AttributeOrBuilder]](#model-List[? extends org.apache.mesos.Protos$AttributeOrBuilder]) | optional |  |
-| unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | resourcesCount | int | optional |  |
+| unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | id | [OfferID](#model-OfferID) | optional |  |
 | initializationErrorString | string | optional |  |
 
@@ -2803,6 +2866,7 @@ Start a new deployment for a Request
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| targetFolderRelativeToTask | string | optional |  |
 | s3Bucket | string | optional |  |
 | md5sum | string | optional |  |
 | filename | string | optional |  |
@@ -2815,6 +2879,7 @@ Start a new deployment for a Request
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| targetFolderRelativeToTask | string | optional |  |
 | s3Bucket | string | optional |  |
 | md5sum | string | optional |  |
 | filename | string | optional |  |
@@ -3068,6 +3133,7 @@ Start a new deployment for a Request
 |------|------|----------|-------------|
 | hostAddress | string | optional |  |
 | hostname | string | optional |  |
+| mesosConnected | boolean | optional |  |
 | driverStatus | string | optional |  |
 | master | boolean | optional |  |
 | mesosMaster | string | optional |  |
@@ -3189,6 +3255,7 @@ Start a new deployment for a Request
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| hideEvenNumberAcrossRacksHint | boolean | optional |  |
 | readOnlyGroups | [Set](#model-Set) | optional |  |
 | schedule | string | optional |  |
 | skipHealthchecks | boolean | optional |  |
@@ -3600,8 +3667,8 @@ Start a new deployment for a Request
 |------|------|----------|-------------|
 | commandOrBuilder | [CommandInfoOrBuilder](#model-CommandInfoOrBuilder) | optional |  |
 | defaultInstanceForType | [TaskInfo](#model-TaskInfo) | optional |  |
-| taskIdOrBuilder | [TaskIDOrBuilder](#model-TaskIDOrBuilder) | optional |  |
 | taskId | [TaskID](#model-TaskID) | optional |  |
+| taskIdOrBuilder | [TaskIDOrBuilder](#model-TaskIDOrBuilder) | optional |  |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$TaskInfo&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$TaskInfo&gt;) | optional |  |
 | slaveIdOrBuilder | [SlaveIDOrBuilder](#model-SlaveIDOrBuilder) | optional |  |
 | resourcesOrBuilderList | [List[? extends org.apache.mesos.Protos$ResourceOrBuilder]](#model-List[? extends org.apache.mesos.Protos$ResourceOrBuilder]) | optional |  |
@@ -3624,8 +3691,8 @@ Start a new deployment for a Request
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
 | discovery | [DiscoveryInfo](#model-DiscoveryInfo) | optional |  |
-| unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | resourcesCount | int | optional |  |
+| unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | initializationErrorString | string | optional |  |
 | discoveryOrBuilder | [DiscoveryInfoOrBuilder](#model-DiscoveryInfoOrBuilder) | optional |  |
 

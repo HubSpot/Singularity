@@ -4,6 +4,8 @@ LogLine = require '../models/LogLine'
 
 moment = require 'moment'
 
+orZero = (value) => if value < 0 then 0 else value
+
 class LogLines extends Collection
 
     model: LogLine
