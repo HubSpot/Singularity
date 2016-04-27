@@ -25,11 +25,22 @@ Handlebars.registerHelper "ifAll", (conditions..., options)->
         return options.inverse @ unless condition?
     options.fn @
 
-Handlebars.registerHelper "ifHasAdminRights", (options) ->
+# Doesn't show anything if you don't have admin rights
+Handlebars.registerHelper "adminOnlyComponent", (options) ->
     if app.hasAdminRights()
         return options.fn @
     else
-        return options.inverse @
+        return null
+
+# Shows the 'no admin rights' page if you don't have admin rights
+Handlebars.registerHelper "adminOnlyPage", (options) ->
+    if app.hasAdminRights()
+        return options.fn @
+    else
+        return """
+            <h1> Permission Denied </h1>
+            <div class='alert alert-danger'> You must have admin rights to view this page </div>
+        """
 
 Handlebars.registerHelper 'percentageOf', (v1, v2) ->
     (v1/v2) * 100

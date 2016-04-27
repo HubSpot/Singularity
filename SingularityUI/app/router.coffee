@@ -84,10 +84,7 @@ class Router extends Backbone.Router
         app.bootstrapController new RequestDetailController {requestId}
 
     taskSearch: (requestId) ->
-        if requestId or app.hasAdminRights() # Non-admins can task search on specific requests
-            app.bootstrapController new TaskSearchController {requestId}
-        else
-            @noAdminRights()
+        app.bootstrapController new TaskSearchController {requestId}
 
     newDeploy: (requestId) ->
         app.bootstrapController new NewDeployController {requestId}
@@ -106,16 +103,10 @@ class Router extends Backbone.Router
         app.bootstrapController new TailController {taskId, path, offset}
 
     racks: (state = 'all') ->
-        if app.hasAdminRights()
-            app.bootstrapController new RacksController {state}
-        else
-            @noAdminRights() # No racks for you
+        app.bootstrapController new RacksController {state}
 
     slaves: (state = 'all') ->
-        if app.hasAdminRights()
-            app.bootstrapController new SlavesController {state}
-        else
-            @noAdminRights()
+        app.bootstrapController new SlavesController {state}
 
     notFound: ->
         app.bootstrapController new NotFoundController
@@ -126,19 +117,5 @@ class Router extends Backbone.Router
     aggregateTail: (requestId, path = '') ->
         offset = parseInt(window.location.hash.substr(1), 10) || null
         app.bootstrapController new AggregateTailController {requestId, path, offset}
-
-    noAdminRights: () ->
-        vex.dialog.alert
-            message: '''
-                <h3>Unauthorized</h3>
-                <div class='alert alert-danger'>
-                    You must be an admin to view this page.
-                </div>
-            '''
-            buttons: [
-                $.extend _.clone(vex.dialog.buttons.YES), text: 'Go Back'
-            ]
-            callback: (data) =>
-                window.history.back()
 
 module.exports = Router
