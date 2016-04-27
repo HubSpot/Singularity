@@ -13,7 +13,7 @@ Webhooks = React.createClass
 
     defaultRowsPerPage: 10
 
-    rowsPerPageChoices: [10, 20, 30, 40]
+    rowsPerPageChoices: [10, 20]
 
     webhookTypes: ['REQUEST', 'DEPLOY', 'TASK']
 
