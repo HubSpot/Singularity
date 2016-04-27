@@ -9,21 +9,24 @@ public class SingularityExecutorS3UploaderAdditionalFile {
     private final Optional<String> s3UploaderBucket;
     private final Optional<String> s3UploaderKeyPattern;
     private final Optional<String> s3UploaderFilenameHint;
+    private final Optional<String> glob;
 
     @JsonCreator
     public static SingularityExecutorS3UploaderAdditionalFile fromString(String value) {
-        return new SingularityExecutorS3UploaderAdditionalFile(value, Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent());
+        return new SingularityExecutorS3UploaderAdditionalFile(value, Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent());
     }
 
     @JsonCreator
     public SingularityExecutorS3UploaderAdditionalFile(@JsonProperty("filename") String filename,
         @JsonProperty("s3UploaderBucket") Optional<String> s3UploaderBucket,
         @JsonProperty("s3UploaderKeyPattern") Optional<String> s3UploaderKeyPattern,
-        @JsonProperty("s3UploaderFilenameHint") Optional<String> s3UploaderFilenameHint) {
+        @JsonProperty("s3UploaderFilenameHint") Optional<String> s3UploaderFilenameHint,
+        @JsonProperty("glob") Optional<String> glob) {
         this.filename = filename;
         this.s3UploaderBucket = s3UploaderBucket;
         this.s3UploaderKeyPattern = s3UploaderKeyPattern;
         this.s3UploaderFilenameHint = s3UploaderFilenameHint;
+        this.glob = glob;
     }
 
     public String getFilename() {
@@ -42,6 +45,10 @@ public class SingularityExecutorS3UploaderAdditionalFile {
         return s3UploaderFilenameHint;
     }
 
+    public Optional<String> getGlob() {
+        return glob;
+    }
+
     @Override
     public String toString() {
         return "SingularityExecutorS3UploaderAdditionalFile[" +
@@ -49,6 +56,7 @@ public class SingularityExecutorS3UploaderAdditionalFile {
             ", s3UploaderBucket=" + s3UploaderBucket +
             ", s3UploaderKeyPattern=" + s3UploaderKeyPattern +
             ", s3UploaderFilenameHint=" + s3UploaderFilenameHint +
+            ", glob=" + glob +
             ']';
     }
 }
