@@ -23,8 +23,6 @@ DeployDetailController = require 'controllers/DeployDetail'
 AggregateTailController = require 'controllers/AggregateTail'
 TaskSearchController = require 'controllers/TaskSearch'
 
-vex = require 'vex'
-
 class Router extends Backbone.Router
 
     routes:
