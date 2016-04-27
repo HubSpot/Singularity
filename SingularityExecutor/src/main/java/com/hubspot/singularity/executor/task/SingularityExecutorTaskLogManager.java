@@ -60,7 +60,7 @@ public class SingularityExecutorTaskLogManager {
 
     int index = 1;
     for (SingularityExecutorS3UploaderAdditionalFile additionalFile : configuration.getS3UploaderAdditionalFiles()) {
-      result = result && writeS3MetadataFile(additionalFile.getS3UploaderFilenameHint().or(String.format("extra%d", index)), taskDefinition.getTaskDirectoryPath().resolve(additionalFile.getFilename()), additionalFile.getGlob().or(String.format("%s*.gz*", additionalFile.getFilename())), additionalFile.getS3UploaderBucket(), additionalFile.getS3UploaderKeyPattern(), finished);
+      result = result && writeS3MetadataFile(additionalFile.getS3UploaderFilenameHint().or(String.format("extra%d", index)), taskDefinition.getTaskDirectoryPath(), String.format("%s%s", additionalFile.getFilename(), additionalFile.getGlob().or("*.gz*")), additionalFile.getS3UploaderBucket(), additionalFile.getS3UploaderKeyPattern(), finished);
       index++;
     }
 
