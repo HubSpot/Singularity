@@ -114,10 +114,10 @@ public class SingularityClient {
   private static final String DELETE_DEPLOY_FORMAT = DEPLOYS_FORMAT + "/deploy/%s/request/%s";
 
   private static final String WEBHOOKS_FORMAT = "http://%s/%s/webhooks";
-  private static final String WEBHOOKS_DELETE_FORMAT = WEBHOOKS_FORMAT +"?webhookId=%s";
-  private static final String WEBHOOKS_GET_QUEUED_DEPLOY_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/deploy?webhookId=%s";
-  private static final String WEBHOOKS_GET_QUEUED_REQUEST_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/request?webhookId=%s";
-  private static final String WEBHOOKS_GET_QUEUED_TASK_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/task?webhookId=%s";
+  private static final String WEBHOOKS_DELETE_FORMAT = WEBHOOKS_FORMAT;
+  private static final String WEBHOOKS_GET_QUEUED_DEPLOY_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/deploy";
+  private static final String WEBHOOKS_GET_QUEUED_REQUEST_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/request";
+  private static final String WEBHOOKS_GET_QUEUED_TASK_UPDATES_FORMAT = WEBHOOKS_FORMAT + "/task";
 
   private static final String SANDBOX_FORMAT = "http://%s/%s/sandbox";
   private static final String SANDBOX_BROWSE_FORMAT = SANDBOX_FORMAT + "/%s/browse";
@@ -305,6 +305,41 @@ public class SingularityClient {
 
     if (body.isPresent()) {
       request.setBody(body.get());
+    }
+
+    addCredentials(request);
+
+    HttpResponse response = httpClient.execute(request.build());
+
+    if (response.getStatusCode() == 404) {
+      LOG.info("{} ({}) was not found", type, id);
+      return Optional.absent();
+    }
+
+    checkResponse(type, response);
+
+    LOG.info("Deleted {} ({}) from Singularity in %sms", type, id, System.currentTimeMillis() - start);
+
+    if (clazz.isPresent()) {
+      return Optional.of(response.getAs(clazz.get()));
+    }
+
+    return Optional.absent();
+  }
+
+  private <T> Optional<T> deleteWithParams(String uri, String type, String id, Optional<?> body, Optional<Map<String, Object>> queryParams, Optional<Class<T>> clazz) {
+    LOG.info("Deleting {} {} from {}", type, id, uri);
+
+    final long start = System.currentTimeMillis();
+
+    HttpRequest.Builder request = HttpRequest.newBuilder().setUrl(uri).setMethod(Method.DELETE);
+
+    if (body.isPresent()) {
+      request.setBody(body.get());
+    }
+
+    if (queryParams.isPresent()) {
+      addQueryParams(request, queryParams.get());
     }
 
     addCredentials(request);
@@ -823,9 +858,11 @@ public class SingularityClient {
   }
 
   public Optional<SingularityDeleteResult> deleteWebhook(String webhookId) {
-    final String requestUri = String.format(WEBHOOKS_DELETE_FORMAT, getHost(), contextPath, webhookId);
+    final String requestUri = String.format(WEBHOOKS_DELETE_FORMAT, getHost(), contextPath);
 
-    return delete(requestUri, String.format("webhook with id %s", webhookId), webhookId, Optional.absent(), Optional.of(SingularityDeleteResult.class));
+    Builder<String, Object> queryParamBuider = ImmutableMap.<String, Object>builder().put("webhookId", webhookId);
+
+    return deleteWithParams(requestUri, String.format("webhook with id %s", webhookId), webhookId, Optional.absent(), Optional.<Map<String,Object>>of(queryParamBuider.build()), Optional.of(SingularityDeleteResult.class));
   }
 
   public Collection<SingularityWebhook> getActiveWebhook() {
@@ -837,19 +874,25 @@ public class SingularityClient {
   public Collection<SingularityDeployUpdate> getQueuedDeployUpdates(String webhookId) {
     final String requestUri = String.format(WEBHOOKS_GET_QUEUED_DEPLOY_UPDATES_FORMAT, getHost(), contextPath, webhookId);
 
-    return getCollection(requestUri, "deploy updates", DEPLOY_UPDATES_COLLECTION);
+    Builder<String, Object> queryParamBuider = ImmutableMap.<String, Object>builder().put("webhookId", webhookId);
+
+    return getCollectionWithParams(requestUri, "deploy updates", Optional.<Map<String,Object>>of(queryParamBuider.build()), DEPLOY_UPDATES_COLLECTION);
   }
 
   public Collection<SingularityRequestHistory> getQueuedRequestUpdates(String webhookId) {
-    final String requestUri = String.format(WEBHOOKS_GET_QUEUED_REQUEST_UPDATES_FORMAT, getHost(), contextPath, webhookId);
+    final String requestUri = String.format(WEBHOOKS_GET_QUEUED_REQUEST_UPDATES_FORMAT, getHost(), contextPath);
 
-    return getCollection(requestUri, "request updates", REQUEST_UPDATES_COLLECTION);
+    Builder<String, Object> queryParamBuider = ImmutableMap.<String, Object>builder().put("webhookId", webhookId);
+
+    return getCollectionWithParams(requestUri, "request updates", Optional.<Map<String,Object>>of(queryParamBuider.build()), REQUEST_UPDATES_COLLECTION);
   }
 
   public Collection<SingularityTaskHistoryUpdate> getQueuedTaskUpdates(String webhookId) {
-    final String requestUri = String.format(WEBHOOKS_GET_QUEUED_TASK_UPDATES_FORMAT, getHost(), contextPath, webhookId);
+    final String requestUri = String.format(WEBHOOKS_GET_QUEUED_TASK_UPDATES_FORMAT, getHost(), contextPath);
 
-    return getCollection(requestUri, "request updates", TASK_UPDATES_COLLECTION);
+    Builder<String, Object> queryParamBuider = ImmutableMap.<String, Object>builder().put("webhookId", webhookId);
+
+    return getCollectionWithParams(requestUri, "request updates", Optional.<Map<String,Object>>of(queryParamBuider.build()), TASK_UPDATES_COLLECTION);
   }
 
   //
