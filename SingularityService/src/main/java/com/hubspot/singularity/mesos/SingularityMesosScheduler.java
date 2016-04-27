@@ -398,7 +398,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
       slaveAndRackManager.checkStateAfterFinishedTask(taskIdObj, status.getSlaveId().getValue(), stateCache);
 
-      scheduler.handleCompletedTask(task, taskIdObj, isActiveTask, timestamp, taskState, taskHistoryUpdateCreateResult, stateCache);
+      scheduler.handleCompletedTask(task, taskIdObj, isActiveTask, timestamp, taskState, taskHistoryUpdateCreateResult, stateCache, status);
     }
 
     saveNewTaskStatusHolder(taskIdObj, newTaskStatusHolder, taskState);
