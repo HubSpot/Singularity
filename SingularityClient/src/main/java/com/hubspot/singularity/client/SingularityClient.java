@@ -872,7 +872,7 @@ public class SingularityClient {
   }
 
   public Collection<SingularityDeployUpdate> getQueuedDeployUpdates(String webhookId) {
-    final String requestUri = String.format(WEBHOOKS_GET_QUEUED_DEPLOY_UPDATES_FORMAT, getHost(), contextPath, webhookId);
+    final String requestUri = String.format(WEBHOOKS_GET_QUEUED_DEPLOY_UPDATES_FORMAT, getHost(), contextPath);
 
     Builder<String, Object> queryParamBuider = ImmutableMap.<String, Object>builder().put("webhookId", webhookId);
 
