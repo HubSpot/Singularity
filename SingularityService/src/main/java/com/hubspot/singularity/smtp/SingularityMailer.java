@@ -122,7 +122,7 @@ public class SingularityMailer implements Managed {
     }
   }
 
-  private void populateRequestEmailProperties(Map<String, Object> templateProperties, SingularityRequest request) {
+  private void populateRequestEmailProperties(Map<String, Object> templateProperties, SingularityRequest request, SingularityEmailType emailType) {
     templateProperties.put("requestId", request.getId());
     templateProperties.put("singularityRequestLink", mailTemplateHelpers.getSingularityRequestLink(request.getId()));
 
@@ -133,9 +133,11 @@ public class SingularityMailer implements Managed {
 
     templateProperties.put("taskWillRetry", request.getNumRetriesOnFailure().or(0) > 0);
     templateProperties.put("numRetries", request.getNumRetriesOnFailure().or(0));
+
+    templateProperties.put("color", emailType.getColor());
   }
 
-  private void populateTaskEmailProperties(Map<String, Object> templateProperties, SingularityTaskId taskId, Collection<SingularityTaskHistoryUpdate> taskHistory, ExtendedTaskState taskState, List<SingularityTaskMetadata> taskMetadata) {
+  private void populateTaskEmailProperties(Map<String, Object> templateProperties, SingularityTaskId taskId, Collection<SingularityTaskHistoryUpdate> taskHistory, ExtendedTaskState taskState, List<SingularityTaskMetadata> taskMetadata, SingularityEmailType emailType) {
     Optional<SingularityTask> task = taskManager.getTask(taskId);
     Optional<String> directory = taskManager.getDirectory(taskId);
 
@@ -148,6 +150,8 @@ public class SingularityMailer implements Managed {
     templateProperties.put("deployId", taskId.getDeployId());
 
     templateProperties.put("taskDirectory", directory.or("directory missing"));
+
+    templateProperties.put("color", emailType.getColor());
 
     if (task.isPresent()) {
       templateProperties.put("slaveHostname", task.get().getOffer().getHostname());
@@ -298,8 +302,8 @@ public class SingularityMailer implements Managed {
     final Collection<SingularityEmailDestination> emailDestination = getDestination(request, emailType);
 
     final Map<String, Object> templateProperties = Maps.newHashMap();
-    populateRequestEmailProperties(templateProperties, request);
-    populateTaskEmailProperties(templateProperties, taskId, taskHistory, taskState, taskMetadata);
+    populateRequestEmailProperties(templateProperties, request, emailType);
+    populateTaskEmailProperties(templateProperties, taskId, taskHistory, taskState, taskMetadata, emailType);
     templateProperties.putAll(extraProperties);
 
     final String subject = mailTemplateHelpers.getSubjectForTaskHistory(taskId, taskState, emailType, taskHistory);
@@ -392,7 +396,7 @@ public class SingularityMailer implements Managed {
 
     final String subject = String.format("Request %s has been %s — Singularity", request.getId(), type.name().toLowerCase());
     final Map<String, Object> templateProperties = Maps.newHashMap();
-    populateRequestEmailProperties(templateProperties, request);
+    populateRequestEmailProperties(templateProperties, request, type.getEmailType());
 
     templateProperties.put("expiring", Boolean.FALSE);
     templateProperties.put("requestPaused", type == RequestMailType.PAUSED);
@@ -509,7 +513,7 @@ public class SingularityMailer implements Managed {
     }
 
     final Map<String, Object> templateProperties = Maps.newHashMap();
-    populateRequestEmailProperties(templateProperties, request);
+    populateRequestEmailProperties(templateProperties, request, SingularityEmailType.REQUEST_IN_COOLDOWN);
 
     final String subject = String.format("Request %s has entered system cooldown — Singularity", request.getId());
 
@@ -607,6 +611,7 @@ public class SingularityMailer implements Managed {
     templateProperties.put("rateLimitCooldownFormat", DurationFormatUtils.formatDurationHMS(maybeSmtpConfiguration.get().getRateLimitCooldownMillis()));
     templateProperties.put("emailType", emailType.name());
     templateProperties.put("requestId", request.getId());
+    templateProperties.put("color", emailType.getColor());
 
     return templateProperties.build();
   }
