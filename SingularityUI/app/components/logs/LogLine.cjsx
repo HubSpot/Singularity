@@ -1,15 +1,28 @@
 React = require 'react'
 classNames = require 'classnames'
 
-LogLine = React.createClass
+{ connect } = require 'react-redux'
+{ clickPermalink } = require '../../actions/log'
 
-  shouldComponentUpdate: (nextProps) ->
-    (@props.offset isnt nextProps.offset) or (@props.isHighlighted isnt nextProps.isHighlighted) or (@props.content isnt nextProps.content) or (@props.isLastLine isnt nextProps.isLastLine) or (@props.isFirstLine isnt nextProps.isFirstLine)
+class LogLine extends React.Component
+  @propTypes:
+    offset: React.PropTypes.number.isRequired
+    isHighlighted: React.PropTypes.bool.isRequired
+    content: React.PropTypes.string.isRequired
+    taskId: React.PropTypes.string.isRequired
+    showDebugInfo: React.PropTypes.bool
+    color: React.PropTypes.string
+
+    search: React.PropTypes.string
+    clickPermalink: React.PropTypes.func.isRequired
 
   highlightContent: (content) ->
     search = @props.search
     if not search or _.isEmpty(search)
-      return content
+      if @props.showDebugInfo
+        return "#{ @props.offset } | #{ @props.timestamp } | #{ content }"
+      else
+        return content
 
     regex = RegExp(search, 'g')
     matches = []
@@ -37,20 +50,13 @@ LogLine = React.createClass
         'search-match': s.match
       <span key={i} className={spanClass}>{s.text}</span>
 
-  handleClick: (e) ->
-    e.preventDefault()
-    window.history.pushState({}, window.document.title, @props.offsetLink)  # have to do it this janky way because of the hash
-    @props.handleOffsetLink(@props.offset)
-
   render: ->
     divClass = classNames
       line: true
       highlightLine: @props.isHighlighted
-      'first-line': @props.isFirstLine
-      'last-line': @props.isLastLine
 
     <div className={divClass} style={backgroundColor: @props.color}>
-      <a href="#{@props.offsetLink}" className="offset-link" data-offset="#{@props.offset}" onClick={@handleClick}>
+      <a href="#{config.appRoot}/task/#{@props.taskId}/tail/#{@props.path}##{@props.offset}" className="offset-link" onClick={=> @props.clickPermalink(@props.offset)}>
         <div className="pre-line">
             <span className="glyphicon glyphicon-link" data-offset="#{@props.offset}"></span>
         </div>
@@ -60,4 +66,11 @@ LogLine = React.createClass
       </span>
     </div>
 
-module.exports = LogLine
+mapStateToProps = (state, ownProps) ->
+  search: state.search
+  showDebugInfo: state.showDebugInfo
+  path: state.path
+
+mapDispatchToProps = { clickPermalink }
+
+module.exports = connect(mapStateToProps, mapDispatchToProps)(LogLine)

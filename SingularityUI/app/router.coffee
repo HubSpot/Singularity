@@ -11,7 +11,6 @@ RequestsTableController = require 'controllers/RequestsTable'
 
 TasksTableController = require 'controllers/TasksTable'
 TaskDetailController = require 'controllers/TaskDetail'
-TailController = require 'controllers/Tail'
 
 RacksController = require 'controllers/Racks'
 SlavesController = require 'controllers/Slaves'
@@ -20,8 +19,11 @@ NotFoundController = require 'controllers/NotFound'
 
 DeployDetailController = require 'controllers/DeployDetail'
 
-AggregateTailController = require 'controllers/AggregateTail'
+LogViewerController = require 'controllers/LogViewer'
+
 TaskSearchController = require 'controllers/TaskSearch'
+
+Utils = require './utils'
 
 class Router extends Backbone.Router
 
@@ -97,8 +99,16 @@ class Router extends Backbone.Router
         app.bootstrapController new TaskDetailController {taskId, filePath}
 
     tail: (taskId, path = '') ->
-        offset = parseInt(window.location.hash.substr(1), 10) || null
-        app.bootstrapController new TailController {taskId, path, offset}
+        initialOffset = parseInt(window.location.hash.substr(1), 10) || null
+        splits = taskId.split('-')
+        requestId = splits.slice(0, splits.length - 5).join('-')
+        params = Utils.getQueryParams()
+
+        search = params.search || ''
+
+        path = path.replace(taskId, '$TASK_ID')
+
+        app.bootstrapController new LogViewerController {requestId, path, initialOffset, taskIds: [taskId], search, viewMode: 'split'}
 
     racks: (state = 'all') ->
         app.bootstrapController new RacksController {state}
@@ -113,7 +123,16 @@ class Router extends Backbone.Router
         app.bootstrapController new DeployDetailController {requestId, deployId}
 
     aggregateTail: (requestId, path = '') ->
-        offset = parseInt(window.location.hash.substr(1), 10) || null
-        app.bootstrapController new AggregateTailController {requestId, path, offset}
+        initialOffset = parseInt(window.location.hash.substr(1), 10) || null
+
+        params = Utils.getQueryParams()
+        if params.taskIds
+            taskIds = params.taskIds.split(',')
+        else
+            taskIds = []
+        viewMode = params.viewMode || 'split'
+        search = params.search || ''
+
+        app.bootstrapController new LogViewerController {requestId, path, initialOffset, taskIds, viewMode, search}
 
 module.exports = Router

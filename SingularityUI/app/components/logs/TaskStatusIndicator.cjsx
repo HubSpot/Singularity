@@ -1,7 +1,9 @@
 React = require 'react'
 Utils = require '../../utils'
 
-StatusIndicator = React.createClass
+class TaskStatusIndicator extends React.Component
+  @propTypes:
+    status: React.PropTypes.string
 
   getClassName: ->
     if @props.status in Utils.TERMINAL_TASK_STATES
@@ -16,6 +18,6 @@ StatusIndicator = React.createClass
         {@props.status.toLowerCase().replace('_', ' ')}
       </div>
     else
-      <div></div>
+      <div />
 
-module.exports = StatusIndicator
+module.exports = TaskStatusIndicator
