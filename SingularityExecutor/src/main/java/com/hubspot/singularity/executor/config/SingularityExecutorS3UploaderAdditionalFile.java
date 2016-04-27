@@ -9,7 +9,7 @@ public class SingularityExecutorS3UploaderAdditionalFile {
     private final Optional<String> s3UploaderBucket;
     private final Optional<String> s3UploaderKeyPattern;
     private final Optional<String> s3UploaderFilenameHint;
-    private final Optional<String> glob;
+    private final Optional<String> directory;
 
     @JsonCreator
     public static SingularityExecutorS3UploaderAdditionalFile fromString(String value) {
@@ -21,12 +21,12 @@ public class SingularityExecutorS3UploaderAdditionalFile {
         @JsonProperty("s3UploaderBucket") Optional<String> s3UploaderBucket,
         @JsonProperty("s3UploaderKeyPattern") Optional<String> s3UploaderKeyPattern,
         @JsonProperty("s3UploaderFilenameHint") Optional<String> s3UploaderFilenameHint,
-        @JsonProperty("glob") Optional<String> glob) {
+        @JsonProperty("directory") Optional<String> directory) {
         this.filename = filename;
         this.s3UploaderBucket = s3UploaderBucket;
         this.s3UploaderKeyPattern = s3UploaderKeyPattern;
         this.s3UploaderFilenameHint = s3UploaderFilenameHint;
-        this.glob = glob;
+        this.directory = directory;
     }
 
     public String getFilename() {
@@ -45,8 +45,8 @@ public class SingularityExecutorS3UploaderAdditionalFile {
         return s3UploaderFilenameHint;
     }
 
-    public Optional<String> getGlob() {
-        return glob;
+    public Optional<String> getDirectory() {
+        return directory;
     }
 
     @Override
@@ -56,7 +56,7 @@ public class SingularityExecutorS3UploaderAdditionalFile {
             ", s3UploaderBucket=" + s3UploaderBucket +
             ", s3UploaderKeyPattern=" + s3UploaderKeyPattern +
             ", s3UploaderFilenameHint=" + s3UploaderFilenameHint +
-            ", glob=" + glob +
+            ", directory=" + directory +
             ']';
     }
 }

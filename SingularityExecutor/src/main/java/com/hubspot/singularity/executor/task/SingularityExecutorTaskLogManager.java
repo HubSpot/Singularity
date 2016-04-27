@@ -56,11 +56,13 @@ public class SingularityExecutorTaskLogManager {
     final Path serviceLogParent = serviceLogOutPath.getParent();
     final Path logrotateDirectory = serviceLogParent.resolve(configuration.getLogrotateToDirectory());
 
-    boolean result = writeS3MetadataFile("default", logrotateDirectory, String.format("%s*.gz*", taskDefinition.getServiceLogOutPath().getFileName()), Optional.<String>absent(), Optional.<String>absent(), finished);
+    boolean result = writeS3MetadataFile("default", logrotateDirectory, String.format("%ss*.gz*", taskDefinition.getServiceLogOutPath().getFileName()), Optional.<String>absent(), Optional.<String>absent(), finished);
 
     int index = 1;
     for (SingularityExecutorS3UploaderAdditionalFile additionalFile : configuration.getS3UploaderAdditionalFiles()) {
-      result = result && writeS3MetadataFile(additionalFile.getS3UploaderFilenameHint().or(String.format("extra%d", index)), taskDefinition.getTaskDirectoryPath(), String.format("%s%s", additionalFile.getFilename(), additionalFile.getGlob().or("*.gz*")), additionalFile.getS3UploaderBucket(), additionalFile.getS3UploaderKeyPattern(), finished);
+      Path directory = additionalFile.getDirectory().isPresent() ? taskDefinition.getTaskDirectoryPath().resolve(additionalFile.getDirectory().get()) : taskDefinition.getTaskDirectoryPath();
+      String fileGlob = additionalFile.getFilename() != null && additionalFile.getFilename().contains("*") ? additionalFile.getFilename() : String.format("%s*.gz*", additionalFile.getFilename());
+      result = result && writeS3MetadataFile(additionalFile.getS3UploaderFilenameHint().or(String.format("extra%d", index)), directory, fileGlob, additionalFile.getS3UploaderBucket(), additionalFile.getS3UploaderKeyPattern(), finished);
       index++;
     }
 
