@@ -69,7 +69,6 @@ public class SingularityDeploy {
   private final Optional<Integer> deployStepWaitTimeMs;
   private final Optional<Boolean> autoAdvanceDeploySteps;
   private final Optional<Integer> maxTaskRetries;
-  private final Optional<List<String>> expectedRunNowArguments;
 
   public static SingularityDeployBuilder newBuilder(String requestId, String id) {
     return new SingularityDeployBuilder(requestId, id);
@@ -114,8 +113,7 @@ public class SingularityDeploy {
       @JsonProperty("deployInstanceCountPerStep") Optional<Integer> deployInstanceCountPerStep,
       @JsonProperty("deployStepWaitTimeMs") Optional<Integer> deployStepWaitTimeMs,
       @JsonProperty("autoAdvanceDeploySteps") Optional<Boolean> autoAdvanceDeploySteps,
-      @JsonProperty("maxTaskRetries") Optional<Integer> maxTaskRetries,
-      @JsonProperty("expectedRunNowArguments") Optional<List<String>> expectedRunNowArguments) {
+      @JsonProperty("maxTaskRetries") Optional<Integer> maxTaskRetries) {
     this.requestId = requestId;
 
     this.command = command;
@@ -165,7 +163,6 @@ public class SingularityDeploy {
     this.deployStepWaitTimeMs = deployStepWaitTimeMs;
     this.autoAdvanceDeploySteps = autoAdvanceDeploySteps;
     this.maxTaskRetries = maxTaskRetries;
-    this.expectedRunNowArguments = expectedRunNowArguments;
   }
 
   public SingularityDeployBuilder toBuilder() {
@@ -207,7 +204,6 @@ public class SingularityDeploy {
     .setDeployStepWaitTimeMs(deployStepWaitTimeMs)
     .setAutoAdvanceDeploySteps(autoAdvanceDeploySteps)
     .setMaxTaskRetries(maxTaskRetries)
-    .setExpectedRunNowArguments(expectedRunNowArguments);
   }
 
   @ApiModelProperty(required=false, value="Number of seconds that Singularity waits for this service to become healthy (for it to download artifacts, start running, and optionally pass healthchecks.)")
@@ -404,9 +400,6 @@ public class SingularityDeploy {
     return maxTaskRetries;
   }
 
-  @ApiModelProperty(required=false, value="Command Line Arguments to autopopulate in the UI run task now dialog")
-  public Optional<List<String>> getExpectedRunNowArguments() { return expectedRunNowArguments; }
-
   @Override
   public String toString() {
     return "SingularityDeploy{" +
@@ -449,7 +442,6 @@ public class SingularityDeploy {
       ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
       ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +
       ", maxTaskRetries=" + maxTaskRetries +
-      ", expectedRunNowArguments=" + expectedRunNowArguments +
       '}';
   }
 
