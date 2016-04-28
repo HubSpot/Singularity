@@ -3,12 +3,15 @@ package com.hubspot.singularity.data;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
+
 
 import org.quartz.CronExpression;
 
@@ -30,6 +33,7 @@ import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.WebExceptions;
+import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
 
@@ -166,6 +170,19 @@ public class SingularityValidator {
     }
 
     return request.toBuilder().setQuartzSchedule(Optional.fromNullable(quartzSchedule)).build();
+  }
+
+  public SingularityWebhook checkSingularityWebhook(SingularityWebhook webhook) {
+    checkNotNull(webhook, "Webhook is null");
+    checkNotNull(webhook.getUri(), "URI is null");
+
+    try {
+      new URI(webhook.getUri());
+    } catch (URISyntaxException e) {
+      WebExceptions.badRequest("Invalid URI provided");
+    }
+
+    return webhook;
   }
 
   public SingularityDeploy checkDeploy(SingularityRequest request, SingularityDeploy deploy) {
