@@ -203,7 +203,7 @@ public class SingularityDeploy {
     .setDeployInstanceCountPerStep(deployInstanceCountPerStep)
     .setDeployStepWaitTimeMs(deployStepWaitTimeMs)
     .setAutoAdvanceDeploySteps(autoAdvanceDeploySteps)
-    .setMaxTaskRetries(maxTaskRetries)
+    .setMaxTaskRetries(maxTaskRetries);
   }
 
   @ApiModelProperty(required=false, value="Number of seconds that Singularity waits for this service to become healthy (for it to download artifacts, start running, and optionally pass healthchecks.)")
