@@ -53,6 +53,24 @@ class TaskFiles extends Collection
 
         taskFiles
 
+    sortBy: (field, sortDirectionAscending) ->
+        if field is 'name'
+            sorted = _.sortBy @models, (file) =>
+                if file.attributes.isDirectory
+                    "a#{file.attributes.name}"
+                else
+                    "b#{file.attributes.name}"
+        else if field is 'size'
+            sorted = _.sortBy @models, (file) =>
+                if file.attributes.isDirectory
+                    -1
+                else
+                    file.attributes.size
+        else # Sorting by last modified mixes in directories by design
+            sorted = _.sortBy @models, (file) => file.attributes[field]
+        sorted.reverse() unless sortDirectionAscending
+        @models = sorted
+
     comparator: (a, b) ->
         return @nameComparator(a, b)
 

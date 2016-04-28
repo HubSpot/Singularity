@@ -47,6 +47,7 @@ Table = React.createClass
         pageNumber: React.PropTypes.number
         pageDown: React.PropTypes.func
         pageUp: React.PropTypes.func
+        noPages: React.PropTypes.bool
 
         dataCollection: React.PropTypes.string
 
@@ -70,6 +71,7 @@ Table = React.createClass
         if @props.rowsPerPageChoices then @props.rowsPerPageChoices else @defaultRowsPerPageChoices
 
     renderRowsPerPageChoices: ->
+        return null if @props.noPages
         choices = []
         @rowsPerPageChoices().map (choice) =>
             choices.push <Link
@@ -133,6 +135,7 @@ Table = React.createClass
         @setState {pageNumber: @state.pageNumber + 1} unless @pageUpDisabled()
 
     renderPageButtons: ->
+        return null if @props.noPages
         <div>
             <div className = 'col-xs-5' />
             <div className = 'col-xs-1'>
@@ -182,7 +185,10 @@ Table = React.createClass
             prop = {{
                 url: '#'
                 title: "Sort By #{columnHead.data}"
-                onClickFn: @makeColumnHeadSortFn columnHead
+                onClickFn: (event) =>
+                    event.preventDefault()
+                    sort = @makeColumnHeadSortFn columnHead
+                    sort()
                 text: <div>{columnHead.data} {@getSortableColumnHeadGlyphicon columnHead}</div>
             }}
         />
@@ -211,7 +217,7 @@ Table = React.createClass
         </div>
 
     displayThisRow: (rowNr) ->
-        return true if @props.customPaging
+        return true if @props.customPaging or @props.noPages
         minRow = (@state.pageNumber - 1) * @rowsPerPage()
         maxRow = (@state.pageNumber * @rowsPerPage()) - 1
         return minRow <= rowNr <= maxRow
@@ -235,6 +241,7 @@ Table = React.createClass
               YOUR doSort FUNCTION MAY HAVE TO CALL forceUpdate() TO BE ABLE TO SEE THE SORTED COLLECTION
         - @props.customPaging indicates that you will be providing your own functions to handle table pages
             - If provided, you must provide @props.setRowsPerPage, @props.increasePage, @props.decreasePage, @props.pageNumber
+        - @props.noPages indicates that the table will display every element on one page, regardless of how many elements there are
     ###
     getClassName: ->
         return "table #{@props.tableClassOpts}"
