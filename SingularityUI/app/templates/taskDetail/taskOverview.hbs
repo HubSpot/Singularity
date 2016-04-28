@@ -1,52 +1,39 @@
-{{#if data.isStillRunning}}
-    {{! If there's a TaskCleanup object associated with this task, display its info }}
-    {{#if data.cleanup}}
-        <div class="alert alert-warning" role="alert">
-            <b>Task is cleaning:</b> {{ data.cleanup.cleanupType }}
-            {{#if data.cleanup.message}}
-                ({{ data.cleanup.message }})
-            {{/if}}
-        </div>
-    {{else}}
-        {{#if data.isCleaning}}
-            <div class="alert alert-warning" role="alert">
-                <b>Task is terminating:</b> To issue a non-graceful termination (kill -term), click Destroy Task.
-            </div>
-        {{/if}}
-    {{/if}}
-{{/if}}
-
 {{! Part of taskBase }}
 <header class='detail-header'>
+        {{#with data.task}}
+            <ul class="breadcrumb">
+                <li class="breadcrumb-wide">
+                    Request
+                    <a href="{{appRoot}}/request/{{ taskRequest.request.id }}">
+                        {{ taskRequest.request.id }}
+                    </a>
+                </li>
+                <li>
+                    Deploy
+                    <a href="{{appRoot}}/request/{{ taskRequest.request.id }}/deploy/{{ taskRequest.deploy.id }}">
+                        {{ taskRequest.deploy.id }}
+                    </a>
+                </li>
+                <li>
+                    Instance {{ taskId.instanceNo }}
+                </li>
+                <span class="pull-right">
+                    <strong>Hostname: </strong>{{ ../data.task.offer.hostname }}
+                </span>
+            </ul>
+        {{/with}}
     <div class="row">
         {{! Left side }}
-        <div class="col-md-12">
-            {{#with data.task.taskRequest}}
-                <ul class="breadcrumb">
-                    <li>
-                        Request
-                        <a href="{{appRoot}}/request/{{ request.id }}">
-                            {{ request.id }}
-                        </a>
-                    </li>
-                    <li>
-                        Deploy
-                        <a href="{{appRoot}}/request/{{ request.id }}/deploy/{{ deploy.id }}">
-                            {{ deploy.id }}
-                        </a>
-                    </li>
-                </ul>
-            {{/with}}
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-7">
-            <h3>
-                {{ data.task.taskId.id }}
-            </h3>
-        </div>
-        {{! Right side, buttons }}
-        <div class="col-md-4 button-container">
+        {{#if data.taskUpdates}}
+            {{#withLast data.taskUpdates}}
+                <div class="col-xs-6 task-state-header">
+                    <h3><span class="label label-{{getLabelClass taskState}} task-state-header-label">{{humanizeText taskState}}{{#if ../data.isStillRunning}}{{#if ../data.cleanup}} ({{humanizeText ../data.cleanup.cleanupType}}){{/if}}{{/if}}</span></h3>
+                </div>
+            {{/withLast}}
+        <div class="col-xs-6 button-container">
+        {{else}}
+        <div class="col-xs-12 button-container">
+        {{/if}}
             <a class="btn btn-default" data-action="viewObjectJSON">
                 JSON
             </a>
@@ -69,14 +56,12 @@
     </div>
 </header>
 
-{{#if data.taskUpdates}}
-    {{#withLast data.taskUpdates}}
-        <div class="well text-muted">
-            {{humanizeText taskState}} as of
-            {{timestampFromNow timestamp}}
-            {{#if statusMessage}}
-                &mdash; {{ statusMessage }}
-            {{/if}}
-        </div>
-    {{/withLast}}
+{{#if data.isStillRunning}}
+    {{#unless data.cleanup}}
+        {{#if data.isCleaning}}
+            <div class="alert alert-warning" role="alert">
+                <b>Task is terminating:</b> To issue a non-graceful termination (kill -term), click Destroy Task.
+            </div>
+        {{/if}}
+    {{/unless}}
 {{/if}}
