@@ -532,6 +532,7 @@ class Request extends Model
                     $('#browse-to-sandbox').on('click', () => $('#filename').prop('disabled', true))
                     $('#autoTail').on('click', () => $('#filename').prop('disabled', false))
                     $('#filename').prop 'disabled', false if taskRunAfterStart is 'autoTail'
+                    $('.vex-dialog-button, .vex-primary, .vex-first').focus()
 
                 callback: (data) =>
                     if data.commandLineInput
