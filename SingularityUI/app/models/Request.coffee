@@ -457,17 +457,6 @@ class Request extends Model
             app.caughtError()
             callback() # Don't actually error if we can't find previous args, just don't populate
 
-    getCommandLineArgs: (callback) =>
-        fetchThis = @fetch()
-        fetchThis.done =>
-            if @attributes and @attributes.activeDeploy and @attributes.activeDeploy.expectedRunNowArguments
-                @commands = @attributes.activeDeploy.expectedRunNowArguments
-                callback()
-            else
-                @getMostRecentlyRunTask callback
-        fetchThis.error =>
-            app.caughtError()
-
     promptRun: (callback, task) => #task is an optional parameter - if it's provided this will rerun it, else this will run a new task
         showDialog = () =>
             if task
@@ -562,7 +551,7 @@ class Request extends Model
         if task
             showDialog()
         else
-            @getCommandLineArgs showDialog
+            @getMostRecentlyRunTask showDialog
 
     addCmdLineArg: (event) ->
         event.preventDefault()
