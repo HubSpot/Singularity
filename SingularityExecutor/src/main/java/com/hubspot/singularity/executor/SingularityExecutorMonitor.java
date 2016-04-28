@@ -401,6 +401,10 @@ public class SingularityExecutorMonitor {
   }
 
   public KillState requestKill(String taskId) {
+    return requestKill(taskId, Optional.<String>absent(), false);
+  }
+
+  public KillState requestKill(String taskId, Optional<String> user, boolean destroy) {
     final Optional<SingularityExecutorTask> maybeTask = Optional.fromNullable(tasks.get(taskId));
 
     if (!maybeTask.isPresent()) {
@@ -439,17 +443,30 @@ public class SingularityExecutorMonitor {
     }
 
     if (runningProcess != null) {
-      task.getLog().info("Killing process for task {} (was killed: {})", taskId, wasKilled);
-
-      if (wasKilled) {
-        LOG.info("Destroying process by request {} ({})", taskId, runningProcess.getCurrentPid());
+      if (destroy) {
+        if (user.isPresent()) {
+          task.getLog().info("Destroying process with pid {} for task {} by request from user {}", runningProcess.getCurrentPid(), taskId, user.get());
+        } else {
+          task.getLog().info("Destroying process with pid {} for task {}", runningProcess.getCurrentPid(), taskId);
+        }
         task.markForceDestroyed();
         runningProcess.signalKillToProcessIfActive();
         return KillState.DESTROYING_PROCESS;
-      } else {
-        processKiller.submitKillRequest(runningProcess);
+      }
+
+      if (processKiller.isKillInProgress(taskId)) {
+        task.getLog().info("Kill already in progress for task {}", taskId);
         return KillState.KILLING_PROCESS;
       }
+
+      if (user.isPresent()) {
+        task.getLog().info("Killing process for task {} by request from {}", taskId, user.get());
+      } else {
+        task.getLog().info("Killing process for task {}", taskId);
+      }
+      processKiller.submitKillRequest(runningProcess);
+      return KillState.KILLING_PROCESS;
+
     }
 
     return KillState.INCONSISTENT_STATE;
