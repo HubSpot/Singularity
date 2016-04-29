@@ -140,6 +140,7 @@ class TasksView extends View
         # Reset search box caret
         $searchInput = $('.big-search-box')
         $searchInput[0].setSelectionRange(@prevSelectionStart, @prevSelectionEnd)
+        @$('.has-tooltip').tooltip()
 
     # Prepares the staged rendering and triggers the first one
     renderTable: =>

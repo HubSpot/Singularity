@@ -1,4 +1,4 @@
-<ul class="nav nav-pills nav-pills-multi-select">
+<ul class="nav nav-pills nav-pills-multi-select has-tooltip" title="Protip: press cmd to select multiple" data-toggle='tooltip'>
     <li {{#unlessInSubFilter 'SERVICE' requestsSubFilter}}class="active"{{/unlessInSubFilter}}>
         <a data-filter="SERVICE">
             <span class="glyphicon glyphicon-ok"></span>
@@ -30,7 +30,3 @@
         </a>
     </li>
 </ul>
-
-<span class="text-muted filter-tip hidden-xs">
-    Protip: press <kbd>cmd</kbd> to select multiple
-</span>
