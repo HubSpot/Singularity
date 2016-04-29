@@ -40,7 +40,9 @@
                         {{timestampFromNow taskId.startedAt}}
                     </td>
                     <td class="hidden-xs">
-                        {{ host }}
+                        <a href='{{appRoot}}/tasks/active/all/{{host}}'>
+                            {{ host }}
+                        </a>
                         {{#ifTaskInList ../decomissioning_tasks taskId.id}}
                             <span class='label label-warning'>DECOM</span>
                         {{/ifTaskInList}}
