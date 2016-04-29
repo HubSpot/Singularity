@@ -159,6 +159,7 @@ class RequestsView extends View
 
         @renderTable()
         @$('.actions-column a[title]').tooltip()
+        @$('.has-tooltip').tooltip()
         @$('.schedule-header span#schedule').popover({
             animation: false,
             placement : 'auto',
