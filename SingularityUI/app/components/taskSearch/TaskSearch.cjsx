@@ -4,6 +4,7 @@ Enums = require './Enums'
 TaskSearchForm = require './TaskSearchForm'
 DisplayResults = require './DisplayResults'
 Header = require './Header'
+AdminOnly = require '../common/AdminOnly'
 
 TaskSearch = React.createClass
 
@@ -137,7 +138,7 @@ TaskSearch = React.createClass
     clearStartedAfter: (event) ->
         @setState startedAfter: ''
 
-    render: ->
+    renderTaskSearch: ->
         <div>
             <Header
                 global = @props.global
@@ -197,5 +198,12 @@ TaskSearch = React.createClass
             />
         </div>
 
+    render: ->
+        if @props.global
+            <AdminOnly showPermissionDeniedIfNotAdmin={true}>
+                {@renderTaskSearch()}
+            </AdminOnly>
+        else
+            @renderTaskSearch()
 
 module.exports = TaskSearch
