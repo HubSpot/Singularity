@@ -41,7 +41,9 @@
                             {{timestampFromNow taskId.startedAt}}
                         </td>
                         <td class="hidden-xs">
-                            {{ host }}
+                            <a href='{{appRoot}}/tasks/decommissioning/all/{{host}}'>
+                                {{ host }}
+                            </a>
                             <span class='label label-warning'>DECOMMISSIONING</span>
                         </td>
                         <td class="visible-lg">
