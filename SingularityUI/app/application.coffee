@@ -185,8 +185,8 @@ class Application
 
     hasAdminRights: ->
         return false unless @user
-        return true unless @user.authEnabled
-        return @user.get('admin')
+        return true unless @user.get 'authEnabled'
+        return @user.get 'admin'
 
     getUsername: =>
         if @user.get('authenticated')
