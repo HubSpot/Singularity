@@ -21,6 +21,11 @@
                     <th class="visible-lg" data-sort-attribute="memoryMb">
                         Memory
                     </th>
+                    {{#if showDiskSpace}}
+                        <th class="visible-lg" data-sort-attribute="memoryMb">
+                            Disk Space
+                        </th>
+                    {{/if}}
                     <th class="hidden-xs">
                         {{! Actions column }}
                     </th>
@@ -58,6 +63,11 @@
                     <td class="visible-lg" data-value="{{ memoryMb }}">
                         {{ memoryMb }} MB
                     </td>
+                    {{#if ../showDiskSpace}}
+                        <td class="visible-lg" data-value="{{ diskMb }}">
+                            {{#if diskMb}} {{ diskMb }} MB {{/if}}
+                        </td>
+                    {{/if}}
                     <td>
                         {{#if pendingTask.pendingTaskId}}
                             {{#ifTimestampInPast pendingTask.pendingTaskId.nextRunAt}}
