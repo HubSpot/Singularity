@@ -54,6 +54,7 @@ class TasksView extends View
         @listenTo @taskKillRecords, 'change', @render
 
         @fuzzySearch = _.memoize(@fuzzySearch)
+        @showDiskSpace = window.config.showTaskDiskSpace
 
     fuzzySearch: (filter, tasks) =>
         host =
@@ -129,6 +130,7 @@ class TasksView extends View
             collectionSynced: @collection.synced
             requestsSubFilter: @requestsSubFilter
             haveTasks: @collection.length and @collection.synced
+            showDiskSpace: @showDiskSpace
 
         partials =
             partials:
@@ -183,6 +185,8 @@ class TasksView extends View
             rowsOnly: true
             decomissioning_tasks: decomTasks
             config: config
+            showDiskSpace: @showDiskSpace
+
 
         $table = @$ ".table-staged table"
         $tableBody = $table.find "tbody"
