@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SingularityUserHolder;
+import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
 @Path(AuthResource.PATH)
@@ -19,17 +20,20 @@ public class AuthResource {
 
   private final Optional<SingularityUser> user;
   private final SingularityConfiguration configuration;
+  private final SingularityAuthorizationHelper authorizationHelper;
 
   @Inject
   public AuthResource(Optional<SingularityUser> user,
-      SingularityConfiguration configuration) {
+      SingularityConfiguration configuration,
+      SingularityAuthorizationHelper authorizationHelper) {
     this.user = user;
     this.configuration = configuration;
+    this.authorizationHelper = authorizationHelper;
   }
 
   @GET
   @Path("/user")
   public SingularityUserHolder getUser() {
-    return new SingularityUserHolder(user, user.isPresent(), configuration.getAuthConfiguration().isEnabled());
+    return new SingularityUserHolder(user, user.isPresent(), configuration.getAuthConfiguration().isEnabled(), authorizationHelper.hasAdminAuthorization(user));
   }
 }
