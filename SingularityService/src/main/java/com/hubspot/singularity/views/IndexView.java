@@ -56,6 +56,8 @@ public class IndexView extends View {
 
   private final String redirectOnUnauthorizedUrl;
 
+  private final Boolean showTaskDiskSpace;
+
   public IndexView(String singularityUriBase, String appRoot, SingularityConfiguration configuration, ObjectMapper mapper) {
     super("index.mustache");
 
@@ -90,6 +92,8 @@ public class IndexView extends View {
 
     this.runningTaskLogPath = configuration.getUiConfiguration().getRunningTaskLogPath();
     this.finishedTaskLogPath = configuration.getUiConfiguration().getFinishedTaskLogPath();
+
+    this.showTaskDiskSpace = configuration.getUiConfiguration().isShowTaskDiskSpace();
 
     this.commonHostnameSuffixToOmit = configuration.getCommonHostnameSuffixToOmit().or("");
 
@@ -211,6 +215,8 @@ public class IndexView extends View {
     return timestampFormat;
   }
 
+  public Boolean isShowTaskDiskSpace() { return showTaskDiskSpace; }
+
   public String getTimestampWithSecondsFormat() {
     return timestampWithSecondsFormat;
   }
@@ -243,6 +249,7 @@ public class IndexView extends View {
             ", shellCommands='" + shellCommands + '\'' +
             ", timestampFormat='" + timestampFormat + '\'' +
             ", timestampWithSecondsFormat='" + timestampWithSecondsFormat + '\'' +
+            ", showTaskDiskSpace=" + showTaskDiskSpace +
             ", redirectOnUnauthorizedUrl='" + redirectOnUnauthorizedUrl + '\'' +
             ']';
   }

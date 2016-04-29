@@ -59,6 +59,10 @@ public class UIConfiguration {
   @NotNull
   private List<ShellCommandDescriptor> shellCommands = Collections.emptyList();
 
+  @JsonProperty
+  @NotNull
+  private Boolean showTaskDiskSpace = false;
+
   private boolean hideNewDeployButton = false;
   private boolean hideNewRequestButton = false;
 
@@ -158,6 +162,10 @@ public class UIConfiguration {
   public void setShellCommands(List<ShellCommandDescriptor> shellCommands) {
     this.shellCommands = shellCommands;
   }
+
+  public Boolean isShowTaskDiskSpace() { return showTaskDiskSpace; }
+
+  public void setShowTaskDiskSpace(Boolean showTaskDiskSpace) { this.showTaskDiskSpace = showTaskDiskSpace; }
 
   public String getRunningTaskLogPath() {
     return runningTaskLogPath;

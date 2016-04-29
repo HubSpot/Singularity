@@ -54,7 +54,7 @@ class TasksView extends View
         @listenTo @taskKillRecords, 'change', @render
 
         @fuzzySearch = _.memoize(@fuzzySearch)
-        @showDiskSpace = true
+        @showDiskSpace = window.config.showTaskDiskSpace
 
     fuzzySearch: (filter, tasks) =>
         host =
