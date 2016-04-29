@@ -520,7 +520,7 @@ class Request extends Model
                         @run( @data.commandLineInput, message, @data.runId ).done doneFn
                         return true
 
-                afterOpen: =>
+                afterOpen: (vexContent) =>
                     taskRunAfterStart = localStorage.getItem('taskRunAfterStart')
                     $('#filename').val localStorage.getItem('taskRunRedirectFilename') or Utils.fileName(config.runningTaskLogPath)
                     $('#autoTail').prop 'checked', (taskRunAfterStart is 'autoTail')
@@ -532,9 +532,10 @@ class Request extends Model
                     $('#browse-to-sandbox').on('click', () => $('#filename').prop('disabled', true))
                     $('#autoTail').on('click', () => $('#filename').prop('disabled', false))
                     $('#filename').prop 'disabled', false if taskRunAfterStart is 'autoTail'
-                    focusFn = () => $('.vex-dialog-button, .vex-primary, .vex-first').focus()
-                    focusFn()
-                    setTimeout focusFn, 500 # For Firefox...
+                    vexContent.bind('vexOpen', () =>
+                      vexElement = document.getElementsByClassName('vex')[0]
+                      vexElement.scrollTop = vexElement.scrollHeight
+                    )
 
                 callback: (data) =>
                     if data.commandLineInput
