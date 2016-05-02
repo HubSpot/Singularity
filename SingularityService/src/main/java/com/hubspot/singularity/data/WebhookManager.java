@@ -1,6 +1,9 @@
 package com.hubspot.singularity.data;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -17,6 +20,7 @@ import com.hubspot.singularity.SingularityDeployUpdate;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityWebhook;
+import com.hubspot.singularity.SingularityWebhookSummary;
 import com.hubspot.singularity.WebhookType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
@@ -132,6 +136,14 @@ public class WebhookManager extends CuratorAsyncManager implements SingularityEv
 
   public List<SingularityRequestHistory> getQueuedRequestHistoryForHook(String webhookId) {
     return getAsyncChildren(getEnqueuePathForWebhook(webhookId, WebhookType.REQUEST), requestHistoryTranscoder);
+  }
+
+  public List<SingularityWebhookSummary> getWebhooksWithQueueSize() {
+    List<SingularityWebhookSummary> webhooks = new ArrayList<>();
+    for (SingularityWebhook webhook : getActiveWebhooks()) {
+      webhooks.add(new SingularityWebhookSummary(webhook, getNumChildren(getEnqueuePathForWebhook(webhook.getId(), webhook.getType()))));
+    }
+    return webhooks;
   }
 
   // TODO consider caching the list of hooks (at the expense of needing to refresh the cache and not
