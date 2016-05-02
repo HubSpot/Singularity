@@ -110,6 +110,10 @@ class SingularityMesosTaskBuilder {
     bldr.addResources(MesosUtils.getCpuResource(desiredTaskResources.getCpus()));
     bldr.addResources(MesosUtils.getMemoryResource(desiredTaskResources.getMemoryMb()));
 
+    if (desiredTaskResources.getDiskMb() > 0) {
+      bldr.addResources(MesosUtils.getDiskResource(desiredTaskResources.getDiskMb()));
+    }
+
     bldr.setSlaveId(offer.getSlaveId());
 
     bldr.setName(taskRequest.getRequest().getId());
@@ -282,6 +286,10 @@ class SingularityMesosTaskBuilder {
 
     if (resources.getMemoryMb() > 0) {
       builder.add(MesosUtils.getMemoryResource(resources.getMemoryMb()));
+    }
+
+    if (resources.getDiskMb() > 0) {
+      builder.add(MesosUtils.getDiskResource(resources.getDiskMb()));
     }
 
     return builder.build();
