@@ -59,6 +59,10 @@ public class UIConfiguration {
   @NotNull
   private List<ShellCommandDescriptor> shellCommands = Collections.emptyList();
 
+  @JsonProperty
+  @NotNull
+  private boolean showTaskDiskResource = false;
+
   private boolean hideNewDeployButton = false;
   private boolean hideNewRequestButton = false;
 
@@ -158,6 +162,10 @@ public class UIConfiguration {
   public void setShellCommands(List<ShellCommandDescriptor> shellCommands) {
     this.shellCommands = shellCommands;
   }
+
+  public boolean isShowTaskDiskResource() { return showTaskDiskResource; }
+
+  public void setShowTaskDiskResource(boolean showTaskDiskResource) { this.showTaskDiskResource = showTaskDiskResource; }
 
   public String getRunningTaskLogPath() {
     return runningTaskLogPath;
