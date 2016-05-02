@@ -23,44 +23,45 @@ class Application
     initialize: ->
         @setupGlobalErrorHandling()
 
-        @setupUser =>
-            @$page = $('#page')
-            @page = @$page[0]
+        @setupUser()
 
-            $body = $ 'body'
+        @$page = $('#page')
+        @page = @$page[0]
 
-            @views.nav = new NavView
-            @views.nav.render()
-            $body.prepend @views.nav.$el
+        $body = $ 'body'
 
-            @views.globalSearch = new GlobalSearchView
-            @views.globalSearch.render()
-            $body.append @views.globalSearch.$el
+        @views.nav = new NavView
+        @views.nav.render()
+        $body.prepend @views.nav.$el
 
-            $('.page-loader.fixed').hide()
+        @views.globalSearch = new GlobalSearchView
+        @views.globalSearch.render()
+        $body.append @views.globalSearch.$el
 
-            @router = new Router
+        $('.page-loader.fixed').hide()
 
-            # so sneaky
-            el = document.createElement('a')
-            el.href = config.appRoot or '/'
+        @router = new Router
 
-            Backbone.history.start
-                pushState: true
-                root: el.pathname
+        # so sneaky
+        el = document.createElement('a')
+        el.href = config.appRoot or '/'
 
-            # Global refresh
+        Backbone.history.start
+            pushState: true
+            root: el.pathname
+
+        # Global refresh
+        @setRefreshInterval()
+
+        # We don't want the refresh to trigger if the tab isn't active
+        $(window).on 'blur',  =>
+            @blurred = true
+            clearInterval @globalRefreshInterval
+
+        $(window).on 'focus', =>
+            @blurred = false
+            @globalRefresh()
             @setRefreshInterval()
-
-            # We don't want the refresh to trigger if the tab isn't active
-            $(window).on 'blur',  =>
-                @blurred = true
-                clearInterval @globalRefreshInterval
-
-            $(window).on 'focus', =>
-                @blurred = false
-                @globalRefresh()
-                @setRefreshInterval()
 
     setRefreshInterval: ->
         clearInterval @globalRefreshInterval
@@ -179,14 +180,18 @@ class Application
         else
             @page.appendChild view.el
 
-    setupUser: (callback) ->
+    setupUser: ->
         @user = new User
+<<<<<<< HEAD
         @user.fetch().done callback
 
     hasAdminRights: ->
         return false unless @user
         return true unless @user.get 'authEnabled'
         return @user.get 'admin'
+=======
+        @user.fetch() # Syncronous because it uses localStorage
+>>>>>>> parent of bbe6af4... Merge branch 'admin-only-components-pages' into hs_staging
 
     getUsername: =>
         if @user.get('authenticated')
