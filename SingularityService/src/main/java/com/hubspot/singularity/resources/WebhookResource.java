@@ -1,15 +1,14 @@
 package com.hubspot.singularity.resources;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import javax.ws.rs.DELETE;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.Path;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
@@ -25,6 +24,7 @@ import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.SingularityWebhookSummary;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.WebhookManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -38,12 +38,14 @@ public class WebhookResource {
   private final WebhookManager webhookManager;
   private final Optional<SingularityUser> user;
   private final SingularityAuthorizationHelper authorizationHelper;
+  private final SingularityValidator validator;
 
   @Inject
-  public WebhookResource(WebhookManager webhookManager, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user) {
+  public WebhookResource(WebhookManager webhookManager, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, SingularityValidator validator) {
     this.webhookManager = webhookManager;
     this.authorizationHelper = authorizationHelper;
     this.user = user;
+    this.validator = validator;
   }
 
   @GET
@@ -65,37 +67,73 @@ public class WebhookResource {
   @ApiOperation("Add a new webhook.")
   public SingularityCreateResult addWebhook(SingularityWebhook webhook) {
     authorizationHelper.checkAdminAuthorization(user);
+    validator.checkSingularityWebhook(webhook);
     return webhookManager.addWebhook(webhook);
   }
 
   @DELETE
+  @Deprecated
   @Path("/{webhookId}")
   @ApiOperation("Delete a specific webhook.")
-  public SingularityDeleteResult deleteWebhook(@PathParam("webhookId") String webhookId) {
+  public SingularityDeleteResult deleteWebhookDeprecated(@PathParam("webhookId") String webhookId) {
     authorizationHelper.checkAdminAuthorization(user);
     return webhookManager.deleteWebhook(JavaUtils.urlEncode(webhookId));
   }
 
   @GET
+  @Deprecated
   @Path("/deploy/{webhookId}")
   @ApiOperation("Retrieve a list of queued deploy updates for a specific webhook.")
-  public List<SingularityDeployUpdate> getQueuedDeployUpdates(@PathParam("webhookId") String webhookId) {
+  public List<SingularityDeployUpdate> getQueuedDeployUpdatesDeprecated(@PathParam("webhookId") String webhookId) {
     authorizationHelper.checkAdminAuthorization(user);
     return webhookManager.getQueuedDeployUpdatesForHook(JavaUtils.urlEncode(webhookId));
   }
 
   @GET
+  @Deprecated
   @Path("/request/{webhookId}")
   @ApiOperation("Retrieve a list of queued request updates for a specific webhook.")
-  public List<SingularityRequestHistory> getQueuedRequestUpdates(@PathParam("webhookId") String webhookId) {
+  public List<SingularityRequestHistory> getQueuedRequestUpdatesDeprecated(@PathParam("webhookId") String webhookId) {
     authorizationHelper.checkAdminAuthorization(user);
     return webhookManager.getQueuedRequestHistoryForHook(JavaUtils.urlEncode(webhookId));
   }
 
   @GET
+  @Deprecated
   @Path("/task/{webhookId}")
   @ApiOperation("Retrieve a list of queued task updates for a specific webhook.")
-  public List<SingularityTaskHistoryUpdate> getQueuedTaskUpdates(@PathParam("webhookId") String webhookId) {
+  public List<SingularityTaskHistoryUpdate> getQueuedTaskUpdatesDeprecated(@PathParam("webhookId") String webhookId) {
+    authorizationHelper.checkAdminAuthorization(user);
+    return webhookManager.getQueuedTaskUpdatesForHook(JavaUtils.urlEncode(webhookId));
+  }
+
+  @DELETE
+  @ApiOperation("Delete a specific webhook.")
+  public SingularityDeleteResult deleteWebhook(@QueryParam("webhookId") String webhookId) {
+    authorizationHelper.checkAdminAuthorization(user);
+    return webhookManager.deleteWebhook(JavaUtils.urlEncode(webhookId));
+  }
+
+  @GET
+  @Path("/deploy")
+  @ApiOperation("Retrieve a list of queued deploy updates for a specific webhook.")
+  public List<SingularityDeployUpdate> getQueuedDeployUpdates(@QueryParam("webhookId") String webhookId) {
+    authorizationHelper.checkAdminAuthorization(user);
+    return webhookManager.getQueuedDeployUpdatesForHook(JavaUtils.urlEncode(webhookId));
+  }
+
+  @GET
+  @Path("/request")
+  @ApiOperation("Retrieve a list of queued request updates for a specific webhook.")
+  public List<SingularityRequestHistory> getQueuedRequestUpdates(@QueryParam("webhookId") String webhookId) {
+    authorizationHelper.checkAdminAuthorization(user);
+    return webhookManager.getQueuedRequestHistoryForHook(JavaUtils.urlEncode(webhookId));
+  }
+
+  @GET
+  @Path("/task")
+  @ApiOperation("Retrieve a list of queued task updates for a specific webhook.")
+  public List<SingularityTaskHistoryUpdate> getQueuedTaskUpdates(@QueryParam("webhookId") String webhookId) {
     authorizationHelper.checkAdminAuthorization(user);
     return webhookManager.getQueuedTaskUpdatesForHook(JavaUtils.urlEncode(webhookId));
   }
