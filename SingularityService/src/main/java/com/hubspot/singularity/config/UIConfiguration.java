@@ -61,7 +61,7 @@ public class UIConfiguration {
 
   @JsonProperty
   @NotNull
-  private Boolean showTaskDiskSpace = false;
+  private boolean showTaskDiskResource = false;
 
   private boolean hideNewDeployButton = false;
   private boolean hideNewRequestButton = false;
@@ -163,9 +163,9 @@ public class UIConfiguration {
     this.shellCommands = shellCommands;
   }
 
-  public Boolean isShowTaskDiskSpace() { return showTaskDiskSpace; }
+  public boolean isShowTaskDiskResource() { return showTaskDiskResource; }
 
-  public void setShowTaskDiskSpace(Boolean showTaskDiskSpace) { this.showTaskDiskSpace = showTaskDiskSpace; }
+  public void setShowTaskDiskResource(boolean showTaskDiskResource) { this.showTaskDiskResource = showTaskDiskResource; }
 
   public String getRunningTaskLogPath() {
     return runningTaskLogPath;
