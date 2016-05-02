@@ -182,16 +182,7 @@ class Application
 
     setupUser: ->
         @user = new User
-<<<<<<< HEAD
-        @user.fetch().done callback
-
-    hasAdminRights: ->
-        return false unless @user
-        return true unless @user.get 'authEnabled'
-        return @user.get 'admin'
-=======
         @user.fetch() # Syncronous because it uses localStorage
->>>>>>> parent of bbe6af4... Merge branch 'admin-only-components-pages' into hs_staging
 
     getUsername: =>
         if @user.get('authenticated')
