@@ -52,6 +52,8 @@ public class IndexView extends View {
 
   private final String timestampFormat;
 
+  private final boolean showTaskDiskResource;
+
   private final String timestampWithSecondsFormat;
 
   public IndexView(String singularityUriBase, String appRoot, SingularityConfiguration configuration, ObjectMapper mapper) {
@@ -88,6 +90,8 @@ public class IndexView extends View {
 
     this.runningTaskLogPath = configuration.getUiConfiguration().getRunningTaskLogPath();
     this.finishedTaskLogPath = configuration.getUiConfiguration().getFinishedTaskLogPath();
+
+    this.showTaskDiskResource = configuration.getUiConfiguration().isShowTaskDiskResource();
 
     this.commonHostnameSuffixToOmit = configuration.getCommonHostnameSuffixToOmit().or("");
 
@@ -191,6 +195,10 @@ public class IndexView extends View {
     return commonHostnameSuffixToOmit;
   }
 
+  public Boolean isShowTaskDiskResource() {
+    return showTaskDiskResource;
+  }
+
   public String getTaskS3LogOmitPrefix() {
     return taskS3LogOmitPrefix;
   }
@@ -237,6 +245,7 @@ public class IndexView extends View {
             ", taskS3LogOmitPrefix='" + taskS3LogOmitPrefix + '\'' +
             ", warnIfScheduledJobIsRunningPastNextRunPct=" + warnIfScheduledJobIsRunningPastNextRunPct +
             ", shellCommands='" + shellCommands + '\'' +
+            ", showTaskDiskResource=" + showTaskDiskResource +
             ", timestampFormat='" + timestampFormat + '\'' +
             ", timestampWithSecondsFormat='" + timestampWithSecondsFormat + '\'' +
             ']';
