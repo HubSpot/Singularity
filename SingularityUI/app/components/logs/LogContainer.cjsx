@@ -18,16 +18,18 @@ class LogContainer extends React.Component
   renderTaskGroups: ->
     rows = []
 
+    tasksPerRow = if @props.taskGroupsCount is 4 then 2 else 3
+
     row = []
-    for i in [1..Math.min(@props.taskGroupsCount, 3)]
-      row.push <TaskGroupContainer key={i - 1} taskGroupId={i - 1} taskGroupContainerCount={Math.min(@props.taskGroupsCount, 3)} />
+    for i in [1..Math.min(@props.taskGroupsCount, tasksPerRow)]
+      row.push <TaskGroupContainer key={i - 1} taskGroupId={i - 1} taskGroupContainerCount={Math.min(@props.taskGroupsCount, tasksPerRow)} />
 
     rows.push row
 
-    if @props.taskGroupsCount > 3
+    if @props.taskGroupsCount > tasksPerRow
       row = []
-      for i in [4..Math.min(@props.taskGroupsCount, 6)]
-        row.push <TaskGroupContainer key={i - 1} taskGroupId={i - 1} taskGroupContainerCount={Math.min(@props.taskGroupsCount, 6) - 3} />
+      for i in [tasksPerRow+1..Math.min(@props.taskGroupsCount, 6)]
+        row.push <TaskGroupContainer key={i - 1} taskGroupId={i - 1} taskGroupContainerCount={Math.min(@props.taskGroupsCount, 6) - tasksPerRow} />
       rows.push row
 
     rowClassName = 'row tail-row'
