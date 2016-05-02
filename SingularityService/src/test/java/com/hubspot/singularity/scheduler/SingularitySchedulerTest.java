@@ -70,6 +70,7 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
+import com.hubspot.singularity.scheduler.SingularityNewTaskChecker.CheckTaskState;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation.ReconciliationState;
 
 public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
@@ -2762,6 +2763,32 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testNewTaskCheckerRespectsDeployHealthcheckRetries() {
+    initRequest();
+
+    final String deployId = "new_task_healthcheck";
+
+    SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId);
+    db.setHealthcheckMaxRetries(Optional.of(1));
+    db.setHealthcheckUri(Optional.of("http://uri"));
+
+    SingularityDeploy deploy = initAndFinishDeploy(request, db);
+
+    SingularityTask task = launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_RUNNING);
+
+    Assert.assertEquals(CheckTaskState.CHECK_IF_OVERDUE, newTaskChecker.getTaskState(task, requestManager.getRequest(requestId), healthchecker));
+    Assert.assertTrue(taskManager.getCleanupTaskIds().isEmpty());
+
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(500), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.<String> absent(), Optional.<String> absent(), task.getTaskId()));
+
+    Assert.assertEquals(CheckTaskState.CHECK_IF_OVERDUE, newTaskChecker.getTaskState(task, requestManager.getRequest(requestId), healthchecker));
+
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(500), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.<String> absent(), Optional.<String> absent(), task.getTaskId()));
+
+    Assert.assertEquals(CheckTaskState.UNHEALTHY_KILL_TASK, newTaskChecker.getTaskState(task, requestManager.getRequest(requestId), healthchecker));
+  }
+
+  @Test
   public void testHealthchecksSuccess() {
     initRequest();
 
@@ -2900,6 +2927,24 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     finishNewTaskChecksAndCleanup();
 
     Assert.assertTrue(taskManager.getLastHealthcheck(firstTask.getTaskId()).get().toString().contains("host1:81"));
+  }
+
+  @Test
+  public void testQueueMultipleOneOffs() {
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND);
+    requestResource.postRequest(bldr.build());
+    deploy("on_demand_deploy");
+    deployChecker.checkDeploys();
+
+
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, "on_demand_deploy", System.currentTimeMillis(), Optional.<String>absent(), PendingType.ONEOFF,
+      Optional.<List<String>>absent(), Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<String>absent()));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, "on_demand_deploy", System.currentTimeMillis(), Optional.<String>absent(), PendingType.ONEOFF,
+      Optional.<List<String>>absent(), Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<String>absent()));
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    Assert.assertEquals(2, taskManager.getPendingTaskIds().size());
   }
 
 }

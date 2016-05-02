@@ -70,6 +70,18 @@ public class SMTPConfiguration {
   @JsonProperty
   private List<String> taskEmailTailFiles = Arrays.asList("stdout", "stderr");
 
+  @NotNull
+  @JsonProperty
+  private Optional<String> taskLogErrorRegex = Optional.absent();
+
+  @NotNull
+  @JsonProperty
+  private Optional<Boolean> taskLogErrorRegexCaseSensitive = Optional.absent();
+
+  @NotNull
+  @JsonProperty
+  private Long maxTaskLogSearchOffset = 100000L;
+
   @JsonProperty
   private TimeZone mailerTimeZone = TimeZone.getTimeZone("UTC");
 
@@ -224,4 +236,16 @@ public class SMTPConfiguration {
   public void setMailerTimeZone(TimeZone mailerTimeZone) {
     this.mailerTimeZone = mailerTimeZone;
   }
+
+  public Optional<String> getTaskLogErrorRegex() { return taskLogErrorRegex; }
+
+  public void setTaskLogErrorRegex(Optional<String> taskLogErrorRegex) { this.taskLogErrorRegex = taskLogErrorRegex; }
+
+  public Optional<Boolean> getTaskLogErrorRegexCaseSensitive() { return taskLogErrorRegexCaseSensitive; }
+
+  public void setTaskLogErrorRegexCaseSensitive(Optional<Boolean> taskLogErrorRegexCaseSensitive) { this.taskLogErrorRegexCaseSensitive = taskLogErrorRegexCaseSensitive; }
+
+  public Long getMaxTaskLogSearchOffset() { return maxTaskLogSearchOffset; }
+
+  public void setMaxTaskLogSearchOffset(Long maxTaskLogSearchOffset) { this.maxTaskLogSearchOffset = maxTaskLogSearchOffset; }
 }
