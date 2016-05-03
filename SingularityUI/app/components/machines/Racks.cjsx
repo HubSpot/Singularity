@@ -38,7 +38,7 @@ Racks = React.createClass
         heads.push {} # Reactivate button and Decommission or Remove button
         heads
 
-    refresh: () -> @props.racks.fetch()
+    refresh: () -> @props.racks.fetch().done => @forceUpdate()
 
     promptReactivate: (event, rackModel) ->
         event.preventDefault()

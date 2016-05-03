@@ -12,11 +12,6 @@ class RacksView extends View
     initialPageLoad: true
 
     initialize: ({@state}) ->
-        for eventName in ['sync', 'add', 'remove', 'change']
-            @listenTo @collection, eventName, @render
-
-        @listenTo @collection, 'reset', =>
-            @$el.empty()
 
     render: ->
         return if not @collection.synced and @collection.isEmpty?()
@@ -24,7 +19,6 @@ class RacksView extends View
         ReactDOM.render(
             <RacksPage
                 racks = @collection
-                refresh = {() => @trigger 'refreshrequest'}
             />,
             @el)
 
@@ -32,8 +26,6 @@ class RacksView extends View
             return if @state is 'all'
             utils.scrollTo "##{@state}"
             @initialPageLoad = false
-
-        super.afterRender()
 
 
 module.exports = RacksView
