@@ -70,8 +70,8 @@ public class SingularityMesosTaskBuilderTest {
 
     builder = new SingularityMesosTaskBuilder(new ObjectMapper(), slaveAndRackHelper, idGenerator, new SingularityConfiguration());
 
-    taskResources = new Resources(1, 1, 0);
-    executorResources = new Resources(0.1, 1, 0);
+    taskResources = new Resources(1, 1, 0, 0);
+    executorResources = new Resources(0.1, 1, 0, 0);
 
     offer = Offer.newBuilder()
         .setSlaveId(SlaveID.newBuilder().setValue("1"))
@@ -117,7 +117,7 @@ public class SingularityMesosTaskBuilderTest {
 
   @Test
   public void testDockerTask() {
-    taskResources = new Resources(1, 1, 1);
+    taskResources = new Resources(1, 1, 1, 0);
 
     final Protos.Resource portsResource = Protos.Resource.newBuilder()
         .setName("ports")
@@ -179,7 +179,7 @@ public class SingularityMesosTaskBuilderTest {
 
   @Test
   public void testDockerMinimalNetworking() {
-    taskResources = new Resources(1, 1, 0);
+    taskResources = new Resources(1, 1, 0, 0);
 
     final SingularityRequest request = new SingularityRequestBuilder("test", RequestType.WORKER).build();
     final SingularityContainerInfo containerInfo = new SingularityContainerInfo(

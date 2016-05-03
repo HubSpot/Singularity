@@ -2897,7 +2897,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
           Optional.<Map<String, String>>of(ImmutableMap.of("env", "var=value"))
         )));
     final SingularityDeployBuilder deployBuilder = new SingularityDeployBuilder(requestId, "test-docker-ports-deploy");
-    deployBuilder.setContainerInfo(Optional.of(containerInfo)).setResources(Optional.of(new Resources(1, 64, numPorts)));
+    deployBuilder.setContainerInfo(Optional.of(containerInfo)).setResources(Optional.of(new Resources(1, 64, numPorts, 0)));
     return deployBuilder;
   }
 
@@ -2913,7 +2913,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     firstDeploy = initAndFinishDeploy(request, new SingularityDeployBuilder(request.getId(), firstDeployId)
       .setCommand(Optional.of("sleep 100"))
       .setHealthcheckUri(Optional.of("http://uri"))
-      .setResources(Optional.of(new Resources(1, 64, 3)))
+      .setResources(Optional.of(new Resources(1, 64, 3, 0)))
       .setHealthcheckPortIndex(Optional.of(1)));
 
     requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build());
