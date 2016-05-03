@@ -19,6 +19,7 @@ class RacksController extends Controller
         @refresh()
 
     refresh: ->
-        @collections.racks.fetch()
+        @collections.racks.fetch().done =>
+            @view.render()
 
 module.exports = RacksController
