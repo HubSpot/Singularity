@@ -5,6 +5,7 @@ TimeStamp = require '../common/atomicDisplayItems/TimeStamp'
 Link = require '../common/atomicDisplayItems/Link'
 Glyphicon = require '../common/atomicDisplayItems/Glyphicon'
 Utils = require '../../utils'
+RacksCollection = require '../../collections/Racks'
 
 Racks = React.createClass
 
@@ -37,19 +38,19 @@ Racks = React.createClass
         heads.push {} # Reactivate button and Decommission or Remove button
         heads
 
-    refresh: () -> @props.refresh()
+    refresh: () -> @props.racks.fetch()
 
     promptReactivate: (event, rackModel) ->
         event.preventDefault()
-        rackModel.promptReactivate () => @refresh
+        rackModel.promptReactivate () => @refresh()
 
     promptDecommission: (event, rackModel) ->
         event.preventDefault()
-        rackModel.promptDecommission () => @refresh
+        rackModel.promptDecommission () => @refresh()
 
     promptRemove: (event, rackModel) ->
         event.preventDefault()
-        rackModel.promptRemove () => @refresh
+        rackModel.promptRemove () => @refresh()
 
     getMaybeReactivateButton: (rackModel) ->
         rack = rackModel.attributes
@@ -158,25 +159,43 @@ Racks = React.createClass
             }
         tableifiedRacks
 
+    getActiveRacks: ->
+        return new RacksCollection(
+            @props.racks.filter (model) ->
+              model.get('state') in ['ACTIVE']
+        )
+
+    getDecommissioningRacks: ->
+        return new RacksCollection(
+            @props.racks.filter (model) ->
+              model.get('state') in ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']
+        )
+
+    getInactiveRacks: ->
+        return new RacksCollection(
+            @props.racks.filter (model) ->
+              model.get('state') in ['DEAD', 'MISSING_ON_STARTUP']
+        )
+
     getStates: ->
         [
             {
                 stateName: "Active"
                 emptyTableMessage: "No Active Racks"
                 stateTableColumnMetadata: @columnHeads 'active'
-                hostsInState: @getRacks 'active', @props.activeRacks
+                hostsInState: @getRacks 'active', @getActiveRacks()
             },
             {
                 stateName: "Decommissioning"
                 emptyTableMessage: "No Decommissioning Racks"
                 stateTableColumnMetadata: @columnHeads 'decommissioning'
-                hostsInState: @getRacks 'decommissioning', @props.decommissioningRacks
+                hostsInState: @getRacks 'decommissioning', @getDecommissioningRacks()
             },
             {
                 stateName: "Inactive"
                 emptyTableMessage: "No Inactive Racks"
                 stateTableColumnMetadata: @columnHeads 'inactive'
-                hostsInState: @getRacks 'inactive', @props.inactiveRacks
+                hostsInState: @getRacks 'inactive', @getInactiveRacks()
             }
         ]
 

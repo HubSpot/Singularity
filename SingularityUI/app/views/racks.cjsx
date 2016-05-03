@@ -25,24 +25,9 @@ class RacksView extends View
         return if not @collection.synced and @collection.isEmpty?()
         @$el.html @template()
 
-        active = new Racks(
-            @collection.filter (model) ->
-              model.get('state') in ['ACTIVE']
-        )
-        decommission = new Racks(
-            @collection.filter (model) ->
-              model.get('state') in ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']
-        )
-        inactive = new Racks(
-            @collection.filter (model) ->
-              model.get('state') in ['DEAD', 'MISSING_ON_STARTUP']
-        )
-
         ReactDOM.render(
             <RacksPage
-                activeRacks = {active}
-                decommissioningRacks = {decommission}
-                inactiveRacks = {inactive}
+                racks = @collection
                 refresh = {() => @trigger 'refreshrequest'}
             />,
             @el)
