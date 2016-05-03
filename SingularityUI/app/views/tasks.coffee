@@ -32,6 +32,8 @@ class TasksView extends View
     # Cache for the task array we're currently rendering
     currentTasks: []
 
+    allRequestTypes: ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE']
+
     events: =>
         _.extend super,
             'click [data-action="viewJSON"]': 'viewJson'
@@ -54,6 +56,7 @@ class TasksView extends View
         @listenTo @taskKillRecords, 'change', @render
 
         @fuzzySearch = _.memoize(@fuzzySearch)
+        @showDiskSpace = window.config.showTaskDiskSpace
 
     fuzzySearch: (filter, tasks) =>
         host =
@@ -62,9 +65,13 @@ class TasksView extends View
         id =
             extract: (o) ->
                 "#{o.id}"
+        rack =
+            extract: (o) ->
+                "#{o.rackId}"
         res1 = fuzzy.filter(filter, tasks, host)
         res2 = fuzzy.filter(filter, tasks, id)
-        _.uniq(_.pluck(_.sortBy(_.union(res1, res2), (t) => Utils.fuzzyAdjustScore(filter, t)), 'original').reverse())
+        res3 = fuzzy.filter(filter, tasks, rack)
+        _.uniq(_.pluck(_.sortBy(_.union(res3, _.union(res1, res2)), (t) => Utils.fuzzyAdjustScore(filter, t)), 'original').reverse())
 
     # Returns the array of tasks that need to be rendered
     filterCollection: =>
@@ -141,6 +148,7 @@ class TasksView extends View
         # Reset search box caret
         $searchInput = $('.big-search-box')
         $searchInput[0].setSelectionRange(@prevSelectionStart, @prevSelectionEnd)
+        @$('.has-tooltip').tooltip()
 
     # Prepares the staged rendering and triggers the first one
     renderTable: =>
@@ -236,7 +244,7 @@ class TasksView extends View
                 @renderTableChunk()
 
     updateUrl: =>
-        app.router.navigate "/tasks/#{ @state }/#{ @requestsSubFilter }/#{ @searchFilter }", { replace: true }
+        app.router.navigate "/tasks/#{ @state }/#{ if @requestsSubFilter then @requestsSubFilter else 'all' }/#{ @searchFilter }", { replace: true }
 
     viewJson: (e) ->
         task =
@@ -308,22 +316,23 @@ class TasksView extends View
 
         filter = $(event.currentTarget).data 'filter'
 
-        if not event.metaKey
-            # Select individual filters
+        currentFilter = if @requestsSubFilter then @requestsSubFilter.split '-' else []
+
+        # Select multiple filters
+        if @requestsSubFilter is 'all' or _.difference(@allRequestTypes, currentFilter).length is 0
             @requestsSubFilter = filter
         else
-            # Select multiple filters
-            currentFilter = if @requestsSubFilter is 'all' then 'SERVICE-WORKER-SCHEDULED-ON_DEMAND-RUN_ONCE' else  @requestsSubFilter
+            currentlyInFilter = _.contains currentFilter, filter
 
-            currentFilter = currentFilter.split '-'
-            needToAdd = not _.contains currentFilter, filter
-
-            if needToAdd
-                currentFilter.push filter
-            else
+            if currentlyInFilter
                 currentFilter = _.without currentFilter, filter
+            else
+                currentFilter.push filter
 
-            @requestsSubFilter = currentFilter.join '-'
+            if currentFilter.length isnt 0 and _.difference(@allRequestTypes, currentFilter).length isnt 0
+                @requestsSubFilter = currentFilter.join '-'
+            else
+                @requestsSubFilter = 'all'
 
         @updateUrl()
         @render()
