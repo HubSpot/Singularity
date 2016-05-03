@@ -22,6 +22,7 @@ TimeStamp = React.createClass
         return <div className={@props.prop.className}>{ moment.duration(@props.prop.timestamp).humanize() }</div>
 
     render: ->
+        # Feel free to add more options if you need them
         if @props.prop.display is 'timeStampFromNow'
             return @timeStampFromNow()
         else if @props.prop.display is 'absoluteTimestamp'

@@ -20,6 +20,6 @@ class SlavesController extends Controller
         @refresh()
 
     refresh: ->
-        @collections.slaves.fetch reset: true
+        @collections.slaves.fetch().done => @view.render()
 
 module.exports = SlavesController

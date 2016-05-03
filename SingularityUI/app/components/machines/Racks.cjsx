@@ -162,19 +162,19 @@ Racks = React.createClass
     getActiveRacks: ->
         return new RacksCollection(
             @props.racks.filter (model) ->
-              model.get('state') in ['ACTIVE']
+                model.get('state') in ['ACTIVE']
         )
 
     getDecommissioningRacks: ->
         return new RacksCollection(
             @props.racks.filter (model) ->
-              model.get('state') in ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']
+                model.get('state') in ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']
         )
 
     getInactiveRacks: ->
         return new RacksCollection(
             @props.racks.filter (model) ->
-              model.get('state') in ['DEAD', 'MISSING_ON_STARTUP']
+                model.get('state') in ['DEAD', 'MISSING_ON_STARTUP']
         )
 
     getStates: ->
