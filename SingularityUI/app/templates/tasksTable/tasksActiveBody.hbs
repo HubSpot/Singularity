@@ -9,19 +9,19 @@
                     <th class="hidden-xs" data-sort-attribute="taskId.startedAt">
                         Started At
                     </th>
-                    <th class="hidden-xs" data-sort-attribute="host">
+                    <th data-sort-attribute="host">
                         Host
                     </th>
-                    <th class="visible-lg" data-sort-attribute="taskId.rackId">
+                    <th class="hidden-xs" data-sort-attribute="taskId.rackId">
                         Rack
                     </th>
-                    <th class="visible-lg" data-sort-attribute="cpus">
+                    <th data-sort-attribute="cpus">
                         CPUs
                     </th>
-                    <th class="visible-lg" data-sort-attribute="memoryMb">
+                    <th data-sort-attribute="memoryMb">
                         Memory
                     </th>
-                    <th class="hidden-xs">
+                    <th>
                         {{! Actions column }}
                     </th>
                 </tr>
@@ -39,7 +39,7 @@
                     <td class="hidden-xs" data-value="{{taskId.startedAt}}">
                         {{timestampFromNow taskId.startedAt}}
                     </td>
-                    <td class="hidden-xs">
+                    <td>
                         <a href='{{appRoot}}/tasks/active/all/{{host}}'>
                             {{ host }}
                         </a>
@@ -47,15 +47,15 @@
                             <span class='label label-warning'>DECOM</span>
                         {{/ifTaskInList}}
                     </td>
-                    <td class="visible-lg">
+                    <td class="hidden-xs">
                         <a href='{{appRoot}}/tasks/active/all/{{rackId}}'>
                             {{ rackId }}
                         </a>
                     </td>
-                    <td class="visible-lg">
+                    <td>
                         {{ cpus }}
                     </td>
-                    <td class="visible-lg" data-value="{{ memoryMb }}">
+                    <td data-value="{{ memoryMb }}">
                         {{ memoryMb }} MB
                     </td>
                     <td>
@@ -65,7 +65,7 @@
                             {{/ifTimestampInPast}}
                         {{/if}}
                     </td>
-                    <td class="actions-column hidden-xs">
+                    <td class="actions-column">
                         <a data-task-id="{{ taskId.id }}" data-action="remove" title="Kill task">
                             <span class="glyphicon glyphicon-remove"></span>
                         </a>
