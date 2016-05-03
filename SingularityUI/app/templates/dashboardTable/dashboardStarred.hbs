@@ -4,6 +4,7 @@
             <tr>
                 <th>{{! Star column }}</th>
                 <th>Request</th>
+                <th>Type</th>
                 <th class="hidden-xs">Time of Last Deploy</th>
                 <th>Status</th>
                 <th class="visible-lg visible-md">Deploy user</th>
@@ -23,6 +24,9 @@
                 <a href="{{appRoot}}/request/{{ request.id }}">
                     {{ request.id }}
                 </a>
+            </td>
+            <td>
+                {{humanizeText request.requestType}}
             </td>
             <td class="hidden-xs" data-value="{{ requestDeployState.activeDeploy.timestamp }}">
                 <span title="{{ requestDeployState.activeDeploy.timestamp }}">
