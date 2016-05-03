@@ -8,9 +8,6 @@ React = require 'react'
 ReactDOM = require 'react-dom'
 
 class RacksView extends View
-
-    template: require '../templates/racks/base'
-    rackTemplate: require '../templates/racks/rack'
     
     initialPageLoad: true
 
@@ -23,7 +20,6 @@ class RacksView extends View
 
     render: ->
         return if not @collection.synced and @collection.isEmpty?()
-        @$el.html @template()
 
         ReactDOM.render(
             <RacksPage
