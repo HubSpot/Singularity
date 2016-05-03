@@ -24,6 +24,7 @@ import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeployKey;
 import com.hubspot.singularity.SingularityPendingRequest;
+import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestHistory;
@@ -121,6 +122,13 @@ public class RequestManager extends CuratorAsyncManager {
     return ZKPaths.makePath(PENDING_PATH_ROOT, new SingularityDeployKey(requestId, deployId).getId());
   }
 
+  private String getPendingPath(SingularityPendingRequest pendingRequest) {
+    String nodeName = String.format("%s%s",
+      new SingularityDeployKey(pendingRequest.getRequestId(), pendingRequest.getDeployId()),
+      pendingRequest.getPendingType().equals(PendingType.ONEOFF) ? pendingRequest.getTimestamp()  : "");
+    return ZKPaths.makePath(PENDING_PATH_ROOT, nodeName);
+  }
+
   private String getCleanupPath(String requestId, RequestCleanupType type) {
     return ZKPaths.makePath(CLEANUP_PATH_ROOT, requestId + "-" + type.name());
   }
@@ -142,7 +150,7 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public SingularityDeleteResult deletePendingRequest(SingularityPendingRequest pendingRequest) {
-    return delete(getPendingPath(pendingRequest.getRequestId(), pendingRequest.getDeployId()));
+    return delete(getPendingPath(pendingRequest));
   }
 
   public SingularityDeleteResult deleteHistoryParent(String requestId) {
@@ -209,7 +217,7 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public SingularityCreateResult addToPendingQueue(SingularityPendingRequest pendingRequest) {
-    SingularityCreateResult result = create(getPendingPath(pendingRequest.getRequestId(), pendingRequest.getDeployId()), pendingRequest, pendingRequestTranscoder);
+    SingularityCreateResult result = create(getPendingPath(pendingRequest), pendingRequest, pendingRequestTranscoder);
 
     LOG.info("{} added to pending queue with result: {}", pendingRequest, result);
 

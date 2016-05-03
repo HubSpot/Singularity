@@ -45,16 +45,20 @@
                                 {{/each}}
                             </ul>
                             <ul class='list-plain list-large'>
-                                <li>
-                                    <strong>{{state.overProvisionedRequests}}</strong>
-                                    Over Provisioned
-                                </li>
-                                <li>
-                                    <span {{#ifGT state.underProvisionedRequests 0}}class='color-warning'{{/ifGT}}>
-                                        <strong>{{state.underProvisionedRequests}}</strong>
-                                        Under Provisioned
-                                    <span>
-                                </li>
+                                {{#ifGT state.overProvisionedRequests 0}}
+                                    <li>
+                                        <strong>{{state.overProvisionedRequests}}</strong>
+                                        Over Provisioned
+                                    </li>
+                                {{/ifGT}}
+                                {{#ifGT state.underProvisionedRequests 0}}
+                                    <li>
+                                        <span class='color-warning'>
+                                            <strong>{{state.underProvisionedRequests}}</strong>
+                                            Under Provisioned
+                                        <span>
+                                    </li>
+                                {{/ifGT}}
                             </ul>
                         </div>
                     </div>
@@ -92,15 +96,16 @@
                                 </li>
                                 {{/each}}
                             </ul>
-                            <ul class='list-plain list-large'>
-                                <li>
-                                    Max Task Lag:
-                                    <span>
-                                        {{timestampDuration state.maxTaskLag}}
-                                        {{#ifEqual 0 state.maxTaskLag }}(no lag){{/ifEqual}}
-                                    </span>
-                                </li>
-                            </ul>
+                            {{#ifGT state.maxTaskLag 0 }}
+                                <ul class='list-plain list-large'>
+                                    <li>
+                                        Max Task Lag:
+                                        <span>
+                                            {{timestampDuration state.maxTaskLag}}
+                                        </span>
+                                    </li>
+                                </ul>
+                            {{/ifGT}}
                         </div>
                     </div>
                 </div>

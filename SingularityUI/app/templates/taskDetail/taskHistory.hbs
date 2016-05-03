@@ -17,8 +17,8 @@
             </tr>
         </thead>
         <tbody>
-            {{#each data.taskUpdates}}
-                <tr>
+            {{#reverseEach data.taskUpdates}}
+                <tr{{#ifCurrentState taskState ../data.taskUpdates}} class="medium-weight"{{/ifCurrentState}}>
                     <td>
                         {{humanizeText taskState}}
                     </td>
@@ -33,7 +33,7 @@
                         {{timestampFromNow timestamp}}
                     </td>
                 </tr>
-            {{/each}}
+            {{/reverseEach}}
         </tbody>
     </table>
 {{else}}

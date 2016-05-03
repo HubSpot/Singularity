@@ -57,6 +57,8 @@ These are settings that are more likely to be altered.
 | healthcheckMaxTotalTimeoutSeconds | | Default total time to wait for healthchecks to pass | int |
 
 #### Deploys ####
+| Parameter | Default | Description | Type |
+|-----------|---------|-------------|------|
 | defaultDeployStepWaitTimeMs | 0 | If using an incremental deploy, wait this long between deploy steps if not specified in the deploy | int |
 | defaultDeployMaxTaskRetries | 0 | Allow this many tasks to fail and be retried before failing a new deploy | int |
 
