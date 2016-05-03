@@ -40,7 +40,6 @@ Handlebars.registerHelper 'ifTaskInList', (list, task, options) ->
     return options.inverse @
 
 Handlebars.registerHelper 'ifInSubFilter', (needle, haystack, options) ->
-    #return options.inverse @ unless haystack
     return options.fn @ if haystack is 'all'
     if haystack.indexOf(needle) isnt -1
         options.fn @
