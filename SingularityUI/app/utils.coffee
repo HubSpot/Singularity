@@ -223,6 +223,18 @@ class Utils
         else
             fuzzyObject.score
 
+    @getInstanceNumberFromTaskId: (taskId) ->
+        splits = taskId.split('-')
+        splits[splits.length - 3]
+
+    @getDeployIdFromTaskId: (taskId) ->
+        splits = taskId.split('-')
+        splits[splits.length - 5]
+
+    @getHostFromTaskId: (taskId) ->
+        splits = taskId.split('-')
+        splits[splits.length - 2]
+
     # e.g. `myModel.fetch().error Utils.ignore404`
     @ignore404: (response) -> app.caughtError() if response.status is 404
 
