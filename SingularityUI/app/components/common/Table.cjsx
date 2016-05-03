@@ -9,11 +9,52 @@ Utils = require '../../utils'
 # with functions that trigger sorting by those columns
 Table = React.createClass
 
-    ourRowsPerPageChoices: [5, 10, 15, 20]
+    defaultSortDirectionAscending: true
+
+    propTypes:
+        columnHeads: React.PropTypes.arrayOf(React.PropTypes.shape({
+            data: React.PropTypes.string
+            className: React.PropTypes.string
+            doSort: React.PropTypes.func
+            sortable: React.PropTypes.boolean
+            sortAttr: React.PropTypes.string
+        })).isRequired
+
+        tableRows: React.PropTypes.arrayOf(React.PropTypes.shape({
+            dataId: React.PropTypes.string.isRequired
+            className: React.PropTypes.string
+            data: React.PropTypes.arrayOf(React.PropTypes.shape({
+                component: React.PropTypes.func.isRequired
+                prop: React.PropTypes.object
+                id: React.PropTypes.string
+                className: React.PropTypes.string
+            })).isRequired
+        })).isRequired
+
+        tableClassOpts: React.PropTypes.string
+
+        sortDirection: React.PropTypes.any
+        sortDirectionAscending: React.PropTypes.any
+        sortBy: React.PropTypes.string
+        customSorting: React.PropTypes.bool
+
+        emptyTableMessage: React.PropTypes.string
+
+        customPaging: React.PropTypes.bool
+        defaultRowsPerPage: React.PropTypes.number
+        rowsPerPageChoices: React.PropTypes.arrayOf(React.PropTypes.number)
+        setRowsPerPage: React.PropTypes.func
+        pageNumber: React.PropTypes.number
+        pageDown: React.PropTypes.func
+        pageUp: React.PropTypes.func
+
+        dataCollection: React.PropTypes.string
+
+    defaultRowsPerPageChoices: [5, 10, 15, 20]
 
     getInitialState: ->
         {
-            rowsPerPage: 5
+            rowsPerPage: if @props.defaultRowsPerPage then @props.defaultRowsPerPage else 5
             pageNumber: 1
         }
 
@@ -26,7 +67,7 @@ Table = React.createClass
             rowsPerPage: rows
 
     rowsPerPageChoices: ->
-        if @props.rowsPerPageChoices then @props.rowsPerPageChoices else @ourRowsPerPageChoices
+        if @props.rowsPerPageChoices then @props.rowsPerPageChoices else @defaultRowsPerPageChoices
 
     renderRowsPerPageChoices: ->
         choices = []
@@ -46,17 +87,26 @@ Table = React.createClass
         </div>
 
     sortDirection: ->
-        if @props.customSorting then @props.sortDirection else @state.SortDirection
+        if @props.customSorting then @props.sortDirection else @state.sortDirectionAscending
 
     sortBy: ->
-        if @props.customSorting then @props.sortBy else @state.SortBy
+        if @props.customSorting then @props.sortBy else @state.sortBy
 
     sortDirectionAscending: ->
-        if @props.customSorting then @props.sortDirectionAscending else 'ASC'
+        if @props.customSorting then @props.sortDirectionAscending else true
 
     makeColumnHeadSortFn: (columnHead) ->
-        if @props.customSorting then columnHead.doSort else () ->
-            # TODO
+        if @props.customSorting then columnHead.doSort else () =>
+            if @state.sortBy is columnHead.data
+                newSortDirectionAscending = not @state.sortDirectionAscending
+            else
+                newSortDirectionAscending = @defaultSortDirectionAscending
+            @setState {
+                sortDirectionAscending: newSortDirectionAscending
+                sortBy: columnHead.data
+            }
+            columnHead.doSort newSortDirectionAscending
+            @forceUpdate()
 
     getSortableColumnHeadGlyphicon: (columnHead) ->
         return unless @sortBy() is columnHead.data
@@ -94,7 +144,7 @@ Table = React.createClass
                         alt: 'pageDown'
                         className: {
                             'col-xs-5': true
-                            'disabled': @pageNumber() is 1
+                            'hide': @pageNumber() is 1
                         }
                         onClick: @pageDown
                     }}
@@ -109,7 +159,7 @@ Table = React.createClass
                         alt: 'pageUp'
                         className: {
                             'col-xs-5': true
-                            'disabled': @pageUpDisabled()
+                            'hide': @pageUpDisabled()
                         }
                         onClick: @pageUp
                     }}
@@ -175,10 +225,14 @@ Table = React.createClass
     ### 
         - Use @props.tableClassOpts to declare things like striped or bordered
         - Use @props.customSorting if the API for models this table will display
-          sorts the models on its own and @props.customPaging if it'll page them on its own
+          keeps track of sort direction on its own and @props.customPaging if it'll page them on its own
         - @props.customSorting indicates that you will be providing your own functions to sort the table rows
             - If provided, you must provide @props.sortBy, @props.sortDirection, @props.sortDirectionAscending,
-              and a doSort function for each column you mark as sortable.
+              for each column you mark as sortable.
+            - Either way you must provide a doSort function for each column marked as sortable. However,
+              if you are customSorting the function will take no arguments. Otherwise it will take a boolean
+              true if sort direction is ascending, false if descending.
+              YOUR doSort FUNCTION MAY HAVE TO CALL forceUpdate() TO BE ABLE TO SEE THE SORTED COLLECTION
         - @props.customPaging indicates that you will be providing your own functions to handle table pages
             - If provided, you must provide @props.setRowsPerPage, @props.increasePage, @props.decreasePage, @props.pageNumber
     ###
