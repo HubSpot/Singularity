@@ -13,7 +13,7 @@ ActiveTasks = require '../actions/activeTasks'
 
 class LogViewer extends Controller
   initialize: ({@requestId, @path, @initialOffset, taskIds, viewMode, search}) ->
-    @title 'Tail of ' + @path
+    @title "Tail of #{_.last @path.split('/')}"
 
     initialState = {
         viewMode,
