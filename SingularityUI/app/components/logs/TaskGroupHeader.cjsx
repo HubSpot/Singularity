@@ -17,7 +17,7 @@ class TaskGroupHeader extends React.Component
   toggleLegend: ->
     # TODO
 
-  getToolTip: (task) ->
+  getInstanceNoToolTip: (task) ->
     <ToolTip id={task.taskId}>Deploy ID: {getDeployIdFromTaskId task.taskId}<br />Host: {getHostFromTaskId task.taskId}</ToolTip>
 
   renderInstanceInfo: ->
@@ -26,7 +26,7 @@ class TaskGroupHeader extends React.Component
     else if @props.tasks.length > 0
       <span>
         <div className="width-constrained">
-          <OverlayTrigger placement='bottom' overlay={@getToolTip @props.tasks[0]}>
+          <OverlayTrigger placement='bottom' overlay={@getInstanceNoToolTip @props.tasks[0]}>
             <a className="instance-link" href={"#{config.appRoot}/task/#{@props.tasks[0].taskId}"}>Instance {getInstanceNumberFromTaskId(@props.tasks[0].taskId)}</a>
           </OverlayTrigger>
         </div>
