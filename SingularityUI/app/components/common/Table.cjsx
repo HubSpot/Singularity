@@ -88,6 +88,12 @@ Table = React.createClass
             Results Per Page: {choices}
         </div>
 
+    clearSort: ->
+        return if @props.customSorting
+        @setState
+            sortBy: undefined
+            sortDirection: undefined
+
     sortDirection: ->
         if @props.customSorting then @props.sortDirection else @state.sortDirectionAscending
 
