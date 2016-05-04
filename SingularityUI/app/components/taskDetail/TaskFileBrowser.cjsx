@@ -119,20 +119,15 @@ TaskFileBrowser = React.createClass
     navigate: (path, event) ->
         event.preventDefault()
 
-        $table = $ 'table'
-        # Get table height for later
-        if $table.length
-            tableHeight = $table.height()
-
         @props.collection.path = "#{ path }"
 
         app.router.navigate "#task/#{ @props.collection.taskId }/files/#{ @props.collection.path }"
 
         @props.collection.fetch
             reset: true
-            done: @forceUpdate()
+            done: @forceUpdate
 
-        @setState {scrollWhenReady: true}
+        @clearTableSort()
 
     renderBreadcrumbs: ->
         breadcrumbs = []
@@ -150,6 +145,9 @@ TaskFileBrowser = React.createClass
             tableRows = {@tableData()}
             emptyTableMessage = {@emptyTableMessage()}
             dataCollection = 'taskFiles'
+            ref = {(table) =>
+                if table
+                    @clearTableSort = table.clearSort}
         />
 
     renderBreadcrumbsAndTable: ->
