@@ -10,8 +10,8 @@ Link = React.createClass
                 React.PropTypes.string,
                 React.PropTypes.object #Classnames object
             ])
-            href: React.PropTypes.string
-            onClick: React.PropTypes.func
+            url: React.PropTypes.string
+            onClickFn: React.PropTypes.func
             title: React.PropTypes.string
             text: React.PropTypes.node
             id: React.PropTypes.string
