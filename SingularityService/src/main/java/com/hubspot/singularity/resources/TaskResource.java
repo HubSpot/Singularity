@@ -46,6 +46,7 @@ import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskMetadata;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityTaskShellCommandRequest;
 import com.hubspot.singularity.SingularityTransformHelpers;
@@ -53,7 +54,9 @@ import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.api.SingularityKillTaskRequest;
+import com.hubspot.singularity.api.SingularityTaskMetadataRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 import com.hubspot.singularity.config.shell.ShellCommandOptionDescriptor;
@@ -79,13 +82,15 @@ public class TaskResource {
   private final MesosClient mesosClient;
   private final SingularityAuthorizationHelper authorizationHelper;
   private final Optional<SingularityUser> user;
+  private final SingularityTaskMetadataConfiguration taskMetadataConfiguration;
   private final UIConfiguration uiConfiguration;
 
   @Inject
-  public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient,
+  public TaskResource(TaskRequestManager taskRequestManager, TaskManager taskManager, SlaveManager slaveManager, MesosClient mesosClient, SingularityTaskMetadataConfiguration taskMetadataConfiguration,
       SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, UIConfiguration uiConfiguration, RequestManager requestManager) {
     this.taskManager = taskManager;
     this.taskRequestManager = taskRequestManager;
+    this.taskMetadataConfiguration = taskMetadataConfiguration;
     this.slaveManager = slaveManager;
     this.mesosClient = mesosClient;
     this.requestManager = requestManager;
@@ -319,6 +324,35 @@ public class TaskResource {
   public List<SingularityTaskShellCommandRequest> getQueuedShellCommands() {
     authorizationHelper.checkAdminAuthorization(user);
     return taskManager.getAllQueuedTaskShellCommandRequests();
+  }
+
+  @POST
+  @Path("/task/{taskId}/metadata")
+  @ApiOperation(value="Post metadata about a task that will be persisted along with it and displayed in the UI")
+  @ApiResponses({
+    @ApiResponse(code=400, message="Invalid metadata object or doesn't match allowed types"),
+    @ApiResponse(code=404, message="Task doesn't exist"),
+    @ApiResponse(code=409, message="Metadata with this type/timestamp already existed")
+  })
+  @Consumes({ MediaType.APPLICATION_JSON })
+  public void postTaskMetadata(@PathParam("taskId") String taskId, final SingularityTaskMetadataRequest taskMetadataRequest) {
+    SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
+
+    authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.WRITE);
+
+    if (taskMetadataConfiguration.getAllowedMetadataTypes().isPresent()) {
+      WebExceptions.checkBadRequest(taskMetadataConfiguration.getAllowedMetadataTypes().get().contains(taskMetadataRequest.getType()), "%s is not one of the allowed metadata types %s",
+          taskMetadataRequest.getType(), taskMetadataConfiguration.getAllowedMetadataTypes().get());
+    }
+
+    WebExceptions.checkNotFound(taskManager.taskExistsInZk(taskIdObj), "Task {} not found in ZooKeeper (can not save metadata to tasks which have been persisted", taskIdObj);
+
+    final SingularityTaskMetadata taskMetadata = new SingularityTaskMetadata(taskIdObj, System.currentTimeMillis(), taskMetadataRequest.getType(), taskMetadataRequest.getTitle(),
+        taskMetadataRequest.getMessage(), JavaUtils.getUserEmail(user), taskMetadataRequest.getLevel());
+
+    SingularityCreateResult result = taskManager.saveTaskMetadata(taskMetadata);
+
+    WebExceptions.checkConflict(result == SingularityCreateResult.CREATED, "Task metadata conficted with existing metadata for %s at %s", taskMetadata.getType(), taskMetadata.getTimestamp());
   }
 
   @POST

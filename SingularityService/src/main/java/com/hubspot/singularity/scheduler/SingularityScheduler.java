@@ -460,7 +460,7 @@ public class SingularityScheduler {
     }
 
     if (taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && requestState != RequestState.SYSTEM_COOLDOWN) {
-      mailer.sendTaskCompletedMail(task, taskId, request, state);
+      mailer.queueTaskCompletedMail(task, taskId, request, state);
     } else if (requestState == RequestState.SYSTEM_COOLDOWN) {
       LOG.debug("Not sending a task completed email because task {} is in SYSTEM_COOLDOWN", taskId);
     } else {
@@ -602,8 +602,12 @@ public class SingularityScheduler {
 
   private int getNumMissingInstances(List<SingularityTaskId> matchingTaskIds, SingularityRequest request, SingularityPendingRequest pendingRequest,
     Optional<SingularityPendingDeploy> maybePendingDeploy) {
-    if (request.isOneOff() && pendingRequest.getPendingType() == PendingType.ONEOFF) {
-      return 1;
+    if (request.isOneOff()) {
+      if (pendingRequest.getPendingType() == PendingType.ONEOFF) {
+        return 1;
+      } else {
+        return 0;
+      }
     }
 
     return numInstancesExpected(request, pendingRequest, maybePendingDeploy) - matchingTaskIds.size();

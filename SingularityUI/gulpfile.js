@@ -9,6 +9,7 @@ var stylus = require('gulp-stylus');
 var nib = require('nib');
 
 var concat = require('gulp-concat');
+var merge = require('webpack-merge');
 
 var serverBase = process.env.SINGULARITY_BASE_URI || '/singularity'
 
@@ -36,7 +37,8 @@ var templateData = {
   warnIfScheduledJobIsRunningPastNextRunPct: process.env.SINGULARITY_WARN_IF_SCHEDULED_JOB_IS_RUNNING_PAST_NEXT_RUN_PCT || 200,
   shellCommands: process.env.SINGULARITY_SHELL_COMMANDS || "[]",
   timestampFormat: process.env.SINGULARITY_TIMESTAMP_FORMAT || 'lll',
-  timestampWithSecondsFormat: process.env.SINGULARITY_TIMESTAMP_WITH_SECONDS_FORMAT || 'lll:ss'
+  timestampWithSecondsFormat: process.env.SINGULARITY_TIMESTAMP_WITH_SECONDS_FORMAT || 'lll:ss',
+  redirectOnUnauthorizedUrl: process.env.SINGULARITY_REDIRECT_ON_UNAUTHORIZED_URL || ''
 }
 
 var dest = path.resolve(__dirname, '../SingularityService/target/generated-resources/assets');
@@ -58,7 +60,7 @@ gulp.task('fonts', function() {
 });
 
 gulp.task('scripts', function () {
-  return gulp.src(webpackConfig.entry)
+  return gulp.src(webpackConfig.entry.app)
     .pipe(webpack(webpackConfig))
     .pipe(gulp.dest(dest + '/static/js'))
 });
@@ -104,7 +106,7 @@ gulp.task('build', ['clean'], function () {
 gulp.task('serve', ['html', 'styles', 'fonts', 'images', 'css-images'], function () {
   gulp.watch('app/**/*.styl', ['styles'])
 
-  new WebpackDevServer(require('webpack')(webpackConfig), {
+  new WebpackDevServer(require('webpack')(merge(webpackConfig, {devtool: 'eval'})), {
     contentBase: dest,
     historyApiFallback: true
   }).listen(3334, "localhost", function (err) {

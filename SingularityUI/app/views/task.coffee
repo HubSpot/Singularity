@@ -27,19 +27,23 @@ class TaskView extends View
         @$el.html @baseTemplate
 
         # Plop subview contents in there. It'll take care of everything itself
-        @$('#overview').html                    @subviews.overview.$el
-        @$('#alerts').html                      @subviews.alerts.$el
-        @$('#healthcheck-notification').html    @subviews.healthcheckNotification.$el
-        @$('#history').html                     @subviews.history.$el
-        @$('#latest-log').html                  @subviews.latestLog.$el
-        @$('#file-browser').html                @subviews.fileBrowser.$el
-        @$('#s3-logs').html                     @subviews.s3Logs.$el
-        @$('#lb-updates').html                  @subviews.lbUpdates.$el
-        @$('#health-checks').html               @subviews.healthChecks.$el
-        @$('#info').html                        @subviews.info.$el
-        @$('#resources').html                   @subviews.resourceUsage.$el
-        @$('#environment').html                 @subviews.environment.$el
-        @$('#shell-commands').html              @subviews.shellCommands.$el
+        @$('#overview').html                       @subviews.overview.$el
+        @$('#alerts').html                         @subviews.alerts.$el
+        @$('#task-error-metadata').html            @subviews.taskErrorMetadata.$el
+        @$('#task-warn-metadata').html             @subviews.taskWarnMetadata.$el
+        @$('#deploy-failure-notification').html    @subviews.deployFailureNotification.$el
+        @$('#healthcheck-notification').html       @subviews.healthcheckNotification.$el
+        @$('#history').html                        @subviews.history.$el
+        @$('#latest-log').html                     @subviews.latestLog.$el
+        @$('#file-browser').html                   @subviews.fileBrowser.$el
+        @$('#s3-logs').html                        @subviews.s3Logs.$el
+        @$('#lb-updates').html                     @subviews.lbUpdates.$el
+        @$('#health-checks').html                  @subviews.healthChecks.$el
+        @$('#info').html                           @subviews.info.$el
+        @$('#resources').html                      @subviews.resourceUsage.$el
+        @$('#environment').html                    @subviews.environment.$el
+        @$('#shell-commands').html                 @subviews.shellCommands.$el
+        @$('#task-metadata-table').html            @subviews.taskMetadataTable.$el
 
         super.afterRender()
 

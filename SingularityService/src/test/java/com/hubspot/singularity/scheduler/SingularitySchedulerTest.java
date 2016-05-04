@@ -73,6 +73,7 @@ import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
 import com.hubspot.singularity.data.SingularityValidator;
+import com.hubspot.singularity.scheduler.SingularityNewTaskChecker.CheckTaskState;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation.ReconciliationState;
 import com.sun.jersey.api.ConflictException;
 
@@ -2769,6 +2770,32 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testNewTaskCheckerRespectsDeployHealthcheckRetries() {
+    initRequest();
+
+    final String deployId = "new_task_healthcheck";
+
+    SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, deployId);
+    db.setHealthcheckMaxRetries(Optional.of(1));
+    db.setHealthcheckUri(Optional.of("http://uri"));
+
+    SingularityDeploy deploy = initAndFinishDeploy(request, db);
+
+    SingularityTask task = launchTask(request, deploy, System.currentTimeMillis(), 1, TaskState.TASK_RUNNING);
+
+    Assert.assertEquals(CheckTaskState.CHECK_IF_OVERDUE, newTaskChecker.getTaskState(task, requestManager.getRequest(requestId), healthchecker));
+    Assert.assertTrue(taskManager.getCleanupTaskIds().isEmpty());
+
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(500), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.<String> absent(), Optional.<String> absent(), task.getTaskId()));
+
+    Assert.assertEquals(CheckTaskState.CHECK_IF_OVERDUE, newTaskChecker.getTaskState(task, requestManager.getRequest(requestId), healthchecker));
+
+    taskManager.saveHealthcheckResult(new SingularityTaskHealthcheckResult(Optional.of(500), Optional.of(1000L), System.currentTimeMillis() + 1, Optional.<String> absent(), Optional.<String> absent(), task.getTaskId()));
+
+    Assert.assertEquals(CheckTaskState.UNHEALTHY_KILL_TASK, newTaskChecker.getTaskState(task, requestManager.getRequest(requestId), healthchecker));
+  }
+
+  @Test
   public void testHealthchecksSuccess() {
     initRequest();
 
@@ -2910,6 +2937,24 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testQueueMultipleOneOffs() {
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.ON_DEMAND);
+    requestResource.postRequest(bldr.build());
+    deploy("on_demand_deploy");
+    deployChecker.checkDeploys();
+
+
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, "on_demand_deploy", System.currentTimeMillis(), Optional.<String>absent(), PendingType.ONEOFF,
+      Optional.<List<String>>absent(), Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<String>absent()));
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, "on_demand_deploy", System.currentTimeMillis(), Optional.<String>absent(), PendingType.ONEOFF,
+      Optional.<List<String>>absent(), Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<String>absent()));
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    Assert.assertEquals(2, taskManager.getPendingTaskIds().size());
+  }
+
+  @Test
   public void testCronScheduleChanges() throws Exception {
     final String requestId = "test-change-cron";
     final String oldSchedule = "*/5 * * * *";
@@ -2918,8 +2963,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     final String newScheduleQuartz = "0 */30 * * * ?";
 
     SingularityRequest request = new SingularityRequestBuilder(requestId, RequestType.SCHEDULED)
-        .setSchedule(Optional.of(oldSchedule))
-        .build();
+      .setSchedule(Optional.of(oldSchedule))
+      .build();
 
     request = validator.checkSingularityRequest(request, Optional.<SingularityRequest>absent(), Optional.<SingularityDeploy>absent(), Optional.<SingularityDeploy>absent());
 
@@ -2932,9 +2977,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
     final SingularityRequest newRequest = request.toBuilder()
-        .setSchedule(Optional.of(newSchedule))
-        .setQuartzSchedule(Optional.<String>absent())
-        .build();
+      .setSchedule(Optional.of(newSchedule))
+      .setQuartzSchedule(Optional.<String>absent())
+      .build();
 
     final SingularityDeploy newDeploy = new SingularityDeployBuilder(request.getId(), "2").setCommand(Optional.of("sleep 100")).build();
 
@@ -3002,5 +3047,4 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     requestResource.postRequest(newRequest);
   }
-
 }

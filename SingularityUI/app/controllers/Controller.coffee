@@ -1,3 +1,5 @@
+Utils = require '../utils'
+
 # Base controller to be extended by other classes
 class Controller
 
@@ -33,9 +35,9 @@ class Controller
         document.title = pageTitle + ' - ' + config.title
 
     # e.g. `myModel.fetch().error @ignore404`
-    ignore404: (response) -> app.caughtError() if response.status is 404
+    ignore404: Utils.ignore404
 
     # e.g. `myModel.fetch().error @ignore400`
-    ignore400: (response) -> app.caughtError() if response.status is 400
+    ignore400: Utils.ignore400
 
 module.exports = Controller

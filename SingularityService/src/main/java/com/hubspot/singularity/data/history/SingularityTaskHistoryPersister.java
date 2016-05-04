@@ -23,6 +23,7 @@ import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityTaskHistory;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.TaskManager;
 
@@ -34,14 +35,17 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
   private final TaskManager taskManager;
   private final DeployManager deployManager;
   private final HistoryManager historyManager;
+  private final SingularityTaskMetadataConfiguration taskMetadataConfiguration;
 
   @Inject
-  public SingularityTaskHistoryPersister(SingularityConfiguration configuration, TaskManager taskManager, DeployManager deployManager, HistoryManager historyManager) {
+  public SingularityTaskHistoryPersister(SingularityConfiguration configuration, SingularityTaskMetadataConfiguration taskMetadataConfiguration, TaskManager taskManager,
+      DeployManager deployManager, HistoryManager historyManager) {
     super(configuration);
 
     this.taskManager = taskManager;
     this.historyManager = historyManager;
     this.deployManager = deployManager;
+    this.taskMetadataConfiguration = taskMetadataConfiguration;
   }
 
   @Override
@@ -116,6 +120,18 @@ public class SingularityTaskHistoryPersister extends SingularityHistoryPersister
     final Optional<SingularityTaskHistory> taskHistory = taskManager.getTaskHistory(object);
 
     if (taskHistory.isPresent()) {
+      if (!taskHistory.get().getTaskUpdates().isEmpty()) {
+        final long lastUpdateAt = taskHistory.get().getLastTaskUpdate().get().getTimestamp();
+
+        final long timeSinceLastUpdate = System.currentTimeMillis() - lastUpdateAt;
+
+        if (timeSinceLastUpdate < taskMetadataConfiguration.getTaskPersistAfterFinishBufferMillis()) {
+          LOG.debug("Not persisting {} yet - lastUpdate only happened {} ago, buffer {}", JavaUtils.durationFromMillis(timeSinceLastUpdate),
+              JavaUtils.durationFromMillis(taskMetadataConfiguration.getTaskPersistAfterFinishBufferMillis()));
+          return false;
+        }
+      }
+
       LOG.debug("Moving {} to history", object);
       try {
         historyManager.saveTaskHistory(taskHistory.get());

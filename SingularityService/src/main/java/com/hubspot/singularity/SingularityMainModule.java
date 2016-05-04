@@ -47,6 +47,7 @@ import com.hubspot.singularity.config.S3GroupOverrideConfiguration;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SentryConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.config.UIConfiguration;
 import com.hubspot.singularity.config.ZooKeeperConfiguration;
 import com.hubspot.singularity.guice.DropwizardMetricRegistryProvider;
@@ -61,9 +62,11 @@ import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifierManaged;
 import com.hubspot.singularity.smtp.JadeTemplateLoader;
 import com.hubspot.singularity.smtp.MailTemplateHelpers;
+import com.hubspot.singularity.smtp.NoopMailer;
 import com.hubspot.singularity.smtp.SingularityMailRecordCleaner;
 import com.hubspot.singularity.smtp.SingularityMailer;
 import com.hubspot.singularity.smtp.SingularitySmtpSender;
+import com.hubspot.singularity.smtp.SmtpMailer;
 import com.ning.http.client.AsyncHttpClient;
 
 import de.neuland.jade4j.parser.Parser;
@@ -116,7 +119,11 @@ public class SingularityMainModule implements Module {
 
     binder.bind(SingularityDriverManager.class).in(Scopes.SINGLETON);
     binder.bind(SingularityLeaderController.class).in(Scopes.SINGLETON);
-    binder.bind(SingularityMailer.class).in(Scopes.SINGLETON);
+    if (configuration.getSmtpConfiguration().isPresent()) {
+      binder.bind(SingularityMailer.class).to(SmtpMailer.class).in(Scopes.SINGLETON);
+    } else {
+      binder.bind(SingularityMailer.class).toInstance(NoopMailer.getInstance());
+    }
     binder.bind(SingularitySmtpSender.class).in(Scopes.SINGLETON);
     binder.bind(MailTemplateHelpers.class).in(Scopes.SINGLETON);
     binder.bind(SingularityExceptionNotifier.class).in(Scopes.SINGLETON);
@@ -211,6 +218,12 @@ public class SingularityMainModule implements Module {
   @Singleton
   public Optional<SentryConfiguration> sentryConfiguration(final SingularityConfiguration config) {
     return config.getSentryConfiguration();
+  }
+
+  @Provides
+  @Singleton
+  public SingularityTaskMetadataConfiguration taskMetadataConfiguration(SingularityConfiguration config) {
+    return config.getTaskMetadataConfiguration();
   }
 
   @Provides

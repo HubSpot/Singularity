@@ -1,6 +1,37 @@
 #### Overview
 Manages historical data for tasks, requests, and deploys.
 
+#### **GET** `/api/history/tasks`
+
+Retrieve the history sorted by startedAt for all inactive tasks.
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | false | Optional Request ID to match | string |
+| deployId | false | Optional deploy ID to match | string |
+| host | false | Optional host to match | string |
+| lastTaskStatus | false | Optional last task status to match | string |
+| startedAfter | false | Optionally match only tasks started after | long |
+| startedBefore | false | Optionally match only tasks started before | long |
+| orderDirection | false | Sort direction | string |
+| count | false | Maximum number of items to return | int |
+| page | false | Which page of items to view | int |
+
+###### Response
+[List[SingularityTaskIdHistory]](models.md#model-SingularityTaskIdHistory)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **GET** `/api/history/task/{taskId}`
 
 Retrieve the history for a specific task.
@@ -74,7 +105,7 @@ Retrieve the history for all active tasks of a specific request.
 - - -
 #### **GET** `/api/history/request/{requestId}/tasks`
 
-Retrieve the history for all tasks of a specific request.
+Retrieve the history sorted by startedAt for all inactive tasks of a specific request.
 
 
 ###### Parameters
@@ -82,11 +113,17 @@ Retrieve the history for all tasks of a specific request.
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
-| requestId | true | Request ID to look up | string |
+| requestId | true | Request ID to match | string |
 **query**
 
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
+| deployId | false | Optional deploy ID to match | string |
+| host | false | Optional host to match | string |
+| lastTaskStatus | false | Optional last task status to match | string |
+| startedAfter | false | Optionally match only tasks started after | long |
+| startedBefore | false | Optionally match only tasks started before | long |
+| orderDirection | false | Sort direction | string |
 | count | false | Maximum number of items to return | int |
 | page | false | Which page of items to view | int |
 
@@ -127,7 +164,7 @@ Retrieve the history for a task by runId
 - - -
 #### **GET** `/api/history/request/{requestId}/requests`
 
-
+Get request history for a single request
 
 
 ###### Parameters
@@ -156,7 +193,7 @@ Retrieve the history for a task by runId
 - - -
 #### **GET** `/api/history/request/{requestId}/deploys`
 
-
+Get deploy history for a single request
 
 
 ###### Parameters
