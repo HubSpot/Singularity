@@ -35,6 +35,7 @@ public class SingularityDeployBuilder {
   private Optional<List<String>> uris;
   private Optional<ExecutorData> executorData;
   private Optional<Map<String, String>> labels;
+  private Optional<Map<Integer, Map<String, String>>> taskLabels;
 
   private Optional<String> healthcheckUri;
   private Optional<Long> healthcheckIntervalSeconds;
@@ -82,6 +83,7 @@ public class SingularityDeployBuilder {
     this.uris = Optional.absent();
     this.executorData = Optional.absent();
     this.labels = Optional.absent();
+    this.taskLabels = Optional.absent();
     this.healthcheckUri = Optional.absent();
     this.healthcheckIntervalSeconds = Optional.absent();
     this.healthcheckTimeoutSeconds = Optional.absent();
@@ -107,7 +109,7 @@ public class SingularityDeployBuilder {
 
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, customExecutorUser, resources,
-      env, uris, metadata, executorData, version, timestamp, labels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
+      env, uris, metadata, executorData, version, timestamp, labels, taskLabels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
       healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, loadBalancerDomains, loadBalancerAdditionalRoutes,
       loadBalancerTemplate, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries);
   }
@@ -386,6 +388,15 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<Map<Integer, Map<String, String>>> getTaskLabels() {
+    return taskLabels;
+  }
+
+  public SingularityDeployBuilder setTaskLabels(Optional<Map<Integer, Map<String, String>>> taskLabels) {
+    this.taskLabels = taskLabels;
+    return this;
+  }
+
   public Optional<Boolean> getSkipHealthchecksOnDeploy() {
     return skipHealthchecksOnDeploy;
   }
@@ -479,6 +490,7 @@ public class SingularityDeployBuilder {
       ", uris=" + uris +
       ", executorData=" + executorData +
       ", labels=" + labels +
+      ", taskLabels=" + taskLabels +
       ", healthcheckUri=" + healthcheckUri +
       ", healthcheckIntervalSeconds=" + healthcheckIntervalSeconds +
       ", healthcheckTimeoutSeconds=" + healthcheckTimeoutSeconds +

@@ -42,6 +42,7 @@ public class SingularityDeploy {
   private final Optional<List<String>> uris;
   private final Optional<ExecutorData> executorData;
   private final Optional<Map<String, String>> labels;
+  private final Optional<Map<Integer, Map<String, String>>> taskLabels;
 
   private final Optional<String> healthcheckUri;
   private final Optional<Long> healthcheckIntervalSeconds;
@@ -93,6 +94,7 @@ public class SingularityDeploy {
       @JsonProperty("version") Optional<String> version,
       @JsonProperty("timestamp") Optional<Long> timestamp,
       @JsonProperty("labels") Optional<Map<String, String>> labels,
+      @JsonProperty("taskLabels") Optional<Map<Integer, Map<String, String>>> taskLabels,
       @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
       @JsonProperty("healthcheckUri") Optional<String> healthcheckUri,
       @JsonProperty("healthcheckIntervalSeconds") Optional<Long> healthcheckIntervalSeconds,
@@ -136,6 +138,7 @@ public class SingularityDeploy {
     this.uris = uris;
     this.executorData = executorData;
     this.labels = labels;
+    this.taskLabels = taskLabels;
 
     this.healthcheckUri = healthcheckUri;
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
@@ -360,9 +363,14 @@ public class SingularityDeploy {
     return loadBalancerTemplate;
   }
 
-  @ApiModelProperty(required=false, value="Labels for tasks associated with this deploy")
+  @ApiModelProperty(required=false, value="Labels for all tasks associated with this deploy")
   public Optional<Map<String, String>> getLabels() {
     return labels;
+  }
+
+  @ApiModelProperty(required=false, value="Labels for specific tasks associated with this deploy, indexed by instance number")
+  public Optional<Map<Integer, Map<String, String>>> getTaskLabels() {
+    return taskLabels;
   }
 
   @ApiModelProperty(required=false, value="Allows skipping of health checks when deploying.")
@@ -438,6 +446,7 @@ public class SingularityDeploy {
       ", loadBalancerAdditionalRoutes=" + loadBalancerAdditionalRoutes +
       ", loadBalancerTemplate=" + loadBalancerTemplate +
       ", labels=" + labels +
+      ", taskLabels=" + taskLabels +
       ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
       ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
       ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +
