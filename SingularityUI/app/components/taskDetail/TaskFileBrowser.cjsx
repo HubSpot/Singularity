@@ -42,7 +42,7 @@ TaskFileBrowser = React.createClass
         @props.collection.map (file) =>
             FileNameComponent = if file.attributes.isDirectory or file.attributes.isTailable then Link else PlainText
             if file.attributes.isDirectory
-                url = "#{ config.appRoot}/task/#{ file.attributes.taskId }/files/#{ file.attributes.uiPath }"
+                onClick = (event) => @navigate(file.attributes.uiPath, event)
             else 
                 url = "#{ config.appRoot }/task/#{ @props.task.taskId }/tail/#{ Utils.substituteTaskId file.attributes.uiPath, @props.task.taskId}"
             size = if file.attributes.isDirectory then '' else Utils.humanizeFileSize file.attributes.size
@@ -57,6 +57,7 @@ TaskFileBrowser = React.createClass
                                 iconClass = {if file.attributes.isDirectory then 'folder-open' else 'file'}
                             /> {file.attributes.name}</span>
                             url: url
+                            onClickFn: onClick
                         }
                     },
                     {
@@ -118,24 +119,15 @@ TaskFileBrowser = React.createClass
     navigate: (path, event) ->
         event.preventDefault()
 
-        $table = $ 'table'
-        # Get table height for later
-        if $table.length
-            tableHeight = $table.height()
-
         @props.collection.path = "#{ path }"
 
         app.router.navigate "#task/#{ @props.collection.taskId }/files/#{ @props.collection.path }"
 
         @props.collection.fetch
             reset: true
-            done: @forceUpdate()
+            done: @forceUpdate
 
-        @setState {scrollWhenReady: true}
-
-        $loaderContainer = @$ '.page-loader-container'
-        if tableHeight?
-            $loaderContainer.css 'height', "#{ tableHeight }px"
+        @clearTableSort()
 
     renderBreadcrumbs: ->
         breadcrumbs = []
@@ -153,6 +145,9 @@ TaskFileBrowser = React.createClass
             tableRows = {@tableData()}
             emptyTableMessage = {@emptyTableMessage()}
             dataCollection = 'taskFiles'
+            ref = {(table) =>
+                if table
+                    @clearTableSort = table.clearSort}
         />
 
     renderBreadcrumbsAndTable: ->
