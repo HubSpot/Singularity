@@ -234,17 +234,17 @@ class Utils
         else
             fuzzyObject.score
 
-    @getInstanceNumberFromTaskId: (taskId) ->
+    @getTaskDataFromTaskId: (taskId) ->
         splits = taskId.split('-')
-        splits[splits.length - 3]
-
-    @getDeployIdFromTaskId: (taskId) ->
-        splits = taskId.split('-')
-        splits[splits.length - 5]
-
-    @getHostFromTaskId: (taskId) ->
-        splits = taskId.split('-')
-        splits[splits.length - 2]
+        {
+            id: taskId
+            rackId: splits[splits.length - 1]
+            host: splits[splits.length - 2]
+            instanceNo: splits[splits.length - 3]
+            startedAt: splits[splits.length - 4]
+            deployId: splits[splits.length - 5]
+            requestId: splits[0..splits.length - 6].join '-'
+        }
 
     # e.g. `myModel.fetch().error Utils.ignore404`
     @ignore404: (response) -> app.caughtError() if response.status is 404

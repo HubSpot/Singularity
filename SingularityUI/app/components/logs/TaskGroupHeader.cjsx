@@ -3,7 +3,7 @@ TaskStatusIndicator = require './TaskStatusIndicator'
 OverlayTrigger = require 'react-bootstrap/lib/OverlayTrigger'
 ToolTip = require 'react-bootstrap/lib/Tooltip'
 
-{ getInstanceNumberFromTaskId, getDeployIdFromTaskId, getHostFromTaskId } = require '../../utils'
+{ getTaskDataFromTaskId } = require '../../utils'
 
 { connect } = require 'react-redux'
 
@@ -17,17 +17,18 @@ class TaskGroupHeader extends React.Component
   toggleLegend: ->
     # TODO
 
-  getInstanceNoToolTip: (task) ->
-    <ToolTip id={task.taskId}>Deploy ID: {getDeployIdFromTaskId task.taskId}<br />Host: {getHostFromTaskId task.taskId}</ToolTip>
+  getInstanceNoToolTip: (taskData) ->
+    <ToolTip id={taskData.id}>Deploy ID: {taskData.deployId}<br />Host: {taskData.host}</ToolTip>
 
   renderInstanceInfo: ->
     if @props.tasks.length > 1
-      <span className="instance-link">Viewing Instances {@props.tasks.map(({taskId}) -> getInstanceNumberFromTaskId(taskId)).join(', ')}</span>
+      <span className="instance-link">Viewing Instances {@props.tasks.map(({taskId}) -> getTaskDataFromTaskId(taskId).instanceNo).join(', ')}</span>
     else if @props.tasks.length > 0
+      taskData = getTaskDataFromTaskId @props.tasks[0].taskId
       <span>
         <div className="width-constrained">
-          <OverlayTrigger placement='bottom' overlay={@getInstanceNoToolTip @props.tasks[0]}>
-            <a className="instance-link" href={"#{config.appRoot}/task/#{@props.tasks[0].taskId}"}>Instance {getInstanceNumberFromTaskId(@props.tasks[0].taskId)}</a>
+          <OverlayTrigger placement='bottom' overlay={@getInstanceNoToolTip taskData}>
+            <a className="instance-link" href={"#{config.appRoot}/task/#{@props.tasks[0].taskId}"}>Instance {taskData.instanceNo}</a>
           </OverlayTrigger>
         </div>
         <TaskStatusIndicator status={@props.tasks[0].lastTaskStatus} />
