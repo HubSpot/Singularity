@@ -82,7 +82,7 @@ class TasksView extends View
             tasks = @fuzzySearch(@searchFilter, tasks)
 
         # Only show tasks of requests that match the clicky filters
-        if @requestsSubFilter isnt 'all'
+        if @requestsSubFilter isnt 'all' and @state is 'active'
             tasks = _.filter tasks, (task) =>
                 filter = false
 
@@ -133,6 +133,7 @@ class TasksView extends View
             requestsSubFilter: @requestsSubFilter
             haveTasks: @collection.length and @collection.synced
             showDiskSpace: config.showTaskDiskResource
+            hideRequestTypeFilter: @state isnt 'active'
 
         partials =
             partials:
