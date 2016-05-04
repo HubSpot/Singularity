@@ -213,6 +213,7 @@ class RequestsView extends View
             requests:          requests
             rowsOnly:          true
             requestsSubFilter: @subFilter
+            hideNewRequestButton: config.hideNewRequestButton
 
         $table = @$ ".table-staged table"
         $tableBody = $table.find "tbody"
