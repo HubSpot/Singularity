@@ -1,6 +1,6 @@
 { combineReducers } = require 'redux'
 
-{ getInstanceNumberFromTaskId } = require '../utils'
+{ getTaskDataFromTaskId } = require '../utils'
 
 moment = require 'moment'
 
@@ -60,7 +60,7 @@ ACTIONS = {
 
   # Add a group of tasks to the logger
   LOG_ADD_TASK_GROUP: (state, {taskIds, search}) ->
-    return _.sortBy(state.concat(buildTaskGroup(taskIds, search)), (taskGroup) -> getInstanceNumberFromTaskId(taskGroup.taskIds[0]))
+    return _.sortBy(state.concat(buildTaskGroup(taskIds, search)), (taskGroup) -> getTaskDataFromTaskId(taskGroup.taskIds[0]).instanceNo)
 
   # Remove a task from the logger
   LOG_REMOVE_TASK: (state, {taskId}) ->
