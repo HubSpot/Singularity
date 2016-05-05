@@ -15,9 +15,12 @@ class TaskResourceUsage extends Model
         cpus_used = (currentTime - previousTime) / timestampDiff
         cpuUsageExceeding = (cpus_used / @get('cpusLimit')) > 1.10
         
+        @set 'cpuUsageExceeding', cpuUsageExceeding
         if cpuUsageExceeding
-            @set 'cpuUsageExceeding', cpuUsageExceeding
             @set 'cpuUsageClassStatus', 'danger'
+        else
+            @set 'cpuUsageClassStatus', 'success'
+
         @set 'cpuUsage', cpus_used
 
 module.exports = TaskResourceUsage
