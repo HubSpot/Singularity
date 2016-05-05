@@ -1,88 +1,96 @@
-{{#unless rowsOnly}}
-    {{#if haveTasks}}
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th data-sort-attribute="taskId.id">
-                        Name
-                    </th>
-                    <th class="hidden-xs" data-sort-attribute="taskId.startedAt">
-                        Started
-                    </th>
-                    <th class="hidden-xs" data-sort-attribute="host">
-                        Host
-                    </th>
-                    <th class="hidden-xs" data-sort-attribute="taskId.rackId">
-                        Rack
-                    </th>
-                    <th class="visible-lg" data-sort-attribute="cpus">
-                        CPUs
-                    </th>
-                    <th class="visible-lg" data-sort-attribute="memoryMb">
-                        Memory
-                    </th>
-                    {{#if showDiskSpace}}
+{{#if decomissioning_tasks}}
+    {{#unless rowsOnly}}
+        {{#if haveTasks}}
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th data-sort-attribute="taskId.id">
+                            Task ID
+                        </th>
+                        <th class="hidden-xs" data-sort-attribute="taskId.startedAt">
+                            Started At
+                        </th>
+                        <th class="hidden-xs" data-sort-attribute="host">
+                            Host
+                        </th>
+                        <th class="hidden-xs" data-sort-attribute="taskId.rackId">
+                            Rack
+                        </th>
+                        <th class="visible-lg" data-sort-attribute="cpus">
+                            CPUs
+                        </th>
+                        <th class="visible-lg" data-sort-attribute="memoryMb">
+                            Memory
+                        </th>
+                        {{#if showDiskSpace}}
                         <th class="visible-lg" data-sort-attribute="diskMb">
                             Disk
                         </th>
                     {{/if}}
-                    <th class="hidden-xs">
-                        {{! Actions column }}
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-    {{/if}}
-{{/unless}}
-            {{#each tasks}}
-                {{#ifInSubFilter host ../decommissioning_hosts}}
-                    <tr data-task-id="{{ taskId.id }}" data-task-host="{{ host }}">
-                        <td class='keep-in-check'>
-                            <a title="{{ taskId.id }}" href="{{appRoot}}/task/{{ taskId.id }}">
-                                {{ taskId.id }}
-                            </a>
-                        </td>
-                        <td class="hidden-xs">
-                            {{timestampFromNow taskId.startedAt}}
-                        </td>
-                        <td class="hidden-xs">
-                            {{ host }}
-                            <span class='label label-warning'>DECOMMISSIONING</span>
-                        </td>
-                        <td class="visible-lg">
-                            {{ rackId }}
-                        </td>
-                        <td class="visible-lg">
-                            {{ cpus }}
-                        </td>
-                        <td class="hidden-xs">
-                            {{ memoryMb }} MB
-                        </td>
-                        {{#if showDiskSpace}}
-                            <td class="visible-lg" data-value="{{ diskMb }}">
-                                {{#if diskMb}} {{ diskMb }} MB {{/if}}
-                            </td>
-                        {{/if}}
-                        <td class="actions-column hidden-xs">
-                            <a data-task-id="{{ taskId.id }}" data-action="remove" title="Kill task">
-                                <span class="glyphicon glyphicon-remove"></span>
-                            </a>
-                            <a data-task-id="{{ taskId.id }}" data-action="viewJSON" title="JSON">
-                                { }
-                            </a>
-                        </td>
+                        <th class="hidden-xs">
+                            {{! Actions column }}
+                        </th>
                     </tr>
-                {{/ifInSubFilter}}
-            {{/each}}
-{{#unless rowsOnly}}
-    {{#if haveTasks}}
-            </tbody>
-        </table>
-    {{else}}
-        {{#if collectionSynced}}
-            <div class="empty-table-message"><p>No active tasks</p></div>
-        {{else}}
-            <div class="page-loader centered cushy"></div>
+                </thead>
+                <tbody>
         {{/if}}
-    {{/if}}
-{{/unless}}
+    {{/unless}}
+                {{#each tasks}}
+                    {{#ifInSubFilter taskId.id ../decomissioning_tasks}}
+                        <tr data-task-id="{{ taskId.id }}" data-task-host="{{ host }}">
+                            <td class='keep-in-check'>
+                                <a title="{{ taskId.id }}" href="{{appRoot}}/task/{{ taskId.id }}">
+                                    {{ taskId.id }}
+                                </a>
+                            </td>
+                            <td class="hidden-xs">
+                                {{timestampFromNow taskId.startedAt}}
+                            </td>
+                            <td class="hidden-xs">
+                                <a href='{{appRoot}}/tasks/decommissioning/all/{{host}}'>
+                                    {{ host }}
+                                </a>
+                                <span class='label label-warning'>DECOMMISSIONING</span>
+                            </td>
+                            <td class="visible-lg">
+                                <a href='{{appRoot}}/tasks/decommissioning/all/{{rackId}}'>
+                                    {{ rackId }}
+                                </a>
+                            </td>
+                            <td class="visible-lg">
+                                {{ cpus }}
+                            </td>
+                            <td class="hidden-xs">
+                                {{ memoryMb }} MB
+                            </td>
+                            {{#if showDiskSpace}}
+                                <td class="visible-lg" data-value="{{ diskMb }}">
+                                    {{#if diskMb}} {{ diskMb }} MB {{/if}}
+                                </td>
+                            {{/if}}
+                            <td class="actions-column hidden-xs">
+                                <a data-task-id="{{ taskId.id }}" data-action="remove" title="Kill task">
+                                    <span class="glyphicon glyphicon-remove"></span>
+                                </a>
+                                <a data-task-id="{{ taskId.id }}" data-action="viewJSON" title="JSON">
+                                    { }
+                                </a>
+                            </td>
+                        </tr>
+                    {{/ifInSubFilter}}
+                {{/each}}
+    {{#unless rowsOnly}}
+        {{#if haveTasks}}
+                </tbody>
+            </table>
+        {{else}}
+            {{#if collectionSynced}}
+                <div class="empty-table-message"><p>No decommissioning tasks</p></div>
+            {{else}}
+                <div class="page-loader centered cushy"></div>
+            {{/if}}
+        {{/if}}
+    {{/unless}}
+{{else}}
+    <div class="empty-table-message"><p>No decommissioning tasks</p></div>
+{{/if}}
