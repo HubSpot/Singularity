@@ -148,8 +148,8 @@ taskGroupFetchNext = (taskGroupId) ->
       return Promise.resolve()
 
     dispatch({taskGroupId, type: 'LOG_REQUEST_START'})
-    promises = tasks.map ({taskId, maxOffset, path, initialDataLoaded}) ->
-      if initialDataLoaded
+    promises = tasks.map ({taskId, exists, maxOffset, path, initialDataLoaded}) ->
+      if initialDataLoaded and exists isnt false
         xhr = fetchData(taskId, path, maxOffset, logRequestLength)
         xhr.done ({data, offset, nextOffset}) ->
           if data.length > 0
@@ -176,8 +176,8 @@ taskGroupFetchPrevious = (taskGroupId) ->
       return Promise.resolve()
 
     dispatch({taskGroupId, type: 'LOG_REQUEST_START'})
-    promises = tasks.map ({taskId, minOffset, path, initialDataLoaded}) ->
-      if minOffset > 0 and initialDataLoaded
+    promises = tasks.map ({taskId, exists, minOffset, path, initialDataLoaded}) ->
+      if minOffset > 0 and initialDataLoaded and exists isnt false
         xhr = fetchData(taskId, path, Math.max(minOffset - logRequestLength, 0), Math.min(logRequestLength, minOffset))
         xhr.done ({data, offset, nextOffset}) ->
           if data.length > 0
