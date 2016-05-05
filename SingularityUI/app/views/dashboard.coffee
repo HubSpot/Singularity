@@ -42,6 +42,7 @@ class DashboardView extends View
                 haveRequests: pausedRequests.length > 0
                 requestsSubFilter: ''
                 onDashboardPage: true
+                hideNewRequestButton: config.hideNewRequestButton
                 collectionSynced: @collection.synced
 
         @$el.html @templateBase context, partials
