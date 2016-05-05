@@ -118,13 +118,22 @@ class SingularityMesosTaskBuilder {
 
     bldr.setName(taskRequest.getRequest().getId());
 
+    final Builder labelsBuilder = Labels.newBuilder();
+    // apply request-specific labels, if any
     if (taskRequest.getDeploy().getLabels().isPresent() && !taskRequest.getDeploy().getLabels().get().isEmpty()) {
-      Builder labelsBuilder = Labels.newBuilder();
       for (Map.Entry<String, String> label : taskRequest.getDeploy().getLabels().get().entrySet()) {
         labelsBuilder.addLabels(Label.newBuilder().setKey(label.getKey()).setValue(label.getValue()).build());
       }
-      bldr.setLabels(labelsBuilder);
     }
+
+    // apply task-specific labels, if any
+    final int taskInstanceNo = taskRequest.getPendingTask().getPendingTaskId().getInstanceNo();
+    if (taskRequest.getDeploy().getTaskLabels().isPresent() && taskRequest.getDeploy().getTaskLabels().get().containsKey(taskInstanceNo) && !taskRequest.getDeploy().getTaskLabels().get().get(taskInstanceNo).isEmpty()) {
+      for (Map.Entry<String, String> label : taskRequest.getDeploy().getTaskLabels().get().get(taskInstanceNo).entrySet()) {
+        labelsBuilder.addLabels(Label.newBuilder().setKey(label.getKey()).setValue(label.getValue()).build());
+      }
+    }
+    bldr.setLabels(labelsBuilder);
 
     TaskInfo task = bldr.build();
 
