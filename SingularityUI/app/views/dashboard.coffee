@@ -9,6 +9,7 @@ class DashboardView extends View
     events: ->
         _.extend super,
             'click [data-action="unstar"]': 'unstar'
+            'click [data-action="change-user"]': 'changeUser'
             'click th[data-sort-attribute]': 'sortTable'
             'click [data-action="viewJSON"]': 'viewJson'
             'click [data-action="remove"]': 'removeRequest'
@@ -40,7 +41,7 @@ class DashboardView extends View
                 requests: pausedRequests
                 haveRequests: pausedRequests.length > 0
                 requestsSubFilter: ''
-                onDashboardPage: true
+                hideNewRequestButton: config.hideNewRequestButton
                 collectionSynced: @collection.synced
 
         @$el.html @templateBase context, partials
@@ -118,6 +119,9 @@ class DashboardView extends View
 
         if @$('tbody tr').length is 0
             @render()
+
+    changeUser: =>
+        app.deployUserPrompt()
 
     getRequest: (id) =>
         maybeRequest = @collection.models.filter (model) ->
