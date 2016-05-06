@@ -33,6 +33,8 @@ class TasksView extends View
     # Cache for the task array we're currently rendering
     currentTasks: []
 
+    allRequestTypes: ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE']
+
     events: =>
         _.extend super,
             'click [data-action="viewJSON"]': 'viewJson'
@@ -55,6 +57,7 @@ class TasksView extends View
         @listenTo @taskKillRecords, 'change', @render
 
         @fuzzySearch = _.memoize(@fuzzySearch)
+        @showDiskSpace = window.config.showTaskDiskSpace
 
     fuzzySearch: (filter, tasks) =>
         host =
@@ -63,17 +66,24 @@ class TasksView extends View
         id =
             extract: (o) ->
                 "#{o.id}"
+        rack =
+            extract: (o) ->
+                "#{o.rackId}"
         unless Utils.isGlobFilter filter
             res1 = fuzzy.filter(filter, tasks, host)
             res2 = fuzzy.filter(filter, tasks, id)
+            res3 = fuzzy.filter(filter, tasks, rack)
         else
             res1 = tasks.filter (task) =>
                 micromatch.any host.extract(task), filter
             res2 = tasks.filter (task) =>
                 micromatch.any id.extract(task), filter
+            res3 = tasks.filter (task) =>
+                micromatch.any rack.extract(task), filter
             res1 = fuzzy.filter('', res1, host) #Hack to make the object a fuzzy
             res2 = fuzzy.filter('', res2, id) #Hack to make the object a fuzzy
-        _.uniq(_.pluck(_.sortBy(_.union(res1, res2), (t) => Utils.fuzzyAdjustScore(filter, t)), 'original').reverse())
+            res3 = fuzzy.filter('', res3, id) #Hack to make the object a fuzzy
+        _.uniq(_.pluck(_.sortBy(_.union(res3, _.union(res1, res2)), (t) => Utils.fuzzyAdjustScore(filter, t)), 'original').reverse())
 
     # Returns the array of tasks that need to be rendered
     filterCollection: =>
@@ -84,7 +94,7 @@ class TasksView extends View
             tasks = @fuzzySearch(@searchFilter, tasks)
 
         # Only show tasks of requests that match the clicky filters
-        if @requestsSubFilter isnt 'all'
+        if @requestsSubFilter isnt 'all' and @state is 'active'
             tasks = _.filter tasks, (task) =>
                 filter = false
 
@@ -134,6 +144,8 @@ class TasksView extends View
             collectionSynced: @collection.synced
             requestsSubFilter: @requestsSubFilter
             haveTasks: @collection.length and @collection.synced
+            showDiskSpace: @showDiskSpace
+            hideRequestTypeFilter: @state isnt 'active'
 
         partials =
             partials:
@@ -149,6 +161,7 @@ class TasksView extends View
         # Reset search box caret
         $searchInput = $('.big-search-box')
         $searchInput[0].setSelectionRange(@prevSelectionStart, @prevSelectionEnd)
+        @$('.has-tooltip').tooltip()
 
     # Prepares the staged rendering and triggers the first one
     renderTable: =>
@@ -187,6 +200,8 @@ class TasksView extends View
             rowsOnly: true
             decomissioning_tasks: decomTasks
             config: config
+            showDiskSpace: @showDiskSpace
+
 
         $table = @$ ".table-staged table"
         $tableBody = $table.find "tbody"
@@ -243,7 +258,7 @@ class TasksView extends View
                 @renderTableChunk()
 
     updateUrl: =>
-        app.router.navigate "/tasks/#{ @state }/#{ @requestsSubFilter }/#{ @searchFilter }", { replace: true }
+        app.router.navigate "/tasks/#{ @state }/#{ if @requestsSubFilter then @requestsSubFilter else 'all' }/#{ @searchFilter }", { replace: true }
 
     viewJson: (e) ->
         task =
@@ -315,22 +330,23 @@ class TasksView extends View
 
         filter = $(event.currentTarget).data 'filter'
 
-        if not event.metaKey
-            # Select individual filters
+        currentFilter = if @requestsSubFilter then @requestsSubFilter.split '-' else []
+
+        # Select multiple filters
+        if @requestsSubFilter is 'all' or _.difference(@allRequestTypes, currentFilter).length is 0
             @requestsSubFilter = filter
         else
-            # Select multiple filters
-            currentFilter = if @requestsSubFilter is 'all' then 'SERVICE-WORKER-SCHEDULED-ON_DEMAND-RUN_ONCE' else  @requestsSubFilter
+            currentlyInFilter = _.contains currentFilter, filter
 
-            currentFilter = currentFilter.split '-'
-            needToAdd = not _.contains currentFilter, filter
-
-            if needToAdd
-                currentFilter.push filter
-            else
+            if currentlyInFilter
                 currentFilter = _.without currentFilter, filter
+            else
+                currentFilter.push filter
 
-            @requestsSubFilter = currentFilter.join '-'
+            if currentFilter.length isnt 0 and _.difference(@allRequestTypes, currentFilter).length isnt 0
+                @requestsSubFilter = currentFilter.join '-'
+            else
+                @requestsSubFilter = 'all'
 
         @updateUrl()
         @render()

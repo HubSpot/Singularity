@@ -10,11 +10,13 @@
                         Type
                     </th>
                     <th class="hidden-xs" data-sort-attribute="requestDeployState.activeDeploy.timestamp">
-                        Requested
+                        Time of Last Deploy
                     </th>
-                    <th class="hidden-sm hidden-xs" data-sort-attribute="requestDeployState.activeDeploy.user">
-                        Deploy user
-                    </th>
+                    {{#unless onDashboardPage}}
+                        <th class="hidden-sm hidden-xs" data-sort-attribute="requestDeployState.activeDeploy.user">
+                            Deploy user
+                        </th>
+                    {{/unless}}
 
                     {{#ifInSubFilter 'SCHEDULED' requestsSubFilter}}
                         <th class="visible-lg visible-xl schedule-header" data-sort-attribute="request.schedule">
@@ -45,9 +47,11 @@
                         <td class="hidden-xs" data-value="{{requestDeployState.activeDeploy.timestamp}}">
                             {{timestampFromNow requestDeployState.activeDeploy.timestamp}}
                         </td>
-                        <td class="hidden-sm hidden-xs">
-                            {{usernameFromEmail requestDeployState.activeDeploy.user}}
-                        </td>
+                        {{#unless ../onDashboardPage}}
+                            <td class="hidden-sm hidden-xs">
+                                {{usernameFromEmail requestDeployState.activeDeploy.user}}
+                            </td>
+                        {{/unless}}
 
                         {{#ifInSubFilter 'SCHEDULED' ../requestsSubFilter}}
                             <td class="visible-lg visible-xl">
@@ -73,7 +77,7 @@
                             <a data-request-id="{{ request.id }}" data-action="viewJSON" title="JSON">
                                 { }
                             </a>
-                            {{#unless config.hideNewRequestButton}}
+                            {{#unless ../hideNewRequestButton}}
                                 <a href="{{appRoot}}/requests/edit/{{request.id}}" title="Edit">
                                     <span class="glyphicon glyphicon-edit"></span>
                                 </a>
