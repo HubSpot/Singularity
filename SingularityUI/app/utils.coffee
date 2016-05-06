@@ -197,6 +197,17 @@ class Utils
         text = text[0].toUpperCase() + text.substr 1
         return text
 
+    @humanizeFileSize: (bytes) ->
+        k = 1024
+        sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+
+        return '0 B' if bytes is 0
+        i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length-1)
+        return +(bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i]
+
+    @substituteTaskId: (value, taskId) ->
+        value.replace('$TASK_ID', taskId)
+
     @getLabelClassFromTaskState: (state) ->
         switch state
             when 'TASK_STARTING', 'TASK_CLEANING'
