@@ -56,6 +56,8 @@ public class IndexView extends View {
 
   private final String timestampWithSecondsFormat;
 
+  private final String redirectOnUnauthorizedUrl;
+
   public IndexView(String singularityUriBase, String appRoot, SingularityConfiguration configuration, ObjectMapper mapper) {
     super("index.mustache");
 
@@ -80,7 +82,7 @@ public class IndexView extends View {
     this.hideNewRequestButton = configuration.getUiConfiguration().isHideNewRequestButton();
     this.loadBalancingEnabled = !Strings.isNullOrEmpty(configuration.getLoadBalancerUri());
 
-    this.navColor = configuration.getUiConfiguration().getNavColor();
+    this.navColor = configuration.getUiConfiguration().getNavColor().or("");
 
     this.defaultBounceExpirationMinutes = configuration.getDefaultBounceExpirationMinutes();
     this.defaultHealthcheckIntervalSeconds = configuration.getHealthcheckIntervalSeconds();
@@ -95,9 +97,11 @@ public class IndexView extends View {
 
     this.commonHostnameSuffixToOmit = configuration.getCommonHostnameSuffixToOmit().or("");
 
-    this.taskS3LogOmitPrefix = configuration.getUiConfiguration().getTaskS3LogOmitPrefix();
+    this.taskS3LogOmitPrefix = configuration.getUiConfiguration().getTaskS3LogOmitPrefix().or("");
 
     this.warnIfScheduledJobIsRunningPastNextRunPct = configuration.getWarnIfScheduledJobIsRunningPastNextRunPct();
+
+    this.redirectOnUnauthorizedUrl = configuration.getUiConfiguration().getRedirectOnUnauthorizedUrl().or("");
 
     ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
     try {
@@ -248,6 +252,7 @@ public class IndexView extends View {
             ", showTaskDiskResource=" + showTaskDiskResource +
             ", timestampFormat='" + timestampFormat + '\'' +
             ", timestampWithSecondsFormat='" + timestampWithSecondsFormat + '\'' +
+            ", redirectOnUnauthorizedUrl='" + redirectOnUnauthorizedUrl + '\'' +
             ']';
   }
 }

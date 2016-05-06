@@ -12,6 +12,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
+import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.TaskStatus.Reason;
 import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -432,7 +434,7 @@ public class SingularityScheduler {
   }
 
   private Optional<PendingType> handleCompletedTaskWithStatistics(Optional<SingularityTask> task, SingularityTaskId taskId, long timestamp, ExtendedTaskState state,
-    SingularityDeployStatistics deployStatistics, SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache) {
+    SingularityDeployStatistics deployStatistics, SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache, Protos.TaskStatus status) {
     final Optional<SingularityRequestWithState> maybeRequestWithState = requestManager.getRequest(taskId.getRequestId());
     final Optional<SingularityPendingDeploy> maybePendingDeploy = deployManager.getPendingDeploy(taskId.getRequestId());
 
@@ -452,18 +454,22 @@ public class SingularityScheduler {
     }
 
     if (taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && requestState != RequestState.SYSTEM_COOLDOWN) {
-      mailer.sendTaskCompletedMail(task, taskId, request, state);
+      mailer.queueTaskCompletedMail(task, taskId, request, state);
     } else if (requestState == RequestState.SYSTEM_COOLDOWN) {
       LOG.debug("Not sending a task completed email because task {} is in SYSTEM_COOLDOWN", taskId);
     } else {
       LOG.debug("Not sending a task completed email for task {} because Singularity already processed this update", taskId);
     }
 
-    if (!state.isSuccess() && taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && cooldown.shouldEnterCooldown(request, taskId, requestState, deployStatistics, timestamp)) {
-      LOG.info("Request {} is entering cooldown due to task {}", request.getId(), taskId);
-      requestState = RequestState.SYSTEM_COOLDOWN;
-      requestManager.cooldown(request, System.currentTimeMillis());
-      mailer.sendRequestInCooldownMail(request);
+    if (!status.hasReason() || !status.getReason().equals(Reason.REASON_INVALID_OFFERS)) {
+      if (!state.isSuccess() && taskHistoryUpdateCreateResult == SingularityCreateResult.CREATED && cooldown.shouldEnterCooldown(request, taskId, requestState, deployStatistics, timestamp)) {
+        LOG.info("Request {} is entering cooldown due to task {}", request.getId(), taskId);
+        requestState = RequestState.SYSTEM_COOLDOWN;
+        requestManager.cooldown(request, System.currentTimeMillis());
+        mailer.sendRequestInCooldownMail(request);
+      }
+    } else {
+      LOG.debug("Not triggering cooldown due to TASK_LOST from invalid offers for request {}", request.getId());
     }
 
     PendingType pendingType = PendingType.TASK_DONE;
@@ -502,7 +508,7 @@ public class SingularityScheduler {
 
   @Timed
   public void handleCompletedTask(Optional<SingularityTask> task, SingularityTaskId taskId, boolean wasActive, long timestamp, ExtendedTaskState state,
-    SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache) {
+    SingularityCreateResult taskHistoryUpdateCreateResult, SingularitySchedulerStateCache stateCache, Protos.TaskStatus status) {
     final SingularityDeployStatistics deployStatistics = getDeployStatistics(taskId.getRequestId(), taskId.getDeployId());
 
     if (wasActive) {
@@ -514,7 +520,7 @@ public class SingularityScheduler {
       taskManager.createLBCleanupTask(taskId);
     }
 
-    final Optional<PendingType> scheduleResult = handleCompletedTaskWithStatistics(task, taskId, timestamp, state, deployStatistics, taskHistoryUpdateCreateResult, stateCache);
+    final Optional<PendingType> scheduleResult = handleCompletedTaskWithStatistics(task, taskId, timestamp, state, deployStatistics, taskHistoryUpdateCreateResult, stateCache, status);
 
     if (taskHistoryUpdateCreateResult == SingularityCreateResult.EXISTED) {
       return;
@@ -594,8 +600,12 @@ public class SingularityScheduler {
 
   private int getNumMissingInstances(List<SingularityTaskId> matchingTaskIds, SingularityRequest request, SingularityPendingRequest pendingRequest,
     Optional<SingularityPendingDeploy> maybePendingDeploy) {
-    if (request.isOneOff() && pendingRequest.getPendingType() == PendingType.ONEOFF) {
-      return 1;
+    if (request.isOneOff()) {
+      if (pendingRequest.getPendingType() == PendingType.ONEOFF) {
+        return 1;
+      } else {
+        return 0;
+      }
     }
 
     return numInstancesExpected(request, pendingRequest, maybePendingDeploy) - matchingTaskIds.size();

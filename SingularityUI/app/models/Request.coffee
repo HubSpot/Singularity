@@ -351,7 +351,7 @@ class Request extends Model
                 message = $('.vex #scale-message').val()
                 duration = $('.vex #scale-expiration').val()
                 if !duration or (duration and @_validateDuration(duration, @promptScale, callback))
-                    if @attributes.request.rackSensitive and not @attributes.request.hideEvenNumberAcrossRacksHint
+                    if @attributes.request.requestType is 'SERVICE' and @attributes.request.rackSensitive and not @attributes.request.hideEvenNumberAcrossRacksHint
                         if @racks
                             @checkScaleEvenNumberRacks data, bounce, incremental, message, duration, callback
                         else
@@ -520,7 +520,7 @@ class Request extends Model
                         @run( @data.commandLineInput, message, @data.runId ).done doneFn
                         return true
 
-                afterOpen: =>
+                afterOpen: (vexContent) =>
                     taskRunAfterStart = localStorage.getItem('taskRunAfterStart')
                     $('#filename').val localStorage.getItem('taskRunRedirectFilename') or Utils.fileName(config.runningTaskLogPath)
                     $('#autoTail').prop 'checked', (taskRunAfterStart is 'autoTail')
@@ -532,6 +532,10 @@ class Request extends Model
                     $('#browse-to-sandbox').on('click', () => $('#filename').prop('disabled', true))
                     $('#autoTail').on('click', () => $('#filename').prop('disabled', false))
                     $('#filename').prop 'disabled', false if taskRunAfterStart is 'autoTail'
+                    vexContent.bind('vexOpen', () =>
+                      vexElement = document.getElementsByClassName('vex')[0]
+                      vexElement.scrollTop = vexElement.scrollHeight
+                    )
 
                 callback: (data) =>
                     if data.commandLineInput
