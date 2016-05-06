@@ -5,6 +5,9 @@ FormField = require '../common/formItems/FormField'
 DropDown = require '../common/formItems/DropDown'
 DateEntry = require '../common/formItems/DateEntry'
 LinkedFormItem = require '../common/formItems/LinkedFormItem'
+Glyphicon = require '../common/atomicDisplayItems/Glyphicon'
+OverlayTrigger = require 'react-bootstrap/lib/OverlayTrigger'
+ToolTip = require 'react-bootstrap/lib/Tooltip'
 Enums = require './Enums'
 
 TaskSearchForm = React.createClass
@@ -39,10 +42,21 @@ TaskSearchForm = React.createClass
         </div>
 
     getLastTaskStatusTitle: ->
-        <div>
+        lastTaskStatusTitle = <div className={if @props.lastTaskStatus is 'TASK_ERROR' then 'color-error' else ''}>
+            {if @props.lastTaskStatus is 'TASK_ERROR'
+                <span><Glyphicon iconClass='info-sign' /> </span>}
             Last Task Status
             {<span className='badge current-query-param'>{@props.lastTaskStatusCurrentSearch}</span> if @props.lastTaskStatusCurrentSearch}
         </div>
+        if @props.lastTaskStatus is 'TASK_ERROR'
+            <OverlayTrigger
+                placement = 'top'
+                overlay = {<ToolTip id='lastTaskStatusTitleTip'>Error is an extremely rare task state. You may have meant to search for 'Failed'</ToolTip>}
+            >
+                {lastTaskStatusTitle}
+            </OverlayTrigger>
+        else
+            lastTaskStatusTitle
 
     render: ->
         render: ->
