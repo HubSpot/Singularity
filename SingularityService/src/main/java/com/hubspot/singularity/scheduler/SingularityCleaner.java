@@ -325,7 +325,7 @@ public class SingularityCleaner {
       if (killActiveTasks) {
         for (SingularityTaskId matchingTaskId : matchingActiveTaskIds) {
           LOG.debug("Killing task {} due to {}", matchingTaskId, requestCleanup);
-          driverManager.killAndRecord(matchingTaskId, requestCleanup.getCleanupType());
+          driverManager.killAndRecord(matchingTaskId, requestCleanup.getCleanupType(), Optional.<String>absent());
           numTasksKilled++;
         }
       } else {
@@ -432,7 +432,7 @@ public class SingularityCleaner {
             killedTaskIdRecord, JavaUtils.durationFromMillis(duration), JavaUtils.durationFromMillis(configuration.getAskDriverToKillTasksAgainAfterMillis()));
 
         driverManager.killAndRecord(killedTaskIdRecord.getTaskId(), killedTaskIdRecord.getRequestCleanupType(),
-            killedTaskIdRecord.getTaskCleanupType(), Optional.of(killedTaskIdRecord.getOriginalTimestamp()), Optional.of(killedTaskIdRecord.getRetries()));
+            killedTaskIdRecord.getTaskCleanupType(), Optional.of(killedTaskIdRecord.getOriginalTimestamp()), Optional.of(killedTaskIdRecord.getRetries()), Optional.<String>absent());
 
         rekilled++;
       } else {
@@ -484,7 +484,7 @@ public class SingularityCleaner {
       } else if (decommissionedSlaveReactivated(activeSlaves, cleanupTask)) {
         removeDecommission(cleanupTask);
       } else if (shouldKillTask(cleanupTask, activeTaskIds, cleaningTasks, incrementalBounceCleaningTasks) && checkLBStateAndShouldKillTask(cleanupTask)) {
-        driverManager.killAndRecord(cleanupTask.getTaskId(), cleanupTask.getCleanupType());
+        driverManager.killAndRecord(cleanupTask.getTaskId(), cleanupTask.getCleanupType(), cleanupTask.getUser());
 
         taskManager.deleteCleanupTask(cleanupTask.getTaskId().getId());
 

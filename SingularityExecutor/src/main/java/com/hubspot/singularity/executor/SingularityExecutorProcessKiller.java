@@ -14,6 +14,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskProcessCallable;
 
@@ -49,6 +50,10 @@ public class SingularityExecutorProcessKiller {
     LOG.info("Signaling -15 to process {} ({})", processCallable.getTask().getTaskId(), processCallable.getCurrentPid());
     processCallable.markKilled();  // makes it so that the task can not start
     processCallable.signalTermToProcessIfActive();
+  }
+
+  public boolean isKillInProgress(String taskId) {
+    return destroyFutures.get(taskId) != null;
   }
 
   public void cancelDestroyFuture(String taskId) {
