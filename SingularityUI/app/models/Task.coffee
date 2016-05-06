@@ -26,6 +26,7 @@ class Task extends Model
         if task.mesosTask?
             task.cpus     = _.find(task.mesosTask.resources, (resource) -> resource.name is 'cpus')?.scalar?.value ? ''
             task.memoryMb = _.find(task.mesosTask.resources, (resource) -> resource.name is 'mem')?.scalar?.value ? ''
+            task.diskMb   = _.find(task.mesosTask.resources, (resource) -> resource.name is 'disk')?.scalar?.value ? ''
 
         if task.taskId?
             task.id = task.taskId.id
