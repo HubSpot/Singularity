@@ -43,6 +43,7 @@ public class SingularityDeploy {
   private final Optional<ExecutorData> executorData;
   private final Optional<Map<String, String>> labels;
   private final Optional<Map<Integer, Map<String, String>>> taskLabels;
+  private final Optional<Map<Integer, Map<String, String>>> taskEnv;
 
   private final Optional<String> healthcheckUri;
   private final Optional<Long> healthcheckIntervalSeconds;
@@ -88,6 +89,7 @@ public class SingularityDeploy {
       @JsonProperty("customExecutorUser") Optional<String> customExecutorUser,
       @JsonProperty("resources") Optional<Resources> resources,
       @JsonProperty("env") Optional<Map<String, String>> env,
+      @JsonProperty("taskEnv") Optional<Map<Integer, Map<String, String>>> taskEnv,
       @JsonProperty("uris") Optional<List<String>> uris,
       @JsonProperty("metadata") Optional<Map<String, String>> metadata,
       @JsonProperty("executorData") Optional<ExecutorData> executorData,
@@ -135,6 +137,7 @@ public class SingularityDeploy {
     this.id = id;
     this.timestamp = timestamp;
     this.env = env;
+    this.taskEnv = taskEnv;
     this.uris = uris;
     this.executorData = executorData;
     this.labels = labels;
@@ -200,9 +203,11 @@ public class SingularityDeploy {
     .setVersion(version)
     .setTimestamp(timestamp)
     .setEnv(copyOfMap(env))
+    .setTaskEnv(taskEnv)
     .setUris(copyOfList(uris))
     .setExecutorData(executorData)
     .setLabels(labels)
+    .setTaskLabels(taskLabels)
     .setDeployInstanceCountPerStep(deployInstanceCountPerStep)
     .setDeployStepWaitTimeMs(deployStepWaitTimeMs)
     .setAutoAdvanceDeploySteps(autoAdvanceDeploySteps)
@@ -286,6 +291,11 @@ public class SingularityDeploy {
   @ApiModelProperty(required=false, value="Map of environment variable definitions.")
   public Optional<Map<String, String>> getEnv() {
     return env;
+  }
+
+  @ApiModelProperty(required=false, value="Map of environment variable overrides for specific task instances.")
+  public Optional<Map<Integer, Map<String, String>>> getTaskEnv() {
+    return taskEnv;
   }
 
   @ApiModelProperty(required=false, value="List of URIs to download before executing the deploy command.")
@@ -426,6 +436,7 @@ public class SingularityDeploy {
       ", command=" + command +
       ", arguments=" + arguments +
       ", env=" + env +
+      ", taskEnv=" + taskEnv +
       ", uris=" + uris +
       ", executorData=" + executorData +
       ", healthcheckUri=" + healthcheckUri +
