@@ -77,7 +77,7 @@ class Requests extends Collection
         userRequests = @getUserRequests user
 
         userRequestTotals =
-            all: userRequests.length
+            all: 0
             onDemand: 0
             worker: 0
             scheduled: 0
@@ -89,6 +89,8 @@ class Requests extends Collection
             type = request.get 'type'
 
             continue if request.get('state') isnt 'ACTIVE'
+
+            userRequestTotals.all += 1
 
             if type is 'ON_DEMAND'  then userRequestTotals.onDemand  += 1
             if type is 'SCHEDULED'  then userRequestTotals.scheduled += 1
