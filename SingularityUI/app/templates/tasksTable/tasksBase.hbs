@@ -2,19 +2,19 @@
     <div class="col-md-12">
         <ul class="nav nav-pills">
             <li {{#ifEqual tasksFilter "active"}}class="active"{{/ifEqual}}>
-                <a href="{{appRoot}}/tasks">Active</a>
+                <a href="{{appRoot}}/tasks" class='has-tooltip' title="Currently running" data-toggle='tooltip'>Active</a>
             </li>
             <li {{#ifEqual tasksFilter "scheduled"}}class="active"{{/ifEqual}}>
-                <a href="{{appRoot}}/tasks/scheduled">Scheduled</a>
+                <a href="{{appRoot}}/tasks/scheduled" class='has-tooltip' title="Will run at next scheduled interval" data-toggle='tooltip'>Scheduled</a>
             </li>
             <li {{#ifEqual tasksFilter "cleaning"}}class="active"{{/ifEqual}}>
-                <a href="{{appRoot}}/tasks/cleaning">Cleaning</a>
+                <a href="{{appRoot}}/tasks/cleaning" class='has-tooltip' title="Have been asked to shut down" data-toggle='tooltip'>Cleaning</a>
             </li>
             <li {{#ifEqual tasksFilter "lbcleanup"}}class="active"{{/ifEqual}}>
-                <a href="{{appRoot}}/tasks/lbcleanup">LB Cleaning</a>
+                <a href="{{appRoot}}/tasks/lbcleanup" class='has-tooltip' title="Being removed from the load balancer" data-toggle='tooltip'>LB Cleaning</a>
             </li>
             <li {{#ifEqual tasksFilter "decommissioning"}}class="active"{{/ifEqual}}>
-                <a href="{{appRoot}}/tasks/decommissioning">Decommissioning</a>
+                <a href="{{appRoot}}/tasks/decommissioning" class='has-tooltip' title="Being killed due to a decommissioning slave" data-toggle='tooltip'>Decommissioning</a>
             </li>
         </ul>
     </div>
