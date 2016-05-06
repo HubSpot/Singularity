@@ -1,11 +1,13 @@
 Clipboard = require 'clipboard'
 vex = require 'vex.dialog'
+micromatch = require 'micromatch'
 
 class Utils
 
     # Constants
     @TERMINAL_TASK_STATES: ['TASK_KILLED', 'TASK_LOST', 'TASK_FAILED', 'TASK_FINISHED']
     @DECOMMISION_STATES: ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'DECOMISSIONING', 'DECOMISSIONED', 'STARTING_DECOMISSION']
+    @GLOB_CHARS: ['*', '!', '?', '[', ']']
 
     @viewJSON: (model, callback) ->
         if not model?
@@ -215,9 +217,16 @@ class Utils
     @fileName: (filePath) ->
         filePath.substring(filePath.lastIndexOf('/') + 1)
 
+    @isGlobFilter: (filter) ->
+        for char in @GLOB_CHARS
+            return true if filter.indexOf(char) isnt -1
+        return false
+
     @fuzzyAdjustScore: (filter, fuzzyObject) ->
         if fuzzyObject.original.id.toLowerCase().startsWith(filter.toLowerCase())
             fuzzyObject.score * 10
+        else if micromatch fuzzyObject.original.id.toLowerCase(), filter.toLowerCase() # Matched with micromatch, not fuzzy
+            fuzzyObject.score * 8
         else if fuzzyObject.original.id.toLowerCase().indexOf(filter.toLowerCase()) > -1
             fuzzyObject.score * 5
         else

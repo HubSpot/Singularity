@@ -3,6 +3,7 @@ View = require './view'
 Request = require '../models/Request'
 Slaves = require '../collections/Slaves'
 fuzzy = require 'fuzzy'
+micromatch = require 'micromatch'
 
 killTemplate = require '../templates/vex/taskKill'
 
@@ -62,8 +63,16 @@ class TasksView extends View
         id =
             extract: (o) ->
                 "#{o.id}"
-        res1 = fuzzy.filter(filter, tasks, host)
-        res2 = fuzzy.filter(filter, tasks, id)
+        unless Utils.isGlobFilter filter
+            res1 = fuzzy.filter(filter, tasks, host)
+            res2 = fuzzy.filter(filter, tasks, id)
+        else
+            res1 = tasks.filter (task) =>
+                micromatch.any host.extract(task), filter
+            res2 = tasks.filter (task) =>
+                micromatch.any id.extract(task), filter
+            res1 = fuzzy.filter('', res1, host) #Hack to make the object a fuzzy
+            res2 = fuzzy.filter('', res2, id) #Hack to make the object a fuzzy
         _.uniq(_.pluck(_.sortBy(_.union(res1, res2), (t) => Utils.fuzzyAdjustScore(filter, t)), 'original').reverse())
 
     # Returns the array of tasks that need to be rendered
