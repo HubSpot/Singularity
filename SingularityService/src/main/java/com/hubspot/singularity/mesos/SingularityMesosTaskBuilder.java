@@ -171,6 +171,12 @@ class SingularityMesosTaskBuilder {
       setEnv(envBldr, envEntry.getKey(), envEntry.getValue());
     }
 
+    if (task.getDeploy().getTaskEnv().isPresent() && task.getDeploy().getTaskEnv().get().containsKey(taskId.getInstanceNo()) && !task.getDeploy().getTaskEnv().get().get(taskId.getInstanceNo()).isEmpty()) {
+      for (Entry<String, String> envEntry : task.getDeploy().getTaskEnv().get().get(taskId.getInstanceNo()).entrySet()) {
+        setEnv(envBldr, envEntry.getKey(), envEntry.getValue());
+      }
+    }
+
     if (ports.isPresent()) {
       for (int portNum = 0; portNum < ports.get().length; portNum++) {
         if (portNum == 0) {
