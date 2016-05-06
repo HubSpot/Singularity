@@ -32,6 +32,7 @@ public class SingularityDeployBuilder {
   private Optional<String> command;
   private Optional<List<String>> arguments;
   private Optional<Map<String, String>> env;
+  private Optional<Map<Integer, Map<String, String>>> taskEnv;
   private Optional<List<String>> uris;
   private Optional<ExecutorData> executorData;
   private Optional<Map<String, String>> labels;
@@ -80,6 +81,7 @@ public class SingularityDeployBuilder {
     this.command = Optional.absent();
     this.arguments = Optional.absent();
     this.env = Optional.absent();
+    this.taskEnv = Optional.absent();
     this.uris = Optional.absent();
     this.executorData = Optional.absent();
     this.labels = Optional.absent();
@@ -109,7 +111,7 @@ public class SingularityDeployBuilder {
 
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, customExecutorUser, resources,
-      env, uris, metadata, executorData, version, timestamp, labels, taskLabels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
+      env, taskEnv, uris, metadata, executorData, version, timestamp, labels, taskLabels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
       healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, loadBalancerDomains, loadBalancerAdditionalRoutes,
       loadBalancerTemplate, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries);
   }
@@ -259,6 +261,15 @@ public class SingularityDeployBuilder {
 
   public SingularityDeployBuilder setEnv(Optional<Map<String, String>> env) {
     this.env = env;
+    return this;
+  }
+
+  public Optional<Map<Integer, Map<String, String>>> getTaskEnv() {
+    return taskEnv;
+  }
+
+  public SingularityDeployBuilder setTaskEnv(Optional<Map<Integer, Map<String, String>>> taskEnv) {
+    this.taskEnv = taskEnv;
     return this;
   }
 
@@ -487,6 +498,7 @@ public class SingularityDeployBuilder {
       ", command=" + command +
       ", arguments=" + arguments +
       ", env=" + env +
+      ", taskEnv=" + taskEnv +
       ", uris=" + uris +
       ", executorData=" + executorData +
       ", labels=" + labels +
