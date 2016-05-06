@@ -88,8 +88,6 @@ class Requests extends Collection
 
             type = request.get 'type'
 
-            continue if request.get('state') isnt 'ACTIVE'
-
             if type is 'ON_DEMAND'  then userRequestTotals.onDemand  += 1
             if type is 'SCHEDULED'  then userRequestTotals.scheduled += 1
             if type is 'WORKER'     then userRequestTotals.worker    += 1
