@@ -57,6 +57,10 @@ public class UIConfiguration {
 
   @JsonProperty
   @NotNull
+  private boolean showTaskDiskResource = false;
+
+  @JsonProperty
+  @NotNull
   private List<ShellCommandDescriptor> shellCommands = Collections.emptyList();
 
   private boolean hideNewDeployButton = false;
@@ -154,6 +158,10 @@ public class UIConfiguration {
   public List<ShellCommandDescriptor> getShellCommands() {
     return shellCommands;
   }
+
+  public boolean isShowTaskDiskResource() { return showTaskDiskResource; }
+
+  public void setShowTaskDiskResource(boolean showTaskDiskResource) { this.showTaskDiskResource = showTaskDiskResource; }
 
   public void setShellCommands(List<ShellCommandDescriptor> shellCommands) {
     this.shellCommands = shellCommands;
