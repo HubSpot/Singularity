@@ -5,6 +5,7 @@ class Enums
                         {user: 'Descending', value: 'DESC'}]
 
     @extendedTaskState:  -> return [
+                        {user: 'Error', value: 'TASK_ERROR'},
                         {user: 'Failed', value: 'TASK_FAILED'},
                         {user: 'Finished', value: 'TASK_FINISHED'},
                         {user: 'Killed', value: 'TASK_KILLED'},
