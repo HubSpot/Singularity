@@ -69,21 +69,19 @@ class TasksView extends View
         rack =
             extract: (o) ->
                 "#{o.rackId}"
-        unless Utils.isGlobFilter filter
-            res1 = fuzzy.filter(filter, tasks, host)
-            res2 = fuzzy.filter(filter, tasks, id)
-            res3 = fuzzy.filter(filter, tasks, rack)
-        else
+        if Utils.isGlobFilter filter
             res1 = tasks.filter (task) =>
                 micromatch.any host.extract(task), filter
             res2 = tasks.filter (task) =>
                 micromatch.any id.extract(task), filter
             res3 = tasks.filter (task) =>
                 micromatch.any rack.extract(task), filter
-            res1 = fuzzy.filter('', res1, host) #Hack to make the object a fuzzy
-            res2 = fuzzy.filter('', res2, id) #Hack to make the object a fuzzy
-            res3 = fuzzy.filter('', res3, id) #Hack to make the object a fuzzy
-        _.uniq(_.pluck(_.sortBy(_.union(res3, _.union(res1, res2)), (t) => Utils.fuzzyAdjustScore(filter, t)), 'original').reverse())
+            _.uniq(_.union(res3, _.union(res1, res2))).reverse()
+        else
+            res1 = fuzzy.filter(filter, tasks, host)
+            res2 = fuzzy.filter(filter, tasks, id)
+            res3 = fuzzy.filter(filter, tasks, rack)
+            _.uniq(_.pluck(_.sortBy(_.union(res3, _.union(res1, res2)), (t) => Utils.fuzzyAdjustScore(filter, t)), 'original').reverse())
 
     # Returns the array of tasks that need to be rendered
     filterCollection: =>
