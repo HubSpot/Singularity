@@ -481,7 +481,7 @@ public class SingularityCleaner {
       if (!isValidTask(cleanupTask)) {
         LOG.info("Couldn't find a matching active task for cleanup task {}, deleting..", cleanupTask);
         taskManager.deleteCleanupTask(cleanupTask.getTaskId().getId());
-      } else if (decommissionedSlaveReactivated(activeSlaves, cleanupTask)) {
+      } else if (decommissionedSlaveReactivated(activeSlaves, cleanupTask) && !isLongRunning(cleanupTask)) {
         removeDecommission(cleanupTask);
       } else if (shouldKillTask(cleanupTask, activeTaskIds, cleaningTasks, incrementalBounceCleaningTasks) && checkLBStateAndShouldKillTask(cleanupTask)) {
         driverManager.killAndRecord(cleanupTask.getTaskId(), cleanupTask.getCleanupType());
@@ -505,6 +505,11 @@ public class SingularityCleaner {
     }
 
     LOG.info("Killed {} tasks in {}", killedTasks, JavaUtils.duration(start));
+  }
+
+  private boolean isLongRunning(SingularityTaskCleanup cleanupTask) {
+    Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(cleanupTask.getTaskId().getRequestId());
+    return maybeRequest.isPresent() && maybeRequest.get().getRequest().isLongRunning();
   }
 
   private boolean decommissionedSlaveReactivated(List<SingularitySlave> activeSlaves, SingularityTaskCleanup cleanupTask) {
