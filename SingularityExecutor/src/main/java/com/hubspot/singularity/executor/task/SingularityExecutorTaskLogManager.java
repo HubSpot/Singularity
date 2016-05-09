@@ -56,7 +56,7 @@ public class SingularityExecutorTaskLogManager {
     final Path serviceLogParent = serviceLogOutPath.getParent();
     final Path logrotateDirectory = serviceLogParent.resolve(configuration.getLogrotateToDirectory());
 
-    boolean result = writeS3MetadataFile("default", logrotateDirectory, String.format("%ss*.gz*", taskDefinition.getServiceLogOutPath().getFileName()), Optional.<String>absent(), Optional.<String>absent(), finished);
+    boolean result = writeS3MetadataFile("default", logrotateDirectory, String.format("%s*.gz*", taskDefinition.getServiceLogOutPath().getFileName()), Optional.<String>absent(), Optional.<String>absent(), finished);
 
     int index = 1;
     for (SingularityExecutorS3UploaderAdditionalFile additionalFile : configuration.getS3UploaderAdditionalFiles()) {
