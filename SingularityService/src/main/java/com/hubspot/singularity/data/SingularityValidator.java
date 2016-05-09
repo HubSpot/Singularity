@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import org.quartz.CronExpression;
 
