@@ -81,8 +81,8 @@ public abstract class HistoryJDBI implements GetHandle {
   }
 
   public List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> host,
-      Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<OrderDirection> orderDirection,
-      Optional<Integer> limitStart, Integer limitCount) {
+      Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
+      Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection, Optional<Integer> limitStart, Integer limitCount) {
 
     final Map<String, Object> binds = new HashMap<>();
     final StringBuilder sqlBuilder = new StringBuilder(GET_TASK_ID_HISTORY_QUERY);
@@ -121,6 +121,18 @@ public abstract class HistoryJDBI implements GetHandle {
       addWhereOrAnd(sqlBuilder, binds.isEmpty());
       sqlBuilder.append("startedAt > :startedAfter");
       binds.put("startedAfter", new Date(startedAfter.get()));
+    }
+
+    if (updatedBefore.isPresent()) {
+      addWhereOrAnd(sqlBuilder, binds.isEmpty());
+      sqlBuilder.append("updatedAt < :updatedBefore");
+      binds.put("updatedBefore", new Date(updatedBefore.get()));
+    }
+
+    if (updatedAfter.isPresent()) {
+      addWhereOrAnd(sqlBuilder, binds.isEmpty());
+      sqlBuilder.append("updatedAt > :updatedAfter");
+      binds.put("updatedAfter", new Date(updatedAfter.get()));
     }
 
     sqlBuilder.append(" ORDER BY startedAt ");

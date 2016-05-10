@@ -14,21 +14,25 @@ public class SingularityTaskHistoryQuery {
   private final Optional<ExtendedTaskState> lastTaskStatus;
   private final Optional<Long> startedBefore;
   private final Optional<Long> startedAfter;
+  private final Optional<Long> updatedBefore;
+  private final Optional<Long> updatedAfter;
   private final Optional<OrderDirection> orderDirection;
 
   public SingularityTaskHistoryQuery(String requestId) {
     this(Optional.of(requestId), Optional.<String> absent(), Optional.<String> absent(), Optional.<ExtendedTaskState> absent(), Optional.<Long> absent(), Optional.<Long> absent(),
-        Optional.<OrderDirection> absent());
+        Optional.<Long>absent(), Optional.<Long>absent(), Optional.<OrderDirection> absent());
   }
 
   public SingularityTaskHistoryQuery(Optional<String> requestId, Optional<String> deployId, Optional<String> host, Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore,
-      Optional<Long> startedAfter, Optional<OrderDirection> orderDirection) {
+      Optional<Long> startedAfter, Optional<Long> updatedBefore, Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.host = host;
     this.lastTaskStatus = lastTaskStatus;
     this.startedBefore = startedBefore;
     this.startedAfter = startedAfter;
+    this.updatedBefore = updatedBefore;
+    this.updatedAfter = updatedAfter;
     this.orderDirection = orderDirection;
   }
 
@@ -54,6 +58,14 @@ public class SingularityTaskHistoryQuery {
 
   public Optional<Long> getStartedAfter() {
     return startedAfter;
+  }
+
+  public Optional<Long> getUpdatedBefore() {
+    return updatedBefore;
+  }
+
+  public Optional<Long> getUpdatedAfter() {
+    return updatedAfter;
   }
 
   public Optional<OrderDirection> getOrderDirection() {
@@ -94,6 +106,14 @@ public class SingularityTaskHistoryQuery {
         }
 
         if (startedBefore.isPresent() && startedBefore.get() <= taskId.getStartedAt()) {
+          return false;
+        }
+
+        if (updatedAfter.isPresent() && updatedAfter.get() >= input.getUpdatedAt()) {
+          return false;
+        }
+
+        if (updatedBefore.isPresent() && updatedBefore.get() <= input.getUpdatedAt()) {
           return false;
         }
 
