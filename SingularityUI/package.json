@@ -50,7 +50,7 @@
     "sortable": "git://github.com/HubSpot/sortable.git#v0.6.0",
     "typeahead.js": "~0.10.4",
     "underscore": "~1.8.0",
-    "vex": "git://github.com/HubSpot/vex#v2.3.0-plus-beforeClose-hook"
+    "vex-js": "git://github.com/HubSpot/vex.git#v2.3.0-plus-beforeClose-hook"
   },
   "license": "Apache-2.0",
   "devDependencies": {
