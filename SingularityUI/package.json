@@ -31,7 +31,7 @@
     "jquery": "~1.11.1",
     "juration": "*",
     "linkifyjs": "~2.0.0-beta.9",
-    "messenger": "git://github.com/HubSpot/messenger#set-main-field",
+    "messenger": "git://github.com/HubSpot/messenger.git#set-main-field",
     "moment": "2.11.2",
     "q": "^1.4.1",
     "node-uuid": "^1.4.7",
