@@ -10,6 +10,7 @@ import javax.inject.Singleton;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Offer;
+import org.apache.mesos.Protos.TaskStatus.Reason;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
@@ -305,7 +306,7 @@ public class SingularityMesosScheduler implements Scheduler {
   private Optional<String> getStatusMessage(Protos.TaskStatus status, Optional<SingularityTask> task) {
     if (status.hasMessage() && !Strings.isNullOrEmpty(status.getMessage())) {
       return Optional.of(status.getMessage());
-    } else if (status.hasReason() && status.getReason() == Protos.TaskStatus.Reason.REASON_MEMORY_LIMIT) {
+    } else if (status.hasReason() && status.getReason() == Reason.REASON_CONTAINER_LIMITATION_MEMORY) {
       if (task.isPresent() && task.get().getTaskRequest().getDeploy().getResources().isPresent()) {
         if (task.get().getTaskRequest().getDeploy().getResources().get().getDiskMb() > 0) {
           return Optional.of(String.format("Task exceeded one or more memory limits (%s MB mem, %s MB disk).", task.get().getTaskRequest().getDeploy().getResources().get().getMemoryMb(), task.get().getTaskRequest().getDeploy().getResources().get().getDiskMb()));

@@ -71,7 +71,7 @@ public class SingularityDriver {
     if (configuration.getCredentialPrincipal().isPresent() && configuration.getCredentialSecret().isPresent()) {
       Credential credential = Credential.newBuilder()
         .setPrincipal(configuration.getCredentialPrincipal().get())
-        .setSecret(ByteString.copyFrom(configuration.getCredentialSecret().get().getBytes(StandardCharsets.UTF_8)))
+        .setSecret(configuration.getCredentialSecret().get())
         .build();
       this.driver = new MesosSchedulerDriver(scheduler, frameworkInfo, configuration.getMaster(), credential);
     } else {
