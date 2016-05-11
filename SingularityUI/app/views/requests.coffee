@@ -27,6 +27,8 @@ class RequestsView extends View
     # Which table views have sub-filters (daemon, scheduled, on-demand)
     haveSubfilter: ['all', 'active', 'paused', 'cooldown', 'activeDeploy', 'noDeploy']
 
+    allRequestTypes: ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE']
+
     # For staged rendering
     renderProgress: 0
     renderAtOnce: 100
@@ -159,6 +161,7 @@ class RequestsView extends View
 
         @renderTable()
         @$('.actions-column a[title]').tooltip()
+        @$('.has-tooltip').tooltip()
         @$('.schedule-header span#schedule').popover({
             animation: false,
             placement : 'auto',
@@ -213,6 +216,7 @@ class RequestsView extends View
             requests:          requests
             rowsOnly:          true
             requestsSubFilter: @subFilter
+            hideNewRequestButton: config.hideNewRequestButton
 
         $table = @$ ".table-staged table"
         $tableBody = $table.find "tbody"
@@ -354,22 +358,23 @@ class RequestsView extends View
 
         filter = $(event.currentTarget).data 'filter'
 
-        if not event.metaKey
-            # Select individual filters
+        currentFilter = if @subFilter then @subFilter.split '-' else []
+
+        # Select multiple filters
+        if @subFilter is 'all' or _.difference(@allRequestTypes, currentFilter).length is 0
             @subFilter = filter
         else
-            # Select multiple filters
-            currentFilter = if @subFilter is 'all' then 'SERVICE-WORKER-SCHEDULED-ON_DEMAND-RUN_ONCE' else  @subFilter
+            currentlyInFilter = _.contains currentFilter, filter
 
-            currentFilter = currentFilter.split '-'
-            needToAdd = not _.contains currentFilter, filter
-
-            if needToAdd
-                currentFilter.push filter
-            else
+            if currentlyInFilter
                 currentFilter = _.without currentFilter, filter
+            else
+                currentFilter.push filter
 
-            @subFilter = currentFilter.join '-'
+            if currentFilter.length isnt 0 and _.difference(@allRequestTypes, currentFilter).length isnt 0
+                @subFilter = currentFilter.join '-'
+            else
+                @subFilter = 'all'
 
         @updateUrl()
         @render()

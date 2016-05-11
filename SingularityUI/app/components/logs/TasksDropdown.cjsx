@@ -1,17 +1,27 @@
 React = require 'react'
+OverlayTrigger = require 'react-bootstrap/lib/OverlayTrigger'
+ToolTip = require 'react-bootstrap/lib/Tooltip'
 { toggleTaskLog } = require '../../actions/log'
+
+{ getHostFromTaskId } = require '../../utils'
 
 { connect } = require 'react-redux'
 
 class TasksDropdown extends React.Component
+
+  getTaskListTooltip: (task) ->
+    <ToolTip id={task.taskId.id}>Host: {task.taskId.host}</ToolTip>
+
   renderListItems: ->
     if @props.activeTasks and @props.taskIds
       tasks = _.sortBy(@props.activeTasks, (t) => t.taskId.instanceNo).map (task, i) =>
         <li key={i}>
-          <a onClick={() => @props.toggleTaskLog(task.taskId.id)}>
-            <span className="glyphicon glyphicon-#{if task.taskId.id in @props.taskIds then 'check' else 'unchecked'}"></span>
-            <span> Instance {task.taskId.instanceNo}</span>
-          </a>
+          <OverlayTrigger placement='left' overlay={@getTaskListTooltip task}>
+            <a onClick={() => @props.toggleTaskLog(task.taskId.id)}>
+              <span className="glyphicon glyphicon-#{if task.taskId.id in @props.taskIds then 'check' else 'unchecked'}"></span>
+              <span> Instance {task.taskId.instanceNo}</span>
+            </a>
+          </OverlayTrigger>
         </li>
       if tasks.length > 0
         return tasks

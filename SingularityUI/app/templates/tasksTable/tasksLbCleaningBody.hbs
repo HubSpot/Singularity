@@ -4,10 +4,10 @@
             <thead>
                 <tr>
                     <th data-sort-attribute="id">
-                        Name
+                        Task ID
                     </th>
                     <th data-sort-attribute="startedAt">
-                        Started
+                        Started At
                     </th>
                     <th data-sort-attribute="host">
                         Host
@@ -37,10 +37,14 @@
                         {{timestampFromNow startedAt}}
                     </td>
                     <td>
-                        {{host}}
+                        <a href='{{appRoot}}/tasks/lbcleanup/all/{{host}}'>
+                            {{host}}
+                        </a>
                     </td>
                     <td>
-                        {{rackId}}
+                        <a href='{{appRoot}}/tasks/lbcleanup/all/{{rackId}}'>
+                            {{ rackId }}
+                        </a>
                     </td>
                     <td>
                         {{instanceNo}}

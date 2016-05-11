@@ -1,36 +1,34 @@
-<ul class="nav nav-pills nav-pills-multi-select">
-    <li {{#unlessInSubFilter 'SERVICE' requestsSubFilter}}class="active"{{/unlessInSubFilter}}>
-        <a data-filter="SERVICE">
-            <span class="glyphicon glyphicon-ok"></span>
-            Service
-        </a>
-    </li>
-    <li {{#unlessInSubFilter 'WORKER' requestsSubFilter}}class="active"{{/unlessInSubFilter}}>
-        <a data-filter="WORKER">
-            <span class="glyphicon glyphicon-ok"></span>
-            Worker
-        </a>
-    </li>
-    <li {{#unlessInSubFilter 'SCHEDULED' requestsSubFilter}}class="active"{{/unlessInSubFilter}}>
-        <a data-filter="SCHEDULED">
-            <span class="glyphicon glyphicon-ok"></span>
-            Scheduled
-        </a>
-    </li>
-    <li {{#unlessInSubFilter 'ON_DEMAND' requestsSubFilter}}class="active"{{/unlessInSubFilter}}>
-        <a data-filter="ON_DEMAND">
-            <span class="glyphicon glyphicon-ok"></span>
-            On-demand
-        </a>
-    </li>
-    <li {{#unlessInSubFilter 'RUN_ONCE' requestsSubFilter}}class="active"{{/unlessInSubFilter}}>
-        <a data-filter="RUN_ONCE">
-            <span class="glyphicon glyphicon-ok"></span>
-            Run-once
-        </a>
-    </li>
-</ul>
-
-<span class="text-muted filter-tip hidden-xs">
-    Protip: press <kbd>cmd</kbd> to select multiple
-</span>
+{{#unless hideRequestTypeFilter}}
+    <ul class="nav nav-pills nav-pills-multi-select">
+        <li {{#unlessInSubFilter 'SERVICE' requestsSubFilter}}class="active"{{/unlessInSubFilter}}>
+            <a data-filter="SERVICE">
+                <span class="glyphicon glyphicon-ok"></span>
+                Service
+            </a>
+        </li>
+        <li {{#unlessInSubFilter 'WORKER' requestsSubFilter}}class="active"{{/unlessInSubFilter}}>
+            <a data-filter="WORKER">
+                <span class="glyphicon glyphicon-ok"></span>
+                Worker
+            </a>
+        </li>
+        <li {{#unlessInSubFilter 'SCHEDULED' requestsSubFilter}}class="active"{{/unlessInSubFilter}}>
+            <a data-filter="SCHEDULED">
+                <span class="glyphicon glyphicon-ok"></span>
+                Scheduled
+            </a>
+        </li>
+        <li {{#unlessInSubFilter 'ON_DEMAND' requestsSubFilter}}class="active"{{/unlessInSubFilter}}>
+            <a data-filter="ON_DEMAND">
+                <span class="glyphicon glyphicon-ok"></span>
+                On-demand
+            </a>
+        </li>
+        <li {{#unlessInSubFilter 'RUN_ONCE' requestsSubFilter}}class="active"{{/unlessInSubFilter}}>
+            <a data-filter="RUN_ONCE">
+                <span class="glyphicon glyphicon-ok"></span>
+                Run-once
+            </a>
+        </li>
+    </ul>
+{{/unless}}
