@@ -68,9 +68,9 @@ class RequestsView extends View
                 o.requestDeployState?.activeDeploy?.user or ''
         if Utils.isGlobFilter filter
             res1 = requests.filter (request) =>
-                micromatch.any id.extract(request), filter
+                micromatch.any id.extract(request), filter + '*'
             res2 = requests.filter (request) =>
-                micromatch.any user.extract(request), filter
+                micromatch.any user.extract(request), filter + '*'
             _.uniq(_.union(res2, res1)).reverse()
         else
             res1 = fuzzy.filter(filter, requests, id)
