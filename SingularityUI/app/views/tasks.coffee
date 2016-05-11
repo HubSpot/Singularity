@@ -71,11 +71,11 @@ class TasksView extends View
                 "#{o.rackId}"
         if Utils.isGlobFilter filter
             res1 = tasks.filter (task) =>
-                micromatch.any host.extract(task), filter
+                micromatch.any host.extract(task), filter + '*'
             res2 = tasks.filter (task) =>
-                micromatch.any id.extract(task), filter
+                micromatch.any id.extract(task), filter + '*'
             res3 = tasks.filter (task) =>
-                micromatch.any rack.extract(task), filter
+                micromatch.any rack.extract(task), filter + '*'
             _.uniq(_.union(res3, _.union(res1, res2))).reverse()
         else
             res1 = fuzzy.filter(filter, tasks, host)
