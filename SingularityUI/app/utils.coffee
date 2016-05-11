@@ -4,7 +4,7 @@ vex = require 'vex.dialog'
 class Utils
 
     # Constants
-    @TERMINAL_TASK_STATES: ['TASK_KILLED', 'TASK_LOST', 'TASK_FAILED', 'TASK_FINISHED']
+    @TERMINAL_TASK_STATES: ['TASK_KILLED', 'TASK_LOST', 'TASK_FAILED', 'TASK_FINISHED', 'TASK_ERROR']
     @DECOMMISION_STATES: ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'DECOMISSIONING', 'DECOMISSIONED', 'STARTING_DECOMISSION']
 
     @viewJSON: (model, callback) ->
@@ -216,7 +216,7 @@ class Utils
                 'info'
             when 'TASK_FINISHED'
                 'success'
-            when 'TASK_LOST', 'TASK_FAILED', 'TASK_LOST_WHILE_DOWN'
+            when 'TASK_LOST', 'TASK_FAILED', 'TASK_LOST_WHILE_DOWN', 'TASK_ERROR'
                 'danger'
             when 'TASK_KILLED'
                 'default'
