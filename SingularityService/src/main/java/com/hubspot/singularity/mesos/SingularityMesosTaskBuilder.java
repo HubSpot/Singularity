@@ -239,6 +239,14 @@ class SingularityMesosTaskBuilder {
             dockerInfoBuilder.addPortMappings(maybePortMapping.get());
           }
         }
+      } else if (configuration.getNetworkConfiguration().isDefaultPortMapping() && dockerInfo.get().getPortMappings().isEmpty() && ports.isPresent()) {
+        for (long longPort : ports.get()) {
+          int port = Ints.checkedCast(longPort);
+          dockerInfoBuilder.addPortMappings(DockerInfo.PortMapping.newBuilder()
+              .setHostPort(port)
+              .setContainerPort(port)
+              .build());
+        }
       }
 
       if (!dockerInfo.get().getParameters().isEmpty()) {
