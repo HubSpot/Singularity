@@ -12,9 +12,6 @@
         <thead>
             <tr>
                 <th>Name</th>
-                {{#each displayTaskLabels}}
-                <th>{{ labelTitle }}</th>
-                {{/each}}
                 <th class="hidden-sm hidden-xs">Status</th>
                 <th class="hidden-sm hidden-xs">Deploy ID</th>
                 <th class="hidden-sm hidden-xs">Started</th>
@@ -33,9 +30,6 @@
                             </a>
                         </span>
                     </td>
-                    {{#each displayLabels}}
-                    <td>{{ labelValue }}</td>
-                    {{/each}}
                     <td class="hidden-sm hidden-xs">
                         <span class="label label-{{getLabelClass lastTaskState}}">
                             {{humanizeText lastTaskState}}
