@@ -232,7 +232,7 @@ These settings live under the "sentry" field in the root config and enable Singu
 
 ## SMTP ##
 
-These settings live under the "smtp" field in teh root config.
+These settings live under the "smtp" field in the root config.
 
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|
