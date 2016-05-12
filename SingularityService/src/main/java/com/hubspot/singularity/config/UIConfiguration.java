@@ -14,7 +14,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
-import com.hubspot.singularity.config.labels.SingularityLabelInfo;
 import com.hubspot.singularity.config.shell.ShellCommandDescriptor;
 
 public class UIConfiguration {
@@ -87,10 +86,6 @@ public class UIConfiguration {
   @JsonProperty
   @NotNull
   private Optional<String> redirectOnUnauthorizedUrl = Optional.absent();
-
-  @JsonProperty
-  @NotNull
-  private List<SingularityLabelInfo> displayTaskLabels = Collections.emptyList();
 
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
@@ -210,13 +205,5 @@ public class UIConfiguration {
 
   public void setRedirectOnUnauthorizedUrl(Optional<String> redirectOnUnauthorizedUrl) {
     this.redirectOnUnauthorizedUrl = redirectOnUnauthorizedUrl;
-  }
-
-  public List<SingularityLabelInfo> getDisplayTaskLabels() {
-    return displayTaskLabels;
-  }
-
-  public void setDisplayTaskLabels(List<SingularityLabelInfo> displayTaskLabels) {
-    this.displayTaskLabels = displayTaskLabels;
   }
 }

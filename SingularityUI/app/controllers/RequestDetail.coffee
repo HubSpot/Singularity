@@ -86,38 +86,9 @@ class RequestDetailController extends Controller
             model:      @models.activeDeployStats
             template:   @templates.stats
 
-        activeTaskExtraData = -> {}
-
-        if config.displayTaskLabels?.length > 0
-            activeTaskExtraData = =>
-                unless @models.request.get('activeDeploy')
-                    return {}
-
-                requestType = @models.request.get('type')
-                deployLabels = @models.request.get('activeDeploy').labels || {}
-                taskLabels = @models.request.get('activeDeploy').taskLabels || {}
-                {labels, taskLabels} = @models.request.get('activeDeploy')
-
-                applicableLabels = _.filter(config.displayTaskLabels, (label) -> requestType in label.requestTypes)
-
-                unless applicableLabels.length > 0
-                    return {}
-
-                data = @collections.activeTasks.map (activeTask) ->
-                    combinedLabels = _.extend({}, deployLabels, taskLabels[activeTask.get('taskId').instanceNo] || {})
-                    displayLabels = applicableLabels.map (label) ->
-                        _.extend({}, label, {labelValue: combinedLabels[label.labelName] || label.labelDefaultValue})
-                    _.extend {}, activeTask.toJSON(), {displayLabels}
-
-                return {data, displayTaskLabels: applicableLabels}
-
         @subviews.activeTasks = new SimpleSubview
             collection: @collections.activeTasks
             template:   @templates.activeTasks
-            extraRenderData: activeTaskExtraData
-
-        if config.displayTaskLabels?.length > 0
-            @subviews.activeTasks.listenTo @models.request, 'change', @subviews.activeTasks.render
 
         @subviews.scheduledTasks = new SimpleSubview
             collection:      @collections.scheduledTasks

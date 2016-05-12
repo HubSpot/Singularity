@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
+import com.google.common.base.Optional;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.config.SingularityConfiguration;
 
@@ -58,8 +59,6 @@ public class IndexView extends View {
   private final String timestampWithSecondsFormat;
 
   private final String redirectOnUnauthorizedUrl;
-
-  private final String displayTaskLabels;
 
   public IndexView(String singularityUriBase, String appRoot, SingularityConfiguration configuration, ObjectMapper mapper) {
     super("index.mustache");
@@ -116,12 +115,6 @@ public class IndexView extends View {
     this.timestampFormat = configuration.getUiConfiguration().getTimestampFormat();
 
     this.timestampWithSecondsFormat = configuration.getUiConfiguration().getTimestampWithSecondsFormat();
-
-    try {
-      this.displayTaskLabels = ow.writeValueAsString(configuration.getUiConfiguration().getDisplayTaskLabels());
-    } catch (JsonProcessingException e) {
-      throw Throwables.propagate(e);
-    }
   }
 
   public String getAppRoot() {
@@ -232,10 +225,6 @@ public class IndexView extends View {
     return timestampWithSecondsFormat;
   }
 
-  public String getDisplayTaskLabels() {
-    return displayTaskLabels;
-  }
-
   @Override
   public String toString() {
     return "IndexView[" +
@@ -266,7 +255,6 @@ public class IndexView extends View {
             ", timestampFormat='" + timestampFormat + '\'' +
             ", timestampWithSecondsFormat='" + timestampWithSecondsFormat + '\'' +
             ", redirectOnUnauthorizedUrl='" + redirectOnUnauthorizedUrl + '\'' +
-            ", displayTaskLabels='" + displayTaskLabels + '\'' +
             ']';
   }
 }
