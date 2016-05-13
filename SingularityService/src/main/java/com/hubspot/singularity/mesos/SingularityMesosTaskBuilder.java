@@ -231,15 +231,16 @@ class SingularityMesosTaskBuilder {
         dockerInfoBuilder.setNetwork(DockerInfo.Network.valueOf(dockerInfo.get().getNetwork().get().toString()));
       }
 
-      if ((dockerInfo.get().hasAllLiteralHostPortMappings() || ports.isPresent()) && !dockerInfo.get().getPortMappings().isEmpty()) {
-        for (SingularityDockerPortMapping singularityDockerPortMapping : dockerInfo.get().getPortMappings()) {
+      List<SingularityDockerPortMapping> portMappings = dockerInfo.get().getPortMappings();
+      if ((dockerInfo.get().hasAllLiteralHostPortMappings() || ports.isPresent()) && !portMappings.isEmpty()) {
+        for (SingularityDockerPortMapping singularityDockerPortMapping : portMappings) {
           final Optional<DockerInfo.PortMapping> maybePortMapping = buildPortMapping(singularityDockerPortMapping, ports);
 
           if (maybePortMapping.isPresent()) {
             dockerInfoBuilder.addPortMappings(maybePortMapping.get());
           }
         }
-      } else if (configuration.getNetworkConfiguration().isDefaultPortMapping() && dockerInfo.get().getPortMappings().isEmpty() && ports.isPresent()) {
+      } else if (configuration.getNetworkConfiguration().isDefaultPortMapping() && portMappings.isEmpty() && ports.isPresent()) {
         for (long longPort : ports.get()) {
           int port = Ints.checkedCast(longPort);
           dockerInfoBuilder.addPortMappings(DockerInfo.PortMapping.newBuilder()
