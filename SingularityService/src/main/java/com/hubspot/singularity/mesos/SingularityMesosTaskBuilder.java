@@ -44,6 +44,7 @@ import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityDockerInfo;
+import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.SingularityTask;
@@ -231,7 +232,9 @@ class SingularityMesosTaskBuilder {
         dockerInfoBuilder.setNetwork(DockerInfo.Network.valueOf(dockerInfo.get().getNetwork().get().toString()));
       }
 
-      List<SingularityDockerPortMapping> portMappings = dockerInfo.get().getPortMappings();
+      final List<SingularityDockerPortMapping> portMappings = dockerInfo.get().getPortMappings();
+      final boolean isBridged = SingularityDockerNetworkType.BRIDGE.equals(dockerInfo.get().getNetwork().orNull());
+
       if ((dockerInfo.get().hasAllLiteralHostPortMappings() || ports.isPresent()) && !portMappings.isEmpty()) {
         for (SingularityDockerPortMapping singularityDockerPortMapping : portMappings) {
           final Optional<DockerInfo.PortMapping> maybePortMapping = buildPortMapping(singularityDockerPortMapping, ports);
@@ -240,7 +243,7 @@ class SingularityMesosTaskBuilder {
             dockerInfoBuilder.addPortMappings(maybePortMapping.get());
           }
         }
-      } else if (configuration.getNetworkConfiguration().isDefaultPortMapping() && portMappings.isEmpty() && ports.isPresent()) {
+      } else if (configuration.getNetworkConfiguration().isDefaultPortMapping() && isBridged && portMappings.isEmpty() && ports.isPresent()) {
         for (long longPort : ports.get()) {
           int port = Ints.checkedCast(longPort);
           dockerInfoBuilder.addPortMappings(DockerInfo.PortMapping.newBuilder()
