@@ -603,7 +603,7 @@ public class SingularityDeployChecker {
     int numTasksToShutDown = Math.max(otherActiveTasks.size() - (request.getInstancesSafe() - deployProgress.getTargetActiveInstances()), 0);
     List<SingularityTaskId> sortedOtherTasks = new ArrayList<>(otherActiveTasks);
     Collections.sort(sortedOtherTasks, SingularityTaskId.INSTANCE_NO_COMPARATOR);
-    return sortedOtherTasks.subList(0, numTasksToShutDown);
+    return sortedOtherTasks.subList(0, Math.min(numTasksToShutDown, sortedOtherTasks.size() - 1));
   }
 
   private boolean canMoveToNextStep(SingularityDeployProgress deployProgress) {
