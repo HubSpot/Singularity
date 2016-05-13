@@ -42,6 +42,8 @@ public class SingularityDeploy {
   private final Optional<List<String>> uris;
   private final Optional<ExecutorData> executorData;
   private final Optional<Map<String, String>> labels;
+  private final Optional<Map<Integer, Map<String, String>>> taskLabels;
+  private final Optional<Map<Integer, Map<String, String>>> taskEnv;
 
   private final Optional<String> healthcheckUri;
   private final Optional<Long> healthcheckIntervalSeconds;
@@ -87,12 +89,14 @@ public class SingularityDeploy {
       @JsonProperty("customExecutorUser") Optional<String> customExecutorUser,
       @JsonProperty("resources") Optional<Resources> resources,
       @JsonProperty("env") Optional<Map<String, String>> env,
+      @JsonProperty("taskEnv") Optional<Map<Integer, Map<String, String>>> taskEnv,
       @JsonProperty("uris") Optional<List<String>> uris,
       @JsonProperty("metadata") Optional<Map<String, String>> metadata,
       @JsonProperty("executorData") Optional<ExecutorData> executorData,
       @JsonProperty("version") Optional<String> version,
       @JsonProperty("timestamp") Optional<Long> timestamp,
       @JsonProperty("labels") Optional<Map<String, String>> labels,
+      @JsonProperty("taskLabels") Optional<Map<Integer, Map<String, String>>> taskLabels,
       @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
       @JsonProperty("healthcheckUri") Optional<String> healthcheckUri,
       @JsonProperty("healthcheckIntervalSeconds") Optional<Long> healthcheckIntervalSeconds,
@@ -133,9 +137,11 @@ public class SingularityDeploy {
     this.id = id;
     this.timestamp = timestamp;
     this.env = env;
+    this.taskEnv = taskEnv;
     this.uris = uris;
     this.executorData = executorData;
     this.labels = labels;
+    this.taskLabels = taskLabels;
 
     this.healthcheckUri = healthcheckUri;
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
@@ -197,9 +203,11 @@ public class SingularityDeploy {
     .setVersion(version)
     .setTimestamp(timestamp)
     .setEnv(copyOfMap(env))
+    .setTaskEnv(taskEnv)
     .setUris(copyOfList(uris))
     .setExecutorData(executorData)
     .setLabels(labels)
+    .setTaskLabels(taskLabels)
     .setDeployInstanceCountPerStep(deployInstanceCountPerStep)
     .setDeployStepWaitTimeMs(deployStepWaitTimeMs)
     .setAutoAdvanceDeploySteps(autoAdvanceDeploySteps)
@@ -285,6 +293,11 @@ public class SingularityDeploy {
     return env;
   }
 
+  @ApiModelProperty(required=false, value="Map of environment variable overrides for specific task instances.")
+  public Optional<Map<Integer, Map<String, String>>> getTaskEnv() {
+    return taskEnv;
+  }
+
   @ApiModelProperty(required=false, value="List of URIs to download before executing the deploy command.")
   public Optional<List<String>> getUris() {
     return uris;
@@ -360,9 +373,14 @@ public class SingularityDeploy {
     return loadBalancerTemplate;
   }
 
-  @ApiModelProperty(required=false, value="Labels for tasks associated with this deploy")
+  @ApiModelProperty(required=false, value="Labels for all tasks associated with this deploy")
   public Optional<Map<String, String>> getLabels() {
     return labels;
+  }
+
+  @ApiModelProperty(required=false, value="Labels for specific tasks associated with this deploy, indexed by instance number")
+  public Optional<Map<Integer, Map<String, String>>> getTaskLabels() {
+    return taskLabels;
   }
 
   @ApiModelProperty(required=false, value="Allows skipping of health checks when deploying.")
@@ -418,6 +436,7 @@ public class SingularityDeploy {
       ", command=" + command +
       ", arguments=" + arguments +
       ", env=" + env +
+      ", taskEnv=" + taskEnv +
       ", uris=" + uris +
       ", executorData=" + executorData +
       ", healthcheckUri=" + healthcheckUri +
@@ -438,6 +457,7 @@ public class SingularityDeploy {
       ", loadBalancerAdditionalRoutes=" + loadBalancerAdditionalRoutes +
       ", loadBalancerTemplate=" + loadBalancerTemplate +
       ", labels=" + labels +
+      ", taskLabels=" + taskLabels +
       ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
       ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
       ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +
