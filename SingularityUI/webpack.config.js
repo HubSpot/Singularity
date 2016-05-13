@@ -52,7 +52,8 @@ module.exports = {
       'handlebars': 'handlebars/runtime.js',
       'sortable': 'sortable/js/sortable.js',
       'datatables': 'datatables/media/js/jquery.dataTables.js',
-      'bootstrap': 'bootstrap/dist/js/bootstrap.js'
+      'bootstrap': 'bootstrap/dist/js/bootstrap.js',
+      'react': path.join(__dirname, 'node_modules', 'react')
     }
   },
   plugins: [
