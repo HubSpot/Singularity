@@ -170,6 +170,10 @@ public class SingularityConfiguration extends Configuration {
   @Valid
   private MesosConfiguration mesosConfiguration;
 
+  @JsonProperty("network")
+  @Valid
+  private NetworkConfiguration networkConfiguration = new NetworkConfiguration();
+
   private int newTaskCheckerBaseDelaySeconds = 1;
 
   private long pendingDeployHoldTaskDuringDecommissionMillis = TimeUnit.MINUTES.toMillis(10);
@@ -524,6 +528,10 @@ public class SingularityConfiguration extends Configuration {
     return mesosConfiguration;
   }
 
+  public NetworkConfiguration getNetworkConfiguration() {
+    return networkConfiguration;
+  }
+
   public int getNewTaskCheckerBaseDelaySeconds() {
     return newTaskCheckerBaseDelaySeconds;
   }
@@ -842,6 +850,10 @@ public class SingularityConfiguration extends Configuration {
 
   public void setMesosConfiguration(MesosConfiguration mesosConfiguration) {
     this.mesosConfiguration = mesosConfiguration;
+  }
+
+  public void setNetworkConfiguration(NetworkConfiguration networkConfiguration) {
+    this.networkConfiguration = networkConfiguration;
   }
 
   public void setNewTaskCheckerBaseDelaySeconds(int newTaskCheckerBaseDelaySeconds) {
