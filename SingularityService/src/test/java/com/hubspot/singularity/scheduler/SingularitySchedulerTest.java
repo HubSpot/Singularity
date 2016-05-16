@@ -287,6 +287,39 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testScaleDownDuringDeploy() {
+    initRequest();
+
+    SingularityRequest request = requestResource.getRequest(requestId).getRequest();
+
+    requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build());
+
+    initFirstDeploy();
+
+    launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+    launchTask(request, firstDeploy, 2, TaskState.TASK_RUNNING);
+
+    deploy(secondDeployId);
+    deployChecker.checkDeploys();
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    resourceOffers();
+
+    Assert.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
+
+    for (SingularityTaskId taskId : taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId)) {
+      statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_RUNNING);
+    }
+
+    requestResource.postRequest(request.toBuilder().setInstances(Optional.of(1)).build());
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    Assert.assertEquals(1, taskManager.getCleanupTaskIds().size());
+
+    deployChecker.checkDeploys();
+    Assert.assertEquals(2, taskManager.getCleanupTaskIds().size());
+  }
+
+  @Test
   public void testDeployWithManualStep() {
     initRequest();
 
