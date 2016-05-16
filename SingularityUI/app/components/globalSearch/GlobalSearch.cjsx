@@ -3,7 +3,7 @@ React = require 'react'
 { Typeahead } = require 'react-typeahead'
 
 
-GlobalSearch = React.createClass
+class GlobalSearch extends React.Component
   optionSelected: (requestId) ->
     app.router.navigate "/request/#{ requestId }", { trigger: true }
     @clear()
