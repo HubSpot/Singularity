@@ -4,19 +4,19 @@ React = require 'react'
 
 
 class GlobalSearch extends React.Component
-  optionSelected: (requestId) ->
+  optionSelected: (requestId) =>
     app.router.navigate "/request/#{ requestId }", { trigger: true }
     @clear()
     @props.onHide()
 
-  clear: ->
+  clear: =>
     @refs.typeahead.setEntryText('')
     @refs.typeahead._onEscape() # hack to clear search index, TODO: PR react-typeahead
 
-  focus: ->
+  focus: =>
     @refs.typeahead.focus()
 
-  render: ->
+  render: =>
     if @props.visible
       @focus()
 
