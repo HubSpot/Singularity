@@ -629,7 +629,7 @@ public class SingularityScheduler {
       return deployProgress.getTargetActiveInstances();
     } else {
       if (deployProgress.isStepComplete()) {
-        return request.getInstancesSafe() - deployProgress.getTargetActiveInstances();
+        return Math.max(request.getInstancesSafe() - deployProgress.getTargetActiveInstances(), 0);
       } else {
         return request.getInstancesSafe() - (Math.max(deployProgress.getTargetActiveInstances() - deployProgress.getDeployInstanceCountPerStep(), 0));
       }
