@@ -17,7 +17,7 @@ master:
     MESOS_WORK_DIR: /var/lib/mesos
 
 slave:
-  image: hubspot/singularityexecutorslave:0.6.0-SNAPSHOT
+  image: hubspot/singularityexecutorslave:0.8.0-SNAPSHOT
   command: mesos-slave
   net: host
   environment:
@@ -32,7 +32,7 @@ slave:
     - /sys:/sys
 
 scheduler:
-  image: hubspot/singularityservice:0.6.0-SNAPSHOT
+  image: hubspot/singularityservice:0.8.0-SNAPSHOT
   net: host
   environment:
     - DOCKER_HOST
@@ -41,7 +41,7 @@ scheduler:
     - SINGULARITY_SMTP_PORT=1025
 
 baragonservice:
-  image: hubspot/baragonservice:0.2.0
+  image: hubspot/baragonservice:0.4.0
   net: host
   environment:
     - DOCKER_HOST
@@ -49,7 +49,7 @@ baragonservice:
     - BARAGON_UI_BASE=/baragon/v2
 
 baragonagent:
-  image: hubspot/baragonagent:0.2.0
+  image: hubspot/baragonagent:0.4.0
   net: host
   environment:
     NGINX_PORT: 80
