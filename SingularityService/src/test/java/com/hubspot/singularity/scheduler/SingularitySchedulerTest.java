@@ -317,6 +317,10 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     deployChecker.checkDeploys();
     Assert.assertEquals(2, taskManager.getCleanupTaskIds().size());
+
+    // Extra task from the new deploy should get cleaned up as well
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    Assert.assertEquals(3, taskManager.getCleanupTaskIds().size());
   }
 
   @Test
