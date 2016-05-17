@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(use = Id.MINIMAL_CLASS, include = As.PROPERTY, property = "@class")
+@JsonTypeInfo(use = Id.MINIMAL_CLASS, include = As.PROPERTY, property = "@class", defaultImpl = SingularityTaskShellCommandRequest.class)
 @JsonSubTypes({
   @Type(value = SingularityTaskShellCommandRequest.class, name = "SHELL_COMMAND"),
   @Type(value = SingularityTaskDestroyFrameworkMessage.class, name = "TASK_KILL")
