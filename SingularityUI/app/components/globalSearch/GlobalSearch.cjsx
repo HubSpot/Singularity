@@ -1,20 +1,44 @@
 React = require 'react'
+classNames = require 'classnames'
 
 { Typeahead } = require 'react-typeahead'
-
+fuzzy = require 'fuzzy'
 
 class GlobalSearch extends React.Component
-  optionSelected: (requestId) =>
+  optionSelected: (requestIdObject) =>
+    requestId = @getValueFromOption(requestIdObject)
     app.router.navigate "/request/#{ requestId }", { trigger: true }
     @clear()
     @props.onHide()
 
   clear: =>
     @refs.typeahead.setEntryText('')
-    @refs.typeahead._onEscape() # hack to clear search index, TODO: PR react-typeahead
+    @refs.typeahead._onEscape() # hack to clear search index, TODO: change if https://github.com/fmoo/react-typeahead/pull/193 gets merged
 
   focus: =>
     @refs.typeahead.focus()
+
+  filterOptions: (inputValue, options) ->
+    # fuzzy lazily just appends a string before and after a matching char
+    # we have to later use a simple shift-in shift-out state machine to convert
+    fuzzyOptions = {
+      returnMatchInfo: true
+    }
+
+    filtered = fuzzy.filter(inputValue, options, fuzzyOptions)
+
+    return filtered
+
+  renderOption: (option, index) ->
+    # transform fuzzy string into react component
+    bolded = option.string.map((matchInfo) ->
+      if matchInfo.match then <b>{matchInfo.char}</b> else <span>{matchInfo.char}</span>
+    )
+
+    return bolded
+
+  getValueFromOption: (option) ->
+    return option.original
 
   render: =>
     if @props.visible
@@ -22,10 +46,9 @@ class GlobalSearch extends React.Component
 
     options = _.pluck(@props.requests.toJSON(), 'id')
 
-    globalSearchClasses = [
-      'global-search'
-      'global-search-active' if @props.visible
-    ].join(' ')
+    globalSearchClasses = classNames
+      'global-search': true
+      'global-search-active': @props.visible
 
     <div className={globalSearchClasses}>
       <div className='container'>
@@ -45,6 +68,10 @@ class GlobalSearch extends React.Component
           }}
           placeholder='Search all requests'
           onOptionSelected=@optionSelected
+          filterOptions=@filterOptions
+          displayOption=@renderOption
+          formInputOption=@getValueFromOption
+          inputDisplayOption=@getValueFromOption
         />
       </div>
     </div>
