@@ -1,6 +1,6 @@
 # Singularity REST API
 
-Version: 0.6.0-SNAPSHOT
+Version: 0.7.0-SNAPSHOT
 
 Endpoints:
 - [`/api/deploys`](#endpoint-/api/deploys) - Manages Singularity Deploys for existing requests
@@ -107,6 +107,8 @@ Models:
 - [`SingularityTaskHistoryUpdate`](#model-SingularityTaskHistoryUpdate)
 - [`SingularityTaskId`](#model-SingularityTaskId)
 - [`SingularityTaskIdHistory`](#model-SingularityTaskIdHistory)
+- [`SingularityTaskMetadata`](#model-SingularityTaskMetadata)
+- [`SingularityTaskMetadataRequest`](#model-SingularityTaskMetadataRequest)
 - [`SingularityTaskRequest`](#model-SingularityTaskRequest)
 - [`SingularityTaskShellCommandHistory`](#model-SingularityTaskShellCommandHistory)
 - [`SingularityTaskShellCommandRequest`](#model-SingularityTaskShellCommandRequest)
@@ -116,6 +118,7 @@ Models:
 - [`SingularityUpdatePendingDeployRequest`](#model-SingularityUpdatePendingDeployRequest)
 - [`SingularityVolume`](#model-SingularityVolume)
 - [`SingularityWebhook`](#model-SingularityWebhook)
+- [`SingularityWebhookSummary`](#model-SingularityWebhookSummary)
 - [`SlaveID`](#model-SlaveID)
 - [`SlaveIDOrBuilder`](#model-SlaveIDOrBuilder)
 - [`TaskID`](#model-TaskID)
@@ -1634,6 +1637,36 @@ Retrieve statistics about a specific active task.
 
 
 - - -
+#### **POST** `/api/tasks/task/{taskId}/metadata`
+
+Post metadata about a task that will be persisted along with it and displayed in the UI
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityTaskMetadataRequest](#model-linkType)</a> |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 400    | Invalid metadata object or doesn&#39;t match allowed types | - |
+| 404    | Task doesn&#39;t exist | - |
+| 409    | Metadata with this type/timestamp already existed | - |
+
+
+- - -
 #### **POST** `/api/tasks/task/{taskId}/command`
 
 Run a configured shell command against the given task
@@ -2116,6 +2149,48 @@ Retrieve a list of queued task updates for a specific webhook.
 
 
 - - -
+#### **GET** `/api/webhooks/task`
+
+Retrieve a list of queued task updates for a specific webhook.
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| webhookId | false |  | string |
+
+###### Response
+[List[SingularityTaskHistoryUpdate]](#model-SingularityTaskHistoryUpdate)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/webhooks/summary`
+
+Retrieve a summary of each active webhook
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityWebhookSummary]](#model-SingularityWebhookSummary)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **GET** `/api/webhooks/request/{webhookId}`
 
 Retrieve a list of queued request updates for a specific webhook.
@@ -2139,6 +2214,29 @@ Retrieve a list of queued request updates for a specific webhook.
 
 
 - - -
+#### **GET** `/api/webhooks/request`
+
+Retrieve a list of queued request updates for a specific webhook.
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| webhookId | false |  | string |
+
+###### Response
+[List[SingularityRequestHistory]](#model-SingularityRequestHistory)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **GET** `/api/webhooks/deploy/{webhookId}`
 
 Retrieve a list of queued deploy updates for a specific webhook.
@@ -2150,6 +2248,29 @@ Retrieve a list of queued deploy updates for a specific webhook.
 | Parameter | Required | Description | Data Type |
 |-----------|----------|-------------|-----------|
 | webhookId | true |  | string |
+
+###### Response
+[List[SingularityDeployUpdate]](#model-SingularityDeployUpdate)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
+#### **GET** `/api/webhooks/deploy`
+
+Retrieve a list of queued deploy updates for a specific webhook.
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| webhookId | false |  | string |
 
 ###### Response
 [List[SingularityDeployUpdate]](#model-SingularityDeployUpdate)
@@ -2204,6 +2325,29 @@ string
 
 
 - - -
+#### **DELETE** `/api/webhooks`
+
+Delete a specific webhook.
+
+
+###### Parameters
+**query**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| webhookId | false |  | string |
+
+###### Response
+string
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 
 ## Data Types
 
@@ -2226,8 +2370,8 @@ string
 | urisCount | int | optional |  |
 | argumentsList | Array[string] | optional |  |
 | containerOrBuilder | [ContainerInfoOrBuilder](#model-ContainerInfoOrBuilder) | optional |  |
-| user | string | optional |  |
 | container | [ContainerInfo](#model-ContainerInfo) | optional |  |
+| user | string | optional |  |
 | value | string | optional |  |
 | initialized | boolean | optional |  |
 | environment | [Environment](#model-Environment) | optional |  |
@@ -2252,8 +2396,8 @@ string
 | argumentsCount | int | optional |  |
 | argumentsList | Array[string] | optional |  |
 | containerOrBuilder | [ContainerInfoOrBuilder](#model-ContainerInfoOrBuilder) | optional |  |
-| user | string | optional |  |
 | container | [ContainerInfo](#model-ContainerInfo) | optional |  |
+| user | string | optional |  |
 | value | string | optional |  |
 | environment | [Environment](#model-Environment) | optional |  |
 | userBytes | [ByteString](#model-ByteString) | optional |  |
@@ -2503,8 +2647,8 @@ string
 | initialized | boolean | optional |  |
 | name | string | optional |  |
 | nameBytes | [ByteString](#model-ByteString) | optional |  |
-| sourceBytes | [ByteString](#model-ByteString) | optional |  |
 | frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
+| sourceBytes | [ByteString](#model-ByteString) | optional |  |
 | command | [CommandInfo](#model-CommandInfo) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](#model-FrameworkIDOrBuilder) | optional |  |
 | executorIdOrBuilder | [ExecutorIDOrBuilder](#model-ExecutorIDOrBuilder) | optional |  |
@@ -2532,8 +2676,8 @@ string
 | container | [ContainerInfo](#model-ContainerInfo) | optional |  |
 | name | string | optional |  |
 | nameBytes | [ByteString](#model-ByteString) | optional |  |
-| frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
 | sourceBytes | [ByteString](#model-ByteString) | optional |  |
+| frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
 | command | [CommandInfo](#model-CommandInfo) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](#model-FrameworkIDOrBuilder) | optional |  |
 | executorIdOrBuilder | [ExecutorIDOrBuilder](#model-ExecutorIDOrBuilder) | optional |  |
@@ -2925,6 +3069,7 @@ string
 | resources | [com.hubspot.mesos.Resources](#model-com.hubspot.mesos.Resources) | optional | Resources required for this deploy. |
 | uris | Array[string] | optional | List of URIs to download before executing the deploy command. |
 | containerInfo | [SingularityContainerInfo](#model-SingularityContainerInfo) | optional | Container information for deployment into a container. |
+| loadBalancerDomains | [Set](#model-Set) | optional | List of domains to host this service on, for use with the load balancer api |
 | arguments | Array[string] | optional | Command arguments. |
 | autoAdvanceDeploySteps | boolean | optional | automatically advance to the next target instance count after `deployStepWaitTimeMs` seconds |
 | serviceBasePath | string | optional | The base path for the API exposed by the deploy. Used in conjunction with the Load balancer API. |
@@ -2945,12 +3090,14 @@ string
 | healthcheckIntervalSeconds | long | optional | Time to wait after a failed healthcheck to try again in seconds. |
 | command | string | optional | Command to execute for this deployment. |
 | executorData | [ExecutorData](#model-ExecutorData) | optional | Executor specific information |
+| loadBalancerAdditionalRoutes | Array[string] | optional | Additional routes besides serviceBasePath used by this service |
 | timestamp | long | optional | Deploy timestamp. |
 | deployInstanceCountPerStep | int | optional | deploy this many instances at a time |
 | considerHealthyAfterRunningForSeconds | long | optional | Number of seconds that a service must be healthy to consider the deployment to be successful. |
 | loadBalancerOptions | [Map[string,Object]](#model-Map[string,Object]) | optional | Map (Key/Value) of options for the load balancer. |
 | maxTaskRetries | int | optional | allowed at most this many failed tasks to be retried before failing the deploy |
 | loadBalancerPortIndex | int | optional | Send this port to the load balancer api (e.g. 0 for first port), defaults to first port |
+| loadBalancerTemplate | string | optional | Name of load balancer template to use if not using the default template |
 | customExecutorCmd | string | optional | Custom Mesos executor |
 | env | [Map[string,string]](#model-Map[string,string]) | optional | Map of environment variable definitions. |
 | customExecutorResources | [Resources](#model-Resources) | optional | Resources to allocate for custom mesos executor |
@@ -3084,8 +3231,8 @@ string
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| user | string | optional |  |
 | requestId | string | optional |  |
+| user | string | optional |  |
 | startMillis | long | optional |  |
 | deployId | string | optional |  |
 | actionId | string | optional |  |
@@ -3096,8 +3243,8 @@ string
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| user | string | optional |  |
 | requestId | string | optional |  |
+| user | string | optional |  |
 | startMillis | long | optional |  |
 | actionId | string | optional |  |
 | expiringAPIRequestObject | [T](#model-T) | optional |  |
@@ -3108,8 +3255,8 @@ string
 | name | type | required | description |
 |------|------|----------|-------------|
 | revertToInstances | int | optional |  |
-| user | string | optional |  |
 | requestId | string | optional |  |
+| user | string | optional |  |
 | startMillis | long | optional |  |
 | actionId | string | optional |  |
 | expiringAPIRequestObject | [T](#model-T) | optional |  |
@@ -3119,8 +3266,8 @@ string
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| user | string | optional |  |
 | requestId | string | optional |  |
+| user | string | optional |  |
 | startMillis | long | optional |  |
 | actionId | string | optional |  |
 | expiringAPIRequestObject | [T](#model-T) | optional |  |
@@ -3258,25 +3405,27 @@ string
 | hideEvenNumberAcrossRacksHint | boolean | optional |  |
 | readOnlyGroups | [Set](#model-Set) | optional |  |
 | schedule | string | optional |  |
+| taskLogErrorRegexCaseSensitive | boolean | optional |  |
 | skipHealthchecks | boolean | optional |  |
 | waitAtLeastMillisAfterTaskFinishesForReschedule | long | optional |  |
-| emailConfigurationOverrides | [Map[SingularityEmailType,List[SingularityEmailDestination]]](#model-Map[SingularityEmailType,List[SingularityEmailDestination]]) | optional |  |
 | rackAffinity | Array[string] | optional |  |
-| bounceAfterScale | boolean | optional |  |
+| emailConfigurationOverrides | [Map[SingularityEmailType,List[SingularityEmailDestination]]](#model-Map[SingularityEmailType,List[SingularityEmailDestination]]) | optional |  |
 | slavePlacement | [SlavePlacement](#model-SlavePlacement) | optional |  |
+| bounceAfterScale | boolean | optional |  |
 | group | string | optional |  |
 | rackSensitive | boolean | optional |  |
 | allowedSlaveAttributes | [Map[string,string]](#model-Map[string,string]) | optional |  |
 | owners | Array[string] | optional |  |
 | requestType | [RequestType](#model-RequestType) | optional |  Allowable values: SERVICE, WORKER, SCHEDULED, ON_DEMAND, RUN_ONCE |
-| quartzSchedule | string | optional |  |
 | scheduledExpectedRuntimeMillis | long | optional |  |
+| quartzSchedule | string | optional |  |
 | requiredSlaveAttributes | [Map[string,string]](#model-Map[string,string]) | optional |  |
-| loadBalanced | boolean | optional |  |
 | numRetriesOnFailure | int | optional |  |
+| loadBalanced | boolean | optional |  |
 | killOldNonLongRunningTasksAfterMillis | long | optional |  |
 | instances | int | optional |  |
 | scheduleType | [ScheduleType](#model-ScheduleType) | optional |  |
+| taskLogErrorRegex | string | optional |  |
 | id | string | optional |  |
 
 
@@ -3487,6 +3636,7 @@ string
 | task | [SingularityTask](#model-SingularityTask) | optional |  |
 | healthcheckResults | [Array[SingularityTaskHealthcheckResult]](#model-SingularityTaskHealthcheckResult) | optional |  |
 | loadBalancerUpdates | [Array[SingularityLoadBalancerUpdate]](#model-SingularityLoadBalancerUpdate) | optional |  |
+| taskMetadata | [Array[SingularityTaskMetadata]](#model-SingularityTaskMetadata) | optional |  |
 | shellCommandHistory | [Array[SingularityTaskShellCommandHistory]](#model-SingularityTaskShellCommandHistory) | optional |  |
 | taskUpdates | [Array[SingularityTaskHistoryUpdate]](#model-SingularityTaskHistoryUpdate) | optional |  |
 
@@ -3525,6 +3675,29 @@ string
 | runId | string | optional |  |
 | updatedAt | long | optional |  |
 | lastTaskState | [ExtendedTaskState](#model-ExtendedTaskState) | optional |  |
+
+
+## <a name="model-SingularityTaskMetadata"></a> SingularityTaskMetadata
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| taskId | [SingularityTaskId](#model-SingularityTaskId) | optional |  |
+| level | [MetadataLevel](#model-MetadataLevel) | optional |  Allowable values: INFO, WARN, ERROR |
+| type | string | optional |  |
+| user | string | optional |  |
+| message | string | optional |  |
+| title | string | optional |  |
+| timestamp | long | optional |  |
+
+
+## <a name="model-SingularityTaskMetadataRequest"></a> SingularityTaskMetadataRequest
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| level | [MetadataLevel](#model-MetadataLevel) | optional |  |
+| type | string | optional |  |
+| message | string | optional |  |
+| title | string | optional |  |
 
 
 ## <a name="model-SingularityTaskRequest"></a> SingularityTaskRequest
@@ -3613,6 +3786,14 @@ string
 | id | string | optional | Unique ID for webhook. |
 
 
+## <a name="model-SingularityWebhookSummary"></a> SingularityWebhookSummary
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| webhook | [SingularityWebhook](#model-SingularityWebhook) | optional |  |
+| queueSize | int | optional |  |
+
+
 ## <a name="model-SlaveID"></a> SlaveID
 
 | name | type | required | description |
@@ -3691,8 +3872,8 @@ string
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
 | discovery | [DiscoveryInfo](#model-DiscoveryInfo) | optional |  |
-| resourcesCount | int | optional |  |
 | unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
+| resourcesCount | int | optional |  |
 | initializationErrorString | string | optional |  |
 | discoveryOrBuilder | [DiscoveryInfoOrBuilder](#model-DiscoveryInfoOrBuilder) | optional |  |
 

@@ -92,6 +92,8 @@ Models:
 - [`SingularityTaskHistoryUpdate`](models.md#model-SingularityTaskHistoryUpdate)
 - [`SingularityTaskId`](models.md#model-SingularityTaskId)
 - [`SingularityTaskIdHistory`](models.md#model-SingularityTaskIdHistory)
+- [`SingularityTaskMetadata`](models.md#model-SingularityTaskMetadata)
+- [`SingularityTaskMetadataRequest`](models.md#model-SingularityTaskMetadataRequest)
 - [`SingularityTaskRequest`](models.md#model-SingularityTaskRequest)
 - [`SingularityTaskShellCommandHistory`](models.md#model-SingularityTaskShellCommandHistory)
 - [`SingularityTaskShellCommandRequest`](models.md#model-SingularityTaskShellCommandRequest)
@@ -101,6 +103,7 @@ Models:
 - [`SingularityUpdatePendingDeployRequest`](models.md#model-SingularityUpdatePendingDeployRequest)
 - [`SingularityVolume`](models.md#model-SingularityVolume)
 - [`SingularityWebhook`](models.md#model-SingularityWebhook)
+- [`SingularityWebhookSummary`](models.md#model-SingularityWebhookSummary)
 - [`SlaveID`](models.md#model-SlaveID)
 - [`SlaveIDOrBuilder`](models.md#model-SlaveIDOrBuilder)
 - [`TaskID`](models.md#model-TaskID)
@@ -131,8 +134,8 @@ Models:
 | urisCount | int | optional |  |
 | argumentsList | Array[string] | optional |  |
 | containerOrBuilder | [ContainerInfoOrBuilder](models.md#model-ContainerInfoOrBuilder) | optional |  |
-| user | string | optional |  |
 | container | [ContainerInfo](models.md#model-ContainerInfo) | optional |  |
+| user | string | optional |  |
 | value | string | optional |  |
 | initialized | boolean | optional |  |
 | environment | [Environment](models.md#model-Environment) | optional |  |
@@ -157,8 +160,8 @@ Models:
 | argumentsCount | int | optional |  |
 | argumentsList | Array[string] | optional |  |
 | containerOrBuilder | [ContainerInfoOrBuilder](models.md#model-ContainerInfoOrBuilder) | optional |  |
-| user | string | optional |  |
 | container | [ContainerInfo](models.md#model-ContainerInfo) | optional |  |
+| user | string | optional |  |
 | value | string | optional |  |
 | environment | [Environment](models.md#model-Environment) | optional |  |
 | userBytes | [ByteString](models.md#model-ByteString) | optional |  |
@@ -408,8 +411,8 @@ Models:
 | initialized | boolean | optional |  |
 | name | string | optional |  |
 | nameBytes | [ByteString](models.md#model-ByteString) | optional |  |
-| sourceBytes | [ByteString](models.md#model-ByteString) | optional |  |
 | frameworkId | [FrameworkID](models.md#model-FrameworkID) | optional |  |
+| sourceBytes | [ByteString](models.md#model-ByteString) | optional |  |
 | command | [CommandInfo](models.md#model-CommandInfo) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](models.md#model-FrameworkIDOrBuilder) | optional |  |
 | executorIdOrBuilder | [ExecutorIDOrBuilder](models.md#model-ExecutorIDOrBuilder) | optional |  |
@@ -437,8 +440,8 @@ Models:
 | container | [ContainerInfo](models.md#model-ContainerInfo) | optional |  |
 | name | string | optional |  |
 | nameBytes | [ByteString](models.md#model-ByteString) | optional |  |
-| frameworkId | [FrameworkID](models.md#model-FrameworkID) | optional |  |
 | sourceBytes | [ByteString](models.md#model-ByteString) | optional |  |
+| frameworkId | [FrameworkID](models.md#model-FrameworkID) | optional |  |
 | command | [CommandInfo](models.md#model-CommandInfo) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](models.md#model-FrameworkIDOrBuilder) | optional |  |
 | executorIdOrBuilder | [ExecutorIDOrBuilder](models.md#model-ExecutorIDOrBuilder) | optional |  |
@@ -830,6 +833,7 @@ Models:
 | resources | [com.hubspot.mesos.Resources](models.md#model-com.hubspot.mesos.Resources) | optional | Resources required for this deploy. |
 | uris | Array[string] | optional | List of URIs to download before executing the deploy command. |
 | containerInfo | [SingularityContainerInfo](models.md#model-SingularityContainerInfo) | optional | Container information for deployment into a container. |
+| loadBalancerDomains | [Set](models.md#model-Set) | optional | List of domains to host this service on, for use with the load balancer api |
 | arguments | Array[string] | optional | Command arguments. |
 | autoAdvanceDeploySteps | boolean | optional | automatically advance to the next target instance count after `deployStepWaitTimeMs` seconds |
 | serviceBasePath | string | optional | The base path for the API exposed by the deploy. Used in conjunction with the Load balancer API. |
@@ -850,12 +854,14 @@ Models:
 | healthcheckIntervalSeconds | long | optional | Time to wait after a failed healthcheck to try again in seconds. |
 | command | string | optional | Command to execute for this deployment. |
 | executorData | [ExecutorData](models.md#model-ExecutorData) | optional | Executor specific information |
+| loadBalancerAdditionalRoutes | Array[string] | optional | Additional routes besides serviceBasePath used by this service |
 | timestamp | long | optional | Deploy timestamp. |
 | deployInstanceCountPerStep | int | optional | deploy this many instances at a time |
 | considerHealthyAfterRunningForSeconds | long | optional | Number of seconds that a service must be healthy to consider the deployment to be successful. |
 | loadBalancerOptions | [Map[string,Object]](models.md#model-Map[string,Object]) | optional | Map (Key/Value) of options for the load balancer. |
 | maxTaskRetries | int | optional | allowed at most this many failed tasks to be retried before failing the deploy |
 | loadBalancerPortIndex | int | optional | Send this port to the load balancer api (e.g. 0 for first port), defaults to first port |
+| loadBalancerTemplate | string | optional | Name of load balancer template to use if not using the default template |
 | customExecutorCmd | string | optional | Custom Mesos executor |
 | env | [Map[string,string]](models.md#model-Map[string,string]) | optional | Map of environment variable definitions. |
 | customExecutorResources | [Resources](models.md#model-Resources) | optional | Resources to allocate for custom mesos executor |
@@ -989,8 +995,8 @@ Models:
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| user | string | optional |  |
 | requestId | string | optional |  |
+| user | string | optional |  |
 | startMillis | long | optional |  |
 | deployId | string | optional |  |
 | actionId | string | optional |  |
@@ -1001,8 +1007,8 @@ Models:
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| user | string | optional |  |
 | requestId | string | optional |  |
+| user | string | optional |  |
 | startMillis | long | optional |  |
 | actionId | string | optional |  |
 | expiringAPIRequestObject | [T](models.md#model-T) | optional |  |
@@ -1013,8 +1019,8 @@ Models:
 | name | type | required | description |
 |------|------|----------|-------------|
 | revertToInstances | int | optional |  |
-| user | string | optional |  |
 | requestId | string | optional |  |
+| user | string | optional |  |
 | startMillis | long | optional |  |
 | actionId | string | optional |  |
 | expiringAPIRequestObject | [T](models.md#model-T) | optional |  |
@@ -1024,8 +1030,8 @@ Models:
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| user | string | optional |  |
 | requestId | string | optional |  |
+| user | string | optional |  |
 | startMillis | long | optional |  |
 | actionId | string | optional |  |
 | expiringAPIRequestObject | [T](models.md#model-T) | optional |  |
@@ -1163,25 +1169,27 @@ Models:
 | hideEvenNumberAcrossRacksHint | boolean | optional |  |
 | readOnlyGroups | [Set](models.md#model-Set) | optional |  |
 | schedule | string | optional |  |
+| taskLogErrorRegexCaseSensitive | boolean | optional |  |
 | skipHealthchecks | boolean | optional |  |
 | waitAtLeastMillisAfterTaskFinishesForReschedule | long | optional |  |
-| emailConfigurationOverrides | [Map[SingularityEmailType,List[SingularityEmailDestination]]](models.md#model-Map[SingularityEmailType,List[SingularityEmailDestination]]) | optional |  |
 | rackAffinity | Array[string] | optional |  |
-| bounceAfterScale | boolean | optional |  |
+| emailConfigurationOverrides | [Map[SingularityEmailType,List[SingularityEmailDestination]]](models.md#model-Map[SingularityEmailType,List[SingularityEmailDestination]]) | optional |  |
 | slavePlacement | [SlavePlacement](models.md#model-SlavePlacement) | optional |  |
+| bounceAfterScale | boolean | optional |  |
 | group | string | optional |  |
 | rackSensitive | boolean | optional |  |
 | allowedSlaveAttributes | [Map[string,string]](models.md#model-Map[string,string]) | optional |  |
 | owners | Array[string] | optional |  |
 | requestType | [RequestType](models.md#model-RequestType) | optional |  Allowable values: SERVICE, WORKER, SCHEDULED, ON_DEMAND, RUN_ONCE |
-| quartzSchedule | string | optional |  |
 | scheduledExpectedRuntimeMillis | long | optional |  |
+| quartzSchedule | string | optional |  |
 | requiredSlaveAttributes | [Map[string,string]](models.md#model-Map[string,string]) | optional |  |
-| loadBalanced | boolean | optional |  |
 | numRetriesOnFailure | int | optional |  |
+| loadBalanced | boolean | optional |  |
 | killOldNonLongRunningTasksAfterMillis | long | optional |  |
 | instances | int | optional |  |
 | scheduleType | [ScheduleType](models.md#model-ScheduleType) | optional |  |
+| taskLogErrorRegex | string | optional |  |
 | id | string | optional |  |
 
 
@@ -1392,6 +1400,7 @@ Models:
 | task | [SingularityTask](models.md#model-SingularityTask) | optional |  |
 | healthcheckResults | [Array[SingularityTaskHealthcheckResult]](models.md#model-SingularityTaskHealthcheckResult) | optional |  |
 | loadBalancerUpdates | [Array[SingularityLoadBalancerUpdate]](models.md#model-SingularityLoadBalancerUpdate) | optional |  |
+| taskMetadata | [Array[SingularityTaskMetadata]](models.md#model-SingularityTaskMetadata) | optional |  |
 | shellCommandHistory | [Array[SingularityTaskShellCommandHistory]](models.md#model-SingularityTaskShellCommandHistory) | optional |  |
 | taskUpdates | [Array[SingularityTaskHistoryUpdate]](models.md#model-SingularityTaskHistoryUpdate) | optional |  |
 
@@ -1430,6 +1439,29 @@ Models:
 | runId | string | optional |  |
 | updatedAt | long | optional |  |
 | lastTaskState | [ExtendedTaskState](models.md#model-ExtendedTaskState) | optional |  |
+
+
+## <a name="model-SingularityTaskMetadata"></a> SingularityTaskMetadata
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| taskId | [SingularityTaskId](models.md#model-SingularityTaskId) | optional |  |
+| level | [MetadataLevel](models.md#model-MetadataLevel) | optional |  Allowable values: INFO, WARN, ERROR |
+| type | string | optional |  |
+| user | string | optional |  |
+| message | string | optional |  |
+| title | string | optional |  |
+| timestamp | long | optional |  |
+
+
+## <a name="model-SingularityTaskMetadataRequest"></a> SingularityTaskMetadataRequest
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| level | [MetadataLevel](models.md#model-MetadataLevel) | optional |  |
+| type | string | optional |  |
+| message | string | optional |  |
+| title | string | optional |  |
 
 
 ## <a name="model-SingularityTaskRequest"></a> SingularityTaskRequest
@@ -1518,6 +1550,14 @@ Models:
 | id | string | optional | Unique ID for webhook. |
 
 
+## <a name="model-SingularityWebhookSummary"></a> SingularityWebhookSummary
+
+| name | type | required | description |
+|------|------|----------|-------------|
+| webhook | [SingularityWebhook](models.md#model-SingularityWebhook) | optional |  |
+| queueSize | int | optional |  |
+
+
 ## <a name="model-SlaveID"></a> SlaveID
 
 | name | type | required | description |
@@ -1596,8 +1636,8 @@ Models:
 | allFields | [Map[FieldDescriptor,Object]](models.md#model-Map[FieldDescriptor,Object]) | optional |  |
 | descriptorForType | [Descriptor](models.md#model-Descriptor) | optional |  |
 | discovery | [DiscoveryInfo](models.md#model-DiscoveryInfo) | optional |  |
-| resourcesCount | int | optional |  |
 | unknownFields | [UnknownFieldSet](models.md#model-UnknownFieldSet) | optional |  |
+| resourcesCount | int | optional |  |
 | initializationErrorString | string | optional |  |
 | discoveryOrBuilder | [DiscoveryInfoOrBuilder](models.md#model-DiscoveryInfoOrBuilder) | optional |  |
 
