@@ -16,6 +16,8 @@ public class SingularityTaskMetadataConfiguration {
 
   private long maxMetadataMessageBytes = 10000;
 
+  private long maxMetadataTitleBytes = 2000;
+
   public long getTaskPersistAfterFinishBufferMillis() {
     return taskPersistAfterFinishBufferMillis;
   }
@@ -54,5 +56,13 @@ public class SingularityTaskMetadataConfiguration {
 
   public void setMaxMetadataMessageBytes(long maxMetadataMessageBytes) {
     this.maxMetadataMessageBytes = maxMetadataMessageBytes;
+  }
+
+  public long getMaxMetadataTitleBytes() {
+    return maxMetadataTitleBytes;
+  }
+
+  public void setMaxMetadataTitleBytes(long maxMetadataTitleBytes) {
+    this.maxMetadataTitleBytes = maxMetadataTitleBytes;
   }
 }
