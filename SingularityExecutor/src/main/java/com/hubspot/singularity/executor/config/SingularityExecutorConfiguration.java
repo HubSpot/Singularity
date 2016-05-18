@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.MesosUtils;
+import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 import com.hubspot.singularity.executor.models.ThreadCheckerType;
 import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandDescriptor;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
@@ -222,6 +223,9 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @JsonProperty
   private ThreadCheckerType threadCheckerType = ThreadCheckerType.PS;
+
+  @JsonProperty
+  private SingularityExecutorLogrotateFrequency logrotateFrequency = SingularityExecutorLogrotateFrequency.DAILY;
 
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
@@ -639,6 +643,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.threadCheckerType = threadCheckerType;
   }
 
+  public SingularityExecutorLogrotateFrequency getLogrotateFrequency() {
+    return logrotateFrequency;
+  }
+
+  public void setLogrotateFrequency(SingularityExecutorLogrotateFrequency logrotateFrequency) {
+    this.logrotateFrequency = logrotateFrequency;
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration[" +
@@ -695,6 +707,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", dockerClientTimeLimitMs='" + dockerClientTimeLimitSeconds + '\'' +
             ", dockerClientConnectionPoolSize='" + dockerClientConnectionPoolSize + '\'' +
             ", threadCheckerType='" + threadCheckerType + '\'' +
+            ", logrotateFrequency='" + logrotateFrequency + '\'' +
             ']';
   }
 }
