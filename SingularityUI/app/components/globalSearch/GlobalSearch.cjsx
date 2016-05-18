@@ -11,23 +11,29 @@ class GlobalSearch extends React.Component
     @clear()
     @props.onHide()
 
+  resetSelection: =>
+    @refs.typeahead.setState({
+      selectionIndex: 0
+    })
+
   clear: =>
     @refs.typeahead.setEntryText('')
-    @refs.typeahead._onEscape() # hack to clear search index, TODO: change if https://github.com/fmoo/react-typeahead/pull/193 gets merged
+    @resetSelection()
 
   focus: =>
     @refs.typeahead.focus()
+    @resetSelection()
 
-  filterOptions: (inputValue, options) ->
+  searchOptions: (inputValue, options) ->
     # fuzzy lazily just appends a string before and after a matching char
     # we have to later use a simple shift-in shift-out state machine to convert
     fuzzyOptions = {
       returnMatchInfo: true
     }
 
-    filtered = fuzzy.filter(inputValue, options, fuzzyOptions)
+    searched = fuzzy.filter(inputValue, options, fuzzyOptions)
 
-    return filtered
+    return searched
 
   renderOption: (option, index) ->
     # transform fuzzy string into react component
@@ -68,7 +74,7 @@ class GlobalSearch extends React.Component
           }}
           placeholder='Search all requests'
           onOptionSelected=@optionSelected
-          filterOptions=@filterOptions
+          searchOptions=@searchOptions
           displayOption=@renderOption
           formInputOption=@getValueFromOption
           inputDisplayOption=@getValueFromOption
