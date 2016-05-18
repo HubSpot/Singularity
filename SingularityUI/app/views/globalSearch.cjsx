@@ -21,8 +21,7 @@ class GlobalSearchView extends View
     @render()
 
   focusSearch: =>
-    # TODO: when this class get's Reactified as well, use refs
-    $('input.big-search-box').focus()
+    @ref.focus()
 
   searchActive: false
 
@@ -34,20 +33,21 @@ class GlobalSearchView extends View
       focusInput = $(event.target).is @$ 'input.big-search-box'
 
       modifierKey = event.metaKey or event.shiftKey or event.ctrlKey
-      sPressed = event.keyCode in [83, 84] and not modifierKey
+      # s and t
+      loadSearchKeysPressed = event.keyCode in [83, 84] and not modifierKey
       escPressed = event.keyCode is 27
 
       if escPressed and (focusBody or focusInput)
         @hide()
-      else if sPressed and focusBody
+      else if loadSearchKeysPressed and focusBody
         @show()
         event.preventDefault()
 
   render: ->
-    ReactDOM.render(
+    @ref = ReactDOM.render(
       <GlobalSearch
         requests=@collection
-        visible={@searchActive}
+        visible=@searchActive
         onHide=@hide
       />,
       @el)

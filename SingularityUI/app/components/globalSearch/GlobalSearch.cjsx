@@ -1,31 +1,61 @@
 React = require 'react'
+classNames = require 'classnames'
 
 { Typeahead } = require 'react-typeahead'
-
+fuzzy = require 'fuzzy'
 
 class GlobalSearch extends React.Component
-  optionSelected: (requestId) =>
+  optionSelected: (requestIdObject) =>
+    requestId = @getValueFromOption(requestIdObject)
     app.router.navigate "/request/#{ requestId }", { trigger: true }
     @clear()
     @props.onHide()
 
+  resetSelection: =>
+    @refs.typeahead.setState({
+      selectionIndex: 0
+    })
+
   clear: =>
     @refs.typeahead.setEntryText('')
-    @refs.typeahead._onEscape() # hack to clear search index, TODO: PR react-typeahead
+    @resetSelection()
 
   focus: =>
     @refs.typeahead.focus()
+    @resetSelection()
 
-  render: =>
-    if @props.visible
+  searchOptions: (inputValue, options) ->
+    # fuzzy lazily just appends a string before and after a matching char
+    # we have to later use a simple shift-in shift-out state machine to convert
+    fuzzyOptions = {
+      returnMatchInfo: true
+    }
+
+    searched = fuzzy.filter(inputValue, options, fuzzyOptions)
+
+    return searched
+
+  renderOption: (option, index) ->
+    # transform fuzzy string into react component
+    bolded = option.string.map((matchInfo) ->
+      if matchInfo.match then <b>{matchInfo.char}</b> else <span>{matchInfo.char}</span>
+    )
+
+    return bolded
+
+  getValueFromOption: (option) ->
+    return option.original
+
+  componentDidUpdate: (prevProps, prevState) =>
+    if @props.visible and (@props.visible isnt prevProps.visible)
       @focus()
 
+  render: =>
     options = _.pluck(@props.requests.toJSON(), 'id')
 
-    globalSearchClasses = [
-      'global-search'
-      'global-search-active' if @props.visible
-    ].join(' ')
+    globalSearchClasses = classNames
+      'global-search': true
+      'global-search-active': @props.visible
 
     <div className={globalSearchClasses}>
       <div className='container'>
@@ -45,6 +75,10 @@ class GlobalSearch extends React.Component
           }}
           placeholder='Search all requests'
           onOptionSelected=@optionSelected
+          searchOptions=@searchOptions
+          displayOption=@renderOption
+          formInputOption=@getValueFromOption
+          inputDisplayOption=@getValueFromOption
         />
       </div>
     </div>
