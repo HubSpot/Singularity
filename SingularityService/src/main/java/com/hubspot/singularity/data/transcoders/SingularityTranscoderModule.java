@@ -19,6 +19,7 @@ import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityPriorityKillRequestParent;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
@@ -91,5 +92,7 @@ public class SingularityTranscoderModule implements Module {
     bindTranscoder(binder).asCompressedJson(SingularityTaskStatusHolder.class);
     bindTranscoder(binder).asCompressedJson(SingularityTask.class);
     bindTranscoder(binder).asCompressedJson(SingularityTaskMetadata.class);
+
+    bindTranscoder(binder).asJson(SingularityPriorityKillRequestParent.class);
   }
 }

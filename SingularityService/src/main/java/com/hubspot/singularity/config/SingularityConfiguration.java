@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.TimeZone;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
@@ -254,6 +253,13 @@ public class SingularityConfiguration extends Configuration {
   private GraphiteConfiguration graphiteConfiguration = new GraphiteConfiguration();
 
   private boolean taskHistoryQueryUsesZkFirst = false;
+
+  @Min(0)
+  @Max(1)
+  private double defaultTaskPriorityLevel = 0.5;
+
+  @Min(0)
+  private long checkPriorityKillsEveryMillis = TimeUnit.SECONDS.toMillis(30);
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -1029,5 +1035,21 @@ public class SingularityConfiguration extends Configuration {
 
   public void setTaskHistoryQueryUsesZkFirst(boolean taskHistoryQueryUsesZkFirst) {
     this.taskHistoryQueryUsesZkFirst = taskHistoryQueryUsesZkFirst;
+  }
+
+  public double getDefaultTaskPriorityLevel() {
+    return defaultTaskPriorityLevel;
+  }
+
+  public void setDefaultTaskPriorityLevel(double defaultTaskPriorityLevel) {
+    this.defaultTaskPriorityLevel = defaultTaskPriorityLevel;
+  }
+
+  public long getCheckPriorityKillsEveryMillis() {
+    return checkPriorityKillsEveryMillis;
+  }
+
+  public void setCheckPriorityKillsEveryMillis(long checkPriorityKillsEveryMillis) {
+    this.checkPriorityKillsEveryMillis = checkPriorityKillsEveryMillis;
   }
 }
