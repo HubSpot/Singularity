@@ -46,10 +46,11 @@ class GlobalSearch extends React.Component
   getValueFromOption: (option) ->
     return option.original
 
-  render: =>
-    if @props.visible
+  componentDidUpdate: (prevProps, prevState) =>
+    if @props.visible and (@props.visible isnt prevProps.visible)
       @focus()
 
+  render: =>
     options = _.pluck(@props.requests.toJSON(), 'id')
 
     globalSearchClasses = classNames
