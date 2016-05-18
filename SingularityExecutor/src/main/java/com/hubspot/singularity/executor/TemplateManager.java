@@ -57,7 +57,7 @@ public class TemplateManager {
   public boolean writeHourlyCronForLogrotate(Path destination, LogrotateCronTemplateContext logrotateCronTemplateContext) {
     writeTemplate(destination, hourlyCronLogrotateTemplate, logrotateCronTemplateContext);
     final File destinationFile = destination.toFile();
-    return destinationFile.setReadable(true) && destinationFile.setWritable(true, true) && destinationFile.setExecutable(false);
+    return destinationFile.setReadable(true, false) && destinationFile.setWritable(true) && destinationFile.setExecutable(false);
   }
 
   public void writeDockerScript(Path destination, DockerContext dockerContext) {

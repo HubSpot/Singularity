@@ -142,7 +142,8 @@ public class SingularityExecutorTaskLogManager {
     try {
       deleted = Files.deleteIfExists(getLogrotateConfPath());
       if (logrotateFrequency.getCronSchedule().isPresent()) {
-        deleted = deleted || Files.deleteIfExists(getLogrotateCronPath());
+        boolean cronDeleted = Files.deleteIfExists(getLogrotateCronPath());
+        deleted = deleted || cronDeleted;
       }
     } catch (Throwable t) {
       log.trace("Couldn't delete {}", getLogrotateConfPath(), t);
