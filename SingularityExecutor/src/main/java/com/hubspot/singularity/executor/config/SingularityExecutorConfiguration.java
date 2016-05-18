@@ -227,6 +227,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @JsonProperty
   private SingularityExecutorLogrotateFrequency logrotateFrequency = SingularityExecutorLogrotateFrequency.DAILY;
 
+  @NotEmpty
+  @JsonProperty
+  private String cronDirectory = "/etc/cron.d";
+
   public SingularityExecutorConfiguration() {
     super(Optional.of("singularity-executor.log"));
   }
@@ -651,6 +655,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.logrotateFrequency = logrotateFrequency;
   }
 
+  public String getCronDirectory() {
+    return cronDirectory;
+  }
+
+  public void setCronDirectory(String cronDirectory) {
+    this.cronDirectory = cronDirectory;
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration[" +
@@ -708,6 +720,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", dockerClientConnectionPoolSize='" + dockerClientConnectionPoolSize + '\'' +
             ", threadCheckerType='" + threadCheckerType + '\'' +
             ", logrotateFrequency='" + logrotateFrequency + '\'' +
+            ", cronDirectory='" + cronDirectory + '\'' +
             ']';
   }
 }

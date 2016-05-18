@@ -13,7 +13,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ScheduledExecutorService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +39,6 @@ import com.hubspot.singularity.executor.SingularityExecutorCleanupStatistics.Sin
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.cleanup.config.SingularityExecutorCleanupConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
-import com.hubspot.singularity.executor.config.SingularityExecutorModule;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskCleanup;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskDefinition;
 import com.hubspot.singularity.executor.task.SingularityExecutorTaskLogManager;
@@ -71,13 +69,11 @@ public class SingularityExecutorCleanup {
   private final DockerUtils dockerUtils;
   private final String hostname;
   private final SingularityRunnerExceptionNotifier exceptionNotifier;
-  private final ScheduledExecutorService scheduledExecutorService;
 
   @Inject
   public SingularityExecutorCleanup(SingularityClientProvider singularityClientProvider, JsonObjectFileHelper jsonObjectFileHelper, SingularityRunnerBaseConfiguration baseConfiguration,
       SingularityExecutorConfiguration executorConfiguration, SingularityExecutorCleanupConfiguration cleanupConfiguration, TemplateManager templateManager, MesosClient mesosClient,
-      DockerUtils dockerUtils, @Named(SingularityRunnerBaseModule.HOST_NAME_PROPERTY) String hostname, SingularityRunnerExceptionNotifier exceptionNotifier, @Named(SingularityExecutorModule.LOGROTATE)
-      ScheduledExecutorService scheduledExecutorService) {
+      DockerUtils dockerUtils, @Named(SingularityRunnerBaseModule.HOST_NAME_PROPERTY) String hostname, SingularityRunnerExceptionNotifier exceptionNotifier) {
     this.jsonObjectFileHelper = jsonObjectFileHelper;
     this.baseConfiguration = baseConfiguration;
     this.executorConfiguration = executorConfiguration;
@@ -89,7 +85,6 @@ public class SingularityExecutorCleanup {
     this.dockerUtils = dockerUtils;
     this.hostname = hostname;
     this.exceptionNotifier = exceptionNotifier;
-    this.scheduledExecutorService = scheduledExecutorService;
   }
 
   public SingularityExecutorCleanupStatistics clean() {
@@ -233,7 +228,7 @@ public class SingularityExecutorCleanup {
   }
 
   private TaskCleanupResult cleanTask(SingularityExecutorTaskDefinition taskDefinition, Optional<SingularityTaskHistory> taskHistory) {
-    SingularityExecutorTaskLogManager logManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, baseConfiguration, executorConfiguration, LOG, jsonObjectFileHelper, scheduledExecutorService);
+    SingularityExecutorTaskLogManager logManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, baseConfiguration, executorConfiguration, LOG, jsonObjectFileHelper);
 
     SingularityExecutorTaskCleanup taskCleanup = new SingularityExecutorTaskCleanup(logManager, executorConfiguration, taskDefinition, LOG, dockerUtils);
 
