@@ -3,6 +3,7 @@ package com.hubspot.singularity.executor;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -55,6 +56,10 @@ public class TemplateManager {
 
   public void writeHourlyCronForLogrotate(Path destination, LogrotateCronTemplateContext logrotateCronTemplateContext) {
     writeTemplate(destination, hourlyCronLogrotateTemplate, logrotateCronTemplateContext);
+    final File destinationFile = destination.toFile();
+    destinationFile.setReadable(true);
+    destinationFile.setWritable(true, true);
+    destinationFile.setExecutable(false);
   }
 
   public void writeDockerScript(Path destination, DockerContext dockerContext) {
