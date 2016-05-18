@@ -14,6 +14,7 @@ import com.google.inject.name.Named;
 import com.hubspot.singularity.executor.config.SingularityExecutorModule;
 import com.hubspot.singularity.executor.models.DockerContext;
 import com.hubspot.singularity.executor.models.EnvironmentContext;
+import com.hubspot.singularity.executor.models.LogrotateCronTemplateContext;
 import com.hubspot.singularity.executor.models.LogrotateTemplateContext;
 import com.hubspot.singularity.executor.models.RunnerContext;
 
@@ -23,17 +24,20 @@ public class TemplateManager {
   private final Template runnerTemplate;
   private final Template environmentTemplate;
   private final Template logrotateTemplate;
+  private final Template hourlyCronLogrotateTemplate;
   private final Template dockerTemplate;
 
   @Inject
   public TemplateManager(@Named(SingularityExecutorModule.RUNNER_TEMPLATE) Template runnerTemplate,
                          @Named(SingularityExecutorModule.ENVIRONMENT_TEMPLATE) Template environmentTemplate,
                          @Named(SingularityExecutorModule.LOGROTATE_TEMPLATE) Template logrotateTemplate,
+                         @Named(SingularityExecutorModule.LOGROTATE_CRON_FORMAT) Template hourlyCronLogrotateTemplate,
                          @Named(SingularityExecutorModule.DOCKER_TEMPLATE) Template dockerTemplate
                          ) {
     this.runnerTemplate = runnerTemplate;
     this.environmentTemplate = environmentTemplate;
     this.logrotateTemplate = logrotateTemplate;
+    this.hourlyCronLogrotateTemplate = hourlyCronLogrotateTemplate;
     this.dockerTemplate = dockerTemplate;
   }
 
@@ -47,6 +51,10 @@ public class TemplateManager {
 
   public void writeLogrotateFile(Path destination, LogrotateTemplateContext logRotateContext) {
     writeTemplate(destination, logrotateTemplate, logRotateContext);
+  }
+
+  public void writeHourlyCronForLogrotate(Path destination, LogrotateCronTemplateContext logrotateCronTemplateContext) {
+    writeTemplate(destination, hourlyCronLogrotateTemplate, logrotateCronTemplateContext);
   }
 
   public void writeDockerScript(Path destination, DockerContext dockerContext) {

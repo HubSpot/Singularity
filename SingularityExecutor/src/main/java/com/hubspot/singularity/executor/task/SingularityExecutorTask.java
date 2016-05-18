@@ -2,7 +2,6 @@ package com.hubspot.singularity.executor.task;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
@@ -42,7 +41,7 @@ public class SingularityExecutorTask {
   private final SingularityExecutorArtifactVerifier artifactVerifier;
 
   public SingularityExecutorTask(ExecutorDriver driver, ExecutorUtils executorUtils, SingularityRunnerBaseConfiguration baseConfiguration, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorTaskDefinition taskDefinition, String executorPid,
-      SingularityExecutorArtifactFetcher artifactFetcher, Protos.TaskInfo taskInfo, TemplateManager templateManager, Logger log, JsonObjectFileHelper jsonObjectFileHelper, DockerUtils dockerUtils, SingularityS3Configuration s3Configuration, ScheduledExecutorService scheduledExecutorService) {
+      SingularityExecutorArtifactFetcher artifactFetcher, Protos.TaskInfo taskInfo, TemplateManager templateManager, Logger log, JsonObjectFileHelper jsonObjectFileHelper, DockerUtils dockerUtils, SingularityS3Configuration s3Configuration) {
     this.driver = driver;
     this.taskInfo = taskInfo;
     this.log = log;
@@ -56,7 +55,7 @@ public class SingularityExecutorTask {
 
     this.taskDefinition = taskDefinition;
 
-    this.taskLogManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, baseConfiguration, executorConfiguration, log, jsonObjectFileHelper, scheduledExecutorService);
+    this.taskLogManager = new SingularityExecutorTaskLogManager(taskDefinition, templateManager, baseConfiguration, executorConfiguration, log, jsonObjectFileHelper);
     this.taskCleanup = new SingularityExecutorTaskCleanup(taskLogManager, executorConfiguration, taskDefinition, log, dockerUtils);
     this.processBuilder = new SingularityExecutorTaskProcessBuilder(this, executorUtils, artifactFetcher, templateManager, executorConfiguration, taskDefinition.getExecutorData(), executorPid, dockerUtils);
     this.artifactVerifier = new SingularityExecutorArtifactVerifier(taskDefinition, log, executorConfiguration, s3Configuration);

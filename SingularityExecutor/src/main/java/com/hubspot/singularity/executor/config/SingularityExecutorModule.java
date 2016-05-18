@@ -2,13 +2,10 @@ package com.hubspot.singularity.executor.config;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -27,10 +24,10 @@ public class SingularityExecutorModule extends AbstractModule {
   public static final String RUNNER_TEMPLATE = "runner.sh";
   public static final String ENVIRONMENT_TEMPLATE = "deploy.env";
   public static final String LOGROTATE_TEMPLATE = "logrotate.conf";
+  public static final String LOGROTATE_CRON_FORMAT = "logrotate.cron";
   public static final String DOCKER_TEMPLATE = "docker.sh";
   public static final String LOCAL_DOWNLOAD_HTTP_CLIENT = "SingularityExecutorModule.local.download.http.client";
   public static final String ALREADY_SHUT_DOWN = "already.shut.down";
-  public static final String LOGROTATE = "SingularityExecutorModule.logrotate";
 
   @Override
   protected void configure() {
@@ -71,6 +68,13 @@ public class SingularityExecutorModule extends AbstractModule {
 
   @Provides
   @Singleton
+  @Named(LOGROTATE_CRON_FORMAT)
+  public Template providesLogrotateCronTemplate(Handlebars handlebars) throws IOException {
+    return handlebars.compile(LOGROTATE_CRON_FORMAT);
+  }
+
+  @Provides
+  @Singleton
   @Named(DOCKER_TEMPLATE)
   public Template providesDockerTempalte(Handlebars handlebars) throws IOException {
     return handlebars.compile(DOCKER_TEMPLATE);
@@ -102,12 +106,5 @@ public class SingularityExecutorModule extends AbstractModule {
   @Named(ALREADY_SHUT_DOWN)
   public AtomicBoolean providesAlreadyShutDown() {
     return new AtomicBoolean(false);
-  }
-
-  @Provides
-  @Singleton
-  @Named(LOGROTATE)
-  public ScheduledExecutorService providesLogrotateScheduledExecutorService() {
-    return Executors.newScheduledThreadPool(1, new ThreadFactoryBuilder().setNameFormat("SingularityLogrotateThread-%d").build());
   }
 }

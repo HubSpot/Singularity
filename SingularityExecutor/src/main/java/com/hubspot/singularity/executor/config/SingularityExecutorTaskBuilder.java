@@ -49,12 +49,10 @@ public class SingularityExecutorTaskBuilder {
 
   private final JsonObjectFileHelper jsonObjectFileHelper;
 
-  private final ScheduledExecutorService scheduledExecutorService;
-
   @Inject
   public SingularityExecutorTaskBuilder(ObjectMapper jsonObjectMapper, JsonObjectFileHelper jsonObjectFileHelper, TemplateManager templateManager,
       SingularityExecutorLogging executorLogging, SingularityRunnerBaseConfiguration baseConfiguration, SingularityExecutorConfiguration executorConfiguration, @Named(SingularityRunnerBaseModule.PROCESS_NAME) String executorPid,
-      ExecutorUtils executorUtils, SingularityExecutorArtifactFetcher artifactFetcher, DockerUtils dockerUtils, SingularityS3Configuration s3Configuration, @Named(SingularityExecutorModule.LOGROTATE) ScheduledExecutorService scheduledExecutorService) {
+      ExecutorUtils executorUtils, SingularityExecutorArtifactFetcher artifactFetcher, DockerUtils dockerUtils, SingularityS3Configuration s3Configuration) {
     this.jsonObjectFileHelper = jsonObjectFileHelper;
     this.jsonObjectMapper = jsonObjectMapper;
     this.templateManager = templateManager;
@@ -66,7 +64,6 @@ public class SingularityExecutorTaskBuilder {
     this.executorPid = executorPid;
     this.executorUtils = executorUtils;
     this.s3Configuration = s3Configuration;
-    this.scheduledExecutorService = scheduledExecutorService;
   }
 
   public Logger buildTaskLogger(String taskId, String executorId) {
@@ -83,7 +80,7 @@ public class SingularityExecutorTaskBuilder {
 
     jsonObjectFileHelper.writeObject(taskDefinition, executorConfiguration.getTaskDefinitionPath(taskId), log);
 
-    return new SingularityExecutorTask(driver, executorUtils, baseConfiguration, executorConfiguration, taskDefinition, executorPid, artifactFetcher, taskInfo, templateManager, log, jsonObjectFileHelper, dockerUtils, s3Configuration, scheduledExecutorService);
+    return new SingularityExecutorTask(driver, executorUtils, baseConfiguration, executorConfiguration, taskDefinition, executorPid, artifactFetcher, taskInfo, templateManager, log, jsonObjectFileHelper, dockerUtils, s3Configuration);
   }
 
   private ExecutorData readExecutorData(ObjectMapper objectMapper, Protos.TaskInfo taskInfo) {
