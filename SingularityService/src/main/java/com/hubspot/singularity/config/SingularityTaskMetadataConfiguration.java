@@ -14,6 +14,8 @@ public class SingularityTaskMetadataConfiguration {
 
   private Optional<String> sendTaskCompletedMailOnceMetadataTypeIsAvailable = Optional.absent();
 
+  private long maxMetadataMessageBytes = 10000;
+
   public long getTaskPersistAfterFinishBufferMillis() {
     return taskPersistAfterFinishBufferMillis;
   }
@@ -46,4 +48,11 @@ public class SingularityTaskMetadataConfiguration {
     this.sendTaskCompletedMailOnceMetadataTypeIsAvailable = sendTaskCompletedMailOnceMetadataTypeIsAvailable;
   }
 
+  public long getMaxMetadataMessageBytes() {
+    return maxMetadataMessageBytes;
+  }
+
+  public void setMaxMetadataMessageBytes(long maxMetadataMessageBytes) {
+    this.maxMetadataMessageBytes = maxMetadataMessageBytes;
+  }
 }

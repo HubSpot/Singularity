@@ -340,6 +340,9 @@ public class TaskResource {
 
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.WRITE);
 
+    WebExceptions.checkBadRequest(!taskMetadataRequest.getMessage().isPresent() || taskMetadataRequest.getMessage().get().getBytes().length < taskMetadataConfiguration.getMaxMetadataMessageBytes(),
+      "Task metadata message too long, must be less than %s bytes", taskMetadataConfiguration.getMaxMetadataMessageBytes());
+
     if (taskMetadataConfiguration.getAllowedMetadataTypes().isPresent()) {
       WebExceptions.checkBadRequest(taskMetadataConfiguration.getAllowedMetadataTypes().get().contains(taskMetadataRequest.getType()), "%s is not one of the allowed metadata types %s",
           taskMetadataRequest.getType(), taskMetadataConfiguration.getAllowedMetadataTypes().get());
