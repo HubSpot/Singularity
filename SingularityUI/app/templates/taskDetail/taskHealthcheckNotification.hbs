@@ -54,7 +54,7 @@
     {{#if lastHealthcheckFailed}}
         {{#with data.healthcheckResults.[0]}}
         <div class="alert alert-warning" role="alert">
-            <b>{{#isRunningStateTask ../data/taskUpdates}}No{{else}}Task killed due to no{{/isRunningState}} passing healthchecks after {{#if ../tooManyRetries}}{{../numberFailed}} tries{{else}}{{../secondsElapsed}} seconds{{/if}}:</b> Last healthcheck {{#if statusCode}}responded with <span class="label label-danger">HTTP {{statusCode}}</span>{{else}}did not respond{{/if}}{{#if durationMillis}} in {{durationMillis}}ms{{/if}} at {{timestampFormattedWithSeconds timestamp}}. <a href="#health-checks" data-action="viewHealthchecks">View all healthchecks.</a> <a href="{{ appRoot }}/task/{{ ../data.taskId }}/tail/{{ substituteTaskId ../config.finishedTaskLogPath ../data.taskId }}">View service logs.</a>
+            <b>{{#isRunningState ../data/taskUpdates}}No{{else}}Task killed due to no{{/isRunningState}} passing healthchecks after {{#if ../tooManyRetries}}{{../numberFailed}} tries{{else}}{{../secondsElapsed}} seconds{{/if}}:</b> Last healthcheck {{#if statusCode}}responded with <span class="label label-danger">HTTP {{statusCode}}</span>{{else}}did not respond{{/if}}{{#if durationMillis}} in {{durationMillis}}ms{{/if}} at {{timestampFormattedWithSeconds timestamp}}. <a href="#health-checks" data-action="viewHealthchecks">View all healthchecks.</a> <a href="{{ appRoot }}/task/{{ ../data.taskId }}/tail/{{ substituteTaskId ../config.finishedTaskLogPath ../data.taskId }}">View service logs.</a>
             {{#if ../healthcheckFailureReasonMessage}}
                 <p>
                     The healthcheck failed because {{ ../healthcheckFailureReasonMessage}}
