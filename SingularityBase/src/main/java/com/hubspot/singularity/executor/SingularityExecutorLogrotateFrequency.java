@@ -8,16 +8,16 @@ public enum SingularityExecutorLogrotateFrequency {
     WEEKLY("weekly", Optional.<String>absent()),
     MONTHLY("monthly", Optional.<String>absent());
 
-    private final String logrotateFrequencyValue;
+    private final String logrotateValue;
     private final Optional<String> cronSchedule;
 
-    SingularityExecutorLogrotateFrequency(String logrotateFrequencyValue, Optional<String> cronSchedule) {
-        this.logrotateFrequencyValue = logrotateFrequencyValue;
+    SingularityExecutorLogrotateFrequency(String logrotateValue, Optional<String> cronSchedule) {
+        this.logrotateValue = logrotateValue;
         this.cronSchedule = cronSchedule;
     }
 
-    public String getLogrotateFrequencyValue() {
-        return logrotateFrequencyValue;
+    public String getLogrotateValue() {
+        return logrotateValue;
     }
 
     public Optional<String> getCronSchedule() {
