@@ -69,6 +69,7 @@ public class SingularityDeploy {
   private final Optional<Integer> deployStepWaitTimeMs;
   private final Optional<Boolean> autoAdvanceDeploySteps;
   private final Optional<Integer> maxTaskRetries;
+  private final Optional<Boolean> shell;
 
   public static SingularityDeployBuilder newBuilder(String requestId, String id) {
     return new SingularityDeployBuilder(requestId, id);
@@ -113,7 +114,8 @@ public class SingularityDeploy {
       @JsonProperty("deployInstanceCountPerStep") Optional<Integer> deployInstanceCountPerStep,
       @JsonProperty("deployStepWaitTimeMs") Optional<Integer> deployStepWaitTimeMs,
       @JsonProperty("autoAdvanceDeploySteps") Optional<Boolean> autoAdvanceDeploySteps,
-      @JsonProperty("maxTaskRetries") Optional<Integer> maxTaskRetries) {
+      @JsonProperty("maxTaskRetries") Optional<Integer> maxTaskRetries,
+      @JsonProperty("shell") Optional<Boolean> shell) {
     this.requestId = requestId;
 
     this.command = command;
@@ -163,6 +165,7 @@ public class SingularityDeploy {
     this.deployStepWaitTimeMs = deployStepWaitTimeMs;
     this.autoAdvanceDeploySteps = autoAdvanceDeploySteps;
     this.maxTaskRetries = maxTaskRetries;
+    this.shell = shell;
   }
 
   public SingularityDeployBuilder toBuilder() {
@@ -203,7 +206,8 @@ public class SingularityDeploy {
     .setDeployInstanceCountPerStep(deployInstanceCountPerStep)
     .setDeployStepWaitTimeMs(deployStepWaitTimeMs)
     .setAutoAdvanceDeploySteps(autoAdvanceDeploySteps)
-    .setMaxTaskRetries(maxTaskRetries);
+    .setMaxTaskRetries(maxTaskRetries)
+    .setShell(shell);
   }
 
   @ApiModelProperty(required=false, value="Number of seconds that Singularity waits for this service to become healthy (for it to download artifacts, start running, and optionally pass healthchecks.)")
@@ -398,6 +402,11 @@ public class SingularityDeploy {
   @ApiModelProperty(required=false, value="allowed at most this many failed tasks to be retried before failing the deploy")
   public Optional<Integer> getMaxTaskRetries() {
     return maxTaskRetries;
+  }
+
+  @ApiModelProperty(required=false, value="Override the shell property on the mesos task")
+  public Optional<Boolean> getShell() {
+    return shell;
   }
 
   @Override
