@@ -1,7 +1,6 @@
 package com.hubspot.singularity.executor.config;
 
 import java.nio.file.Path;
-import java.util.concurrent.ScheduledExecutorService;
 
 import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
