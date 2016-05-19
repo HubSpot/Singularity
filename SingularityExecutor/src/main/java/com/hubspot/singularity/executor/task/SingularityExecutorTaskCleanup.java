@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import com.google.common.collect.ImmutableList;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.utils.DockerUtils;
+import com.hubspot.singularity.runner.base.shared.ExceptionChainParser;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.spotify.docker.client.ContainerNotFoundException;
 import com.spotify.docker.client.DockerException;
@@ -46,7 +47,7 @@ public class SingularityExecutorTaskCleanup {
         }
         dockerUtils.removeContainer(containerName, true);
       } catch (DockerException e) {
-        if (e.getCause() != null && e.getCause() instanceof ExecutionException && e.getCause().getCause() != null && e.getCause().getCause() instanceof ContainerNotFoundException) {
+        if (ExceptionChainParser.exceptionChainContains(e, ContainerNotFoundException.class)) {
           log.trace("Container for task {} was already removed", taskDefinition.getTaskId());
         } else {
           log.error("Could not ensure removal of container", e);
