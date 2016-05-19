@@ -25,20 +25,20 @@ public class TemplateManager {
   private final Template runnerTemplate;
   private final Template environmentTemplate;
   private final Template logrotateTemplate;
-  private final Template hourlyCronLogrotateTemplate;
+  private final Template logrotateCronTemplate;
   private final Template dockerTemplate;
 
   @Inject
   public TemplateManager(@Named(SingularityExecutorModule.RUNNER_TEMPLATE) Template runnerTemplate,
                          @Named(SingularityExecutorModule.ENVIRONMENT_TEMPLATE) Template environmentTemplate,
                          @Named(SingularityExecutorModule.LOGROTATE_TEMPLATE) Template logrotateTemplate,
-                         @Named(SingularityExecutorModule.LOGROTATE_CRON_FORMAT) Template hourlyCronLogrotateTemplate,
+                         @Named(SingularityExecutorModule.LOGROTATE_CRON_TEMPLATE) Template logrotateCronTemplate,
                          @Named(SingularityExecutorModule.DOCKER_TEMPLATE) Template dockerTemplate
                          ) {
     this.runnerTemplate = runnerTemplate;
     this.environmentTemplate = environmentTemplate;
     this.logrotateTemplate = logrotateTemplate;
-    this.hourlyCronLogrotateTemplate = hourlyCronLogrotateTemplate;
+    this.logrotateCronTemplate = logrotateCronTemplate;
     this.dockerTemplate = dockerTemplate;
   }
 
@@ -54,10 +54,13 @@ public class TemplateManager {
     writeTemplate(destination, logrotateTemplate, logRotateContext);
   }
 
-  public boolean writeHourlyCronForLogrotate(Path destination, LogrotateCronTemplateContext logrotateCronTemplateContext) {
-    writeTemplate(destination, hourlyCronLogrotateTemplate, logrotateCronTemplateContext);
+  public boolean writeCronEntryForLogrotate(Path destination, LogrotateCronTemplateContext logrotateCronTemplateContext) {
+    writeTemplate(destination, logrotateCronTemplate, logrotateCronTemplateContext);
     final File destinationFile = destination.toFile();
-    return destinationFile.setReadable(true, false) && destinationFile.setWritable(true) && destinationFile.setExecutable(false);
+    boolean r = destinationFile.setReadable(true, false);
+    boolean w = destinationFile.setWritable(true);
+    boolean x = destinationFile.setExecutable(false);
+    return r && w && x;
   }
 
   public void writeDockerScript(Path destination, DockerContext dockerContext) {

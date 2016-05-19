@@ -77,7 +77,7 @@ public class SingularityExecutorTaskLogManager {
 
     if (logrotateFrequency.getCronSchedule().isPresent()) {
       log.info("Writing logrotate cron entry with schedule '{}' to {}", logrotateFrequency.getCronSchedule().get(), getLogrotateCronPath());
-      templateManager.writeHourlyCronForLogrotate(getLogrotateCronPath(), new LogrotateCronTemplateContext(configuration, taskDefinition, logrotateFrequency));
+      templateManager.writeCronEntryForLogrotate(getLogrotateCronPath(), new LogrotateCronTemplateContext(configuration, taskDefinition, logrotateFrequency));
     }
   }
 
