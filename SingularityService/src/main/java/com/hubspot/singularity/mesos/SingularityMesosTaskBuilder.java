@@ -392,7 +392,9 @@ class SingularityMesosTaskBuilder {
       commandBldr.addAllArguments(task.getPendingTask().getCmdLineArgsList().get());
     }
 
-    if (task.getDeploy().getArguments().isPresent() ||
+    if (task.getDeploy().getShell().isPresent()){
+      commandBldr.setShell(task.getDeploy().getShell().get());
+    } else if ((task.getDeploy().getArguments().isPresent() && !task.getDeploy().getArguments().get().isEmpty()) ||
         // Hopefully temporary workaround for
         // http://www.mail-archive.com/user@mesos.apache.org/msg01449.html
         task.getDeploy().getContainerInfo().isPresent() ||
