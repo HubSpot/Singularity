@@ -31,7 +31,7 @@
     "jquery": "~1.11.1",
     "juration": "*",
     "linkifyjs": "~2.0.0-beta.9",
-    "messenger": "git://github.com/HubSpot/messenger#set-main-field",
+    "messenger": "git://github.com/HubSpot/messenger.git#set-main-field",
     "moment": "2.11.2",
     "q": "^1.4.1",
     "node-uuid": "^1.4.7",
@@ -48,7 +48,7 @@
     "sortable": "git://github.com/HubSpot/sortable.git#v0.6.0",
     "typeahead.js": "~0.10.4",
     "underscore": "~1.8.0",
-    "vex": "git://github.com/HubSpot/vex#v2.3.0-plus-beforeClose-hook"
+    "vex-js": "git://github.com/HubSpot/vex.git#v2.3.0-plus-beforeClose-hook"
   },
   "license": "Apache-2.0",
   "devDependencies": {
