@@ -5,14 +5,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
 
 import com.google.common.collect.ImmutableList;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.utils.DockerUtils;
+import com.hubspot.singularity.runner.base.shared.ExceptionChainParser;
 import com.hubspot.singularity.runner.base.shared.SimpleProcessManager;
 import com.spotify.docker.client.ContainerNotFoundException;
+import com.spotify.docker.client.DockerException;
 import com.spotify.docker.client.messages.ContainerInfo;
 
 public class SingularityExecutorTaskCleanup {
@@ -43,8 +46,13 @@ public class SingularityExecutorTaskCleanup {
           dockerUtils.stopContainer(containerName, configuration.getDockerStopTimeout());
         }
         dockerUtils.removeContainer(containerName, true);
-      } catch (ContainerNotFoundException e) {
-        log.trace("Container for task {} was already removed", taskDefinition.getTaskId());
+      } catch (DockerException e) {
+        if (ExceptionChainParser.exceptionChainContains(e, ContainerNotFoundException.class)) {
+          log.trace("Container for task {} was already removed", taskDefinition.getTaskId());
+        } else {
+          log.error("Could not ensure removal of container", e);
+          dockerCleanSuccess = false;
+        }
       } catch (Exception e) {
         log.error("Could not ensure removal of container", e);
         dockerCleanSuccess = false;
