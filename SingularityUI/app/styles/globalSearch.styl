@@ -1,7 +1,7 @@
 .global-search
     display none
 
-.global-search-active .global-search
+.global-search-active.global-search
     display block
 
 .global-search
@@ -37,22 +37,23 @@
         &, &::-webkit-search-cancel-button:after
             font-size 20px !important
 
-    // Overwrite twitter typeahead styles
-    .twitter-typeahead
+    // Better typeahead styles
+    .typeahead
+        ul
+            list-style-type: none
+            padding: 0
+            margin: 0
 
-        &, .tt-suggestions, .tt-suggestion
+        &, .typeahead-selector, li
             display block !important
             width 100%
 
-        .tt-dropdown-menu
-            right: 0px !important
-
-        .tt-suggestion
-            padding 10px
+        li
+            padding: 10px
             cursor: pointer
 
             p
                 margin-bottom: 0
 
-            &.tt-cursor
+            &.hover
                 background rgba(0, 0, 0, .03)
