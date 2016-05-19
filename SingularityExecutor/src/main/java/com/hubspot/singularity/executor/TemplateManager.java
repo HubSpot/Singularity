@@ -57,10 +57,11 @@ public class TemplateManager {
   public boolean writeCronEntryForLogrotate(Path destination, LogrotateCronTemplateContext logrotateCronTemplateContext) {
     writeTemplate(destination, logrotateCronTemplate, logrotateCronTemplateContext);
     final File destinationFile = destination.toFile();
-    boolean r = destinationFile.setReadable(true, false);
-    boolean w = destinationFile.setWritable(true);
-    boolean x = destinationFile.setExecutable(false);
-    return r && w && x;
+    // ensure file is 644 -- java file permissions are so lame :/
+    return destinationFile.setExecutable(false, false) &&
+        destinationFile.setReadable(true, false) &&
+        destinationFile.setWritable(false, false) &&
+        destinationFile.setWritable(true);
   }
 
   public void writeDockerScript(Path destination, DockerContext dockerContext) {
