@@ -44,7 +44,7 @@ public class LogrotateTemplateContext {
     return taskDefinition.shouldLogrotateLogFile();
   }
 
-  public String getLogrotateInterval() {
+  public String getLogrotateFrequency() {
     return taskDefinition.getExecutorData().getLogrotateFrequency().or(configuration.getLogrotateFrequency()).getLogrotateValue();
   }
 
