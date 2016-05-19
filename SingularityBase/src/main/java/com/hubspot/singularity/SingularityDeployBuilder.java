@@ -64,6 +64,7 @@ public class SingularityDeployBuilder {
   private Optional<Integer> deployStepWaitTimeMs;
   private Optional<Boolean> autoAdvanceDeploySteps;
   private Optional<Integer> maxTaskRetries;
+  private Optional<Boolean> shell;
 
   public SingularityDeployBuilder(String requestId, String id) {
     this.requestId = requestId;
@@ -107,13 +108,14 @@ public class SingularityDeployBuilder {
     this.deployStepWaitTimeMs = Optional.absent();
     this.autoAdvanceDeploySteps = Optional.absent();
     this.maxTaskRetries = Optional.absent();
+    this.shell = Optional.absent();
   }
 
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, customExecutorUser, resources,
       env, taskEnv, uris, metadata, executorData, version, timestamp, labels, taskLabels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
       healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, loadBalancerDomains, loadBalancerAdditionalRoutes,
-      loadBalancerTemplate, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries);
+      loadBalancerTemplate, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries, shell);
   }
 
   public String getRequestId() {
@@ -477,6 +479,15 @@ public class SingularityDeployBuilder {
 
   public SingularityDeployBuilder setMaxTaskRetries(Optional<Integer> maxTaskRetries) {
     this.maxTaskRetries = maxTaskRetries;
+    return this;
+  }
+
+  public Optional<Boolean> getShell() {
+    return shell;
+  }
+
+  public SingularityDeployBuilder setShell(Optional<Boolean> shell) {
+    this.shell = shell;
     return this;
   }
 
