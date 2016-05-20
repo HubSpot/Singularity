@@ -1,5 +1,7 @@
 package com.hubspot.singularity.scheduler;
 
+import com.hubspot.singularity.data.SingularityValidator;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -50,6 +52,7 @@ import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityPriorityKillRequestParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityRequestCleanup;
@@ -62,12 +65,14 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.SlavePlacement;
+import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityDeleteRequestRequest;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.api.SingularityKillTaskRequest;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.api.SingularityPauseRequest;
+import com.hubspot.singularity.api.SingularityPriorityKillRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
@@ -3085,4 +3090,44 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(newRequest);
   }
 
+  @Test
+  public void testPriorityKill() {
+    SingularityRequest request1 = new SingularityRequestBuilder("request1", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.25)).build();
+    saveRequest(request1);
+    SingularityRequest request2 = new SingularityRequestBuilder("request2", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.5)).build();
+    saveRequest(request2);
+    SingularityRequest request3 = new SingularityRequestBuilder("request3", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.75)).build();
+    saveRequest(request3);
+
+    SingularityDeploy deploy1 = initAndFinishDeploy(request1, "r1d1");
+    SingularityDeploy deploy2 = initAndFinishDeploy(request2, "r2d2");
+    SingularityDeploy deploy3 = initAndFinishDeploy(request3, "r3d3");
+
+    final SingularityTask task1 = launchTask(request1, deploy1, 2, 1, TaskState.TASK_RUNNING);
+    final SingularityTask task2 = launchTask(request2, deploy2, 1, 1, TaskState.TASK_RUNNING);
+    final SingularityTask task3 = launchTask(request3, deploy3, 10, 1, TaskState.TASK_RUNNING);
+
+    // priority kill of .5 means that just request1 should have cleanups
+    priorityManager.createPriorityKill(new SingularityPriorityKillRequestParent(new SingularityPriorityKillRequest(.5, Optional.of("test"), Optional.<String>absent()), System.currentTimeMillis(), Optional.<String>absent()));
+
+    Assert.assertEquals(3, taskManager.getNumActiveTasks());
+
+    priorityKillPoller.runActionOnPoll();
+
+    // request1 should have a cleanup of type PRIORITY_KILL
+    Assert.assertEquals(TaskCleanupType.PRIORITY_KILL, taskManager.getTaskCleanup(task1.getTaskId().getId()).get().getCleanupType());
+
+    // request2 and request3 should not have cleanups
+    Assert.assertEquals(false, taskManager.getTaskCleanup(task2.getTaskId().getId()).isPresent());
+    Assert.assertEquals(false, taskManager.getTaskCleanup(task3.getTaskId().getId()).isPresent());
+
+    // kill task(s) with cleanups
+    cleaner.drainCleanupQueue();
+    killKilledTasks();
+
+    // task1 should be killed, task2 and task3 should be running
+    Assert.assertEquals(ExtendedTaskState.TASK_KILLED, taskManager.getTaskHistory(task1.getTaskId()).get().getLastTaskUpdate().get().getTaskState());
+    Assert.assertEquals(ExtendedTaskState.TASK_RUNNING, taskManager.getTaskHistory(task2.getTaskId()).get().getLastTaskUpdate().get().getTaskState());
+    Assert.assertEquals(ExtendedTaskState.TASK_RUNNING, taskManager.getTaskHistory(task3.getTaskId()).get().getLastTaskUpdate().get().getTaskState());
+  }
 }
