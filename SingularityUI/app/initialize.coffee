@@ -1,3 +1,9 @@
+# Object.assign polyfill
+require('es6-object-assign').polyfill()
+
+# Promise polyfill
+window.Promise = require 'promise-polyfill'
+
 # Set up the only app globals
 window.utils = require 'utils'
 window.app = require 'application'
