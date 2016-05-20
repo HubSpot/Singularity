@@ -24,6 +24,7 @@ import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityPriorityKillRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.PriorityManager;
+import com.hubspot.singularity.data.SingularityValidator;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 
@@ -37,12 +38,14 @@ public class PriorityResource {
 
     private final Optional<SingularityUser> user;
     private final SingularityAuthorizationHelper authorizationHelper;
+    private final SingularityValidator singularityValidator;
     private final PriorityManager priorityManager;
 
     @Inject
-    public PriorityResource(Optional<SingularityUser> user, SingularityAuthorizationHelper authorizationHelper, PriorityManager priorityManager) {
+    public PriorityResource(Optional<SingularityUser> user, SingularityAuthorizationHelper authorizationHelper, SingularityValidator singularityValidator, PriorityManager priorityManager) {
         this.user = user;
         this.authorizationHelper = authorizationHelper;
+        this.singularityValidator = singularityValidator;
         this.priorityManager = priorityManager;
     }
 
@@ -67,6 +70,7 @@ public class PriorityResource {
     @ApiOperation("Kill all tasks below a certain priority level.")
     public SingularityPriorityKillRequestParent priorityKill(SingularityPriorityKillRequest priorityKillRequest) {
         authorizationHelper.checkAdminAuthorization(user);
+        priorityKillRequest = singularityValidator.checkSingularityPriorityKillRequest(priorityKillRequest);
 
         final SingularityPriorityKillRequestParent priorityKillRequestParent = new SingularityPriorityKillRequestParent(priorityKillRequest, System.currentTimeMillis(), JavaUtils.getUserEmail(user));
 
