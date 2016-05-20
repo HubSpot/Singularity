@@ -122,6 +122,10 @@ public class SingularityValidator {
 
     checkBadRequest(request.getInstancesSafe() <= maxInstancesPerRequest,"Instances (%s) be greater than %s (maxInstancesPerRequest in mesos configuration)", request.getInstancesSafe(), maxInstancesPerRequest);
 
+    if (request.getTaskPriorityLevel().isPresent()) {
+      checkBadRequest(request.getTaskPriorityLevel().get() >= 0 && request.getTaskPriorityLevel().get() <= 1, "Request taskPriorityLevel %s is invalid, must be between 0 and 1 (inclusive).", request.getTaskPriorityLevel().get());
+    }
+
     if (existingRequest.isPresent()) {
       checkForIllegalChanges(request, existingRequest.get());
     }
