@@ -48,6 +48,7 @@ public class SingularityPriorityKillPoller extends SingularityLeaderOnlyPoller {
         final Optional<SingularityPriorityKillRequestParent> maybePriorityKill = priorityManager.getPriorityKill();
 
         if (!maybePriorityKill.isPresent()) {
+            LOG.trace("No priority kill to process.");
             return;
         }
 
