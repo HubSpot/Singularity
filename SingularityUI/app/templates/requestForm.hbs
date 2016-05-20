@@ -67,6 +67,12 @@
             Rack sensitive
           </label>
         </div>
+        <div class="form-group">
+          <label for="hide-distribute-across-racks-hint-SERVICE" data-tooltip='hide-distribute-across-racks-hint'>
+            <input type="checkbox" id="hide-distribute-across-racks-hint-SERVICE">
+            Hide Distribute Evenly Across Racks Hint
+          </label>
+        </div>
         {{#if config.loadBalancingEnabled }}
           <div class="form-group">
             <label data-tooltip='cannot-change' for="load-balanced"{{#if model.id}} class="subtle"{{/if}}>
@@ -92,6 +98,12 @@
             Rack sensitive
           </label>
         </div>
+        <div class="form-group">
+              <label for="hide-distribute-across-racks-hint-WORKER" data-tooltip='hide-distribute-across-racks-hint'>
+                <input type="checkbox" id="hide-distribute-across-racks-hint-WORKER">
+                Hide Distribute Evenly Across Racks Hint
+              </label>
+            </div>
         <div class="form-group">
           <label for="waitAtLeast-WORKER">Task rescheduling delay</label>
           <div class="input-group">

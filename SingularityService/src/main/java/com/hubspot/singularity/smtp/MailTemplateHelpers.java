@@ -23,6 +23,7 @@ import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.SingularityEmailType;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
+import com.hubspot.singularity.SingularityTaskMetadata;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.config.SMTPConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -59,6 +60,35 @@ public class MailTemplateHelpers {
     }
   }
 
+  public String humanizeTimestamp(long timestamp) {
+    if (taskDatePattern.isPresent() && timeZone.isPresent()) {
+      return DateFormatUtils.format(timestamp, taskDatePattern.get(), timeZone.get());
+    } else if (taskDatePattern.isPresent()) {
+      return DateFormatUtils.formatUTC(timestamp, taskDatePattern.get());
+    } else if (timeZone.isPresent()) {
+      return DateFormatUtils.format(timestamp, DEFAULT_TIMESTAMP_FORMAT, timeZone.get());
+    } else {
+      return DateFormatUtils.format(timestamp, DEFAULT_TIMESTAMP_FORMAT);
+    }
+  }
+
+  public List<SingularityMailTaskMetadata> getJadeTaskMetadata(Collection<SingularityTaskMetadata> taskMetadata) {
+    List<SingularityMailTaskMetadata> output = Lists.newArrayListWithCapacity(taskMetadata.size());
+
+    for (SingularityTaskMetadata metadataElement : taskMetadata) {
+      output.add(
+          new SingularityMailTaskMetadata(
+              humanizeTimestamp(metadataElement.getTimestamp()),
+              metadataElement.getType(),
+              metadataElement.getTitle(),
+              metadataElement.getUser().or(""),
+              metadataElement.getMessage().or(""),
+              metadataElement.getLevel().toString()));
+    }
+
+    return output;
+  }
+
   public List<SingularityMailTaskHistoryUpdate> getJadeTaskHistory(Collection<SingularityTaskHistoryUpdate> taskHistory) {
     List<SingularityMailTaskHistoryUpdate> output = Lists.newArrayListWithCapacity(taskHistory.size());
 
@@ -75,7 +105,7 @@ public class MailTemplateHelpers {
       }
       output.add(
           new SingularityMailTaskHistoryUpdate(
-              date,
+              humanizeTimestamp(taskUpdate.getTimestamp()),
               WordUtils.capitalize(taskUpdate.getTaskState().getDisplayName()),
               taskUpdate.getStatusMessage().or("")));
     }

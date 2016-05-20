@@ -21,6 +21,7 @@ Singularity (Service) is configured by DropWizard via a YAML file referenced on 
     - [Resource Limits](#resource-limits)
     - [Racks](#racks)
     - [Slaves](#slaves)
+  - [Network Configuration](#network-configuration)
   - [Database](#database)
     - [History Purging](#history-purging)
   - [S3](#s3)
@@ -192,6 +193,14 @@ These settings should live under the "mesos" field inside the root configuration
 |-----------|---------|-------------|------|
 | database | | The database connection for SingularityService follows the [dropwizard DataSourceFactory format](http://www.dropwizard.io/0.7.0/dropwizard-db/apidocs/io/dropwizard/db/DataSourceFactory.html) | [DataSourceFactory](http://www.dropwizard.io/0.7.0/dropwizard-db/apidocs/io/dropwizard/db/DataSourceFactory.html) |
 
+## Network Configuration
+
+These settings should live under the "network" field of the root configuration.
+
+| Parameter | Default | Description | Type |
+|-----------|---------|-------------|------|
+| defaultPortMapping | false | If no port mapping is provided, map all Mesos-provided ports to the host | boolean |
+
 #### History Purging ####
 
 These settings live under the "historyPuring" field in the root configuration
@@ -232,7 +241,7 @@ These settings live under the "sentry" field in the root config and enable Singu
 
 ## SMTP ##
 
-These settings live under the "smtp" field in teh root config.
+These settings live under the "smtp" field in the root config.
 
 | Parameter | Default | Description | Type |
 |-----------|---------|-------------|------|

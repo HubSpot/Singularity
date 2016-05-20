@@ -29,6 +29,8 @@ class TaskView extends View
         # Plop subview contents in there. It'll take care of everything itself
         @$('#overview').html                       @subviews.overview.$el
         @$('#alerts').html                         @subviews.alerts.$el
+        @$('#task-error-metadata').html            @subviews.taskErrorMetadata.$el
+        @$('#task-warn-metadata').html             @subviews.taskWarnMetadata.$el
         @$('#deploy-failure-notification').html    @subviews.deployFailureNotification.$el
         @$('#healthcheck-notification').html       @subviews.healthcheckNotification.$el
         @$('#history').html                        @subviews.history.$el
@@ -41,6 +43,7 @@ class TaskView extends View
         @$('#resources').html                      @subviews.resourceUsage.$el
         @$('#environment').html                    @subviews.environment.$el
         @$('#shell-commands').html                 @subviews.shellCommands.$el
+        @$('#task-metadata-table').html            @subviews.taskMetadataTable.$el
 
         super.afterRender()
 

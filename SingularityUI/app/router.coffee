@@ -21,9 +21,11 @@ DeployDetailController = require 'controllers/DeployDetail'
 
 LogViewerController = require 'controllers/LogViewer'
 
-Utils = require './utils'
+TaskSearchController = require 'controllers/TaskSearch'
 
 WebhooksController = require 'controllers/Webhooks'
+
+Utils = require './utils'
 
 class Router extends Backbone.Router
 
@@ -42,6 +44,7 @@ class Router extends Backbone.Router
         'request/:requestId(/)': 'requestDetail'
         'request/:requestId/deploy/:deployId(/)': 'deployDetail'
         'request/:requestId/tail/*path': 'aggregateTail'
+        'request/:requestId/taskSearch': 'taskSearch'
 
         'request/:requestId/deploy(/)': 'newDeploy'
 
@@ -53,6 +56,8 @@ class Router extends Backbone.Router
         'task/:taskId(/)': 'taskDetail'
         'task/:taskId/files(/)*path': 'taskFileBrowser'
         'task/:taskId/tail/*path': 'tail'
+
+        'taskSearch': 'taskSearch'
 
         'racks(/)': 'racks'
         'racks/:state(/)': 'racks'
@@ -81,6 +86,9 @@ class Router extends Backbone.Router
 
     requestDetail: (requestId) ->
         app.bootstrapController new RequestDetailController {requestId}
+
+    taskSearch: (requestId) ->
+        app.bootstrapController new TaskSearchController {requestId}
 
     newDeploy: (requestId) ->
         app.bootstrapController new NewDeployController {requestId}

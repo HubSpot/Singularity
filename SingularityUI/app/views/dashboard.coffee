@@ -9,7 +9,6 @@ class DashboardView extends View
     events: ->
         _.extend super,
             'click [data-action="unstar"]': 'unstar'
-            'click [data-action="change-user"]': 'changeUser'
             'click th[data-sort-attribute]': 'sortTable'
             'click [data-action="viewJSON"]': 'viewJson'
             'click [data-action="remove"]': 'removeRequest'
@@ -42,6 +41,7 @@ class DashboardView extends View
                 haveRequests: pausedRequests.length > 0
                 requestsSubFilter: ''
                 hideNewRequestButton: config.hideNewRequestButton
+                onDashboardPage: true
                 collectionSynced: @collection.synced
 
         @$el.html @templateBase context, partials
@@ -120,8 +120,47 @@ class DashboardView extends View
         if @$('tbody tr').length is 0
             @render()
 
-    changeUser: =>
-        app.deployUserPrompt()
+    getRequest: (id) =>
+        maybeRequest = @collection.models.filter (model) ->
+            model.id is id
+        if maybeRequest
+            return maybeRequest[0]
+        else
+            return
+
+    viewJson: (e) ->
+        id = $(e.target).parents('tr').data 'request-id'
+        request = @getRequest id
+        unless request
+            Messenger().error
+                message: "<p>Could not find request #{id}. Perhaps someone removed it?</p>"
+            return
+        utils.viewJSON request
+
+    removeRequest: (e) ->
+        $row = $(e.target).parents 'tr'
+        id = $row.data('request-id')
+        request = @getRequest id
+        unless request
+            Messenger().error
+                message: "<p>Could not find request #{id}. Perhaps someone removed it first?</p>"
+            return
+        request.promptRemove =>
+            $row.remove()
+
+    unpauseRequest: (e) ->
+        $row = $(e.target).parents 'tr'
+        id = $row.data('request-id')
+
+        request = @getRequest id
+        unless request
+            Messenger().error
+                message: "<p>Could not find request #{id}. Perhaps someone removed it?</p>"
+            return
+
+        request.promptUnpause =>
+            $row.remove()
+            @trigger 'refreshrequest'
 
     getRequest: (id) =>
         maybeRequest = @collection.models.filter (model) ->
