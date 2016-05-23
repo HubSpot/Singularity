@@ -6,13 +6,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
-public class SingularityPriorityKillRequest {
+public class SingularityPriorityRequest {
     private final double minimumPriorityLevel;
     private final Optional<String> message;
     private final Optional<String> actionId;
 
     @JsonCreator
-    public SingularityPriorityKillRequest(@JsonProperty("minimumPriorityLevel") double minimumPriorityLevel, @JsonProperty("message") Optional<String> message, @JsonProperty("actionId") Optional<String> actionId) {
+    public SingularityPriorityRequest(@JsonProperty("minimumPriorityLevel") double minimumPriorityLevel, @JsonProperty("message") Optional<String> message, @JsonProperty("actionId") Optional<String> actionId) {
         this.minimumPriorityLevel = minimumPriorityLevel;
         this.message = message;
         this.actionId = actionId;
@@ -38,7 +38,7 @@ public class SingularityPriorityKillRequest {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        SingularityPriorityKillRequest that = (SingularityPriorityKillRequest) o;
+        SingularityPriorityRequest that = (SingularityPriorityRequest) o;
         return Double.compare(that.minimumPriorityLevel, minimumPriorityLevel) == 0 &&
             Objects.equals(message, that.message) &&
             Objects.equals(actionId, that.actionId);
@@ -51,7 +51,7 @@ public class SingularityPriorityKillRequest {
 
     @Override
     public String toString() {
-        return "SingularityPriorityKillRequest[" +
+        return "SingularityPriorityRequest[" +
             "minimumPriorityLevel=" + minimumPriorityLevel +
             ", message=" + message +
             ", actionId=" + actionId +

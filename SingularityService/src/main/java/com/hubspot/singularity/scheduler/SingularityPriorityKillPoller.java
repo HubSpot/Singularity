@@ -11,7 +11,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityPriorityKillRequestParent;
+import com.hubspot.singularity.SingularityPriorityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
@@ -45,7 +45,7 @@ public class SingularityPriorityKillPoller extends SingularityLeaderOnlyPoller {
 
     @Override
     public void runActionOnPoll() {
-        final Optional<SingularityPriorityKillRequestParent> maybePriorityKill = priorityManager.getPriorityKill();
+        final Optional<SingularityPriorityRequestParent> maybePriorityKill = priorityManager.getActivePriorityKill();
 
         if (!maybePriorityKill.isPresent()) {
             LOG.trace("No priority kill to process.");
@@ -55,7 +55,7 @@ public class SingularityPriorityKillPoller extends SingularityLeaderOnlyPoller {
         LOG.info("Handling priority kill {}", maybePriorityKill.get());
 
         final Map<String, Double> requestIdToTaskPriority = new HashMap<>();
-        final double minPriorityLevel = maybePriorityKill.get().getPriorityKillRequest().getMinimumPriorityLevel();
+        final double minPriorityLevel = maybePriorityKill.get().getPriorityRequest().getMinimumPriorityLevel();
         final long now = System.currentTimeMillis();
 
         for (SingularityRequestWithState requestWithState : requestManager.getRequests()) {
@@ -72,12 +72,12 @@ public class SingularityPriorityKillPoller extends SingularityLeaderOnlyPoller {
 
             if (taskPriorityLevel < minPriorityLevel) {
                 LOG.info("Killing {} since priority level {} is less than {}", taskId.getId(), taskPriorityLevel, minPriorityLevel);
-                taskManager.createTaskCleanup(new SingularityTaskCleanup(maybePriorityKill.get().getUser(), TaskCleanupType.PRIORITY_KILL, now, taskId, maybePriorityKill.get().getPriorityKillRequest().getMessage(), maybePriorityKill.get().getPriorityKillRequest().getActionId()));
+                taskManager.createTaskCleanup(new SingularityTaskCleanup(maybePriorityKill.get().getUser(), TaskCleanupType.PRIORITY_KILL, now, taskId, maybePriorityKill.get().getPriorityRequest().getMessage(), maybePriorityKill.get().getPriorityRequest().getActionId()));
                 killedTaskCount++;
             }
         }
 
         LOG.info("Finished priority kill {} in {} for {} tasks", priorityManager, JavaUtils.duration(now), killedTaskCount);
-        priorityManager.deletePriorityKill();
+        priorityManager.deleteActivePriorityKill();
     }
 }

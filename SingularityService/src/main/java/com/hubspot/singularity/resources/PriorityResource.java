@@ -10,31 +10,27 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityPriorityKillRequestParent;
+import com.hubspot.singularity.SingularityPriorityRequestParent;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityUser;
-import com.hubspot.singularity.api.SingularityPriorityKillRequest;
+import com.hubspot.singularity.api.SingularityPriorityRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.PriorityManager;
 import com.hubspot.singularity.data.SingularityValidator;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
 
 @Path(PriorityResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
-@Api( description="Manages Singularity priority.", value=RackResource.PATH )  // TODO: better description
+@Api( description="Manages whether or not to schedule tasks based on their priority levels.", value=RackResource.PATH )
 public class PriorityResource {
     public static final String PATH = SingularityService.API_BASE_PATH + "/priority";
-
-    private static final Logger LOG = LoggerFactory.getLogger(PriorityResource.class);
 
     private final Optional<SingularityUser> user;
     private final SingularityAuthorizationHelper authorizationHelper;
@@ -51,32 +47,91 @@ public class PriorityResource {
 
     @GET
     @Path("/kill")
-    public Optional<SingularityPriorityKillRequestParent> getPriorityKill() {
-        return priorityManager.getPriorityKill();
+    @ApiOperation(value="Retrieve the active priority kill.", response=SingularityPriorityRequestParent.class)
+    @ApiResponses({
+        @ApiResponse(code=200, message="The active priority kill."),
+        @ApiResponse(code=404, message="There was no active priority kill.")
+    })
+    public Optional<SingularityPriorityRequestParent> getPriorityKill() {
+        return priorityManager.getActivePriorityKill();
     }
 
     @DELETE
     @Path("/kill")
-    public void deletePriorityKill() {
+    @ApiOperation("Stops the active priority kill.")
+    @ApiResponses({
+        @ApiResponse(code=202, message="The active priority kill was deleted."),
+        @ApiResponse(code=400, message="There was no active priority kill to delete.")
+    })
+    public void deleteActivePriorityKill() {
         authorizationHelper.checkAdminAuthorization(user);
 
-        final SingularityDeleteResult deleteResult = priorityManager.deletePriorityKill();
+        final SingularityDeleteResult deleteResult = priorityManager.deleteActivePriorityKill();
 
-        checkBadRequest(deleteResult == SingularityDeleteResult.DELETED, "No priority kill to delete");
+        checkBadRequest(deleteResult == SingularityDeleteResult.DELETED, "Active priority kill does not exist.");
     }
 
     @POST
     @Path("/kill")
-    @ApiOperation("Kill all tasks below a certain priority level.")
-    public SingularityPriorityKillRequestParent priorityKill(SingularityPriorityKillRequest priorityKillRequest) {
+    @ApiOperation(value="Kill all tasks below a certain priority level.", response=SingularityPriorityRequestParent.class)
+    @ApiResponses({
+        @ApiResponse(code=200, message="The priority kill request was accepted."),
+        @ApiResponse(code=400, message="There was a validation error with the priority kill request.")
+    })
+    public SingularityPriorityRequestParent createPriorityKill(SingularityPriorityRequest priorityKillRequest) {
         authorizationHelper.checkAdminAuthorization(user);
-        priorityKillRequest = singularityValidator.checkSingularityPriorityKillRequest(priorityKillRequest);
+        priorityKillRequest = singularityValidator.checkSingularityPriorityRequest(priorityKillRequest);
 
-        final SingularityPriorityKillRequestParent priorityKillRequestParent = new SingularityPriorityKillRequestParent(priorityKillRequest, System.currentTimeMillis(), JavaUtils.getUserEmail(user));
+        checkConflict(!priorityManager.getActivePriorityKill().isPresent(), "There is already an active priority kill underway. Please try again soon.");
 
-        final SingularityCreateResult createResult = priorityManager.createPriorityKill(priorityKillRequestParent);
-        checkConflict(createResult == SingularityCreateResult.CREATED, "Already a pending priority kill");
+        final SingularityPriorityRequestParent priorityKillRequestParent = new SingularityPriorityRequestParent(priorityKillRequest, System.currentTimeMillis(), JavaUtils.getUserEmail(user));
+
+        priorityManager.createPriorityKill(priorityKillRequestParent);
 
         return priorityKillRequestParent;
+    }
+
+    @GET
+    @Path("/freeze")
+    @ApiOperation(value="Get information about the active priority freeze.", response=SingularityPriorityRequestParent.class)
+    @ApiResponses({
+        @ApiResponse(code=200, message="The active priority freeze."),
+        @ApiResponse(code=404, message="There was no active priority freeze.")
+    })
+    public Optional<SingularityPriorityRequestParent> getActivePriorityFreeze() {
+        return priorityManager.getActivePriorityFreeze();
+    }
+
+    @DELETE
+    @Path("/freeze")
+    @ApiOperation("Stops the active priority freeze.")
+    @ApiResponses({
+        @ApiResponse(code=202, message="The active priority freeze was deleted."),
+        @ApiResponse(code=400, message="There was no active priority freeze to delete.")
+    })
+    public void deleteActivePriorityFreeze() {
+        authorizationHelper.checkAdminAuthorization(user);
+
+        final SingularityDeleteResult deleteResult = priorityManager.deleteActivePriorityFreeze();
+
+        checkBadRequest(deleteResult == SingularityDeleteResult.DELETED, "No active priority freeze to delete.");
+    }
+
+    @POST
+    @Path("/freeze")
+    @ApiOperation(value="Stop scheduling tasks below a certain priority level.", response=SingularityPriorityRequestParent.class)
+    @ApiResponses({
+        @ApiResponse(code=200, message="The priority freeze request was accepted."),
+        @ApiResponse(code=400, message="There was a validation error with the priorty freeze request.")
+    })
+    public SingularityPriorityRequestParent createPriorityFreeze(SingularityPriorityRequest priorityFreezeRequest) {
+        authorizationHelper.checkAdminAuthorization(user);
+        priorityFreezeRequest = singularityValidator.checkSingularityPriorityRequest(priorityFreezeRequest);
+
+        final SingularityPriorityRequestParent priorityFreezeRequestParent = new SingularityPriorityRequestParent(priorityFreezeRequest, System.currentTimeMillis(), JavaUtils.getUserEmail(user));
+
+        priorityManager.createPriorityFreeze(priorityFreezeRequestParent);
+
+        return priorityFreezeRequestParent;
     }
 }

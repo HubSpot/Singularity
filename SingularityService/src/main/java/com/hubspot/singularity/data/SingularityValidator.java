@@ -34,7 +34,7 @@ import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.SingularityWebhook;
-import com.hubspot.singularity.api.SingularityPriorityKillRequest;
+import com.hubspot.singularity.api.SingularityPriorityRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
 
@@ -416,14 +416,14 @@ public class SingularityValidator {
     }
   }
 
-  public SingularityPriorityKillRequest checkSingularityPriorityKillRequest(SingularityPriorityKillRequest priorityKillRequest) {
-    checkBadRequest(priorityKillRequest.getMinimumPriorityLevel() >= 0 && priorityKillRequest.getMinimumPriorityLevel() <= 1, "minimumPriorityLevel %s is invalid, must be between 0 and 1 (inclusive)", priorityKillRequest.getMinimumPriorityLevel());
+  public SingularityPriorityRequest checkSingularityPriorityRequest(SingularityPriorityRequest priorityRequest) {
+    checkBadRequest(priorityRequest.getMinimumPriorityLevel() >= 0 && priorityRequest.getMinimumPriorityLevel() <= 1, "minimumPriorityLevel %s is invalid, must be between 0 and 1 (inclusive)", priorityRequest.getMinimumPriorityLevel());
 
     // auto-generate actionId if not set
-    if (!priorityKillRequest.getActionId().isPresent()) {
-      priorityKillRequest = new SingularityPriorityKillRequest(priorityKillRequest.getMinimumPriorityLevel(), priorityKillRequest.getMessage(), Optional.of(UUID.randomUUID().toString()));
+    if (!priorityRequest.getActionId().isPresent()) {
+      priorityRequest = new SingularityPriorityRequest(priorityRequest.getMinimumPriorityLevel(), priorityRequest.getMessage(), Optional.of(UUID.randomUUID().toString()));
     }
 
-    return priorityKillRequest;
+    return priorityRequest;
   }
 }
