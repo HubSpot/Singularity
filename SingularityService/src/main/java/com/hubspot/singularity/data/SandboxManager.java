@@ -68,11 +68,11 @@ public class SandboxManager {
   }
 
 
-  private boolean isContinuationChar(byte b) {
+  private static boolean isContinuationChar(byte b) {
     return b >= (byte)0b1000_0000 && b <= (byte)0b1011_1111;
   }
 
-  private int numberOfFollowingBytes(byte b) {
+  private static int numberOfFollowingBytes(byte b) {
     if (b >= (byte)0b1100_0000 && b <= (byte)0b1101_1111) {
       return 1;
     } else if (b >= (byte)0b1110_0000 && b <= (byte)0b1110_1111) {
@@ -85,7 +85,7 @@ public class SandboxManager {
     }
   }
 
-  Optional<MesosFileChunkObject> stripInvalidUTF8(Optional<MesosFileChunkObject> inChunk) {
+  static Optional<MesosFileChunkObject> stripInvalidUTF8(Optional<MesosFileChunkObject> inChunk) {
     if (!inChunk.isPresent()) {
       return inChunk;
     }
