@@ -68,16 +68,23 @@ public class SandboxManager {
   }
 
 
-  private static boolean isContinuationChar(byte b) {
-    return b >= (byte)0b1000_0000 && b <= (byte)0b1011_1111;
+  // Bit-pattern check for UTF-8 continuation byte:
+  // 0b10xxxxxx -> true
+  private static boolean isContinuationByte(byte b) {
+    return b >= (byte)0b10_000000 && b <= (byte)0b10_111111;
   }
 
+  // Bit-pattern check for UTF-8 character extra-byte length:
+  // 0b110_xxxxx -> 1
+  // 0b1110_xxxx -> 2
+  // 0b11110_xxx -> 3
+  // else        -> 0
   private static int numberOfFollowingBytes(byte b) {
-    if (b >= (byte)0b1100_0000 && b <= (byte)0b1101_1111) {
+    if (b >= (byte)0b110_00000 && b <= (byte)0b110_11111) {
       return 1;
     } else if (b >= (byte)0b1110_0000 && b <= (byte)0b1110_1111) {
       return 2;
-    } else if (b >= (byte)0b1111_0000 && b <= (byte)0b1111_0111) {
+    } else if (b >= (byte)0b11110_000 && b <= (byte)0b11110_111) {
       return 3;
     } else {
       // this could be an ASCII char or a continuation byte
@@ -113,7 +120,7 @@ public class SandboxManager {
     // sequence and drop them.
     for (int i = 0; i < 3 && i < data.length; i++) {
       // remove every byte from the sequence that starts like 0b10...
-      if (isContinuationChar(data[i])) {
+      if (isContinuationByte(data[i])) {
         firstIndex += 1;
       } else {
         break;
