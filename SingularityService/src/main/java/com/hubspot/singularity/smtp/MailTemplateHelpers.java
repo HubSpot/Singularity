@@ -196,7 +196,8 @@ public class MailTemplateHelpers {
     }
 
     if (logChunkObject.isPresent()) {
-      return Optional.of(logChunkObject.get().getData());
+      //NONONONONONONO
+      return Optional.of(logChunkObject.get().getData().toString());
     } else {
       LOG.error("Failed to get {} log for {}", filename, taskId.getId());
       return Optional.absent();
@@ -229,12 +230,14 @@ public class MailTemplateHelpers {
       if (logChunkObject.isPresent()) {
         if (logChunkObject.get().getData().equals("")) { // Passed end of file
           if (previous.isPresent()) { // If there was any log, get the bottom bytes of it
-            long end = previous.get().getOffset() + previous.get().getData().length();
+            //TODO: make this work
+            long end = previous.get().getOffset() + previous.get().getData().limit();
             return Optional.of(end - logLength);
           }
           return Optional.absent();
         }
-        Matcher matcher = pattern.matcher(logChunkObject.get().getData());
+        //TODO: make this work (toString is completely invalid)
+        Matcher matcher = pattern.matcher(logChunkObject.get().getData().toString());
         if (matcher.find()) {
           return Optional.of(offset + matcher.start());
         } else {

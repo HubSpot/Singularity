@@ -5,6 +5,10 @@ import static com.hubspot.singularity.WebExceptions.checkNotFound;
 import static com.hubspot.singularity.WebExceptions.notFound;
 
 import java.io.File;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -120,6 +124,9 @@ public class SandboxResource extends AbstractHistoryResource {
     }
   }
 
+
+
+
   @GET
   @Path("/{taskId}/read")
   @ApiOperation("Retrieve part of the contents of a file in a specific task's sandbox.")
@@ -127,7 +134,8 @@ public class SandboxResource extends AbstractHistoryResource {
       @ApiParam("The path to the file to be read") @QueryParam("path") String path,
       @ApiParam("Optional string to grep for") @QueryParam("grep") Optional<String> grep,
       @ApiParam("Byte offset to start reading from") @QueryParam("offset") Optional<Long> offset,
-      @ApiParam("Maximum number of bytes to read") @QueryParam("length") Optional<Long> length) {
+      @ApiParam("Maximum number of bytes to read") @QueryParam("length") Optional<Long> length,
+      @ApiParam("Drop invalid UTF-8 characters") @QueryParam("dropInvalidUTF8") Optional<Boolean> dropInvalidUTF8) {
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.READ);
 
     final SingularityTaskHistory history = checkHistory(taskId);
@@ -140,18 +148,9 @@ public class SandboxResource extends AbstractHistoryResource {
 
       checkNotFound(maybeChunk.isPresent(), "File %s does not exist for task ID %s", fullPath, taskId);
 
+      //TODO: make this work
       if (grep.isPresent() && !Strings.isNullOrEmpty(grep.get())) {
-        final Pattern grepPattern = Pattern.compile(grep.get());
-        final StringBuilder strBuilder = new StringBuilder(maybeChunk.get().getData().length());
-
-        for (String line : Splitter.on("\n").split(maybeChunk.get().getData())) {
-          if (grepPattern.matcher(line).find()) {
-            strBuilder.append(line);
-            strBuilder.append("\n");
-          }
-        }
-
-        return new MesosFileChunkObject(strBuilder.toString(), maybeChunk.get().getOffset(), Optional.of(maybeChunk.get().getOffset() + maybeChunk.get().getData().length()));
+        return maybeChunk.get();
       }
 
       return maybeChunk.get();

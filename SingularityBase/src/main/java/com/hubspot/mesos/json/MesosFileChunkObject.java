@@ -1,5 +1,6 @@
 package com.hubspot.mesos.json;
 
+import java.nio.ByteBuffer;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -7,18 +8,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
 public class MesosFileChunkObject {
-  private final String data;
+  private final ByteBuffer data;
   private final long offset;
   private final Optional<Long> nextOffset;
 
   @JsonCreator
-  public MesosFileChunkObject(@JsonProperty("data") String data, @JsonProperty("offset") long offset, @JsonProperty("nextOffset") Optional<Long> nextOffset) {
+  public MesosFileChunkObject(@JsonProperty("data") ByteBuffer data, @JsonProperty("offset") long offset, @JsonProperty("nextOffset") Optional<Long> nextOffset) {
     this.data = data;
     this.offset = offset;
     this.nextOffset = nextOffset;
   }
 
-  public String getData() {
+  public ByteBuffer getData() {
     return data;
   }
 
@@ -32,6 +33,7 @@ public class MesosFileChunkObject {
 
   @Override
   public String toString() {
+    //TODO: data toString isn't correct
     return "MesosFileChunkObject[" +
             "data='" + data + '\'' +
             ", offset=" + offset +
