@@ -6,20 +6,26 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
-public class SingularityPriorityRequest {
+public class SingularityPriorityFreeze {
     private final double minimumPriorityLevel;
+    private final boolean killTasks;
     private final Optional<String> message;
     private final Optional<String> actionId;
 
     @JsonCreator
-    public SingularityPriorityRequest(@JsonProperty("minimumPriorityLevel") double minimumPriorityLevel, @JsonProperty("message") Optional<String> message, @JsonProperty("actionId") Optional<String> actionId) {
+    public SingularityPriorityFreeze(@JsonProperty("minimumPriorityLevel") double minimumPriorityLevel, @JsonProperty("killTasks") boolean killTasks, @JsonProperty("message") Optional<String> message, @JsonProperty("actionId") Optional<String> actionId) {
         this.minimumPriorityLevel = minimumPriorityLevel;
+        this.killTasks = killTasks;
         this.message = message;
         this.actionId = actionId;
     }
 
     public double getMinimumPriorityLevel() {
         return minimumPriorityLevel;
+    }
+
+    public boolean isKillTasks() {
+        return killTasks;
     }
 
     public Optional<String> getMessage() {
@@ -38,8 +44,9 @@ public class SingularityPriorityRequest {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        SingularityPriorityRequest that = (SingularityPriorityRequest) o;
+        SingularityPriorityFreeze that = (SingularityPriorityFreeze) o;
         return Double.compare(that.minimumPriorityLevel, minimumPriorityLevel) == 0 &&
+            Objects.equals(killTasks, that.killTasks) &&
             Objects.equals(message, that.message) &&
             Objects.equals(actionId, that.actionId);
     }
@@ -51,8 +58,9 @@ public class SingularityPriorityRequest {
 
     @Override
     public String toString() {
-        return "SingularityPriorityRequest[" +
+        return "SingularityPriorityFreeze[" +
             "minimumPriorityLevel=" + minimumPriorityLevel +
+            ", killTasks=" + killTasks +
             ", message=" + message +
             ", actionId=" + actionId +
             ']';

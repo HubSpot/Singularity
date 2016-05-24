@@ -82,6 +82,7 @@ import com.hubspot.singularity.event.SingularityEventListener;
 import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.resources.DeployResource;
+import com.hubspot.singularity.resources.PriorityResource;
 import com.hubspot.singularity.resources.RackResource;
 import com.hubspot.singularity.resources.RequestResource;
 import com.hubspot.singularity.resources.SlaveResource;
@@ -126,6 +127,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected RequestResource requestResource;
   @Inject
   protected DeployResource deployResource;
+  @Inject
+  protected PriorityResource priorityResource;
   @Inject
   protected SingularityCleaner cleaner;
   @Inject

@@ -46,7 +46,7 @@ import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityPriorityRequestParent;
+import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
@@ -213,7 +213,7 @@ public class SingularityScheduler {
     final long start = System.currentTimeMillis();
 
     final ImmutableList<SingularityPendingRequest> pendingRequests = ImmutableList.copyOf(requestManager.getPendingRequests());
-    final Optional<SingularityPriorityRequestParent> maybePriorityFreeze = priorityManager.getActivePriorityFreeze();
+    final Optional<SingularityPriorityFreezeParent> maybePriorityFreeze = priorityManager.getActivePriorityFreeze();
 
     if (pendingRequests.isEmpty()) {
       LOG.trace("Pending queue was empty");
@@ -245,8 +245,8 @@ public class SingularityScheduler {
       }
 
       final double taskPriorityLevel = maybeRequest.get().getRequest().getTaskPriorityLevel().or(configuration.getDefaultTaskPriorityLevel());
-      if (maybePriorityFreeze.isPresent() && taskPriorityLevel < maybePriorityFreeze.get().getPriorityRequest().getMinimumPriorityLevel()) {
-        LOG.debug("Pending request {} is frozen due to priority level {} being lower than {}", taskPriorityLevel, maybePriorityFreeze.get().getPriorityRequest().getMinimumPriorityLevel());
+      if (maybePriorityFreeze.isPresent() && taskPriorityLevel < maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel()) {
+        LOG.debug("Pending request {} is frozen due to priority level {} being lower than {}", taskPriorityLevel, maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel());
         frozenRequests++;
         continue;
       }

@@ -24,7 +24,7 @@ import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.SingularityHostState;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityPriorityRequestParent;
+import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestWithState;
@@ -294,11 +294,11 @@ public class StateManager extends CuratorManager {
 
     final Optional<Boolean> authDatastoreHealthy = authDatastore.isHealthy();
 
-    final Optional<SingularityPriorityRequestParent> maybePriorityFreeze = priorityManager.getActivePriorityFreeze();
+    final Optional<SingularityPriorityFreezeParent> maybePriorityFreeze = priorityManager.getActivePriorityFreeze();
     final Optional<Double> activePriorityLevelFreeze;
 
     if (maybePriorityFreeze.isPresent()) {
-      activePriorityLevelFreeze = Optional.of(maybePriorityFreeze.get().getPriorityRequest().getMinimumPriorityLevel());
+      activePriorityLevelFreeze = Optional.of(maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel());
     } else {
       activePriorityLevelFreeze = Optional.absent();
     }

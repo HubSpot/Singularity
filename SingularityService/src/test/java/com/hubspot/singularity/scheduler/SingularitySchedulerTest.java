@@ -51,7 +51,7 @@ import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
-import com.hubspot.singularity.SingularityPriorityRequestParent;
+import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityRequestCleanup;
@@ -71,7 +71,7 @@ import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.api.SingularityKillTaskRequest;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.api.SingularityPauseRequest;
-import com.hubspot.singularity.api.SingularityPriorityRequest;
+import com.hubspot.singularity.api.SingularityPriorityFreeze;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
@@ -2992,35 +2992,48 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testPriorityKill() {
+  public void testPriorityFreezeKillsActiveTasksAndCancelsPendingTasks() {
     SingularityRequest request1 = new SingularityRequestBuilder("request1", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.25)).build();
     saveRequest(request1);
-    SingularityRequest request2 = new SingularityRequestBuilder("request2", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.5)).build();
+    SingularityRequest request2 = new SingularityRequestBuilder("request2", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.3)).build();
     saveRequest(request2);
-    SingularityRequest request3 = new SingularityRequestBuilder("request3", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.75)).build();
+    SingularityRequest request3 = new SingularityRequestBuilder("request3", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.5)).build();
     saveRequest(request3);
+    SingularityRequest request4 = new SingularityRequestBuilder("request4", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.75)).build();
+    saveRequest(request4);
 
     SingularityDeploy deploy1 = initAndFinishDeploy(request1, "r1d1");
-    SingularityDeploy deploy2 = initAndFinishDeploy(request2, "r2d2");
-    SingularityDeploy deploy3 = initAndFinishDeploy(request3, "r3d3");
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(request2.getId(), "r2d1").setCommand(Optional.of("cmd")).build(), Optional.<Boolean> absent(), Optional.<String> absent()));
+    SingularityDeploy deploy3 = initAndFinishDeploy(request3, "r2d1");
+    SingularityDeploy deploy4 = initAndFinishDeploy(request4, "r3d1");
+
 
     final SingularityTask task1 = launchTask(request1, deploy1, 2, 1, TaskState.TASK_RUNNING);
-    final SingularityTask task2 = launchTask(request2, deploy2, 1, 1, TaskState.TASK_RUNNING);
-    final SingularityTask task3 = launchTask(request3, deploy3, 10, 1, TaskState.TASK_RUNNING);
+    final SingularityTask task3 = launchTask(request3, deploy3, 1, 1, TaskState.TASK_RUNNING);
+    final SingularityTask task4 = launchTask(request4, deploy4, 10, 1, TaskState.TASK_RUNNING);
 
-    // priority kill of .5 means that just request1 should have cleanups
-    priorityManager.createPriorityKill(new SingularityPriorityRequestParent(new SingularityPriorityRequest(.5, Optional.of("test"), Optional.<String>absent()), System.currentTimeMillis(), Optional.<String>absent()));
+    scheduler.drainPendingQueue(stateCacheProvider.get());
 
-    Assert.assertEquals(3, taskManager.getNumActiveTasks());
+    // request2 should have a pending task,
+    Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
+    Assert.assertEquals(request2.getId(), taskManager.getPendingTaskIds().get(0).getRequestId());
+    Assert.assertEquals(task1.getTaskId(), taskManager.getActiveTaskIdsForRequest(request1.getId()).get(0));
 
+    // priority freeze of .5 means that request1 should have a cleanup and request2's pending task should be deleted
+    priorityResource.createPriorityFreeze(new SingularityPriorityFreeze(.5, true, Optional.of("test"), Optional.<String>absent()));
+
+    // perform the killing
     priorityKillPoller.runActionOnPoll();
 
     // request1 should have a cleanup of type PRIORITY_KILL
     Assert.assertEquals(TaskCleanupType.PRIORITY_KILL, taskManager.getTaskCleanup(task1.getTaskId().getId()).get().getCleanupType());
 
-    // request2 and request3 should not have cleanups
-    Assert.assertEquals(false, taskManager.getTaskCleanup(task2.getTaskId().getId()).isPresent());
+    // request2 should not have a pending task
+    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+
+    // request3 and request4 should not have cleanups
     Assert.assertEquals(false, taskManager.getTaskCleanup(task3.getTaskId().getId()).isPresent());
+    Assert.assertEquals(false, taskManager.getTaskCleanup(task4.getTaskId().getId()).isPresent());
 
     // kill task(s) with cleanups
     cleaner.drainCleanupQueue();
@@ -3028,14 +3041,14 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     // task1 should be killed, task2 and task3 should be running
     Assert.assertEquals(ExtendedTaskState.TASK_KILLED, taskManager.getTaskHistory(task1.getTaskId()).get().getLastTaskUpdate().get().getTaskState());
-    Assert.assertEquals(ExtendedTaskState.TASK_RUNNING, taskManager.getTaskHistory(task2.getTaskId()).get().getLastTaskUpdate().get().getTaskState());
     Assert.assertEquals(ExtendedTaskState.TASK_RUNNING, taskManager.getTaskHistory(task3.getTaskId()).get().getLastTaskUpdate().get().getTaskState());
+    Assert.assertEquals(ExtendedTaskState.TASK_RUNNING, taskManager.getTaskHistory(task4.getTaskId()).get().getLastTaskUpdate().get().getTaskState());
   }
 
   @Test
   public void testPriorityFreeze() {
     // create priority freeze
-    priorityManager.createPriorityFreeze(new SingularityPriorityRequestParent(new SingularityPriorityRequest(0.3, Optional.<String>absent(), Optional.<String>absent()), System.currentTimeMillis(), Optional.<String>absent()));
+    priorityManager.createPriorityFreeze(new SingularityPriorityFreezeParent(new SingularityPriorityFreeze(0.3, true, Optional.<String>absent(), Optional.<String>absent()), System.currentTimeMillis(), Optional.<String>absent()));
 
     // deploy 2 requests
     SingularityRequest request1 = new SingularityRequestBuilder("request1", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.25)).build();
