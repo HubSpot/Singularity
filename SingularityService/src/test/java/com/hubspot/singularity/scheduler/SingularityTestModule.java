@@ -59,6 +59,7 @@ import com.hubspot.singularity.mesos.SingularityDriver;
 import com.hubspot.singularity.mesos.SingularityLogSupport;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
 import com.hubspot.singularity.resources.DeployResource;
+import com.hubspot.singularity.resources.PriorityResource;
 import com.hubspot.singularity.resources.RackResource;
 import com.hubspot.singularity.resources.RequestResource;
 import com.hubspot.singularity.resources.SlaveResource;
@@ -217,6 +218,7 @@ public class SingularityTestModule implements Module {
     mainBinder.bind(TaskResource.class);
     mainBinder.bind(SlaveResource.class);
     mainBinder.bind(RackResource.class);
+    mainBinder.bind(PriorityResource.class);
   }
 
   private DataSourceFactory getDataSourceFactory() {

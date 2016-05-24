@@ -11,7 +11,8 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityPriorityKillRequestParent;
+import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskCleanup;
 import com.hubspot.singularity.SingularityTaskId;
@@ -45,39 +46,71 @@ public class SingularityPriorityKillPoller extends SingularityLeaderOnlyPoller {
 
     @Override
     public void runActionOnPoll() {
-        final Optional<SingularityPriorityKillRequestParent> maybePriorityKill = priorityManager.getPriorityKill();
-
-        if (!maybePriorityKill.isPresent()) {
-            LOG.trace("No priority kill to process.");
+        if (!priorityManager.checkPriorityKillExists()) {
+            LOG.trace("No priority freeze to process.");
             return;
         }
 
-        LOG.info("Handling priority kill {}", maybePriorityKill.get());
+        final Optional<SingularityPriorityFreezeParent> maybePriorityFreeze = priorityManager.getActivePriorityFreeze();
 
-        final Map<String, Double> requestIdToTaskPriority = new HashMap<>();
-        final double minPriorityLevel = maybePriorityKill.get().getPriorityKillRequest().getMinimumPriorityLevel();
+        if (!maybePriorityFreeze.isPresent() || !maybePriorityFreeze.get().getPriorityFreeze().isKillTasks()) {
+            LOG.trace("Priority freeze does not exist.");
+            priorityManager.clearPriorityKill();
+            return;
+        }
+
+        LOG.info("Handling priority freeze {}", maybePriorityFreeze.get());
+
         final long now = System.currentTimeMillis();
-
-        for (SingularityRequestWithState requestWithState : requestManager.getRequests()) {
-            requestIdToTaskPriority.put(requestWithState.getRequest().getId(), requestWithState.getRequest().getTaskPriorityLevel().or(defaultTaskPriorityLevel));
-        }
-
+        int cancelledPendingTaskCount = 0;
         int killedTaskCount = 0;
-        for (SingularityTaskId taskId : taskManager.getActiveTaskIds()) {
-            if (!requestIdToTaskPriority.containsKey(taskId.getRequestId())) {
-                continue;
+
+        try {
+            final double minPriorityLevel = maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel();
+
+            // map request ID to priority level
+            final Map<String, Double> requestIdToTaskPriority = new HashMap<>();
+            for (SingularityRequestWithState requestWithState : requestManager.getRequests()) {
+                requestIdToTaskPriority.put(requestWithState.getRequest().getId(), requestWithState.getRequest().getTaskPriorityLevel().or(defaultTaskPriorityLevel));
             }
 
-            final double taskPriorityLevel = requestIdToTaskPriority.get(taskId.getRequestId());
+            // cancel pending tasks below minimum priority level
+            for (SingularityPendingTaskId pendingTaskId : taskManager.getPendingTaskIds()) {
+                if (!requestIdToTaskPriority.containsKey(pendingTaskId.getRequestId())) {
+                    LOG.trace("Unable to lookup priority level for pending task {}, skipping...", pendingTaskId);
+                    continue;
+                }
 
-            if (taskPriorityLevel < minPriorityLevel) {
-                LOG.info("Killing {} since priority level {} is less than {}", taskId.getId(), taskPriorityLevel, minPriorityLevel);
-                taskManager.createTaskCleanup(new SingularityTaskCleanup(maybePriorityKill.get().getUser(), TaskCleanupType.PRIORITY_KILL, now, taskId, maybePriorityKill.get().getPriorityKillRequest().getMessage(), maybePriorityKill.get().getPriorityKillRequest().getActionId()));
-                killedTaskCount++;
+                final double taskPriorityLevel = requestIdToTaskPriority.get(pendingTaskId.getRequestId());
+
+                if (taskPriorityLevel < minPriorityLevel) {
+                    LOG.info("Cancelling pending task {} since priority level {} is less than {}", pendingTaskId.getId(), taskPriorityLevel, minPriorityLevel);
+                    taskManager.deletePendingTask(pendingTaskId);
+                    cancelledPendingTaskCount++;
+                }
             }
+
+            // kill active tasks below minimum priority level
+            for (SingularityTaskId taskId : taskManager.getActiveTaskIds()) {
+                if (!requestIdToTaskPriority.containsKey(taskId.getRequestId())) {
+                    LOG.trace("Unable to lookup priority level for task {}, skipping...", taskId);
+                    continue;
+                }
+
+                final double taskPriorityLevel = requestIdToTaskPriority.get(taskId.getRequestId());
+
+                if (taskPriorityLevel < minPriorityLevel) {
+                    LOG.info("Killing active task {} since priority level {} is less than {}", taskId.getId(), taskPriorityLevel, minPriorityLevel);
+                    taskManager.createTaskCleanup(
+                        new SingularityTaskCleanup(maybePriorityFreeze.get().getUser(), TaskCleanupType.PRIORITY_KILL, now, taskId, maybePriorityFreeze.get().getPriorityFreeze().getMessage(),
+                            maybePriorityFreeze.get().getPriorityFreeze().getActionId()));
+                    killedTaskCount++;
+                }
+            }
+
+        } finally {
+            priorityManager.clearPriorityKill();
+            LOG.info("Finished killing tasks for priority freeze {} in {} for {} active tasks, {} pending tasks", priorityManager, JavaUtils.duration(now), killedTaskCount, cancelledPendingTaskCount);
         }
-
-        LOG.info("Finished priority kill {} in {} for {} tasks", priorityManager, JavaUtils.duration(now), killedTaskCount);
-        priorityManager.deletePriorityKill();
     }
 }

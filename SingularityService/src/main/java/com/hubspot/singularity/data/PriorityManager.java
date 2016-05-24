@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityPriorityKillRequestParent;
+import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 
@@ -16,25 +16,38 @@ import com.hubspot.singularity.data.transcoders.Transcoder;
 public class PriorityManager extends CuratorAsyncManager {
     private static final String PRIORITY_ROOT = "/priority";
     private static final String PRIORITY_KILL = PRIORITY_ROOT + "/kill";
+    private static final String PRIORITY_FREEZE = PRIORITY_ROOT + "/freeze";
 
-    private final Transcoder<SingularityPriorityKillRequestParent> priorityKillTranscoder;
+    private final Transcoder<SingularityPriorityFreezeParent> priorityFreezeParentTranscoder;
 
     @Inject
     public PriorityManager(CuratorFramework curator, SingularityConfiguration configuration,
-        MetricRegistry metricRegistry, Transcoder<SingularityPriorityKillRequestParent> priorityKillTranscoder) {
+        MetricRegistry metricRegistry, Transcoder<SingularityPriorityFreezeParent> priorityFreezeParentTranscoder) {
         super(curator, configuration, metricRegistry);
-        this.priorityKillTranscoder = priorityKillTranscoder;
+        this.priorityFreezeParentTranscoder = priorityFreezeParentTranscoder;
     }
 
-    public Optional<SingularityPriorityKillRequestParent> getPriorityKill() {
-        return getData(PRIORITY_KILL, priorityKillTranscoder);
+    public boolean checkPriorityKillExists() {
+        return checkExists(PRIORITY_KILL).isPresent();
     }
 
-    public SingularityCreateResult createPriorityKill(SingularityPriorityKillRequestParent priorityKill) {
-        return save(PRIORITY_KILL, priorityKill, priorityKillTranscoder);
+    public SingularityCreateResult setPriorityKill() {
+        return create(PRIORITY_KILL);
     }
 
-    public SingularityDeleteResult deletePriorityKill() {
+    public SingularityDeleteResult clearPriorityKill() {
         return delete(PRIORITY_KILL);
+    }
+
+    public Optional<SingularityPriorityFreezeParent> getActivePriorityFreeze() {
+        return getData(PRIORITY_FREEZE, priorityFreezeParentTranscoder);
+    }
+
+    public SingularityCreateResult createPriorityFreeze(SingularityPriorityFreezeParent priorityFreeze) {
+        return save(PRIORITY_FREEZE, priorityFreeze, priorityFreezeParentTranscoder);
+    }
+
+    public SingularityDeleteResult deleteActivePriorityFreeze() {
+        return delete(PRIORITY_FREEZE);
     }
 }

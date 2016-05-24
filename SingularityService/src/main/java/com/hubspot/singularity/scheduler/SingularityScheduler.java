@@ -37,15 +37,16 @@ import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeployMarker;
+import com.hubspot.singularity.SingularityDeployProgress;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
-import com.hubspot.singularity.SingularityDeployProgress;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
@@ -60,6 +61,7 @@ import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.AbstractMachineManager;
 import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.PriorityManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
@@ -83,11 +85,13 @@ public class SingularityScheduler {
   private final SlaveManager slaveManager;
   private final RackManager rackManager;
 
+  private final PriorityManager priorityManager;
+
   private final SingularityMailer mailer;
 
   @Inject
   public SingularityScheduler(TaskRequestManager taskRequestManager, SingularityConfiguration configuration, SingularityCooldown cooldown, DeployManager deployManager,
-    TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager, RackManager rackManager, SingularityMailer mailer) {
+    TaskManager taskManager, RequestManager requestManager, SlaveManager slaveManager, RackManager rackManager, PriorityManager priorityManager, SingularityMailer mailer) {
     this.taskRequestManager = taskRequestManager;
     this.configuration = configuration;
     this.deployManager = deployManager;
@@ -95,6 +99,7 @@ public class SingularityScheduler {
     this.requestManager = requestManager;
     this.slaveManager = slaveManager;
     this.rackManager = rackManager;
+    this.priorityManager = priorityManager;
     this.mailer = mailer;
     this.cooldown = cooldown;
   }
@@ -208,6 +213,7 @@ public class SingularityScheduler {
     final long start = System.currentTimeMillis();
 
     final ImmutableList<SingularityPendingRequest> pendingRequests = ImmutableList.copyOf(requestManager.getPendingRequests());
+    final Optional<SingularityPriorityFreezeParent> maybePriorityFreeze = priorityManager.getActivePriorityFreeze();
 
     if (pendingRequests.isEmpty()) {
       LOG.trace("Pending queue was empty");
@@ -219,6 +225,7 @@ public class SingularityScheduler {
     int totalNewScheduledTasks = 0;
     int heldForScheduledActiveTask = 0;
     int obsoleteRequests = 0;
+    int frozenRequests = 0;
 
     for (SingularityPendingRequest pendingRequest : pendingRequests) {
       Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(pendingRequest.getRequestId());
@@ -245,7 +252,14 @@ public class SingularityScheduler {
         continue;
       }
 
-      final List<SingularityTaskId> matchingTaskIds = getMatchingTaskIds(stateCache, updatedRequest, pendingRequest);
+      final double taskPriorityLevel = maybeRequest.get().getRequest().getTaskPriorityLevel().or(configuration.getDefaultTaskPriorityLevel());
+      if (maybePriorityFreeze.isPresent() && taskPriorityLevel < maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel()) {
+        LOG.debug("Pending request {} is frozen due to priority level {} being lower than {}", taskPriorityLevel, maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel());
+        frozenRequests++;
+        continue;
+      }
+
+      final List<SingularityTaskId> matchingTaskIds = getMatchingTaskIds(stateCache, maybeRequest.get().getRequest(), pendingRequest);
 
       final SingularityDeployStatistics deployStatistics = getDeployStatistics(pendingRequest.getRequestId(), pendingRequest.getDeployId());
 
@@ -266,7 +280,7 @@ public class SingularityScheduler {
       requestManager.deletePendingRequest(pendingRequest);
     }
 
-    LOG.info("Scheduled {} new tasks ({} obsolete requests, {} held) in {}", totalNewScheduledTasks, obsoleteRequests, heldForScheduledActiveTask, JavaUtils.duration(start));
+    LOG.info("Scheduled {} new tasks ({} obsolete requests, {} held, {} frozen) in {}", totalNewScheduledTasks, obsoleteRequests, frozenRequests, heldForScheduledActiveTask, JavaUtils.duration(start));
   }
 
   private RequestState checkCooldown(RequestState requestState, SingularityRequest request, SingularityDeployStatistics deployStatistics) {
