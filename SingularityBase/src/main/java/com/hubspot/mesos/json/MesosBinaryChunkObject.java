@@ -1,24 +1,29 @@
 package com.hubspot.mesos.json;
 
-import java.util.Objects;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Optional;
 
-public class MesosFileChunkObject {
-  private final String data;
+import java.util.Objects;
+
+public class MesosBinaryChunkObject {
+  @JsonDeserialize(using = UTF8StringDeserializer.class)
+  @JsonSerialize(using = UTF8StringSerializer.class)
+  private final UTF8String data;
+
   private final long offset;
   private final Optional<Long> nextOffset;
 
   @JsonCreator
-  public MesosFileChunkObject(@JsonProperty("data") String data, @JsonProperty("offset") long offset, @JsonProperty("nextOffset") Optional<Long> nextOffset) {
+  public MesosBinaryChunkObject(@JsonProperty("data") UTF8String data, @JsonProperty("offset") long offset, @JsonProperty("nextOffset") Optional<Long> nextOffset) {
     this.data = data;
     this.offset = offset;
     this.nextOffset = nextOffset;
   }
 
-  public String getData() {
+  public UTF8String getData() {
     return data;
   }
 
@@ -32,11 +37,11 @@ public class MesosFileChunkObject {
 
   @Override
   public String toString() {
-    return "MesosFileChunkObject[" +
-            "data='" + data + '\'' +
-            ", offset=" + offset +
-            ", nextOffset=" + nextOffset +
-            ']';
+    return "MesosBinaryChunkObject[" +
+        "data='" + data + "'" +
+        ", offset=" + offset +
+        ", nextOffset=" + nextOffset +
+        ']';
   }
 
   @Override
@@ -47,10 +52,10 @@ public class MesosFileChunkObject {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    MesosFileChunkObject that = (MesosFileChunkObject) o;
+    MesosBinaryChunkObject that = (MesosBinaryChunkObject) o;
     return Objects.equals(offset, that.offset) &&
-            Objects.equals(data, that.data) &&
-            Objects.equals(nextOffset, that.nextOffset);
+        Objects.equals(data, that.data) &&
+        Objects.equals(nextOffset, that.nextOffset);
   }
 
   @Override

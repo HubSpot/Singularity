@@ -1,13 +1,14 @@
 package com.hubspot.singularity.data;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
+import com.hubspot.mesos.json.MesosBinaryChunkObject;
 import com.hubspot.mesos.json.MesosFileChunkObject;
+import com.hubspot.mesos.json.UTF8String;
 import com.hubspot.singularity.SingularityTestBaseNoDb;
 import org.apache.commons.lang3.ArrayUtils;
 import org.junit.Test;
-
-import java.nio.ByteBuffer;
 
 import static org.junit.Assert.*;
 
@@ -15,6 +16,8 @@ public class SandboxManagerTest extends SingularityTestBaseNoDb {
 
   @Inject
   private SandboxManager sm;
+  @Inject
+  private ObjectMapper objectMapper;
 
   // valid ASCII "Hi I'm valid ASCII"
   private byte[] validString = {(byte)0b01001000, (byte)0b01101001, (byte)0b00100000,
@@ -56,19 +59,20 @@ public class SandboxManagerTest extends SingularityTestBaseNoDb {
   private byte[] validCheck = {(byte)0b11100010, (byte)0b10011100, (byte)0b10010011};
   private byte[] validPillow = {(byte)0b11110000, (byte)0b10100000, (byte)0b10110001, (byte)0b10111000};
 
-  private Optional<MesosFileChunkObject> makeMFCO(byte[] firstArray, byte[] secondArray) {
+  private Optional<MesosBinaryChunkObject> makeMBCO(byte[] firstArray, byte[] secondArray) {
     final byte[] data = ArrayUtils.addAll(firstArray, secondArray);
 
-    return Optional.of(new MesosFileChunkObject(
-        ByteBuffer.wrap(data, 0, data.length),
+    return Optional.of(new MesosBinaryChunkObject(
+        new UTF8String(data),
         0,
         Optional.of((long)data.length)
     ));
   }
 
-  private byte[] getBytesFromMFCO(Optional<MesosFileChunkObject> mfco) {
-    byte[] resultBytes = new byte[mfco.get().getData().remaining()];
-    mfco.get().getData().duplicate().get(resultBytes);
+  private byte[] getBytesFromMBCO(Optional<MesosBinaryChunkObject> mbco) {
+    UTF8String str = mbco.get().getData();
+    byte[] resultBytes = new byte[str.getLength()];
+    System.arraycopy(str.getData(), str.getOffset(), resultBytes, 0, str.getLength());
 
     return resultBytes;
   }
@@ -76,15 +80,15 @@ public class SandboxManagerTest extends SingularityTestBaseNoDb {
   @Test
   public void stripInvalidBeginningBytes() {
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(invalidBeginningCent, validString))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(invalidBeginningCent, validString))),
         validString
     );
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(invalidBeginningCheck, validString))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(invalidBeginningCheck, validString))),
         validString
     );
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(invalidBeginningPillow, validString))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(invalidBeginningPillow, validString))),
         validString
     );
   }
@@ -93,27 +97,27 @@ public class SandboxManagerTest extends SingularityTestBaseNoDb {
   @Test
   public void stripInvalidEndBytes() {
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(validString, invalidEndCent1))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(validString, invalidEndCent1))),
         validString
     );
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(validString, invalidEndCheck1))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(validString, invalidEndCheck1))),
         validString
     );
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(validString, invalidEndPillow1))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(validString, invalidEndPillow1))),
         validString
     );
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(validString, invalidEndCheck2))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(validString, invalidEndCheck2))),
         validString
     );
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(validString, invalidEndPillow2))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(validString, invalidEndPillow2))),
         validString
     );
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(validString, invalidEndPillow3))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(validString, invalidEndPillow3))),
         validString
     );
   }
@@ -121,19 +125,19 @@ public class SandboxManagerTest extends SingularityTestBaseNoDb {
   @Test
   public void keepValidStrings() {
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(validString, new byte[0]))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(validString, new byte[0]))),
         validString
     );
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(validUTF8, new byte[0]))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(validUTF8, new byte[0]))),
         validUTF8
     );
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(validUTF8, validString))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(validUTF8, validString))),
         ArrayUtils.addAll(validUTF8, validString)
     );
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(validString, validUTF8))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(validString, validUTF8))),
         ArrayUtils.addAll(validString, validUTF8)
     );
   }
@@ -141,15 +145,15 @@ public class SandboxManagerTest extends SingularityTestBaseNoDb {
   @Test
   public void stripTinyBufferUTF8BeginningBytes() {
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(invalidBeginningCent, new byte[0]))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(invalidBeginningCent, new byte[0]))),
         new byte[0]
     );
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(invalidBeginningCheck, new byte[0]))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(invalidBeginningCheck, new byte[0]))),
         new byte[0]
     );
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(invalidBeginningPillow, new byte[0]))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(invalidBeginningPillow, new byte[0]))),
         new byte[0]
     );
   }
@@ -157,27 +161,27 @@ public class SandboxManagerTest extends SingularityTestBaseNoDb {
   @Test
   public void stripTinyBufferUTF8EndBytes() {
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(new byte[0], invalidEndCent1))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(new byte[0], invalidEndCent1))),
         new byte[0]
     );
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(new byte[0], invalidEndCheck1))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(new byte[0], invalidEndCheck1))),
         new byte[0]
     );
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(new byte[0], invalidEndPillow1))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(new byte[0], invalidEndPillow1))),
         new byte[0]
     );
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(new byte[0], invalidEndCheck2))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(new byte[0], invalidEndCheck2))),
         new byte[0]
     );
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(new byte[0], invalidEndPillow2))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(new byte[0], invalidEndPillow2))),
         new byte[0]
     );
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(new byte[0], invalidEndPillow3))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(new byte[0], invalidEndPillow3))),
         new byte[0]
     );
   }
@@ -185,15 +189,15 @@ public class SandboxManagerTest extends SingularityTestBaseNoDb {
   @Test
   public void keepValidUTF8BeginningBytes() {
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(validCent, validString))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(validCent, validString))),
         ArrayUtils.addAll(validCent, validString)
     );
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(validCheck, validString))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(validCheck, validString))),
         ArrayUtils.addAll(validCheck, validString)
     );
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(validPillow, validString))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(validPillow, validString))),
         ArrayUtils.addAll(validPillow, validString)
     );
   }
@@ -201,15 +205,15 @@ public class SandboxManagerTest extends SingularityTestBaseNoDb {
   @Test
   public void keepValidUTF8EndBytes() {
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(validString, validCent))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(validString, validCent))),
         ArrayUtils.addAll(validString, validCent)
     );
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(validString, validCheck))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(validString, validCheck))),
         ArrayUtils.addAll(validString, validCheck)
     );
     assertArrayEquals(
-        getBytesFromMFCO(sm.stripInvalidUTF8(makeMFCO(validString, validPillow))),
+        getBytesFromMBCO(SandboxManager.stripInvalidUTF8(makeMBCO(validString, validPillow))),
         ArrayUtils.addAll(validString, validPillow)
     );
   }
@@ -217,47 +221,66 @@ public class SandboxManagerTest extends SingularityTestBaseNoDb {
   @Test
   public void validBeginningOffsetChange() {
     assertEquals(
-        sm.stripInvalidUTF8(makeMFCO(invalidBeginningCent, validString)).get().getOffset(),
-        makeMFCO(invalidBeginningCent, validString).get().getOffset() + 1
+        SandboxManager.stripInvalidUTF8(makeMBCO(invalidBeginningCent, validString)).get().getOffset(),
+        makeMBCO(invalidBeginningCent, validString).get().getOffset() + 1
     );
     assertEquals(
-        sm.stripInvalidUTF8(makeMFCO(invalidBeginningCheck, validString)).get().getOffset(),
-        makeMFCO(invalidBeginningCheck, validString).get().getOffset() + 2
+        SandboxManager.stripInvalidUTF8(makeMBCO(invalidBeginningCheck, validString)).get().getOffset(),
+        makeMBCO(invalidBeginningCheck, validString).get().getOffset() + 2
     );
     assertEquals(
-        sm.stripInvalidUTF8(makeMFCO(invalidBeginningPillow, validString)).get().getOffset(),
-        makeMFCO(invalidBeginningPillow, validString).get().getOffset() + 3
+        SandboxManager.stripInvalidUTF8(makeMBCO(invalidBeginningPillow, validString)).get().getOffset(),
+        makeMBCO(invalidBeginningPillow, validString).get().getOffset() + 3
     );
   }
 
   @Test
   public void validEndNextOffsetChange() {
     assertEquals(
-        (long) sm.stripInvalidUTF8(makeMFCO(validString, invalidEndCent1)).get().getNextOffset().get(),
-        makeMFCO(validString, invalidEndCent1).get().getNextOffset().get() - 1
+        (long) SandboxManager.stripInvalidUTF8(makeMBCO(validString, invalidEndCent1)).get().getNextOffset().get(),
+        makeMBCO(validString, invalidEndCent1).get().getNextOffset().get() - 1
     );
     assertEquals(
-        (long) sm.stripInvalidUTF8(makeMFCO(validString, invalidEndCheck1)).get().getNextOffset().get(),
-        makeMFCO(validString, invalidEndCheck1).get().getNextOffset().get() - 2
+        (long) SandboxManager.stripInvalidUTF8(makeMBCO(validString, invalidEndCheck1)).get().getNextOffset().get(),
+        makeMBCO(validString, invalidEndCheck1).get().getNextOffset().get() - 2
     );
     assertEquals(
-        (long) sm.stripInvalidUTF8(makeMFCO(validString, invalidEndPillow1)).get().getNextOffset().get(),
-        makeMFCO(validString, invalidEndPillow1).get().getNextOffset().get() - 3
+        (long) SandboxManager.stripInvalidUTF8(makeMBCO(validString, invalidEndPillow1)).get().getNextOffset().get(),
+        makeMBCO(validString, invalidEndPillow1).get().getNextOffset().get() - 3
     );
 
     assertEquals(
-        (long) sm.stripInvalidUTF8(makeMFCO(validString, invalidEndCheck2)).get().getNextOffset().get(),
-        makeMFCO(validString, invalidEndCheck2).get().getNextOffset().get() - 1
+        (long) SandboxManager.stripInvalidUTF8(makeMBCO(validString, invalidEndCheck2)).get().getNextOffset().get(),
+        makeMBCO(validString, invalidEndCheck2).get().getNextOffset().get() - 1
     );
     assertEquals(
-        (long) sm.stripInvalidUTF8(makeMFCO(validString, invalidEndPillow2)).get().getNextOffset().get(),
-        makeMFCO(validString, invalidEndPillow2).get().getNextOffset().get() - 2
+        (long) SandboxManager.stripInvalidUTF8(makeMBCO(validString, invalidEndPillow2)).get().getNextOffset().get(),
+        makeMBCO(validString, invalidEndPillow2).get().getNextOffset().get() - 2
     );
 
     assertEquals(
-        (long) sm.stripInvalidUTF8(makeMFCO(validString, invalidEndPillow3)).get().getNextOffset().get(),
-        makeMFCO(validString, invalidEndPillow3).get().getNextOffset().get() - 1
+        (long) SandboxManager.stripInvalidUTF8(makeMBCO(validString, invalidEndPillow3)).get().getNextOffset().get(),
+        makeMBCO(validString, invalidEndPillow3).get().getNextOffset().get() - 1
     );
+  }
+
+
+  @Test
+  public void testParseMesosResponse() throws Exception {
+    final long MESOS_OFFSET = 283275599;
+    final String MESOS_DATA = "fetches in 5 ms\\n14:35:08.594 [Executor task launch worker-82] INFO  o.a.s.s.ShuffleBlockFetch";
+    final String MESOS_JSON = "{\"data\":\"" + MESOS_DATA + "\",\"offset\":" + MESOS_OFFSET + "}";
+
+
+    final MesosBinaryChunkObject binaryChunkObject = objectMapper.readValue(MESOS_JSON, MesosBinaryChunkObject.class);
+
+    assertEquals(MESOS_OFFSET, binaryChunkObject.getOffset());
+
+    final String serializedJSON = objectMapper.writeValueAsString(binaryChunkObject);
+
+    final MesosFileChunkObject chunkObject = objectMapper.readValue(serializedJSON, MesosFileChunkObject.class);
+
+    assertEquals(MESOS_DATA, chunkObject.getData());
   }
 
 }

@@ -8,6 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import com.hubspot.mesos.json.MesosBinaryChunkObject;
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
@@ -179,7 +180,7 @@ public class MailTemplateHelpers {
 
     final Long logLength = (long) smtpConfiguration.get().getTaskLogLength();
 
-    final Optional<MesosFileChunkObject> logChunkObject;
+    final Optional<MesosBinaryChunkObject> logChunkObject;
 
     LOG.trace("Getting offset (maybe) for task {} file {}", taskId.getId(), fullPath);
     Optional<Long> maybeOffset = getMaybeTaskLogReadOffset(slaveHostname, fullPath, logLength, task);
@@ -189,7 +190,7 @@ public class MailTemplateHelpers {
       return Optional.absent();
     }
     try {
-      logChunkObject = sandboxManager.read(slaveHostname, fullPath, maybeOffset, Optional.of(logLength));
+      logChunkObject = sandboxManager.read(slaveHostname, fullPath, maybeOffset, Optional.of(logLength), Optional.of(true));
     } catch (RuntimeException e) {
       LOG.error("Sandboxmanager failed to read {}/{} on slave {}", directory.get(), filename, slaveHostname, e);
       return Optional.absent();
@@ -217,12 +218,12 @@ public class MailTemplateHelpers {
       return getMaybeTaskLogEndOfFileOffset(slaveHostname, fullPath, logLength);
     }
     long length = logLength + pattern.toString().length(); // Get extra so that we can be sure to find the error
-    Optional<MesosFileChunkObject> logChunkObject;
-    Optional<MesosFileChunkObject> previous = Optional.absent();
+    Optional<MesosBinaryChunkObject> logChunkObject;
+    Optional<MesosBinaryChunkObject> previous = Optional.absent();
 
     while (offset <= maxOffset) {
       try {
-        logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.of(offset), Optional.of(length));
+        logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.of(offset), Optional.of(length), Optional.of(true));
       } catch (RuntimeException e) {
         LOG.error("Sandboxmanager failed to read {} on slave {}", fullPath, slaveHostname, e);
         return Optional.absent();
@@ -231,7 +232,7 @@ public class MailTemplateHelpers {
         if (logChunkObject.get().getData().equals("")) { // Passed end of file
           if (previous.isPresent()) { // If there was any log, get the bottom bytes of it
             //TODO: make this work
-            long end = previous.get().getOffset() + previous.get().getData().limit();
+            long end = previous.get().getOffset() + previous.get().getData().getLength();
             return Optional.of(end - logLength);
           }
           return Optional.absent();
@@ -254,9 +255,9 @@ public class MailTemplateHelpers {
   }
 
   private Optional<Long> getMaybeTaskLogEndOfFileOffset(final String slaveHostname, final String fullPath, final long logLength) {
-    Optional<MesosFileChunkObject> logChunkObject;
+    Optional<MesosBinaryChunkObject> logChunkObject;
     try {
-      logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.<Long>absent(), Optional.<Long>absent());
+      logChunkObject = sandboxManager.read(slaveHostname, fullPath, Optional.<Long>absent(), Optional.<Long>absent(), Optional.of(true));
     } catch (RuntimeException e) {
       LOG.error("Sandboxmanager failed to read {} on slave {}", fullPath, slaveHostname, e);
       return Optional.absent();

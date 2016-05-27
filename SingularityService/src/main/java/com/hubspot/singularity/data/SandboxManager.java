@@ -7,12 +7,15 @@ import java.util.Collections;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.mesos.json.MesosBinaryChunkObject;
 import com.hubspot.mesos.json.MesosFileChunkObject;
 import com.hubspot.mesos.json.MesosFileObject;
+import com.hubspot.mesos.json.UTF8String;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.PerRequestConfig;
@@ -92,53 +95,49 @@ public class SandboxManager {
     }
   }
 
-  static Optional<MesosFileChunkObject> stripInvalidUTF8(Optional<MesosFileChunkObject> inChunk) {
+  static Optional<MesosBinaryChunkObject> stripInvalidUTF8(Optional<MesosBinaryChunkObject> inChunk) {
     if (!inChunk.isPresent()) {
       return inChunk;
     }
 
-    ByteBuffer byteBuffer = inChunk.get().getData();
+    UTF8String utf8String = inChunk.get().getData();
 
     // I'm assuming that the position and limit are the same size as this is...
     // this is a fair assumption iff inChunk is generated directly before this
     // once run through this function, the file chunk object can no longer
-    // be assumed to be directly mapped to the array within the ByteBuffer
-    // If this cannot be assumed, refer to: http://stackoverflow.com/a/33899475
-    // """
-    // final byte[] b = new byte[myByteBuffer.remaining()];
-    // myByteBuffer.duplicate().get(b);
-    // """
-    byte[] data = byteBuffer.array();
+    // be assumed to be directly mapped to the array within the UTF8String
+    byte[] data = utf8String.getData();
 
     int firstIndex = 0;
-    int limit = data.length;
+    int limit = utf8String.getLength();
 
 
     // Check to see if there's invalid UTF-8 at the beginning of the chunk
     // a continuation byte (0b10xxxxxx) can never be at the start of a
     // character find every continuation byte in a row at the beginning of the
     // sequence and drop them.
-    for (int i = 0; i < 3 && i < data.length; i++) {
+    for (int i = 0; i < 3 && i < utf8String.getLength(); i++) {
       // remove every byte from the sequence that starts like 0b10...
-      if (isContinuationByte(data[i])) {
+      if (isContinuationByte(utf8String.get(i))) {
         firstIndex += 1;
       } else {
         break;
       }
     }
 
+
     // Check to see if there's invalid UTF-8 at the end of the chunk
-    for (int i = data.length - 3; i < data.length; i++) {
+    for (int i = utf8String.getLength() - 3; i < utf8String.getLength(); i++) {
       if (i < 0) {
-        // We don't want to prematurely end loop if data.length < 3
+        // We don't want to prematurely end loop if string byte length < 3
         // and i < 0 in this loop (but later i >= 0)
         continue;
       }
       // Find number of continuation chars, if it extends the length of the
       // array, move end offset back to before this byte and stop
 
-      int following = numberOfFollowingBytes(data[i]);
-      if (i + following >= data.length) {
+      int following = numberOfFollowingBytes(utf8String.get(i));
+      if (i + following >= utf8String.getLength()) {
         limit = i;
         break;
       }
@@ -155,15 +154,21 @@ public class SandboxManager {
 
     long nextOffset = newOffset + length;
 
-    return Optional.of(new MesosFileChunkObject(
-        ByteBuffer.wrap(data, firstIndex, length),
+    UTF8String modifiedBoundsUTF8String = new UTF8String(
+        data,
+        utf8String.getOffset() + firstIndex,
+        length
+    );
+
+    return Optional.of(new MesosBinaryChunkObject(
+        modifiedBoundsUTF8String,
         newOffset,
         Optional.of(nextOffset)
     ));
   }
 
   @SuppressWarnings("deprecation")
-  public Optional<MesosFileChunkObject> read(String slaveHostname, String fullPath, Optional<Long> offset, Optional<Long> length) throws SlaveNotFoundException {
+  public Optional<MesosBinaryChunkObject> read(String slaveHostname, String fullPath, Optional<Long> offset, Optional<Long> length, Optional<Boolean> dropInvalidUTF8) throws SlaveNotFoundException {
     try {
       final AsyncHttpClient.BoundRequestBuilder builder = asyncHttpClient.prepareGet(String.format("http://%s:5051/files/read", slaveHostname))
           .addQueryParameter("path", fullPath);
@@ -190,8 +195,13 @@ public class SandboxManager {
         throw new RuntimeException(String.format("Got HTTP %s from Mesos slave", response.getStatusCode()));
       }
 
-      // TODO: make sure objectMapper actually converts the string into the ByteBuffer correctly
-      return Optional.of(objectMapper.readValue(response.getResponseBodyAsStream(), MesosFileChunkObject.class));
+      Optional<MesosBinaryChunkObject> maybeUncheckedChunk = Optional.of(objectMapper.readValue(response.getResponseBodyAsStream(), MesosBinaryChunkObject.class));
+
+      if (dropInvalidUTF8.or(true)) {
+        return stripInvalidUTF8(maybeUncheckedChunk);
+      }
+
+      return maybeUncheckedChunk;
     } catch (ConnectException ce) {
       throw new SlaveNotFoundException(ce);
     } catch (Exception e) {
