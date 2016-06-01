@@ -324,7 +324,6 @@ def tail():
     parser.add_argument("-r", "--request-id", dest="requestId", help="RequestId of request to fetch logs for (can be a glob)")
     parser.add_argument("-d", "--deploy-id", dest="deployId", help="DeployId of tasks to fetch logs for (can be a glob)")
     parser.add_argument("-u", "--singularity-uri-base", dest="singularity_uri_base", help="The base for singularity (eg. http://localhost:8080/singularity/v1)")
-    parser.add_argument("-g", "--grep", dest="grep", help="String to grep for")
     parser.add_argument("-l", "--logfile", dest="logfile", help="Logfile path/name to tail (ie 'logs/access.log')")
     parser.add_argument("-V", "--verbose", dest="verbose", help="more verbose output", action='store_true')
     parser.add_argument("--silent", dest="silent", help="No stderr (progress, file names, etc) output", action='store_true')
