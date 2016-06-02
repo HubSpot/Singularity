@@ -43,7 +43,8 @@ var templateData = {
 
 var dest = path.resolve(__dirname, '../SingularityService/target/generated-resources/assets');
 
-var webpack = require('webpack-stream');
+var webpackStream = require('webpack-stream');
+var webpack = require('webpack');
 var webpackConfig = require('./webpack.config');
 var WebpackDevServer = require('webpack-dev-server');
 
@@ -60,8 +61,21 @@ gulp.task('fonts', function() {
 });
 
 gulp.task('scripts', function () {
-  return gulp.src(webpackConfig.entry.app)
-    .pipe(webpack(webpackConfig))
+  var prodConfig = Object.create(webpackConfig);
+
+  prodConfig.plugins = prodConfig.plugins.concat(
+    new webpack.optimize.UglifyJsPlugin({
+      compress: {
+        warnings: false
+      }
+    }),
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify('development')
+    })
+  );
+
+  return gulp.src(prodConfig.entry.app)
+    .pipe(webpackStream(prodConfig))
     .pipe(gulp.dest(dest + '/static/js'))
 });
 
@@ -106,7 +120,7 @@ gulp.task('build', ['clean'], function () {
 gulp.task('serve', ['html', 'styles', 'fonts', 'images', 'css-images'], function () {
   gulp.watch('app/**/*.styl', ['styles'])
 
-  new WebpackDevServer(require('webpack')(merge(webpackConfig, {devtool: 'eval'})), {
+  new WebpackDevServer(webpackStream(merge(webpackConfig, {devtool: 'eval'})), {
     contentBase: dest,
     historyApiFallback: true
   }).listen(3334, "localhost", function (err) {
