@@ -9,6 +9,7 @@ import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -232,6 +233,16 @@ public class SingularityS3Uploader implements Closeable {
       try {
         S3Object object = new S3Object(s3Bucket, file.toFile());
         object.setKey(key);
+
+        final String fileExtension = com.google.common.io.Files.getFileExtension(file.toString());
+
+        for (Map.Entry<String, Set<String>> entry : configuration.getS3ContentEncodingFileExtensions().entrySet()) {
+          if (entry.getValue().contains(fileExtension)) {
+            LOG.debug("{} Using content encoding '{}' for file {}", logIdentifier, entry.getKey(), file);
+            object.setContentEncoding(entry.getKey());
+            break;
+          }
+        }
 
         if (fileSizeBytes > configuration.getMaxSingleUploadSizeBytes()) {
           multipartUpload(object);

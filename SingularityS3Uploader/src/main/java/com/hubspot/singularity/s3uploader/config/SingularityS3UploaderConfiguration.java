@@ -1,7 +1,9 @@
 package com.hubspot.singularity.s3uploader.config;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.Max;
@@ -10,6 +12,7 @@ import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.jackson.Obfuscate;
@@ -66,6 +69,10 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
   @NotNull
   @JsonProperty
   private Map<String, SingularityS3Credentials> s3BucketCredentials = new HashMap<>();
+
+  @NotNull
+  @JsonProperty
+  private Map<String, Set<String>> s3ContentEncodingFileExtensions = ImmutableMap.of("gzip", Collections.singleton("gz"));
 
   public SingularityS3UploaderConfiguration() {
     super(Optional.of("singularity-s3uploader.log"));
@@ -167,6 +174,14 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     this.s3BucketCredentials = s3BucketCredentials;
   }
 
+  public Map<String, Set<String>> getS3ContentEncodingFileExtensions() {
+    return s3ContentEncodingFileExtensions;
+  }
+
+  public void setS3ContentEncodingFileExtensions(Map<String, Set<String>> s3ContentEncodingFileExtensions) {
+    this.s3ContentEncodingFileExtensions = s3ContentEncodingFileExtensions;
+  }
+
   @Override
   public String toString() {
     return "SingularityS3UploaderConfiguration[" +
@@ -182,6 +197,7 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
             ", retryCount=" + retryCount +
             ", checkForOpenFiles=" + checkForOpenFiles +
             ", s3BucketCredentials=" + s3BucketCredentials +
+            ", s3ContentEncodingFileExtensions=" + s3ContentEncodingFileExtensions +
             ']';
   }
 }
