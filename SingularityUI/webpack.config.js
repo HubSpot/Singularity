@@ -36,6 +36,8 @@ module.exports = {
   devtool: 'source-map',
   module: {
     loaders: [
+      { test: /\.es6$/, exclude: /node_modules/, loader: "babel-loader" },
+      { test: /\.jsx$/, exclude: /node_modules/, loader: "babel-loader" },
       { test: /\.cjsx$/, loaders: ['coffee', 'cjsx']},
       { test: /\.coffee$/, loader: 'coffee'},
       { test: /\.hbs/, loader: "handlebars-template-loader" },
@@ -45,7 +47,7 @@ module.exports = {
   },
   resolve: {
     root: path.resolve('./app'),
-    extensions: ['', '.js', '.cjsx', '.coffee', '.hbs'],
+    extensions: ['', '.js', '.es6', '.jsx', '.cjsx', '.coffee', '.hbs'],
     alias: {
       'vex': 'vex-js/js/vex.js',
       'vex.dialog': 'vex-helper.coffee',
@@ -68,7 +70,7 @@ module.exports = {
       }
     }),
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': '"production"'
+      'process.env.NODE_ENV': JSON.stringify('development')
     }),
     new webpack.optimize.CommonsChunkPlugin('vendor', 'vendor.bundle.js'),
   ]
