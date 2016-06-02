@@ -9,7 +9,6 @@ import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -40,6 +39,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.s3uploader.config.SingularityS3UploaderContentHeaders;
 import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.runner.base.sentry.SingularityRunnerExceptionNotifier;
 import com.hubspot.singularity.runner.base.shared.S3UploadMetadata;
@@ -234,12 +234,15 @@ public class SingularityS3Uploader implements Closeable {
         S3Object object = new S3Object(s3Bucket, file.toFile());
         object.setKey(key);
 
-        final String fileExtension = com.google.common.io.Files.getFileExtension(file.toString());
-
-        for (Map.Entry<String, Set<String>> entry : configuration.getS3ContentEncodingFileExtensions().entrySet()) {
-          if (entry.getValue().contains(fileExtension)) {
-            LOG.debug("{} Using content encoding '{}' for file {}", logIdentifier, entry.getKey(), file);
-            object.setContentEncoding(entry.getKey());
+        for (SingularityS3UploaderContentHeaders contentHeaders : configuration.getS3ContentHeaders()) {
+          if (file.toString().endsWith(contentHeaders.getFilenameEndsWith())) {
+            LOG.debug("{} Using content headers {} for file {}", logIdentifier, contentHeaders, file);
+            if (contentHeaders.getContentType().isPresent()) {
+              object.setContentType(contentHeaders.getContentType().get());
+            }
+            if (contentHeaders.getContentEncoding().isPresent()) {
+              object.setContentEncoding(contentHeaders.getContentEncoding().get());
+            }
             break;
           }
         }
