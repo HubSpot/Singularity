@@ -1,18 +1,18 @@
 package com.hubspot.singularity.s3uploader.config;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.jackson.Obfuscate;
@@ -71,8 +71,9 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
   private Map<String, SingularityS3Credentials> s3BucketCredentials = new HashMap<>();
 
   @NotNull
+  @Valid
   @JsonProperty
-  private Map<String, Set<String>> s3ContentEncodingFileExtensions = ImmutableMap.of("gzip", Collections.singleton("gz"));
+  private List<SingularityS3UploaderContentHeaders> s3ContentHeaders = new ArrayList<>();
 
   public SingularityS3UploaderConfiguration() {
     super(Optional.of("singularity-s3uploader.log"));
@@ -174,12 +175,12 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     this.s3BucketCredentials = s3BucketCredentials;
   }
 
-  public Map<String, Set<String>> getS3ContentEncodingFileExtensions() {
-    return s3ContentEncodingFileExtensions;
+  public List<SingularityS3UploaderContentHeaders> getS3ContentHeaders() {
+    return s3ContentHeaders;
   }
 
-  public void setS3ContentEncodingFileExtensions(Map<String, Set<String>> s3ContentEncodingFileExtensions) {
-    this.s3ContentEncodingFileExtensions = s3ContentEncodingFileExtensions;
+  public void setS3ContentHeaders(List<SingularityS3UploaderContentHeaders> s3ContentHeaders) {
+    this.s3ContentHeaders = s3ContentHeaders;
   }
 
   @Override
@@ -197,7 +198,7 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
             ", retryCount=" + retryCount +
             ", checkForOpenFiles=" + checkForOpenFiles +
             ", s3BucketCredentials=" + s3BucketCredentials +
-            ", s3ContentEncodingFileExtensions=" + s3ContentEncodingFileExtensions +
+            ", s3ContentHeaders=" + s3ContentHeaders +
             ']';
   }
 }
