@@ -1,4 +1,3 @@
-let globalSearchClasses;
 import React from 'react';
 import classNames from 'classnames';
 
@@ -17,7 +16,7 @@ class GlobalSearch extends React.Component {
   }
 
   optionSelected(requestIdObject) {
-    let requestId = this.getValueFromOption(requestIdObject);
+    const requestId = this.getValueFromOption(requestIdObject);
     app.router.navigate(`/request/${ requestId }`, { trigger: true });
     this.clear();
     return this.props.onHide();
@@ -42,18 +41,18 @@ class GlobalSearch extends React.Component {
   searchOptions(inputValue, options) {
     // fuzzy lazily just appends a string before and after a matching char
     // we have to later use a simple shift-in shift-out state machine to convert
-    let fuzzyOptions = {
+    const fuzzyOptions = {
       returnMatchInfo: true
     };
 
-    let searched = fuzzy.filter(inputValue, options, fuzzyOptions);
+    const searched = fuzzy.filter(inputValue, options, fuzzyOptions);
 
     return searched;
   }
 
   renderOption(option, index) {
     // transform fuzzy string into react component
-    let bolded = option.string.map(function(matchInfo) {
+    const bolded = option.string.map(function(matchInfo) {
       if (matchInfo.match) {
         return <b>{matchInfo.char}</b>;
       } else {
@@ -75,9 +74,9 @@ class GlobalSearch extends React.Component {
   }
 
   render() {
-    let options = _.pluck(this.props.requests.toJSON(), 'id');
+    const options = _.pluck(this.props.requests.toJSON(), 'id');
 
-    globalSearchClasses = classNames({
+    const globalSearchClasses = classNames({
       'global-search': true,
       'global-search-active': this.props.visible
     });

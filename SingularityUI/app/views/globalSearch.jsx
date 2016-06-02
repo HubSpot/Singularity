@@ -41,13 +41,13 @@ class GlobalSearchView extends View {
     this.collection = new Requests([], {state: 'all'});
 
     return $(window).on('keydown', event => {
-      let focusBody = $(event.target).is('body');
-      let focusInput = $(event.target).is(this.$('input.big-search-box'));
+      const focusBody = $(event.target).is('body');
+      const focusInput = $(event.target).is(this.$('input.big-search-box'));
 
-      let modifierKey = event.metaKey || event.shiftKey || event.ctrlKey;
+      const modifierKey = event.metaKey || event.shiftKey || event.ctrlKey;
       // s and t
-      let loadSearchKeysPressed = [83, 84].indexOf(event.keyCode) >= 0 && !modifierKey;
-      let escPressed = event.keyCode === 27;
+      const loadSearchKeysPressed = [83, 84].indexOf(event.keyCode) >= 0 && !modifierKey;
+      const escPressed = event.keyCode === 27;
 
       if (escPressed && (focusBody || focusInput)) {
         return this.hide();
