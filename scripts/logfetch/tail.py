@@ -104,27 +104,10 @@ class LogStreamer(threading.Thread):
         response = requests.get(uri, params=params, headers=args.headers).json()
         prefix = '({0}) =>\n'.format(task) if args.verbose else ''
         if len(response['data'].encode('utf-8')) > 0:
-            if args.grep:
-                filename = '{0}/.grep{1}'.format(args.dest, self.Task)
-                self.create_grep_file(args, filename, response['data'])
-                output = os.popen(grep_command(args, filename)).read()
-                sys.stdout.write('{0}{1}'.format(colored(prefix, 'cyan'), output))
-                self.remove_grep_file(filename)
-            else:
-                sys.stdout.write('{0}{1}'.format(colored(prefix, 'cyan'), response['data'].encode('utf-8')))
+            sys.stdout.write('{0}{1}'.format(colored(prefix, 'cyan'), response['data'].encode('utf-8')))
             return offset + len(response['data'].encode('utf-8'))
         else:
             return offset
-
-    def create_grep_file(self, args, filename, content):
-        grep_file = open(filename, 'wb')
-        grep_file.write(content.encode('utf-8'))
-        grep_file.close()
-
-
-    def remove_grep_file(self, grep_file):
-        if os.path.isfile(grep_file):
-            os.remove(grep_file)
 
     def show_available_files(self, args, task):
         sys.stderr.write(colored('Available files (-l arguments):\n', 'cyan'))
