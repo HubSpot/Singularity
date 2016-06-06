@@ -4,9 +4,12 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 
+import com.github.rholder.retry.AttemptTimeLimiters;
+import com.github.rholder.retry.RetryerBuilder;
+import com.github.rholder.retry.StopStrategies;
+import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.spotify.docker.client.DockerClient;
@@ -42,7 +45,7 @@ public class DockerUtils {
     };
 
     try {
-      return callWithTimeout(callable);
+      return callWithRetriesAndTimeout(callable);
     } catch (Exception e) {
       throw new DockerException(e);
     }
@@ -57,7 +60,7 @@ public class DockerUtils {
     };
 
     try {
-      callWithTimeout(callable);
+      callWithRetriesAndTimeout(callable, Optional.of(configuration.getDockerPullRetries()));
     } catch (Exception e) {
       if (e.getCause() != null && e.getCause() instanceof DockerRequestException) {
         try {
@@ -78,7 +81,7 @@ public class DockerUtils {
     };
 
     try {
-      return callWithTimeout(callable);
+      return callWithRetriesAndTimeout(callable);
     } catch (Exception e) {
       throw new DockerException(e);
     }
@@ -93,7 +96,7 @@ public class DockerUtils {
     };
 
     try {
-      callWithTimeout(callable);
+      callWithRetriesAndTimeout(callable);
     } catch (Exception e) {
       throw new DockerException(e);
     }
@@ -108,15 +111,22 @@ public class DockerUtils {
     };
 
     try {
-      callWithTimeout(callable);
+      callWithRetriesAndTimeout(callable);
     } catch (Exception e) {
       throw new DockerException(e);
     }
   }
 
-  private <T> T callWithTimeout(Callable<T> callable) throws Exception {
-    FutureTask<T> task = new FutureTask<T>(callable);
-    executor.execute(task);
-    return task.get(configuration.getDockerClientTimeLimitSeconds(), TimeUnit.SECONDS);
+  private <T> T callWithRetriesAndTimeout(Callable<T> callable) throws Exception {
+    return callWithRetriesAndTimeout(callable, Optional.<Integer>absent());
+  }
+
+  private <T> T callWithRetriesAndTimeout(Callable<T> callable, Optional<Integer> retryCount) throws Exception {
+    RetryerBuilder<T> retryerBuilder = RetryerBuilder.<T>newBuilder()
+      .withAttemptTimeLimiter(AttemptTimeLimiters.<T>fixedTimeLimit(configuration.getDockerClientTimeLimitSeconds(), TimeUnit.SECONDS, executor));
+    if (retryCount.isPresent()) {
+      retryerBuilder.withStopStrategy(StopStrategies.stopAfterAttempt(retryCount.get() + 1));
+    }
+    return retryerBuilder.build().call(callable);
   }
 }
