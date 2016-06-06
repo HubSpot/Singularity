@@ -92,6 +92,7 @@
           <artifactId>maven-shade-plugin</artifactId>
           <configuration>
             <shadedArtifactAttached>true</shadedArtifactAttached>
+            <outputFile>${project.build.directory}/${project.artifactId}-${project.version}-shaded.jar</outputFile>
             <artifactSet>
               <includes>
                 <include>com.hubspot:SingularityClient</include>
