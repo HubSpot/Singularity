@@ -95,40 +95,40 @@
             <goals>
               <goal>shade</goal>
             </goals>
-            <configuration>
-              <!-- remove all classes of dependencies that are not used by the project -->
-              <minimizeJar>true</minimizeJar>
-              <shadedArtifactAttached>true</shadedArtifactAttached>
-              <shadedClassifierName>shaded</shadedClassifierName>
-              <artifactSet>
-                <includes>
-                  <include>com.hubspot:SingularityClient</include>
-                  <include>com.google.guava:guava</include>
-                </includes>
-              </artifactSet>
-              <filters>
-                <filter>
-                  <artifact>com.google.guava:guava</artifact>
-                  <excludes>
-                    <exclude>com/google/common/base/Optional.class</exclude>
-                  </excludes>
-                </filter>
-              </filters>
-              <relocations>
-                <relocation>
-                  <pattern>com.google.common</pattern>
-                  <shadedPattern>com.hubspot.singularity.shaded.com.google.common</shadedPattern>
-                  <excludes>
-                    <exclude>java.**</exclude>
-                    <exclude>javax.**</exclude>
-                    <exclude>sun.**</exclude>
-                    <exclude>com.google.common.base.Optional</exclude>
-                  </excludes>
-                </relocation>
-              </relocations>
-            </configuration>
           </execution>
         </executions>
+        <configuration>
+          <!-- remove all classes of dependencies that are not used by the project -->
+          <minimizeJar>true</minimizeJar>
+          <shadedArtifactAttached>true</shadedArtifactAttached>
+          <shadedClassifierName>shaded</shadedClassifierName>
+          <artifactSet>
+            <includes>
+              <include>com.hubspot:SingularityClient</include>
+              <include>com.google.guava:guava</include>
+            </includes>
+          </artifactSet>
+          <filters>
+            <filter>
+              <artifact>com.google.guava:guava</artifact>
+              <excludes>
+                <exclude>com/google/common/base/Optional.class</exclude>
+              </excludes>
+            </filter>
+          </filters>
+          <relocations>
+            <relocation>
+              <pattern>com.google.common</pattern>
+              <shadedPattern>com.hubspot.singularity.shaded.com.google.common</shadedPattern>
+              <excludes>
+                <exclude>java.**</exclude>
+                <exclude>javax.**</exclude>
+                <exclude>sun.**</exclude>
+                <exclude>com.google.common.base.Optional</exclude>
+              </excludes>
+            </relocation>
+          </relocations>
+        </configuration>
       </plugin>
     </plugins>
   </build>
