@@ -1,0 +1,27 @@
+/* Color palette */
+$pale-grey: #f9fafa;
+$cirrus: #f2f5f8;
+$heffalump: #425b76;
+$light-blue-grey: #e5f5f8;
+$battleship: #cbd6e2;
+$warm-grey: #9b9b9b;
+$calypso: #00a4bd;
+$pale-grey-three: #f9fbfd;
+$bluey-grey: #aab5c1;
+$white: #ffffff;
+$thunderdome-0: #5967bc;
+$thunderdome: #6a78d1;
+$eerie: #7c98b6;
+
+/* State indicator */
+$state-active: #00bda5; // 'Oz'
+$state-cooling-down: $eerie;
+$state-paused: #eaa836;
+
+/* Typography */
+$font-family: 'Avenir Next', 'Helvetica Neue', sans-serif;
+$font-weight-normal: 400;
+$font-weight-medium: 600;
+
+/* Other */
+$request-table-num-cols: 5;

@@ -9,7 +9,7 @@ const initialState = {
   isFetching: false,
   error: null,
   receivedAt: null,
-  requests: []
+  all: []
 };
 
 export default function requests(state = initialState, action) {
@@ -18,7 +18,7 @@ export default function requests(state = initialState, action) {
       if (action.status === 'error') {
         return Object.assign({}, state, {
           isFetching: false,
-          error: actions.error
+          error: action.error
         });
       }
       else if (action.status === 'success') {
@@ -26,7 +26,7 @@ export default function requests(state = initialState, action) {
           isFetching: false,
           error: null,
           receivedAt: Date.now(),
-          requests: action.data
+          all: action.data
         });
       }
       else {

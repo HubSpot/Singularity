@@ -1,0 +1,269 @@
+// Other imports
+@import 'mixins';
+@import 'base';
+
+
+.browserupgrade {
+  margin: 0.2em 0;
+  background: #ccc;
+  color: #000;
+  padding: 0.2em 0;
+}
+
+/* Space out content a bit */
+body {
+  padding-bottom: 20px;
+  font-family: $font-family;
+  font-weight: $font-weight-normal;
+  color: $heffalump;
+}
+
+a {
+  color: #2965a8;
+}
+
+.important-value {
+  font-weight: bold;
+}
+
+/* Globally lighten input placeholder text */
+@include input-placeholder {
+  color: rgba(66, 91, 118, 0.4);
+}
+
+.container {
+  margin-top: 50px;
+  width: 100%;
+}
+
+.test {
+  min-height: 100px;
+  border: 1px solid red;
+}
+
+/* Everything but the jumbotron gets side spacing for mobile first views */
+.header,
+.marketing,
+.footer {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+/* Custom page header */
+.header {
+  border-bottom: 1px solid #e5e5e5;
+  background-color: #D6ECCE;
+  min-height: 50px;
+
+  /* Make the masthead heading the same height as the navigation */
+  h3 {
+    margin-top: 0;
+    margin-bottom: 0;
+    line-height: 40px;
+    padding-bottom: 19px;
+  }
+}
+
+.state-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 10px;
+  &.active {
+    background-color: $state-active;
+  }
+  &.cooling-down {
+    background-color: $state-cooling-down;
+  }
+  &.paused {
+    background-color: $state-paused;
+  }
+}
+
+.filter-container {
+  padding-right: 20px;
+
+  ul, li {
+    margin: 0;
+    padding: 0;
+  }
+
+  ul {
+    list-style: none;
+    font-size: 14px;
+
+    li {
+
+      div {
+        display: block;
+        padding-left: 10px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+
+        input[type='checkbox'] {
+          float: right;
+          margin-right: 12px;
+          display: none;
+        }
+
+        &:hover {
+          background-color: $light-blue-grey;
+          cursor: pointer;
+
+          input[type='checkbox'] {
+            display: inherit;
+          }
+        }
+      }
+
+      &.active div {
+        background-color: $cirrus;
+      }
+
+      li {
+        div {
+          padding-left: 20px;
+        }
+      }
+    }
+  }
+
+  .state-indicator {
+    margin-right: 5px;
+  }
+
+} /* .filter-container */
+
+.list-container {
+
+  .filter-input {
+    width: 100%;
+    font-size: 28px;
+    padding: 10px;
+    padding-bottom: 5px;
+    padding-top: 5px;
+    margin-bottom: 15px;
+  }
+
+  .request-table {
+    width: 100%;
+    border-radius: 3px;
+    border: 1px solid #eaf0f6;
+
+    & .column-1 {   // type tag
+      width: auto;
+    }
+    & .column-2 {   // name
+      width: 20%;
+    }
+    & .column-3 {   // active?
+      width: 10%;
+    }
+    & .column-4 {   // # instances
+      width: 15%;
+    }
+    & .column-5 {   // last deployed
+      width: 25%;
+    }
+    & .column-6 {   // action links
+      width: 30%;
+    }
+
+    tr {
+      border: 1px solid #eaf0f6;
+      height: 75px;
+
+      &.table-header {
+        background-color: $pale-grey-three;
+        text-transform: uppercase;
+        font-weight: $font-weight-medium;
+        font-size: 13px;
+        height: auto;
+      }
+    }
+
+    td {
+      vertical-align: middle;
+
+      // MH: This is causing the action links to ignore the vertical-align, not sure
+      //      why and not sure how to fix it.
+      // &:last-of-type {
+      //   float:right;
+      // }
+
+      & .subline {
+        color: $eerie;
+      }
+    }
+  }
+
+} /* .list-container */
+
+.action-links {
+
+  a {
+    padding: 0 3px 0 3px;
+  }
+}
+
+.service-tag {
+  @include tag-styles($thunderdome, #f0f1fa);
+}
+
+.worker-tag {
+  @include tag-styles($thunderdome, #f0f1fa);
+}
+
+.scheduled-tag {
+  @include tag-styles($heffalump, #eceef1);
+}
+
+.onDemand-tag {
+  @include tag-styles($thunderdome, #f0f1fa);
+}
+
+.runOnce-tag {
+  @include tag-styles($thunderdome, #f0f1fa);
+}
+
+.active-tag {
+  @include tag-styles(#21d596, #e8faf4);
+}
+
+.coolingDown-tag {
+
+}
+
+.paused-tag {
+
+}
+
+.cron-schedule-tag {
+  
+}
+
+
+/* Responsive: Portrait tablets and up */
+// @media screen and (min-width: 768px) {
+//   .container {
+//     max-width: 100%;
+//   }
+//
+//   /* Remove the padding we set earlier */
+//   .header,
+//   .marketing,
+//   .footer {
+//     padding-left: 0;
+//     padding-right: 0;
+//   }
+//
+//   /* Space out the masthead */
+//   .header {
+//     margin-bottom: 30px;
+//   }
+//
+//   /* Remove the bottom border on the jumbotron for visual effect */
+//   .jumbotron {
+//     border-bottom: 0;
+//   }
+// }
