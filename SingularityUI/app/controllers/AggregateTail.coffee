@@ -5,7 +5,7 @@ TaskHistory = require '../models/TaskHistory'
 AjaxError = require '../models/AjaxError'
 RequestTasks = require '../collections/RequestTasks'
 
-AggregateTailView = require '../views/aggregateTail'
+AggregateTailView = require('../views/aggregateTail').default
 
 Utils = require '../utils'
 
