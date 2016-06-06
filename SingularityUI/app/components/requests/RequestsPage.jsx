@@ -5,8 +5,11 @@ import * as RequestsActions from '../../actions/requests';
 
 import Sidebar from '../common/Sidebar';
 import SidebarFilterOption from '../common/sidebar/SidebarFilterOption';
-import SearchBar from '../common/SearchBar';
+import MainContent from '../common/MainContent';
 import TabBar from '../common/TabBar';
+import TabBarFilterOption from '../common/tabBar/TabBarFilterOption';
+import SearchBar from '../common/SearchBar';
+import RequestsTable from '../requests/RequestsTable';
 
 class RequestsPage extends Component {
   constructor(props) {
@@ -41,11 +44,48 @@ class RequestsPage extends Component {
             onChange={console.log}
           />
         </Sidebar>
-        <div>
-          <TabBar />
+        <MainContent>
+          <TabBar>
+            <TabBarFilterOption
+              isEnabled={true}
+              filterName={'All types'}
+              numberOfItems={0}
+              onChange={console.log}
+            />
+            <TabBarFilterOption
+              isEnabled={false}
+              filterName={'On-demand'}
+              numberOfItems={0}
+              onChange={console.log}
+            />
+            <TabBarFilterOption
+              isEnabled={false}
+              filterName={'Worker'}
+              numberOfItems={0}
+              onChange={console.log}
+            />
+            <TabBarFilterOption
+              isEnabled={false}
+              filterName={'Scheduled'}
+              numberOfItems={0}
+              onChange={console.log}
+            />
+            <TabBarFilterOption
+              isEnabled={false}
+              filterName={'Run-once'}
+              numberOfItems={0}
+              onChange={console.log}
+            />
+            <TabBarFilterOption
+              isEnabled={false}
+              filterName={'Service'}
+              numberOfItems={0}
+              onChange={console.log}
+            />
+          </TabBar>
           <SearchBar />
-          <div>Table goes here</div>
-        </div>
+          <RequestsTable />
+        </MainContent>
       </div>
     );
   }

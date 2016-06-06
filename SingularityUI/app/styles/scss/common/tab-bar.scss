@@ -1,0 +1,58 @@
+// Other imports
+@import '../mixins';
+@import '../base';
+
+.nav-tabs {
+  border-bottom: 2px solid $battleship;
+
+  margin-bottom: 20px;
+
+  > li {
+    > a {
+      border: none;
+      background-color: transparent;
+
+      &:hover {
+        background-color: transparent;
+        border: none;
+      }
+
+      &:focus {
+        background-color: transparent;
+        border: none;
+      }
+    }
+  }
+
+  > li.active {
+    > a {
+      border: none;
+      background-color: transparent;
+      color: $tab-selected;
+      font-weight: $font-weight-medium;
+
+      &:hover {
+        background-color: transparent;
+        border: none;
+        color: $tab-selected;
+      }
+
+      &:focus {
+        background-color: transparent;
+        border: none;
+        color: $tab-selected;
+      }
+
+      &::after {
+        content: '';
+        display: block;
+        border-radius: 3px;
+        height: 4px;
+        box-shadow: 0 12px 0 0 $tab-underline;
+
+        margin-left: -8px;
+        margin-right: -8px;
+      }
+    }
+  }
+}
