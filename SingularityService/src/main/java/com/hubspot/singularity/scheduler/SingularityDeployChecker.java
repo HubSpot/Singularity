@@ -27,6 +27,7 @@ import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
 import com.hubspot.singularity.RequestState;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployFailure;
@@ -153,7 +154,9 @@ public class SingularityDeployChecker {
 
     if (deployResult.getDeployState() == DeployState.SUCCEEDED) {
       if (saveNewDeployState(pendingDeployMarker, Optional.of(pendingDeployMarker))) {
-        deleteObsoletePendingTasks(pendingDeploy);
+        if (!(request.getRequestType() == RequestType.RUN_ONCE)) {
+          deleteObsoletePendingTasks(pendingDeploy);
+        }
         finishDeploy(requestWithState, deploy, pendingDeploy, allOtherMatchingTasks, deployResult);
         return;
       } else {
@@ -230,7 +233,7 @@ public class SingularityDeployChecker {
     SingularityDeployResult deployResult) {
     SingularityRequest request = requestWithState.getRequest();
 
-    if (!request.isOneOff()) {
+    if (!request.isOneOff() && !(request.getRequestType() == RequestType.RUN_ONCE)) {
       cleanupTasks(pendingDeploy.getDeployMarker(), deployResult, tasksToKill);
     }
 
