@@ -5,8 +5,6 @@ TaskFileBrowser = require '../components/taskDetail/TaskFileBrowser'
 
 class FileBrowserSubview extends View
 
-    path = ''
-
     events: ->
         'click [data-directory-path]':  'navigate'
 
@@ -24,16 +22,16 @@ class FileBrowserSubview extends View
 
         breadcrumbs = utils.pathToBreadcrumbs @collection.currentDirectory
 
-        ReactDOM.render(
-            <TaskFileBrowser
-                synced = {@collection.synced and @task.synced}
-                files = {_.pluck @collection.models, 'attributes'}
-                collection = {@collection}
-                path = {@collection.path}
-                breadcrumbs = {breadcrumbs}
-                task = {@task}
-            />
-            ,@el)
+        # ReactDOM.render(
+        #     <TaskFileBrowser
+        #         synced = {@collection.synced and @task.synced}
+        #         files = {_.pluck @collection.models, 'attributes'}
+        #         collection = {@collection}
+        #         path = {@collection.path}
+        #         breadcrumbs = {breadcrumbs}
+        #         task = {@task}
+        #     />
+        #     ,@el)
 
         scroll = => $(window).scrollTop @$el.offset().top - 20
         if @scrollAfterRender
