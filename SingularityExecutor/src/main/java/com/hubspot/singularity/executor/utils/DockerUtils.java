@@ -62,13 +62,6 @@ public class DockerUtils {
     try {
       callWithRetriesAndTimeout(callable, Optional.of(configuration.getDockerPullRetries()));
     } catch (Exception e) {
-      if (e.getCause() != null && e.getCause() instanceof DockerRequestException) {
-        try {
-          callWithTimeout(callable);
-        } catch (Exception de) {
-          throw new DockerException(de);
-        }
-      }
       throw new DockerException(e);
     }
   }
