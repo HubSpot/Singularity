@@ -653,7 +653,7 @@ public class SingularityScheduler {
     final List<SingularityPendingTask> newTasks = Lists.newArrayListWithCapacity(numMissingInstances);
 
     int nextInstanceNumber = 1;
-t
+
     for (int i = 0; i < numMissingInstances; i++) {
       while (inuseInstanceNumbers.contains(nextInstanceNumber)) {
         nextInstanceNumber++;
