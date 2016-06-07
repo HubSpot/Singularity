@@ -90,11 +90,10 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-shade-plugin</artifactId>
-          <configuration>
+          <configuration combine.self="override">
             <minimizeJar>true</minimizeJar>
             <shadedArtifactAttached>true</shadedArtifactAttached>
             <shadedClassifierName>shaded</shadedClassifierName>
-            <outputFile>${project.build.directory}/${project.artifactId}-${project.version}-shaded.jar</outputFile>
             <artifactSet>
               <includes>
                 <include>com.hubspot:SingularityClient</include>
