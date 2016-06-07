@@ -20,8 +20,7 @@ class RequestFormNew extends RequestFormBaseView
             @postSave()
 
             app.caughtError()
-            @alert "There was a problem saving your request. The server response has been logged to your JS console.", false
-            console.error response
+            @alert "There was a problem saving your request: #{ response.responseText }", false
 
 
 module.exports = RequestFormNew
