@@ -17,8 +17,11 @@ class SidebarFilterOption extends Component {
       <li>
         <div>
           <span className={this.props.indicatorClass} />
-          {this.props.filterName}
-          <SidebarCheckbox inputName={'checked'} />
+          {this.props.label}
+          <SidebarCheckbox
+            checked={this.props.isEnabled}
+            onChange={this.props.onChange}
+          />
           {` (${this.props.numberOfItems})`}
         </div>
       </li>
@@ -27,8 +30,8 @@ class SidebarFilterOption extends Component {
 }
 
 SidebarFilterOption.propTypes = {
+  label: PropTypes.string.isRequired,
   isEnabled: PropTypes.bool.isRequired,
-  filterName: PropTypes.string.isRequired,
   numberOfItems: PropTypes.number.isRequired,
   onChange: PropTypes.func.isRequired,
   indicatorClass: PropTypes.string

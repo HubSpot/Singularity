@@ -1,15 +1,17 @@
 import React, { Component, PropTypes } from 'react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
-import * as RequestsActions from '../../actions/requests';
+import * as RequestsActions from '../../actions/api/requests';
+import * as RequestsPageActions from '../../actions/ui/requestsPage';
 
 import Sidebar from '../common/Sidebar';
-import SidebarFilterOption from '../common/sidebar/SidebarFilterOption';
 import MainContent from '../common/MainContent';
 import TabBar from '../common/TabBar';
 import TabBarFilterOption from '../common/tabBar/TabBarFilterOption';
 import SearchBar from '../common/SearchBar';
-import RequestsTable from '../requests/RequestsTable';
+
+import FilterOptionState from '../../containers/requests/FilterOptionState';
+import RequestsTable from './RequestsTable';
 
 class RequestsPage extends Component {
   constructor(props) {
@@ -22,26 +24,17 @@ class RequestsPage extends Component {
     return (
       <div className='requests-page'>
         <Sidebar>
-          <SidebarFilterOption
-            isEnabled={true}
-            filterName={'Active'}
-            indicatorClass={'state-indicator active'}
-            numberOfItems={0}
-            onChange={console.log}
+          <FilterOptionState
+            label={'Active'}
+            filterValue={'ACTIVE'}
           />
-          <SidebarFilterOption
-            isEnabled={true}
-            filterName={'Cooling down'}
-            indicatorClass={'state-indicator cooling-down'}
-            numberOfItems={0}
-            onChange={console.log}
+          <FilterOptionState
+            label={'Cooling down'}
+            filterValue={'SYSTEM_COOLDOWN'}
           />
-          <SidebarFilterOption
-            isEnabled={true}
-            indicatorClass={'state-indicator paused'}
-            filterName={'Paused'}
-            numberOfItems={0}
-            onChange={console.log}
+          <FilterOptionState
+            label={'Paused'}
+            filterValue={'PAUSED'}
           />
         </Sidebar>
         <MainContent>
@@ -95,6 +88,13 @@ RequestsPage.propTypes = {
   requests: PropTypes.object.isRequired,
   actions: PropTypes.object.isRequired
 };
+
+const searchRequests = (requests, search) => {
+  return requests.filter((r) => {
+    return search.state.indexOf(r.state) >= -1;
+  });
+}
+
 
 const mapStateToProps = (state) => {
   return {

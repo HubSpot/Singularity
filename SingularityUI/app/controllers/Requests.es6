@@ -6,7 +6,7 @@ import RequestsView from '../views/requests';
 
 import configureStore from '../store/configureStore';
 
-import { fetchRequests } from '../actions/requests';
+import { fetchRequests } from '../actions/api/requests';
 
 class RequestsController extends Controller {
 

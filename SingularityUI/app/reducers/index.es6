@@ -3,7 +3,9 @@ import { combineReducers } from 'redux';
 import taskGroups from './taskGroups';
 import activeRequest from './activeRequest';
 import tasks from './tasks';
-import requests from './requests';
+import requests from './api/requests';
+
+import requestsPage from './ui/requestsPage';
 
 // hack to get the initial state out of the logging controller
 const setInitialLoggingState = function(state={}, action) {
@@ -73,7 +75,8 @@ const rootReducer = combineReducers({
   search,
   logRequestLength,
   maxLines,
-  requests
+  requests,
+  requestsPage
 });
 
 export default rootReducer;

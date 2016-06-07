@@ -10,7 +10,11 @@ class SidebarCheckbox extends Component {
     return (
       <div className='sidebar-checkbox'>
         <label>
-          <input type='checkbox' name={this.props.inputName}/>
+          <input
+            type='checkbox'
+            checked={this.props.checked}
+            onChange={this.props.onChange}
+          />
           <span className='checkbox-style' />
         </label>
       </div>
@@ -19,7 +23,8 @@ class SidebarCheckbox extends Component {
 }
 
 SidebarCheckbox.propTypes = {
-  inputName: PropTypes.string.isRequired
+  checked: PropTypes.bool.isRequired,
+  onChange: PropTypes.func.isRequired
 }
 
 export default SidebarCheckbox;
