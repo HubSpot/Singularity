@@ -7,7 +7,7 @@ LogView = require('../views/logView').default
 Redux = require 'redux'
 thunk = require 'redux-thunk'
 logger = require 'redux-logger'
-rootReducer = require '../reducers'
+rootReducer = require('../reducers/index').default
 LogActions = require('../actions/log').default
 ActiveTasks = require('../actions/activeTasks').default
 
