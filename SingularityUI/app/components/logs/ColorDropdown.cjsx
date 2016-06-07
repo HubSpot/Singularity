@@ -2,7 +2,7 @@ React = require 'react'
 classNames = require 'classnames'
 
 { connect } = require 'react-redux'
-{ selectLogColor } = require '../../actions/log'
+selectLogColor = require('../../actions/log').selectLogColor
 
 class ColorDropdown extends React.Component
   renderColorChoices: ->

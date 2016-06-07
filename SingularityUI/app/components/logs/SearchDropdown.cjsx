@@ -2,7 +2,7 @@ React = require 'react'
 ReactDOM = require 'react-dom'
 
 { connect } = require 'react-redux'
-{ setCurrentSearch } = require '../../actions/log'
+setCurrentSearch = require('../../actions/log').setCurrentSearch
 
 class SearchDropdown extends React.Component
   @propTypes:

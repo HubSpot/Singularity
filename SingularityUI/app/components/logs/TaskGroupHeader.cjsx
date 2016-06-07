@@ -7,7 +7,7 @@ ToolTip = require 'react-bootstrap/lib/Tooltip'
 
 { connect } = require 'react-redux'
 
-{ removeTaskGroup, expandTaskGroup, scrollToTop, scrollToBottom } = require '../../actions/log'
+{ removeTaskGroup, expandTaskGroup, scrollToTop, scrollToBottom } = require('../../actions/log')
 
 class TaskGroupHeader extends React.Component
   @propTypes:

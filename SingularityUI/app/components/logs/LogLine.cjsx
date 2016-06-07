@@ -2,7 +2,7 @@ React = require 'react'
 classNames = require 'classnames'
 
 { connect } = require 'react-redux'
-{ clickPermalink } = require '../../actions/log'
+{ clickPermalink } = require('../../actions/log')
 
 class LogLine extends React.Component
   @propTypes:

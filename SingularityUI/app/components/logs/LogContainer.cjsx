@@ -5,7 +5,7 @@ TaskGroupContainer = require './TaskGroupContainer'
 
 { connect } = require 'react-redux'
 
-{ updateGroups, updateTaskStatuses } = require '../../actions/log'
+{ updateGroups, updateTaskStatuses } = require('../../actions/log')
 
 class LogContainer extends React.Component
   @propTypes:

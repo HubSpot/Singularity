@@ -1,7 +1,7 @@
 React = require 'react'
 OverlayTrigger = require 'react-bootstrap/lib/OverlayTrigger'
 ToolTip = require 'react-bootstrap/lib/Tooltip'
-{ toggleTaskLog } = require '../../actions/log'
+{ toggleTaskLog } = require('../../actions/log')
 
 { getHostFromTaskId } = require '../../utils'
 
