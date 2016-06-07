@@ -42,17 +42,15 @@
         border: none;
         color: $tab-selected;
       }
+    }
 
-      &::after {
-        content: '';
-        display: block;
-        border-radius: 3px;
-        height: 4px;
-        box-shadow: 0 12px 0 0 $tab-underline;
-
-        margin-left: -8px;
-        margin-right: -8px;
-      }
+    &::after {
+      content: '';
+      display: block;
+      border-radius: 3px;
+      height: 4px;
+      background-color: $tab-underline;
+      margin-bottom: -2px;
     }
   }
 }

@@ -34,22 +34,57 @@
 
       div {
         display: block;
-        padding-left: 10px;
+        padding-left: 25px;
         padding-top: 10px;
         padding-bottom: 10px;
 
-        input[type='checkbox'] {
+        .sidebar-checkbox {
           float: right;
           margin-right: 12px;
-          display: none;
+          padding: 0;
+          position: relative;
+
+          label {
+            cursor: pointer;
+            width: 20.1px;
+            height: 20.1px;
+            border-radius: 2px;
+            background-color: rgba(255, 255, 255, 0.5);
+            border: solid 1.5px $battleship;
+            margin-bottom: 0;
+          }
+
+          input[type='checkbox'] {
+            visibility: hidden;
+            display: none;
+
+            &:checked + span {
+              background-color: red;
+            }
+
+            &:checked + span:after {
+              opacity: 0.5;
+              content: '';
+              position: absolute;
+              width: 10px;
+              height: 6px;
+              background: transparent;
+              top: 6px;
+              left: 5.2px;
+              border: 2px solid #333;
+              border-top: none;
+              border-right: none;
+
+              transform: rotate(-45deg);
+            }
+          }
         }
 
         &:hover {
           background-color: $light-blue-grey;
           cursor: pointer;
 
-          input[type='checkbox'] {
-            display: inherit;
+          label {
           }
         }
       }
@@ -60,7 +95,7 @@
 
       li {
         div {
-          padding-left: 20px;
+          padding-left: 30px;
         }
       }
     }

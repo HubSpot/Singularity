@@ -1,5 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 
+import SidebarCheckbox from './SidebarCheckbox';
+
 class SidebarFilterOption extends Component {
   constructor(props) {
     super(props);
@@ -16,11 +18,7 @@ class SidebarFilterOption extends Component {
         <div>
           <span className={this.props.indicatorClass} />
           {this.props.filterName}
-          <input
-            type='checkbox'
-            checked={this.props.isEnabled}
-            onChange={this.props.onChange}
-            />
+          <SidebarCheckbox inputName={'checked'} />
           {` (${this.props.numberOfItems})`}
         </div>
       </li>

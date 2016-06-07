@@ -7,7 +7,12 @@ class SearchBar extends React.Component {
   }
 
   render() {
-    return <input className='filter-input' type='text' placeholder='Filter requests' />;
+    return (
+      <div className='form-group has-feedback search-bar'>
+        <input className='search-input' type='text' placeholder='Filter requests' />
+        <span className='glyphicon glyphicon-search form-control-feedback' />
+      </div>
+    );
   }
 }
 

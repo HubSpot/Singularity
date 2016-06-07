@@ -13,16 +13,27 @@ $thunderdome-0: #5967bc;
 $thunderdome: #6a78d1;
 $eerie: #7c98b6;
 
+$kashmir-blue: #516f90;
+$turquoise-blue: #00a4bd;
+
+/* Sidebar */
+$checkbox-checked: $turquoise-blue;
+$checkbox-unchecked: $battleship;
+
 /* State indicator */
 $state-active: #00bda5; // 'Oz'
 $state-cooling-down: $eerie;
 $state-paused: #eaa836;
 
 /* Tab Bar */
-$kashmir-blue: #516f90;
-
 $tab-selected: $kashmir-blue;
 $tab-underline: $kashmir-blue;
+
+/* Row Links */
+$row-link: $turquoise-blue;
+
+/* Search Bar */
+$search-icon: $turquoise-blue;
 
 /* Typography */
 $font-family: 'Avenir Next', 'Helvetica Neue', sans-serif;

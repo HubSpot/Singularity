@@ -1,0 +1,123 @@
+@import '../mixins';
+@import '../base';
+
+.requests-page {
+  .search-input {
+    margin-bottom: 40px;
+  }  
+}
+
+.requests-page {
+  .list-container {
+    .request-table {
+      width: 100%;
+      border-collapse: separate !important;
+      border-radius: 3px;
+      border: 1px solid #eaf0f6;
+
+      &.column-1 {   // type tag
+        width: auto;
+      }
+      &.column-2 {   // name
+        width: 20%;
+      }
+      &.column-3 {   // active?
+        width: 10%;
+      }
+      &.column-4 {   // # instances
+        width: 15%;
+      }
+      &.column-5 {   // last deployed
+        width: 25%;
+      }
+      &.column-6 {   // action links
+        width: 30%;
+      }
+
+      tr {
+        border: 1px solid #eaf0f6;
+        height: 75px;
+
+        &.table-header {
+          background-color: $pale-grey-three;
+          text-transform: uppercase;
+          font-weight: $font-weight-medium;
+          font-size: 13px;
+          height: 56px;
+        }
+
+        .action-links {
+          font-size: 14px;
+          line-height: 1.3;
+
+          a {
+            padding: 0 8px;
+          }
+        }
+
+        a {
+          color: $row-link;
+        }
+      }
+
+      td {
+        vertical-align: middle;
+
+        &:last-of-type {
+          text-align: right;
+        }
+
+        .subline {
+          font-size: 14px;
+          line-height: 1.3;
+          color: $eerie;
+        }
+      }
+    }
+  }
+}
+
+// Request tags
+.service-tag {
+  @include tag-styles($thunderdome, #f0f1fa);
+}
+
+.worker-tag {
+  @include tag-styles($thunderdome, #f0f1fa);
+}
+
+.scheduled-tag {
+  @include tag-styles($heffalump, #eceef1);
+}
+
+.onDemand-tag {
+  @include tag-styles($thunderdome, #f0f1fa);
+}
+
+.runOnce-tag {
+  @include tag-styles($thunderdome, #f0f1fa);
+}
+
+.active-tag {
+  @include tag-styles(#21d596, #e8faf4);
+}
+
+.coolingDown-tag {
+
+}
+
+.paused-tag {
+
+}
+
+.cron-schedule-tag {
+  
+}
+
+// Row links
+.action-links {
+
+  a {
+    padding: 0 3px 0 3px;
+  }
+}

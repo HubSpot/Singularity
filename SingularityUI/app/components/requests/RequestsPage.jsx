@@ -20,7 +20,7 @@ class RequestsPage extends Component {
   render() {
     const { requests, actions } = this.props;
     return (
-      <div>
+      <div className='requests-page'>
         <Sidebar>
           <SidebarFilterOption
             isEnabled={true}
