@@ -93,6 +93,16 @@ public class MailTemplateHelpers {
     List<SingularityMailTaskHistoryUpdate> output = Lists.newArrayListWithCapacity(taskHistory.size());
 
     for (SingularityTaskHistoryUpdate taskUpdate : taskHistory) {
+      String date;
+      if (taskDatePattern.isPresent() && timeZone.isPresent()) {
+        date = DateFormatUtils.format(taskUpdate.getTimestamp(), taskDatePattern.get(), timeZone.get());
+      } else if (taskDatePattern.isPresent()) {
+        date = DateFormatUtils.formatUTC(taskUpdate.getTimestamp(), taskDatePattern.get());
+      } else if (timeZone.isPresent()) {
+        date = DateFormatUtils.format(taskUpdate.getTimestamp(), DEFAULT_TIMESTAMP_FORMAT, timeZone.get());
+      } else {
+        date = DateFormatUtils.format(taskUpdate.getTimestamp(), DEFAULT_TIMESTAMP_FORMAT);
+      }
       output.add(
           new SingularityMailTaskHistoryUpdate(
               humanizeTimestamp(taskUpdate.getTimestamp()),

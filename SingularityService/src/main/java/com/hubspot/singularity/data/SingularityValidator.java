@@ -12,7 +12,8 @@ import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
 
-
+import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
+import org.dmfs.rfc5545.recur.RecurrenceRule;
 import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
@@ -130,24 +131,30 @@ public class SingularityValidator {
     String quartzSchedule = null;
 
     if (request.isScheduled()) {
+      String originalSchedule = request.getQuartzScheduleSafe();
+
       checkBadRequest(request.getQuartzSchedule().isPresent() || request.getSchedule().isPresent(), "Specify at least one of schedule or quartzSchedule");
 
-      final String originalSchedule = request.getQuartzScheduleSafe();
+      if(request.getScheduleType().or(ScheduleType.QUARTZ) != ScheduleType.RFC5545) {
 
-      if (request.getQuartzSchedule().isPresent() && !request.getSchedule().isPresent()) {
-        checkBadRequest(request.getScheduleType().or(ScheduleType.QUARTZ) == ScheduleType.QUARTZ, "If using quartzSchedule specify scheduleType QUARTZ or leave it blank");
+        if (request.getQuartzSchedule().isPresent() && !request.getSchedule().isPresent()) {
+          checkBadRequest(request.getScheduleType().or(ScheduleType.QUARTZ) == ScheduleType.QUARTZ, "If using quartzSchedule specify scheduleType QUARTZ or leave it blank");
+        }
+
+        if (request.getQuartzSchedule().isPresent() || (request.getScheduleType().isPresent() && request.getScheduleType().get() == ScheduleType.QUARTZ)) {
+          quartzSchedule = originalSchedule;
+        } else {
+          checkBadRequest(request.getScheduleType().or(ScheduleType.CRON) == ScheduleType.CRON, "If not using quartzSchedule specify scheduleType CRON or leave it blank");
+          checkBadRequest(!request.getQuartzSchedule().isPresent(), "If using schedule type CRON do not specify quartzSchedule");
+
+          quartzSchedule = getQuartzScheduleFromCronSchedule(originalSchedule);
+        }
+        checkBadRequest(isValidCronSchedule(quartzSchedule), "Schedule %s (from: %s) was not valid", quartzSchedule, originalSchedule);
       }
-
-      if (request.getQuartzSchedule().isPresent() || (request.getScheduleType().isPresent() && request.getScheduleType().get() == ScheduleType.QUARTZ)) {
-        quartzSchedule = originalSchedule;
-      } else {
-        checkBadRequest(request.getScheduleType().or(ScheduleType.CRON) == ScheduleType.CRON, "If not using quartzSchedule specify scheduleType CRON or leave it blank");
-        checkBadRequest(!request.getQuartzSchedule().isPresent(), "If using schedule type CRON do not specify quartzSchedule");
-
-        quartzSchedule = getQuartzScheduleFromCronSchedule(originalSchedule);
+      else{
+        originalSchedule = request.getSchedule().get();
+        checkBadRequest(isValidRFC5545Schedule(originalSchedule), "Schedule %s was not valid", originalSchedule);
       }
-
-      checkBadRequest(isValidCronSchedule(quartzSchedule), "Schedule %s (from: %s) was not valid", quartzSchedule, originalSchedule);
     } else {
       checkBadRequest(!request.getQuartzSchedule().isPresent() && !request.getSchedule().isPresent(), "Non-scheduled requests can not specify a schedule");
       checkBadRequest(!request.getScheduleType().isPresent(), "ScheduleType can only be set for scheduled requests");
@@ -168,19 +175,6 @@ public class SingularityValidator {
     }
 
     return request.toBuilder().setQuartzSchedule(Optional.fromNullable(quartzSchedule)).build();
-  }
-
-  public SingularityWebhook checkSingularityWebhook(SingularityWebhook webhook) {
-    checkNotNull(webhook, "Webhook is null");
-    checkNotNull(webhook.getUri(), "URI is null");
-
-    try {
-      new URI(webhook.getUri());
-    } catch (URISyntaxException e) {
-      WebExceptions.badRequest("Invalid URI provided");
-    }
-
-    return webhook;
   }
 
   public SingularityDeploy checkDeploy(SingularityRequest request, SingularityDeploy deploy) {
@@ -282,6 +276,15 @@ public class SingularityValidator {
 
   private boolean isValidCronSchedule(String schedule) {
     return CronExpression.isValidExpression(schedule);
+  }
+
+  private boolean isValidRFC5545Schedule(String schedule) {
+    try {
+      new RecurrenceRule(schedule);
+      return true;
+    } catch (InvalidRecurrenceRuleException ex) {
+      return false;
+    }
   }
 
   private final Pattern DAY_RANGE_REGEXP = Pattern.compile("[0-7]-[0-7]");

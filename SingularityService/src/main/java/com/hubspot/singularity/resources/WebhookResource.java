@@ -67,7 +67,6 @@ public class WebhookResource {
   @ApiOperation("Add a new webhook.")
   public SingularityCreateResult addWebhook(SingularityWebhook webhook) {
     authorizationHelper.checkAdminAuthorization(user);
-    validator.checkSingularityWebhook(webhook);
     return webhookManager.addWebhook(webhook);
   }
 

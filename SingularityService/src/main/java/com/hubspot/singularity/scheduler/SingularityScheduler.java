@@ -14,6 +14,8 @@ import javax.inject.Singleton;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskStatus.Reason;
+import org.dmfs.rfc5545.DateTime;
+import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,7 +67,9 @@ import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.TaskRequestManager;
+import com.hubspot.singularity.helpers.RFC5545Schedule;
 import com.hubspot.singularity.smtp.SingularityMailer;
+import com.hubspot.singularity.ScheduleType;
 
 @Singleton
 public class SingularityScheduler {
@@ -672,21 +676,27 @@ public class SingularityScheduler {
         LOG.info("Scheduling requested immediate run of {}", request.getId());
       } else {
         try {
-          final CronExpression cronExpression = new CronExpression(request.getQuartzScheduleSafe());
-
-          final Date scheduleFrom = new Date(now);
-          final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(scheduleFrom);
-
+          Date nextRunAtDate = null;
+          long nextRunAtTimestamp = 0;
+          Date scheduleFrom = null;
+          if (request.getScheduleTypeSafe() == ScheduleType.RFC5545) {
+            final RFC5545Schedule rfc5545Schedule = new RFC5545Schedule(request.getSchedule().get());
+            nextRunAtDate = rfc5545Schedule.getNextValidTime();
+            scheduleFrom = new Date(rfc5545Schedule.getStartDateTime().getMillis());
+          } else {
+            scheduleFrom = new Date(now);
+            final CronExpression cronExpression = new CronExpression(request.getQuartzScheduleSafe());
+            nextRunAtDate = cronExpression.getNextValidTimeAfter(scheduleFrom);
+          }
           if (nextRunAtDate == null) {
             return Optional.absent();
           }
-
+          nextRunAtTimestamp = nextRunAtDate.getTime();
           LOG.trace("Calculating nextRunAtDate for {} (schedule: {}): {} (from: {})", request.getId(), request.getSchedule(), nextRunAtDate, scheduleFrom);
-
-          nextRunAt = Math.max(nextRunAtDate.getTime(), now); // don't create a schedule that is overdue as this is used to indicate that singularity is not fulfilling requests.
-
+          nextRunAt = Math.max(nextRunAtTimestamp, now); // don't create a schedule that is overdue as this is used to indicate that singularity is not fulfilling requests.
           LOG.trace("Scheduling next run of {} (schedule: {}) at {} (from: {})", request.getId(), request.getSchedule(), nextRunAtDate, scheduleFrom);
-        } catch (ParseException pe) {
+
+        } catch (ParseException | InvalidRecurrenceRuleException pe) {
           throw Throwables.propagate(pe);
         }
       }
@@ -707,5 +717,4 @@ public class SingularityScheduler {
 
     return Optional.of(nextRunAt);
   }
-
 }
