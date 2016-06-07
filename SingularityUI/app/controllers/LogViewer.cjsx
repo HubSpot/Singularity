@@ -8,7 +8,7 @@ Redux = require 'redux'
 thunk = require 'redux-thunk'
 logger = require 'redux-logger'
 rootReducer = require('../reducers/index').default
-LogActions = require('../actions/log').default
+LogActions = require('../actions/log')
 ActiveTasks = require('../actions/activeTasks').default
 
 class LogViewer extends Controller
