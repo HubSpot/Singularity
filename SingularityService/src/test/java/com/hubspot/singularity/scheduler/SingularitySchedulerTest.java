@@ -3089,9 +3089,23 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     String deployId = "test_new_request_data";
     SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100")).build();
 
-    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.<Boolean>absent(), Optional.<String>absent(), Optional.of(newRequest)));
+    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.<Boolean> absent(), Optional.<String> absent(), Optional.of(newRequest)));
 
     requestResource.postRequest(newRequest);
+  }
+
+  @Test
+  public void testObsoletePendingRequestsRemoved() {
+    initRequest();
+    initFirstDeploy();
+    SingularityTask taskOne = startTask(firstDeploy);
+    requestResource.pause(requestId, Optional.<SingularityPauseRequest> absent());
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, System.currentTimeMillis(), Optional.<String>absent(), PendingType.NEW_DEPLOY, Optional.<Boolean>absent(), Optional.<String>absent()));
+
+    Assert.assertEquals(requestManager.getPendingRequests().size(), 1);
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    Assert.assertEquals(requestManager.getPendingRequests().size(), 0);
   }
 
 }
