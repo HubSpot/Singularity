@@ -2,7 +2,7 @@ Controller = require './Controller'
 
 LogLines = require '../collections/LogLines'
 
-LogView = require '../views/logView'
+LogView = require('../views/logView').default
 
 Redux = require 'redux'
 thunk = require 'redux-thunk'
@@ -35,7 +35,7 @@ class LogViewer extends Controller
         initPromise = @store.dispatch(LogActions.initialize(@requestId, @path, search, taskIds))
     else
         initPromise = @store.dispatch(LogActions.initializeUsingActiveTasks(@requestId, @path, search))
-    
+
     initPromise.then =>
         @store.dispatch(ActiveTasks.updateActiveTasks(@requestId))
 
