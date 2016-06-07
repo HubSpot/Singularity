@@ -7,7 +7,7 @@ RequestFormEditController = require 'controllers/RequestFormEdit'
 NewDeployController  = require 'controllers/NewDeploy'
 
 RequestDetailController = require 'controllers/RequestDetail'
-RequestsTableController = require 'controllers/RequestsTable'
+RequestsController = require('controllers/requests').default
 
 TasksTableController = require 'controllers/TasksTable'
 TaskDetailController = require 'controllers/TaskDetail'
@@ -82,7 +82,7 @@ class Router extends Backbone.Router
         app.bootstrapController new RequestFormEditController {requestId}
 
     requestsTable: (state = 'all', subFilter = 'all', searchFilter = '') ->
-        app.bootstrapController new RequestsTableController {state, subFilter, searchFilter}
+        app.bootstrapController new RequestsController {state, subFilter, searchFilter}
 
     requestDetail: (requestId) ->
         app.bootstrapController new RequestDetailController {requestId}
