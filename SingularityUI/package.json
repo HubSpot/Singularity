@@ -33,7 +33,7 @@
     "juration": "*",
     "linkifyjs": "~2.0.0-beta.9",
     "messenger": "git://github.com/HubSpot/messenger.git#set-main-field",
-    "moment": "2.11.2",
+    "moment": "^2.13.0",
     "node-uuid": "^1.4.7",
     "promise-polyfill": "^5.2.0",
     "q": "^1.4.1",
