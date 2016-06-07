@@ -609,7 +609,7 @@ public class SingularityScheduler {
       } else {
         return 0;
       }
-    } else if (request.getRequestType() == RequestType.RUN_ONCE) {
+    } else if (request.getRequestType() == RequestType.RUN_ONCE && pendingRequest.getPendingType() == PendingType.NEW_DEPLOY) {
       return 1;
     }
 
