@@ -42,10 +42,18 @@ def download_s3_logs(args):
         logfetch_base.log(colored('Starting {0} S3 Downloads with {1} parallel fetches\n'.format(len(async_requests), args.num_parallel_fetches), 'cyan'), args, False)
         callbacks.goal = len(async_requests)
         grequests.map(async_requests, stream=True, size=args.num_parallel_fetches)
+        all_logs = modify_download_list(all_logs)
     else:
         logfetch_base.log(colored('No S3 logs to download\n', 'cyan'), args, False)
     logfetch_base.log(colored('All S3 logs up to date\n', 'cyan'), args, False)
     return all_logs
+
+def modify_download_list(all_logs):
+    for index, log in enumerate(all_logs):
+        if log.endswith('.gz') and not os.path.isfile(log) and os.path.isfile(log[:-3]):
+            all_logs[index] = log[:-3]
+    return all_logs
+
 
 def already_downloaded(dest, filename):
     return (os.path.isfile('{0}/{1}'.format(dest, filename.replace('.gz', '.log'))) or os.path.isfile('{0}/{1}'.format(dest, filename)))
