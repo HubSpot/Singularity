@@ -1,5 +1,4 @@
 Router = require 'router'
-
 User = require 'models/User'
 
 NavView = require 'views/nav'
