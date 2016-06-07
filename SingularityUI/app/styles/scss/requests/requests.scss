@@ -7,6 +7,9 @@
   }  
 }
 
+/* Other */
+$request-table-num-cols: 5;
+
 .requests-page {
   .list-container {
     .request-table {
@@ -47,8 +50,7 @@
         }
 
         .action-links {
-          font-size: 14px;
-          line-height: 1.3;
+          @include link-label-style();
 
           a {
             padding: 0 8px;
@@ -56,7 +58,7 @@
         }
 
         a {
-          color: $row-link;
+          @include link-style();
         }
       }
 
@@ -68,9 +70,7 @@
         }
 
         .subline {
-          font-size: 14px;
-          line-height: 1.3;
-          color: $eerie;
+          @include link-label-style();
         }
       }
     }

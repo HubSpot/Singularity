@@ -11,14 +11,18 @@
     > a {
       border: none;
       background-color: transparent;
+      color: $tab-selected;
 
       &:hover {
         background-color: transparent;
+        color: $tab-selected;
         border: none;
+        font-weight: $font-weight-medium;
       }
 
       &:focus {
         background-color: transparent;
+        color: $tab-selected;
         border: none;
       }
     }
@@ -29,7 +33,7 @@
       border: none;
       background-color: transparent;
       color: $tab-selected;
-      font-weight: $font-weight-medium;
+      font-weight: $font-weight-demibold;
 
       &:hover {
         background-color: transparent;

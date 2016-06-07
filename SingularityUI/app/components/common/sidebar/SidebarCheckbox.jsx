@@ -11,7 +11,7 @@ class SidebarCheckbox extends Component {
       <div className='sidebar-checkbox'>
         <label>
           <input type='checkbox' name={this.props.inputName}/>
-          <span />
+          <span className='checkbox-style' />
         </label>
       </div>
     );

@@ -24,6 +24,7 @@
   ul, li {
     margin: 0;
     padding: 0;
+    line-height: 21px;
   }
 
   ul {
@@ -44,34 +45,46 @@
           padding: 0;
           position: relative;
 
+          width: 21px;
+          height: 21px;
+
+
           label {
             cursor: pointer;
-            width: 20.1px;
-            height: 20.1px;
+            width: 21px;
+            height: 21px;
+            margin-bottom: 0;
+          }
+
+          span.checkbox-style {
+            display: block;
+            width: 21px;
+            height: 21px;
             border-radius: 2px;
             background-color: rgba(255, 255, 255, 0.5);
             border: solid 1.5px $battleship;
-            margin-bottom: 0;
           }
 
           input[type='checkbox'] {
             visibility: hidden;
             display: none;
 
-            &:checked + span {
-              background-color: red;
+            &:checked + span.checkbox-style {
+              border: solid 2px $turquoise-blue;
+              background-color: white;
             }
+            
 
-            &:checked + span:after {
-              opacity: 0.5;
+            &:checked + span.checkbox-style:after {
+              opacity: 1;
               content: '';
               position: absolute;
-              width: 10px;
-              height: 6px;
+              width: 11px;
+              height: 7px;
               background: transparent;
               top: 6px;
-              left: 5.2px;
-              border: 2px solid #333;
+              left: 5px;
+              border: 3px solid $turquoise-blue;
               border-top: none;
               border-right: none;
 
