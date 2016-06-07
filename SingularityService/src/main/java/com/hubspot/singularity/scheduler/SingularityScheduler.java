@@ -289,6 +289,9 @@ public class SingularityScheduler {
     if (request.isDeployable() && pendingRequest.getPendingType() == PendingType.NEW_DEPLOY && !maybePendingDeploy.isPresent()) {
       return false;
     }
+    if (request.getRequestType() == RequestType.RUN_ONCE && pendingRequest.getPendingType() == PendingType.NEW_DEPLOY) {
+      return true;
+    }
 
     return isDeployInUse(maybeRequestDeployState, pendingRequest.getDeployId(), false);
   }
@@ -335,7 +338,7 @@ public class SingularityScheduler {
     for (SingularityTaskRequest taskRequest : taskRequests) {
       SingularityRequestDeployState requestDeployState = deployStates.get(taskRequest.getRequest().getId());
 
-      if (!matchesDeploy(requestDeployState, taskRequest)) {
+      if (!matchesDeploy(requestDeployState, taskRequest) && !(taskRequest.getRequest().getRequestType() == RequestType.RUN_ONCE)) {
         LOG.info("Removing stale pending task {} because the deployId did not match active/pending deploys {}", taskRequest.getPendingTask().getPendingTaskId(), requestDeployState);
         taskManager.deletePendingTask(taskRequest.getPendingTask().getPendingTaskId());
       } else {
@@ -616,6 +619,8 @@ public class SingularityScheduler {
       } else {
         return 0;
       }
+    } else if (request.getRequestType() == RequestType.RUN_ONCE && pendingRequest.getPendingType() == PendingType.NEW_DEPLOY) {
+      return 1;
     }
 
     return numInstancesExpected(request, pendingRequest, maybePendingDeploy) - matchingTaskIds.size();
