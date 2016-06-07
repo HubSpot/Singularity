@@ -3,6 +3,7 @@ Request = require '../models/Request'
 Utils = require '../utils'
 vex = require 'vex.dialog'
 fuzzy = require 'fuzzy'
+micromatch = require 'micromatch'
 
 class RequestsView extends View
 
@@ -65,9 +66,16 @@ class RequestsView extends View
         user =
             extract: (o) ->
                 o.requestDeployState?.activeDeploy?.user or ''
-        res1 = fuzzy.filter(filter, requests, id)
-        res2 = fuzzy.filter(filter, requests, user)
-        _.uniq(_.pluck(_.sortBy(_.union(res2, res1), (r) => Utils.fuzzyAdjustScore(filter, r)), 'original').reverse())
+        if Utils.isGlobFilter filter
+            res1 = requests.filter (request) =>
+                micromatch.any id.extract(request), filter + '*'
+            res2 = requests.filter (request) =>
+                micromatch.any user.extract(request), filter + '*'
+            _.uniq(_.union(res2, res1)).reverse()
+        else
+            res1 = fuzzy.filter(filter, requests, id)
+            res2 = fuzzy.filter(filter, requests, user)
+            _.uniq(_.pluck(_.sortBy(_.union(res2, res1), (r) => Utils.fuzzyAdjustScore(filter, r)), 'original').reverse())
 
     # Returns the array of requests that need to be rendered
     filterCollection: =>
