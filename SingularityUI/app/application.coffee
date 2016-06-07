@@ -3,7 +3,7 @@ Router = require 'router'
 User = require 'models/User'
 
 NavView = require 'views/nav'
-GlobalSearchView = require 'views/globalSearch'
+GlobalSearchView = require('views/globalSearch').default
 
 Sortable = require 'sortable'
 

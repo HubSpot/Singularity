@@ -9,7 +9,10 @@ var stylus = require('gulp-stylus');
 var nib = require('nib');
 
 var concat = require('gulp-concat');
-var merge = require('webpack-merge');
+var webpackMerge = require('webpack-merge');
+
+var sass = require('gulp-sass');
+var streamqueue = require('streamqueue');
 
 var serverBase = process.env.SINGULARITY_BASE_URI || '/singularity'
 
@@ -44,7 +47,8 @@ var templateData = {
 
 var dest = path.resolve(__dirname, '../SingularityService/target/generated-resources/assets');
 
-var webpack = require('webpack-stream');
+var webpackStream = require('webpack-stream');
+var webpack = require('webpack');
 var webpackConfig = require('./webpack.config');
 var WebpackDevServer = require('webpack-dev-server');
 
@@ -61,8 +65,21 @@ gulp.task('fonts', function() {
 });
 
 gulp.task('scripts', function () {
-  return gulp.src(webpackConfig.entry.app)
-    .pipe(webpack(webpackConfig))
+  var prodConfig = Object.create(webpackConfig);
+
+  prodConfig.plugins = prodConfig.plugins.concat(
+    new webpack.optimize.UglifyJsPlugin({
+      compress: {
+        warnings: false
+      }
+    }),
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify('production')
+    })
+  );
+
+  return gulp.src(prodConfig.entry.app)
+    .pipe(webpackStream(prodConfig))
     .pipe(gulp.dest(dest + '/static/js'))
 });
 
@@ -83,7 +100,7 @@ gulp.task('images', function () {
 });
 
 gulp.task('styles', function () {
-  return gulp.src([
+  var stylusStyles = gulp.src([
       'node_modules/vex-js/css/*.css',
       'node_modules/messenger/build/css/*.css',
       'node_modules/select2/*.css',
@@ -95,9 +112,14 @@ gulp.task('styles', function () {
     .pipe(stylus({
       use: nib(),
       'include css': true
-    }))
+    }));
+
+  var sassStyles = gulp.src('app/styles/scss/**/*.scss')
+    .pipe(sass({errLogToConsole: true}));
+
+  return streamqueue({ objectMode: true }, stylusStyles, sassStyles)
     .pipe(concat('app.css'))
-    .pipe(gulp.dest(dest + '/static/css'))
+    .pipe(gulp.dest(dest + '/static/css'));
 })
 
 gulp.task('build', ['clean'], function () {
@@ -105,15 +127,16 @@ gulp.task('build', ['clean'], function () {
 });
 
 gulp.task('serve', ['html', 'styles', 'fonts', 'images', 'css-images'], function () {
-  gulp.watch('app/**/*.styl', ['styles'])
+  gulp.watch('app/**/*.styl', ['styles']);
+  gulp.watch('app/**/*.scss', ['styles']);
 
-  new WebpackDevServer(require('webpack')(merge(webpackConfig, {devtool: 'eval'})), {
+  new WebpackDevServer(webpack(webpackMerge(webpackConfig, {devtool: 'eval'})), {
     contentBase: dest,
     historyApiFallback: true
   }).listen(3334, "localhost", function (err) {
     if(err) throw new gutil.PluginError("webpack-dev-server", err);
     gutil.log("[webpack-dev-server]", "Development server running on port 3334");
-  })
+  });
 })
 
 gulp.task("default", ["build"]);
