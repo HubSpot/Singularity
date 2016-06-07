@@ -2,7 +2,7 @@ Controller = require './Controller'
 
 Racks = require '../collections/Racks'
 
-RacksView = require '../views/racks'
+RacksView = require('../views/racks').default
 SimpleSubview = require '../views/simpleSubview'
 
 class RacksController extends Controller
