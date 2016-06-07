@@ -9,11 +9,13 @@ class FileBrowserSubview extends View {
         return {'click [data-directory-path]':  'navigate'};
     }
 
-    initialize({ scrollWhenReady1, slaveOffline1 }) {
-        this.scrollWhenReady = scrollWhenReady;
-        this.scrollWhenReady = scrollWhenReady1;
-        this.slaveOffline = slaveOffline;
-        this.slaveOffline = slaveOffline1;
+    constructor({ scrollWhenReady, slaveOffline }) {
+      super();
+      this.scrollWhenReady = scrollWhenReady;
+      this.slaveOffline = slaveOffline;
+    }
+
+    initialize() {
         this.listenTo(this.collection, 'sync',  this.render);
         this.listenTo(this.collection, 'error', this.catchAjaxError);
         this.listenTo(this.model, 'sync', this.render);
