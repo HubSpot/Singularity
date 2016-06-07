@@ -9,7 +9,7 @@ thunk = require 'redux-thunk'
 logger = require 'redux-logger'
 rootReducer = require '../reducers'
 LogActions = require '../actions/log'
-ActiveTasks = require '../actions/activeTasks'
+ActiveTasks = require('../actions/activeTasks').default
 
 class LogViewer extends Controller
   initialize: ({@requestId, @path, @initialOffset, taskIds, viewMode, search}) ->
