@@ -42,13 +42,21 @@ def download_s3_logs(args):
         logfetch_base.log(colored('Starting {0} S3 Downloads with {1} parallel fetches\n'.format(len(async_requests), args.num_parallel_fetches), 'cyan'), args, False)
         callbacks.goal = len(async_requests)
         grequests.map(async_requests, stream=True, size=args.num_parallel_fetches)
+        all_logs = modify_download_list(all_logs)
     else:
         logfetch_base.log(colored('No S3 logs to download\n', 'cyan'), args, False)
     logfetch_base.log(colored('All S3 logs up to date\n', 'cyan'), args, False)
     return all_logs
 
+def modify_download_list(all_logs):
+    for index, log in enumerate(all_logs):
+        if log.endswith('.gz') and not os.path.isfile(log) and os.path.isfile(log[:-3]):
+            all_logs[index] = log[:-3]
+    return all_logs
+
+
 def already_downloaded(dest, filename):
-    return (os.path.isfile('{0}/{1}'.format(dest, filename.replace('.gz', '.log'))) or os.path.isfile('{0}/{1}'.format(dest, filename)))
+    return (os.path.isfile('{0}/{1}'.format(dest, filename.replace('.gz', '.log'))) or os.path.isfile('{0}/{1}'.format(dest, filename[:-3])) or os.path.isfile('{0}/{1}'.format(dest, filename)))
 
 def logs_for_all_requests(args):
     s3_params = {'start': int(time.mktime(args.start.timetuple()) * 1000), 'end': int(time.mktime(args.end.timetuple()) * 1000)}
@@ -68,7 +76,13 @@ def logs_for_all_requests(args):
         for request in logfetch_base.all_requests(args):
             s3_logs = logfetch_base.get_json_response(s3_request_logs_uri(args, request), args, s3_params)
             logs = logs + s3_logs if s3_logs else logs
-        return [dict(t) for t in set(tuple(l.items()) for l in logs)] # remove any duplicates
+        found_logs = []
+        keys = []
+        for log in logs:
+            if not log['key'] in keys:
+                found_logs.append(log)
+                keys.append(log['key'])
+        return found_logs
 
 def s3_task_logs_uri(args, idString):
     return S3LOGS_URI_FORMAT.format(logfetch_base.base_uri(args), TASK_FORMAT.format(idString))

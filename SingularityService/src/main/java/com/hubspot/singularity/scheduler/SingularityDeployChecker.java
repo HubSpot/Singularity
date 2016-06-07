@@ -251,6 +251,13 @@ public class SingularityDeployChecker {
       }
     }
 
+    if (request.isDeployable() && deployResult.getDeployState() == DeployState.SUCCEEDED && pendingDeploy.getDeployProgress().isPresent()) {
+      if (pendingDeploy.getDeployProgress().get().getTargetActiveInstances() != request.getInstancesSafe()) {
+        requestManager.addToPendingQueue(new SingularityPendingRequest(request.getId(), pendingDeploy.getDeployMarker().getDeployId(), deployResult.getTimestamp(),
+          pendingDeploy.getDeployMarker().getUser(), PendingType.UPDATED_REQUEST, request.getSkipHealthchecks(), pendingDeploy.getDeployMarker().getMessage()));
+      }
+    }
+
     if (requestWithState.getState() == RequestState.DEPLOYING_TO_UNPAUSE) {
       if (deployResult.getDeployState() == DeployState.SUCCEEDED) {
         requestManager.activate(request, RequestHistoryType.DEPLOYED_TO_UNPAUSE, deployResult.getTimestamp(), pendingDeploy.getDeployMarker().getUser(), Optional.<String> absent());
@@ -603,7 +610,7 @@ public class SingularityDeployChecker {
     int numTasksToShutDown = Math.max(otherActiveTasks.size() - (request.getInstancesSafe() - deployProgress.getTargetActiveInstances()), 0);
     List<SingularityTaskId> sortedOtherTasks = new ArrayList<>(otherActiveTasks);
     Collections.sort(sortedOtherTasks, SingularityTaskId.INSTANCE_NO_COMPARATOR);
-    return sortedOtherTasks.subList(0, numTasksToShutDown);
+    return sortedOtherTasks.isEmpty() ? sortedOtherTasks : sortedOtherTasks.subList(0, Math.min(numTasksToShutDown, sortedOtherTasks.size()));
   }
 
   private boolean canMoveToNextStep(SingularityDeployProgress deployProgress) {

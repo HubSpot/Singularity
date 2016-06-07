@@ -1,9 +1,12 @@
 package com.hubspot.singularity.s3uploader.config;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
@@ -66,6 +69,11 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
   @NotNull
   @JsonProperty
   private Map<String, SingularityS3Credentials> s3BucketCredentials = new HashMap<>();
+
+  @NotNull
+  @Valid
+  @JsonProperty
+  private List<SingularityS3UploaderContentHeaders> s3ContentHeaders = new ArrayList<>();
 
   public SingularityS3UploaderConfiguration() {
     super(Optional.of("singularity-s3uploader.log"));
@@ -167,6 +175,14 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
     this.s3BucketCredentials = s3BucketCredentials;
   }
 
+  public List<SingularityS3UploaderContentHeaders> getS3ContentHeaders() {
+    return s3ContentHeaders;
+  }
+
+  public void setS3ContentHeaders(List<SingularityS3UploaderContentHeaders> s3ContentHeaders) {
+    this.s3ContentHeaders = s3ContentHeaders;
+  }
+
   @Override
   public String toString() {
     return "SingularityS3UploaderConfiguration[" +
@@ -182,6 +198,7 @@ public class SingularityS3UploaderConfiguration extends BaseRunnerConfiguration 
             ", retryCount=" + retryCount +
             ", checkForOpenFiles=" + checkForOpenFiles +
             ", s3BucketCredentials=" + s3BucketCredentials +
+            ", s3ContentHeaders=" + s3ContentHeaders +
             ']';
   }
 }

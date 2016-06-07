@@ -4,7 +4,8 @@ class FileNotFound extends React.Component
   render: ->
     <div className="lines-wrapper">
       <div className="empty-table-message">
-        <p>{ @props.fileName } does not exist.</p>
+        <p>{ _.last @props.fileName.split('/') } does not exist
+        {if @props.fileName and @props.fileName.indexOf('$TASK_ID') isnt -1 then " in this task's directory" else ' for this task'}.</p>
       </div>
     </div>
 
