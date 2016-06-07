@@ -233,6 +233,7 @@ public class SingularityScheduler {
       if (!isRequestActive(maybeRequest)) {
         LOG.debug("Pending request {} was obsolete (request {})", pendingRequest, SingularityRequestWithState.getRequestState(maybeRequest));
         obsoleteRequests++;
+        requestManager.deletePendingRequest(pendingRequest);
         continue;
       }
 
@@ -249,6 +250,7 @@ public class SingularityScheduler {
       if (!shouldScheduleTasks(updatedRequest, pendingRequest, maybePendingDeploy, maybeRequestDeployState)) {
         LOG.debug("Pending request {} was obsolete (request {})", pendingRequest, SingularityRequestWithState.getRequestState(maybeRequest));
         obsoleteRequests++;
+        requestManager.deletePendingRequest(pendingRequest);
         continue;
       }
 
