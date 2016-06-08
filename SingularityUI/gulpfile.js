@@ -14,6 +14,8 @@ var webpackMerge = require('webpack-merge');
 var sass = require('gulp-sass');
 var streamqueue = require('streamqueue');
 
+var eslint = require('gulp-eslint');
+
 var serverBase = process.env.SINGULARITY_BASE_URI || '/singularity'
 
 var templateData = {
@@ -119,13 +121,19 @@ gulp.task('styles', function () {
   return streamqueue({ objectMode: true }, stylusStyles, sassStyles)
     .pipe(concat('app.css'))
     .pipe(gulp.dest(dest + '/static/css'));
-})
-
-gulp.task('build', ['clean'], function () {
-  gulp.start(['scripts', 'html', 'styles', 'fonts', 'images', 'css-images']);
 });
 
-gulp.task('serve', ['html', 'styles', 'fonts', 'images', 'css-images'], function () {
+gulp.task('lint', function () {
+  return gulp.src(['./app/**/*.{es6, jsx}'])
+    .pipe(eslint())
+    .pipe(eslint.format());
+});
+
+gulp.task('build', ['clean'], function () {
+  gulp.start(['scripts', 'html', 'styles', 'fonts', 'images', 'css-images', 'lint']);
+});
+
+gulp.task('serve', ['html', 'styles', 'fonts', 'images', 'css-images', 'lint'], function () {
   gulp.watch('app/**/*.styl', ['styles']);
   gulp.watch('app/**/*.scss', ['styles']);
 
@@ -136,6 +144,6 @@ gulp.task('serve', ['html', 'styles', 'fonts', 'images', 'css-images'], function
     if(err) throw new gutil.PluginError("webpack-dev-server", err);
     gutil.log("[webpack-dev-server]", "Development server running on port 3334");
   });
-})
+});
 
 gulp.task("default", ["build"]);

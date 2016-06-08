@@ -1,6 +1,6 @@
 Controller = require './Controller'
 
-TaskSearchView = require '../views/taskSearch'
+TaskSearchView = require('../views/taskSearch').default
 
 Utils = require '../utils'
 

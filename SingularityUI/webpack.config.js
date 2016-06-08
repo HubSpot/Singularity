@@ -5,7 +5,7 @@ dest = path.resolve(__dirname, '../SingularityService/target/generated-resources
 
 module.exports = {
   entry: {
-    app: './app/initialize.coffee',
+    app: './app/initialize.es6',
     vendor: [
       'react',
       'jquery',

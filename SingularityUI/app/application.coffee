@@ -1,5 +1,4 @@
 Router = require 'router'
-
 User = require 'models/User'
 
 NavView = require 'views/nav'
@@ -34,7 +33,7 @@ class Application
         @views.nav.render()
         $body.prepend @views.nav.$el
 
-        @views.globalSearch = new GlobalSearchView
+        @views.globalSearch = new GlobalSearchView()
         @views.globalSearch.render()
         $body.append @views.globalSearch.$el
 

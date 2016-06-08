@@ -10,7 +10,7 @@ Deploys = require '../collections/Deploys'
 DeployDetails = require '../models/DeployDetails'
 Alerts = require '../collections/Alerts'
 
-FileBrowserSubview = require '../views/fileBrowserSubview'
+FileBrowserSubview = require('../views/fileBrowserSubview').default
 ExpandableTableSubview = require '../views/expandableTableSubview'
 OverviewSubview = require '../views/taskOverviewSubview'
 HealthcheckNotification = require '../views/taskHealthcheckNotificationSubview'
