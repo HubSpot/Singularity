@@ -19,7 +19,7 @@ NotFoundController = require 'controllers/NotFound'
 
 DeployDetailController = require 'controllers/DeployDetail'
 
-LogViewerController = require 'controllers/LogViewer'
+LogViewerController = require('controllers/LogViewer').default
 
 TaskSearchController = require 'controllers/TaskSearch'
 
