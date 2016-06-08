@@ -10,8 +10,8 @@ export function fetchRequests() {
     dispatch(fetchRequestsStarted());
 
     return fetch(`${ config.apiRoot }/requests/`, {
-        credentials: 'include'
-      })
+      credentials: 'include'
+    })
       .then(response => response.json())
       .then(json => {
         dispatch(fetchRequestsSuccess(json));
@@ -19,7 +19,7 @@ export function fetchRequests() {
       .catch(ex => {
         dispatch(fetchRequestsError(ex));
       });
-  }
+  };
 }
 
 export function fetchRequestsStarted() {

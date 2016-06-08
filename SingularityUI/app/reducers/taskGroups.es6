@@ -20,14 +20,14 @@ let buildTaskGroup = (taskIds, search) =>
   })
 ;
 
-let resetTaskGroup = (tailing=false) => ({
+let resetTaskGroup = (tailing = false) => ({
   logLines: [],
   taskBuffer: {},
   top: true,
   bottom: true,
   updatedAt: +new Date(),
   tailing
-}) ;
+});
 
 let updateTaskGroup = function(state, taskGroupId, update) {
   let newState = Object.assign([], state);
@@ -113,7 +113,7 @@ const ACTIONS = {
 
   LOG_REMOVE_TASK_GROUP(state, {taskGroupId}) {
     let newState = [];
-    let iterable = __range__(0, state.length-1, true);
+    let iterable = __range__(0, state.length - 1, true);
     for (let j = 0; j < iterable.length; j++) {
       let i = iterable[j];
       if (i !== taskGroupId) {
@@ -273,7 +273,7 @@ const ACTIONS = {
   }
 };
 
-export default function(state=[], action) {
+export default function(state = [], action) {
   if (action.type in ACTIONS) {
     return ACTIONS[action.type](state, action);
   } else {

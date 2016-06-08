@@ -1,4 +1,4 @@
-let fetchTasksForRequest = function(requestId, state='active') {
+let fetchTasksForRequest = function(requestId, state = 'active') {
   let params = {
     property: 'taskId'
   };

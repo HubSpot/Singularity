@@ -4,7 +4,7 @@ let updateTask = function(state, taskId, updates) {
   return newState;
 };
 
-let buildTask = (taskId, offset=0) =>
+let buildTask = (taskId, offset = 0) =>
   ({
     taskId,
     minOffset: offset,
@@ -124,7 +124,7 @@ const ACTIONS = {
   }
 };
 
-export default function(state={}, action) {
+export default function(state = {}, action) {
   if (action.type in ACTIONS) {
     return ACTIONS[action.type](state, action);
   } else {

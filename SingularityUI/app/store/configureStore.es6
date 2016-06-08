@@ -9,7 +9,7 @@ export default function configureStore() {
     return window.store;
   }
 
-  let middlewares = [thunk];
+  const middlewares = [thunk];
 
   if (window.localStorage.enableReduxLogging) {
     middlewares.push(logger());

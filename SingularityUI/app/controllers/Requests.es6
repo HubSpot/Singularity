@@ -1,7 +1,5 @@
 import Controller from './Controller';
 
-import Requests from '../collections/Requests';
-
 import RequestsView from '../views/requests';
 
 import configureStore from '../store/configureStore';
@@ -18,7 +16,7 @@ class RequestsController extends Controller {
 
     this.store = configureStore();
 
-    let initPromise = this.store.dispatch(fetchRequests());
+    this.store.dispatch(fetchRequests());
 
     this.view = new RequestsView(this.store);
 

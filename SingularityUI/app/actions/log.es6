@@ -2,7 +2,7 @@ import Q from 'q';
 
 import { fetchTasksForRequest } from './activeTasks';
 
-let fetchData = function(taskId, path, offset=undefined, length=0) {
+let fetchData = function(taskId, path, offset = undefined, length = 0) {
   length = Math.max(length, 0);  // API breaks if you request a negative length
   return $.ajax(
     {url: `${ config.apiRoot }/sandbox/${ taskId }/read?${$.param({path, length, offset})}`});
@@ -128,7 +128,7 @@ let updateFilesizes = () =>
     tasks = getState();
     for (let taskId of tasks) {
       fetchData(taskId, tasks[taskId.path]).done(({offset}) => {
-        dispatch(taskFilesize(taskId, offset))
+        dispatch(taskFilesize(taskId, offset));
       });
     }
   }
@@ -270,7 +270,7 @@ let taskGroupTop = (taskGroupId, visible) =>
   }
 ;
 
-let taskGroupBottom = (taskGroupId, visible, tailing=false) =>
+let taskGroupBottom = (taskGroupId, visible, tailing = false) =>
   function(dispatch, getState) {
     let { taskGroups, tasks } = getState();
     let taskGroup = taskGroups[taskGroupId];
