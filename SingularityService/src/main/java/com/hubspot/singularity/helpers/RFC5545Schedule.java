@@ -29,12 +29,6 @@ public class RFC5545Schedule {
       this.recurrenceRule = new RecurrenceRule(schedule);
       this.dtStart = org.joda.time.DateTime.now().withSecondOfMinute(0);
     }
-
-
-    if (this.recurrenceRule.isInfinite()) {
-      // set limit at 2100-01-01 00:00:00
-      this.recurrenceRule.setUntil(new DateTime(2100, 1, 1, 0, 0, 0));
-    }
   }
 
   public org.joda.time.DateTime getStartDateTime() {

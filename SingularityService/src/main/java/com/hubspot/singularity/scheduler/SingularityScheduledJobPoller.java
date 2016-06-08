@@ -121,8 +121,7 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
           final RFC5545Schedule rfc5545Schedule = new RFC5545Schedule(scheduleExpression);
           nextRunAtDate = rfc5545Schedule.getNextValidTime();
         } else {
-          final CronExpression cronExpression;
-          cronExpression = new CronExpression(scheduleExpression);
+          final CronExpression cronExpression = new CronExpression(scheduleExpression);
           final Date startDate = new Date(taskId.getStartedAt());
           nextRunAtDate = cronExpression.getNextValidTimeAfter(startDate);
         }
