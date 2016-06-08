@@ -48,10 +48,7 @@ var webpackConfig = require('./webpack.config');
 var WebpackDevServer = require('webpack-dev-server');
 
 gulp.task("clean", function() {
-  return del([
-    path.resolve(dest, 'static/**'),
-    path.resolve(dest, 'index.html'),
-    dest], {force: true});
+  return del(dest);
 });
 
 gulp.task('fonts', function() {
