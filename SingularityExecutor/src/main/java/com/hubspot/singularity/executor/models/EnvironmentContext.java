@@ -30,6 +30,10 @@ public class EnvironmentContext {
     return taskInfo.getContainer().getVolumesList();
   }
 
+  public boolean isDocker() {
+    return taskInfo.hasContainer() && taskInfo.getContainer().hasDocker();
+  }
+
   @Override
   public String toString() {
     return "EnvironmentContext [taskInfo=" + taskInfo + "]";
