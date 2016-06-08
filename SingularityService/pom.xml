@@ -22,6 +22,11 @@
 
     <dependency>
       <groupId>com.hubspot</groupId>
+      <artifactId>SingularityUI</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.hubspot</groupId>
       <artifactId>SingularityMesosClient</artifactId>
     </dependency>
 
@@ -357,7 +362,7 @@
       <artifactId>curator-test</artifactId>
       <scope>test</scope>
     </dependency>
-    
+
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
@@ -437,46 +442,8 @@
 
     <pluginManagement>
       <plugins>
-        <!--This plugin's configuration is used to store Eclipse m2e settings 
+        <!--This plugin's configuration is used to store Eclipse m2e settings
           only. It has no influence on the Maven build itself. -->
-        <plugin>
-          <groupId>org.eclipse.m2e</groupId>
-          <artifactId>lifecycle-mapping</artifactId>
-          <version>1.0.0</version>
-          <configuration>
-            <lifecycleMappingMetadata>
-              <pluginExecutions>
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>com.github.eirslett</groupId>
-                    <artifactId>frontend-maven-plugin</artifactId>
-                    <versionRange>[0,)</versionRange>
-                    <goals>
-                      <goal>install-node-and-npm</goal>
-                      <goal>npm</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <ignore />
-                  </action>
-                </pluginExecution>
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>com.github.kongchen</groupId>
-                    <artifactId>swagger-maven-plugin</artifactId>
-                    <versionRange>[0,)</versionRange>
-                    <goals>
-                      <goal>generate</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <ignore />
-                  </action>
-                </pluginExecution>
-              </pluginExecutions>
-            </lifecycleMappingMetadata>
-          </configuration>
-        </plugin>
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
           <configuration>
@@ -542,37 +509,6 @@
       <build>
         <plugins>
           <plugin>
-            <groupId>com.github.eirslett</groupId>
-            <artifactId>frontend-maven-plugin</artifactId>
-            <configuration>
-              <workingDirectory>../SingularityUI</workingDirectory>
-            </configuration>
-            <executions>
-              <execution>
-                <id>install node and npm</id>
-                <goals>
-                  <goal>install-node-and-npm</goal>
-                </goals>
-                <configuration>
-                  <nodeVersion>v4.1.2</nodeVersion>
-                  <npmVersion>2.14.16</npmVersion>
-                </configuration>
-              </execution>
-              <execution>
-                <id>npm install</id>
-                <goals>
-                  <goal>npm</goal>
-                </goals>
-              </execution>
-              <execution>
-                <id>gulp build</id>
-                <goals>
-                  <goal>gulp</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>build-helper-maven-plugin</artifactId>
             <executions>
@@ -585,7 +521,7 @@
                 <configuration>
                   <resources>
                     <resource>
-                      <directory>${project.build.directory}/generated-resources</directory>
+                      <directory>../SingularityUI/dist</directory>
                     </resource>
                   </resources>
                 </configuration>
