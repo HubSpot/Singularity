@@ -1,6 +1,7 @@
 package com.hubspot.singularity.data;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 
 import java.net.URI;
@@ -180,15 +181,11 @@ public class SingularityValidator {
   }
 
   private void checkForValidRFC5545Schedule(String schedule) {
-    String message = "";
-    boolean valid = true;
     try {
       new RecurrenceRule(schedule);
     } catch (InvalidRecurrenceRuleException ex) {
-      message = String.format("Schedule %s was not a valid RFC5545 schedule, error was: %s", schedule, ex);
-      valid = false;
+      badRequest("Schedule %s was not a valid RFC5545 schedule, error was: %s", schedule, ex);
     }
-    checkBadRequest(valid, message);
   }
 
   public SingularityWebhook checkSingularityWebhook(SingularityWebhook webhook) {
