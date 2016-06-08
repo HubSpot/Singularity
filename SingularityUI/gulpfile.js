@@ -127,7 +127,6 @@ gulp.task('lint', function () {
   return gulp.src(['./app/**/*.{es6, jsx}'])
     .pipe(eslint())
     .pipe(eslint.format());
-    // .pipe(eslint.failOnError());
 });
 
 gulp.task('build', ['clean'], function () {
