@@ -17,12 +17,6 @@ public class RFC5545ScheduleTest {
   }
 
   @Test
-  public void testInfiniteScheduleIsLimited() throws Exception {
-    String schedule = "FREQ=DAILY;BYDAY=MO,TU,WE,TH,FR";
-    Assert.assertEquals(new RFC5545Schedule(schedule).getRecurrenceRule().getUntil(), new DateTime(2100, 1, 1, 0, 0, 0));
-  }
-
-  @Test
   public void testMaxIterations() throws Exception {
     String schedule = "DTSTART=19970902T090000\nRRULE:FREQ=HOURLY;COUNT=10001";
     Assert.assertEquals(new RFC5545Schedule(schedule).getStartDateTime(), new org.joda.time.DateTime(1997, 9, 2, 9, 0, 0));
