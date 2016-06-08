@@ -5,8 +5,11 @@ require('es6-object-assign').polyfill();
 window.Promise = require('promise-polyfill');
 
 // Set up the only app globals
-window.utils = require('utils');
-window.app = require('application');
+window.utils = require('utils').default;
+
+import app from 'application';
+
+window.app = app;
 
 import Messenger from 'messenger';
 

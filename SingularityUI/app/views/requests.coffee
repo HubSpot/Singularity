@@ -1,6 +1,6 @@
 View = require './view'
 Request = require '../models/Request'
-Utils = require '../utils'
+Utils = require('../utils').default
 vex = require 'vex.dialog'
 fuzzy = require 'fuzzy'
 micromatch = require 'micromatch'
@@ -235,7 +235,7 @@ class RequestsView extends View
             # After the first stage of rendering we want to fix
             # the width of the columns to prevent having to recalculate
             # it constantly
-            utils.fixTableColumns $table
+            Utils.fixTableColumns $table
         else
             $tableBody.append $contents
 
