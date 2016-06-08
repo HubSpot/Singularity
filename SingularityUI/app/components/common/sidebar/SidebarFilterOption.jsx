@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 
-import SidebarCheckbox from './SidebarCheckbox';
+import FancyCheckbox from '../FancyCheckbox';
 
 class SidebarFilterOption extends Component {
   constructor(props) {
@@ -18,7 +18,7 @@ class SidebarFilterOption extends Component {
         <div>
           <span className={this.props.indicatorClass} />
           {this.props.label}
-          <SidebarCheckbox
+          <FancyCheckbox
             checked={this.props.isEnabled}
             onChange={this.props.onChange}
           />

@@ -1,4 +1,3 @@
-// Other imports
 @import '../mixins';
 @import '../base';
 
@@ -38,60 +37,6 @@
         padding-left: 25px;
         padding-top: 10px;
         padding-bottom: 10px;
-
-        .sidebar-checkbox {
-          float: right;
-          margin-right: 12px;
-          padding: 0;
-          position: relative;
-
-          width: 21px;
-          height: 21px;
-
-
-          label {
-            cursor: pointer;
-            width: 21px;
-            height: 21px;
-            margin-bottom: 0;
-          }
-
-          span.checkbox-style {
-            display: block;
-            width: 21px;
-            height: 21px;
-            border-radius: 2px;
-            background-color: rgba(255, 255, 255, 0.5);
-            border: solid 1.5px $battleship;
-          }
-
-          input[type='checkbox'] {
-            visibility: hidden;
-            display: none;
-
-            &:checked + span.checkbox-style {
-              border: solid 2px $turquoise-blue;
-              background-color: white;
-            }
-            
-
-            &:checked + span.checkbox-style:after {
-              opacity: 1;
-              content: '';
-              position: absolute;
-              width: 11px;
-              height: 7px;
-              background: transparent;
-              top: 6px;
-              left: 5px;
-              border: 3px solid $turquoise-blue;
-              border-top: none;
-              border-right: none;
-
-              transform: rotate(-45deg);
-            }
-          }
-        }
 
         &:hover {
           background-color: $light-blue-grey;

@@ -1,14 +1,14 @@
 import React, { Component, PropTypes } from 'react';
 
-class SidebarCheckbox extends Component {
+class FancyCheckbox extends Component {
   constructor(props) {
     super(props);
-    this.displayName = 'SidebarCheckbox';
+    this.displayName = 'FancyCheckbox';
   }
 
   render() {
     return (
-      <div className='sidebar-checkbox'>
+      <div className='fancy-checkbox'>
         <label>
           <input
             type='checkbox'
@@ -22,9 +22,9 @@ class SidebarCheckbox extends Component {
   }
 }
 
-SidebarCheckbox.propTypes = {
+FancyCheckbox.propTypes = {
   checked: PropTypes.bool.isRequired,
   onChange: PropTypes.func.isRequired
 }
 
-export default SidebarCheckbox;
+export default FancyCheckbox;
