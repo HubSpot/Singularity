@@ -22,20 +22,20 @@ import 'thirdPartyConfigurations';
 import 'handlebarsHelpers';
 
 // Initialize the app on DOMContentReady
-$(function() {
+$(() => {
   if (window.config.apiRoot) {
     return window.app.initialize();
-  } else {
-    // In the event that the apiRoot isn't set (running locally)
-    // prompt the user for it and refresh
-    return vex.dialog.prompt({
-      message: apiRootPromptTemplate(),
-      callback: value => {
-        if (value) {
-          localStorage.setItem('apiRootOverride', value);
-        }
-        return window.location = window.location.href;
-      }
-    });
   }
+  // In the event that the apiRoot isn't set (running locally)
+  // prompt the user for it and refresh
+  return vex.dialog.prompt({
+    message: apiRootPromptTemplate(),
+    callback: value => {
+      if (value) {
+        localStorage.setItem('apiRootOverride', value);
+      }
+      window.location = window.location.href;
+      return window.location;
+    }
+  });
 });
