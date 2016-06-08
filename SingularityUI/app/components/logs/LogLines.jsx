@@ -48,15 +48,17 @@ class LogLines extends React.Component {
   }
 
   renderLogLines() {
-    this.props.logLines.map(function ({data, offset, taskId, timestamp}) {
+    const initialOffset = this.props.initialOffset;
+    const colorMap = this.props.colorMap;
+    return this.props.logLines.map(function ({data, offset, taskId, timestamp}) {
       return <LogLine
         content={data}
         key={taskId + '_' + offset}
         offset={offset}
         taskId={taskId}
         timestamp={timestamp}
-        isHighlighted={offset === this.props.initialOffset}
-        color={this.props.colorMap[taskId]} />;
+        isHighlighted={offset === initialOffset}
+        color={colorMap[taskId]} />;
     });
   }
 
@@ -99,7 +101,7 @@ class LogLines extends React.Component {
 
   render() {
     return <div className="contents-container">
-      <div className={classNames(['tail-contents', this.props.activeColor])} ref="tailContents" onScroll={this.handleScroll}>
+      <div className={classNames(['tail-contents', this.props.activeColor])} ref="tailContents" onScroll={(event) => { this.handleScroll(event); }}>
         {this.renderLoadingPrevious()}
         {this.renderLogLines()}
         {this.renderLoadingMore()}

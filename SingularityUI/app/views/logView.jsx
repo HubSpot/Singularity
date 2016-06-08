@@ -7,11 +7,10 @@ import { Provider } from 'react-redux';
 class LogView extends View {
     constructor(...args) {
       super(...args);
-      this.handleViewChange = this.handleViewChange.bind(this);
-
     }
 
     initialize(store) {
+      this.handleViewChange = this.handleViewChange.bind(this);
       window.addEventListener('viewChange', this.handleViewChange);
       this.store = store;
     }

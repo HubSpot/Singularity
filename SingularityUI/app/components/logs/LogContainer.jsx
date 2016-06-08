@@ -42,7 +42,8 @@ class LogContainer extends React.Component {
   }
 
   render() {
-    return <div><Interval enabled={this.props.ready} timeout={2000} callback={this.props.updateGroups} /><Interval enabled={true} timeout={10000} callback={this.props.updateTaskStatuses} /><Header />{this.renderTaskGroups()}</div>;
+    const cb = this.props.updateGroups
+    return <div><Interval enabled={this.props.ready} timeout={2000} callback={cb} /><Interval enabled={true} timeout={10000} callback={this.props.updateTaskStatuses} /><Header />{this.renderTaskGroups()}</div>;
   }
 }
 
@@ -54,12 +55,14 @@ LogContainer.propTypes = {
   updateTaskStatuses: React.PropTypes.func.isRequired
 };
 
-let mapStateToProps = state => ({
-  taskGroupsCount: state.taskGroups.length,
-  ready: _.all(_.pluck(state.taskGroups, 'ready'))
-});
+function mapStateToProps(state) {
+  return {
+    taskGroupsCount: state.taskGroups.length,
+    ready: _.all(_.pluck(state.taskGroups, 'ready'))
+  };
+}
 
-let mapDispatchToProps = { updateGroups, updateTaskStatuses };
+const mapDispatchToProps = { updateGroups, updateTaskStatuses };
 
 export default connect(mapStateToProps, mapDispatchToProps)(LogContainer);
 

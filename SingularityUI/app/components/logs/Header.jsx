@@ -41,7 +41,6 @@ class Header extends React.Component {
   }
 
   render() {
-    console.log(this);
     return <div className="tail-header">
         <div className="row">
           <div className="col-md-3">

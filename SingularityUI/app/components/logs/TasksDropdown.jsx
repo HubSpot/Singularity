@@ -14,18 +14,20 @@ class TasksDropdown extends React.Component {
   }
 
   renderListItems() {
+    const props = this.props;
+    const getTaskListTooltip = this.getTaskListTooltip;
     if (this.props.activeTasks && this.props.taskIds) {
       if (this.props.activeTasks.length > 0) {
         return _.sortBy(this.props.activeTasks, function (t) {return t.taskId.instanceNo }).map( function (task, i) {
           let classes = ['glyphicon'];
-          if (task.taskId.id in this.props.taskIds) {
+          if (__in__(task.taskId.id, props.taskIds)) {
             classes.push('glyphicon-check');
           } else {
             classes.push('glyphicon-unchecked');
           }
           return <li key={i}>
-            <OverlayTrigger placement='left' overlay={this.getTaskListTooltip(task)}>
-              <a onClick={function () { this.props.toggleTaskLog(task.taskId.id); }}>
+            <OverlayTrigger placement='left' overlay={getTaskListTooltip(task)}>
+              <a onClick={function () { props.toggleTaskLog(task.taskId.id); }}>
                 <span className={classNames(classes)}></span>
                 <span> Instance {task.taskId.instanceNo}</span>
               </a>
@@ -63,4 +65,7 @@ const mapDispatchToProps = { toggleTaskLog };
 
 export default connect(mapStateToProps, mapDispatchToProps)(TasksDropdown);
 
+function __in__(needle, haystack) {
+  return haystack.indexOf(needle) >= 0;
+}
 

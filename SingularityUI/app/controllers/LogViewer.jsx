@@ -33,21 +33,21 @@ class LogViewer extends Controller {
       middlewares.push(logger());
     }
 
-    this.store = createStore(rootReducer, initialState, compose(applyMiddleware.apply(this, middlewares)))
+    const store = createStore(rootReducer, initialState, compose(applyMiddleware.apply(this, middlewares)))
     let initPromise;
 
     if (taskIds.length > 0) {
-        initPromise = this.store.dispatch(LogActions.initialize(this.requestId, this.path, search, taskIds))
+        initPromise = store.dispatch(LogActions.initialize(this.requestId, this.path, search, taskIds))
     } else {
-        initPromise = this.store.dispatch(LogActions.initializeUsingActiveTasks(this.requestId, this.path, search))
+        initPromise = store.dispatch(LogActions.initializeUsingActiveTasks(this.requestId, this.path, search))
     }
 
     initPromise.then(function () {
-        this.store.dispatch(ActiveTasks.updateActiveTasks(this.requestId))
+        store.dispatch(ActiveTasks.updateActiveTasks(requestId))
       });
 
     // create log view
-    this.view = new LogView(this.store);
+    this.view = new LogView(store);
 
     this.setView(this.view)  // does nothing
     app.showView(this.view)

@@ -50,7 +50,7 @@ TaskSearchController = require('controllers/TaskSearch');
 
 WebhooksController = require('controllers/Webhooks');
 
-Utils = require('./utils');
+Utils = require('./utils').default;
 
 class Router extends Backbone.Router {
   constructor(app) {
