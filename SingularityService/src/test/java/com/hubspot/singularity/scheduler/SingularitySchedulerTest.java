@@ -39,6 +39,7 @@ import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityDeployProgress;
@@ -50,6 +51,7 @@ import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestBuilder;
 import com.hubspot.singularity.SingularityRequestCleanup;
@@ -58,17 +60,18 @@ import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHealthcheckResult;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
-import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.SlavePlacement;
+import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityDeleteRequestRequest;
 import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.api.SingularityKillTaskRequest;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.api.SingularityPauseRequest;
+import com.hubspot.singularity.api.SingularityPriorityFreeze;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
@@ -3128,4 +3131,87 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(requestManager.getPendingRequests().size(), 0);
   }
 
+  @Test
+  public void testPriorityFreezeKillsActiveTasksAndCancelsPendingTasks() {
+    SingularityRequest request1 = new SingularityRequestBuilder("request1", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.25)).build();
+    saveRequest(request1);
+    SingularityRequest request2 = new SingularityRequestBuilder("request2", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.3)).build();
+    saveRequest(request2);
+    SingularityRequest request3 = new SingularityRequestBuilder("request3", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.5)).build();
+    saveRequest(request3);
+    SingularityRequest request4 = new SingularityRequestBuilder("request4", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.75)).build();
+    saveRequest(request4);
+
+    SingularityDeploy deploy1 = initAndFinishDeploy(request1, "r1d1");
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(request2.getId(), "r2d1").setCommand(Optional.of("cmd")).build(), Optional.<Boolean> absent(), Optional.<String> absent()));
+    SingularityDeploy deploy3 = initAndFinishDeploy(request3, "r2d1");
+    SingularityDeploy deploy4 = initAndFinishDeploy(request4, "r3d1");
+
+
+    final SingularityTask task1 = launchTask(request1, deploy1, 2, 1, TaskState.TASK_RUNNING);
+    final SingularityTask task3 = launchTask(request3, deploy3, 1, 1, TaskState.TASK_RUNNING);
+    final SingularityTask task4 = launchTask(request4, deploy4, 10, 1, TaskState.TASK_RUNNING);
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    // request2 should have a pending task,
+    Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
+    Assert.assertEquals(request2.getId(), taskManager.getPendingTaskIds().get(0).getRequestId());
+    Assert.assertEquals(task1.getTaskId(), taskManager.getActiveTaskIdsForRequest(request1.getId()).get(0));
+
+    // priority freeze of .5 means that request1 should have a cleanup and request2's pending task should be deleted
+    priorityResource.createPriorityFreeze(new SingularityPriorityFreeze(.5, true, Optional.of("test"), Optional.<String>absent()));
+
+    // perform the killing
+    priorityKillPoller.runActionOnPoll();
+
+    // request1 should have a cleanup of type PRIORITY_KILL
+    Assert.assertEquals(TaskCleanupType.PRIORITY_KILL, taskManager.getTaskCleanup(task1.getTaskId().getId()).get().getCleanupType());
+
+    // request2 should not have a pending task
+    Assert.assertTrue(taskManager.getPendingTaskIds().isEmpty());
+
+    // request3 and request4 should not have cleanups
+    Assert.assertEquals(false, taskManager.getTaskCleanup(task3.getTaskId().getId()).isPresent());
+    Assert.assertEquals(false, taskManager.getTaskCleanup(task4.getTaskId().getId()).isPresent());
+
+    // kill task(s) with cleanups
+    cleaner.drainCleanupQueue();
+    killKilledTasks();
+
+    // task1 should be killed, task2 and task3 should be running
+    Assert.assertEquals(ExtendedTaskState.TASK_KILLED, taskManager.getTaskHistory(task1.getTaskId()).get().getLastTaskUpdate().get().getTaskState());
+    Assert.assertEquals(ExtendedTaskState.TASK_RUNNING, taskManager.getTaskHistory(task3.getTaskId()).get().getLastTaskUpdate().get().getTaskState());
+    Assert.assertEquals(ExtendedTaskState.TASK_RUNNING, taskManager.getTaskHistory(task4.getTaskId()).get().getLastTaskUpdate().get().getTaskState());
+  }
+
+  @Test
+  public void testPriorityFreeze() {
+    // create priority freeze
+    priorityManager.createPriorityFreeze(new SingularityPriorityFreezeParent(new SingularityPriorityFreeze(0.3, true, Optional.<String>absent(), Optional.<String>absent()), System.currentTimeMillis(), Optional.<String>absent()));
+
+    // deploy 2 requests
+    SingularityRequest request1 = new SingularityRequestBuilder("request1", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.25)).build();
+    saveRequest(request1);
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(request1.getId(), "d1").setCommand(Optional.of("cmd")).build(), Optional.<Boolean> absent(), Optional.<String> absent()));
+    SingularityRequest request2 = new SingularityRequestBuilder("request2", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.5)).build();
+    saveRequest(request2);
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(request2.getId(), "d2").setCommand(Optional.of("cmd")).build(), Optional.<Boolean> absent(), Optional.<String> absent()));
+
+    // drain pending queue
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    // check that only request2 has pending tasks
+    Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
+    Assert.assertEquals(request2.getId(), taskManager.getPendingTaskIds().get(0).getRequestId());
+
+    // delete priority freeze
+    Assert.assertEquals(SingularityDeleteResult.DELETED, priorityManager.deleteActivePriorityFreeze());
+
+    // drain pending
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    // check that both requests have active tasks
+    Assert.assertEquals(2, taskManager.getPendingTaskIds().size());
+  }
 }

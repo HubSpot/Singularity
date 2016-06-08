@@ -72,6 +72,7 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.config.SingularityTaskMetadataConfiguration;
 import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.PriorityManager;
 import com.hubspot.singularity.data.RackManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.SlaveManager;
@@ -81,6 +82,7 @@ import com.hubspot.singularity.event.SingularityEventListener;
 import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.mesos.SingularityMesosScheduler;
 import com.hubspot.singularity.resources.DeployResource;
+import com.hubspot.singularity.resources.PriorityResource;
 import com.hubspot.singularity.resources.RackResource;
 import com.hubspot.singularity.resources.RequestResource;
 import com.hubspot.singularity.resources.SlaveResource;
@@ -100,6 +102,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected DeployManager deployManager;
   @Inject
   protected TaskManager taskManager;
+  @Inject
+  protected PriorityManager priorityManager;
   @Inject
   protected SlaveManager slaveManager;
   @Inject
@@ -123,6 +127,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected RequestResource requestResource;
   @Inject
   protected DeployResource deployResource;
+  @Inject
+  protected PriorityResource priorityResource;
   @Inject
   protected SingularityCleaner cleaner;
   @Inject
@@ -149,6 +155,8 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   protected SingularityEventListener eventListener;
   @Inject
   protected SingularityExpiringUserActionPoller expiringUserActionPoller;
+  @Inject
+  protected SingularityPriorityKillPoller priorityKillPoller;
   @Inject
   protected SingularityHealthchecker healthchecker;
 

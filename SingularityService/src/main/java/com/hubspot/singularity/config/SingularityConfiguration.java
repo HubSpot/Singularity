@@ -256,6 +256,13 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean taskHistoryQueryUsesZkFirst = false;
 
+  @Min(0)
+  @Max(1)
+  private double defaultTaskPriorityLevel = 0.5;
+
+  @Min(0)
+  private long checkPriorityKillsEveryMillis = TimeUnit.SECONDS.toMillis(30);
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -1038,5 +1045,21 @@ public class SingularityConfiguration extends Configuration {
 
   public void setTaskLabelForLoadBalancerUpstreamGroup(Optional<String> taskLabelForLoadBalancerUpstreamGroup) {
     this.taskLabelForLoadBalancerUpstreamGroup = taskLabelForLoadBalancerUpstreamGroup;
+  }
+
+  public double getDefaultTaskPriorityLevel() {
+    return defaultTaskPriorityLevel;
+  }
+
+  public void setDefaultTaskPriorityLevel(double defaultTaskPriorityLevel) {
+    this.defaultTaskPriorityLevel = defaultTaskPriorityLevel;
+  }
+
+  public long getCheckPriorityKillsEveryMillis() {
+    return checkPriorityKillsEveryMillis;
+  }
+
+  public void setCheckPriorityKillsEveryMillis(long checkPriorityKillsEveryMillis) {
+    this.checkPriorityKillsEveryMillis = checkPriorityKillsEveryMillis;
   }
 }
