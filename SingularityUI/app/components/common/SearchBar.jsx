@@ -9,7 +9,7 @@ class SearchBar extends React.Component {
   render() {
     return (
       <div className='form-group has-feedback search-bar'>
-        <input className='search-input' type='text' placeholder='Filter requests' />
+        <input className='search-input' type='text' placeholder='Find a request' />
         <span className='glyphicon glyphicon-search form-control-feedback' />
       </div>
     );

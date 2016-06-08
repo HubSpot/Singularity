@@ -16,12 +16,12 @@ const lookupIndicatorClass = (filterValue) => {
 };
 
 const mapStateToProps = (state, ownProps) => {
-  const search = state.requestsPage.search;
+  const requestsPage = state.requestsPage;
   const requests = state.requests;
 
   return {
     label: ownProps.label,
-    isEnabled: search.state.indexOf(ownProps.filterValue) > -1,
+    isEnabled: requestsPage.stateFilter.indexOf(ownProps.filterValue) > -1,
     numberOfItems: requests.data.reduce((count, r) => {
       return count + (r.state === ownProps.filterValue ? 1 : 0);
     }, 0),

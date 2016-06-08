@@ -1,28 +1,28 @@
-import { TOGGLE_STATE_FILTER } from '../../actions/ui/requestsPage';
+import * as RequestsPageActions from '../../actions/ui/requestsPage';
 
 const initialState = {
-  search: {
-    text: '',
-    state: ['ACTIVE', 'SYSTEM_COOLDOWN', 'PAUSED'],
-    type: null
-  }
+  textFilter: '',
+  stateFilter: ['ACTIVE', 'SYSTEM_COOLDOWN', 'PAUSED'],
+  typeFilter: 'ALL'
 };
 
 export default function requestsPage(state = initialState, action) {
   switch (action.type) {
-    case TOGGLE_STATE_FILTER:
+    case RequestsPageActions.TOGGLE_STATE_FILTER:
       let newStateFilter;
-      if (state.search.state.indexOf(action.value) > -1) {
+      if (state.stateFilter.indexOf(action.value) > -1) {
         // disable
-        newStateFilter = state.search.state.filter((v) => v !== action.value);
+        newStateFilter = state.stateFilter.filter((v) => v !== action.value);
       } else {
         // enable
-        newStateFilter = [...state.search.state, action.value];
+        newStateFilter = [...state.stateFilter, action.value];
       }
       return Object.assign({}, state, {
-        search: {
-          state: newStateFilter
-        }
+        stateFilter: newStateFilter
+      });
+    case RequestsPageActions.CHANGE_TYPE_FILTER:
+      return Object.assign({}, state, {
+        typeFilter: action.value
       });
     default:
       return state;

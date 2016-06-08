@@ -18,8 +18,8 @@ class TabBarFilterOption extends Component {
 
     return (
       <li className={classes}>
-        <a href={'#'}>
-          {this.props.filterName}
+        <a onClick={this.props.onClick}>
+          {this.props.label}
           {` (${this.props.numberOfItems})`}
         </a>
       </li>
@@ -29,9 +29,9 @@ class TabBarFilterOption extends Component {
 
 TabBarFilterOption.propTypes = {
   isEnabled: PropTypes.bool.isRequired,
-  filterName: PropTypes.string.isRequired,
+  label: PropTypes.string.isRequired,
   numberOfItems: PropTypes.number.isRequired,
-  onChange: PropTypes.func.isRequired,
+  onClick: PropTypes.func.isRequired,
 }
 
 export default TabBarFilterOption;

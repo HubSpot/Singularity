@@ -11,6 +11,7 @@ import TabBarFilterOption from '../common/tabBar/TabBarFilterOption';
 import SearchBar from '../common/SearchBar';
 
 import FilterOptionState from '../../containers/requests/FilterOptionState';
+import FilterOptionType from '../../containers/requests/FilterOptionType';
 import RequestsTable from './RequestsTable';
 
 class RequestsPage extends Component {
@@ -39,41 +40,29 @@ class RequestsPage extends Component {
         </Sidebar>
         <MainContent>
           <TabBar>
-            <TabBarFilterOption
-              isEnabled={true}
-              filterName={'All types'}
-              numberOfItems={0}
-              onChange={console.log}
+            <FilterOptionType
+              label={'All types'}
+              filterValue={'ALL'}
             />
-            <TabBarFilterOption
-              isEnabled={false}
-              filterName={'On-demand'}
-              numberOfItems={0}
-              onChange={console.log}
+            <FilterOptionType
+              label={'On-demand'}
+              filterValue={'ON_DEMAND'}
             />
-            <TabBarFilterOption
-              isEnabled={false}
-              filterName={'Worker'}
-              numberOfItems={0}
-              onChange={console.log}
+            <FilterOptionType
+              label={'Worker'}
+              filterValue={'WORKER'}
             />
-            <TabBarFilterOption
-              isEnabled={false}
-              filterName={'Scheduled'}
-              numberOfItems={0}
-              onChange={console.log}
+            <FilterOptionType
+              label={'Scheduled'}
+              filterValue={'SCHEDULED'}
             />
-            <TabBarFilterOption
-              isEnabled={false}
-              filterName={'Run-once'}
-              numberOfItems={0}
-              onChange={console.log}
+            <FilterOptionType
+              label={'Run-once'}
+              filterValue={'RUN_ONCE'}
             />
-            <TabBarFilterOption
-              isEnabled={false}
-              filterName={'Service'}
-              numberOfItems={0}
-              onChange={console.log}
+            <FilterOptionType
+              label={'Service'}
+              filterValue={'SERVICE'}
             />
           </TabBar>
           <SearchBar />
