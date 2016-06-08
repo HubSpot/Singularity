@@ -28,10 +28,11 @@ var initialize = (requestId, path, search, taskIds) =>
   function(dispatch, getState) {
     let { viewMode } = getState();
 
+    let taskIdGroups;
     if (viewMode === 'unified') {
-      var taskIdGroups = [taskIds];
+      taskIdGroups = [taskIds];
     } else {
-      var taskIdGroups = taskIds.map(taskId => [taskId]);
+      taskIdGroups = taskIds.map(taskId => [taskId]);
     }
 
     dispatch(init(requestId, taskIdGroups, path, search));
@@ -125,7 +126,7 @@ let updateFilesizes = () =>
   function(dispatch, getState) {
     let tasks;
     tasks = getState();
-    for (taskId of tasks) {
+    for (let taskId of tasks) {
       fetchData(taskId, tasks[taskId.path]).done(({offset}) => {
         dispatch(taskFilesize(taskId, offset))
       });
