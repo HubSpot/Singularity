@@ -10,4 +10,4 @@ let updateActiveTasks = requestId =>
   dispatch =>
     fetchTasksForRequest(requestId).done(tasks => dispatch({tasks, type: 'REQUEST_ACTIVE_TASKS'}));
 
-export { updateActiveTasks, fetchTasksForRequest };
+export default { updateActiveTasks, fetchTasksForRequest };
