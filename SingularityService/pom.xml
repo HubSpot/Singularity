@@ -447,10 +447,7 @@
               <outputDirectory>${basedir}/target/generated-resources/static</outputDirectory>
               <resources>
                 <resource>
-                  <directory>../SingularityUI/app/dist/</directory>
-                  <includes>
-                    <include>*</include>
-                  </includes>
+                  <directory>../SingularityUI/dist</directory>
                 </resource>
               </resources>
             </configuration>
