@@ -1,6 +1,7 @@
 package com.hubspot.singularity.data;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
 
 import java.net.URI;
@@ -14,7 +15,8 @@ import java.util.regex.Pattern;
 import javax.inject.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
-
+import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
+import org.dmfs.rfc5545.recur.RecurrenceRule;
 import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
@@ -143,22 +145,26 @@ public class SingularityValidator {
     if (request.isScheduled()) {
       checkBadRequest(request.getQuartzSchedule().isPresent() || request.getSchedule().isPresent(), "Specify at least one of schedule or quartzSchedule");
 
-      final String originalSchedule = request.getQuartzScheduleSafe();
+      String originalSchedule = request.getQuartzScheduleSafe();
 
-      if (request.getQuartzSchedule().isPresent() && !request.getSchedule().isPresent()) {
-        checkBadRequest(request.getScheduleType().or(ScheduleType.QUARTZ) == ScheduleType.QUARTZ, "If using quartzSchedule specify scheduleType QUARTZ or leave it blank");
-      }
+      if (request.getScheduleType().or(ScheduleType.QUARTZ) != ScheduleType.RFC5545) {
+        if (request.getQuartzSchedule().isPresent() && !request.getSchedule().isPresent()) {
+          checkBadRequest(request.getScheduleType().or(ScheduleType.QUARTZ) == ScheduleType.QUARTZ, "If using quartzSchedule specify scheduleType QUARTZ or leave it blank");
+        }
 
-      if (request.getQuartzSchedule().isPresent() || (request.getScheduleType().isPresent() && request.getScheduleType().get() == ScheduleType.QUARTZ)) {
-        quartzSchedule = originalSchedule;
+        if (request.getQuartzSchedule().isPresent() || (request.getScheduleType().isPresent() && request.getScheduleType().get() == ScheduleType.QUARTZ)) {
+          quartzSchedule = originalSchedule;
+        } else {
+          checkBadRequest(request.getScheduleType().or(ScheduleType.CRON) == ScheduleType.CRON, "If not using quartzSchedule specify scheduleType CRON or leave it blank");
+          checkBadRequest(!request.getQuartzSchedule().isPresent(), "If using schedule type CRON do not specify quartzSchedule");
+
+          quartzSchedule = getQuartzScheduleFromCronSchedule(originalSchedule);
+        }
+
+        checkBadRequest(isValidCronSchedule(quartzSchedule), "Schedule %s (from: %s) was not valid", quartzSchedule, originalSchedule);
       } else {
-        checkBadRequest(request.getScheduleType().or(ScheduleType.CRON) == ScheduleType.CRON, "If not using quartzSchedule specify scheduleType CRON or leave it blank");
-        checkBadRequest(!request.getQuartzSchedule().isPresent(), "If using schedule type CRON do not specify quartzSchedule");
-
-        quartzSchedule = getQuartzScheduleFromCronSchedule(originalSchedule);
+        checkForValidRFC5545Schedule(request.getSchedule().get());
       }
-
-      checkBadRequest(isValidCronSchedule(quartzSchedule), "Schedule %s (from: %s) was not valid", quartzSchedule, originalSchedule);
     } else {
       checkBadRequest(!request.getQuartzSchedule().isPresent() && !request.getSchedule().isPresent(), "Non-scheduled requests can not specify a schedule");
       checkBadRequest(!request.getScheduleType().isPresent(), "ScheduleType can only be set for scheduled requests");
@@ -179,6 +185,14 @@ public class SingularityValidator {
     }
 
     return request.toBuilder().setQuartzSchedule(Optional.fromNullable(quartzSchedule)).build();
+  }
+
+  private void checkForValidRFC5545Schedule(String schedule) {
+    try {
+      new RecurrenceRule(schedule);
+    } catch (InvalidRecurrenceRuleException ex) {
+      badRequest("Schedule %s was not a valid RFC5545 schedule, error was: %s", schedule, ex);
+    }
   }
 
   public SingularityWebhook checkSingularityWebhook(SingularityWebhook webhook) {
