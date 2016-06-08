@@ -10,17 +10,13 @@
 
     <artifactId>SingularityUI</artifactId>
     <packaging>pom</packaging>
-    
+
     <build>
         <plugins>
             <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
                 <version>1.0</version>
-
-                <!-- <configuration>
-                    <workingDirectory>SingularityUI/</workingDirectory>
-                </configuration> -->
 
                 <executions>
                     <execution>

@@ -23,6 +23,7 @@
     <dependency>
       <groupId>com.hubspot</groupId>
       <artifactId>SingularityUI</artifactId>
+      <type>pom</type>
     </dependency>
 
     <dependency>
@@ -436,6 +437,24 @@
               </resources>
             </configuration>
           </execution>
+          <execution>
+            <id>copy-ui</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/target/generated-resources/static</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>../SingularityUI/app/dist/</directory>
+                  <includes>
+                    <include>*</include>
+                  </includes>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
     </plugins>
@@ -462,7 +481,7 @@
                         </pluginExecutionFilter>
                       <action>
                       <ignore />
-                    </action>		
+                    </action>
                  </pluginExecution>
                </pluginExecutions>
              </lifecycleMappingMetadata>
