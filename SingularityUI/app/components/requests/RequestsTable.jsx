@@ -33,10 +33,7 @@ class RequestsTable extends Component {
         </thead>
 
         <tbody>
-          <RequestsTableRow />
-          <RequestsTableRow />
-          <RequestsTableRow />
-          <RequestsTableRow />
+          {this.props.children}
         </tbody>
       </table>
     );

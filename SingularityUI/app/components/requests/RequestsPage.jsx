@@ -13,6 +13,7 @@ import SearchBar from '../common/SearchBar';
 import FilterOptionState from '../../containers/requests/FilterOptionState';
 import FilterOptionType from '../../containers/requests/FilterOptionType';
 import RequestsTable from './RequestsTable';
+import RequestsTableRow from './RequestsTableRow';
 
 class RequestsPage extends Component {
   constructor(props) {
@@ -21,7 +22,8 @@ class RequestsPage extends Component {
   }
 
   render() {
-    const { requests, actions } = this.props;
+    const { requests } = this.props;
+
     return (
       <div className='requests-page'>
         <Sidebar>
@@ -66,7 +68,9 @@ class RequestsPage extends Component {
             />
           </TabBar>
           <SearchBar />
-          <RequestsTable />
+          <RequestsTable>
+            {requests.data.slice(0, 10).map((r) => <RequestsTableRow requestParent={r} />)}
+          </RequestsTable>
         </MainContent>
       </div>
     );
@@ -74,16 +78,8 @@ class RequestsPage extends Component {
 }
 
 RequestsPage.propTypes = {
-  requests: PropTypes.object.isRequired,
-  actions: PropTypes.object.isRequired
+  requests: PropTypes.object.isRequired
 };
-
-const searchRequests = (requests, search) => {
-  return requests.filter((r) => {
-    return search.state.indexOf(r.state) >= -1;
-  });
-}
-
 
 const mapStateToProps = (state) => {
   return {
@@ -93,7 +89,6 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    actions: bindActionCreators(RequestsActions, dispatch)
   }
 }
 

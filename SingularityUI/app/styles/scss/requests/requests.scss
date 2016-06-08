@@ -79,7 +79,7 @@ $request-table-num-cols: 5;
 
 // Request tags
 .service-tag {
-  @include tag-styles($thunderdome, #f0f1fa);
+  @include tag-styles($melon, #fff1ee);
 }
 
 .worker-tag {
@@ -91,7 +91,7 @@ $request-table-num-cols: 5;
 }
 
 .onDemand-tag {
-  @include tag-styles($thunderdome, #f0f1fa);
+  @include tag-styles(#eaa836, #fdf3e1);
 }
 
 .runOnce-tag {
