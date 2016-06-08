@@ -1,0 +1,17 @@
+{
+  "parserOptions": {
+    "sourceType": "module"
+  },
+  "plugins": [
+    "react"
+  ],
+  "extends": "hubspot/experimental",
+  "globals": {
+    "$": true,
+    "jQuery": true,
+    "_": true,
+    "config": true,
+    "app": true,
+    "Promise": true
+  }
+}

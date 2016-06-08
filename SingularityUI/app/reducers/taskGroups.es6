@@ -1,5 +1,3 @@
-import { combineReducers } from 'redux';
-
 import { getTaskDataFromTaskId } from '../utils';
 
 import moment from 'moment';
@@ -281,7 +279,7 @@ export default function(state=[], action) {
   } else {
     return state;
   }
-};
+}
 
 function __in__(needle, haystack) {
   return haystack.indexOf(needle) >= 0;

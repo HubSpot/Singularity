@@ -11,7 +11,7 @@ import app from 'application';
 
 window.app = app;
 
-import Messenger from 'messenger';
+import Messenger from 'messenger'; // eslint-disable-line no-unused-vars
 
 import 'bootstrap';
 
@@ -25,19 +25,20 @@ import 'thirdPartyConfigurations';
 import 'handlebarsHelpers';
 
 // Initialize the app on DOMContentReady
-$(function() {
-	if (config.apiRoot) {
-		return app.initialize();
-	} else {
-		// In the event that the apiRoot isn't set (running locally)
-		// prompt the user for it and refresh
-		return vex.dialog.prompt({
-			message: apiRootPromptTemplate(),
-			callback: value => {
-				if (value) {
-					localStorage.setItem("apiRootOverride", value);
-				}
-				return window.location = window.location.href;
-			}		});
-	}
+$(() => {
+  if (window.config.apiRoot) {
+    return window.app.initialize();
+  }
+  // In the event that the apiRoot isn't set (running locally)
+  // prompt the user for it and refresh
+  return vex.dialog.prompt({
+    message: apiRootPromptTemplate(),
+    callback: value => {
+      if (value) {
+        localStorage.setItem('apiRootOverride', value);
+      }
+      window.location = window.location.href;
+      return window.location;
+    }
+  });
 });
