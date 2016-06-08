@@ -5,21 +5,7 @@
   "plugins": [
     "react"
   ],
-  "extends": ["eslint:recommended", "plugin:react/recommended"],
-  "env": {
-    // I write for browser
-    "browser": true,
-    // in CommonJS
-    "node": true
-  },
-  // To give you an idea how to override rule options:
-  "rules": {
-    "quotes": [2, "single"],
-    "eol-last": [2],
-    "no-mixed-requires": [0],
-    "no-underscore-dangle": [0],
-    "indent": ["error", 2]
-  },
+  "extends": "hubspot/experimental",
   "globals": {
     "$": true,
     "jQuery": true,
