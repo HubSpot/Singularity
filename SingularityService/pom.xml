@@ -444,7 +444,7 @@
               <goal>copy-resources</goal>
             </goals>
             <configuration>
-              <outputDirectory>${basedir}/target/generated-resources/static</outputDirectory>
+              <outputDirectory>${basedir}/target/generated-resources/assets</outputDirectory>
               <resources>
                 <resource>
                   <directory>../SingularityUI/dist</directory>
@@ -561,7 +561,7 @@
                 <configuration>
                   <resources>
                     <resource>
-                      <directory>../SingularityUI/dist</directory>
+                      <directory>${project.build.directory}/generated-resources</directory>
                     </resource>
                   </resources>
                 </configuration>
