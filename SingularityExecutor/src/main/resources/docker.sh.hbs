@@ -112,7 +112,7 @@ DOCKER_NETWORK="--net=host"
 
 DOCKER_WORKDIR="/mnt/mesos/sandbox/{{{ runContext.taskAppDirectory }}}"
 
-DOCKER_OPTIONS="--name=$CONTAINER_NAME --cgroup-parent=mesos/$CGROUPS_GUID -w $DOCKER_WORKDIR $DOCKER_NETWORK ${DOCKER_ENVIRONMENT[@]} --env-file=docker.env ${DOCKER_VOLUMES[@]} ${DOCKER_PORTS[@]}"
+DOCKER_OPTIONS="--name=$CONTAINER_NAME --cgroup-parent=mesos/$CGROUPS_GUID -w $DOCKER_WORKDIR $DOCKER_NETWORK --env-file=docker.env ${DOCKER_VOLUMES[@]} ${DOCKER_PORTS[@]}"
 
 {{#if privileged}}
 DOCKER_OPTIONS="$DOCKER_OPTIONS --privileged"
@@ -125,8 +125,8 @@ sudo chown -R {{{ runContext.user }}} {{{ runContext.taskAppDirectory }}}
 enable_cgroup_hierarchy || true
 
 # Start up the container
-echo "Creating continer with: sudo -E -H -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS $DOCKER_IMAGE {{{ runContext.cmd }}}"
-cid=`sudo -E -H -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS $DOCKER_IMAGE {{{runContext.cmd }}}`
+echo "Creating continer with: sudo -E -H -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS ${DOCKER_ENVIRONMENT[@]} $DOCKER_IMAGE {{{ runContext.cmd }}}"
+cid=`sudo -E -H -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS ${DOCKER_ENVIRONMENT[@]} $DOCKER_IMAGE {{{runContext.cmd }}}`
 sudo -E -H -u {{{ runContext.user }}} docker start -a $cid >> {{{ runContext.logFile }}} 2>&1 &
 running=1
 
