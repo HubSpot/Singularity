@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.TimeZone;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
@@ -146,6 +145,8 @@ public class SingularityConfiguration extends Configuration {
   private String loadBalancerUri;
 
   private boolean deleteRemovedRequestsFromLoadBalancer = false;
+
+  private Optional<String> taskLabelForLoadBalancerUpstreamGroup = Optional.absent();
 
   private int logFetchMaxThreads = 15;
 
@@ -1029,5 +1030,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setTaskHistoryQueryUsesZkFirst(boolean taskHistoryQueryUsesZkFirst) {
     this.taskHistoryQueryUsesZkFirst = taskHistoryQueryUsesZkFirst;
+  }
+
+  public Optional<String> getTaskLabelForLoadBalancerUpstreamGroup() {
+    return taskLabelForLoadBalancerUpstreamGroup;
+  }
+
+  public void setTaskLabelForLoadBalancerUpstreamGroup(Optional<String> taskLabelForLoadBalancerUpstreamGroup) {
+    this.taskLabelForLoadBalancerUpstreamGroup = taskLabelForLoadBalancerUpstreamGroup;
   }
 }
