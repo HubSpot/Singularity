@@ -2,7 +2,7 @@ Controller = require './Controller'
 
 State = require '../models/State'
 
-StatusView = require '../views/status'
+StatusView = require('../views/status').default
 
 class StatusController extends Controller
 
