@@ -7,35 +7,37 @@ let TimeStamp = React.createClass({
         prop: React.PropTypes.shape({
             timestamp: React.PropTypes.number.isRequired,
             className: React.PropTypes.string,
-            display: React.PropTypes.string.isRequired
+            display: React.PropTypes.string.isRequired,
+            postfix: React.PropTypes.string
         }).isRequired
     },
 
     timeStampFromNow() {
         let timeObject = moment(this.props.prop.timestamp);
-        return <div className={this.props.prop.className}>{timeObject.fromNow()} ({timeObject.format(window.config.timestampFormat)})</div>;
+        return `${timeObject.fromNow()} (${timeObject.format(window.config.timestampFormat)})`;
     },
 
     absoluteTimestamp() {
         let timeObject = moment(this.props.prop.timestamp);
-        return <div className={this.props.prop.className}>{timeObject.format(window.config.timestampFormat)}</div>;
+        return timeObject.format(window.config.timestampFormat);
     },
 
     duration() {
-        return <div className={this.props.prop.className}>{moment.duration(this.props.prop.timestamp).humanize()}</div>;
+        return moment.duration(this.props.prop.timestamp).humanize();
     },
 
     render() {
+        let formatted = '';
         // Feel free to add more options if you need them
         if (this.props.prop.display === 'timeStampFromNow') {
-            return this.timeStampFromNow();
+            formatted = this.timeStampFromNow();
         } else if (this.props.prop.display === 'absoluteTimestamp') {
-            return this.absoluteTimestamp();
+            formatted = this.absoluteTimestamp();
         } else if (this.props.prop.display === 'duration') {
-            return this.duration();
+            formatted = this.duration();
         }
+        return <div className={this.props.prop.className}>{`${formatted} ${this.props.prop.postfix || ''}`}</div>;
     }
 });
 
 export default TimeStamp;
-
