@@ -20,7 +20,7 @@ public class BashEscapedHelper implements Helper<Object> {
     sb.append('"');
 
     for (char c : context.toString().toCharArray()) {
-      if (c == '\\' || c == '\"' || c == '`') {
+      if (c == '\\' || c == '\"' || c == '`' || c == '\n') {
         sb.append('\\');
         sb.append(c);
       } else if (c == '!') {
