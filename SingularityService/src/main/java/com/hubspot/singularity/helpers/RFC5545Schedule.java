@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 import org.dmfs.rfc5545.recur.RecurrenceRule;
 import org.dmfs.rfc5545.DateTime;
+import org.dmfs.rfc5545.recur.RecurrenceRule.Part;
 import org.dmfs.rfc5545.recur.RecurrenceRuleIterator;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -23,7 +24,16 @@ public class RFC5545Schedule {
 
     if (matcher.find()) {
       DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss");
-      this.dtStart = formatter.parseDateTime(matcher.group(1));
+      if (schedule.contains("REPEAT") || schedule.contains("COUNT")) {
+        this.dtStart = formatter.parseDateTime(matcher.group(1));
+      } else {
+        org.joda.time.DateTime start = formatter.parseDateTime(matcher.group(1));
+        org.joda.time.DateTime now = org.joda.time.DateTime.now().withSecondOfMinute(0);
+        if (now.getMillis() > start.getMillis()) {
+          start = now;
+        }
+        this.dtStart = start;
+      }
       this.recurrenceRule = new RecurrenceRule(matcher.replaceAll("").replace("RRULE:", ""));
     } else {
       this.recurrenceRule = new RecurrenceRule(schedule);
@@ -42,7 +52,7 @@ public class RFC5545Schedule {
     RecurrenceRuleIterator timeIterator = recurrenceRule.iterator(startDateTime);
 
     int count = 0;
-    while (timeIterator.hasNext() && count < MAX_ITERATIONS) {
+    while (timeIterator.hasNext() && (count < MAX_ITERATIONS || (recurrenceRule.hasPart(Part.COUNT) && count < recurrenceRule.getCount()))) {
       count ++;
       long nextRunAtTimestamp = timeIterator.nextMillis();
       if (nextRunAtTimestamp >= now) {
