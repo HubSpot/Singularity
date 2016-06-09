@@ -44,7 +44,7 @@ var templateData = {
   redirectOnUnauthorizedUrl: process.env.SINGULARITY_REDIRECT_ON_UNAUTHORIZED_URL || ''
 }
 
-var dest = path.resolve(__dirname, '../SingularityService/target/generated-resources/assets');
+var dest = path.resolve(__dirname, 'dist');
 
 var webpackStream = require('webpack-stream');
 var webpack = require('webpack');
@@ -52,9 +52,7 @@ var webpackConfig = require('./webpack.config');
 var WebpackDevServer = require('webpack-dev-server');
 
 gulp.task("clean", function() {
-  return del([
-    path.resolve(dest, 'static/**'),
-    path.resolve(dest, 'index.html')], {force: true});
+  return del(dest);
 });
 
 gulp.task('fonts', function() {
