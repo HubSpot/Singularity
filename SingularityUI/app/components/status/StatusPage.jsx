@@ -20,7 +20,9 @@ export default class StatusPage extends React.Component {
           beforeFill: r.type,
           prop: {
             text: `${r.count} ${r.label} ${this.renderPercentage(r.count, this.props.model.allRequests)}`,
-            url: `${config.appRoot}${r.link}`
+            url: `${config.appRoot}${r.link}`,
+            value: r.count,
+            id: r.type
           }
         }
       );
@@ -35,7 +37,9 @@ export default class StatusPage extends React.Component {
           beforeFill: t.type,
           prop: {
             text: `${t.count} ${t.label} ${this.renderPercentage(t.count, this.props.totalTasks)}`,
-            url: `${config.appRoot}${t.link}`
+            url: `${config.appRoot}${t.link}`,
+            value: t.count,
+            id: t.type
           }
         }
       );
@@ -78,21 +82,27 @@ export default class StatusPage extends React.Component {
                   component: Link,
                   prop: {
                     text: `${m.activeRacks} Active Racks`,
-                    url: `${config.appRoot}/racks/active`
+                    url: `${config.appRoot}/racks/active`,
+                    id: 'activeracks',
+                    value: m.activeRacks
                   }
                 },
                 {
                   component: Link,
                   prop: {
                     text: `${m.decomissioningRacks} Decommissioning Racks`,
-                    url: `${config.appRoot}/racks/decommission`
+                    url: `${config.appRoot}/racks/decommission`,
+                    id: 'decomracks',
+                    value: m.decomissioningRacks
                   }
                 },
                 {
                   component: Link,
                   prop: {
                     text: `${m.deadRacks} Inactive Racks`,
-                    url: `${config.appRoot}/racks/inactive`
+                    url: `${config.appRoot}/racks/inactive`,
+                    id: 'inactiveracks',
+                    value: m.deadRacks
                   }
                 }
               ]}
@@ -106,14 +116,18 @@ export default class StatusPage extends React.Component {
                   component: Link,
                   prop: {
                     text: `${m.activeSlaves} Active Slaves`,
-                    url: `${config.appRoot}/slaves/active`
+                    url: `${config.appRoot}/slaves/active`,
+                    value: m.activeSlaves,
+                    id: 'activeslaves'
                   }
                 },
                 {
                   component: Link,
                   prop: {
                     text: `${m.decomissioningSlaves} Decommissioning Slaves`,
-                    url: `${config.appRoot}/slaves/decommission`
+                    url: `${config.appRoot}/slaves/decommission`,
+                    value: m.decomissioningSlaves,
+                    id: 'decomslaves'
                   }
                 },
                 {
@@ -121,7 +135,9 @@ export default class StatusPage extends React.Component {
                   prop: {
                     text: `${m.deadSlaves} Inactive Slaves`,
                     url: `${config.appRoot}/slaves/inactive`,
-                    className: m.deadSlaves > 0 ? 'color-warning' : ''
+                    className: m.deadSlaves > 0 ? 'color-warning' : '',
+                    value: m.deadSlaves,
+                    id: 'deadslaves'
                   }
                 },
                 m.unknownSlaves ? {
@@ -129,7 +145,9 @@ export default class StatusPage extends React.Component {
                   prop: {
                     text: `${m.unknownSlaves} Unknown Slaves`,
                     url: `${config.appRoot}/slaves/inactive`,
-                    className: 'color-warning'
+                    className: 'color-warning',
+                    value: m.unknownSlaves,
+                    id: 'unknownslaves'
                   }
                 } : undefined
               ]}
@@ -143,7 +161,9 @@ export default class StatusPage extends React.Component {
                   component: PlainText,
                   prop: {
                     text: `${m.numDeploys} Active Deploys`,
-                    className: m.numDeploys < 2 ? 'text-muted' : ''
+                    className: m.numDeploys < 2 ? 'text-muted' : '',
+                    value: m.numDeploys,
+                    id: 'numdeploys'
                   }
                 },
                 m.oldestDeploy != 0 ? {

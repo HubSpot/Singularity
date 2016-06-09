@@ -8,7 +8,7 @@ import Tooltip from 'react-bootstrap/lib/Tooltip';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ReactDOM from 'react-dom';
 
-export default class StatusList extends React.Component {
+export default class Breakdown extends React.Component {
 
   renderSections() {
     return this.props.data.map((d, i) => {
@@ -39,7 +39,7 @@ export default class StatusList extends React.Component {
   }
 }
 
-StatusList.propTypes = {
+Breakdown.propTypes = {
   total: React.PropTypes.number.isRequired,
   data: React.PropTypes.arrayOf(React.PropTypes.shape({
     count: React.PropTypes.number.isRequired,

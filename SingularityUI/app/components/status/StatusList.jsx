@@ -11,12 +11,30 @@ export default class StatusList extends React.Component {
     super();
     this.state = {
       showChange: false,
-      changes: {}
+      changes: []
     };
   }
 
-  componentWillUpdate(nextProps, nextState) {
-    console.warn(this.props, nextProps);
+  componentWillReceiveProps(nextProps) {
+    let changes = [];
+    for (let d of nextProps.data) {
+      if (!d || !d.prop.id) return;
+      let matchingData = _.find(this.props.data, (data) => {
+        return data.id == d.id;
+      });
+      console.log(d.prop.value, matchingData.prop.value);
+      if (d.prop.value && matchingData) {
+        changes.push({
+          id: d.id,
+          diff: d.prop.value - matchingData.prop.value
+        });
+      }
+    }
+    console.log(changes);
+    this.setState({
+      showChange: changes.length > 0,
+      changes: changes
+    });
   }
 
   renderBefore(d) {
@@ -54,6 +72,7 @@ StatusList.propTypes = {
   header: React.PropTypes.string,
   data: React.PropTypes.arrayOf(React.PropTypes.shape({
       component: React.PropTypes.func.isRequired,
+      value: React.PropTypes.number,
       prop: React.PropTypes.object,
       id: React.PropTypes.string,
       className: React.PropTypes.string,
