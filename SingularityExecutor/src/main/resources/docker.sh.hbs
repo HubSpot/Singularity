@@ -67,6 +67,7 @@ DOCKER_ENVIRONMENT=()
 DOCKER_ENVIRONMENT+=( -e {{{name}}}={{{bashEscaped value}}} )
 {{else}}
 echo "{{{name}}}={{{value}}}" >> docker.env
+{{/ifHasNewLines}}
 {{/each}}
 
 # Create log directory for logrotate runs
