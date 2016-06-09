@@ -24,8 +24,8 @@ import 'thirdPartyConfigurations';
 // Set up the Handlebars helpers
 import 'handlebarsHelpers';
 
-// Initialize the app on DOMContentReady
-$(() => {
+
+const init = () => {
   if (window.config.apiRoot) {
     return window.app.initialize();
   }
@@ -41,4 +41,19 @@ $(() => {
       return window.location;
     }
   });
+}
+
+// Initialize the app on DOMContentReady
+$(() => {
+  __webpack_public_path__ = window.config.staticRoot + '/js/';
+  // Do we need to polyfill Intl?
+  if (!window.Intl) {
+    require.ensure([], () => {
+      require('intl');
+
+      init();
+    });
+  } else {
+    init();
+  }
 });

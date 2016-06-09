@@ -69,7 +69,7 @@ class RequestsPage extends Component {
           </TabBar>
           <SearchBar />
           <RequestsTable>
-            {requests.data.slice(0, 10).map((r) => <RequestsTableRow requestParent={r} />)}
+            {requests.data.slice(0, 10).map((r) => <RequestsTableRow requestParent={r} key={r.request.id} />)}
           </RequestsTable>
         </MainContent>
       </div>

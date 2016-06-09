@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react';
+import { FormattedNumber, FormattedPlural } from 'react-intl';
 
 import RequestTag from './RequestTag';
 
@@ -13,13 +14,19 @@ class RequestsTableRow extends Component {
     const request = this.props.requestParent.request;
     const state = this.props.requestParent.state;
 
-    let instancesMaybe = <span>No instances</span>;
-    if ("instances" in request) { 
+    let instancesMaybe = <span className='faded-value'>No instances</span>;
+    if ("instances" in request) {
       // todo: pluralize
       instancesMaybe = (
         <span>
-          <span className='important-value'>{request.instances}</span>
-          {' instances'}
+          <span className='important-value'>
+            <FormattedNumber value={request.instances} />
+          </span>
+          {' '}
+          <FormattedPlural value={request.instances}
+            one='instance'
+            other='instances'
+          />
         </span>
       );
     }

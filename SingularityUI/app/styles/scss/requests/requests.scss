@@ -60,6 +60,10 @@ $request-table-num-cols: 5;
         a {
           @include link-style();
         }
+
+        .faded-value {
+          color: $eerie;
+        }
       }
 
       td {
