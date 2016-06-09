@@ -17,6 +17,14 @@ export default class HostStates extends React.Component {
     ]);
   }
 
+  getStatusTextColor(status) {
+    switch(status) {
+      case 'DRIVER_RUNNING': return 'color-success';
+      case 'DRIVER_NOT_STARTED': return 'text-muted';
+      default: return '';
+    }
+  }
+
   getTableRows(hosts) {
     if (hosts) {
       return hosts.map((h) => {
@@ -31,15 +39,16 @@ export default class HostStates extends React.Component {
             },
             {
               component: PlainText,
+              className: this.getStatusTextColor(h.driverStatus),
               prop: {
                   text: Utils.humanizeText(h.driverStatus)
               }
             },
             {
               component: Glyphicon,
-              className: h.driverStatus == "DRIVER_RUNNING" && h.mesosConnected ? 'color-success': '',
+              className: h.driverStatus == "DRIVER_RUNNING" && h.mesosConnected ? 'color-success': 'color-error',
               prop: {
-                  iconClass: h.driverStatus == "DRIVER_RUNNING" && h.mesosConnected ? 'ok' : ''
+                  iconClass: h.driverStatus == "DRIVER_RUNNING" && h.mesosConnected ? 'ok' : 'remove'
               }
             },
             {

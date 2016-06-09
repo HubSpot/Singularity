@@ -13,6 +13,14 @@ export default class StatusPage extends React.Component {
     return (
       <div>
         <div className="row">
+          <div className="col-sm-12 col-md-6">
+            <h2>Requests</h2>
+          </div>
+          <div className="col-sm-12 col-md-6">
+            <h2>Tasks</h2>
+          </div>
+        </div>
+        <div className="row">
           <div className="col-md-4 col-sm-12">
             <Breakdown
               header="Racks"
