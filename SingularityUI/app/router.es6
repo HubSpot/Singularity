@@ -1,6 +1,5 @@
 let DashboardController;
 let DeployDetailController;
-let LogViewerController;
 let NewDeployController;
 let NotFoundController;
 let RacksController;
@@ -44,7 +43,7 @@ NotFoundController = require('controllers/NotFound');
 
 DeployDetailController = require('controllers/DeployDetail');
 
-LogViewerController = require('controllers/LogViewer')["default"];
+import LogViewerController from 'controllers/LogViewer';
 
 TaskSearchController = require('controllers/TaskSearch');
 
@@ -160,6 +159,7 @@ class Router extends Backbone.Router {
     search = params.search || '';
     path = path.replace(taskId, '$TASK_ID');
     return this.app.bootstrapController(new LogViewerController({
+      store: this.app.store,
       requestId,
       path,
       initialOffset,
@@ -213,6 +213,7 @@ class Router extends Backbone.Router {
     viewMode = params.viewMode || 'split';
     search = params.search || '';
     return this.app.bootstrapController(new LogViewerController({
+      store: this.app.store,
       requestId,
       path,
       initialOffset,
