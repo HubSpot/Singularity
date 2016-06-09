@@ -11,6 +11,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.executor.handlebars.BashEscapedHelper;
+import com.hubspot.singularity.executor.handlebars.IfHasNewLinesHelper;
 import com.hubspot.singularity.executor.handlebars.IfPresentHelper;
 import com.hubspot.singularity.runner.base.config.SingularityRunnerBaseLogging;
 import com.ning.http.client.AsyncHttpClient;
@@ -88,6 +89,7 @@ public class SingularityExecutorModule extends AbstractModule {
 
     handlebars.registerHelper(BashEscapedHelper.NAME, new BashEscapedHelper());
     handlebars.registerHelper(IfPresentHelper.NAME, new IfPresentHelper());
+    handlebars.registerHelper(IfHasNewLinesHelper.NAME, new IfHasNewLinesHelper());
 
     return handlebars;
   }
