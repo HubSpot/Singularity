@@ -59,7 +59,11 @@ function enable_cgroup_hierarchy {
 DOCKER_IMAGE={{{ envContext.dockerInfo.image }}}
 
 # load env vars
-source docker.env
+touch docker.env
+{{#each envContext.env}}
+  {{{name}}}={{{bashEscaped value}}}
+  echo "{{{name}}}={{{value}}}" >> docker.env
+{{/each}}
 
 # Create log directory for logrotate runs
 if [[ ! -d {{{ runContext.logDir }}} ]]; then
