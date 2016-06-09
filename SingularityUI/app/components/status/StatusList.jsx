@@ -7,6 +7,18 @@ import Utils from '../../utils';
 
 export default class StatusList extends React.Component {
 
+  constructor() {
+    super();
+    this.state = {
+      showChange: false,
+      changes: {}
+    };
+  }
+
+  componentWillUpdate(nextProps, nextState) {
+    console.warn(this.props, nextProps);
+  }
+
   renderBefore(d) {
     if (d.beforeFill) {
       return (

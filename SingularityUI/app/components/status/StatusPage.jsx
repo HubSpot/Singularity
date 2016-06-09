@@ -43,7 +43,7 @@ export default class StatusPage extends React.Component {
   }
 
   render() {
-    console.log(this.props);
+    // console.log(this.props);
     let m = this.props.model;
     return (
       <div>
