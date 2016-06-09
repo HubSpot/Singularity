@@ -18,25 +18,6 @@ $request-table-num-cols: 5;
       border-radius: 3px;
       border: 1px solid #eaf0f6;
 
-      &.column-1 {   // type tag
-        width: auto;
-      }
-      &.column-2 {   // name
-        width: 20%;
-      }
-      &.column-3 {   // active?
-        width: 10%;
-      }
-      &.column-4 {   // # instances
-        width: 15%;
-      }
-      &.column-5 {   // last deployed
-        width: 25%;
-      }
-      &.column-6 {   // action links
-        width: 30%;
-      }
-
       tr {
         border: 1px solid #eaf0f6;
         height: 75px;
@@ -64,13 +45,27 @@ $request-table-num-cols: 5;
         .faded-value {
           color: $eerie;
         }
+
+        .caps-sublabel {
+          color: $eerie;
+          font-weight: $font-weight-bold;
+          text-transform: uppercase;
+          font-size: 13px;
+          margin-right: 15px;
+        }
       }
 
       td {
         vertical-align: middle;
+        line-height: 2; // not sure if this is a good idea
+
+        &:first-of-type {
+          white-space: nowrap;
+        }
 
         &:last-of-type {
           text-align: right;
+          white-space: nowrap;
         }
 
         .subline {
@@ -114,8 +109,11 @@ $request-table-num-cols: 5;
 
 }
 
-.cron-schedule-tag {
-  
+.schedule-tag {
+  @include tag-styles($heffalump, #eceef1);
+  unicode-bidi: embed;
+  font-family: monospace;
+  white-space: pre;
 }
 
 // Row links
