@@ -1,7 +1,7 @@
 View = require './view'
 Request = require '../models/Request'
 Utils = require('../utils').default
-vex = require 'vex.dialog'
+vex = require('vex.dialog').default
 fuzzy = require 'fuzzy'
 micromatch = require 'micromatch'
 

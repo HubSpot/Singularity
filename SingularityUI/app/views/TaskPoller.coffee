@@ -10,7 +10,7 @@ taskPollingFailureTemplate = require 'templates/vex/taskPollingFailure'
 
 Utils = require '../utils'
 
-vex = require 'vex.dialog'
+vex = require('vex.dialog').default
 moment = require 'moment'
 
 interval = (a, b) -> setInterval(b, a)  # f u javascript

@@ -5,7 +5,7 @@ const indexOf = [].indexOf || function(item) { for (let i = 0, l = this.length; 
 
 Clipboard = require('clipboard');
 
-vex = require('vex.dialog');
+vex = require('vex.dialog').default;
 
 micromatch = require('micromatch');
 
