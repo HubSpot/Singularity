@@ -60,9 +60,13 @@ DOCKER_IMAGE={{{ envContext.dockerInfo.image }}}
 
 # load env vars
 touch docker.env
+DOCKER_ENVIRONMENT=()
 {{#each envContext.env}}
-  {{{name}}}={{{bashEscaped value}}}
-  echo "{{{name}}}={{{value}}}" >> docker.env
+{{{name}}}={{{bashEscaped value}}}
+{{ifHasNewLines value}}
+DOCKER_ENVIRONMENT+=( -e {{{name}}}={{{bashEscaped value}}} )
+{{else}}
+echo "{{{name}}}={{{value}}}" >> docker.env
 {{/each}}
 
 # Create log directory for logrotate runs
@@ -107,7 +111,7 @@ DOCKER_NETWORK="--net=host"
 
 DOCKER_WORKDIR="/mnt/mesos/sandbox/{{{ runContext.taskAppDirectory }}}"
 
-DOCKER_OPTIONS="--name=$CONTAINER_NAME --cgroup-parent=mesos/$CGROUPS_GUID -w $DOCKER_WORKDIR $DOCKER_NETWORK --env-file=docker.env ${DOCKER_VOLUMES[@]} ${DOCKER_PORTS[@]}"
+DOCKER_OPTIONS="--name=$CONTAINER_NAME --cgroup-parent=mesos/$CGROUPS_GUID -w $DOCKER_WORKDIR $DOCKER_NETWORK $DOCKER_ENVIRONMENT --env-file=docker.env ${DOCKER_VOLUMES[@]} ${DOCKER_PORTS[@]}"
 
 {{#if privileged}}
 DOCKER_OPTIONS="$DOCKER_OPTIONS --privileged"
