@@ -28,6 +28,7 @@ export default class HostStates extends React.Component {
 }
 
 HostStates.propTypes = {
+  header: React.PropTypes.string,
   data: React.PropTypes.arrayOf(React.PropTypes.shape({
       component: React.PropTypes.func.isRequired,
       prop: React.PropTypes.object,

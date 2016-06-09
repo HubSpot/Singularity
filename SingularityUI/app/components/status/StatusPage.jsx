@@ -89,7 +89,7 @@ export default class StatusPage extends React.Component {
                     className: m.numDeploys < 2 ? 'text-muted' : ''
                   }
                 },
-                m.oldestDeploy == 0 ? {
+                m.oldestDeploy != 0 ? {
                   component: TimeStamp,
                   prop: {
                       timestamp: m.oldestDeploy,
