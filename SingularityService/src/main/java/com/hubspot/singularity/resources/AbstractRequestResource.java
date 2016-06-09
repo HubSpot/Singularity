@@ -7,6 +7,7 @@ import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployMarker;
 import com.hubspot.singularity.SingularityPendingDeploy;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestDeployState;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
@@ -43,6 +44,10 @@ public class AbstractRequestResource {
   }
 
   protected SingularityRequestParent fillEntireRequest(SingularityRequestWithState requestWithState) {
+    return fillEntireRequest(requestWithState, Optional.<SingularityRequest>absent());
+  }
+
+  protected SingularityRequestParent fillEntireRequest(SingularityRequestWithState requestWithState, Optional<SingularityRequest> newRequestData) {
     final String requestId = requestWithState.getRequest().getId();
 
     final Optional<SingularityRequestDeployState> requestDeployState = deployManager.getRequestDeployState(requestId);
@@ -57,7 +62,7 @@ public class AbstractRequestResource {
 
     Optional<SingularityPendingDeploy> pendingDeployState = deployManager.getPendingDeploy(requestId);
 
-    return new SingularityRequestParent(requestWithState.getRequest(), requestWithState.getState(), requestDeployState, activeDeploy, pendingDeploy, pendingDeployState,
+    return new SingularityRequestParent(newRequestData.or(requestWithState.getRequest()), requestWithState.getState(), requestDeployState, activeDeploy, pendingDeploy, pendingDeployState,
         requestManager.getExpiringBounce(requestId), requestManager.getExpiringPause(requestId), requestManager.getExpiringScale(requestId),
         requestManager.getExpiringSkipHealthchecks(requestId));
   }
