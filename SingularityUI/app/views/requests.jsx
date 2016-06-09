@@ -3,7 +3,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import RequestsPage from '../components/requests/RequestsPage';
 import { Provider } from 'react-redux';
-import { IntlProvider } from 'react-intl';
 
 class RequestsView extends View {
     constructor(...args) {
@@ -16,11 +15,9 @@ class RequestsView extends View {
       this.render = this.render.bind(this);
       window.addEventListener('viewChange', this.handleViewChange);
       this.component = (
-        <IntlProvider locale='en'>
-          <Provider store={store}>
-            <RequestsPage />
-          </Provider>
-        </IntlProvider>
+        <Provider store={store}>
+          <RequestsPage />
+        </Provider>
       );
     }
 

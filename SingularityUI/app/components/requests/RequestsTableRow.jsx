@@ -1,5 +1,5 @@
 import React, { Component, PropTypes } from 'react';
-import { FormattedNumber, FormattedPlural } from 'react-intl';
+import Humanize from 'humanize-plus';
 
 import RequestTag from './RequestTag';
 
@@ -20,13 +20,10 @@ class RequestsTableRow extends Component {
       instancesMaybe = (
         <span>
           <span className='important-value'>
-            <FormattedNumber value={request.instances} />
+            {request.instances}
           </span>
           {' '}
-          <FormattedPlural value={request.instances}
-            one='instance'
-            other='instances'
-          />
+          {Humanize.pluralize(request.instances, 'instance')}
         </span>
       );
     }
