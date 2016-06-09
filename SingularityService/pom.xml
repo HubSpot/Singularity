@@ -22,6 +22,13 @@
 
     <dependency>
       <groupId>com.hubspot</groupId>
+      <artifactId>SingularityUI</artifactId>
+      <type>pom</type>
+      <scope>runtime</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.hubspot</groupId>
       <artifactId>SingularityMesosClient</artifactId>
     </dependency>
 
@@ -357,7 +364,7 @@
       <artifactId>curator-test</artifactId>
       <scope>test</scope>
     </dependency>
-    
+
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
@@ -425,71 +432,34 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>copy-index.html-template</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${basedir}/target/generated-resources/com/hubspot/singularity/views</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>../SingularityUI/app/assets/</directory>
-                  <includes>
-                    <include>index.mustache</include>
-                  </includes>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
 
     <pluginManagement>
       <plugins>
-        <!--This plugin's configuration is used to store Eclipse m2e settings 
+        <!--This plugin's configuration is used to store Eclipse m2e settings
           only. It has no influence on the Maven build itself. -->
-        <plugin>
-          <groupId>org.eclipse.m2e</groupId>
-          <artifactId>lifecycle-mapping</artifactId>
-          <version>1.0.0</version>
-          <configuration>
-            <lifecycleMappingMetadata>
-              <pluginExecutions>
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>com.github.eirslett</groupId>
-                    <artifactId>frontend-maven-plugin</artifactId>
-                    <versionRange>[0,)</versionRange>
-                    <goals>
-                      <goal>install-node-and-npm</goal>
-                      <goal>npm</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <ignore />
-                  </action>
-                </pluginExecution>
-                <pluginExecution>
-                  <pluginExecutionFilter>
-                    <groupId>com.github.kongchen</groupId>
-                    <artifactId>swagger-maven-plugin</artifactId>
-                    <versionRange>[0,)</versionRange>
-                    <goals>
-                      <goal>generate</goal>
-                    </goals>
-                  </pluginExecutionFilter>
-                  <action>
-                    <ignore />
-                  </action>
-                </pluginExecution>
-              </pluginExecutions>
-            </lifecycleMappingMetadata>
+          <plugin>
+            <groupId>org.eclipse.m2e</groupId>
+            <artifactId>lifecycle-mapping</artifactId>
+            <version>1.0.0</version>
+            <configuration>
+              <lifecycleMappingMetadata>
+                <pluginExecutions>
+                  <pluginExecution>
+                    <pluginExecutionFilter>
+                      <groupId>com.github.kongchen</groupId>
+                      <artifactId>swagger-maven-plugin</artifactId>
+                      <versionRange>[0,)</versionRange>
+                      <goals>
+                        <goal>generate</goal>
+                       </goals>
+                        </pluginExecutionFilter>
+                      <action>
+                      <ignore />
+                    </action>
+                 </pluginExecution>
+               </pluginExecutions>
+             </lifecycleMappingMetadata>
           </configuration>
         </plugin>
         <plugin>
@@ -557,33 +527,40 @@
       <build>
         <plugins>
           <plugin>
-            <groupId>com.github.eirslett</groupId>
-            <artifactId>frontend-maven-plugin</artifactId>
-            <configuration>
-              <workingDirectory>../SingularityUI</workingDirectory>
-            </configuration>
+            <artifactId>maven-resources-plugin</artifactId>
             <executions>
               <execution>
-                <id>install node and npm</id>
+                <id>copy-index.html-template</id>
+                <phase>generate-resources</phase>
                 <goals>
-                  <goal>install-node-and-npm</goal>
+                  <goal>copy-resources</goal>
                 </goals>
                 <configuration>
-                  <nodeVersion>v4.1.2</nodeVersion>
-                  <npmVersion>2.14.16</npmVersion>
+                  <outputDirectory>${basedir}/target/generated-resources/com/hubspot/singularity/views</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>../SingularityUI/app/assets/</directory>
+                      <includes>
+                        <include>index.mustache</include>
+                      </includes>
+                    </resource>
+                  </resources>
                 </configuration>
               </execution>
               <execution>
-                <id>npm install</id>
+                <id>copy-ui</id>
+                <phase>generate-resources</phase>
                 <goals>
-                  <goal>npm</goal>
+                  <goal>copy-resources</goal>
                 </goals>
-              </execution>
-              <execution>
-                <id>gulp build</id>
-                <goals>
-                  <goal>gulp</goal>
-                </goals>
+                <configuration>
+                  <outputDirectory>${basedir}/target/generated-resources/assets</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>../SingularityUI/dist</directory>
+                    </resource>
+                  </resources>
+                </configuration>
               </execution>
             </executions>
           </plugin>

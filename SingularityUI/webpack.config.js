@@ -1,7 +1,7 @@
 var webpack = require('webpack');
 var path = require('path');
 
-dest = path.resolve(__dirname, '../SingularityService/target/generated-resources/assets');
+dest = path.resolve(__dirname, 'dist');
 
 module.exports = {
   entry: {
