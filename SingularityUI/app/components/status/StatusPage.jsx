@@ -1,4 +1,5 @@
 import React from 'react';
+import HostStates from './HostStates';
 
 export default class StatusPage extends React.Component {
 
@@ -15,13 +16,10 @@ export default class StatusPage extends React.Component {
     console.log(this.props);
     return (
       <div>
-          <h1>Status</h1>
-
+          <HostStates hosts={this.props.model.hostStates} />
       </div>
     );
   }
 }
 
-StatusPage.propTypes = {
-
-};
+StatusPage.propTypes = {};

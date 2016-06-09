@@ -32,7 +32,7 @@ class StatusView extends View {
             }
         }
 
-        ReactDOM.render(<StatusPage model={this.model} hasLeader={hasLeader} isLeaderConnected={isLeaderConnected} />, this.el)
+        ReactDOM.render(<StatusPage model={this.model.attributes} hasLeader={hasLeader} isLeaderConnected={isLeaderConnected} />, this.el)
         // this.$el.html(this.template({
         //     state: this.model.toJSON(),
         //     synced: this.model.synced,
