@@ -1,5 +1,6 @@
 package com.hubspot.singularity.executor.models;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.mesos.Protos;
@@ -15,7 +16,19 @@ public class EnvironmentContext {
   }
 
   public List<Variable> getEnv() {
-    return taskInfo.getExecutor().getCommand().getEnvironment().getVariablesList();
+    if (taskInfo.hasContainer() && taskInfo.getContainer().hasDocker()) {
+      List<Variable> editedVars = new ArrayList<>();
+      for (Variable var : taskInfo.getExecutor().getCommand().getEnvironment().getVariablesList()) {
+        if (var.getValue().contains("\n")) {
+          editedVars.add(var.toBuilder().setValue(var.getValue().replace("\n", "\\n")).build());
+        } else {
+          editedVars.add(var);
+        }
+      }
+      return editedVars;
+    } else {
+      return taskInfo.getExecutor().getCommand().getEnvironment().getVariablesList();
+    }
   }
 
   public Protos.ContainerInfo.DockerInfo getDockerInfo() {
