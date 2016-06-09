@@ -5,14 +5,25 @@ import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 import Timestamp from '../common/atomicDisplayItems/Timestamp';
 import Utils from '../../utils';
 
-export default class HostStates extends React.Component {
+export default class StatusList extends React.Component {
+
+  renderBefore(d) {
+    if (d.beforeFill) {
+      return (
+        <span className={`chart__legend-fill chart-fill-${d.beforeFill}`}></span>
+      );
+    }
+  }
 
   renderItems() {
     return this.props.data.map((d, i) => {
       if (!d) {return}
       let ComponentClass = d.component;
       return (
-        <li key={i} className="list-group-item"><ComponentClass prop={d.prop} /></li>
+        <li key={i} className="list-group-item">
+          {this.renderBefore(d)}
+          <ComponentClass prop={d.prop} />
+        </li>
       );
     });
   }
@@ -27,12 +38,13 @@ export default class HostStates extends React.Component {
   }
 }
 
-HostStates.propTypes = {
+StatusList.propTypes = {
   header: React.PropTypes.string,
   data: React.PropTypes.arrayOf(React.PropTypes.shape({
       component: React.PropTypes.func.isRequired,
       prop: React.PropTypes.object,
       id: React.PropTypes.string,
-      className: React.PropTypes.string
+      className: React.PropTypes.string,
+      beforeFill: React.PropTypes.string
   })).isRequired
 };

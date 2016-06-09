@@ -1,6 +1,6 @@
 import React from 'react';
 import HostStates from './HostStates';
-import Breakdown from './Breakdown';
+import StatusList from './StatusList';
 import Link from '../common/atomicDisplayItems/Link';
 import TimeStamp from '../common/atomicDisplayItems/TimeStamp';
 import PlainText from '../common/atomicDisplayItems/PlainText';
@@ -22,7 +22,7 @@ export default class StatusPage extends React.Component {
         </div>
         <div className="row">
           <div className="col-md-4 col-sm-12">
-            <Breakdown
+            <StatusList
               header="Racks"
               data={[
                 {
@@ -50,7 +50,7 @@ export default class StatusPage extends React.Component {
             />
           </div>
           <div className="col-md-4 col-sm-12">
-            <Breakdown
+            <StatusList
               header="Slaves"
               data={[
                 {
@@ -75,7 +75,7 @@ export default class StatusPage extends React.Component {
                     className: m.deadSlaves > 0 ? 'color-warning' : ''
                   }
                 },
-                !m.unknownSlaves ? {
+                m.unknownSlaves ? {
                   component: Link,
                   prop: {
                     text: `${m.unknownSlaves} Unknown Slaves`,
@@ -87,7 +87,7 @@ export default class StatusPage extends React.Component {
             />
           </div>
           <div className="col-md-4 col-sm-12">
-            <Breakdown
+            <StatusList
               header="Deploys"
               data={[
                 {
