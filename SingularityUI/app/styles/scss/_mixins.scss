@@ -8,6 +8,7 @@
 
 /* Tag styles */
 @mixin tag-styles($foreground, $background) {
+  white-space: nowrap;
   padding: 3px 5px;
   font-weight: $font-weight-medium;
   border-radius: 1px;

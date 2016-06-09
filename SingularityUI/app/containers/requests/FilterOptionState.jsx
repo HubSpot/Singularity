@@ -22,9 +22,12 @@ const mapStateToProps = (state, ownProps) => {
   return {
     label: ownProps.label,
     isEnabled: requestsPage.stateFilter.indexOf(ownProps.filterValue) > -1,
-    numberOfItems: requests.data.reduce((count, r) => {
-      return count + (r.state === ownProps.filterValue ? 1 : 0);
-    }, 0),
+    numberOfItems: requests.data.reduce(
+      (count, r) => {
+        return count + (r.state === ownProps.filterValue ? 1 : 0);
+      },
+      0
+    ),
     indicatorClass: lookupIndicatorClass(ownProps.filterValue)
   };
 };

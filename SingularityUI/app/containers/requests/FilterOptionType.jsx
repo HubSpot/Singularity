@@ -14,9 +14,12 @@ const mapStateToProps = (state, ownProps) => {
   if (ownProps.filterValue === 'ALL') {
     numberOfItems = requests.data.length;
   } else {
-    numberOfItems = requests.data.reduce((count, r) => {
-      return count + (ownProps.filterValue === r.request.requestType  ? 1 : 0);
-    }, 0)
+    numberOfItems = requests.data.reduce(
+      (count, r) => {
+        return count + (ownProps.filterValue === r.request.requestType ? 1 : 0);
+      },
+      0
+    );
   }
 
   return {

@@ -1,4 +1,6 @@
-import React, { Component } from 'react';
+import React, { Component, PropTypes } from 'react';
+
+import RequestPropTypes from '../../constants/api/RequestPropTypes';
 
 import RequestsTableRow from './RequestsTableRow';
 
@@ -9,9 +11,12 @@ class RequestsTable extends Component {
   }
 
   render() {
+    const rows = this.props.requests
+      .slice(0, this.props.maxVisible)
+      .map((r) => <RequestsTableRow requestParent={r} key={r.request.id} />);
+
     return (
       <table className='table request-table'>
-
         <colgroup>
           <col span='1' className='column-1' />
           <col span='1' className='column-2' />
@@ -33,11 +38,20 @@ class RequestsTable extends Component {
         </thead>
 
         <tbody>
-          {this.props.children}
+          {rows}
         </tbody>
       </table>
     );
   }
+}
+
+RequestsTable.defaultProps = {
+  maxVisible: 10
+};
+
+RequestsTable.propTypes = {
+  requests: PropTypes.arrayOf(RequestPropTypes.RequestParent).isRequired,
+  maxVisible: PropTypes.number
 }
 
 export default RequestsTable;

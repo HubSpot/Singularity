@@ -12,8 +12,7 @@ import SearchBar from '../common/SearchBar';
 
 import FilterOptionState from '../../containers/requests/FilterOptionState';
 import FilterOptionType from '../../containers/requests/FilterOptionType';
-import RequestsTable from './RequestsTable';
-import RequestsTableRow from './RequestsTableRow';
+import FilteredRequestsTable from '../../containers/requests/FilteredRequestsTable';
 
 class RequestsPage extends Component {
   constructor(props) {
@@ -68,31 +67,11 @@ class RequestsPage extends Component {
             />
           </TabBar>
           <SearchBar />
-          <RequestsTable>
-            {requests.data.slice(0, 10).map((r) => <RequestsTableRow requestParent={r} key={r.request.id} />)}
-          </RequestsTable>
+          <FilteredRequestsTable maxVisible={10} />
         </MainContent>
       </div>
     );
   }
 }
 
-RequestsPage.propTypes = {
-  requests: PropTypes.object.isRequired
-};
-
-const mapStateToProps = (state) => {
-  return {
-    requests: state.requests
-  }
-};
-
-const mapDispatchToProps = (dispatch) => {
-  return {
-  }
-}
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(RequestsPage);
+export default RequestsPage;
