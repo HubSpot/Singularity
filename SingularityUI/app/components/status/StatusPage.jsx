@@ -7,6 +7,40 @@ import PlainText from '../common/atomicDisplayItems/PlainText';
 
 export default class StatusPage extends React.Component {
 
+  renderPercentage(number, total) {
+    return number > 0 ? `(${Math.round(number/total * 100)}%)` : '';
+  }
+
+  getRequestsData() {
+    return this.props.requests.map((r) => {
+      return (
+        {
+          component: Link,
+          beforeFill: r.type,
+          prop: {
+            text: `${r.count} ${r.label} ${this.renderPercentage(r.count, this.props.model.allRequests)}`,
+            url: `${config.appRoot}${r.link}`
+          }
+        }
+      );
+    });
+  }
+
+  getTasksData() {
+    return this.props.tasks.map((t) => {
+      return (
+        {
+          component: Link,
+          beforeFill: t.type,
+          prop: {
+            text: `${t.count} ${t.label} ${this.renderPercentage(t.count, this.props.totalTasks)}`,
+            url: `${config.appRoot}${t.link}`
+          }
+        }
+      );
+    });
+  }
+
   render() {
     console.log(this.props);
     let m = this.props.model;
@@ -15,9 +49,11 @@ export default class StatusPage extends React.Component {
         <div className="row">
           <div className="col-sm-12 col-md-6">
             <h2>Requests</h2>
+            <StatusList data={this.getRequestsData()} />
           </div>
           <div className="col-sm-12 col-md-6">
             <h2>Tasks</h2>
+              <StatusList data={this.getTasksData()} />
           </div>
         </div>
         <div className="row">
