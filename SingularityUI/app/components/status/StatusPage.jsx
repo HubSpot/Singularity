@@ -1,6 +1,7 @@
 import React from 'react';
 import HostStates from './HostStates';
 import StatusList from './StatusList';
+import Breakdown from './Breakdown';
 import Link from '../common/atomicDisplayItems/Link';
 import TimeStamp from '../common/atomicDisplayItems/TimeStamp';
 import PlainText from '../common/atomicDisplayItems/PlainText';
@@ -49,11 +50,23 @@ export default class StatusPage extends React.Component {
         <div className="row">
           <div className="col-sm-12 col-md-6">
             <h2>Requests</h2>
-            <StatusList data={this.getRequestsData()} />
+            <div className="row">
+              <div className="col-md-3 col-sm-3 hidden-xs chart">
+                <Breakdown total={m.allRequests} data={this.props.requests} />
+              </div>
+              <div className="col-md-9 col-sm-9">
+                <StatusList data={this.getRequestsData()} />
+              </div>
+            </div>
           </div>
           <div className="col-sm-12 col-md-6">
             <h2>Tasks</h2>
-              <StatusList data={this.getTasksData()} />
+              <div className="col-md-3 col-sm-3 hidden-xs chart">
+                <Breakdown total={this.props.totalTasks} data={this.props.tasks} />
+              </div>
+              <div className="col-md-9 col-sm-9">
+                <StatusList data={this.getTasksData()} />
+              </div>
           </div>
         </div>
         <div className="row">
