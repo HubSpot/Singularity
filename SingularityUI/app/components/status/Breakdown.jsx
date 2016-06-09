@@ -4,6 +4,9 @@ import PlainText from '../common/atomicDisplayItems/PlainText';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 import Timestamp from '../common/atomicDisplayItems/Timestamp';
 import Utils from '../../utils';
+import Tooltip from 'react-bootstrap/lib/Tooltip';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import ReactDOM from 'react-dom';
 
 export default class StatusList extends React.Component {
 
@@ -11,12 +14,14 @@ export default class StatusList extends React.Component {
     return this.props.data.map((d, i) => {
       return (
         <a key={i} href={`${config.appRoot}${d.link}`}>
-          <span
-            data-type="column"
-            data-state-attribute={d.attribute}
-            style={{height: `${d.percent}%`}}
-            className={`chart__data-point chart-fill-${d.type}`}
-            data-original-title={`${d.count} ${d.label}`} />
+          <OverlayTrigger rootClose placement="right" overlay={<Tooltip id={d.attribute}>{`${d.count} ${d.label}`}</Tooltip>}>
+            <span
+              data-type="column"
+              data-state-attribute={d.attribute}
+              style={{height: `${d.percent}%`}}
+              className={`chart__data-point chart-fill-${d.type}`}
+              data-original-title={`${d.count} ${d.label}`} />
+          </OverlayTrigger>
         </a>
       );
     });
