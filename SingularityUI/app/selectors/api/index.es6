@@ -25,8 +25,6 @@ export const getFilteredRequests = createSelector(
       return searchFilter.stateFilter.indexOf(r.state) > -1;
     });
 
-    // filter by text
-
     const getUser = (r) => {
       if ('requestDeployState' in r && 'activeDeploy' in r.requestDeployState) {
         return r.requestDeployState.activeDeploy.user || '';
@@ -34,6 +32,11 @@ export const getFilteredRequests = createSelector(
       return null;
     }
 
+    // filter by text
+    if (searchFilter.textFilter.length < 3) {
+      // Don't start filtering by text until string has some length
+      return filteredRequests;
+    }
     if (Utils.isGlobFilter(searchFilter.textFilter)) {
       const byId = filteredRequests.filter((r) => {
         return micromatch.any(r.request.id, searchFilter.textFilter + '*');

@@ -102,11 +102,11 @@ $request-table-num-cols: 5;
 }
 
 .coolingDown-tag {
-
+  @include tag-styles($heffalump, #eceef1);
 }
 
 .paused-tag {
-
+  @include tag-styles($heffalump, #eceef1);
 }
 
 .schedule-tag {

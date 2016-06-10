@@ -18,7 +18,9 @@ class RequestTag extends Component {
       'runOnce-tag': this.props.of === 'RUN_ONCE',
 
       // State tags
-      'active-tag': this.props.of === 'ACTIVE'
+      'active-tag': this.props.of === 'ACTIVE',
+      'paused-tag': this.props.of === 'PAUSED',
+      'coolingDown-tag': this.props.of === 'SYSTEM_COOLDOWN'
     });
 
     const text = {
@@ -27,6 +29,9 @@ class RequestTag extends Component {
       'SCHEDULED': 'scheduled',
       'ON_DEMAND': 'on demand',
       'RUN_ONCE': 'run once',
+      'ACTIVE': 'Active',
+      'PAUSED': 'Paused',
+      'SYSTEM_COOLDOWN': 'Cooling down'
     }[this.props.of] || this.props.of;
 
 
