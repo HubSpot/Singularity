@@ -13,21 +13,19 @@ let fetchTaskHistory = taskId =>
     {url: `${ config.apiRoot }/history/task/${ taskId }`})
 ;
 
-let initializeUsingActiveTasks = (requestId, path, search) =>
+export const initializeUsingActiveTasks = (requestId, path, search, viewMode) =>
   function(dispatch) {
     let deferred = Q.defer();
     fetchTasksForRequest(requestId).done(function(tasks) {
       let taskIds = _.sortBy(_.pluck(tasks, 'taskId'), taskId => taskId.instanceNo).map(taskId => taskId.id);
-      return dispatch(initialize(requestId, path, search, taskIds)).then(() => deferred.resolve());
+      return dispatch(initialize(requestId, path, search, taskIds, viewMode)).then(() => deferred.resolve());
     });
     return deferred.promise;
   }
 ;
 
-var initialize = (requestId, path, search, taskIds) =>
+export const initialize = (requestId, path, search, taskIds, viewMode) =>
   function(dispatch, getState) {
-    let { viewMode } = getState();
-
     let taskIdGroups;
     if (viewMode === 'unified') {
       taskIdGroups = [taskIds];
@@ -35,7 +33,7 @@ var initialize = (requestId, path, search, taskIds) =>
       taskIdGroups = taskIds.map(taskId => [taskId]);
     }
 
-    dispatch(init(requestId, taskIdGroups, path, search));
+    dispatch(init(requestId, taskIdGroups, path, search, viewMode));
 
     let groupPromises = taskIdGroups.map(function(taskIds, taskGroupId) {
       let taskInitPromises = taskIds.map(function(taskId) {
@@ -68,17 +66,18 @@ var initialize = (requestId, path, search, taskIds) =>
   }
 ;
 
-var init = (requestId, taskIdGroups, path, search) =>
+export const init = (requestId, taskIdGroups, path, search, viewMode) =>
   ({
     requestId,
     taskIdGroups,
     path,
     search,
+    viewMode,
     type: 'LOG_INIT'
   })
 ;
 
-let addTaskGroup = (taskIds, search) =>
+export const addTaskGroup = (taskIds, search) =>
   ({
     taskIds,
     search,
@@ -86,7 +85,7 @@ let addTaskGroup = (taskIds, search) =>
   })
 ;
 
-var initTask = (taskId, offset, path, exists) =>
+export const initTask = (taskId, offset, path, exists) =>
   ({
     taskId,
     offset,
@@ -96,7 +95,7 @@ var initTask = (taskId, offset, path, exists) =>
   })
 ;
 
-var taskFileDoesNotExist = (taskGroupId, taskId) =>
+export const taskFileDoesNotExist = (taskGroupId, taskId) =>
   ({
     taskId,
     taskGroupId,
@@ -104,14 +103,14 @@ var taskFileDoesNotExist = (taskGroupId, taskId) =>
   })
 ;
 
-var taskGroupReady = taskGroupId =>
+export const taskGroupReady = taskGroupId =>
   ({
     taskGroupId,
     type: 'LOG_TASK_GROUP_READY'
   })
 ;
 
-let taskHistory = (taskGroupId, taskId, taskHistory) =>
+export const taskHistory = (taskGroupId, taskId, taskHistory) =>
   ({
     taskGroupId,
     taskId,
@@ -120,9 +119,9 @@ let taskHistory = (taskGroupId, taskId, taskHistory) =>
   })
 ;
 
-let getTasks = (taskGroup, tasks) => taskGroup.taskIds.map(taskId => tasks[taskId]);
+export const getTasks = (taskGroup, tasks) => taskGroup.taskIds.map(taskId => tasks[taskId]);
 
-let updateFilesizes = () =>
+export const updateFilesizes = () =>
   function(dispatch, getState) {
     let tasks;
     tasks = getState();
@@ -135,7 +134,7 @@ let updateFilesizes = () =>
 ;
 
 
-let updateGroups = () =>
+export const updateGroups = () =>
   (dispatch, getState) =>
     getState().taskGroups.map(function(taskGroup, taskGroupId) {
       if (!taskGroup.pendingRequests) {
@@ -150,7 +149,7 @@ let updateGroups = () =>
 
 ;
 
-let updateTaskStatuses = () =>
+export const updateTaskStatuses = () =>
   function(dispatch, getState) {
     let {tasks, taskGroups} = getState();
     return taskGroups.map((taskGroup, taskGroupId) =>
@@ -165,13 +164,13 @@ let updateTaskStatuses = () =>
   }
 ;
 
-var updateTaskStatus = (taskGroupId, taskId) =>
+export const updateTaskStatus = (taskGroupId, taskId) =>
   (dispatch, getState) =>
     fetchTaskHistory(taskId, ['taskUpdates']).done(data => dispatch(taskHistory(taskGroupId, taskId, data)))
 
 ;
 
-var taskGroupFetchNext = taskGroupId =>
+export const taskGroupFetchNext = taskGroupId =>
   function(dispatch, getState) {
     let {tasks, taskGroups, logRequestLength, maxLines} = getState();
 
@@ -202,7 +201,7 @@ var taskGroupFetchNext = taskGroupId =>
   }
 ;
 
-var taskGroupFetchPrevious = taskGroupId =>
+export const taskGroupFetchPrevious = taskGroupId =>
   function(dispatch, getState) {
     let {tasks, taskGroups, logRequestLength, maxLines} = getState();
 
@@ -238,7 +237,7 @@ var taskGroupFetchPrevious = taskGroupId =>
   }
 ;
 
-var taskData = (taskGroupId, taskId, data, offset, nextOffset, append, maxLines) =>
+export const taskData = (taskGroupId, taskId, data, offset, nextOffset, append, maxLines) =>
   ({
     taskGroupId,
     taskId,
@@ -251,7 +250,7 @@ var taskData = (taskGroupId, taskId, data, offset, nextOffset, append, maxLines)
   })
 ;
 
-let taskFilesize = (taskId, filesize) =>
+export const taskFilesize = (taskId, filesize) =>
   ({
     taskId,
     filesize,
@@ -259,7 +258,7 @@ let taskFilesize = (taskId, filesize) =>
   })
 ;
 
-let taskGroupTop = (taskGroupId, visible) =>
+export const taskGroupTop = (taskGroupId, visible) =>
   function(dispatch, getState) {
     if (getState().taskGroups[taskGroupId].top !== visible) {
       dispatch({taskGroupId, visible, type: 'LOG_TASK_GROUP_TOP'});
@@ -270,7 +269,7 @@ let taskGroupTop = (taskGroupId, visible) =>
   }
 ;
 
-let taskGroupBottom = (taskGroupId, visible, tailing = false) =>
+export const taskGroupBottom = (taskGroupId, visible, tailing=false) =>
   function(dispatch, getState) {
     let { taskGroups, tasks } = getState();
     let taskGroup = taskGroups[taskGroupId];
@@ -288,21 +287,21 @@ let taskGroupBottom = (taskGroupId, visible, tailing = false) =>
   }
 ;
 
-let clickPermalink = offset =>
+export const clickPermalink = offset =>
   ({
     offset,
     type: 'LOG_CLICK_OFFSET_LINK'
   })
 ;
 
-let selectLogColor = color =>
+export const selectLogColor = color =>
   ({
     color,
     type: 'LOG_SELECT_COLOR'
   })
 ;
 
-let switchViewMode = newViewMode =>
+export const switchViewMode = newViewMode =>
   function(dispatch, getState) {
     let { taskGroups, path, activeRequest, search, viewMode } = getState();
 
@@ -313,20 +312,20 @@ let switchViewMode = newViewMode =>
     let taskIds = _.flatten(_.pluck(taskGroups, 'taskIds'));
 
     dispatch({viewMode: newViewMode, type: 'LOG_SWITCH_VIEW_MODE'});
-    return dispatch(initialize(activeRequest.requestId, path, search, taskIds));
+    return dispatch(initialize(activeRequest.requestId, path, search, taskIds, newViewMode));
   }
 ;
 
-let setCurrentSearch = newSearch =>  // TODO: can we do something less heavyweight?
+export const setCurrentSearch = newSearch =>  // TODO: can we do something less heavyweight?
   function(dispatch, getState) {
-    let {activeRequest, path, taskGroups, currentSearch} = getState();
+    let {activeRequest, path, taskGroups, currentSearch, viewMode} = getState();
     if (newSearch !== currentSearch) {
-      return dispatch(initialize(activeRequest.requestId, path, newSearch, _.flatten(_.pluck(taskGroups, 'taskIds'))));
+      return dispatch(initialize(activeRequest.requestId, path, newSearch, _.flatten(_.pluck(taskGroups, 'taskIds')), viewMode));
     }
   }
 ;
 
-let toggleTaskLog = taskId =>
+export const toggleTaskLog = taskId =>
   function(dispatch, getState) {
     let {search, path, tasks, viewMode} = getState();
     if (taskId in tasks) {
@@ -357,21 +356,21 @@ let toggleTaskLog = taskId =>
   }
 ;
 
-let removeTaskGroup = taskGroupId =>
+export const removeTaskGroup = taskGroupId =>
   function(dispatch, getState) {
     let { taskIds } = getState().taskGroups[taskGroupId];
     return dispatch({taskGroupId, taskIds, type: 'LOG_REMOVE_TASK_GROUP'});
   }
 ;
 
-let expandTaskGroup = taskGroupId =>
+export const expandTaskGroup = taskGroupId =>
   function(dispatch, getState) {
     let { taskIds } = getState().taskGroups[taskGroupId];
     return dispatch({taskGroupId, taskIds, type: 'LOG_EXPAND_TASK_GROUP'});
   }
 ;
 
-let scrollToTop = taskGroupId =>
+export const scrollToTop = taskGroupId =>
   function(dispatch, getState) {
     let { taskIds } = getState().taskGroups[taskGroupId];
     dispatch({taskGroupId, taskIds, type: 'LOG_SCROLL_TO_TOP'});
@@ -379,14 +378,14 @@ let scrollToTop = taskGroupId =>
   }
 ;
 
-let scrollAllToTop = () =>
+export const scrollAllToTop = () =>
   function(dispatch, getState) {
     dispatch({type: 'LOG_SCROLL_ALL_TO_TOP'});
     return getState().taskGroups.map((taskGroup, taskGroupId) => dispatch(taskGroupFetchNext(taskGroupId)));
   }
 ;
 
-let scrollToBottom = taskGroupId =>
+export const scrollToBottom = taskGroupId =>
   function(dispatch, getState) {
     let { taskIds } = getState().taskGroups[taskGroupId];
     dispatch({taskGroupId, taskIds, type: 'LOG_SCROLL_TO_BOTTOM'});
@@ -394,7 +393,7 @@ let scrollToBottom = taskGroupId =>
   }
 ;
 
-let scrollAllToBottom = () =>
+export const scrollAllToBottom = () =>
   function(dispatch, getState) {
     dispatch({type: 'LOG_SCROLL_ALL_TO_BOTTOM'});
     return getState().taskGroups.map((taskGroup, taskGroupId) => dispatch(taskGroupFetchPrevious(taskGroupId)));

@@ -5,7 +5,7 @@ const indexOf = [].indexOf || function(item) { for (let i = 0, l = this.length; 
 
 Clipboard = require('clipboard');
 
-vex = require('vex.dialog');
+vex = require('vex.dialog').default;
 
 micromatch = require('micromatch');
 
@@ -287,7 +287,6 @@ let Utils = {
   },
 
   fuzzyAdjustScore(filter, fuzzyObject) {
-    console.log(fuzzyObject);
     if (fuzzyObject.original.id.toLowerCase().startsWith(filter.toLowerCase())) {
       return fuzzyObject.score * 10;
     } else if (fuzzyObject.original.id.toLowerCase().indexOf(filter.toLowerCase()) > -1) {

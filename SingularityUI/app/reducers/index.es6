@@ -3,18 +3,9 @@ import { combineReducers } from 'redux';
 import taskGroups from './taskGroups';
 import activeRequest from './activeRequest';
 import tasks from './tasks';
+import api from './api';
 
-import requests from './api/requests';
-
-import requestsPage from './ui/requestsPage';
-
-// hack to get the initial state out of the logging controller
-const setInitialLoggingState = (state = {}, action) => {
-  if (action.type === 'LOGGING_INIT_STATE') {
-    return Object.assign({}, state, action.state);
-  }
-  return state;
-};
+import ui from './ui';
 
 const path = (state = '', action) => {
   if (action.type === 'LOG_INIT') {
@@ -36,7 +27,7 @@ const activeColor = (state = 'default', action) => {
 const colors = (state = []) => state;
 
 const viewMode = function(state = 'custom', action) {
-  if (action.type === 'LOG_SWITCH_VIEW_MODE') {
+  if (action.type === 'LOG_SWITCH_VIEW_MODE' || action.type === 'LOG_INIT') {
     return action.viewMode;
   }
   return state;
@@ -65,7 +56,8 @@ const showDebugInfo = function(state = false, action) {
 };
 
 const rootReducer = combineReducers({
-  setInitialLoggingState,
+  api,
+  ui,
   showDebugInfo,
   taskGroups,
   tasks,
@@ -76,9 +68,7 @@ const rootReducer = combineReducers({
   viewMode,
   search,
   logRequestLength,
-  maxLines,
-  requests,
-  requestsPage
+  maxLines
 });
 
 export default rootReducer;

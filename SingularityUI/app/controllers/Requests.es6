@@ -2,19 +2,13 @@ import Controller from './Controller';
 
 import RequestsView from '../views/requests';
 
-import configureStore from '../store/configureStore';
-
 import { fetchRequests } from '../actions/api/requests';
 
 class RequestsController extends Controller {
 
-  initialize({state, subFilter, searchFilter}) {
-    this.state = state;
-    this.subFilter = subFilter;
-    this.searchFilter = searchFilter;
+  initialize({store}) {
+    this.store = store;
     this.title('Requests');
-
-    this.store = configureStore();
 
     this.store.dispatch(fetchRequests());
 

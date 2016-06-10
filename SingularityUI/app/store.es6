@@ -1,0 +1,15 @@
+import { createStore, compose, applyMiddleware } from 'redux';
+import thunk from 'redux-thunk';
+import logger from 'redux-logger';
+
+import rootReducer from 'reducers';
+
+export default function configureStore(initialState = {}) {
+  const middlewares = [thunk];
+
+  if (window.localStorage.enableReduxLogging) {
+    middlewares.push(logger());
+  }
+
+  return createStore(rootReducer, initialState, compose(applyMiddleware.apply(this, middlewares)));
+}

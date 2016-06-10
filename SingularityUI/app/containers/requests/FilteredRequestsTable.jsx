@@ -7,8 +7,8 @@ import * as RequestsPageActions from '../../actions/ui/requestsPage';
 import RequestsTableWrapper from '../../components/requests/RequestsTableWrapper';
 
 const mapStateToProps = (state, ownProps) => {
-  const requestsPage = state.requestsPage;
-  const requestsAPI = state.requests;
+  const requestsPage = state.ui.requestsPage;
+  const requestsAPI = state.api.requests;
 
   let filteredRequests = requestsAPI.data;
 

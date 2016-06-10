@@ -56,9 +56,7 @@ class Router extends Backbone.Router {
       searchFilter = '';
     }
     return this.app.bootstrapController(new RequestsController({
-      state,
-      subFilter,
-      searchFilter
+      store: this.app.store
     }));
   }
 
@@ -126,6 +124,7 @@ class Router extends Backbone.Router {
     search = params.search || '';
     path = path.replace(taskId, '$TASK_ID');
     return this.app.bootstrapController(new LogViewerController({
+      store: this.app.store,
       requestId,
       path,
       initialOffset,
@@ -179,6 +178,7 @@ class Router extends Backbone.Router {
     viewMode = params.viewMode || 'split';
     search = params.search || '';
     return this.app.bootstrapController(new LogViewerController({
+      store: this.app.store,
       requestId,
       path,
       initialOffset,

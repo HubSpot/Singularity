@@ -7,14 +7,14 @@ import * as RequestsPageActions from '../../actions/ui/requestsPage';
 import TabBarFilterOption from '../../components/common/tabBar/TabBarFilterOption';
 
 const mapStateToProps = (state, ownProps) => {
-  const requestsPage = state.requestsPage;
-  const requests = state.requests;
+  const requestsPage = state.ui.requestsPage;
+  const requestsAPI = state.api.requests;
 
   let numberOfItems;
   if (ownProps.filterValue === 'ALL') {
-    numberOfItems = requests.data.length;
+    numberOfItems = requestsAPI.data.length;
   } else {
-    numberOfItems = requests.data.reduce(
+    numberOfItems = requestsAPI.data.reduce(
       (count, r) => {
         return count + (ownProps.filterValue === r.request.requestType ? 1 : 0);
       },

@@ -9,10 +9,10 @@ class FileBrowserSubview extends View {
         return {'click [data-directory-path]':  'navigate'};
     }
 
-    constructor({ scrollWhenReady, slaveOffline }) {
-      super();
-      this.scrollWhenReady = scrollWhenReady;
-      this.slaveOffline = slaveOffline;
+    constructor(args) {
+      super(args);
+      this.scrollWhenReady = args.scrollWhenReady;
+      this.slaveOffline = args.slaveOffline;
     }
 
     initialize() {
