@@ -61,8 +61,12 @@ DOCKER_IMAGE={{{ envContext.dockerInfo.image }}}
 # load env vars
 touch docker.env
 {{#each envContext.env}}
+{{#ifHasNewLines value}}
+{{{name}}}={{{bashEscaped value}}}
+{{else}}
 {{{name}}}={{{bashEscaped value}}}
 echo "{{{name}}}={{{value}}}" >> docker.env
+{{/ifHasNewLines}}
 {{/each}}
 
 # Create log directory for logrotate runs
@@ -120,8 +124,8 @@ sudo chown -R {{{ runContext.user }}} {{{ runContext.taskAppDirectory }}}
 enable_cgroup_hierarchy || true
 
 # Start up the container
-echo "Creating continer with: sudo -E -H -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS $DOCKER_IMAGE {{{ runContext.cmd }}}"
-cid=`sudo -E -H -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS $DOCKER_IMAGE {{{runContext.cmd }}}`
+echo "Creating continer with: sudo -E -H -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS {{#each envContext.env}}{{#ifHasNewLines value}}-e {{{name}}}={{#escapedNewLines value}}{{/escapedNewLines}}{{/ifHasNewLines}}{{/each}} $DOCKER_IMAGE {{{ runContext.cmd }}}"
+cid=`sudo -E -H -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS {{#each envContext.env}}{{#ifHasNewLines value}}-e {{{name}}}={{#escapedNewLines value}}{{/escapedNewLines}}{{/ifHasNewLines}}{{/each}} $DOCKER_IMAGE {{{runContext.cmd }}}`
 sudo -E -H -u {{{ runContext.user }}} docker start -a $cid >> {{{ runContext.logFile }}} 2>&1 &
 running=1
 

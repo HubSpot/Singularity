@@ -3014,9 +3014,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
 
     requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, "on_demand_deploy", System.currentTimeMillis(), Optional.<String>absent(), PendingType.ONEOFF,
-        Optional.<List<String>>absent(), Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<String>absent()));
+      Optional.<List<String>>absent(), Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<String>absent()));
     requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, "on_demand_deploy", System.currentTimeMillis(), Optional.<String>absent(), PendingType.ONEOFF,
-        Optional.<List<String>>absent(), Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<String>absent()));
+      Optional.<List<String>>absent(), Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<String>absent()));
 
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
@@ -3032,8 +3032,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     final String newScheduleQuartz = "0 */30 * * * ?";
 
     SingularityRequest request = new SingularityRequestBuilder(requestId, RequestType.SCHEDULED)
-        .setSchedule(Optional.of(oldSchedule))
-        .build();
+      .setSchedule(Optional.of(oldSchedule))
+      .build();
 
     request = validator.checkSingularityRequest(request, Optional.<SingularityRequest>absent(), Optional.<SingularityDeploy>absent(), Optional.<SingularityDeploy>absent());
 
@@ -3046,9 +3046,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
     final SingularityRequest newRequest = request.toBuilder()
-        .setSchedule(Optional.of(newSchedule))
-        .setQuartzSchedule(Optional.<String>absent())
-        .build();
+      .setSchedule(Optional.of(newSchedule))
+      .setQuartzSchedule(Optional.<String>absent())
+      .build();
 
     final SingularityDeploy newDeploy = new SingularityDeployBuilder(request.getId(), "2").setCommand(Optional.of("sleep 100")).build();
 
