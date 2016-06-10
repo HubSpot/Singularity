@@ -1,5 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,6 +22,7 @@ import org.mockito.Mockito;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
@@ -70,10 +72,14 @@ import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
 import com.hubspot.singularity.data.AbstractMachineManager.StateChangeResult;
+import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker.CheckTaskState;
 import com.hubspot.singularity.scheduler.SingularityTaskReconciliation.ReconciliationState;
+import com.sun.jersey.api.ConflictException;
 
 public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
+  @Inject
+  private SingularityValidator validator;
 
   public SingularitySchedulerTest() {
     super(false);
@@ -499,6 +505,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(DeployState.FAILED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
   }
 
+  @Test
   public void testDeployFailsAfterMaxTaskRetries() {
     initRequest();
 
@@ -2998,4 +3005,97 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(requestManager.getPendingRequests().size(), 0);
   }
 
+  @Test
+  public void testCronScheduleChanges() throws Exception {
+    final String requestId = "test-change-cron";
+    final String oldSchedule = "*/5 * * * *";
+    final String oldScheduleQuartz = "0 */5 * * * ?";
+    final String newSchedule = "*/30 * * * *";
+    final String newScheduleQuartz = "0 */30 * * * ?";
+
+    SingularityRequest request = new SingularityRequestBuilder(requestId, RequestType.SCHEDULED)
+      .setSchedule(Optional.of(oldSchedule))
+      .build();
+
+    request = validator.checkSingularityRequest(request, Optional.<SingularityRequest>absent(), Optional.<SingularityDeploy>absent(), Optional.<SingularityDeploy>absent());
+
+    saveRequest(request);
+
+    Assert.assertEquals(oldScheduleQuartz, requestManager.getRequest(requestId).get().getRequest().getQuartzScheduleSafe());
+
+    initAndFinishDeploy(request, "1");
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    final SingularityRequest newRequest = request.toBuilder()
+      .setSchedule(Optional.of(newSchedule))
+      .setQuartzSchedule(Optional.<String>absent())
+      .build();
+
+    final SingularityDeploy newDeploy = new SingularityDeployBuilder(request.getId(), "2").setCommand(Optional.of("sleep 100")).build();
+
+    deployResource.deploy(new SingularityDeployRequest(newDeploy, Optional.<Boolean>absent(), Optional.<String>absent(), Optional.of(newRequest)));
+
+    deployChecker.checkDeploys();
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    Assert.assertEquals(newScheduleQuartz, requestManager.getRequest(requestId).get().getRequest().getQuartzScheduleSafe());
+  }
+
+  @Test
+  public void testUsesNewRequestDataFromPendingDeploy() {
+    initRequest();
+    initFirstDeploy();
+
+    saveAndSchedule(request.toBuilder().setInstances(Optional.of(2)));
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    Assert.assertEquals(2, taskManager.getPendingTaskIds().size());
+    Assert.assertEquals(2, requestManager.getRequest(requestId).get().getRequest().getInstancesSafe());
+
+    SingularityRequest request = requestResource.getRequest(requestId).getRequest();
+    SingularityRequest newRequest = request.toBuilder().setInstances(Optional.of(1)).build();
+
+    String deployId = "test_new_request_data";
+    SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100")).build();
+
+    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.<Boolean>absent(), Optional.<String>absent(), Optional.of(newRequest)));
+
+    deployChecker.checkDeploys();
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    List<SingularityPendingTaskId> pendingTaskIdsForNewDeploy = new ArrayList<>();
+    for (SingularityPendingTaskId pendingTaskId : taskManager.getPendingTaskIds()) {
+      if (pendingTaskId.getDeployId().equals(deployId)) {
+        pendingTaskIdsForNewDeploy.add(pendingTaskId);
+      }
+    }
+
+    Assert.assertEquals(1, pendingTaskIdsForNewDeploy.size());
+    Assert.assertEquals(2, requestManager.getRequest(requestId).get().getRequest().getInstancesSafe());
+
+    resourceOffers();
+    for (SingularityTaskId taskId : taskManager.getActiveTaskIdsForDeploy(requestId, deployId)) {
+      statusUpdate(taskManager.getTask(taskId).get(), TaskState.TASK_RUNNING);
+    }
+    deployChecker.checkDeploys();
+
+    Assert.assertEquals(1, requestManager.getRequest(requestId).get().getRequest().getInstancesSafe());
+  }
+
+  @Test(expected = ConflictException.class)
+  public void testCannotUpdateRequestDuringPendingDeployWithNewData() {
+    initRequest();
+    SingularityRequest request = requestResource.getRequest(requestId).getRequest();
+    SingularityRequest newRequest = request.toBuilder().setInstances(Optional.of(1)).build();
+
+    String deployId = "test_new_request_data";
+    SingularityDeploy deploy = new SingularityDeployBuilder(request.getId(), deployId).setCommand(Optional.of("sleep 100")).build();
+
+    deployResource.deploy(new SingularityDeployRequest(deploy, Optional.<Boolean>absent(), Optional.<String>absent(), Optional.of(newRequest)));
+
+    requestResource.postRequest(newRequest);
+  }
 }

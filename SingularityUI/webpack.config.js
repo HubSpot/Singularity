@@ -1,7 +1,7 @@
 var webpack = require('webpack');
 var path = require('path');
 
-dest = path.resolve(__dirname, '../SingularityService/target/generated-resources/assets');
+dest = path.resolve(__dirname, 'dist');
 
 module.exports = {
   entry: {
@@ -36,6 +36,8 @@ module.exports = {
   devtool: 'source-map',
   module: {
     loaders: [
+      { test: /\.es6$/, exclude: /node_modules/, loader: "babel-loader" },
+      { test: /\.jsx$/, exclude: /node_modules/, loader: "babel-loader" },
       { test: /\.cjsx$/, loaders: ['coffee', 'cjsx']},
       { test: /\.coffee$/, loader: 'coffee'},
       { test: /\.hbs/, loader: "handlebars-template-loader" },
@@ -45,7 +47,7 @@ module.exports = {
   },
   resolve: {
     root: path.resolve('./app'),
-    extensions: ['', '.js', '.cjsx', '.coffee', '.hbs'],
+    extensions: ['', '.js', '.es6', '.jsx', '.cjsx', '.coffee', '.hbs'],
     alias: {
       'vex': 'vex-js/js/vex.js',
       'vex.dialog': 'vex-helper.coffee',
@@ -62,14 +64,6 @@ module.exports = {
       jQuery: 'jquery',
       'window.jQuery': 'jquery'
     }),
-    new webpack.optimize.UglifyJsPlugin({
-      compress: {
-        warnings: false
-      }
-    }),
-    new webpack.DefinePlugin({
-      'process.env.NODE_ENV': '"production"'
-    }),
-    new webpack.optimize.CommonsChunkPlugin('vendor', 'vendor.bundle.js'),
+    new webpack.optimize.CommonsChunkPlugin('vendor', 'vendor.bundle.js')
   ]
 };

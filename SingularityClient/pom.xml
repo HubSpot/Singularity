@@ -84,6 +84,63 @@
     </dependency>
   </dependencies>
 
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <configuration combine.self="override">
+            <minimizeJar>true</minimizeJar>
+            <shadedArtifactAttached>true</shadedArtifactAttached>
+            <shadedClassifierName>shaded</shadedClassifierName>
+            <artifactSet>
+              <includes>
+                <include>com.hubspot:SingularityClient</include>
+                <include>com.google.guava:guava</include>
+              </includes>
+            </artifactSet>
+            <filters>
+              <filter>
+                <artifact>com.google.guava:guava</artifact>
+                <excludes>
+                  <exclude>com/google/common/base/Optional.class</exclude>
+                </excludes>
+              </filter>
+            </filters>
+            <relocations>
+              <relocation>
+                <pattern>com.google.common</pattern>
+                <shadedPattern>com.hubspot.singularity.shaded.com.google.common</shadedPattern>
+                <excludes>
+                  <exclude>java.**</exclude>
+                  <exclude>javax.**</exclude>
+                  <exclude>sun.**</exclude>
+                  <exclude>com.google.common.base.Optional</exclude>
+                </excludes>
+              </relocation>
+            </relocations>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
 </project>
 
 <!-- Local Variables: -->

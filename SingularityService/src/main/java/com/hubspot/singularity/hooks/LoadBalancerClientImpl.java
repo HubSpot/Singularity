@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.mesos.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,6 +50,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
   private final AsyncHttpClient httpClient;
   private final ObjectMapper objectMapper;
+  private final Optional<String> taskLabelForLoadBalancerUpstreamGroup;
 
   private static final String OPERATION_URI = "%s/%s";
 
@@ -59,6 +61,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
     this.loadBalancerUri = configuration.getLoadBalancerUri();
     this.loadBalancerTimeoutMillis = configuration.getLoadBalancerRequestTimeoutMillis();
     this.loadBalancerQueryParams = configuration.getLoadBalancerQueryParams();
+    this.taskLabelForLoadBalancerUpstreamGroup = configuration.getTaskLabelForLoadBalancerUpstreamGroup();
   }
 
   private String getLoadBalancerUri(LoadBalancerRequestId loadBalancerRequestId) {
@@ -187,7 +190,18 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
 
       if (maybeLoadBalancerPort.isPresent()) {
         String upstream = String.format("%s:%d", task.getOffer().getHostname(), maybeLoadBalancerPort.get());
-        upstreams.add(new UpstreamInfo(upstream, Optional.of(requestId), task.getRackId()));
+        Optional<String> group = Optional.absent();
+
+        if (taskLabelForLoadBalancerUpstreamGroup.isPresent()) {
+          for (Protos.Label label : task.getMesosTask().getLabels().getLabelsList()) {
+            if (label.hasKey() && label.getKey().equals(taskLabelForLoadBalancerUpstreamGroup.get()) && label.hasValue()) {
+              group = Optional.of(label.getValue());
+              break;
+            }
+          }
+        }
+
+        upstreams.add(new UpstreamInfo(upstream, Optional.of(requestId), task.getRackId(), Optional.<String>absent(), group));
       } else {
         LOG.warn("Task {} is missing port but is being passed to LB  ({})", task.getTaskId(), task);
       }

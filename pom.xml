@@ -38,7 +38,7 @@
     <basepom.release.profiles>oss-release,build-swagger-documentation</basepom.release.profiles>
 
     <dropwizard.guicier.version>0.7.1.2</dropwizard.guicier.version>
-    <baragon.version>0.2.0</baragon.version>
+    <baragon.version>0.4.0</baragon.version>
     <horizon.version>0.0.24</horizon.version>
     <mesos.docker.tag>0.28.1-2.0.20.ubuntu1404</mesos.docker.tag>
     <mesos.version>0.28.1</mesos.version>
@@ -61,6 +61,7 @@
     <module>SingularitySwagger</module>
     <module>EmbedSingularityExample</module>
     <module>SingularityServiceIntegrationTests</module>
+    <module>SingularityUI</module>
   </modules>
 
   <dependencyManagement>
@@ -93,6 +94,13 @@
         <groupId>com.hubspot</groupId>
         <artifactId>SingularityClient</artifactId>
         <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.hubspot</groupId>
+        <artifactId>SingularityUI</artifactId>
+        <version>${project.version}</version>
+        <type>pom</type>
       </dependency>
 
       <dependency>
@@ -136,7 +144,7 @@
         <artifactId>jackson-jaxrs-propertyfiltering</artifactId>
         <version>0.7.0</version>
       </dependency>
-    
+
       <dependency>
         <groupId>com.h2database</groupId>
         <artifactId>h2</artifactId>
@@ -148,13 +156,13 @@
         <artifactId>liquibase-core</artifactId>
         <version>3.1.1</version>
       </dependency>
-    
+
       <dependency>
         <groupId>org.yaml</groupId>
         <artifactId>snakeyaml</artifactId>
         <version>1.13</version>
       </dependency>
-        
+
       <dependency>
         <groupId>com.hubspot</groupId>
         <artifactId>BaragonCore</artifactId>
@@ -266,7 +274,7 @@
         <plugin>
           <groupId>com.github.eirslett</groupId>
           <artifactId>frontend-maven-plugin</artifactId>
-          <version>0.0.23</version>
+          <version>1.0</version>
         </plugin>
         <plugin>
           <groupId>com.github.kongchen</groupId>
