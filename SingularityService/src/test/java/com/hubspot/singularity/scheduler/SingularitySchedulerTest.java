@@ -3024,6 +3024,20 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testObsoletePendingRequestsRemoved() {
+    initRequest();
+    initFirstDeploy();
+    SingularityTask taskOne = startTask(firstDeploy);
+    requestResource.pause(requestId, Optional.<SingularityPauseRequest> absent());
+    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, System.currentTimeMillis(), Optional.<String>absent(), PendingType.NEW_DEPLOY, Optional.<Boolean>absent(), Optional.<String>absent()));
+
+    Assert.assertEquals(requestManager.getPendingRequests().size(), 1);
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    Assert.assertEquals(requestManager.getPendingRequests().size(), 0);
+  }
+
+  @Test
   public void testCronScheduleChanges() throws Exception {
     final String requestId = "test-change-cron";
     final String oldSchedule = "*/5 * * * *";
@@ -3115,20 +3129,6 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     deployResource.deploy(new SingularityDeployRequest(deploy, Optional.<Boolean> absent(), Optional.<String> absent(), Optional.of(newRequest)));
 
     requestResource.postRequest(newRequest);
-  }
-
-  @Test
-  public void testObsoletePendingRequestsRemoved() {
-    initRequest();
-    initFirstDeploy();
-    SingularityTask taskOne = startTask(firstDeploy);
-    requestResource.pause(requestId, Optional.<SingularityPauseRequest> absent());
-    requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, firstDeployId, System.currentTimeMillis(), Optional.<String>absent(), PendingType.NEW_DEPLOY, Optional.<Boolean>absent(), Optional.<String>absent()));
-
-    Assert.assertEquals(requestManager.getPendingRequests().size(), 1);
-    scheduler.drainPendingQueue(stateCacheProvider.get());
-
-    Assert.assertEquals(requestManager.getPendingRequests().size(), 0);
   }
 
   @Test
