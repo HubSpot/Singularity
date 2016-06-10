@@ -2,17 +2,14 @@ let DashboardController;
 let DeployDetailController;
 let NewDeployController;
 let NotFoundController;
-let RacksController;
 let RequestDetailController;
 let RequestFormEditController;
 let RequestFormNewController;
 let RequestsTableController;
-let SlavesController;
 let TaskDetailController;
 let TaskSearchController;
 let TasksTableController;
 let Utils;
-let WebhooksController;
 
 const hasProp = {}.hasOwnProperty;
 
@@ -34,9 +31,9 @@ TasksTableController = require('controllers/TasksTable');
 
 TaskDetailController = require('controllers/TaskDetail');
 
-RacksController = require('controllers/Racks');
+import RacksController from 'controllers/Racks';
 
-SlavesController = require('controllers/Slaves');
+import SlavesController from 'controllers/Slaves';
 
 NotFoundController = require('controllers/NotFound');
 
@@ -46,7 +43,7 @@ import LogViewerController from 'controllers/LogViewer';
 
 TaskSearchController = require('controllers/TaskSearch');
 
-WebhooksController = require('controllers/Webhooks');
+import WebhooksController from 'controllers/Webhooks';
 
 Utils = require('./utils').default;
 
@@ -171,21 +168,13 @@ class Router extends Backbone.Router {
   }
 
   racks(state) {
-    if (state == null) {
-      state = 'all';
-    }
-    return this.app.bootstrapController(new RacksController({
-      state
-    }));
+    // TODO: state
+    return this.app.bootstrapController(new RacksController({store: this.app.store}));
   }
 
   slaves(state) {
-    if (state == null) {
-      state = 'all';
-    }
-    return this.app.bootstrapController(new SlavesController({
-      state
-    }));
+    // TODO: state?
+    return this.app.bootstrapController(new SlavesController({store: this.app.store}));
   }
 
   notFound() {
@@ -225,7 +214,7 @@ class Router extends Backbone.Router {
   }
 
   webhooks() {
-    return this.app.bootstrapController(new WebhooksController);
+    return this.app.bootstrapController(new WebhooksController({store: this.app.store}));
   }
 }
 

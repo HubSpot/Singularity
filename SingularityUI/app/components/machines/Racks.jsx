@@ -5,7 +5,7 @@ import TimeStamp from '../common/atomicDisplayItems/TimeStamp';
 import Link from '../common/atomicDisplayItems/Link';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 import Utils from '../../utils';
-import RacksCollection from '../../collections/Racks';
+import { connect } from 'react-redux';
 
 let Racks = React.createClass({
 
@@ -16,7 +16,7 @@ let Racks = React.createClass({
     },
 
     showUser(rack) {
-        return __in__(rack.state, ['ACTIVE', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']);
+        return __in__(rack.currentState.state, ['ACTIVE', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']);
     },
 
     columnHeads(type) {
@@ -41,8 +41,6 @@ let Racks = React.createClass({
         return heads;
     },
 
-    refresh() { return this.props.racks.fetch().done(() => this.forceUpdate()); },
-
     promptReactivate(event, rackModel) {
         event.preventDefault();
         return rackModel.promptReactivate(() => this.refresh());
@@ -58,16 +56,15 @@ let Racks = React.createClass({
         return rackModel.promptRemove(() => this.refresh());
     },
 
-    getMaybeReactivateButton(rackModel) {
-        let rack = rackModel.attributes;
-        if (__in__(rack.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION'])) {
+    getMaybeReactivateButton(rack) {
+        if (__in__(rack.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION'])) {
           return (
             <Link
                 prop = {{
                     text: <Glyphicon
                         iconClass = 'new-window'
                     />,
-                  onClickFn: (event) => { this.promptReactivate(event, rackModel) },
+                  onClickFn: (event) => { this.promptReactivate(event, rack) },
                     title: 'Reactivate',
                     altText: `Reactivate ${rack.id}`,
                     overlayTrigger: true,
@@ -82,16 +79,15 @@ let Racks = React.createClass({
         }
     },
 
-    getDecommissionOrRemoveButton(rackModel) {
-        let rack = rackModel.attributes;
-        if (rack.state === 'ACTIVE') {
+    getDecommissionOrRemoveButton(rack) {
+        if (rack.currentState.state === 'ACTIVE') {
           return (
             <Link
                 prop = {{
                     text: <Glyphicon
                         iconClass = 'trash'
                     />,
-                    onClickFn: (event) => { this.promptDecommission(event, rackModel) },
+                    onClickFn: (event) => { this.promptDecommission(event, rack) },
                     title: 'Decommission',
                     altText: `Decommission ${rack.id}`,
                     overlayTrigger: true,
@@ -108,7 +104,7 @@ let Racks = React.createClass({
                     text: <Glyphicon
                         iconClass = 'remove'
                     />,
-                    onClickFn: (event) => { this.promptRemove(event, rackModel) },
+                    onClickFn: (event) => { this.promptRemove(event, rack) },
                     title: 'Remove',
                     altText: `Remove ${rack.id}`,
                     overlayTrigger: true,
@@ -122,8 +118,7 @@ let Racks = React.createClass({
     },
 
 
-    getData(type, rackModel) {
-        let rack = rackModel.attributes;
+    getData(type, rack) {
         let data = [
             {
                 component: PlainText,
@@ -134,7 +129,7 @@ let Racks = React.createClass({
             {
                 component: PlainText,
                 prop: {
-                    text: Utils.humanizeText(rack.state)
+                    text: Utils.humanizeText(rack.currentState.state)
                 }
             },
             {
@@ -149,7 +144,7 @@ let Racks = React.createClass({
             data.push({
                 component: PlainText,
                 prop: {
-                    text: this.showUser(rack) && rack.user ? rack.user : ''
+                    text: this.showUser(rack) && rack.currentState.user ? rack.currentState.user : ''
                 }
             });
         }
@@ -163,39 +158,31 @@ let Racks = React.createClass({
             component: PlainText,
             className: 'actions-column',
             prop: {
-                text: <div>{this.getMaybeReactivateButton(rackModel)} {this.getDecommissionOrRemoveButton(rackModel)} </div>
+                text: <div>{this.getMaybeReactivateButton(rack)} {this.getDecommissionOrRemoveButton(rack)} </div>
             }
         });
         return data;
     },
 
     getRacks(type, racks) {
-        let tableifiedRacks = [];
-        racks.map(rack => {
-            return tableifiedRacks.push({
-                dataId: rack.id,
-                data: this.getData(type, rack)
+        return racks.map(rack => {
+                return {
+                    dataId: rack.id,
+                    data: this.getData(type, rack)
+                };
             });
-        });
-        return tableifiedRacks;
     },
 
     getActiveRacks() {
-        return new RacksCollection(
-            this.props.racks.filter(model => __in__(model.get('state'), ['ACTIVE']))
-        );
+        return this.props.racks.filter(({currentState}) => __in__(currentState.state, ['ACTIVE']));
     },
 
     getDecommissioningRacks() {
-        return new RacksCollection(
-            this.props.racks.filter(model => __in__(model.get('state'), ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']))
-        );
+        return this.props.racks.filter(({currentState}) => __in__(currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']));
     },
 
     getInactiveRacks() {
-        return new RacksCollection(
-            this.props.racks.filter(model => __in__(model.get('state'), ['DEAD', 'MISSING_ON_STARTUP']))
-        );
+        return this.props.racks.filter(({currentState}) => __in__(currentState.state, ['DEAD', 'MISSING_ON_STARTUP']));
     },
 
     getStates() {
@@ -231,8 +218,13 @@ let Racks = React.createClass({
     }
 });
 
+function mapStateToProps(state) {
+    return {
+        racks: state.api.racks.data
+    };
+}
 
-export default Racks;
+export default connect(mapStateToProps)(Racks);
 
 function __in__(needle, haystack) {
   return haystack.indexOf(needle) >= 0;

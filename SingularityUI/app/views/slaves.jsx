@@ -1,35 +1,21 @@
-import View from './view';
-
-import Slave from '../models/Slave';
-import Slaves from '../collections/Slaves';
-import SlavesPage from '../components/machines/Slaves';
-
 import React from 'react';
 import ReactDOM from 'react-dom';
 
+import SlavesPage from '../components/machines/Slaves';
+
+import View from './view';
+
+import { Provider } from 'react-redux';
+
+
 class SlavesView extends View {
+  initialize(store) {
+    this.store = store;
+  }
 
-    constructor(...args) {
-      super(...args);
-    }
-
-    initialize({state}) {
-        this.state = state;
-        this.initialPageLoad = true;
-    }
-
-    render() {
-        if (!this.collection.synced && this.collection.isEmpty()) {
-          return;
-        }
-        ReactDOM.render(<SlavesPage slaves={this.collection} />, this.el)
-
-        if (this.state && this.initialPageLoad) {
-            if (this.state === 'all') { return; }
-            utils.scrollTo(`#${this.state}`);
-            this.initialPageLoad = false;
-        }
-    }
+  render() {
+    ReactDOM.render(<Provider store={this.store}><SlavesPage/></Provider>, this.el);
+  }
 }
 
 export default SlavesView;
