@@ -168,7 +168,7 @@ export default class StatusPage extends React.Component {
 
   render() {
     let m = this.props.status;
-    console.log(this.props);
+
     m.isLeaderConnected = false;
     m.hasLeader = false;
     for(let host in m.hostStates) {

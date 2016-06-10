@@ -53,4 +53,16 @@ let showDebugInfo = function(state=false, action) {
   return state;
 };
 
-export default combineReducers({api, showDebugInfo, taskGroups, tasks, activeRequest, path, activeColor, colors, viewMode, search, logRequestLength, maxLines});
+export default combineReducers({
+  api,
+  showDebugInfo,
+  taskGroups, tasks,
+  activeRequest,
+  path,
+  activeColor,
+  colors,
+  viewMode,
+  search,
+  logRequestLength,
+  maxLines
+});
