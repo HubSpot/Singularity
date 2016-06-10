@@ -381,6 +381,21 @@
       <artifactId>api-all</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.dmfs</groupId>
+      <artifactId>lib-recur</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.dmfs</groupId>
+      <artifactId>rfc5545-datetime</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>joda-time</groupId>
+      <artifactId>joda-time</artifactId>
+    </dependency>
+
   </dependencies>
 
   <build>

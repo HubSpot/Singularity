@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
 
+import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskId;
@@ -25,6 +27,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.helpers.RFC5545Schedule;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 import com.hubspot.singularity.smtp.SingularityMailer;
 
@@ -110,23 +113,29 @@ public class SingularityScheduledJobPoller extends SingularityLeaderOnlyPoller {
         return deployStatistics.get().getAverageRuntimeMillis();
       }
 
-      final CronExpression cronExpression;
+      String scheduleExpression = request.getRequest().getScheduleTypeSafe() == ScheduleType.RFC5545 ? request.getRequest().getSchedule().get() : request.getRequest().getQuartzScheduleSafe();
+      Date nextRunAtDate;
 
       try {
-        cronExpression = new CronExpression(request.getRequest().getQuartzScheduleSafe());
-      } catch (ParseException e) {
-        LOG.warn("Unable to parse cron for {} ({})", taskId, request.getRequest().getQuartzScheduleSafe(), e);
-        exceptionNotifier.notify(e, ImmutableMap.of("taskId", taskId.toString()));
-        return Optional.absent();
-      }
+        if (request.getRequest().getScheduleTypeSafe() == ScheduleType.RFC5545) {
+          final RFC5545Schedule rfc5545Schedule = new RFC5545Schedule(scheduleExpression);
+          nextRunAtDate = rfc5545Schedule.getNextValidTime();
+        } else {
+          final CronExpression cronExpression = new CronExpression(scheduleExpression);
+          final Date startDate = new Date(taskId.getStartedAt());
+          nextRunAtDate = cronExpression.getNextValidTimeAfter(startDate);
+        }
 
-      final Date startDate = new Date(taskId.getStartedAt());
-      final Date nextRunAtDate = cronExpression.getNextValidTimeAfter(startDate);
+        if (nextRunAtDate == null) {
+          String msg = String.format("No next run date found for %s (%s)", taskId, scheduleExpression);
+          LOG.warn(msg);
+          exceptionNotifier.notify(msg, ImmutableMap.of("taskId", taskId.toString()));
+          return Optional.absent();
+        }
 
-      if (nextRunAtDate == null) {
-        String msg = String.format("No next run date found for %s (%s)", taskId, request.getRequest().getQuartzScheduleSafe());
-        LOG.warn(msg);
-        exceptionNotifier.notify(msg, ImmutableMap.of("taskId", taskId.toString()));
+      } catch (ParseException|InvalidRecurrenceRuleException e) {
+        LOG.warn("Unable to parse schedule of type {} for expression {} (taskId: {}, err: {})", request.getRequest().getScheduleTypeSafe(), scheduleExpression, taskId, e);
+        exceptionNotifier.notify(e, ImmutableMap.of("taskId", taskId.toString(), "scheduleExpression", scheduleExpression, "scheduleType", request.getRequest().getScheduleTypeSafe().toString()));
         return Optional.absent();
       }
 
