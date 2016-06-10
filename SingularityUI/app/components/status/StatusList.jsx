@@ -48,7 +48,7 @@ export default class StatusList extends React.Component {
       if (!d) {return}
       let ComponentClass = d.component;
       let diff = this.getDiffFor(d)
-      let cn = {};
+      let cn = {className: ''};
       if (diff) {
         cn = {className: diff.diff > 0 ? 'changed-direction-increase' : 'changed-direction-decrease'};
       }
@@ -64,7 +64,7 @@ export default class StatusList extends React.Component {
   }
 
   getDiffFor(d) {
-    if (!d.prop.id) return;
+    if (!d.prop.id) return null;
     return _.find(this.state.changes, (c) => { return c.id == d.prop.id});
   }
 
