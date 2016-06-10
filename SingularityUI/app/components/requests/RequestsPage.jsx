@@ -8,10 +8,10 @@ import Sidebar from '../common/Sidebar';
 import MainContent from '../common/MainContent';
 import TabBar from '../common/TabBar';
 import TabBarFilterOption from '../common/tabBar/TabBarFilterOption';
-import SearchBar from '../common/SearchBar';
 
 import FilterOptionState from '../../containers/requests/FilterOptionState';
 import FilterOptionType from '../../containers/requests/FilterOptionType';
+import FilterSearchBar from '../../containers/requests/FilterSearchBar';
 import FilteredRequestsTable from '../../containers/requests/FilteredRequestsTable';
 
 class RequestsPage extends Component {
@@ -66,7 +66,7 @@ class RequestsPage extends Component {
               filterValue={'SERVICE'}
             />
           </TabBar>
-          <SearchBar />
+          <FilterSearchBar />
           <FilteredRequestsTable maxVisible={10} />
         </MainContent>
       </div>

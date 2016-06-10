@@ -7,7 +7,7 @@ const initialState = {
   data: []
 };
 
-export default function requests(state = initialState, action) {
+const requests = (state = initialState, action) => {
   switch (action.type) {
     case RequestsActions.FETCH_REQUESTS_ERROR:
       return Object.assign({}, state, {
@@ -30,4 +30,6 @@ export default function requests(state = initialState, action) {
     default:
       return state;
   }
-}
+};
+
+export default requests;

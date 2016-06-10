@@ -11,5 +11,9 @@ export default function configureStore(initialState = {}) {
     middlewares.push(logger());
   }
 
-  return createStore(rootReducer, initialState, compose(applyMiddleware.apply(this, middlewares)));
+  const enhancer = compose(
+    applyMiddleware.apply(this, middlewares)
+  );
+
+  return createStore(rootReducer, initialState, enhancer);
 }

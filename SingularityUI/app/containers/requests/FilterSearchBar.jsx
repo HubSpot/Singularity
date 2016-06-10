@@ -1,27 +1,26 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux'
+import classNames from 'classnames';
 
 import * as RequestsPageActions from '../../actions/ui/requestsPage';
 
-import { getFilteredRequests } from '../../selectors/api';
-
-import RequestsTableWrapper from '../../components/requests/RequestsTableWrapper';
+import SearchBar from '../../components/common/SearchBar';
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    filteredRequests: getFilteredRequests(state),
-    requestsAPI: state.api.requests,
+    value: state.ui.requestsPage.textFilter
   };
 };
 
 const mapDispatchToProps = (dispatch, ownProps) => {
   return {
+    onChange: (e) => dispatch(RequestsPageActions.changeTextFilter(e.target.value))
   };
 };
 
-const FilteredRequestsTable = connect(
+const FilterSearchBar = connect(
   mapStateToProps,
   mapDispatchToProps
-)(RequestsTableWrapper);
+)(SearchBar);
 
-export default FilteredRequestsTable;
+export default FilterSearchBar;

@@ -24,6 +24,10 @@ export default function requestsPage(state = initialState, action) {
       return Object.assign({}, state, {
         typeFilter: action.value
       });
+    case RequestsPageActions.CHANGE_TEXT_FILTER:
+      return Object.assign({}, state, {
+        textFilter: action.value
+      });
     default:
       return state;
   }
