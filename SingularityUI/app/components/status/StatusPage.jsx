@@ -180,7 +180,6 @@ export default class StatusPage extends React.Component {
     }
     _.extend(m, this.requestDetail(m));
     _.extend(m, this.taskDetail(m));
-    console.log(m);
 
     return (
       <div>
