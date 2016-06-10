@@ -66,7 +66,7 @@ class RequestsView extends View
         user =
             extract: (o) ->
                 o.requestDeployState?.activeDeploy?.user or ''
-        if Utils.isGlobFilter filter
+        if utils.isGlobFilter filter
             res1 = requests.filter (request) =>
                 micromatch.any id.extract(request), filter + '*'
             res2 = requests.filter (request) =>

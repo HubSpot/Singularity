@@ -16,11 +16,11 @@ function sum (numbers) {
 
 class LogLines extends React.Component {
   componentDidMount() {
-    window.addEventListener('resize', this.handleScroll);
+    window.addEventListener('resize', this.handleScroll.bind(this));
   }
 
   componentWillUnmount() {
-    window.removeEventListener('resize', this.handleScroll);
+    window.removeEventListener('resize', this.handleScroll.bind(this));
   }
 
   componentDidUpdate(prevProps, prevState) {

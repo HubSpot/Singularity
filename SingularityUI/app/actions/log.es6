@@ -13,21 +13,19 @@ let fetchTaskHistory = taskId =>
     {url: `${ config.apiRoot }/history/task/${ taskId }`})
 ;
 
-export const initializeUsingActiveTasks = (requestId, path, search) =>
+export const initializeUsingActiveTasks = (requestId, path, search, viewMode) =>
   function(dispatch) {
     let deferred = Q.defer();
     fetchTasksForRequest(requestId).done(function(tasks) {
       let taskIds = _.sortBy(_.pluck(tasks, 'taskId'), taskId => taskId.instanceNo).map(taskId => taskId.id);
-      return dispatch(initialize(requestId, path, search, taskIds)).then(() => deferred.resolve());
+      return dispatch(initialize(requestId, path, search, taskIds, viewMode)).then(() => deferred.resolve());
     });
     return deferred.promise;
   }
 ;
 
-export const initialize = (requestId, path, search, taskIds) =>
+export const initialize = (requestId, path, search, taskIds, viewMode) =>
   function(dispatch, getState) {
-    let { viewMode } = getState();
-
     let taskIdGroups;
     if (viewMode === 'unified') {
       taskIdGroups = [taskIds];
@@ -35,7 +33,7 @@ export const initialize = (requestId, path, search, taskIds) =>
       taskIdGroups = taskIds.map(taskId => [taskId]);
     }
 
-    dispatch(init(requestId, taskIdGroups, path, search));
+    dispatch(init(requestId, taskIdGroups, path, search, viewMode));
 
     let groupPromises = taskIdGroups.map(function(taskIds, taskGroupId) {
       let taskInitPromises = taskIds.map(function(taskId) {
@@ -68,12 +66,13 @@ export const initialize = (requestId, path, search, taskIds) =>
   }
 ;
 
-export const init = (requestId, taskIdGroups, path, search) =>
+export const init = (requestId, taskIdGroups, path, search, viewMode) =>
   ({
     requestId,
     taskIdGroups,
     path,
     search,
+    viewMode,
     type: 'LOG_INIT'
   })
 ;
@@ -313,15 +312,15 @@ export const switchViewMode = newViewMode =>
     let taskIds = _.flatten(_.pluck(taskGroups, 'taskIds'));
 
     dispatch({viewMode: newViewMode, type: 'LOG_SWITCH_VIEW_MODE'});
-    return dispatch(initialize(activeRequest.requestId, path, search, taskIds));
+    return dispatch(initialize(activeRequest.requestId, path, search, taskIds, newViewMode));
   }
 ;
 
 export const setCurrentSearch = newSearch =>  // TODO: can we do something less heavyweight?
   function(dispatch, getState) {
-    let {activeRequest, path, taskGroups, currentSearch} = getState();
+    let {activeRequest, path, taskGroups, currentSearch, viewMode} = getState();
     if (newSearch !== currentSearch) {
-      return dispatch(initialize(activeRequest.requestId, path, newSearch, _.flatten(_.pluck(taskGroups, 'taskIds'))));
+      return dispatch(initialize(activeRequest.requestId, path, newSearch, _.flatten(_.pluck(taskGroups, 'taskIds')), viewMode));
     }
   }
 ;

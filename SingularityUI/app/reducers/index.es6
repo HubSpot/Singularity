@@ -3,6 +3,7 @@ import { combineReducers } from 'redux';
 import taskGroups from './taskGroups';
 import activeRequest from './activeRequest';
 import tasks from './tasks';
+import api from './api';
 
 let path = function(state='', action) {
   if (action.type === 'LOG_INIT') {
@@ -24,7 +25,7 @@ let activeColor = function(state='default', action) {
 let colors = (state=[]) => state;
 
 let viewMode = function(state='custom', action) {
-  if (action.type === 'LOG_SWITCH_VIEW_MODE') {
+  if (action.type === 'LOG_SWITCH_VIEW_MODE' || action.type === 'LOG_INIT') {
     return action.viewMode;
   }
   return state;
@@ -52,4 +53,4 @@ let showDebugInfo = function(state=false, action) {
   return state;
 };
 
-export default combineReducers({showDebugInfo, taskGroups, tasks, activeRequest, path, activeColor, colors, viewMode, search, logRequestLength, maxLines});
+export default combineReducers({api, showDebugInfo, taskGroups, tasks, activeRequest, path, activeColor, colors, viewMode, search, logRequestLength, maxLines});
