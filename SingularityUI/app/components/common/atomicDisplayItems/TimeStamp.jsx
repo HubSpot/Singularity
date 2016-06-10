@@ -37,7 +37,7 @@ let TimeStamp = React.createClass({
         } else if (this.props.prop.display === 'duration') {
             formatted = this.duration();
         }
-        return <div className={this.props.prop.className}>{`${this.props.prop.prefix || ''} ${formatted} ${this.props.prop.postfix || ''}`}</div>;
+        return <div className={this.props.prop.className}>{`${this.props.prop.prefix} ${formatted} ${this.props.prop.postfix}`}</div>;
     }
 });
 
