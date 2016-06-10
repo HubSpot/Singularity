@@ -1107,6 +1107,26 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testMultipleRunOnceTasks() {
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.RUN_ONCE);
+    request = bldr.build();
+    saveRequest(request);
+
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, "d1").setCommand(Optional.of("cmd")).build(), Optional.<Boolean> absent(), Optional.<String> absent()));
+    deployChecker.checkDeploys();
+    Assert.assertEquals(1, requestManager.getSizeOfPendingQueue());
+
+    deployResource.deploy(new SingularityDeployRequest(new SingularityDeployBuilder(requestId, "d2").setCommand(Optional.of("cmd")).build(), Optional.<Boolean> absent(), Optional.<String> absent()));
+    deployChecker.checkDeploys();
+    Assert.assertEquals(2, requestManager.getSizeOfPendingQueue());
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    resourceOffers();
+    Assert.assertEquals(2, taskManager.getActiveTaskIds().size());
+  }
+
+  @Test
   public void testRunOnceDontMoveDuringDecomission() {
     SingularityRequestBuilder bldr = new SingularityRequestBuilder(requestId, RequestType.RUN_ONCE);
     request = bldr.build();
