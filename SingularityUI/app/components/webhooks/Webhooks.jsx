@@ -8,6 +8,7 @@ import Link from '../common/atomicDisplayItems/Link';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 import NewWebhookForm from './NewWebhookForm';
 import vex from 'vex';
+import { connect } from 'react-redux';
 
 let Webhooks = React.createClass({
 
@@ -18,7 +19,7 @@ let Webhooks = React.createClass({
     webhookTypes: ['REQUEST', 'DEPLOY', 'TASK'],
 
     sortBy(field, sortDirectionAscending) {
-        this.props.collections.webhooks.sortBy(field, sortDirectionAscending);
+        this.props.api.webhooks.data.sortBy(field, sortDirectionAscending);
         return this.forceUpdate();
     },
 
@@ -149,36 +150,37 @@ let Webhooks = React.createClass({
 
     getWebhookTableData() {
         let data = [];
+        console.log(this.props.collections);
         this.props.collections.webhooks.map(webhook => data.push({
-            dataId: webhook.attributes.webhook.id,
+            dataId: webhook.id,
             dataCollection: 'webhooks',
             data: [{
                 component: PlainText,
                 prop: {
-                    text: webhook.attributes.webhook.uri
+                    text: webhook.uri
                 }
             }, {
                 component: PlainText,
                 prop: {
-                    text: Utils.humanizeText(webhook.attributes.webhook.type)
+                    text: Utils.humanizeText(webhook.type)
                 }
             }, {
                 component: TimeStamp,
                 className: 'hidden-xs',
                 prop: {
-                    timestamp: webhook.attributes.webhook.timestamp,
+                    timestamp: webhook.timestamp,
                     display: 'absoluteTimestamp'
                 }
             }, {
                 component: PlainText,
                 className: 'hidden-xs',
                 prop: {
-                    text: webhook.attributes.webhook.user || 'N/A'
+                    text: webhook.user || 'N/A'
                 }
             }, {
                 component: PlainText,
                 prop: {
-                    text: <b>{webhook.attributes.queueSize}</b>
+                    text: <b>{webhook.queueSize}</b>
                 }
             }, {
                 component: Link,
@@ -191,7 +193,7 @@ let Webhooks = React.createClass({
                     overlayTrigger: true,
                     overlayTriggerPlacement: 'top',
                     overlayToolTipContent: 'Delete This Webhook',
-                    overlayId: `deleteWebhook${ webhook.attributes.webhook.id }`
+                    overlayId: `deleteWebhook${ webhook.id }`
                 }
             }]
         }));
@@ -203,5 +205,13 @@ let Webhooks = React.createClass({
     }
 });
 
-export default Webhooks;
+function mapStateToProps(state) {
+    return {
+        collections: {
+            webhooks: state.api.webhooks.data
+        }
+    };
+}
+
+export default connect(mapStateToProps)(Webhooks);
 

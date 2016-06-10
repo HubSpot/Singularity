@@ -5,19 +5,13 @@ import TimeStamp from '../common/atomicDisplayItems/TimeStamp';
 import Link from '../common/atomicDisplayItems/Link';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 import Utils from '../../utils';
-import SlavesCollection from '../../collections/Slaves';
+import { connect } from 'react-redux';
 
-let Slaves = React.createClass({
-
-    typeName: {
-        'active': 'Activated By',
-        'frozen': 'Frozen By',
-        'decommissioning': 'Decommissioned By'
-    },
+class Slaves extends React.Component {
 
     showUser(slave) {
-        return __in__(slave.state, ['ACTIVE', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']);
-    },
+        return __in__(slave.currentState.state, ['ACTIVE', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']);
+    }
 
     columnHeads(type) {
         let heads = [
@@ -49,32 +43,32 @@ let Slaves = React.createClass({
         heads.push({ data: 'Message' });
         heads.push({}); // Reactivate button and Decommission or Remove button
         return heads;
-    },
+    }
 
-    refresh() { return this.props.slaves.fetch().done(() => this.forceUpdate()); },
+    // TODO: dont
+    refresh() { return this.props.slaves.fetch().done(() => this.forceUpdate()); }
 
     promptReactivate(event, slaveModel) {
         event.preventDefault();
         return slaveModel.promptReactivate(() => this.refresh());
-    },
+    }
 
     promptDecommission(event, slaveModel) {
         event.preventDefault();
         return slaveModel.promptDecommission(() => this.refresh());
-    },
+    }
 
     promptFreeze(event, slaveModel) {
         event.preventDefault();
         return slaveModel.promptFreeze(() => this.refresh());
-    },
+    }
 
     promptRemove(event, slaveModel) {
         event.preventDefault();
         return slaveModel.promptRemove(() => this.refresh());
-    },
+    }
 
-    getMaybeReactivateButton(slaveModel) {
-        let slave = slaveModel.attributes;
+    getMaybeReactivateButton(slave) {
         if (__in__(slave.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN'])) {
             return (
               <Link
@@ -82,7 +76,7 @@ let Slaves = React.createClass({
                       text: <Glyphicon
                           iconClass = 'new-window'
                       />,
-                      onClickFn: (event) => {this.promptReactivate(event, slaveModel)},
+                      onClickFn: (event) => {this.promptReactivate(event, slave)},
                       title: 'Reactivate',
                       altText: `Reactivate ${slave.id}`,
                       overlayTrigger: {true},
@@ -95,10 +89,9 @@ let Slaves = React.createClass({
         } else {
             return null;
         }
-    },
+    }
 
-    getMaybeFreezeButton(slaveModel) {
-        let slave = slaveModel.attributes;
+    getMaybeFreezeButton(slave) {
         if (slave.state === 'ACTIVE') {
           return (
             <Link
@@ -106,7 +99,7 @@ let Slaves = React.createClass({
                     text: <Glyphicon
                         iconClass = 'stop'
                     />,
-                    onClickFn: (event) => {this.promptFreeze(event, slaveModel)},
+                    onClickFn: (event) => {this.promptFreeze(event, slave)},
                     title: 'Freeze',
                     altText: `Freeze ${slave.id}`,
                     overlayTrigger: true,
@@ -119,10 +112,9 @@ let Slaves = React.createClass({
         } else {
             return null;
         }
-    },
+    }
 
-    getDecommissionOrRemoveButton(slaveModel) {
-        let slave = slaveModel.attributes;
+    getDecommissionOrRemoveButton(slave) {
         if (__in__(slave.state, ['ACTIVE', 'FROZEN'])) {
           return (
             <Link
@@ -130,7 +122,7 @@ let Slaves = React.createClass({
                     text: <Glyphicon
                         iconClass = 'trash'
                     />,
-                    onClickFn: (event) => {this.promptDecommission(event, slaveModel)},
+                    onClickFn: (event) => {this.promptDecommission(event, slave)},
                     title: 'Decommission',
                     altText: `Decommission ${slave.id}`,
                     overlayTrigger: true,
@@ -147,7 +139,7 @@ let Slaves = React.createClass({
                     text: <Glyphicon
                         iconClass = 'remove'
                     />,
-                    onClickFn: (event) => {this.promptRemove(event, slaveModel)},
+                    onClickFn: (event) => {this.promptRemove(event, slave)},
                     title: 'Remove',
                     altText: `Remove ${slave.id}`,
                     overlayTrigger: true,
@@ -158,10 +150,9 @@ let Slaves = React.createClass({
             />
           );
       }
-    },
+    }
 
-    getData(type, slaveModel) {
-        let slave = slaveModel.attributes;
+    getData(type, slave) {
         let data = [
             {
                 component: Link,
@@ -174,7 +165,7 @@ let Slaves = React.createClass({
             {
                 component: PlainText,
                 prop: {
-                    text: Utils.humanizeText(slave.state)
+                    text: Utils.humanizeText(slave.currentState.state)
                 }
             },
             {
@@ -223,14 +214,14 @@ let Slaves = React.createClass({
             className: 'actions-column',
             prop: {
                 text: <div>
-                    {this.getMaybeReactivateButton(slaveModel)}
-                    {this.getMaybeFreezeButton(slaveModel)}
-                    {this.getDecommissionOrRemoveButton(slaveModel)}
+                    {this.getMaybeReactivateButton(slave)}
+                    {this.getMaybeFreezeButton(slave)}
+                    {this.getDecommissionOrRemoveButton(slave)}
                 </div>
             }
         });
         return data;
-    },
+    }
 
     getSlaves(type, slaves) {
         let tableifiedSlaves = [];
@@ -241,31 +232,23 @@ let Slaves = React.createClass({
             });
         });
         return tableifiedSlaves;
-    },
+    }
 
     getActiveSlaves() {
-        return new SlavesCollection(
-            this.props.slaves.filter(model => __in__(model.get('state'), ['ACTIVE']))
-        );
-    },
+        return this.props.slaves.filter(({currentState}) => currentState.state === 'ACTIVE');
+    }
 
     getFrozenSlaves() {
-        return new SlavesCollection(
-            this.props.slaves.filter(model => __in__(model.get('state'), ['FROZEN']))
-        );
-    },
+        return this.props.slaves.filter(({currentState}) => currentState.state === 'FROZEN');
+    }
 
     getDecommissioningSlaves() {
-        return new SlavesCollection(
-            this.props.slaves.filter(model => __in__(model.get('state'), ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']))
-        );
-    },
+        return this.props.slaves.filter(({currentState}) => __in__(currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']));
+    }
 
     getInactiveSlaves() {
-        return new SlavesCollection(
-            this.props.slaves.filter(model => __in__(model.get('state'), ['DEAD', 'MISSING_ON_STARTUP']))
-        );
-    },
+        return this.props.slaves.filter(({currentState}) => __in__(currentState.state, ['DEAD', 'MISSING_ON_STARTUP']));
+    }
 
     getStates() {
         return [
@@ -294,7 +277,7 @@ let Slaves = React.createClass({
                 hostsInState: this.getSlaves('inactive', this.getInactiveSlaves())
             }
         ];
-    },
+    }
 
     render() {
       return (
@@ -304,10 +287,21 @@ let Slaves = React.createClass({
         />
       );
     }
-});
+};
 
+Slaves.prototype.typeName = {
+        'active': 'Activated By',
+        'frozen': 'Frozen By',
+        'decommissioning': 'Decommissioned By'
+    }
 
-export default Slaves;
+function mapStateToProps(state) {
+    return {
+        slaves: state.api.slaves.data
+    }
+}
+
+export default connect(mapStateToProps)(Slaves);
 
 function __in__(needle, haystack) {
   return haystack.indexOf(needle) >= 0;
