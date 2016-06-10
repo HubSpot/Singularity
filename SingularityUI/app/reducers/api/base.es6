@@ -9,12 +9,12 @@ export default function buildApiActionReducer(ActionGroup, initialData=[]) {
   return function reducer(state = initialState, action) {
     switch (action.type) {
       case ActionGroup.ERROR:
-        return Object.assign({}, state, {
+        return _.extend({}, state, {
           isFetching: false,
           error: action.error
         });
       case ActionGroup.SUCCESS:
-        return Object.assign({}, state, {
+        return _.extend({}, state, {
           isFetching: false,
           error: null,
           receivedAt: Date.now(),
@@ -22,7 +22,7 @@ export default function buildApiActionReducer(ActionGroup, initialData=[]) {
         });
       case ActionGroup.STARTED:
         // Request initiated
-        return Object.assign({}, state, {
+        return _.extend({}, state, {
           isFetching: true,
           error: null
         });
