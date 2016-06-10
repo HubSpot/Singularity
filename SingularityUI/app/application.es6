@@ -1,7 +1,7 @@
 import Router from 'router';
 
 import configureStore from 'store';
-import { fetchUser } from 'actions/api/user';
+import { FetchAction } from 'actions/api/user';
 
 import NavView from 'views/nav';
 import GlobalSearchView from 'views/globalSearch';
@@ -20,7 +20,7 @@ class Application {
     this.store = configureStore();
 
     // set up user
-    this.store.dispatch(fetchUser());
+    this.store.dispatch(FetchAction.trigger());
 
     // set up ajax error handling
     this.unloading = false;

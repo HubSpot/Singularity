@@ -6,6 +6,7 @@ import Link from '../common/atomicDisplayItems/Link';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
+import { FreezeAction } from '../../actions/api/slaves';
 
 class Slaves extends React.Component {
 
@@ -58,9 +59,9 @@ class Slaves extends React.Component {
         return slaveModel.promptDecommission(() => this.refresh());
     }
 
-    promptFreeze(event, slaveModel) {
+    promptFreeze(event, slave) {
         event.preventDefault();
-        return slaveModel.promptFreeze(() => this.refresh());
+        //return slaveModel.promptFreeze(() => this.refresh());
     }
 
     promptRemove(event, slaveModel) {
@@ -92,14 +93,14 @@ class Slaves extends React.Component {
     }
 
     getMaybeFreezeButton(slave) {
-        if (slave.state === 'ACTIVE') {
+        if (slave.currentState.state === 'ACTIVE') {
           return (
             <Link
                 prop = {{
                     text: <Glyphicon
                         iconClass = 'stop'
                     />,
-                    onClickFn: (event) => {this.promptFreeze(event, slave)},
+                    onClickFn: (event) => {event.preventDefault(); this.props.freezeSlave(slave);},
                     title: 'Freeze',
                     altText: `Freeze ${slave.id}`,
                     overlayTrigger: true,
@@ -301,7 +302,13 @@ function mapStateToProps(state) {
     }
 }
 
-export default connect(mapStateToProps)(Slaves);
+function mapDispatchToProps(dispatch) {
+    return {
+        freezeSlave: (slave) => { dispatch(FreezeAction.trigger(slave.id)); }
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Slaves);
 
 function __in__(needle, haystack) {
   return haystack.indexOf(needle) >= 0;

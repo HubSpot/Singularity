@@ -1,46 +1,54 @@
 import fetch from 'isomorphic-fetch';
 
-export default function buildAction(name, apiPath) {
-  const FETCH = 'FETCH_' + name;
-  const FETCH_STARTED = 'FETCH_' + name + '_STARTED';
-  const FETCH_ERROR = 'FETCH_' + name + '_ERROR';
-  const FETCH_SUCCESS = 'FETCH_' + name + '_SUCCESS';
+export default function buildApiAction(actionName, apiPath, opts={}) {
+  const ACTION = actionName;
+  const STARTED = actionName + '_STARTED';
+  const ERROR = actionName + '_ERROR';
+  const SUCCESS = actionName + '_SUCCESS';
 
-  function fetch() {
+  let apiPathFunc;
+
+  if (typeof apiPath === 'string') {
+    apiPathFunc = () => apiPath;
+  } else {
+    apiPathFunc = apiPath;
+  }
+
+  function trigger(...args) {
     return function (dispatch) {
-      dispatch(fetchStarted());
+      dispatch(started());
 
-      return fetch(config.apiRoot + apiPath, {credentials: 'include'})
+      return fetch(config.apiRoot + apiPathFunc(...args), Object.assign({credentials: 'include'}, opts))
         .then(response => response.json())
         .then(json => {
-          dispatch(fetchSuccess(json));
+          dispatch(success(json));
         })
         .catch(ex => {
-          dispatch(fetchError(ex));
+          dispatch(error(ex));
         });
     }
   }
 
-  function fetchStarted() {
-    return { type: FETCH_STARTED };
+  function started() {
+    return { type: STARTED };
   }
 
-  function fetchError(error) {
-    return { type: FETCH_ERROR };
+  function error(error) {
+    return { type: ERROR, error };
   }
 
-  function fetchSuccess(data) {
-    return { type: FETCH_SUCCESS, data };
+  function success(data) {
+    return { type: SUCCESS, data };
   }
 
   return {
-    FETCH,
-    FETCH_STARTED,
-    FETCH_ERROR,
-    FETCH_SUCCESS,
-    fetch,
-    fetchStarted,
-    fetchError,
-    fetchSuccess
+    ACTION,
+    STARTED,
+    ERROR,
+    SUCCESS,
+    trigger,
+    started,
+    error,
+    success
   }
 }
