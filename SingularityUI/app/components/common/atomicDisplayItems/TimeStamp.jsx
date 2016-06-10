@@ -8,7 +8,8 @@ let TimeStamp = React.createClass({
             timestamp: React.PropTypes.number.isRequired,
             className: React.PropTypes.string,
             display: React.PropTypes.string.isRequired,
-            postfix: React.PropTypes.string
+            postfix: React.PropTypes.string,
+            prefix: React.PropTypes.string
         }).isRequired
     },
 
@@ -36,7 +37,7 @@ let TimeStamp = React.createClass({
         } else if (this.props.prop.display === 'duration') {
             formatted = this.duration();
         }
-        return <div className={this.props.prop.className}>{`${formatted} ${this.props.prop.postfix || ''}`}</div>;
+        return <div className={this.props.prop.className}>{`${this.props.prop.prefix || ''} ${formatted} ${this.props.prop.postfix || ''}`}</div>;
     }
 });
 

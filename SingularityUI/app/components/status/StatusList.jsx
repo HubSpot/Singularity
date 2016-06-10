@@ -10,7 +10,6 @@ export default class StatusList extends React.Component {
   constructor() {
     super();
     this.state = {
-      showChange: false,
       changes: []
     };
   }
@@ -20,19 +19,18 @@ export default class StatusList extends React.Component {
     for (let d of nextProps.data) {
       if (!d || !d.prop.id) return;
       let matchingData = _.find(this.props.data, (data) => {
-        return data.id == d.id;
+        if (data.prop.id == d.prop.id) {
+          return true;
+        }
       });
-      console.log(d.prop.value, matchingData.prop.value);
-      if (d.prop.value && matchingData) {
+      if (d.prop.value && matchingData && d.prop.value != matchingData.prop.value) {
         changes.push({
-          id: d.id,
+          id: d.prop.id,
           diff: d.prop.value - matchingData.prop.value
         });
       }
     }
-    console.log(changes);
     this.setState({
-      showChange: changes.length > 0,
       changes: changes
     });
   }
@@ -49,13 +47,36 @@ export default class StatusList extends React.Component {
     return this.props.data.map((d, i) => {
       if (!d) {return}
       let ComponentClass = d.component;
+      let diff = this.getDiffFor(d)
+      let cn = {};
+      if (diff) {
+        cn = {className: diff.diff > 0 ? 'changed-direction-increase' : 'changed-direction-decrease'};
+      }
+
       return (
         <li key={i} className="list-group-item">
           {this.renderBefore(d)}
-          <ComponentClass prop={d.prop} />
+          <ComponentClass prop={_.extend(d.prop, cn)} />
+          {this.renderDiff(diff)}
         </li>
       );
     });
+  }
+
+  getDiffFor(d) {
+    if (!d.prop.id) return;
+    return _.find(this.state.changes, (c) => { return c.id == d.prop.id});
+  }
+
+  renderDiff(change) {
+    if (change) {
+      setTimeout(() => {
+        this.setState({changes: _.without(this.state.changes, change)});
+      }, 4000);
+      return (
+        <span className={`changeDifference ${change.diff > 0 ? 'color-success' : 'color-warning'}`}>{`${change.diff > 0 ? '+' : ''}${change.diff}`}</span>
+      );
+    }
   }
 
   render() {

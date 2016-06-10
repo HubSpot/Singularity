@@ -30,7 +30,7 @@ export default class StatusPage extends React.Component {
   }
 
   getTasksData() {
-    return this.props.tasks.map((t) => {
+    let res = this.props.tasks.map((t) => {
       return (
         {
           component: Link,
@@ -44,10 +44,24 @@ export default class StatusPage extends React.Component {
         }
       );
     });
+    return res;
+  }
+
+  renderTaskLag() {
+    if (this.props.model.maxTaskLag > 0) {
+      return (
+        <h4>
+          <TimeStamp prop={{
+            timestamp: this.props.model.maxTaskLag,
+            display: 'duration',
+            prefix: 'Max Task Lag:'
+           }} />
+        </h4>
+      );
+    }
   }
 
   render() {
-    // console.log(this.props);
     let m = this.props.model;
     return (
       <div>
@@ -70,6 +84,7 @@ export default class StatusPage extends React.Component {
               </div>
               <div className="col-md-9 col-sm-9">
                 <StatusList data={this.getTasksData()} />
+                {this.renderTaskLag()}
               </div>
           </div>
         </div>
