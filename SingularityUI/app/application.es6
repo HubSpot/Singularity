@@ -28,7 +28,7 @@ class Application {
       this.unloading = true;
     });
     $(document).on('ajaxError', this.handleAjaxError);
-    
+
     this.page = $('#page')[0];
 
     // wire up nav
@@ -47,7 +47,7 @@ class Application {
 
     // set up router
     this.router = new Router(this);
-    
+
     // set up Backbone history
     Backbone.history.start({
       pushState: true,

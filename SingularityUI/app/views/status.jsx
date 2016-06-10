@@ -12,7 +12,7 @@ class StatusView extends View {
     }
 
     initialize() {
-        return this.listenTo(this.model, 'sync', this.render);
+        this.listenTo(this.model, 'sync', this.render);
     }
 
     render() {

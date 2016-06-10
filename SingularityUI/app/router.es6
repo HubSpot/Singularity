@@ -8,7 +8,6 @@ let RequestFormEditController;
 let RequestFormNewController;
 let RequestsTableController;
 let SlavesController;
-let StatusController;
 let TaskDetailController;
 let TaskSearchController;
 let TasksTableController;
@@ -19,7 +18,7 @@ const hasProp = {}.hasOwnProperty;
 
 DashboardController = require('controllers/Dashboard');
 
-StatusController = require('controllers/Status');
+import StatusController from 'controllers/Status';
 
 RequestFormNewController = require('controllers/RequestFormNew');
 
@@ -62,7 +61,9 @@ class Router extends Backbone.Router {
   }
 
   status() {
-    return this.app.bootstrapController(new StatusController);
+    return this.app.bootstrapController(new StatusController({
+      store: this.app.store
+    }));
   }
 
   newRequest() {
