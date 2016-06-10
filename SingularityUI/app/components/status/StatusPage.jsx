@@ -10,7 +10,6 @@ import { connect } from 'react-redux';
 export default class StatusPage extends React.Component {
 
   requestDetail(model) {
-
       let totalRequests = model.activeRequests + model.pausedRequests + model.cooldownRequests + model.pendingRequests + model.cleaningRequests;
 
       let requests = [
@@ -169,7 +168,7 @@ export default class StatusPage extends React.Component {
 
   render() {
     let m = this.props.status;
-
+    console.log(this.props);
     m.isLeaderConnected = false;
     m.hasLeader = false;
     for(let host in m.hostStates) {

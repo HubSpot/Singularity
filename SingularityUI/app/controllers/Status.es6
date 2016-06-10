@@ -1,6 +1,6 @@
 import Controller from './Controller';
 import StatusView from '../views/status';
-import { fetchStatus } from '../actions/api/status';
+import { FetchAction } from '../actions/api/status';
 
 class StatusController extends Controller {
 
@@ -9,7 +9,7 @@ class StatusController extends Controller {
         this.title('Status');
         this.store = store;
 
-        let initPromise = this.store.dispatch(fetchStatus());
+        let initPromise = this.store.dispatch(FetchAction.trigger());
         initPromise.then(() => {
           this.setView(new StatusView(store));
           app.showView(this.view);
@@ -17,7 +17,7 @@ class StatusController extends Controller {
     }
 
     refresh() {
-        this.store.dispatch(fetchStatus());
+        this.store.dispatch(FetchAction.trigger());
     }
 }
 

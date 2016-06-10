@@ -1,5 +1,3 @@
-import fetch from 'isomorphic-fetch';
-
 import buildApiAction from './base';
 
 const POST_JSON = {method: 'POST', headers: {'Accept': 'application/json', 'Content-Type': 'application/json'}};
