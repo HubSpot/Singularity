@@ -9,7 +9,7 @@ export function fetchStatus() {
   return function (dispatch) {
     dispatch(fetchStatusStarted());
 
-    return fetch(`${config.apiRoot}/state`, {
+    return fetch(`${config.apiRoot}/state/`, {
       credentials: 'include'
     })
       .then(response => response.json())
