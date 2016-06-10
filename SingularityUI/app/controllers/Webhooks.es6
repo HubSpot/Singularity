@@ -1,6 +1,6 @@
 import Controller from './Controller';
 import WebhooksView from '../views/webhooks';
-import { fetchWebhooks } from '../actions/api/webhooks';
+import { FetchAction } from '../actions/api/webhooks';
 
 class WebhooksController extends Controller {
     initialize({store}) {
@@ -14,8 +14,7 @@ class WebhooksController extends Controller {
     }
 
     refresh() {
-      console.log("refresh");
-      this.store.dispatch(fetchWebhooks());
+      this.store.dispatch(FetchAction.trigger());
     }
 }
 

@@ -150,7 +150,6 @@ let Webhooks = React.createClass({
 
     getWebhookTableData() {
         let data = [];
-        console.log(this.props.collections);
         this.props.collections.webhooks.map(webhook => data.push({
             dataId: webhook.id,
             dataCollection: 'webhooks',

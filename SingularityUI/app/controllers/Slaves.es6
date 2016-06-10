@@ -1,6 +1,6 @@
 import Controller from './Controller';
 import SlavesView from '../views/slaves';
-import { fetchSlaves } from '../actions/api/slaves';
+import { FetchAction } from '../actions/api/slaves';
 
 class SlavesController extends Controller {
 
@@ -15,7 +15,7 @@ class SlavesController extends Controller {
   }
 
   refresh() {
-      this.store.dispatch(fetchSlaves());
+      this.store.dispatch(FetchAction.trigger());
   }
 }
 

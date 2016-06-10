@@ -1,7 +1,5 @@
 import Controller from './Controller';
 
-import LogLines from '../collections/LogLines';
-
 import LogView from '../views/logView';
 
 import LogActions from '../actions/log';
