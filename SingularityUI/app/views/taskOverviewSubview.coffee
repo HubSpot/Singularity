@@ -61,9 +61,14 @@ class taskOverviewSubview extends View
                         btnText = 'Kill task'
                         templ = killTemplate
 
-                    checked = ""
+                    waitBox = ''
                     if @model.get('task').taskRequest.request.requestType in ['WORKER', 'SERVICE']
-                        checked = "checked"
+                        waitBox = """
+                            <label name="wait-for-replacement-task-label" id="wait-for-replacement-task-label" for="wait-for-replacement-task">
+                                <input name="wait-for-replacement-task" id="wait-for-replacement-task" type="checkbox" checked="checked" />
+                                Wait for replacement task to start before killing task
+                            </label>
+                        """
 
                     vex.dialog.confirm
                         buttons: [
@@ -73,10 +78,7 @@ class taskOverviewSubview extends View
                             vex.dialog.buttons.NO
                         ]
                         input: """
-                            <label name="wait-for-replacement-task-label" id="wait-for-replacement-task-label" for="wait-for-replacement-task">
-                                <input name="wait-for-replacement-task" id="wait-for-replacement-task" type="checkbox" #{checked} /> 
-                                Wait for replacement task to start before killing task
-                            </label>
+                            #{waitBox}
                             <input name="message" type="text" placeholder="Message (optional)" />
                         """
                         message: templ id: @model.taskId
