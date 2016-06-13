@@ -18,7 +18,6 @@ module.exports = {
       'bootstrap',
       'classnames',
       'react-interval',
-      'backbone-react-component',
       'react-dom',
       'fuzzy',
       'datatables',
