@@ -8,6 +8,8 @@ class DeployDetailController extends Controller {
         app.showPageLoader()
         this.title('Status');
         this.store = store;
+        this.requestId = requestId;
+        this.deployId = deployId;
 
         let initPromise = this.store.dispatch(FetchAction.trigger(requestId, deployId));
         initPromise.then(() => {
@@ -17,7 +19,7 @@ class DeployDetailController extends Controller {
     }
 
     refresh() {
-        this.store.dispatch(FetchAction.trigger(requestId, deployId));
+        this.store.dispatch(FetchAction.trigger(this.requestId, this.deployId));
     }
 }
 
