@@ -2,7 +2,7 @@ import React from 'react';
 import Table from '../common/Table';
 import PlainText from '../common/atomicDisplayItems/PlainText';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
-import Timestamp from '../common/atomicDisplayItems/Timestamp';
+import Timestamp from '../common/atomicDisplayItems/TimeStamp';
 import Utils from '../../utils';
 
 export default class HostStates extends React.Component {
