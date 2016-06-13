@@ -21,7 +21,7 @@ let Link = React.createClass({
     },
 
     getLink() {
-        return <a href={this.props.prop.url} title={this.props.prop.title} onClick={this.props.prop.onClickFn} className={this.props.prop.className} id={this.props.id} key={this.props.key}>{this.props.prop.text}</a>;
+        return <a href={this.props.prop.url} title={this.props.prop.title} onClick={this.props.prop.onClickFn} className={this.props.prop.className} id={this.props.id}>{this.props.prop.text}</a>;
     },
 
     getToolTip() {
