@@ -4,7 +4,6 @@ import { FetchAction } from '../actions/api/racks';
 
 class RacksController extends Controller {
   initialize({store}) {
-    console.log("store:", store);
     this.title('Racks');
     this.setView(new RacksView(store));
     app.showView(this.view);
