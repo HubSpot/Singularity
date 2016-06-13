@@ -16,7 +16,7 @@ cancelDeployTemplate = require '../templates/vex/cancelDeploy'
 TaskHistory = require '../models/TaskHistory'
 TaskPoller = require '../views/TaskPoller'
 
-Utils = require '../utils'
+Utils = require('../utils').default
 
 vex = require('vex.dialog').default
 juration = require 'juration'
