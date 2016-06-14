@@ -8,6 +8,7 @@ import { DeployState, InfoBox } from '../common/statelessComponents';
 import Breadcrumbs from '../common/Breadcrumbs';
 import JSONButton from '../common/JSONButton';
 import SimpleTable from '../common/SimpleTable';
+import CollapsableSection from '../common/CollapsableSection';
 
 class DeployDetail extends React.Component {
 
@@ -95,10 +96,7 @@ class DeployDetail extends React.Component {
   renderActiveTasks(d, tasks) {
     const headers = ['Name', 'Last State', 'Started', 'Updated', '', ''];
     return (
-      <div>
-        <div className="page-header">
-            <h2>Active Tasks</h2>
-        </div>
+      <CollapsableSection title="Active Tasks" defaultExpanded>
         <SimpleTable
           unit="task"
           entries={tasks}
@@ -124,7 +122,7 @@ class DeployDetail extends React.Component {
             );
           }}
         />
-      </div>
+      </CollapsableSection>
     );
   }
 
@@ -157,16 +155,21 @@ class DeployDetail extends React.Component {
       }
     }
     return (
-      <div>
-        <div className="page-header">
-            <h2>Info</h2>
-        </div>
+      <CollapsableSection title="Info" defaultExpanded>
         <div className="row">
           <ul className="list-unstyled horizontal-description-list">
             {stats}
           </ul>
         </div>
-      </div>
+      </CollapsableSection>
+    );
+  }
+
+  renderHealthchecks(d) {
+    return (
+      <CollapsableSection title="Latest Health Checks">
+        
+      </CollapsableSection>
     );
   }
 
@@ -177,6 +180,7 @@ class DeployDetail extends React.Component {
         {this.renderHeader(this.props.deploy)}
         {this.renderActiveTasks(this.props.deploy, this.props.activeTasks)}
         {this.renderInfo(this.props.deploy)}
+        {this.renderHealthchecks(this.props.deploy)}
       </div>
     );
   }
