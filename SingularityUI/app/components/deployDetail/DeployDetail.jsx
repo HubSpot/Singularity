@@ -1,12 +1,18 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import Clipboard from 'clipboard';
+import Utils from '../../utils';
 
-import { DeployState } from '../common/statelessComponents';
+import { DeployState, InfoBox } from '../common/statelessComponents';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import JSONButton from '../common/JSONButton';
 
 class DeployDetail extends React.Component {
+
+  componentDidMount() {
+    new Clipboard('.info-copyable');
+  }
 
   renderHeader(d) {
     let message;
@@ -79,12 +85,55 @@ class DeployDetail extends React.Component {
     );
   }
 
+  renderInfo(d) {
+    let stats = [];
+
+    if (d.deployMarker.timestamp) {
+      stats.push(<InfoBox key='initiated' copyableClassName="info-copyable" name="Initiated" value={Utils.timeStampFromNow(d.deployMarker.timestamp)} />);
+    }
+    if (d.deployResult.timestamp) {
+      stats.push(<InfoBox key='completed' copyableClassName="info-copyable" name="Completed" value={Utils.timeStampFromNow(d.deployResult.timestamp)} />);
+    }
+    if (d.deploy.executorData && d.deploy.executorData.cmd) {
+      stats.push(<InfoBox key='cmd' copyableClassName="info-copyable" name="Command" value={d.deploy.executorData.cmd} />);
+    }
+    if (d.deploy.resources.cpus) {
+      let value = `CPUs: ${d.deploy.resources.cpus} | Memory (Mb): ${d.deploy.resources.memoryMb} | Ports: ${d.deploy.resources.numPorts}`;
+      stats.push(<InfoBox key='cpus' copyableClassName="info-copyable" name="Resources" value={value} />);
+    }
+    if (d.deploy.executorData && d.deploy.executorData.extraCmdLineArgs) {
+      stats.push(<InfoBox key='args' copyableClassName="info-copyable" name="Extra Command Line Arguments" value={d.deploy.executorData.extraCmdLineArgsd} />);
+    }
+
+    for (let s in d.deployStatistics) {
+      if (typeof d.deployStatistics[s] !== 'object') {
+        let value = typeof d.deployStatistics[s] === 'string' ? Utils.humanizeText(d.deployStatistics[s]) : d.deployStatistics[s];
+        stats.push(
+          <InfoBox copyableClassName="info-copyable" key={s} name={Utils.humanizeCamelcase(s)} value={value} />
+        );
+      }
+    }
+    return (
+      <div>
+        <div className="page-header">
+            <h2>Info</h2>
+        </div>
+        <div className="row">
+          <ul className="list-unstyled horizontal-description-list">
+            {stats}
+          </ul>
+        </div>
+      </div>
+    );
+  }
+
   render() {
     console.log(this.props.deploy);
     let d = this.props.deploy;
     return (
       <div>
         {this.renderHeader(d)}
+        {this.renderInfo(d)}
       </div>
     );
   }

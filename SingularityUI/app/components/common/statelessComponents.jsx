@@ -6,4 +6,15 @@ export const DeployState = (props) => {
         {props.state}
     </span>
   );
-}
+};
+
+export const InfoBox = (props) => {
+  return (
+    <li className="col-md-4">
+        <div>
+            <h4>{props.name}<a className={props.copyableClassName} data-clipboard-text={props.value}>Copy</a></h4>
+            <p>{props.value}</p>
+        </div>
+    </li>
+  );
+};
