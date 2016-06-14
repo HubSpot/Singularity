@@ -259,7 +259,7 @@ public class SingularityScheduler {
 
       final double taskPriorityLevel = maybeRequest.get().getRequest().getTaskPriorityLevel().or(configuration.getDefaultTaskPriorityLevel());
       if (maybePriorityFreeze.isPresent() && taskPriorityLevel < maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel()) {
-        LOG.debug("Pending request {} is frozen due to priority level {} being lower than {}", taskPriorityLevel, maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel());
+        LOG.debug("Pending request {} is frozen due to priority level {} being lower than {}", pendingRequest, taskPriorityLevel, maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel());
         frozenRequests++;
         continue;
       }
