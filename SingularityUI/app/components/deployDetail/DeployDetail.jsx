@@ -62,11 +62,17 @@ class DeployDetail extends React.Component {
         <div className="row">
           <div className="col-md-12">
             <Breadcrumbs
-              items={[{
+              items={[
+                {
                   label: "Request",
                   text: d.deploy.requestId,
                   link: `${config.appRoot}/request/${d.deploy.requestId}`
-                }]}
+                },
+                {
+                  label: "Deploy",
+                  text: d.deploy.id
+                }
+              ]}
             />
           </div>
         </div>
