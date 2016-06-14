@@ -165,22 +165,47 @@ class DeployDetail extends React.Component {
     );
   }
 
-  renderHealthchecks(d) {
+  renderHealthchecks(d, healthchecks) {
+    const headers = ['Task', 'Timestamp', 'Duration', 'Status', 'Message', ''];
     return (
       <CollapsableSection title="Latest Health Checks">
-
+        <SimpleTable
+          unit="healthcheck"
+          entries={_.values(healthchecks)}
+          perPage={5}
+          first
+          last
+          renderTableHeaders={() => {
+            let row = headers.map((h, i) => {
+              return <th key={i}>{h}</th>;
+            });
+            return <tr>{row}</tr>;
+          }}
+          renderTableRow={(data, index) => {
+            return (
+              <tr key={index}>
+                <td><a href={`${config.appRoot}/task/${data.taskId.id}`}>{data.taskId.id}</a></td>
+                <td>{Utils.absoluteTimestamp(data.timestamp)}</td>
+                <td>{data.durationMillis} {data.durationMillis ? 'ms' : ''}</td>
+                <td>{data.statusCode ? <span className={`label label-${data.statusCode == 200 ? 'success' : 'danger'}`}>HTTP {data.statusCode}</span> : <span className="label label-warning">No Response</span>}</td>
+                <td><pre className="healthcheck-message">{data.errorMessage || data.responseBody}</pre></td>
+                <td className="actions-column"><JSONButton object={data} text="{ }" /></td>
+              </tr>
+            );
+          }}
+        />
       </CollapsableSection>
     );
   }
 
   render() {
-    console.log(this.props);
+    // console.log(this.props);
     return (
       <div>
         {this.renderHeader(this.props.deploy)}
         {this.renderActiveTasks(this.props.deploy, this.props.activeTasks)}
         {this.renderInfo(this.props.deploy)}
-        {this.renderHealthchecks(this.props.deploy)}
+        {this.renderHealthchecks(this.props.deploy, this.props.latestHealthchecks)}
       </div>
     );
   }
@@ -194,6 +219,7 @@ function mapStateToProps(state) {
       });
     }
   });
+  latestHealthchecks = _.without(latestHealthchecks, undefined);
   return {
     deploy: state.api.deploy.data,
     activeTasks: state.api.activeTasksForDeploy.data,

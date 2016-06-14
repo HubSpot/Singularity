@@ -10,6 +10,9 @@ export default function task(state = initialState, action) {
         isFetching: false,
         error: action.error
       };
+      if (state[action.taskId]) {
+        newData[action.taskId] = _.extend(state[action.taskId], newData[action.taskId]);
+      }
       return _.extend({}, state, newData);
     case TaskActions.FETCH_TASK_SUCCESS:
       newData[action.taskId] = {
@@ -18,6 +21,9 @@ export default function task(state = initialState, action) {
         receivedAt: Date.now(),
         data: action.data
       };
+      if (state[action.taskId]) {
+        newData[action.taskId] = _.extend(state[action.taskId], newData[action.taskId]);
+      }
       return _.extend({}, state, newData);
     case TaskActions.FETCH_TASK_STARTED:
       // Request initiated
@@ -25,6 +31,9 @@ export default function task(state = initialState, action) {
         isFetching: true,
         error: null
       };
+      if (state[action.taskId]) {
+        newData[action.taskId] = _.extend(state[action.taskId], newData[action.taskId]);
+      }
       return _.extend({}, state, newData);
     default:
       return state;
