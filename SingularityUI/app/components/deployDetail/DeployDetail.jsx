@@ -168,7 +168,7 @@ class DeployDetail extends React.Component {
   renderHealthchecks(d, healthchecks) {
     const headers = ['Task', 'Timestamp', 'Duration', 'Status', 'Message', ''];
     return (
-      <CollapsableSection title="Latest Health Checks">
+      <CollapsableSection title="Latest Healthchecks">
         <SimpleTable
           unit="healthcheck"
           entries={_.values(healthchecks)}
@@ -199,7 +199,7 @@ class DeployDetail extends React.Component {
   }
 
   render() {
-    // console.log(this.props);
+    console.log(this.props);
     return (
       <div>
         {this.renderHeader(this.props.deploy)}
@@ -212,6 +212,7 @@ class DeployDetail extends React.Component {
 }
 
 function mapStateToProps(state) {
+  console.log(state);
   let latestHealthchecks = _.mapObject(state.api.task, (val, key) => {
     if (val.data) {
       return _.max(val.data.healthcheckResults, (hc) => {

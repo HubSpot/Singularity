@@ -9,6 +9,7 @@ import { FetchAction as RacksFetchAction } from '../../actions/api/racks';
 import { FetchAction as StatusFetchAction } from '../../actions/api/status';
 import { FetchAction as DeployFetchAction } from '../../actions/api/deploy';
 import { FetchForDeployAction as TasksFetchForDeployAction } from '../../actions/api/tasks';
+import { FetchForDeploy as TaskHistoryFetchForDeploy } from '../../actions/api/taskHistory';
 
 const user = buildApiActionReducer(UserFetchAction);
 const webhooks = buildApiActionReducer(WebhooksFetchAction);
@@ -17,6 +18,16 @@ const racks = buildApiActionReducer(RacksFetchAction);
 const status = buildApiActionReducer(StatusFetchAction);
 const deploy = buildApiActionReducer(DeployFetchAction);
 const activeTasksForDeploy = buildApiActionReducer(TasksFetchForDeployAction);
+const taskHistoryForDeploy = buildApiActionReducer(TaskHistoryFetchForDeploy);
 
-
-export default combineReducers({user, webhooks, slaves, racks, status, deploy, task, activeTasksForDeploy});
+export default combineReducers({
+  user,
+  webhooks,
+  slaves,
+  racks,
+  status,
+  deploy,
+  task,
+  activeTasksForDeploy,
+  taskHistoryForDeploy
+});

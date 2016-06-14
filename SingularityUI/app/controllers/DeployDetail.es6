@@ -3,6 +3,7 @@ import DeployView from '../views/deploy';
 import { FetchAction as DeployFetchAction} from '../actions/api/deploy';
 import { fetchTask as TaskFetchAction} from '../actions/api/task';
 import { FetchForDeployAction } from '../actions/api/tasks';
+import { FetchForDeploy as TaskHistoryFetchForDeploy } from '../actions/api/taskHistory';
 
 class DeployDetailController extends Controller {
 
@@ -25,6 +26,8 @@ class DeployDetailController extends Controller {
             this.store.dispatch(TaskFetchAction(t.taskId.id));
           }
         });
+
+        this.store.dispatch(TaskHistoryFetchForDeploy.trigger(requestId, deployId, 5, 1));
     }
 
     refresh() {
