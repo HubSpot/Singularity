@@ -31,6 +31,7 @@ import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
+import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.SingularityWebhook;
@@ -56,20 +57,24 @@ public class SingularityValidator {
   private final int deployIdLength;
   private final DeployHistoryHelper deployHistoryHelper;
   private final Resources defaultResources;
+  private final PriorityManager priorityManager;
+  private final double defaultTaskPriorityLevel;
 
   @Inject
-  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, RequestManager requestManager) {
+  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
     this.createDeployIds = configuration.isCreateDeployIds();
     this.deployIdLength = configuration.getDeployIdLength();
     this.deployHistoryHelper = deployHistoryHelper;
+    this.priorityManager = priorityManager;
 
     this.defaultCpus = configuration.getMesosConfiguration().getDefaultCpus();
     this.defaultMemoryMb = configuration.getMesosConfiguration().getDefaultMemory();
 
     defaultResources = new Resources(defaultCpus, defaultMemoryMb, 0);
+    defaultTaskPriorityLevel = configuration.getDefaultTaskPriorityLevel();
 
     this.maxCpusPerInstance = configuration.getMesosConfiguration().getMaxNumCpusPerInstance();
     this.maxCpusPerRequest = configuration.getMesosConfiguration().getMaxNumCpusPerRequest();
@@ -250,6 +255,10 @@ public class SingularityValidator {
 
     checkBadRequest(deployHistoryHelper.isDeployIdAvailable(request.getId(), deployId), "Can not deploy a deploy that has already been deployed");
 
+    if (request.isDeployable()) {
+      checkRequestForPriorityFreeze(request);
+    }
+
     return deploy;
   }
 
@@ -425,5 +434,17 @@ public class SingularityValidator {
     }
 
     return priorityFreeze;
+  }
+
+  public void checkRequestForPriorityFreeze(SingularityRequest request) {
+    final Optional<SingularityPriorityFreezeParent> maybePriorityFreeze = priorityManager.getActivePriorityFreeze();
+
+    if (!maybePriorityFreeze.isPresent()) {
+      return;
+    }
+
+    final double taskPriorityLevel = request.getTaskPriorityLevel().or(defaultTaskPriorityLevel);
+
+    checkBadRequest(taskPriorityLevel >= maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel(), "Priority level of request %s (%s) is lower than active priority freeze (%s)", request.getId(), taskPriorityLevel, maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel());
   }
 }

@@ -11,7 +11,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hubspot.mesos.JavaUtils;
-import com.hubspot.singularity.SingularityPendingTaskId;
+import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskCleanup;
@@ -74,22 +74,6 @@ public class SingularityPriorityKillPoller extends SingularityLeaderOnlyPoller {
                 requestIdToTaskPriority.put(requestWithState.getRequest().getId(), requestWithState.getRequest().getTaskPriorityLevel().or(defaultTaskPriorityLevel));
             }
 
-            // cancel pending tasks below minimum priority level
-            for (SingularityPendingTaskId pendingTaskId : taskManager.getPendingTaskIds()) {
-                if (!requestIdToTaskPriority.containsKey(pendingTaskId.getRequestId())) {
-                    LOG.trace("Unable to lookup priority level for pending task {}, skipping...", pendingTaskId);
-                    continue;
-                }
-
-                final double taskPriorityLevel = requestIdToTaskPriority.get(pendingTaskId.getRequestId());
-
-                if (taskPriorityLevel < minPriorityLevel) {
-                    LOG.info("Cancelling pending task {} since priority level {} is less than {}", pendingTaskId.getId(), taskPriorityLevel, minPriorityLevel);
-                    taskManager.deletePendingTask(pendingTaskId);
-                    cancelledPendingTaskCount++;
-                }
-            }
-
             // kill active tasks below minimum priority level
             for (SingularityTaskId taskId : taskManager.getActiveTaskIds()) {
                 if (!requestIdToTaskPriority.containsKey(taskId.getRequestId())) {
@@ -104,6 +88,10 @@ public class SingularityPriorityKillPoller extends SingularityLeaderOnlyPoller {
                     taskManager.createTaskCleanup(
                         new SingularityTaskCleanup(maybePriorityFreeze.get().getUser(), TaskCleanupType.PRIORITY_KILL, now, taskId, maybePriorityFreeze.get().getPriorityFreeze().getMessage(),
                             maybePriorityFreeze.get().getPriorityFreeze().getActionId()));
+
+                    // create pending request so that we know to re-launch frozen requests
+                    requestManager.addToPendingQueue(new SingularityPendingRequest(taskId.getRequestId(), taskId.getDeployId(), now, Optional.<String>absent(),
+                        SingularityPendingRequest.PendingType.PRIORITY_FREEZE, Optional.<Boolean>absent(), Optional.<String>absent()));
                     killedTaskCount++;
                 }
             }
