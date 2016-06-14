@@ -212,7 +212,6 @@ class DeployDetail extends React.Component {
 }
 
 function mapStateToProps(state) {
-  console.log(state);
   let latestHealthchecks = _.mapObject(state.api.task, (val, key) => {
     if (val.data) {
       return _.max(val.data.healthcheckResults, (hc) => {
@@ -224,7 +223,8 @@ function mapStateToProps(state) {
   return {
     deploy: state.api.deploy.data,
     activeTasks: state.api.activeTasksForDeploy.data,
-    latestHealthchecks: latestHealthchecks
+    latestHealthchecks: latestHealthchecks,
+    taskHistory: state.api.taskHistoryForDeploy.data
   };
 }
 
