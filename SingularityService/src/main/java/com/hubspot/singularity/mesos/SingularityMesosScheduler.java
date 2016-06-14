@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Set;
 
 import javax.inject.Singleton;
@@ -32,6 +33,7 @@ import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityPendingDeploy;
+import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
@@ -43,6 +45,7 @@ import com.hubspot.singularity.config.CustomExecutorConfiguration;
 import com.hubspot.singularity.config.MesosConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DeployManager;
+import com.hubspot.singularity.data.PriorityManager;
 import com.hubspot.singularity.data.RequestManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.data.transcoders.IdTranscoder;
@@ -64,6 +67,7 @@ public class SingularityMesosScheduler implements Scheduler {
   private final TaskManager taskManager;
   private final RequestManager requestManager;
   private final DeployManager deployManager;
+  private final PriorityManager priorityManager;
   private final SingularityScheduler scheduler;
   private final SingularityConfiguration configuration;
   private final SingularityMesosTaskBuilder mesosTaskBuilder;
@@ -84,7 +88,7 @@ public class SingularityMesosScheduler implements Scheduler {
   private final IdTranscoder<SingularityTaskId> taskIdTranscoder;
 
   @Inject
-  SingularityMesosScheduler(MesosConfiguration mesosConfiguration, SingularityConfiguration configuration, TaskManager taskManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager,
+  SingularityMesosScheduler(MesosConfiguration mesosConfiguration, SingularityConfiguration configuration, TaskManager taskManager, PriorityManager priorityManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager,
       SingularitySchedulerPriority schedulerPriority, SingularityNewTaskChecker newTaskChecker, SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, RequestManager requestManager,
       Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager, SingularityExceptionNotifier exceptionNotifier,SingularityMesosFrameworkMessageHandler messageHandler,
       @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier, SingularityTaskSizeOptimizer taskSizeOptimizer, final IdTranscoder<SingularityTaskId> taskIdTranscoder, CustomExecutorConfiguration customExecutorConfiguration) {
@@ -92,6 +96,7 @@ public class SingularityMesosScheduler implements Scheduler {
     this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0, customExecutorConfiguration.getDiskMb());
     this.taskManager = taskManager;
     this.deployManager = deployManager;
+    this.priorityManager = priorityManager;
     this.schedulerPriority = schedulerPriority;
     this.newTaskChecker = newTaskChecker;
     this.slaveAndRackManager = slaveAndRackManager;
@@ -120,6 +125,25 @@ public class SingularityMesosScheduler implements Scheduler {
   public void reregistered(SchedulerDriver driver, Protos.MasterInfo masterInfo) {
     LOG.info("Reregistered driver {}, with master {}", driver, masterInfo);
     schedulerDriverSupplier.setSchedulerDriver(driver);
+  }
+
+  private void removeTasksAffectedByPriorityFreeze(List<SingularityTaskRequest> taskRequests) {
+    final Optional<SingularityPriorityFreezeParent> maybePriorityFreeze = priorityManager.getActivePriorityFreeze();
+
+    if (maybePriorityFreeze.isPresent()) {
+      final ListIterator<SingularityTaskRequest> iterator = taskRequests.listIterator();
+
+      while (iterator.hasNext()) {
+        final SingularityTaskRequest taskRequest = iterator.next();
+
+        final double taskPriorityLevel = taskRequest.getRequest().getTaskPriorityLevel().or(configuration.getDefaultTaskPriorityLevel());
+
+        if (taskPriorityLevel < maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel()) {
+          LOG.trace("Skipping scheduled task {} because taskPriorityLevel ({}) is less than active priority freeze ({})", taskRequest.getPendingTask().getPendingTaskId(), taskPriorityLevel, maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel());
+          iterator.remove();
+        }
+      }
+    }
   }
 
   @Override
@@ -154,6 +178,8 @@ public class SingularityMesosScheduler implements Scheduler {
       for (SingularityTaskRequest taskRequest : taskRequests) {
         LOG.trace("Task {} is due", taskRequest.getPendingTask().getPendingTaskId());
       }
+
+      removeTasksAffectedByPriorityFreeze(taskRequests);
 
       numDueTasks = taskRequests.size();
 
