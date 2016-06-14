@@ -174,7 +174,7 @@ class DeployDetail extends React.Component {
   }
 
   render() {
-    // console.log(this.props);
+    console.log(this.props);
     return (
       <div>
         {this.renderHeader(this.props.deploy)}
@@ -187,11 +187,18 @@ class DeployDetail extends React.Component {
 }
 
 function mapStateToProps(state) {
-    console.log(state);
-    return {
-        deploy: state.api.deploy.data,
-        activeTasks: state.api.activeTasksForDeploy.data
-    };
+  let latestHealthchecks = _.mapObject(state.api.task, (val, key) => {
+    if (val.data) {
+      return _.max(val.data.healthcheckResults, (hc) => {
+        return hc.timestamp;
+      });
+    }
+  });
+  return {
+    deploy: state.api.deploy.data,
+    activeTasks: state.api.activeTasksForDeploy.data,
+    latestHealthchecks: latestHealthchecks
+  };
 }
 
 export default connect(mapStateToProps)(DeployDetail);

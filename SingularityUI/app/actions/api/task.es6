@@ -7,7 +7,7 @@ export const FETCH_TASK_SUCCESS = 'FETCH_TASK_SUCCESS';
 
 export function fetchTask(taskId) {
   return function (dispatch) {
-    dispatch(fetchTaskStarted());
+    dispatch(fetchTaskStarted(taskId));
 
     return fetch(`${ config.apiRoot }/history/task/${taskId}`, {
       credentials: 'include'
