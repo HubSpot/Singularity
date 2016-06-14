@@ -97,6 +97,8 @@ class DeployDetail extends React.Component {
           unit="task"
           entries={tasks}
           perPage={5}
+          first
+          last
           renderTableHeaders={() => {
             let row = headers.map((h, i) => {
               return <th key={i}>{h}</th>;

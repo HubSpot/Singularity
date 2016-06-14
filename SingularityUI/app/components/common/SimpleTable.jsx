@@ -36,8 +36,8 @@ export default class SimpleTable extends React.Component {
           <Pagination
             prev={true}
             next={true}
-            first={true}
-            last={true}
+            first={this.props.first}
+            last={this.props.last}
             ellipsis={false}
             items={Math.ceil(this.props.entries.length / this.props.perPage)}
             maxButtons={2}
