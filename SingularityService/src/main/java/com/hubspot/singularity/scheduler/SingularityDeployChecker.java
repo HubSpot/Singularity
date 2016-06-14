@@ -127,7 +127,7 @@ public class SingularityDeployChecker {
         cancelLoadBalancer(pendingDeploy, SingularityDeployFailure.deployRemoved());
       }
 
-      removePendingDeploy(pendingDeploy);
+      failPendingDeployDueToState(pendingDeploy, maybeRequestWithState.get(), deploy);
       return;
     }
 
@@ -278,6 +278,12 @@ public class SingularityDeployChecker {
 
   private void removePendingDeploy(SingularityPendingDeploy pendingDeploy) {
     deployManager.deletePendingDeploy(pendingDeploy.getDeployMarker().getRequestId());
+  }
+
+  private void failPendingDeployDueToState(SingularityPendingDeploy pendingDeploy, SingularityRequestWithState requestWithState, Optional<SingularityDeploy> deploy) {
+    SingularityDeployResult deployResult = new SingularityDeployResult(DeployState.FAILED, Optional.of(String.format("Request in state %s is not deployable", requestWithState.getState())), Optional.<SingularityLoadBalancerUpdate>absent());
+    saveNewDeployState(pendingDeploy.getDeployMarker(), Optional.<SingularityDeployMarker> absent());
+    finishDeploy(requestWithState, deploy, pendingDeploy, Collections.<SingularityTaskId>emptyList(), deployResult);
   }
 
   private long getAllowedMillis(SingularityDeploy deploy) {
