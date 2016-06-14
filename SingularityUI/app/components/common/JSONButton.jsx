@@ -34,17 +34,19 @@ export default class JSONButton extends React.Component {
     return (
       <div>
         <a className="btn btn-default" onClick={this.showJSON.bind(this)}>JSON</a>
-        <Modal show={this.state.modalOpen} onHide={this.hideJSON.bind(this)}>
+        <Modal show={this.state.modalOpen} onHide={this.hideJSON.bind(this)} bsSize="large">
           <Modal.Body>
-            <JSONTree
-              data={this.props.object}
-              shouldExpandNode={() => {return true;}}
-              theme={JSONTreeTheme}
-            />
+            <div className="constrained-modal">
+              <JSONTree
+                data={this.props.object}
+                shouldExpandNode={() => {return true;}}
+                theme={JSONTreeTheme}
+              />
+            </div>
           </Modal.Body>
           <Modal.Footer>
-            <Button bsStyle="info" className="copy-btn" data-clipboard-text={JSON.stringify(this.props.object, null, 2)}>Copy</Button>
-            <Button onClick={this.hideJSON.bind(this)}>Close</Button>
+            <Button bsStyle="default" className="copy-btn" data-clipboard-text={JSON.stringify(this.props.object, null, 2)}>Copy</Button>
+            <Button bsStyle="info" onClick={this.hideJSON.bind(this)}>Close</Button>
           </Modal.Footer>
         </Modal>
       </div>

@@ -9,6 +9,47 @@ import JSONButton from '../common/JSONButton';
 class DeployDetail extends React.Component {
 
   renderHeader(d) {
+    let message;
+    if (d.deployResult.message) {
+      message = (
+        <div className="row">
+            <div className="col-md-12">
+                <div className="well text-muted">
+                    {d.deployResult.message}
+                </div>
+            </div>
+        </div>
+      );
+    }
+    let failures;
+    if (d.deployResult.deployFailures) {
+      let fails = [];
+      let k = 0;
+      for (let f of d.deployResult.deployFailures) {
+        fails.push(f.taskId ?
+          <a key={k} href={`${config.appRoot}/task/${f.taskId.id}`} className="list-group-item">
+            <strong>{f.taskId.id}</strong>: {f.reason} (Instance {f.taskId.instanceNo}): {f.message}
+          </a>
+          :
+          <li key={k} className="list-group-item">{f.reason}: {f.message}</li>
+        )
+        k++;
+      }
+      if (fails.length) {
+        failures = (
+          <div className="row">
+              <div className="col-md-12">
+                  <div className="panel panel-danger">
+                      <div className="panel-heading text-muted">Deploy had {fails.length} failure{fails.length > 1 ? 's' : ''}:</div>
+                      <div className="panel-body">
+                        {fails}
+                      </div>
+                  </div>
+              </div>
+          </div>
+        );
+      }
+    }
     return (
       <header className='detail-header'>
         <div className="row">
@@ -33,6 +74,7 @@ class DeployDetail extends React.Component {
             <JSONButton object={d} />
           </div>
         </div>
+        {failures || message}
       </header>
     );
   }
