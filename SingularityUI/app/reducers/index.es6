@@ -3,6 +3,7 @@ import { combineReducers } from 'redux';
 import taskGroups from './taskGroups';
 import activeRequest from './activeRequest';
 import tasks from './tasks';
+import form from './form';
 import api from './api';
 
 let path = function(state='', action) {
@@ -57,6 +58,7 @@ export default combineReducers({
   api,
   showDebugInfo,
   taskGroups, tasks,
+  form,
   activeRequest,
   path,
   activeColor,

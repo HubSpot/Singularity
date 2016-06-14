@@ -1,7 +1,19 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import FormField from '../common/formItems/FormFieldRedux';
+
+let FORM_NAME = 'requestForm';
 
 class RequestForm extends React.Component {
+
+    cantSubmit() {
+        return false;
+    }
+
+    submitForm() {
+        // TODO - Implement
+        return null;
+    }
 
     header() {
         if (this.props.edit) {
@@ -11,11 +23,42 @@ class RequestForm extends React.Component {
         }
     }
 
+    renderForm() {
+        let requestId = this.props.request.request ? this.props.request.request.id : undefined;
+        return (
+            <form role='form'>
+                { this.props.edit ? undefined :
+                    <div className="form-group required" onSubmit={this.submitForm}>
+                        <label htmlFor="id">ID</label>
+                        <FormField
+                            id = "id"
+                            className = "form-control"
+                            formId = {FORM_NAME}
+                            fieldId = 'requestId'
+                            prop = {{
+                                placeholder: "eg: my-awesome-request",
+                                inputType: 'text'
+                            }}
+                        />
+                    </div>
+                }
+                <div id="button-row">
+                    <span>
+                        <button type="submit" className="btn btn-success btn-lg" disabled={this.cantSubmit() ? 'disabled' : undefined}>
+                            Save
+                        </button>
+                    </span>
+                </div>
+            </form>
+        );
+    }
+
     render() {
         return(
             <div className="row new-form">
                 <div className="col-md-5 col-md-offset-3">
                     {this.header()}
+                    {this.renderForm()}
                 </div>
             </div>
         );
