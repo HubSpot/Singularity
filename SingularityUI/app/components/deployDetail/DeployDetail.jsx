@@ -168,13 +168,13 @@ class DeployDetail extends React.Component {
   renderHealthchecks(d) {
     return (
       <CollapsableSection title="Latest Health Checks">
-        
+
       </CollapsableSection>
     );
   }
 
   render() {
-    console.log(this.props);
+    // console.log(this.props);
     return (
       <div>
         {this.renderHeader(this.props.deploy)}
@@ -187,6 +187,7 @@ class DeployDetail extends React.Component {
 }
 
 function mapStateToProps(state) {
+    console.log(state);
     return {
         deploy: state.api.deploy.data,
         activeTasks: state.api.activeTasksForDeploy.data

@@ -1,5 +1,6 @@
 import { combineReducers } from 'redux';
 import buildApiActionReducer from './base';
+import task from './task';
 
 import { FetchAction as UserFetchAction } from '../../actions/api/user';
 import { FetchAction as WebhooksFetchAction } from '../../actions/api/webhooks';
@@ -17,4 +18,5 @@ const status = buildApiActionReducer(StatusFetchAction);
 const deploy = buildApiActionReducer(DeployFetchAction);
 const activeTasksForDeploy = buildApiActionReducer(TasksFetchForDeployAction);
 
-export default combineReducers({user, webhooks, slaves, racks, status, deploy, activeTasksForDeploy});
+
+export default combineReducers({user, webhooks, slaves, racks, status, deploy, task, activeTasksForDeploy});
