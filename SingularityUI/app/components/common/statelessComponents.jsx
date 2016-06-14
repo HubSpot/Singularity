@@ -10,7 +10,7 @@ export const DeployState = (props) => {
 
 export const InfoBox = (props) => {
   return (
-    <li className="col-md-4">
+    <li className="col-sm-6 col-md-3">
         <div>
             <h4>{props.name}<a className={props.copyableClassName} data-clipboard-text={props.value}>Copy</a></h4>
             <p>{props.value}</p>
