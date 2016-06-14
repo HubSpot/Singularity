@@ -1,6 +1,9 @@
 import React from 'react';
 import Modal from 'react-bootstrap/lib/Modal';
+import Button from 'react-bootstrap/lib/Button';
 import JSONTree from 'react-json-tree'
+import { JSONTreeTheme } from '../../thirdPartyConfigurations';
+import Clipboard from 'clipboard';
 
 export default class JSONButton extends React.Component {
 
@@ -9,6 +12,10 @@ export default class JSONButton extends React.Component {
     this.state = {
       modalOpen: false
     }
+  }
+
+  componentDidMount() {
+    new Clipboard('.copy-btn');
   }
 
   showJSON() {
@@ -24,40 +31,21 @@ export default class JSONButton extends React.Component {
   }
 
   render() {
-    const theme = {
-      scheme: 'twilight',
-      author: 'david hart (http://hart-dev.com)',
-      base00: '#1e1e1e',
-      base01: '#323537',
-      base02: '#464b50',
-      base03: '#5f5a60',
-      base04: '#838184',
-      base05: '#a7a7a7',
-      base06: '#c3c3c3',
-      base07: '#ffffff',
-      base08: '#cf6a4c',
-      base09: '#cda869',
-      base0A: '#f9ee98',
-      base0B: '#8f9d6a',
-      base0C: '#afc4db',
-      base0D: '#7587a6',
-      base0E: '#9b859d',
-      base0F: '#9b703f'
-    };
     return (
       <div>
         <a className="btn btn-default" onClick={this.showJSON.bind(this)}>JSON</a>
         <Modal show={this.state.modalOpen} onHide={this.hideJSON.bind(this)}>
-          <Modal.Header closeButton>
-            <Modal.Title>Viewing JSON</Modal.Title>
-          </Modal.Header>
           <Modal.Body>
             <JSONTree
               data={this.props.object}
               shouldExpandNode={() => {return true;}}
-              theme={theme}
+              theme={JSONTreeTheme}
             />
           </Modal.Body>
+          <Modal.Footer>
+            <Button bsStyle="info" className="copy-btn" data-clipboard-text={JSON.stringify(this.props.object, null, 2)}>Copy</Button>
+            <Button onClick={this.hideJSON.bind(this)}>Close</Button>
+          </Modal.Footer>
         </Modal>
       </div>
     );
