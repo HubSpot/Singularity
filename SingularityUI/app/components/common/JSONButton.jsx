@@ -33,7 +33,7 @@ export default class JSONButton extends React.Component {
   render() {
     return (
       <div>
-        <a className="btn btn-default" onClick={this.showJSON.bind(this)}>JSON</a>
+        <a className={this.props.linkClassName} onClick={this.showJSON.bind(this)}>{this.props.text}</a>
         <Modal show={this.state.modalOpen} onHide={this.hideJSON.bind(this)} bsSize="large">
           <Modal.Body>
             <div className="constrained-modal">

@@ -7,6 +7,7 @@ import { DeployState, InfoBox } from '../common/statelessComponents';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import JSONButton from '../common/JSONButton';
+import SimpleTable from '../common/SimpleTable';
 
 class DeployDetail extends React.Component {
 
@@ -71,17 +72,51 @@ class DeployDetail extends React.Component {
         </div>
         <div className="row">
           <div className="col-md-8">
-            <h3>
+            <h1>
               <span>{d.deploy.id}</span>
               <DeployState state={d.deployResult.deployState} />
-            </h3>
+            </h1>
           </div>
           <div className="col-md-4 button-container">
-            <JSONButton object={d} />
+            <JSONButton object={d} linkClassName="btn btn-default" text="JSON" />
           </div>
         </div>
         {failures || message}
       </header>
+    );
+  }
+
+  renderActiveTasks(d, tasks) {
+    const headers = ['Name', 'Last State', 'Started', 'Updated', '', ''];
+    return (
+      <div>
+        <div className="page-header">
+            <h2>Active Tasks</h2>
+        </div>
+        <SimpleTable
+          unit="task"
+          entries={tasks}
+          perPage={5}
+          renderTableHeaders={() => {
+            let row = headers.map((h, i) => {
+              return <th key={i}>{h}</th>;
+            });
+            return <tr>{row}</tr>;
+          }}
+          renderTableRow={(data, index) => {
+            return (
+              <tr key={index}>
+                <td><a href={`${config.appRoot}/task/${data.taskId.id}`}>{data.taskId.id}</a></td>
+                <td><span className={`label label-${Utils.getLabelClassFromTaskState(data.lastTaskState)}`}>{Utils.humanizeText(data.lastTaskState)}</span></td>
+                <td>{Utils.timeStampFromNow(data.taskId.startedAt)}</td>
+                <td>{Utils.timeStampFromNow(data.taskId.updatedAt)}</td>
+                <td className="actions-column"><a href={`${config.appRoot}/request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log">&middot;&middot;&middot;</a></td>
+                <td className="actions-column"><JSONButton object={data} text="{ }" /></td>
+              </tr>
+            );
+          }}
+        />
+      </div>
     );
   }
 
@@ -128,12 +163,12 @@ class DeployDetail extends React.Component {
   }
 
   render() {
-    console.log(this.props.deploy);
-    let d = this.props.deploy;
+    console.log(this.props);
     return (
       <div>
-        {this.renderHeader(d)}
-        {this.renderInfo(d)}
+        {this.renderHeader(this.props.deploy)}
+        {this.renderActiveTasks(this.props.deploy, this.props.activeTasks)}
+        {this.renderInfo(this.props.deploy)}
       </div>
     );
   }
@@ -141,7 +176,8 @@ class DeployDetail extends React.Component {
 
 function mapStateToProps(state) {
     return {
-        deploy: state.api.deploy.data
+        deploy: state.api.deploy.data,
+        activeTasks: state.api.activeTasksForDeploy.data
     };
 }
 
