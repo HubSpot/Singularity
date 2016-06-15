@@ -18,7 +18,13 @@ export default function buildApiAction(actionName, apiPath, opts={}) {
     return function (dispatch) {
       dispatch(started());
 
-      return fetch(config.apiRoot + apiPathFunc(...args), _.extend({credentials: 'include'}, opts))
+      return fetch(
+          config.apiRoot + apiPathFunc(...args),
+          _.extend(
+            {credentials: 'include'},
+            opts
+          )
+        )
         .then(response => response.json())
         .then(json => {
           dispatch(success(json));

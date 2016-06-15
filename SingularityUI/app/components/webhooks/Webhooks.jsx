@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Utils from '../../utils';
-import Table from '../common/Table';
+import OldTable from '../common/OldTable';
 import PlainText from '../common/atomicDisplayItems/PlainText';
 import TimeStamp from '../common/atomicDisplayItems/TimeStamp';
 import Link from '../common/atomicDisplayItems/Link';
@@ -200,7 +200,7 @@ let Webhooks = React.createClass({
     },
 
     render() {
-        return <div><div className='row'><div className='col-md-10'><span className='h1'>Webhooks</span></div><div className='col-md-2 button-container'><button className='btn btn-success' alt="Create a new webhook" title="newWebhook" onClick={this.promptNewWebhook}> New Webhook </button></div></div><Table defaultRowsPerPage={this.defaultRowsPerPage} rowsPerPageChoices={this.rowsPerPageChoices} tableClassOpts="table-striped" columnHeads={this.webhookColumns()} tableRows={this.getWebhookTableData()} emptyTableMessage='No Webhooks' dataCollection='webhooks' /></div>;
+        return <div><div className='row'><div className='col-md-10'><span className='h1'>Webhooks</span></div><div className='col-md-2 button-container'><button className='btn btn-success' alt="Create a new webhook" title="newWebhook" onClick={this.promptNewWebhook}> New Webhook </button></div></div><OldTable defaultRowsPerPage={this.defaultRowsPerPage} rowsPerPageChoices={this.rowsPerPageChoices} tableClassOpts="table-striped" columnHeads={this.webhookColumns()} tableRows={this.getWebhookTableData()} emptyTableMessage='No Webhooks' dataCollection='webhooks' /></div>;
     }
 });
 
