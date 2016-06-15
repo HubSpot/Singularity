@@ -9,7 +9,7 @@ class DeployDetailController extends Controller {
 
     initialize({store, requestId, deployId}) {
         app.showPageLoader()
-        this.title('Status');
+        this.title(`${requestId} deploy ${deployId}`);
         this.store = store;
         this.requestId = requestId;
         this.deployId = deployId;
