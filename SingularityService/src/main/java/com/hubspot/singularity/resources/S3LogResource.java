@@ -71,6 +71,8 @@ public class S3LogResource extends AbstractHistoryResource {
 
   private static final Logger LOG = LoggerFactory.getLogger(S3LogResource.class);
 
+  private static final String FORCE_DOWNLOAD_S3_PARAMS = "response-content-disposition=attachment&response-content-encoding=identity";
+
   private final Optional<S3Service> s3ServiceDefault;
   private final Map<String, S3Service> s3GroupOverride;
   private final Optional<S3Configuration> configuration;
@@ -236,8 +238,9 @@ public class S3LogResource extends AbstractHistoryResource {
         @Override
         public SingularityS3Log call() throws Exception {
           String getUrl = s3Service.createSignedGetUrl(s3Bucket, s3Object.getKey(), expireAt);
+          String downloadUrl = s3Service.createSignedUrl("GET", s3Bucket, s3Object.getKey(), FORCE_DOWNLOAD_S3_PARAMS, null, expireAt.getTime() / 1000, false);
 
-          return new SingularityS3Log(getUrl, s3Object.getKey(), s3Object.getLastModifiedDate().getTime(), s3Object.getContentLength());
+          return new SingularityS3Log(getUrl, s3Object.getKey(), s3Object.getLastModifiedDate().getTime(), s3Object.getContentLength(), Optional.of(downloadUrl));
         }
 
       }));
