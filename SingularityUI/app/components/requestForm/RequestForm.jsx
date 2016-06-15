@@ -22,7 +22,7 @@ class RequestForm extends React.Component {
     }
 
     submitForm(props, event) {
-        event.preventDefault()
+        event.preventDefault();
         return null;
     }
 
@@ -219,6 +219,26 @@ class RequestForm extends React.Component {
         );
     }
 
+    renderTaskReschedulingDelay() {
+        return (
+            <div className="form-group">
+                <label for="waitAtLeast">Task rescheduling delay</label>
+                <div className="input-group">
+                    <FormField
+                        id = "waitAtLeast"
+                        prop = {{
+                            updateFn: event => {
+                                this.props.update(FORM_ID, 'waitAtLeast', event.target.value);
+                            },
+                            inputType: 'text'
+                        }}
+                    />
+                    <div className="input-group-addon">milliseconds</div>
+                </div>
+            </div>
+        );
+    }
+
     renderRackAffinity() {
         return (
             <div className="form-group">
@@ -249,13 +269,21 @@ class RequestForm extends React.Component {
                 </div>
             );
         } else if (this.getRequestType() === 'WORKER') {
-            //
+            return (
+                <div>
+                    {this.renderInstances()}
+                    {this.renderRackSensitive()}
+                    {this.renderHideDistributeEvenlyAcrossRacksHint()}
+                    {this.renderTaskReschedulingDelay()}
+                    {this.renderRackAffinity()}
+                </div>
+            );
         } else if (this.getRequestType() === 'SCHEDULED') {
             //
         } else if (this.getRequestType() === 'ON_DEMAND') {
-            //
+            return this.renderTaskReschedulingDelay();
         } else if (this.getRequestType() === 'RUN_ONCE') {
-            //
+            return this.renderTaskReschedulingDelay();
         }
     }
 
