@@ -3215,9 +3215,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     scheduler.drainPendingQueue(stateCacheProvider.get());
     resourceOffers();
 
-    // assert that only lowPriorityRequest has a pending request
-    Assert.assertEquals(1, requestManager.getPendingRequests().size());
-    Assert.assertEquals(lowPriorityRequest.getId(), requestManager.getPendingRequests().get(0).getRequestId());
+    // assert that lowPriorityRequest has a pending task
+    Assert.assertEquals(1, taskManager.getPendingTaskIds().size());
+    Assert.assertEquals(lowPriorityRequest.getId(), taskManager.getPendingTaskIds().get(0).getRequestId());
 
     // assert that only mediumPriorityRequest has an active task
     Assert.assertEquals(0, taskManager.getActiveTaskIdsForRequest(lowPriorityRequest.getId()).size());
