@@ -5,6 +5,8 @@ const initialState = {};
 export default function task(state = initialState, action) {
   let newData = {};
   switch (action.type) {
+    case TaskActions.FETCH_TASK_CLEAR:
+      return initialState;
     case TaskActions.FETCH_TASK_ERROR:
       newData[action.taskId] = {
         isFetching: false,

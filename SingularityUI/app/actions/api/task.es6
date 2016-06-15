@@ -4,6 +4,7 @@ export const FETCH_TASK = 'FETCH_TASK';
 export const FETCH_TASK_STARTED = 'FETCH_TASK_STARTED';
 export const FETCH_TASK_ERROR = 'FETCH_TASK_ERROR';
 export const FETCH_TASK_SUCCESS = 'FETCH_TASK_SUCCESS';
+export const FETCH_TASK_CLEAR = 'FETCH_TASK_CLEAR';
 
 export function fetchTask(taskId) {
   return function (dispatch) {
@@ -20,6 +21,16 @@ export function fetchTask(taskId) {
         dispatch(fetchTasksError(ex));
       });
   };
+}
+
+export function clear() {
+  return function (dispatch) {
+    return dispatch(fetchTaskCleared());
+  }
+}
+
+export function fetchTaskCleared() {
+  return { type: FETCH_TASK_CLEAR };
 }
 
 export function fetchTaskStarted(taskId) {
