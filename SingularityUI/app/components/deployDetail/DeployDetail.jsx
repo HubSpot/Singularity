@@ -2,12 +2,14 @@ import React from 'react';
 import { connect } from 'react-redux';
 import Clipboard from 'clipboard';
 import Utils from '../../utils';
+import { FetchForDeploy as TaskHistoryFetchForDeploy } from '../../actions/api/taskHistory';
 
 import { DeployState, InfoBox } from '../common/statelessComponents';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import JSONButton from '../common/JSONButton';
 import SimpleTable from '../common/SimpleTable';
+import ServerSideTable from '../common/ServerSideTable';
 import CollapsableSection from '../common/CollapsableSection';
 
 class DeployDetail extends React.Component {
@@ -126,6 +128,40 @@ class DeployDetail extends React.Component {
     );
   }
 
+  renderTaskHistory(d, tasks) {
+    const headers = ['Name', 'Last State', 'Started', 'Updated', '', ''];
+    return (
+      <CollapsableSection title="Task History" defaultExpanded>
+        <ServerSideTable
+          unit="task"
+          entries={tasks}
+          perPage={5}
+          fetchAction={TaskHistoryFetchForDeploy}
+          dispatch={this.props.dispatch}
+          fetchParams={[d.deploy.requestId, d.deploy.id]}
+          renderTableHeaders={() => {
+            let row = headers.map((h, i) => {
+              return <th key={i}>{h}</th>;
+            });
+            return <tr>{row}</tr>;
+          }}
+          renderTableRow={(data, index) => {
+            return (
+              <tr key={index}>
+                <td><a href={`${config.appRoot}/task/${data.taskId.id}`}>{data.taskId.id}</a></td>
+                <td><span className={`label label-${Utils.getLabelClassFromTaskState(data.lastTaskState)}`}>{Utils.humanizeText(data.lastTaskState)}</span></td>
+                <td>{Utils.timeStampFromNow(data.taskId.startedAt)}</td>
+                <td>{Utils.timeStampFromNow(data.taskId.updatedAt)}</td>
+                <td className="actions-column"><a href={`${config.appRoot}/request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log">&middot;&middot;&middot;</a></td>
+                <td className="actions-column"><JSONButton object={data} text="{ }" /></td>
+              </tr>
+            );
+          }}
+        />
+      </CollapsableSection>
+    );
+  }
+
   renderInfo(d) {
     let stats = [];
 
@@ -199,11 +235,12 @@ class DeployDetail extends React.Component {
   }
 
   render() {
-    console.log(this.props);
+    // console.log(this.props);
     return (
       <div>
         {this.renderHeader(this.props.deploy)}
         {this.renderActiveTasks(this.props.deploy, this.props.activeTasks)}
+        {this.renderTaskHistory(this.props.deploy, this.props.taskHistory)}
         {this.renderInfo(this.props.deploy)}
         {this.renderHealthchecks(this.props.deploy, this.props.latestHealthchecks)}
       </div>
