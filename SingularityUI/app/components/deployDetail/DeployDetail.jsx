@@ -98,7 +98,10 @@ class DeployDetail extends React.Component {
   renderActiveTasks(d, tasks) {
     const headers = ['Name', 'Last State', 'Started', 'Updated', '', ''];
     return (
-      <CollapsableSection title="Active Tasks" defaultExpanded>
+      <div>
+        <div className="page-header">
+          <h2>Active Tasks</h2>
+        </div>
         <SimpleTable
           unit="task"
           entries={tasks}
@@ -124,7 +127,7 @@ class DeployDetail extends React.Component {
             );
           }}
         />
-      </CollapsableSection>
+    </div>
     );
   }
 
