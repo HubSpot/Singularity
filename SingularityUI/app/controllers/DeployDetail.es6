@@ -18,6 +18,7 @@ class DeployDetailController extends Controller {
         let promises = [];
         promises.push(this.store.dispatch(DeployFetchAction.trigger(requestId, deployId)));
         let tasksPromise = this.store.dispatch(FetchForDeployAction.trigger(requestId, deployId));
+        promises.push(this.store.dispatch(TaskHistoryFetchForDeploy.clear()));
         promises.push(this.store.dispatch(TaskFetchActionClear()));
         tasksPromise.then(() => {
           for (let t of store.getState().api.activeTasksForDeploy.data) {
@@ -25,7 +26,6 @@ class DeployDetailController extends Controller {
           }
         });
         promises.push(tasksPromise);
-        promises.push(this.store.dispatch(TaskHistoryFetchForDeploy.clear()));
         promises.push(this.store.dispatch(TaskHistoryFetchForDeploy.trigger(requestId, deployId, 5, 1)));
 
         Promise.all(promises).then(() => {

@@ -26,7 +26,7 @@ export default class ServerSideTable extends SimpleTable {
 
   updateDisplay(nextProps) {
     let newState = {};
-    if (this.props.entries && this.props.entries.length > 0 && nextProps.entries.length == 0) {
+    if (this.props.entries && this.props.entries.length > 0 && nextProps.entries.length == 0 && this.state.serverPage > 1) {
       this.props.dispatch(this.props.fetchAction.trigger(...this.props.fetchParams, this.props.perPage, this.state.serverPage - 1));
       _.extend(newState, {
         serverPage: this.state.serverPage - 1,
