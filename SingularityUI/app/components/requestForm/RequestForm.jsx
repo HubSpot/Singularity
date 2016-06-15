@@ -222,13 +222,33 @@ class RequestForm extends React.Component {
     renderTaskReschedulingDelay() {
         return (
             <div className="form-group">
-                <label for="waitAtLeast">Task rescheduling delay</label>
+                <label htmlFor="waitAtLeast">Task rescheduling delay</label>
                 <div className="input-group">
                     <FormField
                         id = "waitAtLeast"
                         prop = {{
                             updateFn: event => {
                                 this.props.update(FORM_ID, 'waitAtLeast', event.target.value);
+                            },
+                            inputType: 'text'
+                        }}
+                    />
+                    <div className="input-group-addon">milliseconds</div>
+                </div>
+            </div>
+        );
+    }
+
+    renderKillCleaningTasksAfter() {
+        return (
+            <div className="form-group">
+                <label htmlFor="killOldNRL">Kill cleaning task(s) after</label>
+                <div className="input-group">
+                    <FormField
+                        id = "killCleaningTasksAfter"
+                        prop = {{
+                            updateFn: event => {
+                                this.props.update(FORM_ID, 'killCleaningTasksAfter', event.target.value);
                             },
                             inputType: 'text'
                         }}
@@ -279,11 +299,11 @@ class RequestForm extends React.Component {
                 </div>
             );
         } else if (this.getRequestType() === 'SCHEDULED') {
-            //
+            return this.renderKillCleaningTasksAfter();
         } else if (this.getRequestType() === 'ON_DEMAND') {
-            return this.renderTaskReschedulingDelay();
+            return this.renderKillCleaningTasksAfter();
         } else if (this.getRequestType() === 'RUN_ONCE') {
-            return this.renderTaskReschedulingDelay();
+            return this.renderKillCleaningTasksAfter();
         }
     }
 
