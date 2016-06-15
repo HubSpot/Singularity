@@ -251,7 +251,7 @@ class DeployDetail extends React.Component {
 
 function mapStateToProps(state) {
   let latestHealthchecks = _.mapObject(state.api.task, (val, key) => {
-    if (val.data) {
+    if (val.data && val.data.healthcheckResults.length > 0) {
       return _.max(val.data.healthcheckResults, (hc) => {
         return hc.timestamp;
       });
