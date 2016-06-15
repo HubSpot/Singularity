@@ -149,7 +149,6 @@ class RequestForm extends React.Component {
                 <label htmlFor="instances">Instances</label>
                 <FormField
                     id = "instances"
-                    className = "form-control"
                     prop = {{
                         updateFn: event => {
                             this.props.update(FORM_ID, 'instances', event.target.value);
@@ -162,9 +161,93 @@ class RequestForm extends React.Component {
         );
     }
 
+    renderRackSensitive() {
+        return (
+            <div className="form-group">
+                <label htmlFor="rack-sensitive" className="control-label">
+                    Rack Sensitive
+                    <FormField
+                        id = "rack-sensitive"
+                        prop = {{
+                            updateFn: event => {
+                                this.props.update(FORM_ID, 'rackSensitive', !(this.props.form.rackSensitive));
+                            },
+                            inputType: 'checkBox'
+                        }}
+                    />
+                </label>
+            </div>
+        );
+    }
+
+    renderHideDistributeEvenlyAcrossRacksHint() {
+        return (
+            <div className="form-group">
+                <label htmlFor="hide-distribute-evenly-across-racks-hint" className="control-label">
+                    Hide Distribute Evenly Across Racks Hint
+                    <FormField
+                        id = "hide-distribute-evenly-across-racks-hint"
+                        className = "hide-distribute-evenly-across-racks-hint-checkbox"
+                        prop = {{
+                            onClick: event => {
+                                this.props.update(FORM_ID, 'hideDistributEvenlyAcrossRacksHint', !(this.props.form.hideDistributEvenlyAcrossRacksHint));
+                            },
+                            inputType: 'checkBox'
+                        }}
+                    />
+                </label>
+            </div>
+        );
+    }
+
+    renderLoadBalanced() {
+        return (
+            <div className="form-group">
+                <label htmlFor="load-balanced" className="control-label">
+                    Load Balanced
+                    <FormField
+                        id = "load-balanced"
+                        prop = {{
+                            updateFn: event => {
+                                this.props.update(FORM_ID, 'loadBalanced', !(this.props.form.loadBalanced));
+                            },
+                            inputType: 'checkBox'
+                        }}
+                    />
+                </label>
+            </div>
+        );
+    }
+
+    renderRackAffinity() {
+        return (
+            <div className="form-group">
+                <label htmlFor="rack-affinity">Rack Affinity</label>
+                <FormField
+                    id = "rack-affinity"
+                    className = "tagging-input"
+                    prop = {{
+                        updateFn: event => {
+                            this.props.update(FORM_ID, 'rackAffinity', event.target.value);
+                        },
+                        inputType: 'text'
+                    }}
+                />
+            </div>
+        );
+    }
+
     renderRequestTypeSpecificFormFields() {
         if (this.getRequestType() === 'SERVICE') {
-            return this.renderInstances();
+            return(
+                <div>
+                    {this.renderInstances()}
+                    {this.renderRackSensitive()}
+                    {this.renderHideDistributeEvenlyAcrossRacksHint()}
+                    {config.loadBalancingEnabled ? this.renderLoadBalanced() : undefined}
+                    {this.renderRackAffinity()}
+                </div>
+            );
         } else if (this.getRequestType() === 'WORKER') {
             //
         } else if (this.getRequestType() === 'SCHEDULED') {
