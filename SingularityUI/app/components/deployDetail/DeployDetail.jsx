@@ -134,7 +134,10 @@ class DeployDetail extends React.Component {
   renderTaskHistory(d, tasks) {
     const headers = ['Name', 'Last State', 'Started', 'Updated', '', ''];
     return (
-      <CollapsableSection title="Task History" defaultExpanded>
+      <div>
+        <div className="page-header">
+          <h2>Task History</h2>
+        </div>
         <ServerSideTable
           unit="task"
           entries={tasks}
@@ -162,7 +165,7 @@ class DeployDetail extends React.Component {
             );
           }}
         />
-      </CollapsableSection>
+    </div>
     );
   }
 
@@ -206,6 +209,7 @@ class DeployDetail extends React.Component {
   }
 
   renderHealthchecks(d, healthchecks) {
+    if (healthchecks.length == 0) return <div></div>;
     const headers = ['Task', 'Timestamp', 'Duration', 'Status', 'Message', ''];
     return (
       <CollapsableSection title="Latest Healthchecks">
