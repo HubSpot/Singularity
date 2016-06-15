@@ -3014,9 +3014,9 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     // perform the killing
     priorityKillPoller.runActionOnPoll();
 
-    // assert lowPriorityRequest has a PRIORITY_KILL task cleanup and a PRIORITY_FREEZE pending request, and that mediumPriorityRequest and highPriorityRequest should not have cleanups
+    // assert lowPriorityRequest has a PRIORITY_KILL task cleanup and that mediumPriorityRequest and highPriorityRequest should not have cleanups
     Assert.assertEquals(TaskCleanupType.PRIORITY_KILL, taskManager.getTaskCleanup(lowPriorityTask.getTaskId().getId()).get().getCleanupType());
-    Assert.assertEquals(PendingType.PRIORITY_FREEZE, requestManager.getPendingRequest(lowPriorityRequest.getId(), lowPriorityDeploy.getId()).get().getPendingType());
+
     Assert.assertEquals(false, taskManager.getTaskCleanup(mediumPriorityTask.getTaskId().getId()).isPresent());
     Assert.assertEquals(false, taskManager.getTaskCleanup(highPriorityTask.getTaskId().getId()).isPresent());
 
