@@ -159,6 +159,7 @@
                     <env>
                       <MESOS_MASTER>zk://singularity-test-zk:2181/mesos</MESOS_MASTER>
                       <MESOS_CONTAINERIZERS>docker,mesos</MESOS_CONTAINERIZERS>
+                      <MESOS_LAUNCHER>posix</MESOS_LAUNCHER>
                       <MESOS_HOSTNAME>${mesos.slave1.hostname}</MESOS_HOSTNAME>
                       <MESOS_PORT>5051</MESOS_PORT>
                       <MESOS_ATTRIBUTES>rackid:a</MESOS_ATTRIBUTES>
@@ -191,6 +192,7 @@
                     <env>
                       <MESOS_MASTER>zk://singularity-test-zk:2181/mesos</MESOS_MASTER>
                       <MESOS_CONTAINERIZERS>docker,mesos</MESOS_CONTAINERIZERS>
+                      <MESOS_LAUNCHER>posix</MESOS_LAUNCHER>
                       <MESOS_HOSTNAME>${mesos.slave2.hostname}</MESOS_HOSTNAME>
                       <MESOS_PORT>5051</MESOS_PORT>
                       <MESOS_ATTRIBUTES>rackid:b</MESOS_ATTRIBUTES>
@@ -223,6 +225,7 @@
                     <env>
                       <MESOS_MASTER>zk://singularity-test-zk:2181/mesos</MESOS_MASTER>
                       <MESOS_CONTAINERIZERS>docker,mesos</MESOS_CONTAINERIZERS>
+                      <MESOS_LAUNCHER>posix</MESOS_LAUNCHER>
                       <MESOS_HOSTNAME>${mesos.slave3.hostname}</MESOS_HOSTNAME>
                       <MESOS_PORT>5051</MESOS_PORT>
                       <MESOS_ATTRIBUTES>rackid:c</MESOS_ATTRIBUTES>
