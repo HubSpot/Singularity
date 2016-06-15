@@ -120,7 +120,7 @@ class DeployDetail extends React.Component {
                 <td><a href={`${config.appRoot}/task/${data.taskId.id}`}>{data.taskId.id}</a></td>
                 <td><span className={`label label-${Utils.getLabelClassFromTaskState(data.lastTaskState)}`}>{Utils.humanizeText(data.lastTaskState)}</span></td>
                 <td>{Utils.timeStampFromNow(data.taskId.startedAt)}</td>
-                <td>{Utils.timeStampFromNow(data.taskId.updatedAt)}</td>
+                <td>{Utils.timeStampFromNow(data.updatedAt)}</td>
                 <td className="actions-column"><a href={`${config.appRoot}/request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log">&middot;&middot;&middot;</a></td>
                 <td className="actions-column"><JSONButton object={data} text="{ }" /></td>
               </tr>
@@ -155,7 +155,7 @@ class DeployDetail extends React.Component {
                 <td><a href={`${config.appRoot}/task/${data.taskId.id}`}>{data.taskId.id}</a></td>
                 <td><span className={`label label-${Utils.getLabelClassFromTaskState(data.lastTaskState)}`}>{Utils.humanizeText(data.lastTaskState)}</span></td>
                 <td>{Utils.timeStampFromNow(data.taskId.startedAt)}</td>
-                <td>{Utils.timeStampFromNow(data.taskId.updatedAt)}</td>
+                <td>{Utils.timeStampFromNow(data.updatedAt)}</td>
                 <td className="actions-column"><a href={`${config.appRoot}/request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log">&middot;&middot;&middot;</a></td>
                 <td className="actions-column"><JSONButton object={data} text="{ }" /></td>
               </tr>
