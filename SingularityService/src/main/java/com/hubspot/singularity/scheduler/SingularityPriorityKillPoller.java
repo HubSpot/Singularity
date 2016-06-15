@@ -93,7 +93,7 @@ public class SingularityPriorityKillPoller extends SingularityLeaderOnlyPoller {
 
         } finally {
             priorityManager.clearPriorityKill();
-            LOG.info("Finished killing tasks for priority freeze {} in {} for {} active tasks, {} pending tasks", priorityManager, JavaUtils.duration(now), killedTaskCount, cancelledPendingTaskCount);
+            LOG.info("Finished killing active tasks for priority freeze {} in {} for {} active tasks, {} pending tasks", maybePriorityFreeze, JavaUtils.duration(now), killedTaskCount, cancelledPendingTaskCount);
         }
     }
 }
