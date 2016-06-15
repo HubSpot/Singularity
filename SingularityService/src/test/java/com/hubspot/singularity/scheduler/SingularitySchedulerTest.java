@@ -1,7 +1,5 @@
 package com.hubspot.singularity.scheduler;
 
-import com.hubspot.singularity.data.SingularityValidator;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -10,8 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-
-import javax.ws.rs.HEAD;
 
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.SlaveID;
