@@ -26,7 +26,7 @@ class DeployDetailController extends Controller {
             this.store.dispatch(TaskFetchAction(t.taskId.id));
           }
         });
-
+        this.store.dispatch(TaskHistoryFetchForDeploy.clear());
         this.store.dispatch(TaskHistoryFetchForDeploy.trigger(requestId, deployId, 5, 1));
     }
 

@@ -5,6 +5,7 @@ export default function buildApiAction(actionName, apiPath, opts={}) {
   const STARTED = actionName + '_STARTED';
   const ERROR = actionName + '_ERROR';
   const SUCCESS = actionName + '_SUCCESS';
+  const CLEAR = actionName + '_CLEAR';
 
   let apiPathFunc;
 
@@ -29,6 +30,16 @@ export default function buildApiAction(actionName, apiPath, opts={}) {
     }
   }
 
+  function clearData() {
+    return function (dispatch) {
+      dispatch(clear());
+    }
+  }
+
+  function clear() {
+    return { type: CLEAR };
+  }
+
   function started() {
     return { type: STARTED };
   }
@@ -46,6 +57,9 @@ export default function buildApiAction(actionName, apiPath, opts={}) {
     STARTED,
     ERROR,
     SUCCESS,
+    CLEAR,
+    clear,
+    clearData,
     trigger,
     started,
     error,
