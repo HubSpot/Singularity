@@ -3029,6 +3029,11 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(ExtendedTaskState.TASK_RUNNING, taskManager.getTaskHistory(mediumPriorityTask.getTaskId()).get().getLastTaskUpdate().get().getTaskState());
     Assert.assertEquals(ExtendedTaskState.TASK_RUNNING, taskManager.getTaskHistory(highPriorityTask.getTaskId()).get().getLastTaskUpdate().get().getTaskState());
 
+    // assert lowPriorityRequest has a pending task
+    final SingularityPendingTaskId pendingTaskId = taskManager.getPendingTaskIds().get(0);
+    Assert.assertEquals(PendingType.TASK_DONE, pendingTaskId.getPendingType());
+    Assert.assertEquals(lowPriorityRequest.getId(), pendingTaskId.getRequestId());
+
     // end the priority freeze
     priorityResource.deleteActivePriorityFreeze();
 
