@@ -1,6 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import FormField from '../common/formItems/FormFieldRedux';
+import FormField from '../common/formItems/FormField';
+import DropDown from '../common/formItems/DropDown';
 import { modifyField, clearForm } from '../../actions/form';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
@@ -60,18 +61,6 @@ class RequestForm extends React.Component {
         }
     }
 
-    renderNewTasksOnlyWarning() {
-        if (this.props.edit) {
-            return (
-                <div className="alert alert-info alert-slim" role="alert">
-                    <strong>Note:</strong> changes made below will only affect new tasks
-                </div>
-            );
-        } else {
-            return undefined
-        }
-    }
-
     renderRequestTypeSelectors() {
         let selectors = [];
         let tooltip = (
@@ -107,8 +96,84 @@ class RequestForm extends React.Component {
         );
     }
 
+    renderNewTasksOnlyWarning() {
+        if (this.props.edit) {
+            return (
+                <div className="alert alert-info alert-slim" role="alert">
+                    <strong>Note:</strong> changes made below will only affect new tasks
+                </div>
+            );
+        } else {
+            return undefined
+        }
+    }
+
+    renderSlavePlacementField() {
+        return (
+            <div className="form-group">
+                <label htmlFor="slavePlacement">Slave Placement</label>
+                <DropDown
+                    id = "slavePlacement"
+                    prop = {{
+                        updateFn: event => {
+                            this.props.update(FORM_ID, 'slavePlacement', event.target.value);
+                        },
+                        forceChooseValue: true,
+                        choices: [
+                            {
+                                value: "",
+                                user: "Default"
+                            },
+                            {
+                                value: "SEPARATE",
+                                user: "Separate"
+                            },
+                            {
+                                value: "OPTIMISTIC",
+                                user: "Optimistic"
+                            },
+                            {
+                                value: "GREEDY",
+                                user: "Greedy"
+                            }
+                        ]
+                    }}
+                />
+            </div>
+        );
+    }
+
+    renderInstances() {
+        return (
+            <div className="form-group">
+                <label htmlFor="instances">Instances</label>
+                <FormField
+                    id = "instances"
+                    className = "form-control"
+                    prop = {{
+                        updateFn: event => {
+                            this.props.update(FORM_ID, 'instances', event.target.value);
+                        },
+                        placeholder: "1",
+                        inputType: 'text'
+                    }}
+                />
+            </div>
+        );
+    }
+
     renderRequestTypeSpecificFormFields() {
-        //
+        if (this.getRequestType() === 'SERVICE') {
+            return this.renderInstances();
+        } else if (this.getRequestType() === 'WORKER') {
+            //
+        } else if (this.getRequestType() === 'SCHEDULED') {
+            //
+        } else if (this.getRequestType() === 'ON_DEMAND') {
+            //
+        } else if (this.getRequestType() === 'RUN_ONCE') {
+            //
+        }
     }
 
     renderForm() {
@@ -121,9 +186,10 @@ class RequestForm extends React.Component {
                         <FormField
                             id = "id"
                             className = "form-control"
-                            formId = {FORM_ID}
-                            fieldId = 'requestId'
                             prop = {{
+                                updateFn: event => {
+                                    this.props.update(FORM_ID, 'requestId', event.target.value);
+                                },
                                 placeholder: "eg: my-awesome-request",
                                 inputType: 'text'
                             }}
@@ -135,15 +201,17 @@ class RequestForm extends React.Component {
                     <FormField
                             id = "owners"
                             className = "tagging-input"
-                            formId = {FORM_ID}
-                            fieldId = 'owners'
                             prop = {{
+                                updateFn: event => {
+                                    this.props.update(FORM_ID, 'owners', event.target.value);
+                                },
                                 inputType: 'text'
                             }}
                         />
                 </div>
                 {this.renderRequestTypeSelectors()}
                 {this.renderNewTasksOnlyWarning()}
+                {this.renderSlavePlacementField()}
                 {this.renderRequestTypeSpecificFormFields()}
                 <div id="button-row">
                     <span>
