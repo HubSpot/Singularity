@@ -14,20 +14,22 @@ class DeployDetailController extends Controller {
         this.requestId = requestId;
         this.deployId = deployId;
 
-        let initPromise = this.store.dispatch(DeployFetchAction.trigger(requestId, deployId));
-        initPromise.then(() => {
-          this.setView(new DeployView(store));
-          app.showView(this.view);
-        });
-
+        let promises = [];
+        promises.push(this.store.dispatch(DeployFetchAction.trigger(requestId, deployId)));
         let tasksPromise = this.store.dispatch(FetchForDeployAction.trigger(requestId, deployId));
         tasksPromise.then(() => {
           for (let t of store.getState().api.activeTasksForDeploy.data) {
             this.store.dispatch(TaskFetchAction(t.taskId.id));
           }
         });
-        this.store.dispatch(TaskHistoryFetchForDeploy.clear());
-        this.store.dispatch(TaskHistoryFetchForDeploy.trigger(requestId, deployId, 5, 1));
+        promises.push(tasksPromise);
+        promises.push(this.store.dispatch(TaskHistoryFetchForDeploy.clear()));
+        promises.push(this.store.dispatch(TaskHistoryFetchForDeploy.trigger(requestId, deployId, 5, 1)));
+
+        Promise.all(promises).then(() => {
+          this.setView(new DeployView(store));
+          app.showView(this.view);
+        });
     }
 
     refresh() {
