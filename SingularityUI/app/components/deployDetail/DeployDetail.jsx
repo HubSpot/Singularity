@@ -135,6 +135,7 @@ class DeployDetail extends React.Component {
         <ServerSideTable
           unit="task"
           entries={tasks}
+          paginate={tasks.length >= 5}
           perPage={5}
           fetchAction={TaskHistoryFetchForDeploy}
           dispatch={this.props.dispatch}

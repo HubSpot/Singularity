@@ -9,7 +9,8 @@ export default class ServerSideTable extends SimpleTable {
     super(props);
     _.extend(this.state, {
       serverPage: 1,
-      atEnd: false
+      atEnd: false,
+      paginate: props.paginate
     });
   }
 
@@ -24,18 +25,26 @@ export default class ServerSideTable extends SimpleTable {
   }
 
   updateDisplay(nextProps) {
+    let newState = {};
     if (this.props.entries && this.props.entries.length > 0 && nextProps.entries.length == 0) {
       this.props.dispatch(this.props.fetchAction.trigger(...this.props.fetchParams, this.props.perPage, this.state.serverPage - 1));
-      this.setState({
+      _.extend(newState, {
         serverPage: this.state.serverPage - 1,
         atEnd: true
       });
     } else if (nextProps.entries && nextProps.entries.length > 0) {
-      this.setState({
-        displayItems: nextProps.entries,
-        atEnd: nextProps.entries.length < this.props.perPage
+      _.extend(newState, {
+        displayItems: nextProps.entries
       });
     }
+
+    if (!this.state.paginate && nextProps.paginate) {
+      _.extend(newState, {
+        paginate: true
+      });
+    }
+
+    this.setState(newState);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -43,20 +52,22 @@ export default class ServerSideTable extends SimpleTable {
   }
 
   renderPagination() {
-    return (
-      <div className="pagination-container">
-        <Pagination
-          prev={true}
-          next={true}
-          first={false}
-          last={false}
-          ellipsis={false}
-          items={this.state.atEnd ? this.state.serverPage : this.state.serverPage + 1}
-          maxButtons={1}
-          activePage={this.state.serverPage}
-          onSelect={this.handleSelect.bind(this)} />
-      </div>
-    );
+    if (this.state.paginate) {
+      return (
+        <div className="pagination-container">
+          <Pagination
+            prev={true}
+            next={true}
+            first={false}
+            last={false}
+            ellipsis={false}
+            items={this.state.atEnd ? this.state.serverPage : this.state.serverPage + 1}
+            maxButtons={1}
+            activePage={this.state.serverPage}
+            onSelect={this.handleSelect.bind(this)} />
+        </div>
+      );
+    }
   }
 }
 
@@ -65,5 +76,6 @@ ServerSideTable.propTypes = _.extend({}, SimpleTable.propTypes, {
       trigger: React.PropTypes.func.isRequired
   }),
   dispatch: React.PropTypes.func.isRequired,
-  fetchParams: React.PropTypes.array
+  fetchParams: React.PropTypes.array,
+  paginate: React.PropTypes.bool
 });
