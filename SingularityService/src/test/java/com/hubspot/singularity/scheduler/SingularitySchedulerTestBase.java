@@ -502,11 +502,11 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   }
 
   protected void finishDeploy(SingularityDeployMarker marker, SingularityDeploy deploy) {
-    deployManager.deletePendingDeploy(requestId);
+    deployManager.deletePendingDeploy(marker.getRequestId());
 
     deployManager.saveDeployResult(marker, Optional.of(deploy), new SingularityDeployResult(DeployState.SUCCEEDED));
 
-    deployManager.saveNewRequestDeployState(new SingularityRequestDeployState(requestId, Optional.of(marker), Optional.<SingularityDeployMarker> absent()));
+    deployManager.saveNewRequestDeployState(new SingularityRequestDeployState(marker.getRequestId(), Optional.of(marker), Optional.<SingularityDeployMarker> absent()));
   }
 
   protected SingularityTask startTask(SingularityDeploy deploy) {
