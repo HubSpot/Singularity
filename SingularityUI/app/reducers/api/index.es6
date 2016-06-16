@@ -11,6 +11,7 @@ import { FetchAction as DeployFetchAction } from '../../actions/api/deploy';
 import { FetchForDeployAction as TasksFetchForDeployAction } from '../../actions/api/tasks';
 import { FetchForDeploy as TaskHistoryFetchForDeploy } from '../../actions/api/taskHistory';
 import { FetchAction as TaskCleanupsFetchAction } from '../../actions/api/taskCleanups';
+import { FetchAction as TaskFilesFetchAction } from '../../actions/api/taskFiles';
 
 const user = buildApiActionReducer(UserFetchAction);
 const webhooks = buildApiActionReducer(WebhooksFetchAction);
@@ -21,6 +22,7 @@ const deploy = buildApiActionReducer(DeployFetchAction);
 const activeTasksForDeploy = buildApiActionReducer(TasksFetchForDeployAction);
 const taskHistoryForDeploy = buildApiActionReducer(TaskHistoryFetchForDeploy);
 const taskCleanups = buildApiActionReducer(TaskCleanupsFetchAction);
+const taskFiles = buildApiActionReducer(TaskFilesFetchAction);
 
 export default combineReducers({
   user,
@@ -32,5 +34,6 @@ export default combineReducers({
   task,
   activeTasksForDeploy,
   taskHistoryForDeploy,
-  taskCleanups
+  taskCleanups,
+  taskFiles
 });

@@ -342,6 +342,12 @@ let Utils = {
     if (response.status === 400) {
       return app.caughtError();
     }
+  },
+
+  joinPath(a, b) {
+    if (!a.endsWith('/')) a += '/';
+    if (b.startsWith('/')) b = b.substring(1, b.length);
+    return a + b;
   }
 };
 

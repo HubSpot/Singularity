@@ -2,6 +2,7 @@ import Controller from './Controller';
 import TaskView from '../views/task';
 import { fetchTask as TaskFetchAction, clear as TaskFetchActionClear} from '../actions/api/task';
 import { FetchAction as TaskCleanupsFetchAction } from '../actions/api/taskCleanups';
+import { FetchAction as TaskFilesFetchAction } from '../actions/api/taskFiles';
 
 class TaskDetail extends Controller {
 
@@ -23,6 +24,7 @@ class TaskDetail extends Controller {
     let promises = [];
     promises.push(this.store.dispatch(TaskFetchAction(this.taskId)));
     promises.push(this.store.dispatch(TaskCleanupsFetchAction.trigger()));
+    promises.push(this.store.dispatch(TaskFilesFetchAction.trigger(this.taskId, this.filePath)))
     return Promise.all(promises);
   }
 }

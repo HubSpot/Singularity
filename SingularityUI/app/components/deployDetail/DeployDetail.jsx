@@ -214,7 +214,7 @@ class DeployDetail extends React.Component {
     return (
       <CollapsableSection title="Latest Healthchecks">
         <SimpleTable
-          unit="healthcheck"
+          emptyMessage="No healthchecks"
           entries={_.values(healthchecks)}
           perPage={5}
           first

@@ -8,6 +8,8 @@ import Section from '../common/Section';
 import CollapsableSection from '../common/CollapsableSection';
 import SimpleTable from '../common/SimpleTable';
 
+import TaskFileBrowser from './TaskFileBrowser';
+
 class TaskDetail extends React.Component {
 
   renderHeader(t, cleanup) {
@@ -101,27 +103,64 @@ class TaskDetail extends React.Component {
     );
   }
 
+  renderFiles(t, files) {
+    return (
+      <Section title="Files">
+        <TaskFileBrowser taskId={t.task.taskId.id} files={files} />
+      </Section>
+    );
+  }
+
   render() {
     let task = this.props.task[this.props.taskId].data;
     let cleanup = _.find(this.props.taskCleanups, (c) => {
       return c.taskId.id == this.props.taskId;
     });
 
-    console.log(task, cleanup);
+    console.log(this.props.files);
 
     return (
       <div>
         {this.renderHeader(task, cleanup)}
         {this.renderHistory(task)}
+        {this.renderFiles(task, this.props.files)}
       </div>
     );
   }
 }
 
 function mapStateToProps(state) {
+  let files = state.api.taskFiles.data;
+  for (let f of files.files) {
+    f.isDirectory = f.mode[0] == 'd';
+    let httpPrefix = "http";
+    let httpPort = config.slaveHttpPort;
+    if (config.slaveHttpsPort) {
+      httpPrefix = "https";
+      httpPort = config.slaveHttpsPort;
+    }
+
+    if (files.currentDirectory) {
+      f.uiPath = files.currentDirectory + "/" + f.name;
+    } else {
+      f.uiPath = f.name;
+    }
+
+
+    f.fullPath = files.fullPathToRoot  + files.currentDirectory + '/' + f.name;
+    f.downloadLink = `${httpPrefix}://${files.slaveHostname}:${httpPort}/files/download.json?path=${f.fullPath}`;
+
+    if (!f.isDirectory) {
+      let re = /(?:\.([^.]+))?$/;
+      let extension = re.exec(f.name)[1];
+      f.isTailable = !_.contains(['zip', 'gz', 'jar'], extension);
+    }
+  }
+
   return {
     task: state.api.task,
-    taskCleanups: state.api.taskCleanups.data
+    taskCleanups: state.api.taskCleanups.data,
+    files: state.api.taskFiles.data
   };
 }
 
