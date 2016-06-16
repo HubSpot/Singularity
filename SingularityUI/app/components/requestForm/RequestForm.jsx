@@ -149,12 +149,42 @@ class RequestForm extends React.Component {
         }
     }
 
-    header() {
+    renderHeader() {
         if (this.hasOldValues()) {
             return <h3>Editing <a href={`${config.appRoot}/request/${this.props.request.request.id}`}>{this.props.request.request.id}</a></h3>
         } else {
             return <h3>New Request</h3>
         }
+    }
+
+    renderId() {
+        return this.renderBasicFormField(
+            "id",
+            "requestId",
+            "ID",
+            {
+                placeholder: "eg: my-awesome-request",
+                required: true
+            }
+        );
+    }
+
+    renderOwners() {
+        return this.renderBasicFormField(
+            'owners',
+            'owners',
+            'Owners',
+            {
+                generateSelectBox: true,
+                selectBoxOptions: {
+                    tags: [],
+                    containerCssClass: 'select-owners hide-select2-spinner',
+                    dropdownCssClass: 'hidden',
+                    selectOnBlur: true,
+                    tokenSeparators: [',',' ']
+                }
+            }
+        );
     }
 
     renderRequestTypeSelectors() {
@@ -202,6 +232,59 @@ class RequestForm extends React.Component {
         }
     }
 
+    renderSlavePlacement() {
+        return this.renderDropdown(
+            'slavePlacement',
+            'slavePlacement',
+            [
+                {
+                    value: "",
+                    user: "Default"
+                },
+                {
+                    value: "SEPARATE",
+                    user: "Separate"
+                },
+                {
+                    value: "OPTIMISTIC",
+                    user: "Optimistic"
+                },
+                {
+                    value: "GREEDY",
+                    user: "Greedy"
+                }
+            ],
+            {
+                labelText: 'Slave Placement'
+            }
+        );
+    }
+
+    renderInstances() {
+        return this.renderBasicFormField('instances', 'instances', 'Instances', {placeholder: 1});
+    }
+
+    renderRackSensitive() {
+        return this.renderCheckbox("rack-sensitive", "rackSensitive", "Rack Sensitive");
+    }
+
+    renderHideDistributeEvenlyAcrossRacksHint() {
+        return this.renderCheckbox(
+            "hide-distribute-evenly-across-racks-hint", 
+            "hideEvenNumberAcrossRacksHint",
+            "Hide Distribute Evenly Across Racks Hint"
+        );
+    }
+
+    renderWaitAtLeast() {
+        return this.renderBasicFormField(
+            'waitAtLeast',
+            'waitAtLeastMillisAfterTaskFinishesForReschedule',
+            'Task rescheduling delay',
+            {inputGroupAddon: 'milliseconds'}
+        );
+    }
+
     renderRackAffinity() {
         return this.renderBasicFormField(
             "rack-affinity",
@@ -218,101 +301,96 @@ class RequestForm extends React.Component {
         );
     }
 
+    renderSchedule() {
+        return this.renderBasicFormField(
+            'schedule',
+            this.getScheduleType() === 'quartzSchedule' ? "quartzSchedule" : "chronSchedule",
+            'Schedule',
+            {
+                inputGroupAddon: this.renderDropdown(
+                    'schedule-type',
+                    'scheduleType',
+                    [
+                        {
+                            value: 'cronSchedule',
+                            user: 'Cron Schedule'
+                        },
+                        {
+                            value: 'quartzSchedule',
+                            user: 'Quartz Schedule'
+                        }
+                    ],
+                    {
+                        defaultChoice: this.getScheduleType(),
+                        generateSelectBox: true,
+                        selectBoxOptions: {containerCssClass : "select2-select-box select-box-small"}
+                    }),
+                inputGroupAddonExtraClasses: 'input-group-addon--select',
+                required: true,
+                placeholder: this.getScheduleType() === 'quartzSchedule' ? "eg: 0 */5 * * * ?" : "eg: */5 * * * *"
+            }
+        );
+    }
+
+    renderNumRetriesOnFailure() {
+        return this.renderBasicFormField(
+            'retries-on-failure',
+            'numRetriesOnFailure',
+            'Number of retries on failure'
+        );
+    }
+
+    renderKillOldNonRunningTasks() {
+        return this.renderBasicFormField(
+            'killOldNRL',
+            'killOldNonLongRunningTasksAfterMillis',
+            'Kill cleaning task(s) after',
+            {inputGroupAddon: 'milliseconds'}
+        )
+    }
+
+    renderExpectedRuntimeMillis() {
+        return this.renderBasicFormField(
+            'expected-runtime',
+            'scheduledExpectedRuntimeMillis',
+            'Maximum task duration',
+            {inputGroupAddon: 'milliseconds'}
+        );
+    }
+
     renderRequestTypeSpecificFormFields() {
         if (this.getValue('requestType') === 'SERVICE') {
             return(
                 <div>
-                    {this.renderBasicFormField('instances', 'instances', 'Instances', {placeholder: 1})}
-                    {this.renderCheckbox("rack-sensitive", "rackSensitive", "Rack Sensitive")}
-                    {this.renderCheckbox(
-                        "hide-distribute-evenly-across-racks-hint", 
-                        "hideEvenNumberAcrossRacksHint",
-                        "Hide Distribute Evenly Across Racks Hint")}
-                    {config.loadBalancingEnabled ? this.renderCheckbox("load-balanced", "loadBalanced", "Load balanced") : undefined}
+                    {this.renderInstances()}
+                    {this.renderRackSensitive()}
+                    {this.renderHideDistributeEvenlyAcrossRacksHint()}
                     {this.renderRackAffinity()}
                 </div>
             );
         } else if (this.getValue('requestType') === 'WORKER') {
             return (
                 <div>
-                    {this.renderBasicFormField('instances', 'instances', 'Instances', {placeholder: 1})}
-                    {this.renderCheckbox("rack-sensitive", "rackSensitive", "Rack Sensitive")}
-                    {this.renderCheckbox(
-                        "hide-distribute-evenly-across-racks-hint", 
-                        "hideEvenNumberAcrossRacksHint",
-                        "Hide Distribute Evenly Across Racks Hint")}
-                    {this.renderBasicFormField(
-                        'waitAtLeast',
-                        'waitAtLeastMillisAfterTaskFinishesForReschedule',
-                        'Task rescheduling delay',
-                        {inputGroupAddon: 'milliseconds'})}
+                    {this.renderInstances()}
+                    {this.renderRackSensitive()}
+                    {this.renderHideDistributeEvenlyAcrossRacksHint()}
+                    {this.renderWaitAtLeast()}
                     {this.renderRackAffinity()}
                 </div>
             );
         } else if (this.getValue('requestType') === 'SCHEDULED') {
             return (
                 <div>
-                    {this.renderBasicFormField(
-                        'schedule',
-                        this.getScheduleType() === 'quartzSchedule' ? "quartzSchedule" : "chronSchedule",
-                        'Schedule',
-                        {
-                            inputGroupAddon: this.renderDropdown(
-                                'schedule-type',
-                                'scheduleType',
-                                [
-                                    {
-                                        value: 'cronSchedule',
-                                        user: 'Cron Schedule'
-                                    },
-                                    {
-                                        value: 'quartzSchedule',
-                                        user: 'Quartz Schedule'
-                                    }
-                                ],
-                                {
-                                    defaultChoice: this.getScheduleType(),
-                                    generateSelectBox: true,
-                                    selectBoxOptions: {containerCssClass : "select2-select-box select-box-small"}
-                                }),
-                            inputGroupAddonExtraClasses: 'input-group-addon--select',
-                            required: true,
-                            placeholder: this.getScheduleType() === 'quartzSchedule' ? "eg: 0 */5 * * * ?" : "eg: */5 * * * *"
-                        }
-                    )}
-                    {this.renderBasicFormField(
-                        'retries-on-failure',
-                        'numRetriesOnFailure',
-                        'Number of retries on failure'
-                    )}
-                    {this.renderBasicFormField(
-                        'killOldNRL',
-                        'killOldNonLongRunningTasksAfterMillis',
-                        'Kill cleaning task(s) after',
-                        {inputGroupAddon: 'milliseconds'}
-                    )}
-                    {this.renderBasicFormField(
-                        'expected-runtime',
-                        'scheduledExpectedRuntimeMillis',
-                        'Maximum task duration',
-                        {inputGroupAddon: 'milliseconds'}
-                    )}
+                    {this.renderSchedule()}
+                    {this.renderNumRetriesOnFailure()}
+                    {this.renderKillOldNonRunningTasks()}
+                    {this.renderExpectedRuntimeMillis()}
                 </div>
             );
         } else if (this.getValue('requestType')) {
-            return this.renderBasicFormField(
-                'killOldNRL',
-                'killOldNonLongRunningTasksAfterMillis',
-                'Kill cleaning task(s) after',
-                {inputGroupAddon: 'milliseconds'}
-            );
+            return this.renderKillOldNonRunningTasks();
         } else if (this.getValue('requestType')) {
-            return this.renderBasicFormField(
-                'killOldNRL',
-                'killOldNonLongRunningTasksAfterMillis',
-                'Kill cleaning task(s) after',
-                {inputGroupAddon: 'milliseconds'}
-            );
+            return this.renderKillOldNonRunningTasks();
         }
     }
 
@@ -322,59 +400,13 @@ class RequestForm extends React.Component {
         return (
             <div className="row new-form">
                 <div className="col-md-5 col-md-offset-3">
+                    {this.renderHeader()}
                     <form role='form' onSubmit={event => this.submitForm(this.props, event)}>
-                        { this.hasOldValues() ? undefined : this.renderBasicFormField(
-                            "id",
-                            "requestId",
-                            "ID",
-                            {
-                                placeholder: "eg: my-awesome-request",
-                                required: true
-                            })
-                        }
-                        {this.renderBasicFormField(
-                            'owners',
-                            'owners',
-                            'Owners',
-                            {
-                                generateSelectBox: true,
-                                selectBoxOptions: {
-                                    tags: [],
-                                    containerCssClass: 'select-owners hide-select2-spinner',
-                                    dropdownCssClass: 'hidden',
-                                    selectOnBlur: true,
-                                    tokenSeparators: [',',' ']
-                                }
-                            })
-                        }
+                        {this.hasOldValues() ? undefined : this.renderId()}
+                        {this.renderOwners()}
                         {this.renderRequestTypeSelectors()}
                         {this.renderNewTasksOnlyWarning()}
-                        {this.renderDropdown(
-                                'slavePlacement',
-                                'slavePlacement',
-                                [
-                                    {
-                                        value: "",
-                                        user: "Default"
-                                    },
-                                    {
-                                        value: "SEPARATE",
-                                        user: "Separate"
-                                    },
-                                    {
-                                        value: "OPTIMISTIC",
-                                        user: "Optimistic"
-                                    },
-                                    {
-                                        value: "GREEDY",
-                                        user: "Greedy"
-                                    }
-                                ],
-                                {
-                                    labelText: 'Slave Placement'
-                                }
-                            )
-                        }
+                        {this.renderSlavePlacement()}
                         {this.renderRequestTypeSpecificFormFields()}
                         <div id="button-row">
                             <span>
@@ -402,8 +434,12 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        update: (formId, fieldId, newValue) => { dispatch(modifyField(formId, fieldId, newValue)); },
-        clearForm: (formId) => { dispatch(clearForm(formId)); }
+        update(formId, fieldId, newValue) {
+            dispatch(modifyField(formId, fieldId, newValue));
+        },
+        clearForm(formId) {
+            dispatch(clearForm(formId));
+        }
     }
 }
 
