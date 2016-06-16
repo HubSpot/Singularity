@@ -68,13 +68,14 @@ export default class TaskFileBrowser extends React.Component {
               overlayToolTipContent: `Download ${data.name}`,
               overlayId: `downloadFile${data.name}`
             };
+            const link = !data.isDirectory ? <Link prop={linkProps} /> : null;
             return (
               <tr key={index}>
                 <td>{nameLink}</td>
                 <td>{Utils.humanizeFileSize(data.size)}</td>
                 <td>{Utils.absoluteTimestamp(data.mtime * 1000)}</td>
                 <td>
-                  <Link prop={linkProps} />
+                  {link}
                 </td>
               </tr>
             );
