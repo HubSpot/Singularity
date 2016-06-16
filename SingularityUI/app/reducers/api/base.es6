@@ -8,6 +8,8 @@ export default function buildApiActionReducer(ActionGroup, initialData=[]) {
 
   return function reducer(state = initialState, action) {
     switch (action.type) {
+      case ActionGroup.CLEAR:
+        return initialState;
       case ActionGroup.ERROR:
         return _.extend({}, state, {
           isFetching: false,
