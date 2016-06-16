@@ -28,6 +28,12 @@ class TaskDetail extends React.Component {
       </a>
     ) : null;
 
+    const terminationAlert = t.isStillRunning && !cleanup && t.isCleaning ? (
+      <div className="alert alert-warning" role="alert">
+          <strong>Task is terminating:</strong> To issue a non-graceful termination (kill -term), click Destroy Task.
+      </div>
+    ) : null;
+
     return (
       <header className='detail-header'>
         <div className="row">
@@ -60,6 +66,7 @@ class TaskDetail extends React.Component {
             {removeBtn}
           </div>
         </div>
+        {terminationAlert}
       </header>
     );
   }
