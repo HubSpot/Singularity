@@ -6,6 +6,7 @@ import { modifyField, clearForm } from '../../actions/form';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 import Utils from '../../utils';
+import classNames from 'classnames';
 
 let FORM_ID = 'requestForm';
 
@@ -43,7 +44,7 @@ class RequestForm extends React.Component {
         if (this.props.edit) {
             return this.props.request.request.requestType;
         } else {
-            return this.props.requestType;
+            return this.props.form ? this.props.form.requestType : undefined;
         }
     }
 
@@ -51,6 +52,67 @@ class RequestForm extends React.Component {
         if (this.getRequestType() === type) {
             return 'active';
         }
+    }
+
+    renderBasicFormField(htmlId, fieldId, labelText, {placeholder, inputGroupAddon, inputGroupAddonExtraClasses, required} = {}) {
+        return (
+            <div className={classNames('form-group', {required: required})}>
+                <label htmlFor={htmlId}>{labelText}</label>
+                <div className={inputGroupAddon ? "input-group" : null}>
+                    <FormField
+                        id = {htmlId}
+                        prop = {{
+                            updateFn: event => {
+                                this.props.update(FORM_ID, fieldId, event.target.value);
+                            },
+                            placeholder: placeholder,
+                            inputType: 'text',
+                            value: this.props.form ? this.props.form[fieldId] : ""
+                        }}
+                    />
+                    {inputGroupAddon ? <div className={classNames("input-group-addon", inputGroupAddonExtraClasses)}>{inputGroupAddon}</div> : null}
+                </div>
+            </div>
+        );
+    }
+
+    renderCheckbox(htmlId, fieldId, labelText) {
+        return (
+            <div className={classNames('form-group', htmlId)}>
+                <label htmlFor={htmlId} className="control-label">
+                    {labelText}
+                    <FormField
+                        id = {htmlId}
+                        prop = {{
+                            updateFn: event => {
+                                this.props.update(FORM_ID, fieldId, !(this.props.form[fieldId]));
+                            },
+                            inputType: 'checkBox',
+                            checked: this.props.form[fieldId]
+                        }}
+                    />
+                </label>
+            </div>
+        );
+    }
+
+    renderDropdown(htmlId, fieldId, choices, {defaultChoice, generateSelectBox, selectBoxOptions} = {}) {
+        return (
+            <DropDown
+                id = {htmlId}
+                prop = {{
+                    updateFn: event => {
+                        this.props.update(FORM_ID, fieldId, event.target.value);
+                    },
+                    forceChooseValue: true,
+                    choices: choices,
+                    value: this.props.form ? this.props.form[fieldId] : defaultChoice,
+                    defaultValue: defaultChoice,
+                    generateSelectBox: generateSelectBox,
+                    selectBoxOptions: selectBoxOptions
+                }}
+            />
+        );
     }
 
     header() {
@@ -66,8 +128,7 @@ class RequestForm extends React.Component {
         let tooltip = (
             <ToolTip id="cannotChangeAfterCreation">Option cannot be altered after creation</ToolTip>
         );
-        let key = 0;
-        for (let requestType of REQUEST_TYPES) {
+        REQUEST_TYPES.map((requestType, key) => {
             let selector = (
                 <button
                     key={key}
@@ -84,8 +145,7 @@ class RequestForm extends React.Component {
             } else {
                 selectors.push (selector);
             }
-            key ++;
-        }
+        })
         return (
             <div className="form-group">
                 <label>Type</label>
@@ -143,122 +203,6 @@ class RequestForm extends React.Component {
         );
     }
 
-    renderInstances() {
-        return (
-            <div className="form-group">
-                <label htmlFor="instances">Instances</label>
-                <FormField
-                    id = "instances"
-                    prop = {{
-                        updateFn: event => {
-                            this.props.update(FORM_ID, 'instances', event.target.value);
-                        },
-                        placeholder: "1",
-                        inputType: 'text'
-                    }}
-                />
-            </div>
-        );
-    }
-
-    renderRackSensitive() {
-        return (
-            <div className="form-group">
-                <label htmlFor="rack-sensitive" className="control-label">
-                    Rack Sensitive
-                    <FormField
-                        id = "rack-sensitive"
-                        prop = {{
-                            updateFn: event => {
-                                this.props.update(FORM_ID, 'rackSensitive', !(this.props.form.rackSensitive));
-                            },
-                            inputType: 'checkBox'
-                        }}
-                    />
-                </label>
-            </div>
-        );
-    }
-
-    renderHideDistributeEvenlyAcrossRacksHint() {
-        return (
-            <div className="form-group">
-                <label htmlFor="hide-distribute-evenly-across-racks-hint" className="control-label">
-                    Hide Distribute Evenly Across Racks Hint
-                    <FormField
-                        id = "hide-distribute-evenly-across-racks-hint"
-                        className = "hide-distribute-evenly-across-racks-hint-checkbox"
-                        prop = {{
-                            onClick: event => {
-                                this.props.update(FORM_ID, 'hideDistributEvenlyAcrossRacksHint', !(this.props.form.hideDistributEvenlyAcrossRacksHint));
-                            },
-                            inputType: 'checkBox'
-                        }}
-                    />
-                </label>
-            </div>
-        );
-    }
-
-    renderLoadBalanced() {
-        return (
-            <div className="form-group">
-                <label htmlFor="load-balanced" className="control-label">
-                    Load Balanced
-                    <FormField
-                        id = "load-balanced"
-                        prop = {{
-                            updateFn: event => {
-                                this.props.update(FORM_ID, 'loadBalanced', !(this.props.form.loadBalanced));
-                            },
-                            inputType: 'checkBox'
-                        }}
-                    />
-                </label>
-            </div>
-        );
-    }
-
-    renderTaskReschedulingDelay() {
-        return (
-            <div className="form-group">
-                <label htmlFor="waitAtLeast">Task rescheduling delay</label>
-                <div className="input-group">
-                    <FormField
-                        id = "waitAtLeast"
-                        prop = {{
-                            updateFn: event => {
-                                this.props.update(FORM_ID, 'waitAtLeast', event.target.value);
-                            },
-                            inputType: 'text'
-                        }}
-                    />
-                    <div className="input-group-addon">milliseconds</div>
-                </div>
-            </div>
-        );
-    }
-
-    renderKillCleaningTasksAfter() {
-        return (
-            <div className="form-group">
-                <label htmlFor="killOldNRL">Kill cleaning task(s) after</label>
-                <div className="input-group">
-                    <FormField
-                        id = "killCleaningTasksAfter"
-                        prop = {{
-                            updateFn: event => {
-                                this.props.update(FORM_ID, 'killCleaningTasksAfter', event.target.value);
-                            },
-                            inputType: 'text'
-                        }}
-                    />
-                    <div className="input-group-addon">milliseconds</div>
-                </div>
-            </div>
-        );
-    }
-
     renderRackAffinity() {
         return (
             <div className="form-group">
@@ -281,29 +225,95 @@ class RequestForm extends React.Component {
         if (this.getRequestType() === 'SERVICE') {
             return(
                 <div>
-                    {this.renderInstances()}
-                    {this.renderRackSensitive()}
-                    {this.renderHideDistributeEvenlyAcrossRacksHint()}
-                    {config.loadBalancingEnabled ? this.renderLoadBalanced() : undefined}
+                    {this.renderBasicFormField('instances', 'instances', 'Instances', {placeholder: 1})}
+                    {this.renderCheckbox("rack-sensitive", "rackSensitive", "Rack Sensitive")}
+                    {this.renderCheckbox(
+                        "hide-distribute-evenly-across-racks-hint", 
+                        "hideDistributEvenlyAcrossRacksHint",
+                        "Hide Distribute Evenly Across Racks Hint")}
+                    {config.loadBalancingEnabled ? this.renderCheckbox("load-balanced", "loadBalanced", "Load balanced") : undefined}
                     {this.renderRackAffinity()}
                 </div>
             );
         } else if (this.getRequestType() === 'WORKER') {
             return (
                 <div>
-                    {this.renderInstances()}
-                    {this.renderRackSensitive()}
-                    {this.renderHideDistributeEvenlyAcrossRacksHint()}
-                    {this.renderTaskReschedulingDelay()}
+                    {this.renderBasicFormField('instances', 'instances', 'Instances', {placeholder: 1})}
+                    {this.renderCheckbox("rack-sensitive", "rackSensitive", "Rack Sensitive")}
+                    {this.renderCheckbox(
+                        "hide-distribute-evenly-across-racks-hint", 
+                        "hideDistributEvenlyAcrossRacksHint",
+                        "Hide Distribute Evenly Across Racks Hint")}
+                    {this.renderBasicFormField('waitAtLeast', 'waitAtLeast', 'Task rescheduling delay', {inputGroupAddon: 'milliseconds'})}
                     {this.renderRackAffinity()}
                 </div>
             );
         } else if (this.getRequestType() === 'SCHEDULED') {
-            return this.renderKillCleaningTasksAfter();
+            return (
+                <div>
+                    {this.renderBasicFormField(
+                        'schedule',
+                        'schedule',
+                        'Schedule',
+                        {
+                            inputGroupAddon: this.renderDropdown(
+                                'schedule-type',
+                                'scheduleType',
+                                [
+                                    {
+                                        value: 'cronSchedule',
+                                        user: 'Cron Schedule'
+                                    },
+                                    {
+                                        value: 'quartzSchedule',
+                                        user: 'Quartz Schedule'
+                                    }
+                                ],
+                                {
+                                    defaultChoice: 'cronSchedule',
+                                    generateSelectBox: true,
+                                    selectBoxOptions: {containerCssClass : "select2-select-box select-box-small"}
+                                }),
+                            inputGroupAddonExtraClasses: 'input-group-addon--select',
+                            required: true,
+                            placeholder: this.props.form && this.props.form.scheduleType === 'quartzSchedule' ? 
+                                "eg: 0 */5 * * * ?" : 
+                                "eg: */5 * * * *"
+                        }
+                    )}
+                    {this.renderBasicFormField(
+                        'retries-on-failure',
+                        'retriesOnFailure',
+                        'Number of retries on failure'
+                    )}
+                    {this.renderBasicFormField(
+                        'killOldNRL',
+                        'killCleaningTasksAfter',
+                        'Kill cleaning task(s) after',
+                        {inputGroupAddon: 'milliseconds'}
+                    )}
+                    {this.renderBasicFormField(
+                        'expected-runtime',
+                        'expectedRuntime',
+                        'Maximum task duration',
+                        {inputGroupAddon: 'milliseconds'}
+                    )}
+                </div>
+            );
         } else if (this.getRequestType() === 'ON_DEMAND') {
-            return this.renderKillCleaningTasksAfter();
+            return this.renderBasicFormField(
+                'killOldNRL',
+                'killCleaningTasksAfter',
+                'Kill cleaning task(s) after',
+                {inputGroupAddon: 'milliseconds'}
+            );
         } else if (this.getRequestType() === 'RUN_ONCE') {
-            return this.renderKillCleaningTasksAfter();
+            return this.renderBasicFormField(
+                'killOldNRL',
+                'killCleaningTasksAfter',
+                'Kill cleaning task(s) after',
+                {inputGroupAddon: 'milliseconds'}
+            );
         }
     }
 
@@ -311,21 +321,14 @@ class RequestForm extends React.Component {
         let requestId = this.props.request.request ? this.props.request.request.id : undefined;
         return (
             <form role='form' onSubmit={event => this.submitForm(this.props, event)}>
-                { this.props.edit ? undefined :
-                    <div className="form-group required" onSubmit={this.submitForm}>
-                        <label htmlFor="id">ID</label>
-                        <FormField
-                            id = "id"
-                            className = "form-control"
-                            prop = {{
-                                updateFn: event => {
-                                    this.props.update(FORM_ID, 'requestId', event.target.value);
-                                },
-                                placeholder: "eg: my-awesome-request",
-                                inputType: 'text'
-                            }}
-                        />
-                    </div>
+                { this.props.edit ? undefined : this.renderBasicFormField(
+                    "id",
+                    "requestId",
+                    "ID",
+                    {
+                        placeholder: "eg: my-awesome-request",
+                        required: true
+                    })
                 }
                 <div class="form-group">
                     <label htmlFor="owner">Owners <span className='form-label-tip'>separate multiple owners with commas</span></label>
@@ -373,7 +376,7 @@ function mapStateToProps(state) {
         racks: state.api.racks.data,
         request: state.api.request ? state.api.request.data : undefined,
         form: state.form[FORM_ID],
-        requestType: state.form && state.form[FORM_ID] ? state.form[FORM_ID].requestType : undefined
+        modifications: state.form[FORM_ID] ? state.form[FORM_ID].modifications : 0
     }
 }
 

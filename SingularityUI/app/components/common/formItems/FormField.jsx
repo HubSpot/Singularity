@@ -17,6 +17,7 @@ let FormField = React.createClass({
             min={this.props.prop.min}
             max={this.props.prop.max}
             required={this.props.prop.required}
+            checked={this.props.prop.checked || false}
         />;
     }
 });
