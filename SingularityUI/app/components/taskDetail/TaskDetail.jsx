@@ -117,7 +117,7 @@ class TaskDetail extends React.Component {
       return c.taskId.id == this.props.taskId;
     });
 
-    console.log(this.props.files);
+    // console.log(this.props.files);
 
     return (
       <div>
@@ -147,7 +147,7 @@ function mapStateToProps(state) {
     }
 
 
-    f.fullPath = files.fullPathToRoot  + files.currentDirectory + '/' + f.name;
+    f.fullPath = files.fullPathToRoot + '/' + files.currentDirectory + '/' + f.name;
     f.downloadLink = `${httpPrefix}://${files.slaveHostname}:${httpPort}/files/download.json?path=${f.fullPath}`;
 
     if (!f.isDirectory) {

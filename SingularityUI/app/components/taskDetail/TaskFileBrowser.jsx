@@ -4,6 +4,7 @@ import Utils from '../../utils';
 import Breadcrumbs from '../common/Breadcrumbs';
 import SimpleTable from '../common/SimpleTable';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
+import Link from '../common/atomicDisplayItems/Link';
 
 export default class TaskFileBrowser extends React.Component {
 
@@ -39,6 +40,8 @@ export default class TaskFileBrowser extends React.Component {
           emptyMessage="No files exist in this directory"
           entries={_.sortBy(this.props.files.files, 'isDirectory').reverse()}
           perPage={10}
+          first={this.props.files.files.length >= 30}
+          last={this.props.files.files.length >= 30}
           renderTableHeaders={() => {
             let row = headers.map((h, i) => {
               return <th key={i}>{h}</th>;
@@ -55,11 +58,24 @@ export default class TaskFileBrowser extends React.Component {
             } else {
               nameLink = <a onClick={() => this.navigateTo(`${this.props.files.currentDirectory}/${data.name}`)}>{icon}<span className="file-name">{data.name}</span></a>;
             }
+            let linkProps = {
+              text: <Glyphicon iconClass='download-alt' />,
+              url: data.downloadLink,
+              title: 'Download',
+              altText: `Download ${data.name}`,
+              overlayTrigger: true,
+              overlayTriggerPlacement: 'top',
+              overlayToolTipContent: `Download ${data.name}`,
+              overlayId: `downloadFile${data.name}`
+            };
             return (
               <tr key={index}>
                 <td>{nameLink}</td>
                 <td>{Utils.humanizeFileSize(data.size)}</td>
                 <td>{Utils.absoluteTimestamp(data.mtime * 1000)}</td>
+                <td>
+                  <Link prop={linkProps} />
+                </td>
               </tr>
             );
           }}

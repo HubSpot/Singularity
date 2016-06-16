@@ -50,7 +50,7 @@ export default class SimpleTable extends React.Component {
             last={this.props.last}
             ellipsis={false}
             items={Math.ceil(this.state.displayItems.length / this.props.perPage)}
-            maxButtons={this.props.maxButtons || 3}
+            maxButtons={this.props.maxButtons || 1}
             activePage={this.state.activePage}
             onSelect={this.handleSelect.bind(this)} />
         </div>
