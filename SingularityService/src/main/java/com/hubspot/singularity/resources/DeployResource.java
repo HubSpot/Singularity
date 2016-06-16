@@ -129,11 +129,11 @@ public class DeployResource extends AbstractRequestResource {
     checkConflict(deployManager.createPendingDeploy(pendingDeployObj) != SingularityCreateResult.EXISTED,
         "Pending deploy already in progress for %s - cancel it or wait for it to complete (%s)", requestId, deployManager.getPendingDeploy(requestId).orNull());
 
-    deployManager.saveDeploy(request, deployMarker, deploy);
-
     if (requestWithState.getState() == RequestState.PAUSED) {
       requestManager.deployToUnpause(request, now, deployUser, deployRequest.getMessage());
     }
+
+    deployManager.saveDeploy(request, deployMarker, deploy);
 
     if (request.isDeployable()) {
       requestManager.addToPendingQueue(new SingularityPendingRequest(requestId, deployMarker.getDeployId(), now, deployUser, PendingType.NEW_DEPLOY,
