@@ -3,19 +3,14 @@ import ReactDOM from 'react-dom';
 
 import SlavesPage from '../components/machines/Slaves';
 
-import View from './view';
+import ReactView from './reactView';
 
 import { Provider } from 'react-redux';
 
 
-class SlavesView extends View {
+class SlavesView extends ReactView {
   initialize(store) {
     this.store = store;
-  }
-
-  remove() {
-      super.remove();
-      ReactDOM.unmountComponentAtNode(this.el);
   }
 
   render() {

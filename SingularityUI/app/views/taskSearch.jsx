@@ -1,11 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import View from './view';
+import ReactView from './reactView';
 
 import TaskSearch from '../components/taskSearch/TaskSearch';
 
-class TaskSearchView extends View {
+class TaskSearchView extends ReactView {
 
     constructor(...args) {
         super(...args);
@@ -31,11 +31,6 @@ class TaskSearchView extends View {
         this.requestId = requestId;
         this.global = global;
         this.opts = opts;
-    }
-
-    remove() {
-        super.remove();
-        ReactDOM.unmountComponentAtNode(this.el);
     }
 
     render() {

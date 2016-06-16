@@ -1,4 +1,4 @@
-import View from './view';
+import ReactView from './reactView';
 import StatusPage from '../components/status/StatusPage';
 
 import React from 'react';
@@ -6,15 +6,10 @@ import ReactDOM from 'react-dom';
 
 import { Provider } from 'react-redux';
 
-class StatusView extends View {
+class StatusView extends ReactView {
 
     initialize(store) {
         this.store = store;
-    }
-
-    remove() {
-        super.remove();
-        ReactDOM.unmountComponentAtNode(this.el);
     }
 
     render() {
