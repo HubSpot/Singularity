@@ -103,7 +103,7 @@ class DeployDetail extends React.Component {
           <h2>Active Tasks</h2>
         </div>
         <SimpleTable
-          unit="task"
+          emptyMessage="No tasks"
           entries={tasks}
           perPage={5}
           first
@@ -139,7 +139,7 @@ class DeployDetail extends React.Component {
           <h2>Task History</h2>
         </div>
         <ServerSideTable
-          unit="task"
+          emptyMessage="No tasks"
           entries={tasks}
           paginate={tasks.length >= 5}
           perPage={5}

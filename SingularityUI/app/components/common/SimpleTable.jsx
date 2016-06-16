@@ -76,7 +76,7 @@ export default class SimpleTable extends React.Component {
     } else {
       return (
         <div className="empty-table-message">
-            No {this.props.unit}s
+            {this.props.emptyMessage}
         </div>
       );
     }
@@ -84,7 +84,7 @@ export default class SimpleTable extends React.Component {
 }
 
 SimpleTable.propTypes = {
-  unit: React.PropTypes.string.isRequired,
+  emptyMessage: React.PropTypes.string.isRequired,
   entries: React.PropTypes.array.isRequired,
   perPage: React.PropTypes.number,
   first: React.PropTypes.bool,
