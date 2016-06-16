@@ -11,6 +11,11 @@ class WebhooksView extends View {
         this.store = store;
     }
 
+    remove() {
+        super.remove();
+        ReactDOM.unmountComponentAtNode(this.el);
+    }
+
     render() {
         $(this.el).addClass("webhooks-root");
         ReactDOM.render(<Provider store={this.store}><Webhooks /></Provider>, this.el);

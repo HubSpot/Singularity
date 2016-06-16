@@ -12,6 +12,11 @@ class StatusView extends View {
         this.store = store;
     }
 
+    remove() {
+        super.remove();
+        ReactDOM.unmountComponentAtNode(this.el);
+    }
+
     render() {
         ReactDOM.render(<Provider store={this.store}><StatusPage/></Provider>, this.el);
     }

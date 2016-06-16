@@ -2,7 +2,6 @@ import Controller from './Controller';
 import DeployView from '../views/deploy';
 import { FetchAction as DeployFetchAction} from '../actions/api/deploy';
 import { fetchTask as TaskFetchAction} from '../actions/api/task';
-import { clear as TaskFetchActionClear} from '../actions/api/task';
 import { FetchForDeployAction } from '../actions/api/tasks';
 import { FetchForDeploy as TaskHistoryFetchForDeploy } from '../actions/api/taskHistory';
 
@@ -19,7 +18,6 @@ class DeployDetailController extends Controller {
         promises.push(this.store.dispatch(DeployFetchAction.trigger(requestId, deployId)));
         let tasksPromise = this.store.dispatch(FetchForDeployAction.trigger(requestId, deployId));
         promises.push(this.store.dispatch(TaskHistoryFetchForDeploy.clear()));
-        promises.push(this.store.dispatch(TaskFetchActionClear()));
         tasksPromise.then(() => {
           for (let t of store.getState().api.activeTasksForDeploy.data) {
             this.store.dispatch(TaskFetchAction(t.taskId.id));

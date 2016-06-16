@@ -33,6 +33,11 @@ class TaskSearchView extends View {
         this.opts = opts;
     }
 
+    remove() {
+        super.remove();
+        ReactDOM.unmountComponentAtNode(this.el);
+    }
+
     render() {
       $(this.el).addClass("task-search-root");
       ReactDOM.render(

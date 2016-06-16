@@ -13,6 +13,11 @@ class RacksView extends View {
     this.store = store;
   }
 
+  remove() {
+      super.remove();
+      ReactDOM.unmountComponentAtNode(this.el);
+  }
+
   render() {
     ReactDOM.render(<Provider store={this.store}><RacksPage/></Provider>, this.el);
   }

@@ -13,6 +13,11 @@ class SlavesView extends View {
     this.store = store;
   }
 
+  remove() {
+      super.remove();
+      ReactDOM.unmountComponentAtNode(this.el);
+  }
+
   render() {
     ReactDOM.render(<Provider store={this.store}><SlavesPage/></Provider>, this.el);
   }

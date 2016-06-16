@@ -22,6 +22,11 @@ class LogView extends View {
       }
     }
 
+    remove() {
+        super.remove();
+        ReactDOM.unmountComponentAtNode(this.el);
+    }
+
     render() {
       $(this.el).addClass('tail-root');
       ReactDOM.render(<Provider store={this.store}><LogContainer /></Provider>, this.el);

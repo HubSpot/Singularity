@@ -41,7 +41,7 @@ class View extends Backbone.View
 
     afterRender: ->
       $('.linkify').linkify()
-      
+
       Sortable.init()
 
       # Paginate client side collections

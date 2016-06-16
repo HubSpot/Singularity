@@ -14,6 +14,11 @@ class TaskView extends View {
         this.taskId = taskId;
     }
 
+    remove() {
+        super.remove();
+        ReactDOM.unmountComponentAtNode(this.el);
+    }
+
     render() {
         ReactDOM.render(<Provider store={this.store}><TaskDetail taskId={this.taskId}/></Provider>, this.el);
     }
