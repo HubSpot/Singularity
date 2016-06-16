@@ -96,8 +96,8 @@ class RequestForm extends React.Component {
         );
     }
 
-    renderDropdown(htmlId, fieldId, choices, {defaultChoice, generateSelectBox, selectBoxOptions} = {}) {
-        return (
+    renderDropdown(htmlId, fieldId, choices, {defaultChoice, generateSelectBox, selectBoxOptions, labelText} = {}) {
+        let dropDown = (
             <DropDown
                 id = {htmlId}
                 prop = {{
@@ -107,12 +107,23 @@ class RequestForm extends React.Component {
                     forceChooseValue: true,
                     choices: choices,
                     value: this.props.form ? this.props.form[fieldId] : defaultChoice,
-                    defaultValue: defaultChoice,
                     generateSelectBox: generateSelectBox,
                     selectBoxOptions: selectBoxOptions
                 }}
             />
-        );
+        )
+        if (labelText) {
+            return (
+                <div className={classNames('form-group', htmlId)}>
+                    <label htmlFor={htmlId} className="control-label">
+                        {labelText}
+                    </label>
+                    {dropDown}
+                </div>
+            );
+        } else {
+            return dropDown
+        }
     }
 
     header() {
@@ -166,41 +177,6 @@ class RequestForm extends React.Component {
         } else {
             return undefined
         }
-    }
-
-    renderSlavePlacementField() {
-        return (
-            <div className="form-group">
-                <label htmlFor="slavePlacement">Slave Placement</label>
-                <DropDown
-                    id = "slavePlacement"
-                    prop = {{
-                        updateFn: event => {
-                            this.props.update(FORM_ID, 'slavePlacement', event.target.value);
-                        },
-                        forceChooseValue: true,
-                        choices: [
-                            {
-                                value: "",
-                                user: "Default"
-                            },
-                            {
-                                value: "SEPARATE",
-                                user: "Separate"
-                            },
-                            {
-                                value: "OPTIMISTIC",
-                                user: "Optimistic"
-                            },
-                            {
-                                value: "GREEDY",
-                                user: "Greedy"
-                            }
-                        ]
-                    }}
-                />
-            </div>
-        );
     }
 
     renderRackAffinity() {
@@ -317,53 +293,71 @@ class RequestForm extends React.Component {
         }
     }
 
-    renderForm() {
+    render() {
         let requestId = this.props.request.request ? this.props.request.request.id : undefined;
         return (
-            <form role='form' onSubmit={event => this.submitForm(this.props, event)}>
-                { this.props.edit ? undefined : this.renderBasicFormField(
-                    "id",
-                    "requestId",
-                    "ID",
-                    {
-                        placeholder: "eg: my-awesome-request",
-                        required: true
-                    })
-                }
-                <div class="form-group">
-                    <label htmlFor="owner">Owners <span className='form-label-tip'>separate multiple owners with commas</span></label>
-                    <FormField
-                            id = "owners"
-                            className = "tagging-input"
-                            prop = {{
-                                updateFn: event => {
-                                    this.props.update(FORM_ID, 'owners', event.target.value);
-                                },
-                                inputType: 'text'
-                            }}
-                        />
-                </div>
-                {this.renderRequestTypeSelectors()}
-                {this.renderNewTasksOnlyWarning()}
-                {this.renderSlavePlacementField()}
-                {this.renderRequestTypeSpecificFormFields()}
-                <div id="button-row">
-                    <span>
-                        <button type="submit" className="btn btn-success btn-lg" disabled={this.cantSubmit() ? 'disabled' : undefined}>
-                            Save
-                        </button>
-                    </span>
-                </div>
-            </form>
-        );
-    }
-
-    render() {
-        return(
             <div className="row new-form">
                 <div className="col-md-5 col-md-offset-3">
-                    {this.header()}
-                    {this.renderForm()}
+                    <form role='form' onSubmit={event => this.submitForm(this.props, event)}>
+                        { this.props.edit ? undefined : this.renderBasicFormField(
+                            "id",
+                            "requestId",
+                            "ID",
+                            {
+                                placeholder: "eg: my-awesome-request",
+                                required: true
+                            })
+                        }
+                        <div class="form-group">
+                            <label htmlFor="owner">Owners <span className='form-label-tip'>separate multiple owners with commas</span></label>
+                            <FormField
+                                    id = "owners"
+                                    className = "tagging-input"
+                                    prop = {{
+                                        updateFn: event => {
+                                            this.props.update(FORM_ID, 'owners', event.target.value);
+                                        },
+                                        inputType: 'text'
+                                    }}
+                                />
+                        </div>
+                        {this.renderRequestTypeSelectors()}
+                        {this.renderNewTasksOnlyWarning()}
+                        {this.renderDropdown(
+                                'slavePlacement',
+                                'slavePlacement',
+                                [
+                                    {
+                                        value: "",
+                                        user: "Default"
+                                    },
+                                    {
+                                        value: "SEPARATE",
+                                        user: "Separate"
+                                    },
+                                    {
+                                        value: "OPTIMISTIC",
+                                        user: "Optimistic"
+                                    },
+                                    {
+                                        value: "GREEDY",
+                                        user: "Greedy"
+                                    }
+                                ],
+                                {
+                                    labelText: 'Slave Placement'
+                                }
+                            )
+                        }
+                        {this.renderRequestTypeSpecificFormFields()}
+                        <div id="button-row">
+                            <span>
+                                <button type="submit" className="btn btn-success btn-lg" disabled={this.cantSubmit() ? 'disabled' : undefined}>
+                                    Save
+                                </button>
+                            </span>
+                        </div>
+                    </form>
                 </div>
             </div>
         );
