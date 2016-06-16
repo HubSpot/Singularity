@@ -60,7 +60,7 @@ public class DockerUtils {
     };
 
     try {
-      callWithRetriesAndTimeout(callable, Optional.of(configuration.getDockerPullRetries()));
+      callWithRetriesAndTimeout(callable, Optional.of(configuration.getMaxDockerPullAttempts()));
     } catch (Exception e) {
       throw new DockerException(e);
     }
@@ -118,7 +118,7 @@ public class DockerUtils {
     RetryerBuilder<T> retryerBuilder = RetryerBuilder.<T>newBuilder()
       .withAttemptTimeLimiter(AttemptTimeLimiters.<T>fixedTimeLimit(configuration.getDockerClientTimeLimitSeconds(), TimeUnit.SECONDS, executor));
     if (retryCount.isPresent()) {
-      retryerBuilder.withStopStrategy(StopStrategies.stopAfterAttempt(retryCount.get() + 1));
+      retryerBuilder.withStopStrategy(StopStrategies.stopAfterAttempt(retryCount.get()));
     }
     return retryerBuilder.build().call(callable);
   }
