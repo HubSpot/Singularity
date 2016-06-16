@@ -3,6 +3,7 @@ import Utils from '../../utils';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import SimpleTable from '../common/SimpleTable';
+import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 
 export default class TaskFileBrowser extends React.Component {
 
@@ -36,7 +37,7 @@ export default class TaskFileBrowser extends React.Component {
         <Breadcrumbs items={pathItems} />
         <SimpleTable
           emptyMessage="No files exist in this directory"
-          entries={this.props.files.files}
+          entries={_.sortBy(this.props.files.files, 'isDirectory').reverse()}
           perPage={10}
           renderTableHeaders={() => {
             let row = headers.map((h, i) => {
@@ -46,12 +47,13 @@ export default class TaskFileBrowser extends React.Component {
           }}
           renderTableRow={(data, index) => {
             let nameLink = "";
+            let icon = <Glyphicon iconClass={data.isDirectory ? 'folder-open' : 'file'} />;
             if (data.isTailable) {
-              nameLink = <a href={`${config.appRoot}/task/${this.props.taskId}/tail/${data.uiPath}`}>{data.name}</a>;
+              nameLink = <a href={`${config.appRoot}/task/${this.props.taskId}/tail/${data.uiPath}`}>{icon}<span className="file-name">{data.name}</span></a>;
             } else if (!data.isTailable && !data.isDirectory) {
-              nameLink = data.name;
+              nameLink = <span>{icon} {data.name}</span>;
             } else {
-              nameLink = <a onClick={() => this.navigateTo(`${this.props.files.currentDirectory}/${data.name}`)}>{data.name}</a>;
+              nameLink = <a onClick={() => this.navigateTo(`${this.props.files.currentDirectory}/${data.name}`)}>{icon}<span className="file-name">{data.name}</span></a>;
             }
             return (
               <tr key={index}>
