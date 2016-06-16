@@ -20,6 +20,7 @@ export default class Breadcrumbs extends React.Component {
     return (
       <ul className="breadcrumb">
           {this.renderItems()}
+          <span className="pull-right">{this.props.right}</span>
       </ul>
     );
   }
@@ -30,5 +31,6 @@ Breadcrumbs.propTypes = {
       label: React.PropTypes.string.isRequired,
       text: React.PropTypes.oneOfType([React.PropTypes.string.isRequired, React.PropTypes.number.isRequired]),
       link: React.PropTypes.string
-  })).isRequired
+  })).isRequired,
+  right: React.PropTypes.element
 };

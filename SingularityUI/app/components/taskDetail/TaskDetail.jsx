@@ -9,12 +9,12 @@ import CollapsableSection from '../common/CollapsableSection';
 
 class TaskDetail extends React.Component {
 
-  renderHeader(t) {
+  renderHeader(t, cleanup) {
     const taskState = t.taskUpdates ? (
       <div className="col-xs-6 task-state-header">
         <h3>
           <span className={`label label-${Utils.getLabelClassFromTaskState(_.last(t.taskUpdates).taskState)} task-state-header-label`}>
-            {Utils.humanizeText(_.last(t.taskUpdates).taskState)} {t.cleanup ? Utils.humanizeText(t.cleanup.cleanupType) : ''}
+            {Utils.humanizeText(_.last(t.taskUpdates).taskState)} {cleanup ? `(${Utils.humanizeText(cleanup.cleanupType)})` : ''}
           </span>
         </h3>
       </div>
@@ -22,8 +22,8 @@ class TaskDetail extends React.Component {
 
     const removeBtn = t.isStillRunning ? (
       <a className="btn btn-danger">
-        {t.cleanup ?
-          (t.cleanup.isImmediate ? 'Destroy task' : 'Override cleanup') :
+        {cleanup ?
+          (cleanup.isImmediate ? 'Destroy task' : 'Override cleanup') :
           (t.isCleaning ? 'Destroy task' : 'Kill Task')}
       </a>
     ) : null;
@@ -49,6 +49,7 @@ class TaskDetail extends React.Component {
                   text: t.task.taskId.instanceNo,
                 }
               ]}
+              right={<span><strong>Hostname: </strong>{t.task.offer.hostname}</span>}
             />
           </div>
         </div>
@@ -65,11 +66,15 @@ class TaskDetail extends React.Component {
 
   render() {
     let task = this.props.task[this.props.taskId].data;
-    console.log(task);
+    let cleanup = _.find(this.props.taskCleanups, (c) => {
+      return c.taskId.id == this.props.taskId;
+    });
+
+    console.log(task, cleanup);
 
     return (
       <div>
-        {this.renderHeader(task)}
+        {this.renderHeader(task, cleanup)}
       </div>
     );
   }
@@ -78,7 +83,7 @@ class TaskDetail extends React.Component {
 function mapStateToProps(state) {
   return {
     task: state.api.task,
-    taskCleanups: state.api.taskCleanups
+    taskCleanups: state.api.taskCleanups.data
   };
 }
 

@@ -32,7 +32,7 @@ export default class JSONButton extends React.Component {
 
   render() {
     return (
-      <div>
+      <span>
         <a className={this.props.linkClassName} onClick={this.showJSON.bind(this)}>{this.props.text}</a>
         <Modal show={this.state.modalOpen} onHide={this.hideJSON.bind(this)} bsSize="large">
           <Modal.Body>
@@ -49,7 +49,7 @@ export default class JSONButton extends React.Component {
             <Button bsStyle="info" onClick={this.hideJSON.bind(this)}>Close</Button>
           </Modal.Footer>
         </Modal>
-      </div>
+      </span>
     );
   }
 }
