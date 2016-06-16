@@ -28,7 +28,7 @@ export default class Breadcrumbs extends React.Component {
 Breadcrumbs.propTypes = {
   items: React.PropTypes.arrayOf(React.PropTypes.shape({
       label: React.PropTypes.string.isRequired,
-      text: React.PropTypes.string.isRequired,
+      text: React.PropTypes.oneOfType([React.PropTypes.string.isRequired, React.PropTypes.number.isRequired]),
       link: React.PropTypes.string
   })).isRequired
 };

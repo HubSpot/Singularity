@@ -10,6 +10,7 @@ import { FetchAction as StatusFetchAction } from '../../actions/api/status';
 import { FetchAction as DeployFetchAction } from '../../actions/api/deploy';
 import { FetchForDeployAction as TasksFetchForDeployAction } from '../../actions/api/tasks';
 import { FetchForDeploy as TaskHistoryFetchForDeploy } from '../../actions/api/taskHistory';
+import { FetchAction as TaskCleanupsFetchAction } from '../../actions/api/taskCleanups';
 
 const user = buildApiActionReducer(UserFetchAction);
 const webhooks = buildApiActionReducer(WebhooksFetchAction);
@@ -19,6 +20,7 @@ const status = buildApiActionReducer(StatusFetchAction);
 const deploy = buildApiActionReducer(DeployFetchAction);
 const activeTasksForDeploy = buildApiActionReducer(TasksFetchForDeployAction);
 const taskHistoryForDeploy = buildApiActionReducer(TaskHistoryFetchForDeploy);
+const taskCleanups = buildApiActionReducer(TaskCleanupsFetchAction);
 
 export default combineReducers({
   user,
@@ -29,5 +31,6 @@ export default combineReducers({
   deploy,
   task,
   activeTasksForDeploy,
-  taskHistoryForDeploy
+  taskHistoryForDeploy,
+  taskCleanups
 });
