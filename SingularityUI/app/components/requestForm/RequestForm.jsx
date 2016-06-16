@@ -74,7 +74,7 @@ class RequestForm extends React.Component {
         }
     }
 
-    renderBasicFormField(htmlId, fieldId, labelText, {placeholder, inputGroupAddon, inputGroupAddonExtraClasses, required} = {}) {
+    renderBasicFormField(htmlId, fieldId, labelText, {placeholder, inputGroupAddon, inputGroupAddonExtraClasses, required, generateSelectBox, selectBoxOptions} = {}) {
         return (
             <div className={classNames('form-group', {required: required})}>
                 <label htmlFor={htmlId}>{labelText}</label>
@@ -87,7 +87,9 @@ class RequestForm extends React.Component {
                             },
                             placeholder: placeholder,
                             inputType: 'text',
-                            value: this.getValue(fieldId)
+                            value: this.getValue(fieldId),
+                            generateSelectBox: generateSelectBox,
+                            selectBoxOptions: selectBoxOptions
                         }}
                     />
                     {inputGroupAddon ? <div className={classNames("input-group-addon", inputGroupAddonExtraClasses)}>{inputGroupAddon}</div> : null}
@@ -201,20 +203,18 @@ class RequestForm extends React.Component {
     }
 
     renderRackAffinity() {
-        return (
-            <div className="form-group">
-                <label htmlFor="rack-affinity">Rack Affinity</label>
-                <FormField
-                    id = "rack-affinity"
-                    className = "tagging-input"
-                    prop = {{
-                        updateFn: event => {
-                            this.props.update(FORM_ID, 'rackAffinity', event.target.value);
-                        },
-                        inputType: 'text'
-                    }}
-                />
-            </div>
+        return this.renderBasicFormField(
+            "rack-affinity",
+            'rackAffinity',
+            'Rack Affinity',
+            {
+                generateSelectBox: true,
+                selectBoxOptions: {
+                    tags: _.pluck(this.props.racks, 'id'),
+                    selectOnBlur: true,
+                    tokenSeparators: [',',' ']
+                }
+            }
         );
     }
 
@@ -318,6 +318,7 @@ class RequestForm extends React.Component {
 
     render() {
         let requestId = this.hasOldValues() ? this.props.request.request.id : undefined;
+        let labelTip = (<span className='form-label-tip'>separate multiple owners with commas</span>);
         return (
             <div className="row new-form">
                 <div className="col-md-5 col-md-offset-3">
@@ -331,19 +332,21 @@ class RequestForm extends React.Component {
                                 required: true
                             })
                         }
-                        <div class="form-group">
-                            <label htmlFor="owner">Owners <span className='form-label-tip'>separate multiple owners with commas</span></label>
-                            <FormField
-                                    id = "owners"
-                                    className = "tagging-input"
-                                    prop = {{
-                                        updateFn: event => {
-                                            this.props.update(FORM_ID, 'owners', event.target.value);
-                                        },
-                                        inputType: 'text'
-                                    }}
-                                />
-                        </div>
+                        {this.renderBasicFormField(
+                            'owners',
+                            'owners',
+                            'Owners',
+                            {
+                                generateSelectBox: true,
+                                selectBoxOptions: {
+                                    tags: [],
+                                    containerCssClass: 'select-owners hide-select2-spinner',
+                                    dropdownCssClass: 'hidden',
+                                    selectOnBlur: true,
+                                    tokenSeparators: [',',' ']
+                                }
+                            })
+                        }
                         {this.renderRequestTypeSelectors()}
                         {this.renderNewTasksOnlyWarning()}
                         {this.renderDropdown(
