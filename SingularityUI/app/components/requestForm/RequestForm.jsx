@@ -28,7 +28,7 @@ class RequestForm extends React.Component {
     }
 
     getButtonsDisabled(type) {
-        if (this.hasOldValues() && this.getRequestType() !== type) {
+        if (this.hasOldValues() && this.getValue('requestType') !== type) {
             return 'disabled';
         } else {
             return null;
@@ -44,11 +44,11 @@ class RequestForm extends React.Component {
         return this.props.edit && this.props.request && this.props.request.request;
     }
 
-    getRequestType() {
-        if (this.hasOldValues()) {
-            return this.props.request.request.requestType;
-        } else {
-            return this.props.form ? this.props.form.requestType : undefined;
+    getValue(fieldId) {
+        if (this.props.form && this.props.form[fieldId]) {
+            return this.props.form[fieldId];
+        } else if (this.hasOldValues() && this.props.request.request[fieldId]) {
+            return this.props.request.request[fieldId];
         }
     }
 
@@ -69,7 +69,7 @@ class RequestForm extends React.Component {
     }
 
     getActive(type) {
-        if (this.getRequestType() === type) {
+        if (this.getValue('requestType') === type) {
             return 'active';
         }
     }
@@ -87,7 +87,7 @@ class RequestForm extends React.Component {
                             },
                             placeholder: placeholder,
                             inputType: 'text',
-                            value: this.props.form ? this.props.form[fieldId] : ""
+                            value: this.getValue(fieldId)
                         }}
                     />
                     {inputGroupAddon ? <div className={classNames("input-group-addon", inputGroupAddonExtraClasses)}>{inputGroupAddon}</div> : null}
@@ -97,21 +97,6 @@ class RequestForm extends React.Component {
     }
 
     renderCheckbox(htmlId, fieldId, labelText) {
-        let checked = false
-        if (this.props.form && this.props.form[fieldId] !== undefined) {
-            checked = this.props.form[fieldId]
-        } else if (this.hasOldValues()) {
-            checked = this.props.request.request[fieldId]
-        }
-        let oldValue = () => {
-            if (this.props.form && this.props.form[fieldId] !== undefined) {
-                return this.props.form[fieldId];
-            } else if (this.hasOldValues()) {
-                return this.props.request.request[fieldId];
-            } else {
-                return false;
-            }
-        }
         return (
             <div className={classNames('form-group', htmlId)}>
                 <label htmlFor={htmlId} className="control-label">
@@ -120,10 +105,10 @@ class RequestForm extends React.Component {
                         id = {htmlId}
                         prop = {{
                             updateFn: event => {
-                                this.props.update(FORM_ID, fieldId, !oldValue());
+                                this.props.update(FORM_ID, fieldId, !this.getValue(fieldId));
                             },
                             inputType: 'checkBox',
-                            checked: checked
+                            checked: this.getValue(fieldId)
                         }}
                     />
                 </label>
@@ -132,6 +117,7 @@ class RequestForm extends React.Component {
     }
 
     renderDropdown(htmlId, fieldId, choices, {defaultChoice, generateSelectBox, selectBoxOptions, labelText} = {}) {
+        let value = this.getValue(fieldId);
         let dropDown = (
             <DropDown
                 id = {htmlId}
@@ -141,7 +127,7 @@ class RequestForm extends React.Component {
                     },
                     forceChooseValue: true,
                     choices: choices,
-                    value: this.props.form ? this.props.form[fieldId] : defaultChoice,
+                    value: value ? value : defaultChoice,
                     generateSelectBox: generateSelectBox,
                     selectBoxOptions: selectBoxOptions
                 }}
@@ -186,7 +172,7 @@ class RequestForm extends React.Component {
                     {Utils.humanizeText(requestType)}
                 </button>
             );
-            if (this.hasOldValues() && requestType === this.getRequestType()) {
+            if (this.hasOldValues() && requestType === this.getValue('requestType')) {
                 selectors.push (<OverlayTrigger placement="top" key={key} overlay={tooltip}>{selector}</OverlayTrigger>);
             } else {
                 selectors.push (selector);
@@ -233,7 +219,7 @@ class RequestForm extends React.Component {
     }
 
     renderRequestTypeSpecificFormFields() {
-        if (this.getRequestType() === 'SERVICE') {
+        if (this.getValue('requestType') === 'SERVICE') {
             return(
                 <div>
                     {this.renderBasicFormField('instances', 'instances', 'Instances', {placeholder: 1})}
@@ -246,7 +232,7 @@ class RequestForm extends React.Component {
                     {this.renderRackAffinity()}
                 </div>
             );
-        } else if (this.getRequestType() === 'WORKER') {
+        } else if (this.getValue('requestType') === 'WORKER') {
             return (
                 <div>
                     {this.renderBasicFormField('instances', 'instances', 'Instances', {placeholder: 1})}
@@ -255,16 +241,20 @@ class RequestForm extends React.Component {
                         "hide-distribute-evenly-across-racks-hint", 
                         "hideEvenNumberAcrossRacksHint",
                         "Hide Distribute Evenly Across Racks Hint")}
-                    {this.renderBasicFormField('waitAtLeast', 'waitAtLeast', 'Task rescheduling delay', {inputGroupAddon: 'milliseconds'})}
+                    {this.renderBasicFormField(
+                        'waitAtLeast',
+                        'waitAtLeastMillisAfterTaskFinishesForReschedule',
+                        'Task rescheduling delay',
+                        {inputGroupAddon: 'milliseconds'})}
                     {this.renderRackAffinity()}
                 </div>
             );
-        } else if (this.getRequestType() === 'SCHEDULED') {
+        } else if (this.getValue('requestType') === 'SCHEDULED') {
             return (
                 <div>
                     {this.renderBasicFormField(
                         'schedule',
-                        'schedule',
+                        this.getScheduleType() === 'quartzSchedule' ? "quartzSchedule" : "chronSchedule",
                         'Schedule',
                         {
                             inputGroupAddon: this.renderDropdown(
@@ -292,34 +282,34 @@ class RequestForm extends React.Component {
                     )}
                     {this.renderBasicFormField(
                         'retries-on-failure',
-                        'retriesOnFailure',
+                        'numRetriesOnFailure',
                         'Number of retries on failure'
                     )}
                     {this.renderBasicFormField(
                         'killOldNRL',
-                        'killCleaningTasksAfter',
+                        'killOldNonLongRunningTasksAfterMillis',
                         'Kill cleaning task(s) after',
                         {inputGroupAddon: 'milliseconds'}
                     )}
                     {this.renderBasicFormField(
                         'expected-runtime',
-                        'expectedRuntime',
+                        'scheduledExpectedRuntimeMillis',
                         'Maximum task duration',
                         {inputGroupAddon: 'milliseconds'}
                     )}
                 </div>
             );
-        } else if (this.getRequestType() === 'ON_DEMAND') {
+        } else if (this.getValue('requestType')) {
             return this.renderBasicFormField(
                 'killOldNRL',
-                'killCleaningTasksAfter',
+                'killOldNonLongRunningTasksAfterMillis',
                 'Kill cleaning task(s) after',
                 {inputGroupAddon: 'milliseconds'}
             );
-        } else if (this.getRequestType() === 'RUN_ONCE') {
+        } else if (this.getValue('requestType')) {
             return this.renderBasicFormField(
                 'killOldNRL',
-                'killCleaningTasksAfter',
+                'killOldNonLongRunningTasksAfterMillis',
                 'Kill cleaning task(s) after',
                 {inputGroupAddon: 'milliseconds'}
             );
