@@ -25,7 +25,7 @@ export function fetchTask(taskId) {
 
 export function clear() {
   return function (dispatch) {
-    return dispatch(fetchTaskCleared());
+    dispatch(fetchTaskCleared());
   }
 }
 
