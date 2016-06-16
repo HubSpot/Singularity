@@ -7,7 +7,13 @@ let DropDown = React.createClass({
 
     componentDidMount() {
         if (this.props.prop.generateSelectBox) {
-            $(`#${this.props.id}`).select2(this.props.prop.selectBoxOptions).on('change', this.props.prop.updateFn)
+            let generateSelectBox = () => {
+                $(`#${this.props.id}`).select2(this.props.prop.selectBoxOptions).on('change', this.props.prop.updateFn);
+            }
+            generateSelectBox();
+            // Delay needed because componentDidMount() is called before the entire document is rendered to HTML
+            // There is no lifecycle method that runs as soon as the document is rendered as HTML...
+            setTimeout(generateSelectBox, 1);
         }
     },
 

@@ -28,7 +28,7 @@ class RequestForm extends React.Component {
     }
 
     getButtonsDisabled(type) {
-        if (this.props.edit && this.getRequestType() !== type) {
+        if (this.hasOldValues() && this.getRequestType() !== type) {
             return 'disabled';
         } else {
             return null;
@@ -40,11 +40,31 @@ class RequestForm extends React.Component {
         props.update(FORM_ID, 'requestType', event.target.value);
     }
 
+    hasOldValues() {
+        return this.props.edit && this.props.request && this.props.request.request;
+    }
+
     getRequestType() {
-        if (this.props.edit) {
+        if (this.hasOldValues()) {
             return this.props.request.request.requestType;
         } else {
             return this.props.form ? this.props.form.requestType : undefined;
+        }
+    }
+
+    getScheduleType() {
+        if (this.hasOldValues() && !(this.props.form && this.props.form.scheduleType)) {
+            if (this.props.request.request.quartzSchedule) {
+                return 'quartzSchedule';
+            } else {
+                return 'chronSchedule';
+            }
+        } else {
+            if (this.props.form && this.props.form.scheduleType) {
+                return this.props.form.scheduleType;
+            } else {
+                return 'chronSchedule';
+            }
         }
     }
 
@@ -77,6 +97,21 @@ class RequestForm extends React.Component {
     }
 
     renderCheckbox(htmlId, fieldId, labelText) {
+        let checked = false
+        if (this.props.form && this.props.form[fieldId] !== undefined) {
+            checked = this.props.form[fieldId]
+        } else if (this.hasOldValues()) {
+            checked = this.props.request.request[fieldId]
+        }
+        let oldValue = () => {
+            if (this.props.form && this.props.form[fieldId] !== undefined) {
+                return this.props.form[fieldId];
+            } else if (this.hasOldValues()) {
+                return this.props.request.request[fieldId];
+            } else {
+                return false;
+            }
+        }
         return (
             <div className={classNames('form-group', htmlId)}>
                 <label htmlFor={htmlId} className="control-label">
@@ -85,10 +120,10 @@ class RequestForm extends React.Component {
                         id = {htmlId}
                         prop = {{
                             updateFn: event => {
-                                this.props.update(FORM_ID, fieldId, !(this.props.form[fieldId]));
+                                this.props.update(FORM_ID, fieldId, !oldValue());
                             },
                             inputType: 'checkBox',
-                            checked: this.props.form[fieldId]
+                            checked: checked
                         }}
                     />
                 </label>
@@ -127,7 +162,7 @@ class RequestForm extends React.Component {
     }
 
     header() {
-        if (this.props.edit) {
+        if (this.hasOldValues()) {
             return <h3>Editing <a href={`${config.appRoot}/request/${this.props.request.request.id}`}>{this.props.request.request.id}</a></h3>
         } else {
             return <h3>New Request</h3>
@@ -151,7 +186,7 @@ class RequestForm extends React.Component {
                     {Utils.humanizeText(requestType)}
                 </button>
             );
-            if (this.props.edit && requestType === this.getRequestType()) {
+            if (this.hasOldValues() && requestType === this.getRequestType()) {
                 selectors.push (<OverlayTrigger placement="top" key={key} overlay={tooltip}>{selector}</OverlayTrigger>);
             } else {
                 selectors.push (selector);
@@ -168,7 +203,7 @@ class RequestForm extends React.Component {
     }
 
     renderNewTasksOnlyWarning() {
-        if (this.props.edit) {
+        if (this.hasOldValues()) {
             return (
                 <div className="alert alert-info alert-slim" role="alert">
                     <strong>Note:</strong> changes made below will only affect new tasks
@@ -205,7 +240,7 @@ class RequestForm extends React.Component {
                     {this.renderCheckbox("rack-sensitive", "rackSensitive", "Rack Sensitive")}
                     {this.renderCheckbox(
                         "hide-distribute-evenly-across-racks-hint", 
-                        "hideDistributEvenlyAcrossRacksHint",
+                        "hideEvenNumberAcrossRacksHint",
                         "Hide Distribute Evenly Across Racks Hint")}
                     {config.loadBalancingEnabled ? this.renderCheckbox("load-balanced", "loadBalanced", "Load balanced") : undefined}
                     {this.renderRackAffinity()}
@@ -218,7 +253,7 @@ class RequestForm extends React.Component {
                     {this.renderCheckbox("rack-sensitive", "rackSensitive", "Rack Sensitive")}
                     {this.renderCheckbox(
                         "hide-distribute-evenly-across-racks-hint", 
-                        "hideDistributEvenlyAcrossRacksHint",
+                        "hideEvenNumberAcrossRacksHint",
                         "Hide Distribute Evenly Across Racks Hint")}
                     {this.renderBasicFormField('waitAtLeast', 'waitAtLeast', 'Task rescheduling delay', {inputGroupAddon: 'milliseconds'})}
                     {this.renderRackAffinity()}
@@ -246,15 +281,13 @@ class RequestForm extends React.Component {
                                     }
                                 ],
                                 {
-                                    defaultChoice: 'cronSchedule',
+                                    defaultChoice: this.getScheduleType(),
                                     generateSelectBox: true,
                                     selectBoxOptions: {containerCssClass : "select2-select-box select-box-small"}
                                 }),
                             inputGroupAddonExtraClasses: 'input-group-addon--select',
                             required: true,
-                            placeholder: this.props.form && this.props.form.scheduleType === 'quartzSchedule' ? 
-                                "eg: 0 */5 * * * ?" : 
-                                "eg: */5 * * * *"
+                            placeholder: this.getScheduleType() === 'quartzSchedule' ? "eg: 0 */5 * * * ?" : "eg: */5 * * * *"
                         }
                     )}
                     {this.renderBasicFormField(
@@ -294,12 +327,12 @@ class RequestForm extends React.Component {
     }
 
     render() {
-        let requestId = this.props.request.request ? this.props.request.request.id : undefined;
+        let requestId = this.hasOldValues() ? this.props.request.request.id : undefined;
         return (
             <div className="row new-form">
                 <div className="col-md-5 col-md-offset-3">
                     <form role='form' onSubmit={event => this.submitForm(this.props, event)}>
-                        { this.props.edit ? undefined : this.renderBasicFormField(
+                        { this.hasOldValues() ? undefined : this.renderBasicFormField(
                             "id",
                             "requestId",
                             "ID",
