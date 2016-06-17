@@ -136,7 +136,7 @@ public class SingularityMesosScheduler implements Scheduler {
       while (iterator.hasNext()) {
         final SingularityTaskRequest taskRequest = iterator.next();
 
-        final double taskPriorityLevel = taskRequest.getRequest().getTaskPriorityLevel().or(configuration.getDefaultTaskPriorityLevel());
+        final double taskPriorityLevel = priorityManager.getTaskPriorityLevelForRequest(taskRequest.getRequest());
 
         if (taskPriorityLevel < maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel()) {
           LOG.trace("Skipping scheduled task {} because taskPriorityLevel ({}) is less than active priority freeze ({})", taskRequest.getPendingTask().getPendingTaskId(), taskPriorityLevel, maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel());
