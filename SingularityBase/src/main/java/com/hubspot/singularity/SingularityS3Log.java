@@ -2,7 +2,6 @@ package com.hubspot.singularity;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Optional;
 import com.wordnik.swagger.annotations.ApiModel;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
@@ -13,10 +12,10 @@ public class SingularityS3Log {
   private final String key;
   private final long lastModified;
   private final long size;
-  private final Optional<String> downloadUrl;
+  private final String downloadUrl;
 
   @JsonCreator
-  public SingularityS3Log(@JsonProperty("getUrl") String getUrl, @JsonProperty("key") String key, @JsonProperty("lastModified") long lastModified, @JsonProperty("size") long size, @JsonProperty("downloadUrl") Optional<String> downloadUrl) {
+  public SingularityS3Log(@JsonProperty("getUrl") String getUrl, @JsonProperty("key") String key, @JsonProperty("lastModified") long lastModified, @JsonProperty("size") long size, @JsonProperty("downloadUrl") String downloadUrl) {
     this.getUrl = getUrl;
     this.key = key;
     this.lastModified = lastModified;
@@ -44,8 +43,8 @@ public class SingularityS3Log {
     return size;
   }
 
-  @ApiModelProperty("URL to file in S3 to explicitly download")
-  public Optional<String> getDownloadUrl() {
+  @ApiModelProperty("URL to file in S3 containing headers that will force file to be downloaded instead of viewed")
+  public String getDownloadUrl() {
     return downloadUrl;
   }
 
