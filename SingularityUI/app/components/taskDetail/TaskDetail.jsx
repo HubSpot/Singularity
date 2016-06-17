@@ -269,6 +269,46 @@ class TaskDetail extends React.Component {
     );
   }
 
+  renderHealthchecks(t) {
+    let healthchecks = t.healthcheckResults;
+    return (
+      <CollapsableSection title="Healthchecks">
+        <div className="well">
+          <span>
+            Beginning on <strong>Task running</strong>, hit
+            <a className="healthcheck-link" target="_blank" href={`http://${t.task.offer.hostname}:${_.first(t.ports)}${t.task.taskRequest.deploy.healthcheckUri}`}>
+              {t.task.taskRequest.deploy.healthcheckUri}
+            </a>
+            with a <strong>{t.task.taskRequest.deploy.healthcheckTimeoutSeconds || config.defaultHealthcheckTimeoutSeconds}</strong> second timeout
+            every <strong>{t.task.taskRequest.deploy.healthcheckIntervalSeconds || config.defaultHealthcheckIntervalSeconds}</strong> second(s)
+            until <strong>HTTP 200</strong> is recieved,
+            <strong>{t.task.taskRequest.deploy.healthcheckMaxRetries}</strong> retries have failed,
+            or <strong>{t.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds || config.defaultDeployHealthTimeoutSeconds}</strong> seconds have elapsed.
+          </span>
+        </div>
+        <SimpleTable
+          emptyMessage="No healthchecks"
+          entries={healthchecks}
+          perPage={5}
+          first
+          last
+          headers={['Timestamp', 'Duration', 'Status', 'Message', '']}
+          renderTableRow={(data, index) => {
+            return (
+              <tr key={index}>
+                <td>{Utils.absoluteTimestamp(data.timestamp)}</td>
+                <td>{data.durationMillis} {data.durationMillis ? 'ms' : ''}</td>
+                <td>{data.statusCode ? <span className={`label label-${data.statusCode == 200 ? 'success' : 'danger'}`}>HTTP {data.statusCode}</span> : <span className="label label-warning">No Response</span>}</td>
+                <td><pre className="healthcheck-message">{data.errorMessage || data.responseBody}</pre></td>
+                <td className="actions-column"><JSONButton object={data} text="{ }" /></td>
+              </tr>
+            );
+          }}
+        />
+      </CollapsableSection>
+    );
+  }
+
   render() {
     let task = this.props.task[this.props.taskId].data;
     let cleanup = _.find(this.props.taskCleanups, (c) => {
@@ -287,6 +327,7 @@ class TaskDetail extends React.Component {
         {this.renderInfo(task)}
         {this.renderResourceUsage(task, this.props.resourceUsage)}
         {this.renderEnvVariables(task)}
+        {this.renderHealthchecks(task)}
       </div>
     );
   }
