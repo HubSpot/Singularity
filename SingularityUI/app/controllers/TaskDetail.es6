@@ -3,6 +3,7 @@ import TaskView from '../views/task';
 import { fetchTask as TaskFetchAction, clear as TaskFetchActionClear} from '../actions/api/task';
 import { FetchAction as TaskCleanupsFetchAction } from '../actions/api/taskCleanups';
 import { FetchAction as TaskFilesFetchAction } from '../actions/api/taskFiles';
+import { FetchAction as TaskResourceUsageFetchAction } from '../actions/api/taskResourceUsage';
 
 class TaskDetail extends Controller {
 
@@ -25,6 +26,7 @@ class TaskDetail extends Controller {
     let promises = [];
     promises.push(this.store.dispatch(TaskFetchAction(this.taskId)));
     promises.push(this.store.dispatch(TaskCleanupsFetchAction.trigger()));
+    promises.push(this.store.dispatch(TaskResourceUsageFetchAction.trigger(this.taskId)));
     return Promise.all(promises);
   }
 }

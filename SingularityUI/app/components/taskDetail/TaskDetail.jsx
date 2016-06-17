@@ -2,7 +2,8 @@ import React from 'react';
 import { connect } from 'react-redux';
 import Utils from '../../utils';
 import { FetchAction as TaskFilesFetchAction } from '../../actions/api/taskFiles';
-import { InfoBox } from '../common/statelessComponents';
+import { FetchAction as TaskResourceUsageFetchAction } from '../../actions/api/taskResourceUsage';
+import { InfoBox, UsageInfo } from '../common/statelessComponents';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import JSONButton from '../common/JSONButton';
@@ -14,6 +15,26 @@ import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 import TaskFileBrowser from './TaskFileBrowser';
 
 class TaskDetail extends React.Component {
+
+  constructor() {
+    super();
+    this.state = {
+      previousUsage: null
+    }
+  }
+
+  componentDidMount() {
+    // Get a second sample for CPU usage right away
+    this.props.dispatch(TaskResourceUsageFetchAction.trigger(this.props.taskId));
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.resourceUsage.timestamp != this.props.resourceUsage.timestamp) {
+      this.setState({
+        previousUsage: this.props.resourceUsage
+      });
+    }
+  }
 
   renderHeader(t, cleanup) {
     const taskState = t.taskUpdates ? (
@@ -182,13 +203,62 @@ class TaskDetail extends React.Component {
     );
   }
 
+  renderResourceUsage(t, usage) {
+    let cpuUsage = 0;
+    let cpuUsageExceeding = false;
+    if (this.state.previousUsage) {
+      let currentTime = usage.cpusSystemTimeSecs + usage.cpusUserTimeSecs;
+      let previousTime = this.state.previousUsage.cpusSystemTimeSecs + this.state.previousUsage.cpusUserTimeSecs;
+      let timestampDiff = usage.timestamp - this.state.previousUsage.timestamp;
+      cpuUsage = (currentTime - previousTime) / timestampDiff;
+      cpuUsageExceeding = (cpuUsage / usage.cpusLimit) > 1.10;
+    }
+
+    const exceedingWarning = cpuUsageExceeding ? (
+      <span className="label label-danger">CPU usage > 110% allocated</span>
+    ) : null;
+
+    return (
+      <CollapsableSection title="Resource Usage" defaultExpanded>
+        <div className="row">
+          <div className="col-md-3">
+            <UsageInfo
+              title="Memory (rss vs limit)"
+              style="success"
+              total={usage.memLimitBytes}
+              used={usage.memRssBytes}
+              text={`${Utils.humanizeFileSize(usage.memRssBytes)} / ${Utils.humanizeFileSize(usage.memLimitBytes)}`}
+            />
+            <UsageInfo
+              title="CPU Usage"
+              style={cpuUsageExceeding ? "danger" : "success"}
+              total={usage.cpusLimit}
+              used={Math.round(cpuUsage * 100) / 100}
+              text={<span><p>{`${Math.round(cpuUsage * 100) / 100} used / ${usage.cpusLimit} allocated CPUs`}</p>{exceedingWarning}</span>}
+            />
+          </div>
+          <div className='col-md-9'>
+            <ul className="list-unstyled horizontal-description-list">
+              {usage.cpusNrPeriods ? <InfoBox copyableClassName="info-copyable" name="CPUs number of periods" value={usage.cpusNrPeriods} /> : null}
+              {usage.cpusNrThrottled ? <InfoBox copyableClassName="info-copyable" name="CPUs number throttled" value={usage.cpusNrThrottled} />: null}
+              {usage.cpusThrottledTimeSecs ? <InfoBox copyableClassName="info-copyable" name="Throttled time (sec)" value={usage.cpusThrottledTimeSecs} />: null}
+              <InfoBox copyableClassName="info-copyable" name="Memory (anon)" value={Utils.humanizeFileSize(usage.memAnonBytes)} />
+              <InfoBox copyableClassName="info-copyable" name="Memory (file)" value={Utils.humanizeFileSize(usage.memFileBytes)} />
+              <InfoBox copyableClassName="info-copyable" name="Memory (mapped file)" value={Utils.humanizeFileSize(usage.memMappedFileBytes)} />
+            </ul>
+          </div>
+        </div>
+      </CollapsableSection>
+    )
+  }
+
   render() {
     let task = this.props.task[this.props.taskId].data;
     let cleanup = _.find(this.props.taskCleanups, (c) => {
       return c.taskId.id == this.props.taskId;
     });
 
-    console.log(task);
+    console.log(this.props.resourceUsage);
 
     return (
       <div>
@@ -198,6 +268,7 @@ class TaskDetail extends React.Component {
         {this.renderFiles(task, this.props.files)}
         {this.renderLbUpdates(task)}
         {this.renderInfo(task)}
+        {this.renderResourceUsage(task, this.props.resourceUsage)}
       </div>
     );
   }
@@ -220,7 +291,6 @@ function mapStateToProps(state) {
       f.uiPath = f.name;
     }
 
-
     f.fullPath = files.fullPathToRoot + '/' + files.currentDirectory + '/' + f.name;
     f.downloadLink = `${httpPrefix}://${files.slaveHostname}:${httpPort}/files/download.json?path=${f.fullPath}`;
 
@@ -234,7 +304,9 @@ function mapStateToProps(state) {
   return {
     task: state.api.task,
     taskCleanups: state.api.taskCleanups.data,
-    files: files
+    files: files,
+    resourceUsage: state.api.taskResourceUsage.data,
+    cpuTimestamp: state.api.taskResourceUsage.data.timestamp
   };
 }
 
