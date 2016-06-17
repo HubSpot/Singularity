@@ -13,6 +13,7 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
+import javax.ws.rs.HEAD;
 
 import org.apache.commons.lang3.StringUtils;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
@@ -37,8 +38,8 @@ import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.SingularityWebhook;
+import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.api.SingularityPriorityFreeze;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
@@ -65,7 +66,6 @@ public class SingularityValidator {
   private final DeployHistoryHelper deployHistoryHelper;
   private final Resources defaultResources;
   private final PriorityManager priorityManager;
-  private final double defaultTaskPriorityLevel;
 
   @Inject
   public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager) {
@@ -81,8 +81,8 @@ public class SingularityValidator {
     this.defaultMemoryMb = configuration.getMesosConfiguration().getDefaultMemory();
     this.defaultDiskMb = configuration.getMesosConfiguration().getDefaultDisk();
 
+
     defaultResources = new Resources(defaultCpus, defaultMemoryMb, 0, defaultDiskMb);
-    defaultTaskPriorityLevel = configuration.getDefaultTaskPriorityLevel();
 
     this.maxCpusPerInstance = configuration.getMesosConfiguration().getMaxNumCpusPerInstance();
     this.maxCpusPerRequest = configuration.getMesosConfiguration().getMaxNumCpusPerRequest();
@@ -463,7 +463,7 @@ public class SingularityValidator {
       return;
     }
 
-    final double taskPriorityLevel = request.getTaskPriorityLevel().or(defaultTaskPriorityLevel);
+    final double taskPriorityLevel = priorityManager.getTaskPriorityLevelForRequest(request);
 
     checkBadRequest(taskPriorityLevel >= maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel(), "Priority level of request %s (%s) is lower than active priority freeze (%s)", request.getId(), taskPriorityLevel, maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel());
   }

@@ -50,7 +50,7 @@ public class SingularityState {
 
   private final Optional<Boolean> authDatastoreHealthy;
 
-  private final Optional<Double> activePriorityLevelFreeze;
+  private final Optional<Double> minimumPriorityLevel;
 
   @JsonCreator
   public SingularityState(@JsonProperty("activeTasks") int activeTasks, @JsonProperty("activeRequests") int activeRequests, @JsonProperty("cooldownRequests") int cooldownRequests,
@@ -61,7 +61,7 @@ public class SingularityState {
       @JsonProperty("lateTasks") int lateTasks, @JsonProperty("futureTasks") int futureTasks, @JsonProperty("maxTaskLag") long maxTaskLag, @JsonProperty("generatedAt") long generatedAt,
       @JsonProperty("overProvisionedRequestIds") List<String> overProvisionedRequestIds, @JsonProperty("underProvisionedRequestIds") List<String> underProvisionedRequestIds,
       @JsonProperty("overProvisionedRequests") int overProvisionedRequests, @JsonProperty("underProvisionedRequests") int underProvisionedRequests, @JsonProperty("finishedRequests") int finishedRequests,
-      @JsonProperty("unknownRacks") int unknownRacks, @JsonProperty("unknownSlaves") int unknownSlaves, @JsonProperty("authDatastoreHealthy") Optional<Boolean> authDatastoreHealthy, @JsonProperty("activePriorityLevelFreeze") Optional<Double> activePriorityLevelFreeze) {
+      @JsonProperty("unknownRacks") int unknownRacks, @JsonProperty("unknownSlaves") int unknownSlaves, @JsonProperty("authDatastoreHealthy") Optional<Boolean> authDatastoreHealthy, @JsonProperty("minimumPriorityLevel") Optional<Double> minimumPriorityLevel) {
     this.activeTasks = activeTasks;
     this.activeRequests = activeRequests;
     this.pausedRequests = pausedRequests;
@@ -93,7 +93,7 @@ public class SingularityState {
     this.overProvisionedRequestIds = overProvisionedRequestIds;
     this.underProvisionedRequestIds = underProvisionedRequestIds;
     this.authDatastoreHealthy = authDatastoreHealthy;
-    this.activePriorityLevelFreeze = activePriorityLevelFreeze;
+    this.minimumPriorityLevel = minimumPriorityLevel;
   }
 
   public int getFinishedRequests() {
@@ -234,8 +234,8 @@ public class SingularityState {
     return authDatastoreHealthy;
   }
 
-  public Optional<Double> getActivePriorityLevelFreeze() {
-    return activePriorityLevelFreeze;
+  public Optional<Double> getMinimumPriorityLevel() {
+    return minimumPriorityLevel;
   }
 
   @Override
@@ -246,7 +246,7 @@ public class SingularityState {
         + activeSlaves + ", deadSlaves=" + deadSlaves + ", decommissioningSlaves=" + decommissioningSlaves + ", unknownSlaves=" + unknownSlaves + ", activeRacks=" + activeRacks + ", deadRacks="
         + deadRacks + ", decommissioningRacks=" + decommissioningRacks + ", unknownRacks=" + unknownRacks + ", oldestDeploy=" + oldestDeploy + ", numDeploys=" + numDeploys + ", generatedAt="
         + generatedAt + ", hostStates=" + hostStates + ", overProvisionedRequestIds=" + overProvisionedRequestIds + ", underProvisionedRequestIds=" + underProvisionedRequestIds
-        + ", overProvisionedRequests=" + overProvisionedRequests + ", underProvisionedRequests=" + underProvisionedRequests + ", authDatastoreHealthy=" + authDatastoreHealthy + ", activePriorityLevelFreeze=" + activePriorityLevelFreeze + "]";
+        + ", overProvisionedRequests=" + overProvisionedRequests + ", underProvisionedRequests=" + underProvisionedRequests + ", authDatastoreHealthy=" + authDatastoreHealthy + ", minimumPriorityLevel=" + minimumPriorityLevel + "]";
   }
 
 }
