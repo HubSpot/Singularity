@@ -240,7 +240,7 @@ public class S3LogResource extends AbstractHistoryResource {
           String getUrl = s3Service.createSignedGetUrl(s3Bucket, s3Object.getKey(), expireAt);
           String downloadUrl = s3Service.createSignedUrl("GET", s3Bucket, s3Object.getKey(), FORCE_DOWNLOAD_S3_PARAMS, null, expireAt.getTime() / 1000, false);
 
-          return new SingularityS3Log(getUrl, s3Object.getKey(), s3Object.getLastModifiedDate().getTime(), s3Object.getContentLength(), Optional.of(downloadUrl));
+          return new SingularityS3Log(getUrl, s3Object.getKey(), s3Object.getLastModifiedDate().getTime(), s3Object.getContentLength(), downloadUrl);
         }
 
       }));
