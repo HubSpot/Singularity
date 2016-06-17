@@ -64,7 +64,7 @@ export default class TaskFileBrowser extends React.Component {
               title: 'Download',
               altText: `Download ${data.name}`,
               overlayTrigger: true,
-              overlayTriggerPlacement: 'top',
+              overlayTriggerPlacement: 'left',
               overlayToolTipContent: `Download ${data.name}`,
               overlayId: `downloadFile${data.name}`
             };
@@ -74,7 +74,7 @@ export default class TaskFileBrowser extends React.Component {
                 <td>{nameLink}</td>
                 <td>{Utils.humanizeFileSize(data.size)}</td>
                 <td>{Utils.absoluteTimestamp(data.mtime * 1000)}</td>
-                <td>
+                <td className="actions-column">
                   {link}
                 </td>
               </tr>

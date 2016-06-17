@@ -8,6 +8,7 @@ import JSONButton from '../common/JSONButton';
 import Section from '../common/Section';
 import CollapsableSection from '../common/CollapsableSection';
 import SimpleTable from '../common/SimpleTable';
+import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 
 import TaskFileBrowser from './TaskFileBrowser';
 
@@ -104,6 +105,27 @@ class TaskDetail extends React.Component {
     );
   }
 
+  renderLatestLog(t, files) {
+    const link = t.isStillRunning ? (
+      <a href={`${config.appRoot}/task/${this.props.taskId}/tail/${Utils.substituteTaskId(config.runningTaskLogPath, this.props.taskId)}`} title="Log">
+          <span><Glyphicon iconClass="file" /> {Utils.fileName(config.runningTaskLogPath)}</span>
+      </a>
+    ) : (
+      <a href={`${config.appRoot}/task/${this.props.taskId}/tail/${Utils.substituteTaskId(config.finishedTaskLogPath, this.props.taskId)}`} title="Log">
+          <span><Glyphicon iconClass="file" /> {Utils.fileName(config.finishedTaskLogPath)}</span>
+      </a>
+    );
+    return (
+      <Section title="Logs">
+        <div className="row">
+          <div className="col-md-4">
+            <h4>{link}</h4>
+          </div>
+        </div>
+      </Section>
+    )
+  }
+
   renderFiles(t, files) {
     return (
       <Section title="Files">
@@ -126,12 +148,13 @@ class TaskDetail extends React.Component {
       return c.taskId.id == this.props.taskId;
     });
 
-    // console.log(this.props.files);
+    console.log(task);
 
     return (
       <div>
         {this.renderHeader(task, cleanup)}
         {this.renderHistory(task)}
+        {this.renderLatestLog(task, this.props.files)}
         {this.renderFiles(task, this.props.files)}
       </div>
     );

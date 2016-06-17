@@ -130,7 +130,7 @@ class Router extends Backbone.Router {
     return this.app.bootstrapController(new TaskDetailController({
       store: this.app.store,
       taskId: taskId,
-      filePath: null
+      filePath: taskId
     }));
   }
 
