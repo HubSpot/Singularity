@@ -219,7 +219,7 @@ class TaskDetail extends React.Component {
     ) : null;
 
     return (
-      <CollapsableSection title="Resource Usage" defaultExpanded>
+      <CollapsableSection title="Resource Usage">
         <div className="row">
           <div className="col-md-3">
             <UsageInfo
@@ -252,13 +252,30 @@ class TaskDetail extends React.Component {
     )
   }
 
+  renderEnvVariables(t) {
+    let vars = [];
+    for (let v of t.task.mesosTask.executor.command.environment.variables) {
+      vars.push(<InfoBox key={v.name} copyableClassName="info-copyable" name={v.name} value={v.value} />);
+    }
+
+    return (
+      <CollapsableSection title="Environment variables">
+        <div className="row">
+          <ul className="list-unstyled horizontal-description-list">
+            {vars}
+          </ul>
+        </div>
+      </CollapsableSection>
+    );
+  }
+
   render() {
     let task = this.props.task[this.props.taskId].data;
     let cleanup = _.find(this.props.taskCleanups, (c) => {
       return c.taskId.id == this.props.taskId;
     });
 
-    console.log(this.props.resourceUsage);
+    // console.log(this.props.resourceUsage);
 
     return (
       <div>
@@ -269,6 +286,7 @@ class TaskDetail extends React.Component {
         {this.renderLbUpdates(task)}
         {this.renderInfo(task)}
         {this.renderResourceUsage(task, this.props.resourceUsage)}
+        {this.renderEnvVariables(task)}
       </div>
     );
   }
