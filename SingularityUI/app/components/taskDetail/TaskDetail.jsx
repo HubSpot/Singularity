@@ -4,6 +4,7 @@ import Utils from '../../utils';
 import { FetchAction as TaskFilesFetchAction } from '../../actions/api/taskFiles';
 import { FetchAction as TaskResourceUsageFetchAction } from '../../actions/api/taskResourceUsage';
 import { InfoBox, UsageInfo } from '../common/statelessComponents';
+import { Alert } from 'react-bootstrap';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import JSONButton from '../common/JSONButton';
@@ -39,12 +40,12 @@ class TaskDetail extends React.Component {
   renderHeader(t, cleanup) {
     const taskState = t.taskUpdates ? (
       <div className="col-xs-6 task-state-header">
-        <h3>
+        <h1>
           <span>Instance {t.task.taskId.instanceNo} </span>
           <span className={`label label-${Utils.getLabelClassFromTaskState(_.last(t.taskUpdates).taskState)} task-state-header-label`}>
             {Utils.humanizeText(_.last(t.taskUpdates).taskState)} {cleanup ? `(${Utils.humanizeText(cleanup.cleanupType)})` : ''}
           </span>
-        </h3>
+        </h1>
       </div>
     ) : null;
 
@@ -97,6 +98,31 @@ class TaskDetail extends React.Component {
         {terminationAlert}
       </header>
     );
+  }
+
+  renderAlerts(t) {
+    let alerts = [];
+
+    // Was this task killed by a decomissioning slave?
+    if (!t.isStillRunning) {
+      let decomMessage = _.find(t.taskUpdates, (u) => {
+        return u.statusMessage && u.statusMessage.indexOf('DECOMISSIONING') != -1 && u.taskState == 'TASK_CLEANING';
+      })
+      let killedMessage = _.find(t.taskUpdates, (u) => {
+        return u.taskState == 'TASK_KILLED';
+      });
+      if (decomMessage && killedMessage) {
+        alerts.push(
+          <Alert key='decom' bsStyle='warning'>This task was replaced then killed by Singularity due to a slave decommissioning.</Alert>
+        );
+      }
+    }
+
+    return (
+      <div>
+        {alerts}
+      </div>
+    )
   }
 
   renderHistory(t) {
@@ -354,11 +380,12 @@ class TaskDetail extends React.Component {
       return c.taskId.id == this.props.taskId;
     });
 
-    // console.log(this.props.s3Logs);
+    // console.log(task);
 
     return (
       <div>
         {this.renderHeader(task, cleanup)}
+        {this.renderAlerts(task)}
         {this.renderHistory(task)}
         {this.renderLatestLog(task, this.props.files)}
         {this.renderFiles(task, this.props.files)}
