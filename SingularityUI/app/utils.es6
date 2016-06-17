@@ -365,6 +365,43 @@ let Utils = {
     }
     finalRegex = config.taskS3LogOmitPrefix.replace('%taskId', taskId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).replace('%index', '[0-9]+').replace('%s', '[0-9]+');
     return filename.replace(new RegExp(finalRegex), '');
+  },
+
+  isCauseOfFailure(task, deploy) {
+    deploy.deployResult.deployFailures.map(failure => {
+      if (failure.taskId && failure.taskId.id === task.taskId) {
+        return true;
+      }
+    });
+    return false;
+  },
+
+  causeOfDeployFailure(task, deploy) {
+    let failureCause;
+    failureCause = '';
+    deploy.deployResult.deployFailures.map(failure => {
+      if (failure.taskId && failure.taskId.id === task.taskId) {
+        return failureCause = Handlebars.helpers.humanizeText(failure.reason);
+      }
+    });
+    if (failureCause) {
+      return failureCause;
+    }
+  },
+
+  ifDeployFailureCausedTaskToBeKilled(task) {
+    let deployFailed, taskKilled;
+    deployFailed = false;
+    taskKilled = false;
+    task.taskUpdates.map(update => {
+      if (update.statusMessage && update.statusMessage.indexOf('DEPLOY_FAILED' !== -1)) {
+        deployFailed = true;
+      }
+      if (update.taskState === 'TASK_KILLED') {
+        return taskKilled = true;
+      }
+    });
+    return deployFailed && taskKilled;
   }
 
 };

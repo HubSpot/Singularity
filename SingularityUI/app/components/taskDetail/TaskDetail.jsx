@@ -105,9 +105,34 @@ class TaskDetail extends React.Component {
   renderAlerts(t, deploy) {
     let alerts = [];
 
-    // Did this task cause a deploy to fail?
     if (deploy.deployResult && deploy.deployResult.deployState == 'FAILED') {
-
+      // Did this task cause a deploy to fail?
+      if (Utils.isCauseOfFailure(t, deploy)) {
+        alerts.push(
+          <Alert key='failure' bsStyle='danger'>
+            <p>This task casued <a href={`${config.appRoot}/request/${deploy.requestId}/deploy/${deploy.deployId}`}>
+              Deploy {deploy.deployId}
+            </a> to fail. Cause: {Utils.causeOfDeployFailure(t, deploy)}</p>
+          </Alert>
+        );
+      } else {
+        // Did a deploy cause this task to fail?
+        const fails = deploy.deployResult.deployFailures.map((f, i) => {
+          if (f.taskId) {
+            return <li key={i}><a href={`${config.appRoot}/task/${f.taskId.id}`}>{f.taskId.id}</a>: {Utils.humanizeText(f.reason)} {f.message}</li>;
+          } else {
+            return <li key={i}>{Utils.humanizeText(f.reason)} {f.message}</li>;
+          }
+        });
+        alerts.push(
+          <Alert key='failure' bsStyle='danger'>
+            <a href={`${config.appRoot}/request/${deploy.deploy.requestId}/deploy/${deploy.deploy.id}`}>Deploy {deploy.deploy.id} </a>failed.
+            {Utils.ifDeployFailureCausedTaskToBeKilled(t) ? ' This task was killed as a result of the failing deploy. ' : ''}
+            {deploy.deployResult.deployFailures.length ? ' The deploy failure was caused by: ' : ''}
+            <ul>{fails}</ul>
+          </Alert>
+        );
+      }
     }
 
     // Is this a scheduled task that has been running much longer than previous ones?
