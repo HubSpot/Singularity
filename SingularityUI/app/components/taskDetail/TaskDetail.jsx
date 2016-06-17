@@ -26,7 +26,9 @@ class TaskDetail extends React.Component {
 
   componentDidMount() {
     // Get a second sample for CPU usage right away
-    this.props.dispatch(TaskResourceUsageFetchAction.trigger(this.props.taskId));
+    if (this.props.task[this.props.taskId].data.isStillRunning) {
+      this.props.dispatch(TaskResourceUsageFetchAction.trigger(this.props.taskId));
+    }
   }
 
   componentWillReceiveProps(nextProps) {
@@ -100,8 +102,28 @@ class TaskDetail extends React.Component {
     );
   }
 
-  renderAlerts(t) {
+  renderAlerts(t, deploy) {
     let alerts = [];
+
+    // Did this task cause a deploy to fail?
+    if (deploy.deployResult && deploy.deployResult.deployState == 'FAILED') {
+
+    }
+
+    // Is this a scheduled task that has been running much longer than previous ones?
+    if (t.isStillRunning && t.task.taskRequest.request.requestType == 'SCHEDULED') {
+      let avg = deploy.deployStatistics.averageRuntimeMillis;
+      let current = new Date().getTime() - t.task.taskId.startedAt;
+      let threshold = config.warnIfScheduledJobIsRunningPastNextRunPct / 100;
+      if (current > (avg * threshold)) {
+        alerts.push(
+          <Alert key='runLong' bsStyle='warning'>
+            <strong>Warning: </strong>
+            This scheduled task has been running longer than <code>{threshold}</code> times the average for the request and may be stuck.
+          </Alert>
+        );
+      }
+    }
 
     // Was this task killed by a decomissioning slave?
     if (!t.isStillRunning) {
@@ -169,6 +191,13 @@ class TaskDetail extends React.Component {
   }
 
   renderFiles(t, files) {
+    if (_.isEmpty(files)) {
+      return (
+        <div className="empty-table-message">
+            {'Could not retrieve files. The host of this task is likely offline or the directory has been cleaned up.'}
+        </div>
+      );
+    }
     return (
       <Section title="Files">
         <TaskFileBrowser
@@ -248,7 +277,7 @@ class TaskDetail extends React.Component {
           <ul className="list-unstyled horizontal-description-list">
             <InfoBox copyableClassName="info-copyable" name="Task ID" value={t.task.taskId.id} />
             <InfoBox copyableClassName="info-copyable" name="Directory" value={t.directory} />
-            <InfoBox copyableClassName="info-copyable" name="Executor GUID" value={t.task.mesosTask.executor.executorId.value} />
+            {t.task.mesosTask.executor ? <InfoBox copyableClassName="info-copyable" name="Executor GUID" value={t.task.mesosTask.executor.executorId.value} /> : null}
             <InfoBox copyableClassName="info-copyable" name="Hostname" value={t.task.offer.hostname} />
             <InfoBox copyableClassName="info-copyable" name="Ports" value={t.ports.toString()} />
             <InfoBox copyableClassName="info-copyable" name="Rack ID" value={t.task.rackId} />
@@ -261,6 +290,7 @@ class TaskDetail extends React.Component {
   }
 
   renderResourceUsage(t, usage) {
+    if (!t.isStillRunning) return null;
     let cpuUsage = 0;
     let cpuUsageExceeding = false;
     if (this.state.previousUsage) {
@@ -310,6 +340,7 @@ class TaskDetail extends React.Component {
   }
 
   renderEnvVariables(t) {
+    if (!t.task.mesosTask.executor) return null;
     let vars = [];
     for (let v of t.task.mesosTask.executor.command.environment.variables) {
       vars.push(<InfoBox key={v.name} copyableClassName="info-copyable" name={v.name} value={v.value} />);
@@ -380,12 +411,12 @@ class TaskDetail extends React.Component {
       return c.taskId.id == this.props.taskId;
     });
 
-    // console.log(task);
+    // console.log(task, this.props.deploy);
 
     return (
       <div>
         {this.renderHeader(task, cleanup)}
-        {this.renderAlerts(task)}
+        {this.renderAlerts(task, this.props.deploy)}
         {this.renderHistory(task)}
         {this.renderLatestLog(task, this.props.files)}
         {this.renderFiles(task, this.props.files)}
@@ -403,28 +434,30 @@ class TaskDetail extends React.Component {
 
 function mapStateToProps(state) {
   let files = state.api.taskFiles.data;
-  for (let f of files.files) {
-    f.isDirectory = f.mode[0] == 'd';
-    let httpPrefix = "http";
-    let httpPort = config.slaveHttpPort;
-    if (config.slaveHttpsPort) {
-      httpPrefix = "https";
-      httpPort = config.slaveHttpsPort;
-    }
+  if (files.files) {
+    for (let f of files.files) {
+      f.isDirectory = f.mode[0] == 'd';
+      let httpPrefix = "http";
+      let httpPort = config.slaveHttpPort;
+      if (config.slaveHttpsPort) {
+        httpPrefix = "https";
+        httpPort = config.slaveHttpsPort;
+      }
 
-    if (files.currentDirectory) {
-      f.uiPath = files.currentDirectory + "/" + f.name;
-    } else {
-      f.uiPath = f.name;
-    }
+      if (files.currentDirectory) {
+        f.uiPath = files.currentDirectory + "/" + f.name;
+      } else {
+        f.uiPath = f.name;
+      }
 
-    f.fullPath = files.fullPathToRoot + '/' + files.currentDirectory + '/' + f.name;
-    f.downloadLink = `${httpPrefix}://${files.slaveHostname}:${httpPort}/files/download.json?path=${f.fullPath}`;
+      f.fullPath = files.fullPathToRoot + '/' + files.currentDirectory + '/' + f.name;
+      f.downloadLink = `${httpPrefix}://${files.slaveHostname}:${httpPort}/files/download.json?path=${f.fullPath}`;
 
-    if (!f.isDirectory) {
-      let re = /(?:\.([^.]+))?$/;
-      let extension = re.exec(f.name)[1];
-      f.isTailable = !_.contains(['zip', 'gz', 'jar'], extension);
+      if (!f.isDirectory) {
+        let re = /(?:\.([^.]+))?$/;
+        let extension = re.exec(f.name)[1];
+        f.isTailable = !_.contains(['zip', 'gz', 'jar'], extension);
+      }
     }
   }
 
@@ -434,7 +467,8 @@ function mapStateToProps(state) {
     files: files,
     resourceUsage: state.api.taskResourceUsage.data,
     cpuTimestamp: state.api.taskResourceUsage.data.timestamp,
-    s3Logs: state.api.taskS3Logs.data
+    s3Logs: state.api.taskS3Logs.data,
+    deploy: state.api.deploy.data
   };
 }
 
