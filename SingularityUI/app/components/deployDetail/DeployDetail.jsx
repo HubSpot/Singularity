@@ -96,7 +96,6 @@ class DeployDetail extends React.Component {
   }
 
   renderActiveTasks(d, tasks) {
-    const headers = ['Name', 'Last State', 'Started', 'Updated', '', ''];
     return (
       <div>
         <div className="page-header">
@@ -108,12 +107,7 @@ class DeployDetail extends React.Component {
           perPage={5}
           first
           last
-          renderTableHeaders={() => {
-            let row = headers.map((h, i) => {
-              return <th key={i}>{h}</th>;
-            });
-            return <tr>{row}</tr>;
-          }}
+          headers={['Name', 'Last State', 'Started', 'Updated', '', '']}
           renderTableRow={(data, index) => {
             return (
               <tr key={index}>
@@ -132,7 +126,6 @@ class DeployDetail extends React.Component {
   }
 
   renderTaskHistory(d, tasks) {
-    const headers = ['Name', 'Last State', 'Started', 'Updated', '', ''];
     return (
       <div>
         <div className="page-header">
@@ -146,12 +139,7 @@ class DeployDetail extends React.Component {
           fetchAction={TaskHistoryFetchForDeploy}
           dispatch={this.props.dispatch}
           fetchParams={[d.deploy.requestId, d.deploy.id]}
-          renderTableHeaders={() => {
-            let row = headers.map((h, i) => {
-              return <th key={i}>{h}</th>;
-            });
-            return <tr>{row}</tr>;
-          }}
+          headers={['Name', 'Last State', 'Started', 'Updated', '', '']}
           renderTableRow={(data, index) => {
             return (
               <tr key={index}>
@@ -210,7 +198,6 @@ class DeployDetail extends React.Component {
 
   renderHealthchecks(d, healthchecks) {
     if (healthchecks.length == 0) return <div></div>;
-    const headers = ['Task', 'Timestamp', 'Duration', 'Status', 'Message', ''];
     return (
       <CollapsableSection title="Latest Healthchecks">
         <SimpleTable
@@ -219,12 +206,7 @@ class DeployDetail extends React.Component {
           perPage={5}
           first
           last
-          renderTableHeaders={() => {
-            let row = headers.map((h, i) => {
-              return <th key={i}>{h}</th>;
-            });
-            return <tr>{row}</tr>;
-          }}
+          headers={['Task', 'Timestamp', 'Duration', 'Status', 'Message', '']}
           renderTableRow={(data, index) => {
             return (
               <tr key={index}>

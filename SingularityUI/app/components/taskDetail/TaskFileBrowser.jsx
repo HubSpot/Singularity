@@ -13,7 +13,6 @@ export default class TaskFileBrowser extends React.Component {
   }
 
   render() {
-    const headers = ['Name', 'Size', 'Last Modified', ''];
     let pathItems = [];
     pathItems.push({
       text: "root",
@@ -42,12 +41,7 @@ export default class TaskFileBrowser extends React.Component {
           perPage={10}
           first={this.props.files.files.length >= 30}
           last={this.props.files.files.length >= 30}
-          renderTableHeaders={() => {
-            let row = headers.map((h, i) => {
-              return <th key={i}>{h}</th>;
-            });
-            return <tr>{row}</tr>;
-          }}
+          headers={['Name', 'Size', 'Last Modified', '']}
           renderTableRow={(data, index) => {
             let nameLink = "";
             let icon = <Glyphicon iconClass={data.isDirectory ? 'folder-open' : 'file'} />;

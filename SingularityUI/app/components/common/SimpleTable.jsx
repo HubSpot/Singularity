@@ -58,13 +58,20 @@ export default class SimpleTable extends React.Component {
     }
   }
 
+  renderHeaders() {
+    let row = this.props.headers.map((h, i) => {
+      return <th key={i}>{h}</th>;
+    });
+    return <tr>{row}</tr>;
+  }
+
   render() {
     if (this.state.displayItems.length > 0) {
       return (
         <div className="table-container">
           <Table responsive>
             <thead>
-              {this.props.renderTableHeaders()}
+              {this.renderHeaders()}
             </thead>
             <tbody>
               {this.renderTableRows()}
@@ -89,6 +96,6 @@ SimpleTable.propTypes = {
   perPage: React.PropTypes.number,
   first: React.PropTypes.bool,
   last: React.PropTypes.bool,
-  renderTableHeaders: React.PropTypes.func.isRequired,
+  headers: React.PropTypes.array.isRequired,
   renderTableRow: React.PropTypes.func.isRequired
 };

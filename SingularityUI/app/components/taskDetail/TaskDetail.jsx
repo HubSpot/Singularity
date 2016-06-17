@@ -78,19 +78,13 @@ class TaskDetail extends React.Component {
   }
 
   renderHistory(t) {
-    const headers = ['Status', 'Message', 'Time'];
     return (
       <Section title="History">
         <SimpleTable
           emptyMessage="This task has no history yet"
           entries={t.taskUpdates.concat().reverse()}
           perPage={5}
-          renderTableHeaders={() => {
-            let row = headers.map((h, i) => {
-              return <th key={i}>{h}</th>;
-            });
-            return <tr>{row}</tr>;
-          }}
+          headers={['Status', 'Message', 'Time']}
           renderTableRow={(data, index) => {
             return (
               <tr key={index} className={index == 0 ? 'medium-weight' : ''}>
@@ -142,6 +136,32 @@ class TaskDetail extends React.Component {
     );
   }
 
+  renderLbUpdates(t) {
+    return (
+      <Section title="Load Balancer Updates">
+        <SimpleTable
+          emptyMessage="No Load Balancer Info"
+          entries={t.loadBalancerUpdates}
+          perPage={5}
+          headers={['Timestamp', 'Request Type', 'State', 'Message', '']}
+          renderTableRow={(data, index) => {
+            return (
+              <tr key={index}>
+                <td>{Utils.absoluteTimestamp(data.timestamp)}</td>
+                <td>{Utils.humanizeText(data.loadBalancerRequestId.requestType)}</td>
+                <td>{Utils.humanizeText(data.loadBalancerState)}</td>
+                <td>{data.message}</td>
+                <td className="actions-column">
+                  <JSONButton object={data} text="{ }" />
+                </td>
+              </tr>
+            );
+          }}
+        />
+      </Section>
+    );
+  }
+
   render() {
     let task = this.props.task[this.props.taskId].data;
     let cleanup = _.find(this.props.taskCleanups, (c) => {
@@ -156,6 +176,7 @@ class TaskDetail extends React.Component {
         {this.renderHistory(task)}
         {this.renderLatestLog(task, this.props.files)}
         {this.renderFiles(task, this.props.files)}
+        {this.renderLbUpdates(task)}
       </div>
     );
   }
@@ -192,7 +213,7 @@ function mapStateToProps(state) {
   return {
     task: state.api.task,
     taskCleanups: state.api.taskCleanups.data,
-    files: state.api.taskFiles.data
+    files: files
   };
 }
 
