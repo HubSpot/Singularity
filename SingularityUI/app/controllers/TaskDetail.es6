@@ -14,6 +14,7 @@ class TaskDetail extends Controller {
     this.filePath = filePath;
 
     this.store.dispatch(TaskFetchActionClear());
+    this.store.dispatch(TaskFilesFetchAction.trigger(this.taskId, this.filePath))
     this.refresh().then(() => {
       this.setView(new TaskView(store, this.taskId));
       app.showView(this.view);
@@ -24,7 +25,6 @@ class TaskDetail extends Controller {
     let promises = [];
     promises.push(this.store.dispatch(TaskFetchAction(this.taskId)));
     promises.push(this.store.dispatch(TaskCleanupsFetchAction.trigger()));
-    promises.push(this.store.dispatch(TaskFilesFetchAction.trigger(this.taskId, this.filePath)))
     return Promise.all(promises);
   }
 }

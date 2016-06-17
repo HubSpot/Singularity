@@ -1,6 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import Utils from '../../utils';
+import { FetchAction as TaskFilesFetchAction } from '../../actions/api/taskFiles';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import JSONButton from '../common/JSONButton';
@@ -106,7 +107,15 @@ class TaskDetail extends React.Component {
   renderFiles(t, files) {
     return (
       <Section title="Files">
-        <TaskFileBrowser taskId={t.task.taskId.id} files={files} />
+        <TaskFileBrowser
+          taskId={t.task.taskId.id}
+          files={files}
+          changeDir={(path) => {
+            if (path.startsWith('/')) path = path.substring(1);
+            this.props.dispatch(TaskFilesFetchAction.trigger(this.props.taskId,path));
+            app.router.navigate(Utils.joinPath(`#task/${this.props.taskId}/files/`, path));
+          }}
+        />
       </Section>
     );
   }

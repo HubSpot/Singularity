@@ -9,7 +9,7 @@ import Link from '../common/atomicDisplayItems/Link';
 export default class TaskFileBrowser extends React.Component {
 
   navigateTo(link) {
-    app.router.navigate(Utils.joinPath(`#task/${this.props.taskId}/files/`, link), {trigger: true});
+    this.props.changeDir(link);
   }
 
   render() {
