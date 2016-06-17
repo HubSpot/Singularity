@@ -356,7 +356,17 @@ let Utils = {
       res.push(i);
     }
     return res;
+  },
+
+  trimS3File(filename, taskId) {
+    let finalRegex;
+    if (!config.taskS3LogOmitPrefix) {
+      return filename;
+    }
+    finalRegex = config.taskS3LogOmitPrefix.replace('%taskId', taskId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).replace('%index', '[0-9]+').replace('%s', '[0-9]+');
+    return filename.replace(new RegExp(finalRegex), '');
   }
+
 };
 
 export default Utils;

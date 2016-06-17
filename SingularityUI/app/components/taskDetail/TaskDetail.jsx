@@ -158,6 +158,37 @@ class TaskDetail extends React.Component {
     );
   }
 
+  renderS3Logs(f, s3Files) {
+    return (
+      <Section title="S3 Logs">
+        <SimpleTable
+          emptyMessage="No S3 logs"
+          entries={s3Files}
+          perPage={5}
+          headers={['Log file', 'Size', 'Last modified', '']}
+          renderTableRow={(data, index) => {
+            return (
+              <tr key={index}>
+                <td>
+                  <a className="long-link" href={data.getUrl} target="_blank" title={data.key}>
+                      {Utils.trimS3File(data.key.substring(data.key.lastIndexOf('/') + 1), this.props.taskId)}
+                  </a>
+                </td>
+                <td>{Utils.humanizeFileSize(data.size)}</td>
+                <td>{Utils.absoluteTimestamp(data.lastModified)}</td>
+                <td className="actions-column">
+                  <a href={data.getUrl} target="_blank" title="Download">
+                    <Glyphicon iconClass="download-alt"></Glyphicon>
+                  </a>
+                </td>
+              </tr>
+            );
+          }}
+        />
+      </Section>
+    );
+  }
+
   renderLbUpdates(t) {
     return (
       <Section title="Load Balancer Updates">
@@ -309,13 +340,21 @@ class TaskDetail extends React.Component {
     );
   }
 
+  renderShellCommands(t) {
+    return (
+      <CollapsableSection title="Shell commands">
+
+      </CollapsableSection>
+    )
+  }
+
   render() {
     let task = this.props.task[this.props.taskId].data;
     let cleanup = _.find(this.props.taskCleanups, (c) => {
       return c.taskId.id == this.props.taskId;
     });
 
-    // console.log(this.props.resourceUsage);
+    // console.log(this.props.s3Logs);
 
     return (
       <div>
@@ -323,11 +362,13 @@ class TaskDetail extends React.Component {
         {this.renderHistory(task)}
         {this.renderLatestLog(task, this.props.files)}
         {this.renderFiles(task, this.props.files)}
+        {this.renderS3Logs(task, this.props.s3Logs)}
         {this.renderLbUpdates(task)}
         {this.renderInfo(task)}
         {this.renderResourceUsage(task, this.props.resourceUsage)}
         {this.renderEnvVariables(task)}
         {this.renderHealthchecks(task)}
+        {this.renderShellCommands(task)}
       </div>
     );
   }
@@ -365,7 +406,8 @@ function mapStateToProps(state) {
     taskCleanups: state.api.taskCleanups.data,
     files: files,
     resourceUsage: state.api.taskResourceUsage.data,
-    cpuTimestamp: state.api.taskResourceUsage.data.timestamp
+    cpuTimestamp: state.api.taskResourceUsage.data.timestamp,
+    s3Logs: state.api.taskS3Logs.data
   };
 }
 
