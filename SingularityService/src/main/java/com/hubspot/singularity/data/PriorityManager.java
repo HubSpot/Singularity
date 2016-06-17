@@ -1,14 +1,18 @@
 package com.hubspot.singularity.data;
 
+import java.util.Map;
+
 import org.apache.curator.framework.CuratorFramework;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
+import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
 
@@ -20,11 +24,16 @@ public class PriorityManager extends CuratorAsyncManager {
 
     private final Transcoder<SingularityPriorityFreezeParent> priorityFreezeParentTranscoder;
 
+    private final Map<RequestType, Double> defaultTaskPriorityLevelForRequestType;
+    private final double defaultTaskPriorityLevel;
+
     @Inject
     public PriorityManager(CuratorFramework curator, SingularityConfiguration configuration,
         MetricRegistry metricRegistry, Transcoder<SingularityPriorityFreezeParent> priorityFreezeParentTranscoder) {
         super(curator, configuration, metricRegistry);
         this.priorityFreezeParentTranscoder = priorityFreezeParentTranscoder;
+        this.defaultTaskPriorityLevelForRequestType = configuration.getDefaultTaskPriorityLevelForRequestType();
+        this.defaultTaskPriorityLevel = configuration.getDefaultTaskPriorityLevel();
     }
 
     public boolean checkPriorityKillExists() {
@@ -49,5 +58,9 @@ public class PriorityManager extends CuratorAsyncManager {
 
     public SingularityDeleteResult deleteActivePriorityFreeze() {
         return delete(PRIORITY_FREEZE);
+    }
+
+    public double getTaskPriorityLevelForRequest(SingularityRequest request) {
+        return request.getTaskPriorityLevel().or(Optional.fromNullable(defaultTaskPriorityLevelForRequestType.get(request.getRequestType()))).or(defaultTaskPriorityLevel);
     }
 }

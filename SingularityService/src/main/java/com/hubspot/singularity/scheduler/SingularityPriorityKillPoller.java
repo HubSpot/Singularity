@@ -29,8 +29,6 @@ public class SingularityPriorityKillPoller extends SingularityLeaderOnlyPoller {
     private final RequestManager requestManager;
     private final TaskManager taskManager;
 
-    private final double defaultTaskPriorityLevel;
-
     @Inject
     public SingularityPriorityKillPoller(PriorityManager priorityManager, RequestManager requestManager, TaskManager taskManager, SingularityConfiguration configuration) {
         super(configuration.getCheckPriorityKillsEveryMillis(), TimeUnit.MILLISECONDS);
@@ -38,8 +36,6 @@ public class SingularityPriorityKillPoller extends SingularityLeaderOnlyPoller {
         this.priorityManager = priorityManager;
         this.requestManager = requestManager;
         this.taskManager = taskManager;
-
-        this.defaultTaskPriorityLevel = configuration.getDefaultTaskPriorityLevel();
     }
 
 
@@ -70,7 +66,7 @@ public class SingularityPriorityKillPoller extends SingularityLeaderOnlyPoller {
             // map request ID to priority level
             final Map<String, Double> requestIdToTaskPriority = new HashMap<>();
             for (SingularityRequestWithState requestWithState : requestManager.getRequests()) {
-                requestIdToTaskPriority.put(requestWithState.getRequest().getId(), requestWithState.getRequest().getTaskPriorityLevel().or(defaultTaskPriorityLevel));
+                requestIdToTaskPriority.put(requestWithState.getRequest().getId(), priorityManager.getTaskPriorityLevelForRequest(requestWithState.getRequest()));
             }
 
             // kill active tasks below minimum priority level

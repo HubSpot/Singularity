@@ -295,17 +295,17 @@ public class StateManager extends CuratorManager {
     final Optional<Boolean> authDatastoreHealthy = authDatastore.isHealthy();
 
     final Optional<SingularityPriorityFreezeParent> maybePriorityFreeze = priorityManager.getActivePriorityFreeze();
-    final Optional<Double> activePriorityLevelFreeze;
+    final Optional<Double> minimumPriorityLevel;
 
     if (maybePriorityFreeze.isPresent()) {
-      activePriorityLevelFreeze = Optional.of(maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel());
+      minimumPriorityLevel = Optional.of(maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel());
     } else {
-      activePriorityLevelFreeze = Optional.absent();
+      minimumPriorityLevel = Optional.absent();
     }
 
     return new SingularityState(activeTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, lbCleanupRequests, cleaningRequests, activeSlaves,
         deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, scheduledTasksInfo.getNumLateTasks(),
         scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
-            includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, activePriorityLevelFreeze);
+            includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, minimumPriorityLevel);
   }
 }

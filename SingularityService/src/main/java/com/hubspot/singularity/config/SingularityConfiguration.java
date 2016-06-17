@@ -14,6 +14,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
+import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.SlavePlacement;
 
 import io.dropwizard.Configuration;
@@ -258,7 +260,10 @@ public class SingularityConfiguration extends Configuration {
 
   @Min(0)
   @Max(1)
-  private double defaultTaskPriorityLevel = 0.5;
+  private double defaultTaskPriorityLevel = 0.3;
+
+  @NotNull
+  private Map<RequestType, Double> defaultTaskPriorityLevelForRequestType = ImmutableMap.of(RequestType.WORKER, 0.5, RequestType.SERVICE, 0.7);
 
   @Min(0)
   private long checkPriorityKillsEveryMillis = TimeUnit.SECONDS.toMillis(30);
@@ -1053,6 +1058,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setDefaultTaskPriorityLevel(double defaultTaskPriorityLevel) {
     this.defaultTaskPriorityLevel = defaultTaskPriorityLevel;
+  }
+
+  public Map<RequestType, Double> getDefaultTaskPriorityLevelForRequestType() {
+    return defaultTaskPriorityLevelForRequestType;
+  }
+
+  public void setDefaultTaskPriorityLevelForRequestType(Map<RequestType, Double> defaultTaskPriorityLevelForRequestType) {
+    this.defaultTaskPriorityLevelForRequestType = defaultTaskPriorityLevelForRequestType;
   }
 
   public long getCheckPriorityKillsEveryMillis() {
