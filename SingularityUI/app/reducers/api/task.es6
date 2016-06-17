@@ -36,6 +36,20 @@ export default function task(state = initialState, action) {
 
       newData[action.taskId].data.isCleaning = newData[action.taskId].data.lastKnownState.taskState == 'TASK_CLEANING';
 
+      let ports = [];
+      if (newData[action.taskId].data.task.taskRequest.deploy.resources.numPorts > 0) {
+        for (let resource of newData[action.taskId].data.task.mesosTask.resources) {
+          if (resource.name == 'ports') {
+            for (let range of resource.ranges.range) {
+              for (let port of Utils.range(range.begin, range.end + 1)) {
+                ports.push (port);
+              }
+            }
+          }
+        }
+      }
+      newData[action.taskId].data.ports = ports;
+
       if (state[action.taskId]) {
         newData[action.taskId] = _.extend(state[action.taskId], newData[action.taskId]);
       }

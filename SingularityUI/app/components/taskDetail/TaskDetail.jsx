@@ -2,6 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import Utils from '../../utils';
 import { FetchAction as TaskFilesFetchAction } from '../../actions/api/taskFiles';
+import { InfoBox } from '../common/statelessComponents';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import JSONButton from '../common/JSONButton';
@@ -162,6 +163,25 @@ class TaskDetail extends React.Component {
     );
   }
 
+  renderInfo(t) {
+    return (
+      <Section title="Info">
+        <div className="row">
+          <ul className="list-unstyled horizontal-description-list">
+            <InfoBox copyableClassName="info-copyable" name="Task ID" value={t.task.taskId.id} />
+            <InfoBox copyableClassName="info-copyable" name="Directory" value={t.directory} />
+            <InfoBox copyableClassName="info-copyable" name="Executor GUID" value={t.task.mesosTask.executor.executorId.value} />
+            <InfoBox copyableClassName="info-copyable" name="Hostname" value={t.task.offer.hostname} />
+            <InfoBox copyableClassName="info-copyable" name="Ports" value={t.ports.toString()} />
+            <InfoBox copyableClassName="info-copyable" name="Rack ID" value={t.task.rackId} />
+            {t.task.taskRequest.deploy.executorData ? <InfoBox copyableClassName="info-copyable" name="Extra Cmd Line Arguments (for Deploy)" value={t.task.taskRequest.deploy.executorData.extraCmdLineArgs} /> : null}
+            {t.task.taskRequest.pendingTask && t.task.taskRequest.pendingTask.cmdLineArgsList ? <InfoBox copyableClassName="info-copyable" name="Extra Cmd Line Arguments (for Task)" value={t.task.taskRequest.pendingTask.cmdLineArgsList} /> : null}
+          </ul>
+        </div>
+      </Section>
+    );
+  }
+
   render() {
     let task = this.props.task[this.props.taskId].data;
     let cleanup = _.find(this.props.taskCleanups, (c) => {
@@ -177,6 +197,7 @@ class TaskDetail extends React.Component {
         {this.renderLatestLog(task, this.props.files)}
         {this.renderFiles(task, this.props.files)}
         {this.renderLbUpdates(task)}
+        {this.renderInfo(task)}
       </div>
     );
   }

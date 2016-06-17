@@ -348,6 +348,14 @@ let Utils = {
     if (!a.endsWith('/')) a += '/';
     if (b.startsWith('/')) b = b.substring(1, b.length);
     return a + b;
+  },
+
+  range(begin, end, interval = 1) {
+    let res = [];
+    for (let i = begin; i < end; i += interval) {
+      res.push(i);
+    }
+    return res;
   }
 };
 
