@@ -9,24 +9,39 @@ export default class ShellCommandLauncher extends React.Component {
   constructor() {
     super();
     this.state = {
-      commandAcked: true,
+      commandAcked: false,
       commandStarted: false,
       commandFileExists: false,
-      outputFilename: null
+      outputFilename: null,
+      commandFailed: false,
+      commandFailedMessage: null
     }
   }
 
   componentDidMount() {
+    this.props.updateTask();
     this.interval = setInterval(() => {
       this.props.updateTask();
     }, 1000);
-    console.log(this.props);
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    let timestamp = this.props.shellCommandResponse.timestamp;
-    let cmdStatus = _.find(this.props.commandHistory, (c) => c.shellRequest.timestamp == timestamp);
-    let latestUpdate = cmdStatus
+  componentWillUpdate(nextProps, nextState) {
+    if (nextState.commandFailed) {
+      clearInterval(this.interval);
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    let timestamp = nextProps.shellCommandResponse.timestamp;
+    let cmdStatus = _.find(nextProps.commandHistory, (c) => c.shellRequest.timestamp == timestamp);
+    if (!cmdStatus || !cmdStatus.shellUpdates) return;
+    let failedStatus = _.find(cmdStatus.shellUpdates, (u) => u.updateType == 'FAILED' || u.updateType == 'INVALID');
+    this.setState({
+      commandAcked: !!_.find(cmdStatus.shellUpdates, (u) => u.updateType == 'ACKED'),
+      commandStarted: !!_.find(cmdStatus.shellUpdates, (u) => u.updateType == 'STARTED'),
+      commandFailed: !!failedStatus,
+      commandFailedMessage: failedStatus ? failedStatus.message : null
+    });
     console.log(cmdStatus);
   }
 
@@ -38,16 +53,13 @@ export default class ShellCommandLauncher extends React.Component {
     return (
       <ul className="status-list">
         <li className={this.state.commandAcked ? 'complete text-success' : 'waiting'}>
-          {this.state.commandAcked ? <div className="page-loader loader-small" /> : <Glyphicon iconClass='ok' />}
-          Command acknowledged...
+          {!this.state.commandAcked ? <div className="page-loader loader-small" /> : <Glyphicon iconClass='ok' />} Command acknowledged...
         </li>
         <li className={this.state.commandStarted ? 'complete text-success' : 'waiting'}>
-          {this.state.commandStarted ? <div className="page-loader loader-small" /> : <Glyphicon iconClass='ok' />}
-          Command started...
+          {!this.state.commandStarted ? <div className="page-loader loader-small" /> : <Glyphicon iconClass='ok' />} Command started...
         </li>
         <li className={this.state.commandFileExists ? 'complete text-success' : 'waiting'}>
-          {this.state.commandFileExists ? <div className="page-loader loader-small" /> : <Glyphicon iconClass='ok' />}
-          Output file{this.state.outputFilename ? <code> {this.state.outputFilename}</code> : ''} exists...
+          {!this.state.commandFileExists ? <div className="page-loader loader-small" /> : <Glyphicon iconClass='ok' />} Output file{this.state.outputFilename ? <code> {this.state.outputFilename}</code> : ''} exists...
         </li>
       </ul>
     );
@@ -62,6 +74,11 @@ export default class ShellCommandLauncher extends React.Component {
         <Modal.Body>
           <div className='constrained-modal'>
             {this.renderStatusList()}
+            {this.state.commandFailed ? (
+              <p className="text-danger">
+                <Glyphicon iconClass='remove' /> Command failed: {this.state.commandFailedMessage}
+              </p>
+            ): null}
           </div>
         </Modal.Body>
       </Modal>
