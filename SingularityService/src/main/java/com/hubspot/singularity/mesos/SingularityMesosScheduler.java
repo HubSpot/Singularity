@@ -152,8 +152,8 @@ public class SingularityMesosScheduler implements Scheduler {
     LOG.info("Received {} offer(s)", offers.size());
 
     for (Offer offer : offers) {
-      LOG.debug("Received offer from {} ({}) for {} cpu(s), {} memory, {} ports, and {} disk", offer.getHostname(), offer.getSlaveId().getValue(), MesosUtils.getNumCpus(offer), MesosUtils.getMemory(offer),
-          MesosUtils.getNumPorts(offer));
+      LOG.debug("Received offer ID {} from {} ({}) for {} cpu(s), {} memory, {} ports, and {} disk", offer.getId().getValue(), offer.getHostname(), offer.getSlaveId().getValue(), MesosUtils.getNumCpus(offer), MesosUtils.getMemory(offer),
+          MesosUtils.getNumPorts(offer), MesosUtils.getDisk(offer));
     }
 
     final long start = System.currentTimeMillis();

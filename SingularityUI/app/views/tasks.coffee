@@ -197,6 +197,7 @@ class TasksView extends View
             tasks: tasks
             rowsOnly: true
             decomissioning_tasks: decomTasks
+            config: config
             showDiskSpace: config.showTaskDiskResource
 
         $table = @$ ".table-staged table"
