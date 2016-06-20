@@ -2,7 +2,7 @@ import fetch from 'isomorphic-fetch';
 
 const JSON_HEADERS = {'Content-Type': 'application/json', 'Accept': 'application/json'};
 
-export default function buildJsonSendingApiAction(actionName, httpMethod='POST', opts={}) {
+export default function buildJsonSendingApiAction(actionName, httpMethod, opts=(data => {body: JSON.stringify(data)})) {
   let jsonBoilerplate = {
     method: httpMethod,
     headers: JSON_HEADERS
