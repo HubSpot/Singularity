@@ -5,11 +5,6 @@ const ACTIONS = {
             newState[formId] = {};
         }
         newState[formId][fieldId] = newValue;
-        if (state[formId].modifications) {
-            newState[formId].modifications = state[formId].modifications + 1;
-        } else {
-            newState[formId].modifications = 1;
-        }
         return newState;
     },
 
