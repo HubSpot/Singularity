@@ -5,6 +5,7 @@ import { FetchAction as TaskFilesFetchAction } from '../../actions/api/taskFiles
 import { FetchAction as TaskResourceUsageFetchAction } from '../../actions/api/taskResourceUsage';
 import { InfoBox, UsageInfo } from '../common/statelessComponents';
 import { Alert } from 'react-bootstrap';
+import FormGroup from 'react-bootstrap/lib/FormGroup';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import JSONButton from '../common/JSONButton';
@@ -14,6 +15,7 @@ import SimpleTable from '../common/SimpleTable';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 
 import TaskFileBrowser from './TaskFileBrowser';
+import ShellCommands from './ShellCommands';
 
 class TaskDetail extends React.Component {
 
@@ -500,8 +502,8 @@ class TaskDetail extends React.Component {
 
   renderShellCommands(t) {
     return (
-      <CollapsableSection title="Shell commands">
-
+      <CollapsableSection title="Shell commands" defaultExpanded>
+        <ShellCommands task={t} />
       </CollapsableSection>
     )
   }
@@ -512,7 +514,7 @@ class TaskDetail extends React.Component {
       return c.taskId.id == this.props.taskId;
     });
 
-    console.log(task);
+    // console.log(config);
 
     return (
       <div>
@@ -567,6 +569,7 @@ function mapFilesToProps(files) {
 function mapHealthchecksToProps(tasks) {
   for (let task in tasks) {
     let t = tasks[task].data;
+    if (!t) continue;
     let hcs = t.healthcheckResults;
     t.hasSuccessfulHealthcheck = hcs && hcs.length > 0 && !!_.find(hcs, (h) => h.statusCode == 200);
     t.lastHealthcheckFailed = hcs && hcs.length > 0 && hcs[0].statusCode != 200;
