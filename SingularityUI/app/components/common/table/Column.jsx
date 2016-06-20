@@ -8,7 +8,8 @@ class Column extends Component {
       PropTypes.func
     ]),
     cellData: PropTypes.func,
-    renderCell: PropTypes.func,
+    cellRender: PropTypes.func,
+    sortable: PropTypes.bool,
     sortFunc: PropTypes.func,
     className: PropTypes.string,
     headerClassName: PropTypes.string
@@ -16,9 +17,18 @@ class Column extends Component {
 
   static defaultProps = {
     cellData: (o) => o,
-    renderCell: (str) => str,
+    cellRender: (str) => str,
     label: '',
-    sortFunc: (a, b) => a > b
+    sortable: false,
+    sortFunc: (a, b) => {
+      if (a < b) {
+        return -1;
+      }
+      if (a > b) {
+        return 1;
+      }
+      return 0;
+    }
   };
 
   displayName = 'Column';

@@ -17,14 +17,19 @@ class RequestsTable extends Component {
 
   render() {
     return (
-      <UITable data={this.props.requests} keyGetter={(r) => r.request.id}>
+      <UITable
+        data={this.props.requests}
+        keyGetter={(r) => r.request.id}
+        asyncSort
+        paginated
+      >
         <Column
           label='Request'
           id='requestId'
           cellData={
             (rowData) => rowData.request.id
           }
-          className={'good'}
+          sortable
         />
         <Column
           label='Type'
@@ -32,6 +37,7 @@ class RequestsTable extends Component {
           cellData={
             (rowData) => rowData.request.requestType
           }
+          sortable
         />
         <Column
           label='Time of Last Deploy'
@@ -39,15 +45,26 @@ class RequestsTable extends Component {
           cellData={
             (rowData) => {
               if ('requestDeployState' in rowData) {
-                if ('activeDeploy' in rowData.requestDeployState) {
-                  const fromNow = moment(rowData.requestDeployState.activeDeploy.timestamp).fromNow();
-                  const when = moment(rowData.requestDeployState.activeDeploy.timestamp).calendar();
-                  return `${fromNow} (${when})`;
+                const requestDeployState = rowData.requestDeployState;
+                if ('activeDeploy' in requestDeployState) {
+                  const activeDeploy = requestDeployState.activeDeploy;
+                  return activeDeploy.timestamp;
                 }
+              }
+              return null;
+            }
+          }
+          cellRender={
+            (cellData) => {
+              if (cellData !== null) {
+                const fromNow = moment(cellData).fromNow();
+                const when = moment(cellData).calendar();
+                return `${fromNow} (${when})`;
               }
               return '';
             }
           }
+          sortable
         />
         <Column
           label='Status'
@@ -55,6 +72,7 @@ class RequestsTable extends Component {
           cellData={
             (rowData) => rowData.state
           }
+          sortable
         />
         <Column
           label='Deploy User'
@@ -65,6 +83,7 @@ class RequestsTable extends Component {
                 if ('activeDeploy' in rowData.requestDeployState) {
                   if ('user' in rowData.requestDeployState.activeDeploy) {
                     const user = rowData.requestDeployState.activeDeploy.user;
+                    // assume user is an email address
                     return user.split('@')[0];
                   }
                 }
@@ -72,6 +91,7 @@ class RequestsTable extends Component {
               return '';
             }
           }
+          sortable
         />
       </UITable>
     );
