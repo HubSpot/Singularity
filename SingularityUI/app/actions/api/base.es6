@@ -1,8 +1,8 @@
 import fetch from 'isomorphic-fetch';
 
-export default function buildPostJsonApiAction(actionName, opts={}) {
+export default function buildJsonSendingApiAction(actionName, httpMethod='POST', opts={}) {
   let jsonBoilerplate = {
-    method: 'POST',
+    method: httpMethod,
     headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
   }
   let newOpts;
