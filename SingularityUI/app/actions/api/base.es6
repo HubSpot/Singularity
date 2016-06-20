@@ -8,6 +8,7 @@ export default function buildApiAction(actionName, apiPath, opts={}) {
   const CLEAR = actionName + '_CLEAR';
 
   let apiPathFunc;
+  let optsFunc;
 
   if (typeof apiPath === 'string') {
     apiPathFunc = () => apiPath;
@@ -15,11 +16,17 @@ export default function buildApiAction(actionName, apiPath, opts={}) {
     apiPathFunc = apiPath;
   }
 
+  if (typeof opts === 'object') {
+    optsFunc = () => opts;
+  } else {
+    optsFunc = opts;
+  }
+
   function trigger(...args) {
     return function (dispatch) {
       dispatch(started());
 
-      return fetch(config.apiRoot + apiPathFunc(...args), _.extend({credentials: 'include'}, opts))
+      return fetch(config.apiRoot + apiPathFunc(...args), _.extend({credentials: 'include'}, optsFunc(...args)))
         .then(response => response.json())
         .then(json => {
           dispatch(success(json));

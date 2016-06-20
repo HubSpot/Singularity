@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import Utils from '../../utils';
 import { FetchAction as TaskFilesFetchAction } from '../../actions/api/taskFiles';
 import { FetchAction as TaskResourceUsageFetchAction } from '../../actions/api/taskResourceUsage';
+import { RunAction as RunShellCommandAction } from '../../actions/api/taskShellCommand';
 import { InfoBox, UsageInfo } from '../common/statelessComponents';
 import { Alert } from 'react-bootstrap';
 import FormGroup from 'react-bootstrap/lib/FormGroup';
@@ -503,7 +504,12 @@ class TaskDetail extends React.Component {
   renderShellCommands(t) {
     return (
       <CollapsableSection title="Shell commands" defaultExpanded>
-        <ShellCommands task={t} />
+        <ShellCommands
+          task={t}
+          runShellCommand={(commandName) => {
+            this.props.dispatch(RunShellCommandAction.trigger(this.props.taskId, commandName));
+          }}
+        />
       </CollapsableSection>
     )
   }
