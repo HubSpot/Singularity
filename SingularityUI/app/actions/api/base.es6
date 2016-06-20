@@ -7,9 +7,7 @@ export default function buildJsonSendingApiAction(actionName, httpMethod='POST',
   }
   let newOpts;
   if (typeof opts === 'function') {
-    newOpts = (...args) => {
-      return _.extend(jsonBoilerplate, opts(...args));
-    }
+    newOpts = (...args) => _.extend(jsonBoilerplate, opts(...args))
   } else {
     newOpts = _.extend(jsonBoilerplate, opts);
   }
