@@ -102,7 +102,7 @@ class TaskDetail extends React.Component {
     );
   }
 
-  renderAlerts(t, deploy) {
+  renderAlerts(t, deploy, pendingDeploys) {
     let alerts = [];
 
     if (deploy.deployResult && deploy.deployResult.deployState == 'FAILED') {
@@ -163,6 +163,55 @@ class TaskDetail extends React.Component {
           <Alert key='decom' bsStyle='warning'>This task was replaced then killed by Singularity due to a slave decommissioning.</Alert>
         );
       }
+    }
+
+    // Healthcheck notification
+    if (_.find(pendingDeploys, (d) => {
+      d.deployMarker.requestId == t.task.taskId.requestId && d.deployMarker.deployId == t.task.taskId.deployId && d.currentDeployState == 'WAITING'
+    })) {
+      const hcTable = t.healthcheckResults > 0 ? (
+        <SimpleTable
+          emptyMessage="No healthchecks"
+          entries={[t.healthcheckResults[0]]}
+          perPage={5}
+          first
+          last
+          headers={['Timestamp', 'Duration', 'Status', 'Message']}
+          renderTableRow={(data, index) => {
+            return (
+              <tr key={index}>
+                <td>{Utils.absoluteTimestamp(data.timestamp)}</td>
+                <td>{data.durationMillis} {data.durationMillis ? 'ms' : ''}</td>
+                <td>{data.statusCode ? <span className={`label label-${data.statusCode == 200 ? 'success' : 'danger'}`}>HTTP {data.statusCode}</span> : <span className="label label-warning">No Response</span>}</td>
+                <td><pre className="healthcheck-message">{data.errorMessage || data.responseBody}</pre></td>
+                <td className="actions-column"><JSONButton object={data} text="{ }" /></td>
+              </tr>
+            );
+          }}
+        />
+      ) : null;
+      const pending = <span><strong>Deploy <code>{t.task.taskId.deployId}</code> is pending:</strong> Waiting for task to become healthy.</span>;
+      alerts.push(
+        <Alert key='hc' bsStyle='warning'>
+          <strong>Deploy <code>{t.task.taskId.deployId}</code> is pending: </strong>
+          {t.hasSuccessfulHealthcheck ? "Waiting for successful load balancer update" : (t.healthcheckResults > 0 ? hcTable : pending)}
+        </Alert>
+      );
+    }
+
+    // Killed due to HC fail
+    if (t.lastHealthcheckFailed) {
+      alerts.push(
+        <Alert key='hcFail' bsStyle='danger'>
+          <strong>Task killed due to no passing healthchecks after {t.tooManyRetries ? t.healthcheckResults.length.toString() + 'tries' : t.secondsElapsed.toString() + 'seconds'}</strong>
+          Last healthcheck {t.healthcheckResults[0].statusCode ?
+            <span>responded with <span className="label label-danger">HTTP {t.healthcheckResults[0].statusCode}</span></span> :
+              <span>'did not respond ' {t.healthcheckResults[0].durationMillis ? t.healthcheckResults[0].durationMillis.toString() + ' ms ' : ''} at {Utils.absoluteTimestamp(t.healthcheckResults[0].timestamp)}</span>}
+            <a href="#healthchecks">View all healthchecks</a>
+            <a href="#logs">View service logs</a>
+            {t.healthcheckFailureReasonMessage ? <p>The healthcheck failed because {t.healthcheckFailureReasonMessage}</p> : ''}
+        </Alert>
+      )
     }
 
     return (
@@ -384,6 +433,7 @@ class TaskDetail extends React.Component {
 
   renderHealthchecks(t) {
     let healthchecks = t.healthcheckResults;
+    if (!healthchecks || healthchecks.length == 0) return null;
     return (
       <CollapsableSection title="Healthchecks">
         <div className="well">
@@ -436,12 +486,12 @@ class TaskDetail extends React.Component {
       return c.taskId.id == this.props.taskId;
     });
 
-    // console.log(task, this.props.deploy);
+    console.log(task);
 
     return (
       <div>
         {this.renderHeader(task, cleanup)}
-        {this.renderAlerts(task, this.props.deploy)}
+        {this.renderAlerts(task, this.props.deploy, this.props.pendingDeploys)}
         {this.renderHistory(task)}
         {this.renderLatestLog(task, this.props.files)}
         {this.renderFiles(task, this.props.files)}
@@ -457,8 +507,7 @@ class TaskDetail extends React.Component {
   }
 }
 
-function mapStateToProps(state) {
-  let files = state.api.taskFiles.data;
+function mapFilesToProps(files) {
   if (files.files) {
     for (let f of files.files) {
       f.isDirectory = f.mode[0] == 'd';
@@ -485,15 +534,35 @@ function mapStateToProps(state) {
       }
     }
   }
+  return files;
+}
+
+function mapHealthchecksToProps(tasks) {
+  for (let task in tasks) {
+    let t = tasks[task].data;
+    let hcs = t.healthcheckResults;
+    t.hasSuccessfulHealthcheck = hcs && hcs.length > 0 && !!_.find(hcs, (h) => h.statusCode == 200);
+    t.lastHealthcheckFailed = hcs && hcs.length > 0 && hcs[0].statusCode != 200;
+    t.healthcheckFailureReasonMessage = Utils.healthcheckFailureReasonMessage(t);
+    t.tooManyRetries = hcs && hcs.length > t.task.taskRequest.deploy.healthcheckMaxRetries && t.task.taskRequest.deploy.healthcheckMaxRetries > 0;
+    t.secondsElapsed = t.taskRequest && t.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds ? t.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds : config.defaultDeployHealthTimeoutSeconds;
+  }
+  return tasks;
+}
+
+function mapStateToProps(state) {
+  let files = mapFilesToProps(state.api.taskFiles.data);
+  let task = mapHealthchecksToProps(state.api.task);
 
   return {
-    task: state.api.task,
+    task: task,
     taskCleanups: state.api.taskCleanups.data,
     files: files,
     resourceUsage: state.api.taskResourceUsage.data,
     cpuTimestamp: state.api.taskResourceUsage.data.timestamp,
     s3Logs: state.api.taskS3Logs.data,
-    deploy: state.api.deploy.data
+    deploy: state.api.deploy.data,
+    pendingDeploys: state.api.deploys.data
   };
 }
 

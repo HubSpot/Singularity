@@ -2,6 +2,7 @@ import Controller from './Controller';
 import TaskView from '../views/task';
 import { fetchTask as TaskFetchAction, clear as TaskFetchActionClear} from '../actions/api/task';
 import { FetchAction as DeployFetchAction} from '../actions/api/deploy';
+import { FetchAction as DeploysFetchAction} from '../actions/api/deploys';
 import { FetchAction as TaskCleanupsFetchAction } from '../actions/api/taskCleanups';
 import { FetchAction as TaskFilesFetchAction } from '../actions/api/taskFiles';
 import { FetchAction as TaskResourceUsageFetchAction } from '../actions/api/taskResourceUsage';
@@ -36,6 +37,7 @@ class TaskDetail extends Controller {
     });
     promises.push(taskPromise);
     promises.push(this.store.dispatch(TaskCleanupsFetchAction.trigger()));
+    promises.push(this.store.dispatch(DeploysFetchAction.trigger('pending')));
     promises.push(this.store.dispatch(TaskS3LogsFetchAction.trigger(this.taskId)));
     return Promise.all(promises);
   }
