@@ -37,7 +37,7 @@ let FIELDS_BY_REQUEST_TYPE = {
   ],
   SCHEDULED: [
     'quartzSchedule',
-    'chronSchedule',
+    'cronSchedule',
     'scheduleType',
     'numRetriesOnFailure',
     'killOldNonLongRunningTasksAfterMillis',
