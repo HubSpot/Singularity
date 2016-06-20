@@ -1,25 +1,27 @@
 import fetch from 'isomorphic-fetch';
 
-export default function buildApiAction(actionName, apiPath, opts={}) {
+export default function buildApiAction(actionName, opts={}) {
   const ACTION = actionName;
   const STARTED = actionName + '_STARTED';
   const ERROR = actionName + '_ERROR';
   const SUCCESS = actionName + '_SUCCESS';
   const CLEAR = actionName + '_CLEAR';
 
-  let apiPathFunc;
+  let optsFunc;
 
-  if (typeof apiPath === 'string') {
-    apiPathFunc = () => apiPath;
+  if (typeof opts === 'function') {
+    optsFunc = opts;
   } else {
-    apiPathFunc = apiPath;
+    optsFunc = () => opts;
   }
 
   function trigger(...args) {
     return function (dispatch) {
       dispatch(started());
 
-      return fetch(config.apiRoot + apiPathFunc(...args), _.extend({credentials: 'include'}, opts))
+      let options = optsFunc(...args);
+      console.log(options);
+      return fetch(config.apiRoot + options.url, _.extend({credentials: 'include'}, _.omit(options, 'url')))
         .then(response => response.json())
         .then(json => {
           dispatch(success(json));
