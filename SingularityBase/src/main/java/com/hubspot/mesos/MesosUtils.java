@@ -31,6 +31,7 @@ public final class MesosUtils {
   public static final String CPUS = "cpus";
   public static final String MEMORY = "mem";
   public static final String PORTS = "ports";
+  public static final String DISK = "disk";
 
   private MesosUtils() { }
 
@@ -76,6 +77,8 @@ public final class MesosUtils {
   public static Resource getMemoryResource(double memory) {
     return newScalar(MEMORY, memory);
   }
+
+  public static Resource getDiskResource(double disk) { return newScalar(DISK, disk); }
 
   public static long[] getPorts(Resource portsResource, int numPorts) {
     long[] ports = new long[numPorts];
@@ -196,6 +199,8 @@ public final class MesosUtils {
     return getMemory(offer.getResourcesList());
   }
 
+  public static double getDisk(Offer offer) { return getDisk(offer.getResourcesList()); }
+
   public static double getNumCpus(List<Resource> resources) {
     return getScalar(resources, CPUS);
   }
@@ -203,6 +208,8 @@ public final class MesosUtils {
   public static double getMemory(List<Resource> resources) {
     return getScalar(resources, MEMORY);
   }
+
+  public static double getDisk(List<Resource> resources) { return getScalar(resources, DISK); }
 
   public static int getNumPorts(List<Resource> resources) {
     return getNumRanges(resources, PORTS);
@@ -222,6 +229,12 @@ public final class MesosUtils {
     double memory = getMemory(offerResources);
 
     if (memory < resources.getMemoryMb()) {
+      return false;
+    }
+
+    double disk = getDisk(offerResources);
+
+    if (disk < resources.getDiskMb()) {
       return false;
     }
 
@@ -334,7 +347,7 @@ public final class MesosUtils {
   }
 
   public static Resources buildResourcesFromMesosResourceList(List<Resource> resources) {
-    return new Resources(getNumCpus(resources), getMemory(resources), getNumPorts(resources));
+    return new Resources(getNumCpus(resources), getMemory(resources), getNumPorts(resources), getDisk(resources));
   }
 
   public static Path getTaskDirectoryPath(String taskId) {

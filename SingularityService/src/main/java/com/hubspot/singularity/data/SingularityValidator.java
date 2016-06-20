@@ -55,6 +55,7 @@ public class SingularityValidator {
   private final int maxMemoryMbPerRequest;
   private final int defaultCpus;
   private final int defaultMemoryMb;
+  private final int defaultDiskMb;
   private final int maxMemoryMbPerInstance;
   private final boolean allowRequestsWithoutOwners;
   private final boolean createDeployIds;
@@ -73,8 +74,9 @@ public class SingularityValidator {
 
     this.defaultCpus = configuration.getMesosConfiguration().getDefaultCpus();
     this.defaultMemoryMb = configuration.getMesosConfiguration().getDefaultMemory();
+    this.defaultDiskMb = configuration.getMesosConfiguration().getDefaultDisk();
 
-    defaultResources = new Resources(defaultCpus, defaultMemoryMb, 0);
+    defaultResources = new Resources(defaultCpus, defaultMemoryMb, 0, defaultDiskMb);
 
     this.maxCpusPerInstance = configuration.getMesosConfiguration().getMaxNumCpusPerInstance();
     this.maxCpusPerRequest = configuration.getMesosConfiguration().getMaxNumCpusPerRequest();

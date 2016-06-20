@@ -142,7 +142,7 @@ class TasksView extends View
             collectionSynced: @collection.synced
             requestsSubFilter: @requestsSubFilter
             haveTasks: @collection.length and @collection.synced
-            showDiskSpace: @showDiskSpace
+            showDiskSpace: config.showTaskDiskResource
             hideRequestTypeFilter: @state isnt 'active'
 
         partials =
@@ -198,8 +198,7 @@ class TasksView extends View
             rowsOnly: true
             decomissioning_tasks: decomTasks
             config: config
-            showDiskSpace: @showDiskSpace
-
+            showDiskSpace: config.showTaskDiskResource
 
         $table = @$ ".table-staged table"
         $tableBody = $table.find "tbody"

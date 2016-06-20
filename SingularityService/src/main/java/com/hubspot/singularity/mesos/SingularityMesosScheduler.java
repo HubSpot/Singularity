@@ -88,8 +88,8 @@ public class SingularityMesosScheduler implements Scheduler {
       SingularitySchedulerPriority schedulerPriority, SingularityNewTaskChecker newTaskChecker, SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, RequestManager requestManager,
       Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager, SingularityExceptionNotifier exceptionNotifier,SingularityMesosFrameworkMessageHandler messageHandler,
       @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier, SingularityTaskSizeOptimizer taskSizeOptimizer, final IdTranscoder<SingularityTaskId> taskIdTranscoder, CustomExecutorConfiguration customExecutorConfiguration) {
-    this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
-    this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0);
+    this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0, mesosConfiguration.getDefaultDisk());
+    this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0, customExecutorConfiguration.getDiskMb());
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.schedulerPriority = schedulerPriority;
@@ -128,7 +128,7 @@ public class SingularityMesosScheduler implements Scheduler {
     LOG.info("Received {} offer(s)", offers.size());
 
     for (Offer offer : offers) {
-      LOG.debug("Received offer from {} ({}) for {} cpu(s), {} memory, and {} ports", offer.getHostname(), offer.getSlaveId().getValue(), MesosUtils.getNumCpus(offer), MesosUtils.getMemory(offer),
+      LOG.debug("Received offer from {} ({}) for {} cpu(s), {} memory, {} ports, and {} disk", offer.getHostname(), offer.getSlaveId().getValue(), MesosUtils.getNumCpus(offer), MesosUtils.getMemory(offer),
           MesosUtils.getNumPorts(offer));
     }
 
@@ -308,7 +308,12 @@ public class SingularityMesosScheduler implements Scheduler {
       return Optional.of(status.getMessage());
     } else if (status.hasReason() && status.getReason() == Reason.REASON_CONTAINER_LIMITATION_MEMORY) {
       if (task.isPresent() && task.get().getTaskRequest().getDeploy().getResources().isPresent()) {
-          return Optional.of(String.format("Task exceeded memory limit of %s MB", task.get().getTaskRequest().getDeploy().getResources().get().getMemoryMb()));
+        if (task.get().getTaskRequest().getDeploy().getResources().get().getDiskMb() > 0) {
+          return Optional.of(String.format("Task exceeded one or more memory limits (%s MB mem, %s MB disk).", task.get().getTaskRequest().getDeploy().getResources().get().getMemoryMb(), task.get().getTaskRequest().getDeploy().getResources().get().getDiskMb()));
+        } else {
+          return Optional.of(String.format("Task exceeded memory limit (%s MB mem).", task.get().getTaskRequest().getDeploy().getResources().get().getMemoryMb()));
+        }
+
       }
       return Optional.of("Task exceeded memory limit");
     }

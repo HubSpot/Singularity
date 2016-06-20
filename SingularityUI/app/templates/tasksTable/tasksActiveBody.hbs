@@ -21,6 +21,11 @@
                     <th data-sort-attribute="memoryMb">
                         Memory
                     </th>
+                    {{#if showDiskSpace}}
+                        <th class="visible-lg" data-sort-attribute="diskMb">
+                            Disk
+                        </th>
+                    {{/if}}
                     <th>
                         {{! Actions column }}
                     </th>
@@ -58,6 +63,11 @@
                     <td data-value="{{ memoryMb }}">
                         {{ memoryMb }} MB
                     </td>
+                    {{#if ../showDiskSpace}}
+                        <td class="visible-lg" data-value="{{ diskMb }}">
+                            {{#if diskMb}} {{ diskMb }} MB {{/if}}
+                        </td>
+                    {{/if}}
                     <td class="actions-column">
                         <a data-task-id="{{ taskId.id }}" data-action="remove" title="Kill task">
                             <span class="glyphicon glyphicon-remove"></span>
