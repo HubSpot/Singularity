@@ -3,11 +3,11 @@ import classNames from 'classnames';
 import Utils from '../../../utils';
 import select2 from 'select2';
 
-let DropDown = React.createClass({
+const DropDown = React.createClass({
 
     componentDidMount() {
         if (this.props.prop.generateSelectBox) {
-            let generateSelectBox = () => {
+            const generateSelectBox = () => {
                 $(`#${this.props.id}`).select2(this.props.prop.selectBoxOptions).on('change', this.props.prop.updateFn);
             }
             generateSelectBox();

@@ -17,9 +17,9 @@ class ReqeustFormController extends Controller {
         this.title(`${requestId ? 'Edit' : 'New'} Request`);
         this.store = store;
 
-        let racksPromise = this.store.dispatch(RacksFetchAction.trigger());
+        const racksPromise = this.store.dispatch(RacksFetchAction.trigger());
         if (requestId) {
-            let requestPromise = this.store.dispatch(RequestFetchAction.trigger(requestId));
+            const requestPromise = this.store.dispatch(RequestFetchAction.trigger(requestId));
             requestPromise.then(() => {
                 this.showView(store, true);
             });
