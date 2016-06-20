@@ -10,7 +10,7 @@ export default function buildJsonSendingApiAction(actionName, httpMethod, opts={
   let optsFunctionOrObject;
   if (typeof opts === 'function') {
     optsFunctionOrObject = (...args) => {
-      let optsFunctionResult = _.extend({}, jsonBoilerplate, opts(...args));
+      const optsFunctionResult = _.extend({}, jsonBoilerplate, opts(...args));
       if (optsFunctionResult.data) {
         optsFunctionResult.body = JSON.stringify(optsFunctionResult.data);
       }
