@@ -11,12 +11,16 @@ export default function buildJsonSendingApiAction(actionName, httpMethod, opts={
   if (typeof opts === 'function') {
     optsFunctionOrObject = (...args) => {
       let optsFunctionResult = _.extend(jsonBoilerplate, opts(...args));
-      optsFunctionResult.body = JSON.stringify(optsFunctionOrObject.data);
+      if (optsFunctionResult.data) {
+        optsFunctionResult.body = JSON.stringify(optsFunctionResult.data);
+      }
       return optsFunctionResult;
     }
   } else {
     optsFunctionOrObject = _.extend(jsonBoilerplate, opts);
-    optsFunctionOrObject.body = JSON.stringify(optsFunctionOrObject.data);
+    if (optsFunctionOrObject.data) {
+      optsFunctionOrObject.body = JSON.stringify(optsFunctionOrObject.data);
+    }
   }
 
   return buildApiAction(actionName, optsFunctionOrObject);
