@@ -20,7 +20,6 @@ export default function buildApiAction(actionName, opts={}) {
       dispatch(started());
 
       let options = optsFunc(...args);
-      console.log(options);
       return fetch(config.apiRoot + options.url, _.extend({credentials: 'include'}, _.omit(options, 'url')))
         .then(response => response.json())
         .then(json => {
