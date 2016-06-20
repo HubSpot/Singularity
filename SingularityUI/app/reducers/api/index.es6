@@ -15,6 +15,7 @@ import { FetchAction as TaskCleanupsFetchAction } from '../../actions/api/taskCl
 import { FetchAction as TaskFilesFetchAction } from '../../actions/api/taskFiles';
 import { FetchAction as TaskResourceUsageFetchAction } from '../../actions/api/taskResourceUsage';
 import { FetchAction as TaskS3LogsFetchAction } from '../../actions/api/taskS3Logs';
+import { RunAction as TaskShellCommandRunAction } from '../../actions/api/taskShellCommand';
 
 const user = buildApiActionReducer(UserFetchAction);
 const webhooks = buildApiActionReducer(WebhooksFetchAction);
@@ -29,6 +30,7 @@ const taskCleanups = buildApiActionReducer(TaskCleanupsFetchAction);
 const taskFiles = buildApiActionReducer(TaskFilesFetchAction);
 const taskResourceUsage = buildApiActionReducer(TaskResourceUsageFetchAction);
 const taskS3Logs = buildApiActionReducer(TaskS3LogsFetchAction);
+const taskShellCommandResponse = buildApiActionReducer(TaskShellCommandRunAction);
 
 export default combineReducers({
   user,
@@ -44,5 +46,6 @@ export default combineReducers({
   taskFiles,
   taskResourceUsage,
   taskS3Logs,
-  deploys
+  deploys,
+  taskShellCommandResponse
 });

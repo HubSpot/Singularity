@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import Utils from '../../utils';
 import { FetchAction as TaskFilesFetchAction } from '../../actions/api/taskFiles';
 import { FetchAction as TaskResourceUsageFetchAction } from '../../actions/api/taskResourceUsage';
+import { fetchTask as TaskFetchAction } from '../../actions/api/task';
 import { RunAction as RunShellCommandAction } from '../../actions/api/taskShellCommand';
 import { InfoBox, UsageInfo } from '../common/statelessComponents';
 import { Alert } from 'react-bootstrap';
@@ -501,13 +502,17 @@ class TaskDetail extends React.Component {
     );
   }
 
-  renderShellCommands(t) {
+  renderShellCommands(t, shellCommandResponse) {
     return (
       <CollapsableSection title="Shell commands" defaultExpanded>
         <ShellCommands
           task={t}
+          shellCommandResponse={shellCommandResponse}
           runShellCommand={(commandName) => {
-            this.props.dispatch(RunShellCommandAction.trigger(this.props.taskId, commandName));
+            return this.props.dispatch(RunShellCommandAction.trigger(this.props.taskId, commandName));
+          }}
+          updateTask={() => {
+            this.props.dispatch(TaskFetchAction(this.props.taskId));
           }}
         />
       </CollapsableSection>
@@ -520,7 +525,7 @@ class TaskDetail extends React.Component {
       return c.taskId.id == this.props.taskId;
     });
 
-    // console.log(config);
+    // console.log(this.props.shellCommandResponse);
 
     return (
       <div>
@@ -536,7 +541,7 @@ class TaskDetail extends React.Component {
         {this.renderResourceUsage(task, this.props.resourceUsage)}
         {this.renderEnvVariables(task)}
         {this.renderHealthchecks(task)}
-        {this.renderShellCommands(task)}
+        {this.renderShellCommands(task, this.props.shellCommandResponse)}
       </div>
     );
   }
@@ -598,7 +603,8 @@ function mapStateToProps(state) {
     cpuTimestamp: state.api.taskResourceUsage.data.timestamp,
     s3Logs: state.api.taskS3Logs.data,
     deploy: state.api.deploy.data,
-    pendingDeploys: state.api.deploys.data
+    pendingDeploys: state.api.deploys.data,
+    shellCommandResponse: state.api.taskShellCommandResponse.data
   };
 }
 

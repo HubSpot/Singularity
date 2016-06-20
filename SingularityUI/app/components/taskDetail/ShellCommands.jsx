@@ -1,6 +1,8 @@
 import React from 'react';
 import { Button } from 'react-bootstrap';
 
+import ShellCommandLauncher from './ShellCommandLauncher';
+
 import SimpleTable from '../common/SimpleTable';
 import Link from '../common/atomicDisplayItems/Link';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
@@ -13,7 +15,9 @@ export default class ShellCommands extends React.Component {
     this.state = {
       selectedCmd: _.first(config.shellCommands),
       openLog: true,
-      responseText: null
+      responseText: null,
+      showLauncher: false,
+      submitDisabled: false
     }
   }
 
@@ -32,11 +36,17 @@ export default class ShellCommands extends React.Component {
 
   handleRun(e) {
     e.preventDefault();
-    this.props.runShellCommand(this.state.selectedCmd.name);
     this.setState({
-      responseText: "Command sent!"
+      submitDisabled: true
     });
-    setTimeout(() => this.setState({responseText: null}), 5000);
+    this.props.runShellCommand(this.state.selectedCmd.name).then(() => {
+      this.setState({
+        responseText: "Command sent!",
+        showLauncher: this.state.openLog,
+        submitDisabled: false
+      });
+      setTimeout(() => this.setState({responseText: null}), 5000);
+    });
   }
 
   render() {
@@ -59,7 +69,7 @@ export default class ShellCommands extends React.Component {
               <input type="checkbox" name="openLog" checked={this.state.openLog} onChange={this.onOpenLogChange.bind(this)} /> Redirect to command output upon success
             </label>
           </div>
-          <Button bsStyle="success" onClick={this.handleRun.bind(this)}>Run</Button>
+          <Button bsStyle="success" onClick={this.handleRun.bind(this)} disabled={this.state.submitDisabled}>Run</Button>
           {this.state.responseText ? (
             <span className="text-success" style={{marginLeft: "10px"}}>
               <Glyphicon iconClass='ok' /> {this.state.responseText}
@@ -88,7 +98,7 @@ export default class ShellCommands extends React.Component {
                   <td>{Utils.absoluteTimestamp(data.shellRequest.timestamp)}</td>
                   <td><code>{data.shellRequest.shellCommand.name}</code></td>
                   <td>{data.shellRequest.user}</td>
-                  <td>{_.last(updates).updateType}</td>
+                  <td>{updates.length ? _.last(updates).updateType : null}</td>
                   <td>
                     <ul>
                       {updates.map((u) => {
@@ -116,10 +126,20 @@ export default class ShellCommands extends React.Component {
       </div>
     ) : null;
 
+    const launcher = this.state.showLauncher ? (
+      <ShellCommandLauncher
+        commandHistory={this.props.task.shellCommandHistory}
+        close={() => this.setState({showLauncher: false})}
+        updateTask={this.props.updateTask}
+        shellCommandResponse={this.props.shellCommandResponse}
+      />
+    ) : null;
+
     return (
       <div>
         {form}
         {history}
+        {launcher}
       </div>
     );
   }
