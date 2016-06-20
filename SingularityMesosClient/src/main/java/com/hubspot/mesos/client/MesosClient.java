@@ -28,6 +28,7 @@ public class MesosClient {
   private static final String MASTER_STATE_FORMAT = "http://%s/master/state";
   private static final String MESOS_SLAVE_JSON_URL = "http://%s:5051/slave(1)/state";
   private static final String MESOS_SLAVE_STATISTICS_URL = "http://%s:5051/monitor/statistics";
+  private static final String MESOS_METRICS_SNAPSHOT_URL = "http://%s/metrics/snapshot";
 
   private static final TypeReference<List<MesosTaskMonitorObject>> TASK_MONITOR_TYPE_REFERENCE = new TypeReference<List<MesosTaskMonitorObject>>() {};
 
@@ -40,6 +41,10 @@ public class MesosClient {
 
   public String getMasterUri(String hostnameAndPort) {
     return String.format(MASTER_STATE_FORMAT, hostnameAndPort);
+  }
+
+  public String getMetricsSnapshotUri(String hostnameAndPort) {
+    return String.format(MESOS_METRICS_SNAPSHOT_URL, hostnameAndPort);
   }
 
   public static class MesosClientException extends RuntimeException {
