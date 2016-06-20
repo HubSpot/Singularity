@@ -20,14 +20,20 @@ export default class ShellCommandLauncher extends React.Component {
 
   componentDidMount() {
     this.props.updateTask();
-    this.interval = setInterval(() => {
+    this.taskInterval = setInterval(() => {
       this.props.updateTask();
     }, 1000);
   }
 
   componentWillUpdate(nextProps, nextState) {
     if (nextState.commandFailed) {
-      clearInterval(this.interval);
+      clearInterval(this.taskInterval);
+    }
+    if (nextState.commandAcked && nextState.commandStarted) {
+      clearInterval(this.taskInterval);
+      this.fileInterval = setInterval(() => {
+
+      }, 1000);
     }
   }
 
@@ -36,17 +42,21 @@ export default class ShellCommandLauncher extends React.Component {
     let cmdStatus = _.find(nextProps.commandHistory, (c) => c.shellRequest.timestamp == timestamp);
     if (!cmdStatus || !cmdStatus.shellUpdates) return;
     let failedStatus = _.find(cmdStatus.shellUpdates, (u) => u.updateType == 'FAILED' || u.updateType == 'INVALID');
+    let ackedStatus = _.find(cmdStatus.shellUpdates, (u) => u.updateType == 'ACKED');
     this.setState({
-      commandAcked: !!_.find(cmdStatus.shellUpdates, (u) => u.updateType == 'ACKED'),
+      commandAcked: !!ackedStatus,
       commandStarted: !!_.find(cmdStatus.shellUpdates, (u) => u.updateType == 'STARTED'),
       commandFailed: !!failedStatus,
       commandFailedMessage: failedStatus ? failedStatus.message : null
     });
+    if (ackedStatus) {
+      this.outputFilename = ackedStatus.outputFilename;
+    }
     console.log(cmdStatus);
   }
 
   componentWillUnmount() {
-    clearInterval(this.interval);
+    clearInterval(this.taskInterval);
   }
 
   renderStatusList() {
@@ -69,7 +79,7 @@ export default class ShellCommandLauncher extends React.Component {
     return (
       <Modal show={true} onHide={this.props.close} bsSize="small" backdrop="static">
         <Modal.Header closeButton>
-            <Modal.Title>Command queued</Modal.Title>
+            <Modal.Title>Redirecting to output</Modal.Title>
           </Modal.Header>
         <Modal.Body>
           <div className='constrained-modal'>
