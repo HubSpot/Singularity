@@ -1,5 +1,22 @@
 import fetch from 'isomorphic-fetch';
 
+export default function buildPostJsonApiAction(actionName, opts={}) {
+  let jsonBoilerplate = {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
+  }
+  let newOpts;
+  if (typeof opts === 'function') {
+    newOpts = (...args) => {
+      return _.extend(jsonBoilerplate, opts(...args));
+    }
+  } else {
+    newOpts = _.extend(jsonBoilerplate, opts);
+  }
+
+  return buildApiAction(actionName, newOpts);
+}
+
 export default function buildApiAction(actionName, opts={}) {
   const ACTION = actionName;
   const STARTED = actionName + '_STARTED';
