@@ -221,6 +221,32 @@ class TaskDetail extends React.Component {
     )
   }
 
+  renderMetadataAlerts(t) {
+    let alerts = [];
+
+    for(let i in t.taskMetadata) {
+      let md = t.taskMetadata[i];
+      const message = md.message ? (
+        <pre className='pre-scrollable'>{md.message}</pre>
+      ) : null;
+      alerts.push(
+        <Alert key={i} bsStyle={md.level == 'ERROR' ? 'danger' : 'warning'}>
+          <h4>{md.title}</h4>
+          <p>
+            <strong>{Utils.timeStampFromNow(md.timestamp)}</strong> | Type: {md.type} {md.user ? `| User: ${md.user}` : null}
+          </p>
+          {message}
+        </Alert>
+      )
+    }
+
+    return (
+      <div>
+        {alerts}
+      </div>
+    )
+  }
+
   renderHistory(t) {
     return (
       <Section title="History">
@@ -492,6 +518,7 @@ class TaskDetail extends React.Component {
       <div>
         {this.renderHeader(task, cleanup)}
         {this.renderAlerts(task, this.props.deploy, this.props.pendingDeploys)}
+        {this.renderMetadataAlerts(task)}
         {this.renderHistory(task)}
         {this.renderLatestLog(task, this.props.files)}
         {this.renderFiles(task, this.props.files)}
