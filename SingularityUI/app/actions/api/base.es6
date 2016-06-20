@@ -2,19 +2,24 @@ import fetch from 'isomorphic-fetch';
 
 const JSON_HEADERS = {'Content-Type': 'application/json', 'Accept': 'application/json'};
 
-export default function buildJsonSendingApiAction(actionName, httpMethod, opts=(data => {body: JSON.stringify(data)})) {
+export default function buildJsonSendingApiAction(actionName, httpMethod, opts={}) {
   let jsonBoilerplate = {
     method: httpMethod,
     headers: JSON_HEADERS
   }
-  let newOpts;
+  let optsFunctionOrObject;
   if (typeof opts === 'function') {
-    newOpts = (...args) => _.extend(jsonBoilerplate, opts(...args))
+    optsFunctionOrObject = (...args) => {
+      let optsFunctionResult = _.extend(jsonBoilerplate, opts(...args));
+      optsFunctionResult.body = JSON.stringify(optsFunctionOrObject.data);
+      return optsFunctionResult;
+    }
   } else {
-    newOpts = _.extend(jsonBoilerplate, opts);
+    optsFunctionOrObject = _.extend(jsonBoilerplate, opts);
+    optsFunctionOrObject.body = JSON.stringify(optsFunctionOrObject.data);
   }
 
-  return buildApiAction(actionName, newOpts);
+  return buildApiAction(actionName, optsFunctionOrObject);
 }
 
 export default function buildApiAction(actionName, opts={}) {
