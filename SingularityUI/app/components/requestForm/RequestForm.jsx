@@ -4,6 +4,7 @@ import FormField from '../common/formItems/FormField';
 import DropDown from '../common/formItems/DropDown';
 import CheckBox from '../common/formItems/CheckBox';
 import { modifyField, clearForm } from '../../actions/form';
+import {makeSaveAction} from '../../actions/api/request';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 import Utils from '../../utils';
@@ -13,10 +14,13 @@ let FORM_ID = 'requestForm';
 
 let REQUEST_TYPES = ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'];
 
-
-
-
-let FIELDS_OF_REQUEST_TYPE = {
+let FIELDS_BY_REQUEST_TYPE = {
+  ALL: [
+    'id',
+    'owners',
+    'requestType',
+    'slavePlacement'
+  ],
   SERVICE: [
     'instances',
     'rackSensitive',
@@ -32,7 +36,9 @@ let FIELDS_OF_REQUEST_TYPE = {
     'rackAffinity'
   ],
   SCHEDULED: [
-    'schedule',
+    'quartzSchedule',
+    'chronSchedule',
+    'scheduleType',
     'numRetriesOnFailure',
     'killOldNonLongRunningTasksAfterMillis',
     'scheduledExpectedRuntimeMillis'
@@ -62,7 +68,7 @@ class RequestForm extends React.Component {
   }
 
   cantSubmit() {
-    if (!this.getValue('requestId')) {
+    if (!this.getValue('id')) {
       return true;
     }
     if (!this.getValue('requestType')) {
@@ -74,15 +80,43 @@ class RequestForm extends React.Component {
     return false;
   }
 
-  submitForm(props, event) {
+  submitForm(event) {
     event.preventDefault();
+    let request = {};
+    let copyOverField = (fieldId) => {
+      if (this.getValue(fieldId)) {
+        request[fieldId] = this.getValue(fieldId);
+      }
+    }
+    
+    FIELDS_BY_REQUEST_TYPE[this.getValue('requestType')].map(copyOverField)
+    FIELDS_BY_REQUEST_TYPE.ALL.map(copyOverField)
+
+    if (this.getValue('scheduleType') === 'quartzSchedule') {
+      request.schedule = ''
+    }
+
+    if (['ON_DEMAND', 'RUN_ONCE'].indexOf(this.getValue('requestType')) !== -1) {
+      request.daemon = false
+    } else if (['SERVICE', 'WORKER'].indexOf(this.getValue('requestType')) !== -1) {
+      request.daemon = true
+    }
+
+    if (request.owners) {
+      request.owners = request.owners.split(',')
+    }
+    if (request.rackAffinity) {
+      request.rackAffinity = request.rackAffinity.split(',')
+    }
+
+    this.props.save(request);
     return null;
   }
 
   shouldRenderField(fieldId) {
     if (!this.getValue('requestType')) {
       return false;
-    } else if (FIELDS_OF_REQUEST_TYPE[this.getValue('requestType')].indexOf(fieldId) === -1) {
+    } else if (FIELDS_BY_REQUEST_TYPE[this.getValue('requestType')].indexOf(fieldId) === -1) {
       return false;
     } else {
       return true;
@@ -101,9 +135,9 @@ class RequestForm extends React.Component {
     this.props.update(FORM_ID, fieldId, newValue)
   }
 
-  updateTypeButtonClick(me, event) {
+  updateTypeButtonClick(event) {
     event.preventDefault();
-    me.updateField('requestType', event.target.value);
+    this.updateField('requestType', event.target.value);
   }
 
   getScheduleType() {
@@ -133,7 +167,7 @@ class RequestForm extends React.Component {
           key={key}
           value={requestType}
           className={classNames('btn', 'btn-default', {active: this.getValue('requestType') === requestType})}
-          onClick={event => this.updateTypeButtonClick(this, event)}
+          onClick={event => this.updateTypeButtonClick(event)}
           disabled={this.getButtonsDisabled(requestType)}
         >
           {Utils.humanizeText(requestType)}
@@ -267,7 +301,7 @@ class RequestForm extends React.Component {
             undefined
         }
         {
-          this.shouldRenderField('schedule') ?
+          this.shouldRenderField('cronSchedule') || this.shouldRenderField('quartzSchedule') ?
             <div className='form-group required'>
               <label htmlFor='schedule'>Schedule</label>
               <div className="input-group">
@@ -373,7 +407,7 @@ class RequestForm extends React.Component {
             </h3> :
             <h3>New Request</h3>
           }
-          <form role='form' onSubmit={event => this.submitForm(this.props, event)}>
+          <form role='form' onSubmit={event => this.submitForm(event)}>
             {this.isEditing() ?
               undefined :
               <div className="form-group required">
@@ -382,11 +416,11 @@ class RequestForm extends React.Component {
                   id = "id"
                   prop = {{
                     updateFn: event => {
-                      this.updateField("requestId", event.target.value);
+                      this.updateField("id", event.target.value);
                     },
                     placeholder: "eg: my-awesome-request",
                     inputType: 'text',
-                    value: this.getValue("requestId"),
+                    value: this.getValue("id"),
                     required: true
                   }}
                 />
@@ -488,6 +522,9 @@ function mapDispatchToProps(dispatch) {
     },
     clearForm(formId) {
       dispatch(clearForm(formId));
+    },
+    save(requestBody) {
+      dispatch(makeSaveAction(requestBody).trigger());
     }
   }
 }
