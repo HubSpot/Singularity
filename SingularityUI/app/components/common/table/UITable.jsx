@@ -248,11 +248,32 @@ class UITable extends Component {
         'column-sorted-desc': this.state.sortDirection === UITable.SortDirection.DESC && thisColumnSorted
       }, col.props.headerClassName);
 
-      return <th key={thIndex} onClick={maybeOnClick} className={headerClasses}>{cell}</th>;
+      const sortIndicator = this.sortIndicator(
+        col.props.sortable,
+        thisColumnSorted,
+        this.state.sortDirection
+      );
+
+      return <th key={thIndex} onClick={maybeOnClick} className={headerClasses}>{cell}{sortIndicator}</th>;
     });
 
 
     return <tr>{headerRow}</tr>;
+  }
+
+  sortIndicator(sortable, thisColumnSorted, sortDirection) {
+    if (sortable) {
+      let classes = classNames({
+        'glyphicon': thisColumnSorted,
+        'glyphicon-triangle-bottom': thisColumnSorted && sortDirection === UITable.SortDirection.DESC,
+        'glyphicon-triangle-top': thisColumnSorted && sortDirection === UITable.SortDirection.ASC,
+        'pull-right': thisColumnSorted
+      });
+
+      return <span className={classes} />;
+    }
+
+    return undefined;
   }
 
   handleSortClick(col) {
