@@ -18,7 +18,7 @@ let FormField = React.createClass({
 
   render() {
     return <input 
-      className={classNames('form-control', this.props.prop.customClass)}
+      className={classNames({'form-control': !this.props.noFormControlClass}, this.props.prop.customClass)}
       placeholder={this.props.prop.placeholder}
       type={this.props.prop.inputType}
       id={this.props.id}

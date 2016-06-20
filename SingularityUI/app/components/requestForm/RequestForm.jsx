@@ -184,14 +184,15 @@ class RequestForm extends React.Component {
 
   renderLoadBalanced() {
     let checkbox = (
-      <label htmlFor="load-balanced" className="control-label">
-        Load balanced
+      <label htmlFor="load-balanced" className={classNames({subtle: this.isEditing()})}>
         <CheckBox
           id = "load-balanced"
           onChange = {event => this.updateField("loadBalanced", !this.getValue("loadBalanced"))}
           checked = {this.getValue("loadBalanced")}
           disabled = {this.isEditing()}
+          noFormControlClass = {true}
         />
+        {" Load balanced"}
       </label>
     );
     let field;
@@ -207,7 +208,7 @@ class RequestForm extends React.Component {
       field = checkbox;
     }
     return (
-      <div className = 'form-group load-balanced'>
+      <div className = 'form-group'>
         {field}
       </div>
     );
@@ -234,28 +235,30 @@ class RequestForm extends React.Component {
         }
         {
           this.shouldRenderField('rackSensitive') ?
-            <div className="form-group rack-sensitive">
-              <label htmlFor="rack-sensitive" className="control-label">
-                Rack Sensitive
+            <div className="form-group">
+              <label htmlFor="rack-sensitive">
                 <CheckBox
                   id = "rack-sensitive"
                   onChange = {event => this.updateField("rackSensitive", !this.getValue("rackSensitive"))}
                   checked = {this.getValue("rackSensitive")}
+                  noFormControlClass = {true}
                 />
+                {" Rack Sensitive"}
               </label>
             </div> :
             undefined
         }
         {
           this.shouldRenderField('hideEvenNumberAcrossRacksHint') ?
-            <div className='form-group hide-distribute-evenly-across-racks-hint'>
-              <label htmlFor="hide-distribute-evenly-across-racks-hint" className="control-label">
-                Hide Distribute Evenly Across Racks Hint
+            <div className='form-group'>
+              <label htmlFor="hide-distribute-evenly-across-racks-hint">
                 <CheckBox
                   id = "hide-distribute-evenly-across-racks-hint"
                   onChange = {event => this.updateField("hideEvenNumberAcrossRacksHint", !this.getValue("hideEvenNumberAcrossRacksHint"))}
                   checked = {this.getValue("hideEvenNumberAcrossRacksHint")}
+                  noFormControlClass = {true}
                 />
+                {" Hide Distribute Evenly Across Racks Hint"}
               </label>
             </div> :
             undefined

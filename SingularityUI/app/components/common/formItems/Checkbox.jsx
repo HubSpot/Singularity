@@ -7,6 +7,7 @@ class CheckBox extends React.Component {
     return (
       <FormField
         id = {this.props.id}
+        noFormControlClass = {this.props.noFormControlClass}
         prop = {{
           updateFn: this.props.onChange,
           inputType: 'checkBox',
