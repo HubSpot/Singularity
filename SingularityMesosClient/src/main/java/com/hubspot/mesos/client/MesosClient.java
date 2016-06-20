@@ -13,6 +13,7 @@ import com.hubspot.horizon.HttpClient;
 import com.hubspot.horizon.HttpRequest;
 import com.hubspot.horizon.HttpResponse;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.json.MesosMasterMetricsSnapshotObject;
 import com.hubspot.mesos.json.MesosMasterStateObject;
 import com.hubspot.mesos.json.MesosSlaveStateObject;
 import com.hubspot.mesos.json.MesosTaskMonitorObject;
@@ -88,6 +89,10 @@ public class MesosClient {
 
   public MesosMasterStateObject getMasterState(String uri) {
     return getFromMesos(uri, MesosMasterStateObject.class);
+  }
+
+  public MesosMasterMetricsSnapshotObject getMasterMetricsSnapshot(String uri) {
+    return getFromMesos(uri, MesosMasterMetricsSnapshotObject.class);
   }
 
   public String getSlaveUri(String hostname) {
