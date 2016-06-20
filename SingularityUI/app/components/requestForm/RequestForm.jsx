@@ -10,11 +10,11 @@ import ToolTip from 'react-bootstrap/lib/Tooltip';
 import Utils from '../../utils';
 import classNames from 'classnames';
 
-let FORM_ID = 'requestForm';
+const FORM_ID = 'requestForm';
 
-let REQUEST_TYPES = ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'];
+const REQUEST_TYPES = ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'];
 
-let FIELDS_BY_REQUEST_TYPE = {
+const FIELDS_BY_REQUEST_TYPE = {
   ALL: [
     'id',
     'owners',
@@ -82,8 +82,8 @@ class RequestForm extends React.Component {
 
   submitForm(event) {
     event.preventDefault();
-    let request = {};
-    let copyOverField = (fieldId) => {
+    const request = {};
+    const copyOverField = (fieldId) => {
       if (this.getValue(fieldId)) {
         request[fieldId] = this.getValue(fieldId);
       }
@@ -157,12 +157,12 @@ class RequestForm extends React.Component {
   }
 
   renderRequestTypeSelectors() {
-    let selectors = [];
-    let tooltip = (
+    const selectors = [];
+    const tooltip = (
       <ToolTip id="cannotChangeRequestTypeAfterCreation">Option cannot be altered after creation</ToolTip>
     );
     REQUEST_TYPES.map((requestType, key) => {
-      let selector = (
+      const selector = (
         <button
           key={key}
           value={requestType}
@@ -183,7 +183,7 @@ class RequestForm extends React.Component {
   }
 
   renderLoadBalanced() {
-    let checkbox = (
+    const checkbox = (
       <label htmlFor="load-balanced" className={classNames({subtle: this.isEditing()})}>
         <CheckBox
           id = "load-balanced"
@@ -399,8 +399,7 @@ class RequestForm extends React.Component {
   }
 
   render() {
-    let requestId = this.isEditing() ? this.props.request.request.id : undefined;
-    let labelTip = (<span className='form-label-tip'>separate multiple owners with commas</span>);
+    const requestId = this.isEditing() ? this.props.request.request.id : undefined;
     return (
       <div className="row new-form">
         <div className="col-md-5 col-md-offset-3">
