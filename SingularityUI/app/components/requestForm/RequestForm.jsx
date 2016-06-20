@@ -48,7 +48,6 @@ class RequestForm extends React.Component {
 
   submitForm(props, event) {
     event.preventDefault();
-    console.log (props);
     return null;
   }
 
