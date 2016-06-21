@@ -15,7 +15,7 @@ class RequestFormView extends View {
   }
 
   render() {
-    ReactDOM.render(<Provider store={this.store}><RequestFormPage edit={this.edit}/></Provider>, this.el);
+    ReactDOM.render(<Provider store={this.store}><RequestFormPage /></Provider>, this.el);
   }
 }
 
