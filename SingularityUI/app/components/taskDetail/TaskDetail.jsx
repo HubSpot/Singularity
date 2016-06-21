@@ -509,7 +509,6 @@ class TaskDetail extends React.Component {
           task={t}
           shellCommandResponse={shellCommandResponse}
           runShellCommand={(commandName) => {
-            console.log(RunShellCommandAction);
             return this.props.dispatch(RunShellCommandAction.trigger(this.props.taskId, commandName));
           }}
           updateTask={() => {

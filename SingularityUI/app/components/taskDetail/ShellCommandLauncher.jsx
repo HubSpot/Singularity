@@ -29,7 +29,11 @@ export default class ShellCommandLauncher extends React.Component {
     if (nextState.commandFailed) {
       clearInterval(this.taskInterval);
     }
-    if (nextState.commandAcked && nextState.commandStarted) {
+    if (nextState.commandFileExists) {
+      clearInterval(this.fileInterval);
+    }
+
+    if (!this.state.commandAcked && !this.state.commandStarted && nextState.commandAcked && nextState.commandStarted) {
       clearInterval(this.taskInterval);
       this.fileInterval = setInterval(() => {
 
@@ -52,11 +56,11 @@ export default class ShellCommandLauncher extends React.Component {
     if (ackedStatus) {
       this.outputFilename = ackedStatus.outputFilename;
     }
-    console.log(cmdStatus);
   }
 
   componentWillUnmount() {
     clearInterval(this.taskInterval);
+    clearInterval(this.fileInterval);
   }
 
   renderStatusList() {
