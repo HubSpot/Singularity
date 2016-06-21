@@ -7,40 +7,40 @@ import { FetchForDeploy as TaskHistoryFetchForDeploy } from '../actions/api/task
 
 class DeployDetailController extends Controller {
 
-    initialize({store, requestId, deployId}) {
-        app.showPageLoader()
-        this.title(`${requestId} deploy ${deployId}`);
-        this.store = store;
-        this.requestId = requestId;
-        this.deployId = deployId;
+  initialize({store, requestId, deployId}) {
+    app.showPageLoader()
+    this.title(`${requestId} deploy ${deployId}`);
+    this.store = store;
+    this.requestId = requestId;
+    this.deployId = deployId;
 
-        let promises = [];
-        promises.push(this.store.dispatch(DeployFetchAction.trigger(requestId, deployId)));
-        promises.push(this.store.dispatch(FetchForDeployAction.trigger(requestId, deployId)));
-        promises.push(this.store.dispatch(TaskHistoryFetchForDeploy.clear()));
-        promises.push(this.store.dispatch(TaskHistoryFetchForDeploy.trigger(requestId, deployId, 5, 1)));
+    let promises = [];
+    promises.push(this.store.dispatch(DeployFetchAction.trigger(requestId, deployId)));
+    promises.push(this.store.dispatch(FetchForDeployAction.trigger(requestId, deployId)));
+    promises.push(this.store.dispatch(TaskHistoryFetchForDeploy.clear()));
+    promises.push(this.store.dispatch(TaskHistoryFetchForDeploy.trigger(requestId, deployId, 5, 1)));
 
-        Promise.all(promises).then(() => {
-          let readyPromise = [];
-          for (let t of store.getState().api.activeTasksForDeploy.data) {
-            readyPromise.push(this.store.dispatch(TaskFetchAction.trigger(t.taskId.id)));
-          }
-          Promise.all(readyPromise).then(() => {
-            this.setView(new DeployView(store));
-            app.showView(this.view);
-          });
-        });
-    }
+    Promise.all(promises).then(() => {
+      let readyPromise = [];
+      for (let t of store.getState().api.activeTasksForDeploy.data) {
+        readyPromise.push(this.store.dispatch(TaskFetchAction.trigger(t.taskId.id)));
+      }
+      Promise.all(readyPromise).then(() => {
+        this.setView(new DeployView(store));
+        app.showView(this.view);
+      });
+    });
+  }
 
-    refresh() {
-        this.store.dispatch(DeployFetchAction.trigger(this.requestId, this.deployId));
-        let tasksPromise = this.store.dispatch(FetchForDeployAction.trigger(this.requestId, this.deployId));
-        tasksPromise.then(() => {
-          for (let t of this.store.getState().api.activeTasksForDeploy.data) {
-            this.store.dispatch(TaskFetchAction.trigger(t.taskId.id));
-          }
-        });
-    }
+  refresh() {
+    this.store.dispatch(DeployFetchAction.trigger(this.requestId, this.deployId));
+    let tasksPromise = this.store.dispatch(FetchForDeployAction.trigger(this.requestId, this.deployId));
+    tasksPromise.then(() => {
+      for (let t of this.store.getState().api.activeTasksForDeploy.data) {
+        this.store.dispatch(TaskFetchAction.trigger(t.taskId.id));
+      }
+    });
+  }
 }
 
 

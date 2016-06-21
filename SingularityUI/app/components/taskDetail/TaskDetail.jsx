@@ -4,6 +4,7 @@ import Utils from '../../utils';
 import { FetchAction as TaskFilesFetchAction } from '../../actions/api/taskFiles';
 import { FetchAction as TaskResourceUsageFetchAction } from '../../actions/api/taskResourceUsage';
 import { FetchAction as TaskFetchAction } from '../../actions/api/task';
+import { KillAction as TaskKillAction } from '../../actions/api/task';
 import { RunAction as RunShellCommandAction } from '../../actions/api/taskShellCommand';
 import { InfoBox, UsageInfo } from '../common/statelessComponents';
 import { Alert } from 'react-bootstrap';
@@ -12,6 +13,7 @@ import FormGroup from 'react-bootstrap/lib/FormGroup';
 import Breadcrumbs from '../common/Breadcrumbs';
 import JSONButton from '../common/JSONButton';
 import Section from '../common/Section';
+import ConfirmationDialog from '../common/ConfirmationDialog';
 import CollapsableSection from '../common/CollapsableSection';
 import SimpleTable from '../common/SimpleTable';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
@@ -56,14 +58,34 @@ class TaskDetail extends React.Component {
       </div>
     ) : null;
 
+    const removeText = cleanup ?
+      (cleanup.isImmediate ? 'Destroy task' : 'Override cleanup') :
+      (t.isCleaning ? 'Destroy task' : 'Kill Task');
     const removeBtn = t.isStillRunning ? (
-      <a className="btn btn-danger" >
-        {cleanup ?
-          (cleanup.isImmediate ? 'Destroy task' : 'Override cleanup') :
-          (t.isCleaning ? 'Destroy task' : 'Kill Task')}
-      </a>
+      <span>
+        <ConfirmationDialog
+          ref="confirmKillTask"
+          text={
+            <span>
+              <p>Are you sure you want to kill this task?</p>
+              <pre>{this.props.taskId}</pre>
+              <p>
+                  Long running process will be started again instantly, scheduled
+                  tasks will behave as if the task failed and may be rescheduled
+                  to run in the future depending on whether or not the request
+                  has <code>numRetriesOnFailure</code> set.
+              </p>
+            </span>
+          }
+          action={removeText}
+          onConfirm={this.killTask.bind(this)}
+          buttonStyle="danger"
+        />
+      <a className="btn btn-danger" onClick={() => this.refs.confirmKillTask.show()}>
+          {removeText}
+        </a>
+      </span>
     ) : null;
-
     const terminationAlert = t.isStillRunning && !cleanup && t.isCleaning ? (
       <div className="alert alert-warning" role="alert">
           <strong>Task is terminating:</strong> To issue a non-graceful termination (kill -term), click Destroy Task.
@@ -510,24 +532,26 @@ class TaskDetail extends React.Component {
   }
 
   renderShellCommands(t, shellCommandResponse, taskFiles) {
-    return (
-      <CollapsableSection title="Shell commands">
-        <ShellCommands
-          task={t}
-          taskFiles={taskFiles}
-          shellCommandResponse={shellCommandResponse}
-          runShellCommand={(commandName) => {
-            return this.props.dispatch(RunShellCommandAction.trigger(this.props.taskId, commandName));
-          }}
-          updateTask={() => {
-            this.props.dispatch(TaskFetchAction.trigger(this.props.taskId));
-          }}
-          updateFiles={(path) => {
-            this.props.dispatch(TaskFilesFetchAction.trigger(this.props.taskId, path));
-          }}
-        />
-      </CollapsableSection>
-    )
+    if (t.isStillRunning || t.shellCommandHistory.length > 0) {
+      return (
+        <CollapsableSection title="Shell commands">
+          <ShellCommands
+            task={t}
+            taskFiles={taskFiles}
+            shellCommandResponse={shellCommandResponse}
+            runShellCommand={(commandName) => {
+              return this.props.dispatch(RunShellCommandAction.trigger(this.props.taskId, commandName));
+            }}
+            updateTask={() => {
+              this.props.dispatch(TaskFetchAction.trigger(this.props.taskId));
+            }}
+            updateFiles={(path) => {
+              this.props.dispatch(TaskFilesFetchAction.trigger(this.props.taskId, path));
+            }}
+          />
+        </CollapsableSection>
+      );
+    }
   }
 
   render() {
@@ -584,6 +608,12 @@ class TaskDetail extends React.Component {
       }
     }
     return files;
+  }
+
+  killTask() {
+    this.props.dispatch(TaskKillAction.trigger(this.props.taskId)).then(() =>{
+      this.props.dispatch(TaskFetchAction.trigger(this.props.taskId));
+    });
   }
 }
 

@@ -21,7 +21,7 @@ export default function buildApiActionReducer(ActionGroup, keyed=false, initialD
         } else {
           newData = _.extend({}, state, {isFetching: false, error: action.error});
         }
-        return _.extend(state, newData);
+        return _.extend({}, state, newData);
 
       case ActionGroup.SUCCESS:
         if (keyed) {
@@ -39,8 +39,7 @@ export default function buildApiActionReducer(ActionGroup, keyed=false, initialD
             data: action.data
           });
         }
-
-        return _.extend(state, newData);
+        return _.extend({}, state, newData);
 
       case ActionGroup.STARTED:
         if (keyed) {
@@ -54,7 +53,7 @@ export default function buildApiActionReducer(ActionGroup, keyed=false, initialD
             error: null
           });
         }
-        return _.extend(state, newData);
+        return _.extend({}, state, newData);
 
       default:
         return state;
