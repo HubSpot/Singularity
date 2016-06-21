@@ -532,8 +532,7 @@ class TaskDetail extends React.Component {
       return c.taskId.id == this.props.taskId;
     });
 
-    let filesToDisplay = this.props.files[`${this.props.taskId}/${this.state.currentFilePath}`].data;
-    console.log(filesToDisplay);
+    let filesToDisplay = this.analyzeFiles(this.props.files[`${this.props.taskId}/${this.state.currentFilePath}`].data);
 
     return (
       <div>
@@ -553,12 +552,8 @@ class TaskDetail extends React.Component {
       </div>
     );
   }
-}
 
-function mapFilesToProps(directories) {
-  for (let d in directories) {
-    let directory = directories[d];
-    let files = directory.data;
+  analyzeFiles(files) {
     if (files && files.files) {
       for (let f of files.files) {
         f.isDirectory = f.mode[0] == 'd';
@@ -585,9 +580,8 @@ function mapFilesToProps(directories) {
         }
       }
     }
+    return files;
   }
-
-  return directories;
 }
 
 function mapHealthchecksToProps(t) {
@@ -602,14 +596,12 @@ function mapHealthchecksToProps(t) {
 }
 
 function mapStateToProps(state, ownProps) {
-  console.log(ownProps);
-  let files = mapFilesToProps(state.api.taskFiles);
   let task = mapHealthchecksToProps(state.api.task[ownProps.taskId].data);
 
   return {
     task: task,
     taskCleanups: state.api.taskCleanups.data,
-    files: files,
+    files: state.api.taskFiles,
     resourceUsage: state.api.taskResourceUsage.data,
     cpuTimestamp: state.api.taskResourceUsage.data.timestamp,
     s3Logs: state.api.taskS3Logs.data,
