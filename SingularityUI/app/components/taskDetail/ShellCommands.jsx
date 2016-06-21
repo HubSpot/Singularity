@@ -54,7 +54,9 @@ export default class ShellCommands extends React.Component {
       return <option key={c.name} value={c.name}>{c.name}</option>;
     });
 
-    const form = this.props.task.isStillRunning && this.props.task.task.taskRequest.deploy.customExecutorCmd.indexOf('singularity-executor') != -1 ? (
+    const form = this.props.task.isStillRunning &&
+    this.props.task.task.taskRequest.deploy.customExecutorCmd &&
+    this.props.task.task.taskRequest.deploy.customExecutorCmd.indexOf('singularity-executor') != -1 ? (
       <div className="row">
         <form className="col-md-6">
           <h3>Execute a command</h3>
