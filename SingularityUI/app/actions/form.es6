@@ -21,5 +21,3 @@ export const clearForm = (formId) =>
     type: 'CLEAR_FORM'
   })
 ;
-
-export default {modifyField, clearField, clearForm};

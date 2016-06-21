@@ -171,11 +171,10 @@ class RequestForm extends React.Component {
   }
 
   renderRequestTypeSelectors() {
-    const selectors = [];
     const tooltip = (
       <ToolTip id="cannotChangeRequestTypeAfterCreation">Option cannot be altered after creation</ToolTip>
     );
-    REQUEST_TYPES.map((requestType, key) => {
+    const selectors = REQUEST_TYPES.map((requestType, key) => {
       const selector = (
         <button
           key={key}
@@ -188,9 +187,9 @@ class RequestForm extends React.Component {
         </button>
       );
       if (this.isEditing() && requestType === this.getValue('requestType')) {
-        selectors.push (<OverlayTrigger placement="top" key={key} overlay={tooltip}>{selector}</OverlayTrigger>);
+        return <OverlayTrigger placement="top" key={key} overlay={tooltip}>{selector}</OverlayTrigger>;
       } else {
-        selectors.push (selector);
+        return selector;
       }
     })
     return selectors;
