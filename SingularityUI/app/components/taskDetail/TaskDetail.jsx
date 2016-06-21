@@ -227,7 +227,7 @@ class TaskDetail extends React.Component {
     }
 
     // Killed due to HC fail
-    if (t.lastHealthcheckFailed && t.isStillRunning) {
+    if (t.lastHealthcheckFailed && !t.isStillRunning) {
       alerts.push(
         <Alert key='hcFail' bsStyle='danger'>
           <strong>Task killed due to no passing healthchecks after {t.tooManyRetries ? t.healthcheckResults.length.toString() + ' tries. ' : t.secondsElapsed.toString() + ' seconds. '}</strong>
