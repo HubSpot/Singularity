@@ -600,8 +600,36 @@ function mapHealthchecksToProps(t) {
   return t;
 }
 
+function mapTaskToProps(t) {
+  t.lastKnownState = _.last(t.taskUpdates);
+   let isStillRunning = true;
+   if (t.taskUpdates && _.contains(Utils.TERMINAL_TASK_STATES, t.lastKnownState.taskState)) {
+     isStillRunning = false;
+   }
+   t.isStillRunning = isStillRunning;
+
+   t.isCleaning = t.lastKnownState.taskState == 'TASK_CLEANING';
+
+   let ports = [];
+   if (t.task.taskRequest.deploy.resources.numPorts > 0) {
+     for (let resource of t.task.mesosTask.resources) {
+       if (resource.name == 'ports') {
+         for (let range of resource.ranges.range) {
+           for (let port of Utils.range(range.begin, range.end + 1)) {
+             ports.push(port);
+           }
+         }
+       }
+     }
+   }
+   t.ports = ports;
+
+   return t;
+}
+
 function mapStateToProps(state, ownProps) {
   let task = mapHealthchecksToProps(state.api.task[ownProps.taskId].data);
+  task = mapTaskToProps(task);
 
   return {
     task: task,

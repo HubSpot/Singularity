@@ -1,7 +1,7 @@
 import { combineReducers } from 'redux';
 import buildApiActionReducer from './base';
-import task from './task';
 
+import { FetchAction as TaskHistoryFetchAction } from '../../actions/api/task';
 import { FetchAction as UserFetchAction } from '../../actions/api/user';
 import { FetchAction as WebhooksFetchAction } from '../../actions/api/webhooks';
 import { FetchAction as SlavesFetchAction } from '../../actions/api/slaves';
@@ -31,6 +31,7 @@ const taskFiles = buildApiActionReducer(TaskFilesFetchAction, true);
 const taskResourceUsage = buildApiActionReducer(TaskResourceUsageFetchAction);
 const taskS3Logs = buildApiActionReducer(TaskS3LogsFetchAction);
 const taskShellCommandResponse = buildApiActionReducer(TaskShellCommandRunAction);
+const task = buildApiActionReducer(TaskHistoryFetchAction, true);
 
 export default combineReducers({
   user,
