@@ -227,15 +227,15 @@ class TaskDetail extends React.Component {
     }
 
     // Killed due to HC fail
-    if (t.lastHealthcheckFailed) {
+    if (t.lastHealthcheckFailed && t.isStillRunning) {
       alerts.push(
         <Alert key='hcFail' bsStyle='danger'>
-          <strong>Task killed due to no passing healthchecks after {t.tooManyRetries ? t.healthcheckResults.length.toString() + 'tries' : t.secondsElapsed.toString() + 'seconds'}</strong>
+          <strong>Task killed due to no passing healthchecks after {t.tooManyRetries ? t.healthcheckResults.length.toString() + ' tries. ' : t.secondsElapsed.toString() + ' seconds. '}</strong>
           Last healthcheck {t.healthcheckResults[0].statusCode ?
             <span>responded with <span className="label label-danger">HTTP {t.healthcheckResults[0].statusCode}</span></span> :
-              <span>'did not respond ' {t.healthcheckResults[0].durationMillis ? t.healthcheckResults[0].durationMillis.toString() + ' ms ' : ''} at {Utils.absoluteTimestamp(t.healthcheckResults[0].timestamp)}</span>}
-            <a href="#healthchecks">View all healthchecks</a>
-            <a href="#logs">View service logs</a>
+              <span>did not respond after <code>{t.healthcheckResults[0].durationMillis ? t.healthcheckResults[0].durationMillis.toString() + ' ms' : ''}</code> at {Utils.absoluteTimestamp(t.healthcheckResults[0].timestamp)}</span>}
+            <a href="#healthchecks"> View all healthchecks</a>
+            <a href="#logs"> View service logs</a>
             {t.healthcheckFailureReasonMessage ? <p>The healthcheck failed because {t.healthcheckFailureReasonMessage}</p> : ''}
         </Alert>
       )
@@ -307,7 +307,7 @@ class TaskDetail extends React.Component {
       </a>
     );
     return (
-      <Section title="Logs">
+      <Section title="Logs" id="logs">
         <div className="row">
           <div className="col-md-4">
             <h4>{link}</h4>
@@ -494,7 +494,7 @@ class TaskDetail extends React.Component {
     let healthchecks = t.healthcheckResults;
     if (!healthchecks || healthchecks.length == 0) return null;
     return (
-      <CollapsableSection title="Healthchecks">
+      <CollapsableSection title="Healthchecks" id="healthchecks">
         <div className="well">
           <span>
             Beginning on <strong>Task running</strong>, hit

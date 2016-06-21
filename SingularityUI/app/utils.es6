@@ -409,7 +409,7 @@ let Utils = {
     if (healthcheckResults && healthcheckResults.length > 0) {
       if (healthcheckResults[0].errorMessage && healthcheckResults[0].errorMessage.toLowerCase().indexOf('connection refused') != -1) {
         let portIndex = task.task.taskRequest.deploy.healthcheckPortIndex || 0;
-        let port = task.ports.length > portIndex ? task[portIndex] : false;
+        let port = task.ports && task.ports.length > portIndex ? task[portIndex] : false;
         return `a refused connection. It is possible your app did not start properly or was not listening on the anticipated port (${port}). Please check the logs for more details.`;
       }
     }

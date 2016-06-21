@@ -4,7 +4,7 @@ export default class Section extends React.Component {
 
   render() {
     return (
-      <div>
+      <div id={this.props.id}>
         <div className="page-header">
             <h2>{this.props.title}</h2>
         </div>
