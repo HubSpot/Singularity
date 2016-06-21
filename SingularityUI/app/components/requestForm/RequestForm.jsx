@@ -526,7 +526,7 @@ function mapDispatchToProps(dispatch) {
       dispatch(clearForm(formId));
     },
     save(requestBody) {
-      dispatch(makeSaveAction(requestBody).trigger());
+      //dispatch(makeSaveAction(requestBody).trigger());
     }
   }
 }

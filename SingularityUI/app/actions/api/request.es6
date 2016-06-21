@@ -1,14 +1,4 @@
-import buildApiAction from './base';
+import { buildApiAction, buildJsonApiAction } from './base';
 
-export const FetchAction = buildApiAction('FETCH_REQUEST', (requestId) => `/requests/request/${ requestId }`);
-export const makeSaveAction = (requestBody) => {
-    return buildApiAction(
-        'SAVE_REQUEST',
-        "/requests",
-        {
-            method: 'POST',
-            body: JSON.stringify(requestBody),
-            headers: {'Content-Type': 'application/json'}
-        }
-    );
-}
+export const FetchAction = buildApiAction('FETCH_REQUEST', (requestId) => {return {url: `/requests/request/${ requestId }`}});
+export const SaveAcrion = buildJsonApiAction('SAVE_REQUEST', 'POST', (requestData) => {return {body: requestData}});
