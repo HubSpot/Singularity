@@ -7,26 +7,26 @@ import { FetchAction as RacksFetchAction } from '../actions/api/racks';
 
 class ReqeustFormController extends Controller {
 
-    showView(store, edit) {
-        this.setView(new RequestFormView({store, edit}));
-        app.showView(this.view);
-    }
+  showView(store, edit) {
+    this.setView(new RequestFormView({store, edit}));
+    app.showView(this.view);
+  }
 
-    initialize({store, requestId = ''}) {
-        app.showPageLoader();
-        this.title(`${requestId ? 'Edit' : 'New'} Request`);
-        this.store = store;
+  initialize({store, requestId = ''}) {
+    app.showPageLoader();
+    this.title(`${requestId ? 'Edit' : 'New'} Request`);
+    this.store = store;
 
-        const racksPromise = this.store.dispatch(RacksFetchAction.trigger());
-        if (requestId) {
-            const requestPromise = this.store.dispatch(RequestFetchAction.trigger(requestId));
-            requestPromise.then(() => {
-                this.showView(store, true);
-            });
-        } else {
-            this.showView(store, false);
-        }
+    const racksPromise = this.store.dispatch(RacksFetchAction.trigger());
+    if (requestId) {
+      const requestPromise = this.store.dispatch(RequestFetchAction.trigger(requestId));
+      requestPromise.then(() => {
+        this.showView(store, true);
+      });
+    } else {
+      this.showView(store, false);
     }
+  }
 }
 
 export default ReqeustFormController;
