@@ -1,3 +1,3 @@
-import buildApiAction from './base';
+import { buildApiAction } from './base';
 
-export const FetchAction = buildApiAction('FETCH_DEPLOYS', (state = '') => `deploys/${state}`);
+export const FetchAction = buildApiAction('FETCH_DEPLOYS', (state = '') => {return {url: `deploys/${state}`}});

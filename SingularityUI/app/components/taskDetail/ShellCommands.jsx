@@ -17,7 +17,7 @@ export default class ShellCommands extends React.Component {
       openLog: true,
       responseText: null,
       showLauncher: false,
-      submitDisabled: false
+      submitDisabled: config.shellCommands.length == 0
     }
   }
 
@@ -63,7 +63,7 @@ export default class ShellCommands extends React.Component {
             <select name="cmd" className="form-control input-large" onChange={this.onCommandChange.bind(this)}>
               {options}
             </select>
-            <p className="cmd-description">{this.state.selectedCmd.description}</p>
+            <p className="cmd-description">{this.state.selectedCmd ? this.state.selectedCmd.description : ''}</p>
 
             <label class="check-label">
               <input type="checkbox" name="openLog" checked={this.state.openLog} onChange={this.onOpenLogChange.bind(this)} /> Redirect to command output upon success

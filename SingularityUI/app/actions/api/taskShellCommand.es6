@@ -1,7 +1,8 @@
-import buildApiAction from './base';
+import { buildJsonApiAction } from './base';
 
-const POST_JSON = {method: 'POST', headers: {'Accept': 'application/json', 'Content-Type': 'application/json'}};
-
-export const RunAction = buildApiAction('RUN_COMMAND',
-                                        (taskId, commandName) => `/tasks/task/${taskId}/command`,
-                                        (taskId, commandName) => _.extend({}, POST_JSON, {body: JSON.stringify({name: commandName})}));
+export const RunAction = buildJsonApiAction('RUN_COMMAND', (taskId, commandName) => {
+  return {
+    url: `/tasks/task/${taskId}/command`,
+    body: {name: commandName}
+  }
+});

@@ -1,3 +1,3 @@
-import buildApiAction from './base';
+import { buildApiAction } from './base';
 
-export const FetchAction = buildApiAction('FETCH_TASK_CLEANUPS', '/tasks/cleaning');
+export const FetchAction = buildApiAction('FETCH_TASK_CLEANUPS', {url: '/tasks/cleaning'});
