@@ -10,6 +10,9 @@ import ToolTip from 'react-bootstrap/lib/Tooltip';
 import Utils from '../../utils';
 import classNames from 'classnames';
 
+const QUARTZ_SCHEDULE = 'quartzSchedule';
+const CRON_SCHEDULE = 'cronSchedule';
+
 const FORM_ID = 'requestForm';
 
 const REQUEST_TYPES = ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'];
@@ -36,8 +39,8 @@ const FIELDS_BY_REQUEST_TYPE = {
     'rackAffinity'
   ],
   SCHEDULED: [
-    'quartzSchedule',
-    'cronSchedule',
+    QUARTZ_SCHEDULE,
+    CRON_SCHEDULE,
     'scheduleType',
     'numRetriesOnFailure',
     'killOldNonLongRunningTasksAfterMillis',
@@ -58,14 +61,11 @@ class RequestForm extends React.Component {
       newProps.saveApiCall &&
       this.props.saveApiCall.isFetching &&
       !newProps.saveApiCall.isFetching &&
-      !newProps.saveApiCall.error)
+      !newProps.saveApiCall.error &&
+      !(newProps.saveApiCall.data && newProps.saveApiCall.data.message))
     {
-      this.redirectToRequestPage(newProps.saveApiCall.data.request.id);
+      Backbone.history.navigate(`/request/${ newProps.saveApiCall.data.request.id }`, {trigger: true});
     }
-  }
-
-  redirectToRequestPage(requestId) {
-    Backbone.history.navigate(`/request/${ requestId }`, {trigger: true})
   }
 
   isEditing() {
@@ -93,7 +93,7 @@ class RequestForm extends React.Component {
     event.preventDefault();
     const request = {};
     const copyOverField = (fieldId) => {
-      if (this.getValue(fieldId)) {
+      if (this.getValue(fieldId) && fieldId != QUARTZ_SCHEDULE && fieldId != CRON_SCHEDULE && fieldId != 'scheduleType') {
         request[fieldId] = this.getValue(fieldId);
       }
     }
@@ -101,8 +101,12 @@ class RequestForm extends React.Component {
     FIELDS_BY_REQUEST_TYPE[this.getValue('requestType')].map(copyOverField)
     FIELDS_BY_REQUEST_TYPE.ALL.map(copyOverField)
 
-    if (this.getValue('scheduleType') === 'quartzSchedule') {
-      request.schedule = ''
+    if (this.getValue('requestType') === 'SCHEDULED') {
+      if (this.getScheduleType() === QUARTZ_SCHEDULE) {
+        request[QUARTZ_SCHEDULE] = this.getValue(QUARTZ_SCHEDULE);
+      } else {
+        request.schedule = this.getValue(CRON_SCHEDULE);
+      }
     }
 
     if (['ON_DEMAND', 'RUN_ONCE'].indexOf(this.getValue('requestType')) !== -1) {
@@ -151,16 +155,16 @@ class RequestForm extends React.Component {
 
   getScheduleType() {
     if (this.isEditing() && !(this.props.form && this.props.form.scheduleType)) {
-      if (this.props.request.request.quartzSchedule) {
-        return 'quartzSchedule';
+      if (this.props.request.request[QUARTZ_SCHEDULE]) {
+        return QUARTZ_SCHEDULE;
       } else {
-        return 'chronSchedule';
+        return CRON_SCHEDULE;
       }
     } else {
       if (this.props.form && this.props.form.scheduleType) {
         return this.props.form.scheduleType;
       } else {
-        return 'chronSchedule';
+        return CRON_SCHEDULE;
       }
     }
   }
@@ -313,7 +317,7 @@ class RequestForm extends React.Component {
             undefined
         }
         {
-          this.shouldRenderField('cronSchedule') || this.shouldRenderField('quartzSchedule') ?
+          this.shouldRenderField(CRON_SCHEDULE) || this.shouldRenderField(QUARTZ_SCHEDULE) ?
             <div className='form-group required'>
               <label htmlFor='schedule'>Schedule</label>
               <div className="input-group">
@@ -321,7 +325,7 @@ class RequestForm extends React.Component {
                   id = 'schedule'
                   prop = {{
                     updateFn: event => this.updateField(this.getScheduleType(), event.target.value),
-                    placeholder: this.getScheduleType() === 'quartzSchedule' ? "eg: 0 */5 * * * ?" : "eg: */5 * * * *",
+                    placeholder: this.getScheduleType() === QUARTZ_SCHEDULE ? "eg: 0 */5 * * * ?" : "eg: */5 * * * *",
                     inputType: 'text',
                     value: this.getValue(this.getScheduleType())
                   }}
@@ -334,11 +338,11 @@ class RequestForm extends React.Component {
                       forceChooseValue: true,
                       choices: [
                         {
-                          value: 'cronSchedule',
+                          value: CRON_SCHEDULE,
                           user: 'Cron Schedule'
                         },
                         {
-                          value: 'quartzSchedule',
+                          value: QUARTZ_SCHEDULE,
                           user: 'Quartz Schedule'
                         }
                       ],
@@ -513,6 +517,12 @@ class RequestForm extends React.Component {
             {this.props.saveApiCall.error ?
               <p className='alert alert-danger'>
                 There was a problem saving your request: {this.props.saveApiCall.error.message}
+              </p> :
+              undefined
+            }
+            {this.props.saveApiCall.data && this.props.saveApiCall.data.message ?
+              <p className='alert alert-danger'>
+                There was a problem saving your request: {this.props.saveApiCall.data.message}
               </p> :
               undefined
             }
