@@ -1,5 +1,6 @@
 import React from 'react';
 import moment from 'moment';
+import Utils from '../../../utils';
 
 let TimeStamp = React.createClass({
 
@@ -13,29 +14,15 @@ let TimeStamp = React.createClass({
         }).isRequired
     },
 
-    timeStampFromNow() {
-        let timeObject = moment(this.props.prop.timestamp);
-        return `${timeObject.fromNow()} (${timeObject.format(window.config.timestampFormat)})`;
-    },
-
-    absoluteTimestamp() {
-        let timeObject = moment(this.props.prop.timestamp);
-        return timeObject.format(window.config.timestampFormat);
-    },
-
-    duration() {
-        return moment.duration(this.props.prop.timestamp).humanize();
-    },
-
     render() {
         let formatted = '';
         // Feel free to add more options if you need them
         if (this.props.prop.display === 'timeStampFromNow') {
-            formatted = this.timeStampFromNow();
+            formatted = Utils.timeStampFromNow(this.props.prop.timestamp);
         } else if (this.props.prop.display === 'absoluteTimestamp') {
-            formatted = this.absoluteTimestamp();
+            formatted = Utils.absoluteTimestamp(this.props.prop.timestamp);
         } else if (this.props.prop.display === 'duration') {
-            formatted = this.duration();
+            formatted = Utils.duration(this.props.prop.timestamp);
         }
         return <div className={this.props.prop.className}>{`${this.props.prop.prefix || ''} ${formatted} ${this.props.prop.postfix || ''}`}</div>;
     }

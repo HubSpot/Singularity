@@ -1,4 +1,3 @@
-let DeployDetailController;
 let NewDeployController;
 let NotFoundController;
 let RequestDetailController;
@@ -36,7 +35,7 @@ import SlavesController from 'controllers/Slaves';
 
 NotFoundController = require('controllers/NotFound');
 
-DeployDetailController = require('controllers/DeployDetail');
+import DeployDetailController from 'controllers/DeployDetail';
 
 import LogViewerController from 'controllers/LogViewer';
 
@@ -184,8 +183,9 @@ class Router extends Backbone.Router {
 
   deployDetail(requestId, deployId) {
     return this.app.bootstrapController(new DeployDetailController({
-      requestId,
-      deployId
+      store: this.app.store,
+      requestId: requestId,
+      deployId: deployId
     }));
   }
 

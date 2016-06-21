@@ -9,6 +9,8 @@ vex = require('vex.dialog').default;
 
 micromatch = require('micromatch');
 
+import moment from 'moment';
+
 let Utils = {
   TERMINAL_TASK_STATES: ['TASK_KILLED', 'TASK_LOST', 'TASK_FAILED', 'TASK_FINISHED', 'TASK_ERROR'],
 
@@ -241,6 +243,26 @@ let Utils = {
     }
     i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
     return `${+(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
+  },
+
+  humanizeCamelcase(text) {
+    return text.replace(/^[a-z]|[A-Z]/g, function(v, i) {
+        return i === 0 ? v.toUpperCase() : " " + v.toLowerCase();
+    });
+  },
+
+  timeStampFromNow(millis) {
+      let timeObject = moment(millis);
+      return `${timeObject.fromNow()} (${timeObject.format(window.config.timestampFormat)})`;
+  },
+
+  absoluteTimestamp(millis) {
+      let timeObject = moment(millis);
+      return timeObject.format(window.config.timestampFormat);
+  },
+
+  duration(millis) {
+      return moment.duration(millis).humanize();
   },
 
   substituteTaskId(value, taskId) {

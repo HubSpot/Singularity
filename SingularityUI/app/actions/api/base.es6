@@ -1,30 +1,51 @@
 import fetch from 'isomorphic-fetch';
 
-export default function buildApiAction(actionName, apiPath, opts={}) {
+const JSON_HEADERS = {'Content-Type': 'application/json', 'Accept': 'application/json'};
+
+export function buildJsonApiAction(actionName, httpMethod, opts={}) {
+  const JSON_BOILERPLATE = {
+    method: httpMethod,
+    headers: JSON_HEADERS
+  }
+
+  let options;
+  if (typeof opts === 'function') {
+    options = (...args) => {
+      let generatedOpts = opts(...args);
+      generatedOpts.body = JSON.stringify(generatedOpts.body || {});
+      return _.extend({}, generatedOpts, JSON_BOILERPLATE);
+    };
+  } else {
+    options = (...args) => {
+      opts.body = JSON.stringify(opts.body || {});
+      return _.extend({}, opts, JSON_BOILERPLATE);
+    };
+  }
+
+  return buildApiAction(actionName, options);
+}
+
+export function buildApiAction(actionName, opts={}) {
   const ACTION = actionName;
   const STARTED = actionName + '_STARTED';
   const ERROR = actionName + '_ERROR';
   const SUCCESS = actionName + '_SUCCESS';
+  const CLEAR = actionName + '_CLEAR';
 
-  let apiPathFunc;
+  let optsFunc;
 
-  if (typeof apiPath === 'string') {
-    apiPathFunc = () => apiPath;
+  if (typeof opts === 'function') {
+    optsFunc = opts;
   } else {
-    apiPathFunc = apiPath;
+    optsFunc = () => opts;
   }
 
   function trigger(...args) {
     return function (dispatch) {
       dispatch(started());
 
-      return fetch(
-          config.apiRoot + apiPathFunc(...args),
-          _.extend(
-            {credentials: 'include'},
-            opts
-          )
-        )
+      let options = optsFunc(...args);
+      return fetch(config.apiRoot + options.url, _.extend({credentials: 'include'}, _.omit(options, 'url')))
         .then(response => response.json())
         .then(json => {
           dispatch(success(json));
@@ -33,6 +54,16 @@ export default function buildApiAction(actionName, apiPath, opts={}) {
           dispatch(error(ex));
         });
     }
+  }
+
+  function clearData() {
+    return function (dispatch) {
+      dispatch(clear());
+    }
+  }
+
+  function clear() {
+    return { type: CLEAR };
   }
 
   function started() {
@@ -52,6 +83,9 @@ export default function buildApiAction(actionName, apiPath, opts={}) {
     STARTED,
     ERROR,
     SUCCESS,
+    CLEAR,
+    clear,
+    clearData,
     trigger,
     started,
     error,
