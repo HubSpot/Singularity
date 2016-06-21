@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import Utils from '../../utils';
 import { FetchAction as TaskFilesFetchAction } from '../../actions/api/taskFiles';
 import { FetchAction as TaskResourceUsageFetchAction } from '../../actions/api/taskResourceUsage';
-import { fetchTask as TaskFetchAction } from '../../actions/api/task';
+import { FetchAction as TaskFetchAction } from '../../actions/api/task';
 import { RunAction as RunShellCommandAction } from '../../actions/api/taskShellCommand';
 import { InfoBox, UsageInfo } from '../common/statelessComponents';
 import { Alert } from 'react-bootstrap';
@@ -57,7 +57,7 @@ class TaskDetail extends React.Component {
     ) : null;
 
     const removeBtn = t.isStillRunning ? (
-      <a className="btn btn-danger">
+      <a className="btn btn-danger" >
         {cleanup ?
           (cleanup.isImmediate ? 'Destroy task' : 'Override cleanup') :
           (t.isCleaning ? 'Destroy task' : 'Kill Task')}
@@ -511,7 +511,7 @@ class TaskDetail extends React.Component {
 
   renderShellCommands(t, shellCommandResponse, taskFiles) {
     return (
-      <CollapsableSection title="Shell commands" defaultExpanded>
+      <CollapsableSection title="Shell commands">
         <ShellCommands
           task={t}
           taskFiles={taskFiles}
@@ -520,7 +520,7 @@ class TaskDetail extends React.Component {
             return this.props.dispatch(RunShellCommandAction.trigger(this.props.taskId, commandName));
           }}
           updateTask={() => {
-            this.props.dispatch(TaskFetchAction(this.props.taskId));
+            this.props.dispatch(TaskFetchAction.trigger(this.props.taskId));
           }}
           updateFiles={(path) => {
             this.props.dispatch(TaskFilesFetchAction.trigger(this.props.taskId, path));
@@ -536,8 +536,6 @@ class TaskDetail extends React.Component {
       return c.taskId.id == this.props.taskId;
     });
     let filesToDisplay = this.analyzeFiles(this.props.files[`${this.props.taskId}/${this.state.currentFilePath}`].data);
-
-    // console.log(task.shellCommandHistory);
 
     return (
       <div>

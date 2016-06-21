@@ -246,11 +246,12 @@ function mapStateToProps(state) {
     }
   });
   latestHealthchecks = _.without(latestHealthchecks, undefined);
+
   return {
     deploy: state.api.deploy.data,
     activeTasks: state.api.activeTasksForDeploy.data,
-    latestHealthchecks: latestHealthchecks,
-    taskHistory: state.api.taskHistoryForDeploy.data
+    taskHistory: state.api.taskHistoryForDeploy.data,
+    latestHealthchecks: latestHealthchecks
   };
 }
 
