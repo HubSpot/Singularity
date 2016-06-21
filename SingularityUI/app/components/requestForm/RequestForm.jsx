@@ -4,7 +4,7 @@ import FormField from '../common/formItems/FormField';
 import DropDown from '../common/formItems/DropDown';
 import CheckBox from '../common/formItems/CheckBox';
 import { modifyField, clearForm } from '../../actions/form';
-import {makeSaveAction} from '../../actions/api/request';
+import {SaveAction} from '../../actions/api/request';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 import Utils from '../../utils';
@@ -53,6 +53,21 @@ class RequestForm extends React.Component {
     this.props.clearForm(FORM_ID);
   }
 
+  componentWillReceiveProps(newProps) {
+    if (this.props.saveApiCall &&
+      newProps.saveApiCall &&
+      this.props.saveApiCall.isFetching &&
+      !newProps.saveApiCall.isFetching &&
+      !newProps.saveApiCall.error)
+    {
+      this.redirectToRequestPage(newProps.saveApiCall.data.request.id);
+    }
+  }
+
+  redirectToRequestPage(requestId) {
+    Backbone.history.navigate(`/request/${ requestId }`, {trigger: true})
+  }
+
   isEditing() {
     return this.props.edit && this.props.request && this.props.request.request;
   }
@@ -68,16 +83,10 @@ class RequestForm extends React.Component {
   }
 
   cantSubmit() {
-    if (!this.getValue('id')) {
-      return true;
-    }
-    if (!this.getValue('requestType')) {
-      return true;
-    }
-    if (this.getValue('requestType') === 'SCHEDULED' && !this.getValue(this.getScheduleType())) {
-      return true;
-    }
-    return false;
+    return this.props.saveApiCall.isFetching ||
+      !this.getValue('id') ||
+      !this.getValue('requestType') ||
+      (this.getValue('requestType') === 'SCHEDULED' && !this.getValue(this.getScheduleType()));
   }
 
   submitForm(event) {
@@ -501,6 +510,12 @@ class RequestForm extends React.Component {
                 </button>
               </span>
             </div>
+            {this.props.saveApiCall.error ?
+              <p className='alert alert-danger'>
+                There was a problem saving your request: {this.props.saveApiCall.error.message}
+              </p> :
+              undefined
+            }
           </form>
         </div>
       </div>
@@ -513,7 +528,8 @@ function mapStateToProps(state) {
   return {
     racks: state.api.racks.data,
     request: state.api.request ? state.api.request.data : undefined,
-    form: state.form[FORM_ID]
+    form: state.form[FORM_ID],
+    saveApiCall: state.api.saveRequest
   }
 }
 
@@ -526,7 +542,7 @@ function mapDispatchToProps(dispatch) {
       dispatch(clearForm(formId));
     },
     save(requestBody) {
-      //dispatch(makeSaveAction(requestBody).trigger());
+      dispatch(SaveAction.trigger(requestBody));
     }
   }
 }
