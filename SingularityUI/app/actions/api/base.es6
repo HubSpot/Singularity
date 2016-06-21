@@ -2,31 +2,30 @@ import fetch from 'isomorphic-fetch';
 
 const JSON_HEADERS = {'Content-Type': 'application/json', 'Accept': 'application/json'};
 
-export default function buildJsonSendingApiAction(actionName, httpMethod, opts={}) {
-  const jsonBoilerplate = {
+export function buildJsonApiAction(actionName, httpMethod, opts={}) {
+  const JSON_BOILERPLATE = {
     method: httpMethod,
     headers: JSON_HEADERS
   }
-  let optsFunctionOrObject;
+
+  let options;
   if (typeof opts === 'function') {
-    optsFunctionOrObject = (...args) => {
-      const optsFunctionResult = _.extend({}, jsonBoilerplate, opts(...args));
-      if (optsFunctionResult.data) {
-        optsFunctionResult.body = JSON.stringify(optsFunctionResult.data);
-      }
-      return optsFunctionResult;
-    }
+    options = (...args) => {
+      let generatedOpts = opts(...args);
+      generatedOpts.body = JSON.stringify(generatedOpts.body || {});
+      return _.extend({}, generatedOpts, JSON_BOILERPLATE);
+    };
   } else {
-    optsFunctionOrObject = _.extend({}, jsonBoilerplate, opts);
-    if (optsFunctionOrObject.data) {
-      optsFunctionOrObject.body = JSON.stringify(optsFunctionOrObject.data);
-    }
+    options = (...args) => {
+      opts.body = JSON.stringify(opts.body || {});
+      return _.extend({}, opts, JSON_BOILERPLATE);
+    };
   }
 
-  return buildApiAction(actionName, optsFunctionOrObject);
+  return buildApiAction(actionName, options);
 }
 
-export default function buildApiAction(actionName, opts={}) {
+export function buildApiAction(actionName, opts={}) {
   const ACTION = actionName;
   const STARTED = actionName + '_STARTED';
   const ERROR = actionName + '_ERROR';
@@ -46,6 +45,7 @@ export default function buildApiAction(actionName, opts={}) {
       dispatch(started());
 
       let options = optsFunc(...args);
+      console.log(options);
       return fetch(config.apiRoot + options.url, _.extend({credentials: 'include'}, _.omit(options, 'url')))
         .then(response => response.json())
         .then(json => {

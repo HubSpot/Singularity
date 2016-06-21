@@ -1,7 +1,5 @@
-import buildApiAction from './base';
-
-const POST_JSON = {method: 'POST', headers: {'Accept': 'application/json', 'Content-Type': 'application/json'}};
+import { buildApiAction, buildJsonApiAction } from './base';
 
 export const FetchAction = buildApiAction('FETCH_SLAVES', {url: '/slaves'});
-export const FreezeAction = buildApiAction('FREEZE_SLAVE', (slaveId) => _.extend({}, POST_JSON, {url: `/slaves/slave/${slaveId}/freeze`}));
-export const DecommissionAction = buildApiAction('DECOMMISSION_SLAVE', (slaveId) => _.extend({}, POST_JSON, {url: `/slaves/slave/${slaveId}/decomission`}));
+export const FreezeAction = buildJsonApiAction('FREEZE_SLAVE', 'POST', (slaveId) => _.extend({}, {url: `/slaves/slave/${slaveId}/freeze`}));
+export const DecommissionAction = buildJsonApiAction('DECOMMISSION_SLAVE', 'POST', (slaveId) => _.extend({}, {url: `/slaves/slave/${slaveId}/decomission`}));
