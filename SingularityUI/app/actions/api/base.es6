@@ -1,5 +1,31 @@
 import fetch from 'isomorphic-fetch';
 
+const JSON_HEADERS = {'Content-Type': 'application/json', 'Accept': 'application/json'};
+
+export default function buildJsonSendingApiAction(actionName, httpMethod, opts={}) {
+  const jsonBoilerplate = {
+    method: httpMethod,
+    headers: JSON_HEADERS
+  }
+  let optsFunctionOrObject;
+  if (typeof opts === 'function') {
+    optsFunctionOrObject = (...args) => {
+      const optsFunctionResult = _.extend({}, jsonBoilerplate, opts(...args));
+      if (optsFunctionResult.data) {
+        optsFunctionResult.body = JSON.stringify(optsFunctionResult.data);
+      }
+      return optsFunctionResult;
+    }
+  } else {
+    optsFunctionOrObject = _.extend({}, jsonBoilerplate, opts);
+    if (optsFunctionOrObject.data) {
+      optsFunctionOrObject.body = JSON.stringify(optsFunctionOrObject.data);
+    }
+  }
+
+  return buildApiAction(actionName, optsFunctionOrObject);
+}
+
 export default function buildApiAction(actionName, opts={}) {
   const ACTION = actionName;
   const STARTED = actionName + '_STARTED';
