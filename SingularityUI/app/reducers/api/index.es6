@@ -18,7 +18,7 @@ import { FetchAction as TaskS3LogsFetchAction } from '../../actions/api/taskS3Lo
 import { RunAction as TaskShellCommandRunAction } from '../../actions/api/taskShellCommand';
 
 const user = buildApiActionReducer(UserFetchAction);
-const webhooks = buildApiActionReducer(WebhooksFetchAction);
+const webhooks = buildApiActionReducer(WebhooksFetchAction, false, []);
 const slaves = buildApiActionReducer(SlavesFetchAction, false, []);
 const racks = buildApiActionReducer(RacksFetchAction, false, []);
 const status = buildApiActionReducer(StatusFetchAction);
