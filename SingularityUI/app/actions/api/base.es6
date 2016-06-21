@@ -49,18 +49,15 @@ export function buildApiAction(actionName, opts={}) {
         .then(response => {
           if (response.status >= 200 && response.status < 300) {
             if (response.headers.get('Content-Type') === 'application/json') {
-              return response.json().then(json =>dispatch(success(json)));
+              return response.json().then(json => dispatch(success(json)));
             } else {
-              response.text().then(body => dispatch(success({response: body})));
-              return null;
+              return response.text().then(body => dispatch(success({response: body})));
             }
           } else {
             if (response.headers.get('Content-Type') === 'application/json') {
               return response.json().then(body => dispatch(error(body)));
-              return null;
             } else {
-              response.text().then(body => dispatch(error({message: body})));
-              return null;
+              return response.text().then(body => dispatch(error({message: body})));
             }
           }
         })
