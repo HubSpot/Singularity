@@ -47,13 +47,11 @@ export function buildApiAction(actionName, opts={}) {
       let options = optsFunc(...args);
       return fetch(config.apiRoot + options.url, _.extend({credentials: 'include'}, _.omit(options, 'url')))
         .then(response => {
-          const data = {};
-          data.contentType = response.headers.get('Content-Type');
           if (response.headers.get('Content-Type') === 'application/json') {
             return response.json();
           } else {
             // All API calls respond with JSON, so if we're not getting JSON it's bad
-            data.body = response.text().then(body => dispatch(error({message: body})));
+            response.text().then(body => dispatch(error({message: body})));
             return null;
           }
         })
