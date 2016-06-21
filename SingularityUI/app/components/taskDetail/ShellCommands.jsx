@@ -131,6 +131,8 @@ export default class ShellCommands extends React.Component {
         commandHistory={this.props.task.shellCommandHistory}
         close={() => this.setState({showLauncher: false})}
         updateTask={this.props.updateTask}
+        updateFiles={this.props.updateFiles}
+        taskFiles={this.props.taskFiles}
         shellCommandResponse={this.props.shellCommandResponse}
       />
     ) : null;

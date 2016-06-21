@@ -35,8 +35,17 @@ export default class ShellCommandLauncher extends React.Component {
 
     if (!this.state.commandAcked && !this.state.commandStarted && nextState.commandAcked && nextState.commandStarted) {
       clearInterval(this.taskInterval);
+      const cmdStatus = _.find(nextProps.commandHistory, (c) => c.shellRequest.timestamp == this.props.shellCommandResponse.timestamp);
+      const outputFilePath = _.find(cmdStatus.shellUpdates, (u) => u.updateType == "ACKED").outputFilename;
+      const taskId = _.first(cmdStatus.shellUpdates).shellRequestId.taskId.id;
       this.fileInterval = setInterval(() => {
-
+        let directory = this.props.taskFiles[`${taskId}/${taskId}`].data;
+        if (_.find(directory.files, (f) => f.name == outputFilePath)) {
+          clearInterval(this.fileInterval);
+          app.router.navigate(`task/${taskId}/tail/${taskId}/${outputFilePath}`, {trigger: true});
+        } else {
+          this.props.updateFiles(taskId, taskId);
+        }
       }, 1000);
     }
   }

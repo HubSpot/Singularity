@@ -509,17 +509,21 @@ class TaskDetail extends React.Component {
     );
   }
 
-  renderShellCommands(t, shellCommandResponse) {
+  renderShellCommands(t, shellCommandResponse, taskFiles) {
     return (
       <CollapsableSection title="Shell commands" defaultExpanded>
         <ShellCommands
           task={t}
+          taskFiles={taskFiles}
           shellCommandResponse={shellCommandResponse}
           runShellCommand={(commandName) => {
             return this.props.dispatch(RunShellCommandAction.trigger(this.props.taskId, commandName));
           }}
           updateTask={() => {
             this.props.dispatch(TaskFetchAction(this.props.taskId));
+          }}
+          updateFiles={(path) => {
+            this.props.dispatch(TaskFilesFetchAction.trigger(this.props.taskId, path));
           }}
         />
       </CollapsableSection>
@@ -531,8 +535,9 @@ class TaskDetail extends React.Component {
     let cleanup = _.find(this.props.taskCleanups, (c) => {
       return c.taskId.id == this.props.taskId;
     });
-
     let filesToDisplay = this.analyzeFiles(this.props.files[`${this.props.taskId}/${this.state.currentFilePath}`].data);
+
+    // console.log(task.shellCommandHistory);
 
     return (
       <div>
@@ -548,7 +553,7 @@ class TaskDetail extends React.Component {
         {this.renderResourceUsage(task, this.props.resourceUsage)}
         {this.renderEnvVariables(task)}
         {this.renderHealthchecks(task)}
-        {this.renderShellCommands(task, this.props.shellCommandResponse)}
+        {this.renderShellCommands(task, this.props.shellCommandResponse, this.props.files)}
       </div>
     );
   }
