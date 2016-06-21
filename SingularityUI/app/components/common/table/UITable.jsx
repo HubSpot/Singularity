@@ -115,6 +115,7 @@ class UITable extends Component {
     const sortCol = this.props.children.find((col) => {
       return col.props.id === sortBy;
     });
+
     if (sortCol === undefined) {
       return data;
     }
@@ -136,7 +137,8 @@ class UITable extends Component {
   renderTableRow(rowData) {
     const row = this.props.children.map((col, tdIndex) => {
       const cell = col.props.cellRender(
-        col.props.cellData(rowData)
+        col.props.cellData(rowData),
+        rowData
       );
 
       return <td key={tdIndex} className={col.props.className}>{cell}</td>;

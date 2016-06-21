@@ -1,3 +1,3 @@
-import buildApiAction from './base';
+import { buildApiAction } from './base';
 
-export const FetchAction = buildApiAction('FETCH_REQUESTS', '/requests');
+export const FetchAction = buildApiAction('FETCH_REQUESTS', {url: '/requests'});

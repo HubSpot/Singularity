@@ -7,7 +7,6 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 
 class DashboardView extends View {
-
   initialize(store) {
     this.store = store;
   }

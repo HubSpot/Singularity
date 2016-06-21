@@ -2,6 +2,29 @@ import React from 'react';
 import Column from '../common/table/Column';
 import moment from 'moment';
 
+// use this only with combineStarredWithRequests selector
+export const Starred = (changeStar) => (
+  <Column
+    label=''
+    id='starred'
+    cellData={
+      (rowData) => 'starred' in rowData
+    }
+    sortable
+    cellRender={
+      (cellData, rowData) => {
+        return (
+          <a className='star' data-starred={cellData} onClick={
+            () => changeStar(rowData.request.id)
+          }>
+            <span className='glyphicon glyphicon-star'></span>
+          </a>
+        );
+      }
+    }
+  />
+);
+
 export const DeployUser = (
   <Column
     label='Deploy User'

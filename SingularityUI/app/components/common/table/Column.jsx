@@ -16,7 +16,7 @@ class Column extends Component {
   };
 
   static defaultProps = {
-    cellData: (o) => o,
+    cellData: (o, rowData) => o,
     cellRender: (str) => str,
     label: '',
     sortable: false,
