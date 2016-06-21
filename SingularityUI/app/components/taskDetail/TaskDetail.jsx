@@ -21,10 +21,11 @@ import ShellCommands from './ShellCommands';
 
 class TaskDetail extends React.Component {
 
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {
-      previousUsage: null
+      previousUsage: null,
+      currentFilePath: props.filePath
     }
   }
 
@@ -295,11 +296,13 @@ class TaskDetail extends React.Component {
   }
 
   renderFiles(t, files) {
-    if (_.isEmpty(files)) {
+    if (!files) {
       return (
-        <div className="empty-table-message">
-            {'Could not retrieve files. The host of this task is likely offline or the directory has been cleaned up.'}
-        </div>
+        <Section title="Files">
+          <div className="empty-table-message">
+              {'Could not retrieve files. The host of this task is likely offline or its directory has been cleaned up.'}
+          </div>
+        </Section>
       );
     }
     return (
@@ -309,8 +312,12 @@ class TaskDetail extends React.Component {
           files={files}
           changeDir={(path) => {
             if (path.startsWith('/')) path = path.substring(1);
-            this.props.dispatch(TaskFilesFetchAction.trigger(this.props.taskId,path));
-            app.router.navigate(Utils.joinPath(`#task/${this.props.taskId}/files/`, path));
+            this.props.dispatch(TaskFilesFetchAction.trigger(this.props.taskId, path)).then(() => {
+              this.setState({
+                currentFilePath: path
+              });
+              app.router.navigate(Utils.joinPath(`#task/${this.props.taskId}/files/`, path));
+            });
           }}
         />
       </Section>
@@ -525,7 +532,8 @@ class TaskDetail extends React.Component {
       return c.taskId.id == this.props.taskId;
     });
 
-    // console.log(this.props.shellCommandResponse);
+    let filesToDisplay = this.props.files[`${this.props.taskId}/${this.state.currentFilePath}`].data;
+    console.log(this.props.files[`${this.props.taskId}/${this.state.currentFilePath}`]);
 
     return (
       <div>
@@ -533,8 +541,8 @@ class TaskDetail extends React.Component {
         {this.renderAlerts(task, this.props.deploy, this.props.pendingDeploys)}
         {this.renderMetadataAlerts(task)}
         {this.renderHistory(task)}
-        {this.renderLatestLog(task, this.props.files)}
-        {this.renderFiles(task, this.props.files)}
+        {this.renderLatestLog(task, filesToDisplay)}
+        {this.renderFiles(task, filesToDisplay)}
         {this.renderS3Logs(task, this.props.s3Logs)}
         {this.renderLbUpdates(task)}
         {this.renderInfo(task)}
@@ -547,34 +555,39 @@ class TaskDetail extends React.Component {
   }
 }
 
-function mapFilesToProps(files) {
-  if (files.files) {
-    for (let f of files.files) {
-      f.isDirectory = f.mode[0] == 'd';
-      let httpPrefix = "http";
-      let httpPort = config.slaveHttpPort;
-      if (config.slaveHttpsPort) {
-        httpPrefix = "https";
-        httpPort = config.slaveHttpsPort;
-      }
+function mapFilesToProps(directories) {;
+  for (let d in directories) {
+    let directory = directories[d];
+    let files = directory.data;
+    if (files && files.files) {
+      for (let f of files.files) {
+        f.isDirectory = f.mode[0] == 'd';
+        let httpPrefix = "http";
+        let httpPort = config.slaveHttpPort;
+        if (config.slaveHttpsPort) {
+          httpPrefix = "https";
+          httpPort = config.slaveHttpsPort;
+        }
 
-      if (files.currentDirectory) {
-        f.uiPath = files.currentDirectory + "/" + f.name;
-      } else {
-        f.uiPath = f.name;
-      }
+        if (files.currentDirectory) {
+          f.uiPath = files.currentDirectory + "/" + f.name;
+        } else {
+          f.uiPath = f.name;
+        }
 
-      f.fullPath = files.fullPathToRoot + '/' + files.currentDirectory + '/' + f.name;
-      f.downloadLink = `${httpPrefix}://${files.slaveHostname}:${httpPort}/files/download.json?path=${f.fullPath}`;
+        f.fullPath = files.fullPathToRoot + '/' + files.currentDirectory + '/' + f.name;
+        f.downloadLink = `${httpPrefix}://${files.slaveHostname}:${httpPort}/files/download.json?path=${f.fullPath}`;
 
-      if (!f.isDirectory) {
-        let re = /(?:\.([^.]+))?$/;
-        let extension = re.exec(f.name)[1];
-        f.isTailable = !_.contains(['zip', 'gz', 'jar'], extension);
+        if (!f.isDirectory) {
+          let re = /(?:\.([^.]+))?$/;
+          let extension = re.exec(f.name)[1];
+          f.isTailable = !_.contains(['zip', 'gz', 'jar'], extension);
+        }
       }
     }
   }
-  return files;
+
+  return directories;
 }
 
 function mapHealthchecksToProps(tasks) {
@@ -592,7 +605,7 @@ function mapHealthchecksToProps(tasks) {
 }
 
 function mapStateToProps(state) {
-  let files = mapFilesToProps(state.api.taskFiles.data);
+  let files = mapFilesToProps(state.api.taskFiles);
   let task = mapHealthchecksToProps(state.api.task);
 
   return {

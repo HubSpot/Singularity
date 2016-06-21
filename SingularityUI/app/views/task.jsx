@@ -8,14 +8,15 @@ import { Provider } from 'react-redux';
 
 class TaskView extends ReactView {
 
-    constructor(store, taskId) {
+    constructor(store, taskId, filePath) {
         super();
         this.store = store;
         this.taskId = taskId;
+        this.filePath = filePath;
     }
 
     render() {
-        ReactDOM.render(<Provider store={this.store}><TaskDetail taskId={this.taskId}/></Provider>, this.el);
+        ReactDOM.render(<Provider store={this.store}><TaskDetail taskId={this.taskId} filePath={this.filePath} /></Provider>, this.el);
     }
 }
 

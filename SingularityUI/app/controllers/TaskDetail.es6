@@ -20,7 +20,7 @@ class TaskDetail extends Controller {
     this.store.dispatch(TaskFetchActionClear());
     this.store.dispatch(TaskFilesFetchAction.trigger(this.taskId, this.filePath));
     this.refresh().then(() => {
-      this.setView(new TaskView(store, this.taskId));
+      this.setView(new TaskView(store, this.taskId, this.filePath));
       app.showView(this.view);
     });
   }

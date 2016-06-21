@@ -2,7 +2,7 @@ import fetch from 'isomorphic-fetch';
 
 const JSON_HEADERS = {'Content-Type': 'application/json', 'Accept': 'application/json'};
 
-export function buildJsonApiAction(actionName, httpMethod, opts={}) {
+export function buildJsonApiAction(actionName, httpMethod, opts={}, keyField=undefined) {
   const JSON_BOILERPLATE = {
     method: httpMethod,
     headers: JSON_HEADERS
@@ -22,10 +22,10 @@ export function buildJsonApiAction(actionName, httpMethod, opts={}) {
     };
   }
 
-  return buildApiAction(actionName, options);
+  return buildApiAction(actionName, options, keyField);
 }
 
-export function buildApiAction(actionName, opts={}) {
+export function buildApiAction(actionName, opts={}, keyFunc=undefined) {
   const ACTION = actionName;
   const STARTED = actionName + '_STARTED';
   const ERROR = actionName + '_ERROR';
@@ -48,16 +48,21 @@ export function buildApiAction(actionName, opts={}) {
 
   function trigger(...args) {
     return function (dispatch) {
-      dispatch(started());
+      let key;
+      if (keyFunc) {
+        key = keyFunc(...args);
+      }
+      dispatch(started(key));
 
       let options = optsFunc(...args);
+
       return fetch(config.apiRoot + options.url, _.extend({credentials: 'include'}, _.omit(options, 'url')))
         .then(response => response.json())
         .then(json => {
-          dispatch(success(json));
+          dispatch(success(json, key));
         })
         .catch(ex => {
-          dispatch(error(ex));
+          dispatch(error(ex, key));
         });
     }
   }
@@ -72,16 +77,16 @@ export function buildApiAction(actionName, opts={}) {
     return { type: CLEAR };
   }
 
-  function started() {
-    return { type: STARTED };
+  function started(key=undefined) {
+    return { type: STARTED, key: key };
   }
 
-  function error(error) {
-    return { type: ERROR, error };
+  function error(error, key=undefined) {
+    return { type: ERROR, error: error, key: key };
   }
 
-  function success(data) {
-    return { type: SUCCESS, data };
+  function success(data, key=undefined) {
+    return { type: SUCCESS, data: data, key: key };
   }
 
   return {

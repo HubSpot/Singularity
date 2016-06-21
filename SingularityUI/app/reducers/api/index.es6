@@ -19,15 +19,15 @@ import { RunAction as TaskShellCommandRunAction } from '../../actions/api/taskSh
 
 const user = buildApiActionReducer(UserFetchAction);
 const webhooks = buildApiActionReducer(WebhooksFetchAction);
-const slaves = buildApiActionReducer(SlavesFetchAction);
-const racks = buildApiActionReducer(RacksFetchAction);
+const slaves = buildApiActionReducer(SlavesFetchAction, false, []);
+const racks = buildApiActionReducer(RacksFetchAction, false, []);
 const status = buildApiActionReducer(StatusFetchAction);
 const deploy = buildApiActionReducer(DeployFetchAction);
 const deploys = buildApiActionReducer(DeploysFetchAction);
 const activeTasksForDeploy = buildApiActionReducer(TasksFetchForDeployAction);
 const taskHistoryForDeploy = buildApiActionReducer(TaskHistoryFetchForDeploy);
 const taskCleanups = buildApiActionReducer(TaskCleanupsFetchAction);
-const taskFiles = buildApiActionReducer(TaskFilesFetchAction);
+const taskFiles = buildApiActionReducer(TaskFilesFetchAction, true);
 const taskResourceUsage = buildApiActionReducer(TaskResourceUsageFetchAction);
 const taskS3Logs = buildApiActionReducer(TaskS3LogsFetchAction);
 const taskShellCommandResponse = buildApiActionReducer(TaskShellCommandRunAction);
