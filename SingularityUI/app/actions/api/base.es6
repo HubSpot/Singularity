@@ -47,16 +47,22 @@ export function buildApiAction(actionName, opts={}) {
       let options = optsFunc(...args);
       return fetch(config.apiRoot + options.url, _.extend({credentials: 'include'}, _.omit(options, 'url')))
         .then(response => {
-          if (response.headers.get('Content-Type') === 'application/json') {
-            return response.json();
+          if (response.status >= 200 && response.status < 300) {
+            if (response.headers.get('Content-Type') === 'application/json') {
+              return response.json().then(json =>dispatch(success(json)));
+            } else {
+              response.text().then(body => dispatch(success({response: body})));
+              return null;
+            }
           } else {
-            // All API calls respond with JSON, so if we're not getting JSON it's bad
-            response.text().then(body => dispatch(error({message: body})));
-            return null;
+            if (response.headers.get('Content-Type') === 'application/json') {
+              return response.json().then(body => dispatch(error(body)));
+              return null;
+            } else {
+              response.text().then(body => dispatch(error({message: body})));
+              return null;
+            }
           }
-        })
-        .then(json => {
-          dispatch(success(json));
         })
         .catch(ex => {
           dispatch(error(ex));

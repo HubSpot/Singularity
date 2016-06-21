@@ -61,8 +61,9 @@ class RequestForm extends React.Component {
       newProps.saveApiCall &&
       this.props.saveApiCall.isFetching &&
       !newProps.saveApiCall.isFetching &&
-      !newProps.saveApiCall.error &&
-      !(newProps.saveApiCall.data && newProps.saveApiCall.data.message))
+      newProps.saveApiCall.data &&
+      newProps.saveApiCall.data.request &&
+      !newProps.saveApiCall.error)
     {
       Backbone.history.navigate(`/request/${ newProps.saveApiCall.data.request.id }`, {trigger: true});
     }
@@ -93,7 +94,7 @@ class RequestForm extends React.Component {
     event.preventDefault();
     const request = {};
     const copyOverField = (fieldId) => {
-      if (this.getValue(fieldId) && fieldId != QUARTZ_SCHEDULE && fieldId != CRON_SCHEDULE && fieldId != 'scheduleType') {
+      if (this.getValue(fieldId) ){//&& fieldId != QUARTZ_SCHEDULE && fieldId != CRON_SCHEDULE && fieldId != 'scheduleType') {
         request[fieldId] = this.getValue(fieldId);
       }
     }
@@ -101,13 +102,13 @@ class RequestForm extends React.Component {
     FIELDS_BY_REQUEST_TYPE[this.getValue('requestType')].map(copyOverField)
     FIELDS_BY_REQUEST_TYPE.ALL.map(copyOverField)
 
-    if (this.getValue('requestType') === 'SCHEDULED') {
+    /*if (this.getValue('requestType') === 'SCHEDULED') {
       if (this.getScheduleType() === QUARTZ_SCHEDULE) {
         request[QUARTZ_SCHEDULE] = this.getValue(QUARTZ_SCHEDULE);
       } else {
         request.schedule = this.getValue(CRON_SCHEDULE);
       }
-    }
+    }*/
 
     if (['ON_DEMAND', 'RUN_ONCE'].indexOf(this.getValue('requestType')) !== -1) {
       request.daemon = false
