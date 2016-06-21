@@ -31,7 +31,7 @@ class TaskDetail extends React.Component {
 
   componentDidMount() {
     // Get a second sample for CPU usage right away
-    if (this.props.task[this.props.taskId].data.isStillRunning) {
+    if (this.props.task.isStillRunning) {
       this.props.dispatch(TaskResourceUsageFetchAction.trigger(this.props.taskId));
     }
   }
@@ -527,13 +527,13 @@ class TaskDetail extends React.Component {
   }
 
   render() {
-    let task = this.props.task[this.props.taskId].data;
+    let task = this.props.task;
     let cleanup = _.find(this.props.taskCleanups, (c) => {
       return c.taskId.id == this.props.taskId;
     });
 
     let filesToDisplay = this.props.files[`${this.props.taskId}/${this.state.currentFilePath}`].data;
-    console.log(this.props.files[`${this.props.taskId}/${this.state.currentFilePath}`]);
+    console.log(filesToDisplay);
 
     return (
       <div>
@@ -555,7 +555,7 @@ class TaskDetail extends React.Component {
   }
 }
 
-function mapFilesToProps(directories) {;
+function mapFilesToProps(directories) {
   for (let d in directories) {
     let directory = directories[d];
     let files = directory.data;
@@ -590,23 +590,21 @@ function mapFilesToProps(directories) {;
   return directories;
 }
 
-function mapHealthchecksToProps(tasks) {
-  for (let task in tasks) {
-    let t = tasks[task].data;
-    if (!t) continue;
-    let hcs = t.healthcheckResults;
-    t.hasSuccessfulHealthcheck = hcs && hcs.length > 0 && !!_.find(hcs, (h) => h.statusCode == 200);
-    t.lastHealthcheckFailed = hcs && hcs.length > 0 && hcs[0].statusCode != 200;
-    t.healthcheckFailureReasonMessage = Utils.healthcheckFailureReasonMessage(t);
-    t.tooManyRetries = hcs && hcs.length > t.task.taskRequest.deploy.healthcheckMaxRetries && t.task.taskRequest.deploy.healthcheckMaxRetries > 0;
-    t.secondsElapsed = t.taskRequest && t.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds ? t.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds : config.defaultDeployHealthTimeoutSeconds;
-  }
-  return tasks;
+function mapHealthchecksToProps(t) {
+  if (!t) return t;
+  let hcs = t.healthcheckResults;
+  t.hasSuccessfulHealthcheck = hcs && hcs.length > 0 && !!_.find(hcs, (h) => h.statusCode == 200);
+  t.lastHealthcheckFailed = hcs && hcs.length > 0 && hcs[0].statusCode != 200;
+  t.healthcheckFailureReasonMessage = Utils.healthcheckFailureReasonMessage(t);
+  t.tooManyRetries = hcs && hcs.length > t.task.taskRequest.deploy.healthcheckMaxRetries && t.task.taskRequest.deploy.healthcheckMaxRetries > 0;
+  t.secondsElapsed = t.taskRequest && t.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds ? t.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds : config.defaultDeployHealthTimeoutSeconds;
+  return t;
 }
 
-function mapStateToProps(state) {
+function mapStateToProps(state, ownProps) {
+  console.log(ownProps);
   let files = mapFilesToProps(state.api.taskFiles);
-  let task = mapHealthchecksToProps(state.api.task);
+  let task = mapHealthchecksToProps(state.api.task[ownProps.taskId].data);
 
   return {
     task: task,
