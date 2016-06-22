@@ -13,7 +13,7 @@ class TasksTableController extends Controller {
     this.searchFilter = searchFilter;
 
     this.refresh().then(() => {
-      this.setView(new TasksView(store, state, requestsSubFilter, searchFilter));
+      this.setView(new TasksView(this.store, this.state, this.requestsSubFilter, this.searchFilter));
       app.showView(this.view);
     });
   }

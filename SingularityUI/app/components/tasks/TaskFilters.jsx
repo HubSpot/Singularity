@@ -40,39 +40,16 @@ export default class TaskFilters extends React.Component {
     return ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'];
   }
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      selectedStatusKey: 0,
-      selectedRequestTypes: TaskFilters.REQUEST_TYPES,
-      searchValue: ''
-    };
-  }
-
-  componentWillUpdate(nextProps, nextState) {
-    if (nextState != this.state) {
-      this.props.onFilterChange({
-        taskStatus: TaskFilters.TASK_STATES[nextState.selectedStatusKey].filterVal,
-        requestTypes: nextState.selectedRequestTypes,
-        filterText: nextState.searchValue
-      });
-    }
-  }
-
   handleStatusSelect(selectedKey) {
-    this.setState({
-      selectedStatusKey: selectedKey
-    });
+    this.props.onFilterChange(_.extend({}, this.props.filter, {taskStatus: TaskFilters.TASK_STATES[selectedKey].filterVal}));
   }
 
   handleSearchChange(e) {
-    this.setState({
-      searchValue: e.target.value
-    });
+    this.props.onFilterChange(_.extend({}, this.props.filter, {filterText: e.target.value}));
   }
 
   toggleRequestType(t) {
-    let selected = this.state.selectedRequestTypes;
+    let selected = this.props.filter.requestTypes;
     if (selected.length == TaskFilters.REQUEST_TYPES.length) {
       selected = [t];
     } else if (_.isEmpty(_.without(selected, t))) {
@@ -82,19 +59,18 @@ export default class TaskFilters extends React.Component {
     } else {
       selected.push(t);
     }
-    this.setState({
-      selectedRequestTypes: selected
-    });
+    this.props.onFilterChange(_.extend({}, this.props.filter, {requestTypes: selected}));
   }
 
-  renderStateFilter() {
+  renderStatusFilter() {
+    const selectedIndex = _.findIndex(TaskFilters.TASK_STATES, (s) => s.filterVal == this.props.filter.taskStatus);
     const navItems = TaskFilters.TASK_STATES.map((s, index) => {
       return (
         <OverlayTrigger key={index} placement="top" overlay={<Tooltip id={index}>{s.tip}</Tooltip>} delay={500}>
           <NavItem
             eventKey={index}
             title={s.tip}
-            active={index == this.state.selectedStatusKey}
+            active={index == selectedIndex}
             onClick={() => this.handleStatusSelect(index)}>
               {s.displayVal}
           </NavItem>
@@ -103,7 +79,7 @@ export default class TaskFilters extends React.Component {
     });
 
     return (
-      <Nav bsStyle="pills" activeKey={this.state.selectedStatusKey}>
+      <Nav bsStyle="pills" activeKey={selectedIndex}>
         {navItems}
       </Nav>
     );
@@ -115,7 +91,7 @@ export default class TaskFilters extends React.Component {
         type="search"
         className="big-search-box"
         placeholder="Filter tasks"
-        value={this.state.searchValue}
+        value={this.props.filter.filterText}
         onChange={this.handleSearchChange.bind(this)}
         maxlength="128" />
     );
@@ -124,7 +100,7 @@ export default class TaskFilters extends React.Component {
   renderRequestTypeFilter() {
     const filterItems = TaskFilters.REQUEST_TYPES.map((t, index) => {
       return (
-        <li key={index} className={_.contains(this.state.selectedRequestTypes, t) ? 'active' : ''}>
+        <li key={index} className={_.contains(this.props.filter.requestTypes, t) ? 'active' : ''}>
           <a onClick={() => this.toggleRequestType(t)}>
             <Glyphicon iconClass='ok' /> {Utils.humanizeText(t)}
           </a>
@@ -146,7 +122,7 @@ export default class TaskFilters extends React.Component {
       <div>
         <div className="row">
           <div className="col-md-12">
-            {this.renderStateFilter()}
+            {this.renderStatusFilter()}
           </div>
         </div>
         <div className="row">
@@ -163,5 +139,10 @@ export default class TaskFilters extends React.Component {
 }
 
 TaskFilters.propTypes = {
-  onFilterChange: React.PropTypes.func.isRequired
+  onFilterChange: React.PropTypes.func.isRequired,
+  filter: React.PropTypes.shape({
+    taskStatus: React.PropTypes.string.isRequired,
+    requestTypes: React.PropTypes.array.isRequired,
+    filterText: React.PropTypes.string.isRequired
+  }).isRequired
 };

@@ -3,16 +3,34 @@ import { connect } from 'react-redux';
 
 import TaskFilters from './TaskFilters';
 
+import { FetchAction } from '../../actions/api/tasks';
+
 class TasksPage extends React.Component {
 
+  constructor(props) {
+    super(props);
+    this.state = {
+      filter: {
+        taskStatus: props.state,
+        requestTypes: props.requestsSubFilter == 'all' ? TaskFilters.REQUEST_TYPES : props.requestsSubFilter.split(','),
+        filterText: props.searchFilter
+      }
+    }
+  }
+
   handleFilterChange(filter) {
-    console.log(filter);
+    this.props.fetchFilter(filter.taskStatus);
+    this.setState({
+      filter: filter
+    });
+    app.router.navigate(`/tasks/${filter.taskStatus}/${filter.requestTypes.length == TaskFilters.REQUEST_TYPES.length ? 'all' : filter.requestTypes.join(',')}/${filter.filterText}`);
   }
 
   render() {
-    console.log(this.props);
+    console.log(this.props.tasks);
+
     return (
-      <TaskFilters onFilterChange={this.handleFilterChange.bind(this)} />
+      <TaskFilters filter={this.state.filter} onFilterChange={this.handleFilterChange.bind(this)} />
     );
   }
 }
@@ -20,7 +38,13 @@ class TasksPage extends React.Component {
 function mapStateToProps(state) {
   return {
     tasks: state.api.tasks.data
-  }
+  };
 }
 
-export default connect(mapStateToProps)(TasksPage);
+function mapDispatchToProps(dispatch) {
+  return {
+    fetchFilter: (state) => dispatch(FetchAction.trigger(state))
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(TasksPage);
