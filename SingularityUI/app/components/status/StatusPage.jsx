@@ -196,13 +196,15 @@ export default class StatusPage extends React.Component {
           </div>
           <div className="col-sm-12 col-md-6">
             <h2>Tasks</h2>
-              <div className="col-md-3 col-sm-3 hidden-xs chart">
-                <Breakdown total={m.totalTasks} data={m.tasks} />
-              </div>
-              <div className="col-md-9 col-sm-9">
-                <StatusList data={this.getTasksData(m)} />
-                {this.renderTaskLag(m)}
-              </div>
+              <div className="row">
+                <div className="col-md-3 col-sm-3 hidden-xs chart">
+                  <Breakdown total={m.totalTasks} data={m.tasks} />
+                </div>
+                <div className="col-md-9 col-sm-9">
+                  <StatusList data={this.getTasksData(m)} />
+                  {this.renderTaskLag(m)}
+                </div>
+            </div>
           </div>
         </div>
         <div className="row">
