@@ -85,6 +85,13 @@ export const RequestId = (
     cellData={
       (rowData) => rowData.request.id
     }
+    cellRender={
+      (cellData) => (
+        <a href={`${config.appRoot}/request/${cellData}`}>
+          {cellData}
+        </a>
+      )
+    }
     sortable
   />
 );
@@ -94,7 +101,7 @@ export const State = (
     label='Status'
     id='state'
     cellData={
-      (rowData) => rowData.state
+      (rowData) => Utils.humanizeText(rowData.state)
     }
     sortable
   />
@@ -105,7 +112,7 @@ export const Type = (
     label='Type'
     id='type'
     cellData={
-      (rowData) => rowData.request.requestType
+      (rowData) => Utils.humanizeText(rowData.request.requestType)
     }
     sortable
   />

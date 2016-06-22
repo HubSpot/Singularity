@@ -2,6 +2,8 @@ import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { Row, Col } from 'react-bootstrap';
 
+import Utils from '../../utils';
+
 import * as StarredActions from '../../actions/ui/starred';
 import * as RequestsSelectors from '../../selectors/requests';
 
@@ -19,8 +21,12 @@ class DashboardPage extends Component {
 
   renderHeader() {
     let headerData = <h1>Singularity</h1>;
-    if (this.props.userAPI.data.user.id) {
-      headerData = <h1>{this.props.userAPI.data.user.id}</h1>;
+    const deployUser = Utils.maybe(this.props.userAPI.data, [
+      'user',
+      'id'
+    ]);
+    if (deployUser) {
+      headerData = <h1>{deployUser}</h1>;
     }
 
     return (
@@ -32,31 +38,42 @@ class DashboardPage extends Component {
 
   renderMyRequests() {
     const totals = this.props.userRequestTotals;
+    const deployUser = Utils.maybe(this.props.userAPI.data, [
+      'user',
+      'id'
+    ]);
+
     const myRequests = (
       <RequestCounts>
         <RequestCount
           label={'total'}
           count={totals.all}
+          link={`${config.appRoot}/requests/active/all/${deployUser}`}
         />
         <RequestCount
           label={'on demand'}
           count={totals.onDemand}
+          link={`${config.appRoot}/requests/active/ON_DEMAND/${deployUser}`}
         />
         <RequestCount
           label={'worker'}
           count={totals.worker}
+          link={`${config.appRoot}/requests/active/WORKER/${deployUser}`}
         />
         <RequestCount
           label={'scheduled'}
           count={totals.scheduled}
+          link={`${config.appRoot}/requests/active/SCHEDULED/${deployUser}`}
         />
         <RequestCount
           label={'run once'}
           count={totals.runOnce}
+          link={`${config.appRoot}/requests/active/RUN_ONCE/${deployUser}`}
         />
         <RequestCount
           label={'service'}
           count={totals.service}
+          link={`${config.appRoot}/requests/active/SERVICE/${deployUser}`}
         />
       </RequestCounts>
     );
