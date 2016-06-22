@@ -1,6 +1,8 @@
+import Utils from '../Utils'
+
 const ACTIONS = {
   MODIFY_FORM_FIELD(state, {formId, fieldId, newValue}) {
-    let newState = Object.assign({}, state);
+    let newState = Utils.deepClone(state);
     if (!newState[formId]) {
       newState[formId] = {};
     }

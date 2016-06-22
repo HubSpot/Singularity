@@ -561,4 +561,4 @@ function mapDispatchToProps(dispatch) {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps, undefined, {pure: false})(RequestForm);
+export default connect(mapStateToProps, mapDispatchToProps)(RequestForm);

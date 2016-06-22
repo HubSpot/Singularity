@@ -332,6 +332,10 @@ let Utils = {
     };
   },
 
+  deepClone(objectToClone) {
+    return $.extend(true, {}, objectToClone);
+  },
+
   ignore404(response) {
     if (response.status === 404) {
       return app.caughtError();
