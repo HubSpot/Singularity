@@ -142,8 +142,8 @@ class TasksView extends View
             collectionSynced: @collection.synced
             requestsSubFilter: @requestsSubFilter
             haveTasks: @collection.length and @collection.synced
-            hideRequestTypeFilter: @state isnt 'active'
             showDiskSpace: config.showTaskDiskResource
+            hideRequestTypeFilter: @state isnt 'active'
 
         partials =
             partials:
