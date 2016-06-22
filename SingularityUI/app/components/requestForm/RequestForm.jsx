@@ -69,8 +69,12 @@ class RequestForm extends React.Component {
     }
   }
 
+  shouldComponentUpdate(nextProps) {
+    return !_.isEqual(this.props, nextProps);
+  }
+
   isEditing() {
-    return this.props.request && this.props.request.request;
+    return this.props.editing && this.props.request && this.props.request.request;
   }
 
   getValue(fieldId) {
@@ -192,7 +196,7 @@ class RequestForm extends React.Component {
         return selector;
       }
     })
-    return selectors;
+    return <div className="btn-group">{selectors}</div>;
   }
 
   renderLoadBalanced() {
@@ -557,4 +561,4 @@ function mapDispatchToProps(dispatch) {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps, undefined, {pure: false})(RequestForm);
+export default connect(mapStateToProps, mapDispatchToProps)(RequestForm);
