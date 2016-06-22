@@ -7,33 +7,19 @@ import { FetchAction as RacksFetchAction } from '../actions/api/racks';
 
 class ReqeustFormController extends Controller {
 
-  showViewIfReady() {
-    if (this.racksPromiseDone && (this.requestPromiseDone || !this.requestId)) {
-      this.setView(new RequestFormView({store: this.store}));
-      app.showView(this.view);
-    }
-  }
-
   initialize({store, requestId = ''}) {
     app.showPageLoader();
     this.title(`${requestId ? 'Edit' : 'New'} Request`);
     this.store = store;
     this.requestId = requestId;
 
-    this.requestPromiseDone = false;
-    this.racksPromiseDone = false;
+    const racksPromise = this.store.dispatch(RacksFetchAction.trigger())
+    const requestPromise = this.requestId ? this.store.dispatch(RequestFetchAction.trigger(this.requestId)) : Promise.resolve()
 
-    const racksPromise = this.store.dispatch(RacksFetchAction.trigger()).then(() => {
-      this.racksPromiseDone = true;
-      this.showViewIfReady();
-    })
-    if (requestId) {
-      const requestPromise = this.store.dispatch(RequestFetchAction.trigger(this.requestId));
-      requestPromise.then(() => {
-        this.requestPromiseDone = true;
-        this.showViewIfReady();
-      });
-    }
+    Promise.all([racksPromise, requestPromise]).then(() => {
+      this.setView(new RequestFormView({store: this.store}));
+      app.showView(this.view);
+    });
   }
 }
 
