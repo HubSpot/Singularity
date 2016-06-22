@@ -8,6 +8,7 @@ import { FetchAction as SlavesFetchAction } from '../../actions/api/slaves';
 import { FetchAction as RacksFetchAction } from '../../actions/api/racks';
 import { FetchAction as StatusFetchAction } from '../../actions/api/status';
 import { FetchAction as DeployFetchAction } from '../../actions/api/deploy';
+import { FetchAction as TasksFetchAction } from '../../actions/api/tasks';
 import { FetchForDeployAction as TasksFetchForDeployAction } from '../../actions/api/tasks';
 import { FetchForDeploy as TaskHistoryFetchForDeploy } from '../../actions/api/taskHistory';
 
@@ -19,6 +20,7 @@ const status = buildApiActionReducer(StatusFetchAction);
 const deploy = buildApiActionReducer(DeployFetchAction);
 const activeTasksForDeploy = buildApiActionReducer(TasksFetchForDeployAction);
 const taskHistoryForDeploy = buildApiActionReducer(TaskHistoryFetchForDeploy);
+const tasks = buildApiActionReducer(TasksFetchAction);
 
 export default combineReducers({
   user,
@@ -28,6 +30,7 @@ export default combineReducers({
   status,
   deploy,
   task,
+  tasks,
   activeTasksForDeploy,
   taskHistoryForDeploy
 });

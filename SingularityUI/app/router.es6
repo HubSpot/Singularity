@@ -7,7 +7,6 @@ let RequestFormNewController;
 let RequestsTableController;
 let TaskDetailController;
 let TaskSearchController;
-let TasksTableController;
 let Utils;
 
 const hasProp = {}.hasOwnProperty;
@@ -26,7 +25,7 @@ RequestDetailController = require('controllers/RequestDetail');
 
 RequestsTableController = require('controllers/RequestsTable');
 
-TasksTableController = require('controllers/TasksTable');
+import TasksTableController from 'controllers/TasksTable';
 
 TaskDetailController = require('controllers/TaskDetail');
 
@@ -121,9 +120,10 @@ class Router extends Backbone.Router {
       searchFilter = '';
     }
     return this.app.bootstrapController(new TasksTableController({
-      state,
-      requestsSubFilter,
-      searchFilter
+      store: this.app.store,
+      state: state,
+      requestsSubFilter: requestsSubFilter,
+      searchFilter: searchFilter
     }));
   }
 
