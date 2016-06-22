@@ -37,7 +37,8 @@ let MultiInput = React.createClass({
                   value: value,
                   updateFn: event => this.change(key, event.target.value),
                   required: this.props.required,
-                  type: "text"
+                  type: "text",
+                  placeholder: this.props.placeholder
                 }}
               />
             );

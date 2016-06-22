@@ -112,6 +112,14 @@ class NewDeployForm extends React.Component {
                         value = {this.getValue('arguments') || []}
                         onChange = {(newValue) => this.updateField('arguments', newValue)}
                       />
+
+                      <label htmlFor="artifacts" >Artifacts</label>
+                      <MultiInput
+                        id = "artifacts"
+                        value = {this.getValue('uris') || []}
+                        onChange = {(newValue) => this.updateField('uris', newValue)}
+                        placeholder="eg: http://s3.example/my-artifact"
+                      />
                     </fieldset>
                   </div> :
                   null
