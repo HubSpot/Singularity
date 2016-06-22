@@ -196,7 +196,7 @@ class RequestForm extends React.Component {
         return selector;
       }
     })
-    return selectors;
+    return <div className="btn-group">{selectors}</div>;
   }
 
   renderLoadBalanced() {
