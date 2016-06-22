@@ -73,7 +73,6 @@ export default class TaskFilters extends React.Component {
 
   toggleRequestType(t) {
     let selected = this.state.selectedRequestTypes;
-    console.log(selected, [t]);
     if (selected.length == TaskFilters.REQUEST_TYPES.length) {
       selected = [t];
     } else if (_.isEmpty(_.without(selected, t))) {
@@ -125,7 +124,7 @@ export default class TaskFilters extends React.Component {
   renderRequestTypeFilter() {
     const filterItems = TaskFilters.REQUEST_TYPES.map((t, index) => {
       return (
-        <li key={index} className={!_.contains(this.state.selectedRequestTypes, t) ? 'active' : ''}>
+        <li key={index} className={_.contains(this.state.selectedRequestTypes, t) ? 'active' : ''}>
           <a onClick={() => this.toggleRequestType(t)}>
             <Glyphicon iconClass='ok' /> {Utils.humanizeText(t)}
           </a>
