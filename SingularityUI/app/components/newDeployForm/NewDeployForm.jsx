@@ -37,7 +37,9 @@ const FIELDS = {
         'successfulExitCodes',
         'maxTaskThreads',
         'loggingTag',
-        'loggingExtraFields'
+        'loggingExtraFields',
+        'preserveTaskSandboxAfterFinish',
+        'skipLogrotateAndCompress'
       ]
     }
   ]
@@ -191,7 +193,6 @@ class NewDeployForm extends Component {
                               updateFn: event => this.updateField("user", event.target.value),
                               inputType: 'text',
                               value: this.getValue("user"),
-                              required: true,
                               placeholder: "default: root"
                             }}
                           />
@@ -206,7 +207,6 @@ class NewDeployForm extends Component {
                               updateFn: event => this.updateField("sigKillProcessesAfterMillis", event.target.value),
                               inputType: 'text',
                               value: this.getValue("sigKillProcessesAfterMillis"),
-                              required: true,
                               placeholder: "default: 120000"
                             }}
                           />
@@ -233,8 +233,7 @@ class NewDeployForm extends Component {
                             prop = {{
                               updateFn: event => this.updateField("maxTaskThreads", event.target.value),
                               inputType: 'text',
-                              value: this.getValue("maxTaskThreads"),
-                              required: true
+                              value: this.getValue("maxTaskThreads")
                             }}
                           />
                         </div>
@@ -250,8 +249,7 @@ class NewDeployForm extends Component {
                             prop = {{
                               updateFn: event => this.updateField("loggingTag", event.target.value),
                               inputType: 'text',
-                              value: this.getValue("loggingTag"),
-                              required: true
+                              value: this.getValue("loggingTag")
                             }}
                           />
                         </div>
@@ -267,6 +265,76 @@ class NewDeployForm extends Component {
                           />
                         </div>
                       </div>
+                    </div>
+
+                    <div className="row">
+                      <div className="col-md-6">
+                        <div className="form-group">
+                          <label htmlFor="preserve-sandbox">
+                            <CheckBox
+                              id = "preserve-sandbox"
+                              onChange = {event => this.updateField("preserveTaskSandboxAfterFinish", !this.getValue("preserveTaskSandboxAfterFinish"))}
+                              checked = {this.getValue("preserveTaskSandboxAfterFinish")}
+                              noFormControlClass = {true}
+                            />
+                            {" Preserve task sandbox after finish"}
+                          </label>
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="form-group">
+                          <label htmlFor="skip-lr-compress">
+                            <CheckBox
+                              id = "skip-lr-compress"
+                              onChange = {event => this.updateField("skipLogrotateAndCompress", !this.getValue("skipLogrotateAndCompress"))}
+                              checked = {this.getValue("skipLogrotateAndCompress")}
+                              noFormControlClass = {true}
+                            />
+                            {" Skip lorotate compress"}
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="row">
+                      <div className="col-md-6">
+                        <div className="form-group">
+                          <label htmlFor="logging-s3-bucket">Logging S3 Bucket</label>
+                          <FormField
+                            id = "logging-s3-bucket"
+                            prop = {{
+                              updateFn: event => this.updateField("loggingS3Bucket", event.target.value),
+                              inputType: 'text',
+                              value: this.getValue("loggingS3Bucket")
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="form-group">
+                          <label htmlFor="max-open-files">Max Open Files</label>
+                          <FormField
+                            id = "max-open-files"
+                            prop = {{
+                              updateFn: event => this.updateField("maxOpenFiles", event.target.value),
+                              inputType: 'text',
+                              value: this.getValue("maxOpenFiles")
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="running-sentinel">Running Sentinel</label>
+                      <FormField
+                        id = "running-sentinel"
+                        prop = {{
+                          updateFn: event => this.updateField("runningSentinel", event.target.value),
+                          inputType: 'text',
+                          value: this.getValue("runningSentinel")
+                        }}
+                      />
                     </div>
 
                   </fieldset>
