@@ -8,18 +8,19 @@ import TasksPage from '../components/tasks/TasksPage';
 
 class TasksView extends View {
 
-  constructor(store, state, requestsSubFilter, searchFilter) {
+  constructor(store, state, requestsSubFilter, searchFilter, updateFilters) {
     super();
     this.store = store;
     this.state = state;
     this.requestsSubFilter = requestsSubFilter;
     this.searchFilter = searchFilter;
+    this.updateFilters = updateFilters;
   }
 
   render() {
     ReactDOM.render(
       <Provider store={this.store}>
-        <TasksPage state={this.state} requestsSubFilter={this.requestsSubFilter} searchFilter={this.searchFilter} />
+        <TasksPage state={this.state} requestsSubFilter={this.requestsSubFilter} searchFilter={this.searchFilter} updateFilters={this.updateFilters} />
       </Provider>
     , this.el);
   }

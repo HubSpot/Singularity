@@ -23,7 +23,9 @@ class TasksPage extends React.Component {
     this.setState({
       filter: filter
     });
-    app.router.navigate(`/tasks/${filter.taskStatus}/${filter.requestTypes.length == TaskFilters.REQUEST_TYPES.length ? 'all' : filter.requestTypes.join(',')}/${filter.filterText}`);
+    const requestTypes = filter.requestTypes.length == TaskFilters.REQUEST_TYPES.length ? 'all' : filter.requestTypes.join(',');
+    this.props.updateFilters(filter.taskStatus, requestTypes, filter.filterText);
+    app.router.navigate(`/tasks/${filter.taskStatus}/${requestTypes}/${filter.filterText}`);
   }
 
   render() {
