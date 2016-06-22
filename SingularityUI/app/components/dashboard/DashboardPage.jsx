@@ -5,10 +5,11 @@ import { Row, Col } from 'react-bootstrap';
 import Utils from '../../utils';
 
 import * as StarredActions from '../../actions/ui/starred';
+import * as RequestActions from '../../actions/api/request';
 import * as RequestsSelectors from '../../selectors/requests';
 
 import UITable from '../common/table/UITable';
-import { Starred, RequestId, Type, LastDeploy, DeployUser, State } from '../requests/Columns';
+import { Starred, RequestId, Type, LastDeploy, DeployUser, State, Actions } from '../requests/Columns';
 
 import RequestCounts from './RequestCounts';
 import RequestCount from './RequestCount';
@@ -101,7 +102,7 @@ class DashboardPage extends Component {
           {RequestId}
           {Type}
           {LastDeploy}
-          {DeployUser}
+          {Actions(this.props.unpauseAction, this.props.removeAction)}
         </UITable>
       );
     }
@@ -182,6 +183,12 @@ const mapDispatchToProps = (dispatch) => {
   return {
     changeStar: (requestId) => {
       dispatch(StarredActions.changeRequestStar(requestId))
+    },
+    unpauseAction: (requestId, message) => {
+      dispatch(RequestActions.UnpauseAction.trigger(requestId, message))
+    },
+    removeAction: (requestId, message) => {
+      dispatch(RequestActions.RemoveAction.trigger(requestId, message))
     }
   };
 }

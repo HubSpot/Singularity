@@ -4,15 +4,19 @@ import moment from 'moment';
 
 import Utils from '../../utils';
 
+import JSONButton from '../common/JSONButton';
+
+import UnpauseButton from './UnpauseButton';
+import RemoveButton from './RemoveButton';
+
 // use this only with combineStarredWithRequests selector
-export const Starred = (changeStar) => (
+export const Starred = (changeStar, sortable = false) => (
   <Column
     label=''
     id='starred'
     cellData={
       (rowData) => 'starred' in rowData
     }
-    sortable
     cellRender={
       (cellData, rowData) => {
         return (
@@ -24,6 +28,7 @@ export const Starred = (changeStar) => (
         );
       }
     }
+    sortable={sortable}
   />
 );
 
@@ -115,5 +120,39 @@ export const Type = (
       (rowData) => Utils.humanizeText(rowData.request.requestType)
     }
     sortable
+  />
+);
+
+export const Actions = (unpauseAction, removeAction, showEditButton = false) => (
+  <Column
+    label=''
+    id='actions'
+    className='actions-column'
+    cellData={
+      (rowData) => rowData.request.id
+    }
+    cellRender={
+      (requestId, rowData) => {
+        let maybeEditButton;
+        if (showEditButton) {
+          maybeEditButton = (
+            <a href={`${config.appRoot}/requests/edit/${requestId}`} alt='Edit'>
+              <span className='glyphicon glyphicon-edit'></span>
+            </a>
+          );
+        }
+
+        return (
+          <div className='hidden-xs'>
+            <UnpauseButton requestId={requestId} unpauseAction={unpauseAction} />
+            <RemoveButton requestId={requestId} removeAction={removeAction} />
+            <JSONButton className='inline' object={rowData}>
+              {'{ }'}
+            </JSONButton>
+            {maybeEditButton}
+          </div>
+        );
+      }
+    }
   />
 );
