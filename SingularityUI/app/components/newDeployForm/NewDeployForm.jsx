@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {Component} from 'react';
 import { connect } from 'react-redux';
 import FormField from '../common/formItems/FormField';
 import MultiInput from '../common/formItems/MultiInput';
@@ -16,7 +16,34 @@ const FORM_ID = 'newDeployForm';
 const DEFAULT_EXECUTOR_TYPE = 'default';
 const CUSTOM_EXECUTOR_TYPE = 'custom';
 
-class NewDeployForm extends React.Component {
+const FIELDS = {
+  ALL: [
+    'id',
+    'executorType',
+  ],
+  DEFAULT_EXECUTOR: [
+    'command',
+    'uris'
+  ],
+  CUSTOM_EXECUTOR: [
+    'customExecutorCmd',
+    {
+      id: 'executorData',
+      values: [
+        'cmd',
+        'extraCmdLineArgs',
+        'user',
+        'sigKillProcessesAfterMillis',
+        'successfulExitCodes',
+        'maxTaskThreads',
+        'loggingTag',
+        'loggingExtraFields'
+      ]
+    }
+  ]
+};
+
+class NewDeployForm extends Component {
 
   componentDidMount() {
     this.props.clearForm(FORM_ID);
@@ -35,7 +62,7 @@ class NewDeployForm extends React.Component {
   }
 
   getExecutorType() {
-    return this.getValue('executorType') ? this.getValue('executorType') : DEFAULT_EXECUTOR_TYPE
+    return this.getValue('executorType') ? this.getValue('executorType') : CUSTOM_EXECUTOR_TYPE//DEFAULT_EXECUTOR_TYPE
   }
 
   render() {
@@ -124,6 +151,128 @@ class NewDeployForm extends React.Component {
                   </div> :
                   null
               }
+              {
+                this.getExecutorType() === CUSTOM_EXECUTOR_TYPE ?
+                <div>
+                  <fieldset>
+                    <h4>Custom Executor Settingss</h4>
+
+                    <div className="form-group required">
+                      <label htmlFor="custom-executor-command">Custom executor command</label>
+                      <FormField
+                        id = "customExecutorCmd"
+                        prop = {{
+                          updateFn: event => this.updateField("customExecutorCmd", event.target.value),
+                          inputType: 'text',
+                          value: this.getValue("customExecutorCmd"),
+                          required: true,
+                          placeholder: "eg: /usr/local/bin/singularity-executor"
+                        }}
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="extra-args">Extra command args</label>
+                      <MultiInput
+                        id = "extra-args"
+                        value = {this.getValue('extraCmdLineArgs') || []}
+                        onChange = {(newValue) => this.updateField('extraCmdLineArgs', newValue)}
+                        placeholder="eg: -jar MyThing.jar"
+                      />
+                    </div>
+
+                    <div className="row">
+                      <div className="col-md-6">
+                        <div className="form-group">
+                          <label htmlFor="user">User</label>
+                          <FormField
+                            id = "user"
+                            prop = {{
+                              updateFn: event => this.updateField("user", event.target.value),
+                              inputType: 'text',
+                              value: this.getValue("user"),
+                              required: true,
+                              placeholder: "default: root"
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="form-group">
+                          <label htmlFor="kill-after-millis">Kill processes after (milisec)</label>
+                          <FormField
+                            id = "kill-after-millis"
+                            prop = {{
+                              updateFn: event => this.updateField("sigKillProcessesAfterMillis", event.target.value),
+                              inputType: 'text',
+                              value: this.getValue("sigKillProcessesAfterMillis"),
+                              required: true,
+                              placeholder: "default: 120000"
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="row">
+                      <div className="col-md-6">
+                        <div className="form-group">
+                          <label htmlFor="successful-exit-code">Successful exit codes</label>
+                          <MultiInput
+                            id = "successful-exit-code"
+                            value = {this.getValue("successfulExitCodes") || []}
+                            onChange = {(newValue) => this.updateField("successfulExitCodes", newValue)}
+                          />
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="form-group">
+                          <label htmlFor="max-task-threads">Max Task Threads</label>
+                          <FormField
+                            id = "max-task-threads"
+                            prop = {{
+                              updateFn: event => this.updateField("maxTaskThreads", event.target.value),
+                              inputType: 'text',
+                              value: this.getValue("maxTaskThreads"),
+                              required: true
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="row">
+                      <div className="col-md-6">
+                        <div className="form-group">
+                          <label htmlFor="logging-tag">Logging tag</label>
+                          <FormField
+                            id = "logging-tag"
+                            prop = {{
+                              updateFn: event => this.updateField("loggingTag", event.target.value),
+                              inputType: 'text',
+                              value: this.getValue("loggingTag"),
+                              required: true
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div className="col-md-6">
+                        <div className="form-group">
+                          <label htmlFor="logging-extra-fields">Logging extra fields</label>
+                          <MultiInput
+                            id = "logging-extra-fields"
+                            value = {this.getValue("loggingExtraFields") || []}
+                            onChange = {(newValue) => this.updateField("loggingExtraFields", newValue)}
+                            placeholder="format: key=value"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                  </fieldset>
+                </div> :
+                null
+              }
             </div>
           </form>
           <div id="help-column" class="col-md-4 col-md-offset-1" />
@@ -136,23 +285,23 @@ class NewDeployForm extends React.Component {
 
 function mapStateToProps(state) {
   return {
-  request: state.api.request.data.request,
-  form: state.form[FORM_ID],
-  saveApiCall: state.api.saveDeploy
+    request: state.api.request.data.request,
+    form: state.form[FORM_ID],
+    saveApiCall: state.api.saveDeploy
   }
 }
 
 function mapDispatchToProps(dispatch) {
   return {
-  update(formId, fieldId, newValue) {
-    dispatch(modifyField(formId, fieldId, newValue));
-  },
-  clearForm(formId) {
-    dispatch(clearForm(formId));
-  },
-  save(requestBody) {
-    dispatch(SaveAction.trigger(requestBody));
-  }
+    update(formId, fieldId, newValue) {
+      dispatch(modifyField(formId, fieldId, newValue));
+    },
+    clearForm(formId) {
+      dispatch(clearForm(formId));
+    },
+    save(requestBody) {
+      dispatch(SaveAction.trigger(requestBody));
+    }
   }
 }
 
