@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { Row, Col } from 'react-bootstrap';
 
 import * as StarredActions from '../../actions/ui/starred';
-import { combineStarredWithRequests } from '../../selectors/requests';
+import * as RequestsSelectors from '../../selectors/requests';
 
 import UITable from '../common/table/UITable';
 import { Starred, RequestId, Type, LastDeploy, DeployUser, State } from '../requests/Columns';
@@ -19,8 +19,8 @@ class DashboardPage extends Component {
 
   renderHeader() {
     let headerData = <h1>Singularity</h1>;
-    if (this.props.user.user.id) {
-      headerData = <h1>{this.props.user.user.id}</h1>;
+    if (this.props.userAPI.data.user.id) {
+      headerData = <h1>{this.props.userAPI.data.user.id}</h1>;
     }
 
     return (
@@ -31,33 +31,32 @@ class DashboardPage extends Component {
   }
 
   renderMyRequests() {
-
-
+    const totals = this.props.userRequestTotals;
     const myRequests = (
       <RequestCounts>
         <RequestCount
           label={'total'}
-          count={0}
+          count={totals.all}
         />
         <RequestCount
           label={'on demand'}
-          count={0}
+          count={totals.onDemand}
         />
         <RequestCount
           label={'worker'}
-          count={0}
+          count={totals.worker}
         />
         <RequestCount
           label={'scheduled'}
-          count={0}
+          count={totals.scheduled}
         />
         <RequestCount
           label={'run once'}
-          count={0}
+          count={totals.runOnce}
         />
         <RequestCount
           label={'service'}
-          count={0}
+          count={totals.service}
         />
       </RequestCounts>
     );
@@ -66,13 +65,17 @@ class DashboardPage extends Component {
   }
 
   renderMyPausedRequests() {
-    let myPausedRequests = (
-      <div class="empty-table-message"><p>No starred requests</p></div>
+    let pausedRequestsSection = (
+      <div className='empty-table-message'><p>No paused requests</p></div>
     );
-    if (this.props.requests.length > 0) {
-      myPausedRequests = (
+
+    const pausedRequests = this.props.userRequests.filter((r) => r.state === 'PAUSED');
+    const starredRequests = this.props.requests.filter((r) => 'starred' in r && r.starred);
+
+    if (pausedRequests.length > 0) {
+      pausedRequestsSection = (
         <UITable
-          data={this.props.requests}
+          data={pausedRequests}
           keyGetter={(r) => r.request.id}
           asyncSort
           paginated
@@ -82,22 +85,30 @@ class DashboardPage extends Component {
           {Type}
           {LastDeploy}
           {DeployUser}
-          {State}
         </UITable>
       );
     }
 
-    return myPausedRequests;
+    return (
+      <Row>
+          <Col md={12} className='table-staged'>
+              <div className='page-header'>
+                  <h2>My paused requests</h2>
+              </div>
+              {pausedRequestsSection}
+          </Col>
+      </Row>
+    );
   }
 
   renderStarredRequests() {
     let starredRequestsSection = (
-      <div class="empty-table-message"><p>No starred requests</p></div>
+      <div className='empty-table-message'><p>No starred requests</p></div>
     );
-    const starredRequests = this.props.requests.filter((r) => 'starred' in r);
+    const starredRequests = this.props.requests.filter((r) => 'starred' in r && r.starred);
 
     if (starredRequests.length > 0) {
-      const starredRequestsTable = (
+      starredRequestsSection = (
         <UITable
           data={starredRequests}
           keyGetter={(r) => r.request.id}
@@ -113,20 +124,18 @@ class DashboardPage extends Component {
           {State}
         </UITable>
       );
-
-      starredRequestsSection = (
-        <Row>
-            <Col md={12} className='table-staged'>
-                <div class='page-header'>
-                    <h2>Starred requests</h2>
-                </div>
-                {starredRequestsTable}
-            </Col>
-        </Row>
-      );
     }
 
-    return starredRequestsSection;
+    return (
+      <Row>
+          <Col md={12} className='table-staged'>
+              <div className='page-header'>
+                  <h2>Starred requests</h2>
+              </div>
+              {starredRequestsSection}
+          </Col>
+      </Row>
+    );
   }
 
   render() {
@@ -144,9 +153,10 @@ class DashboardPage extends Component {
 const mapStateToProps = (state) => {
   const requestsAPI = state.api.requests;
   const userAPI = state.api.user;
-
   return {
-    requests: combineStarredWithRequests(state),
+    requests: RequestsSelectors.combineStarredWithRequests(state),
+    userRequests: RequestsSelectors.getUserRequests(state),
+    userRequestTotals: RequestsSelectors.getUserRequestTotals(state),
     userAPI
   };
 };

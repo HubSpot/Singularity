@@ -308,7 +308,7 @@ class UITable extends Component {
   render() {
     return (
       <div>
-        <BootstrapTable responsive className={this.props.className}>
+        <BootstrapTable responsive striped className={this.props.className}>
           <thead>
             {this.renderTableHeader()}
           </thead>

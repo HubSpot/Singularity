@@ -2,6 +2,8 @@ import React from 'react';
 import Column from '../common/table/Column';
 import moment from 'moment';
 
+import Utils from '../../utils';
+
 // use this only with combineStarredWithRequests selector
 export const Starred = (changeStar) => (
   <Column
@@ -31,18 +33,17 @@ export const DeployUser = (
     id='user'
     cellData={
       (rowData) => {
-        // optional hell
-        if ('requestDeployState' in rowData) {
-          const requestDeployState = rowData.requestDeployState;
-          if ('activeDeploy' in requestDeployState) {
-            const activeDeploy = requestDeployState.activeDeploy;
-            if ('user' in activeDeploy) {
-              const user = activeDeploy.user;
-              // assume user is an email address
-              return user.split('@')[0];
-            }
-          }
+        const activeDeployUser = Utils.maybe(rowData, [
+          'requestDeployState',
+          'activeDeploy',
+          'user'
+        ]);
+
+        if (activeDeployUser !== undefined) {
+          // assume user is an email address
+          return activeDeployUser.split('@')[0]; 
         }
+
         return '';
       }
     }
@@ -51,28 +52,24 @@ export const DeployUser = (
 );
 
 export const LastDeploy = (
-
   <Column
     label='Time of Last Deploy'
     id='lastDeploy'
     cellData={
       (rowData) => {
-        if ('requestDeployState' in rowData) {
-          const requestDeployState = rowData.requestDeployState;
-          if ('activeDeploy' in requestDeployState) {
-            const activeDeploy = requestDeployState.activeDeploy;
-            return activeDeploy.timestamp;
-          }
-        }
-        return null;
+        const activeDeployTimestamp = Utils.maybe(rowData, [
+          'requestDeployState',
+          'activeDeploy',
+          'timestamp'
+        ], null);
+
+        return activeDeployTimestamp;
       }
     }
     cellRender={
       (cellData) => {
         if (cellData !== null) {
-          const fromNow = moment(cellData).fromNow();
-          const when = moment(cellData).calendar();
-          return `${fromNow} (${when})`;
+          return Utils.timeStampFromNow(cellData);
         }
         return '';
       }
