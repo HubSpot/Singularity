@@ -69,6 +69,10 @@ class RequestForm extends React.Component {
     }
   }
 
+  shouldComponentUpdate(nextProps) {
+    return !_.isEqual(this.props, nextProps);
+  }
+
   isEditing() {
     return this.props.request && this.props.request.request;
   }
