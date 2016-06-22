@@ -60,7 +60,7 @@ const DropDown = React.createClass({
         value={this.props.prop.value}
         defaultValue={this.props.prop.defaultValue}
         required={this.props.prop.required ? true : false}>
-        {this.props.prop.forceChooseValue ? undefined : <option key={0} value='' />}{this.dropDownOpts()}
+        {this.props.prop.forceChooseValue ? null : <option key={0} value='' />}{this.dropDownOpts()}
       </select>
     );
   }

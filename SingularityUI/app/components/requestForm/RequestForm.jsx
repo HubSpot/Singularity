@@ -74,7 +74,7 @@ class RequestForm extends React.Component {
   }
 
   isEditing() {
-    return this.props.request && this.props.request.request;
+    return this.props.editing && this.props.request && this.props.request.request;
   }
 
   getValue(fieldId) {

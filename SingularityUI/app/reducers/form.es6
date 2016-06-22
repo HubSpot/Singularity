@@ -15,7 +15,7 @@ const ACTIONS = {
   },
 
   CLEAR_FORM(state, {formId}) {
-    let newState = Object.assign({}, state);
+    let newState = Utils.deepClone({}, state);
     newState[formId] = {};
     return newState;
   }
