@@ -1,15 +1,16 @@
-import React from 'react';
+import React, {Component, PropTypes} from 'react';
 import FormField from './FormField';
 import classNames from 'classnames';
 import Utils from '../../../utils';
 
-let MultiInput = React.createClass({
+class MultiInput extends Component {
 
-  propTypes: {
-    className: React.PropTypes.string,
-    value: React.PropTypes.arrayOf(React.PropTypes.string).isRequired,
-    onChange: React.PropTypes.func.isRequired // Function of signature (newValue) => ()
-  },
+  static propTypes = {
+    className: PropTypes.string,
+    value: PropTypes.arrayOf(React.PropTypes.string).isRequired,
+    onChange: PropTypes.func.isRequired, // Function of signature (newValue) => ()
+    placeholder: PropTypes.string
+  };
 
   change(key, value) {
     const valueClone = this.props.value.slice();
@@ -19,7 +20,7 @@ let MultiInput = React.createClass({
       valueClone[key] = value;
     }
     this.props.onChange(_.without(valueClone, ""));
-  },
+  };
 
   render() {
     const valueClone = this.props.value.slice()
@@ -46,7 +47,7 @@ let MultiInput = React.createClass({
         }
       </div>
     );
-  }
-});
+  };
+}
 
 export default MultiInput;
