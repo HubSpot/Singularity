@@ -39,8 +39,7 @@ const FIELDS = {
         'loggingTag',
         'loggingExtraFields',
         'preserveTaskSandboxAfterFinish',
-        'skipLogrotateAndCompress',
-        'artifacts'
+        'skipLogrotateAndCompress'
       ]
     }
   ]
@@ -68,6 +67,27 @@ class NewDeployForm extends Component {
     return this.getValue('executorType') ? this.getValue('executorType') : CUSTOM_EXECUTOR_TYPE//DEFAULT_EXECUTOR_TYPE
   }
 
+  addArtifact(type) {
+    if (!this.getValue('artifacts')) {
+      this.updateField('artifacts', [{ type: type }]);
+    } else {
+      const artifacts = this.getValue('artifacts').slice();
+      artifacts.push({type: type});
+      this.updateField('artifacts', artifacts);
+    }
+  }
+
+  addArtifactPreventDefault(type, event) {
+    event.preventDefault();
+    this.addArtifact(type);
+  }
+
+  removeArtifact(key) {
+    const artifacts = this.getValue('artifacts').slice();
+    artifacts.splice(key, 1);
+    this.updateField('artifacts', artifacts);
+  }
+
   renderDefaultExecutorFields() {
     return (
       <div>
@@ -91,6 +111,19 @@ class NewDeployForm extends Component {
         </fieldset>
       </div>
     );
+  }
+
+  renderCustomArtifactFields() {
+    if (!this.getValue('artifacts')) {
+      return (<div id="custom-artifacts"></div>);
+    }
+    return this.getValue('artifacts').map((artifact, key) => {
+
+      return (
+        <button key={key} onClick={(event) => {event.preventDefault(); this.removeArtifact(key);}}>{artifact.type}</button>
+
+      );
+    });
   }
 
   renderCustomExecutorFields() {
@@ -281,23 +314,23 @@ class NewDeployForm extends Component {
         <fieldset>
           <h4>Custom executor artifacts</h4>
 
-          <div id="custom-artifacts"></div>
+          { this.renderCustomArtifactFields() }
 
           <div id="artifact-button-row" className="row">
             <div className="col-sm-4">
-              <button className="btn btn-success btn-block" onClick={event => this.addArtifact('embedded', event)}>
+              <button className="btn btn-success btn-block" onClick={event => this.addArtifactPreventDefault('embedded', event)}>
                 <span className="glyphicon glyphicon-plus"></span>
                 {" Embedded"}
               </button>
             </div>
             <div className="col-sm-4">
-              <button className="btn btn-success btn-block" onClick={event => this.addArtifact('external', event)}>
+              <button className="btn btn-success btn-block" onClick={event => this.addArtifactPreventDefault('external', event)}>
                 <span className="glyphicon glyphicon-plus"></span>
                 {" External"}
               </button>
             </div>
             <div className="col-sm-4">
-              <button className="btn btn-success btn-block" onClick={event => this.addArtifact('s3', event)}>
+              <button className="btn btn-success btn-block" onClick={event => this.addArtifactPreventDefault('s3', event)}>
                 <span className="glyphicon glyphicon-plus"></span>
                 {" S3"}
               </button>
@@ -403,4 +436,4 @@ function mapDispatchToProps(dispatch) {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps, undefined, {pure: false})(NewDeployForm);
+export default connect(mapStateToProps, mapDispatchToProps)(NewDeployForm);
