@@ -48,7 +48,7 @@ const FIELDS_BY_REQUEST_TYPE = {
   ],
   ON_DEMAND: [ 'killOldNonLongRunningTasksAfterMillis' ],
   RUN_ONCE: [ 'killOldNonLongRunningTasksAfterMillis' ]
-}
+};
 
 class RequestForm extends React.Component {
 
@@ -79,7 +79,7 @@ class RequestForm extends React.Component {
     } else if (this.isEditing() && this.props.request.request[fieldId] !== undefined) {
       return this.props.request.request[fieldId];
     } else {
-      return ""
+      return "";
     }
   }
 
@@ -98,9 +98,9 @@ class RequestForm extends React.Component {
         request[fieldId] = this.getValue(fieldId);
       }
     }
-    
+
     FIELDS_BY_REQUEST_TYPE[this.getValue('requestType')].map(copyOverField)
-    FIELDS_BY_REQUEST_TYPE.ALL.map(copyOverField)
+    FIELDS_BY_REQUEST_TYPE.ALL.map(copyOverField);
 
     if (this.getValue('requestType') === 'SCHEDULED') {
       if (this.getScheduleType() === QUARTZ_SCHEDULE) {
@@ -111,16 +111,16 @@ class RequestForm extends React.Component {
     }
 
     if (['ON_DEMAND', 'RUN_ONCE'].indexOf(this.getValue('requestType')) !== -1) {
-      request.daemon = false
+      request.daemon = false;
     } else if (['SERVICE', 'WORKER'].indexOf(this.getValue('requestType')) !== -1) {
-      request.daemon = true
+      request.daemon = true;
     }
 
     if (request.owners) {
-      request.owners = request.owners.split(',')
+      request.owners = request.owners.split(',');
     }
     if (request.rackAffinity) {
-      request.rackAffinity = request.rackAffinity.split(',')
+      request.rackAffinity = request.rackAffinity.split(',');
     }
 
     this.props.save(request);
@@ -146,7 +146,7 @@ class RequestForm extends React.Component {
   }
 
   updateField(fieldId, newValue) {
-    this.props.update(FORM_ID, fieldId, newValue)
+    this.props.update(FORM_ID, fieldId, newValue);
   }
 
   updateTypeButtonClick(event) {
@@ -244,7 +244,7 @@ class RequestForm extends React.Component {
                 }}
               />
             </div> :
-            undefined
+            null
         }
         {
           this.shouldRenderField('rackSensitive') ?
@@ -259,7 +259,7 @@ class RequestForm extends React.Component {
                 {" Rack Sensitive"}
               </label>
             </div> :
-            undefined
+            null
         }
         {
           this.shouldRenderField('hideEvenNumberAcrossRacksHint') ?
@@ -274,9 +274,9 @@ class RequestForm extends React.Component {
                 {" Hide Distribute Evenly Across Racks Hint"}
               </label>
             </div> :
-            undefined
+            null
         }
-        { this.shouldRenderField('loadBalanced') ? this.renderLoadBalanced() : undefined }
+        { this.shouldRenderField('loadBalanced') ? this.renderLoadBalanced() : null }
         {
           this.shouldRenderField('waitAtLeastMillisAfterTaskFinishesForReschedule') ?
             <div className='form-group'>
@@ -293,7 +293,7 @@ class RequestForm extends React.Component {
                 <div className="input-group-addon">milliseconds</div>
               </div>
             </div> :
-            undefined
+            null
         }
         {
           this.shouldRenderField('rackAffinity') ?
@@ -314,7 +314,7 @@ class RequestForm extends React.Component {
                 }}
               />
             </div> :
-            undefined
+            null
         }
         {
           this.shouldRenderField(CRON_SCHEDULE) || this.shouldRenderField(QUARTZ_SCHEDULE) ?
@@ -354,7 +354,7 @@ class RequestForm extends React.Component {
                 </div>
               </div>
             </div> :
-            undefined
+            null
         }
         {
           this.shouldRenderField('numRetriesOnFailure') ?
@@ -369,7 +369,7 @@ class RequestForm extends React.Component {
                 }}
               />
             </div> :
-            undefined
+            null
         }
         {
           this.shouldRenderField('killOldNonLongRunningTasksAfterMillis') ?
@@ -387,7 +387,7 @@ class RequestForm extends React.Component {
                 <div className="input-group-addon">milliseconds</div>
               </div>
             </div> :
-            undefined
+            null
         }
         {
           this.shouldRenderField('scheduledExpectedRuntimeMillis') ?
@@ -405,14 +405,14 @@ class RequestForm extends React.Component {
                 <div className="input-group-addon">milliseconds</div>
               </div>
             </div> :
-            undefined
+            null
         }
       </div>
     );
   }
 
   render() {
-    const requestId = this.isEditing() ? this.props.request.request.id : undefined;
+    const requestId = this.isEditing() ? this.props.request.request.id : null;
     return (
       <div className="row new-form">
         <div className="col-md-5 col-md-offset-3">
@@ -424,7 +424,7 @@ class RequestForm extends React.Component {
           }
           <form role='form' onSubmit={event => this.submitForm(event)}>
             {this.isEditing() ?
-              undefined :
+              null :
               <div className="form-group required">
                 <label htmlFor="id">ID</label>
                 <FormField
@@ -472,7 +472,7 @@ class RequestForm extends React.Component {
               <div className="alert alert-info alert-slim" role="alert">
                 <strong>Note:</strong> changes made below will only affect new tasks
               </div> :
-              undefined}
+              null}
             <div className="form-group slavePlacement">
               <label htmlFor="slavePlacement" className="control-label">
                 Slave Placement
@@ -509,7 +509,7 @@ class RequestForm extends React.Component {
             {this.renderRequestTypeSpecificFormFields()}
             <div id="button-row">
               <span>
-                <button type="submit" className="btn btn-success btn-lg" disabled={this.cantSubmit() ? 'disabled' : undefined}>
+                <button type="submit" className="btn btn-success btn-lg" disabled={this.cantSubmit() ? 'disabled' : null}>
                   Save
                 </button>
               </span>
@@ -518,13 +518,13 @@ class RequestForm extends React.Component {
               <p className='alert alert-danger'>
                 There was a problem saving your request: {this.props.saveApiCall.error.message}
               </p> :
-              undefined
+              null
             }
             {this.props.saveApiCall.data && this.props.saveApiCall.data.message ?
               <p className='alert alert-danger'>
                 There was a problem saving your request: {this.props.saveApiCall.data.message}
               </p> :
-              undefined
+              null
             }
           </form>
         </div>
@@ -537,7 +537,7 @@ class RequestForm extends React.Component {
 function mapStateToProps(state) {
   return {
     racks: state.api.racks.data,
-    request: state.api.request ? state.api.request.data : undefined,
+    request: state.api.request ? state.api.request.data : null,
     form: state.form[FORM_ID],
     saveApiCall: state.api.saveRequest
   }

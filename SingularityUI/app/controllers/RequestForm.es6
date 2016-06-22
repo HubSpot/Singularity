@@ -9,7 +9,7 @@ class ReqeustFormController extends Controller {
 
   showViewIfReady() {
     if (this.racksPromiseDone && (this.requestPromiseDone || !this.requestId)) {
-      this.setView(new RequestFormView({store: this.store, edit: this.requestId}));
+      this.setView(new RequestFormView({store: this.store}));
       app.showView(this.view);
     }
   }

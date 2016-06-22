@@ -9,9 +9,8 @@ import RequestFormPage from '../components/requestForm/RequestForm'
 
 
 class RequestFormView extends View {
-  initialize({store, edit}) {
+  initialize({store}) {
     this.store = store;
-    this.edit = edit;
   }
 
   render() {

@@ -9,7 +9,7 @@ const ACTIONS = {
   },
 
   CLEAR_FORM_FIELD(state, {formId, fieldId}) {
-    return MODIFY_FORM_FIELD(state, {formId, fieldId, undefined});
+    return MODIFY_FORM_FIELD(state, {formId, fieldId, newValue: undefined});
   },
 
   CLEAR_FORM(state, {formId}) {
