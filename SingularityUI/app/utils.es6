@@ -1,17 +1,14 @@
-let Clipboard;
-let micromatch;
-let vex;
 const indexOf = [].indexOf || function(item) { for (let i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-Clipboard = require('clipboard');
+import Clipboard from 'clipboard';
 
-vex = require('vex.dialog').default;
+import vex from 'vex.dialog';
 
-micromatch = require('micromatch');
+import micromatch from 'micromatch';
 
 import moment from 'moment';
 
-let Utils = {
+const Utils = {
   TERMINAL_TASK_STATES: ['TASK_KILLED', 'TASK_LOST', 'TASK_FAILED', 'TASK_FINISHED', 'TASK_ERROR'],
 
   DECOMMISION_STATES: ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'DECOMISSIONING', 'DECOMISSIONED', 'STARTING_DECOMISSION'],
@@ -346,6 +343,20 @@ let Utils = {
     if (response.status === 400) {
       return app.caughtError();
     }
+  },
+
+  maybe(object, path, defaultValue = undefined) {
+    if (!path.length) {
+      return object;
+    }
+    if (object.hasOwnProperty(path[0])) {
+      return Utils.maybe(
+        object[path[0]],
+        path.slice(1, path.length)
+      );
+    }
+
+    return defaultValue;
   }
 };
 
