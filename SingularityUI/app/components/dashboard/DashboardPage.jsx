@@ -48,32 +48,32 @@ class DashboardPage extends Component {
       <RequestCounts>
         <RequestCount
           label={'total'}
-          count={totals.all}
+          count={totals.total}
           link={`${config.appRoot}/requests/active/all/${deployUser}`}
         />
         <RequestCount
           label={'on demand'}
-          count={totals.onDemand}
+          count={totals.ON_DEMAND}
           link={`${config.appRoot}/requests/active/ON_DEMAND/${deployUser}`}
         />
         <RequestCount
           label={'worker'}
-          count={totals.worker}
+          count={totals.WORKER}
           link={`${config.appRoot}/requests/active/WORKER/${deployUser}`}
         />
         <RequestCount
           label={'scheduled'}
-          count={totals.scheduled}
+          count={totals.SCHEDULED}
           link={`${config.appRoot}/requests/active/SCHEDULED/${deployUser}`}
         />
         <RequestCount
           label={'run once'}
-          count={totals.runOnce}
+          count={totals.RUN_ONCE}
           link={`${config.appRoot}/requests/active/RUN_ONCE/${deployUser}`}
         />
         <RequestCount
           label={'service'}
-          count={totals.service}
+          count={totals.SERVICE}
           link={`${config.appRoot}/requests/active/SERVICE/${deployUser}`}
         />
       </RequestCounts>

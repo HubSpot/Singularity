@@ -2,24 +2,18 @@ import { createSelector } from 'reselect';
 
 import Utils from '../utils';
 
-const getStarred = (state) => state.ui.starred;
+const getStarred = (state) => new Set(state.ui.starred);
 const getRequests = (state) => state.api.requests;
 const getUser = (state) => state.api.user;
 
 export const combineStarredWithRequests = createSelector(
   [getStarred, getRequests],
   (starredData, requestsAPI) => {
-    // TODO: make this use two sorted lists
-    // to combine the data
-    // because this is O(awful)
     return requestsAPI.data.map((r) => {
-      if (starredData.indexOf(r.request.id) > -1) {
-        return {
-          ...r,
-          starred: true
-        };
-      }
-      return r;
+      return {
+        ...r,
+        starred: starredData.has(r.request.id)
+      };
     });
   }
 );
@@ -67,36 +61,16 @@ export const getUserRequestTotals = createSelector(
   [getUserRequests],
   (userRequests) => {
     const userRequestTotals = {
-      all: userRequests.length,
-      onDemand: 0,
-      worker: 0,
-      scheduled: 0,
-      runOnce: 0,
-      service: 0
+      total: userRequests.length,
+      ON_DEMAND: 0,
+      SCHEDULED: 0,
+      WORKER: 0,
+      RUN_ONCE: 0,
+      SERVICE: 0
     };
 
     for (const r of userRequests) {
-      const type = r.request.requestType;
-      switch (type) {
-        case 'ON_DEMAND':
-          userRequestTotals.onDemand += 1;
-          break;
-        case 'SCHEDULED':
-          userRequestTotals.scheduled += 1;
-          break;
-        case 'WORKER':
-          userRequestTotals.worker += 1;
-          break;
-        case 'RUN_ONCE':
-          userRequestTotals.runOnce += 1;
-          break;
-        case 'SERVICE':
-          userRequestTotals.service += 1;
-          break;
-        default:
-          // wat
-          console.warn(`Unknown request type ${type}. Check requests reducer.`);
-      }
+      userRequestTotals[r.request.requestType] += 1;
     }
 
     return userRequestTotals;
