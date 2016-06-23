@@ -13,6 +13,7 @@ export default createSelector([getTasks, getFilter], (tasks, filter) => {
     return task.taskRequest && _.contains(filter.requestTypes, task.taskRequest.request.requestType);
   });
 
+  // Filter by glob or fuzzy string
   if (filter.filterText) {
     const host = {extract: (t) => `${t.taskId && t.taskId.host}`};
     const id = {extract: (t) => `${t.taskId ? t.taskId.id : t.pendingTask.pendingTaskId.id}`};
