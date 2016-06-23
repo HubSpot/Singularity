@@ -10,7 +10,7 @@ import UnpauseButton from './UnpauseButton';
 import RemoveButton from './RemoveButton';
 
 // use this only with combineStarredWithRequests selector
-export const Starred = (changeStar, sortable = false) => (
+export const Starred = ({changeStar, sortable}) => (
   <Column
     label=''
     id='starred'

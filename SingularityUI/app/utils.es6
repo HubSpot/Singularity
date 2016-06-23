@@ -342,7 +342,7 @@ const Utils = {
   },
 
   maybe(object, path, defaultValue = undefined) {
-    if (path.length === 0) {
+    if (!path.length) {
       return object;
     }
     if (object.hasOwnProperty(path[0])) {

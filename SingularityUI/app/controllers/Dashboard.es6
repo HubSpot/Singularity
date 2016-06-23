@@ -1,7 +1,6 @@
 import Controller from './Controller';
 import DashboardView from '../views/dashboard';
 import { FetchAction } from '../actions/api/requests';
-import { getStarredRequests } from '../actions/ui/starred';
 
 class DashboardController extends Controller {
 
@@ -9,9 +8,6 @@ class DashboardController extends Controller {
     app.showPageLoader();
     this.title('Dashboard');
     this.store = store;
-
-    // load from localStorage
-    this.store.dispatch(getStarredRequests());
 
     const initPromise = this.store.dispatch(FetchAction.trigger());
     initPromise.then(() => {
