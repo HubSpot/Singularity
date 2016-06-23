@@ -51,6 +51,11 @@ const MyRequests = ({userRequestTotals, userAPI}) => {
   );
 };
 
+MyRequests.propTypes = {
+  userRequestTotals: PropTypes.object.isRequired,
+  userAPI: PropTypes.object.isRequired
+};
+
 const mapStateToProps = (state) => {
   return {
     userRequestTotals: RequestsSelectors.getUserRequestTotals(state),
@@ -58,12 +63,6 @@ const mapStateToProps = (state) => {
   };
 };
 
-const mapDispatchToProps = (dispatch) => {
-  return {
-  };
-}
-
 export default connect(
-  mapStateToProps,
-  mapDispatchToProps
+  mapStateToProps
 )(MyRequests);

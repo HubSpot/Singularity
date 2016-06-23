@@ -1,7 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import Waypoint from 'react-waypoint';
 import classNames from 'classnames';
-import _ from 'underscore';
 
 import BootstrapTable from 'react-bootstrap/lib/Table';
 import { Pagination } from 'react-bootstrap';
@@ -15,10 +14,12 @@ class UITable extends Component {
   static propTypes = {
     data: PropTypes.arrayOf(PropTypes.object).isRequired,
     keyGetter: PropTypes.func.isRequired,
+    children: PropTypes.arrayOf(PropTypes.node).isRequired,
     paginated: PropTypes.bool,
     rowChunkSize: PropTypes.number,
-    sortBy: PropTypes.string,
-    sortDirection: PropTypes.oneOf([
+    maxButtons: PropTypes.number,
+    defaultSortBy: PropTypes.string,
+    defaultSortDirection: PropTypes.oneOf([
       UITable.SortDirection.ASC,
       UITable.SortDirection.DESC
     ]),
@@ -26,12 +27,11 @@ class UITable extends Component {
     asyncSort: PropTypes.bool
   };
 
-  
   static defaultProps = {
     paginated: false,
     rowChunkSize: 30,
-    sortBy: undefined,
-    sortDirection: UITable.SortDirection.DESC,
+    defaultSortBy: undefined,
+    defaultSortDirection: UITable.SortDirection.DESC,
     asyncSort: false
   };
 
@@ -46,7 +46,9 @@ class UITable extends Component {
       sortTime: null,
       chunkNum: 1,
       data: props.data
-    }
+    };
+
+    this.handlePageChange = this.handlePageChange.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -55,17 +57,17 @@ class UITable extends Component {
 
   updateSort(data, sortBy, sortDirection) {
     if (this.props.asyncSort) {
-      const sortTime = Date.now();
+      const sortTimeStart = Date.now();
       this.setState({
         sortBy,
         sortDirection,
-        sortTime,
+        sortTime: sortTimeStart,
         sortFinished: false
       });
 
-      new Promise((resolve, reject) => {
+      new Promise((resolve) => {
         const sorted = this.doSort(data, sortBy, sortDirection);
-        resolve({sorted, sortTime});
+        resolve({sorted, sortTime: sortTimeStart});
       }).then(({sorted, sortTime}) => {
         if (this.state.sortTime === sortTime) {
           // same sort that was last triggered, let's update the state
@@ -100,11 +102,11 @@ class UITable extends Component {
 
     let updatedNextState = nextState;
 
-    if (this.props.pagination) {
+    if (this.props.paginated) {
       updatedNextState = {
         ...updatedNextState,
         chunkNum: updatedPage
-      }
+      };
     }
 
     this.setState(updatedNextState);
@@ -155,21 +157,20 @@ class UITable extends Component {
       });
 
       return rows;
-    } else {
-      // infinite scrolling
-      // Only render a number of rows at a time
-      // check to see if we can render of everything
-      const maxVisibleRows = this.state.chunkNum * this.props.rowChunkSize;
-      const rows = this.state.data.slice(0, maxVisibleRows).map((r) => {
-        return this.renderTableRow(r);
-      });
-
-      if (maxVisibleRows < this.state.data.length) {
-        return [...rows, this.renderWaypoint()];
-      } else {
-        return rows;
-      }
     }
+    // infinite scrolling
+    // Only render a number of rows at a time
+    // check to see if we can render of everything
+    const maxVisibleRows = this.state.chunkNum * this.props.rowChunkSize;
+    const rows = this.state.data.slice(0, maxVisibleRows).map((r) => {
+      return this.renderTableRow(r);
+    });
+
+    if (maxVisibleRows < this.state.data.length) {
+      return [...rows, this.renderWaypoint()];
+    }
+
+    return rows;
   }
 
   renderPagination() {
@@ -179,17 +180,20 @@ class UITable extends Component {
       const numPages = Math.ceil(numRows / rowsPerPage);
       return (
         <Pagination
-          prev
-          next
-          first
-          last
+          prev={true}
+          next={true}
+          first={true}
+          last={true}
           ellipsis={false}
           items={numPages}
           maxButtons={this.props.maxButtons || 10}
           activePage={this.state.chunkNum}
-          onSelect={this.handlePageChange.bind(this)} />
+          onSelect={this.handlePageChange}
+        />
       );
     }
+
+    return undefined;
   }
 
   handlePageChange(event, selectedEvent) {
@@ -204,7 +208,7 @@ class UITable extends Component {
   renderWaypoint() {
     return (
       <tr key={'waypoint'}>
-        <td colspan={this.props.children.length}>
+        <td colSpan={this.props.children.length}>
           <Waypoint
             key={'waypoint'}
             onEnter={() => {
@@ -226,9 +230,7 @@ class UITable extends Component {
     const headerRow = this.props.children.map((col, thIndex) => {
       let cell;
       if (typeof col.props.label === 'function') {
-        cell = col.props.label(
-          col.props.cellData(rowData)
-        );
+        cell = col.props.label(this.props.data);
       } else {
         // should only be string according to propTypes
         cell = col.props.label;
@@ -283,9 +285,9 @@ class UITable extends Component {
       // swap sort direction
       let newSortDirection;
       if (this.state.sortDirection === UITable.SortDirection.ASC) {
-         newSortDirection = UITable.SortDirection.DESC;
+        newSortDirection = UITable.SortDirection.DESC;
       } else {
-         newSortDirection = UITable.SortDirection.ASC;
+        newSortDirection = UITable.SortDirection.ASC;
       }
 
       this.updateSort(
@@ -307,7 +309,7 @@ class UITable extends Component {
   render() {
     return (
       <div>
-        <BootstrapTable responsive striped className={this.props.className}>
+        <BootstrapTable responsive={true} striped={true} className={this.props.className}>
           <thead>
             {this.renderTableHeader()}
           </thead>

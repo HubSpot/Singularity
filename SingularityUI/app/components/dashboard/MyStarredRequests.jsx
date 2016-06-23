@@ -11,7 +11,7 @@ import * as RequestsSelectors from '../../selectors/requests';
 
 const MyStarredRequests = ({requests, changeStar}) => {
   let starredRequestsSection = (
-    <div className='empty-table-message'><p>No starred requests</p></div>
+    <div className="empty-table-message"><p>No starred requests</p></div>
   );
   const starredRequests = requests.filter((r) => r.starred);
 
@@ -20,8 +20,8 @@ const MyStarredRequests = ({requests, changeStar}) => {
       <UITable
         data={starredRequests}
         keyGetter={(r) => r.request.id}
-        asyncSort
-        paginated
+        asyncSort={true}
+        paginated={true}
         rowChunkSize={10}
       >
         {Starred({changeStar})}
@@ -36,8 +36,8 @@ const MyStarredRequests = ({requests, changeStar}) => {
 
   return (
     <Row>
-      <Col md={12} className='table-staged'>
-        <div className='page-header'>
+      <Col md={12} className="table-staged">
+        <div className="page-header">
           <h2>Starred requests</h2>
         </div>
         {starredRequestsSection}
@@ -63,7 +63,7 @@ const mapDispatchToProps = (dispatch) => {
       dispatch(StarredActions.changeRequestStarAndSave(requestId));
     }
   };
-}
+};
 
 export default connect(
   mapStateToProps,
