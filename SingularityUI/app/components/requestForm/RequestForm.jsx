@@ -1,4 +1,5 @@
 import React from 'react';
+import Select from 'react-select';
 import { connect } from 'react-redux';
 import FormField from '../common/formItems/FormField';
 import DropDown from '../common/formItems/DropDown';
@@ -297,36 +298,32 @@ class RequestForm extends React.Component {
     const schedule = (
       <div className='form-group required'>
         <label htmlFor='schedule'>Schedule</label>
-        <div className="input-group">
-          <FormField
-            id='schedule'
-            prop={{
-              updateFn: event => this.updateField(this.getScheduleType(), event.target.value),
-              placeholder: this.getScheduleType() === QUARTZ_SCHEDULE ? "eg: 0 */5 * * * ?" : "eg: */5 * * * *",
-              inputType: 'text',
-              value: this.getValue(this.getScheduleType())
-            }}
-          />
-          <div className="input-group-addon input-group-addon--select">
-            <DropDown
-              id='schedule-type'
+        <div className="row" id='schedule'>
+          <div className='col-sm-8'>
+            <FormField
               prop={{
-                updateFn: event => this.updateField('scheduleType', event.target.value),
-                forceChooseValue: true,
-                choices: [
-                  {
-                    value: CRON_SCHEDULE,
-                    user: 'Cron Schedule'
-                  },
-                  {
-                    value: QUARTZ_SCHEDULE,
-                    user: 'Quartz Schedule'
-                  }
-                ],
-                value: this.getValue('scheduleType') || this.getScheduleType(),
-                generateSelectBox: true,
-                selectBoxOptions: {containerCssClass : "select2-select-box select-box-small"}
+                updateFn: event => this.updateField(this.getScheduleType(), event.target.value),
+                placeholder: this.getScheduleType() === QUARTZ_SCHEDULE ? "eg: 0 */5 * * * ?" : "eg: */5 * * * *",
+                inputType: 'text',
+                value: this.getValue(this.getScheduleType())
               }}
+            />
+          </div>
+          <div className='col-sm-4'>
+            <Select
+              onChange={value => this.updateField('scheduleType', value)}
+              options={[
+                {
+                  value: CRON_SCHEDULE,
+                  label: 'Cron Schedule'
+                },
+                {
+                  value: QUARTZ_SCHEDULE,
+                  label: 'Quartz Schedule'
+                }
+              ]}
+              clearable={false}
+              value={ this.getScheduleType() }
             />
           </div>
         </div>
