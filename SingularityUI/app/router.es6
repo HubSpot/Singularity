@@ -2,8 +2,6 @@ let DashboardController;
 let NewDeployController;
 let NotFoundController;
 let RequestDetailController;
-let RequestFormEditController;
-let RequestFormNewController;
 let RequestsTableController;
 let TaskDetailController;
 let TaskSearchController;

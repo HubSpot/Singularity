@@ -1,4 +1,4 @@
-export default function buildApiActionReducer(ActionGroup, initialData=[]) {
+export default function buildApiActionReducer(ActionGroup, initialData = []) {
   const initialState = {
     isFetching: false,
     error: null,
@@ -32,5 +32,5 @@ export default function buildApiActionReducer(ActionGroup, initialData=[]) {
       default:
         return state;
     }
-  }
+  };
 }

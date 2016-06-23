@@ -1,7 +1,5 @@
 import Controller from './Controller';
 import RequestFormView from '../views/requestForm';
-import Racks from '../collections/Racks';
-import Request from '../models/Request';
 import { FetchAction as RequestFetchAction } from '../actions/api/request';
 import { FetchAction as RacksFetchAction } from '../actions/api/racks';
 
