@@ -64,7 +64,7 @@ class RequestForm extends React.Component {
       newProps.saveApiCall.data &&
       newProps.saveApiCall.data.request &&
       !newProps.saveApiCall.error)
-    {
+    { // Navigate to the page of the request if we just recieved data back from the call to save, and that call was successful
       Backbone.history.navigate(`/request/${ newProps.saveApiCall.data.request.id }`, {trigger: true});
     }
   }
@@ -217,7 +217,7 @@ class RequestForm extends React.Component {
       field = (
         <OverlayTrigger
           placement="top"
-          overlay = {<ToolTip id="cannotChangeLoadBalancedAfterCreation">Option cannot be altered after creation</ToolTip>}>
+          overlay={<ToolTip id="cannotChangeLoadBalancedAfterCreation">Option cannot be altered after creation</ToolTip>}>
           {checkbox}
         </OverlayTrigger>
       );
@@ -225,7 +225,7 @@ class RequestForm extends React.Component {
       field = checkbox;
     }
     return (
-      <div className = 'form-group'>
+      <div className='form-group'>
         {field}
       </div>
     );
@@ -255,10 +255,10 @@ class RequestForm extends React.Component {
             <div className="form-group">
               <label htmlFor="rack-sensitive">
                 <CheckBox
-                  id = "rack-sensitive"
-                  onChange = {event => this.updateField("rackSensitive", !this.getValue("rackSensitive"))}
-                  checked = {this.getValue("rackSensitive")}
-                  noFormControlClass = {true}
+                  id="rack-sensitive"
+                  onChange={event => this.updateField("rackSensitive", !this.getValue("rackSensitive"))}
+                  checked={this.getValue("rackSensitive")}
+                  noFormControlClass={true}
                 />
                 {" Rack Sensitive"}
               </label>
@@ -270,10 +270,10 @@ class RequestForm extends React.Component {
             <div className='form-group'>
               <label htmlFor="hide-distribute-evenly-across-racks-hint">
                 <CheckBox
-                  id = "hide-distribute-evenly-across-racks-hint"
-                  onChange = {event => this.updateField("hideEvenNumberAcrossRacksHint", !this.getValue("hideEvenNumberAcrossRacksHint"))}
-                  checked = {this.getValue("hideEvenNumberAcrossRacksHint")}
-                  noFormControlClass = {true}
+                  id="hide-distribute-evenly-across-racks-hint"
+                  onChange={event => this.updateField("hideEvenNumberAcrossRacksHint", !this.getValue("hideEvenNumberAcrossRacksHint"))}
+                  checked={this.getValue("hideEvenNumberAcrossRacksHint")}
+                  noFormControlClass={true}
                 />
                 {" Hide Distribute Evenly Across Racks Hint"}
               </label>
@@ -287,8 +287,8 @@ class RequestForm extends React.Component {
               <label htmlFor='waitAtLeast'>Task rescheduling delay</label>
               <div className="input-group">
                 <FormField
-                  id = 'waitAtLeast'
-                  prop = {{
+                  id='waitAtLeast'
+                  prop={{
                     updateFn: event => this.updateField('waitAtLeastMillisAfterTaskFinishesForReschedule', event.target.value),
                     inputType: 'text',
                     value: this.getValue('waitAtLeastMillisAfterTaskFinishesForReschedule')
@@ -304,8 +304,8 @@ class RequestForm extends React.Component {
             <div className='form-group'>
               <label htmlFor="rack-affinity">Rack Affinity <span className='form-label-tip'>separate multiple racks with commas</span></label>
               <FormField
-                id = "rack-affinity"
-                prop = {{
+                id="rack-affinity"
+                prop={{
                   updateFn: event => this.updateField('rackAffinity', event.target.value),
                   inputType: 'text',
                   value: this.getValue('rackAffinity'),
@@ -326,8 +326,8 @@ class RequestForm extends React.Component {
               <label htmlFor='schedule'>Schedule</label>
               <div className="input-group">
                 <FormField
-                  id = 'schedule'
-                  prop = {{
+                  id='schedule'
+                  prop={{
                     updateFn: event => this.updateField(this.getScheduleType(), event.target.value),
                     placeholder: this.getScheduleType() === QUARTZ_SCHEDULE ? "eg: 0 */5 * * * ?" : "eg: */5 * * * *",
                     inputType: 'text',
@@ -336,8 +336,8 @@ class RequestForm extends React.Component {
                 />
                 <div className="input-group-addon input-group-addon--select">
                   <DropDown
-                    id = 'schedule-type'
-                    prop = {{
+                    id='schedule-type'
+                    prop={{
                       updateFn: event => this.updateField('scheduleType', event.target.value),
                       forceChooseValue: true,
                       choices: [
@@ -365,8 +365,8 @@ class RequestForm extends React.Component {
             <div className='form-group'>
               <label htmlFor='retries-on-failure'>Number of retries on failure</label>
               <FormField
-                id = 'retries-on-failure'
-                prop = {{
+                id='retries-on-failure'
+                prop={{
                   updateFn: event => this.updateField('numRetriesOnFailure', event.target.value),
                   inputType: 'text',
                   value: this.getValue('numRetriesOnFailure')
@@ -381,8 +381,8 @@ class RequestForm extends React.Component {
               <label htmlFor='killOldNRL'>Kill cleaning task(s) after</label>
               <div className="input-group">
                 <FormField
-                  id = 'killOldNRL'
-                  prop = {{
+                  id='killOldNRL'
+                  prop={{
                     updateFn: event => this.updateField('killOldNonLongRunningTasksAfterMillis', event.target.value),
                     inputType: 'text',
                     value: this.getValue('killOldNonLongRunningTasksAfterMillis')
@@ -399,8 +399,8 @@ class RequestForm extends React.Component {
               <label htmlFor='expected-runtime'>Maximum task duration</label>
               <div className="input-group">
                 <FormField
-                  id = 'expected-runtime'
-                  prop = {{
+                  id='expected-runtime'
+                  prop={{
                     updateFn: event => this.updateField('scheduledExpectedRuntimeMillis', event.target.value),
                     inputType: 'text',
                     value: this.getValue('scheduledExpectedRuntimeMillis')
@@ -432,8 +432,8 @@ class RequestForm extends React.Component {
               <div className="form-group required">
                 <label htmlFor="id">ID</label>
                 <FormField
-                  id = "id"
-                  prop = {{
+                  id="id"
+                  prop={{
                     updateFn: event => {
                       this.updateField("id", event.target.value);
                     },
@@ -448,8 +448,8 @@ class RequestForm extends React.Component {
             <div className="form-group">
               <label htmlFor='owners'>Owners <span className='form-label-tip'>separate multiple owners with commas</span></label>
               <FormField
-                id = "owners"
-                prop = {{
+                id="owners"
+                prop={{
                   updateFn: event => {
                     this.updateField('owners', event.target.value);
                   },
@@ -482,8 +482,8 @@ class RequestForm extends React.Component {
                 Slave Placement
               </label>
               <DropDown
-                id = 'slavePlacement'
-                prop = {{
+                id='slavePlacement'
+                prop={{
                   updateFn: event => {
                     this.updateField('slavePlacement', event.target.value);
                   },
