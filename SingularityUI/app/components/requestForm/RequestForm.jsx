@@ -323,7 +323,7 @@ class RequestForm extends React.Component {
                     user: 'Quartz Schedule'
                   }
                 ],
-                value: this.getValue('scheduleType') ? this.getValue('scheduleType') : this.getScheduleType(),
+                value: this.getValue('scheduleType') || this.getScheduleType(),
                 generateSelectBox: true,
                 selectBoxOptions: {containerCssClass : "select2-select-box select-box-small"}
               }}
@@ -379,16 +379,16 @@ class RequestForm extends React.Component {
     );
     return (
       <div>
-        { this.shouldRenderField('instances') ? instances : null }
-        { this.shouldRenderField('rackSensitive') ? rackSensitive : null }
-        { this.shouldRenderField('hideEvenNumberAcrossRacksHint') ? hideEvenNumberAcrossRacksHint : null }
-        { this.shouldRenderField('loadBalanced') ? this.renderLoadBalanced() : null }
-        { this.shouldRenderField('waitAtLeastMillisAfterTaskFinishesForReschedule') ? waitAtLeastMillisAfterTaskFinishesForReschedule : null }
-        { this.shouldRenderField('rackAffinity') ? rackAffinity : null }
-        { this.shouldRenderField(CRON_SCHEDULE) || this.shouldRenderField(QUARTZ_SCHEDULE) ? schedule : null }
-        { this.shouldRenderField('numRetriesOnFailure') ? numRetriesOnFailure : null }
-        { this.shouldRenderField('killOldNonLongRunningTasksAfterMillis') ? killOldNonLongRunningTasksAfterMillis : null }
-        { this.shouldRenderField('scheduledExpectedRuntimeMillis') ? scheduledExpectedRuntimeMillis : null }
+        { this.shouldRenderField('instances') && instances }
+        { this.shouldRenderField('rackSensitive') && rackSensitive }
+        { this.shouldRenderField('hideEvenNumberAcrossRacksHint') && hideEvenNumberAcrossRacksHint }
+        { this.shouldRenderField('loadBalanced') && this.renderLoadBalanced() }
+        { this.shouldRenderField('waitAtLeastMillisAfterTaskFinishesForReschedule') && waitAtLeastMillisAfterTaskFinishesForReschedule }
+        { this.shouldRenderField('rackAffinity') && rackAffinity }
+        { (this.shouldRenderField(CRON_SCHEDULE) || this.shouldRenderField(QUARTZ_SCHEDULE)) && schedule }
+        { this.shouldRenderField('numRetriesOnFailure') && numRetriesOnFailure }
+        { this.shouldRenderField('killOldNonLongRunningTasksAfterMillis') && killOldNonLongRunningTasksAfterMillis }
+        { this.shouldRenderField('scheduledExpectedRuntimeMillis') && scheduledExpectedRuntimeMillis }
       </div>
     );
   }
@@ -485,7 +485,7 @@ class RequestForm extends React.Component {
                 user: "Greedy"
               }
             ],
-            value: this.getValue('slavePlacement') ? this.getValue('slavePlacement') : ""
+            value: this.getValue('slavePlacement') || ""
           }}
         />
       </div>
@@ -493,7 +493,7 @@ class RequestForm extends React.Component {
     const saveButton = (
       <div id="button-row">
         <span>
-          <button type="submit" className="btn btn-success btn-lg" disabled={this.cantSubmit() ? 'disabled' : null}>
+          <button type="submit" className="btn btn-success btn-lg" disabled={this.cantSubmit() && 'disabled'}>
             Save
           </button>
         </span>
@@ -515,10 +515,10 @@ class RequestForm extends React.Component {
         <div className="col-md-5 col-md-offset-3">
           { header }
           <form role='form' onSubmit={event => this.submitForm(event)}>
-            { this.isEditing() ? null : id }
+            { !this.isEditing() && id }
             { owners }
             { requestTypeSelectors }
-            { this.isEditing() ? onlyAffectsNewTasksWarning : null }
+            { this.isEditing() && onlyAffectsNewTasksWarning }
             { slavePlacement }
             { this.renderRequestTypeSpecificFormFields() }
             { saveButton }
