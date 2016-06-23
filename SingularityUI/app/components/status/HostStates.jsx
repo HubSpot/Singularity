@@ -1,5 +1,5 @@
 import React from 'react';
-import Table from '../common/Table';
+import OldTable from '../common/OldTable';
 import PlainText from '../common/atomicDisplayItems/PlainText';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 import Timestamp from '../common/atomicDisplayItems/TimeStamp';
@@ -75,7 +75,7 @@ export default class HostStates extends React.Component {
     return (
       <div>
           <h2>Singularity scheduler instances</h2>
-          <Table
+          <OldTable
             noPages
             columnHeads={this.getTableHeaders()}
             tableRows={this.getTableRows(this.props.hosts) || []}

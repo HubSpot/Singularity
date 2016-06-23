@@ -25,7 +25,7 @@ export function buildJsonApiAction(actionName, httpMethod, opts={}) {
   return buildApiAction(actionName, options);
 }
 
-export function buildApiAction(actionName, opts={}) {
+export function buildApiAction(actionName, opts = {}) {
   const ACTION = actionName;
   const STARTED = actionName + '_STARTED';
   const ERROR = actionName + '_ERROR';

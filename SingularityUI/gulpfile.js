@@ -108,6 +108,7 @@ gulp.task('styles', function () {
       'node_modules/bootstrap/dist/css/bootstrap.css',
       'node_modules/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.css',
       'node_modules/sortable/css/sortable-theme-bootstrap.css',
+      'node_modules/react-virtualized/styles.css',
       'app/**/*.styl'
     ])
     .pipe(stylus({
