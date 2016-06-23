@@ -27,10 +27,6 @@ class MultiSelect extends Component {
     }
   }
 
-  renderNoMenu() {
-    throw new Error('CALLED')
-  }
-
   render() {
     return (
       <Select
@@ -42,7 +38,6 @@ class MultiSelect extends Component {
           onBlurResetsInput={false}
           multi={true}
           onBlur={ event => this.addNewOption(event.target.value) }
-          menuRenderer={ this.renderNoMenu }
           placeholder={ this.props.placeholder || ""}
         />
     );
