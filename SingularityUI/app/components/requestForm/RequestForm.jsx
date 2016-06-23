@@ -56,19 +56,6 @@ class RequestForm extends React.Component {
     this.props.clearForm(FORM_ID);
   }
 
-  componentWillReceiveProps(newProps) {
-    if (this.props.saveApiCall &&
-      newProps.saveApiCall &&
-      this.props.saveApiCall.isFetching &&
-      !newProps.saveApiCall.isFetching &&
-      newProps.saveApiCall.data &&
-      newProps.saveApiCall.data.request &&
-      !newProps.saveApiCall.error)
-    { // Navigate to the page of the request if we just recieved data back from the call to save, and that call was successful
-      Backbone.history.navigate(`/request/${ newProps.saveApiCall.data.request.id }`, {trigger: true});
-    }
-  }
-
   shouldComponentUpdate(nextProps) {
     return !_.isEqual(this.props, nextProps);
   }
@@ -538,6 +525,12 @@ class RequestForm extends React.Component {
 
 };
 
+function navigateToRequestIfSuccess(promiseResult) {
+  if (promiseResult.type === "SAVE_REQUEST_SUCCESS") {
+    Backbone.history.navigate(`/request/${ promiseResult.data.request.id }`, {trigger: true});
+  }
+}
+
 function mapStateToProps(state) {
   return {
     racks: state.api.racks.data,
@@ -556,7 +549,7 @@ function mapDispatchToProps(dispatch) {
       dispatch(clearForm(formId));
     },
     save(requestBody) {
-      dispatch(SaveAction.trigger(requestBody));
+      dispatch(SaveAction.trigger(requestBody)).then((response) => navigateToRequestIfSuccess(response));
     }
   }
 }
