@@ -73,22 +73,20 @@ export default class ShellCommandLauncher extends React.Component {
     clearInterval(this.fileInterval);
   }
 
-  isDone(state) {
-    return classNames({'complete text-success': state}, {'waiting': !state});
+  stepStatus(state, text) {
+    return (
+      <li className={classNames({'complete text-success': state}, {'waiting': !state})}>
+        {!state ? <div className="page-loader loader-small" /> : <Glyphicon iconClass='ok' />} {text}...
+      </li>
+    );
   }
 
   renderStatusList() {
     return (
       <ul className="status-list">
-        <li className={this.isDone(this.state.commandAcked)}>
-          {!this.state.commandAcked ? <div className="page-loader loader-small" /> : <Glyphicon iconClass='ok' />} Command acknowledged...
-        </li>
-        <li className={this.isDone(this.state.commandStarted)}>
-          {!this.state.commandStarted ? <div className="page-loader loader-small" /> : <Glyphicon iconClass='ok' />} Command started...
-        </li>
-        <li className={this.isDone(this.state.commandFileExists)}>
-          {!this.state.commandFileExists ? <div className="page-loader loader-small" /> : <Glyphicon iconClass='ok' />} Output file{this.state.outputFilename ? <code> {this.state.outputFilename}</code> : ''} exists...
-        </li>
+        {this.stepStatus(this.state.commandAcked, 'Command acknowledged')}
+        {this.stepStatus(this.state.commandStarted, 'Command started')}
+        {this.stepStatus(this.state.commandFileExists, 'Output file exists')}
       </ul>
     );
   }

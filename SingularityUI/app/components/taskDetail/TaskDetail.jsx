@@ -87,9 +87,9 @@ class TaskDetail extends React.Component {
       </span>
     );
     const terminationAlert = t.isStillRunning && !cleanup && t.isCleaning && (
-      <div className="alert alert-warning" role="alert">
+      <Alert bsStyle="warning">
           <strong>Task is terminating:</strong> To issue a non-graceful termination (kill -term), click Destroy Task.
-      </div>
+      </Alert>
     );
 
     return (
