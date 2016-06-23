@@ -3,6 +3,7 @@ import Select from 'react-select';
 import { connect } from 'react-redux';
 import FormField from '../common/formItems/FormField';
 import DropDown from '../common/formItems/DropDown';
+import MultiSelect from '../common/formItems/MultiSelect';
 import CheckBox from '../common/formItems/CheckBox';
 import { modifyField, clearForm } from '../../actions/form';
 import {SaveAction} from '../../actions/api/request';
@@ -276,22 +277,16 @@ class RequestForm extends React.Component {
         </div>
       </div>
     );
+    const rackOptions = _.pluck(this.props.racks, 'id').map(id => ({value: id, label: id}));
     const rackAffinity = (
       <div className='form-group'>
         <label htmlFor="rack-affinity">Rack Affinity <span className='form-label-tip'>separate multiple racks with commas</span></label>
-        <FormField
+        <MultiSelect
           id="rack-affinity"
-          prop={{
-            updateFn: event => this.updateField('rackAffinity', event.target.value),
-            inputType: 'text',
-            value: this.getValue('rackAffinity'),
-            generateSelectBox: true,
-            selectBoxOptions: {
-              tags: _.pluck(this.props.racks, 'id'),
-              selectOnBlur: true,
-              tokenSeparators: [',',' ']
-            }
-          }}
+          onChange={ value => this.updateField('rackAffinity', value) }
+          value={ this.getValue('rackAffinity') }
+          options={rackOptions}
+          splits={[',', ' ']}
         />
       </div>
     );
@@ -299,7 +294,7 @@ class RequestForm extends React.Component {
       <div className='form-group required'>
         <label htmlFor='schedule'>Schedule</label>
         <div className="row" id='schedule'>
-          <div className='col-sm-8'>
+          <div className='col-sm-7'>
             <FormField
               prop={{
                 updateFn: event => this.updateField(this.getScheduleType(), event.target.value),
@@ -309,7 +304,7 @@ class RequestForm extends React.Component {
               }}
             />
           </div>
-          <div className='col-sm-4'>
+          <div className='col-sm-5'>
             <Select
               onChange={value => this.updateField('scheduleType', value)}
               options={[
@@ -419,6 +414,12 @@ class RequestForm extends React.Component {
     const owners = (
       <div className="form-group">
         <label htmlFor='owners'>Owners <span className='form-label-tip'>separate multiple owners with commas</span></label>
+        <MultiSelect
+          id="owners"
+          onChange={ value => this.updateField('owners', value) }
+          value={ this.getValue('owners') }
+          splits={[',', ' ']}
+        />{/*
         <FormField
           id="owners"
           prop={{
@@ -436,7 +437,7 @@ class RequestForm extends React.Component {
               tokenSeparators: [',',' ']
             }
           }}
-        />
+        />*/}
       </div>
     );
     const requestTypeSelectors = (
