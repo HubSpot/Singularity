@@ -1,5 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { createSelector } from 'reselect';
 
 import TaskFilters from './TaskFilters';
 

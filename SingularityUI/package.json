@@ -49,6 +49,7 @@
     "redux": "^3.5.2",
     "redux-logger": "^2.6.1",
     "redux-thunk": "^2.0.1",
+    "reselect": "^2.5.1",
     "select2": "~3.5.1",
     "sortable": "git://github.com/HubSpot/sortable.git#v0.6.0",
     "typeahead.js": "~0.10.4",
