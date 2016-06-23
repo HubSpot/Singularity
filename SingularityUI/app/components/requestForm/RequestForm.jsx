@@ -232,7 +232,7 @@ class RequestForm extends React.Component {
           }}
         />
       </div>
-      );
+    );
     const rackSensitive = (
       <div className="form-group">
         <label htmlFor="rack-sensitive">

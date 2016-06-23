@@ -67,21 +67,24 @@ export function buildApiAction(actionName, opts = {}) {
       dispatch(started());
 
       const options = optsFunc(...args);
+      let apiResponse;
       return fetch(config.apiRoot + options.url, _.extend({credentials: 'include'}, _.omit(options, 'url')))
         .then(response => {
-          if (response.status >= 200 && response.status < 300) {
-            if (response.headers.get('Content-Type') === 'application/json') {
-              return response.json().then(json => dispatch(success(json)));
-            }
-            return response.text().then(body => dispatch(success({response: body})));
-          }
+          apiResponse = response;
           if (response.headers.get('Content-Type') === 'application/json') {
-            return response.json().then(body => dispatch(error(body)));
+            return response.json();
           }
-          return response.text().then(body => dispatch(error({message: body})));
+          return response.text();
+        })
+        .then((data) => {
+          if (apiResponse.status >= 200 && apiResponse.status < 300) {
+            return dispatch(success(data));
+          } else {
+            throw new Error(data);
+          }
         })
         .catch(ex => {
-          dispatch(error(ex));
+          return dispatch(error(ex));
         });
     };
   }
