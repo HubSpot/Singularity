@@ -1,4 +1,5 @@
 import React from 'react';
+import classNames from 'classnames';
 
 import { Modal, Button } from 'react-bootstrap';
 
@@ -72,16 +73,20 @@ export default class ShellCommandLauncher extends React.Component {
     clearInterval(this.fileInterval);
   }
 
+  isDone(state) {
+    return classNames({'complete text-success': state}, {'waiting': !state});
+  }
+
   renderStatusList() {
     return (
       <ul className="status-list">
-        <li className={this.state.commandAcked ? 'complete text-success' : 'waiting'}>
+        <li className={this.isDone(this.state.commandAcked)}>
           {!this.state.commandAcked ? <div className="page-loader loader-small" /> : <Glyphicon iconClass='ok' />} Command acknowledged...
         </li>
-        <li className={this.state.commandStarted ? 'complete text-success' : 'waiting'}>
+        <li className={this.isDone(this.state.commandStarted)}>
           {!this.state.commandStarted ? <div className="page-loader loader-small" /> : <Glyphicon iconClass='ok' />} Command started...
         </li>
-        <li className={this.state.commandFileExists ? 'complete text-success' : 'waiting'}>
+        <li className={this.isDone(this.state.commandFileExists)}>
           {!this.state.commandFileExists ? <div className="page-loader loader-small" /> : <Glyphicon iconClass='ok' />} Output file{this.state.outputFilename ? <code> {this.state.outputFilename}</code> : ''} exists...
         </li>
       </ul>

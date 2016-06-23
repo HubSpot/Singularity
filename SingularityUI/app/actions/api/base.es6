@@ -40,12 +40,6 @@ export function buildApiAction(actionName, opts={}, keyFunc=undefined) {
     optsFunc = () => opts;
   }
 
-  if (typeof opts === 'object') {
-    optsFunc = () => opts;
-  } else {
-    optsFunc = opts;
-  }
-
   function trigger(...args) {
     return function (dispatch) {
       let key;
@@ -78,15 +72,15 @@ export function buildApiAction(actionName, opts={}, keyFunc=undefined) {
   }
 
   function started(key=undefined) {
-    return { type: STARTED, key: key };
+    return { type: STARTED, key };
   }
 
   function error(error, key=undefined) {
-    return { type: ERROR, error: error, key: key };
+    return { type: ERROR, error, key };
   }
 
   function success(data, key=undefined) {
-    return { type: SUCCESS, data: data, key: key };
+    return { type: SUCCESS, data, key };
   }
 
   return {
