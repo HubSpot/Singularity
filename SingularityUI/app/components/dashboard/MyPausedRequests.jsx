@@ -11,7 +11,7 @@ import * as RequestsSelectors from '../../selectors/requests';
 
 const MyPausedRequests = ({userRequests, unpauseAction, removeAction}) => {
   let pausedRequestsSection = (
-    <div className='empty-table-message'><p>No paused requests</p></div>
+    <div className="empty-table-message"><p>No paused requests</p></div>
   );
 
   const pausedRequests = userRequests.filter((r) => r.state === 'PAUSED');
@@ -21,22 +21,22 @@ const MyPausedRequests = ({userRequests, unpauseAction, removeAction}) => {
       <UITable
         data={pausedRequests}
         keyGetter={(r) => r.request.id}
-        asyncSort
-        paginated
+        asyncSort={true}
+        paginated={true}
         rowChunkSize={10}
       >
         {RequestId}
         {Type}
         {LastDeploy}
-        {Actions(unpauseAction, removeAction)}
+        {Actions({unpauseAction, removeAction})}
       </UITable>
     );
   }
 
   return (
     <Row>
-      <Col md={12} className='table-staged'>
-        <div className='page-header'>
+      <Col md={12} className="table-staged">
+        <div className="page-header">
           <h2>My paused requests</h2>
         </div>
         {pausedRequestsSection}

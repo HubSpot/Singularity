@@ -14,6 +14,9 @@ export default class RemoveButton extends Component {
     this.state = {
       message: ''
     };
+
+    this.confirm = this.confirm.bind(this);
+    this.handleChange = this.handleChange.bind(this);
   }
 
   handleChange(event) {
@@ -27,22 +30,22 @@ export default class RemoveButton extends Component {
   render() {
     return (
       <ConfirmModal
-        confirm={this.confirm.bind(this)}
-        alt='Remove Request'
-        data-action='remove'
-        button={<span className='glyphicon glyphicon-trash'></span>}
+        confirm={this.confirm}
+        alt="Remove Request"
+        data-action="remove"
+        button={<span className="glyphicon glyphicon-trash"></span>}
       >
         <p>Are you sure you want to remove this request?</p>
         <pre>{this.props.requestId}</pre>
         <p>If not paused, removing this request will kill all active and scheduled tasks and tasks for it will not run again unless it is reposted to Singularity.</p>
         <form>
-          <div className='form-group'>
+          <div className="form-group">
             <input
-              className='form-control'
-              type='text'
+              className="form-control"
+              type="text"
               value={this.state.message}
-              onChange={this.handleChange.bind(this)}
-              placeholder='Message (optional)'
+              onChange={this.handleChange}
+              placeholder="Message (optional)"
             />
           </div>
         </form>

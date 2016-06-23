@@ -12,7 +12,7 @@ class DashboardView extends View {
   }
 
   render() {
-    ReactDOM.render(<Provider store={this.store}><DashboardPage/></Provider>, this.el);
+    ReactDOM.render(<Provider store={this.store}><DashboardPage /></Provider>, this.el);
   }
 }
 
