@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { createSelector } from 'reselect';
+import filterSelector from '../../selectors/tasks/filterSelector';
 
 import TaskFilters from './TaskFilters';
 
@@ -30,7 +30,8 @@ class TasksPage extends React.Component {
   }
 
   render() {
-    console.log(this.props.tasks);
+    const displayTasks = filterSelector({tasks: this.props.tasks, filter: this.state.filter});
+    console.log(displayTasks);
 
     return (
       <TaskFilters filter={this.state.filter} onFilterChange={this.handleFilterChange.bind(this)} />
@@ -38,7 +39,7 @@ class TasksPage extends React.Component {
   }
 }
 
-function mapStateToProps(state) {
+function mapStateToProps(state, ownProps) {
   return {
     tasks: state.api.tasks.data
   };

@@ -11,7 +11,7 @@ export const FetchAction = buildApiAction('FETCH_TASKS', (state) => {
       propertyString += ['offer.hostname', 'taskId', 'mesosTask.resources', 'rackId', 'taskRequest.request.requestType'].join('&property=');
       break;
     case 'scheduled':
-      propertyString += 'pendingTask';
+      propertyString += ['offer.hostname', 'taskId', 'mesosTask.resources', 'rackId', 'taskRequest.request.requestType', 'pendingTask'].join('&property=');
       break;
     default:
       propertyString = '';
