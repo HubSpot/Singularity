@@ -20,6 +20,15 @@ import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 
 import TaskFileBrowser from './TaskFileBrowser';
 import ShellCommands from './ShellCommands';
+import TaskAlerts from './TaskAlerts';
+import TaskMetadataAlerts from './TaskMetadataAlerts';
+import TaskHistory from './TaskHistory';
+import TaskLatestLog from './TaskLatestLog';
+import TaskS3Logs from './TaskS3Logs';
+import TaskLbUpdates from './TaskLbUpdates';
+import TaskInfo from './TaskInfo';
+import TaskEnvVars from './TaskEnvVars';
+import TaskHealthchecks from './TaskHealthchecks';
 
 class TaskDetail extends React.Component {
 
@@ -129,194 +138,6 @@ class TaskDetail extends React.Component {
     );
   }
 
-  renderAlerts(t, deploy, pendingDeploys) {
-    let alerts = [];
-
-    if (deploy.deployResult && deploy.deployResult.deployState == 'FAILED') {
-      // Did this task cause a deploy to fail?
-      if (Utils.isCauseOfFailure(t, deploy)) {
-        alerts.push(
-          <Alert key='failure' bsStyle='danger'>
-            <p>This task casued <a href={`${config.appRoot}/request/${deploy.requestId}/deploy/${deploy.deployId}`}>
-              Deploy {deploy.deployId}
-            </a> to fail. Cause: {Utils.causeOfDeployFailure(t, deploy)}</p>
-          </Alert>
-        );
-      } else {
-        // Did a deploy cause this task to fail?
-        const fails = deploy.deployResult.deployFailures.map((f, i) => {
-          if (f.taskId) {
-            return <li key={i}><a href={`${config.appRoot}/task/${f.taskId.id}`}>{f.taskId.id}</a>: {Utils.humanizeText(f.reason)} {f.message}</li>;
-          } else {
-            return <li key={i}>{Utils.humanizeText(f.reason)} {f.message}</li>;
-          }
-        });
-        alerts.push(
-          <Alert key='failure' bsStyle='danger'>
-            <a href={`${config.appRoot}/request/${deploy.deploy.requestId}/deploy/${deploy.deploy.id}`}>Deploy {deploy.deploy.id} </a>failed.
-            {Utils.ifDeployFailureCausedTaskToBeKilled(t) ? ' This task was killed as a result of the failing deploy. ' : ''}
-            {deploy.deployResult.deployFailures.length ? ' The deploy failure was caused by: ' : ''}
-            <ul>{fails}</ul>
-          </Alert>
-        );
-      }
-    }
-
-    // Is this a scheduled task that has been running much longer than previous ones?
-    if (t.isStillRunning && t.task.taskRequest.request.requestType == 'SCHEDULED') {
-      let avg = deploy.deployStatistics.averageRuntimeMillis;
-      let current = new Date().getTime() - t.task.taskId.startedAt;
-      let threshold = config.warnIfScheduledJobIsRunningPastNextRunPct / 100;
-      if (current > (avg * threshold)) {
-        alerts.push(
-          <Alert key='runLong' bsStyle='warning'>
-            <strong>Warning: </strong>
-            This scheduled task has been running longer than <code>{threshold}</code> times the average for the request and may be stuck.
-          </Alert>
-        );
-      }
-    }
-
-    // Was this task killed by a decomissioning slave?
-    if (!t.isStillRunning) {
-      let decomMessage = _.find(t.taskUpdates, (u) => {
-        return u.statusMessage && u.statusMessage.indexOf('DECOMISSIONING') != -1 && u.taskState == 'TASK_CLEANING';
-      })
-      let killedMessage = _.find(t.taskUpdates, (u) => {
-        return u.taskState == 'TASK_KILLED';
-      });
-      if (decomMessage && killedMessage) {
-        alerts.push(
-          <Alert key='decom' bsStyle='warning'>This task was replaced then killed by Singularity due to a slave decommissioning.</Alert>
-        );
-      }
-    }
-
-    // Healthcheck notification
-    if (_.find(pendingDeploys, (d) => {
-      d.deployMarker.requestId == t.task.taskId.requestId && d.deployMarker.deployId == t.task.taskId.deployId && d.currentDeployState == 'WAITING'
-    })) {
-      const hcTable = t.healthcheckResults > 0 && (
-        <SimpleTable
-          emptyMessage="No healthchecks"
-          entries={[t.healthcheckResults[0]]}
-          perPage={5}
-          first
-          last
-          headers={['Timestamp', 'Duration', 'Status', 'Message']}
-          renderTableRow={(data, index) => {
-            return (
-              <tr key={index}>
-                <td>{Utils.absoluteTimestamp(data.timestamp)}</td>
-                <td>{data.durationMillis} {data.durationMillis ? 'ms' : ''}</td>
-                <td>{data.statusCode ? <span className={`label label-${data.statusCode == 200 ? 'success' : 'danger'}`}>HTTP {data.statusCode}</span> : <span className="label label-warning">No Response</span>}</td>
-                <td><pre className="healthcheck-message">{data.errorMessage || data.responseBody}</pre></td>
-                <td className="actions-column"><JSONButton object={data} text="{ }" /></td>
-              </tr>
-            );
-          }}
-        />
-      );
-      const pending = <span><strong>Deploy <code>{t.task.taskId.deployId}</code> is pending:</strong> Waiting for task to become healthy.</span>;
-      alerts.push(
-        <Alert key='hc' bsStyle='warning'>
-          <strong>Deploy <code>{t.task.taskId.deployId}</code> is pending: </strong>
-          {t.hasSuccessfulHealthcheck ? "Waiting for successful load balancer update" : (t.healthcheckResults > 0 ? hcTable : pending)}
-        </Alert>
-      );
-    }
-
-    // Killed due to HC fail
-    if (t.lastHealthcheckFailed && !t.isStillRunning) {
-      alerts.push(
-        <Alert key='hcFail' bsStyle='danger'>
-          <strong>Task killed due to no passing healthchecks after {t.tooManyRetries ? t.healthcheckResults.length.toString() + ' tries. ' : t.secondsElapsed.toString() + ' seconds. '}</strong>
-          Last healthcheck {t.healthcheckResults[0].statusCode ?
-            <span>responded with <span className="label label-danger">HTTP {t.healthcheckResults[0].statusCode}</span></span> :
-              <span>did not respond after <code>{t.healthcheckResults[0].durationMillis ? t.healthcheckResults[0].durationMillis.toString() + ' ms' : ''}</code> at {Utils.absoluteTimestamp(t.healthcheckResults[0].timestamp)}</span>}
-            <a href="#healthchecks"> View all healthchecks</a>
-            <a href="#logs"> View service logs</a>
-            {t.healthcheckFailureReasonMessage ? <p>The healthcheck failed because {t.healthcheckFailureReasonMessage}</p> : ''}
-        </Alert>
-      )
-    }
-
-    return (
-      <div>
-        {alerts}
-      </div>
-    )
-  }
-
-  renderMetadataAlerts(t) {
-    let alerts = [];
-
-    for(let i in t.taskMetadata) {
-      let md = t.taskMetadata[i];
-      const message = md.message && (
-        <pre className='pre-scrollable'>{md.message}</pre>
-      );
-      alerts.push(
-        <Alert key={i} bsStyle={md.level == 'ERROR' ? 'danger' : 'warning'}>
-          <h4>{md.title}</h4>
-          <p>
-            <strong>{Utils.timeStampFromNow(md.timestamp)}</strong> | Type: {md.type} {md.user ? `| User: ${md.user}` : null}
-          </p>
-          {message}
-        </Alert>
-      )
-    }
-
-    return (
-      <div>
-        {alerts}
-      </div>
-    )
-  }
-
-  renderHistory(t) {
-    return (
-      <Section title="History">
-        <SimpleTable
-          emptyMessage="This task has no history yet"
-          entries={t.taskUpdates.concat().reverse()}
-          perPage={5}
-          headers={['Status', 'Message', 'Time']}
-          renderTableRow={(data, index) => {
-            return (
-              <tr key={index} className={index == 0 ? 'medium-weight' : ''}>
-                <td>{Utils.humanizeText(data.taskState)}</td>
-                <td>{data.statusMessage ? data.statusMessage : '—'}</td>
-                <td>{Utils.timeStampFromNow(data.timestamp)}</td>
-              </tr>
-            );
-          }}
-        />
-      </Section>
-    );
-  }
-
-  renderLatestLog(t, files) {
-    const link = t.isStillRunning ? (
-      <a href={`${config.appRoot}/task/${this.props.taskId}/tail/${Utils.substituteTaskId(config.runningTaskLogPath, this.props.taskId)}`} title="Log">
-          <span><Glyphicon iconClass="file" /> {Utils.fileName(config.runningTaskLogPath)}</span>
-      </a>
-    ) : (
-      <a href={`${config.appRoot}/task/${this.props.taskId}/tail/${Utils.substituteTaskId(config.finishedTaskLogPath, this.props.taskId)}`} title="Log">
-          <span><Glyphicon iconClass="file" /> {Utils.fileName(config.finishedTaskLogPath)}</span>
-      </a>
-    );
-    return (
-      <Section title="Logs" id="logs">
-        <div className="row">
-          <div className="col-md-4">
-            <h4>{link}</h4>
-          </div>
-        </div>
-      </Section>
-    )
-  }
-
   renderFiles(t, files) {
     if (!files) {
       return (
@@ -342,82 +163,6 @@ class TaskDetail extends React.Component {
             });
           }}
         />
-      </Section>
-    );
-  }
-
-  renderS3Logs(f, s3Files) {
-    return (
-      <Section title="S3 Logs">
-        <SimpleTable
-          emptyMessage="No S3 logs"
-          entries={s3Files}
-          perPage={5}
-          headers={['Log file', 'Size', 'Last modified', '']}
-          renderTableRow={(data, index) => {
-            return (
-              <tr key={index}>
-                <td>
-                  <a className="long-link" href={data.getUrl} target="_blank" title={data.key}>
-                      {Utils.trimS3File(data.key.substring(data.key.lastIndexOf('/') + 1), this.props.taskId)}
-                  </a>
-                </td>
-                <td>{Utils.humanizeFileSize(data.size)}</td>
-                <td>{Utils.absoluteTimestamp(data.lastModified)}</td>
-                <td className="actions-column">
-                  <a href={data.getUrl} target="_blank" title="Download">
-                    <Glyphicon iconClass="download-alt"></Glyphicon>
-                  </a>
-                </td>
-              </tr>
-            );
-          }}
-        />
-      </Section>
-    );
-  }
-
-  renderLbUpdates(t) {
-    return (
-      <Section title="Load Balancer Updates">
-        <SimpleTable
-          emptyMessage="No Load Balancer Info"
-          entries={t.loadBalancerUpdates}
-          perPage={5}
-          headers={['Timestamp', 'Request Type', 'State', 'Message', '']}
-          renderTableRow={(data, index) => {
-            return (
-              <tr key={index}>
-                <td>{Utils.absoluteTimestamp(data.timestamp)}</td>
-                <td>{Utils.humanizeText(data.loadBalancerRequestId.requestType)}</td>
-                <td>{Utils.humanizeText(data.loadBalancerState)}</td>
-                <td>{data.message}</td>
-                <td className="actions-column">
-                  <JSONButton object={data} text="{ }" />
-                </td>
-              </tr>
-            );
-          }}
-        />
-      </Section>
-    );
-  }
-
-  renderInfo(t) {
-    return (
-      <Section title="Info">
-        <div className="row">
-          <ul className="list-unstyled horizontal-description-list">
-            <InfoBox copyableClassName="info-copyable" name="Task ID" value={t.task.taskId.id} />
-            <InfoBox copyableClassName="info-copyable" name="Directory" value={t.directory} />
-            {t.task.mesosTask.executor ? <InfoBox copyableClassName="info-copyable" name="Executor GUID" value={t.task.mesosTask.executor.executorId.value} /> : null}
-            <InfoBox copyableClassName="info-copyable" name="Hostname" value={t.task.offer.hostname} />
-            <InfoBox copyableClassName="info-copyable" name="Ports" value={t.ports.toString()} />
-            <InfoBox copyableClassName="info-copyable" name="Rack ID" value={t.task.rackId} />
-            {t.task.taskRequest.deploy.executorData ? <InfoBox copyableClassName="info-copyable" name="Extra Cmd Line Arguments (for Deploy)" value={t.task.taskRequest.deploy.executorData.extraCmdLineArgs} /> : null}
-            {t.task.taskRequest.pendingTask && t.task.taskRequest.pendingTask.cmdLineArgsList ? <InfoBox copyableClassName="info-copyable" name="Extra Cmd Line Arguments (for Task)" value={t.task.taskRequest.pendingTask.cmdLineArgsList} /> : null}
-          </ul>
-        </div>
       </Section>
     );
   }
@@ -472,65 +217,6 @@ class TaskDetail extends React.Component {
     )
   }
 
-  renderEnvVariables(t) {
-    if (!t.task.mesosTask.executor) return null;
-    let vars = [];
-    for (let v of t.task.mesosTask.executor.command.environment.variables) {
-      vars.push(<InfoBox key={v.name} copyableClassName="info-copyable" name={v.name} value={v.value} />);
-    }
-
-    return (
-      <CollapsableSection title="Environment variables">
-        <div className="row">
-          <ul className="list-unstyled horizontal-description-list">
-            {vars}
-          </ul>
-        </div>
-      </CollapsableSection>
-    );
-  }
-
-  renderHealthchecks(t) {
-    let healthchecks = t.healthcheckResults;
-    if (!healthchecks || healthchecks.length == 0) return null;
-    return (
-      <CollapsableSection title="Healthchecks" id="healthchecks">
-        <div className="well">
-          <span>
-            Beginning on <strong>Task running</strong>, hit
-            <a className="healthcheck-link" target="_blank" href={`http://${t.task.offer.hostname}:${_.first(t.ports)}${t.task.taskRequest.deploy.healthcheckUri}`}>
-              {t.task.taskRequest.deploy.healthcheckUri}
-            </a>
-            with a <strong>{t.task.taskRequest.deploy.healthcheckTimeoutSeconds || config.defaultHealthcheckTimeoutSeconds}</strong> second timeout
-            every <strong>{t.task.taskRequest.deploy.healthcheckIntervalSeconds || config.defaultHealthcheckIntervalSeconds}</strong> second(s)
-            until <strong>HTTP 200</strong> is recieved,
-            <strong>{t.task.taskRequest.deploy.healthcheckMaxRetries}</strong> retries have failed,
-            or <strong>{t.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds || config.defaultDeployHealthTimeoutSeconds}</strong> seconds have elapsed.
-          </span>
-        </div>
-        <SimpleTable
-          emptyMessage="No healthchecks"
-          entries={healthchecks}
-          perPage={5}
-          first
-          last
-          headers={['Timestamp', 'Duration', 'Status', 'Message', '']}
-          renderTableRow={(data, index) => {
-            return (
-              <tr key={index}>
-                <td>{Utils.absoluteTimestamp(data.timestamp)}</td>
-                <td>{data.durationMillis} {data.durationMillis ? 'ms' : ''}</td>
-                <td>{data.statusCode ? <span className={`label label-${data.statusCode == 200 ? 'success' : 'danger'}`}>HTTP {data.statusCode}</span> : <span className="label label-warning">No Response</span>}</td>
-                <td><pre className="healthcheck-message">{data.errorMessage || data.responseBody}</pre></td>
-                <td className="actions-column"><JSONButton object={data} text="{ }" /></td>
-              </tr>
-            );
-          }}
-        />
-      </CollapsableSection>
-    );
-  }
-
   renderShellCommands(t, shellCommandResponse, taskFiles) {
     if (t.isStillRunning || t.shellCommandHistory.length > 0) {
       return (
@@ -564,17 +250,17 @@ class TaskDetail extends React.Component {
     return (
       <div>
         {this.renderHeader(task, cleanup)}
-        {this.renderAlerts(task, this.props.deploy, this.props.pendingDeploys)}
-        {this.renderMetadataAlerts(task)}
-        {this.renderHistory(task)}
-        {this.renderLatestLog(task, filesToDisplay)}
+        <TaskAlerts task={task} deploy={this.props.deploy} pendingDeploys={this.props.pendingDeploys} />
+        <TaskMetadataAlerts task={task} />
+        <TaskHistory task={task} />
+        <TaskLatestLog task={task} />
         {this.renderFiles(task, filesToDisplay)}
-        {this.renderS3Logs(task, this.props.s3Logs)}
-        {this.renderLbUpdates(task)}
-        {this.renderInfo(task)}
+        <TaskS3Logs task={task} s3Files={this.props.s3Logs} />
+        <TaskLbUpdates task={task} />
+        <TaskInfo task={task} />
         {this.renderResourceUsage(task, this.props.resourceUsage)}
-        {this.renderEnvVariables(task)}
-        {this.renderHealthchecks(task)}
+        <TaskEnvVars task={task} />
+        <TaskHealthchecks task={task} />
         {this.renderShellCommands(task, this.props.shellCommandResponse, this.props.files)}
       </div>
     );
