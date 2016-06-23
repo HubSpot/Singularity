@@ -56,7 +56,7 @@ export default class ShellCommands extends React.Component {
 
     const form = this.props.task.isStillRunning &&
     this.props.task.task.taskRequest.deploy.customExecutorCmd &&
-    this.props.task.task.taskRequest.deploy.customExecutorCmd.indexOf('singularity-executor') != -1 ? (
+    this.props.task.task.taskRequest.deploy.customExecutorCmd.indexOf('singularity-executor') != -1 && (
       <div className="row">
         <form className="col-md-6">
           <h3>Execute a command</h3>
@@ -79,9 +79,9 @@ export default class ShellCommands extends React.Component {
           ) : null}
         </form>
       </div>
-    ) : null;
+    );
 
-    const history = this.props.task.shellCommandHistory.length ? (
+    const history = !!this.props.task.shellCommandHistory.length && (
       <div>
         <h3>Command History</h3>
           <SimpleTable
@@ -126,9 +126,9 @@ export default class ShellCommands extends React.Component {
             }}
           />
       </div>
-    ) : null;
+    );
 
-    const launcher = this.state.showLauncher ? (
+    const launcher = this.state.showLauncher && (
       <ShellCommandLauncher
         commandHistory={this.props.task.shellCommandHistory}
         close={() => this.setState({showLauncher: false})}
@@ -137,7 +137,7 @@ export default class ShellCommands extends React.Component {
         taskFiles={this.props.taskFiles}
         shellCommandResponse={this.props.shellCommandResponse}
       />
-    ) : null;
+    );
 
     return (
       <div>

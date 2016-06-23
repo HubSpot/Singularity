@@ -47,7 +47,7 @@ class TaskDetail extends React.Component {
   }
 
   renderHeader(t, cleanup) {
-    const taskState = t.taskUpdates ? (
+    const taskState = t.taskUpdates && (
       <div className="col-xs-6 task-state-header">
         <h1>
           <span>Instance {t.task.taskId.instanceNo} </span>
@@ -56,12 +56,12 @@ class TaskDetail extends React.Component {
           </span>
         </h1>
       </div>
-    ) : null;
+    );
 
     const removeText = cleanup ?
       (cleanup.isImmediate ? 'Destroy task' : 'Override cleanup') :
       (t.isCleaning ? 'Destroy task' : 'Kill Task');
-    const removeBtn = t.isStillRunning ? (
+    const removeBtn = t.isStillRunning && (
       <span>
         <ConfirmationDialog
           ref="confirmKillTask"
@@ -85,12 +85,12 @@ class TaskDetail extends React.Component {
           {removeText}
         </a>
       </span>
-    ) : null;
-    const terminationAlert = t.isStillRunning && !cleanup && t.isCleaning ? (
+    );
+    const terminationAlert = t.isStillRunning && !cleanup && t.isCleaning && (
       <div className="alert alert-warning" role="alert">
           <strong>Task is terminating:</strong> To issue a non-graceful termination (kill -term), click Destroy Task.
       </div>
-    ) : null;
+    );
 
     return (
       <header className='detail-header'>
@@ -196,7 +196,7 @@ class TaskDetail extends React.Component {
     if (_.find(pendingDeploys, (d) => {
       d.deployMarker.requestId == t.task.taskId.requestId && d.deployMarker.deployId == t.task.taskId.deployId && d.currentDeployState == 'WAITING'
     })) {
-      const hcTable = t.healthcheckResults > 0 ? (
+      const hcTable = t.healthcheckResults > 0 && (
         <SimpleTable
           emptyMessage="No healthchecks"
           entries={[t.healthcheckResults[0]]}
@@ -216,7 +216,7 @@ class TaskDetail extends React.Component {
             );
           }}
         />
-      ) : null;
+      );
       const pending = <span><strong>Deploy <code>{t.task.taskId.deployId}</code> is pending:</strong> Waiting for task to become healthy.</span>;
       alerts.push(
         <Alert key='hc' bsStyle='warning'>
@@ -253,9 +253,9 @@ class TaskDetail extends React.Component {
 
     for(let i in t.taskMetadata) {
       let md = t.taskMetadata[i];
-      const message = md.message ? (
+      const message = md.message && (
         <pre className='pre-scrollable'>{md.message}</pre>
-      ) : null;
+      );
       alerts.push(
         <Alert key={i} bsStyle={md.level == 'ERROR' ? 'danger' : 'warning'}>
           <h4>{md.title}</h4>
@@ -434,9 +434,9 @@ class TaskDetail extends React.Component {
       cpuUsageExceeding = (cpuUsage / usage.cpusLimit) > 1.10;
     }
 
-    const exceedingWarning = cpuUsageExceeding ? (
+    const exceedingWarning = cpuUsageExceeding && (
       <span className="label label-danger">CPU usage > 110% allocated</span>
-    ) : null;
+    );
 
     return (
       <CollapsableSection title="Resource Usage">
