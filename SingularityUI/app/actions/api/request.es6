@@ -17,4 +17,3 @@ export const RemoveAction = buildJsonApiAction(
     body: { message }
   })
 );
-

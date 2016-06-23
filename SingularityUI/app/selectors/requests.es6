@@ -51,7 +51,7 @@ export const getUserRequests = createSelector(
         return false;
       }
 
-      for (let owner of requestOwners) {
+      for (const owner of requestOwners) {
         if (deployUserTrimmed === owner.split('@')[0]) {
           return true;
         }
@@ -75,7 +75,7 @@ export const getUserRequestTotals = createSelector(
       service: 0
     };
 
-    for (let r of userRequests) {
+    for (const r of userRequests) {
       const type = r.request.requestType;
       switch (type) {
         case 'ON_DEMAND':
@@ -93,6 +93,9 @@ export const getUserRequestTotals = createSelector(
         case 'SERVICE':
           userRequestTotals.service += 1;
           break;
+        default:
+          // wat
+          console.warn(`Unknown request type ${type}. Check requests reducer.`);
       }
     }
 

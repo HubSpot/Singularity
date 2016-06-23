@@ -182,13 +182,13 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
   return {
     changeStar: (requestId) => {
-      dispatch(StarredActions.changeRequestStar(requestId))
+      dispatch(StarredActions.changeRequestStar(requestId));
     },
     unpauseAction: (requestId, message) => {
-      dispatch(RequestActions.UnpauseAction.trigger(requestId, message))
+      dispatch(RequestActions.UnpauseAction.trigger(requestId, message));
     },
     removeAction: (requestId, message) => {
-      dispatch(RequestActions.RemoveAction.trigger(requestId, message))
+      dispatch(RequestActions.RemoveAction.trigger(requestId, message));
     }
   };
 }

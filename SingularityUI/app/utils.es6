@@ -350,9 +350,9 @@ const Utils = {
         object[path[0]],
         path.slice(1, path.length)
       );
-    } else {
-      return defaultValue;
     }
+
+    return defaultValue;
   }
 };
 
