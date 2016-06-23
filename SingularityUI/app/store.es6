@@ -13,11 +13,5 @@ export default function configureStore(initialState = {}) {
 
   const store = createStore(rootReducer, initialState, compose(applyMiddleware.apply(this, middlewares)));
 
-  // set up subscriber
-  store.subscribe(() => {
-    const starredRequests = store.getState().ui.starred;
-    window.localStorage.starredRequests = JSON.stringify(starredRequests);
-  });
-
   return store;
 }
