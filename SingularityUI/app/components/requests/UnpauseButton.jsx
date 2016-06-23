@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 
-import ModalButton from '../common/ModalButton';
+import ConfirmModal from '../common/ConfirmModal';
 
 export default class UnpauseButton extends Component {
   static propTypes = {
@@ -26,7 +26,7 @@ export default class UnpauseButton extends Component {
 
   render() {
     return (
-      <ModalButton
+      <ConfirmModal
         confirm={this.confirm.bind(this)}
         alt='Unpause Request'
         data-action='unpause'
@@ -45,7 +45,7 @@ export default class UnpauseButton extends Component {
             />
           </div>
         </form>
-      </ModalButton>
+      </ConfirmModal>
     );
   }
 }

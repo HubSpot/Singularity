@@ -31,8 +31,6 @@ class Column extends Component {
     }
   };
 
-  displayName = 'Column';
-
   constructor(props) {
     super(props);
   }

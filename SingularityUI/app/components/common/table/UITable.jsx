@@ -39,7 +39,6 @@ class UITable extends Component {
 
   constructor(props) {
     super(props);
-    this.displayName = 'UITable';
 
     this.state = {
       sortBy: props.defaultSortBy,

@@ -2,7 +2,7 @@ import React, { Component, PropTypes } from 'react';
 import Modal from 'react-bootstrap/lib/Modal';
 import Button from 'react-bootstrap/lib/Button';
 
-export default class ModalButton extends Component {
+export default class ConfirmModal extends Component {
   static propTypes = {
     children: PropTypes.oneOfType([
       PropTypes.arrayOf(PropTypes.node),

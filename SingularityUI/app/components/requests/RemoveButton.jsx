@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 
-import ModalButton from '../common/ModalButton';
+import ConfirmModal from '../common/ConfirmModal';
 
 export default class RemoveButton extends Component {
   static propTypes = {
@@ -26,7 +26,7 @@ export default class RemoveButton extends Component {
 
   render() {
     return (
-      <ModalButton
+      <ConfirmModal
         confirm={this.confirm.bind(this)}
         alt='Remove Request'
         data-action='remove'
@@ -46,7 +46,7 @@ export default class RemoveButton extends Component {
             />
           </div>
         </form>
-      </ModalButton>
+      </ConfirmModal>
     );
   }
 }

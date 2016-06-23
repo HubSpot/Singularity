@@ -6,7 +6,6 @@ import { RequestId, Type, LastDeploy, DeployUser, State } from './Columns';
 class RequestsTable extends Component {
   constructor(props) {
     super(props);
-    this.displayName = 'RequestsTable';
 
     this.state = {
       sortBy: 'requestId',
