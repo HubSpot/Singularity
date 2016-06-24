@@ -8,6 +8,10 @@ export default class Breadcrumbs extends React.Component {
         return (
           <li key={n}>{i.label} <a href={i.link}>{i.text}</a></li>
         );
+      } else if (i.onClick) {
+        return (
+          <li key={n}>{i.label} <a onClick={i.onClick}>{i.text}</a></li>
+        );
       } else {
         return (
           <li key={n}>{i.label} {i.text}</li>
@@ -20,6 +24,7 @@ export default class Breadcrumbs extends React.Component {
     return (
       <ul className="breadcrumb">
           {this.renderItems()}
+          <span className="pull-right">{this.props.right}</span>
       </ul>
     );
   }
@@ -27,8 +32,9 @@ export default class Breadcrumbs extends React.Component {
 
 Breadcrumbs.propTypes = {
   items: React.PropTypes.arrayOf(React.PropTypes.shape({
-      label: React.PropTypes.string.isRequired,
-      text: React.PropTypes.string.isRequired,
+      label: React.PropTypes.string,
+      text: React.PropTypes.oneOfType([React.PropTypes.string.isRequired, React.PropTypes.number.isRequired]),
       link: React.PropTypes.string
-  })).isRequired
+  })).isRequired,
+  right: React.PropTypes.element
 };

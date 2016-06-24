@@ -4,7 +4,6 @@ let RequestDetailController;
 let RequestFormEditController;
 let RequestFormNewController;
 let RequestsTableController;
-let TaskDetailController;
 let TaskSearchController;
 let Utils;
 
@@ -26,7 +25,7 @@ RequestsTableController = require('controllers/RequestsTable');
 
 import TasksTableController from 'controllers/TasksTable';
 
-TaskDetailController = require('controllers/TaskDetail');
+import TaskDetailController from 'controllers/TaskDetail';
 
 import RacksController from 'controllers/Racks';
 
@@ -130,8 +129,9 @@ class Router extends Backbone.Router {
 
   taskDetail(taskId) {
     return this.app.bootstrapController(new TaskDetailController({
-      taskId,
-      filePath: null
+      store: this.app.store,
+      taskId: taskId,
+      filePath: taskId
     }));
   }
 
@@ -140,8 +140,9 @@ class Router extends Backbone.Router {
       filePath = "";
     }
     return this.app.bootstrapController(new TaskDetailController({
-      taskId,
-      filePath
+      store: this.app.store,
+      taskId: taskId,
+      filePath: filePath
     }));
   }
 
