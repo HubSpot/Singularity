@@ -12,10 +12,15 @@ class ReqeustFormController extends Controller {
     this.requestId = requestId;
 
     const racksPromise = this.store.dispatch(RacksFetchAction.trigger());
-    const requestPromise = this.requestId ? this.store.dispatch(RequestFetchAction.trigger(this.requestId)) : Promise.resolve();
+    let requestPromise;
+    if (this.requestId) {
+      requestPromise = this.store.dispatch(RequestFetchAction.trigger(this.requestId));
+    } else {
+      requestPromise = this.store.dispatch(RequestFetchAction.clearData());
+    }
 
     Promise.all([racksPromise, requestPromise]).then(() => {
-      this.setView(new RequestFormView({store: this.store, editing: this.requestId}));
+      this.setView(new RequestFormView({store: this.store}));
       app.showView(this.view);
     });
   }
