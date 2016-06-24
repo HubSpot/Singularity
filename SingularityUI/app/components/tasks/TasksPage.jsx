@@ -40,9 +40,20 @@ class TasksPage extends React.Component {
     }
   }
 
+  getDefaultSortAttribute(t) {
+    switch(this.state.filter.taskStatus) {
+      case 'active':
+        return t.taskId.startedAt;
+      case 'scheduled':
+        if (!t.pendingTask) return null;
+        return t.pendingTask.pendingTaskId.nextRunAt;
+    }
+  }
+
   render() {
     const displayRequestTypeFilters = this.state.filter.taskStatus == 'active';
-    const displayTasks = _.sortBy(filterSelector({tasks: this.props.tasks, filter: this.state.filter}), (t) => t.taskId && t.taskId.startedAt).reverse();
+    const displayTasks = _.sortBy(filterSelector({tasks: this.props.tasks, filter: this.state.filter}), (t) => this.getDefaultSortAttribute(t));
+    if (this.state.filter.taskStatus == 'active') displayTasks.reverse();
 
     return (
       <div>
