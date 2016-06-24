@@ -59,7 +59,6 @@ class TaskDetail extends React.Component {
     const taskState = t.taskUpdates && (
       <div className="col-xs-6 task-state-header">
         <h1>
-          <span>Instance {t.task.taskId.instanceNo} </span>
           <span className={`label label-${Utils.getLabelClassFromTaskState(_.last(t.taskUpdates).taskState)} task-state-header-label`}>
             {Utils.humanizeText(_.last(t.taskUpdates).taskState)} {cleanup ? `(${Utils.humanizeText(cleanup.cleanupType)})` : ''}
           </span>
@@ -261,7 +260,7 @@ class TaskDetail extends React.Component {
     let filesToDisplay = this.analyzeFiles(this.props.files[`${this.props.taskId}/${this.state.currentFilePath}`].data);
 
     return (
-      <div>
+      <div className="task-detail detail-view">
         {this.renderHeader(task, cleanup)}
         <TaskAlerts task={task} deploy={this.props.deploy} pendingDeploys={this.props.pendingDeploys} />
         <TaskMetadataAlerts task={task} />
