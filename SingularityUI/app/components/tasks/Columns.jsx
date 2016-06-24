@@ -21,6 +21,7 @@ export const TaskId = (
       )
     }
     sortable={true}
+    className="keep-in-check"
   />
 );
 
