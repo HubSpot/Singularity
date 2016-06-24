@@ -21,6 +21,10 @@ export default class ShellCommands extends React.Component {
     }
   }
 
+  componentWillUnmount() {
+    clearTimeout(this.timeout);
+  }
+
   onOpenLogChange(e) {
     this.setState({
       openLog: e.target.checked
@@ -45,7 +49,7 @@ export default class ShellCommands extends React.Component {
         showLauncher: this.state.openLog,
         submitDisabled: false
       });
-      setTimeout(() => this.setState({responseText: null}), 5000);
+      this.timeout = setTimeout(() => this.setState({responseText: null}), 5000);
     });
   }
 
