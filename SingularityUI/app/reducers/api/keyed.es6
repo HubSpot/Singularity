@@ -6,7 +6,6 @@ export default function buildKeyedApiActionReducer(ActionGroup, initialData={}) 
 
   return function reducer(state={}, action) {
     if (action.type == ActionGroup.CLEAR) {
-      console.log('clear');
       return {};
     } else if (_.contains([ActionGroup.ERROR, ActionGroup.SUCCESS, ActionGroup.STARTED], action.type)) {
       const newState = {};
