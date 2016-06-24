@@ -126,7 +126,7 @@ export default class FormModal extends React.Component {
       <Modal show={this.state.visible} onHide={this.hide.bind(this)}>
         <Modal.Body>
           {this.props.children}
-          {this.props.children && <hr/>}
+          {this.props.children && !!this.props.formElements.length && <hr/>}
           {this.renderForm()}
         </Modal.Body>
         <Modal.Footer>
@@ -148,5 +148,5 @@ FormModal.propTypes = {
     label: React.PropTypes.string,
     required: React.PropTypes.bool,
     defaultValue: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.bool])
-  }))
+  })).isRequired
 };
