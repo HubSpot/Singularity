@@ -17,7 +17,7 @@ export default class CollapsableSection extends React.Component {
 
   render() {
     return (
-      <div>
+      <div id={this.props.id}>
         <div className="page-header">
             <h2>
               {this.props.title}

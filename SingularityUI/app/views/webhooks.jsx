@@ -3,10 +3,10 @@ import ReactDOM from 'react-dom';
 
 import Webhooks from '../components/webhooks/Webhooks';
 
-import View from './view';
+import ReactView from './reactView';
 import { Provider } from 'react-redux';
 
-class WebhooksView extends View {
+class WebhooksView extends ReactView {
     initialize(store) {
         this.store = store;
     }

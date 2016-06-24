@@ -341,6 +341,78 @@ const Utils = {
     }
   },
 
+  joinPath(a, b) {
+    if (!a.endsWith('/')) a += '/';
+    if (b.startsWith('/')) b = b.substring(1, b.length);
+    return a + b;
+  },
+
+  range(begin, end, interval = 1) {
+    let res = [];
+    for (let i = begin; i < end; i += interval) {
+      res.push(i);
+    }
+    return res;
+  },
+
+  trimS3File(filename, taskId) {
+    let finalRegex;
+    if (!config.taskS3LogOmitPrefix) {
+      return filename;
+    }
+    finalRegex = config.taskS3LogOmitPrefix.replace('%taskId', taskId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).replace('%index', '[0-9]+').replace('%s', '[0-9]+');
+    return filename.replace(new RegExp(finalRegex), '');
+  },
+
+  isCauseOfFailure(task, deploy) {
+    deploy.deployResult.deployFailures.map(failure => {
+      if (failure.taskId && failure.taskId.id === task.taskId) {
+        return true;
+      }
+    });
+    return false;
+  },
+
+  causeOfDeployFailure(task, deploy) {
+    let failureCause;
+    failureCause = '';
+    deploy.deployResult.deployFailures.map(failure => {
+      if (failure.taskId && failure.taskId.id === task.taskId) {
+        return failureCause = Handlebars.helpers.humanizeText(failure.reason);
+      }
+    });
+    if (failureCause) {
+      return failureCause;
+    }
+  },
+
+  ifDeployFailureCausedTaskToBeKilled(task) {
+    let deployFailed, taskKilled;
+    deployFailed = false;
+    taskKilled = false;
+    task.taskUpdates.map(update => {
+      if (update.statusMessage && update.statusMessage.indexOf('DEPLOY_FAILED' !== -1)) {
+        deployFailed = true;
+      }
+      if (update.taskState === 'TASK_KILLED') {
+        return taskKilled = true;
+      }
+    });
+    return deployFailed && taskKilled;
+  },
+
+  healthcheckFailureReasonMessage(task) {
+    let healthcheckResults = task.healthcheckResults;
+    if (healthcheckResults && healthcheckResults.length > 0) {
+      if (healthcheckResults[0].errorMessage && healthcheckResults[0].errorMessage.toLowerCase().indexOf('connection refused') != -1) {
+        let portIndex = task.task.taskRequest.deploy.healthcheckPortIndex || 0;
+        let port = task.ports && task.ports.length > portIndex ? task[portIndex] : false;
+        return `a refused connection. It is possible your app did not start properly or was not listening on the anticipated port (${port}). Please check the logs for more details.`;
+      }
+    }
+    return null;
+  },
+
   maybe(object, path, defaultValue = undefined) {
     if (!path.length) {
       return object;
