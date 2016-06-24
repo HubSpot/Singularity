@@ -1,4 +1,4 @@
-import View from './view';
+import ReactView from './reactView';
 
 import Requests from '../collections/Requests';
 
@@ -7,7 +7,7 @@ import GlobalSearch from '../components/globalSearch/GlobalSearch';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-class GlobalSearchView extends View {
+class GlobalSearchView extends ReactView {
   constructor(...args) {
     super(...args);
     this.show = this.show.bind(this);

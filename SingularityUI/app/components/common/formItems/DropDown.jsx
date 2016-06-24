@@ -1,7 +1,6 @@
 import React from 'react';
 import classNames from 'classnames';
 import Utils from '../../../utils';
-import select2 from 'select2';
 
 const DropDown = React.createClass({
 
