@@ -129,7 +129,9 @@ class TaskDetail extends React.Component {
         <div className="row">
           {taskState}
           <div className={`col-xs-${taskState ? '6' : '12'} button-container`}>
-            <JSONButton object={t} linkClassName="btn btn-default" text="JSON" />
+            <JSONButton object={t} linkClassName="btn btn-default">
+              JSON
+            </JSONButton>
             {removeBtn}
           </div>
         </div>

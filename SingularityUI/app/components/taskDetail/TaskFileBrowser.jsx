@@ -1,4 +1,6 @@
 import React from 'react';
+import PlainText from '../common/atomicDisplayItems/PlainText';
+import TimeStamp from '../common/atomicDisplayItems/TimeStamp';
 import Utils from '../../utils';
 
 import Breadcrumbs from '../common/Breadcrumbs';

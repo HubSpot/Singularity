@@ -28,7 +28,7 @@ export default (props) => {
               <td>{Utils.humanizeText(data.loadBalancerState)}</td>
               <td>{data.message}</td>
               <td className="actions-column">
-                <JSONButton object={data} text="{ }" />
+                <JSONButton object={data}>{'{ }'}</JSONButton>
               </td>
             </tr>
           );

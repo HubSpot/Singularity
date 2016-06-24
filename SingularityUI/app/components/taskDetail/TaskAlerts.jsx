@@ -96,7 +96,7 @@ export default (props) => {
               <td>{data.durationMillis} {data.durationMillis ? 'ms' : ''}</td>
               <td>{data.statusCode ? <span className={`label label-${data.statusCode == 200 ? 'success' : 'danger'}`}>HTTP {data.statusCode}</span> : <span className="label label-warning">No Response</span>}</td>
               <td><pre className="healthcheck-message">{data.errorMessage || data.responseBody}</pre></td>
-              <td className="actions-column"><JSONButton object={data} text="{ }" /></td>
+              <td className="actions-column"><JSONButton object={data}>{'{ }'}</JSONButton></td>
             </tr>
           );
         }}
