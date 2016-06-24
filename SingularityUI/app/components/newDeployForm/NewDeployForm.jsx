@@ -13,6 +13,29 @@ import ToolTip from 'react-bootstrap/lib/Tooltip';
 import Utils from '../../utils';
 import classNames from 'classnames';
 
+class SimpleTextInputGroup extends Component {
+
+  render() {
+    return (
+      <div className={classNames('form-group', {required: this.props.required})}>
+        <label htmlFor={this.props.id}>{this.props.label}</label>
+        <FormField
+          id={this.props.id}
+          className={this.props.id}
+          prop = {{
+            updateFn: this.props.onChange,
+            inputType: 'text',
+            value: this.props.value,
+            required: this.props.required,
+            placeholder: this.props.placeholder
+          }}
+        />
+      </div>
+    );
+  }
+
+}
+
 const FORM_ID = 'newDeployForm';
 
 const DEFAULT_EXECUTOR_TYPE = 'default';
@@ -38,6 +61,14 @@ const FIELDS = {
             'portMappings'
           ]
         }
+      ]
+    },
+    {
+      id: 'resources',
+      values: [
+        'cpus',
+        'memoryMb',
+        'numPorts'
       ]
     }
   ],
@@ -162,121 +193,65 @@ class NewDeployForm extends Component {
 
   renderArtifact(artifact, key) {
     const name = (
-      <div className="form-group required">
-        <label htmlFor={`name-${ key }`}>Name</label>
-        <FormField
-          id={`name-${ key }`}
-          className='name'
-          prop = {{
-            updateFn: event => this.updateThingInArrayField("artifacts", key, {name: event.target.value}),
-            inputType: 'text',
-            value: artifact["name"],
-            required: true
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id={`name-${ key }`}
+        onChange={event => this.updateThingInArrayField("artifacts", key, {name: event.target.value})}
+        value={artifact["name"]}
+        label="Name"
+        required={true} />
     );
     const fileName = (
-      <div className="form-group required">
-        <label htmlFor={`filename-${key}`}>File name</label>
-        <FormField
-          id={`filename-${ key }`}
-          className='filename'
-          prop = {{
-            updateFn: event => this.updateThingInArrayField("artifacts", key, {filename: event.target.value}),
-            inputType: 'text',
-            value: artifact["filename"],
-            required: true
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id={`filename-${ key }`}
+        onChange={event => this.updateThingInArrayField("artifacts", key, {filename: event.target.value})}
+        value={artifact["filename"]}
+        label="File name"
+        required={true} />
     );
     const md5Sum = (
-      <div className="form-group">
-        <label htmlFor={`md5-${ key }`}>MD5 checksum</label>
-        <FormField
-          id={`md5-${ key }`}
-          className='md5'
-          prop = {{
-            updateFn: event => this.updateThingInArrayField("artifacts", key, {md5Sum: event.target.value}),
-            inputType: 'text',
-            value: artifact["md5Sum"]
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id={`md5-${ key }`}
+        onChange={event => this.updateThingInArrayField("artifacts", key, {md5Sum: event.target.value})}
+        value={artifact["md5Sum"]}
+        label="MD5 checksum" />
     );
     const content = (
-      <div className="form-group">
-        <label htmlFor={`content-${ key }`}>Content</label>
-        <FormField
-          id={`content-${ key }`}
-          className='content'
-          prop = {{
-            updateFn: event => this.updateThingInArrayField("artifacts", key, {content: event.target.value}),
-            inputType: 'text',
-            value: artifact["content"]
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id={`content-${ key }`}
+        onChange={event => this.updateThingInArrayField("artifacts", key, {content: event.target.value})}
+        value={artifact["content"]}
+        label="Content" />
     );
     const filesize = (
-      <div className="form-group">
-        <label htmlFor={`file-size-${ key }`}>File size</label>
-        <FormField
-          id={`file-size-${ key }`}
-          className='filesize'
-          prop = {{
-            updateFn: event => this.updateThingInArrayField("artifacts", key, {filesize: event.target.value}),
-            inputType: 'text',
-            value: artifact["filesize"]
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id={`file-size-${ key }`}
+        onChange={event => this.updateThingInArrayField("artifacts", key, {filesize: event.target.value})}
+        value={artifact["filesize"]}
+        label="File size" />
     );
     const url = (
-      <div className="form-group required">
-        <label htmlFor={`url-${ key }`}>URL</label>
-        <FormField
-          id={`url-${ key }`}
-          className='url'
-          prop = {{
-            updateFn: event => this.updateThingInArrayField("artifacts", key, {url: event.target.value}),
-            inputType: 'text',
-            value: artifact["url"],
-            required: true
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id={`url-${ key }`}
+        onChange={event => this.updateThingInArrayField("artifacts", key, {url: event.target.value})}
+        value={artifact["url"]}
+        label="URL"
+        required={true} />
     );
     const s3Bucket = (
-      <div className="form-group required">
-        <label htmlFor={`bucket-${ key }`}>S3 bucket</label>
-        <FormField
-          id={`bucket-${ key }`}
-          className='bucket'
-          prop = {{
-            updateFn: event => this.updateThingInArrayField("artifacts", key, {s3Bucket: event.target.value}),
-            inputType: 'text',
-            value: artifact["s3Bucket"],
-            required: true
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id={`bucket-${ key }`}
+        onChange={event => this.updateThingInArrayField("artifacts", key, {s3Bucket: event.target.value})}
+        value={artifact["s3Bucket"]}
+        label="S3 bucket"
+        required={true} />
     );
     const s3ObjectKey = (
-      <div className="form-group required">
-        <label htmlFor={`object-key-${ key }`}>S3 object key</label>
-        <FormField
-          id={`object-key-${ key }`}
-          className='object-key'
-          prop = {{
-            updateFn: event => this.updateThingInArrayField("artifacts", key, {s3ObjectKey: event.target.value}),
-            inputType: 'text',
-            value: artifact["s3ObjectKey"],
-            required: true
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id={`object-key-${ key }`}
+        onChange={event => this.updateThingInArrayField("artifacts", key, {s3ObjectKey: event.target.value})}
+        value={artifact["s3ObjectKey"]}
+        label="S3 object key"
+        required={true} />
     );
     return (
       <div key={key} className="well well-sm artifact">
@@ -305,19 +280,13 @@ class NewDeployForm extends Component {
 
   renderCustomExecutorFields() {
     const customExecutorCmds = (
-      <div className="form-group required">
-        <label htmlFor="custom-executor-command">Custom executor command</label>
-        <FormField
-          id = "customExecutorCmd"
-          prop = {{
-            updateFn: event => this.updateField("customExecutorCmd", event.target.value),
-            inputType: 'text',
-            value: this.getValue("customExecutorCmd"),
-            required: true,
-            placeholder: "eg: /usr/local/bin/singularity-executor"
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id="custom-executor-command"
+        onChange={event => this.updateField("customExecutorCmd", event.target.value)}
+        value={this.getValue("customExecutorCmd")}
+        label="Custom executor command"
+        required={true}
+        placeholder="eg: /usr/local/bin/singularity-executor" />
     );
     const extraCommandArgs = (
       <div className="form-group">
@@ -331,32 +300,20 @@ class NewDeployForm extends Component {
       </div>
     );
     const user = (
-      <div className="form-group">
-        <label htmlFor="user">User</label>
-        <FormField
-          id = "user"
-          prop = {{
-            updateFn: event => this.updateField("user", event.target.value),
-            inputType: 'text',
-            value: this.getValue("user"),
-            placeholder: "default: root"
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id="user"
+        onChange={event => this.updateField("user", event.target.value)}
+        value={this.getValue("user")}
+        label="User"
+        placeholder="default: root" />
     );
     const killAfterMillis = (
-      <div className="form-group">
-        <label htmlFor="kill-after-millis">Kill processes after (milisec)</label>
-        <FormField
-          id = "kill-after-millis"
-          prop = {{
-            updateFn: event => this.updateField("sigKillProcessesAfterMillis", event.target.value),
-            inputType: 'text',
-            value: this.getValue("sigKillProcessesAfterMillis"),
-            placeholder: "default: 120000"
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id="kill-after-millis"
+        onChange={event => this.updateField("sigKillProcessesAfterMillis", event.target.value)}
+        value={this.getValue("sigKillProcessesAfterMillis")}
+        label="Kill processes after (milisec)"
+        placeholder="default: 120000" />
     );
     const successfulExitCodes = (
       <div className="form-group">
@@ -369,30 +326,18 @@ class NewDeployForm extends Component {
       </div>
     );
     const maxTaskThreads = (
-      <div className="form-group">
-        <label htmlFor="max-task-threads">Max Task Threads</label>
-        <FormField
-          id = "max-task-threads"
-          prop = {{
-            updateFn: event => this.updateField("maxTaskThreads", event.target.value),
-            inputType: 'text',
-            value: this.getValue("maxTaskThreads")
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id="max-task-threads"
+        onChange={event => this.updateField("maxTaskThreads", event.target.value)}
+        value={this.getValue("maxTaskThreads")}
+        label="Max Task Threads" />
     );
     const loggingTag = (
-      <div className="form-group">
-        <label htmlFor="logging-tag">Logging tag</label>
-        <FormField
-          id = "logging-tag"
-          prop = {{
-            updateFn: event => this.updateField("loggingTag", event.target.value),
-            inputType: 'text',
-            value: this.getValue("loggingTag")
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id="logging-tag"
+        onChange={event => this.updateField("loggingTag", event.target.value)}
+        value={this.getValue("loggingTag")}
+        label="Logging tag" />
     );
     const loggingExtraFields = (
       <div className="form-group">
@@ -432,43 +377,25 @@ class NewDeployForm extends Component {
       </div>
     );
     const loggingS3Bucket = (
-      <div className="form-group">
-        <label htmlFor="logging-s3-bucket">Logging S3 Bucket</label>
-        <FormField
-          id = "logging-s3-bucket"
-          prop = {{
-            updateFn: event => this.updateField("loggingS3Bucket", event.target.value),
-            inputType: 'text',
-            value: this.getValue("loggingS3Bucket")
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id="logging-s3-bucket"
+        onChange={event => this.updateField("loggingS3Bucket", event.target.value)}
+        value={this.getValue("loggingS3Bucket")}
+        label="Logging S3 Bucket" />
     );
     const maxOpenFiles = (
-      <div className="form-group">
-        <label htmlFor="max-open-files">Max Open Files</label>
-        <FormField
-          id = "max-open-files"
-          prop = {{
-            updateFn: event => this.updateField("maxOpenFiles", event.target.value),
-            inputType: 'text',
-            value: this.getValue("maxOpenFiles")
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id="max-open-files"
+        onChange={event => this.updateField("maxOpenFiles", event.target.value)}
+        value={this.getValue("maxOpenFiles")}
+        label="Max Open Files" />
     );
     const runningSentinel = (
-      <div className="form-group">
-        <label htmlFor="running-sentinel">Running Sentinel</label>
-        <FormField
-          id = "running-sentinel"
-          prop = {{
-            updateFn: event => this.updateField("runningSentinel", event.target.value),
-            inputType: 'text',
-            value: this.getValue("runningSentinel")
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id="running-sentinel"
+        onChange={event => this.updateField("runningSentinel", event.target.value)}
+        value={this.getValue("runningSentinel")}
+        label="Running Sentinel" />
     );
     return (
       <div>
@@ -575,19 +502,12 @@ class NewDeployForm extends Component {
       </div>
     );
     const containerPort = (
-      <div className="form-group required">
-        <label htmlFor={`cont-port-${ key }`}>Container Port</label>
-        <FormField
-          id={`cont-port-${ key }`}
-          className="cont-port"
-          prop = {{
-            updateFn: event => this.updateThingInArrayField('portMappings', key, {containerPort: event.target.value}),
-            inputType: 'text',
-            value: thisPortMapping.containerPort,
-            required: true
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id={`cont-port-${ key }`}
+        onChange={event => this.updateThingInArrayField('portMappings', key, {containerPort: event.target.value})}
+        value={thisPortMapping.containerPort}
+        label="Container Port"
+        required={true} />
     );
     const hostPortType = (
       <div className="form-group required">
@@ -606,34 +526,20 @@ class NewDeployForm extends Component {
       </div>
     );
     const hostPort = (
-      <div className="form-group required">
-        <label htmlFor={`host-port-${ key }`}>Host Port</label>
-        <FormField
-          id={`host-port-${ key }`}
-          className="host-port"
-          prop = {{
-            updateFn: event => this.updateThingInArrayField('portMappings', key, {hostPort: event.target.value}),
-            inputType: 'text',
-            value: thisPortMapping.hostPort,
-            required: true
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id={`host-port-${ key }`}
+        onChange={event => this.updateThingInArrayField('portMappings', key, {hostPort: event.target.value})}
+        value={thisPortMapping.hostPort}
+        label="Host Port"
+        required={true} />
     );
     const protocol = (
-      <div className="form-group">
-        <label htmlFor={`protocol-${ key }`}>Protocol</label>
-        <FormField
-          id={`protocol-${ key }`}
-          className="protocol"
-          prop = {{
-            updateFn: event => this.updateThingInArrayField('portMappings', key, {protocol: event.target.value}),
-            inputType: 'text',
-            value: thisPortMapping.protocol,
-            placeholder: "default: tcp"
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id={`protocol-${ key }`}
+        onChange={event => this.updateThingInArrayField('portMappings', key, {protocol: event.target.value})}
+        value={thisPortMapping.protocol}
+        label="Protocol"
+        placeholder="default: tcp" />
     );
     return (
       <div className="well well-sm docker-port" key={key}>
@@ -661,34 +567,20 @@ class NewDeployForm extends Component {
   renderDockerVolume(mapping, key) {
     const thisVolume = this.getValue('volumes')[key];
     const containerPath = (
-      <div className="form-group required">
-        <label htmlFor={`cont-path-${ key }`}>Container Path</label>
-        <FormField
-          id={`cont-path-${ key }`}
-          className="cont-path"
-          prop = {{
-            updateFn: event => this.updateThingInArrayField('volumes', key, {containerPath: event.target.value}),
-            inputType: 'text',
-            value: thisVolume.containerPath,
-            required: true
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id={`cont-path-${ key }`}
+        onChange={event => this.updateThingInArrayField('volumes', key, {containerPath: event.target.value})}
+        value={thisVolume.containerPath}
+        label="Container Path"
+        required={true} />
     );
     const hostPath = (
-      <div className="form-group required">
-        <label htmlFor={`host-path-${ key }`}>Host Path</label>
-        <FormField
-          id={`host-path-${ key }`}
-          className="host-path"
-          prop = {{
-            updateFn: event => this.updateThingInArrayField('volumes', key, {hostPath: event.target.value}),
-            inputType: 'text',
-            value: thisVolume.hostPath,
-            required: true
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id={`host-path-${ key }`}
+        onChange={event => this.updateThingInArrayField('volumes', key, {hostPath: event.target.value})}
+        value={thisVolume.hostPath}
+        label="Host Path"
+        required={true} />
     );
     const mode = (
       <div className="form-group required">
@@ -846,18 +738,12 @@ class NewDeployForm extends Component {
   render() {
     // Fields
     const deployId = (
-      <div className="form-group required">
-        <label htmlFor="id">Deploy ID</label>
-        <FormField
-          id = "id"
-          prop = {{
-            updateFn: event => this.updateField("id", event.target.value),
-            inputType: 'text',
-            value: this.getValue("id"),
-            required: true
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id="id"
+        onChange={event => this.updateField("id", event.target.value)}
+        value={this.getValue("id")}
+        label="Deploy ID"
+        required={true} />
     );
     const executorType = (
       <div className="form-group required">
@@ -875,18 +761,12 @@ class NewDeployForm extends Component {
       </div>
     );
     const command = (
-      <div className="form-group">
-        <label htmlFor="command">Command to execute</label>
-        <FormField
-          id = "command"
-          prop = {{
-            updateFn: event => this.updateField("command", event.target.value),
-            inputType: 'text',
-            value: this.getValue("command"),
-            placeholder: "eg: rm -rf /"
-          }}
-        />
-      </div>
+      <SimpleTextInputGroup
+        id="command"
+        onChange={event => this.updateField("command", event.target.value)}
+        value={this.getValue("command")}
+        label="Command to execute"
+        placeholder="eg: rm -rf /" />
     );
     const containerType = (
       <div className="form-group required">
@@ -904,8 +784,32 @@ class NewDeployForm extends Component {
         />
       </div>
     );
+    const cpus = (
+      <SimpleTextInputGroup
+        id="cpus"
+        onChange={event => this.updateField("cpus", event.target.value)}
+        value={this.getValue("cpus")}
+        label="CPUs"
+        placeholder={`default: ${config.defaultCpus}`} />
+    );
+    const memoryMb = (
+      <SimpleTextInputGroup
+        id="memory-mb"
+        onChange={event => this.updateField("memoryMb", event.target.value)}
+        value={this.getValue("memoryMb")}
+        label="Memory (MB)"
+        placeholder={`default: ${config.defaultMemory}`} />
+    );
+    const numPorts = (
+      <SimpleTextInputGroup
+        id="cpus"
+        onChange={event => this.updateField("numPorts", event.target.value)}
+        value={this.getValue("numPorts")}
+        label="Num. ports"
+        placeholder="default: 0" />
+    );
 
-    // Info Groups
+    // Groups
     const executorInfo = (
       <div className="well">
         <div className="row">
@@ -935,6 +839,26 @@ class NewDeployForm extends Component {
         { this.getContainerType() === 'docker' && this.renderDockerContainerFields() }
       </div>
     );
+    const resources = (
+      <div className="well">
+        <h3>Resources</h3>
+        <fieldset>
+          <div className="row">
+            <div className="col-sm-4">
+              {cpus}
+            </div>
+
+            <div className="col-sm-4">
+              {memoryMb}
+            </div>
+
+            <div className="col-sm-4">
+              {numPorts}
+            </div>
+          </div>
+        </fieldset>
+      </div>
+    );
     return (
       <div>
         <h2>
@@ -946,6 +870,7 @@ class NewDeployForm extends Component {
             {deployId}
             {executorInfo}
             {containerInfo}
+            {resources}
 
           </form>
           <div id="help-column" class="col-md-4 col-md-offset-1" />
