@@ -7,6 +7,7 @@ import { FetchAction as WebhooksFetchAction } from '../../actions/api/webhooks';
 import { FetchAction as SlavesFetchAction } from '../../actions/api/slaves';
 import { FetchAction as RacksFetchAction } from '../../actions/api/racks';
 import { FetchAction as RequestFetchAction, SaveAction as RequestSaveAction } from '../../actions/api/request';
+import { FetchAction as RequestsFetchAction } from '../../actions/api/requests';
 import { FetchAction as StatusFetchAction } from '../../actions/api/status';
 import { FetchAction as DeployFetchAction } from '../../actions/api/deploy';
 import { FetchForDeployAction as TasksFetchForDeployAction } from '../../actions/api/tasks';
@@ -18,6 +19,7 @@ const slaves = buildApiActionReducer(SlavesFetchAction);
 const racks = buildApiActionReducer(RacksFetchAction);
 const request = buildApiActionReducer(RequestFetchAction);
 const saveRequest = buildApiActionReducer(RequestSaveAction);
+const requests = buildApiActionReducer(RequestsFetchAction);
 const status = buildApiActionReducer(StatusFetchAction);
 const deploy = buildApiActionReducer(DeployFetchAction);
 const activeTasksForDeploy = buildApiActionReducer(TasksFetchForDeployAction);
@@ -30,6 +32,7 @@ export default combineReducers({
   racks,
   request,
   saveRequest,
+  requests,
   status,
   deploy,
   task,

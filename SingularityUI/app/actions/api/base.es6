@@ -25,12 +25,12 @@ export function buildJsonApiAction(actionName, httpMethod, opts={}) {
   return buildApiAction(actionName, options);
 }
 
-export function buildApiAction(actionName, opts={}) {
+export function buildApiAction(actionName, opts = {}) {
   const ACTION = actionName;
-  const STARTED = actionName + '_STARTED';
-  const ERROR = actionName + '_ERROR';
-  const SUCCESS = actionName + '_SUCCESS';
-  const CLEAR = actionName + '_CLEAR';
+  const STARTED = `${actionName}_STARTED`;
+  const ERROR = `${actionName}_ERROR`;
+  const SUCCESS = `${actionName}_SUCCESS`;
+  const CLEAR = `${actionName}_CLEAR`;
 
   let optsFunc;
 
@@ -38,39 +38,6 @@ export function buildApiAction(actionName, opts={}) {
     optsFunc = opts;
   } else {
     optsFunc = () => opts;
-  }
-
-  function trigger(...args) {
-    return function (dispatch) {
-      dispatch(started());
-
-      let options = optsFunc(...args);
-      return fetch(config.apiRoot + options.url, _.extend({credentials: 'include'}, _.omit(options, 'url')))
-        .then(response => {
-          if (response.status >= 200 && response.status < 300) {
-            if (response.headers.get('Content-Type') === 'application/json') {
-              return response.json().then(json => dispatch(success(json)));
-            } else {
-              return response.text().then(body => dispatch(success({response: body})));
-            }
-          } else {
-            if (response.headers.get('Content-Type') === 'application/json') {
-              return response.json().then(body => dispatch(error(body)));
-            } else {
-              return response.text().then(body => dispatch(error({message: body})));
-            }
-          }
-        })
-        .catch(ex => {
-          dispatch(error(ex));
-        });
-    }
-  }
-
-  function clearData() {
-    return function (dispatch) {
-      dispatch(clear());
-    }
   }
 
   function clear() {
@@ -89,6 +56,38 @@ export function buildApiAction(actionName, opts={}) {
     return { type: SUCCESS, data };
   }
 
+  function clearData() {
+    return function (dispatch) {
+      dispatch(clear());
+    };
+  }
+
+  function trigger(...args) {
+    return function (dispatch) {
+      dispatch(started());
+
+      const options = optsFunc(...args);
+      let apiResponse;
+      return fetch(config.apiRoot + options.url, _.extend({credentials: 'include'}, _.omit(options, 'url')))
+        .then(response => {
+          apiResponse = response;
+          if (response.headers.get('Content-Type') === 'application/json') {
+            return response.json();
+          }
+          return response.text();
+        })
+        .then((data) => {
+          if (apiResponse.status >= 200 && apiResponse.status < 300) {
+            return dispatch(success(data));
+          }
+          throw new Error(data);
+        })
+        .catch(ex => {
+          return dispatch(error(ex));
+        });
+    };
+  }
+
   return {
     ACTION,
     STARTED,
@@ -101,5 +100,5 @@ export function buildApiAction(actionName, opts={}) {
     started,
     error,
     success
-  }
+  };
 }

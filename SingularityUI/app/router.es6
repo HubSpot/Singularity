@@ -1,8 +1,5 @@
-let DashboardController;
 let NotFoundController;
 let RequestDetailController;
-let RequestFormEditController;
-let RequestFormNewController;
 let RequestsTableController;
 let TaskDetailController;
 let TaskSearchController;
@@ -11,7 +8,7 @@ let Utils;
 
 const hasProp = {}.hasOwnProperty;
 
-DashboardController = require('controllers/Dashboard');
+import DashboardController from 'controllers/Dashboard';
 
 import StatusController from 'controllers/Status';
 
@@ -50,7 +47,9 @@ class Router extends Backbone.Router {
   }
 
   dashboard() {
-    return this.app.bootstrapController(new DashboardController);
+    return this.app.bootstrapController(new DashboardController({
+      store: this.app.store
+    }));
   }
 
   status() {

@@ -1,7 +1,9 @@
 import React from 'react';
+import Select from 'react-select';
 import { connect } from 'react-redux';
 import FormField from '../common/formItems/FormField';
 import DropDown from '../common/formItems/DropDown';
+import MultiSelect from '../common/formItems/MultiSelect';
 import CheckBox from '../common/formItems/CheckBox';
 import { modifyField, clearForm } from '../../actions/form';
 import {SaveAction} from '../../actions/api/request';
@@ -56,25 +58,12 @@ class RequestForm extends React.Component {
     this.props.clearForm(FORM_ID);
   }
 
-  componentWillReceiveProps(newProps) {
-    if (this.props.saveApiCall &&
-      newProps.saveApiCall &&
-      this.props.saveApiCall.isFetching &&
-      !newProps.saveApiCall.isFetching &&
-      newProps.saveApiCall.data &&
-      newProps.saveApiCall.data.request &&
-      !newProps.saveApiCall.error)
-    {
-      Backbone.history.navigate(`/request/${ newProps.saveApiCall.data.request.id }`, {trigger: true});
-    }
-  }
-
   shouldComponentUpdate(nextProps) {
     return !_.isEqual(this.props, nextProps);
   }
 
   isEditing() {
-    return this.props.editing && this.props.request && this.props.request.request;
+    return this.props.request && this.props.request.request;
   }
 
   getValue(fieldId) {
@@ -121,10 +110,10 @@ class RequestForm extends React.Component {
     }
 
     if (request.owners) {
-      request.owners = request.owners.split(',');
+      request.owners = request.owners.map(owner => owner.value);
     }
     if (request.rackAffinity) {
-      request.rackAffinity = request.rackAffinity.split(',');
+      request.rackAffinity = request.rackAffinity.map(rack => rack.value);
     }
 
     this.props.save(request);
@@ -217,7 +206,7 @@ class RequestForm extends React.Component {
       field = (
         <OverlayTrigger
           placement="top"
-          overlay = {<ToolTip id="cannotChangeLoadBalancedAfterCreation">Option cannot be altered after creation</ToolTip>}>
+          overlay={<ToolTip id="cannotChangeLoadBalancedAfterCreation">Option cannot be altered after creation</ToolTip>}>
           {checkbox}
         </OverlayTrigger>
       );
@@ -225,311 +214,295 @@ class RequestForm extends React.Component {
       field = checkbox;
     }
     return (
-      <div className = 'form-group'>
+      <div className='form-group'>
         {field}
       </div>
     );
   }
 
   renderRequestTypeSpecificFormFields() {
+    const instances = (
+      <div className='form-group'>
+        <label htmlFor='instances'>Instances</label>
+        <FormField
+          id = 'instances'
+          prop = {{
+            updateFn: event => this.updateField('instances', event.target.value),
+            placeholder: "1",
+            inputType: 'text',
+            value: this.getValue('instances')
+          }}
+        />
+      </div>
+    );
+    const rackSensitive = (
+      <div className="form-group">
+        <label htmlFor="rack-sensitive">
+          <CheckBox
+            id="rack-sensitive"
+            onChange={event => this.updateField("rackSensitive", !this.getValue("rackSensitive"))}
+            checked={this.getValue("rackSensitive")}
+            noFormControlClass={true}
+          />
+          {" Rack Sensitive"}
+        </label>
+      </div>
+    );
+    const hideEvenNumberAcrossRacksHint = (
+      <div className='form-group'>
+        <label htmlFor="hide-distribute-evenly-across-racks-hint">
+          <CheckBox
+            id="hide-distribute-evenly-across-racks-hint"
+            onChange={event => this.updateField("hideEvenNumberAcrossRacksHint", !this.getValue("hideEvenNumberAcrossRacksHint"))}
+            checked={this.getValue("hideEvenNumberAcrossRacksHint")}
+            noFormControlClass={true}
+          />
+          {" Hide Distribute Evenly Across Racks Hint"}
+        </label>
+      </div>
+    );
+    const waitAtLeastMillisAfterTaskFinishesForReschedule = (
+      <div className='form-group'>
+        <label htmlFor='waitAtLeast'>Task rescheduling delay</label>
+        <div className="input-group">
+          <FormField
+            id='waitAtLeast'
+            prop={{
+              updateFn: event => this.updateField('waitAtLeastMillisAfterTaskFinishesForReschedule', event.target.value),
+              inputType: 'text',
+              value: this.getValue('waitAtLeastMillisAfterTaskFinishesForReschedule')
+            }}
+          />
+          <div className="input-group-addon">milliseconds</div>
+        </div>
+      </div>
+    );
+    const rackOptions = _.pluck(this.props.racks, 'id').map(id => ({value: id, label: id}));
+    const rackAffinity = (
+      <div className='form-group'>
+        <label htmlFor="rack-affinity">Rack Affinity <span className='form-label-tip'>separate multiple racks with commas</span></label>
+        <MultiSelect
+          id="rack-affinity"
+          onChange={ value => this.updateField('rackAffinity', value) }
+          value={ this.getValue('rackAffinity') }
+          options={rackOptions}
+          splits={[',', ' ']}
+        />
+      </div>
+    );
+    const schedule = (
+      <div className='form-group required'>
+        <label htmlFor='schedule'>Schedule</label>
+        <div className="row" id='schedule'>
+          <div className='col-sm-7'>
+            <FormField
+              prop={{
+                updateFn: event => this.updateField(this.getScheduleType(), event.target.value),
+                placeholder: this.getScheduleType() === QUARTZ_SCHEDULE ? "eg: 0 */5 * * * ?" : "eg: */5 * * * *",
+                inputType: 'text',
+                value: this.getValue(this.getScheduleType())
+              }}
+            />
+          </div>
+          <div className='col-sm-5'>
+            <Select
+              onChange={value => this.updateField('scheduleType', value)}
+              options={[
+                {
+                  value: CRON_SCHEDULE,
+                  label: 'Cron Schedule'
+                },
+                {
+                  value: QUARTZ_SCHEDULE,
+                  label: 'Quartz Schedule'
+                }
+              ]}
+              clearable={false}
+              value={ this.getScheduleType() }
+            />
+          </div>
+        </div>
+      </div>
+    );
+    const numRetriesOnFailure = (
+      <div className='form-group'>
+        <label htmlFor='retries-on-failure'>Number of retries on failure</label>
+        <FormField
+          id='retries-on-failure'
+          prop={{
+            updateFn: event => this.updateField('numRetriesOnFailure', event.target.value),
+            inputType: 'text',
+            value: this.getValue('numRetriesOnFailure')
+          }}
+        />
+      </div>
+    );
+    const killOldNonLongRunningTasksAfterMillis = (
+      <div className='form-group'>
+        <label htmlFor='killOldNRL'>Kill cleaning task(s) after</label>
+        <div className="input-group">
+          <FormField
+            id='killOldNRL'
+            prop={{
+              updateFn: event => this.updateField('killOldNonLongRunningTasksAfterMillis', event.target.value),
+              inputType: 'text',
+              value: this.getValue('killOldNonLongRunningTasksAfterMillis')
+            }}
+          />
+          <div className="input-group-addon">milliseconds</div>
+        </div>
+      </div>
+    );
+    const scheduledExpectedRuntimeMillis = (
+      <div className='form-group'>
+        <label htmlFor='expected-runtime'>Maximum task duration</label>
+        <div className="input-group">
+          <FormField
+            id='expected-runtime'
+            prop={{
+              updateFn: event => this.updateField('scheduledExpectedRuntimeMillis', event.target.value),
+              inputType: 'text',
+              value: this.getValue('scheduledExpectedRuntimeMillis')
+            }}
+          />
+          <div className="input-group-addon">milliseconds</div>
+        </div>
+      </div>
+    );
     return (
       <div>
-        {
-          this.shouldRenderField('instances') ?
-            <div className='form-group'>
-              <label htmlFor='instances'>Instances</label>
-              <FormField
-                id = 'instances'
-                prop = {{
-                  updateFn: event => this.updateField('instances', event.target.value),
-                  placeholder: "1",
-                  inputType: 'text',
-                  value: this.getValue('instances')
-                }}
-              />
-            </div> :
-            null
-        }
-        {
-          this.shouldRenderField('rackSensitive') ?
-            <div className="form-group">
-              <label htmlFor="rack-sensitive">
-                <CheckBox
-                  id = "rack-sensitive"
-                  onChange = {event => this.updateField("rackSensitive", !this.getValue("rackSensitive"))}
-                  checked = {this.getValue("rackSensitive")}
-                  noFormControlClass = {true}
-                />
-                {" Rack Sensitive"}
-              </label>
-            </div> :
-            null
-        }
-        {
-          this.shouldRenderField('hideEvenNumberAcrossRacksHint') ?
-            <div className='form-group'>
-              <label htmlFor="hide-distribute-evenly-across-racks-hint">
-                <CheckBox
-                  id = "hide-distribute-evenly-across-racks-hint"
-                  onChange = {event => this.updateField("hideEvenNumberAcrossRacksHint", !this.getValue("hideEvenNumberAcrossRacksHint"))}
-                  checked = {this.getValue("hideEvenNumberAcrossRacksHint")}
-                  noFormControlClass = {true}
-                />
-                {" Hide Distribute Evenly Across Racks Hint"}
-              </label>
-            </div> :
-            null
-        }
-        { this.shouldRenderField('loadBalanced') ? this.renderLoadBalanced() : null }
-        {
-          this.shouldRenderField('waitAtLeastMillisAfterTaskFinishesForReschedule') ?
-            <div className='form-group'>
-              <label htmlFor='waitAtLeast'>Task rescheduling delay</label>
-              <div className="input-group">
-                <FormField
-                  id = 'waitAtLeast'
-                  prop = {{
-                    updateFn: event => this.updateField('waitAtLeastMillisAfterTaskFinishesForReschedule', event.target.value),
-                    inputType: 'text',
-                    value: this.getValue('waitAtLeastMillisAfterTaskFinishesForReschedule')
-                  }}
-                />
-                <div className="input-group-addon">milliseconds</div>
-              </div>
-            </div> :
-            null
-        }
-        {
-          this.shouldRenderField('rackAffinity') ?
-            <div className='form-group'>
-              <label htmlFor="rack-affinity">Rack Affinity <span className='form-label-tip'>separate multiple racks with commas</span></label>
-              <FormField
-                id = "rack-affinity"
-                prop = {{
-                  updateFn: event => this.updateField('rackAffinity', event.target.value),
-                  inputType: 'text',
-                  value: this.getValue('rackAffinity'),
-                  generateSelectBox: true,
-                  selectBoxOptions: {
-                    tags: _.pluck(this.props.racks, 'id'),
-                    selectOnBlur: true,
-                    tokenSeparators: [',',' ']
-                  }
-                }}
-              />
-            </div> :
-            null
-        }
-        {
-          this.shouldRenderField(CRON_SCHEDULE) || this.shouldRenderField(QUARTZ_SCHEDULE) ?
-            <div className='form-group required'>
-              <label htmlFor='schedule'>Schedule</label>
-              <div className="input-group">
-                <FormField
-                  id = 'schedule'
-                  prop = {{
-                    updateFn: event => this.updateField(this.getScheduleType(), event.target.value),
-                    placeholder: this.getScheduleType() === QUARTZ_SCHEDULE ? "eg: 0 */5 * * * ?" : "eg: */5 * * * *",
-                    inputType: 'text',
-                    value: this.getValue(this.getScheduleType())
-                  }}
-                />
-                <div className="input-group-addon input-group-addon--select">
-                  <DropDown
-                    id = 'schedule-type'
-                    prop = {{
-                      updateFn: event => this.updateField('scheduleType', event.target.value),
-                      forceChooseValue: true,
-                      choices: [
-                        {
-                          value: CRON_SCHEDULE,
-                          user: 'Cron Schedule'
-                        },
-                        {
-                          value: QUARTZ_SCHEDULE,
-                          user: 'Quartz Schedule'
-                        }
-                      ],
-                      value: this.getValue('scheduleType') ? this.getValue('scheduleType') : this.getScheduleType(),
-                      generateSelectBox: true,
-                      selectBoxOptions: {containerCssClass : "select2-select-box select-box-small"}
-                    }}
-                  />
-                </div>
-              </div>
-            </div> :
-            null
-        }
-        {
-          this.shouldRenderField('numRetriesOnFailure') ?
-            <div className='form-group'>
-              <label htmlFor='retries-on-failure'>Number of retries on failure</label>
-              <FormField
-                id = 'retries-on-failure'
-                prop = {{
-                  updateFn: event => this.updateField('numRetriesOnFailure', event.target.value),
-                  inputType: 'text',
-                  value: this.getValue('numRetriesOnFailure')
-                }}
-              />
-            </div> :
-            null
-        }
-        {
-          this.shouldRenderField('killOldNonLongRunningTasksAfterMillis') ?
-            <div className='form-group'>
-              <label htmlFor='killOldNRL'>Kill cleaning task(s) after</label>
-              <div className="input-group">
-                <FormField
-                  id = 'killOldNRL'
-                  prop = {{
-                    updateFn: event => this.updateField('killOldNonLongRunningTasksAfterMillis', event.target.value),
-                    inputType: 'text',
-                    value: this.getValue('killOldNonLongRunningTasksAfterMillis')
-                  }}
-                />
-                <div className="input-group-addon">milliseconds</div>
-              </div>
-            </div> :
-            null
-        }
-        {
-          this.shouldRenderField('scheduledExpectedRuntimeMillis') ?
-            <div className='form-group'>
-              <label htmlFor='expected-runtime'>Maximum task duration</label>
-              <div className="input-group">
-                <FormField
-                  id = 'expected-runtime'
-                  prop = {{
-                    updateFn: event => this.updateField('scheduledExpectedRuntimeMillis', event.target.value),
-                    inputType: 'text',
-                    value: this.getValue('scheduledExpectedRuntimeMillis')
-                  }}
-                />
-                <div className="input-group-addon">milliseconds</div>
-              </div>
-            </div> :
-            null
-        }
+        { this.shouldRenderField('instances') && instances }
+        { this.shouldRenderField('rackSensitive') && rackSensitive }
+        { this.shouldRenderField('hideEvenNumberAcrossRacksHint') && hideEvenNumberAcrossRacksHint }
+        { this.shouldRenderField('loadBalanced') && this.renderLoadBalanced() }
+        { this.shouldRenderField('waitAtLeastMillisAfterTaskFinishesForReschedule') && waitAtLeastMillisAfterTaskFinishesForReschedule }
+        { this.shouldRenderField('rackAffinity') && rackAffinity }
+        { (this.shouldRenderField(CRON_SCHEDULE) || this.shouldRenderField(QUARTZ_SCHEDULE)) && schedule }
+        { this.shouldRenderField('numRetriesOnFailure') && numRetriesOnFailure }
+        { this.shouldRenderField('killOldNonLongRunningTasksAfterMillis') && killOldNonLongRunningTasksAfterMillis }
+        { this.shouldRenderField('scheduledExpectedRuntimeMillis') && scheduledExpectedRuntimeMillis }
       </div>
     );
   }
 
   render() {
     const requestId = this.isEditing() ? this.props.request.request.id : null;
+    const header = (
+      this.isEditing() ?
+        <h3>
+          Editing <a href={`${config.appRoot}/request/${this.props.request.request.id}`}>{this.props.request.request.id}</a>
+        </h3> :
+        <h3>New Request</h3>
+    );
+    const id = (
+      <div className="form-group required">
+        <label htmlFor="id">ID</label>
+        <FormField
+          id="id"
+          prop={{
+            updateFn: event => {
+              this.updateField("id", event.target.value);
+            },
+            placeholder: "eg: my-awesome-request",
+            inputType: 'text',
+            value: this.getValue("id"),
+            required: true
+          }}
+        />
+      </div>
+    );
+    const owners = (
+      <div className="form-group">
+        <label htmlFor='owners'>Owners <span className='form-label-tip'>separate multiple owners with commas</span></label>
+        <MultiSelect
+          id="owners"
+          onChange={ value => this.updateField('owners', value) }
+          value={ this.getValue('owners') }
+          splits={[',', ' ']}
+        />
+      </div>
+    );
+    const requestTypeSelectors = (
+      <div className="form-group">
+        <label>Type</label>
+        <div id="type" className="btn-group">
+          {this.renderRequestTypeSelectors()}
+        </div>
+      </div>
+    );
+    const onlyAffectsNewTasksWarning = (
+      <div className="alert alert-info alert-slim" role="alert">
+        <strong>Note:</strong> changes made below will only affect new tasks
+      </div>
+    );
+    const slavePlacement = (
+      <div className="form-group slavePlacement">
+        <label htmlFor="slavePlacement" className="control-label">
+          Slave Placement
+        </label>
+        <DropDown
+          id='slavePlacement'
+          prop={{
+            updateFn: event => {
+              this.updateField('slavePlacement', event.target.value);
+            },
+            forceChooseValue: true,
+            choices: [
+              {
+                value: "",
+                user: "Default"
+              },
+              {
+                value: "SEPARATE",
+                user: "Separate"
+              },
+              {
+                value: "OPTIMISTIC",
+                user: "Optimistic"
+              },
+              {
+                value: "GREEDY",
+                user: "Greedy"
+              }
+            ],
+            value: this.getValue('slavePlacement') || ""
+          }}
+        />
+      </div>
+    );
+    const saveButton = (
+      <div id="button-row">
+        <span>
+          <button type="submit" className="btn btn-success btn-lg" disabled={this.cantSubmit() && 'disabled'}>
+            Save
+          </button>
+        </span>
+      </div>
+    );
+    const errorMessage = (
+      this.props.saveApiCall.error ?
+        <p className='alert alert-danger'>
+          There was a problem saving your request: {this.props.saveApiCall.error.message}
+        </p> :
+        this.props.saveApiCall.data && this.props.saveApiCall.data.message ?
+        <p className='alert alert-danger'>
+          There was a problem saving your request: {this.props.saveApiCall.data.message}
+        </p> :
+        null
+    );
     return (
       <div className="row new-form">
         <div className="col-md-5 col-md-offset-3">
-          {this.isEditing() ?
-            <h3>
-              Editing <a href={`${config.appRoot}/request/${this.props.request.request.id}`}>{this.props.request.request.id}</a>
-            </h3> :
-            <h3>New Request</h3>
-          }
+          { header }
           <form role='form' onSubmit={event => this.submitForm(event)}>
-            {this.isEditing() ?
-              null :
-              <div className="form-group required">
-                <label htmlFor="id">ID</label>
-                <FormField
-                  id = "id"
-                  prop = {{
-                    updateFn: event => {
-                      this.updateField("id", event.target.value);
-                    },
-                    placeholder: "eg: my-awesome-request",
-                    inputType: 'text',
-                    value: this.getValue("id"),
-                    required: true
-                  }}
-                />
-              </div>
-            }
-            <div className="form-group">
-              <label htmlFor='owners'>Owners <span className='form-label-tip'>separate multiple owners with commas</span></label>
-              <FormField
-                id = "owners"
-                prop = {{
-                  updateFn: event => {
-                    this.updateField('owners', event.target.value);
-                  },
-                  inputType: 'text',
-                  value: this.getValue('owners'),
-                  generateSelectBox: true,
-                  selectBoxOptions: {
-                    tags: [],
-                    containerCssClass: 'select-owners hide-select2-spinner',
-                    dropdownCssClass: 'hidden',
-                    selectOnBlur: true,
-                    tokenSeparators: [',',' ']
-                  }
-                }}
-              />
-            </div>
-            <div className="form-group">
-              <label>Type</label>
-              <div id="type" class="btn-group">
-                {this.renderRequestTypeSelectors()}
-              </div>
-            </div>
-            {this.isEditing() ?
-              <div className="alert alert-info alert-slim" role="alert">
-                <strong>Note:</strong> changes made below will only affect new tasks
-              </div> :
-              null}
-            <div className="form-group slavePlacement">
-              <label htmlFor="slavePlacement" className="control-label">
-                Slave Placement
-              </label>
-              <DropDown
-                id = 'slavePlacement'
-                prop = {{
-                  updateFn: event => {
-                    this.updateField('slavePlacement', event.target.value);
-                  },
-                  forceChooseValue: true,
-                  choices: [
-                    {
-                      value: "",
-                      user: "Default"
-                    },
-                    {
-                      value: "SEPARATE",
-                      user: "Separate"
-                    },
-                    {
-                      value: "OPTIMISTIC",
-                      user: "Optimistic"
-                    },
-                    {
-                      value: "GREEDY",
-                      user: "Greedy"
-                    }
-                  ],
-                  value: this.getValue('slavePlacement') ? this.getValue('slavePlacement') : ""
-                }}
-              />
-            </div>
-            {this.renderRequestTypeSpecificFormFields()}
-            <div id="button-row">
-              <span>
-                <button type="submit" className="btn btn-success btn-lg" disabled={this.cantSubmit() ? 'disabled' : null}>
-                  Save
-                </button>
-              </span>
-            </div>
-            {this.props.saveApiCall.error ?
-              <p className='alert alert-danger'>
-                There was a problem saving your request: {this.props.saveApiCall.error.message}
-              </p> :
-              null
-            }
-            {this.props.saveApiCall.data && this.props.saveApiCall.data.message ?
-              <p className='alert alert-danger'>
-                There was a problem saving your request: {this.props.saveApiCall.data.message}
-              </p> :
-              null
-            }
+            { !this.isEditing() && id }
+            { owners }
+            { requestTypeSelectors }
+            { this.isEditing() && onlyAffectsNewTasksWarning }
+            { slavePlacement }
+            { this.renderRequestTypeSpecificFormFields() }
+            { saveButton }
+            { errorMessage }
           </form>
         </div>
       </div>
@@ -537,6 +510,12 @@ class RequestForm extends React.Component {
   }
 
 };
+
+function navigateToRequestIfSuccess(promiseResult) {
+  if (promiseResult.type === "SAVE_REQUEST_SUCCESS") {
+    Backbone.history.navigate(`/request/${ promiseResult.data.request.id }`, {trigger: true});
+  }
+}
 
 function mapStateToProps(state) {
   return {
@@ -556,7 +535,7 @@ function mapDispatchToProps(dispatch) {
       dispatch(clearForm(formId));
     },
     save(requestBody) {
-      dispatch(SaveAction.trigger(requestBody));
+      dispatch(SaveAction.trigger(requestBody)).then((response) => navigateToRequestIfSuccess(response));
     }
   }
 }

@@ -1,11 +1,9 @@
 import Controller from './Controller';
 import RequestFormView from '../views/requestForm';
-import Racks from '../collections/Racks';
-import Request from '../models/Request';
 import { FetchAction as RequestFetchAction } from '../actions/api/request';
 import { FetchAction as RacksFetchAction } from '../actions/api/racks';
 
-class ReqeustFormController extends Controller {
+class RequestFormController extends Controller {
 
   initialize({store, requestId = ''}) {
     app.showPageLoader();
@@ -14,13 +12,18 @@ class ReqeustFormController extends Controller {
     this.requestId = requestId;
 
     const racksPromise = this.store.dispatch(RacksFetchAction.trigger());
-    const requestPromise = this.requestId ? this.store.dispatch(RequestFetchAction.trigger(this.requestId)) : Promise.resolve();
+    let requestPromise;
+    if (this.requestId) {
+      requestPromise = this.store.dispatch(RequestFetchAction.trigger(this.requestId));
+    } else {
+      requestPromise = this.store.dispatch(RequestFetchAction.clearData());
+    }
 
     Promise.all([racksPromise, requestPromise]).then(() => {
-      this.setView(new RequestFormView({store: this.store, editing: this.requestId}));
+      this.setView(new RequestFormView({store: this.store}));
       app.showView(this.view);
     });
   }
 }
 
-export default ReqeustFormController;
+export default RequestFormController;

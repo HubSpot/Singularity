@@ -1,5 +1,5 @@
 import React from 'react';
-import Table from '../common/Table';
+import OldTable from '../common/OldTable';
 
 let MachinesPage = React.createClass({
 
@@ -33,7 +33,7 @@ let MachinesPage = React.createClass({
       return (
         <div key={key}>
             <h2> {state.stateName} </h2>
-            <Table
+            <OldTable
                 noPages = {true}
                 tableClassOpts = "table-striped"
                 columnHeads = {state.stateTableColumnMetadata}
