@@ -11,7 +11,7 @@ import { FreezeAction } from '../../actions/api/slaves';
 class Slaves extends React.Component {
 
     showUser(slave) {
-        return __in__(slave.currentState.state, ['ACTIVE', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']);
+        return __in__(slave.currentState.state, ['ACTIVE', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']);
     }
 
     columnHeads(type) {
@@ -70,7 +70,7 @@ class Slaves extends React.Component {
     }
 
     getMaybeReactivateButton(slave) {
-        if (__in__(slave.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN'])) {
+        if (__in__(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN'])) {
             return (
               <Link
                   prop = {{
@@ -116,7 +116,7 @@ class Slaves extends React.Component {
     }
 
     getDecommissionOrRemoveButton(slave) {
-        if (__in__(slave.state, ['ACTIVE', 'FROZEN'])) {
+        if (__in__(slave.currentState.state, ['ACTIVE', 'FROZEN'])) {
           return (
             <Link
                 prop = {{
@@ -154,6 +154,7 @@ class Slaves extends React.Component {
     }
 
     getData(type, slave) {
+        const now = +new Date();
         let data = [
             {
                 component: Link,
@@ -192,7 +193,7 @@ class Slaves extends React.Component {
                 component: TimeStamp,
                 prop: {
                     display: 'duration',
-                    timestamp: slave.uptime
+                    timestamp: now - slave.firstSeenAt
                 }
             }
         ];
@@ -200,7 +201,7 @@ class Slaves extends React.Component {
             data.push({
                 component: PlainText,
                 prop: {
-                    text: this.showUser(slave) && slave.user ? slave.user : ''
+                    text: this.showUser(slave) && slave.currentState.user ? slave.currentState.user : ''
                 }
             });
         }
