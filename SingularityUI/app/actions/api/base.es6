@@ -42,7 +42,11 @@ export function buildApiAction(actionName, opts={}, keyFunc=undefined) {
 
   function trigger(...args) {
     return function (dispatch) {
-      dispatch(started());
+      let key;
+      if (keyFunc) {
+        key = keyFunc(...args);
+      }
+      dispatch(started(key));
 
       const options = optsFunc(...args);
       let apiResponse;

@@ -16,11 +16,8 @@ export default function buildApiActionReducer(ActionGroup, initialData={}) {
         return initialState;
 
       case ActionGroup.ERROR:
-        return _.extend({}, state, {
-          isFetching: false,
-          error: action.error,
-          receivedAt: Date.now()
-        });
+        newData = _.extend({}, state, {isFetching: false, error: action.error});
+        return _.extend({}, state, newData);
 
       case ActionGroup.SUCCESS:
         newData = _.extend({}, state, {
