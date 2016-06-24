@@ -1,8 +1,6 @@
 let NewDeployController;
 let NotFoundController;
 let RequestDetailController;
-let RequestFormEditController;
-let RequestFormNewController;
 let RequestsTableController;
 let TaskSearchController;
 let TasksTableController;
@@ -14,9 +12,7 @@ import DashboardController from 'controllers/Dashboard';
 
 import StatusController from 'controllers/Status';
 
-RequestFormNewController = require('controllers/RequestFormNew');
-
-RequestFormEditController = require('controllers/RequestFormEdit');
+import RequestFormController from 'controllers/RequestForm';
 
 NewDeployController = require('controllers/NewDeploy');
 
@@ -62,15 +58,12 @@ class Router extends Backbone.Router {
     }));
   }
 
-  newRequest() {
-    return this.app.bootstrapController(new RequestFormNewController);
-  }
-
-  editRequest(requestId) {
+  requestForm(requestId = null) {
     if (requestId == null) {
       requestId = '';
     }
-    return this.app.bootstrapController(new RequestFormEditController({
+    return this.app.bootstrapController(new RequestFormController({
+      store: this.app.store,
       requestId
     }));
   }
@@ -223,8 +216,8 @@ class Router extends Backbone.Router {
 Router.prototype.routes = {
   '(/)': 'dashboard',
   'status(/)': 'status',
-  'requests/new(/)': 'newRequest',
-  'requests/edit/:requestId': 'editRequest',
+  'requests/new(/)': 'requestForm',
+  'requests/edit/:requestId': 'requestForm',
   'requests/:state/:subFilter/:searchFilter(/)': 'requestsTable',
   'requests/:state/:subFilter(/)': 'requestsTable',
   'requests/:state(/)': 'requestsTable',

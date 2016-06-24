@@ -356,7 +356,6 @@ function mapTaskToProps(t) {
 function mapStateToProps(state, ownProps) {
   let task = mapHealthchecksToProps(state.api.task[ownProps.taskId].data);
   task = mapTaskToProps(task);
-
   return {
     task: task,
     taskCleanups: state.api.taskCleanups.data,
