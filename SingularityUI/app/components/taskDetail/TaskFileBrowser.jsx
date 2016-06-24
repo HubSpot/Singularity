@@ -1,5 +1,5 @@
 import React from 'react';
-import Table from '../common/Table';
+import OldTable from '../common/OldTable';
 import Link from '../common/atomicDisplayItems/Link';
 import PlainText from '../common/atomicDisplayItems/PlainText';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
@@ -140,7 +140,7 @@ let TaskFileBrowser = React.createClass({
     },
 
     renderTable() {
-        return React.createElement(Table, {
+        return React.createElement(OldTable, {
             "noPages": true,
             "tableClassOpts": "table-striped files-table sortable-theme-bootstrap",
             "columnHeads": this.columns(),

@@ -1,5 +1,5 @@
 import React from 'react';
-import Table from './Table';
+import OldTable from './OldTable';
 import TimeStamp from './atomicDisplayItems/TimeStamp';
 import TaskStateLabel from './atomicDisplayItems/TaskStateLabel';
 import Link from './atomicDisplayItems/Link';
@@ -150,7 +150,7 @@ let TaskTable = React.createClass({
                     }
                 }] });
         });
-        return <Table tableClassOpts='table-striped' columnHeads={taskTableColumns} tableRows={taskTableData} sortDirection={this.props.sortDirection} sortDirectionAscending={this.props.sortDirectionAscending} sortBy={this.props.sortBy} emptyTableMessage={this.props.emptyTableMessage || 'No Tasks'} customSorting={true} customPaging={true} rowsPerPageChoices={this.props.rowsPerPageChoices} setRowsPerPage={this.props.setRowsPerPage} pageNumber={this.props.pageNumber} pageDown={this.props.pageDown} pageUp={this.props.pageUp} dataCollection='taskHistory' />;
+        return <OldTable tableClassOpts='table-striped' columnHeads={taskTableColumns} tableRows={taskTableData} sortDirection={this.props.sortDirection} sortDirectionAscending={this.props.sortDirectionAscending} sortBy={this.props.sortBy} emptyTableMessage={this.props.emptyTableMessage || 'No Tasks'} customSorting={true} customPaging={true} rowsPerPageChoices={this.props.rowsPerPageChoices} setRowsPerPage={this.props.setRowsPerPage} pageNumber={this.props.pageNumber} pageDown={this.props.pageDown} pageUp={this.props.pageUp} dataCollection='taskHistory' />;
     }
 });
 

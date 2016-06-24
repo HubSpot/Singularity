@@ -5,14 +5,16 @@ import activeRequest from './activeRequest';
 import tasks from './tasks';
 import api from './api';
 
-let path = function(state='', action) {
+import ui from './ui';
+
+const path = (state='', action) => {
   if (action.type === 'LOG_INIT') {
     return action.path;
   }
   return state;
 };
 
-let activeColor = function(state='default', action) {
+const activeColor = (state='default', action) => {
   if (action.type === 'LOG_INIT') {
     return window.localStorage.logColor || 'default';
   } else if (action.type === 'LOG_SELECT_COLOR') {
@@ -22,27 +24,27 @@ let activeColor = function(state='default', action) {
   return state;
 };
 
-let colors = (state=[]) => state;
+const colors = (state=[]) => state;
 
-let viewMode = function(state='custom', action) {
+const viewMode = (state='custom', action) => {
   if (action.type === 'LOG_SWITCH_VIEW_MODE' || action.type === 'LOG_INIT') {
     return action.viewMode;
   }
   return state;
 };
 
-let search = function(state='', action) {
+const search = (state='', action) => {
   if (action.type === 'LOG_INIT') {
     return action.search;
   }
   return state;
 };
 
-let logRequestLength = (state=30000, action) => state;
+const logRequestLength = (state=30000, action) => state;
 
-let maxLines = (state=100000, action) => state;
+const maxLines = (state=100000, action) => state;
 
-let showDebugInfo = function(state=false, action) {
+const showDebugInfo = (state=false, action) => {
   if (action.type === 'LOG_INIT') {
     return Boolean(window.localStorage.showDebugInfo) || false;
   }
@@ -55,8 +57,10 @@ let showDebugInfo = function(state=false, action) {
 
 export default combineReducers({
   api,
+  ui,
   showDebugInfo,
-  taskGroups, tasks,
+  taskGroups,
+  tasks,
   activeRequest,
   path,
   activeColor,
