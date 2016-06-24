@@ -67,13 +67,7 @@ export function buildApiAction(actionName, opts={}, keyFunc=undefined) {
         .catch(ex => {
           return dispatch(error(ex, key));
         });
-    }
-  }
-
-  function clearData() {
-    return function (dispatch) {
-      dispatch(clear());
-    }
+    };
   }
 
   function clear() {
