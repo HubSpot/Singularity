@@ -17,7 +17,7 @@ class DeployDetailController extends Controller {
     let promises = [];
     promises.push(this.store.dispatch(DeployFetchAction.trigger(requestId, deployId)));
     promises.push(this.store.dispatch(FetchForDeployAction.trigger(requestId, deployId)));
-    promises.push(this.store.dispatch(TaskHistoryFetchForDeploy.clear()));
+    promises.push(this.store.dispatch(TaskHistoryFetchForDeploy.clearData()));
     promises.push(this.store.dispatch(TaskHistoryFetchForDeploy.trigger(requestId, deployId, 5, 1)));
 
     Promise.all(promises).then(() => {

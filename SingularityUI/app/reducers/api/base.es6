@@ -38,5 +38,5 @@ export default function buildApiActionReducer(ActionGroup, initialData={}) {
       default:
         return state;
     }
-  }
+  };
 }

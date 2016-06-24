@@ -151,7 +151,7 @@ class TaskDetail extends React.Component {
   }
 
   renderFiles(t, files) {
-    if (!files) {
+    if (!files || !files.currentDirectory) {
       return (
         <Section title="Files">
           <div className="empty-table-message">
@@ -356,7 +356,6 @@ function mapTaskToProps(t) {
 function mapStateToProps(state, ownProps) {
   let task = mapHealthchecksToProps(state.api.task[ownProps.taskId].data);
   task = mapTaskToProps(task);
-
   return {
     task: task,
     taskCleanups: state.api.taskCleanups.data,

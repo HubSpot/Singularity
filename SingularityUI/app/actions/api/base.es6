@@ -27,10 +27,10 @@ export function buildJsonApiAction(actionName, httpMethod, opts={}, keyField=und
 
 export function buildApiAction(actionName, opts={}, keyFunc=undefined) {
   const ACTION = actionName;
-  const STARTED = actionName + '_STARTED';
-  const ERROR = actionName + '_ERROR';
-  const SUCCESS = actionName + '_SUCCESS';
-  const CLEAR = actionName + '_CLEAR';
+  const STARTED = `${actionName}_STARTED`;
+  const ERROR = `${actionName}_ERROR`;
+  const SUCCESS = `${actionName}_SUCCESS`;
+  const CLEAR = `${actionName}_CLEAR`;
 
   let optsFunc;
 
@@ -48,23 +48,26 @@ export function buildApiAction(actionName, opts={}, keyFunc=undefined) {
       }
       dispatch(started(key));
 
-      let options = optsFunc(...args);
-
+      const options = optsFunc(...args);
+      let apiResponse;
       return fetch(config.apiRoot + options.url, _.extend({credentials: 'include'}, _.omit(options, 'url')))
-        .then(response => response.json())
-        .then(json => {
-          dispatch(success(json, key));
+        .then(response => {
+          apiResponse = response;
+          if (response.headers.get('Content-Type') === 'application/json') {
+            return response.json();
+          }
+          return response.text();
+        })
+        .then((data) => {
+          if (apiResponse.status >= 200 && apiResponse.status < 300) {
+            return dispatch(success(data, key));
+          }
+          throw new Error(data);
         })
         .catch(ex => {
-          dispatch(error(ex, key));
+          return dispatch(error(ex, key));
         });
-    }
-  }
-
-  function clearData() {
-    return function (dispatch) {
-      dispatch(clear());
-    }
+    };
   }
 
   function clear() {
@@ -83,6 +86,12 @@ export function buildApiAction(actionName, opts={}, keyFunc=undefined) {
     return { type: SUCCESS, data, key };
   }
 
+  function clearData() {
+    return function (dispatch) {
+      dispatch(clear());
+    };
+  }
+
   return {
     ACTION,
     STARTED,
@@ -95,5 +104,5 @@ export function buildApiAction(actionName, opts={}, keyFunc=undefined) {
     started,
     error,
     success
-  }
+  };
 }
