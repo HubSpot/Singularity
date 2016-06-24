@@ -419,31 +419,13 @@ class RequestForm extends React.Component {
           onChange={ value => this.updateField('owners', value) }
           value={ this.getValue('owners') }
           splits={[',', ' ']}
-        />{/*
-        <FormField
-          id="owners"
-          prop={{
-            updateFn: event => {
-              this.updateField('owners', event.target.value);
-            },
-            inputType: 'text',
-            value: this.getValue('owners'),
-            generateSelectBox: true,
-            selectBoxOptions: {
-              tags: [],
-              containerCssClass: 'select-owners hide-select2-spinner',
-              dropdownCssClass: 'hidden',
-              selectOnBlur: true,
-              tokenSeparators: [',',' ']
-            }
-          }}
-        />*/}
+        />
       </div>
     );
     const requestTypeSelectors = (
       <div className="form-group">
         <label>Type</label>
-        <div id="type" class="btn-group">
+        <div id="type" className="btn-group">
           {this.renderRequestTypeSelectors()}
         </div>
       </div>
