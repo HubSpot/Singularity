@@ -3,12 +3,12 @@ import ReactDOM from 'react-dom';
 
 import RacksPage from '../components/machines/Racks';
 
-import View from './view';
+import ReactView from './reactView';
 
 import { Provider } from 'react-redux';
 
 
-class RacksView extends View {
+class RacksView extends ReactView {
   initialize(store) {
     this.store = store;
   }

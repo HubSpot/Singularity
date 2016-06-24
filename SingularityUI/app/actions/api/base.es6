@@ -2,7 +2,7 @@ import fetch from 'isomorphic-fetch';
 
 const JSON_HEADERS = {'Content-Type': 'application/json', 'Accept': 'application/json'};
 
-export function buildJsonApiAction(actionName, httpMethod, opts={}) {
+export function buildJsonApiAction(actionName, httpMethod, opts={}, keyField=undefined) {
   const JSON_BOILERPLATE = {
     method: httpMethod,
     headers: JSON_HEADERS
@@ -22,10 +22,10 @@ export function buildJsonApiAction(actionName, httpMethod, opts={}) {
     };
   }
 
-  return buildApiAction(actionName, options);
+  return buildApiAction(actionName, options, keyField);
 }
 
-export function buildApiAction(actionName, opts = {}) {
+export function buildApiAction(actionName, opts={}, keyFunc=undefined) {
   const ACTION = actionName;
   const STARTED = `${actionName}_STARTED`;
   const ERROR = `${actionName}_ERROR`;
@@ -40,31 +40,13 @@ export function buildApiAction(actionName, opts = {}) {
     optsFunc = () => opts;
   }
 
-  function clear() {
-    return { type: CLEAR };
-  }
-
-  function started() {
-    return { type: STARTED };
-  }
-
-  function error(error) {
-    return { type: ERROR, error };
-  }
-
-  function success(data) {
-    return { type: SUCCESS, data };
-  }
-
-  function clearData() {
-    return function (dispatch) {
-      dispatch(clear());
-    };
-  }
-
   function trigger(...args) {
     return function (dispatch) {
-      dispatch(started());
+      let key;
+      if (keyFunc) {
+        key = keyFunc(...args);
+      }
+      dispatch(started(key));
 
       const options = optsFunc(...args);
       let apiResponse;
@@ -78,13 +60,41 @@ export function buildApiAction(actionName, opts = {}) {
         })
         .then((data) => {
           if (apiResponse.status >= 200 && apiResponse.status < 300) {
-            return dispatch(success(data));
+            return dispatch(success(data, key));
           }
           throw new Error(data);
         })
         .catch(ex => {
-          return dispatch(error(ex));
+          return dispatch(error(ex, key));
         });
+    }
+  }
+
+  function clearData() {
+    return function (dispatch) {
+      dispatch(clear());
+    }
+  }
+
+  function clear() {
+    return { type: CLEAR };
+  }
+
+  function started(key=undefined) {
+    return { type: STARTED, key };
+  }
+
+  function error(error, key=undefined) {
+    return { type: ERROR, error, key };
+  }
+
+  function success(data, key=undefined) {
+    return { type: SUCCESS, data, key };
+  }
+
+  function clearData() {
+    return function (dispatch) {
+      dispatch(clear());
     };
   }
 

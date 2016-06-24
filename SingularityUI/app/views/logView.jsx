@@ -1,10 +1,10 @@
-import View from './view';
+import ReactView from './reactView';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import LogContainer from '../components/logs/LogContainer';
 import { Provider } from 'react-redux';
 
-class LogView extends View {
+class LogView extends ReactView {
     constructor(...args) {
       super(...args);
     }
