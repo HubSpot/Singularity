@@ -110,10 +110,10 @@ class RequestForm extends React.Component {
     }
 
     if (request.owners) {
-      request.owners = request.owners.split(',');
+      request.owners = request.owners.map(owner => owner.value);
     }
     if (request.rackAffinity) {
-      request.rackAffinity = request.rackAffinity.split(',');
+      request.rackAffinity = request.rackAffinity.map(rack => rack.value);
     }
 
     this.props.save(request);

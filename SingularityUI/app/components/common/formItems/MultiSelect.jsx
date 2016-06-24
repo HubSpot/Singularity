@@ -16,6 +16,9 @@ class MultiSelect extends Component {
     if (!cleansedValueToAdd || this.props.value.indexOf(cleansedValueToAdd) !== -1) {
       return;
     }
+    if (this.props.options && !this.props.options.filter(option => option.value === cleansedValueToAdd)) {
+      return;
+    }
     const newValue = this.props.value.slice() || [];
     newValue.push(cleansedValueToAdd);
     this.props.onChange(newValue);
@@ -30,15 +33,16 @@ class MultiSelect extends Component {
   render() {
     return (
       <Select
-          id={this.props.id}
+          id={ this.props.id }
           onChange={ this.props.onChange }
           onInputChange={ value => this.checkInputChange(value) }
           value={ this.props.value }
-          options={this.props.options || [{ label: null, value: null}]}
-          onBlurResetsInput={false}
-          multi={true}
+          options={ this.props.options || [{ label: null, value: null}] }
+          onBlurResetsInput={ false }
+          multi={ true }
           onBlur={ event => this.addNewOption(event.target.value) }
-          placeholder={ this.props.placeholder || ""}
+          placeholder={ this.props.placeholder || "" }
+          allowCreate={ this.props.allowCreate || !this.props.options }
         />
     );
   }
