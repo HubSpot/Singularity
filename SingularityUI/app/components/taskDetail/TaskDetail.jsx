@@ -79,7 +79,7 @@ class TaskDetail extends React.Component {
           buttonStyle="danger"
           formElements={[
             {
-              name: 'waitForReplacment',
+              name: 'waitForReplacementTask',
               type: FormModal.INPUT_TYPES.BOOLEAN,
               label: 'Wait for replacement task to start before killing task',
               defaultValue: true
@@ -310,10 +310,9 @@ class TaskDetail extends React.Component {
   }
 
   killTask(data) {
-    console.log(data);
-    // this.props.dispatch(TaskKillAction.trigger(this.props.taskId)).then(() =>{
-    //   this.props.dispatch(TaskFetchAction.trigger(this.props.taskId));
-    // });
+    this.props.dispatch(TaskKillAction.trigger(this.props.taskId, data)).then((e) =>{
+      this.props.dispatch(TaskFetchAction.trigger(this.props.taskId));
+    });
   }
 }
 
