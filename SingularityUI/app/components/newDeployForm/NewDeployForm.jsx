@@ -13,6 +13,7 @@ import ToolTip from 'react-bootstrap/lib/Tooltip';
 import Utils from '../../utils';
 import classNames from 'classnames';
 
+
 class SimpleTextInputGroup extends Component {
 
   render() {
