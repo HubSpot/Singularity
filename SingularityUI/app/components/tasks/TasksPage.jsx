@@ -6,7 +6,7 @@ import TaskFilters from './TaskFilters';
 import { FetchAction } from '../../actions/api/tasks';
 
 import UITable from '../common/table/UITable';
-import { TaskId, StartedAt, Host, Rack, CPUs } from './Columns';
+import { TaskId, StartedAt, Host, Rack, CPUs, Memory, Actions } from './Columns';
 
 class TasksPage extends React.Component {
 
@@ -46,6 +46,8 @@ class TasksPage extends React.Component {
           {Host}
           {Rack}
           {CPUs}
+          {Memory}
+          {Actions}
         </UITable>
       </div>
     );

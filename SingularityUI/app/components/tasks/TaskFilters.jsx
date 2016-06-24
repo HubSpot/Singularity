@@ -92,7 +92,7 @@ export default class TaskFilters extends React.Component {
         className="big-search-box"
         placeholder="Filter tasks"
         value={this.props.filter.filterText}
-        onChange={this.handleSearchChange.bind(this)}
+        onChange={_.debounce(this.handleSearchChange, 500)}
         maxlength="128" />
     );
   }

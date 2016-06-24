@@ -4,6 +4,7 @@ import Column from '../common/table/Column';
 import Utils from '../../utils';
 
 import JSONButton from '../common/JSONButton';
+import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 
 export const TaskId = (
   <Column
@@ -88,5 +89,43 @@ export const CPUs = (
       )
     }
     sortable={true}
+  />
+);
+
+export const Memory = (
+  <Column
+    label="CPUs"
+    id="cpus"
+    cellData={
+      (rowData) => _.find(rowData.mesosTask.resources, (r) => r.name == 'mem').scalar.value
+    }
+    cellRender={
+      (cellData) => (
+        <span>{cellData} MB</span>
+      )
+    }
+    sortable={true}
+  />
+);
+
+export const Actions = (
+  <Column
+    label=""
+    id="actions"
+    className="actions-column"
+    cellData={
+      (rowData) => rowData
+    }
+    cellRender={(cellData) => {
+        return (
+          <div className="hidden-xs">
+            <a><Glyphicon iconClass="remove" /></a>
+            <JSONButton className="inline" object={cellData}>
+              {'{ }'}
+            </JSONButton>
+          </div>
+        );
+      }
+    }
   />
 );
