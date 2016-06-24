@@ -3,7 +3,7 @@ import RequestFormView from '../views/requestForm';
 import { FetchAction as RequestFetchAction } from '../actions/api/request';
 import { FetchAction as RacksFetchAction } from '../actions/api/racks';
 
-class ReqeustFormController extends Controller {
+class RequestFormController extends Controller {
 
   initialize({store, requestId = ''}) {
     app.showPageLoader();
@@ -26,4 +26,4 @@ class ReqeustFormController extends Controller {
   }
 }
 
-export default ReqeustFormController;
+export default RequestFormController;
