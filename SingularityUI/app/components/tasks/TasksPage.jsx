@@ -3,8 +3,10 @@ import { connect } from 'react-redux';
 import filterSelector from '../../selectors/tasks/filterSelector';
 
 import TaskFilters from './TaskFilters';
-
 import { FetchAction } from '../../actions/api/tasks';
+
+import UITable from '../common/table/UITable';
+import { TaskId, StartedAt, Host, Rack, CPUs } from './Columns';
 
 class TasksPage extends React.Component {
 
@@ -30,11 +32,22 @@ class TasksPage extends React.Component {
   }
 
   render() {
-    const displayTasks = filterSelector({tasks: this.props.tasks, filter: this.state.filter});
-    console.log(displayTasks);
+    const displayTasks = _.sortBy(filterSelector({tasks: this.props.tasks, filter: this.state.filter}), (t) => t.taskId.startedAt).reverse();
 
     return (
-      <TaskFilters filter={this.state.filter} onFilterChange={this.handleFilterChange.bind(this)} />
+      <div>
+        <TaskFilters filter={this.state.filter} onFilterChange={this.handleFilterChange.bind(this)} />
+        <UITable
+          data={displayTasks}
+          keyGetter={(r) => r.taskId.id}
+        >
+          {TaskId}
+          {StartedAt}
+          {Host}
+          {Rack}
+          {CPUs}
+        </UITable>
+      </div>
     );
   }
 }
