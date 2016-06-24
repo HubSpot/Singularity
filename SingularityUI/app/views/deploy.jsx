@@ -1,4 +1,4 @@
-import View from './view';
+import ReactView from './reactView';
 import DeployDetail from '../components/deployDetail/DeployDetail';
 
 import React from 'react';
@@ -6,7 +6,7 @@ import ReactDOM from 'react-dom';
 
 import { Provider } from 'react-redux';
 
-class DeployView extends View {
+class DeployView extends ReactView {
 
     initialize(store) {
         this.store = store;

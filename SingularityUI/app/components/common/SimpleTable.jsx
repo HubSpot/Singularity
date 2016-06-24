@@ -50,12 +50,19 @@ export default class SimpleTable extends React.Component {
             last={this.props.last}
             ellipsis={false}
             items={Math.ceil(this.state.displayItems.length / this.props.perPage)}
-            maxButtons={2}
+            maxButtons={this.props.maxButtons || 1}
             activePage={this.state.activePage}
             onSelect={this.handleSelect.bind(this)} />
         </div>
       );
     }
+  }
+
+  renderHeaders() {
+    let row = this.props.headers.map((h, i) => {
+      return <th key={i}>{h}</th>;
+    });
+    return <tr>{row}</tr>;
   }
 
   render() {
@@ -64,7 +71,7 @@ export default class SimpleTable extends React.Component {
         <div className="table-container">
           <Table responsive>
             <thead>
-              {this.props.renderTableHeaders()}
+              {this.renderHeaders()}
             </thead>
             <tbody>
               {this.renderTableRows()}
@@ -76,7 +83,7 @@ export default class SimpleTable extends React.Component {
     } else {
       return (
         <div className="empty-table-message">
-            No {this.props.unit}s
+            {this.props.emptyMessage}
         </div>
       );
     }
@@ -84,11 +91,11 @@ export default class SimpleTable extends React.Component {
 }
 
 SimpleTable.propTypes = {
-  unit: React.PropTypes.string.isRequired,
+  emptyMessage: React.PropTypes.string.isRequired,
   entries: React.PropTypes.array.isRequired,
   perPage: React.PropTypes.number,
   first: React.PropTypes.bool,
   last: React.PropTypes.bool,
-  renderTableHeaders: React.PropTypes.func.isRequired,
+  headers: React.PropTypes.array.isRequired,
   renderTableRow: React.PropTypes.func.isRequired
 };

@@ -1,11 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import View from './view';
+import ReactView from './reactView';
 
 import TaskSearch from '../components/taskSearch/TaskSearch';
 
-class TaskSearchView extends View {
+class TaskSearchView extends ReactView {
 
     constructor(...args) {
         super(...args);
