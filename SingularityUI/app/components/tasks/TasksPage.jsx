@@ -6,7 +6,7 @@ import TaskFilters from './TaskFilters';
 import { FetchAction } from '../../actions/api/tasks';
 
 import UITable from '../common/table/UITable';
-import { TaskId, StartedAt, Host, Rack, CPUs, Memory, Actions } from './Columns';
+import { TaskId, StartedAt, Host, Rack, CPUs, Memory, ActiveActions, NextRun, PendingType, DeployId, ScheduledActions, ScheduledTaskId } from './Columns';
 
 class TasksPage extends React.Component {
 
@@ -31,23 +31,27 @@ class TasksPage extends React.Component {
     app.router.navigate(`/tasks/${filter.taskStatus}/${requestTypes}/${filter.filterText}`);
   }
 
+  getColumns() {
+    switch(this.state.filter.taskStatus) {
+      case 'active':
+        return [TaskId, StartedAt, Host, Rack, CPUs, Memory, ActiveActions];
+      case 'scheduled':
+        return [ScheduledTaskId, NextRun, PendingType, DeployId, ScheduledActions];
+    }
+  }
+
   render() {
-    const displayTasks = _.sortBy(filterSelector({tasks: this.props.tasks, filter: this.state.filter}), (t) => t.taskId.startedAt).reverse();
+    const displayRequestTypeFilters = this.state.filter.taskStatus == 'active';
+    const displayTasks = _.sortBy(filterSelector({tasks: this.props.tasks, filter: this.state.filter}), (t) => t.taskId && t.taskId.startedAt).reverse();
 
     return (
       <div>
-        <TaskFilters filter={this.state.filter} onFilterChange={this.handleFilterChange.bind(this)} />
+        <TaskFilters filter={this.state.filter} onFilterChange={this.handleFilterChange.bind(this)} displayRequestTypeFilters={displayRequestTypeFilters} />
         <UITable
           data={displayTasks}
-          keyGetter={(r) => r.taskId.id}
+          keyGetter={(r) => r.taskId ? r.taskId.id : r.pendingTask.pendingTaskId.id}
         >
-          {TaskId}
-          {StartedAt}
-          {Host}
-          {Rack}
-          {CPUs}
-          {Memory}
-          {Actions}
+          {this.getColumns()}
         </UITable>
       </div>
     );

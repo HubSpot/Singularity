@@ -4,14 +4,16 @@ import fuzzy from 'fuzzy';
 import Utils from '../../utils';
 
 const getTasks = (state) => state.tasks;
-const getFilter = (state) => ({requestTypes: state.filter.requestTypes, filterText: state.filter.filterText});
+const getFilter = (state) => ({state: state.filter.taskStatus, requestTypes: state.filter.requestTypes, filterText: state.filter.filterText});
 
 export default createSelector([getTasks, getFilter], (tasks, filter) => {
 
   // Filter by requestType
-  tasks = _.filter(tasks, (task) => {
-    return task.taskRequest && _.contains(filter.requestTypes, task.taskRequest.request.requestType);
-  });
+  if (filter.state == 'active') {
+    tasks = _.filter(tasks, (task) => {
+      return task.taskRequest && _.contains(filter.requestTypes, task.taskRequest.request.requestType);
+    });
+  }
 
   // Filter by glob or fuzzy string
   if (filter.filterText) {

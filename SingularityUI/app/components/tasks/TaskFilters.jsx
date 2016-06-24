@@ -89,16 +89,17 @@ export default class TaskFilters extends React.Component {
     return (
       <input
         type="search"
+        ref="search"
         className="big-search-box"
         placeholder="Filter tasks"
         value={this.props.filter.filterText}
-        onChange={_.debounce(this.handleSearchChange, 500)}
+        onChange={this.handleSearchChange.bind(this)}
         maxlength="128" />
     );
   }
 
   renderRequestTypeFilter() {
-    const filterItems = TaskFilters.REQUEST_TYPES.map((t, index) => {
+    const filterItems = this.props.displayRequestTypeFilters && TaskFilters.REQUEST_TYPES.map((t, index) => {
       return (
         <li key={index} className={_.contains(this.props.filter.requestTypes, t) ? 'active' : ''}>
           <a onClick={() => this.toggleRequestType(t)}>
