@@ -1,5 +1,6 @@
 import { combineReducers } from 'redux';
 import buildApiActionReducer from './base';
+import buildKeyedApiActionReducer from './keyed';
 
 import { FetchAction as TaskHistoryFetchAction } from '../../actions/api/task';
 import { FetchAction as UserFetchAction } from '../../actions/api/user';
@@ -19,9 +20,9 @@ import { FetchAction as TaskS3LogsFetchAction } from '../../actions/api/taskS3Lo
 import { RunAction as TaskShellCommandRunAction } from '../../actions/api/taskShellCommand';
 
 const user = buildApiActionReducer(UserFetchAction);
-const webhooks = buildApiActionReducer(WebhooksFetchAction, false, []);
-const slaves = buildApiActionReducer(SlavesFetchAction, false, []);
-const racks = buildApiActionReducer(RacksFetchAction, false, []);
+const webhooks = buildApiActionReducer(WebhooksFetchAction, []);
+const slaves = buildApiActionReducer(SlavesFetchAction, []);
+const racks = buildApiActionReducer(RacksFetchAction, []);
 const status = buildApiActionReducer(StatusFetchAction);
 const deploy = buildApiActionReducer(DeployFetchAction);
 const deploys = buildApiActionReducer(DeploysFetchAction);
@@ -29,11 +30,11 @@ const requests = buildApiActionReducer(RequestsFetchAction);
 const activeTasksForDeploy = buildApiActionReducer(TasksFetchForDeployAction);
 const taskHistoryForDeploy = buildApiActionReducer(TaskHistoryFetchForDeploy);
 const taskCleanups = buildApiActionReducer(TaskCleanupsFetchAction);
-const taskFiles = buildApiActionReducer(TaskFilesFetchAction, true);
+const taskFiles = buildKeyedApiActionReducer(TaskFilesFetchAction);
 const taskResourceUsage = buildApiActionReducer(TaskResourceUsageFetchAction);
 const taskS3Logs = buildApiActionReducer(TaskS3LogsFetchAction);
 const taskShellCommandResponse = buildApiActionReducer(TaskShellCommandRunAction);
-const task = buildApiActionReducer(TaskHistoryFetchAction, true);
+const task = buildKeyedApiActionReducer(TaskHistoryFetchAction);
 
 export default combineReducers({
   user,

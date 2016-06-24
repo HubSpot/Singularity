@@ -17,7 +17,6 @@ class TaskDetail extends Controller {
     this.taskId = taskId;
     this.filePath = filePath;
 
-    this.store.dispatch(TaskFetchAction.clear());
     this.store.dispatch(TaskFilesFetchAction.trigger(this.taskId, this.filePath));
     this.refresh().then(() => {
       this.setView(new TaskView(store, this.taskId, this.filePath));
