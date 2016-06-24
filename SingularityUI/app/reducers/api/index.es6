@@ -30,7 +30,6 @@ const requests = buildApiActionReducer(RequestsFetchAction, []);
 const status = buildApiActionReducer(StatusFetchAction);
 const deploy = buildApiActionReducer(DeployFetchAction);
 const deploys = buildApiActionReducer(DeploysFetchAction, []);
-const requests = buildApiActionReducer(RequestsFetchAction, []);
 const activeTasksForDeploy = buildApiActionReducer(TasksFetchForDeployAction);
 const taskHistoryForDeploy = buildApiActionReducer(TaskHistoryFetchForDeploy);
 const taskCleanups = buildApiActionReducer(TaskCleanupsFetchAction, []);
