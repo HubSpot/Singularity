@@ -32,7 +32,7 @@ export default class ConfirmationDialog extends React.Component {
     return (
       <Modal show={this.state.visible} onHide={this.hide.bind(this)}>
         <Modal.Body>
-          {this.props.text}
+          {this.props.children}
         </Modal.Body>
         <Modal.Footer>
           <Button bsStyle="default" onClick={this.hide.bind(this)}>Cancel</Button>
@@ -44,7 +44,6 @@ export default class ConfirmationDialog extends React.Component {
 }
 
 ConfirmationDialog.propTypes = {
-  text: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.object]).isRequired,
   action: React.PropTypes.string.isRequired,
   onConfirm: React.PropTypes.func.isRequired,
   buttonStyle: React.PropTypes.string

@@ -13,7 +13,7 @@ import FormGroup from 'react-bootstrap/lib/FormGroup';
 import Breadcrumbs from '../common/Breadcrumbs';
 import JSONButton from '../common/JSONButton';
 import Section from '../common/Section';
-import ConfirmationDialog from '../common/ConfirmationDialog';
+import FormModal from '../common/FormModal';
 import CollapsableSection from '../common/CollapsableSection';
 import SimpleTable from '../common/SimpleTable';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
@@ -72,24 +72,35 @@ class TaskDetail extends React.Component {
       (t.isCleaning ? 'Destroy task' : 'Kill Task');
     const removeBtn = t.isStillRunning && (
       <span>
-        <ConfirmationDialog
+        <FormModal
           ref="confirmKillTask"
-          text={
-            <span>
-              <p>Are you sure you want to kill this task?</p>
-              <pre>{this.props.taskId}</pre>
-              <p>
-                  Long running process will be started again instantly, scheduled
-                  tasks will behave as if the task failed and may be rescheduled
-                  to run in the future depending on whether or not the request
-                  has <code>numRetriesOnFailure</code> set.
-              </p>
-            </span>
-          }
           action={removeText}
           onConfirm={this.killTask.bind(this)}
           buttonStyle="danger"
-        />
+          formElements={[
+            {
+              name: 'waitForReplacment',
+              type: FormModal.INPUT_TYPES.BOOLEAN,
+              label: 'Wait for replacement task to start before killing task',
+              defaultValue: true
+            },
+            {
+              name: 'message',
+              type: FormModal.INPUT_TYPES.STRING,
+              label: 'Message (optional)'
+            }
+          ]}>
+          <span>
+            <p>Are you sure you want to kill this task?</p>
+            <pre>{this.props.taskId}</pre>
+            <p>
+                Long running process will be started again instantly, scheduled
+                tasks will behave as if the task failed and may be rescheduled
+                to run in the future depending on whether or not the request
+                has <code>numRetriesOnFailure</code> set.
+            </p>
+          </span>
+        </FormModal>
       <a className="btn btn-danger" onClick={() => this.refs.confirmKillTask.show()}>
           {removeText}
         </a>
@@ -298,10 +309,11 @@ class TaskDetail extends React.Component {
     return files;
   }
 
-  killTask() {
-    this.props.dispatch(TaskKillAction.trigger(this.props.taskId)).then(() =>{
-      this.props.dispatch(TaskFetchAction.trigger(this.props.taskId));
-    });
+  killTask(data) {
+    console.log(data);
+    // this.props.dispatch(TaskKillAction.trigger(this.props.taskId)).then(() =>{
+    //   this.props.dispatch(TaskFetchAction.trigger(this.props.taskId));
+    // });
   }
 }
 
