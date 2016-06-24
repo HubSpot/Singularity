@@ -13,7 +13,7 @@ export default function buildApiActionReducer(ActionGroup, initialData = []) {
       case ActionGroup.ERROR:
         return _.extend({}, state, {
           isFetching: false,
-          error: action.ex,
+          error: action.error,
           receivedAt: Date.now()
         });
       case ActionGroup.SUCCESS:

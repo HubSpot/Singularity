@@ -48,8 +48,8 @@ export function buildApiAction(actionName, opts = {}) {
     return { type: STARTED };
   }
 
-  function error(ex) {
-    return { type: ERROR, ex };
+  function error(error) {
+    return { type: ERROR, error };
   }
 
   function success(data) {
