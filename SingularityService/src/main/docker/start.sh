@@ -4,7 +4,7 @@ PATH=/usr/local/singularity/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/lib64/qt-3.
 
 if [ ${DOCKER_HOST} ]; then
 	HOST_AND_PORT=`echo $DOCKER_HOST | awk -F/ '{print $3}'`
-	SINGULARITY_HOSTNAME="${SINGULARITY_HOSTNAME:=HOST_AND_PORT%:*}"
+	SINGULARITY_HOSTNAME="${SINGULARITY_HOSTNAME:=$HOST_AND_PORT%:*}"
 fi
 
 DEFAULT_URI_BASE="http://${SINGULARITY_HOSTNAME:=localhost}:${SINGULARITY_PORT:=7099}${SINGULARITY_UI_BASE:=/singularity}"
