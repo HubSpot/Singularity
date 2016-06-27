@@ -9,6 +9,7 @@ import { KillAction } from '../../actions/api/task';
 
 import UITable from '../common/table/UITable';
 import KillTaskModal from '../common/KillTaskModal';
+import RunNowModal from '../common/RunNowModal';
 import { TaskId, StartedAt, Host, Rack, CPUs, Memory, ActiveActions, NextRun, PendingType, DeployId, ScheduledActions, ScheduledTaskId, CleanupType, JSONAction, InstanceNumber } from './Columns';
 
 class TasksPage extends React.Component {
@@ -49,12 +50,16 @@ class TasksPage extends React.Component {
     this.props.killTask(taskId, data);
   }
 
+  handleRunNow(requestId, data) {
+    console.log(requestId, data);
+  }
+
   getColumns() {
     switch(this.state.filter.taskStatus) {
       case 'active':
         return [TaskId, StartedAt, Host, Rack, CPUs, Memory, ActiveActions((taskId) => this.refs.killTaskModal.show(taskId))];
       case 'scheduled':
-        return [ScheduledTaskId, NextRun, PendingType, DeployId, ScheduledActions];
+        return [ScheduledTaskId, NextRun, PendingType, DeployId, ScheduledActions((requestId) => this.refs.runModal.show(requestId))];
       case 'cleaning':
         return [TaskId, CleanupType, JSONAction];
       case 'lbcleanup':
@@ -103,6 +108,7 @@ class TasksPage extends React.Component {
       <div>
         <TaskFilters filter={this.state.filter} onFilterChange={this.handleFilterChange.bind(this)} displayRequestTypeFilters={displayRequestTypeFilters} />
         {table}
+        {<RunNowModal ref="runModal" onRunNow={this.handleRunNow.bind(this)} />}
         {<KillTaskModal ref="killTaskModal" onTaskKill={this.handleTaskKill.bind(this)} />}
       </div>
     );

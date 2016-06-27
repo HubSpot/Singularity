@@ -125,10 +125,9 @@ export const ActiveActions = (onTaskKill) => {
       (rowData) => rowData
     }
     cellRender={(cellData) => {
-        const taskId = cellData.taskId.id;
         return (
           <div className="hidden-xs">
-            <a data-action="remove" onClick={() => onTaskKill(taskId)}><Glyphicon iconClass="remove" /></a>
+            <a data-action="remove" onClick={() => onTaskKill(cellData.taskId.id)}><Glyphicon iconClass="remove" /></a>
             <JSONButton className="inline" object={cellData}>
               {'{ }'}
             </JSONButton>
@@ -203,8 +202,8 @@ export const DeployId = (
   />
 );
 
-export const ScheduledActions = (
-  <Column
+export const ScheduledActions = (onRunNow) => {
+  return <Column
     label=""
     id="actions"
     key="actions"
@@ -215,7 +214,7 @@ export const ScheduledActions = (
     cellRender={(cellData) => {
         return (
           <div className="hidden-xs">
-            <a><Glyphicon iconClass="flash" /></a>
+            <a onClick={() => onRunNow(cellData.pendingTask.pendingTaskId.requestId)}><Glyphicon iconClass="flash" /></a>
             <JSONButton className="inline" object={cellData}>
               {'{ }'}
             </JSONButton>
@@ -223,8 +222,8 @@ export const ScheduledActions = (
         );
       }
     }
-  />
-);
+  />;
+};
 
 export const ScheduledTaskId = (
   <Column
