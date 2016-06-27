@@ -115,6 +115,18 @@ const FIELDS = {
   ]
 };
 
+const REQUIRED_FIELDS = {
+  all: ['id'],
+  customExecutor: ['customExecutorCmd'],
+  artifacts: ['name', 'filename'],
+  externalArtifacts: ['url'],
+  s3Artifacts: ['s3Bucket', 's3ObjectKey'],
+  docker: ['image'],
+  dockerPortMappings: ['hostPort', 'containerPort'],
+  dockerVolumes: ['containerPath', 'hostPath'],
+  loadBalancer: ['serviceBasePath', 'loadBalancerGroups']
+}
+
 class NewDeployForm extends Component {
 
   componentDidMount() {
@@ -133,26 +145,6 @@ class NewDeployForm extends Component {
     }
   }
 
-  cantSubmit() {
-    const requiredFields = ['id'];
-    if (this.getExecutorType() === CUSTOM_EXECUTOR_TYPE) {
-      requiredFields.push('customExecutorCmd');
-    }
-    if (this.getContainerType() === 'docker') {
-      requiredFields.push('image');
-    }
-    if (this.props.request.request.loadBalanced) {
-      requiredFields.push('serviceBasePath');
-      requiredFields.push('loadBalancerGroups');
-    }
-    for (const fieldId of requiredFields) {
-      if (!this.getValue(fieldId)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   getExecutorType() {
     return this.getValue('executorType') || DEFAULT_EXECUTOR_TYPE;
   }
@@ -163,6 +155,83 @@ class NewDeployForm extends Component {
 
   isRequestDaemon() {
     return ['SERVICE', 'WORKER'].indexOf(this.props.request.request.requestType) !== -1;
+  }
+
+  // Checks if a value is permitted if a field is required.
+  // Returns true unless the object is falsey or an empty array.
+  permitValue(value) {
+    if (!value) {
+      return false;
+    }
+    if (Array.isArray(value) && value.length === 0) {
+      return false;
+    }
+    return true;
+  }
+
+  canSubmit() {
+    for (const fieldId of REQUIRED_FIELDS.all) {
+      if (!this.permitValue(this.getValue(fieldId))) {
+        return false;
+      }
+    }
+    if (this.getExecutorType() === CUSTOM_EXECUTOR_TYPE) {
+      for (const fieldId of REQUIRED_FIELDS.customExecutor) {
+        if (!this.permitValue(this.getValue(fieldId))) {
+          return false;
+        }
+      }
+      for (const artifact of (this.getValue('artifacts') || [])) {
+        for (const fieldId of REQUIRED_FIELDS.artifacts) {
+          if (!this.permitValue(artifact[fieldId])) {
+            return false;
+          }
+        }
+        if (artifact.type === 'external') {
+          for (const fieldId of REQUIRED_FIELDS.externalArtifacts) {
+            if (!this.permitValue(artifact[fieldId])) {
+              return false;
+            }
+          }
+        }
+        if (artifact.type === 's3') {
+          for (const fieldId of REQUIRED_FIELDS.s3Artifacts) {
+            if (!this.permitValue(artifact[fieldId])) {
+              return false;
+            }
+          }
+        }
+      }
+    }
+    if (this.getContainerType() === 'docker') {
+      for (const fieldId of REQUIRED_FIELDS.docker) {
+        if (!this.permitValue(this.getValue(fieldId))) {
+          return false;
+        }
+      }
+      for (const portMapping of (this.getValue('portMappings') || [])) {
+        for (const fieldId of REQUIRED_FIELDS.dockerPortMappings) {
+          if (!this.permitValue(portMapping[fieldId])) {
+            return false;
+          }
+        }
+      }
+      for (const volume of (this.getValue('volumes') || [])) {
+        for (const fieldId of REQUIRED_FIELDS.dockerVolumes) {
+          if (!this.permitValue(volume[fieldId])) {
+            return false;
+          }
+        }
+      }
+    }
+    if (this.props.request.request.loadBalanced) {
+      for (const fieldId of REQUIRED_FIELDS.loadBalancer) {
+        if (!this.permitValue(this.getValue(fieldId))) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   addThingToArrayField(fieldId, thing) {
@@ -1122,7 +1191,7 @@ class NewDeployForm extends Component {
 
             <div id="button-row">
             <span>
-              <button type="submit" className="btn btn-success btn-lg" disabled={this.cantSubmit()}>
+              <button type="submit" className="btn btn-success btn-lg" disabled={!this.canSubmit()}>
                 Deploy
               </button>
             </span>
