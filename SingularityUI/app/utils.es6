@@ -429,6 +429,12 @@ const Utils = {
     }
 
     return defaultValue;
+  },
+
+  timestampWithinSecionds(timestamp, seconds) {
+    const before = moment().subtract(seconds, 'seconds');
+    const after = moment().add(seconds, 'seconds');
+    return moment(timestamp).isBetween(before, after);
   }
 };
 

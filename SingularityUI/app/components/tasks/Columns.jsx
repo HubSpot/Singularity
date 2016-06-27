@@ -147,9 +147,15 @@ export const NextRun = (
       (rowData) => rowData.pendingTask.pendingTaskId.nextRunAt
     }
     cellRender={(cellData) => {
+        let label = <span className="label label-default">SCHEDULED</span>;
+        if (Utils.timestampWithinSecionds(cellData, config.pendingWithinSeconds)) {
+          label = <span className="label label-info">PENDING</span>
+        } else if (cellData < Date.now() - config.pendingWithinSeconds * 1000) {
+          label = <span className="label label-danger">OVERDUE</span>
+        }
         return (
           <div>
-            {Utils.timeStampFromNow(cellData)} {cellData < Date.now() ? <span className="label label-danger">OVERDUE</span> : <span className="label label-default">SCHEDULED</span>}
+            {Utils.timeStampFromNow(cellData)} {label}
           </div>
         );
       }
