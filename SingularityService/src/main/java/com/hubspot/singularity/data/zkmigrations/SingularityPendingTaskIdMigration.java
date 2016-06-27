@@ -14,6 +14,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.InvalidSingularityTaskIdException;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
 import com.hubspot.singularity.SingularityPendingTask;
@@ -59,7 +60,7 @@ public class SingularityPendingTaskIdMigration extends ZkDataMigration {
           Optional<String> cmdLineArgs = getCmdLineArgs(pendingTaskId);
 
           taskManager.savePendingTask(new SingularityPendingTask(newPendingTaskId, cmdLineArgs.isPresent() ? Optional.of(Collections.singletonList(cmdLineArgs.get())) :
-            Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent()));
+            Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent()));
 
           curator.delete().forPath(ZKPaths.makePath(PENDING_TASKS_ROOT, pendingTaskId));
         }
