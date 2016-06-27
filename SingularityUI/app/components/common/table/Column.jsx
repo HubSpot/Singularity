@@ -10,16 +10,18 @@ class Column extends Component {
     cellData: PropTypes.func,
     cellRender: PropTypes.func,
     sortable: PropTypes.bool,
+    sortData: PropTypes.func,
     sortFunc: PropTypes.func,
     className: PropTypes.string,
     headerClassName: PropTypes.string
   };
 
   static defaultProps = {
-    cellData: (o, rowData) => o,
-    cellRender: (str) => str,
+    cellData: (rowData) => rowData,
+    cellRender: (cellData, rowData) => cellData,
     label: '',
     sortable: false,
+    sortData: (cellData, rowData) => cellData,
     sortFunc: (a, b) => {
       if (a < b) {
         return -1;
