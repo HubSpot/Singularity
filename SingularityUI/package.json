@@ -8,12 +8,12 @@
     "url": "git@github.com:HubSpot/Singularity.git"
   },
   "engines": {
-    "node": "~4.1.2",
-    "npm": "~2.14.16"
+    "node": "~6.2.1",
+    "npm": "~3.9.3"
   },
   "bin": {},
   "scripts": {
-    "start": "brunch watch --server"
+    "start": "gulp serve"
   },
   "dependencies": {
     "backbone": "~1.2.3",
