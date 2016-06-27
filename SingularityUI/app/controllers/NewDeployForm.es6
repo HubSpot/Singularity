@@ -6,18 +6,18 @@ import { FetchAction as RequestFetchAction } from '../actions/api/request';
 
 class NewDeployForm extends Controller {
 
-    showView () {
-        this.setView(new NewDeployFormView({store: this.store}));
-        app.showView(this.view);
-    }
+  showView () {
+    this.setView(new NewDeployFormView({store: this.store}));
+    app.showView(this.view);
+  }
 
-    initialize ({store, requestId}) {
-        app.showPageLoader()
-        this.title('New Deploy')
-        this.store = store;
+  initialize ({store, requestId}) {
+    app.showPageLoader();
+    this.title('New Deploy');
+    this.store = store;
 
-        this.store.dispatch(RequestFetchAction.trigger(requestId)).then(() => this.showView());
-    }
+    this.store.dispatch(RequestFetchAction.trigger(requestId)).then(() => this.showView());
+  }
 }
 
 export default NewDeployForm;
