@@ -134,7 +134,23 @@ class NewDeployForm extends Component {
   }
 
   cantSubmit() {
-    return true;
+    const requiredFields = ['id'];
+    if (this.getExecutorType() === CUSTOM_EXECUTOR_TYPE) {
+      requiredFields.push('customExecutorCmd');
+    }
+    if (this.getContainerType() === 'docker') {
+      requiredFields.push('image');
+    }
+    if (this.props.request.request.loadBalanced) {
+      requiredFields.push('serviceBasePath');
+      requiredFields.push('loadBalancerGroups');
+    }
+    for (const fieldId of requiredFields) {
+      if (!this.getValue(fieldId)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   getExecutorType() {
@@ -142,7 +158,7 @@ class NewDeployForm extends Component {
   }
 
   getContainerType() {
-    return this.getValue('containerType') || 'mesos';
+    return this.getValue('type') || 'mesos';
   }
 
   isRequestDaemon() {
@@ -781,7 +797,7 @@ class NewDeployForm extends Component {
         label="Command to execute"
         placeholder="eg: rm -rf /" />
     );
-    const containerType = (
+    const type = (
       <div className="form-group required">
         <label htmlFor="container-type">Container type</label>
         <Select
@@ -790,9 +806,9 @@ class NewDeployForm extends Component {
             { label: 'Mesos', value: 'mesos' },
             { label: 'Docker', value: 'docker' }
           ]}
-          onChange={newValue => this.updateField('containerType', newValue.value)}
+          onChange={newValue => this.updateField('type', newValue.value)}
           required={true}
-          value={this.getValue('containerType') || 'mesos'}
+          value={this.getValue('type') || 'mesos'}
           clearable={false}
         />
       </div>
@@ -991,7 +1007,7 @@ class NewDeployForm extends Component {
             <h3>Container Info</h3>
           </div>
           <div className="col-md-8">
-            {containerType}
+            {type}
           </div>
         </div>
 
@@ -1103,6 +1119,14 @@ class NewDeployForm extends Component {
             {this.isRequestDaemon() && health}
             {this.isRequestDaemon() && this.props.request.request.loadBalanced && loadBalancer}
             {this.props.request.state === 'PAUSED' && unpause}
+
+            <div id="button-row">
+            <span>
+              <button type="submit" className="btn btn-success btn-lg" disabled={this.cantSubmit()}>
+                Deploy
+              </button>
+            </span>
+        </div>
 
           </form>
           <div id="help-column" class="col-md-4 col-md-offset-1" />
