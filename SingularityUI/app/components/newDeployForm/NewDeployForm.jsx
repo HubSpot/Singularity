@@ -77,36 +77,37 @@ const REQUIRED_FIELDS = {
 
 const FIELDS = {
   all: [
-    'id',
-    'executorType',
-    'env',
-    'healthcheckUri',
-    'healthcheckIntervalSeconds',
-    'healthcheckTimeoutSeconds',
-    'healthcheckPortIndex',
-    'healthcheckMaxTotalTimeoutSeconds',
-    'deployHealthTimeoutSeconds',
-    'healthCheckProtocol',
-    'skipHealthchecksOnDeploy',
-    'considerHealthyAfterRunningForSeconds',
-    'serviceBasePath',
-    'loadBalancerGroups',
-    'loadBalancerOptions',
-    'loadBalancerPortIndex',
+    {id: 'id', type: 'text'},
+    {id: 'executorType', type: 'text', default: DEFAULT_EXECUTOR_TYPE},
+    {id: 'env', type: 'text'},
+    {id: 'healthcheckUri', type: 'text'},
+    {id: 'healthcheckIntervalSeconds', type: 'number'},
+    {id: 'healthcheckTimeoutSeconds', type: 'number'},
+    {id: 'healthcheckPortIndex', type: 'number'},
+    {id: 'healthcheckMaxTotalTimeoutSeconds', type: 'number'},
+    {id: 'deployHealthTimeoutSeconds', type: 'number'},
+    {id: 'healthCheckProtocol', type: 'text', default: 'HTTP'},
+    {id: 'skipHealthchecksOnDeploy', type: 'text'},
+    {id: 'considerHealthyAfterRunningForSeconds', type: 'number'},
+    {id: 'serviceBasePath', type: 'text'},
+    {id: 'loadBalancerGroups', type: 'array', arrayType: 'text'},
+    {id: 'loadBalancerOptions', type: 'map'},
+    {id: 'loadBalancerPortIndex', type: 'text', default: 0},
     {
       id: 'containerInfo',
+      type: 'object',
       values: [
-        'type',
+        {id: 'type', type: 'text', default: 'mesos'},
         {
           id: 'docker',
           values: [
-            'image',
-            'network',
-            'parameters',
-            'privileged',
-            'forcePullImage',
-            'volumes',
-            'portMappings'
+            {id: 'image', type: 'text'},
+            {id: 'network', type: 'text', default: 'NONE'},
+            {id: 'parameters', type: 'map'},
+            {id: 'privileged', type: 'text'},
+            {id: 'forcePullImage', type: 'text'},
+            {id: 'volumes', type: 'array', arrayType: 'volume'},
+            {id: 'portMappings', type: 'array', arrayType: 'portMapping'}
           ]
         }
       ]
@@ -114,35 +115,35 @@ const FIELDS = {
     {
       id: 'resources',
       values: [
-        'cpus',
-        'memoryMb',
-        'numPorts'
+        {id: 'cpus', type: 'number', default: 1},
+        {id: 'memoryMb', type: 'number', default: 128},
+        {id: 'numPorts', type: 'number', default: 0}
       ]
     }
   ],
   defaultExecutor: [
-    'command',
-    'uris',
-    'arguments'
+    {id: 'command', type: 'text'},
+    {id: 'uris', type: 'array', arrayType: 'text'},
+    {id: 'arguments', type: 'array', arrayType: 'text'}
   ],
   customExecutor: [
-    'customExecutorCmd',
+    {id: 'customExecutorCmd', type: 'text'},
     {
       id: 'executorData',
       values: [
-        'cmd',
-        'extraCmdLineArgs',
-        'user',
-        'sigKillProcessesAfterMillis',
-        'successfulExitCodes',
-        'maxTaskThreads',
-        'loggingTag',
-        'loggingExtraFields',
-        'preserveTaskSandboxAfterFinish',
-        'skipLogrotateAndCompress',
-        'embeddedArtifacts',
-        'externalArtifacts',
-        's3Artifacts'
+        {id: 'cmd', type: 'text'},
+        {id: 'extraCmdLineArgs', type: 'array', arrayType: 'text'},
+        {id: 'user', type: 'text', default: 'root'},
+        {id: 'sigKillProcessesAfterMillis', type: 'number', default: 120000},
+        {id: 'successfulExitCodes', type: 'array', arrayType: 'number'},
+        {id: 'maxTaskThreads', type: 'text'},
+        {id: 'loggingTag', type: 'text'},
+        {id: 'loggingExtraFields', type: 'map'},
+        {id: 'preserveTaskSandboxAfterFinish', type: 'text'},
+        {id: 'skipLogrotateAndCompress', type: 'text'},
+        {id: 'embeddedArtifacts', type: 'array', arrayType: 'artifact'},
+        {id: 'externalArtifacts', type: 'array', arrayType: 'artifact'},
+        {id: 's3Artifacts', type: 'array', arrayType: 'artifact'}
       ]
     }
   ]
@@ -428,7 +429,7 @@ class NewDeployForm extends Component {
       <div id="custom-artifacts">
         {this.getValue('embeddedArtifacts') && this.getValue('embeddedArtifacts').map((artifact, key) => { return this.renderArtifact(artifact, key) })}
         {this.getValue('externalArtifacts') && this.getValue('externalArtifacts').map((artifact, key) => { return this.renderArtifact(artifact, key) })}
-        {this.getValue('s3Artifacts') && this.getValue('s3Artifacts').map((artifact, key) => { return this.renderArtifact(artifact, key) })}
+        {this.getValue('s3Artifacts') && his.getValue('s3Artifacts').map((artifact, key) => { return this.renderArtifact(artifact, key) })}
       </div>
     );
   }
