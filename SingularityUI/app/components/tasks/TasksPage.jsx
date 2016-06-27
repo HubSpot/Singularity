@@ -5,8 +5,10 @@ import decomSelector from '../../selectors/tasks/decomSelector';
 
 import TaskFilters from './TaskFilters';
 import { FetchAction } from '../../actions/api/tasks';
+import { KillAction } from '../../actions/api/task';
 
 import UITable from '../common/table/UITable';
+import KillTaskModal from '../common/KillTaskModal';
 import { TaskId, StartedAt, Host, Rack, CPUs, Memory, ActiveActions, NextRun, PendingType, DeployId, ScheduledActions, ScheduledTaskId, CleanupType, JSONAction, InstanceNumber } from './Columns';
 
 class TasksPage extends React.Component {
@@ -43,10 +45,14 @@ class TasksPage extends React.Component {
     }
   }
 
+  handleTaskKill(taskId, data) {
+    this.props.killTask(taskId, data);
+  }
+
   getColumns() {
     switch(this.state.filter.taskStatus) {
       case 'active':
-        return [TaskId, StartedAt, Host, Rack, CPUs, Memory, ActiveActions];
+        return [TaskId, StartedAt, Host, Rack, CPUs, Memory, ActiveActions((taskId) => this.refs.killTaskModal.show(taskId))];
       case 'scheduled':
         return [ScheduledTaskId, NextRun, PendingType, DeployId, ScheduledActions];
       case 'cleaning':
@@ -54,7 +60,7 @@ class TasksPage extends React.Component {
       case 'lbcleanup':
         return [TaskId, StartedAt, Host, Rack, InstanceNumber, JSONAction];
       case 'decommissioning':
-        return [TaskId, StartedAt, Host, Rack, CPUs, Memory, ActiveActions];
+        return [TaskId, StartedAt, Host, Rack, CPUs, Memory, ActiveActions((taskId) => this.refs.killTaskModal.show(taskId))];
     }
   }
 
@@ -97,6 +103,7 @@ class TasksPage extends React.Component {
       <div>
         <TaskFilters filter={this.state.filter} onFilterChange={this.handleFilterChange.bind(this)} displayRequestTypeFilters={displayRequestTypeFilters} />
         {table}
+        {<KillTaskModal ref="killTaskModal" onTaskKill={this.handleTaskKill.bind(this)} />}
       </div>
     );
   }
@@ -111,7 +118,8 @@ function mapStateToProps(state, ownProps) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    fetchFilter: (state) => dispatch(FetchAction.trigger(state))
+    fetchFilter: (state) => dispatch(FetchAction.trigger(state)),
+    killTask: (taskId, data) => dispatch(KillAction.trigger(taskId, data))
   };
 }
 

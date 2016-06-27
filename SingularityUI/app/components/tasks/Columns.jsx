@@ -115,8 +115,8 @@ export const Memory = (
   />
 );
 
-export const ActiveActions = (
-  <Column
+export const ActiveActions = (onTaskKill) => {
+  return <Column
     label=""
     id="actions"
     key="actions"
@@ -125,9 +125,10 @@ export const ActiveActions = (
       (rowData) => rowData
     }
     cellRender={(cellData) => {
+        const taskId = cellData.taskId.id;
         return (
           <div className="hidden-xs">
-            <a><Glyphicon iconClass="remove" /></a>
+            <a data-action="remove" onClick={() => onTaskKill(taskId)}><Glyphicon iconClass="remove" /></a>
             <JSONButton className="inline" object={cellData}>
               {'{ }'}
             </JSONButton>
@@ -136,7 +137,7 @@ export const ActiveActions = (
       }
     }
   />
-);
+};
 
 export const NextRun = (
   <Column

@@ -100,7 +100,7 @@ class TaskDetail extends React.Component {
             </p>
           </span>
         </FormModal>
-      <a className="btn btn-danger" onClick={() => this.refs.confirmKillTask.show()}>
+        <a className="btn btn-danger" onClick={() => this.refs.confirmKillTask.show()}>
           {removeText}
         </a>
       </span>
