@@ -48,7 +48,7 @@ export default (props) => {
   }
 
   // Is this a scheduled task that has been running much longer than previous ones?
-  if (t.isStillRunning && t.task.taskRequest.request.requestType == 'SCHEDULED' && deploy.deployStatistics.averageRuntimeMillis) {
+  if (t.isStillRunning && t.task.taskRequest.request.requestType == 'SCHEDULED' && deploy.deployStatistics) {
     let avg = deploy.deployStatistics.averageRuntimeMillis;
     let current = new Date().getTime() - t.task.taskId.startedAt;
     let threshold = config.warnIfScheduledJobIsRunningPastNextRunPct / 100;

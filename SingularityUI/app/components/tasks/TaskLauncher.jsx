@@ -10,7 +10,9 @@ export default class ShellCommandLauncher extends React.Component {
     super();
     this.state = {
       visible: false,
-      taskStarted: false
+      taskStarted: false,
+      fileExists: false,
+      tailFilename: null
     }
   }
 
@@ -19,8 +21,10 @@ export default class ShellCommandLauncher extends React.Component {
   }
 
   startPolling(requestId, runId, tailFilename=null) {
+    this.setState({
+      tailFilename: tailFilename
+    });
     this.show();
-    console.log(requestId, runId, tailFilename);
 
     // Wait for task to start
     this.taskInterval = setInterval(() => {
@@ -29,14 +33,13 @@ export default class ShellCommandLauncher extends React.Component {
       promises.push(this.props.fetchTaskRunHistory(requestId, runId));
       Promise.all(promises).then((responses) => {
         responses = _.without(_.pluck(responses, 'data'), undefined);
-        console.log(responses);
         if (responses.length) {
           this.clearIntervals();
           this.setState({
             taskStarted: true
           });
           if (tailFilename) {
-            this.logFilePoll(tailFilename);
+            this.logFilePoll(_.first(responses).id, tailFilename);
           } else {
             app.router.navigate(`task/${_.first(responses).id}`, {trigger: true});
           }
@@ -45,9 +48,22 @@ export default class ShellCommandLauncher extends React.Component {
     }, 1000);
   }
 
-  logFilePoll(filename) {
+  logFilePoll(taskId, filename) {
     this.fileInterval = setInterval(() => {
-
+      const directory = filename.indexOf('/') != -1 ? '/' + _.initial(filename.split('/')).join('/') : '';
+      this.props.fetchTaskFiles(taskId, `${taskId}${directory}`).then((response) => {
+        const files = response.data && response.data.files;
+        if (files) {
+          const file = _.find(files, (f) => f.name == _.last(filename.split('/')));
+          if (file) {
+            this.setState({
+              fileExists: true
+            });
+            this.clearIntervals();
+            app.router.navigate(`task/${taskId}/tail/${taskId}/${filename}`, {trigger: true});
+          }
+        }
+      });
     }, 1000);
   }
 
@@ -78,9 +94,11 @@ export default class ShellCommandLauncher extends React.Component {
   }
 
   renderStatusList() {
+    const fileExists = this.state.tailFilename && this.stepStatus(this.state.fileExists, `Waiting for ${this.state.tailFilename} to exist`)
     return (
       <ul className="status-list">
         {this.stepStatus(this.state.taskStarted, 'Waiting for task to launch')}
+        {fileExists}
       </ul>
     );
   }

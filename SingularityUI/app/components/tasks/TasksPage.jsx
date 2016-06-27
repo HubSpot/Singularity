@@ -9,6 +9,7 @@ import { KillAction } from '../../actions/api/task';
 import { RunAction } from '../../actions/api/request';
 import { FetchRunAction } from '../../actions/api/request';
 import { FetchRunHistoryAction } from '../../actions/api/request';
+import { FetchAction as FetchFilesAction } from '../../actions/api/taskFiles';
 
 import UITable from '../common/table/UITable';
 import KillTaskModal from '../common/KillTaskModal';
@@ -119,7 +120,12 @@ class TasksPage extends React.Component {
         {table}
         <RunNowModal ref="runModal" onRunNow={this.handleRunNow.bind(this)} />
         <KillTaskModal ref="killTaskModal" onTaskKill={this.handleTaskKill.bind(this)} />
-        <TaskLauncher ref="taskLauncher" fetchTaskRun={this.props.taskRun.bind(this)} fetchTaskRunHistory={this.props.taskRunHistory.bind(this)} />
+        <TaskLauncher
+          ref="taskLauncher"
+          fetchTaskRun={this.props.taskRun.bind(this)}
+          fetchTaskRunHistory={this.props.taskRunHistory.bind(this)}
+          fetchTaskFiles={this.props.taskFiles.bind(this)}
+        />
       </div>
     );
   }
@@ -139,6 +145,7 @@ function mapDispatchToProps(dispatch) {
     runRequest: (requestId, data) => dispatch(RunAction.trigger(requestId, data)),
     taskRun: (requestId, runId) => dispatch(FetchRunAction.trigger(requestId, runId)),
     taskRunHistory: (requestId, runId) => dispatch(FetchRunHistoryAction.trigger(requestId, runId)),
+    taskFiles: (taskId, path) => dispatch(FetchFilesAction.trigger(taskId, path)),
   };
 }
 
