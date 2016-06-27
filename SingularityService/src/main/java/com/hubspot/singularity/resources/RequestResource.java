@@ -26,6 +26,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
@@ -244,12 +245,14 @@ public class RequestResource extends AbstractRequestResource {
     Optional<String> message = Optional.absent();
     Optional<Boolean> skipHealthchecks = Optional.absent();
     Optional<List<String>> commandLineArgs = Optional.absent();
+    Optional<Resources> resources = Optional.absent();
 
     if (runNowRequest.isPresent()) {
       message = runNowRequest.get().getMessage();
       runId = runNowRequest.get().getRunId();
       skipHealthchecks = runNowRequest.get().getSkipHealthchecks();
       commandLineArgs = runNowRequest.get().getCommandLineArgs();
+      resources = runNowRequest.get().getResources();
     }
 
     if (runId.isPresent() && runId.get().length() > 100) {
@@ -261,7 +264,7 @@ public class RequestResource extends AbstractRequestResource {
     }
 
     final SingularityPendingRequest pendingRequest = new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(),
-        JavaUtils.getUserEmail(user), pendingType, commandLineArgs, runId, skipHealthchecks, message, Optional.<String> absent());
+        JavaUtils.getUserEmail(user), pendingType, commandLineArgs, runId, skipHealthchecks, message, Optional.<String> absent(), resources);
 
     SingularityCreateResult result = requestManager.addToPendingQueue(pendingRequest);
 
