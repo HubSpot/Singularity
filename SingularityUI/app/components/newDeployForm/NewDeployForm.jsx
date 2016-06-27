@@ -14,7 +14,7 @@ import Utils from '../../utils';
 import classNames from 'classnames';
 
 
-class SimpleTextInputGroup extends Component {
+class TextFormGroup extends Component {
 
   render() {
     return (
@@ -46,6 +46,7 @@ const FIELDS = {
   ALL: [
     'id',
     'executorType',
+    'env',
     {
       id: 'containerInfo',
       values: [
@@ -194,7 +195,7 @@ class NewDeployForm extends Component {
 
   renderArtifact(artifact, key) {
     const name = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id={`name-${ key }`}
         onChange={event => this.updateThingInArrayField("artifacts", key, {name: event.target.value})}
         value={artifact["name"]}
@@ -202,7 +203,7 @@ class NewDeployForm extends Component {
         required={true} />
     );
     const fileName = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id={`filename-${ key }`}
         onChange={event => this.updateThingInArrayField("artifacts", key, {filename: event.target.value})}
         value={artifact["filename"]}
@@ -210,28 +211,28 @@ class NewDeployForm extends Component {
         required={true} />
     );
     const md5Sum = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id={`md5-${ key }`}
         onChange={event => this.updateThingInArrayField("artifacts", key, {md5Sum: event.target.value})}
         value={artifact["md5Sum"]}
         label="MD5 checksum" />
     );
     const content = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id={`content-${ key }`}
         onChange={event => this.updateThingInArrayField("artifacts", key, {content: event.target.value})}
         value={artifact["content"]}
         label="Content" />
     );
     const filesize = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id={`file-size-${ key }`}
         onChange={event => this.updateThingInArrayField("artifacts", key, {filesize: event.target.value})}
         value={artifact["filesize"]}
         label="File size" />
     );
     const url = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id={`url-${ key }`}
         onChange={event => this.updateThingInArrayField("artifacts", key, {url: event.target.value})}
         value={artifact["url"]}
@@ -239,7 +240,7 @@ class NewDeployForm extends Component {
         required={true} />
     );
     const s3Bucket = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id={`bucket-${ key }`}
         onChange={event => this.updateThingInArrayField("artifacts", key, {s3Bucket: event.target.value})}
         value={artifact["s3Bucket"]}
@@ -247,7 +248,7 @@ class NewDeployForm extends Component {
         required={true} />
     );
     const s3ObjectKey = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id={`object-key-${ key }`}
         onChange={event => this.updateThingInArrayField("artifacts", key, {s3ObjectKey: event.target.value})}
         value={artifact["s3ObjectKey"]}
@@ -281,7 +282,7 @@ class NewDeployForm extends Component {
 
   renderCustomExecutorFields() {
     const customExecutorCmds = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id="custom-executor-command"
         onChange={event => this.updateField("customExecutorCmd", event.target.value)}
         value={this.getValue("customExecutorCmd")}
@@ -301,7 +302,7 @@ class NewDeployForm extends Component {
       </div>
     );
     const user = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id="user"
         onChange={event => this.updateField("user", event.target.value)}
         value={this.getValue("user")}
@@ -309,7 +310,7 @@ class NewDeployForm extends Component {
         placeholder="default: root" />
     );
     const killAfterMillis = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id="kill-after-millis"
         onChange={event => this.updateField("sigKillProcessesAfterMillis", event.target.value)}
         value={this.getValue("sigKillProcessesAfterMillis")}
@@ -327,14 +328,14 @@ class NewDeployForm extends Component {
       </div>
     );
     const maxTaskThreads = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id="max-task-threads"
         onChange={event => this.updateField("maxTaskThreads", event.target.value)}
         value={this.getValue("maxTaskThreads")}
         label="Max Task Threads" />
     );
     const loggingTag = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id="logging-tag"
         onChange={event => this.updateField("loggingTag", event.target.value)}
         value={this.getValue("loggingTag")}
@@ -378,21 +379,21 @@ class NewDeployForm extends Component {
       </div>
     );
     const loggingS3Bucket = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id="logging-s3-bucket"
         onChange={event => this.updateField("loggingS3Bucket", event.target.value)}
         value={this.getValue("loggingS3Bucket")}
         label="Logging S3 Bucket" />
     );
     const maxOpenFiles = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id="max-open-files"
         onChange={event => this.updateField("maxOpenFiles", event.target.value)}
         value={this.getValue("maxOpenFiles")}
         label="Max Open Files" />
     );
     const runningSentinel = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id="running-sentinel"
         onChange={event => this.updateField("runningSentinel", event.target.value)}
         value={this.getValue("runningSentinel")}
@@ -503,7 +504,7 @@ class NewDeployForm extends Component {
       </div>
     );
     const containerPort = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id={`cont-port-${ key }`}
         onChange={event => this.updateThingInArrayField('portMappings', key, {containerPort: event.target.value})}
         value={thisPortMapping.containerPort}
@@ -527,7 +528,7 @@ class NewDeployForm extends Component {
       </div>
     );
     const hostPort = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id={`host-port-${ key }`}
         onChange={event => this.updateThingInArrayField('portMappings', key, {hostPort: event.target.value})}
         value={thisPortMapping.hostPort}
@@ -535,7 +536,7 @@ class NewDeployForm extends Component {
         required={true} />
     );
     const protocol = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id={`protocol-${ key }`}
         onChange={event => this.updateThingInArrayField('portMappings', key, {protocol: event.target.value})}
         value={thisPortMapping.protocol}
@@ -568,7 +569,7 @@ class NewDeployForm extends Component {
   renderDockerVolume(mapping, key) {
     const thisVolume = this.getValue('volumes')[key];
     const containerPath = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id={`cont-path-${ key }`}
         onChange={event => this.updateThingInArrayField('volumes', key, {containerPath: event.target.value})}
         value={thisVolume.containerPath}
@@ -576,7 +577,7 @@ class NewDeployForm extends Component {
         required={true} />
     );
     const hostPath = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id={`host-path-${ key }`}
         onChange={event => this.updateThingInArrayField('volumes', key, {hostPath: event.target.value})}
         value={thisVolume.hostPath}
@@ -622,19 +623,13 @@ class NewDeployForm extends Component {
 
   renderDockerContainerFields() {
     const image = (
-      <div className="form-group required">
-        <label htmlFor="docker">Docker image</label>
-        <FormField
-          id = "docker"
-          prop = {{
-            updateFn: event => this.updateField("image", event.target.value),
-            inputType: 'text',
-            value: this.getValue("image"),
-            required: true,
-            placeholder: "eg: centos6:latest"
-          }}
-        />
-      </div>
+      <TextFormGroup
+        id="docker"
+        onChange={event => this.updateField("image", event.target.value)}
+        value={this.getValue("image")}
+        label="Docker image"
+        required={true}
+        placeholder="eg: centos6:latest" />
     );
     const network = (
       <div className="form-group">
@@ -739,7 +734,7 @@ class NewDeployForm extends Component {
   render() {
     // Fields
     const deployId = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id="id"
         onChange={event => this.updateField("id", event.target.value)}
         value={this.getValue("id")}
@@ -762,7 +757,7 @@ class NewDeployForm extends Component {
       </div>
     );
     const command = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id="command"
         onChange={event => this.updateField("command", event.target.value)}
         value={this.getValue("command")}
@@ -786,7 +781,7 @@ class NewDeployForm extends Component {
       </div>
     );
     const cpus = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id="cpus"
         onChange={event => this.updateField("cpus", event.target.value)}
         value={this.getValue("cpus")}
@@ -794,7 +789,7 @@ class NewDeployForm extends Component {
         placeholder={`default: ${config.defaultCpus}`} />
     );
     const memoryMb = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id="memory-mb"
         onChange={event => this.updateField("memoryMb", event.target.value)}
         value={this.getValue("memoryMb")}
@@ -802,12 +797,23 @@ class NewDeployForm extends Component {
         placeholder={`default: ${config.defaultMemory}`} />
     );
     const numPorts = (
-      <SimpleTextInputGroup
+      <TextFormGroup
         id="cpus"
         onChange={event => this.updateField("numPorts", event.target.value)}
         value={this.getValue("numPorts")}
         label="Num. ports"
         placeholder="default: 0" />
+    );
+    const env = (
+      <div className="form-group">
+        <label htmlFor="env-vars">Environment variables</label>
+        <MultiInput
+          id = "env-vars"
+          value = {this.getValue('env') || []}
+          onChange = {(newValue) => this.updateField('env', newValue)}
+          placeholder="format: key=value"
+        />
+      </div>
     );
 
     // Groups
@@ -860,6 +866,14 @@ class NewDeployForm extends Component {
         </fieldset>
       </div>
     );
+    const variables = (
+      <div className="well">
+        <h3>Variables</h3>
+        <fieldset>
+          {env}
+        </fieldset>
+      </div>
+    );
     return (
       <div>
         <h2>
@@ -872,6 +886,7 @@ class NewDeployForm extends Component {
             {executorInfo}
             {containerInfo}
             {resources}
+            {variables}
 
           </form>
           <div id="help-column" class="col-md-4 col-md-offset-1" />
