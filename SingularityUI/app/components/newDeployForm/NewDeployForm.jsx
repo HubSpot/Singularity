@@ -340,10 +340,11 @@ class NewDeployForm extends Component {
   }
 
   renderArtifact(artifact, key) {
+    const arrayName = `${artifact.type}Artifacts`
     const name = (
       <TextFormGroup
         id={`name-${ key }`}
-        onChange={event => this.updateThingInArrayField("artifacts", key, {name: event.target.value})}
+        onChange={event => this.updateThingInArrayField(arrayName, key, {name: event.target.value})}
         value={artifact["name"]}
         label="Name"
         required={true} />
@@ -351,7 +352,7 @@ class NewDeployForm extends Component {
     const fileName = (
       <TextFormGroup
         id={`filename-${ key }`}
-        onChange={event => this.updateThingInArrayField("artifacts", key, {filename: event.target.value})}
+        onChange={event => this.updateThingInArrayField(arrayName, key, {filename: event.target.value})}
         value={artifact["filename"]}
         label="File name"
         required={true} />
@@ -359,28 +360,28 @@ class NewDeployForm extends Component {
     const md5Sum = (
       <TextFormGroup
         id={`md5-${ key }`}
-        onChange={event => this.updateThingInArrayField("artifacts", key, {md5Sum: event.target.value})}
+        onChange={event => this.updateThingInArrayField(arrayName, key, {md5Sum: event.target.value})}
         value={artifact["md5Sum"]}
         label="MD5 checksum" />
     );
     const content = (
       <TextFormGroup
         id={`content-${ key }`}
-        onChange={event => this.updateThingInArrayField("artifacts", key, {content: event.target.value})}
+        onChange={event => this.updateThingInArrayField(arrayName, key, {content: event.target.value})}
         value={artifact["content"]}
         label="Content" />
     );
     const filesize = (
       <TextFormGroup
         id={`file-size-${ key }`}
-        onChange={event => this.updateThingInArrayField("artifacts", key, {filesize: event.target.value})}
+        onChange={event => this.updateThingInArrayField(arrayName, key, {filesize: event.target.value})}
         value={artifact["filesize"]}
         label="File size" />
     );
     const url = (
       <TextFormGroup
         id={`url-${ key }`}
-        onChange={event => this.updateThingInArrayField("artifacts", key, {url: event.target.value})}
+        onChange={event => this.updateThingInArrayField(arrayName, key, {url: event.target.value})}
         value={artifact["url"]}
         label="URL"
         required={true} />
@@ -388,7 +389,7 @@ class NewDeployForm extends Component {
     const s3Bucket = (
       <TextFormGroup
         id={`bucket-${ key }`}
-        onChange={event => this.updateThingInArrayField("artifacts", key, {s3Bucket: event.target.value})}
+        onChange={event => this.updateThingInArrayField(arrayName, key, {s3Bucket: event.target.value})}
         value={artifact["s3Bucket"]}
         label="S3 bucket"
         required={true} />
@@ -396,7 +397,7 @@ class NewDeployForm extends Component {
     const s3ObjectKey = (
       <TextFormGroup
         id={`object-key-${ key }`}
-        onChange={event => this.updateThingInArrayField("artifacts", key, {s3ObjectKey: event.target.value})}
+        onChange={event => this.updateThingInArrayField(arrayName, key, {s3ObjectKey: event.target.value})}
         value={artifact["s3ObjectKey"]}
         label="S3 object key"
         required={true} />
@@ -406,7 +407,7 @@ class NewDeployForm extends Component {
         <h5>{artifact.type} artifact</h5>
         <RemoveButton
           id={`remove-artifact-${key}`}
-          onClick={() => { this.removeThingFromArrayField('artifacts', key) }} />
+          onClick={() => { this.removeThingFromArrayField(arrayName, key) }} />
         {name}
         {fileName}
         {md5Sum}
@@ -420,10 +421,16 @@ class NewDeployForm extends Component {
   }
 
   renderCustomArtifactFields() {
-    if (!this.getValue('artifacts')) {
+    if (!this.getValue('s3Artifacts') && !this.getValue('externalArtifacts') && !this.getValue('embeddedArtifacts')) {
       return (<div id="custom-artifacts"></div>);
     }
-    return this.getValue('artifacts').map((artifact, key) => { return this.renderArtifact(artifact, key) });
+    return (
+      <div id="custom-artifacts">
+        {this.getValue('embeddedArtifacts') && this.getValue('embeddedArtifacts').map((artifact, key) => { return this.renderArtifact(artifact, key) })}
+        {this.getValue('externalArtifacts') && this.getValue('externalArtifacts').map((artifact, key) => { return this.renderArtifact(artifact, key) })}
+        {this.getValue('s3Artifacts') && this.getValue('s3Artifacts').map((artifact, key) => { return this.renderArtifact(artifact, key) })}
+      </div>
+    );
   }
 
   renderCustomExecutorFields() {
@@ -608,19 +615,19 @@ class NewDeployForm extends Component {
 
           <div id="artifact-button-row" className="row">
             <div className="col-sm-4">
-              <button className="btn btn-success btn-block" onClick={event => this.addThingPreventDefault('artifacts', {type: 'embedded'}, event)}>
+              <button className="btn btn-success btn-block" onClick={event => this.addThingPreventDefault('embeddedArtifacts', {type: 'embedded'}, event)}>
                 <span className="glyphicon glyphicon-plus"></span>
                 {" Embedded"}
               </button>
             </div>
             <div className="col-sm-4">
-              <button className="btn btn-success btn-block" onClick={event => this.addThingPreventDefault('artifacts', {type: 'external'}, event)}>
+              <button className="btn btn-success btn-block" onClick={event => this.addThingPreventDefault('externalArtifacts', {type: 'external'}, event)}>
                 <span className="glyphicon glyphicon-plus"></span>
                 {" External"}
               </button>
             </div>
             <div className="col-sm-4">
-              <button className="btn btn-success btn-block" onClick={event => this.addThingPreventDefault('artifacts', {type: 's3'}, event)}>
+              <button className="btn btn-success btn-block" onClick={event => this.addThingPreventDefault('s3Artifacts', {type: 's3'}, event)}>
                 <span className="glyphicon glyphicon-plus"></span>
                 {" S3"}
               </button>
