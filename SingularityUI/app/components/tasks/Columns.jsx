@@ -244,3 +244,59 @@ export const ScheduledTaskId = (
     className="keep-in-check"
   />
 );
+
+export const CleanupType = (
+  <Column
+    label="Cleanup Type"
+    id="cleanupType"
+    key="cleanupType"
+    cellData={
+      (rowData) => rowData.cleanupType
+    }
+    cellRender={
+      (cellData) => (
+        Utils.humanizeText(cellData)
+      )
+    }
+    sortable={true}
+  />
+);
+
+export const JSONAction = (
+  <Column
+    label=""
+    id="jsonAction"
+    key="jsonAction"
+    className="actions-column"
+    cellData={
+      (rowData) => rowData
+    }
+    cellRender={(cellData) => {
+        return (
+          <div className="hidden-xs">
+            <JSONButton className="inline" object={cellData}>
+              {'{ }'}
+            </JSONButton>
+          </div>
+        );
+      }
+    }
+  />
+);
+
+export const InstanceNumber = (
+  <Column
+    label="Instance Number"
+    id="instanceNo"
+    key="instanceNo"
+    cellData={
+      (rowData) => rowData.instanceNo
+    }
+    cellRender={(cellData) => {
+        return (
+          {cellData}
+        );
+      }
+    }
+  />
+);

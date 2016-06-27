@@ -1,12 +1,13 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import filterSelector from '../../selectors/tasks/filterSelector';
+import decomSelector from '../../selectors/tasks/decomSelector';
 
 import TaskFilters from './TaskFilters';
 import { FetchAction } from '../../actions/api/tasks';
 
 import UITable from '../common/table/UITable';
-import { TaskId, StartedAt, Host, Rack, CPUs, Memory, ActiveActions, NextRun, PendingType, DeployId, ScheduledActions, ScheduledTaskId } from './Columns';
+import { TaskId, StartedAt, Host, Rack, CPUs, Memory, ActiveActions, NextRun, PendingType, DeployId, ScheduledActions, ScheduledTaskId, CleanupType, JSONAction, InstanceNumber } from './Columns';
 
 class TasksPage extends React.Component {
 
@@ -48,12 +49,19 @@ class TasksPage extends React.Component {
         return [TaskId, StartedAt, Host, Rack, CPUs, Memory, ActiveActions];
       case 'scheduled':
         return [ScheduledTaskId, NextRun, PendingType, DeployId, ScheduledActions];
+      case 'cleaning':
+        return [TaskId, CleanupType, JSONAction];
+      case 'lbcleanup':
+        return [TaskId, StartedAt, Host, Rack, InstanceNumber, JSONAction];
+      case 'decommissioning':
+        return [TaskId, StartedAt, Host, Rack, CPUs, Memory, ActiveActions];
     }
   }
 
   getDefaultSortAttribute(t) {
     switch(this.state.filter.taskStatus) {
       case 'active':
+      case 'decommissioning':
         return t.taskId.startedAt;
       case 'scheduled':
         if (!t.pendingTask) return null;
@@ -63,17 +71,27 @@ class TasksPage extends React.Component {
 
   render() {
     const displayRequestTypeFilters = this.state.filter.taskStatus == 'active';
-    const displayTasks = _.sortBy(filterSelector({tasks: this.props.tasks, filter: this.state.filter}), (t) => this.getDefaultSortAttribute(t));
-    if (this.state.filter.taskStatus == 'active') displayTasks.reverse();
+    const displayTasks = this.state.filter.taskStatus != 'decommissioning' ?
+      _.sortBy(filterSelector({tasks: this.props.tasks, filter: this.state.filter}), (t) => this.getDefaultSortAttribute(t)) :
+      _.sortBy(decomSelector({tasks: this.props.tasks, cleanups: this.props.cleanups}), (t) => this.getDefaultSortAttribute(t));
+    if (_.contains(['active', 'decommissioning'], this.state.filter.taskStatus)) displayTasks.reverse();
 
-    const table = !this.state.loading ? (
-      <UITable
-        data={displayTasks}
-        keyGetter={(r) => r.taskId ? r.taskId.id : r.pendingTask.pendingTaskId.id}
-      >
-        {this.getColumns()}
-      </UITable>
-    ) : <div className="page-loader fixed"></div>;
+    let table;
+    if (this.state.loading) {
+      table = <div className="page-loader fixed"></div>;
+    }
+    else if (!displayTasks.length) {
+      table = <div className="empty-table-message"><p>No matching tasks</p></div>;
+    } else {
+      table = (
+        <UITable
+          data={displayTasks}
+          keyGetter={(r) => r.taskId ? r.taskId.id : r.pendingTask.pendingTaskId.id}
+        >
+          {this.getColumns()}
+        </UITable>
+      );
+    }
 
     return (
       <div>
@@ -86,7 +104,8 @@ class TasksPage extends React.Component {
 
 function mapStateToProps(state, ownProps) {
   return {
-    tasks: state.api.tasks.data
+    tasks: state.api.tasks.data,
+    cleanups: state.api.taskCleanups.data
   };
 }
 
