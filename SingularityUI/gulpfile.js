@@ -42,7 +42,8 @@ var templateData = {
   shellCommands: process.env.SINGULARITY_SHELL_COMMANDS || "[]",
   timestampFormat: process.env.SINGULARITY_TIMESTAMP_FORMAT || 'lll',
   timestampWithSecondsFormat: process.env.SINGULARITY_TIMESTAMP_WITH_SECONDS_FORMAT || 'lll:ss',
-  redirectOnUnauthorizedUrl: process.env.SINGULARITY_REDIRECT_ON_UNAUTHORIZED_URL || ''
+  redirectOnUnauthorizedUrl: process.env.SINGULARITY_REDIRECT_ON_UNAUTHORIZED_URL || '',
+  extraScript: process.env.SINGULARITY_EXTRA_SCRIPT || ''
 }
 
 var dest = path.resolve(__dirname, 'dist');
