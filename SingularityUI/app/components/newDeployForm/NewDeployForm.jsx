@@ -47,6 +47,19 @@ const FIELDS = {
     'id',
     'executorType',
     'env',
+    'healthcheckUri',
+    'healthcheckIntervalSeconds',
+    'healthcheckTimeoutSeconds',
+    'healthcheckPortIndex',
+    'healthcheckMaxTotalTimeoutSeconds',
+    'deployHealthTimeoutSeconds',
+    'healthCheckProtocol',
+    'skipHealthchecksOnDeploy',
+    'considerHealthyAfterRunningForSeconds',
+    'serviceBasePath',
+    'loadBalancerGroups',
+    'loadBalancerOptions',
+    'loadBalancerPortIndex',
     {
       id: 'containerInfo',
       values: [
@@ -130,6 +143,10 @@ class NewDeployForm extends Component {
 
   getContainerType() {
     return this.getValue('containerType') || 'mesos';
+  }
+
+  isRequestDaemon() {
+    return ['SERVICE', 'WORKER'].indexOf(this.props.request.request.requestType) !== -1;
   }
 
   addThingToArrayField(fieldId, thing) {
@@ -815,6 +832,141 @@ class NewDeployForm extends Component {
         />
       </div>
     );
+    const healthcheckUri = (
+      <TextFormGroup
+        id="healthcheck-uri"
+        onChange={event => this.updateField("healthcheckUri", event.target.value)}
+        value={this.getValue("healthcheckUri")}
+        label="Healthcheck URI" />
+    );
+    const healthcheckIntervalSeconds = (
+      <TextFormGroup
+        id="healthcheck-interval"
+        onChange={event => this.updateField("healthcheckIntervalSeconds", event.target.value)}
+        value={this.getValue("healthcheckIntervalSeconds")}
+        label="HC interval (sec)"
+        placeholder="default: 5" />
+    );
+    const healthcheckTimeoutSeconds = (
+      <TextFormGroup
+        id="healthcheck-timeout"
+        onChange={event => this.updateField("healthcheckTimeoutSeconds", event.target.value)}
+        value={this.getValue("healthcheckTimeoutSeconds")}
+        label="HC timeout (sec)"
+        placeholder="default: 5" />
+    );
+    const healthcheckPortIndex = (
+      <TextFormGroup
+        id="healthcheck-port-index"
+        onChange={event => this.updateField("healthcheckPortIndex", event.target.value)}
+        value={this.getValue("healthcheckPortIndex")}
+        label="HC Port Index"
+        placeholder="default: 0 (first allocated port)" />
+    );
+    const healthcheckMaxTotalTimeoutSeconds = (
+      <TextFormGroup
+        id="total-healthcheck-timeout"
+        onChange={event => this.updateField("healthcheckMaxTotalTimeoutSeconds", event.target.value)}
+        value={this.getValue("healthcheckMaxTotalTimeoutSeconds")}
+        label="Total Healthcheck Timeout (sec)"
+        placeholder="default: None" />
+    );
+    const deployHealthTimeoutSeconds = (
+      <TextFormGroup
+        id="deploy-healthcheck-timeout"
+        onChange={event => this.updateField("deployHealthTimeoutSeconds", event.target.value)}
+        value={this.getValue("deployHealthTimeoutSeconds")}
+        label="Deploy healthcheck timeout (sec)"
+        placeholder="default: 120" />
+    );
+    const healthCheckProtocol = (
+      <div className="form-group">
+        <label htmlFor="hc-protocol">HC Protocol</label>
+        <Select
+          id="hc-protocol"
+          options={[
+            { label: 'HTTP', value: 'HTTP' },
+            { label: 'HTTPS', value: 'HTTPS' }
+          ]}
+          onChange={newValue => this.updateField('healthCheckProtocol', newValue.value)}
+          value={this.getValue('healthCheckProtocol') || 'HTTP'}
+          clearable={false}
+        />
+      </div>
+    );
+    const skipHealthchecksOnDeploy = (
+      <div className="form-group">
+        <label htmlFor="skip-healthcheck">
+          <CheckBox
+            id = "skip-healthcheck"
+            onChange = {event => this.updateField("skipHealthchecksOnDeploy", !this.getValue("skipHealthchecksOnDeploy"))}
+            checked = {this.getValue("skipHealthchecksOnDeploy")}
+            noFormControlClass = {true}
+          />
+          {" Skip healthcheck on deploy"}
+        </label>
+      </div>
+    );
+    const considerHealthyAfterRunningForSeconds = (
+      <TextFormGroup
+        id="consider-healthy-after"
+        onChange={event => this.updateField("considerHealthyAfterRunningForSeconds", event.target.value)}
+        value={this.getValue("considerHealthyAfterRunningForSeconds")}
+        label="Consider Healthy After Running For (sec)"
+        placeholder="default: 5" />
+    );
+    const serviceBasePath = (
+      <TextFormGroup
+        id="service-base-path"
+        onChange={event => this.updateField("serviceBasePath", event.target.value)}
+        value={this.getValue("serviceBasePath")}
+        label="Service base path"
+        placeholder="eg: /singularity/api/v2"
+        required={true} />
+    );
+    const loadBalancerGroups = (
+      <div className="form-group required">
+        <label htmlFor="env-vars">Environment variables</label>
+        <MultiInput
+          id = "lb-group"
+          value = {this.getValue('loadBalancerGroups') || []}
+          onChange = {(newValue) => this.updateField('loadBalancerGroups', newValue)}
+          required={true}
+        />
+      </div>
+    );
+    const loadBalancerOptions = (
+      <div className="form-group">
+        <label htmlFor="env-vars">Load balancer options</label>
+        <MultiInput
+          id = "lb-option"
+          value = {this.getValue('loadBalancerOptions') || []}
+          onChange = {(newValue) => this.updateField('loadBalancerOptions', newValue)}
+          placeholder="format: key=value"
+        />
+      </div>
+    );
+    const loadBalancerPortIndex = (
+      <TextFormGroup
+        id="lb-port-index"
+        onChange={event => this.updateField("loadBalancerPortIndex", event.target.value)}
+        value={this.getValue("loadBalancerPortIndex")}
+        label="Load balancer port index"
+        placeholder="default: 0 (first allocated port)" />
+    );
+    const unpauseOnSuccessfulDeploy = (
+      <div className="form-group">
+        <label htmlFor="deploy-to-unpause">
+          <CheckBox
+            id = "deploy-to-unpause"
+            onChange = {event => this.updateField("unpauseOnSuccessfulDeploy", !this.getValue("unpauseOnSuccessfulDeploy"))}
+            checked = {this.getValue("unpauseOnSuccessfulDeploy")}
+            noFormControlClass = {true}
+          />
+          {" Unpause on successful deploy"}
+        </label>
+      </div>
+    );
 
     // Groups
     const executorInfo = (
@@ -874,10 +1026,71 @@ class NewDeployForm extends Component {
         </fieldset>
       </div>
     );
+    const health = (
+      <div className="well">
+        <h3>Deploy Health</h3>
+        <fieldset>
+          {this.props.request.request.requestType === 'SERVICE' &&
+            <div>
+              {healthcheckUri}
+              <div className="row">
+                <div className="col-md-6">
+                  {healthcheckIntervalSeconds}
+                </div>
+                <div className="col-md-6">
+                  {healthcheckTimeoutSeconds}
+                </div>
+              </div>
+              <div className="row">
+                <div className="col-md-6">
+                  {healthcheckPortIndex}
+                </div>
+                <div className="col-md-6">
+                  {healthcheckMaxTotalTimeoutSeconds}
+                </div>
+              </div>
+              <div className="row">
+                <div className="col-md-6">
+                  {deployHealthTimeoutSeconds}
+                </div>
+                <div className="col-md-6">
+                  {healthCheckProtocol}
+                </div>
+              </div>
+              <div className="row">
+                <div className="col-md-6">
+                  {skipHealthchecksOnDeploy}
+                </div>
+              </div>
+            </div>}
+          {this.props.request.request.requestType !== 'SERVICE' && considerHealthyAfterRunningForSeconds}
+        </fieldset>
+      </div>
+    );
+    const loadBalancer = (
+      <div className="well">
+        <h3>Load Balancer</h3>
+        <fieldset>
+          {serviceBasePath}
+          {loadBalancerGroups}
+          {loadBalancerOptions}
+          {loadBalancerPortIndex}
+        </fieldset>
+      </div>
+    );
+    const unpause = (
+      <div className="well">
+        <h3>Unpause</h3>
+        <fieldset>
+          {unpauseOnSuccessfulDeploy}
+        </fieldset>
+      </div>
+    );
+
     return (
       <div>
         <h2>
-          New deploy for <a href={`${ config.appRoot }/request/${ this.props.request.id }`}>{ this.props.request.id }</a>
+          New deploy for <a href={`${ config.appRoot }/request/${ this.props.request.request.id }`}>{ this.props.request.request.id }</a>
         </h2>
         <div className="row new-form">
           <form className="col-md-8">
@@ -887,6 +1100,9 @@ class NewDeployForm extends Component {
             {containerInfo}
             {resources}
             {variables}
+            {this.isRequestDaemon() && health}
+            {this.isRequestDaemon() && this.props.request.request.loadBalanced && loadBalancer}
+            {this.props.request.state === 'PAUSED' && unpause}
 
           </form>
           <div id="help-column" class="col-md-4 col-md-offset-1" />
@@ -899,7 +1115,7 @@ class NewDeployForm extends Component {
 
 function mapStateToProps(state) {
   return {
-    request: state.api.request.data.request,
+    request: state.api.request.data,
     form: state.form[FORM_ID],
     saveApiCall: state.api.saveDeploy
   }
