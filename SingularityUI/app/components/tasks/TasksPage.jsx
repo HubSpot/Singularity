@@ -6,6 +6,7 @@ import decomSelector from '../../selectors/tasks/decomSelector';
 import TaskFilters from './TaskFilters';
 import { FetchAction } from '../../actions/api/tasks';
 import { KillAction } from '../../actions/api/task';
+import { RunAction } from '../../actions/api/request';
 
 import UITable from '../common/table/UITable';
 import KillTaskModal from '../common/KillTaskModal';
@@ -52,6 +53,7 @@ class TasksPage extends React.Component {
 
   handleRunNow(requestId, data) {
     console.log(requestId, data);
+    this.props.runRequest(requestId, data);
   }
 
   getColumns() {
@@ -125,7 +127,8 @@ function mapStateToProps(state, ownProps) {
 function mapDispatchToProps(dispatch) {
   return {
     fetchFilter: (state) => dispatch(FetchAction.trigger(state)),
-    killTask: (taskId, data) => dispatch(KillAction.trigger(taskId, data))
+    killTask: (taskId, data) => dispatch(KillAction.trigger(taskId, data)),
+    runRequest: (requestId, data) => dispatch(RunAction.trigger(requestId, data)),
   };
 }
 

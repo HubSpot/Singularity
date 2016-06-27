@@ -34,7 +34,7 @@ export default class RunNowModal extends React.Component {
         buttonStyle="primary"
         formElements={[
           {
-            name: 'additonalArgs',
+            name: 'commandLineArgs',
             type: FormModal.INPUT_TYPES.TAGS,
             label: 'Additional command line input: (optional)'
           },

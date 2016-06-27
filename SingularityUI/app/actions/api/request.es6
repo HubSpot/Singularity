@@ -21,3 +21,12 @@ export const RemoveAction = buildJsonApiAction(
     body: { message }
   })
 );
+
+export const RunAction = buildJsonApiAction(
+  'RUN_NOW',
+  'POST',
+  (requestId, data) => ({
+    url: `/requests/request/${requestId}/run`,
+    body: { data }
+  })
+);
