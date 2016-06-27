@@ -7,12 +7,33 @@ import CheckBox from '../common/formItems/CheckBox';
 import RemoveButton from '../common/RemoveButton';
 import Select from 'react-select';
 import { modifyField, clearForm } from '../../actions/form';
-import {SaveAction} from '../../actions/api/request';
+import {SaveAction} from '../../actions/api/deploy';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 import Utils from '../../utils';
 import classNames from 'classnames';
 
+class SelectFormGroup extends Component {
+
+  render() {
+    if (!this.props.value) {
+      this.props.onChange({value: this.props.defaultValue});
+    }
+    return (
+      <div className={classNames('form-group', {required: this.props.required})}>
+        <label htmlFor={this.props.id}>{this.props.label}</label>
+        <Select
+          id={this.props.id}
+          className={this.props.id}
+          options={this.props.options}
+          onChange={this.props.onChange}
+          value={this.props.value}
+          clearable={false}
+        />
+      </div>
+    );
+  }
+}
 
 class TextFormGroup extends Component {
 
@@ -42,8 +63,20 @@ const FORM_ID = 'newDeployForm';
 const DEFAULT_EXECUTOR_TYPE = 'default';
 const CUSTOM_EXECUTOR_TYPE = 'custom';
 
+const REQUIRED_FIELDS = {
+  all: ['id', 'executorType', 'type'],
+  customExecutor: ['cmd'],
+  artifacts: ['name', 'filename'],
+  externalArtifacts: ['url'],
+  s3Artifacts: ['s3Bucket', 's3ObjectKey'],
+  docker: ['image'],
+  dockerPortMappings: ['hostPort', 'containerPort', 'containerPortType', 'hostPortType'],
+  dockerVolumes: ['containerPath', 'hostPath', 'mode', 'network'],
+  loadBalancer: ['serviceBasePath', 'loadBalancerGroups']
+}
+
 const FIELDS = {
-  ALL: [
+  all: [
     'id',
     'executorType',
     'env',
@@ -87,12 +120,12 @@ const FIELDS = {
       ]
     }
   ],
-  DEFAULT_EXECUTOR: [
+  defaultExecutor: [
     'command',
     'uris',
     'arguments'
   ],
-  CUSTOM_EXECUTOR: [
+  customExecutor: [
     'customExecutorCmd',
     {
       id: 'executorData',
@@ -115,18 +148,6 @@ const FIELDS = {
   ]
 };
 
-const REQUIRED_FIELDS = {
-  all: ['id'],
-  customExecutor: ['customExecutorCmd'],
-  artifacts: ['name', 'filename'],
-  externalArtifacts: ['url'],
-  s3Artifacts: ['s3Bucket', 's3ObjectKey'],
-  docker: ['image'],
-  dockerPortMappings: ['hostPort', 'containerPort'],
-  dockerVolumes: ['containerPath', 'hostPath'],
-  loadBalancer: ['serviceBasePath', 'loadBalancerGroups']
-}
-
 class NewDeployForm extends Component {
 
   componentDidMount() {
@@ -146,7 +167,7 @@ class NewDeployForm extends Component {
   }
 
   getExecutorType() {
-    return this.getValue('executorType') || DEFAULT_EXECUTOR_TYPE;
+    return this.getValue('executorType');
   }
 
   getContainerType() {
@@ -157,9 +178,8 @@ class NewDeployForm extends Component {
     return ['SERVICE', 'WORKER'].indexOf(this.props.request.request.requestType) !== -1;
   }
 
-  // Checks if a value is permitted if a field is required.
   // Returns true unless the object is falsey or an empty array.
-  permitValue(value) {
+  hasValue(value) {
     if (!value) {
       return false;
     }
@@ -171,32 +191,32 @@ class NewDeployForm extends Component {
 
   canSubmit() {
     for (const fieldId of REQUIRED_FIELDS.all) {
-      if (!this.permitValue(this.getValue(fieldId))) {
+      if (!this.hasValue(this.getValue(fieldId))) {
         return false;
       }
     }
     if (this.getExecutorType() === CUSTOM_EXECUTOR_TYPE) {
       for (const fieldId of REQUIRED_FIELDS.customExecutor) {
-        if (!this.permitValue(this.getValue(fieldId))) {
+        if (!this.hasValue(this.getValue(fieldId))) {
           return false;
         }
       }
       for (const artifact of (this.getValue('artifacts') || [])) {
         for (const fieldId of REQUIRED_FIELDS.artifacts) {
-          if (!this.permitValue(artifact[fieldId])) {
+          if (!this.hasValue(artifact[fieldId])) {
             return false;
           }
         }
         if (artifact.type === 'external') {
           for (const fieldId of REQUIRED_FIELDS.externalArtifacts) {
-            if (!this.permitValue(artifact[fieldId])) {
+            if (!this.hasValue(artifact[fieldId])) {
               return false;
             }
           }
         }
         if (artifact.type === 's3') {
           for (const fieldId of REQUIRED_FIELDS.s3Artifacts) {
-            if (!this.permitValue(artifact[fieldId])) {
+            if (!this.hasValue(artifact[fieldId])) {
               return false;
             }
           }
@@ -205,20 +225,20 @@ class NewDeployForm extends Component {
     }
     if (this.getContainerType() === 'docker') {
       for (const fieldId of REQUIRED_FIELDS.docker) {
-        if (!this.permitValue(this.getValue(fieldId))) {
+        if (!this.hasValue(this.getValue(fieldId))) {
           return false;
         }
       }
       for (const portMapping of (this.getValue('portMappings') || [])) {
         for (const fieldId of REQUIRED_FIELDS.dockerPortMappings) {
-          if (!this.permitValue(portMapping[fieldId])) {
+          if (!this.hasValue(portMapping[fieldId])) {
             return false;
           }
         }
       }
       for (const volume of (this.getValue('volumes') || [])) {
         for (const fieldId of REQUIRED_FIELDS.dockerVolumes) {
-          if (!this.permitValue(volume[fieldId])) {
+          if (!this.hasValue(volume[fieldId])) {
             return false;
           }
         }
@@ -226,12 +246,36 @@ class NewDeployForm extends Component {
     }
     if (this.props.request.request.loadBalanced) {
       for (const fieldId of REQUIRED_FIELDS.loadBalancer) {
-        if (!this.permitValue(this.getValue(fieldId))) {
+        if (!this.hasValue(this.getValue(fieldId))) {
           return false;
         }
       }
     }
     return true;
+  }
+
+  addFieldsToDeployObject(deployObject, fieldsToAdd) {
+    for (const fieldId of fieldsToAdd) {
+      if (typeof fieldId === 'object') {
+        deployObject[fieldId.id] = this.addFieldsToDeployObject({}, fieldId.values);
+      } else if (this.hasValue(this.getValue(fieldId))) {
+        deployObject[fieldId] = this.getValue(fieldId);
+      }
+    }
+    return deployObject;
+  }
+
+  submit(event) {
+    event.preventDefault();
+    const deployObject = {};
+    this.addFieldsToDeployObject(deployObject, FIELDS.all);
+    if (this.getExecutorType() === DEFAULT_EXECUTOR_TYPE) {
+      this.addFieldsToDeployObject(deployObject, FIELDS.defaultExecutor);
+    } else {
+      this.addFieldsToDeployObject(deployObject, FIELDS.customExecutor);
+    }
+    deployObject.requestId = this.props.request.request.id;
+    this.props.save({deploy: deployObject});
   }
 
   addThingToArrayField(fieldId, thing) {
@@ -386,8 +430,8 @@ class NewDeployForm extends Component {
     const customExecutorCmds = (
       <TextFormGroup
         id="custom-executor-command"
-        onChange={event => this.updateField("customExecutorCmd", event.target.value)}
-        value={this.getValue("customExecutorCmd")}
+        onChange={event => this.updateField("cmd", event.target.value)}
+        value={this.getValue("cmd")}
         label="Custom executor command"
         required={true}
         placeholder="eg: /usr/local/bin/singularity-executor" />
@@ -590,20 +634,17 @@ class NewDeployForm extends Component {
   renderDockerPortMapping(mapping, key) {
     const thisPortMapping = this.getValue('portMappings')[key];
     const containerPortType = (
-      <div className="form-group required">
-        <label htmlFor={`cont-port-type-${ key }`}>Container Port Type</label>
-        <Select
-          id={`cont-port-type-${ key }`}
-          className="cont-port-type"
-          options={[
-            { label: 'Literal', value: 'LITERAL' },
-            { label: 'From Offer', value: 'FROM_OFFER' }
-          ]}
-          onChange={newValue => this.updateThingInArrayField('portMappings', key, {containerPortType: newValue.value})}
-          value={thisPortMapping.containerPortType || 'LITERAL'}
-          clearable={false}
-        />
-      </div>
+      <SelectFormGroup
+        id={`cont-port-type-${ key }`}
+        label="Container Port Type"
+        value={thisPortMapping.containerPortType}
+        defaultValue="LITERAL"
+        onChange={newValue => this.updateThingInArrayField('portMappings', key, {containerPortType: newValue.value})}
+        required={true}
+        options={[
+          { label: 'Literal', value: 'LITERAL' },
+          { label: 'From Offer', value: 'FROM_OFFER' }
+        ]} />
     );
     const containerPort = (
       <TextFormGroup
@@ -614,20 +655,17 @@ class NewDeployForm extends Component {
         required={true} />
     );
     const hostPortType = (
-      <div className="form-group required">
-        <label htmlFor={`host-port-type-${ key }`}>Host Port Type</label>
-        <Select
-          id={`host-port-type-${ key }`}
-          className="host-port-type"
-          options={[
-            { label: 'Literal', value: 'LITERAL' },
-            { label: 'From Offer', value: 'FROM_OFFER' }
-          ]}
-          onChange={newValue => this.updateThingInArrayField('portMappings', key, {hostPortType: newValue.value})}
-          value={thisPortMapping.hostPortType || 'LITERAL'}
-          clearable={false}
-        />
-      </div>
+      <SelectFormGroup
+        id={`host-port-type-${ key }`}
+        label="Host Port Type"
+        value={thisPortMapping.hostPortType}
+        defaultValue="LITERAL"
+        onChange={newValue => this.updateThingInArrayField('portMappings', key, {hostPortType: newValue.value})}
+        required={true}
+        options={[
+          { label: 'Literal', value: 'LITERAL' },
+          { label: 'From Offer', value: 'FROM_OFFER' }
+        ]} />
     );
     const hostPort = (
       <TextFormGroup
@@ -687,20 +725,17 @@ class NewDeployForm extends Component {
         required={true} />
     );
     const mode = (
-      <div className="form-group required">
-        <label htmlFor={`volume-mode-${ key }`}>Volume Mode</label>
-        <Select
-          id={`volume-mode-${ key }`}
-          className="volume-mode"
-          options={[
-            { label: 'RO', value: 'RO' },
-            { label: 'RW', value: 'RW' }
-          ]}
-          onChange={newValue => this.updateThingInArrayField('volumes', key, {mode: newValue.value})}
-          value={thisVolume.mode || 'RO'}
-          clearable={false}
-        />
-      </div>
+      <SelectFormGroup
+        id={`volume-mode-${ key }`}
+        label="Volume Mode"
+        value={thisVolume.mode}
+        defaultValue="RO"
+        onChange={newValue => this.updateThingInArrayField('volumes', key, {mode: newValue.value})}
+        required={true}
+        options={[
+          { label: 'RO', value: 'RO' },
+          { label: 'RW', value: 'RW' }
+        ]} />
     );
     return (
       <div className="well well-sm docker-volume" key={key}>
@@ -734,20 +769,17 @@ class NewDeployForm extends Component {
         placeholder="eg: centos6:latest" />
     );
     const network = (
-      <div className="form-group">
-        <label htmlFor="dockernetwork">Docker Network</label>
-        <Select
-          id="dockernetwork"
-          options={[
-            { label: 'None', value: 'NONE' },
-            { label: 'Bridge', value: 'BRIDGE' },
-            { label: 'Host', value: 'HOST' }
-          ]}
-          onChange={newValue => this.updateField('network', newValue.value)}
-          value={this.getValue('network') || 'NONE'}
-          clearable={false}
-        />
-      </div>
+      <SelectFormGroup
+        id="dockernetwork"
+        label="Docker Network"
+        value={this.getValue('network')}
+        defaultValue="NONE"
+        onChange={newValue => this.updateField('network', newValue.value)}
+        options={[
+          { label: 'None', value: 'NONE' },
+          { label: 'Bridge', value: 'BRIDGE' },
+          { label: 'Host', value: 'HOST' }
+        ]} />
     );
     const privileged = (
       <div className="form-group">
@@ -844,19 +876,17 @@ class NewDeployForm extends Component {
         required={true} />
     );
     const executorType = (
-      <div className="form-group required">
-        <label htmlFor="executor-type">Executor type</label>
-        <Select
-          id = 'executor-type'
-          options={[
-            { label: 'Default', value: DEFAULT_EXECUTOR_TYPE },
-            { label: 'Custom', value: CUSTOM_EXECUTOR_TYPE }
-          ]}
-          onChange={newValue => this.updateField('executorType', newValue.value)}
-          value={this.getExecutorType()}
-          clearable={false}
-        />
-      </div>
+      <SelectFormGroup
+        id="executor-type"
+        label="Executor type"
+        value={this.getExecutorType()}
+        defaultValue={DEFAULT_EXECUTOR_TYPE}
+        onChange={newValue => this.updateField('executorType', newValue.value)}
+        required={true}
+        options={[
+          { label: 'Default', value: DEFAULT_EXECUTOR_TYPE },
+          { label: 'Custom', value: CUSTOM_EXECUTOR_TYPE }
+        ]} />
     );
     const command = (
       <TextFormGroup
@@ -867,20 +897,17 @@ class NewDeployForm extends Component {
         placeholder="eg: rm -rf /" />
     );
     const type = (
-      <div className="form-group required">
-        <label htmlFor="container-type">Container type</label>
-        <Select
-          id="container-type"
-          options={[
-            { label: 'Mesos', value: 'mesos' },
-            { label: 'Docker', value: 'docker' }
-          ]}
-          onChange={newValue => this.updateField('type', newValue.value)}
-          required={true}
-          value={this.getValue('type') || 'mesos'}
-          clearable={false}
-        />
-      </div>
+      <SelectFormGroup
+        id="container-type"
+        label="Container type"
+        value={this.getValue('type')}
+        defaultValue="mesos"
+        onChange={newValue => this.updateField('type', newValue.value)}
+        required={true}
+        options={[
+          { label: 'Mesos', value: 'mesos' },
+          { label: 'Docker', value: 'docker' }
+        ]} />
     );
     const cpus = (
       <TextFormGroup
@@ -965,19 +992,16 @@ class NewDeployForm extends Component {
         placeholder="default: 120" />
     );
     const healthCheckProtocol = (
-      <div className="form-group">
-        <label htmlFor="hc-protocol">HC Protocol</label>
-        <Select
-          id="hc-protocol"
-          options={[
-            { label: 'HTTP', value: 'HTTP' },
-            { label: 'HTTPS', value: 'HTTPS' }
-          ]}
-          onChange={newValue => this.updateField('healthCheckProtocol', newValue.value)}
-          value={this.getValue('healthCheckProtocol') || 'HTTP'}
-          clearable={false}
-        />
-      </div>
+      <SelectFormGroup
+        id="hc-protocol"
+        label="HC Protocol"
+        value={this.getValue('healthCheckProtocol')}
+        defaultValue="HTTP"
+        onChange={newValue =>  this.updateField('healthCheckProtocol', newValue.value)}
+        options={[
+          { label: 'HTTP', value: 'HTTP' },
+          { label: 'HTTPS', value: 'HTTPS' }
+        ]} />
     );
     const skipHealthchecksOnDeploy = (
       <div className="form-group">
@@ -1011,12 +1035,11 @@ class NewDeployForm extends Component {
     );
     const loadBalancerGroups = (
       <div className="form-group required">
-        <label htmlFor="env-vars">Environment variables</label>
+        <label htmlFor="env-vars">Load balancer groups</label>
         <MultiInput
           id = "lb-group"
           value = {this.getValue('loadBalancerGroups') || []}
           onChange = {(newValue) => this.updateField('loadBalancerGroups', newValue)}
-          required={true}
         />
       </div>
     );
@@ -1172,13 +1195,38 @@ class NewDeployForm extends Component {
       </div>
     );
 
+    const errorMessage = (
+      this.props.saveApiCall.error ?
+        <p className='alert alert-danger'>
+          There was a problem saving your request: {this.props.saveApiCall.error.message}
+        </p> :
+        this.props.saveApiCall.data && this.props.saveApiCall.data.message ?
+        <p className='alert alert-danger'>
+          There was a problem saving your request: {this.props.saveApiCall.data.message}
+        </p> :
+        null
+    );
+    const successMessage = (
+      this.props.saveApiCall.data.activeDeploy ?
+        <p className='alert alert-success'>
+          Deploy
+          <a
+            href={`${config.appRoot}/request/${ this.props.saveApiCall.data.activeDeploy.requestId }/deploy/${ this.props.saveApiCall.data.activeDeploy.id }`}
+            >
+            {` ${this.props.saveApiCall.data.activeDeploy.id} `}
+          </a>
+          succesfully created!
+        </p> :
+        null
+    );
+
     return (
       <div>
         <h2>
           New deploy for <a href={`${ config.appRoot }/request/${ this.props.request.request.id }`}>{ this.props.request.request.id }</a>
         </h2>
         <div className="row new-form">
-          <form className="col-md-8">
+          <form className="col-md-8" role="form" onSubmit={event => this.submit(event)}>
 
             {deployId}
             {executorInfo}
@@ -1190,12 +1238,15 @@ class NewDeployForm extends Component {
             {this.props.request.state === 'PAUSED' && unpause}
 
             <div id="button-row">
-            <span>
-              <button type="submit" className="btn btn-success btn-lg" disabled={!this.canSubmit()}>
-                Deploy
-              </button>
-            </span>
-        </div>
+              <span>
+                <button type="submit" className="btn btn-success btn-lg" disabled={!this.canSubmit()}>
+                  Deploy
+                </button>
+              </span>
+            </div>
+
+            {errorMessage}
+            {successMessage}
 
           </form>
           <div id="help-column" class="col-md-4 col-md-offset-1" />
@@ -1203,7 +1254,6 @@ class NewDeployForm extends Component {
       </div>
     );
   }
-
 }
 
 function mapStateToProps(state) {
@@ -1222,8 +1272,8 @@ function mapDispatchToProps(dispatch) {
     clearForm(formId) {
       dispatch(clearForm(formId));
     },
-    save(requestBody) {
-      dispatch(SaveAction.trigger(requestBody));
+    save(deployBody) {
+      dispatch(SaveAction.trigger(deployBody));
     }
   }
 }

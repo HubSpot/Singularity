@@ -10,7 +10,7 @@ import { FetchAction as RacksFetchAction } from '../../actions/api/racks';
 import { FetchAction as RequestFetchAction, SaveAction as RequestSaveAction } from '../../actions/api/request';
 import { FetchAction as RequestsFetchAction } from '../../actions/api/requests';
 import { FetchAction as StatusFetchAction } from '../../actions/api/status';
-import { FetchAction as DeployFetchAction } from '../../actions/api/deploy';
+import { FetchAction as DeployFetchAction, SaveAction as DeploySaveAction } from '../../actions/api/deploy';
 import { FetchAction as DeploysFetchAction } from '../../actions/api/deploys';
 import { FetchForDeployAction as TasksFetchForDeployAction } from '../../actions/api/tasks';
 import { FetchForDeploy as TaskHistoryFetchForDeploy } from '../../actions/api/taskHistory';
@@ -29,6 +29,7 @@ const saveRequest = buildApiActionReducer(RequestSaveAction);
 const requests = buildApiActionReducer(RequestsFetchAction, []);
 const status = buildApiActionReducer(StatusFetchAction);
 const deploy = buildApiActionReducer(DeployFetchAction);
+const saveDeploy = buildApiActionReducer(DeploySaveAction);
 const deploys = buildApiActionReducer(DeploysFetchAction, []);
 const activeTasksForDeploy = buildApiActionReducer(TasksFetchForDeployAction);
 const taskHistoryForDeploy = buildApiActionReducer(TaskHistoryFetchForDeploy);
@@ -49,6 +50,7 @@ export default combineReducers({
   requests,
   status,
   deploy,
+  saveDeploy,
   task,
   activeTasksForDeploy,
   taskHistoryForDeploy,
