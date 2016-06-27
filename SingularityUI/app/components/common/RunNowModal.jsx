@@ -34,14 +34,19 @@ export default class RunNowModal extends React.Component {
         buttonStyle="primary"
         formElements={[
           {
+            name: 'additonalArgs',
+            type: FormModal.INPUT_TYPES.TAGS,
+            label: 'Additional command line input: (optional)'
+          },
+          {
             name: 'message',
             type: FormModal.INPUT_TYPES.STRING,
-            label: 'Message (optional)'
+            label: 'Message: (optional)'
           },
           {
             name: 'afterTrigger',
             type: FormModal.INPUT_TYPES.RADIO,
-            label: 'After triggering the run',
+            label: 'After triggering the run:',
             values: _.values(RunNowModal.AFTER_TRIGGER),
             defaultValue: RunNowModal.AFTER_TRIGGER.SANDBOX
           },

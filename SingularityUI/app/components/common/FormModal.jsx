@@ -2,13 +2,15 @@ import React from 'react';
 import classNames from 'classnames';
 
 import { Modal, Button } from 'react-bootstrap';
+import TagsInput from 'react-tagsinput'
 
 export default class FormModal extends React.Component {
 
   static INPUT_TYPES = {
     BOOLEAN: 'BOOLEAN',
     STRING: 'STRING',
-    RADIO: 'RADIO'
+    RADIO: 'RADIO',
+    TAGS: 'TAGS'
   }
 
   constructor(props) {
@@ -81,6 +83,7 @@ export default class FormModal extends React.Component {
       const help = error && <span className="help-block">{error}</span>;
 
       switch(e.type) {
+
         case FormModal.INPUT_TYPES.BOOLEAN:
           return (
             <div key={e.name}>
@@ -97,6 +100,7 @@ export default class FormModal extends React.Component {
               </div>
             </div>
           );
+
         case FormModal.INPUT_TYPES.STRING:
           return (
             <div key={e.name}>
@@ -112,6 +116,7 @@ export default class FormModal extends React.Component {
               </div>
             </div>
           );
+
         case FormModal.INPUT_TYPES.RADIO:
           const buttons = e.values.map((v, i) => {
             return (
@@ -132,6 +137,22 @@ export default class FormModal extends React.Component {
             <div key={e.name}>
               <strong>{e.label}</strong>
               {buttons}
+            </div>
+          );
+
+        case FormModal.INPUT_TYPES.TAGS:
+          return (
+            <div key={e.name}>
+              <label style={{display: "block", width: "100%"}}>
+                {e.label}
+                <TagsInput
+                  value={this.state.formState[e.name] || []}
+                  onChange={(tags) => this.handleFormChange(e.name, tags)}
+                  addOnBlur
+                  addOnPaste
+                  inputProps={{className: "form-control input-large", placeholder: ""}}
+                />
+              </label>
             </div>
           );
       }
