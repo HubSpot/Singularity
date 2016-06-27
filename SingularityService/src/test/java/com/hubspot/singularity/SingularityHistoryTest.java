@@ -20,6 +20,7 @@ import org.skife.jdbi.v2.Handle;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.api.SingularityDeleteRequestRequest;
 import com.hubspot.singularity.api.SingularityRunNowRequest;
@@ -199,7 +200,7 @@ public class SingularityHistoryTest extends SingularitySchedulerTestBase {
     String runId = "my-run-id";
 
     SingularityPendingRequestParent parent = requestResource.scheduleImmediately(requestId,
-        Optional.of(new SingularityRunNowRequest(Optional.<String> absent(), Optional.<Boolean> absent(), Optional.of(runId), Optional.<List<String>> absent())));
+        Optional.of(new SingularityRunNowRequest(Optional.<String> absent(), Optional.<Boolean> absent(), Optional.of(runId), Optional.<List<String>> absent(), Optional.<Resources>absent())));
 
     Assert.assertEquals(runId, parent.getPendingRequest().getRunId().get());
 

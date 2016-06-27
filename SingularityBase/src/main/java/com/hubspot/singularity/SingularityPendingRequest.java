@@ -5,6 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.hubspot.mesos.Resources;
 
 public class SingularityPendingRequest {
 
@@ -22,16 +23,22 @@ public class SingularityPendingRequest {
   private final Optional<Boolean> skipHealthchecks;
   private final Optional<String> message;
   private final Optional<String> actionId;
+  private final Optional<Resources> resources;
 
   public SingularityPendingRequest(String requestId, String deployId, long timestamp, Optional<String> user, PendingType pendingType, Optional<Boolean> skipHealthchecks, Optional<String> message) {
-    this(requestId, deployId, timestamp, user, pendingType, Optional.<List<String>> absent(), Optional.<String> absent(), skipHealthchecks, message, Optional.<String> absent());
+    this(requestId, deployId, timestamp, user, pendingType, Optional.<List<String>> absent(), Optional.<String> absent(), skipHealthchecks, message, Optional.<String> absent(), Optional.<Resources>absent());
+  }
+
+  public SingularityPendingRequest(String requestId, String deployId, long timestamp, Optional<String> user, PendingType pendingType, Optional<List<String>> cmdLineArgsList,
+    Optional<String> runId, Optional<Boolean> skipHealthchecks, Optional<String> message, Optional<String> actionId) {
+    this(requestId, deployId, timestamp, user, pendingType, cmdLineArgsList, runId, skipHealthchecks, message, actionId, Optional.<Resources>absent());
   }
 
   @JsonCreator
   public SingularityPendingRequest(@JsonProperty("requestId") String requestId, @JsonProperty("deployId") String deployId, @JsonProperty("timestamp") long timestamp,
       @JsonProperty("user") Optional<String> user, @JsonProperty("pendingType") PendingType pendingType, @JsonProperty("cmdLineArgsList") Optional<List<String>> cmdLineArgsList,
       @JsonProperty("runId") Optional<String> runId, @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks, @JsonProperty("message") Optional<String> message,
-      @JsonProperty("actionId") Optional<String> actionId) {
+      @JsonProperty("actionId") Optional<String> actionId, @JsonProperty("resources") Optional<Resources> resources) {
     this.requestId = requestId;
     this.deployId = deployId;
     this.timestamp = timestamp;
@@ -42,6 +49,7 @@ public class SingularityPendingRequest {
     this.skipHealthchecks = skipHealthchecks;
     this.message = message;
     this.actionId = actionId;
+    this.resources = resources;
   }
 
   public Optional<String> getActionId() {
@@ -84,10 +92,14 @@ public class SingularityPendingRequest {
     return message;
   }
 
+  public Optional<Resources> getResources() {
+    return resources;
+  }
+
   @Override
   public String toString() {
     return "SingularityPendingRequest [requestId=" + requestId + ", deployId=" + deployId + ", timestamp=" + timestamp + ", pendingType=" + pendingType + ", user=" + user + ", cmdLineArgsList="
-        + cmdLineArgsList + ", runId=" + runId + ", skipHealthchecks=" + skipHealthchecks + ", message=" + message + ", actionId=" + actionId + "]";
+        + cmdLineArgsList + ", runId=" + runId + ", skipHealthchecks=" + skipHealthchecks + ", message=" + message + ", actionId=" + actionId + ", resources=" + resources + "]";
   }
 
 }
