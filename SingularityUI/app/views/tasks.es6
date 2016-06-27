@@ -1,4 +1,4 @@
-import View from './view';
+import ReactView from './reactView';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -6,7 +6,7 @@ import { Provider } from 'react-redux';
 
 import TasksPage from '../components/tasks/TasksPage';
 
-class TasksView extends View {
+class TasksView extends ReactView {
 
   constructor(store, state, requestsSubFilter, searchFilter, updateFilters) {
     super();

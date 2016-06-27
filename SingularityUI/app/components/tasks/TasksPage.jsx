@@ -7,10 +7,13 @@ import TaskFilters from './TaskFilters';
 import { FetchAction } from '../../actions/api/tasks';
 import { KillAction } from '../../actions/api/task';
 import { RunAction } from '../../actions/api/request';
+import { FetchRunAction } from '../../actions/api/request';
+import { FetchRunHistoryAction } from '../../actions/api/request';
 
 import UITable from '../common/table/UITable';
 import KillTaskModal from '../common/KillTaskModal';
 import RunNowModal from '../common/RunNowModal';
+import TaskLauncher from './TaskLauncher';
 import { TaskId, StartedAt, Host, Rack, CPUs, Memory, ActiveActions, NextRun, PendingType, DeployId, ScheduledActions, ScheduledTaskId, CleanupType, JSONAction, InstanceNumber } from './Columns';
 
 class TasksPage extends React.Component {
@@ -52,8 +55,12 @@ class TasksPage extends React.Component {
   }
 
   handleRunNow(requestId, data) {
-    console.log(requestId, data);
-    this.props.runRequest(requestId, data);
+    this.props.runRequest(requestId, data).then((response) => {
+      // console.log(data, response.data);
+      if (_.contains([RunNowModal.AFTER_TRIGGER.SANDBOX, RunNowModal.AFTER_TRIGGER.TAIL], data.afterTrigger)) {
+        this.refs.taskLauncher.startPolling(response.data.request.id, response.data.pendingRequest.runId, data.afterTrigger == RunNowModal.AFTER_TRIGGER.TAIL && data.fileToTail);
+      }
+    });
   }
 
   getColumns() {
@@ -110,8 +117,9 @@ class TasksPage extends React.Component {
       <div>
         <TaskFilters filter={this.state.filter} onFilterChange={this.handleFilterChange.bind(this)} displayRequestTypeFilters={displayRequestTypeFilters} />
         {table}
-        {<RunNowModal ref="runModal" onRunNow={this.handleRunNow.bind(this)} />}
-        {<KillTaskModal ref="killTaskModal" onTaskKill={this.handleTaskKill.bind(this)} />}
+        <RunNowModal ref="runModal" onRunNow={this.handleRunNow.bind(this)} />
+        <KillTaskModal ref="killTaskModal" onTaskKill={this.handleTaskKill.bind(this)} />
+        <TaskLauncher ref="taskLauncher" fetchTaskRun={this.props.taskRun.bind(this)} fetchTaskRunHistory={this.props.taskRunHistory.bind(this)} />
       </div>
     );
   }
@@ -129,6 +137,8 @@ function mapDispatchToProps(dispatch) {
     fetchFilter: (state) => dispatch(FetchAction.trigger(state)),
     killTask: (taskId, data) => dispatch(KillAction.trigger(taskId, data)),
     runRequest: (requestId, data) => dispatch(RunAction.trigger(requestId, data)),
+    taskRun: (requestId, runId) => dispatch(FetchRunAction.trigger(requestId, runId)),
+    taskRunHistory: (requestId, runId) => dispatch(FetchRunHistoryAction.trigger(requestId, runId)),
   };
 }
 

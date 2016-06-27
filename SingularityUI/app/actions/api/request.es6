@@ -30,3 +30,6 @@ export const RunAction = buildJsonApiAction(
     body: { data }
   })
 );
+
+export const FetchRunAction = buildApiAction('FETCH_REQUEST_RUN', (requestId, runId) => ({url: `/requests/request/${ requestId }/run/${runId}`}));
+export const FetchRunHistoryAction = buildApiAction('FETCH_REQUEST_RUN_HISTORY', (requestId, runId) => ({url: `/history/request/${ requestId }/run/${runId}`}));
