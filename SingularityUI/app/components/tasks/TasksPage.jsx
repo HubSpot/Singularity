@@ -16,19 +16,30 @@ class TasksPage extends React.Component {
       filter: {
         taskStatus: props.state,
         requestTypes: props.requestsSubFilter == 'all' ? TaskFilters.REQUEST_TYPES : props.requestsSubFilter.split(','),
-        filterText: props.searchFilter
+        filterText: props.searchFilter,
+        loading: false
       }
     }
   }
 
   handleFilterChange(filter) {
-    this.props.fetchFilter(filter.taskStatus);
+    const lastFilterTaskStatus = this.state.filter.taskStatus;
     this.setState({
+      loading: lastFilterTaskStatus != filter.taskStatus,
       filter: filter
     });
+
     const requestTypes = filter.requestTypes.length == TaskFilters.REQUEST_TYPES.length ? 'all' : filter.requestTypes.join(',');
     this.props.updateFilters(filter.taskStatus, requestTypes, filter.filterText);
     app.router.navigate(`/tasks/${filter.taskStatus}/${requestTypes}/${filter.filterText}`);
+
+    if (lastFilterTaskStatus != filter.taskStatus) {
+      this.props.fetchFilter(filter.taskStatus).then(() => {
+        this.setState({
+          loading: false
+        });
+      });
+    }
   }
 
   getColumns() {
@@ -55,15 +66,19 @@ class TasksPage extends React.Component {
     const displayTasks = _.sortBy(filterSelector({tasks: this.props.tasks, filter: this.state.filter}), (t) => this.getDefaultSortAttribute(t));
     if (this.state.filter.taskStatus == 'active') displayTasks.reverse();
 
+    const table = !this.state.loading ? (
+      <UITable
+        data={displayTasks}
+        keyGetter={(r) => r.taskId ? r.taskId.id : r.pendingTask.pendingTaskId.id}
+      >
+        {this.getColumns()}
+      </UITable>
+    ) : <div className="page-loader fixed"></div>;
+
     return (
       <div>
         <TaskFilters filter={this.state.filter} onFilterChange={this.handleFilterChange.bind(this)} displayRequestTypeFilters={displayRequestTypeFilters} />
-        <UITable
-          data={displayTasks}
-          keyGetter={(r) => r.taskId ? r.taskId.id : r.pendingTask.pendingTaskId.id}
-        >
-          {this.getColumns()}
-        </UITable>
+        {table}
       </div>
     );
   }
