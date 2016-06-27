@@ -87,6 +87,12 @@ public class UIConfiguration {
   @NotNull
   private Optional<String> redirectOnUnauthorizedUrl = Optional.absent();
 
+
+  @JsonProperty
+  @NotNull
+  private Optional<String> extraScript = Optional.absent();
+
+
   public boolean isHideNewDeployButton() {
     return hideNewDeployButton;
   }
@@ -205,5 +211,13 @@ public class UIConfiguration {
 
   public void setRedirectOnUnauthorizedUrl(Optional<String> redirectOnUnauthorizedUrl) {
     this.redirectOnUnauthorizedUrl = redirectOnUnauthorizedUrl;
+  }
+
+  public Optional<String> getExtraScript() {
+    return extraScript;
+  }
+
+  public void setExtraScript(Optional<String> extraScript) {
+    this.extraScript = extraScript;
   }
 }
