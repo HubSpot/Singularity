@@ -16,9 +16,6 @@ import classNames from 'classnames';
 class SelectFormGroup extends Component {
 
   render() {
-    if (!this.props.value) {
-      this.props.onChange({value: this.props.defaultValue});
-    }
     return (
       <div className={classNames('form-group', {required: this.props.required})}>
         <label htmlFor={this.props.id}>{this.props.label}</label>
@@ -77,41 +74,13 @@ const REQUIRED_FIELDS = {
 
 const FIELDS = {
   all: [
-    {id: 'id', type: 'text'},
-    {id: 'executorType', type: 'text', default: DEFAULT_EXECUTOR_TYPE},
-    {id: 'env', type: 'text'},
-    {id: 'healthcheckUri', type: 'text'},
-    {id: 'healthcheckIntervalSeconds', type: 'number'},
-    {id: 'healthcheckTimeoutSeconds', type: 'number'},
-    {id: 'healthcheckPortIndex', type: 'number'},
-    {id: 'healthcheckMaxTotalTimeoutSeconds', type: 'number'},
-    {id: 'deployHealthTimeoutSeconds', type: 'number'},
-    {id: 'healthCheckProtocol', type: 'text', default: 'HTTP'},
-    {id: 'skipHealthchecksOnDeploy', type: 'text'},
-    {id: 'considerHealthyAfterRunningForSeconds', type: 'number'},
-    {id: 'serviceBasePath', type: 'text'},
-    {id: 'loadBalancerGroups', type: 'array', arrayType: 'text'},
-    {id: 'loadBalancerOptions', type: 'map'},
-    {id: 'loadBalancerPortIndex', type: 'text', default: 0},
+    {id: 'id', type: 'text', required: true},
+    {id: 'executorType', type: 'text', default: DEFAULT_EXECUTOR_TYPE, required: true},
+    {id: 'env', type: 'map'},
     {
       id: 'containerInfo',
       type: 'object',
-      values: [
-        {id: 'type', type: 'text', default: 'mesos'},
-        {
-          id: 'docker',
-          type: 'object',
-          values: [
-            {id: 'image', type: 'text'},
-            {id: 'network', type: 'text', default: 'NONE'},
-            {id: 'parameters', type: 'map'},
-            {id: 'privileged', type: 'text'},
-            {id: 'forcePullImage', type: 'text'},
-            {id: 'volumes', type: 'array', arrayType: 'volume'},
-            {id: 'portMappings', type: 'array', arrayType: 'portMapping'}
-          ]
-        }
-      ]
+      values: [{id: 'type', type: 'text', default: 'mesos', required: true}]
     },
     {
       id: 'resources',
@@ -134,42 +103,140 @@ const FIELDS = {
       id: 'executorData',
       type: 'object',
       values: [
-        {id: 'cmd', type: 'text'},
+        {id: 'cmd', type: 'text', required: true},
         {id: 'extraCmdLineArgs', type: 'array', arrayType: 'text'},
         {id: 'user', type: 'text', default: 'root'},
         {id: 'sigKillProcessesAfterMillis', type: 'number', default: 120000},
         {id: 'successfulExitCodes', type: 'array', arrayType: 'number'},
-        {id: 'maxTaskThreads', type: 'text'},
+        {id: 'maxTaskThreads', type: 'number'},
         {id: 'loggingTag', type: 'text'},
         {id: 'loggingExtraFields', type: 'map'},
         {id: 'preserveTaskSandboxAfterFinish', type: 'text'},
         {id: 'skipLogrotateAndCompress', type: 'text'},
-        {id: 'embeddedArtifacts', type: 'array', arrayType: 'artifact'},
-        {id: 'externalArtifacts', type: 'array', arrayType: 'artifact'},
-        {id: 's3Artifacts', type: 'array', arrayType: 'artifact'}
+        {id: 'loggingS3Bucket', type: 'text'},
+        {id: 'maxOpenFiles', type: 'number'},
+        {id: 'runningSentinel', type: 'text'},
+        {id: 'embeddedArtifacts', type: 'artifacts'},
+        {id: 'externalArtifacts', type: 'artifacts'},
+        {id: 's3Artifacts', type: 'artifacts'}
       ]
     }
+  ],
+  dockerContainer: [
+    {
+      id: 'containerInfo',
+      type: 'object',
+      values: [
+        {
+          id: 'docker',
+          type: 'object',
+          values: [
+            {id: 'image', type: 'text', required: true},
+            {id: 'network', type: 'text', default: 'NONE'},
+            {id: 'parameters', type: 'map'},
+            {id: 'privileged', type: 'text'},
+            {id: 'forcePullImage', type: 'text'},
+            {id: 'volumes', type: 'volumes'},
+            {id: 'portMappings', type: 'portMappings'}
+          ]
+        }
+      ]
+    },
+  ],
+  loadBalancer: [
+    {id: 'serviceBasePath', type: 'text', required: true},
+    {id: 'loadBalancerGroups', type: 'array', arrayType: 'text', required: true},
+    {id: 'loadBalancerOptions', type: 'map'},
+    {id: 'loadBalancerPortIndex', type: 'text', default: 0}
+  ],
+  healthChecker: [
+    {id: 'healthcheckUri', type: 'text'},
+    {id: 'healthcheckIntervalSeconds', type: 'number'},
+    {id: 'healthcheckTimeoutSeconds', type: 'number'},
+    {id: 'healthcheckPortIndex', type: 'number'},
+    {id: 'healthcheckMaxTotalTimeoutSeconds', type: 'number'},
+    {id: 'deployHealthTimeoutSeconds', type: 'number'},
+    {id: 'healthCheckProtocol', type: 'text', default: 'HTTP'},
+    {id: 'skipHealthchecksOnDeploy', type: 'text'},
+    {id: 'considerHealthyAfterRunningForSeconds', type: 'number'}
   ]
 };
 
-function makeFlattenedFields(fields) {
-  const flattenedFields = {};
+const ARTIFACT_FIELDS = {
+  all: [
+    {id: 'name', type: 'text', required: true},
+    {id: 'filename', type: 'text', required: true},
+    {id: 'md5Sum', type: 'text'}
+  ],
+  embedded: [
+    {id: 'content', type: 'base64'}
+  ],
+  external: [
+    {id: 'url', type: 'text', required: true},
+    {id: 'filesize', type: 'number'}
+  ],
+  s3: [
+    {id: 's3Bucket', type: 'text', required: true},
+    {id: 's3ObjectKey', type: 'text', required: true},
+    {id: 'filesize', type: 'number'}
+  ]
+};
+
+const DOCKER_PORT_MAPPING_FIELDS = [
+  {id: 'containerPortType', type: 'text', default: 'LITERAL', required: true},
+  {id: 'containerPort', type: 'text', required: true},
+  {id: 'hostPortType', type: 'text', default: 'LITERAL', required: true},
+  {id: 'hostPort', type: 'text', required: true},
+  {id: 'protocol', type: 'text', default: 'tcp'}
+];
+
+const DOCKER_VOLUME_FIELDS = [
+  {id: 'containerPath', type: 'text', required: true},
+  {id: 'hostPath', type: 'text', required: true},
+  {id: 'mode', type: 'text', default: 'RO', required: true}
+]
+
+function makeIndexedFields(fields) {
+  const indexedFields = {};
   for (const field of fields) {
     if (field.type === 'object') {
-      _.extend(flattenedFields, makeFlattenedFields(field.values));
+      _.extend(indexedFields, makeIndexedFields(field.values));
     } else {
-      flattenedFields[field.id] = field;
+      indexedFields[field.id] = field;
     }
   }
-  return flattenedFields;
+  return indexedFields;
 }
 
-const FLATTENED_FIELDS = _.extend(
+const INDEXED_FIELDS = _.extend(
   {},
-  makeFlattenedFields(FIELDS.all),
-  makeFlattenedFields(FIELDS.customExecutor),
-  makeFlattenedFields(FIELDS.defaultExecutor)
+  makeIndexedFields(FIELDS.all),
+  makeIndexedFields(FIELDS.customExecutor),
+  makeIndexedFields(FIELDS.defaultExecutor),
+  makeIndexedFields(FIELDS.dockerContainer),
+  makeIndexedFields(FIELDS.loadBalancer),
+  makeIndexedFields(FIELDS.healthChecker)
 );
+const INDEXED_ARTIFACT_FIELDS = _.extend(
+  {},
+  makeIndexedFields(ARTIFACT_FIELDS.all),
+  makeIndexedFields(ARTIFACT_FIELDS.embedded),
+  makeIndexedFields(ARTIFACT_FIELDS.external),
+  makeIndexedFields(ARTIFACT_FIELDS.s3)
+);
+const INDEXED_DOCKER_PORT_MAPPING_FIELDS = makeIndexedFields(DOCKER_PORT_MAPPING_FIELDS);
+const INDEXED_DOCKER_VOLUME_FIELDS = makeIndexedFields(DOCKER_VOLUME_FIELDS);
+const INDEXED_ALL_FIELDS = makeIndexedFields(FIELDS.all);
+const INDEXED_CUSTOM_EXECUTOR_FIELDS = makeIndexedFields(FIELDS.customExecutor);
+const INDEXED_DEFAULT_EXECUTOR_FIELDS = makeIndexedFields(FIELDS.defaultExecutor);
+const INDEXED_DOCKER_CONTAINER_FIELDS = makeIndexedFields(FIELDS.dockerContainer);
+const INDEXED_LOAD_BALANCER_FIELDS = makeIndexedFields(FIELDS.loadBalancer);
+const INDEXED_HEALTH_CHECKER_FIELDS = makeIndexedFields(FIELDS.healthChecker);
+const INDEXED_ALL_ARTIFACT_FIELDS = makeIndexedFields(ARTIFACT_FIELDS.all);
+const INDEXED_EMBEDDED_ARTIFACT_FIELDS = makeIndexedFields(ARTIFACT_FIELDS.embedded);
+const INDEXED_EXTERNAL_ARTIFACT_FIELDS = makeIndexedFields(ARTIFACT_FIELDS.external);
+const INDEXED_S3_ARTIFACT_FIELDS = makeIndexedFields(ARTIFACT_FIELDS.s3);
+
 
 class NewDeployForm extends Component {
 
@@ -190,7 +257,7 @@ class NewDeployForm extends Component {
   }
 
   getValueOrDefault(fieldId) {
-    return this.getValue(fieldId) || FLATTENED_FIELDS[fieldId].default;
+    return this.getValue(fieldId) || INDEXED_FIELDS[fieldId].default;
   }
 
   isRequestDaemon() {
@@ -208,64 +275,22 @@ class NewDeployForm extends Component {
     return true;
   }
 
-  canSubmit() {
-    for (const fieldId of REQUIRED_FIELDS.all) {
-      if (!this.hasValue(this.getValueOrDefault(fieldId))) {
-        return false;
-      }
+  validateValue(value, type, arrayType) {
+    if (!value) {
+      return true;
     }
-    if (this.getValueOrDefault('executorType') === CUSTOM_EXECUTOR_TYPE) {
-      for (const fieldId of REQUIRED_FIELDS.customExecutor) {
-        if (!this.hasValue(this.getValueOrDefault(fieldId))) {
+    if (type === 'number') {
+      const number = parseInt(value);
+      return number === 0 || number; // NaN is invalid
+    } else if (type === 'map') {
+      for (const element of value) {
+        if (element.split('=').length !== 2) {
           return false;
         }
       }
-      for (const artifact of (this.getValueOrDefault('artifacts') || [])) {
-        for (const fieldId of REQUIRED_FIELDS.artifacts) {
-          if (!this.hasValue(artifact[fieldId])) {
-            return false;
-          }
-        }
-        if (artifact.type === 'external') {
-          for (const fieldId of REQUIRED_FIELDS.externalArtifacts) {
-            if (!this.hasValue(artifact[fieldId])) {
-              return false;
-            }
-          }
-        }
-        if (artifact.type === 's3') {
-          for (const fieldId of REQUIRED_FIELDS.s3Artifacts) {
-            if (!this.hasValue(artifact[fieldId])) {
-              return false;
-            }
-          }
-        }
-      }
-    }
-    if (this.getValueOrDefault('type') === 'docker') {
-      for (const fieldId of REQUIRED_FIELDS.docker) {
-        if (!this.hasValue(this.getValue(fieldId))) {
-          return false;
-        }
-      }
-      for (const portMapping of (this.getValueOrDefault('portMappings') || [])) {
-        for (const fieldId of REQUIRED_FIELDS.dockerPortMappings) {
-          if (!this.hasValue(portMapping[fieldId])) {
-            return false;
-          }
-        }
-      }
-      for (const volume of (this.getValueOrDefault('volumes') || [])) {
-        for (const fieldId of REQUIRED_FIELDS.dockerVolumes) {
-          if (!this.hasValue(volume[fieldId])) {
-            return false;
-          }
-        }
-      }
-    }
-    if (this.props.request.request.loadBalanced) {
-      for (const fieldId of REQUIRED_FIELDS.loadBalancer) {
-        if (!this.hasValue(this.getValueOrDefault(fieldId))) {
+    } else if (type === 'array') {
+      for (const element of value) {
+        if (!this.validateValue(element, arrayType)) {
           return false;
         }
       }
@@ -273,12 +298,152 @@ class NewDeployForm extends Component {
     return true;
   }
 
-  addFieldsToDeployObject(deployObject, fieldsToAdd) {
+  validateField(field, valueGetter) {
+    const type = field.type;
+    if (type === 'object') {
+      for (const subField of field.values) {
+        if (!validateField(subField)) {
+          return false;
+        }
+      }
+      return true;
+    }
+    const value = valueGetter(field.id);
+    if (field.required && !this.hasValue(value)) {
+      return false;
+    }
+    return this.validateValue(value, type, field.arrayType);
+  }
+
+  validateFields(fields) {
+    for (const fieldId of Object.keys(fields)) {
+      if (!this.validateField(fields[fieldId], (fieldId) => this.getValueOrDefault(fieldId))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  validateObject(obj, fieldsToValidateAgainst) {
+    for (const fieldId of Object.keys(fieldsToValidateAgainst)) {
+      if (!this.validateField(fieldsToValidateAgainst[fieldId], (fieldId) => obj[fieldId])) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  validateObjects(idForObjects, fieldsToValidateAgainst) {
+    const objects = this.getValueOrDefault(idForObjects);
+    if (!objects) {
+      return true;
+    }
+    for (const id of Object.keys(objects)) {
+      if (!this.validateObject(objects[id], fieldsToValidateAgainst)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  validateArtifacts() {
+    for (const artifact of this.getValueOrDefault('embeddedArtifacts') || []) {
+      if (!this.validateObject(artifact, INDEXED_ALL_ARTIFACT_FIELDS)) {
+        return false;
+      }
+      if (!this.validateObject(artifact, INDEXED_EMBEDDED_ARTIFACT_FIELDS)) {
+        return false;
+      }
+    }
+    for (const artifact of this.getValueOrDefault('externalArtifacts') || []) {
+      if (!this.validateObject(artifact, INDEXED_ALL_ARTIFACT_FIELDS)) {
+        return false;
+      }
+      if (!this.validateObject(artifact, INDEXED_EXTERNAL_ARTIFACT_FIELDS)) {
+        return false;
+      }
+    }
+    for (const artifact of this.getValueOrDefault('s3Artifacts') || []) {
+      if (!this.validateObject(artifact, INDEXED_ALL_ARTIFACT_FIELDS)) {
+        return false;
+      }
+      if (artifact.type === 's3' && !this.validateObject(artifact, INDEXED_S3_ARTIFACT_FIELDS)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  canSubmit() {
+    for (const fieldId of REQUIRED_FIELDS.all) {
+      if (!this.validateFields(INDEXED_ALL_FIELDS)) {
+        return false;
+      }
+    }
+    if (this.getValueOrDefault('executorType') === CUSTOM_EXECUTOR_TYPE) {
+      if (!this.validateFields(INDEXED_CUSTOM_EXECUTOR_FIELDS) || !this.validateArtifacts()) {
+        return false;
+      }
+    } else if (!this.validateFields(INDEXED_DEFAULT_EXECUTOR_FIELDS)) {
+      return false;
+    }
+    if (this.getValueOrDefault('type') === 'docker') {
+      if (!this.validateFields(INDEXED_DOCKER_CONTAINER_FIELDS) ||
+        !this.validateObjects('portMappings', INDEXED_DOCKER_PORT_MAPPING_FIELDS) ||
+        !this.validateObjects('volumes', INDEXED_DOCKER_VOLUME_FIELDS)) {
+        return false;
+      }
+    }
+    if (this.props.request.request.loadBalanced && !this.validateFields(INDEXED_LOAD_BALANCER_FIELDS)) {
+      return false;
+    }
+    if (this.isRequestDaemon() && !this.validateFields(INDEXED_HEALTH_CHECKER_FIELDS)) {
+      return false;
+    }
+    return true;
+  }
+
+  copyFieldsToObject(deployObject, fieldsToAdd, valueGetter) {
     for (const fieldId of fieldsToAdd) {
       if (fieldId.type === 'object') {
-        deployObject[fieldId.id] = this.addFieldsToDeployObject({}, fieldId.values);
-      } else if (this.hasValue(this.getValueOrDefault(fieldId.id))) {
-        deployObject[fieldId.id] = this.getValueOrDefault(fieldId.id);
+        deployObject[fieldId.id] = this.copyFieldsToObject({}, fieldId.values, (fieldId) => this.getValueOrDefault(fieldId));
+      } else if (this.hasValue(valueGetter(fieldId.id))) {
+        const value = valueGetter(fieldId.id);
+        if (fieldId.type === 'text' || fieldId.type === 'array') {
+          deployObject[fieldId.id] = value;
+        } else if (fieldId.type === 'number') {
+          deployObject[fieldId.id] = parseInt(value);
+        } else if (fieldId.type === 'base64') {
+          deployObject[fieldId.id] = btoa(value);
+        } else if (fieldId.type === 'map') {
+          const map = {}
+          for (const element of value) {
+            const split = element.split('=');
+            if (split.length !== 2) {
+              continue;
+            }
+            map[split[0]] = split[1];
+          }
+          if (map) {
+            deployObject[fieldId.id] = map;
+          }
+        } else if (fieldId.type === 'artifacts') {
+          const artifacts = value.map(artifact => {
+            const newArtifact = {};
+            this.copyFieldsToObject(newArtifact, ARTIFACT_FIELDS.all, (id) => artifact[id]);
+            this.copyFieldsToObject(newArtifact, ARTIFACT_FIELDS.embedded, (id) => artifact[id]);
+            this.copyFieldsToObject(newArtifact, ARTIFACT_FIELDS.external, (id) => artifact[id]);
+            this.copyFieldsToObject(newArtifact, ARTIFACT_FIELDS.s3, (id) => artifact[id]);
+            return newArtifact;
+          });
+          deployObject[fieldId.id] = artifacts;
+        } else if (fieldId.type === 'volumes') {
+          const volumes = value.map(volume => this.copyFieldsToObject({}, DOCKER_VOLUME_FIELDS, (id) => volume[id]));
+          deployObject[fieldId.id] = volumes;
+        } else if (fieldId.type === 'portMappings') {
+          const portMappings = value.map(portMapping => this.copyFieldsToObject({}, DOCKER_PORT_MAPPING_FIELDS, (id) => portMapping[id]));
+          deployObject[fieldId.id] = portMappings;
+        }
       }
     }
     return deployObject;
@@ -287,11 +452,20 @@ class NewDeployForm extends Component {
   submit(event) {
     event.preventDefault();
     const deployObject = {};
-    this.addFieldsToDeployObject(deployObject, FIELDS.all);
+    this.copyFieldsToObject(deployObject, FIELDS.all, (fieldId) => this.getValueOrDefault(fieldId));
     if (this.getValueOrDefault('executorType') === DEFAULT_EXECUTOR_TYPE) {
-      this.addFieldsToDeployObject(deployObject, FIELDS.defaultExecutor);
+      this.copyFieldsToObject(deployObject, FIELDS.defaultExecutor, (fieldId) => this.getValueOrDefault(fieldId));
     } else {
-      this.addFieldsToDeployObject(deployObject, FIELDS.customExecutor);
+      this.copyFieldsToObject(deployObject, FIELDS.customExecutor, (fieldId) => this.getValueOrDefault(fieldId));
+    }
+    if (this.getValueOrDefault('type') === 'docker') {
+      this.copyFieldsToObject(deployObject, FIELDS.dockerContainer, (fieldId) => this.getValueOrDefault(fieldId));
+    }
+    if (this.props.request.request.loadBalanced) {
+      this.copyFieldsToObject(deployObject, FIELDS.loadBalancer, (fieldId) => this.getValueOrDefault(fieldId));
+    }
+    if (this.isRequestDaemon()) {
+      this.copyFieldsToObject(deployObject, FIELDS.healthChecker, (fieldId) => this.getValueOrDefault(fieldId));
     }
     deployObject.requestId = this.props.request.request.id;
     this.props.save({deploy: deployObject});
