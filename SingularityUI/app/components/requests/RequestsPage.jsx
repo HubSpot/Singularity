@@ -30,7 +30,7 @@ class RequestsPage extends React.Component {
   getColumns() {
     switch(this.state.filter.subFilter) {
       case RequestFilters.REQUEST_TYPES.ALL:
-        return [Cols.RequestId, Cols.Type, Cols.State, Cols.Instances, Cols.DeployId, Cols.DeployUser, Cols.LastDeploy, Cols.Schedule, Cols.Actions(this.props.removeRequest)];
+        return [Cols.Starred(), Cols.RequestId, Cols.Type, Cols.State, Cols.Instances, Cols.DeployId, Cols.DeployUser, Cols.LastDeploy, Cols.Schedule, Cols.Actions(this.props.removeRequest)];
     }
   }
 

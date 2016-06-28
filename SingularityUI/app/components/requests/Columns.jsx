@@ -9,8 +9,8 @@ import UnpauseButton from './UnpauseButton';
 import RemoveButton from './RemoveButton';
 
 // use this only with combineStarredWithRequests selector
-export const Starred = ({changeStar, sortable}) => (
-  <Column
+export const Starred = (changeStar, sortable) => {
+  return <Column
     label=""
     id="starred"
     cellData={
@@ -29,7 +29,7 @@ export const Starred = ({changeStar, sortable}) => (
     }
     sortable={sortable}
   />
-);
+};
 
 Starred.propTypes = {
   changeStar: PropTypes.func,
