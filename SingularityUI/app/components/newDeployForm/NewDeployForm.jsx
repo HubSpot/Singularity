@@ -1,59 +1,17 @@
 import React, {Component} from 'react';
 import { connect } from 'react-redux';
-import FormField from '../common/formItems/FormField';
+import SelectFormGroup from '../common/formItems/SelectFormGroup';
+import TextFormGroup from '../common/formItems/TextFormGroup';
 import MultiInput from '../common/formItems/MultiInput';
 import CheckBox from '../common/formItems/CheckBox';
 import RemoveButton from '../common/RemoveButton';
-import Select from 'react-select';
 import { modifyField, clearForm } from '../../actions/form';
 import {SaveAction} from '../../actions/api/deploy';
-import { FIELDS, ARTIFACT_FIELDS, DOCKER_PORT_MAPPING_FIELDS, DOCKER_VOLUME_FIELDS, INDEXED_FIELDS, INDEXED_ARTIFACT_FIELDS,
+import { FIELDS, ARTIFACT_FIELDS, DOCKER_PORT_MAPPING_FIELDS, DOCKER_VOLUME_FIELDS, INDEXED_FIELDS,
   INDEXED_DOCKER_PORT_MAPPING_FIELDS, INDEXED_DOCKER_VOLUME_FIELDS, INDEXED_ALL_FIELDS, INDEXED_CUSTOM_EXECUTOR_FIELDS,
   INDEXED_DEFAULT_EXECUTOR_FIELDS, INDEXED_DOCKER_CONTAINER_FIELDS, INDEXED_LOAD_BALANCER_FIELDS, INDEXED_HEALTH_CHECKER_FIELDS,
   INDEXED_ALL_ARTIFACT_FIELDS, INDEXED_EMBEDDED_ARTIFACT_FIELDS, INDEXED_EXTERNAL_ARTIFACT_FIELDS, INDEXED_S3_ARTIFACT_FIELDS } from './fields';
-import classNames from 'classnames';
 
-class SelectFormGroup extends Component {
-
-  render() {
-    return (
-      <div className={classNames('form-group', {required: this.props.required})}>
-        <label htmlFor={this.props.id}>{this.props.label}</label>
-        <Select
-          id={this.props.id}
-          className={this.props.id}
-          options={this.props.options}
-          onChange={this.props.onChange}
-          value={this.props.value}
-          clearable={false}
-        />
-      </div>
-    );
-  }
-}
-
-class TextFormGroup extends Component {
-
-  render() {
-    return (
-      <div className={classNames('form-group', {required: this.props.required})}>
-        <label htmlFor={this.props.id}>{this.props.label}</label>
-        <FormField
-          id={this.props.id}
-          className={this.props.id}
-          prop = {{
-            updateFn: this.props.onChange,
-            inputType: 'text',
-            value: this.props.value,
-            required: this.props.required,
-            placeholder: this.props.placeholder
-          }}
-        />
-      </div>
-    );
-  }
-
-}
 
 const FORM_ID = 'newDeployForm';
 
