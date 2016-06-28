@@ -50,7 +50,7 @@ export default class TaskFilters extends React.Component {
 
   toggleRequestType(t) {
     let selected = this.props.filter.requestTypes;
-    if (selected.length == TaskFilters.REQUEST_TYPES.length) {
+    if (selected.length === TaskFilters.REQUEST_TYPES.length) {
       selected = [t];
     } else if (_.isEmpty(_.without(selected, t))) {
       selected = TaskFilters.REQUEST_TYPES;
@@ -63,14 +63,14 @@ export default class TaskFilters extends React.Component {
   }
 
   renderStatusFilter() {
-    const selectedIndex = _.findIndex(TaskFilters.TASK_STATES, (s) => s.filterVal == this.props.filter.taskStatus);
+    const selectedIndex = _.findIndex(TaskFilters.TASK_STATES, (s) => s.filterVal === this.props.filter.taskStatus);
     const navItems = TaskFilters.TASK_STATES.map((s, index) => {
       return (
         <OverlayTrigger key={index} placement="top" overlay={<Tooltip id={index}>{s.tip}</Tooltip>} delay={500}>
           <NavItem
             eventKey={index}
             title={s.tip}
-            active={index == selectedIndex}
+            active={index === selectedIndex}
             onClick={() => this.handleStatusSelect(index)}>
               {s.displayVal}
           </NavItem>

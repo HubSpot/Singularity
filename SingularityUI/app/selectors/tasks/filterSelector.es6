@@ -9,7 +9,7 @@ const getFilter = (state) => ({state: state.filter.taskStatus, requestTypes: sta
 export default createSelector([getTasks, getFilter], (tasks, filter) => {
 
   // Filter by requestType
-  if (filter.state == 'active') {
+  if (filter.state === 'active') {
     tasks = _.filter(tasks, (task) => {
       return task.taskRequest && _.contains(filter.requestTypes, task.taskRequest.request.requestType);
     });

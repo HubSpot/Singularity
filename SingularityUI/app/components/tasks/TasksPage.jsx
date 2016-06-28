@@ -57,7 +57,6 @@ class TasksPage extends React.Component {
 
   handleRunNow(requestId, data) {
     this.props.runRequest(requestId, data).then((response) => {
-      // console.log(data, response.data);
       if (_.contains([RunNowModal.AFTER_TRIGGER.SANDBOX, RunNowModal.AFTER_TRIGGER.TAIL], data.afterTrigger)) {
         this.refs.taskLauncher.startPolling(response.data.request.id, response.data.pendingRequest.runId, data.afterTrigger == RunNowModal.AFTER_TRIGGER.TAIL && data.fileToTail);
       }

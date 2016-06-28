@@ -124,7 +124,7 @@ export default class FormModal extends React.Component {
                 <label>
                   <input type="radio"
                     name={e.name}
-                    checked={v == this.state.formState[e.name]}
+                    checked={v === this.state.formState[e.name]}
                     value={v}
                     onChange={(event) => this.handleFormChange(e.name, event.target.value)}
                   />
