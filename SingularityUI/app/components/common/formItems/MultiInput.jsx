@@ -37,7 +37,6 @@ class MultiInput extends Component {
                 prop = {{
                   value: value,
                   updateFn: event => this.change(key, event.target.value),
-                  /* required: this.props.required, Can't mark this as form required because there will always be an extra empty field */
                   type: "text",
                   placeholder: this.props.placeholder
                 }}
