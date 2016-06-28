@@ -266,7 +266,7 @@ class NewDeployForm extends Component {
     if (!value) {
       return false;
     }
-    if (Array.isArray(value) && value.length === 0) {
+    if (Array.isArray(value) && _.isEmpty(value)) {
       return false;
     }
     return true;
@@ -964,7 +964,7 @@ class NewDeployForm extends Component {
 
   renderDockerVolumes() {
     const volumes = this.getValue('volumes');
-    if (!volumes) {
+    if (volumes) {
       return volumes.map((mapping, key) => this.renderDockerVolume(mapping, key));
     }
   }
