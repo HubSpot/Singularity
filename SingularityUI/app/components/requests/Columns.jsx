@@ -40,6 +40,7 @@ export const DeployUser = (
   <Column
     label="Deploy User"
     id="user"
+    key="user"
     cellData={
       (rowData) => {
         const activeDeployUser = Utils.maybe(rowData, [
@@ -64,6 +65,7 @@ export const LastDeploy = (
   <Column
     label="Time of Last Deploy"
     id="lastDeploy"
+    key="lastDeploy"
     cellData={
       (rowData) => {
         const activeDeployTimestamp = Utils.maybe(rowData, [
@@ -75,9 +77,10 @@ export const LastDeploy = (
         return activeDeployTimestamp;
       }
     }
+    sortData={(cellData, rowData) => cellData || 0}
     cellRender={
       (cellData) => {
-        if (cellData !== null) {
+        if (cellData) {
           return Utils.timeStampFromNow(cellData);
         }
         return '';
@@ -91,9 +94,11 @@ export const RequestId = (
   <Column
     label="Request"
     id="requestId"
+    key="requestId"
     cellData={
       (rowData) => rowData.request.id
     }
+    sortData={(cellData) => cellData.toLowerCase()}
     cellRender={
       (cellData) => (
         <a href={`${config.appRoot}/request/${cellData}`}>
@@ -109,6 +114,7 @@ export const State = (
   <Column
     label="Status"
     id="state"
+    key="state"
     cellData={
       (rowData) => Utils.humanizeText(rowData.state)
     }
@@ -120,6 +126,7 @@ export const Type = (
   <Column
     label="Type"
     id="type"
+    key="type"
     cellData={
       (rowData) => Utils.humanizeText(rowData.request.requestType)
     }
@@ -127,8 +134,55 @@ export const Type = (
   />
 );
 
-export const Actions = ({unpauseAction, removeAction, showEditButton}) => (
+export const Instances = (
   <Column
+    label="Instances"
+    id="instances"
+    key="instances"
+    cellData={
+      (rowData) => rowData.request.instances
+    }
+    sortData={(cellData) => cellData || 0}
+    sortable={true}
+  />
+);
+
+export const DeployId = (
+  <Column
+    label="Deploy ID"
+    id="deployId"
+    key="deployId"
+    cellData={
+      (rowData) => rowData.requestDeployState && rowData.requestDeployState.activeDeploy
+    }
+    sortData={(cellData, rowData) => cellData ? cellData.deployId : ''}
+    cellRender={(cellData) => {
+        if (cellData) {
+          return (
+            <a href={`${config.appRoot}/request/${cellData.requestId}/deploy/${cellData.deployId}`}>{cellData.deployId}</a>
+          );
+        }
+      }
+    }
+    sortable={true}
+  />
+);
+
+export const Schedule = (
+  <Column
+    label="Schedule"
+    id="schedule"
+    key="schedule"
+    cellData={
+      (rowData) => rowData.request.quartzSchedule
+    }
+    sortData={(cellData) => cellData || ''}
+    sortable={true}
+  />
+);
+
+export function Actions(unpauseAction, removeAction, showEditButton) {
+  return <Column
     label=""
     id="actions"
     className="actions-column"
@@ -158,8 +212,8 @@ export const Actions = ({unpauseAction, removeAction, showEditButton}) => (
         );
       }
     }
-  />
-);
+  />;
+};
 
 Actions.propTypes = {
   unpauseAction: PropTypes.func.isRequired,
