@@ -100,6 +100,7 @@ const FIELDS = {
         {id: 'type', type: 'text', default: 'mesos'},
         {
           id: 'docker',
+          type: 'object',
           values: [
             {id: 'image', type: 'text'},
             {id: 'network', type: 'text', default: 'NONE'},
@@ -114,6 +115,7 @@ const FIELDS = {
     },
     {
       id: 'resources',
+      type: 'object',
       values: [
         {id: 'cpus', type: 'number', default: 1},
         {id: 'memoryMb', type: 'number', default: 128},
@@ -130,6 +132,7 @@ const FIELDS = {
     {id: 'customExecutorCmd', type: 'text'},
     {
       id: 'executorData',
+      type: 'object',
       values: [
         {id: 'cmd', type: 'text'},
         {id: 'extraCmdLineArgs', type: 'array', arrayType: 'text'},
@@ -149,6 +152,25 @@ const FIELDS = {
   ]
 };
 
+function makeFlattenedFields(fields) {
+  const flattenedFields = {};
+  for (const field of fields) {
+    if (field.type === 'object') {
+      _.extend(flattenedFields, makeFlattenedFields(field.values));
+    } else {
+      flattenedFields[field.id] = field;
+    }
+  }
+  return flattenedFields;
+}
+
+const FLATTENED_FIELDS = _.extend(
+  {},
+  makeFlattenedFields(FIELDS.all),
+  makeFlattenedFields(FIELDS.customExecutor),
+  makeFlattenedFields(FIELDS.defaultExecutor)
+);
+
 class NewDeployForm extends Component {
 
   componentDidMount() {
@@ -167,12 +189,8 @@ class NewDeployForm extends Component {
     }
   }
 
-  getExecutorType() {
-    return this.getValue('executorType');
-  }
-
-  getContainerType() {
-    return this.getValue('type') || 'mesos';
+  getValueOrDefault(fieldId) {
+    return this.getValue(fieldId) || FLATTENED_FIELDS[fieldId].default;
   }
 
   isRequestDaemon() {
@@ -192,17 +210,17 @@ class NewDeployForm extends Component {
 
   canSubmit() {
     for (const fieldId of REQUIRED_FIELDS.all) {
-      if (!this.hasValue(this.getValue(fieldId))) {
+      if (!this.hasValue(this.getValueOrDefault(fieldId))) {
         return false;
       }
     }
-    if (this.getExecutorType() === CUSTOM_EXECUTOR_TYPE) {
+    if (this.getValueOrDefault('executorType') === CUSTOM_EXECUTOR_TYPE) {
       for (const fieldId of REQUIRED_FIELDS.customExecutor) {
-        if (!this.hasValue(this.getValue(fieldId))) {
+        if (!this.hasValue(this.getValueOrDefault(fieldId))) {
           return false;
         }
       }
-      for (const artifact of (this.getValue('artifacts') || [])) {
+      for (const artifact of (this.getValueOrDefault('artifacts') || [])) {
         for (const fieldId of REQUIRED_FIELDS.artifacts) {
           if (!this.hasValue(artifact[fieldId])) {
             return false;
@@ -224,20 +242,20 @@ class NewDeployForm extends Component {
         }
       }
     }
-    if (this.getContainerType() === 'docker') {
+    if (this.getValueOrDefault('type') === 'docker') {
       for (const fieldId of REQUIRED_FIELDS.docker) {
         if (!this.hasValue(this.getValue(fieldId))) {
           return false;
         }
       }
-      for (const portMapping of (this.getValue('portMappings') || [])) {
+      for (const portMapping of (this.getValueOrDefault('portMappings') || [])) {
         for (const fieldId of REQUIRED_FIELDS.dockerPortMappings) {
           if (!this.hasValue(portMapping[fieldId])) {
             return false;
           }
         }
       }
-      for (const volume of (this.getValue('volumes') || [])) {
+      for (const volume of (this.getValueOrDefault('volumes') || [])) {
         for (const fieldId of REQUIRED_FIELDS.dockerVolumes) {
           if (!this.hasValue(volume[fieldId])) {
             return false;
@@ -247,7 +265,7 @@ class NewDeployForm extends Component {
     }
     if (this.props.request.request.loadBalanced) {
       for (const fieldId of REQUIRED_FIELDS.loadBalancer) {
-        if (!this.hasValue(this.getValue(fieldId))) {
+        if (!this.hasValue(this.getValueOrDefault(fieldId))) {
           return false;
         }
       }
@@ -257,10 +275,10 @@ class NewDeployForm extends Component {
 
   addFieldsToDeployObject(deployObject, fieldsToAdd) {
     for (const fieldId of fieldsToAdd) {
-      if (typeof fieldId === 'object') {
+      if (fieldId.type === 'object') {
         deployObject[fieldId.id] = this.addFieldsToDeployObject({}, fieldId.values);
-      } else if (this.hasValue(this.getValue(fieldId))) {
-        deployObject[fieldId] = this.getValue(fieldId);
+      } else if (this.hasValue(this.getValueOrDefault(fieldId.id))) {
+        deployObject[fieldId.id] = this.getValueOrDefault(fieldId.id);
       }
     }
     return deployObject;
@@ -270,7 +288,7 @@ class NewDeployForm extends Component {
     event.preventDefault();
     const deployObject = {};
     this.addFieldsToDeployObject(deployObject, FIELDS.all);
-    if (this.getExecutorType() === DEFAULT_EXECUTOR_TYPE) {
+    if (this.getValueOrDefault('executorType') === DEFAULT_EXECUTOR_TYPE) {
       this.addFieldsToDeployObject(deployObject, FIELDS.defaultExecutor);
     } else {
       this.addFieldsToDeployObject(deployObject, FIELDS.customExecutor);
@@ -429,7 +447,7 @@ class NewDeployForm extends Component {
       <div id="custom-artifacts">
         {this.getValue('embeddedArtifacts') && this.getValue('embeddedArtifacts').map((artifact, key) => { return this.renderArtifact(artifact, key) })}
         {this.getValue('externalArtifacts') && this.getValue('externalArtifacts').map((artifact, key) => { return this.renderArtifact(artifact, key) })}
-        {this.getValue('s3Artifacts') && his.getValue('s3Artifacts').map((artifact, key) => { return this.renderArtifact(artifact, key) })}
+        {this.getValue('s3Artifacts') && this.getValue('s3Artifacts').map((artifact, key) => { return this.renderArtifact(artifact, key) })}
       </div>
     );
   }
@@ -780,8 +798,7 @@ class NewDeployForm extends Component {
       <SelectFormGroup
         id="dockernetwork"
         label="Docker Network"
-        value={this.getValue('network')}
-        defaultValue="NONE"
+        value={this.getValueOrDefault('network')}
         onChange={newValue => this.updateField('network', newValue.value)}
         options={[
           { label: 'None', value: 'NONE' },
@@ -887,8 +904,7 @@ class NewDeployForm extends Component {
       <SelectFormGroup
         id="executor-type"
         label="Executor type"
-        value={this.getExecutorType()}
-        defaultValue={DEFAULT_EXECUTOR_TYPE}
+        value={this.getValueOrDefault('executorType')}
         onChange={newValue => this.updateField('executorType', newValue.value)}
         required={true}
         options={[
@@ -908,8 +924,7 @@ class NewDeployForm extends Component {
       <SelectFormGroup
         id="container-type"
         label="Container type"
-        value={this.getValue('type')}
-        defaultValue="mesos"
+        value={this.getValueOrDefault('type')}
         onChange={newValue => this.updateField('type', newValue.value)}
         required={true}
         options={[
@@ -1003,8 +1018,7 @@ class NewDeployForm extends Component {
       <SelectFormGroup
         id="hc-protocol"
         label="HC Protocol"
-        value={this.getValue('healthCheckProtocol')}
-        defaultValue="HTTP"
+        value={this.getValueOrDefault('healthCheckProtocol')}
         onChange={newValue =>  this.updateField('healthCheckProtocol', newValue.value)}
         options={[
           { label: 'HTTP', value: 'HTTP' },
@@ -1096,8 +1110,8 @@ class NewDeployForm extends Component {
           </div>
         </div>
         {command}
-        { this.getExecutorType() === DEFAULT_EXECUTOR_TYPE && this.renderDefaultExecutorFields() }
-        { this.getExecutorType() === CUSTOM_EXECUTOR_TYPE && this.renderCustomExecutorFields() }
+        { this.getValueOrDefault('executorType') === DEFAULT_EXECUTOR_TYPE && this.renderDefaultExecutorFields() }
+        { this.getValueOrDefault('executorType') === CUSTOM_EXECUTOR_TYPE && this.renderCustomExecutorFields() }
       </div>
     );
     const containerInfo = (
@@ -1111,7 +1125,7 @@ class NewDeployForm extends Component {
           </div>
         </div>
 
-        { this.getContainerType() === 'docker' && this.renderDockerContainerFields() }
+        { this.getValueOrDefault('type') === 'docker' && this.renderDockerContainerFields() }
       </div>
     );
     const resources = (
