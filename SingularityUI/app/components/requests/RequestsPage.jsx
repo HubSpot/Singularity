@@ -2,10 +2,13 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 import { FetchAction } from '../../actions/api/requests';
+import { RemoveAction } from '../../actions/api/request';
 
 import UITable from '../common/table/UITable';
 import RequestFilters from './RequestFilters';
 import * as Cols from './Columns';
+
+import Utils from '../../utils';
 
 class RequestsPage extends React.Component {
 
@@ -20,10 +23,14 @@ class RequestsPage extends React.Component {
     }
   }
 
+  componentDidMount() {
+    Utils.fixTableColumns($(this.refs.table.getTableDOMNode()));
+  }
+
   getColumns() {
     switch(this.state.filter.subFilter) {
       case RequestFilters.REQUEST_TYPES.ALL:
-        return [Cols.RequestId, Cols.Type, Cols.State, Cols.Instances, Cols.DeployId, Cols.DeployUser, Cols.LastDeploy, Cols.Schedule, Cols.Actions()];
+        return [Cols.RequestId, Cols.Type, Cols.State, Cols.Instances, Cols.DeployId, Cols.DeployUser, Cols.LastDeploy, Cols.Schedule, Cols.Actions(this.props.removeRequest)];
     }
   }
 
@@ -41,6 +48,7 @@ class RequestsPage extends React.Component {
     } else {
       table = (
         <UITable
+          ref="table"
           data={displayRequests}
           keyGetter={(r) => r.request.id}
         >
@@ -65,7 +73,8 @@ function mapStateToProps(state, ownProps) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    fetchFilter: (state) => dispatch(FetchAction.trigger(state))
+    fetchFilter: (state) => dispatch(FetchAction.trigger(state)),
+    removeRequest: (requestid, data) => dispatch(RemoveAction.trigger(requestid, data)),
   };
 }
 

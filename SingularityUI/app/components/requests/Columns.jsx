@@ -181,42 +181,33 @@ export const Schedule = (
   />
 );
 
-export function Actions(unpauseAction, removeAction, showEditButton) {
+export const Actions = (removeAction) => {
   return <Column
     label=""
     id="actions"
+    key="actions"
     className="actions-column"
     cellData={
       (rowData) => rowData.request.id
     }
     cellRender={
       (requestId, rowData) => {
-        let maybeEditButton;
-        if (showEditButton) {
-          maybeEditButton = (
-            <a href={`${config.appRoot}/requests/edit/${requestId}`} alt="Edit">
-              <span className="glyphicon glyphicon-edit"></span>
-            </a>
-          );
-        }
+        const edit = !config.hideNewRequestButton && (
+          <a href={`${config.appRoot}/requests/edit/${requestId}`} alt="Edit">
+            <span className="glyphicon glyphicon-edit"></span>
+          </a>
+        );
 
         return (
           <div className="hidden-xs">
-            <UnpauseButton requestId={requestId} unpauseAction={unpauseAction} />
             <RemoveButton requestId={requestId} removeAction={removeAction} />
             <JSONButton className="inline" object={rowData}>
               {'{ }'}
             </JSONButton>
-            {maybeEditButton}
+            {edit}
           </div>
         );
       }
     }
   />;
-};
-
-Actions.propTypes = {
-  unpauseAction: PropTypes.func.isRequired,
-  removeAction: PropTypes.func.isRequired,
-  showEditButton: PropTypes.bool
 };

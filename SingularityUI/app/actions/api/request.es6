@@ -13,14 +13,7 @@ export const UnpauseAction = buildJsonApiAction(
   })
 );
 
-export const RemoveAction = buildJsonApiAction(
-  'REMOVE_REQUEST',
-  'DELETE',
-  (requestId, message) => ({
-    url: `/requests/request/${requestId}`,
-    body: { message }
-  })
-);
+export const RemoveAction = buildJsonApiAction('REMOVE_REQUEST', 'DELETE', (requestId, data) => ({url: `/requests/request/${requestId}`, body: data}));
 
 export const RunAction = buildJsonApiAction(
   'RUN_NOW',
