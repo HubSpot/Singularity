@@ -2,7 +2,9 @@ import Controller from './Controller';
 
 import NewDeployFormView from 'views/newDeployForm';
 
-import { FetchAction as RequestFetchAction } from '../actions/api/request';
+import { FetchAction as RequestFetchAction, SaveAction } from '../actions/api/request';
+
+import { clearForm } from '../actions/form';
 
 class NewDeployForm extends Controller {
 
@@ -16,7 +18,10 @@ class NewDeployForm extends Controller {
     this.title('New Deploy');
     this.store = store;
 
-    this.store.dispatch(RequestFetchAction.trigger(requestId)).then(() => this.showView());
+    const requestFetchPromise = this.store.dispatch(RequestFetchAction.trigger(requestId));
+    const formClearPromise = this.store.dispatch(clearForm('newDeployForm'));
+    const clearSaveDeployDataPromise = this.store.dispatch(SaveAction.clearData());
+    Promise.all([requestFetchPromise, formClearPromise, clearSaveDeployDataPromise]).then(() => this.showView());
   }
 }
 

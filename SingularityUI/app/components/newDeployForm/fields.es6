@@ -91,6 +91,7 @@ export const FIELDS = {
 export const ARTIFACT_FIELDS = {
   all: [
     {id: 'name', type: 'text', required: true},
+    {id: 'type', type: 'text', required: true},
     {id: 'filename', type: 'text', required: true},
     {id: 'md5Sum', type: 'text'}
   ],
