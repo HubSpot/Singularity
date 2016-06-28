@@ -292,11 +292,5 @@ export const InstanceNumber = (
     cellData={
       (rowData) => rowData.instanceNo
     }
-    cellRender={(cellData) => {
-        return (
-          {cellData}
-        );
-      }
-    }
   />
 );
