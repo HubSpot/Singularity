@@ -913,10 +913,9 @@ class NewDeployForm extends Component {
 
   renderDockerPortMappings() {
     const portMappings = this.getValue('portMappings');
-    if (!portMappings) {
-      return (<div id="docker-port-mappings" />);
+    if (portMappings) {
+      return portMappings.map((mapping, key) => this.renderDockerPortMapping(mapping, key));
     }
-    return portMappings.map((mapping, key) => this.renderDockerPortMapping(mapping, key));
   }
 
   renderDockerVolume(mapping, key) {
@@ -966,9 +965,8 @@ class NewDeployForm extends Component {
   renderDockerVolumes() {
     const volumes = this.getValue('volumes');
     if (!volumes) {
-      return (<div id="docker-volumes" />);
+      return volumes.map((mapping, key) => this.renderDockerVolume(mapping, key));
     }
-    return volumes.map((mapping, key) => this.renderDockerVolume(mapping, key));
   }
 
   renderDockerContainerFields() {
