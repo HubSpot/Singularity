@@ -34,7 +34,7 @@ class TasksPage extends React.Component {
   handleFilterChange(filter) {
     const lastFilterTaskStatus = this.state.filter.taskStatus;
     this.setState({
-      loading: lastFilterTaskStatus != filter.taskStatus,
+      loading: lastFilterTaskStatus !== filter.taskStatus,
       filter: filter
     });
 
@@ -42,7 +42,7 @@ class TasksPage extends React.Component {
     this.props.updateFilters(filter.taskStatus, requestTypes, filter.filterText);
     app.router.navigate(`/tasks/${filter.taskStatus}/${requestTypes}/${filter.filterText}`);
 
-    if (lastFilterTaskStatus != filter.taskStatus) {
+    if (lastFilterTaskStatus !== filter.taskStatus) {
       this.props.fetchFilter(filter.taskStatus).then(() => {
         this.setState({
           loading: false
@@ -91,7 +91,7 @@ class TasksPage extends React.Component {
 
   render() {
     const displayRequestTypeFilters = this.state.filter.taskStatus == 'active';
-    const displayTasks = this.state.filter.taskStatus != 'decommissioning' ?
+    const displayTasks = this.state.filter.taskStatus !== 'decommissioning' ?
       _.sortBy(filterSelector({tasks: this.props.tasks, filter: this.state.filter}), (t) => this.getDefaultSortAttribute(t)) :
       _.sortBy(decomSelector({tasks: this.props.tasks, cleanups: this.props.cleanups}), (t) => this.getDefaultSortAttribute(t));
     if (_.contains(['active', 'decommissioning'], this.state.filter.taskStatus)) displayTasks.reverse();
