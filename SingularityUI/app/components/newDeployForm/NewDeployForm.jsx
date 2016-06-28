@@ -539,7 +539,7 @@ class NewDeployForm extends Component {
     );
     return (
       <div>
-        <fieldset id="default-expandable" className='expandable'>
+        <fieldset id="default-expandable" className="expandable">
           <h4>Default Executor Settings</h4>
           {cmdLineArguments}
           {artifacts}
@@ -1409,18 +1409,18 @@ class NewDeployForm extends Component {
 
     const errorMessage = (
       this.props.saveApiCall.error ?
-        <p className='alert alert-danger'>
+        <p className="alert alert-danger">
           There was a problem saving your request: {this.props.saveApiCall.error.message}
         </p> :
         this.props.saveApiCall.data && this.props.saveApiCall.data.message ?
-        <p className='alert alert-danger'>
+        <p className="alert alert-danger">
           There was a problem saving your request: {this.props.saveApiCall.data.message}
         </p> :
         null
     );
     const successMessage = (
       this.props.saveApiCall.data.activeDeploy ?
-        <p className='alert alert-success'>
+        <p className="alert alert-success">
           Deploy
           <a
             href={`${config.appRoot}/request/${ this.props.saveApiCall.data.activeDeploy.requestId }/deploy/${ this.props.saveApiCall.data.activeDeploy.id }`}
