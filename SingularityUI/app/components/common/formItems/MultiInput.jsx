@@ -24,7 +24,7 @@ class MultiInput extends Component {
 
   render() {
     const valueClone = this.props.value.slice()
-    if (valueClone.length === 0 || _.last(valueClone)) {
+    if (!valueClone.length || _.last(valueClone)) {
       valueClone.push("")
     }
     return (
