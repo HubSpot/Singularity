@@ -192,6 +192,7 @@ export const DeployId = (
     cellData={
       (rowData) => rowData.pendingTask.pendingTaskId
     }
+    sortData={(cellData, rowData) => cellData.deployId}
     cellRender={(cellData) => {
         return (
           <a href={`${config.appRoot}/request/${cellData.requestId}/deploy/${cellData.deployId}`}>{cellData.deployId}</a>
