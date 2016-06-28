@@ -5,7 +5,7 @@ dest = path.resolve(__dirname, 'dist');
 
 module.exports = {
   entry: {
-    app: './app/initialize.coffee',
+    app: './app/initialize.es6',
     vendor: [
       'react',
       'jquery',
@@ -50,7 +50,7 @@ module.exports = {
     extensions: ['', '.js', '.es6', '.jsx', '.cjsx', '.coffee', '.hbs'],
     alias: {
       'vex': 'vex-js/js/vex.js',
-      'vex.dialog': 'vex-helper.coffee',
+      'vex.dialog': 'vex-helper.es6',
       'handlebars': 'handlebars/runtime.js',
       'sortable': 'sortable/js/sortable.js',
       'datatables': 'datatables/media/js/jquery.dataTables.js',

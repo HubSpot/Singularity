@@ -1,0 +1,125 @@
+@import '../mixins';
+@import '../base';
+
+.requests-page {
+  .search-input {
+    margin-bottom: 40px;
+  }  
+}
+
+/* Other */
+$request-table-num-cols: 5;
+
+.requests-page {
+  .list-container {
+    .request-table {
+      width: 100%;
+      border-collapse: separate !important;
+      border-radius: 3px;
+      border: 1px solid #eaf0f6;
+
+      tr {
+        border: 1px solid #eaf0f6;
+        height: 75px;
+
+        &.table-header {
+          background-color: $pale-grey-three;
+          text-transform: uppercase;
+          font-weight: $font-weight-medium;
+          font-size: 13px;
+          height: 56px;
+        }
+
+        .action-links {
+          @include link-label-style();
+
+          a {
+            padding: 0 8px;
+          }
+        }
+
+        a {
+          @include link-style();
+        }
+
+        .faded-value {
+          color: $eerie;
+        }
+
+        .caps-sublabel {
+          color: $eerie;
+          font-weight: $font-weight-bold;
+          text-transform: uppercase;
+          font-size: 13px;
+          margin-right: 15px;
+        }
+      }
+
+      td {
+        vertical-align: middle;
+        line-height: 2; // not sure if this is a good idea
+
+        &:first-of-type {
+          white-space: nowrap;
+        }
+
+        &:last-of-type {
+          text-align: right;
+          white-space: nowrap;
+        }
+
+        .subline {
+          @include link-label-style();
+        }
+      }
+    }
+  }
+}
+
+// Request tags
+.service-tag {
+  @include tag-styles($melon, #fff1ee);
+}
+
+.worker-tag {
+  @include tag-styles($thunderdome, #f0f1fa);
+}
+
+.scheduled-tag {
+  @include tag-styles($heffalump, #eceef1);
+}
+
+.onDemand-tag {
+  @include tag-styles(#eaa836, #fdf3e1);
+}
+
+.runOnce-tag {
+  @include tag-styles($thunderdome, #f0f1fa);
+}
+
+.active-tag {
+  @include tag-styles(#21d596, #e8faf4);
+}
+
+.coolingDown-tag {
+  @include tag-styles($heffalump, #eceef1);
+}
+
+.paused-tag {
+  @include tag-styles($heffalump, #eceef1);
+}
+
+.schedule-tag {
+  @include tag-styles($heffalump, #eceef1);
+  unicode-bidi: embed;
+  font-family: monospace;
+  white-space: pre;
+}
+
+// Row links
+.action-links {
+
+  a {
+    padding: 0 3px 0 3px;
+  }
+}

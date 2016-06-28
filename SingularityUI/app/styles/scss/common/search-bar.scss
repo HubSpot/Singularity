@@ -1,0 +1,30 @@
+@import '../mixins';
+@import '../base';
+
+.search-bar {
+  .search-input {
+    font-size: 28px;
+    // This color should be moved out
+    border: solid 0.5px rgba(65, 91, 118, 0.2);
+    background-color: $white;
+
+    border-radius: 3px;
+
+    width: 100%;
+    padding: 10px;
+    padding-bottom: 5px;
+    padding-top: 5px;
+    margin-bottom: 15px;
+
+    &:focus {
+
+    }
+  }
+
+  .form-control-feedback {
+    line-height: 34px;
+    font-size: 28px;
+    margin: 9px;
+    color: $search-icon;
+  }
+}

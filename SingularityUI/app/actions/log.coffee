@@ -11,6 +11,9 @@ fetchTaskHistory = (taskId) ->
   $.ajax
     url: "#{ config.apiRoot }/history/task/#{ taskId }"
 
+setupInitialLoggingState = (st) ->
+  { type: 'LOGGING_INIT_STATE', state: st }
+
 initializeUsingActiveTasks = (requestId, path, search) ->
   (dispatch) ->
     deferred = Q.defer()
@@ -315,6 +318,7 @@ scrollAllToBottom = () ->
       dispatch(taskGroupFetchPrevious(taskGroupId))
 
 module.exports = {
+  setupInitialLoggingState
   initialize
   initializeUsingActiveTasks
   taskGroupFetchNext

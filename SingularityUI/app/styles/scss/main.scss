@@ -1,0 +1,93 @@
+// Other imports
+@import 'mixins';
+@import 'base';
+
+
+.browserupgrade {
+  margin: 0.2em 0;
+  background: #ccc;
+  color: #000;
+  padding: 0.2em 0;
+}
+
+/* Space out content a bit */
+body {
+  padding-bottom: 20px;
+  font-family: $font-family;
+  font-weight: $font-weight-normal;
+  color: $heffalump;
+}
+
+a {
+  color: #2965a8;
+}
+
+.important-value {
+  font-weight: $font-weight-demibold;
+}
+
+/* Globally lighten input placeholder text */
+@include input-placeholder {
+  color: rgba(66, 91, 118, 0.4);
+}
+
+.container {
+  margin-top: 50px;
+  width: 100%;
+}
+
+.test {
+  min-height: 100px;
+  border: 1px solid red;
+}
+
+/* Everything but the jumbotron gets side spacing for mobile first views */
+.header,
+.marketing,
+.footer {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+/* Custom page header */
+.header {
+  border-bottom: 1px solid #e5e5e5;
+  background-color: #D6ECCE;
+  min-height: 50px;
+
+  /* Make the masthead heading the same height as the navigation */
+  h3 {
+    margin-top: 0;
+    margin-bottom: 0;
+    line-height: 40px;
+    padding-bottom: 19px;
+  }
+}
+
+ /* .filter-container */
+
+
+/* Responsive: Portrait tablets and up */
+// @media screen and (min-width: 768px) {
+//   .container {
+//     max-width: 100%;
+//   }
+//
+//   /* Remove the padding we set earlier */
+//   .header,
+//   .marketing,
+//   .footer {
+//     padding-left: 0;
+//     padding-right: 0;
+//   }
+//
+//   /* Space out the masthead */
+//   .header {
+//     margin-bottom: 30px;
+//   }
+//
+//   /* Remove the bottom border on the jumbotron for visual effect */
+//   .jumbotron {
+//     border-bottom: 0;
+//   }
+// }
