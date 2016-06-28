@@ -326,7 +326,7 @@ class NewDeployForm extends Component {
 
   validateObject(obj, fieldsToValidateAgainst) {
     for (const fieldId of Object.keys(fieldsToValidateAgainst)) {
-      if (!this.validateField(fieldsToValidateAgainst[fieldId], (fieldId) => obj[fieldId])) {
+      if (!this.validateField(fieldsToValidateAgainst[fieldId], (fieldId) => obj[fieldId] || fieldsToValidateAgainst[fieldId].default)) {
         return false;
       }
     }
@@ -406,7 +406,10 @@ class NewDeployForm extends Component {
   copyFieldsToObject(deployObject, fieldsToAdd, valueGetter) {
     for (const fieldId of fieldsToAdd) {
       if (fieldId.type === 'object') {
-        deployObject[fieldId.id] = this.copyFieldsToObject({}, fieldId.values, (fieldId) => this.getValueOrDefault(fieldId));
+        deployObject[fieldId.id] = this.copyFieldsToObject(
+          deployObject[fieldId.id] || {},
+          fieldId.values,
+          (fieldId) => this.getValueOrDefault(fieldId));
       } else if (this.hasValue(valueGetter(fieldId.id))) {
         const value = valueGetter(fieldId.id);
         if (fieldId.type === 'text' || fieldId.type === 'array') {
@@ -430,18 +433,31 @@ class NewDeployForm extends Component {
         } else if (fieldId.type === 'artifacts') {
           const artifacts = value.map(artifact => {
             const newArtifact = {};
-            this.copyFieldsToObject(newArtifact, ARTIFACT_FIELDS.all, (id) => artifact[id]);
-            this.copyFieldsToObject(newArtifact, ARTIFACT_FIELDS.embedded, (id) => artifact[id]);
-            this.copyFieldsToObject(newArtifact, ARTIFACT_FIELDS.external, (id) => artifact[id]);
-            this.copyFieldsToObject(newArtifact, ARTIFACT_FIELDS.s3, (id) => artifact[id]);
+            this.copyFieldsToObject(newArtifact, ARTIFACT_FIELDS.all, (id) => artifact[id] || INDEXED_ALL_ARTIFACT_FIELDS[id].default);
+            if (artifact.type === 'embedded') {
+              this.copyFieldsToObject(newArtifact, ARTIFACT_FIELDS.embedded, (id) => artifact[id] || INDEXED_ALL_ARTIFACT_FIELDS[id].default);
+            }
+            if (artifact.type === 'external') {
+              this.copyFieldsToObject(newArtifact, ARTIFACT_FIELDS.external, (id) => artifact[id] || INDEXED_ALL_ARTIFACT_FIELDS[id].default);
+            }
+            if (artifact.type === 's3') {
+              this.copyFieldsToObject(newArtifact, ARTIFACT_FIELDS.s3, (id) => artifact[id] || INDEXED_ALL_ARTIFACT_FIELDS[id].default);
+            }
             return newArtifact;
           });
           deployObject[fieldId.id] = artifacts;
         } else if (fieldId.type === 'volumes') {
-          const volumes = value.map(volume => this.copyFieldsToObject({}, DOCKER_VOLUME_FIELDS, (id) => volume[id]));
+          const volumes = value.map(volume => this.copyFieldsToObject(
+            {},
+            DOCKER_VOLUME_FIELDS,
+            (id) => volume[id] || INDEXED_DOCKER_VOLUME_FIELDS[id].default
+          ));
           deployObject[fieldId.id] = volumes;
         } else if (fieldId.type === 'portMappings') {
-          const portMappings = value.map(portMapping => this.copyFieldsToObject({}, DOCKER_PORT_MAPPING_FIELDS, (id) => portMapping[id]));
+          const portMappings = value.map(portMapping => this.copyFieldsToObject(
+            {},
+            DOCKER_PORT_MAPPING_FIELDS,
+            (id) => portMapping[id] || INDEXED_DOCKER_PORT_MAPPING_FIELDS[id].default));
           deployObject[fieldId.id] = portMappings;
         }
       }
@@ -837,7 +853,7 @@ class NewDeployForm extends Component {
       <SelectFormGroup
         id={`cont-port-type-${ key }`}
         label="Container Port Type"
-        value={thisPortMapping.containerPortType}
+        value={thisPortMapping.containerPortType || INDEXED_DOCKER_PORT_MAPPING_FIELDS.containerPortType.default}
         defaultValue="LITERAL"
         onChange={newValue => this.updateThingInArrayField('portMappings', key, {containerPortType: newValue.value})}
         required={true}
@@ -858,7 +874,7 @@ class NewDeployForm extends Component {
       <SelectFormGroup
         id={`host-port-type-${ key }`}
         label="Host Port Type"
-        value={thisPortMapping.hostPortType}
+        value={thisPortMapping.hostPortType || INDEXED_DOCKER_PORT_MAPPING_FIELDS.hostPortType.default}
         defaultValue="LITERAL"
         onChange={newValue => this.updateThingInArrayField('portMappings', key, {hostPortType: newValue.value})}
         required={true}
@@ -928,7 +944,7 @@ class NewDeployForm extends Component {
       <SelectFormGroup
         id={`volume-mode-${ key }`}
         label="Volume Mode"
-        value={thisVolume.mode}
+        value={thisVolume.mode || INDEXED_DOCKER_VOLUME_FIELDS.mode.default}
         defaultValue="RO"
         onChange={newValue => this.updateThingInArrayField('volumes', key, {mode: newValue.value})}
         required={true}
