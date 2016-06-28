@@ -37,7 +37,7 @@ export default createSelector([getTasks, getFilter], (tasks, filter) => {
       let res1 = fuzzy.filter(filter.filterText, tasks, host);
       let res2 = fuzzy.filter(filter.filterText, tasks, id);
       let res3 = fuzzy.filter(filter.filterText, tasks, rack);
-      tasks = _.uniq(_.pluck(_.sortBy(_.union(res3, _.union(res1, res2)), (t) => Utils.fuzzyAdjustScore(filter.filterText, t)), 'original').reverse());
+      tasks = _.uniq(_.pluck(_.sortBy(_.union(res3, res1, res2), (t) => Utils.fuzzyAdjustScore(filter.filterText, t)), 'original').reverse());
     }
   }
 
