@@ -50,7 +50,7 @@ export default class ShellCommandLauncher extends React.Component {
 
   logFilePoll(taskId, filename) {
     this.fileInterval = setInterval(() => {
-      const directory = filename.indexOf('/') != -1 ? '/' + _.initial(filename.split('/')).join('/') : '';
+      const directory = filename.indexOf('/') !== -1 ? '/' + _.initial(filename.split('/')).join('/') : '';
       this.props.fetchTaskFiles(taskId, `${taskId}${directory}`).then((response) => {
         const files = response.data && response.data.files;
         if (files) {
@@ -105,7 +105,7 @@ export default class ShellCommandLauncher extends React.Component {
 
   render() {
     return (
-      <Modal show={this.state.visible} onHide={this.hide.bind(this)} bsSize="small" backdrop="static">
+      <Modal show={this.state.visible} onHide={() => this.hide()} bsSize="small" backdrop="static">
         <Modal.Header closeButton>
             <Modal.Title>Launching</Modal.Title>
           </Modal.Header>

@@ -37,7 +37,7 @@ class TaskDetail extends React.Component {
     this.state = {
       previousUsage: null,
       currentFilePath: props.filePath
-    }
+    };
   }
 
   componentDidMount() {
