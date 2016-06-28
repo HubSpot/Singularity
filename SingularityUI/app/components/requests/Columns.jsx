@@ -13,6 +13,7 @@ export const Starred = (changeStar, sortable) => {
   return <Column
     label=""
     id="starred"
+    key="starred"
     cellData={
       (rowData) => 'starred' in rowData
     }
@@ -95,6 +96,7 @@ export const RequestId = (
     label="Request"
     id="requestId"
     key="requestId"
+    className="keep-in-check"
     cellData={
       (rowData) => rowData.request.id
     }
