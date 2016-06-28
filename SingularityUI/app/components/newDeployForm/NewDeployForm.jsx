@@ -2,15 +2,12 @@ import React, {Component} from 'react';
 import { connect } from 'react-redux';
 import FormField from '../common/formItems/FormField';
 import MultiInput from '../common/formItems/MultiInput';
-import DropDown from '../common/formItems/DropDown';
 import CheckBox from '../common/formItems/CheckBox';
 import RemoveButton from '../common/RemoveButton';
 import Select from 'react-select';
 import { modifyField, clearForm } from '../../actions/form';
 import {SaveAction} from '../../actions/api/deploy';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
-import Utils from '../../utils';
 import classNames from 'classnames';
 
 class SelectFormGroup extends Component {
