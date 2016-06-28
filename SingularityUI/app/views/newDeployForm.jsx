@@ -1,13 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import View from './view';
+import ReactView from './reactView';
 
 import { Provider } from 'react-redux';
 
 import NewDeployFormPage from '../components/newDeployForm/NewDeployForm'
 
-class NewDeployFormView extends View {
+class NewDeployFormView extends ReactView {
   initialize({store}) {
     this.store = store;
   }
