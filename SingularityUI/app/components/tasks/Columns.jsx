@@ -12,7 +12,7 @@ export const TaskId = (
     id="taskId"
     key="taskId"
     cellData={
-      (rowData) => rowData.taskId.id
+      (rowData) => rowData.taskId ? rowData.taskId.id : rowData.id
     }
     cellRender={
       (cellData) => (
@@ -32,7 +32,7 @@ export const StartedAt = (
     id="startedAt"
     key="startedAt"
     cellData={
-      (rowData) => rowData.taskId.startedAt
+      (rowData) => rowData.taskId ? rowData.taskId.startedAt : rowData.startedAt
     }
     cellRender={
       (cellData) => (
@@ -49,7 +49,7 @@ export const Host = (
     id="host"
     key="host"
     cellData={
-      (rowData) => rowData.taskId.host
+      (rowData) => rowData.taskId ? rowData.taskId.host : rowData.host
     }
     cellRender={
       (cellData) => (
@@ -68,7 +68,7 @@ export const Rack = (
     id="rack"
     key="rack"
     cellData={
-      (rowData) => rowData.taskId.rackId
+      (rowData) => rowData.taskId ? rowData.taskId.rackId : rowData.rackId
     }
     cellRender={
       (cellData) => (
