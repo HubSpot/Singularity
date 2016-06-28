@@ -1405,18 +1405,17 @@ class NewDeployForm extends Component {
     );
 
     const errorMessage = (
-      this.props.saveApiCall.error ?
+      this.props.saveApiCall.error &&
         <p className="alert alert-danger">
           There was a problem saving your request: {this.props.saveApiCall.error.message}
-        </p> :
-        this.props.saveApiCall.data && this.props.saveApiCall.data.message ?
+        </p> ||
+        this.props.saveApiCall.data && this.props.saveApiCall.data.message &&
         <p className="alert alert-danger">
           There was a problem saving your request: {this.props.saveApiCall.data.message}
-        </p> :
-        null
+        </p>
     );
     const successMessage = (
-      this.props.saveApiCall.data.activeDeploy ?
+      this.props.saveApiCall.data.activeDeploy &&
         <p className="alert alert-success">
           Deploy
           <a
@@ -1425,8 +1424,7 @@ class NewDeployForm extends Component {
             {` ${this.props.saveApiCall.data.activeDeploy.id} `}
           </a>
           succesfully created!
-        </p> :
-        null
+        </p>
     );
 
     return (
@@ -1454,8 +1452,7 @@ class NewDeployForm extends Component {
               </span>
             </div>
 
-            {errorMessage}
-            {successMessage}
+            {errorMessage || successMessage}
 
           </form>
           <div id="help-column" class="col-md-4 col-md-offset-1" />
