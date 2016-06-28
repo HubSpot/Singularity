@@ -292,5 +292,6 @@ export const InstanceNumber = (
     cellData={
       (rowData) => rowData.instanceNo
     }
+    sortable={true}
   />
 );
