@@ -13,10 +13,7 @@ export default class RemoveButton extends Component {
       <Button
         className='remove-button'
         id={this.props.id}
-        onClick={(event) => {
-          event.preventDefault();
-          this.props.onClick();
-        }}/>
+        onClick={this.props.onClick}/>
     );
   }
 }
