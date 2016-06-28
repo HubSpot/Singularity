@@ -105,7 +105,7 @@ export default class ShellCommandLauncher extends React.Component {
 
   render() {
     return (
-      <Modal show={this.state.visible} onHide={this.hide.bind(this)} bsSize="small" backdrop="static">
+      <Modal show={this.state.visible} onHide={() => this.hide()} bsSize="small" backdrop="static">
         <Modal.Header closeButton>
             <Modal.Title>Launching</Modal.Title>
           </Modal.Header>
