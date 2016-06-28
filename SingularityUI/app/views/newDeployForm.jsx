@@ -5,7 +5,7 @@ import ReactView from './reactView';
 
 import { Provider } from 'react-redux';
 
-import NewDeployFormPage from '../components/newDeployForm/NewDeployForm'
+import NewDeployFormPage from '../components/newDeployForm/NewDeployForm';
 
 class NewDeployFormView extends ReactView {
   initialize({store}) {
@@ -16,7 +16,5 @@ class NewDeployFormView extends ReactView {
     ReactDOM.render(<Provider store={this.store}><NewDeployFormPage /></Provider>, this.el);
   }
 }
-
-
 
 export default NewDeployFormView;
