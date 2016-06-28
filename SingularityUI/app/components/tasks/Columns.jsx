@@ -148,7 +148,7 @@ export const NextRun = (
     }
     cellRender={(cellData) => {
         let label = <span className="label label-default">SCHEDULED</span>;
-        if (Utils.timestampWithinSecionds(cellData, config.pendingWithinSeconds)) {
+        if (Utils.timestampWithinSeconds(cellData, config.pendingWithinSeconds)) {
           label = <span className="label label-info">PENDING</span>
         } else if (cellData < Date.now() - config.pendingWithinSeconds * 1000) {
           label = <span className="label label-danger">OVERDUE</span>
