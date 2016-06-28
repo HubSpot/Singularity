@@ -90,7 +90,7 @@ class TasksPage extends React.Component {
   }
 
   render() {
-    const displayRequestTypeFilters = this.state.filter.taskStatus == 'active';
+    const displayRequestTypeFilters = this.state.filter.taskStatus === 'active';
     const displayTasks = this.state.filter.taskStatus !== 'decommissioning' ?
       _.sortBy(filterSelector({tasks: this.props.tasks, filter: this.state.filter}), (t) => this.getDefaultSortAttribute(t)) :
       _.sortBy(decomSelector({tasks: this.props.tasks, cleanups: this.props.cleanups}), (t) => this.getDefaultSortAttribute(t));
