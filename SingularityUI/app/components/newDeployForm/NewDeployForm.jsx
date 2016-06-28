@@ -7,7 +7,10 @@ import RemoveButton from '../common/RemoveButton';
 import Select from 'react-select';
 import { modifyField, clearForm } from '../../actions/form';
 import {SaveAction} from '../../actions/api/deploy';
-import ToolTip from 'react-bootstrap/lib/Tooltip';
+import { FIELDS, ARTIFACT_FIELDS, DOCKER_PORT_MAPPING_FIELDS, DOCKER_VOLUME_FIELDS, INDEXED_FIELDS, INDEXED_ARTIFACT_FIELDS,
+  INDEXED_DOCKER_PORT_MAPPING_FIELDS, INDEXED_DOCKER_VOLUME_FIELDS, INDEXED_ALL_FIELDS, INDEXED_CUSTOM_EXECUTOR_FIELDS,
+  INDEXED_DEFAULT_EXECUTOR_FIELDS, INDEXED_DOCKER_CONTAINER_FIELDS, INDEXED_LOAD_BALANCER_FIELDS, INDEXED_HEALTH_CHECKER_FIELDS,
+  INDEXED_ALL_ARTIFACT_FIELDS, INDEXED_EMBEDDED_ARTIFACT_FIELDS, INDEXED_EXTERNAL_ARTIFACT_FIELDS, INDEXED_S3_ARTIFACT_FIELDS } from './fields';
 import classNames from 'classnames';
 
 class SelectFormGroup extends Component {
@@ -56,184 +59,6 @@ const FORM_ID = 'newDeployForm';
 
 const DEFAULT_EXECUTOR_TYPE = 'default';
 const CUSTOM_EXECUTOR_TYPE = 'custom';
-
-const REQUIRED_FIELDS = {
-  all: ['id', 'executorType', 'type'],
-  customExecutor: ['cmd'],
-  artifacts: ['name', 'filename'],
-  externalArtifacts: ['url'],
-  s3Artifacts: ['s3Bucket', 's3ObjectKey'],
-  docker: ['image'],
-  dockerPortMappings: ['hostPort', 'containerPort', 'containerPortType', 'hostPortType'],
-  dockerVolumes: ['containerPath', 'hostPath', 'mode', 'network'],
-  loadBalancer: ['serviceBasePath', 'loadBalancerGroups']
-}
-
-const FIELDS = {
-  all: [
-    {id: 'id', type: 'text', required: true},
-    {id: 'executorType', type: 'text', default: DEFAULT_EXECUTOR_TYPE, required: true},
-    {id: 'env', type: 'map'},
-    {
-      id: 'containerInfo',
-      type: 'object',
-      values: [{id: 'type', type: 'text', default: 'mesos', required: true}]
-    },
-    {
-      id: 'resources',
-      type: 'object',
-      values: [
-        {id: 'cpus', type: 'number', default: 1},
-        {id: 'memoryMb', type: 'number', default: 128},
-        {id: 'numPorts', type: 'number', default: 0}
-      ]
-    }
-  ],
-  defaultExecutor: [
-    {id: 'command', type: 'text'},
-    {id: 'uris', type: 'array', arrayType: 'text'},
-    {id: 'arguments', type: 'array', arrayType: 'text'}
-  ],
-  customExecutor: [
-    {id: 'customExecutorCmd', type: 'text'},
-    {
-      id: 'executorData',
-      type: 'object',
-      values: [
-        {id: 'cmd', type: 'text', required: true},
-        {id: 'extraCmdLineArgs', type: 'array', arrayType: 'text'},
-        {id: 'user', type: 'text', default: 'root'},
-        {id: 'sigKillProcessesAfterMillis', type: 'number', default: 120000},
-        {id: 'successfulExitCodes', type: 'array', arrayType: 'number'},
-        {id: 'maxTaskThreads', type: 'number'},
-        {id: 'loggingTag', type: 'text'},
-        {id: 'loggingExtraFields', type: 'map'},
-        {id: 'preserveTaskSandboxAfterFinish', type: 'text'},
-        {id: 'skipLogrotateAndCompress', type: 'text'},
-        {id: 'loggingS3Bucket', type: 'text'},
-        {id: 'maxOpenFiles', type: 'number'},
-        {id: 'runningSentinel', type: 'text'},
-        {id: 'embeddedArtifacts', type: 'artifacts'},
-        {id: 'externalArtifacts', type: 'artifacts'},
-        {id: 's3Artifacts', type: 'artifacts'}
-      ]
-    }
-  ],
-  dockerContainer: [
-    {
-      id: 'containerInfo',
-      type: 'object',
-      values: [
-        {
-          id: 'docker',
-          type: 'object',
-          values: [
-            {id: 'image', type: 'text', required: true},
-            {id: 'network', type: 'text', default: 'NONE'},
-            {id: 'parameters', type: 'map'},
-            {id: 'privileged', type: 'text'},
-            {id: 'forcePullImage', type: 'text'},
-            {id: 'volumes', type: 'volumes'},
-            {id: 'portMappings', type: 'portMappings'}
-          ]
-        }
-      ]
-    },
-  ],
-  loadBalancer: [
-    {id: 'serviceBasePath', type: 'text', required: true},
-    {id: 'loadBalancerGroups', type: 'array', arrayType: 'text', required: true},
-    {id: 'loadBalancerOptions', type: 'map'},
-    {id: 'loadBalancerPortIndex', type: 'text', default: 0}
-  ],
-  healthChecker: [
-    {id: 'healthcheckUri', type: 'text'},
-    {id: 'healthcheckIntervalSeconds', type: 'number'},
-    {id: 'healthcheckTimeoutSeconds', type: 'number'},
-    {id: 'healthcheckPortIndex', type: 'number'},
-    {id: 'healthcheckMaxTotalTimeoutSeconds', type: 'number'},
-    {id: 'deployHealthTimeoutSeconds', type: 'number'},
-    {id: 'healthCheckProtocol', type: 'text', default: 'HTTP'},
-    {id: 'skipHealthchecksOnDeploy', type: 'text'},
-    {id: 'considerHealthyAfterRunningForSeconds', type: 'number'}
-  ]
-};
-
-const ARTIFACT_FIELDS = {
-  all: [
-    {id: 'name', type: 'text', required: true},
-    {id: 'filename', type: 'text', required: true},
-    {id: 'md5Sum', type: 'text'}
-  ],
-  embedded: [
-    {id: 'content', type: 'base64'}
-  ],
-  external: [
-    {id: 'url', type: 'text', required: true},
-    {id: 'filesize', type: 'number'}
-  ],
-  s3: [
-    {id: 's3Bucket', type: 'text', required: true},
-    {id: 's3ObjectKey', type: 'text', required: true},
-    {id: 'filesize', type: 'number'}
-  ]
-};
-
-const DOCKER_PORT_MAPPING_FIELDS = [
-  {id: 'containerPortType', type: 'text', default: 'LITERAL', required: true},
-  {id: 'containerPort', type: 'text', required: true},
-  {id: 'hostPortType', type: 'text', default: 'LITERAL', required: true},
-  {id: 'hostPort', type: 'text', required: true},
-  {id: 'protocol', type: 'text', default: 'tcp'}
-];
-
-const DOCKER_VOLUME_FIELDS = [
-  {id: 'containerPath', type: 'text', required: true},
-  {id: 'hostPath', type: 'text', required: true},
-  {id: 'mode', type: 'text', default: 'RO', required: true}
-]
-
-function makeIndexedFields(fields) {
-  const indexedFields = {};
-  for (const field of fields) {
-    if (field.type === 'object') {
-      _.extend(indexedFields, makeIndexedFields(field.values));
-    } else {
-      indexedFields[field.id] = field;
-    }
-  }
-  return indexedFields;
-}
-
-const INDEXED_FIELDS = _.extend(
-  {},
-  makeIndexedFields(FIELDS.all),
-  makeIndexedFields(FIELDS.customExecutor),
-  makeIndexedFields(FIELDS.defaultExecutor),
-  makeIndexedFields(FIELDS.dockerContainer),
-  makeIndexedFields(FIELDS.loadBalancer),
-  makeIndexedFields(FIELDS.healthChecker)
-);
-const INDEXED_ARTIFACT_FIELDS = _.extend(
-  {},
-  makeIndexedFields(ARTIFACT_FIELDS.all),
-  makeIndexedFields(ARTIFACT_FIELDS.embedded),
-  makeIndexedFields(ARTIFACT_FIELDS.external),
-  makeIndexedFields(ARTIFACT_FIELDS.s3)
-);
-const INDEXED_DOCKER_PORT_MAPPING_FIELDS = makeIndexedFields(DOCKER_PORT_MAPPING_FIELDS);
-const INDEXED_DOCKER_VOLUME_FIELDS = makeIndexedFields(DOCKER_VOLUME_FIELDS);
-const INDEXED_ALL_FIELDS = makeIndexedFields(FIELDS.all);
-const INDEXED_CUSTOM_EXECUTOR_FIELDS = makeIndexedFields(FIELDS.customExecutor);
-const INDEXED_DEFAULT_EXECUTOR_FIELDS = makeIndexedFields(FIELDS.defaultExecutor);
-const INDEXED_DOCKER_CONTAINER_FIELDS = makeIndexedFields(FIELDS.dockerContainer);
-const INDEXED_LOAD_BALANCER_FIELDS = makeIndexedFields(FIELDS.loadBalancer);
-const INDEXED_HEALTH_CHECKER_FIELDS = makeIndexedFields(FIELDS.healthChecker);
-const INDEXED_ALL_ARTIFACT_FIELDS = makeIndexedFields(ARTIFACT_FIELDS.all);
-const INDEXED_EMBEDDED_ARTIFACT_FIELDS = makeIndexedFields(ARTIFACT_FIELDS.embedded);
-const INDEXED_EXTERNAL_ARTIFACT_FIELDS = makeIndexedFields(ARTIFACT_FIELDS.external);
-const INDEXED_S3_ARTIFACT_FIELDS = makeIndexedFields(ARTIFACT_FIELDS.s3);
-
 
 class NewDeployForm extends Component {
 
@@ -372,10 +197,8 @@ class NewDeployForm extends Component {
   }
 
   canSubmit() {
-    for (const fieldId of REQUIRED_FIELDS.all) {
-      if (!this.validateFields(INDEXED_ALL_FIELDS)) {
-        return false;
-      }
+    if (!this.validateFields(INDEXED_ALL_FIELDS)) {
+      return false;
     }
     if (this.getValueOrDefault('executorType') === CUSTOM_EXECUTOR_TYPE) {
       if (!this.validateFields(INDEXED_CUSTOM_EXECUTOR_FIELDS) || !this.validateArtifacts()) {
@@ -484,19 +307,19 @@ class NewDeployForm extends Component {
     this.props.save({deploy: deployObject});
   }
 
-  addThingToArrayField(fieldId, thing) {
+  addDeployObjectToArrayField(fieldId, deployObject) {
     if (!this.getValue(fieldId)) {
-      this.updateField(fieldId, [thing]);
+      this.updateField(fieldId, [deployObject]);
     } else {
       const fieldValue = this.getValue(fieldId).slice();
-      fieldValue.push(thing);
+      fieldValue.push(deployObject);
       this.updateField(fieldId, fieldValue);
     }
   }
 
-  addThingPreventDefault(fieldId, thing, event) {
+  addObjectToDeployFieldPreventDefault(fieldId, deployObject, event) {
     event.preventDefault();
-    this.addThingToArrayField(fieldId, thing);
+    this.addDeployObjectToArrayField(fieldId, deployObject);
   }
 
   removeThingFromArrayField(fieldId, key) {
@@ -821,19 +644,19 @@ class NewDeployForm extends Component {
 
           <div id="artifact-button-row" className="row">
             <div className="col-sm-4">
-              <button className="btn btn-success btn-block" onClick={event => this.addThingPreventDefault('embeddedArtifacts', {type: 'embedded'}, event)}>
+              <button className="btn btn-success btn-block" onClick={event => this.addObjectToDeployFieldPreventDefault('embeddedArtifacts', {type: 'embedded'}, event)}>
                 <span className="glyphicon glyphicon-plus"></span>
                 {" Embedded"}
               </button>
             </div>
             <div className="col-sm-4">
-              <button className="btn btn-success btn-block" onClick={event => this.addThingPreventDefault('externalArtifacts', {type: 'external'}, event)}>
+              <button className="btn btn-success btn-block" onClick={event => this.addObjectToDeployFieldPreventDefault('externalArtifacts', {type: 'external'}, event)}>
                 <span className="glyphicon glyphicon-plus"></span>
                 {" External"}
               </button>
             </div>
             <div className="col-sm-4">
-              <button className="btn btn-success btn-block" onClick={event => this.addThingPreventDefault('s3Artifacts', {type: 's3'}, event)}>
+              <button className="btn btn-success btn-block" onClick={event => this.addObjectToDeployFieldPreventDefault('s3Artifacts', {type: 's3'}, event)}>
                 <span className="glyphicon glyphicon-plus"></span>
                 {" S3"}
               </button>
@@ -1027,7 +850,7 @@ class NewDeployForm extends Component {
           placeholder="format: key=value"
         />
       </div>
-    )
+    );
     //
     return (
       <div className="container-info">
@@ -1052,7 +875,7 @@ class NewDeployForm extends Component {
 
           <div id="docker-port-button-row" className="row">
             <div className="col-sm-6">
-              <button className="btn btn-success btn-block" onClick={event => this.addThingPreventDefault('portMappings', {}, event)}>
+              <button className="btn btn-success btn-block" onClick={event => this.addObjectToDeployFieldPreventDefault('portMappings', {}, event)}>
                 <span className="glyphicon glyphicon-plus"></span>
                 {" Docker Port Mapping"}
               </button>
@@ -1063,7 +886,7 @@ class NewDeployForm extends Component {
 
           <div id="docker-volume-button-row" className="row">
             <div className="col-sm-6">
-              <button className="btn btn-success btn-block" onClick={event => this.addThingPreventDefault('volumes', {}, event)}>
+              <button className="btn btn-success btn-block" onClick={event => this.addObjectToDeployFieldPreventDefault('volumes', {}, event)}>
                 <span className="glyphicon glyphicon-plus"></span>
                 {" Docker Volume"}
               </button>
@@ -1453,7 +1276,7 @@ class NewDeployForm extends Component {
             {errorMessage || successMessage}
 
           </form>
-          <div id="help-column" class="col-md-4 col-md-offset-1" />
+          <div id="help-column" className="col-md-4 col-md-offset-1" />
         </div>
       </div>
     );
@@ -1465,7 +1288,7 @@ function mapStateToProps(state) {
     request: state.api.request.data,
     form: state.form[FORM_ID],
     saveApiCall: state.api.saveDeploy
-  }
+  };
 }
 
 function mapDispatchToProps(dispatch) {
@@ -1479,7 +1302,7 @@ function mapDispatchToProps(dispatch) {
     save(deployBody) {
       dispatch(SaveAction.trigger(deployBody));
     }
-  }
+  };
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(NewDeployForm);
