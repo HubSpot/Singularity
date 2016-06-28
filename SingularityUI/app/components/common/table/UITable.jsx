@@ -144,7 +144,7 @@ class UITable extends Component {
         rowData
       );
 
-      return <td key={`${tdIndex}${col.props.id}`} className={col.props.className}>{cell}</td>;
+      return <td key={col.props.id} className={col.props.className}>{cell}</td>;
     });
     return <tr key={`row-${this.props.keyGetter(rowData)}`}>{row}</tr>;
   }
@@ -261,7 +261,7 @@ class UITable extends Component {
         this.state.sortDirection
       );
 
-      return <th key={`${thIndex}${col.props.id}`} onClick={maybeOnClick} className={headerClasses}>{cell}{sortIndicator}</th>;
+      return <th key={col.props.id} onClick={maybeOnClick} className={headerClasses}>{cell}{sortIndicator}</th>;
     });
 
 

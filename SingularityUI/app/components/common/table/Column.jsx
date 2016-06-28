@@ -2,7 +2,7 @@ import React, { Component, PropTypes } from 'react';
 
 class Column extends Component {
   static propTypes = {
-    id: PropTypes.string.isRequired,
+    id: PropTypes.string.isRequired, // must be unique
     label: PropTypes.oneOfType([
       PropTypes.string,
       PropTypes.func
