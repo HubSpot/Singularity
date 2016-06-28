@@ -151,7 +151,7 @@ class TaskDetail extends React.Component {
   }
 
   renderFiles(t, files) {
-    if (!files || !files.currentDirectory) {
+    if (!files || _.isUndefined(files.currentDirectory)) {
       return (
         <Section title="Files">
           <div className="empty-table-message">
