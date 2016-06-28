@@ -1,6 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import Waypoint from 'react-waypoint';
 import classNames from 'classnames';
+import _ from 'underscore';
 
 import BootstrapTable from 'react-bootstrap/lib/Table';
 import { Pagination } from 'react-bootstrap';
@@ -215,11 +216,11 @@ class UITable extends Component {
             onEnter={() => {
               const maxVisibleRows = this.state.chunkNum * this.props.rowChunkSize;
               if (maxVisibleRows < this.state.data.length) {
-                setTimeout(() => {
+                _.defer(() => {
                   this.setState({
                     chunkNum: this.state.chunkNum + 1
                   });
-                }, 0);
+                });
               }
             }}
             threshold={1}
