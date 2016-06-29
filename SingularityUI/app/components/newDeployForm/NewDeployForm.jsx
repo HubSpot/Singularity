@@ -167,7 +167,7 @@ class NewDeployForm extends Component {
     if (field.required && _.isEmpty(arrayFieldValue)) {
       return [0];
     }
-    const type = field.type === ('map' && 'mapPair') || field.arrayType;
+    const type = field.type === 'map' && 'mapPair' || field.arrayType;
     for (const idx in arrayFieldValue) {
       if (!this.validateValue(arrayFieldValue[idx], type)) {
         errorIndices.push(parseInt(idx, 10));
