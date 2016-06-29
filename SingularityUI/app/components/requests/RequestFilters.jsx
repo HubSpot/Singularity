@@ -17,7 +17,7 @@ export default class RequestFilters extends React.Component {
     },
     {
       filterVal: 'cooldown',
-      displayVal: 'Cleaning'
+      displayVal: 'Cooldown'
     },
     {
       filterVal: 'paused',
@@ -28,7 +28,7 @@ export default class RequestFilters extends React.Component {
       displayVal: 'Pending'
     },
     {
-      filterVal: 'cleaning',
+      filterVal: 'cleanup',
       displayVal: 'Cleaning'
     },
     {
@@ -44,11 +44,11 @@ export default class RequestFilters extends React.Component {
   static REQUEST_TYPES = ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'];
 
   handleStatusSelect(selectedKey) {
-    this.props.onFilterChange(_.extend({}, this.props.filter, {requestStatus: RequestFilters.REQUEST_STATES[selectedKey].filterVal}));
+    this.props.onFilterChange(_.extend({}, this.props.filter, {state: RequestFilters.REQUEST_STATES[selectedKey].filterVal}));
   }
 
   handleSearchChange(e) {
-    this.props.onFilterChange(_.extend({}, this.props.filter, {filterText: e.target.value}));
+    this.props.onFilterChange(_.extend({}, this.props.filter, {searchFilter: e.target.value}));
   }
 
   toggleRequestType(t) {
@@ -62,7 +62,7 @@ export default class RequestFilters extends React.Component {
     } else {
       selected.push(t);
     }
-    this.props.onFilterChange(_.extend({}, this.props.filter, {requestTypes: selected}));
+    this.props.onFilterChange(_.extend({}, this.props.filter, {subFilter: selected}));
   }
 
   renderStatusFilter() {

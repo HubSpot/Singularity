@@ -35,7 +35,7 @@ class RequestsPage extends React.Component {
     const lastFilterState = this.state.filter.state;
     console.log(filter, this.state.filter)
     this.setState({
-      loading: lastFilterTaskStatus !== filter.taskStatus,
+      loading: lastFilterState !== filter.state && !_.contains(['activeDeploy', 'noDeploy'], filter.state),
       filter: filter
     });
 
@@ -43,7 +43,7 @@ class RequestsPage extends React.Component {
     this.props.updateFilters(filter.state, subFilter, filter.searchFilter);
     app.router.navigate(`/requests/${filter.state}/${subFilter}/${filter.searchFilter}`);
 
-    if (lastFilterState !== filter.state) {
+    if (lastFilterState !== filter.state && !_.contains(['activeDeploy', 'noDeploy'], filter.state)) {
       this.props.fetchFilter(filter.state).then(() => {
         this.setState({
           loading: false
