@@ -73,7 +73,7 @@ export const FIELDS = {
     {id: 'serviceBasePath', type: 'text', required: true},
     {id: 'loadBalancerGroups', type: 'array', arrayType: 'text', required: true},
     {id: 'loadBalancerOptions', type: 'map'},
-    {id: 'loadBalancerPortIndex', type: 'text', default: 0}
+    {id: 'loadBalancerPortIndex', type: 'number', default: 0}
   ],
   healthChecker: [
     {id: 'healthcheckUri', type: 'text'},

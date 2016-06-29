@@ -6,7 +6,7 @@ import MultiInputFormGroup from '../common/formItems/formGroups/MultiInputFormGr
 import CheckBoxFormGroup from '../common/formItems/formGroups/CheckBoxFormGroup';
 import { modifyField } from '../../actions/form';
 import {SaveAction} from '../../actions/api/deploy';
-import { FIELDS, ARTIFACT_FIELDS, DOCKER_PORT_MAPPING_FIELDS, DOCKER_VOLUME_FIELDS, INDEXED_FIELDS,
+import { FIELDS, ARTIFACT_FIELDS, DOCKER_PORT_MAPPING_FIELDS, DOCKER_VOLUME_FIELDS, INDEXED_FIELDS, INDEXED_ARTIFACT_FIELDS,
   INDEXED_DOCKER_PORT_MAPPING_FIELDS, INDEXED_DOCKER_VOLUME_FIELDS, INDEXED_ALL_FIELDS, INDEXED_CUSTOM_EXECUTOR_FIELDS,
   INDEXED_DEFAULT_EXECUTOR_FIELDS, INDEXED_DOCKER_CONTAINER_FIELDS, INDEXED_LOAD_BALANCER_FIELDS, INDEXED_HEALTH_CHECKER_FIELDS,
   INDEXED_ALL_ARTIFACT_FIELDS, INDEXED_EMBEDDED_ARTIFACT_FIELDS, INDEXED_EXTERNAL_ARTIFACT_FIELDS, INDEXED_S3_ARTIFACT_FIELDS } from './fields';
@@ -153,8 +153,27 @@ class NewDeployForm extends Component {
           return false;
         }
       }
+    } else if (type === 'mapPair') {
+      if (value.split('=').length !== 2) {
+        return false;
+      }
     }
     return true;
+  }
+
+  errorsInArrayField(field, valueGetter) {
+    const errorIndices = [];
+    const arrayFieldValue = valueGetter(field.id);
+    if (field.required && _.isEmpty(arrayFieldValue)) {
+      return [0];
+    }
+    const type = field.type === ('map' && 'mapPair') || field.arrayType;
+    for (const idx in arrayFieldValue) {
+      if (!this.validateValue(arrayFieldValue[idx], type)) {
+        errorIndices.push(parseInt(idx, 10));
+      }
+    }
+    return errorIndices;
   }
 
   validateField(field, valueGetter) {
@@ -172,6 +191,19 @@ class NewDeployForm extends Component {
       return false;
     }
     return this.validateValue(value, type, field.arrayType);
+  }
+
+  formFieldFeedback(field, value) {
+    if (!field.required && !value) {
+      return null;
+    }
+    if (field.required && !value) {
+      return 'ERROR';
+    }
+    if (this.validateField(field, () => value)) {
+      return 'SUCCESS';
+    }
+    return 'ERROR';
   }
 
   validateFields(fields) {
@@ -379,6 +411,7 @@ class NewDeployForm extends Component {
         value={this.props.form.arguments}
         onChange={(newValue) => this.updateField('arguments', newValue)}
         label="Arguments"
+        errorIndices={this.errorsInArrayField(INDEXED_FIELDS.arguments, () => this.props.form.arguments)}
       />
     );
     const artifacts = (
@@ -388,6 +421,7 @@ class NewDeployForm extends Component {
         onChange={(newValue) => this.updateField('uris', newValue)}
         label="Artifacts"
         placeholder="eg: http://s3.example/my-artifact"
+        errorIndices={this.errorsInArrayField(INDEXED_FIELDS.uris, () => this.props.form.uris)}
       />
     );
     return (
@@ -410,6 +444,7 @@ class NewDeployForm extends Component {
         value={artifact.name}
         label="Name"
         required={true}
+        feedback={this.formFieldFeedback(INDEXED_ARTIFACT_FIELDS.name, artifact.name)}
       />
     );
     const fileName = (
@@ -419,6 +454,7 @@ class NewDeployForm extends Component {
         value={artifact.filename}
         label="File name"
         required={true}
+        feedback={this.formFieldFeedback(INDEXED_ARTIFACT_FIELDS.filename, artifact.filename)}
       />
     );
     const md5Sum = (
@@ -427,6 +463,7 @@ class NewDeployForm extends Component {
         onChange={event => this.updateThingInArrayField(arrayName, key, {md5Sum: event.target.value})}
         value={artifact.md5Sum}
         label="MD5 checksum"
+        feedback={this.formFieldFeedback(INDEXED_ARTIFACT_FIELDS.md5Sum, artifact.md5Sum)}
       />
     );
     const content = (
@@ -435,6 +472,7 @@ class NewDeployForm extends Component {
         onChange={event => this.updateThingInArrayField(arrayName, key, {content: event.target.value})}
         value={artifact.content}
         label="Content"
+        feedback={this.formFieldFeedback(INDEXED_ARTIFACT_FIELDS.content, artifact.content)}
       />
     );
     const filesize = (
@@ -443,6 +481,7 @@ class NewDeployForm extends Component {
         onChange={event => this.updateThingInArrayField(arrayName, key, {filesize: event.target.value})}
         value={artifact.filesize}
         label="File size"
+        feedback={this.formFieldFeedback(INDEXED_ARTIFACT_FIELDS.filesize, artifact.filesize)}
       />
     );
     const url = (
@@ -452,6 +491,7 @@ class NewDeployForm extends Component {
         value={artifact.url}
         label="URL"
         required={true}
+        feedback={this.formFieldFeedback(INDEXED_ARTIFACT_FIELDS.url, artifact.url)}
       />
     );
     const s3Bucket = (
@@ -461,6 +501,7 @@ class NewDeployForm extends Component {
         value={artifact.s3Bucket}
         label="S3 bucket"
         required={true}
+        feedback={this.formFieldFeedback(INDEXED_ARTIFACT_FIELDS.s3Bucket, artifact.s3Bucket)}
       />
     );
     const s3ObjectKey = (
@@ -470,6 +511,7 @@ class NewDeployForm extends Component {
         value={artifact.s3ObjectKey}
         label="S3 object key"
         required={true}
+        feedback={this.formFieldFeedback(INDEXED_ARTIFACT_FIELDS.s3ObjectKey, artifact.s3ObjectKey)}
       />
     );
     return (
@@ -514,6 +556,7 @@ class NewDeployForm extends Component {
         label="Custom executor command"
         required={true}
         placeholder="eg: /usr/local/bin/singularity-executor"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.cmd, this.props.form.cmd)}
       />
     );
     const extraCommandArgs = (
@@ -523,6 +566,7 @@ class NewDeployForm extends Component {
         onChange={(newValue) => this.updateField('extraCmdLineArgs', newValue)}
         label="Extra command args"
         placeholder="eg: -jar MyThing.jar"
+        errorIndices={this.errorsInArrayField(INDEXED_FIELDS.extraCmdLineArgs, () => this.props.form.extraCmdLineArgs)}
       />
     );
     const user = (
@@ -532,6 +576,7 @@ class NewDeployForm extends Component {
         value={this.props.form.user}
         label="User"
         placeholder="default: root"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.user, this.props.form.user)}
       />
     );
     const killAfterMillis = (
@@ -541,6 +586,7 @@ class NewDeployForm extends Component {
         value={this.props.form.sigKillProcessesAfterMillis}
         label="Kill processes after (milisec)"
         placeholder="default: 120000"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.sigKillProcessesAfterMillis, this.props.form.sigKillProcessesAfterMillis)}
       />
     );
     const successfulExitCodes = (
@@ -549,6 +595,7 @@ class NewDeployForm extends Component {
         value={this.props.form.successfulExitCodes}
         onChange={(newValue) => this.updateField('successfulExitCodes', newValue)}
         label="Successful exit codes"
+        errorIndices={this.errorsInArrayField(INDEXED_FIELDS.successfulExitCodes, () => this.props.form.successfulExitCodes)}
       />
     );
     const maxTaskThreads = (
@@ -557,6 +604,7 @@ class NewDeployForm extends Component {
         onChange={event => this.updateField('maxTaskThreads', event.target.value)}
         value={this.props.form.maxTaskThreads}
         label="Max Task Threads"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.maxTaskThreads, this.props.form.maxTaskThreads)}
       />
     );
     const loggingTag = (
@@ -565,6 +613,7 @@ class NewDeployForm extends Component {
         onChange={event => this.updateField('loggingTag', event.target.value)}
         value={this.props.form.loggingTag}
         label="Logging tag"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.loggingTag, this.props.form.loggingTag)}
       />
     );
     const loggingExtraFields = (
@@ -574,6 +623,7 @@ class NewDeployForm extends Component {
         onChange={(newValue) => this.updateField('loggingExtraFields', newValue)}
         label="Logging extra fields"
         placeholder="format: key=value"
+        errorIndices={this.errorsInArrayField(INDEXED_FIELDS.loggingExtraFields, () => this.props.form.loggingExtraFields)}
       />
     );
     const preserveSandbox = (
@@ -598,6 +648,7 @@ class NewDeployForm extends Component {
         onChange={event => this.updateField('loggingS3Bucket', event.target.value)}
         value={this.props.form.loggingS3Bucket}
         label="Logging S3 Bucket"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.loggingS3Bucket, this.props.form.loggingS3Bucket)}
       />
     );
     const maxOpenFiles = (
@@ -606,6 +657,7 @@ class NewDeployForm extends Component {
         onChange={event => this.updateField('maxOpenFiles', event.target.value)}
         value={this.props.form.maxOpenFiles}
         label="Max Open Files"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.maxOpenFiles, this.props.form.maxOpenFiles)}
       />
     );
     const runningSentinel = (
@@ -614,6 +666,7 @@ class NewDeployForm extends Component {
         onChange={event => this.updateField('runningSentinel', event.target.value)}
         value={this.props.form.runningSentinel}
         label="Running Sentinel"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.runningSentinel, this.props.form.runningSentinel)}
       />
     );
     return (
@@ -725,6 +778,7 @@ class NewDeployForm extends Component {
         value={thisPortMapping.containerPort}
         label="Container Port"
         required={true}
+        feedback={this.formFieldFeedback(INDEXED_DOCKER_PORT_MAPPING_FIELDS.containerPort, thisPortMapping.containerPort)}
       />
     );
     const hostPortType = (
@@ -748,6 +802,7 @@ class NewDeployForm extends Component {
         value={thisPortMapping.hostPort}
         label="Host Port"
         required={true}
+        feedback={this.formFieldFeedback(INDEXED_DOCKER_PORT_MAPPING_FIELDS.hostPort, thisPortMapping.hostPort)}
       />
     );
     const protocol = (
@@ -757,6 +812,7 @@ class NewDeployForm extends Component {
         value={thisPortMapping.protocol}
         label="Protocol"
         placeholder="default: tcp"
+        feedback={this.formFieldFeedback(INDEXED_DOCKER_PORT_MAPPING_FIELDS.protocol, thisPortMapping.protocol)}
       />
     );
     return (
@@ -793,6 +849,7 @@ class NewDeployForm extends Component {
         value={thisVolume.containerPath}
         label="Container Path"
         required={true}
+        feedback={this.formFieldFeedback(INDEXED_DOCKER_VOLUME_FIELDS.containerPath, thisVolume.containerPath)}
       />
     );
     const hostPath = (
@@ -802,6 +859,7 @@ class NewDeployForm extends Component {
         value={thisVolume.hostPath}
         label="Host Path"
         required={true}
+        feedback={this.formFieldFeedback(INDEXED_DOCKER_VOLUME_FIELDS.hostPath, thisVolume.hostPath)}
       />
     );
     const mode = (
@@ -850,6 +908,7 @@ class NewDeployForm extends Component {
         label="Docker image"
         required={true}
         placeholder="eg: centos6:latest"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.image, this.props.form.image)}
       />
     );
     const network = (
@@ -888,6 +947,7 @@ class NewDeployForm extends Component {
         onChange={(newValue) => this.updateField('parameters', newValue)}
         label="Docker Parameters"
         placeholder="format: key=value"
+        errorIndices={this.errorsInArrayField(INDEXED_FIELDS.parameters, () => this.props.form.parameters)}
       />
     );
     //
@@ -946,6 +1006,7 @@ class NewDeployForm extends Component {
         value={this.props.form.id}
         label="Deploy ID"
         required={true}
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.id, this.props.form.id)}
       />
     );
     const executorType = (
@@ -968,6 +1029,7 @@ class NewDeployForm extends Component {
         value={this.props.form.command}
         label="Command to execute"
         placeholder="eg: rm -rf /"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.command, this.props.form.command)}
       />
     );
     const type = (
@@ -990,6 +1052,7 @@ class NewDeployForm extends Component {
         value={this.props.form.cpus}
         label="CPUs"
         placeholder={`default: ${config.defaultCpus}`}
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.cpus, this.props.form.cpus)}
       />
     );
     const memoryMb = (
@@ -999,6 +1062,7 @@ class NewDeployForm extends Component {
         value={this.props.form.memoryMb}
         label="Memory (MB)"
         placeholder={`default: ${config.defaultMemory}`}
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.memoryMb, this.props.form.memoryMb)}
       />
     );
     const numPorts = (
@@ -1008,6 +1072,7 @@ class NewDeployForm extends Component {
         value={this.props.form.numPorts}
         label="Num. ports"
         placeholder="default: 0"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.numPorts, this.props.form.numPorts)}
       />
     );
     const env = (
@@ -1017,6 +1082,7 @@ class NewDeployForm extends Component {
         onChange={(newValue) => this.updateField('env', newValue)}
         placeholder="format: key=value"
         label="Environment variables"
+        errorIndices={this.errorsInArrayField(INDEXED_FIELDS.env, () => this.props.form.env)}
       />
     );
     const healthcheckUri = (
@@ -1025,6 +1091,7 @@ class NewDeployForm extends Component {
         onChange={event => this.updateField('healthcheckUri', event.target.value)}
         value={this.props.form.healthcheckUri}
         label="Healthcheck URI"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.healthcheckUri, this.props.form.healthcheckUri)}
       />
     );
     const healthcheckIntervalSeconds = (
@@ -1034,6 +1101,7 @@ class NewDeployForm extends Component {
         value={this.props.form.healthcheckIntervalSeconds}
         label="HC interval (sec)"
         placeholder="default: 5"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.healthcheckIntervalSeconds, this.props.form.healthcheckIntervalSeconds)}
       />
     );
     const healthcheckTimeoutSeconds = (
@@ -1043,6 +1111,7 @@ class NewDeployForm extends Component {
         value={this.props.form.healthcheckTimeoutSeconds}
         label="HC timeout (sec)"
         placeholder="default: 5"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.healthcheckTimeoutSeconds, this.props.form.healthcheckTimeoutSeconds)}
       />
     );
     const healthcheckPortIndex = (
@@ -1052,6 +1121,7 @@ class NewDeployForm extends Component {
         value={this.props.form.healthcheckPortIndex}
         label="HC Port Index"
         placeholder="default: 0 (first allocated port)"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.healthcheckPortIndex, this.props.form.healthcheckPortIndex)}
       />
     );
     const healthcheckMaxTotalTimeoutSeconds = (
@@ -1061,6 +1131,7 @@ class NewDeployForm extends Component {
         value={this.props.form.healthcheckMaxTotalTimeoutSeconds}
         label="Total Healthcheck Timeout (sec)"
         placeholder="default: None"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.healthcheckMaxTotalTimeoutSeconds, this.props.form.healthcheckMaxTotalTimeoutSeconds)}
       />
     );
     const deployHealthTimeoutSeconds = (
@@ -1070,6 +1141,7 @@ class NewDeployForm extends Component {
         value={this.props.form.deployHealthTimeoutSeconds}
         label="Deploy healthcheck timeout (sec)"
         placeholder="default: 120"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.deployHealthTimeoutSeconds, this.props.form.deployHealthTimeoutSeconds)}
       />
     );
     const healthCheckProtocol = (
@@ -1099,6 +1171,7 @@ class NewDeployForm extends Component {
         value={this.props.form.considerHealthyAfterRunningForSeconds}
         label="Consider Healthy After Running For (sec)"
         placeholder="default: 5"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.considerHealthyAfterRunningForSeconds, this.props.form.considerHealthyAfterRunningForSeconds)}
       />
     );
     const serviceBasePath = (
@@ -1109,6 +1182,7 @@ class NewDeployForm extends Component {
         label="Service base path"
         placeholder="eg: /singularity/api/v2"
         required={true}
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.serviceBasePath, this.props.form.serviceBasePath)}
       />
     );
     const loadBalancerGroups = (
@@ -1118,6 +1192,7 @@ class NewDeployForm extends Component {
         onChange={(newValue) => this.updateField('loadBalancerGroups', newValue)}
         label="Load balancer groups"
         required={true}
+        errorIndices={this.errorsInArrayField(INDEXED_FIELDS.loadBalancerGroups, () => this.props.form.loadBalancerGroups)}
       />
     );
     const loadBalancerOptions = (
@@ -1125,8 +1200,9 @@ class NewDeployForm extends Component {
         id="lb-option"
         value={this.props.form.loadBalancerOptions}
         onChange={(newValue) => this.updateField('loadBalancerOptions', newValue)}
-        label="Load balancer groups"
+        label="Load balancer options"
         placeholder="format: key=value"
+        errorIndices={this.errorsInArrayField(INDEXED_FIELDS.loadBalancerOptions, () => this.props.form.loadBalancerOptions)}
       />
     );
     const loadBalancerPortIndex = (
@@ -1136,6 +1212,7 @@ class NewDeployForm extends Component {
         value={this.props.form.loadBalancerPortIndex}
         label="Load balancer port index"
         placeholder="default: 0 (first allocated port)"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.loadBalancerPortIndex, this.props.form.loadBalancerPortIndex)}
       />
     );
     const unpauseOnSuccessfulDeploy = (

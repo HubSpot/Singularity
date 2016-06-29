@@ -1,6 +1,6 @@
 import React, {Component, PropTypes} from 'react';
 import MultiInput from '../MultiInput';
-import classNames from 'classnames';
+import classNames from 'classNames';
 
 class MultiInputFormGroup extends Component {
   static propTypes = {
@@ -9,7 +9,8 @@ class MultiInputFormGroup extends Component {
     onChange: PropTypes.func.isRequired,
     placeholder: PropTypes.string,
     value: PropTypes.arrayOf(PropTypes.string),
-    required: PropTypes.bool
+    required: PropTypes.bool,
+    errorIndices: PropTypes.arrayOf(PropTypes.number)
   }
 
   render() {
@@ -23,6 +24,8 @@ class MultiInputFormGroup extends Component {
           onChange={this.props.onChange}
           required={this.props.required}
           placeholder={this.props.placeholder}
+          errorIndices={this.props.errorIndices}
+          doFeedback={this.props.required || !_.isEmpty(this.props.value)}
         />
       </div>
     );

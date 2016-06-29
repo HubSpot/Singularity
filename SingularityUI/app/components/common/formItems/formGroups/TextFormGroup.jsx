@@ -9,12 +9,37 @@ class TextFormGroup extends Component {
     onChange: PropTypes.func.isRequired,
     placeholder: PropTypes.string,
     value: PropTypes.string,
-    required: PropTypes.bool
+    required: PropTypes.bool,
+    feedback: PropTypes.oneOf(['SUCCESS', 'ERROR', 'WARN'])
+  }
+
+  formGroupClassNames() {
+    return classNames(
+      'form-group',
+      {
+        required: this.props.required,
+        'has-success': this.props.feedback === 'SUCCESS',
+        'has-error': this.props.feedback === 'ERROR',
+        'has-warning': this.props.feedback === 'WARN',
+        'has-feedback': this.props.feedback
+      });
+  }
+
+  iconClassNames() {
+    return classNames(
+      'glyphicon',
+      'form-control-feedback',
+      {
+        'glyphicon-ok': this.props.feedback === 'SUCCESS',
+        'glyphicon-warning-sign': this.props.feedback === 'WARN',
+        'glyphicon-remove': this.props.feedback === 'ERROR'
+      }
+    );
   }
 
   render() {
     return (
-      <div className={classNames('form-group', {required: this.props.required})}>
+      <div className={this.formGroupClassNames()}>
         <label htmlFor={this.props.id}>{this.props.label}</label>
         <FormField
           id={this.props.id}
@@ -27,6 +52,7 @@ class TextFormGroup extends Component {
             placeholder: this.props.placeholder
           }}
         />
+        {this.props.feedback && <span className={this.iconClassNames()} />}
       </div>
     );
   }
