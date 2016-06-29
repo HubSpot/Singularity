@@ -1,9 +1,9 @@
 import React, {Component, PropTypes} from 'react';
 import { connect } from 'react-redux';
-import SelectFormGroup from '../common/formItems/SelectFormGroup';
-import TextFormGroup from '../common/formItems/TextFormGroup';
+import SelectFormGroup from '../common/formItems/formGroups/SelectFormGroup';
+import TextFormGroup from '../common/formItems/formGroups/TextFormGroup';
 import MultiInput from '../common/formItems/MultiInput';
-import CheckBox from '../common/formItems/CheckBox';
+import CheckBoxFormGroup from '../common/formItems/formGroups/CheckBoxFormGroup';
 import RemoveButton from '../common/RemoveButton';
 import { modifyField, clearForm } from '../../actions/form';
 import {SaveAction} from '../../actions/api/deploy';
@@ -590,30 +590,20 @@ class NewDeployForm extends Component {
       </div>
     );
     const preserveSandbox = (
-      <div className="form-group">
-        <label htmlFor="preserve-sandbox">
-          <CheckBox
-            id = "preserve-sandbox"
-            onChange = {() => this.updateField('preserveTaskSandboxAfterFinish', !this.props.form.preserveTaskSandboxAfterFinish)}
-            checked = {this.props.form.preserveTaskSandboxAfterFinish}
-            noFormControlClass = {true}
-          />
-          {" Preserve task sandbox after finish"}
-        </label>
-      </div>
+      <CheckBoxFormGroup
+        id = "preserve-sandbox"
+        label="Preserve task sandbox after finish"
+        checked = {this.props.form.preserveTaskSandboxAfterFinish}
+        onChange = {(newValue) => this.updateField('preserveTaskSandboxAfterFinish', newValue)}
+      />
     );
     const skipLogrotateAndCompress = (
-      <div className="form-group">
-        <label htmlFor="skip-lr-compress">
-          <CheckBox
-            id = "skip-lr-compress"
-            onChange = {() => this.updateField('skipLogrotateAndCompress', !this.props.form.skipLogrotateAndCompress)}
-            checked = {this.props.form.skipLogrotateAndCompress}
-            noFormControlClass = {true}
-          />
-          {" Skip lorotate compress"}
-        </label>
-      </div>
+      <CheckBoxFormGroup
+        id = "skip-lr-compress"
+        label="Skip lorotate compress"
+        checked = {this.props.form.skipLogrotateAndCompress}
+        onChange = {(newValue) => this.updateField('skipLogrotateAndCompress', newValue)}
+      />
     );
     const loggingS3Bucket = (
       <TextFormGroup
@@ -887,30 +877,20 @@ class NewDeployForm extends Component {
       />
     );
     const privileged = (
-      <div className="form-group">
-        <label htmlFor="privileged">
-          <CheckBox
-            id = "privileged"
-            onChange = {() => this.updateField('privileged', !this.props.form.privileged)}
-            checked = {this.props.form.privileged}
-            noFormControlClass = {true}
-          />
-          {" Privileged"}
-        </label>
-      </div>
+      <CheckBoxFormGroup
+        id = "privileged"
+        label="Privileged"
+        checked = {this.props.form.privileged}
+        onChange = {(newValue) => this.updateField('privileged', newValue)}
+      />
     );
     const forcePullImage = (
-      <div className="form-group">
-        <label htmlFor="force-pull">
-          <CheckBox
-            id = "force-pull"
-            onChange = {() => this.updateField('forcePullImage', !this.props.form.forcePullImage)}
-            checked = {this.props.form.forcePullImage}
-            noFormControlClass = {true}
-          />
-          {" Force Pull Image"}
-        </label>
-      </div>
+      <CheckBoxFormGroup
+        id = "force-pull"
+        label="Force Pull Image"
+        checked = {this.props.form.forcePullImage}
+        onChange = {(newValue) => this.updateField('forcePullImage', newValue)}
+      />
     );
     const parameters = (
       <div className="form-group">
@@ -1120,17 +1100,12 @@ class NewDeployForm extends Component {
       />
     );
     const skipHealthchecksOnDeploy = (
-      <div className="form-group">
-        <label htmlFor="skip-healthcheck">
-          <CheckBox
-            id = "skip-healthcheck"
-            onChange = {() => this.updateField('skipHealthchecksOnDeploy', !this.props.form.skipHealthchecksOnDeploy)}
-            checked = {this.props.form.skipHealthchecksOnDeploy}
-            noFormControlClass = {true}
-          />
-          {" Skip healthcheck on deploy"}
-        </label>
-      </div>
+      <CheckBoxFormGroup
+        id = "skip-healthcheck"
+        label="Skip healthcheck on deploy"
+        checked = {this.props.form.skipHealthchecksOnDeploy}
+        onChange = {(newValue) => this.updateField('skipHealthchecksOnDeploy', newValue)}
+      />
     );
     const considerHealthyAfterRunningForSeconds = (
       <TextFormGroup
@@ -1182,17 +1157,12 @@ class NewDeployForm extends Component {
       />
     );
     const unpauseOnSuccessfulDeploy = (
-      <div className="form-group">
-        <label htmlFor="deploy-to-unpause">
-          <CheckBox
-            id = "deploy-to-unpause"
-            onChange = {() => this.updateField('unpauseOnSuccessfulDeploy', !this.props.form.unpauseOnSuccessfulDeploy)}
-            checked = {this.props.form.unpauseOnSuccessfulDeploy}
-            noFormControlClass = {true}
-          />
-          {" Unpause on successful deploy"}
-        </label>
-      </div>
+      <CheckBoxFormGroup
+        id = "deploy-to-unpause"
+        label="Unpause on successful deploy"
+        checked = {this.props.form.unpauseOnSuccessfulDeploy}
+        onChange = {(newValue) => this.updateField('unpauseOnSuccessfulDeploy', newValue)}
+      />
     );
 
     // Groups

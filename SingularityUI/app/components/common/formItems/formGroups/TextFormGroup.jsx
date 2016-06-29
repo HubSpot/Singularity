@@ -1,5 +1,5 @@
 import React, {Component, PropTypes} from 'react';
-import FormField from './FormField';
+import FormField from '../FormField';
 import classNames from 'classnames';
 
 class TextFormGroup extends Component {
