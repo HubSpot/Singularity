@@ -1,8 +1,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
 
-import { FetchAction } from '../../actions/api/requests';
-import { RemoveAction } from '../../actions/api/request';
+import FetchAction from '../../actions/api/requests';
+import { RemoveAction, UnpauseAction, RunAction, ScaleAction, FetchRunAction, FetchRunHistoryAction } from '../../actions/api/request';
+import { FetchAction as FetchTaskFiles } from '../../actions/api/taskFiles';
 
 import UITable from '../common/table/UITable';
 import RequestFilters from './RequestFilters';
@@ -30,7 +31,18 @@ class RequestsPage extends React.Component {
   getColumns() {
     switch(this.state.filter.subFilter) {
       case RequestFilters.REQUEST_TYPES.ALL:
-        return [Cols.Starred(), Cols.RequestId, Cols.Type, Cols.State, Cols.Instances, Cols.DeployId, Cols.DeployUser, Cols.LastDeploy, Cols.Schedule, Cols.Actions(this.props.removeRequest)];
+        return [
+          Cols.Starred(),
+          Cols.RequestId,
+          Cols.Type,
+          Cols.State,
+          Cols.Instances,
+          Cols.DeployId,
+          Cols.DeployUser,
+          Cols.LastDeploy,
+          Cols.Schedule,
+          Cols.Actions(this.props.removeRequest, this.props.unpauseRequest, this.props.runNow, this.props.fetchRun, this.props.fetchRunHistory, this.props.fetchTaskFiles, this.props.scaleRequest)
+        ];
     }
   }
 
@@ -66,8 +78,15 @@ class RequestsPage extends React.Component {
 }
 
 function mapStateToProps(state, ownProps) {
+  const requests = state.api.requests.data;
+  _.each(requests, (r) => {
+    let hasActiveDeploy = !!(r.activeDeploy || (r.requestDeployState && r.requestDeployState.activeDeploy));
+    r.canBeRunNow = r.state === 'ACTIVE' && _.contains(['SCHEDULED', 'ON_DEMAND'], r.request.requestType) && hasActiveDeploy;
+    r.canBeScaled = _.contains(['ACTIVE', 'SYSTEM_COOLDOWN'], r.state) && hasActiveDeploy && _.contains(['WORKER', 'SERVICE'], r.request.requestType);
+  });
+
   return {
-    requests: state.api.requests.data
+    requests
   };
 }
 
@@ -75,6 +94,12 @@ function mapDispatchToProps(dispatch) {
   return {
     fetchFilter: (state) => dispatch(FetchAction.trigger(state)),
     removeRequest: (requestid, data) => dispatch(RemoveAction.trigger(requestid, data)),
+    unpauseRequest: (requestId, data) => dispatch(UnpauseAction.trigger(requestId, data)),
+    runNow: (requestId, data) => dispatch(RunAction.trigger(requestId, data)),
+    fetchRun: (requestId, runId) => dispatch(FetchRunAction.trigger(requestId, runId)),
+    fetchRunHistory: (requestId, runId) => dispatch(FetchRunHistoryAction.trigger(requestId, runId)),
+    fetchTaskFiles: (taskId, path) => dispatch(FetchTaskFiles.trigger(taskId, path)),
+    scaleRequest: (requestId, data) => dispatch(ScaleAction.trigger(requestId, data))
   };
 }
 

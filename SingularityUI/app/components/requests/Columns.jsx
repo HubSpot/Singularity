@@ -7,6 +7,8 @@ import JSONButton from '../common/JSONButton';
 
 import UnpauseButton from './UnpauseButton';
 import RemoveButton from './RemoveButton';
+import RunNowButton from './RunNowButton';
+import ScaleButton from './ScaleButton';
 
 // use this only with combineStarredWithRequests selector
 export const Starred = (changeStar, sortable) => {
@@ -183,26 +185,47 @@ export const Schedule = (
   />
 );
 
-export const Actions = (removeAction) => {
+export const Actions = (removeAction, unpauseAction, runAction, fetchRun, fetchRunHistory, fetchTaskFiles, scaleAction) => {
   return <Column
     label=""
     id="actions"
     key="actions"
     className="actions-column"
     cellData={
-      (rowData) => rowData.request.id
+      (rowData) => rowData
     }
     cellRender={
-      (requestId, rowData) => {
+      (rowData) => {
         const edit = !config.hideNewRequestButton && (
-          <a href={`${config.appRoot}/requests/edit/${requestId}`} alt="Edit">
+          <a href={`${config.appRoot}/requests/edit/${rowData.request.id}`} alt="Edit">
             <span className="glyphicon glyphicon-edit"></span>
           </a>
         );
 
+        const unpause = rowData.state === 'PAUSED' && (
+          <UnpauseButton requestId={rowData.request.id} unpauseAction={unpauseAction} />
+        );
+
+        const scale = rowData.canBeScaled && (
+          <ScaleButton requestId={rowData.request.id} scaleAction={scaleAction} currentInstances={rowData.request.instances} />
+        );
+
+        const runNow = rowData.canBeRunNow && (
+          <RunNowButton
+            requestId={rowData.request.id}
+            runAction={runAction}
+            fetchRunAction={fetchRun}
+            fetchRunHistoryAction={fetchRunHistory}
+            fetchTaskFilesAction={fetchTaskFiles}
+          />
+        );
+
         return (
           <div className="hidden-xs">
-            <RemoveButton requestId={requestId} removeAction={removeAction} />
+            {scale}
+            {runNow}
+            {unpause}
+            <RemoveButton requestId={rowData.request.id} removeAction={removeAction} />
             <JSONButton className="inline" object={rowData}>
               {'{ }'}
             </JSONButton>

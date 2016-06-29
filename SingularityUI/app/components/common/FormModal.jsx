@@ -10,7 +10,8 @@ export default class FormModal extends React.Component {
     BOOLEAN: 'BOOLEAN',
     STRING: 'STRING',
     RADIO: 'RADIO',
-    TAGS: 'TAGS'
+    TAGS: 'TAGS',
+    NUMBER: 'NUMBER'
   }
 
   constructor(props) {
@@ -153,6 +154,25 @@ export default class FormModal extends React.Component {
                   inputProps={{className: "form-control input-large", placeholder: ""}}
                 />
               </label>
+            </div>
+          );
+
+        case FormModal.INPUT_TYPES.NUMBER:
+          return (
+            <div key={e.name}>
+              <div className={classNames('form-group', {'has-error': !!error})}>
+                <label className="control-label" for={e.name}>{e.label}</label>
+                <input type="number"
+                  name={e.name}
+                  min={e.min}
+                  max={e.max}
+                  step={e.step}
+                  className="form-control input-large"
+                  value={this.state.formState[e.name] || ''}
+                  onChange={(event) => this.handleFormChange(e.name, event.target.value)}
+                />
+                {help}
+              </div>
             </div>
           );
       }

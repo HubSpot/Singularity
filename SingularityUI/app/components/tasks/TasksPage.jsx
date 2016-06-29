@@ -14,7 +14,7 @@ import { FetchAction as FetchFilesAction } from '../../actions/api/taskFiles';
 import UITable from '../common/table/UITable';
 import KillTaskModal from '../common/KillTaskModal';
 import RunNowModal from '../common/RunNowModal';
-import TaskLauncher from './TaskLauncher';
+import TaskLauncher from '../common/TaskLauncher';
 import { TaskId, StartedAt, Host, Rack, CPUs, Memory, ActiveActions, NextRun, PendingType, DeployId, ScheduledActions, ScheduledTaskId, CleanupType, JSONAction, InstanceNumber } from './Columns';
 
 class TasksPage extends React.Component {
