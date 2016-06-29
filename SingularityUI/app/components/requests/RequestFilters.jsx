@@ -94,7 +94,7 @@ export default class RequestFilters extends React.Component {
         ref="search"
         className="big-search-box"
         placeholder="Filter requests"
-        value={this.props.filter.filterText}
+        value={this.props.filter.searchFilter}
         onChange={(...args) => this.handleSearchChange(...args)}
         maxlength="128" />
     );

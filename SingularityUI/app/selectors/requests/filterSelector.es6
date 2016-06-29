@@ -23,28 +23,24 @@ export default createSelector([getRequests, getFilter], (requests, filter) => {
   }
 
   // Filter by glob or fuzzy string
-  if (filter.filterText) {
-    const host = {extract: (t) => `${t.taskId && t.taskId.host}`};
-    const id = {extract: (t) => `${t.taskId ? t.taskId.id : t.pendingTask.pendingTaskId.id}`};
-    const rack = {extract: (t) => `${t.taskId && t.taskId.rackId}`};
+  if (filter.searchFilter) {
+    const id = {extract: (r) => r.id || ''};
+    const user = {extract: (r) => `${r.hasActiveDeploy ? r.requestDeployState.activeDeploy.user : ''}`};
 
-    if (Utils.isGlobFilter(filter.filterText)) {
-      let res1 = _.filter(requests, (task) => {
-        return micromatch.any(host.extract(task), filter.filterText + '*');
+    if (Utils.isGlobFilter(filter.searchFilter)) {
+      let res1 = _.filter(requests, (request) => {
+        return micromatch.any(user.extract(request), filter.searchFilter + '*');
       });
       let res2 = _.filter(requests, (task) => {
-        return micromatch.any(id.extract(task), filter.filterText + '*');
+        return micromatch.any(id.extract(request), filter.searchFilter + '*');
       });
-      let res3 = _.filter(requests, (task) => {
-        return micromatch.any(rack.extract(task), filter.filterText + '*');
-      });
-      requests = _.union(res1, res2, res3).reverse();
+      requests = _.union(res1, res2).reverse();
     } else {
-      _.each(tasks, (t) => t.id = id.extract(t));
-      let res1 = fuzzy.filter(filter.filterText, requests, host);
-      let res2 = fuzzy.filter(filter.filterText, requests, id);
-      let res3 = fuzzy.filter(filter.filterText, requests, rack);
-      requests = _.uniq(_.pluck(_.sortBy(_.union(res3, res1, res2), (t) => Utils.fuzzyAdjustScore(filter.filterText, t)), 'original').reverse());
+      _.each(requests, (r) => r.id = id.extract(r));
+      let res1 = fuzzy.filter(filter.searchFilter, requests, user);
+      let res2 = fuzzy.filter(filter.searchFilter, requests, id);
+      requests = _.uniq(_.pluck(_.sortBy(_.union(res1, res2), (t) => Utils.fuzzyAdjustScore(filter.searchFilter, t)), 'original').reverse());
+      console.log(requests);
     }
   }
 

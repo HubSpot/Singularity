@@ -27,7 +27,7 @@ class RequestsPage extends React.Component {
   }
 
   componentDidMount() {
-    if (this.props.requests.length) {
+    if (filterSelector({requests: this.props.requests, filter: this.state.filter}).length) {
       Utils.fixTableColumns($(this.refs.table.getTableDOMNode()));
     }
   }
