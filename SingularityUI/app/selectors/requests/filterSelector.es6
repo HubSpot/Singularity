@@ -8,7 +8,7 @@ const getFilter = (state) => state.filter;
 
 export default createSelector([getRequests, getFilter], (requests, filter) => {
 
-  // Filter by requestType
+  // Filter by state
   let stateFilter = null;
   switch (filter.state) {
     case 'activeDeploy':
@@ -22,6 +22,9 @@ export default createSelector([getRequests, getFilter], (requests, filter) => {
     requests = _.filter(requests, stateFilter);
   }
 
+  // FIlter by request type
+  requests = _.filter(requests, (r) => _.contains(filter.subFilter, r.request.requestType));
+
   // Filter by glob or fuzzy string
   if (filter.searchFilter) {
     const id = {extract: (r) => r.id || ''};
@@ -31,7 +34,7 @@ export default createSelector([getRequests, getFilter], (requests, filter) => {
       let res1 = _.filter(requests, (request) => {
         return micromatch.any(user.extract(request), filter.searchFilter + '*');
       });
-      let res2 = _.filter(requests, (task) => {
+      let res2 = _.filter(requests, (request) => {
         return micromatch.any(id.extract(request), filter.searchFilter + '*');
       });
       requests = _.union(res1, res2).reverse();
