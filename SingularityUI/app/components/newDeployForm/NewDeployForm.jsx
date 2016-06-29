@@ -4,7 +4,6 @@ import SelectFormGroup from '../common/formItems/formGroups/SelectFormGroup';
 import TextFormGroup from '../common/formItems/formGroups/TextFormGroup';
 import MultiInputFormGroup from '../common/formItems/formGroups/MultiInputFormGroup';
 import CheckBoxFormGroup from '../common/formItems/formGroups/CheckBoxFormGroup';
-import RemoveButton from '../common/RemoveButton';
 import { modifyField } from '../../actions/form';
 import {SaveAction} from '../../actions/api/deploy';
 import { FIELDS, ARTIFACT_FIELDS, DOCKER_PORT_MAPPING_FIELDS, DOCKER_VOLUME_FIELDS, INDEXED_FIELDS,
@@ -476,7 +475,8 @@ class NewDeployForm extends Component {
     return (
       <div key={key} className="well well-sm artifact">
         <h5>{artifact.type} artifact</h5>
-        <RemoveButton
+        <button
+          className="remove-button"
           id={`remove-artifact-${key}`}
           onClick={() => this.removeThingFromArrayField(arrayName, key) }
         />
@@ -762,7 +762,8 @@ class NewDeployForm extends Component {
     return (
       <div className="well well-sm docker-port" key={key}>
         <h5>Docker Port Mapping</h5>
-        <RemoveButton
+        <button
+          className="remove-button"
           id={`remove-port-mapping-${key}`}
           onClick={() => this.removeThingFromArrayField('portMappings', key)}
         />
@@ -820,7 +821,8 @@ class NewDeployForm extends Component {
     return (
       <div className="well well-sm docker-volume" key={key}>
         <h5>Docker Volume</h5>
-        <RemoveButton
+        <button
+          className="remove-button"
           id={`remove-volume-${key}`}
           onClick={() => this.removeThingFromArrayField('volumes', key)}
         />
