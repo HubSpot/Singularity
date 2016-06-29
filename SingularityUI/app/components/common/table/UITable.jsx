@@ -1,6 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import Waypoint from 'react-waypoint';
 import classNames from 'classnames';
+import _ from 'underscore';
 
 import BootstrapTable from 'react-bootstrap/lib/Table';
 import { Pagination } from 'react-bootstrap';
@@ -95,7 +96,7 @@ class UITable extends Component {
 
     // we have to update pagination if the new list size doesn't
     // have enough pages for the current page
-    const numPages = (nextState.data.length / this.props.rowChunkSize);
+    const numPages = Math.ceil(nextState.data.length / this.props.rowChunkSize);
     const updatedPage = this.state.chunkNum > numPages
       ? numPages
       : this.state.chunkNum;
@@ -121,10 +122,11 @@ class UITable extends Component {
       return data;
     }
 
+    const { cellData, sortData } = sortCol.props;
     const sorted = data.concat().sort((a, b) => {
       return sortCol.props.sortFunc(
-        sortCol.props.cellData(a),
-        sortCol.props.cellData(b)
+        sortData(cellData(a), a),
+        sortData(cellData(b), b)
       );
     });
 
@@ -142,7 +144,7 @@ class UITable extends Component {
         rowData
       );
 
-      return <td key={tdIndex} className={col.props.className}>{cell}</td>;
+      return <td key={col.props.id} className={col.props.className}>{cell}</td>;
     });
     return <tr key={`row-${this.props.keyGetter(rowData)}`}>{row}</tr>;
   }
@@ -214,8 +216,10 @@ class UITable extends Component {
             onEnter={() => {
               const maxVisibleRows = this.state.chunkNum * this.props.rowChunkSize;
               if (maxVisibleRows < this.state.data.length) {
-                this.setState({
-                  chunkNum: this.state.chunkNum + 1
+                _.defer(() => {
+                  this.setState({
+                    chunkNum: this.state.chunkNum + 1
+                  });
                 });
               }
             }}
@@ -257,7 +261,7 @@ class UITable extends Component {
         this.state.sortDirection
       );
 
-      return <th key={thIndex} onClick={maybeOnClick} className={headerClasses}>{cell}{sortIndicator}</th>;
+      return <th key={col.props.id} onClick={maybeOnClick} className={headerClasses}>{cell}{sortIndicator}</th>;
     });
 
 

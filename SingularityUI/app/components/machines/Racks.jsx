@@ -136,7 +136,7 @@ let Racks = React.createClass({
                 component: TimeStamp,
                 prop: {
                     display: 'duration',
-                    timestamp: rack.uptime
+                    timestamp: Date.now() - rack.firstSeenAt
                 }
             }
         ];
