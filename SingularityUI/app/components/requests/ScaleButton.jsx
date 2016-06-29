@@ -8,8 +8,22 @@ export default class ScaleButton extends Component {
   static propTypes = {
     requestId: PropTypes.string.isRequired,
     scaleAction: PropTypes.func.isRequired,
+    bounceAction: PropTypes.func.isRequired,
     currentInstances: PropTypes.number
   };
+
+  static INCREMENTAL_BOUNCE_VALUE = {
+    INCREMENTAL: {label: 'Kill old tasks as new tasks become healthy', value: true},
+    ALL: {label: 'Kill old tasks once ALL new tasks are healthy', value: false}
+  };
+
+  handleScale(data) {
+    console.log(data);
+    this.props.scaleAction(this.props.requestId, {instances: data.instances, durationMillis: data.durationMillis, message: data.message}).then((r) => console.log(r));
+    if (data.bounce) {
+      this.props.bounceAction(this.props.requestId, {incremental: !!data.incremental}).then((r) => console.log(r));
+    }
+  }
 
   render() {
     return (
@@ -18,7 +32,7 @@ export default class ScaleButton extends Component {
         <FormModal
           ref="unpauseModal"
           action="Scale Request"
-          onConfirm={(data) => this.props.unpauseAction(this.props.requestId, data)}
+          onConfirm={(data) => this.handleScale(data)}
           buttonStyle="primary"
           formElements={[
             {
@@ -28,6 +42,24 @@ export default class ScaleButton extends Component {
               label: 'Number of instances:',
               defaultValue: this.props.currentInstances,
               isRequired: true
+            },
+            {
+              name: 'bounce',
+              type: FormModal.INPUT_TYPES.BOOLEAN,
+              label: 'Bounce after scaling',
+              defaultValue: false
+            },
+            {
+              name: 'incremental',
+              type: FormModal.INPUT_TYPES.RADIO,
+              values: _.values(ScaleButton.INCREMENTAL_BOUNCE_VALUE),
+              dependsOn: 'bounce',
+              defaultValue: ScaleButton.INCREMENTAL_BOUNCE_VALUE.INCREMENTAL.value
+            },
+            {
+              name: 'durationMillis',
+              type: FormModal.INPUT_TYPES.DURATION,
+              label: 'Expiration: (optional)'
             },
             {
               name: 'message',

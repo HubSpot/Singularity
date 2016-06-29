@@ -15,3 +15,5 @@ export const RunAction = buildJsonApiAction('RUN_REQUEST', 'POST', (requestId, d
 export const FetchRunAction = buildApiAction('FETCH_REQUEST_RUN', (requestId, runId) => ({url: `/requests/request/${ requestId }/run/${runId}`}));
 
 export const FetchRunHistoryAction = buildApiAction('FETCH_REQUEST_RUN_HISTORY', (requestId, runId) => ({url: `/history/request/${ requestId }/run/${runId}`}));
+
+export const BounceAction = buildJsonApiAction('BOUNCE_REQUEST', 'POST', (requestId, data) => ({url: `/requests/request/${requestId}/bounce`, body: data}));

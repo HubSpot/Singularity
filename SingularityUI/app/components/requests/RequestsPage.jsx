@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 import FetchAction from '../../actions/api/requests';
-import { RemoveAction, UnpauseAction, RunAction, ScaleAction, FetchRunAction, FetchRunHistoryAction } from '../../actions/api/request';
+import { RemoveAction, UnpauseAction, RunAction, ScaleAction, BounceAction, FetchRunAction, FetchRunHistoryAction } from '../../actions/api/request';
 import { FetchAction as FetchTaskFiles } from '../../actions/api/taskFiles';
 
 import UITable from '../common/table/UITable';
@@ -41,14 +41,12 @@ class RequestsPage extends React.Component {
           Cols.DeployUser,
           Cols.LastDeploy,
           Cols.Schedule,
-          Cols.Actions(this.props.removeRequest, this.props.unpauseRequest, this.props.runNow, this.props.fetchRun, this.props.fetchRunHistory, this.props.fetchTaskFiles, this.props.scaleRequest)
+          Cols.Actions(this.props.removeRequest, this.props.unpauseRequest, this.props.runNow, this.props.fetchRun, this.props.fetchRunHistory, this.props.fetchTaskFiles, this.props.scaleRequest, this.props.bounceRequest)
         ];
     }
   }
 
   render() {
-    console.log(_.filter(this.props.requests, (r) => r.request.requestType == 'SCHEDULED'));
-
     const displayRequests = this.props.requests;
 
     let table;
@@ -99,7 +97,8 @@ function mapDispatchToProps(dispatch) {
     fetchRun: (requestId, runId) => dispatch(FetchRunAction.trigger(requestId, runId)),
     fetchRunHistory: (requestId, runId) => dispatch(FetchRunHistoryAction.trigger(requestId, runId)),
     fetchTaskFiles: (taskId, path) => dispatch(FetchTaskFiles.trigger(taskId, path)),
-    scaleRequest: (requestId, data) => dispatch(ScaleAction.trigger(requestId, data))
+    scaleRequest: (requestId, data) => dispatch(ScaleAction.trigger(requestId, data)),
+    bounceRequest: (requestId, data) => dispatch(BounceAction.trigger(requestId, data))
   };
 }
 

@@ -185,7 +185,7 @@ export const Schedule = (
   />
 );
 
-export const Actions = (removeAction, unpauseAction, runAction, fetchRun, fetchRunHistory, fetchTaskFiles, scaleAction) => {
+export const Actions = (removeAction, unpauseAction, runAction, fetchRun, fetchRunHistory, fetchTaskFiles, scaleAction, bounceAction) => {
   return <Column
     label=""
     id="actions"
@@ -207,7 +207,7 @@ export const Actions = (removeAction, unpauseAction, runAction, fetchRun, fetchR
         );
 
         const scale = rowData.canBeScaled && (
-          <ScaleButton requestId={rowData.request.id} scaleAction={scaleAction} currentInstances={rowData.request.instances} />
+          <ScaleButton requestId={rowData.request.id} scaleAction={scaleAction} bounceAction={bounceAction} currentInstances={rowData.request.instances} />
         );
 
         const runNow = rowData.canBeRunNow && (
