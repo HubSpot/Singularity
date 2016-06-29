@@ -96,7 +96,7 @@ class UITable extends Component {
 
     // we have to update pagination if the new list size doesn't
     // have enough pages for the current page
-    const numPages = (nextState.data.length / this.props.rowChunkSize);
+    const numPages = Math.ceil(nextState.data.length / this.props.rowChunkSize);
     const updatedPage = this.state.chunkNum > numPages
       ? numPages
       : this.state.chunkNum;
