@@ -1,3 +1,11 @@
 import { buildApiAction } from './base';
 
-export const FetchAction = buildApiAction('FETCH_REQUESTS', {url: '/requests'});
+export const FetchAction = buildApiAction('FETCH_REQUESTS', (state) => {
+  if (_.contains(['pending', 'cleaning'], state)) {
+    return {url: `/requests/queued/${state}`}
+  } else if (state === 'all') {
+    return {url: '/requests'}
+  } else {
+    return {url: `/requests/${state}`}
+  }
+});

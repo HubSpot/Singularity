@@ -1,26 +1,50 @@
 import React from 'react';
 import Utils from '../../utils';
 
-import { Nav, NavItem, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Nav, NavItem } from 'react-bootstrap';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 
-export default class TaskFilters extends React.Component {
+export default class RequestFilters extends React.Component {
 
-  static get REQUEST_TYPES() {
-    return {
-      ALL: 'all',
-      ACTIVE: 'active',
-      COOLDOWN: 'cooldown',
-      PAUSED: 'paused',
-      PENDING: 'pending',
-      CLEANING: 'cleaning',
-      ACTIVE_DEPLOY: 'activeDeploy',
-      NO_DEPLOY: 'noDeploy'
-    };
-  }
+  static REQUEST_STATES = [
+    {
+      filterVal: 'all',
+      displayVal: 'All'
+    },
+    {
+      filterVal: 'active',
+      displayVal: 'Active'
+    },
+    {
+      filterVal: 'cooldown',
+      displayVal: 'Cleaning'
+    },
+    {
+      filterVal: 'paused',
+      displayVal: 'Paused'
+    },
+    {
+      filterVal: 'pending',
+      displayVal: 'Pending'
+    },
+    {
+      filterVal: 'cleaning',
+      displayVal: 'Cleaning'
+    },
+    {
+      filterVal: 'activeDeploy',
+      displayVal: 'Active Deploy'
+    },
+    {
+      filterVal: 'noDeploy',
+      displayVal: 'No Deploy'
+    }
+  ];
+
+  static REQUEST_TYPES = ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'];
 
   handleStatusSelect(selectedKey) {
-    this.props.onFilterChange(_.extend({}, this.props.filter, {taskStatus: TaskFilters.TASK_STATES[selectedKey].filterVal}));
+    this.props.onFilterChange(_.extend({}, this.props.filter, {requestStatus: RequestFilters.REQUEST_STATES[selectedKey].filterVal}));
   }
 
   handleSearchChange(e) {
@@ -28,11 +52,11 @@ export default class TaskFilters extends React.Component {
   }
 
   toggleRequestType(t) {
-    let selected = this.props.filter.requestTypes;
-    if (selected.length === TaskFilters.REQUEST_TYPES.length) {
+    let selected = this.props.filter.subFilter;
+    if (selected.length === RequestFilters.REQUEST_TYPES.length) {
       selected = [t];
     } else if (_.isEmpty(_.without(selected, t))) {
-      selected = TaskFilters.REQUEST_TYPES;
+      selected = RequestFilters.REQUEST_TYPES;
     } else if (_.contains(selected, t)) {
       selected = _.without(selected, t);
     } else {
@@ -42,18 +66,17 @@ export default class TaskFilters extends React.Component {
   }
 
   renderStatusFilter() {
-    const selectedIndex = _.findIndex(TaskFilters.TASK_STATES, (s) => s.filterVal === this.props.filter.taskStatus);
-    const navItems = TaskFilters.TASK_STATES.map((s, index) => {
+    const selectedIndex = _.findIndex(RequestFilters.REQUEST_STATES, (s) => s.filterVal === this.props.filter.state);
+    const navItems = RequestFilters.REQUEST_STATES.map((s, index) => {
       return (
-        <OverlayTrigger key={index} placement="top" overlay={<Tooltip id={index}>{s.tip}</Tooltip>} delay={500}>
-          <NavItem
-            eventKey={index}
-            title={s.tip}
-            active={index === selectedIndex}
-            onClick={() => this.handleStatusSelect(index)}>
-              {s.displayVal}
-          </NavItem>
-        </OverlayTrigger>
+        <NavItem
+          key={index}
+          eventKey={index}
+          title={s.tip}
+          active={index === selectedIndex}
+          onClick={() => this.handleStatusSelect(index)}>
+            {s.displayVal}
+        </NavItem>
       );
     });
 
@@ -70,7 +93,7 @@ export default class TaskFilters extends React.Component {
         type="search"
         ref="search"
         className="big-search-box"
-        placeholder="Filter tasks"
+        placeholder="Filter requests"
         value={this.props.filter.filterText}
         onChange={(...args) => this.handleSearchChange(...args)}
         maxlength="128" />
@@ -78,9 +101,9 @@ export default class TaskFilters extends React.Component {
   }
 
   renderRequestTypeFilter() {
-    const filterItems = this.props.displayRequestTypeFilters && TaskFilters.REQUEST_TYPES.map((t, index) => {
+    const filterItems = this.props.displayRequestTypeFilters && RequestFilters.REQUEST_TYPES.map((t, index) => {
       return (
-        <li key={index} className={_.contains(this.props.filter.requestTypes, t) ? 'active' : ''}>
+        <li key={index} className={_.contains(this.props.filter.subFilter, t) ? 'active' : ''}>
           <a onClick={() => this.toggleRequestType(t)}>
             <Glyphicon iconClass='ok' /> {Utils.humanizeText(t)}
           </a>
@@ -118,11 +141,11 @@ export default class TaskFilters extends React.Component {
   }
 }
 
-TaskFilters.propTypes = {
+RequestFilters.propTypes = {
   onFilterChange: React.PropTypes.func.isRequired,
   filter: React.PropTypes.shape({
-    taskStatus: React.PropTypes.string.isRequired,
-    requestTypes: React.PropTypes.array.isRequired,
-    filterText: React.PropTypes.string.isRequired
+    state: React.PropTypes.string.isRequired,
+    subFilter: React.PropTypes.array.isRequired,
+    searchFilter: React.PropTypes.string.isRequired
   }).isRequired
 };

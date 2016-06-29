@@ -8,9 +8,10 @@ import RequestsPage from '../components/requests/RequestsPage';
 
 class RequestsView extends ReactView {
 
-  constructor(store, subFilter, searchFilter, updateFilters) {
+  constructor(store, state, subFilter, searchFilter, updateFilters) {
     super();
     this.store = store;
+    this.state = state;
     this.subFilter = subFilter;
     this.searchFilter = searchFilter;
     this.updateFilters = updateFilters;
@@ -19,7 +20,7 @@ class RequestsView extends ReactView {
   render() {
     ReactDOM.render(
       <Provider store={this.store}>
-        <RequestsPage subFilter={this.subFilter} searchFilter={this.searchFilter} updateFilters={this.updateFilters} />
+        <RequestsPage subFilter={this.subFilter} state={this.state} searchFilter={this.searchFilter} updateFilters={this.updateFilters} />
       </Provider>
     , this.el);
   }

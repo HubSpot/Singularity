@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 
-import FetchAction from '../../actions/api/requests';
+import { FetchAction } from '../../actions/api/requests';
 import { RemoveAction, UnpauseAction, RunAction, ScaleAction, BounceAction, FetchRunAction, FetchRunHistoryAction } from '../../actions/api/request';
 import { FetchAction as FetchTaskFiles } from '../../actions/api/taskFiles';
 
@@ -17,20 +17,45 @@ class RequestsPage extends React.Component {
     super(props);
     this.state = {
       filter: {
-        subFilter: props.subFilter,
-        searchFilter: props.searchFilter,
-        loading: false
-      }
+        state: props.state,
+        subFilter: props.subFilter === 'all' ? RequestFilters.REQUEST_TYPES : props.subFilter.split(','),
+        searchFilter: props.searchFilter
+      },
+      loading: false
     }
   }
 
   componentDidMount() {
-    Utils.fixTableColumns($(this.refs.table.getTableDOMNode()));
+    if (this.props.requests.length) {
+      Utils.fixTableColumns($(this.refs.table.getTableDOMNode()));
+    }
+  }
+
+  handleFilterChange(filter) {
+    const lastFilterState = this.state.filter.state;
+    console.log(filter, this.state.filter)
+    this.setState({
+      loading: lastFilterTaskStatus !== filter.taskStatus,
+      filter: filter
+    });
+
+    const subFilter = filter.subFilter.length == RequestFilters.REQUEST_TYPES.length ? 'all' : filter.subFilter.join(',');
+    this.props.updateFilters(filter.state, subFilter, filter.searchFilter);
+    app.router.navigate(`/requests/${filter.state}/${subFilter}/${filter.searchFilter}`);
+
+    if (lastFilterState !== filter.state) {
+      this.props.fetchFilter(filter.state).then(() => {
+        this.setState({
+          loading: false
+        });
+      });
+    }
   }
 
   getColumns() {
     switch(this.state.filter.subFilter) {
       case RequestFilters.REQUEST_TYPES.ALL:
+      default:
         return [
           Cols.Starred(),
           Cols.RequestId,
@@ -48,13 +73,14 @@ class RequestsPage extends React.Component {
 
   render() {
     const displayRequests = this.props.requests;
+    // console.log(this.state.filter);
 
     let table;
     if (this.state.loading) {
       table = <div className="page-loader fixed"></div>;
     }
     else if (!displayRequests.length) {
-      table = <div className="empty-table-message"><p>No matching tasks</p></div>;
+      table = <div className="empty-table-message"><p>No matching requests</p></div>;
     } else {
       table = (
         <UITable
@@ -69,6 +95,7 @@ class RequestsPage extends React.Component {
 
     return (
       <div>
+        <RequestFilters filter={this.state.filter} onFilterChange={(filter) => this.handleFilterChange(filter)} displayRequestTypeFilters />
         {table}
       </div>
     );

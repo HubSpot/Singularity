@@ -4,15 +4,16 @@ import { FetchAction } from '../actions/api/requests';
 
 class RequestsTableController extends Controller {
 
-  initialize({store, subFilter, searchFilter}) {
+  initialize({store, state, subFilter, searchFilter}) {
     app.showPageLoader()
     this.title('Requests');
     this.store = store;
+    this.state = state;
     this.subFilter = subFilter;
     this.searchFilter = searchFilter;
 
     this.refresh().then(() => {
-      this.setView(new RequestsView(this.store, this.subFilter, this.searchFilter, (...args) => this.updateFilters(...args)));
+      this.setView(new RequestsView(this.store, this.state, this.subFilter, this.searchFilter, (...args) => this.updateFilters(...args)));
       app.showView(this.view);
     });
   }
@@ -25,6 +26,7 @@ class RequestsTableController extends Controller {
 
   // Backbone router sucks
   updateFilters(state, subFilter, searchFilter) {
+    this.state = state;
     this.subFilter = subFilter;
     this.searchFilter = searchFilter;
   }
