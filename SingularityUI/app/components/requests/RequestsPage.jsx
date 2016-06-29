@@ -10,6 +10,7 @@ import RequestFilters from './RequestFilters';
 import * as Cols from './Columns';
 
 import Utils from '../../utils';
+import filterSelector from '../../selectors/requests/filterSelector';
 
 class RequestsPage extends React.Component {
 
@@ -33,9 +34,8 @@ class RequestsPage extends React.Component {
 
   handleFilterChange(filter) {
     const lastFilterState = this.state.filter.state;
-    console.log(filter, this.state.filter)
     this.setState({
-      loading: lastFilterState !== filter.state && !_.contains(['activeDeploy', 'noDeploy'], filter.state),
+      loading: lastFilterState !== filter.state,
       filter: filter
     });
 
@@ -43,7 +43,7 @@ class RequestsPage extends React.Component {
     this.props.updateFilters(filter.state, subFilter, filter.searchFilter);
     app.router.navigate(`/requests/${filter.state}/${subFilter}/${filter.searchFilter}`);
 
-    if (lastFilterState !== filter.state && !_.contains(['activeDeploy', 'noDeploy'], filter.state)) {
+    if (lastFilterState !== filter.state) {
       this.props.fetchFilter(filter.state).then(() => {
         this.setState({
           loading: false
@@ -72,8 +72,8 @@ class RequestsPage extends React.Component {
   }
 
   render() {
-    const displayRequests = this.props.requests;
-    // console.log(this.state.filter);
+    const displayRequests = filterSelector({requests: this.props.requests, filter: this.state.filter});
+    // console.log(displayRequests);
 
     let table;
     if (this.state.loading) {
@@ -105,9 +105,9 @@ class RequestsPage extends React.Component {
 function mapStateToProps(state, ownProps) {
   const requests = state.api.requests.data;
   _.each(requests, (r) => {
-    let hasActiveDeploy = !!(r.activeDeploy || (r.requestDeployState && r.requestDeployState.activeDeploy));
-    r.canBeRunNow = r.state === 'ACTIVE' && _.contains(['SCHEDULED', 'ON_DEMAND'], r.request.requestType) && hasActiveDeploy;
-    r.canBeScaled = _.contains(['ACTIVE', 'SYSTEM_COOLDOWN'], r.state) && hasActiveDeploy && _.contains(['WORKER', 'SERVICE'], r.request.requestType);
+    r.hasActiveDeploy = !!(r.activeDeploy || (r.requestDeployState && r.requestDeployState.activeDeploy));
+    r.canBeRunNow = r.state === 'ACTIVE' && _.contains(['SCHEDULED', 'ON_DEMAND'], r.request.requestType) && r.hasActiveDeploy;
+    r.canBeScaled = _.contains(['ACTIVE', 'SYSTEM_COOLDOWN'], r.state) && r.hasActiveDeploy && _.contains(['WORKER', 'SERVICE'], r.request.requestType);
   });
 
   return {
