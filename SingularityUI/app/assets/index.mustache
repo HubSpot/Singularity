@@ -47,6 +47,9 @@
     </script>
     <script src="{{{staticRoot}}}/js/vendor.bundle.js"></script>
     <script src="{{{staticRoot}}}/js/app.js"></script>
+    {{#extraScript}}
+    {{{extraScript}}}
+    {{/extraScript}}
 </head>
 {{#navColor}}
 <body class="env-color-{{{.}}}">

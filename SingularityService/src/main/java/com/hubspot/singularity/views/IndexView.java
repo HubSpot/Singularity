@@ -58,6 +58,8 @@ public class IndexView extends View {
 
   private final String redirectOnUnauthorizedUrl;
 
+  private final String extraScript;
+
   public IndexView(String singularityUriBase, String appRoot, SingularityConfiguration configuration, ObjectMapper mapper) {
     super("index.mustache");
 
@@ -113,6 +115,8 @@ public class IndexView extends View {
     this.timestampFormat = configuration.getUiConfiguration().getTimestampFormat();
 
     this.timestampWithSecondsFormat = configuration.getUiConfiguration().getTimestampWithSecondsFormat();
+
+    this.extraScript = configuration.getUiConfiguration().getExtraScript().orNull();
   }
 
   public String getAppRoot() {
@@ -223,6 +227,10 @@ public class IndexView extends View {
     return timestampWithSecondsFormat;
   }
 
+  public String getExtraScript() {
+    return extraScript;
+  }
+
   @Override
   public String toString() {
     return "IndexView[" +
@@ -253,6 +261,7 @@ public class IndexView extends View {
             ", timestampFormat='" + timestampFormat + '\'' +
             ", timestampWithSecondsFormat='" + timestampWithSecondsFormat + '\'' +
             ", redirectOnUnauthorizedUrl='" + redirectOnUnauthorizedUrl + '\'' +
+            ", extraScript='" + extraScript + '\'' +
             ']';
   }
 }
