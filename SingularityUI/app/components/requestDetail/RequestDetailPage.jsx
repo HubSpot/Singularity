@@ -1,32 +1,23 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import Utils from '../../utils';
+import RequestHeader from './RequestHeader';
 
-const RequestDetailPage = ({requestAPI}) => {
-  let headerData = <h1>Singularity</h1>;
-  const deployUser = Utils.maybe(requestAPI.data, [
-    'user',
-    'id'
-  ]);
-  if (deployUser) {
-    headerData = <h1>{deployUser}</h1>;
-  }
-
+const RequestDetailPage = ({requestParent}) => {
   return (
-    <header>
-      {headerData}
-    </header>
+    <div>
+      <RequestHeader requestParent={requestParent} />
+    </div>
   );
 };
 
 RequestDetailPage.propTypes = {
-  userAPI: PropTypes.object.isRequired
+  requestParent: PropTypes.object.isRequired
 };
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    request: state.api.request[ownProps.requestId]
+    requestParent: state.api.request[ownProps.requestId].data
   };
 };
 

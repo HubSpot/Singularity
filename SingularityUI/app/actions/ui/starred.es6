@@ -1,13 +1,11 @@
 export const CHANGE_REQUEST_STAR = 'CHANGE_REQUEST_STAR';
 
-export const changeRequestStar = (requestId) => ({
-  type: CHANGE_REQUEST_STAR,
-  value: requestId
-});
-
-export const changeRequestStarAndSave = (requestId) => {
+export const changeRequestStar = (requestId) => {
   return (dispatch, getState) => {
-    dispatch(changeRequestStar(requestId));
+    dispatch({
+      type: CHANGE_REQUEST_STAR,
+      value: requestId
+    });
     window.localStorage.starredRequests = JSON.stringify(getState().ui.starred);
   };
 };
