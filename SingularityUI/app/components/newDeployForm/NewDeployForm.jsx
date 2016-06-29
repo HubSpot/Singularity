@@ -2,7 +2,7 @@ import React, {Component, PropTypes} from 'react';
 import { connect } from 'react-redux';
 import SelectFormGroup from '../common/formItems/formGroups/SelectFormGroup';
 import TextFormGroup from '../common/formItems/formGroups/TextFormGroup';
-import MultiInput from '../common/formItems/MultiInput';
+import MultiInputFormGroup from '../common/formItems/formGroups/MultiInputFormGroup';
 import CheckBoxFormGroup from '../common/formItems/formGroups/CheckBoxFormGroup';
 import RemoveButton from '../common/RemoveButton';
 import { modifyField, clearForm } from '../../actions/form';
@@ -378,25 +378,21 @@ class NewDeployForm extends Component {
 
   renderDefaultExecutorFields() {
     const cmdLineArguments = (
-      <div className="form-group">
-        <label htmlFor="cmd-line-args">Arguments</label>
-        <MultiInput
-          id = "cmd-line-args"
-          value = {this.props.form.arguments || []}
-          onChange = {(newValue) => this.updateField('arguments', newValue)}
-        />
-      </div>
+      <MultiInputFormGroup
+        id="cmd-line-args"
+        value={this.props.form.arguments}
+        onChange={(newValue) => this.updateField('arguments', newValue)}
+        label="Arguments"
+      />
     );
     const artifacts = (
-      <div className="form-group">
-        <label htmlFor="artifacts" >Artifacts</label>
-        <MultiInput
-          id = "artifacts"
-          value = {this.props.form.uris || []}
-          onChange = {(newValue) => this.updateField('uris', newValue)}
-          placeholder="eg: http://s3.example/my-artifact"
-        />
-      </div>
+      <MultiInputFormGroup
+        id="artifacts"
+        value={this.props.form.uris}
+        onChange={(newValue) => this.updateField('uris', newValue)}
+        label="Artifacts"
+        placeholder="eg: http://s3.example/my-artifact"
+      />
     );
     return (
       <div>
@@ -524,15 +520,13 @@ class NewDeployForm extends Component {
       />
     );
     const extraCommandArgs = (
-      <div className="form-group">
-        <label htmlFor="extra-args">Extra command args</label>
-        <MultiInput
-          id = "extra-args"
-          value = {this.props.form.extraCmdLineArgs || []}
-          onChange = {(newValue) => this.updateField('extraCmdLineArgs', newValue)}
-          placeholder="eg: -jar MyThing.jar"
-        />
-      </div>
+      <MultiInputFormGroup
+        id="extra-args"
+        value={this.props.form.extraCmdLineArgs}
+        onChange={(newValue) => this.updateField('extraCmdLineArgs', newValue)}
+        label="Extra command args"
+        placeholder="eg: -jar MyThing.jar"
+      />
     );
     const user = (
       <TextFormGroup
@@ -553,14 +547,12 @@ class NewDeployForm extends Component {
       />
     );
     const successfulExitCodes = (
-      <div className="form-group">
-        <label htmlFor="successful-exit-code">Successful exit codes</label>
-        <MultiInput
-          id = "successful-exit-code"
-          value = {this.props.form.successfulExitCodes || []}
-          onChange = {(newValue) => this.updateField('successfulExitCodes', newValue)}
-        />
-      </div>
+      <MultiInputFormGroup
+        id="successful-exit-code"
+        value={this.props.form.successfulExitCodes}
+        onChange={(newValue) => this.updateField('successfulExitCodes', newValue)}
+        label="Successful exit codes"
+      />
     );
     const maxTaskThreads = (
       <TextFormGroup
@@ -579,15 +571,13 @@ class NewDeployForm extends Component {
       />
     );
     const loggingExtraFields = (
-      <div className="form-group">
-        <label htmlFor="logging-extra-fields">Logging extra fields</label>
-        <MultiInput
-          id = "logging-extra-fields"
-          value = {this.props.form.loggingExtraFields || []}
-          onChange = {(newValue) => this.updateField('loggingExtraFields', newValue)}
-          placeholder="format: key=value"
-        />
-      </div>
+      <MultiInputFormGroup
+        id="logging-extra-fields"
+        value={this.props.form.loggingExtraFields}
+        onChange={(newValue) => this.updateField('loggingExtraFields', newValue)}
+        label="Logging extra fields"
+        placeholder="format: key=value"
+      />
     );
     const preserveSandbox = (
       <CheckBoxFormGroup
@@ -893,15 +883,13 @@ class NewDeployForm extends Component {
       />
     );
     const parameters = (
-      <div className="form-group">
-        <label htmlFor="docker-params">Docker Parameters</label>
-        <MultiInput
-          id = "docker-params"
-          value = {this.props.form.parameters || []}
-          onChange = {(newValue) => this.updateField('parameters', newValue)}
-          placeholder="format: key=value"
-        />
-      </div>
+      <MultiInputFormGroup
+        id="docker-params"
+        value={this.props.form.parameters}
+        onChange={(newValue) => this.updateField('parameters', newValue)}
+        label="Docker Parameters"
+        placeholder="format: key=value"
+      />
     );
     //
     return (
@@ -1024,15 +1012,13 @@ class NewDeployForm extends Component {
       />
     );
     const env = (
-      <div className="form-group">
-        <label htmlFor="env-vars">Environment variables</label>
-        <MultiInput
-          id = "env-vars"
-          value = {this.props.form.env || []}
-          onChange = {(newValue) => this.updateField('env', newValue)}
-          placeholder="format: key=value"
-        />
-      </div>
+      <MultiInputFormGroup
+        id="env-vars"
+        value={this.props.form.env}
+        onChange={(newValue) => this.updateField('env', newValue)}
+        placeholder="format: key=value"
+        label="Environment variables"
+      />
     );
     const healthcheckUri = (
       <TextFormGroup
@@ -1127,25 +1113,22 @@ class NewDeployForm extends Component {
       />
     );
     const loadBalancerGroups = (
-      <div className="form-group required">
-        <label htmlFor="env-vars">Load balancer groups</label>
-        <MultiInput
-          id = "lb-group"
-          value = {this.props.form.loadBalancerGroups || []}
-          onChange = {(newValue) => this.updateField('loadBalancerGroups', newValue)}
-        />
-      </div>
+      <MultiInputFormGroup
+        id="lb-group"
+        value={this.props.form.loadBalancerGroups}
+        onChange={(newValue) => this.updateField('loadBalancerGroups', newValue)}
+        label="Load balancer groups"
+        required={true}
+      />
     );
     const loadBalancerOptions = (
-      <div className="form-group">
-        <label htmlFor="env-vars">Load balancer options</label>
-        <MultiInput
-          id = "lb-option"
-          value = {this.props.form.loadBalancerOptions || []}
-          onChange = {(newValue) => this.updateField('loadBalancerOptions', newValue)}
-          placeholder="format: key=value"
-        />
-      </div>
+      <MultiInputFormGroup
+        id="lb-option"
+        value={this.props.form.loadBalancerOptions}
+        onChange={(newValue) => this.updateField('loadBalancerOptions', newValue)}
+        label="Load balancer groups"
+        placeholder="format: key=value"
+      />
     );
     const loadBalancerPortIndex = (
       <TextFormGroup
