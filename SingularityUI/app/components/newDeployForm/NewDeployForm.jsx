@@ -5,7 +5,7 @@ import TextFormGroup from '../common/formItems/formGroups/TextFormGroup';
 import MultiInputFormGroup from '../common/formItems/formGroups/MultiInputFormGroup';
 import CheckBoxFormGroup from '../common/formItems/formGroups/CheckBoxFormGroup';
 import RemoveButton from '../common/RemoveButton';
-import { modifyField, clearForm } from '../../actions/form';
+import { modifyField } from '../../actions/form';
 import {SaveAction} from '../../actions/api/deploy';
 import { FIELDS, ARTIFACT_FIELDS, DOCKER_PORT_MAPPING_FIELDS, DOCKER_VOLUME_FIELDS, INDEXED_FIELDS,
   INDEXED_DOCKER_PORT_MAPPING_FIELDS, INDEXED_DOCKER_VOLUME_FIELDS, INDEXED_ALL_FIELDS, INDEXED_CUSTOM_EXECUTOR_FIELDS,
@@ -97,7 +97,9 @@ class NewDeployForm extends Component {
       }).isRequired
     }).isRequired,
     saveApiCall: PropTypes.shape({
-      error: PropTypes.bool,
+      error: PropTypes.shape({
+        message: PropTypes.string
+      }),
       data: PropTypes.shape({
         message: PropTypes.string,
         activeDeploy: PropTypes.shape({
@@ -106,14 +108,9 @@ class NewDeployForm extends Component {
         })
       })
     }),
-    clearForm: PropTypes.func.isRequired,
     update: PropTypes.func.isRequired,
     save: PropTypes.func.isRequired
   };
-
-  componentWillMount() {
-    this.props.clearForm(FORM_ID);
-  }
 
   updateField(fieldId, newValue) {
     this.props.update(FORM_ID, fieldId, newValue);
@@ -1337,9 +1334,6 @@ function mapDispatchToProps(dispatch) {
   return {
     update(formId, fieldId, newValue) {
       dispatch(modifyField(formId, fieldId, newValue));
-    },
-    clearForm(formId) {
-      dispatch(clearForm(formId));
     },
     save(deployBody) {
       dispatch(SaveAction.trigger(deployBody));
