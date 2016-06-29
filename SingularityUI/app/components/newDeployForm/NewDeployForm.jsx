@@ -974,7 +974,7 @@ class NewDeployForm extends Component {
       <SelectFormGroup
         id="container-type"
         label="Container type"
-        value={this.props.form.type}
+        value={this.getValueOrDefault('type')}
         onChange={newValue => this.updateField('type', newValue.value)}
         required={true}
         options={[
