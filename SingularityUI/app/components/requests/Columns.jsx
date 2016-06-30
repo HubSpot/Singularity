@@ -100,7 +100,7 @@ export const RequestId = (
     key="requestId"
     className="keep-in-check"
     cellData={
-      (rowData) => rowData.request.id
+      (rowData) => rowData.request ? rowData.request.id : rowData.requestId
     }
     sortData={(cellData) => cellData.toLowerCase()}
     cellRender={
@@ -236,3 +236,55 @@ export const Actions = (removeAction, unpauseAction, runAction, fetchRun, fetchR
     }
   />;
 };
+
+export const PendingType = (
+  <Column
+    label="Pending Type"
+    id="schedule"
+    key="schedule"
+    sortable
+    cellData={
+      (rowData) => rowData.pendingType
+    }
+    cellRender={(cellData) => Utils.humanizeText(cellData)}
+  />
+);
+
+export const CleaningUser = (
+  <Column
+    label="User"
+    id="user"
+    key="user"
+    sortable
+    cellData={
+      (rowData) => rowData.user
+    }
+    cellRender={(cellData) => cellData.split('@')[0]}
+  />
+);
+
+export const CleaningTimestamp = (
+  <Column
+    label="Timestamp"
+    id="timestamp"
+    key="timestamp"
+    sortable
+    cellData={
+      (rowData) => rowData.timestamp
+    }
+    cellRender={(cellData) => Utils.timeStampFromNow(cellData)}
+  />
+);
+
+export const CleanupType = (
+  <Column
+    label="Cleaning Type"
+    id="cleanupType"
+    key="cleanupType"
+    sortable
+    cellData={
+      (rowData) => rowData.cleanupType
+    }
+    cellRender={(cellData) => Utils.humanizeText(cellData)}
+  />
+);

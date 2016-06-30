@@ -53,8 +53,11 @@ class RequestsPage extends React.Component {
   }
 
   getColumns() {
-    switch(this.state.filter.subFilter) {
-      case RequestFilters.REQUEST_TYPES.ALL:
+    switch(this.state.filter.state) {
+      case 'pending':
+        return [Cols.RequestId, Cols.PendingType];
+      case 'cleanup':
+        return [Cols.RequestId, Cols.CleaningUser, Cols.CleaningTimestamp, Cols.CleanupType];
       default:
         return [
           Cols.Starred(),
@@ -73,7 +76,7 @@ class RequestsPage extends React.Component {
 
   render() {
     const displayRequests = filterSelector({requests: this.props.requests, filter: this.state.filter});
-    // console.log(displayRequests);
+    console.log(displayRequests);
 
     let table;
     if (this.state.loading) {
@@ -86,7 +89,7 @@ class RequestsPage extends React.Component {
         <UITable
           ref="table"
           data={displayRequests}
-          keyGetter={(r) => r.request.id}
+          keyGetter={(r) => r.request ? r.request.id : r.requestId}
         >
           {this.getColumns()}
         </UITable>
@@ -95,7 +98,11 @@ class RequestsPage extends React.Component {
 
     return (
       <div>
-        <RequestFilters filter={this.state.filter} onFilterChange={(filter) => this.handleFilterChange(filter)} displayRequestTypeFilters />
+        <RequestFilters
+          filter={this.state.filter}
+          onFilterChange={(filter) => this.handleFilterChange(filter)}
+          displayRequestTypeFilters={!_.contains(['pending', 'cleanup'], this.state.filter.state)}
+        />
         {table}
       </div>
     );

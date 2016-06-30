@@ -23,7 +23,9 @@ export default createSelector([getRequests, getFilter], (requests, filter) => {
   }
 
   // FIlter by request type
-  requests = _.filter(requests, (r) => r.request || _.contains(filter.subFilter, r.request.requestType));
+  if (!_.contains(['pending', 'cleanup'], filter.state)) {
+    requests = _.filter(requests, (r) => r.request || _.contains(filter.subFilter, r.request.requestType));
+  }
 
   // Filter by glob or fuzzy string
   if (filter.searchFilter) {
