@@ -1,6 +1,6 @@
 import Controller from './Controller';
 import TaskSearchView from '../views/taskSearch';
-import { FetchAction } from '../actions/api/status';
+import { FetchAction } from '../actions/api/request';
 
 class TaskSearchController extends Controller {
 
@@ -17,7 +17,7 @@ class TaskSearchController extends Controller {
     }
 
     refresh() {
-      return this.store.dispatch(FetchAction.trigger());
+      return this.store.dispatch(FetchAction.trigger(this.requestId));
     }
 }
 
