@@ -12,7 +12,7 @@ class TaskSearchFilters extends React.Component {
 
   handleSubmit(e) {
     e.preventDefault();
-    if (!this.hasErrors) {
+    if (!this.hasErrors()) {
       const result = _.mapObject(this.props.fields, (v, k) => v.value);
       console.log(result);
     }
@@ -75,10 +75,11 @@ class TaskSearchFilters extends React.Component {
               <ReduxSelect options={statusOptions} optionRenderer={this.renderStatusOptions} valueRenderer={this.renderStatusOptions} {...lastTaskStatus} />
             </div>
             <div className="col-md-4 text-right">
-              <Button type="submit" bsStyle="primary" className="pull-right" disabled={this.hasErrors()}>Submit</Button>
-              <Button type="button" bsStyle="default" className="pull-right">Clear</Button>
+
             </div>
           </div>
+          <Button type="submit" bsStyle="primary" className="pull-right" disabled={this.hasErrors()}>Submit</Button>
+          <Button type="button" bsStyle="default" className="pull-right" onClick={() => this.props.resetForm()}>Clear</Button>
         </form>
       </Panel>
     );
@@ -87,6 +88,12 @@ class TaskSearchFilters extends React.Component {
 
 const validate = values => {
   const errors = {}
+  if (values.dateStart && !moment(parseInt(values.dateStart)).isValid()) {
+    errors.dateStart = "Please enter a valid date";
+  }
+  if (values.dateEnd && !moment(parseInt(values.dateEnd)).isValid()) {
+    errors.dateEnd = "Please enter a valid date";
+  }
   if (values.dateStart && values.dateEnd && parseInt(values.dateEnd) < parseInt(values.dateStart)) {
     errors.dateEnd = "End date must be after start";
   }
