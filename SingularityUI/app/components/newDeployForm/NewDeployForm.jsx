@@ -376,28 +376,28 @@ class NewDeployForm extends Component {
     this.props.save({deploy: deployObject});
   }
 
-  addDeployObjectToArrayField(fieldId, deployObject) {
+  addObjectToArrayField(fieldId, obj) {
     if (!this.props.form[fieldId]) {
-      this.updateField(fieldId, [deployObject]);
+      this.updateField(fieldId, [obj]);
     } else {
       const fieldValue = this.props.form[fieldId].slice();
-      fieldValue.push(deployObject);
+      fieldValue.push(obj);
       this.updateField(fieldId, fieldValue);
     }
   }
 
-  addObjectToDeployFieldPreventDefault(fieldId, deployObject, event) {
+  addObjectToArrayFieldPreventDefault(fieldId, obj, event) {
     event.preventDefault();
-    this.addDeployObjectToArrayField(fieldId, deployObject);
+    this.addObjectToArrayField(fieldId, obj);
   }
 
-  removeThingFromArrayField(fieldId, key) {
+  removeObjectFromArrayField(fieldId, key) {
     const fieldValue = this.props.form[fieldId].slice();
     fieldValue.splice(key, 1);
     this.updateField(fieldId, fieldValue);
   }
 
-  updateThingInArrayField(fieldId, key, newFieldObj) {
+  updateObjectInArrayField(fieldId, key, newFieldObj) {
     const newArray = this.props.form[fieldId].slice();
     const newValue = _.extend({}, newArray[key], newFieldObj);
     newArray[key] = newValue;
@@ -440,7 +440,7 @@ class NewDeployForm extends Component {
     const name = (
       <TextFormGroup
         id={`name-${ key }`}
-        onChange={event => this.updateThingInArrayField(arrayName, key, {name: event.target.value})}
+        onChange={event => this.updateObjectInArrayField(arrayName, key, {name: event.target.value})}
         value={artifact.name}
         label="Name"
         required={true}
@@ -450,7 +450,7 @@ class NewDeployForm extends Component {
     const fileName = (
       <TextFormGroup
         id={`filename-${ key }`}
-        onChange={event => this.updateThingInArrayField(arrayName, key, {filename: event.target.value})}
+        onChange={event => this.updateObjectInArrayField(arrayName, key, {filename: event.target.value})}
         value={artifact.filename}
         label="File name"
         required={true}
@@ -460,7 +460,7 @@ class NewDeployForm extends Component {
     const md5Sum = (
       <TextFormGroup
         id={`md5-${ key }`}
-        onChange={event => this.updateThingInArrayField(arrayName, key, {md5Sum: event.target.value})}
+        onChange={event => this.updateObjectInArrayField(arrayName, key, {md5Sum: event.target.value})}
         value={artifact.md5Sum}
         label="MD5 checksum"
         feedback={this.formFieldFeedback(INDEXED_ARTIFACT_FIELDS.md5Sum, artifact.md5Sum)}
@@ -469,7 +469,7 @@ class NewDeployForm extends Component {
     const content = (
       <TextFormGroup
         id={`content-${ key }`}
-        onChange={event => this.updateThingInArrayField(arrayName, key, {content: event.target.value})}
+        onChange={event => this.updateObjectInArrayField(arrayName, key, {content: event.target.value})}
         value={artifact.content}
         label="Content"
         feedback={this.formFieldFeedback(INDEXED_ARTIFACT_FIELDS.content, artifact.content)}
@@ -478,7 +478,7 @@ class NewDeployForm extends Component {
     const filesize = (
       <TextFormGroup
         id={`file-size-${ key }`}
-        onChange={event => this.updateThingInArrayField(arrayName, key, {filesize: event.target.value})}
+        onChange={event => this.updateObjectInArrayField(arrayName, key, {filesize: event.target.value})}
         value={artifact.filesize}
         label="File size"
         feedback={this.formFieldFeedback(INDEXED_ARTIFACT_FIELDS.filesize, artifact.filesize)}
@@ -487,7 +487,7 @@ class NewDeployForm extends Component {
     const url = (
       <TextFormGroup
         id={`url-${ key }`}
-        onChange={event => this.updateThingInArrayField(arrayName, key, {url: event.target.value})}
+        onChange={event => this.updateObjectInArrayField(arrayName, key, {url: event.target.value})}
         value={artifact.url}
         label="URL"
         required={true}
@@ -497,7 +497,7 @@ class NewDeployForm extends Component {
     const s3Bucket = (
       <TextFormGroup
         id={`bucket-${ key }`}
-        onChange={event => this.updateThingInArrayField(arrayName, key, {s3Bucket: event.target.value})}
+        onChange={event => this.updateObjectInArrayField(arrayName, key, {s3Bucket: event.target.value})}
         value={artifact.s3Bucket}
         label="S3 bucket"
         required={true}
@@ -507,7 +507,7 @@ class NewDeployForm extends Component {
     const s3ObjectKey = (
       <TextFormGroup
         id={`object-key-${ key }`}
-        onChange={event => this.updateThingInArrayField(arrayName, key, {s3ObjectKey: event.target.value})}
+        onChange={event => this.updateObjectInArrayField(arrayName, key, {s3ObjectKey: event.target.value})}
         value={artifact.s3ObjectKey}
         label="S3 object key"
         required={true}
@@ -520,7 +520,7 @@ class NewDeployForm extends Component {
         <button
           className="remove-button"
           id={`remove-artifact-${key}`}
-          onClick={() => this.removeThingFromArrayField(arrayName, key) }
+          onClick={() => this.removeObjectFromArrayField(arrayName, key) }
         />
         {name}
         {fileName}
@@ -732,19 +732,19 @@ class NewDeployForm extends Component {
 
           <div id="artifact-button-row" className="row">
             <div className="col-sm-4">
-              <button className="btn btn-success btn-block" onClick={event => this.addObjectToDeployFieldPreventDefault('embeddedArtifacts', {type: 'embedded'}, event)}>
+              <button className="btn btn-success btn-block" onClick={event => this.addObjectToArrayFieldPreventDefault('embeddedArtifacts', {type: 'embedded'}, event)}>
                 <span className="glyphicon glyphicon-plus"></span>
                 {" Embedded"}
               </button>
             </div>
             <div className="col-sm-4">
-              <button className="btn btn-success btn-block" onClick={event => this.addObjectToDeployFieldPreventDefault('externalArtifacts', {type: 'external'}, event)}>
+              <button className="btn btn-success btn-block" onClick={event => this.addObjectToArrayFieldPreventDefault('externalArtifacts', {type: 'external'}, event)}>
                 <span className="glyphicon glyphicon-plus"></span>
                 {" External"}
               </button>
             </div>
             <div className="col-sm-4">
-              <button className="btn btn-success btn-block" onClick={event => this.addObjectToDeployFieldPreventDefault('s3Artifacts', {type: 's3'}, event)}>
+              <button className="btn btn-success btn-block" onClick={event => this.addObjectToArrayFieldPreventDefault('s3Artifacts', {type: 's3'}, event)}>
                 <span className="glyphicon glyphicon-plus"></span>
                 {" S3"}
               </button>
@@ -763,7 +763,7 @@ class NewDeployForm extends Component {
         label="Container Port Type"
         value={thisPortMapping.containerPortType || INDEXED_DOCKER_PORT_MAPPING_FIELDS.containerPortType.default}
         defaultValue="LITERAL"
-        onChange={newValue => this.updateThingInArrayField('portMappings', key, {containerPortType: newValue.value})}
+        onChange={newValue => this.updateObjectInArrayField('portMappings', key, {containerPortType: newValue.value})}
         required={true}
         options={[
           { label: 'Literal', value: 'LITERAL' },
@@ -774,7 +774,7 @@ class NewDeployForm extends Component {
     const containerPort = (
       <TextFormGroup
         id={`cont-port-${ key }`}
-        onChange={event => this.updateThingInArrayField('portMappings', key, {containerPort: event.target.value})}
+        onChange={event => this.updateObjectInArrayField('portMappings', key, {containerPort: event.target.value})}
         value={thisPortMapping.containerPort}
         label="Container Port"
         required={true}
@@ -787,7 +787,7 @@ class NewDeployForm extends Component {
         label="Host Port Type"
         value={thisPortMapping.hostPortType || INDEXED_DOCKER_PORT_MAPPING_FIELDS.hostPortType.default}
         defaultValue="LITERAL"
-        onChange={newValue => this.updateThingInArrayField('portMappings', key, {hostPortType: newValue.value})}
+        onChange={newValue => this.updateObjectInArrayField('portMappings', key, {hostPortType: newValue.value})}
         required={true}
         options={[
           { label: 'Literal', value: 'LITERAL' },
@@ -798,7 +798,7 @@ class NewDeployForm extends Component {
     const hostPort = (
       <TextFormGroup
         id={`host-port-${ key }`}
-        onChange={event => this.updateThingInArrayField('portMappings', key, {hostPort: event.target.value})}
+        onChange={event => this.updateObjectInArrayField('portMappings', key, {hostPort: event.target.value})}
         value={thisPortMapping.hostPort}
         label="Host Port"
         required={true}
@@ -808,7 +808,7 @@ class NewDeployForm extends Component {
     const protocol = (
       <TextFormGroup
         id={`protocol-${ key }`}
-        onChange={event => this.updateThingInArrayField('portMappings', key, {protocol: event.target.value})}
+        onChange={event => this.updateObjectInArrayField('portMappings', key, {protocol: event.target.value})}
         value={thisPortMapping.protocol}
         label="Protocol"
         placeholder="default: tcp"
@@ -821,7 +821,7 @@ class NewDeployForm extends Component {
         <button
           className="remove-button"
           id={`remove-port-mapping-${key}`}
-          onClick={() => this.removeThingFromArrayField('portMappings', key)}
+          onClick={() => this.removeObjectFromArrayField('portMappings', key)}
         />
         {containerPortType}
         {containerPort}
@@ -845,7 +845,7 @@ class NewDeployForm extends Component {
     const containerPath = (
       <TextFormGroup
         id={`cont-path-${ key }`}
-        onChange={event => this.updateThingInArrayField('volumes', key, {containerPath: event.target.value})}
+        onChange={event => this.updateObjectInArrayField('volumes', key, {containerPath: event.target.value})}
         value={thisVolume.containerPath}
         label="Container Path"
         required={true}
@@ -855,7 +855,7 @@ class NewDeployForm extends Component {
     const hostPath = (
       <TextFormGroup
         id={`host-path-${ key }`}
-        onChange={event => this.updateThingInArrayField('volumes', key, {hostPath: event.target.value})}
+        onChange={event => this.updateObjectInArrayField('volumes', key, {hostPath: event.target.value})}
         value={thisVolume.hostPath}
         label="Host Path"
         required={true}
@@ -868,7 +868,7 @@ class NewDeployForm extends Component {
         label="Volume Mode"
         value={thisVolume.mode || INDEXED_DOCKER_VOLUME_FIELDS.mode.default}
         defaultValue="RO"
-        onChange={newValue => this.updateThingInArrayField('volumes', key, {mode: newValue.value})}
+        onChange={newValue => this.updateObjectInArrayField('volumes', key, {mode: newValue.value})}
         required={true}
         options={[
           { label: 'RO', value: 'RO' },
@@ -882,7 +882,7 @@ class NewDeployForm extends Component {
         <button
           className="remove-button"
           id={`remove-volume-${key}`}
-          onClick={() => this.removeThingFromArrayField('volumes', key)}
+          onClick={() => this.removeObjectFromArrayField('volumes', key)}
         />
         {containerPath}
         {hostPath}
@@ -974,7 +974,7 @@ class NewDeployForm extends Component {
 
           <div id="docker-port-button-row" className="row">
             <div className="col-sm-6">
-              <button className="btn btn-success btn-block" onClick={event => this.addObjectToDeployFieldPreventDefault('portMappings', {}, event)}>
+              <button className="btn btn-success btn-block" onClick={event => this.addObjectToArrayFieldPreventDefault('portMappings', {}, event)}>
                 <span className="glyphicon glyphicon-plus"></span>
                 {" Docker Port Mapping"}
               </button>
@@ -985,7 +985,7 @@ class NewDeployForm extends Component {
 
           <div id="docker-volume-button-row" className="row">
             <div className="col-sm-6">
-              <button className="btn btn-success btn-block" onClick={event => this.addObjectToDeployFieldPreventDefault('volumes', {}, event)}>
+              <button className="btn btn-success btn-block" onClick={event => this.addObjectToArrayFieldPreventDefault('volumes', {}, event)}>
                 <span className="glyphicon glyphicon-plus"></span>
                 {" Docker Volume"}
               </button>
