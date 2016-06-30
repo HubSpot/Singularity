@@ -11,20 +11,18 @@ import RunNowButton from './RunNowButton';
 import ScaleButton from './ScaleButton';
 
 // use this only with combineStarredWithRequests selector
-export const Starred = (changeStar, sortable) => {
+export const Starred = (toggleStar, sortable, starredRequests) => {
   return <Column
     label=""
     id="starred"
     key="starred"
     cellData={
-      (rowData) => 'starred' in rowData
+      (rowData) => starredRequests.has(rowData.request ? rowData.request.id : rowData.requestId)
     }
     cellRender={
       (cellData, rowData) => {
         return (
-          <a className="star" data-starred={cellData} onClick={
-            () => changeStar(rowData.request.id)
-          }>
+          <a className="star" data-starred={cellData} onClick={() => toggleStar(rowData.request.id)}>
             <span className="glyphicon glyphicon-star"></span>
           </a>
         );

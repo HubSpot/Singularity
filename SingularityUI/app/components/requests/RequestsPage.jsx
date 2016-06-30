@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { FetchAction } from '../../actions/api/requests';
 import { RemoveAction, UnpauseAction, RunAction, ScaleAction, BounceAction, FetchRunAction, FetchRunHistoryAction } from '../../actions/api/request';
 import { FetchAction as FetchTaskFiles } from '../../actions/api/taskFiles';
+import { toggleRequestStar as ToggleStar } from '../../actions/ui/starred';
 
 import UITable from '../common/table/UITable';
 import RequestFilters from './RequestFilters';
@@ -58,9 +59,19 @@ class RequestsPage extends React.Component {
         return [Cols.RequestId, Cols.PendingType];
       case 'cleanup':
         return [Cols.RequestId, Cols.CleaningUser, Cols.CleaningTimestamp, Cols.CleanupType];
+      case 'noDeploy':
+        return [
+          Cols.Starred(this.props.toggleStar, this.props.hasStarred, this.props.starredRequests),
+          Cols.RequestId,
+          Cols.Type,
+          Cols.State,
+          Cols.Instances,
+          Cols.Schedule,
+          Cols.Actions(this.props.removeRequest, this.props.unpauseRequest, this.props.runNow, this.props.fetchRun, this.props.fetchRunHistory, this.props.fetchTaskFiles, this.props.scaleRequest, this.props.bounceRequest)
+        ];
       default:
         return [
-          Cols.Starred(),
+          Cols.Starred(this.props.toggleStar, this.props.hasStarred, this.props.starredRequests),
           Cols.RequestId,
           Cols.Type,
           Cols.State,
@@ -76,7 +87,6 @@ class RequestsPage extends React.Component {
 
   render() {
     const displayRequests = filterSelector({requests: this.props.requests, filter: this.state.filter});
-    console.log(displayRequests);
 
     let table;
     if (this.state.loading) {
@@ -111,6 +121,7 @@ class RequestsPage extends React.Component {
 
 function mapStateToProps(state, ownProps) {
   const requests = state.api.requests.data;
+  const starredRequestIds = new Set(state.ui.starred);
   _.each(requests, (r) => {
     r.hasActiveDeploy = !!(r.activeDeploy || (r.requestDeployState && r.requestDeployState.activeDeploy));
     r.canBeRunNow = r.state === 'ACTIVE' && _.contains(['SCHEDULED', 'ON_DEMAND'], r.request.requestType) && r.hasActiveDeploy;
@@ -118,7 +129,8 @@ function mapStateToProps(state, ownProps) {
   });
 
   return {
-    requests
+    requests,
+    starredRequests: new Set(state.ui.starred)
   };
 }
 
@@ -132,7 +144,8 @@ function mapDispatchToProps(dispatch) {
     fetchRunHistory: (requestId, runId) => dispatch(FetchRunHistoryAction.trigger(requestId, runId)),
     fetchTaskFiles: (taskId, path) => dispatch(FetchTaskFiles.trigger(taskId, path)),
     scaleRequest: (requestId, data) => dispatch(ScaleAction.trigger(requestId, data)),
-    bounceRequest: (requestId, data) => dispatch(BounceAction.trigger(requestId, data))
+    bounceRequest: (requestId, data) => dispatch(BounceAction.trigger(requestId, data)),
+    toggleStar: (requestId) => dispatch(ToggleStar(requestId))
   };
 }
 

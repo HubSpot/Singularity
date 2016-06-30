@@ -1,13 +1,19 @@
 export const CHANGE_REQUEST_STAR = 'CHANGE_REQUEST_STAR';
 
-export const changeRequestStar = (requestId) => ({
-  type: CHANGE_REQUEST_STAR,
-  value: requestId
-});
+export const toggleRequestStar = (requestId) => {
 
-export const changeRequestStarAndSave = (requestId) => {
-  return (dispatch, getState) => {
-    dispatch(changeRequestStar(requestId));
-    window.localStorage.starredRequests = JSON.stringify(getState().ui.starred);
+  return (dispatch) => {
+    let starredRequests = JSON.parse(localStorage.getItem('starredRequests')) || [];
+    if (_.contains(starredRequests, requestId)) {
+      starredRequests = _.without(starredRequests, requestId);
+    } else {
+      starredRequests.push(requestId);
+    }
+    localStorage.setItem('starredRequests', JSON.stringify(starredRequests));
+
+    dispatch({
+      type: CHANGE_REQUEST_STAR,
+      value: starredRequests
+    });
   };
 };
