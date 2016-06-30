@@ -12,14 +12,10 @@ class TaskSearchFilters extends React.Component {
 
   handleSubmit(e) {
     e.preventDefault();
-    if (!this.hasErrors()) {
+    if (this.props.valid) {
       const result = _.mapObject(this.props.fields, (v, k) => v.value);
-      console.log(result);
+      this.props.onSearch(result);
     }
-  }
-
-  hasErrors() {
-    return !!_.without(_.pluck(this.props.fields, 'error'), undefined).length;
   }
 
   renderStatusOptions(opt) {
@@ -78,7 +74,7 @@ class TaskSearchFilters extends React.Component {
 
             </div>
           </div>
-          <Button type="submit" bsStyle="primary" className="pull-right" disabled={this.hasErrors()}>Submit</Button>
+          <Button type="submit" bsStyle="primary" className="pull-right" disabled={!this.props.valid}>Submit</Button>
           <Button type="button" bsStyle="default" className="pull-right" onClick={() => this.props.resetForm()}>Clear</Button>
         </form>
       </Panel>

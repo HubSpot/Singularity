@@ -1,10 +1,15 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { FetchAction } from '../../actions/api/taskHistory';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import TaskSearchFilters from './TaskSearchFilters';
 
 class TaskSearch extends React.Component {
+
+  handleSearch(filter) {
+    console.log(filter);
+  }
 
   render() {
     return (
@@ -20,7 +25,7 @@ class TaskSearch extends React.Component {
         />
         <h1>Historical Tasks</h1>
         <h2>Search Parameters</h2>
-        <TaskSearchFilters requestId={this.props.requestId} />
+        <TaskSearchFilters requestId={this.props.requestId} onSearch={(filter) => this.handleSearch(filter)} />
       </div>
     );
   }
@@ -33,7 +38,9 @@ function mapStateToProps(state) {
 }
 
 function mapDispatchToProps(dispatch) {
-  return {};
+  return {
+    fetchTaskHistory: (...args) => dispatch(FetchAction.trigger(...args))
+  };
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(TaskSearch);
