@@ -8,9 +8,10 @@ class TextFormGroup extends Component {
     label: PropTypes.string.isRequired,
     onChange: PropTypes.func.isRequired,
     placeholder: PropTypes.string,
-    value: PropTypes.string,
+    value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     required: PropTypes.bool,
-    feedback: PropTypes.oneOf(['SUCCESS', 'ERROR', 'WARN'])
+    feedback: PropTypes.oneOf(['SUCCESS', 'ERROR', 'WARN']),
+    inputGroupAddon: PropTypes.oneOfType([PropTypes.element, PropTypes.string])
   }
 
   formGroupClassNames() {
@@ -38,21 +39,40 @@ class TextFormGroup extends Component {
   }
 
   render() {
+    const label = <label htmlFor={this.props.id}>{this.props.label}</label>;
+    const formField = (
+      <FormField
+        id={this.props.id}
+        className={this.props.id}
+        prop = {{
+          updateFn: this.props.onChange,
+          inputType: 'text',
+          value: this.props.value,
+          required: this.props.required,
+          placeholder: this.props.placeholder
+        }}
+      />
+    );
+    const feedback = this.props.feedback && <span className={this.iconClassNames()} />;
+    if (this.props.inputGroupAddon) {
+      return (
+        <div className={this.formGroupClassNames()}>
+          {label}
+          <div className="input-group">
+            {formField}
+            {feedback}
+            <div className="input-group-addon">
+              {this.props.inputGroupAddon}
+            </div>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className={this.formGroupClassNames()}>
-        <label htmlFor={this.props.id}>{this.props.label}</label>
-        <FormField
-          id={this.props.id}
-          className={this.props.id}
-          prop = {{
-            updateFn: this.props.onChange,
-            inputType: 'text',
-            value: this.props.value,
-            required: this.props.required,
-            placeholder: this.props.placeholder
-          }}
-        />
-        {this.props.feedback && <span className={this.iconClassNames()} />}
+        {label}
+        {formField}
+        {feedback}
       </div>
     );
   }

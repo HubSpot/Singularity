@@ -10,6 +10,7 @@ class MultiInputFormGroup extends Component {
     placeholder: PropTypes.string,
     value: PropTypes.arrayOf(PropTypes.string),
     required: PropTypes.bool,
+    couldHaveFeedback: PropTypes.bool,
     errorIndices: PropTypes.arrayOf(PropTypes.number)
   }
 
@@ -25,7 +26,7 @@ class MultiInputFormGroup extends Component {
           required={this.props.required}
           placeholder={this.props.placeholder}
           errorIndices={this.props.errorIndices}
-          doFeedback={this.props.required || !_.isEmpty(this.props.value)}
+          doFeedback={this.props.couldHaveFeedback && (this.props.required || !_.isEmpty(this.props.value))}
         />
       </div>
     );
