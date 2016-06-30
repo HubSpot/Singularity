@@ -2,7 +2,6 @@ let NewDeployController;
 let NotFoundController;
 let RequestDetailController;
 let RequestsTableController;
-let TaskSearchController;
 let TasksTableController;
 let Utils;
 
@@ -34,7 +33,7 @@ import DeployDetailController from 'controllers/DeployDetail';
 
 import LogViewerController from 'controllers/LogViewer';
 
-TaskSearchController = require('controllers/TaskSearch');
+import TaskSearchController from 'controllers/TaskSearch';
 
 import WebhooksController from 'controllers/Webhooks';
 
@@ -93,6 +92,7 @@ class Router extends Backbone.Router {
 
   taskSearch(requestId) {
     return this.app.bootstrapController(new TaskSearchController({
+      store: this.app.store,
       requestId
     }));
   }
