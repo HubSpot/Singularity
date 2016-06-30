@@ -61,7 +61,7 @@ class RequestsPage extends React.Component {
         return [Cols.RequestId, Cols.CleaningUser, Cols.CleaningTimestamp, Cols.CleanupType];
       case 'noDeploy':
         return [
-          Cols.Starred(this.props.toggleStar, this.props.hasStarred, this.props.starredRequests),
+          Cols.Starred(this.props.toggleStar, !!this.props.starredRequests.size, this.props.starredRequests),
           Cols.RequestId,
           Cols.Type,
           Cols.State,
@@ -71,7 +71,7 @@ class RequestsPage extends React.Component {
         ];
       default:
         return [
-          Cols.Starred(this.props.toggleStar, this.props.hasStarred, this.props.starredRequests),
+          Cols.Starred(this.props.toggleStar, !!this.props.starredRequests.size, this.props.starredRequests),
           Cols.RequestId,
           Cols.Type,
           Cols.State,
