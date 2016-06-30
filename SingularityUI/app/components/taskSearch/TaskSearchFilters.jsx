@@ -2,6 +2,8 @@ import React from 'react';
 import {reduxForm} from 'redux-form';
 import classNames from 'classnames';
 import { Panel, Button } from 'react-bootstrap';
+import DateTimeField from 'react-bootstrap-datetimepicker';
+import moment from 'moment';
 
 import ReduxSelect from '../common/formItems/ReduxSelect';
 import Utils from '../../utils';
@@ -10,7 +12,14 @@ class TaskSearchFilters extends React.Component {
 
   handleSubmit(e) {
     e.preventDefault();
-    console.log(this.props.fields);
+    if (!this.hasErrors) {
+      const result = _.mapObject(this.props.fields, (v, k) => v.value);
+      console.log(result);
+    }
+  }
+
+  hasErrors() {
+    return !!_.without(_.pluck(this.props.fields, 'error'), undefined).length;
   }
 
   renderStatusOptions(opt) {
@@ -22,7 +31,7 @@ class TaskSearchFilters extends React.Component {
   }
 
   render() {
-    const {fields: {requestId, deployId, host, lastTaskStatus}} = this.props;
+    const {fields: {requestId, deployId, host, dateStart, dateEnd, lastTaskStatus}} = this.props;
     const statusOptions = [
       { value: 'TASK_ERROR', label: 'Error' },
       { value: 'TASK_FAILED', label: 'Failed' },
@@ -36,28 +45,37 @@ class TaskSearchFilters extends React.Component {
       <Panel>
         <form onSubmit={(...args) => this.handleSubmit(...args)}>
           <div className="row">
-            <div className="col-md-4">
+            <div className="form-group col-md-4">
               <label for="requestId">Request ID</label>
               <input className="form-control" disabled {...requestId} />
             </div>
-            <div className="col-md-4">
+            <div className="form-group col-md-4">
               <label for="deployId">Deploy ID</label>
               <input className="form-control" {...deployId} />
             </div>
-            <div className="col-md-4">
+            <div className="form-group col-md-4">
               <label for="host">Host</label>
               <input className="form-control" {...host} />
             </div>
           </div>
           <div className="row">
-            <div className="col-md-4">
-              <label for="startedBetween">Started Between</label>
-            </div><div className="col-md-4">
+            <div className={classNames("form-group col-md-4", {"has-error": dateStart.error || dateEnd.error})}>
+              <label className="control-label">Started Between</label>
+              <div className="row">
+                <div className="col-md-6">
+                  <DateTimeField defaultText="" maxDate={moment()} {...dateStart} />
+                </div>
+                <div className="col-md-6">
+                  <DateTimeField defaultText="" minDate={moment(dateStart.value ? parseInt(dateStart.value) : moment(0))} maxDate={moment()} {...dateEnd} />
+                </div>
+              </div>
+              <span className="text-center help-block">{dateStart.error || dateEnd.error}</span>
+            </div><div className="form-group col-md-4">
               <label for="lastTaskStatus">Last Task Status</label>
               <ReduxSelect options={statusOptions} optionRenderer={this.renderStatusOptions} valueRenderer={this.renderStatusOptions} {...lastTaskStatus} />
             </div>
             <div className="col-md-4 text-right">
-              <Button type="submit" bsStyle="primary" className="pull-right">Submit</Button>
+              <Button type="submit" bsStyle="primary" className="pull-right" disabled={this.hasErrors()}>Submit</Button>
               <Button type="button" bsStyle="default" className="pull-right">Clear</Button>
             </div>
           </div>
@@ -67,15 +85,26 @@ class TaskSearchFilters extends React.Component {
   }
 }
 
+const validate = values => {
+  const errors = {}
+  if (values.dateStart && values.dateEnd && parseInt(values.dateEnd) < parseInt(values.dateStart)) {
+    errors.dateEnd = "End date must be after start";
+  }
+  return errors
+}
+
 function mapStateToProps(state, ownProps) {
   return {
     initialValues: {
-      requestId: ownProps.requestId
+      requestId: ownProps.requestId,
+      dateStart: null,
+      dateEnd: null
     }
   }
 }
 
 export default reduxForm({
   form: 'taskSearch',
-  fields: ['requestId', 'deployId', 'host', 'lastTaskStatus']
+  fields: ['requestId', 'deployId', 'host', 'dateStart', 'dateEnd', 'lastTaskStatus'],
+  validate
 }, mapStateToProps)(TaskSearchFilters);

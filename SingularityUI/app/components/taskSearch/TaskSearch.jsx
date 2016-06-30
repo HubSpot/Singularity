@@ -18,6 +18,7 @@ class TaskSearch extends React.Component {
             }
           ]}
         />
+        <h1>Historical Tasks</h1>
         <h2>Search Parameters</h2>
         <TaskSearchFilters requestId={this.props.requestId} />
       </div>
