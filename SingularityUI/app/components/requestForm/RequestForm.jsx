@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {PropTypes} from 'react';
 import Select from 'react-select';
 import { connect } from 'react-redux';
 import FormField from '../common/formItems/FormField';
@@ -53,6 +53,32 @@ const FIELDS_BY_REQUEST_TYPE = {
 };
 
 class RequestForm extends React.Component {
+
+  static propTypes = {
+    clearForm: PropTypes.func.isRequired,
+    update: PropTypes.func.isRequired,
+    save: PropTypes.func.isRequired,
+    racks: PropTypes.arrayOf(PropTypes.shape({
+      id: PropTypes.string.isRequired
+    })).isRequired,
+    request: PropTypes.shape({
+      request: PropTypes.shape({
+        id: PropTypes.string.isRequired
+      }).isRequired
+    }),
+    saveApiCall: PropTypes.shape({
+      isFetching: PropTypes.bool,
+      error: PropTypes.shape({
+        message: PropTypes.string
+      }),
+      data: PropTypes.shape({
+        message: PropTypes.string
+      })
+    }).isRequired,
+    form: PropTypes.shape({
+      scheduleType: PropTypes.string
+    }).isRequired
+  }
 
   componentDidMount() {
     this.props.clearForm(FORM_ID);
