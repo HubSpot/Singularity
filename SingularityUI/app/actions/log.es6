@@ -174,7 +174,7 @@ export const taskGroupFetchNext = taskGroupId =>
   function(dispatch, getState) {
     let {tasks, taskGroups, logRequestLength, maxLines} = getState();
 
-    let taskGroup = taskGroups[taskGroupId];
+    const taskGroup = taskGroups[taskGroupId];
     tasks = getTasks(taskGroup, tasks);
 
     // bail early if there's already a pending request
@@ -183,23 +183,24 @@ export const taskGroupFetchNext = taskGroupId =>
     }
 
     dispatch({taskGroupId, type: 'LOG_REQUEST_START'});
-    let promises = tasks.map(function({taskId, exists, maxOffset, path, initialDataLoaded}) {
+    const promises = tasks.map(({taskId, exists, maxOffset, path, initialDataLoaded}) => {
       if (initialDataLoaded && exists !== false) {
-        let xhr = fetchData(taskId, path, maxOffset, logRequestLength);
-        return xhr.done(function({data, offset, nextOffset}) {
+        const xhr = fetchData(taskId, path, maxOffset, logRequestLength);
+        const promise = xhr.done(function({data, offset, nextOffset}) {
           if (data.length > 0) {
             nextOffset = offset + data.length;
             return dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, true, maxLines));
           }
         });
-      } else {
-        return Promise.resolve(); // reject("initialDataLoaded is false for task #{taskId}")
+        promise.taskId = taskId;
+        return promise;
       }
+      return Promise.resolve(); // reject("initialDataLoaded is false for task #{taskId}")
     });
 
     return Promise.all(promises).then(() => dispatch({taskGroupId, type: 'LOG_REQUEST_END'})).catch((error) => {
       if (error.status === 404) {
-        dispatch(taskFileDoesNotExist(taskGroupId, error.responseText.split('task ID ')[1]));
+        dispatch(taskFileDoesNotExist(taskGroupId, error.taskId));
       }
     });
   }
