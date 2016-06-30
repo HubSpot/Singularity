@@ -197,7 +197,11 @@ export const taskGroupFetchNext = taskGroupId =>
       }
     });
 
-    return Promise.all(promises).then(() => dispatch({taskGroupId, type: 'LOG_REQUEST_END'}));
+    return Promise.all(promises).then(() => dispatch({taskGroupId, type: 'LOG_REQUEST_END'})).catch((error) => {
+      if (error.status === 404) {
+        dispatch(taskFileDoesNotExist(taskGroupId, error.responseText.split('task ID ')[1]));
+      }
+    });
   }
 ;
 

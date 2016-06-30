@@ -1,32 +1,28 @@
 import React, {PropTypes} from 'react';
 
-const RENAMED_FILES = {
-  'service.log': 'tail_of_finished_service.log'
-};
-
 class FileNotFound extends React.Component {
   static propTypes = {
-    fileName: PropTypes.string.isRequired
+    fileName: PropTypes.string.isRequired,
+    noLongerExists: PropTypes.bool
   };
 
-  buildNewRoute(fileName) {
+  buildNewRoute() {
     const currentRoute = Backbone.history.getFragment();
     const newRoute = currentRoute.split('/');
-    newRoute.pop();
-    newRoute.push(RENAMED_FILES[fileName]);
+    config.runningTaskLogPath.split('/').map(() => newRoute.pop());
+    newRoute.push(config.finishedTaskLogPath);
     return `${ config.appRoot }/${ newRoute.join('/') }`;
   }
 
   render() {
-    const fileName = _.last(this.props.fileName.split('/'));
     return (
       <div className="lines-wrapper">
         <div className="empty-table-message">
           <p>
-            {fileName} does not exist{this.props.fileName && this.props.fileName.indexOf('$TASK_ID') !== -1 ? " in this task's directory" : ' for this task'}.
+            {_.last(this.props.fileName.split('/'))} {this.props.noLongerExists ? 'no longer exists ' : 'does not exist '}{this.props.fileName && this.props.fileName.indexOf('$TASK_ID') !== -1 ? " in this task's directory" : ' for this task'}.
           </p>
-          {RENAMED_FILES[fileName] && <p>
-            It may have been moved to <a href={this.buildNewRoute(fileName)}>tail_of_finished_service.log</a>.
+          {this.props.fileName.indexOf(config.runningTaskLogPath) !== -1 && <p>
+            It may have been moved to <a href={this.buildNewRoute()}>tail_of_finished_service.log</a>.
           </p>}
         </div>
       </div>

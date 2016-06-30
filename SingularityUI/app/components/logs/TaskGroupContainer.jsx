@@ -3,7 +3,6 @@ import TaskGroupHeader from './TaskGroupHeader';
 import LogLines from './LogLines';
 import LoadingSpinner from './LoadingSpinner';
 import FileNotFound from './FileNotFound';
-import classNames from 'classnames';
 
 import { connect } from 'react-redux';
 
@@ -13,13 +12,23 @@ class TaskGroupContainer extends React.Component {
   }
 
   renderLogLines() {
-    if (this.props.logDataLoaded) {
+    if (this.props.logDataLoaded && this.props.fileExists) {
       return <LogLines taskGroupId={this.props.taskGroupId} />;
-    } else if (this.props.initialDataLoaded && !this.props.fileExists) {
-      return <div className="tail-contents"><FileNotFound fileName={this.props.path} /></div>;
-    } else {
-      return <LoadingSpinner centered={true}>Loading logs...</LoadingSpinner>;
     }
+    if (this.props.logDataLoaded) {
+      return (
+        <div>
+          <LogLines
+            taskGroupId={this.props.taskGroupId}
+            fileNotFound={<FileNotFound fileName={this.props.path} noLongerExists={true} />}
+          />
+        </div>
+      );
+    }
+    if (this.props.initialDataLoaded && !this.props.fileExists) {
+      return <div className="tail-contents"><FileNotFound fileName={this.props.path} /></div>;
+    }
+    return <LoadingSpinner centered={true}>Loading logs...</LoadingSpinner>;
   }
 
   render() {
@@ -31,13 +40,15 @@ class TaskGroupContainer extends React.Component {
 TaskGroupContainer.propTypes = {
   taskGroupId: React.PropTypes.number.isRequired,
   taskGroupContainerCount: React.PropTypes.number.isRequired,
+  path: React.PropTypes.string.isRequired,
+  logDataLoaded: React.PropTypes.bool,
 
   initialDataLoaded: React.PropTypes.bool.isRequired,
   fileExists: React.PropTypes.bool.isRequired,
   terminated: React.PropTypes.bool.isRequired
 };
 
-let mapStateToProps = function (state, ownProps) {
+const mapStateToProps = (state, ownProps) => {
   if (!(ownProps.taskGroupId in state.taskGroups)) {
     return {
       initialDataLoaded: false,
@@ -46,8 +57,8 @@ let mapStateToProps = function (state, ownProps) {
       terminated: false
     };
   }
-  let taskGroup = state.taskGroups[ownProps.taskGroupId];
-  let tasks = taskGroup.taskIds.map(taskId => state.tasks[taskId]);
+  const taskGroup = state.taskGroups[ownProps.taskGroupId];
+  const tasks = taskGroup.taskIds.map(taskId => state.tasks[taskId]);
 
   return {
     initialDataLoaded: _.all(_.pluck(tasks, 'initialDataLoaded')),
