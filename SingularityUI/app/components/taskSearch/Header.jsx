@@ -1,12 +1,30 @@
-import React from 'react';
+import React, { PropTypes } from 'react';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 
-let Header = React.createClass({
+const Header = (props) => {
+  let maybeLink;
 
-    render() {
-        return <div>{this.props.global ? <a className='btn btn-danger' href={window.config.appRoot + '/request/' + this.props.requestId} alt={`Return to Request ${ this.props.requestId }`}><Glyphicon iconClass='arrow-left' /> Back to {this.props.requestId}</a> : undefined}<h1>{this.props.global ? 'Global' : undefined} Historical Tasks</h1></div>;
-    }
-});
+  if (props.global) {
+    maybeLink = (
+      <a className="btn btn-danger" href={`${config.appRoot}/request/${props.requestId}`} alt={`Return to Request ${props.requestId}`}>
+        <Glyphicon iconClass="arrow-left" />
+        {' Back to '}{props.requestId}
+      </a>
+    );
+  }
+  return (
+    <div>
+      {maybeLink}
+      <h1>
+        {props.global ? 'Global' : ''} Historical Tasks
+      </h1>
+    </div>
+  );
+};
+
+Header.propTypes = {
+  global: PropTypes.bool,
+  requestId: PropTypes.string
+};
 
 export default Header;
-
