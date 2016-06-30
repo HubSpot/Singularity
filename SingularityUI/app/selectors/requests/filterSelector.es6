@@ -23,7 +23,7 @@ export default createSelector([getRequests, getFilter], (requests, filter) => {
   }
 
   // FIlter by request type
-  requests = _.filter(requests, (r) => _.contains(filter.subFilter, r.request.requestType));
+  requests = _.filter(requests, (r) => r.request || _.contains(filter.subFilter, r.request.requestType));
 
   // Filter by glob or fuzzy string
   if (filter.searchFilter) {
@@ -43,7 +43,6 @@ export default createSelector([getRequests, getFilter], (requests, filter) => {
       let res1 = fuzzy.filter(filter.searchFilter, requests, user);
       let res2 = fuzzy.filter(filter.searchFilter, requests, id);
       requests = _.uniq(_.pluck(_.sortBy(_.union(res1, res2), (t) => Utils.fuzzyAdjustScore(filter.searchFilter, t)), 'original').reverse());
-      console.log(requests);
     }
   }
 

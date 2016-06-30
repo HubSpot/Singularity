@@ -1,5 +1,6 @@
 import React from 'react';
 import Utils from '../../utils';
+import classNames from 'classnames';
 
 import { Nav, NavItem } from 'react-bootstrap';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
@@ -71,6 +72,7 @@ export default class RequestFilters extends React.Component {
       return (
         <NavItem
           key={index}
+          className={classNames({'separator-pill': _.contains([3, 5], index)})}
           eventKey={index}
           title={s.tip}
           active={index === selectedIndex}
@@ -81,7 +83,7 @@ export default class RequestFilters extends React.Component {
     });
 
     return (
-      <Nav bsStyle="pills" activeKey={selectedIndex}>
+      <Nav bsStyle="pills" className="table-nav-pills" activeKey={selectedIndex}>
         {navItems}
       </Nav>
     );
