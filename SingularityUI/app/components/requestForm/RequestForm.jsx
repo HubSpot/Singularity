@@ -6,7 +6,7 @@ import DropDown from '../common/formItems/DropDown';
 import MultiSelect from '../common/formItems/MultiSelect';
 import CheckBox from '../common/formItems/CheckBox';
 import { modifyField, clearForm } from '../../actions/form';
-import {SaveAction} from '../../actions/api/request';
+import { SaveRequest } from '../../actions/api/requests';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 import Utils from '../../utils';
@@ -535,7 +535,7 @@ function mapDispatchToProps(dispatch) {
       dispatch(clearForm(formId));
     },
     save(requestBody) {
-      dispatch(SaveAction.trigger(requestBody)).then((response) => navigateToRequestIfSuccess(response));
+      dispatch(SaveRequest.trigger(requestBody)).then((response) => navigateToRequestIfSuccess(response));
     }
   }
 }

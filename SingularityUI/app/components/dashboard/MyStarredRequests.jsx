@@ -6,14 +6,12 @@ import { Row, Col } from 'react-bootstrap';
 import UITable from '../common/table/UITable';
 import { Starred, RequestId, Type, LastDeploy, DeployUser, State } from '../requests/Columns';
 
-import * as StarredActions from '../../actions/ui/starred';
 import * as RequestsSelectors from '../../selectors/requests';
 
-const MyStarredRequests = ({requests, changeStar}) => {
+const MyStarredRequests = ({starredRequests}) => {
   let starredRequestsSection = (
     <div className="empty-table-message"><p>No starred requests</p></div>
   );
-  const starredRequests = requests.filter((r) => r.starred);
 
   if (starredRequests.length > 0) {
     starredRequestsSection = (
@@ -24,7 +22,7 @@ const MyStarredRequests = ({requests, changeStar}) => {
         paginated={true}
         rowChunkSize={10}
       >
-        {Starred({changeStar})}
+        {Starred}
         {RequestId}
         {Type}
         {LastDeploy}
@@ -47,25 +45,15 @@ const MyStarredRequests = ({requests, changeStar}) => {
 };
 
 MyStarredRequests.propTypes = {
-  requests: PropTypes.arrayOf(PropTypes.object).isRequired,
-  changeStar: PropTypes.func.isRequired
+  starredRequests: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 
 const mapStateToProps = (state) => {
   return {
-    requests: RequestsSelectors.combineStarredWithRequests(state)
-  };
-};
-
-const mapDispatchToProps = (dispatch) => {
-  return {
-    changeStar: (requestId) => {
-      dispatch(StarredActions.changeRequestStarAndSave(requestId));
-    }
+    starredRequests: RequestsSelectors.getStarredRequests(state)
   };
 };
 
 export default connect(
-  mapStateToProps,
-  mapDispatchToProps
+  mapStateToProps
 )(MyStarredRequests);

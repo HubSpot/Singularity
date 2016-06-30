@@ -1,22 +1,22 @@
 import Controller from './Controller';
 import SlavesView from '../views/slaves';
-import { FetchAction } from '../actions/api/slaves';
+import { FetchSlaves } from '../actions/api/slaves';
 
 class SlavesController extends Controller {
 
   initialize({store}) {
-      this.title('Slaves');
-      this.setView(new SlavesView(store));
-      app.showView(this.view);
+    this.title('Slaves');
+    this.setView(new SlavesView(store));
+    app.showView(this.view);
 
-      this.store = store;
+    this.store = store;
 
-      this.refresh();
+    this.refresh();
   }
 
   refresh() {
-      this.store.dispatch(FetchAction.trigger());
+    this.store.dispatch(FetchSlaves.trigger());
   }
 }
 
-export default SlavesController
+export default SlavesController;
