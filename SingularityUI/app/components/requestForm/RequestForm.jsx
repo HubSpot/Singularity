@@ -48,8 +48,8 @@ const FIELDS_BY_REQUEST_TYPE = {
     'killOldNonLongRunningTasksAfterMillis',
     'scheduledExpectedRuntimeMillis'
   ],
-  ON_DEMAND: [ 'killOldNonLongRunningTasksAfterMillis' ],
-  RUN_ONCE: [ 'killOldNonLongRunningTasksAfterMillis' ]
+  ON_DEMAND: ['killOldNonLongRunningTasksAfterMillis'],
+  RUN_ONCE: ['killOldNonLongRunningTasksAfterMillis']
 };
 
 class RequestForm extends React.Component {
@@ -69,11 +69,11 @@ class RequestForm extends React.Component {
   getValue(fieldId) {
     if (this.props.form && this.props.form[fieldId] !== undefined) {
       return this.props.form[fieldId];
-    } else if (this.isEditing() && this.props.request.request[fieldId] !== undefined) {
-      return this.props.request.request[fieldId];
-    } else {
-      return "";
     }
+    if (this.isEditing() && this.props.request.request[fieldId] !== undefined) {
+      return this.props.request.request[fieldId];
+    }
+    return '';
   }
 
   cantSubmit() {
@@ -87,12 +87,12 @@ class RequestForm extends React.Component {
     event.preventDefault();
     const request = {};
     const copyOverField = (fieldId) => {
-      if (this.getValue(fieldId) && fieldId != QUARTZ_SCHEDULE && fieldId != CRON_SCHEDULE && fieldId != 'scheduleType') {
+      if (this.getValue(fieldId) && fieldId !== QUARTZ_SCHEDULE && fieldId !== CRON_SCHEDULE && fieldId !== 'scheduleType') {
         request[fieldId] = this.getValue(fieldId);
       }
-    }
+    };
 
-    FIELDS_BY_REQUEST_TYPE[this.getValue('requestType')].map(copyOverField)
+    FIELDS_BY_REQUEST_TYPE[this.getValue('requestType')].map(copyOverField);
     FIELDS_BY_REQUEST_TYPE.ALL.map(copyOverField);
 
     if (this.getValue('requestType') === 'SCHEDULED') {
@@ -123,19 +123,18 @@ class RequestForm extends React.Component {
   shouldRenderField(fieldId) {
     if (!this.getValue('requestType')) {
       return false;
-    } else if (FIELDS_BY_REQUEST_TYPE[this.getValue('requestType')].indexOf(fieldId) === -1) {
-      return false;
-    } else {
-      return true;
     }
+    if (FIELDS_BY_REQUEST_TYPE[this.getValue('requestType')].indexOf(fieldId) === -1) {
+      return false;
+    }
+    return true;
   }
 
   getButtonsDisabled(type) {
     if (this.isEditing() && this.getValue('requestType') !== type) {
       return 'disabled';
-    } else {
-      return null;
     }
+    return null;
   }
 
   updateField(fieldId, newValue) {
@@ -151,16 +150,13 @@ class RequestForm extends React.Component {
     if (this.isEditing() && !(this.props.form && this.props.form.scheduleType)) {
       if (this.props.request.request[QUARTZ_SCHEDULE]) {
         return QUARTZ_SCHEDULE;
-      } else {
-        return CRON_SCHEDULE;
       }
-    } else {
-      if (this.props.form && this.props.form.scheduleType) {
-        return this.props.form.scheduleType;
-      } else {
-        return CRON_SCHEDULE;
-      }
+      return CRON_SCHEDULE;
     }
+    if (this.props.form && this.props.form.scheduleType) {
+      return this.props.form.scheduleType;
+    }
+    return CRON_SCHEDULE;
   }
 
   renderRequestTypeSelectors() {
@@ -181,10 +177,9 @@ class RequestForm extends React.Component {
       );
       if (this.isEditing() && requestType === this.getValue('requestType')) {
         return <OverlayTrigger placement="top" key={key} overlay={tooltip}>{selector}</OverlayTrigger>;
-      } else {
-        return selector;
       }
-    })
+      return selector;
+    });
     return <div className="btn-group">{selectors}</div>;
   }
 
@@ -193,8 +188,8 @@ class RequestForm extends React.Component {
       <label htmlFor="load-balanced" className={classNames({subtle: this.isEditing()})}>
         <CheckBox
           id = "load-balanced"
-          onChange = {event => this.updateField("loadBalanced", !this.getValue("loadBalanced"))}
-          checked = {this.getValue("loadBalanced")}
+          onChange = {() => this.updateField('loadBalanced', !this.getValue('loadBalanced'))}
+          checked = {this.getValue('loadBalanced')}
           disabled = {this.isEditing()}
           noFormControlClass = {true}
         />
@@ -214,7 +209,7 @@ class RequestForm extends React.Component {
       field = checkbox;
     }
     return (
-      <div className='form-group'>
+      <div className="form-group">
         {field}
       </div>
     );
@@ -222,13 +217,13 @@ class RequestForm extends React.Component {
 
   renderRequestTypeSpecificFormFields() {
     const instances = (
-      <div className='form-group'>
-        <label htmlFor='instances'>Instances</label>
+      <div className="form-group">
+        <label htmlFor="instances">Instances</label>
         <FormField
-          id = 'instances'
-          prop = {{
+          id="instances"
+          prop={{
             updateFn: event => this.updateField('instances', event.target.value),
-            placeholder: "1",
+            placeholder: '1',
             inputType: 'text',
             value: this.getValue('instances')
           }}
@@ -240,8 +235,8 @@ class RequestForm extends React.Component {
         <label htmlFor="rack-sensitive">
           <CheckBox
             id="rack-sensitive"
-            onChange={event => this.updateField("rackSensitive", !this.getValue("rackSensitive"))}
-            checked={this.getValue("rackSensitive")}
+            onChange={() => this.updateField('rackSensitive', !this.getValue('rackSensitive'))}
+            checked={this.getValue('rackSensitive')}
             noFormControlClass={true}
           />
           {" Rack Sensitive"}
@@ -249,12 +244,12 @@ class RequestForm extends React.Component {
       </div>
     );
     const hideEvenNumberAcrossRacksHint = (
-      <div className='form-group'>
+      <div className="form-group">
         <label htmlFor="hide-distribute-evenly-across-racks-hint">
           <CheckBox
             id="hide-distribute-evenly-across-racks-hint"
-            onChange={event => this.updateField("hideEvenNumberAcrossRacksHint", !this.getValue("hideEvenNumberAcrossRacksHint"))}
-            checked={this.getValue("hideEvenNumberAcrossRacksHint")}
+            onChange={() => this.updateField('hideEvenNumberAcrossRacksHint', !this.getValue('hideEvenNumberAcrossRacksHint'))}
+            checked={this.getValue('hideEvenNumberAcrossRacksHint')}
             noFormControlClass={true}
           />
           {" Hide Distribute Evenly Across Racks Hint"}
@@ -262,11 +257,11 @@ class RequestForm extends React.Component {
       </div>
     );
     const waitAtLeastMillisAfterTaskFinishesForReschedule = (
-      <div className='form-group'>
-        <label htmlFor='waitAtLeast'>Task rescheduling delay</label>
+      <div className="form-group">
+        <label htmlFor="waitAtLeast">Task rescheduling delay</label>
         <div className="input-group">
           <FormField
-            id='waitAtLeast'
+            id="waitAtLeast"
             prop={{
               updateFn: event => this.updateField('waitAtLeastMillisAfterTaskFinishesForReschedule', event.target.value),
               inputType: 'text',
@@ -279,8 +274,8 @@ class RequestForm extends React.Component {
     );
     const rackOptions = _.pluck(this.props.racks, 'id').map(id => ({value: id, label: id}));
     const rackAffinity = (
-      <div className='form-group'>
-        <label htmlFor="rack-affinity">Rack Affinity <span className='form-label-tip'>separate multiple racks with commas</span></label>
+      <div className="form-group">
+        <label htmlFor="rack-affinity">Rack Affinity <span className="form-label-tip">separate multiple racks with commas</span></label>
         <MultiSelect
           id="rack-affinity"
           onChange={ value => this.updateField('rackAffinity', value) }
@@ -291,20 +286,20 @@ class RequestForm extends React.Component {
       </div>
     );
     const schedule = (
-      <div className='form-group required'>
-        <label htmlFor='schedule'>Schedule</label>
-        <div className="row" id='schedule'>
-          <div className='col-sm-7'>
+      <div className="form-group required">
+        <label htmlFor="schedule">Schedule</label>
+        <div className="row" id="schedule">
+          <div className="col-sm-7">
             <FormField
               prop={{
                 updateFn: event => this.updateField(this.getScheduleType(), event.target.value),
-                placeholder: this.getScheduleType() === QUARTZ_SCHEDULE ? "eg: 0 */5 * * * ?" : "eg: */5 * * * *",
+                placeholder: this.getScheduleType() === QUARTZ_SCHEDULE ? 'eg: 0 */5 * * * ?' : 'eg: */5 * * * *',
                 inputType: 'text',
                 value: this.getValue(this.getScheduleType())
               }}
             />
           </div>
-          <div className='col-sm-5'>
+          <div className="col-sm-5">
             <Select
               onChange={value => this.updateField('scheduleType', value)}
               options={[
@@ -325,10 +320,10 @@ class RequestForm extends React.Component {
       </div>
     );
     const numRetriesOnFailure = (
-      <div className='form-group'>
-        <label htmlFor='retries-on-failure'>Number of retries on failure</label>
+      <div className="form-group">
+        <label htmlFor="retries-on-failure">Number of retries on failure</label>
         <FormField
-          id='retries-on-failure'
+          id="retries-on-failure"
           prop={{
             updateFn: event => this.updateField('numRetriesOnFailure', event.target.value),
             inputType: 'text',
@@ -338,11 +333,11 @@ class RequestForm extends React.Component {
       </div>
     );
     const killOldNonLongRunningTasksAfterMillis = (
-      <div className='form-group'>
-        <label htmlFor='killOldNRL'>Kill cleaning task(s) after</label>
+      <div className="form-group">
+        <label htmlFor="killOldNRL">Kill cleaning task(s) after</label>
         <div className="input-group">
           <FormField
-            id='killOldNRL'
+            id="killOldNRL"
             prop={{
               updateFn: event => this.updateField('killOldNonLongRunningTasksAfterMillis', event.target.value),
               inputType: 'text',
@@ -354,11 +349,11 @@ class RequestForm extends React.Component {
       </div>
     );
     const scheduledExpectedRuntimeMillis = (
-      <div className='form-group'>
-        <label htmlFor='expected-runtime'>Maximum task duration</label>
+      <div className="form-group">
+        <label htmlFor="expected-runtime">Maximum task duration</label>
         <div className="input-group">
           <FormField
-            id='expected-runtime'
+            id="expected-runtime"
             prop={{
               updateFn: event => this.updateField('scheduledExpectedRuntimeMillis', event.target.value),
               inputType: 'text',
@@ -390,7 +385,7 @@ class RequestForm extends React.Component {
     const header = (
       this.isEditing() ?
         <h3>
-          Editing <a href={`${config.appRoot}/request/${this.props.request.request.id}`}>{this.props.request.request.id}</a>
+          Editing <a href={`${config.appRoot}/request/${requestId}`}>{requestId}</a>
         </h3> :
         <h3>New Request</h3>
     );
@@ -401,11 +396,11 @@ class RequestForm extends React.Component {
           id="id"
           prop={{
             updateFn: event => {
-              this.updateField("id", event.target.value);
+              this.updateField('id', event.target.value);
             },
-            placeholder: "eg: my-awesome-request",
+            placeholder: 'eg: my-awesome-request',
             inputType: 'text',
-            value: this.getValue("id"),
+            value: this.getValue('id'),
             required: true
           }}
         />
@@ -413,7 +408,7 @@ class RequestForm extends React.Component {
     );
     const owners = (
       <div className="form-group">
-        <label htmlFor='owners'>Owners <span className='form-label-tip'>separate multiple owners with commas</span></label>
+        <label htmlFor="owners">Owners <span className="form-label-tip">separate multiple owners with commas</span></label>
         <MultiSelect
           id="owners"
           onChange={ value => this.updateField('owners', value) }
@@ -441,7 +436,7 @@ class RequestForm extends React.Component {
           Slave Placement
         </label>
         <DropDown
-          id='slavePlacement'
+          id="slavePlacement"
           prop={{
             updateFn: event => {
               this.updateField('slavePlacement', event.target.value);
@@ -449,23 +444,23 @@ class RequestForm extends React.Component {
             forceChooseValue: true,
             choices: [
               {
-                value: "",
-                user: "Default"
+                value: '',
+                user: 'Default'
               },
               {
-                value: "SEPARATE",
-                user: "Separate"
+                value: 'SEPARATE',
+                user: 'Separate'
               },
               {
-                value: "OPTIMISTIC",
-                user: "Optimistic"
+                value: 'OPTIMISTIC',
+                user: 'Optimistic'
               },
               {
-                value: "GREEDY",
-                user: "Greedy"
+                value: 'GREEDY',
+                user: 'Greedy'
               }
             ],
-            value: this.getValue('slavePlacement') || ""
+            value: this.getValue('slavePlacement') || ''
           }}
         />
       </div>
@@ -480,21 +475,20 @@ class RequestForm extends React.Component {
       </div>
     );
     const errorMessage = (
-      this.props.saveApiCall.error ?
-        <p className='alert alert-danger'>
-          There was a problem saving your request: {this.props.saveApiCall.error.message}
-        </p> :
-        this.props.saveApiCall.data && this.props.saveApiCall.data.message ?
-        <p className='alert alert-danger'>
-          There was a problem saving your request: {this.props.saveApiCall.data.message}
-        </p> :
-        null
+      this.props.saveApiCall.error &&
+      <p className="alert alert-danger">
+        There was a problem saving your request: {this.props.saveApiCall.error.message}
+      </p> ||
+      this.props.saveApiCall.data && this.props.saveApiCall.data.message &&
+      <p className="alert alert-danger">
+        There was a problem saving your request: {this.props.saveApiCall.data.message}
+      </p>
     );
     return (
       <div className="row new-form">
         <div className="col-md-5 col-md-offset-3">
           { header }
-          <form role='form' onSubmit={event => this.submitForm(event)}>
+          <form role="form" onSubmit={event => this.submitForm(event)}>
             { !this.isEditing() && id }
             { owners }
             { requestTypeSelectors }
@@ -509,10 +503,10 @@ class RequestForm extends React.Component {
     );
   }
 
-};
+}
 
 function navigateToRequestIfSuccess(promiseResult) {
-  if (promiseResult.type === "SAVE_REQUEST_SUCCESS") {
+  if (promiseResult.type === 'SAVE_REQUEST_SUCCESS') {
     Backbone.history.navigate(`/request/${ promiseResult.data.request.id }`, {trigger: true});
   }
 }
@@ -523,7 +517,7 @@ function mapStateToProps(state) {
     request: state.api.request ? state.api.request.data : null,
     form: state.form[FORM_ID],
     saveApiCall: state.api.saveRequest
-  }
+  };
 }
 
 function mapDispatchToProps(dispatch) {
@@ -537,7 +531,7 @@ function mapDispatchToProps(dispatch) {
     save(requestBody) {
       dispatch(SaveAction.trigger(requestBody)).then((response) => navigateToRequestIfSuccess(response));
     }
-  }
+  };
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(RequestForm);
