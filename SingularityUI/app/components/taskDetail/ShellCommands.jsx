@@ -18,7 +18,7 @@ export default class ShellCommands extends React.Component {
       responseText: null,
       showLauncher: false,
       submitDisabled: config.shellCommands.length == 0
-    }
+    };
   }
 
   componentWillUnmount() {
@@ -45,7 +45,7 @@ export default class ShellCommands extends React.Component {
     });
     this.props.runShellCommand(this.state.selectedCmd.name).then(() => {
       this.setState({
-        responseText: "Command sent!",
+        responseText: 'Command sent!',
         showLauncher: this.state.openLog,
         submitDisabled: false
       });
@@ -65,20 +65,20 @@ export default class ShellCommands extends React.Component {
         <form className="col-md-6">
           <h3>Execute a command</h3>
           <div className="form-group required">
-            <label for="cmd">Select command</label>
+            <label htmlFor="cmd">Select command</label>
             <select name="cmd" className="form-control input-large" onChange={this.onCommandChange.bind(this)}>
               {options}
             </select>
             <p className="cmd-description">{this.state.selectedCmd ? this.state.selectedCmd.description : ''}</p>
 
-            <label class="check-label">
+            <label className="check-label">
               <input type="checkbox" name="openLog" checked={this.state.openLog} onChange={this.onOpenLogChange.bind(this)} /> Redirect to command output upon success
             </label>
           </div>
           <Button bsStyle="success" onClick={this.handleRun.bind(this)} disabled={this.state.submitDisabled}>Run</Button>
           {this.state.responseText ? (
-            <span className="text-success" style={{marginLeft: "10px"}}>
-              <Glyphicon iconClass='ok' /> {this.state.responseText}
+            <span className="text-success" style={{marginLeft: '10px'}}>
+              <Glyphicon iconClass="ok" /> {this.state.responseText}
             </span>
           ) : null}
         </form>
@@ -92,8 +92,8 @@ export default class ShellCommands extends React.Component {
             emptyMessage="No commands run"
             entries={this.props.task.shellCommandHistory}
             perPage={5}
-            first
-            last
+            first={true}
+            last={true}
             headers={['Timestamp', 'Command', 'User', 'Status', 'Message', '']}
             renderTableRow={(data, index) => {
               let updates = _.sortBy(data.shellUpdates, 'timestamp');
@@ -108,20 +108,20 @@ export default class ShellCommands extends React.Component {
                   <td>
                     <ul>
                       {updates.map((u) => {
-                        return <li key={u.timestamp}>{Utils.absoluteTimestamp(u.timestamp)}: {u.message}</li>
+                        return <li key={u.timestamp}>{Utils.absoluteTimestamp(u.timestamp)}: {u.message}</li>;
                       })}
                     </ul>
                   </td>
                   <td className="actions-column">
                     {filename ? (
                       <Link prop={{
-                          url: `${config.appRoot}/task/${data.shellRequest.taskId.id}/tail/${data.shellRequest.taskId.id}/${filename}`,
-                          text: '···',
-                          overlayTrigger: true,
-                          overlayId: filename,
-                          overlayTriggerPlacement: 'left',
-                          overlayToolTipContent: 'View output file'
-                        }}
+                        url: `${config.appRoot}/task/${data.shellRequest.taskId.id}/tail/${data.shellRequest.taskId.id}/${filename}`,
+                        text: '···',
+                        overlayTrigger: true,
+                        overlayId: filename,
+                        overlayTriggerPlacement: 'left',
+                        overlayToolTipContent: 'View output file'
+                      }}
                       />
                     ) : null}
                   </td>

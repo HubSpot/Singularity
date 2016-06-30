@@ -8,7 +8,7 @@ const initialState = window.localStorage.hasOwnProperty('starredRequests')
 // revisit this with an actual pure function later
 // (maybe a subscriber will fix this)
 const starredRequests = (state = initialState, action) => {
-  if (action.type === StarredActions.CHANGE_REQUEST_STAR) {
+  if (action.type === StarredActions.TOGGLE_REQUEST_STAR) {
     let newState;
     if (state.indexOf(action.value) > -1) {
       // remove

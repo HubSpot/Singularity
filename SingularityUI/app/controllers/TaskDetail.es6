@@ -1,23 +1,28 @@
 import Controller from './Controller';
 import TaskView from '../views/task';
-import { FetchAction as TaskFetchAction } from '../actions/api/task';
-import { FetchAction as DeployFetchAction} from '../actions/api/deploy';
-import { FetchAction as DeploysFetchAction} from '../actions/api/deploys';
-import { FetchAction as TaskCleanupsFetchAction } from '../actions/api/taskCleanups';
-import { FetchAction as TaskFilesFetchAction } from '../actions/api/taskFiles';
-import { FetchAction as TaskResourceUsageFetchAction } from '../actions/api/taskResourceUsage';
-import { FetchAction as TaskS3LogsFetchAction } from '../actions/api/taskS3Logs';
+
+import {
+  FetchTaskHistory,
+  FetchDeployForRequest
+} from '../actions/api/history';
+import { FetchPendingDeploys } from '../actions/api/deploys';
+import {
+  FetchTaskCleanups,
+  FetchTaskStatistics
+} from '../actions/api/tasks';
+import { FetchTaskFiles } from '../actions/api/sandbox';
+import { FetchTaskS3Logs } from '../actions/api/logs';
 
 class TaskDetail extends Controller {
 
   initialize({store, taskId, filePath}) {
-    app.showPageLoader()
+    app.showPageLoader();
     this.title(taskId);
     this.store = store;
     this.taskId = taskId;
     this.filePath = filePath;
 
-    this.store.dispatch(TaskFilesFetchAction.trigger(this.taskId, this.filePath)).then(
+    this.store.dispatch(FetchTaskFiles.trigger(this.taskId, this.filePath)).then(
       this.refresh().then(() => {
         this.setView(new TaskView(store, this.taskId, this.filePath));
         app.showView(this.view);
@@ -26,19 +31,19 @@ class TaskDetail extends Controller {
   }
 
   refresh() {
-    let promises = [];
-    let taskPromise = this.store.dispatch(TaskFetchAction.trigger(this.taskId));
+    const promises = [];
+    const taskPromise = this.store.dispatch(FetchTaskHistory.trigger(this.taskId));
     taskPromise.then(() => {
-      let task = this.store.getState().api.task[this.taskId].data;
-      promises.push(this.store.dispatch(DeployFetchAction.trigger(task.task.taskId.requestId, task.task.taskId.deployId)));
+      const task = this.store.getState().api.task[this.taskId].data;
+      promises.push(this.store.dispatch(FetchDeployForRequest.trigger(task.task.taskId.requestId, task.task.taskId.deployId)));
       if (task.isStillRunning) {
-        promises.push(this.store.dispatch(TaskResourceUsageFetchAction.trigger(this.taskId)));
+        promises.push(this.store.dispatch(FetchTaskStatistics.trigger(this.taskId)));
       }
     });
     promises.push(taskPromise);
-    promises.push(this.store.dispatch(TaskCleanupsFetchAction.trigger()));
-    promises.push(this.store.dispatch(DeploysFetchAction.trigger('pending')));
-    promises.push(this.store.dispatch(TaskS3LogsFetchAction.trigger(this.taskId)));
+    promises.push(this.store.dispatch(FetchTaskCleanups.trigger()));
+    promises.push(this.store.dispatch(FetchPendingDeploys.trigger()));
+    promises.push(this.store.dispatch(FetchTaskS3Logs.trigger(this.taskId)));
     return Promise.all(promises);
   }
 }
