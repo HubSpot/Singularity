@@ -1,22 +1,26 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import Utils from '../../utils';
-import { FetchAction as TaskFilesFetchAction } from '../../actions/api/taskFiles';
-import { FetchAction as TaskResourceUsageFetchAction } from '../../actions/api/taskResourceUsage';
-import { FetchAction as TaskFetchAction } from '../../actions/api/task';
-import { KillAction as TaskKillAction } from '../../actions/api/task';
-import { RunAction as RunShellCommandAction } from '../../actions/api/taskShellCommand';
+
+import { FetchTaskFiles } from '../../actions/api/sandbox';
+import {
+  FetchTaskStatistics,
+  KillTask,
+  RunCommandOnTask
+} from '../../actions/api/tasks';
+
+import {
+  FetchTaskHistory,
+} from '../../actions/api/history';
+
 import { InfoBox, UsageInfo } from '../common/statelessComponents';
 import { Alert } from 'react-bootstrap';
-import FormGroup from 'react-bootstrap/lib/FormGroup';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import JSONButton from '../common/JSONButton';
 import Section from '../common/Section';
 import FormModal from '../common/FormModal';
 import CollapsableSection from '../common/CollapsableSection';
-import SimpleTable from '../common/SimpleTable';
-import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 
 import TaskFileBrowser from './TaskFileBrowser';
 import ShellCommands from './ShellCommands';
@@ -37,13 +41,13 @@ class TaskDetail extends React.Component {
     this.state = {
       previousUsage: null,
       currentFilePath: props.filePath
-    }
+    };
   }
 
   componentDidMount() {
     // Get a second sample for CPU usage right away
     if (this.props.task.isStillRunning) {
-      this.props.dispatch(TaskResourceUsageFetchAction.trigger(this.props.taskId));
+      this.props.dispatch(FetchTaskStatistics.trigger(this.props.taskId));
     }
   }
 
@@ -167,7 +171,7 @@ class TaskDetail extends React.Component {
           files={files}
           changeDir={(path) => {
             if (path.startsWith('/')) path = path.substring(1);
-            this.props.dispatch(TaskFilesFetchAction.trigger(this.props.taskId, path)).then(() => {
+            this.props.dispatch(FetchTaskFiles.trigger(this.props.taskId, path)).then(() => {
               this.setState({
                 currentFilePath: path
               });
@@ -238,13 +242,13 @@ class TaskDetail extends React.Component {
             taskFiles={taskFiles}
             shellCommandResponse={shellCommandResponse}
             runShellCommand={(commandName) => {
-              return this.props.dispatch(RunShellCommandAction.trigger(this.props.taskId, commandName));
+              return this.props.dispatch(RunCommandOnTask.trigger(this.props.taskId, commandName));
             }}
             updateTask={() => {
-              this.props.dispatch(TaskFetchAction.trigger(this.props.taskId));
+              this.props.dispatch(FetchTaskHistory.trigger(this.props.taskId));
             }}
             updateFiles={(path) => {
-              this.props.dispatch(TaskFilesFetchAction.trigger(this.props.taskId, path));
+              this.props.dispatch(FetchTaskFiles.trigger(this.props.taskId, path));
             }}
           />
         </CollapsableSection>
@@ -309,8 +313,8 @@ class TaskDetail extends React.Component {
   }
 
   killTask(data) {
-    this.props.dispatch(TaskKillAction.trigger(this.props.taskId, data)).then((e) =>{
-      this.props.dispatch(TaskFetchAction.trigger(this.props.taskId));
+    this.props.dispatch(KillTask.trigger(this.props.taskId, data)).then((e) =>{
+      this.props.dispatch(FetchTaskHistory.trigger(this.props.taskId));
     });
   }
 }

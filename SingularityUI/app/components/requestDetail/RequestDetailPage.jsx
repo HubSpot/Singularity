@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import RequestHeader from './RequestHeader';
 
 const RequestDetailPage = ({requestParent}) => {
+  // if deleted handle differently here
   return (
     <div>
       <RequestHeader requestParent={requestParent} />
