@@ -126,6 +126,7 @@ function mapStateToProps(state, ownProps) {
     r.hasActiveDeploy = !!(r.activeDeploy || (r.requestDeployState && r.requestDeployState.activeDeploy));
     r.canBeRunNow = r.state === 'ACTIVE' && _.contains(['SCHEDULED', 'ON_DEMAND'], r.request.requestType) && r.hasActiveDeploy;
     r.canBeScaled = _.contains(['ACTIVE', 'SYSTEM_COOLDOWN'], r.state) && r.hasActiveDeploy && _.contains(['WORKER', 'SERVICE'], r.request.requestType);
+    r.id = r.request ? r.request.id : r.requestId
   });
 
   return {

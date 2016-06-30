@@ -17,12 +17,12 @@ export const Starred = (toggleStar, sortable, starredRequests) => {
     id="starred"
     key="starred"
     cellData={
-      (rowData) => starredRequests.has(rowData.request ? rowData.request.id : rowData.requestId)
+      (rowData) => starredRequests.has(rowData.id)
     }
     cellRender={
       (cellData, rowData) => {
         return (
-          <a className="star" data-starred={cellData} onClick={() => toggleStar(rowData.request.id)}>
+          <a className="star" data-starred={cellData} onClick={() => toggleStar(rowData.id)}>
             <span className="glyphicon glyphicon-star"></span>
           </a>
         );
@@ -98,7 +98,7 @@ export const RequestId = (
     key="requestId"
     className="keep-in-check"
     cellData={
-      (rowData) => rowData.request ? rowData.request.id : rowData.requestId
+      (rowData) => rowData.id
     }
     sortData={(cellData) => cellData.toLowerCase()}
     cellRender={
@@ -195,22 +195,22 @@ export const Actions = (removeAction, unpauseAction, runAction, fetchRun, fetchR
     cellRender={
       (rowData) => {
         const edit = !config.hideNewRequestButton && (
-          <a href={`${config.appRoot}/requests/edit/${rowData.request.id}`} alt="Edit">
+          <a href={`${config.appRoot}/requests/edit/${rowData.id}`} alt="Edit">
             <span className="glyphicon glyphicon-edit"></span>
           </a>
         );
 
         const unpause = rowData.state === 'PAUSED' && (
-          <UnpauseButton requestId={rowData.request.id} unpauseAction={unpauseAction} />
+          <UnpauseButton requestId={rowData.id} unpauseAction={unpauseAction} />
         );
 
         const scale = rowData.canBeScaled && (
-          <ScaleButton requestId={rowData.request.id} scaleAction={scaleAction} bounceAction={bounceAction} currentInstances={rowData.request.instances} />
+          <ScaleButton requestId={rowData.id} scaleAction={scaleAction} bounceAction={bounceAction} currentInstances={rowData.request.instances} />
         );
 
         const runNow = rowData.canBeRunNow && (
           <RunNowButton
-            requestId={rowData.request.id}
+            requestId={rowData.id}
             runAction={runAction}
             fetchRunAction={fetchRun}
             fetchRunHistoryAction={fetchRunHistory}
@@ -223,7 +223,7 @@ export const Actions = (removeAction, unpauseAction, runAction, fetchRun, fetchR
             {scale}
             {runNow}
             {unpause}
-            <RemoveButton requestId={rowData.request.id} removeAction={removeAction} />
+            <RemoveButton requestId={rowData.id} removeAction={removeAction} />
             <JSONButton className="inline" object={rowData}>
               {'{ }'}
             </JSONButton>
