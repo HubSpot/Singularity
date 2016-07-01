@@ -5,36 +5,24 @@ import Utils from '../../utils';
 
 import JSONButton from '../common/JSONButton';
 
+import RequestStar from './RequestStar';
 import UnpauseButton from './UnpauseButton';
 import RemoveButton from './RemoveButton';
 
-// use this only with combineStarredWithRequests selector
-export const Starred = ({changeStar, sortable}) => (
+export const Starred = (
   <Column
     label=""
     id="starred"
     cellData={
-      (rowData) => 'starred' in rowData
+      (rowData) => rowData.request.id
     }
     cellRender={
-      (cellData, rowData) => {
-        return (
-          <a className="star" data-starred={cellData} onClick={
-            () => changeStar(rowData.request.id)
-          }>
-            <span className="glyphicon glyphicon-star"></span>
-          </a>
-        );
-      }
+      (cellData) => (
+        <RequestStar requestId={cellData} />
+      )
     }
-    sortable={sortable}
   />
 );
-
-Starred.propTypes = {
-  changeStar: PropTypes.func,
-  sortable: PropTypes.bool
-};
 
 export const DeployUser = (
   <Column

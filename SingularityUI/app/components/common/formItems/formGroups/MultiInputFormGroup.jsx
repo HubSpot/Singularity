@@ -1,6 +1,6 @@
 import React, {Component, PropTypes} from 'react';
 import MultiInput from '../MultiInput';
-import classNames from 'classNames';
+import classNames from 'classnames';
 
 class MultiInputFormGroup extends Component {
   static propTypes = {

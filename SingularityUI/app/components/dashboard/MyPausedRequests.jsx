@@ -6,7 +6,7 @@ import { Row, Col } from 'react-bootstrap';
 import UITable from '../common/table/UITable';
 import { RequestId, Type, LastDeploy, Actions } from '../requests/Columns';
 
-import * as RequestActions from '../../actions/api/request';
+import * as RequestsActions from '../../actions/api/requests';
 import * as RequestsSelectors from '../../selectors/requests';
 
 const MyPausedRequests = ({userRequests, unpauseAction, removeAction}) => {
@@ -60,10 +60,10 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
   return {
     unpauseAction: (requestId, message) => {
-      dispatch(RequestActions.UnpauseAction.trigger(requestId, message));
+      dispatch(RequestsActions.UnpauseRequest.trigger(requestId, message));
     },
     removeAction: (requestId, message) => {
-      dispatch(RequestActions.RemoveAction.trigger(requestId, message));
+      dispatch(RequestsActions.RemoveRequest.trigger(requestId, message));
     }
   };
 };
