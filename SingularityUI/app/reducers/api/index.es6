@@ -3,7 +3,10 @@ import buildApiActionReducer from './base';
 import buildKeyedApiActionReducer from './keyed';
 
 import { FetchUser } from '../../actions/api/auth';
-import { FetchPendingDeploys } from '../../actions/api/deploys';
+import {
+  FetchPendingDeploys,
+  SaveDeploy
+} from '../../actions/api/deploys';
 
 import {
   FetchTaskHistory,
@@ -26,7 +29,8 @@ import {
   FetchRequest,
   SaveRequest,
   RemoveRequest,
-  UnpauseRequest
+  UnpauseRequest,
+  FetchRequestsInState
 } from '../../actions/api/requests';
 
 import { FetchTaskFiles } from '../../actions/api/sandbox';
@@ -42,6 +46,8 @@ import {
 } from '../../actions/api/state';
 
 import {
+  FetchTasksInState,
+  FetchTask, // currently FetchTaskHistory is used for `task` in the store
   KillTask,
   FetchTaskCleanups,
   FetchTaskStatistics,
@@ -57,9 +63,11 @@ const racks = buildApiActionReducer(FetchRacks, []);
 const request = buildKeyedApiActionReducer(FetchRequest);
 const saveRequest = buildApiActionReducer(SaveRequest);
 const requests = buildApiActionReducer(FetchRequests, []);
+const requestsInState = buildApiActionReducer(FetchRequestsInState, []);
 const status = buildApiActionReducer(FetchSingularityStatus);
 const deploy = buildApiActionReducer(FetchDeployForRequest);
 const deploys = buildApiActionReducer(FetchPendingDeploys, []);
+const saveDeploy = buildApiActionReducer(SaveDeploy);
 const activeTasksForDeploy = buildApiActionReducer(FetchActiveTasksForDeploy);
 const activeTasksForRequest = buildKeyedApiActionReducer(FetchActiveTasksForRequest);
 const taskHistoryForDeploy = buildApiActionReducer(FetchTaskHistoryForDeploy);
@@ -69,6 +77,7 @@ const taskResourceUsage = buildApiActionReducer(FetchTaskStatistics);
 const taskS3Logs = buildApiActionReducer(FetchTaskS3Logs, []);
 const taskShellCommandResponse = buildApiActionReducer(RunCommandOnTask);
 const task = buildKeyedApiActionReducer(FetchTaskHistory);
+const tasks = buildApiActionReducer(FetchTasksInState, []);
 
 export default combineReducers({
   user,
@@ -78,9 +87,12 @@ export default combineReducers({
   request,
   saveRequest,
   requests,
+  requestsInState,
   status,
   deploy,
+  saveDeploy,
   task,
+  tasks,
   activeTasksForDeploy,
   activeTasksForRequest,
   taskHistoryForDeploy,

@@ -26,7 +26,7 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = (dispatch) => {
   return {
     changeStar: (requestId) => {
-      dispatch(StarredActions.toggleRequestStar(requestId));
+      dispatch(StarredActions.ToggleRequestStar(requestId));
     }
   };
 };

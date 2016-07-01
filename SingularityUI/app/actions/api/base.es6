@@ -2,30 +2,7 @@ import fetch from 'isomorphic-fetch';
 
 const JSON_HEADERS = {'Content-Type': 'application/json', 'Accept': 'application/json'};
 
-export function buildJsonApiAction(actionName, httpMethod, opts={}, keyField=undefined) {
-  const JSON_BOILERPLATE = {
-    method: httpMethod,
-    headers: JSON_HEADERS
-  }
-
-  let options;
-  if (typeof opts === 'function') {
-    options = (...args) => {
-      let generatedOpts = opts(...args);
-      generatedOpts.body = JSON.stringify(generatedOpts.body || {});
-      return _.extend({}, generatedOpts, JSON_BOILERPLATE);
-    };
-  } else {
-    options = (...args) => {
-      opts.body = JSON.stringify(opts.body || {});
-      return _.extend({}, opts, JSON_BOILERPLATE);
-    };
-  }
-
-  return buildApiAction(actionName, options, keyField);
-}
-
-export function buildApiAction(actionName, opts={}, keyFunc=undefined) {
+export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
   const ACTION = actionName;
   const STARTED = `${actionName}_STARTED`;
   const ERROR = `${actionName}_ERROR`;
@@ -38,6 +15,28 @@ export function buildApiAction(actionName, opts={}, keyFunc=undefined) {
     optsFunc = opts;
   } else {
     optsFunc = () => opts;
+  }
+
+  function clear() {
+    return { type: CLEAR };
+  }
+
+  function started(key = undefined) {
+    return { type: STARTED, key };
+  }
+
+  function error(error, key = undefined) {
+    return { type: ERROR, error, key };
+  }
+
+  function success(data, key = undefined) {
+    return { type: SUCCESS, data, key };
+  }
+
+  function clearData() {
+    return function (dispatch) {
+      dispatch(clear());
+    };
   }
 
   function trigger(...args) {
@@ -61,34 +60,14 @@ export function buildApiAction(actionName, opts={}, keyFunc=undefined) {
         .then((data) => {
           if (apiResponse.status >= 200 && apiResponse.status < 300) {
             return dispatch(success(data, key));
+          } else {
+            return dispatch(error(data, key));
           }
-          throw new Error(data);
+          if (data.message) {
+            return dispatch(error({message: data.message}, key));
+          }
+          return dispatch(error({message: data}, key));
         })
-        .catch(ex => {
-          return dispatch(error(ex, key));
-        });
-    };
-  }
-
-  function clear() {
-    return { type: CLEAR };
-  }
-
-  function started(key=undefined) {
-    return { type: STARTED, key };
-  }
-
-  function error(error, key=undefined) {
-    return { type: ERROR, error, key };
-  }
-
-  function success(data, key=undefined) {
-    return { type: SUCCESS, data, key };
-  }
-
-  function clearData() {
-    return function (dispatch) {
-      dispatch(clear());
     };
   }
 
@@ -105,4 +84,27 @@ export function buildApiAction(actionName, opts={}, keyFunc=undefined) {
     error,
     success
   };
+}
+
+export function buildJsonApiAction(actionName, httpMethod, opts = {}, keyField = undefined) {
+  const JSON_BOILERPLATE = {
+    method: httpMethod,
+    headers: JSON_HEADERS
+  };
+
+  let options;
+  if (typeof opts === 'function') {
+    options = (...args) => {
+      const generatedOpts = opts(...args);
+      generatedOpts.body = JSON.stringify(generatedOpts.body || {});
+      return _.extend({}, generatedOpts, JSON_BOILERPLATE);
+    };
+  } else {
+    options = () => {
+      opts.body = JSON.stringify(opts.body || {});
+      return _.extend({}, opts, JSON_BOILERPLATE);
+    };
+  }
+
+  return buildApiAction(actionName, options, keyField);
 }

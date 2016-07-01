@@ -1,54 +1,35 @@
 import React, { Component, PropTypes } from 'react';
 
-import ConfirmModal from '../common/ConfirmModal';
+import FormModal from '../common/FormModal';
+import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 
 export default class UnpauseButton extends Component {
+
   static propTypes = {
     requestId: PropTypes.string.isRequired,
     unpauseAction: PropTypes.func.isRequired
   };
 
-  constructor() {
-    super();
-
-    this.state = {
-      message: ''
-    };
-
-    this.confirm = this.confirm.bind(this);
-    this.handleChange = this.handleChange.bind(this);
-  }
-
-  handleChange(event) {
-    this.setState({message: event.target.value});
-  }
-
-  confirm() {
-    this.props.unpauseAction(this.props.requestId, this.state.message);
-  }
-
   render() {
     return (
-      <ConfirmModal
-        confirm={this.confirm}
-        alt="Unpause Request"
-        data-action="unpause"
-        button={<span className="glyphicon glyphicon-play"></span>}
-      >
-        <p>Are you sure you want to unpause the request?</p>
-        <pre>{this.props.requestId}</pre>
-        <form>
-          <div className="form-group">
-            <input
-              className="form-control"
-              type="text"
-              value={this.state.message}
-              onChange={this.handleChange}
-              placeholder="Message (optional)"
-            />
-          </div>
-        </form>
-      </ConfirmModal>
+      <span>
+        <a onClick={() => this.refs.unpauseModal.show()}><Glyphicon iconClass="play" /></a>
+        <FormModal
+          ref="unpauseModal"
+          action="Unpause Request"
+          onConfirm={(data) => this.props.unpauseAction(this.props.requestId, data)}
+          buttonStyle="primary"
+          formElements={[
+            {
+              name: 'message',
+              type: FormModal.INPUT_TYPES.STRING,
+              label: 'Message (optional)'
+            }
+          ]}>
+          <p>Are you sure you want to unpause this request?</p>
+          <pre>{this.props.requestId}</pre>
+        </FormModal>
+      </span>
     );
   }
 }

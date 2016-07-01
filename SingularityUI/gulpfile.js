@@ -108,6 +108,7 @@ gulp.task('styles', function () {
       'node_modules/sortable/css/sortable-theme-bootstrap.css',
       'node_modules/react-virtualized/styles.css',
       'node_modules/react-select/dist/react-select.css',
+      'node_modules/react-tagsinput/react-tagsinput.css',
       'app/**/*.styl'
     ])
     .pipe(stylus({

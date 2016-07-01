@@ -1,8 +1,5 @@
-let NewDeployController;
 let NotFoundController;
-let RequestsTableController;
 let TaskSearchController;
-let TasksTableController;
 let Utils;
 
 const hasProp = {}.hasOwnProperty;
@@ -13,13 +10,13 @@ import StatusController from 'controllers/Status';
 
 import RequestFormController from 'controllers/RequestForm';
 
-NewDeployController = require('controllers/NewDeploy');
+import NewDeployFormController from 'controllers/NewDeployForm';
 
 import RequestDetailController from 'controllers/RequestDetail';
 
-RequestsTableController = require('controllers/RequestsTable');
+import RequestsTableController from 'controllers/RequestsTable';
 
-TasksTableController = require('controllers/TasksTable');
+import TasksTableController from 'controllers/TasksTable';
 
 import TaskDetailController from 'controllers/TaskDetail';
 
@@ -78,6 +75,7 @@ class Router extends Backbone.Router {
       searchFilter = '';
     }
     return this.app.bootstrapController(new RequestsTableController({
+      store: this.app.store,
       state,
       subFilter,
       searchFilter
@@ -98,7 +96,8 @@ class Router extends Backbone.Router {
   }
 
   newDeploy(requestId) {
-    return this.app.bootstrapController(new NewDeployController({
+    return this.app.bootstrapController(new NewDeployFormController({
+      store: this.app.store,
       requestId
     }));
   }
@@ -114,9 +113,10 @@ class Router extends Backbone.Router {
       searchFilter = '';
     }
     return this.app.bootstrapController(new TasksTableController({
-      state,
-      requestsSubFilter,
-      searchFilter
+      store: this.app.store,
+      state: state,
+      requestsSubFilter: requestsSubFilter,
+      searchFilter: searchFilter
     }));
   }
 
