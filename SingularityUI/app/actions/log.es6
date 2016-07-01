@@ -170,12 +170,26 @@ export const updateTaskStatus = (taskGroupId, taskId) =>
 
 ;
 
+export const taskData = (taskGroupId, taskId, data, offset, nextOffset, append, maxLines) =>
+  ({
+    taskGroupId,
+    taskId,
+    data,
+    offset,
+    nextOffset,
+    append,
+    maxLines,
+    type: 'LOG_TASK_DATA'
+  })
+;
+
 export const taskGroupFetchNext = taskGroupId =>
-  function(dispatch, getState) {
-    let {tasks, taskGroups, logRequestLength, maxLines} = getState();
+  (dispatch, getState) => {
+    const state = getState();
+    const {taskGroups, logRequestLength, maxLines} = state;
 
     const taskGroup = taskGroups[taskGroupId];
-    tasks = getTasks(taskGroup, tasks);
+    const tasks = getTasks(taskGroup, state.tasks);
 
     // bail early if there's already a pending request
     if (taskGroup.pendingRequests) {
@@ -186,11 +200,12 @@ export const taskGroupFetchNext = taskGroupId =>
     const promises = tasks.map(({taskId, exists, maxOffset, path, initialDataLoaded}) => {
       if (initialDataLoaded && exists !== false) {
         const xhr = fetchData(taskId, path, maxOffset, logRequestLength);
-        const promise = xhr.done(function({data, offset, nextOffset}) {
+        const promise = xhr.done(({data, offset, nextOffset}) => {
           if (data.length > 0) {
             nextOffset = offset + data.length;
             return dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, true, maxLines));
           }
+          return Promise.resolve();
         });
         promise.taskId = taskId;
         return promise;
@@ -240,19 +255,6 @@ export const taskGroupFetchPrevious = taskGroupId =>
 
     return Promise.all(promises).then(() => dispatch({taskGroupId, type: 'LOG_REQUEST_END'}));
   }
-;
-
-export const taskData = (taskGroupId, taskId, data, offset, nextOffset, append, maxLines) =>
-  ({
-    taskGroupId,
-    taskId,
-    data,
-    offset,
-    nextOffset,
-    append,
-    maxLines,
-    type: 'LOG_TASK_DATA'
-  })
 ;
 
 export const taskFilesize = (taskId, filesize) =>
