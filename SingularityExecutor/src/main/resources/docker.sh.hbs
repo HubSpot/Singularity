@@ -46,17 +46,17 @@ function handle_signal {
 # will look like:
 # --------------------
 # 8:net_cls:/
-# 7:memory:/hs_high_priority/mesos/4e59173b-e2a7-47a6-bcb8-455b637faa5f
-# 6:freezer:/hs_high_priority/mesos/4e59173b-e2a7-47a6-bcb8-455b637faa5f
+# 7:memory:/test_cgroup/mesos/4e59173b-e2a7-47a6-bcb8-455b637faa5f
+# 6:freezer:/test_cgroup/mesos/4e59173b-e2a7-47a6-bcb8-455b637faa5f
 # 5:devices:/
 # 4:cpuset:/
-# 3:cpuacct:/hs_high_priority/mesos/4e59173b-e2a7-47a6-bcb8-455b637faa5f
-# 2:cpu:/hs_high_priority/mesos/4e59173b-e2a7-47a6-bcb8-455b637faa5f
-# 1:blkio:/hs_high_priority
+# 3:cpuacct:/test_cgroup/mesos/4e59173b-e2a7-47a6-bcb8-455b637faa5f
+# 2:cpu:/test_cgroup/mesos/4e59173b-e2a7-47a6-bcb8-455b637faa5f
+# 1:blkio:/test_cgroup
 # --------------------
 # This function will return the deepest cgroup path in that output.
 # For this example, it would return:
-#   /hs_high_priority/mesos/4e59173b-e2a7-47a6-bcb8-455b637faa5f
+#   /test_cgroup/mesos/4e59173b-e2a7-47a6-bcb8-455b637faa5f
 function get_deepest_cgroup {
    local cgroups=$(</proc/self/cgroup)
    local max_depth=0
