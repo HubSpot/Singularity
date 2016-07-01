@@ -31,6 +31,22 @@ export const RemoveRequest = buildJsonApiAction(
   })
 );
 
+export const RunRequest = buildJsonApiAction(
+  'RUN_REQUEST_NOW',
+  'POST',
+  (requestId, data) => ({
+    url: `/requests/request/${requestId}/run`,
+    body: { data }
+  })
+);
+
+export const FetchRequestRun = buildApiAction(
+  'FETCH_REQUEST_RUN',
+  (requestId, runId) => ({
+    url: `/requests/request/${ requestId }/run/${runId}`
+  })
+);
+
 export const UnpauseRequest = buildJsonApiAction(
   'UNPAUSE_REQUEST',
   'POST',

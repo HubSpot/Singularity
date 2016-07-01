@@ -2,12 +2,15 @@ import React from 'react';
 import classNames from 'classnames';
 
 import { Modal, Button } from 'react-bootstrap';
+import TagsInput from 'react-tagsinput'
 
 export default class FormModal extends React.Component {
 
   static INPUT_TYPES = {
     BOOLEAN: 'BOOLEAN',
-    STRING: 'STRING'
+    STRING: 'STRING',
+    RADIO: 'RADIO',
+    TAGS: 'TAGS'
   }
 
   constructor(props) {
@@ -80,6 +83,7 @@ export default class FormModal extends React.Component {
       const help = error && <span className="help-block">{error}</span>;
 
       switch(e.type) {
+
         case FormModal.INPUT_TYPES.BOOLEAN:
           return (
             <div key={e.name}>
@@ -96,6 +100,7 @@ export default class FormModal extends React.Component {
               </div>
             </div>
           );
+
         case FormModal.INPUT_TYPES.STRING:
           return (
             <div key={e.name}>
@@ -109,6 +114,45 @@ export default class FormModal extends React.Component {
                 />
                 {help}
               </div>
+            </div>
+          );
+
+        case FormModal.INPUT_TYPES.RADIO:
+          const buttons = e.values.map((v, i) => {
+            return (
+              <div key={i} className="radio">
+                <label>
+                  <input type="radio"
+                    name={e.name}
+                    checked={v === this.state.formState[e.name]}
+                    value={v}
+                    onChange={(event) => this.handleFormChange(e.name, event.target.value)}
+                  />
+                {v}
+                </label>
+              </div>
+            );
+          });
+          return (
+            <div key={e.name}>
+              <strong>{e.label}</strong>
+              {buttons}
+            </div>
+          );
+
+        case FormModal.INPUT_TYPES.TAGS:
+          return (
+            <div key={e.name}>
+              <label style={{display: "block", width: "100%"}}>
+                {e.label}
+                <TagsInput
+                  value={this.state.formState[e.name] || []}
+                  onChange={(tags) => this.handleFormChange(e.name, tags)}
+                  addOnBlur
+                  addOnPaste
+                  inputProps={{className: "form-control input-large", placeholder: ""}}
+                />
+              </label>
             </div>
           );
       }
@@ -139,7 +183,7 @@ export default class FormModal extends React.Component {
 }
 
 FormModal.propTypes = {
-  action: React.PropTypes.string.isRequired,
+  action: React.PropTypes.node.isRequired,
   onConfirm: React.PropTypes.func.isRequired,
   buttonStyle: React.PropTypes.string,
   formElements: React.PropTypes.arrayOf(React.PropTypes.shape({
@@ -147,6 +191,7 @@ FormModal.propTypes = {
     type: React.PropTypes.oneOf(_.keys(FormModal.INPUT_TYPES)).isRequired,
     label: React.PropTypes.string,
     required: React.PropTypes.bool,
-    defaultValue: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.bool])
+    values: React.PropTypes.array,
+    defaultValue: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.bool, React.PropTypes.number])
   })).isRequired
 };

@@ -45,6 +45,8 @@ import {
 } from '../../actions/api/state';
 
 import {
+  FetchTasksInState,
+  FetchTask, // currently FetchTaskHistory is used for `task` in the store
   KillTask,
   FetchTaskCleanups,
   FetchTaskStatistics,
@@ -73,6 +75,7 @@ const taskResourceUsage = buildApiActionReducer(FetchTaskStatistics);
 const taskS3Logs = buildApiActionReducer(FetchTaskS3Logs, []);
 const taskShellCommandResponse = buildApiActionReducer(RunCommandOnTask);
 const task = buildKeyedApiActionReducer(FetchTaskHistory);
+const tasks = buildApiActionReducer(FetchTasksInState, []);
 
 export default combineReducers({
   user,
@@ -86,6 +89,7 @@ export default combineReducers({
   deploy,
   saveDeploy,
   task,
+  tasks,
   activeTasksForDeploy,
   activeTasksForRequest,
   taskHistoryForDeploy,

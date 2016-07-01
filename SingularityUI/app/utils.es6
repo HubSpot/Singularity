@@ -258,6 +258,12 @@ const Utils = {
       return timeObject.format(window.config.timestampFormat);
   },
 
+  timestampWithinSeconds(timestamp, seconds) {
+    const before = moment().subtract(seconds, 'seconds');
+    const after = moment().add(seconds, 'seconds');
+    return moment(timestamp).isBetween(before, after);
+  },
+
   duration(millis) {
       return moment.duration(millis).humanize();
   },
@@ -441,7 +447,7 @@ const Utils = {
       return Utils.maybe(r, ['pendingDeploy'], false);
     },
     isBouncing: (r) => {
-      
+      throw Error('Implement this', r);
     },
     isLongRunning: (r) => {
       return Utils.request.LONG_RUNNING_TYPES.has(r.request.requestType);
