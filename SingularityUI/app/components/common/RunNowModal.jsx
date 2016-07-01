@@ -6,9 +6,9 @@ import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 export default class RunNowModal extends React.Component {
 
   static AFTER_TRIGGER = {
-    STAY: 'Stay on this page',
-    SANDBOX: 'Wait for task to start, then browse its sandbox',
-    TAIL: 'Wait for task to start, then start tailing:'
+    STAY: {label: 'Stay on this page', value: 'STAY'},
+    SANDBOX: {label: 'Wait for task to start, then browse its sandbox', value: 'SANDBOX'},
+    TAIL: {label: 'Wait for task to start, then start tailing:', value: 'TAIL'}
   };
 
   constructor() {
@@ -48,7 +48,7 @@ export default class RunNowModal extends React.Component {
             type: FormModal.INPUT_TYPES.RADIO,
             label: 'After triggering the run:',
             values: _.values(RunNowModal.AFTER_TRIGGER),
-            defaultValue: RunNowModal.AFTER_TRIGGER.SANDBOX
+            defaultValue: RunNowModal.AFTER_TRIGGER.SANDBOX.value
           },
           {
             name: 'fileToTail',

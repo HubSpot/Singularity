@@ -14,7 +14,7 @@ import { FetchTaskFiles } from '../../actions/api/sandbox';
 import UITable from '../common/table/UITable';
 import KillTaskModal from '../common/KillTaskModal';
 import RunNowModal from '../common/RunNowModal';
-import TaskLauncher from './TaskLauncher';
+import TaskLauncher from '../common/TaskLauncher';
 import {
   TaskId,
   StartedAt,

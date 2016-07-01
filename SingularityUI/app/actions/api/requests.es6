@@ -5,6 +5,18 @@ export const FetchRequests = buildApiAction(
   {url: '/requests'}
 );
 
+export const FetchRequestsInState = buildApiAction(
+  'FETCH_REQUESTS_IN_STATE',
+  (state) => {
+    if (_.contains(['pending', 'cleanup'], state)) {
+      return {url: `/requests/queued/${state}`};
+    } else if (_.contains(['all', 'noDeploy', 'activeDeploy'], state)) {
+      return {url: '/requests'};
+    }
+    return {url: `/requests/${state}`};
+  }
+);
+
 export const FetchRequest = buildApiAction(
   'FETCH_REQUEST',
   (requestId) => ({
@@ -53,5 +65,23 @@ export const UnpauseRequest = buildJsonApiAction(
   (requestId, message) => ({
     url: `/requests/request/${requestId}/unpause`,
     body: { message }
+  })
+);
+
+export const ScaleRequest = buildJsonApiAction(
+  'SCALE_REQUEST',
+  'PUT',
+  (requestId, data) => ({
+    url: `/requests/request/${requestId}/scale`,
+    body: data
+  })
+);
+
+export const BounceRequest = buildJsonApiAction(
+  'BOUNCE_REQUEST',
+  'POST',
+  (requestId, data) => ({
+    url: `/requests/request/${requestId}/bounce`,
+    body: data
   })
 );

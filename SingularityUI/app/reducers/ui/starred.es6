@@ -1,7 +1,7 @@
 import * as StarredActions from '../../actions/ui/starred';
 
 const initialState = window.localStorage.hasOwnProperty('starredRequests')
-  ? JSON.parse(window.localStorage.starredRequests)
+  ? JSON.parse(window.localStorage.getItem('starredRequests'))
   : [];
 
 // really not great of grabbing the starred requests from localStorage
@@ -9,15 +9,7 @@ const initialState = window.localStorage.hasOwnProperty('starredRequests')
 // (maybe a subscriber will fix this)
 const starredRequests = (state = initialState, action) => {
   if (action.type === StarredActions.TOGGLE_REQUEST_STAR) {
-    let newState;
-    if (state.indexOf(action.value) > -1) {
-      // remove
-      newState = state.filter((requestId) => requestId !== action.value);
-    } else {
-      newState = [...state, action.value];
-    }
-
-    return newState;
+    return action.value;
   }
 
   return state;
