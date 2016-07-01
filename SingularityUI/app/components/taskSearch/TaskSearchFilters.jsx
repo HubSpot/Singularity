@@ -38,7 +38,7 @@ class TaskSearchFilters extends React.Component {
     ];
 
     return (
-      <Panel>
+      <Panel className="task-filters">
         <form onSubmit={(...args) => this.handleSubmit(...args)}>
           <div className="row">
             <div className="form-group col-md-4">

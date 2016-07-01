@@ -12,17 +12,14 @@ class TaskSearchController extends Controller {
       this.store = store;
       this.requestId = requestId;
 
-      this.refresh().then((r) => {
-        this.setView(new TaskSearchView(store, this.requestId));
-        app.showView(this.view);
-      });
-    }
-
-    refresh() {
       const promises = [];
       promises.push(this.store.dispatch(FetchRequest.trigger(this.requestId)));
       promises.push(this.store.dispatch(FetchTaskHistory.trigger({requestId: this.requestId, page: 1, count: TaskSearch.TASKS_PER_PAGE})));
-      return Promise.all(promises);
+
+      Promise.all(promises).then((r) => {
+        this.setView(new TaskSearchView(store, this.requestId));
+        app.showView(this.view);
+      });
     }
 }
 

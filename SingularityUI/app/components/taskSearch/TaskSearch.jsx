@@ -21,7 +21,8 @@ class TaskSearch extends React.Component {
         page: 1,
         count: TaskSearch.TASKS_PER_PAGE
       },
-      disableNext: false
+      disableNext: false,
+      loading: false
     }
   }
 
@@ -35,9 +36,18 @@ class TaskSearch extends React.Component {
 
   handlePage(page) {
     let newFilter = _.extend({}, this.state.filter, {page});
-    console.log(page)
+    this.setState({
+      loading: true
+    });
+    
     this.props.fetchTaskHistory(newFilter).then((resp) => {
-      if (resp.data.length < TaskSearch.TASKS_PER_PAGE) {
+      if (!resp.data.length) {
+        console.log('refetch');
+        this.props.fetchTaskHistory(_.extend({}, newFilter, {page: page - 1}));
+        this.setState({
+          disableNext: true
+        });
+      } else if (resp.data.length < TaskSearch.TASKS_PER_PAGE) {
         this.setState({
           disableNext: false,
           filter: newFilter
