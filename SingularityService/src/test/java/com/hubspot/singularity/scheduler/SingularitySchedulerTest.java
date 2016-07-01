@@ -1624,37 +1624,40 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testSchedulerPriority() {
-    SingularityRequest request1 = buildRequest("request1");
-    SingularityRequest request2 = buildRequest("request2");
-    SingularityRequest request3 = buildRequest("request3");
+    final SingularityRequest lowPriorityRequest = new SingularityRequestBuilder("lowPriorityRequest", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.25)).build();
+    saveRequest(lowPriorityRequest);
+    final SingularityRequest mediumPriorityRequest = new SingularityRequestBuilder("mediumPriorityRequest", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.5)).build();
+    saveRequest(mediumPriorityRequest);
+    final SingularityRequest highPriorityRequest = new SingularityRequestBuilder("highPriorityRequest", RequestType.WORKER).setTaskPriorityLevel(Optional.of(.75)).build();
+    saveRequest(highPriorityRequest);
 
-    SingularityDeploy deploy1 = initAndFinishDeploy(request1, "r1d1");
-    SingularityDeploy deploy2 = initAndFinishDeploy(request2, "r2d2");
-    SingularityDeploy deploy3 = initAndFinishDeploy(request3, "r3d3");
+    final SingularityDeploy lowPriorityDeploy = initAndFinishDeploy(lowPriorityRequest, "lowPriorityDeploy");
+    final SingularityDeploy mediumPriorityDeploy = initAndFinishDeploy(mediumPriorityRequest, "mediumPriorityDeploy");
+    final SingularityDeploy highPriorityDeploy = initAndFinishDeploy(highPriorityRequest, "highPriorityDeploy");
 
-    launchTask(request1, deploy1, 2, 1, TaskState.TASK_RUNNING);
-    launchTask(request2, deploy2, 1, 1, TaskState.TASK_RUNNING);
-    launchTask(request2, deploy2, 10, 1, TaskState.TASK_RUNNING);
+    // Task requests launched at ~ the same time should be in priority order
+    long now = System.currentTimeMillis();
+    List<SingularityTaskRequest> requestsByPriority = Arrays.asList(
+      buildTaskRequest(lowPriorityRequest, lowPriorityDeploy, now),
+      buildTaskRequest(mediumPriorityRequest, mediumPriorityDeploy, now),
+      buildTaskRequest(highPriorityRequest, highPriorityDeploy, now));
 
-    // r3 should have priority (never launched)
-    // r1 last launch at 2
-    // r2 last launch at 10
+    schedulerPriority.sortTaskRequestsInPriorityOrder(requestsByPriority);
 
-    List<SingularityTaskRequest> requests = Arrays.asList(buildTaskRequest(request1, deploy1, 100), buildTaskRequest(request2, deploy2, 101), buildTaskRequest(request3, deploy3, 95));
-    schedulerPriority.sortTaskRequestsInPriorityOrder(requests);
+    Assert.assertTrue(requestsByPriority.get(0).getRequest().getId().equals(highPriorityRequest.getId()));
+    Assert.assertTrue(requestsByPriority.get(1).getRequest().getId().equals(mediumPriorityRequest.getId()));
+    Assert.assertTrue(requestsByPriority.get(2).getRequest().getId().equals(lowPriorityRequest.getId()));
 
-    Assert.assertTrue(requests.get(0).getRequest().getId().equals(request3.getId()));
-    Assert.assertTrue(requests.get(1).getRequest().getId().equals(request1.getId()));
-    Assert.assertTrue(requests.get(2).getRequest().getId().equals(request2.getId()));
+    // A lower priority task that is long overdue should be run before a higher priority task
+    now = System.currentTimeMillis();
+    List<SingularityTaskRequest> requestsByOverdueAndPriority = Arrays.asList(
+      buildTaskRequest(lowPriorityRequest, lowPriorityDeploy, now - 60000), // 1 min overdue
+      buildTaskRequest(mediumPriorityRequest, mediumPriorityDeploy, now - 30000), // 30s overdue
+      buildTaskRequest(highPriorityRequest, highPriorityDeploy, now)); // Not overdue
 
-    schedulerPriority.notifyTaskLaunched(new SingularityTaskId(request3.getId(), deploy3.getId(), 500, 1, "host", "rack"));
-
-    requests = Arrays.asList(buildTaskRequest(request1, deploy1, 100), buildTaskRequest(request2, deploy2, 101), buildTaskRequest(request3, deploy3, 95));
-    schedulerPriority.sortTaskRequestsInPriorityOrder(requests);
-
-    Assert.assertTrue(requests.get(0).getRequest().getId().equals(request1.getId()));
-    Assert.assertTrue(requests.get(1).getRequest().getId().equals(request2.getId()));
-    Assert.assertTrue(requests.get(2).getRequest().getId().equals(request3.getId()));
+    Assert.assertTrue(requestsByOverdueAndPriority.get(0).getRequest().getId().equals(lowPriorityRequest.getId()));
+    Assert.assertTrue(requestsByOverdueAndPriority.get(1).getRequest().getId().equals(mediumPriorityRequest.getId()));
+    Assert.assertTrue(requestsByOverdueAndPriority.get(2).getRequest().getId().equals(highPriorityRequest.getId()));
   }
 
   @Test
