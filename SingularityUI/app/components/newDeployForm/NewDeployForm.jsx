@@ -1,15 +1,24 @@
-import React, {Component, PropTypes} from 'react';
+import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
+
 import SelectFormGroup from '../common/formItems/formGroups/SelectFormGroup';
 import TextFormGroup from '../common/formItems/formGroups/TextFormGroup';
 import MultiInputFormGroup from '../common/formItems/formGroups/MultiInputFormGroup';
 import CheckBoxFormGroup from '../common/formItems/formGroups/CheckBoxFormGroup';
-import { modifyField } from '../../actions/form';
-import {SaveAction} from '../../actions/api/deploy';
-import { FIELDS, ARTIFACT_FIELDS, DOCKER_PORT_MAPPING_FIELDS, DOCKER_VOLUME_FIELDS, INDEXED_FIELDS, INDEXED_ARTIFACT_FIELDS,
-  INDEXED_DOCKER_PORT_MAPPING_FIELDS, INDEXED_DOCKER_VOLUME_FIELDS, INDEXED_ALL_FIELDS, INDEXED_CUSTOM_EXECUTOR_FIELDS,
-  INDEXED_DEFAULT_EXECUTOR_FIELDS, INDEXED_DOCKER_CONTAINER_FIELDS, INDEXED_LOAD_BALANCER_FIELDS, INDEXED_HEALTH_CHECKER_FIELDS,
-  INDEXED_ALL_ARTIFACT_FIELDS, INDEXED_EMBEDDED_ARTIFACT_FIELDS, INDEXED_EXTERNAL_ARTIFACT_FIELDS, INDEXED_S3_ARTIFACT_FIELDS } from './fields';
+
+import { ModifyField } from '../../actions/ui/form';
+import { SaveDeploy } from '../../actions/api/deploys';
+
+import {
+  FIELDS, ARTIFACT_FIELDS, DOCKER_PORT_MAPPING_FIELDS, DOCKER_VOLUME_FIELDS,
+  INDEXED_FIELDS, INDEXED_ARTIFACT_FIELDS, INDEXED_DOCKER_PORT_MAPPING_FIELDS,
+  INDEXED_DOCKER_VOLUME_FIELDS, INDEXED_ALL_FIELDS,
+  INDEXED_CUSTOM_EXECUTOR_FIELDS, INDEXED_DEFAULT_EXECUTOR_FIELDS,
+  INDEXED_DOCKER_CONTAINER_FIELDS, INDEXED_LOAD_BALANCER_FIELDS,
+  INDEXED_HEALTH_CHECKER_FIELDS, INDEXED_ALL_ARTIFACT_FIELDS,
+  INDEXED_EMBEDDED_ARTIFACT_FIELDS, INDEXED_EXTERNAL_ARTIFACT_FIELDS,
+  INDEXED_S3_ARTIFACT_FIELDS
+} from './fields';
 
 
 const FORM_ID = 'newDeployForm';
@@ -1410,10 +1419,10 @@ class NewDeployForm extends Component {
   }
 }
 
-function mapStateToProps(state) {
+function mapStateToProps(state, ownProps) {
   return {
-    request: state.api.request.data,
-    form: state.form[FORM_ID],
+    request: state.api.request[ownProps.requestId].data,
+    form: state.ui.form[FORM_ID],
     saveApiCall: state.api.saveDeploy
   };
 }
@@ -1421,10 +1430,10 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch) {
   return {
     update(formId, fieldId, newValue) {
-      dispatch(modifyField(formId, fieldId, newValue));
+      dispatch(ModifyField(formId, fieldId, newValue));
     },
     save(deployBody) {
-      dispatch(SaveAction.trigger(deployBody));
+      dispatch(SaveDeploy.trigger(deployBody));
     }
   };
 }

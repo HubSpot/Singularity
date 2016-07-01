@@ -429,6 +429,62 @@ const Utils = {
     }
 
     return defaultValue;
+  },
+
+  request: {
+    // all of these expect a RequestParent object
+    LONG_RUNNING_TYPES: new Set(['WORKER', 'SERVICE']),
+    hasActiveDeploy: (r) => {
+      return Utils.maybe(r, ['activeDeploy'], false) || Utils.maybe(r, ['requestDeployState', 'activeDeploy'], false);
+    },
+    isDeploying: (r) => {
+      return Utils.maybe(r, ['pendingDeploy'], false);
+    },
+    isBouncing: (r) => {
+      
+    },
+    isLongRunning: (r) => {
+      return Utils.request.LONG_RUNNING_TYPES.has(r.request.requestType);
+    },
+    canBeRunNow: (r) => {
+      return r.state === 'ACTIVE'
+        && new Set(['SCHEDULED', 'ON_DEMAND']).has(r.request.requestType)
+        && Utils.request.hasActiveDeploy(r);
+    },
+    canBeBounced: (r) => {
+      return new Set(['ACTIVE', 'SYSTEM_COOLDOWN']).has(r.state)
+        && Utils.request.isLongRunning(r);
+    },
+    canBeScaled: (r) => {
+      return new Set(['ACTIVE', 'SYSTEM_COOLDOWN']).has(r.state)
+        && Utils.request.hasActiveDeploy(r)
+        && Utils.request.isLongRunning(r);
+    },
+    // other
+    canDisableHealthchecks: (r) => {
+      return !!r.activeDeploy
+        && !!r.activeDeploy.healthcheckUri
+        && !r.state === 'PAUSED'
+        && !r.expiringSkipHealthchecks;
+    },
+    pauseDisabled: (r) => {
+      const expiringPause = Utils.maybe(r, 'expiringPause');
+      return expiringPause
+        ? (expiringPause.startMillis + expiringPause.expiringAPIRequestObject.durationMillis) > new Date().getTime()
+        : false;
+    },
+    scaleDisabled: (r) => {
+      const expiringScale = Utils.maybe(r, 'expiringScale');
+      return expiringScale
+        ? (expiringScale.startMillis + expiringScale.expiringAPIRequestObject.durationMillis) > new Date().getTime()
+        : false;
+    },
+    bounceDisabled: (r) => {
+      const expiringBounce = Utils.maybe(r, 'expiringBounce');
+      return expiringBounce
+        ? (expiringBounce.startMillis + expiringBounce.expiringAPIRequestObject.durationMillis) > new Date().getTime()
+        : false;
+    }
   }
 };
 

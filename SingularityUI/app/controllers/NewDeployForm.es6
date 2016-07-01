@@ -2,14 +2,14 @@ import Controller from './Controller';
 
 import NewDeployFormView from 'views/newDeployForm';
 
-import { FetchAction as RequestFetchAction, SaveAction } from '../actions/api/request';
+import { FetchRequest, SaveRequest } from '../actions/api/requests';
 
-import { clearForm } from '../actions/form';
+import { ClearForm } from '../actions/ui/form';
 
 class NewDeployForm extends Controller {
 
   showView () {
-    this.setView(new NewDeployFormView({store: this.store}));
+    this.setView(new NewDeployFormView({store: this.store, requestId: this.requestId}));
     app.showView(this.view);
   }
 
@@ -17,10 +17,11 @@ class NewDeployForm extends Controller {
     app.showPageLoader();
     this.title('New Deploy');
     this.store = store;
+    this.requestId = requestId;
 
-    const requestFetchPromise = this.store.dispatch(RequestFetchAction.trigger(requestId));
-    const formClearPromise = this.store.dispatch(clearForm('newDeployForm'));
-    const clearSaveDeployDataPromise = this.store.dispatch(SaveAction.clearData());
+    const requestFetchPromise = this.store.dispatch(FetchRequest.trigger(requestId));
+    const formClearPromise = this.store.dispatch(ClearForm('newDeployForm'));
+    const clearSaveDeployDataPromise = this.store.dispatch(SaveRequest.clearData());
     Promise.all([requestFetchPromise, formClearPromise, clearSaveDeployDataPromise]).then(() => this.showView());
   }
 }

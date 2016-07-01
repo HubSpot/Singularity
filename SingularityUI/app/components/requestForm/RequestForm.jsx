@@ -7,10 +7,10 @@ import MultiInputFormGroup from '../common/formItems/formGroups/MultiInputFormGr
 import SelectFormGroup from '../common/formItems/formGroups/SelectFormGroup';
 import TextFormGroup from '../common/formItems/formGroups/TextFormGroup';
 import CheckBoxFormGroup from '../common/formItems/formGroups/CheckBoxFormGroup';
-import { modifyField, clearForm } from '../../actions/form';
-import {SaveAction} from '../../actions/api/request';
+import { ModifyField, ClearForm } from '../../actions/ui/form';
+import { SaveRequest } from '../../actions/api/requests';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import ToolTip from 'react-bootstrap/lib/Tooltip';
+import Tooltip from 'react-bootstrap/lib/Tooltip';
 import Utils from '../../utils';
 import classNames from 'classnames';
 import {FIELDS_BY_REQUEST_TYPE, INDEXED_FIELDS} from './fields';
@@ -25,6 +25,8 @@ const REQUEST_ID_REGEX = /[a-zA-Z0-9._-]*/;
 const REQUEST_TYPES = ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'];
 
 class RequestForm extends React.Component {
+  static propTypes = {
+  };
 
   static propTypes = {
     clearForm: PropTypes.func.isRequired,
@@ -241,7 +243,7 @@ class RequestForm extends React.Component {
 
   renderRequestTypeSelectors() {
     const tooltip = (
-      <ToolTip id="cannotChangeRequestTypeAfterCreation">Option cannot be altered after creation</ToolTip>
+      <Tooltip id="cannotChangeRequestTypeAfterCreation">Option cannot be altered after creation</Tooltip>
     );
     const selectors = REQUEST_TYPES.map((requestType, key) => {
       const selector = (
@@ -510,7 +512,6 @@ class RequestForm extends React.Component {
       </div>
     );
   }
-
 }
 
 function navigateToRequestIfSuccess(promiseResult) {
@@ -519,11 +520,15 @@ function navigateToRequestIfSuccess(promiseResult) {
   }
 }
 
-function mapStateToProps(state) {
+function mapStateToProps(state, ownProps) {
+  const request = state.api.request[ownProps.requestId]
+    ? state.api.request[ownProps.requestId].data
+    : null;
+
   return {
     racks: state.api.racks.data,
-    request: state.api.request ? state.api.request.data : null,
-    form: state.form[FORM_ID],
+    request,
+    form: state.ui.form[FORM_ID],
     saveApiCall: state.api.saveRequest
   };
 }
@@ -531,13 +536,13 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch) {
   return {
     update(formId, fieldId, newValue) {
-      dispatch(modifyField(formId, fieldId, newValue));
+      dispatch(ModifyField(formId, fieldId, newValue));
     },
     clearForm(formId) {
-      dispatch(clearForm(formId));
+      dispatch(ClearForm(formId));
     },
     save(requestBody) {
-      dispatch(SaveAction.trigger(requestBody)).then((response) => navigateToRequestIfSuccess(response));
+      dispatch(SaveRequest.trigger(requestBody)).then((response) => navigateToRequestIfSuccess(response));
     }
   };
 }

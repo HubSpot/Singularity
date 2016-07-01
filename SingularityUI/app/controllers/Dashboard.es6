@@ -1,6 +1,6 @@
 import Controller from './Controller';
 import DashboardView from '../views/dashboard';
-import { FetchAction } from '../actions/api/requests';
+import { FetchRequests } from '../actions/api/requests';
 
 class DashboardController extends Controller {
 
@@ -9,7 +9,7 @@ class DashboardController extends Controller {
     this.title('Dashboard');
     this.store = store;
 
-    const initPromise = this.store.dispatch(FetchAction.trigger());
+    const initPromise = this.store.dispatch(FetchRequests.trigger());
     initPromise.then(() => {
       this.setView(new DashboardView(store));
       app.showView(this.view);
@@ -17,7 +17,7 @@ class DashboardController extends Controller {
   }
 
   refresh() {
-    this.store.dispatch(FetchAction.trigger());
+    this.store.dispatch(FetchRequests.trigger());
   }
 }
 

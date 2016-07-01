@@ -9,12 +9,13 @@ import RequestFormPage from '../components/requestForm/RequestForm'
 
 
 class RequestFormView extends View {
-  initialize({store}) {
+  initialize({store, requestId}) {
     this.store = store;
+    this.requestId = requestId;
   }
 
   render() {
-    ReactDOM.render(<Provider store={this.store}><RequestFormPage /></Provider>, this.el);
+    ReactDOM.render(<Provider store={this.store}><RequestFormPage requestId={this.requestId} /></Provider>, this.el);
   }
 }
 

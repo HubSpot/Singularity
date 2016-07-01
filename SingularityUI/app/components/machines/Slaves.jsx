@@ -6,7 +6,7 @@ import Link from '../common/atomicDisplayItems/Link';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
-import { FreezeAction } from '../../actions/api/slaves';
+import { FreezeSlave } from '../../actions/api/slaves';
 
 class Slaves extends React.Component {
 
@@ -305,7 +305,7 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        freezeSlave: (slave) => { dispatch(FreezeAction.trigger(slave.id)); }
+        freezeSlave: (slave) => { dispatch(FreezeSlave.trigger(slave.id)); }
     }
 }
 

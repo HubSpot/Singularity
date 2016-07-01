@@ -1,6 +1,6 @@
 import Controller from './Controller';
 import RacksView from '../views/racks';
-import { FetchAction } from '../actions/api/racks';
+import { FetchRacks } from '../actions/api/racks';
 
 class RacksController extends Controller {
   initialize({store}) {
@@ -12,7 +12,7 @@ class RacksController extends Controller {
   }
 
   refresh() {
-    this.store.dispatch(FetchAction.trigger());
+    this.store.dispatch(FetchRacks.trigger());
   }
 }
 
