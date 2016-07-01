@@ -88,7 +88,7 @@
                                 <ul>{{#each shellUpdates}}<li>{{timestampFormatted timestamp}}: {{ message }}</li>{{/each}}</ul>
                               </td>
                               <td>
-                                {{#ifShellRequestHasOutputFilename shellUpdates}}<a href="{{ appRoot }}/task/{{ ../shellRequest.taskId.id }}/tail/{{ ../shellRequest.taskId.id }}/{{shellRequestOutputFilename shellUpdates}}">View</a>{{/ifShellRequestHasOutputFilename}}
+                                {{#ifShellRequestHasOutputFilename shellUpdates}}<a href="{{ appRoot }}/task/{{ shellRequest.taskId.id }}/tail/{{ shellRequest.taskId.id }}/{{shellRequestOutputFilename shellUpdates}}">View</a>{{/ifShellRequestHasOutputFilename}}
                               </td>
                             </tr>
                           {{/each}}
