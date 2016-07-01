@@ -36,7 +36,6 @@ export default class TasksTable extends React.Component {
   }
 
   render() {
-    console.log(this.props.data.length)
     if (this.props.data.length) {
       return (
         <div className="table-container">

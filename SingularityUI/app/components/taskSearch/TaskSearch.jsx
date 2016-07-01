@@ -35,11 +35,12 @@ class TaskSearch extends React.Component {
 
   handlePage(page) {
     let newFilter = _.extend({}, this.state.filter, {page});
+    console.log(page)
     this.props.fetchTaskHistory(newFilter).then((resp) => {
       if (resp.data.length < TaskSearch.TASKS_PER_PAGE) {
         this.setState({
           disableNext: false,
-          page
+          page: page
         });
       } else {
         this.setState({
@@ -70,7 +71,7 @@ class TaskSearch extends React.Component {
   }
 
   render() {
-    console.log(this.props.taskHistory, this.state.filter.page);
+    console.log(this.props.taskHistory);
     return (
       <div>
         <Breadcrumbs
@@ -106,7 +107,6 @@ class TaskSearch extends React.Component {
 }
 
 function mapStateToProps(state) {
-  console.log(state.api);
   return {
     request: state.api.request.data,
     taskHistory: state.api.taskHistory.data
