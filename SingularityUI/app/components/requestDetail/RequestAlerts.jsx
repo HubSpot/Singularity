@@ -13,7 +13,8 @@ const RequestAlerts = ({requestParent}) => {
 };
 
 RequestAlerts.propTypes = {
-  requestParent: PropTypes.object.isRequired
-}
+  requestParent: PropTypes.object.isRequired,
+  bounces: PropTypes.arrayOf(PropTypes.object).isRequired
+};
 
 export default RequestAlerts;

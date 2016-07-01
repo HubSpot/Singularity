@@ -13,31 +13,20 @@ class RequestDetailController extends Controller {
 
     this.title(this.requestId);
 
-    const initPromise = this.store.dispatch(FetchRequest.trigger(this.requestId));
-    initPromise.then(() => {
+    this.refresh().then(() => {
       this.setView(new RequestDetailView({store, requestId}));
       app.showView(this.view);
     });
   }
 
   refresh() {
-    this.store.dispatch(FetchRequest.trigger(this.requestId));
-    // FetchActiveForRequest
+    const requestPromise = this.store.dispatch(FetchRequest.trigger(this.requestId));
+    const activeTasksPromise = this.store.dispatch(FetchActiveTasksForRequest.trigger(this.requestId));
+    const taskCleanupsPromise = this.store.dispatch(FetchTaskCleanups.trigger());
 
-    // const promises = [];
-    // const requestPromise = this.store.dispatch(RequestFetchAction.trigger(this.requestId));
-    // requestPromise.then(() => {
-    //   const task = this.store.getState().api.task[this.taskId].data;
-    //   promises.push(this.store.dispatch(DeployFetchAction.trigger(task.task.taskId.requestId, task.task.taskId.deployId)));
-    //   if (task.isStillRunning) {
-    //     promises.push(this.store.dispatch(TaskResourceUsageFetchAction.trigger(this.taskId)));
-    //   }
-    // });
-    // promises.push(requestPromise);
-    // promises.push(this.store.dispatch(TaskCleanupsFetchAction.trigger()));
-    // promises.push(this.store.dispatch(DeploysFetchAction.trigger('pending')));
-    // promises.push(this.store.dispatch(TaskS3LogsFetchAction.trigger(this.taskId)));
-    // return Promise.all(promises);
+    const promises = [requestPromise, activeTasksPromise, taskCleanupsPromise];
+
+    return Promise.all(promises);
   }
 }
 
