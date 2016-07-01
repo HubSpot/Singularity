@@ -60,7 +60,6 @@ class TextFormGroup extends Component {
           {label}
           <div className="input-group">
             {formField}
-            {feedback}
             <div className="input-group-addon">
               {this.props.inputGroupAddon}
             </div>

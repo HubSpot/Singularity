@@ -19,6 +19,8 @@ const CRON_SCHEDULE = 'cronSchedule';
 
 const FORM_ID = 'requestForm';
 
+const REQUEST_ID_FORBIDDEN_SYMBOLS = ['@', '\\', '/', '*', '?', '%', ' ', '[', ']', '#', '$', '{', '}', '`', '|'];
+
 const REQUEST_TYPES = ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'];
 
 const FIELDS_BY_REQUEST_TYPE = {
@@ -104,6 +106,30 @@ class RequestForm extends React.Component {
       return this.props.request.request[fieldId];
     }
     return '';
+  }
+
+  feedback(fieldId, fieldType, required) {
+    const value = this.getValue(fieldId);
+    if (required && (!value || _.isEmpty(value))) {
+      return 'ERROR';
+    }
+    if (!value || _.isEmpty(value)) {
+      return null;
+    }
+    if (fieldType === 'number') {
+      const numericalValue = parseInt(value, 10);
+      if (numericalValue !== 0 && !numericalValue) {
+        return 'ERROR';
+      }
+    }
+    if (fieldType === 'request-id') {
+      for (const forbiddenSymbol of REQUEST_ID_FORBIDDEN_SYMBOLS) {
+        if (value.indexOf(forbiddenSymbol) !== -1) {
+          return 'ERROR';
+        }
+      }
+    }
+    return 'SUCCESS';
   }
 
   cantSubmit() {
@@ -219,6 +245,7 @@ class RequestForm extends React.Component {
         value={this.getValue('instances')}
         label="Instances"
         placeholder="1"
+        feedback={this.feedback('instances', 'number')}
       />
     );
     const rackSensitive = (
@@ -255,6 +282,7 @@ class RequestForm extends React.Component {
         value={this.getValue('waitAtLeastMillisAfterTaskFinishesForReschedule')}
         label="Task rescheduling delay"
         inputGroupAddon="milliseconds"
+        feedback={this.feedback('waitAtLeastMillisAfterTaskFinishesForReschedule', 'number')}
       />
     );
     const rackOptions = _.pluck(this.props.racks, 'id').map(id => ({value: id, label: id}));
@@ -282,6 +310,7 @@ class RequestForm extends React.Component {
                 inputType: 'text',
                 value: this.getValue(this.getScheduleType())
               }}
+              feedback={this.feedback(this.getScheduleType())}
             />
           </div>
           <div className="col-sm-5">
@@ -310,6 +339,7 @@ class RequestForm extends React.Component {
         onChange={event => this.updateField('numRetriesOnFailure', event.target.value)}
         value={this.getValue('numRetriesOnFailure')}
         label="Number of retries on failure"
+        feedback={this.feedback('numRetriesOnFailure', 'number')}
       />
     );
     const killOldNonLongRunningTasksAfterMillis = (
@@ -319,6 +349,7 @@ class RequestForm extends React.Component {
         value={this.getValue('killOldNonLongRunningTasksAfterMillis')}
         label="Kill cleaning task(s) after"
         inputGroupAddon="milliseconds"
+        feedback={this.feedback('killOldNonLongRunningTasksAfterMillis', 'number')}
       />
     );
     const scheduledExpectedRuntimeMillis = (
@@ -328,6 +359,7 @@ class RequestForm extends React.Component {
         value={this.getValue('scheduledExpectedRuntimeMillis')}
         label="Maximum task duration"
         inputGroupAddon="milliseconds"
+        feedback={this.feedback('scheduledExpectedRuntimeMillis', 'number')}
       />
     );
     return (
@@ -363,6 +395,7 @@ class RequestForm extends React.Component {
         label="ID"
         required={true}
         placeholder="eg: my-awesome-request"
+        feedback={this.feedback('id', 'request-id', true)}
       />
     );
     const owners = (
@@ -371,6 +404,7 @@ class RequestForm extends React.Component {
         value={this.getValue('owners') || []}
         onChange={(newValue) => this.updateField('owners', newValue)}
         label="Owners"
+        couldHaveFeedback={true}
       />
     );
     const requestTypeSelectors = (
