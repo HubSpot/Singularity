@@ -94,6 +94,11 @@ public class SandboxResource extends AbstractHistoryResource {
       @ApiParam("The path to browse from") @QueryParam("path") String path) {
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.READ);
 
+    // Remove all trailing slashes from the path
+    if (path != null) {
+      path = path.replaceAll("\\/+$", "");
+    }
+
     final String currentDirectory = getCurrentDirectory(taskId, path);
     final SingularityTaskHistory history = checkHistory(taskId);
 
