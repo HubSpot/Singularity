@@ -54,8 +54,7 @@ const FIELDS_BY_REQUEST_TYPE = {
 
 class RequestForm extends React.Component {
   static propTypes = {
-    racks:
-  }
+  };
 
   componentDidMount() {
     this.props.clearForm(FORM_ID);
