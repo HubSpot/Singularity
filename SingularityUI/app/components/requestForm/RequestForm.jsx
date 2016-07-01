@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import FormField from '../common/formItems/FormField';
 import DropDown from '../common/formItems/DropDown';
 import MultiSelect from '../common/formItems/MultiSelect';
-import CheckBox from '../common/formItems/CheckBox';
+import Checkbox from '../common/formItems/Checkbox';
 import { ModifyField, ClearForm } from '../../actions/ui/form';
 import { SaveRequest } from '../../actions/api/requests';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
@@ -193,7 +193,7 @@ class RequestForm extends React.Component {
   renderLoadBalanced() {
     const checkbox = (
       <label htmlFor="load-balanced" className={classNames({subtle: this.isEditing()})}>
-        <CheckBox
+        <Checkbox
           id = "load-balanced"
           onChange = {event => this.updateField('loadBalanced', !this.getValue('loadBalanced'))}
           checked = {this.getValue('loadBalanced')}
@@ -240,7 +240,7 @@ class RequestForm extends React.Component {
     const rackSensitive = (
       <div className="form-group">
         <label htmlFor="rack-sensitive">
-          <CheckBox
+          <Checkbox
             id="rack-sensitive"
             onChange={event => this.updateField('rackSensitive', !this.getValue('rackSensitive'))}
             checked={this.getValue('rackSensitive')}
@@ -253,7 +253,7 @@ class RequestForm extends React.Component {
     const hideEvenNumberAcrossRacksHint = (
       <div className="form-group">
         <label htmlFor="hide-distribute-evenly-across-racks-hint">
-          <CheckBox
+          <Checkbox
             id="hide-distribute-evenly-across-racks-hint"
             onChange={event => this.updateField('hideEvenNumberAcrossRacksHint', !this.getValue('hideEvenNumberAcrossRacksHint'))}
             checked={this.getValue('hideEvenNumberAcrossRacksHint')}
