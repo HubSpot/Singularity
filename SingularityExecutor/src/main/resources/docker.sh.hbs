@@ -11,8 +11,6 @@ STOP_TIME={{{ stopTimeout }}} # Max time to wait for container to stop before ki
 CONTAINER_NAME="{{{ prefix }}}{{{ runContext.taskId }}}"
 
 CURRENT_DIR=`pwd`
-CGROUPS_GUID=${CURRENT_DIR##*runs/}
-CGROUPS_GUID=${CGROUPS_GUID%/*}
 
 function check_contianer_running {
   status=`sudo -E -H -u {{{ runContext.user }}} docker inspect -f \{{.State.Running}} $1`
@@ -42,18 +40,42 @@ function handle_signal {
   exit "$exit_code"
 }
 
-function enable_cgroup_hierarchy {
-  if [ -d "/cgroup/memory/mesos" ] ;then
-    CGROUPS_DIR="/cgroup"
-  else
-    if [ -d "/sys/fs/cgroup/memory/mesos" ] ; then
-      CGROUPS_DIR="/sys/fs/cgroup"
-    else
-      echo "Couldn't find cgroups directory, memory/cpu reporting may be inaccurate for this task"
-      return 0
-    fi
-  fi
-  echo 1 > $CGROUPS_DIR/memory/mesos/$CGROUPS_GUID/memory.use_hierarchy
+# Outputs the path of the deepest cgroup the current process is in.
+# The output of:
+#   cat /proc/self/cgroup
+# will look like:
+# --------------------
+# 8:net_cls:/
+# 7:memory:/hs_high_priority/mesos/4e59173b-e2a7-47a6-bcb8-455b637faa5f
+# 6:freezer:/hs_high_priority/mesos/4e59173b-e2a7-47a6-bcb8-455b637faa5f
+# 5:devices:/
+# 4:cpuset:/
+# 3:cpuacct:/hs_high_priority/mesos/4e59173b-e2a7-47a6-bcb8-455b637faa5f
+# 2:cpu:/hs_high_priority/mesos/4e59173b-e2a7-47a6-bcb8-455b637faa5f
+# 1:blkio:/hs_high_priority
+# --------------------
+# This function will return the deepest cgroup path in that output.
+# For this example, it would return:
+#   /hs_high_priority/mesos/4e59173b-e2a7-47a6-bcb8-455b637faa5f
+function get_deepest_cgroup {
+   local cgroups=$(</proc/self/cgroup)
+   local max_depth=0
+   local max_path="/"
+
+   for cgroup_spec in $cgroups; do
+     local cg_path=$(echo $cgroup_spec | cut -d: -f3)
+     if [ "$cg_path" == "/" ]; then
+       local depth=0
+     else
+       local depth=$(echo -ne "$cg_path" | tr '/' "\n" | wc -l)
+     fi
+
+     if [ "$depth" -gt "$max_depth" ]; then
+       local max_depth="$depth"
+       local max_path="$cg_path"
+     fi
+   done
+   echo "$max_path"
 }
 
 DOCKER_IMAGE={{{ envContext.dockerInfo.image }}}
@@ -111,7 +133,9 @@ DOCKER_NETWORK="--net=host"
 
 DOCKER_WORKDIR="/mnt/mesos/sandbox/{{{ runContext.taskAppDirectory }}}"
 
-DOCKER_OPTIONS="--name=$CONTAINER_NAME --cgroup-parent=mesos/$CGROUPS_GUID -w $DOCKER_WORKDIR $DOCKER_NETWORK --env-file=docker.env ${DOCKER_VOLUMES[@]} ${DOCKER_PORTS[@]}"
+PARENT_CGROUP=$(get_deepest_cgroup)
+
+DOCKER_OPTIONS="--name=$CONTAINER_NAME --cgroup-parent=$PARENT_CGROUP -w $DOCKER_WORKDIR $DOCKER_NETWORK --env-file=docker.env ${DOCKER_VOLUMES[@]} ${DOCKER_PORTS[@]}"
 
 {{#if privileged}}
 DOCKER_OPTIONS="$DOCKER_OPTIONS --privileged"
@@ -120,8 +144,6 @@ DOCKER_OPTIONS="$DOCKER_OPTIONS --privileged"
 echo "Ensuring {{{ runContext.taskAppDirectory }}} is owned by {{{ runContext.user }}}"
 mkdir -p {{{ runContext.taskAppDirectory }}}
 sudo chown -R {{{ runContext.user }}} {{{ runContext.taskAppDirectory }}}
-
-enable_cgroup_hierarchy || true
 
 # Start up the container
 echo "Creating continer with: sudo -E -H -u {{{ runContext.user }}} docker create $DOCKER_OPTIONS {{#each envContext.env}}{{#ifHasNewLines value}}-e {{{name}}}={{#escapedNewLines value}}{{/escapedNewLines}}{{/ifHasNewLines}}{{/each}} $DOCKER_IMAGE {{{ runContext.cmd }}}"
