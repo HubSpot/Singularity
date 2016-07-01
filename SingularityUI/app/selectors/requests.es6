@@ -9,12 +9,19 @@ const getRequestsAPI = (state) => state.api.requests;
 const getUserAPI = (state) => state.api.user;
 const getSearchFilter = (state) => state.ui.requestsPage;
 
+const findRequestIds = function(requests) {
+  return _.map(requests, (r) => {
+    return _.extend({}, r, {id: r.request ? r.request.id : r.requestId});
+  });
+}
+
 export const getStarred = (state) => new Set(state.ui.starred);
 
 export const getStarredRequests = createSelector(
   [getStarred, getRequestsAPI],
   (starredData, requestsAPI) => {
-    return requestsAPI.data.filter((r) => starredData.has(r.request.id));
+    const requests = findRequestIds(requestsAPI.data);
+    return requests.filter((r) => starredData.has(r.request.id));
   }
 );
 
@@ -27,7 +34,9 @@ export const getUserRequests = createSelector(
       ''
     ).split('@')[0];
 
-    return requestsAPI.data.filter((r) => {
+    const requests = findRequestIds(requestsAPI.data);
+
+    return requests.filter((r) => {
       const activeDeployUser = Utils.maybe(
         r,
         ['requestDeployState', 'activeDeploy', 'user']
