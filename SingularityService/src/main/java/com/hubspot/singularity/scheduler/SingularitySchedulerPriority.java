@@ -17,7 +17,6 @@ public class SingularitySchedulerPriority {
 
   @Inject
   public SingularitySchedulerPriority(final PriorityManager priorityManager, final SingularityConfiguration configuration) {
-    final double weightingFactor = 2 * configuration.getSchedulerPriorityWeightFactor();
     this.comparator = new Comparator<SingularityTaskRequest>() {
 
       @Override
@@ -28,8 +27,8 @@ public class SingularitySchedulerPriority {
         final Double pendingTask1Priority = priorityManager.getTaskPriorityLevelForRequest(o1.getRequest());
         final Double pendingTask2Priority = priorityManager.getTaskPriorityLevelForRequest(o2.getRequest());
 
-        final Double pendingTask1WeightedPriority = pendingTask1OverdueTimeMillis * Math.pow(pendingTask1Priority, weightingFactor);
-        final Double pendingTask2WeightedPriority = pendingTask2OverdueTimeMillis * Math.pow(pendingTask2Priority, weightingFactor);
+        final Double pendingTask1WeightedPriority = pendingTask1OverdueTimeMillis * Math.pow(pendingTask1Priority, configuration.getSchedulerPriorityWeightFactor());
+        final Double pendingTask2WeightedPriority = pendingTask2OverdueTimeMillis * Math.pow(pendingTask2Priority, configuration.getSchedulerPriorityWeightFactor());
 
         return Doubles.compare(pendingTask2WeightedPriority, pendingTask1WeightedPriority);
       }

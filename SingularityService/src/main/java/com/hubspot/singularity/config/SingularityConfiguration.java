@@ -267,8 +267,8 @@ public class SingularityConfiguration extends Configuration {
   private long checkPriorityKillsEveryMillis = TimeUnit.SECONDS.toMillis(30);
 
   @Min(0)
-  @Max(1)
-  private double schedulerPriorityWeightFactor = 0.5;
+  @Max(5)
+  private double schedulerPriorityWeightFactor = 1.0;
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
