@@ -75,7 +75,6 @@ class TasksPage extends React.Component {
 
   handleRunNow(requestId, data) {
     this.props.runRequest(requestId, data).then((response) => {
-      // console.log(data, response.data);
       if (_.contains([RunNowModal.AFTER_TRIGGER.SANDBOX, RunNowModal.AFTER_TRIGGER.TAIL], data.afterTrigger)) {
         this.refs.taskLauncher.startPolling(response.data.request.id, response.data.pendingRequest.runId, data.afterTrigger == RunNowModal.AFTER_TRIGGER.TAIL && data.fileToTail);
       }
@@ -137,15 +136,15 @@ class TasksPage extends React.Component {
 
     return (
       <div>
-        <TaskFilters filter={this.state.filter} onFilterChange={this.handleFilterChange.bind(this)} displayRequestTypeFilters={displayRequestTypeFilters} />
+        <TaskFilters filter={this.state.filter} onFilterChange={(...args) => this.handleFilterChange(...args)} displayRequestTypeFilters={displayRequestTypeFilters} />
         {table}
-        <RunNowModal ref="runModal" onRunNow={this.handleRunNow.bind(this)} />
-        <KillTaskModal ref="killTaskModal" onTaskKill={this.handleTaskKill.bind(this)} />
+        <RunNowModal ref="runModal" onRunNow={(...args) => this.handleRunNow(...args)} />
+        <KillTaskModal ref="killTaskModal" onTaskKill={(...args) => this.handleTaskKill(...args)} />
         <TaskLauncher
           ref="taskLauncher"
-          fetchTaskRun={this.props.taskRun.bind(this)}
-          fetchTaskRunHistory={this.props.taskRunHistory.bind(this)}
-          fetchTaskFiles={this.props.taskFiles.bind(this)}
+          fetchTaskRun={(...args) => this.props.taskRun(...args)}
+          fetchTaskRunHistory={(...args) => this.props.taskRunHistory(...args)}
+          fetchTaskFiles={(...args) => this.props.taskFiles(...args)}
         />
       </div>
     );
