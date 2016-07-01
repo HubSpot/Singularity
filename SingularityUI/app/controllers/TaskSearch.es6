@@ -26,5 +26,4 @@ class TaskSearchController extends Controller {
     }
 }
 
-
 export default TaskSearchController;

@@ -40,7 +40,7 @@ class TaskSearch extends React.Component {
       if (resp.data.length < TaskSearch.TASKS_PER_PAGE) {
         this.setState({
           disableNext: false,
-          page: page
+          filter: newFilter
         });
       } else {
         this.setState({
@@ -64,14 +64,16 @@ class TaskSearch extends React.Component {
         </td>
         <td>{Utils.timeStampFromNow(data.taskId.startedAt)}</td>
         <td>{Utils.timeStampFromNow(data.updatedAt)}</td>
-        <td className="actions-column"><a href={`${config.appRoot}/task/${data.taskId.id}/tail/${config.finishedTaskLogPath}`}>···</a></td>
-        <td className="actions-column"><JSONButton object={data}>{'{ }'}</JSONButton></td>
+        <td className="actions-column">
+          <a href={`${config.appRoot}/task/${data.taskId.id}/tail/${config.finishedTaskLogPath}`}>···</a>
+          <JSONButton object={data}>{'{ }'}</JSONButton>
+        </td>
       </tr>
     );
   }
 
   render() {
-    console.log(this.props.taskHistory);
+    // console.log(this.props.taskHistory);
     return (
       <div>
         <Breadcrumbs
@@ -83,14 +85,15 @@ class TaskSearch extends React.Component {
             }
           ]}
         />
-        <h1>Historical Tasks</h1>
+        <h1 className="inline-header">Historical Tasks </h1>
+        <h3 className="inline-header" style={{marginLeft: '10px'}}>for {this.props.requestId}</h3>
         <h2>Search Parameters</h2>
         <TaskSearchFilters requestId={this.props.requestId} onSearch={(filter) => this.handleSearch(filter)} />
         <div className="row">
           <div className="col-md-12">
             <TasksTable
               emptyMessage={"No matching tasks"}
-              headers={['', 'Request ID', 'Deploy ID', 'Host', 'Last Status', 'Started', 'Updated', '', '']}
+              headers={['', 'Request ID', 'Deploy ID', 'Host', 'Last Status', 'Started', 'Updated', '']}
               data={this.props.taskHistory}
               paginate={true}
               page={this.state.filter.page}
