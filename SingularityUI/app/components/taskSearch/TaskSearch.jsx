@@ -5,6 +5,8 @@ import { FetchAction } from '../../actions/api/taskHistory';
 import Breadcrumbs from '../common/Breadcrumbs';
 import TasksTable from './TasksTable';
 import TaskSearchFilters from './TaskSearchFilters';
+import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
+import JSONButton from '../common/JSONButton';
 import Utils from '../../utils';
 
 class TaskSearch extends React.Component {
@@ -47,6 +49,26 @@ class TaskSearch extends React.Component {
     });
   }
 
+  renderTableRow(data, i) {
+    return (
+      <tr key={i}>
+        <td className="actions-column"><a href={`${config.appRoot}/task/${data.taskId.id}`}><Glyphicon iconClass="link" /></a></td>
+        <td><a href={`${config.appRoot}/request/${data.taskId.requestId}`}>{data.taskId.requestId}</a></td>
+        <td><a href={`${config.appRoot}/request/${data.taskId.requestId}/deploy/${data.taskId.deployId}`}>{data.taskId.deployId}</a></td>
+        <td><a href={`${config.appRoot}/tasks/active/all/${data.taskId.host}`}>{data.taskId.host}</a></td>
+        <td>
+          <span className={`label label-${Utils.getLabelClassFromTaskState(data.lastTaskState)}`}>
+            {Utils.humanizeText(data.lastTaskState)}
+          </span>
+        </td>
+        <td>{Utils.timeStampFromNow(data.taskId.startedAt)}</td>
+        <td>{Utils.timeStampFromNow(data.updatedAt)}</td>
+        <td className="actions-column"><a href={`${config.appRoot}/task/${data.taskId.id}/tail/${config.finishedTaskLogPath}`}>···</a></td>
+        <td className="actions-column"><JSONButton object={data}>{'{ }'}</JSONButton></td>
+      </tr>
+    );
+  }
+
   render() {
     console.log(this.props.taskHistory, this.state.filter.page);
     return (
@@ -66,12 +88,15 @@ class TaskSearch extends React.Component {
         <div className="row">
           <div className="col-md-12">
             <TasksTable
+              emptyMessage={"No matching tasks"}
+              headers={['', 'Request ID', 'Deploy ID', 'Host', 'Last Status', 'Started', 'Updated', '', '']}
               data={this.props.taskHistory}
               paginate={true}
               page={this.state.filter.page}
               pageSize={TaskSearch.TASKS_PER_PAGE + 1}
               disableNext={this.props.taskHistory.length < TaskSearch.TASKS_PER_PAGE}
               onPage={(page) => this.handlePage(page)}
+              renderTableRow={(...args) => this.renderTableRow(...args)}
             />
           </div>
         </div>
