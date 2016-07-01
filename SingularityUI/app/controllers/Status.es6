@@ -1,24 +1,24 @@
 import Controller from './Controller';
 import StatusView from '../views/status';
-import { FetchAction } from '../actions/api/status';
+import { FetchSingularityStatus } from '../actions/api/state';
 
 class StatusController extends Controller {
 
-    initialize({store}) {
-        app.showPageLoader()
-        this.title('Status');
-        this.store = store;
+  initialize({store}) {
+    app.showPageLoader();
+    this.title('Status');
+    this.store = store;
 
-        let initPromise = this.store.dispatch(FetchAction.trigger());
-        initPromise.then(() => {
-          this.setView(new StatusView(store));
-          app.showView(this.view);
-        });
-    }
+    const initPromise = this.store.dispatch(FetchSingularityStatus.trigger());
+    initPromise.then(() => {
+      this.setView(new StatusView(store));
+      app.showView(this.view);
+    });
+  }
 
-    refresh() {
-        this.store.dispatch(FetchAction.trigger());
-    }
+  refresh() {
+    this.store.dispatch(FetchSingularityStatus.trigger());
+  }
 }
 
 
