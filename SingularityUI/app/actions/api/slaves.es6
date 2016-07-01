@@ -1,5 +1,22 @@
 import { buildApiAction, buildJsonApiAction } from './base';
 
-export const FetchAction = buildApiAction('FETCH_SLAVES', {url: '/slaves'});
-export const FreezeAction = buildJsonApiAction('FREEZE_SLAVE', 'POST', (slaveId) => _.extend({}, {url: `/slaves/slave/${slaveId}/freeze`}));
-export const DecommissionAction = buildJsonApiAction('DECOMMISSION_SLAVE', 'POST', (slaveId) => _.extend({}, {url: `/slaves/slave/${slaveId}/decomission`}));
+export const FetchSlaves = buildApiAction(
+  'FETCH_SLAVES',
+  {url: '/slaves'}
+);
+
+export const FreezeSlave = buildJsonApiAction(
+  'FREEZE_SLAVE',
+  'POST',
+  (slaveId) => ({
+    url: `/slaves/slave/${slaveId}/freeze`
+  })
+);
+
+export const DecommissionSlave = buildJsonApiAction(
+  'DECOMMISSION_SLAVE',
+  'POST',
+  (slaveId) => ({
+    url: `/slaves/slave/${slaveId}/decomission`
+  })
+);

@@ -1,12 +1,11 @@
 import Controller from './Controller';
 import TasksView from '../views/tasks';
-import { FetchAction } from '../actions/api/tasks';
-import { FetchAction as CleanupsFetchAction} from '../actions/api/taskCleanups';
+import { FetchTasksInState, FetchTaskCleanups } from '../actions/api/tasks';
 
 class TasksTableController extends Controller {
 
   initialize({store, state, requestsSubFilter, searchFilter}) {
-    app.showPageLoader()
+    app.showPageLoader();
     this.title('Tasks');
     this.store = store;
     this.state = state;
@@ -20,9 +19,9 @@ class TasksTableController extends Controller {
   }
 
   refresh() {
-    let promises = [];
-    promises.push(this.store.dispatch(FetchAction.trigger(this.state)));
-    promises.push(this.store.dispatch(CleanupsFetchAction.trigger()));
+    const promises = [];
+    promises.push(this.store.dispatch(FetchTasksInState.trigger(this.state)));
+    promises.push(this.store.dispatch(FetchTaskCleanups.trigger()));
     return Promise.all(promises);
   }
 

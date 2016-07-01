@@ -1,48 +1,66 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import filterSelector from '../../selectors/tasks/filterSelector';
-import decomSelector from '../../selectors/tasks/decomSelector';
+import {
+  getDecomissioningTasks,
+  getFilteredTasks
+} from '../../selectors/tasks';
 
 import TaskFilters from './TaskFilters';
-import { FetchAction } from '../../actions/api/tasks';
-import { KillAction } from '../../actions/api/task';
-import { RunAction } from '../../actions/api/request';
-import { FetchRunAction } from '../../actions/api/request';
-import { FetchRunHistoryAction } from '../../actions/api/request';
-import { FetchAction as FetchFilesAction } from '../../actions/api/taskFiles';
+import { FetchTasksInState, KillTask } from '../../actions/api/tasks';
+import { FetchRequestRun, RunRequest } from '../../actions/api/requests';
+import { FetchRequestRunHistory } from '../../actions/api/history';
+import { FetchTaskFiles } from '../../actions/api/sandbox';
 
 import UITable from '../common/table/UITable';
 import KillTaskModal from '../common/KillTaskModal';
 import RunNowModal from '../common/RunNowModal';
 import TaskLauncher from './TaskLauncher';
-import { TaskId, StartedAt, Host, Rack, CPUs, Memory, ActiveActions, NextRun, PendingType, DeployId, ScheduledActions, ScheduledTaskId, CleanupType, JSONAction, InstanceNumber } from './Columns';
+import {
+  TaskId,
+  StartedAt,
+  Host,
+  Rack,
+  CPUs,
+  Memory,
+  ActiveActions,
+  NextRun,
+  PendingType,
+  DeployId,
+  ScheduledActions,
+  ScheduledTaskId,
+  CleanupType,
+  JSONAction,
+  InstanceNumber
+} from './Columns';
 
 class TasksPage extends React.Component {
+  static propTypes = {
+  };
 
   constructor(props) {
     super(props);
     this.state = {
       filter: {
         taskStatus: props.state,
-        requestTypes: props.requestsSubFilter == 'all' ? TaskFilters.REQUEST_TYPES : props.requestsSubFilter.split(','),
+        requestTypes: props.requestsSubFilter === 'all' ? TaskFilters.REQUEST_TYPES : props.requestsSubFilter.split(','),
         filterText: props.searchFilter,
         loading: false
       }
-    }
+    };
   }
 
   handleFilterChange(filter) {
     const lastFilterTaskStatus = this.state.filter.taskStatus;
     this.setState({
-      loading: lastFilterTaskStatus != filter.taskStatus,
-      filter: filter
+      loading: lastFilterTaskStatus !== filter.taskStatus,
+      filter
     });
 
-    const requestTypes = filter.requestTypes.length == TaskFilters.REQUEST_TYPES.length ? 'all' : filter.requestTypes.join(',');
+    const requestTypes = filter.requestTypes.length === TaskFilters.REQUEST_TYPES.length ? 'all' : filter.requestTypes.join(',');
     this.props.updateFilters(filter.taskStatus, requestTypes, filter.filterText);
     app.router.navigate(`/tasks/${filter.taskStatus}/${requestTypes}/${filter.filterText}`);
 
-    if (lastFilterTaskStatus != filter.taskStatus) {
+    if (lastFilterTaskStatus !== filter.taskStatus) {
       this.props.fetchFilter(filter.taskStatus).then(() => {
         this.setState({
           loading: false
@@ -65,7 +83,7 @@ class TasksPage extends React.Component {
   }
 
   getColumns() {
-    switch(this.state.filter.taskStatus) {
+    switch (this.state.filter.taskStatus) {
       case 'active':
         return [TaskId, StartedAt, Host, Rack, CPUs, Memory, ActiveActions((taskId) => this.refs.killTaskModal.show(taskId))];
       case 'scheduled':
@@ -76,38 +94,41 @@ class TasksPage extends React.Component {
         return [TaskId, StartedAt, Host, Rack, InstanceNumber, JSONAction];
       case 'decommissioning':
         return [TaskId, StartedAt, Host, Rack, CPUs, Memory, ActiveActions((taskId) => this.refs.killTaskModal.show(taskId))];
+      default:
+        return [TaskId, JSONAction];
     }
   }
 
   getDefaultSortAttribute(t) {
-    switch(this.state.filter.taskStatus) {
+    switch (this.state.filter.taskStatus) {
       case 'active':
       case 'decommissioning':
         return t.taskId.startedAt;
       case 'scheduled':
         if (!t.pendingTask) return null;
         return t.pendingTask.pendingTaskId.nextRunAt;
+      default:
+        return null;
     }
   }
 
   render() {
-    const displayRequestTypeFilters = this.state.filter.taskStatus == 'active';
-    const displayTasks = this.state.filter.taskStatus != 'decommissioning' ?
-      _.sortBy(filterSelector({tasks: this.props.tasks, filter: this.state.filter}), (t) => this.getDefaultSortAttribute(t)) :
-      _.sortBy(decomSelector({tasks: this.props.tasks, cleanups: this.props.cleanups}), (t) => this.getDefaultSortAttribute(t));
+    const displayRequestTypeFilters = this.state.filter.taskStatus === 'active';
+    const displayTasks = this.state.filter.taskStatus !== 'decommissioning' ?
+      _.sortBy(getFilteredTasks({tasks: this.props.tasks, filter: this.state.filter}), (t) => this.getDefaultSortAttribute(t)) :
+      _.sortBy(getDecomissioningTasks({tasks: this.props.tasks, cleanups: this.props.cleanups}), (t) => this.getDefaultSortAttribute(t));
     if (_.contains(['active', 'decommissioning'], this.state.filter.taskStatus)) displayTasks.reverse();
 
     let table;
     if (this.state.loading) {
       table = <div className="page-loader fixed"></div>;
-    }
-    else if (!displayTasks.length) {
+    } else if (!displayTasks.length) {
       table = <div className="empty-table-message"><p>No matching tasks</p></div>;
     } else {
       table = (
         <UITable
           data={displayTasks}
-          keyGetter={(r) => r.taskId ? r.taskId.id : r.pendingTask.pendingTaskId.id}
+          keyGetter={(r) => (r.taskId ? r.taskId.id : r.pendingTask.pendingTaskId.id)}
         >
           {this.getColumns()}
         </UITable>
@@ -131,7 +152,7 @@ class TasksPage extends React.Component {
   }
 }
 
-function mapStateToProps(state, ownProps) {
+function mapStateToProps(state) {
   return {
     tasks: state.api.tasks.data,
     cleanups: state.api.taskCleanups.data
@@ -140,12 +161,12 @@ function mapStateToProps(state, ownProps) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    fetchFilter: (state) => dispatch(FetchAction.trigger(state)),
-    killTask: (taskId, data) => dispatch(KillAction.trigger(taskId, data)),
-    runRequest: (requestId, data) => dispatch(RunAction.trigger(requestId, data)),
-    taskRun: (requestId, runId) => dispatch(FetchRunAction.trigger(requestId, runId)),
-    taskRunHistory: (requestId, runId) => dispatch(FetchRunHistoryAction.trigger(requestId, runId)),
-    taskFiles: (taskId, path) => dispatch(FetchFilesAction.trigger(taskId, path)),
+    fetchFilter: (state) => dispatch(FetchTasksInState.trigger(state)),
+    killTask: (taskId, data) => dispatch(KillTask.trigger(taskId, data)),
+    runRequest: (requestId, data) => dispatch(RunRequest.trigger(requestId, data)),
+    taskRun: (requestId, runId) => dispatch(FetchRequestRun.trigger(requestId, runId)),
+    taskRunHistory: (requestId, runId) => dispatch(FetchRequestRunHistory.trigger(requestId, runId)),
+    taskFiles: (taskId, path) => dispatch(FetchTaskFiles.trigger(taskId, path)),
   };
 }
 

@@ -5,25 +5,21 @@ import _ from 'underscore';
 
 import Utils from '../utils';
 
-const getStarred = (state) => new Set(state.ui.starred);
+const getRequestsAPI = (state) => state.api.requests;
+const getUserAPI = (state) => state.api.user;
 const getSearchFilter = (state) => state.ui.requestsPage;
-const getRequests = (state) => state.api.requests;
-const getUser = (state) => state.api.user;
 
-export const combineStarredWithRequests = createSelector(
-  [getStarred, getRequests],
+export const getStarred = (state) => new Set(state.ui.starred);
+
+export const getStarredRequests = createSelector(
+  [getStarred, getRequestsAPI],
   (starredData, requestsAPI) => {
-    return requestsAPI.data.map((r) => {
-      return {
-        ...r,
-        starred: starredData.has(r.request.id)
-      };
-    });
+    return requestsAPI.data.filter((r) => starredData.has(r.request.id));
   }
 );
 
 export const getUserRequests = createSelector(
-  [getUser, getRequests],
+  [getUserAPI, getRequestsAPI],
   (userAPI, requestsAPI) => {
     const deployUserTrimmed = Utils.maybe(
       userAPI.data,
@@ -82,7 +78,7 @@ export const getUserRequestTotals = createSelector(
 );
 
 export const getFilteredRequests = createSelector(
-  [ getSearchFilter, getRequests ],
+  [getSearchFilter, getRequestsAPI],
   (searchFilter, requestsAPI) => {
     let filteredRequests = requestsAPI.data;
 
@@ -103,7 +99,7 @@ export const getFilteredRequests = createSelector(
         return r.requestDeployState.activeDeploy.user || '';
       }
       return null;
-    }
+    };
 
     // filter by text
     if (searchFilter.textFilter.length < 3) {
@@ -112,12 +108,12 @@ export const getFilteredRequests = createSelector(
     }
     if (Utils.isGlobFilter(searchFilter.textFilter)) {
       const byId = filteredRequests.filter((r) => {
-        return micromatch.any(r.request.id, searchFilter.textFilter + '*');
+        return micromatch.any(r.request.id, `${searchFilter.textFilter}*`);
       });
       const byUser = filteredRequests.filter((r) => {
         const user = getUser(r);
         if (user !== null) {
-          return micromatch.any(user, searchFilter.textFilter + '*');
+          return micromatch.any(user, `${searchFilter.textFilter}*`);
         }
         return false;
       });

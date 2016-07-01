@@ -1,21 +1,63 @@
-import { buildApiAction } from './base';
+import { buildApiAction, buildJsonApiAction } from './base';
 
-export const FetchForDeployAction = buildApiAction('FETCH_FOR_DEPLOY', (requestId, deployId) => {return {url: `/history/request/${requestId}/deploy/${deployId}/tasks/active`}});
+export const FetchTasksInState = buildApiAction(
+  'FETCH_TASKS',
+  (state) => {
+    const stateToFetch = state !== 'decommissioning' ? state : 'active';
 
-export const FetchAction = buildApiAction('FETCH_TASKS', (state) => {
-  const stateToFetch = state != 'decommissioning' ? state : 'active';
+    let propertyString = '?property=';
+    const propertyJoin = '&property=';
 
-  let propertyString = '?property=';
-  switch(stateToFetch) {
-    case 'active':
-      propertyString += ['offer.hostname', 'taskId', 'mesosTask.resources', 'rackId', 'taskRequest.request.requestType'].join('&property=');
-      break;
-    case 'scheduled':
-      propertyString += ['offer.hostname', 'taskId', 'mesosTask.resources', 'rackId', 'taskRequest.request.requestType', 'pendingTask'].join('&property=');
-      break;
-    default:
-      propertyString = '';
+    switch (stateToFetch) {
+      case 'active':
+        propertyString += ['offer.hostname', 'taskId', 'mesosTask.resources', 'rackId', 'taskRequest.request.requestType'].join(propertyJoin);
+        break;
+      case 'scheduled':
+        propertyString += ['offer.hostname', 'taskId', 'mesosTask.resources', 'rackId', 'taskRequest.request.requestType', 'pendingTask'].join(propertyJoin);
+        break;
+      default:
+        propertyString = '';
+    }
+
+    return {
+      url: `/tasks/${stateToFetch}${propertyString}`
+    };
   }
+);
 
-  return {url: `tasks/${stateToFetch}${propertyString}`};
-});
+export const FetchTask = buildApiAction(
+  'FETCH_TASK',
+  (taskId) => ({
+    url: `/tasks/task/${taskId}`,
+  })
+);
+
+export const KillTask = buildJsonApiAction(
+  'KILL_TASK',
+  'DELETE',
+  (taskId, data) => ({
+    url: `/tasks/task/${taskId}`,
+    body: data
+  })
+);
+
+export const FetchTaskCleanups = buildApiAction(
+  'FETCH_TASK_CLEANUPS',
+  {url: '/tasks/cleaning'}
+);
+
+export const FetchTaskStatistics = buildApiAction(
+  'FETCH_TASK_STATISTICS',
+  (taskId) => ({
+    url: `/tasks/task/${taskId}/statistics`
+  })
+);
+
+export const RunCommandOnTask = buildJsonApiAction(
+  'RUN_COMMAND_ON_TASK',
+  'POST',
+  (taskId, commandName) => ({
+    url: `/tasks/task/${taskId}/command`,
+    body: {name: commandName}
+  })
+);
