@@ -1,3 +1,6 @@
 import { buildApiAction } from './base';
 
-export const FetchAction = buildApiAction('FETCH_WEBHOOKS', {url: '/webhooks'});
+export const FetchWebhooks = buildApiAction(
+  'FETCH_WEBHOOKS',
+  {url: '/webhooks'}
+);

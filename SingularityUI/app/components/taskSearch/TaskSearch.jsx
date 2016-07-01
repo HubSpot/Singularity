@@ -106,6 +106,7 @@ class TaskSearch extends React.Component {
 }
 
 function mapStateToProps(state) {
+  console.log(state.api);
   return {
     request: state.api.request.data,
     taskHistory: state.api.taskHistory.data
