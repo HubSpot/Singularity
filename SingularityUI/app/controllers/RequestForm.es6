@@ -21,7 +21,7 @@ class RequestFormController extends Controller {
     const clearSaveRequestDataPromise = this.store.dispatch(SaveRequest.clearData());
 
     Promise.all([racksPromise, requestPromise, clearSaveRequestDataPromise]).then(() => {
-      this.setView(new RequestFormView({store: this.store}));
+      this.setView(new RequestFormView({store: this.store, requestId: this.requestId}));
       app.showView(this.view);
     });
   }
