@@ -213,7 +213,7 @@ public class SingularityScheduler {
     final ImmutableList<SingularityPendingRequest> pendingRequests = ImmutableList.copyOf(requestManager.getPendingRequests());
 
     if (pendingRequests.isEmpty()) {
-      LOG.trace("Pending queue was empty");
+      LOG.trace("Pending request queue was empty");
       return;
     }
 
