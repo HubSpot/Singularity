@@ -40,9 +40,9 @@ function handle_signal {
   exit "$exit_code"
 }
 
-# Outputs the path of the deepest cgroup a PID (or self) is in.
+# Outputs the path of the deepest cgroup the current process is in.
 # The output of:
-#   cat /proc/4194/cgroup
+#   cat /proc/self/cgroup
 # will look like:
 # --------------------
 # 8:net_cls:/
@@ -54,11 +54,11 @@ function handle_signal {
 # 2:cpu:/hs_high_priority/mesos/4e59173b-e2a7-47a6-bcb8-455b637faa5f
 # 1:blkio:/hs_high_priority
 # --------------------
-# This function will get the deepest cgroup path in that output.
+# This function will return the deepest cgroup path in that output.
 # For this example, it would return:
 #   /hs_high_priority/mesos/4e59173b-e2a7-47a6-bcb8-455b637faa5f
 function get_deepest_cgroup {
-   local cgroups=$(</proc/${1:self}/cgroup)
+   local cgroups=$(</proc/self/cgroup)
    local max_depth=0
    local max_path="/"
 
