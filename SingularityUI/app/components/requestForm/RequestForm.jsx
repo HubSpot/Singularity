@@ -13,48 +13,16 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 import Utils from '../../utils';
 import classNames from 'classnames';
+import {FIELDS_BY_REQUEST_TYPE, INDEXED_FIELDS} from './fields';
 
 const QUARTZ_SCHEDULE = 'quartzSchedule';
 const CRON_SCHEDULE = 'cronSchedule';
 
 const FORM_ID = 'requestForm';
 
-const REQUEST_ID_FORBIDDEN_SYMBOLS = ['@', '\\', '/', '*', '?', '%', ' ', '[', ']', '#', '$', '{', '}', '`', '|'];
+const REQUEST_ID_REGEX = /[a-zA-Z0-9._-]*/;
 
 const REQUEST_TYPES = ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'];
-
-const FIELDS_BY_REQUEST_TYPE = {
-  ALL: [
-    'id',
-    'owners',
-    'requestType',
-    'slavePlacement'
-  ],
-  SERVICE: [
-    'instances',
-    'rackSensitive',
-    'hideEvenNumberAcrossRacksHint',
-    'loadBalanced',
-    'rackAffinity'
-  ],
-  WORKER: [
-    'instances',
-    'rackSensitive',
-    'hideEvenNumberAcrossRacksHint',
-    'waitAtLeastMillisAfterTaskFinishesForReschedule',
-    'rackAffinity'
-  ],
-  SCHEDULED: [
-    QUARTZ_SCHEDULE,
-    CRON_SCHEDULE,
-    'scheduleType',
-    'numRetriesOnFailure',
-    'killOldNonLongRunningTasksAfterMillis',
-    'scheduledExpectedRuntimeMillis'
-  ],
-  ON_DEMAND: ['killOldNonLongRunningTasksAfterMillis'],
-  RUN_ONCE: ['killOldNonLongRunningTasksAfterMillis']
-};
 
 class RequestForm extends React.Component {
 
@@ -108,41 +76,77 @@ class RequestForm extends React.Component {
     return '';
   }
 
-  feedback(fieldId, fieldType, required) {
+  validateField(fieldId) {
     const value = this.getValue(fieldId);
-    if (required && (!value || _.isEmpty(value))) {
-      return 'ERROR';
+    const {required, type} = INDEXED_FIELDS[fieldId];
+    if (required && (_.isEmpty(value))) {
+      return false;
     }
     if (!value || _.isEmpty(value)) {
-      return null;
+      return true;
     }
-    if (fieldType === 'number') {
+    if (type === 'number') {
       const numericalValue = parseInt(value, 10);
       if (numericalValue !== 0 && !numericalValue) {
-        return 'ERROR';
+        return false;
       }
     }
-    if (fieldType === 'request-id') {
-      for (const forbiddenSymbol of REQUEST_ID_FORBIDDEN_SYMBOLS) {
-        if (value.indexOf(forbiddenSymbol) !== -1) {
-          return 'ERROR';
-        }
+    if (type === 'request-id') {
+      if (value.match(REQUEST_ID_REGEX)[0] !== value) {
+        return false;
       }
     }
-    return 'SUCCESS';
+    return true;
+  }
+
+  feedback(fieldId) {
+    const value = this.getValue(fieldId);
+    const {required} = INDEXED_FIELDS[fieldId];
+    if (required && (_.isEmpty(value))) {
+      return 'ERROR';
+    }
+    if (_.isEmpty(value)) {
+      return null;
+    }
+    if (this.validateField(fieldId)) {
+      return 'SUCCESS';
+    }
+    return 'ERROR';
   }
 
   cantSubmit() {
-    return this.props.saveApiCall.isFetching ||
-      !this.getValue('id') ||
-      !this.getValue('requestType') ||
-      (this.getValue('requestType') === 'SCHEDULED' && !this.getValue(this.getScheduleType()));
+    if (this.props.saveApiCall.isFetching) {
+      return true;
+    }
+    for (const field of FIELDS_BY_REQUEST_TYPE.ALL) {
+      if (!this.validateField(field.id)) {
+        return true;
+      }
+    }
+    const scheduleType = this.getScheduleType();
+    const requestTypeSpecificFields = FIELDS_BY_REQUEST_TYPE[this.getValue('requestType')];
+    if (_.isEmpty(requestTypeSpecificFields)) {
+      return true;
+    }
+    for (const field of requestTypeSpecificFields) {
+      if (field.id === CRON_SCHEDULE && scheduleType !== CRON_SCHEDULE) {
+        continue;
+      }
+      if (field.id === QUARTZ_SCHEDULE && scheduleType !== QUARTZ_SCHEDULE) {
+        continue;
+      }
+      if (!this.validateField(field.id)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   submitForm(event) {
     event.preventDefault();
     const request = {};
-    const copyOverField = (fieldId) => {
+    const copyOverField = (field) => {
+      const fieldId = field.id;
       if (this.getValue(fieldId) && fieldId !== QUARTZ_SCHEDULE && fieldId !== CRON_SCHEDULE && fieldId !== 'scheduleType') {
         request[fieldId] = this.getValue(fieldId);
       }
@@ -178,7 +182,7 @@ class RequestForm extends React.Component {
     if (!this.getValue('requestType')) {
       return false;
     }
-    if (FIELDS_BY_REQUEST_TYPE[this.getValue('requestType')].indexOf(fieldId) === -1) {
+    if (_.pluck(FIELDS_BY_REQUEST_TYPE[this.getValue('requestType')], 'id').indexOf(fieldId) === -1) {
       return false;
     }
     return true;
@@ -213,6 +217,28 @@ class RequestForm extends React.Component {
     return CRON_SCHEDULE;
   }
 
+  getScheduleFeedback() {
+    const scheduleFeedback = this.feedback(this.getScheduleType());
+    const scheduleClassName = classNames(
+      'col-sm-7',
+      {
+        'has-feedback': scheduleFeedback,
+        'has-success': scheduleFeedback === 'SUCCESS',
+        'has-error': scheduleFeedback === 'ERROR',
+        'has-warning': scheduleFeedback === 'WARN'
+      });
+    const scheduleIconClassName = classNames(
+      'glyphicon',
+      'form-control-feedback',
+      {
+        'glyphicon-ok': scheduleFeedback === 'SUCCESS',
+        'glyphicon-warning-sign': scheduleFeedback === 'WARN',
+        'glyphicon-remove': scheduleFeedback === 'ERROR'
+      }
+    );
+    return {scheduleFeedback, scheduleClassName, scheduleIconClassName};
+  }
+
   renderRequestTypeSelectors() {
     const tooltip = (
       <ToolTip id="cannotChangeRequestTypeAfterCreation">Option cannot be altered after creation</ToolTip>
@@ -245,7 +271,8 @@ class RequestForm extends React.Component {
         value={this.getValue('instances')}
         label="Instances"
         placeholder="1"
-        feedback={this.feedback('instances', 'number')}
+        feedback={this.feedback('instances')}
+        required={INDEXED_FIELDS.instances.required}
       />
     );
     const rackSensitive = (
@@ -282,7 +309,8 @@ class RequestForm extends React.Component {
         value={this.getValue('waitAtLeastMillisAfterTaskFinishesForReschedule')}
         label="Task rescheduling delay"
         inputGroupAddon="milliseconds"
-        feedback={this.feedback('waitAtLeastMillisAfterTaskFinishesForReschedule', 'number')}
+        required={INDEXED_FIELDS.waitAtLeastMillisAfterTaskFinishesForReschedule.required}
+        feedback={this.feedback('waitAtLeastMillisAfterTaskFinishesForReschedule')}
       />
     );
     const rackOptions = _.pluck(this.props.racks, 'id').map(id => ({value: id, label: id}));
@@ -298,20 +326,23 @@ class RequestForm extends React.Component {
         />
       </div>
     );
+    const {scheduleFeedback, scheduleClassName, scheduleIconClassName} = this.getScheduleFeedback();
     const schedule = (
-      <div className="form-group required">
+      <div className={classNames('form-group', {required: INDEXED_FIELDS[this.getScheduleType()].required})}>
         <label htmlFor="schedule">Schedule</label>
         <div className="row" id="schedule">
-          <div className="col-sm-7">
+          <div className={scheduleClassName}>
             <FormField
               prop={{
                 updateFn: event => this.updateField(this.getScheduleType(), event.target.value),
                 placeholder: this.getScheduleType() === QUARTZ_SCHEDULE ? 'eg: 0 */5 * * * ?' : 'eg: */5 * * * *',
                 inputType: 'text',
-                value: this.getValue(this.getScheduleType())
+                value: this.getValue(this.getScheduleType()),
+                required: INDEXED_FIELDS[this.getScheduleType()].required
               }}
               feedback={this.feedback(this.getScheduleType())}
             />
+            {scheduleFeedback && <span className={scheduleIconClassName} />}
           </div>
           <div className="col-sm-5">
             <Select
@@ -339,7 +370,8 @@ class RequestForm extends React.Component {
         onChange={event => this.updateField('numRetriesOnFailure', event.target.value)}
         value={this.getValue('numRetriesOnFailure')}
         label="Number of retries on failure"
-        feedback={this.feedback('numRetriesOnFailure', 'number')}
+        required={INDEXED_FIELDS.numRetriesOnFailure.required}
+        feedback={this.feedback('numRetriesOnFailure')}
       />
     );
     const killOldNonLongRunningTasksAfterMillis = (
@@ -349,7 +381,8 @@ class RequestForm extends React.Component {
         value={this.getValue('killOldNonLongRunningTasksAfterMillis')}
         label="Kill cleaning task(s) after"
         inputGroupAddon="milliseconds"
-        feedback={this.feedback('killOldNonLongRunningTasksAfterMillis', 'number')}
+        required={INDEXED_FIELDS.killOldNonLongRunningTasksAfterMillis.required}
+        feedback={this.feedback('killOldNonLongRunningTasksAfterMillis')}
       />
     );
     const scheduledExpectedRuntimeMillis = (
@@ -359,7 +392,8 @@ class RequestForm extends React.Component {
         value={this.getValue('scheduledExpectedRuntimeMillis')}
         label="Maximum task duration"
         inputGroupAddon="milliseconds"
-        feedback={this.feedback('scheduledExpectedRuntimeMillis', 'number')}
+        required={INDEXED_FIELDS.scheduledExpectedRuntimeMillis.required}
+        feedback={this.feedback('scheduledExpectedRuntimeMillis')}
       />
     );
     return (
@@ -393,9 +427,9 @@ class RequestForm extends React.Component {
         onChange={event => this.updateField('id', event.target.value)}
         value={this.getValue('id')}
         label="ID"
-        required={true}
+        required={INDEXED_FIELDS.id.required}
         placeholder="eg: my-awesome-request"
-        feedback={this.feedback('id', 'request-id', true)}
+        feedback={this.feedback('id')}
       />
     );
     const owners = (
@@ -404,6 +438,8 @@ class RequestForm extends React.Component {
         value={this.getValue('owners') || []}
         onChange={(newValue) => this.updateField('owners', newValue)}
         label="Owners"
+        required={INDEXED_FIELDS.owners.required}
+        errorIndices={INDEXED_FIELDS.owners.required && _.isEmpty(this.getValue('owners')) && [0] || []}
         couldHaveFeedback={true}
       />
     );
@@ -426,6 +462,7 @@ class RequestForm extends React.Component {
         label="Slave Placement"
         value={this.getValue('slavePlacement') || ''}
         defaultValue=""
+        required={INDEXED_FIELDS.slavePlacement.required}
         onChange={newValue => this.updateField('slavePlacement', newValue.value)}
         options={[
           { label: 'Default', value: '' },
