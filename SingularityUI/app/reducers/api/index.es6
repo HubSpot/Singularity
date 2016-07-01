@@ -3,7 +3,10 @@ import buildApiActionReducer from './base';
 import buildKeyedApiActionReducer from './keyed';
 
 import { FetchUser } from '../../actions/api/auth';
-import { FetchPendingDeploys } from '../../actions/api/deploys';
+import {
+  FetchPendingDeploys,
+  SaveDeploy
+} from '../../actions/api/deploys';
 
 import {
   FetchTaskHistory,
@@ -64,6 +67,7 @@ const requestsInState = buildApiActionReducer(FetchRequestsInState, []);
 const status = buildApiActionReducer(FetchSingularityStatus);
 const deploy = buildApiActionReducer(FetchDeployForRequest);
 const deploys = buildApiActionReducer(FetchPendingDeploys, []);
+const saveDeploy = buildApiActionReducer(SaveDeploy);
 const activeTasksForDeploy = buildApiActionReducer(FetchActiveTasksForDeploy);
 const activeTasksForRequest = buildKeyedApiActionReducer(FetchActiveTasksForRequest);
 const taskHistoryForDeploy = buildApiActionReducer(FetchTaskHistoryForDeploy);
@@ -86,6 +90,7 @@ export default combineReducers({
   requestsInState,
   status,
   deploy,
+  saveDeploy,
   task,
   tasks,
   activeTasksForDeploy,

@@ -1,4 +1,4 @@
-import Utils from '../utils';
+import Utils from '../../utils';
 
 const ACTIONS = {
   MODIFY_FORM_FIELD(state, {formId, fieldId, newValue}) {
