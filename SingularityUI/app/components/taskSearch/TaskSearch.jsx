@@ -27,9 +27,10 @@ class TaskSearch extends React.Component {
   }
 
   handleSearch(filter) {
-    let newFilter = _.extend({}, this.state.filter, filter, {disableNext: false, page: 1});
+    let newFilter = _.extend({}, this.state.filter, filter, {page: 1});
     this.setState({
-      filter: newFilter
+      filter: newFilter,
+      disableNext: false
     });
     this.props.fetchTaskHistory(newFilter);
   }
@@ -50,14 +51,15 @@ class TaskSearch extends React.Component {
         });
       } else if (resp.data.length < TaskSearch.TASKS_PER_PAGE) {
         this.setState({
-          disableNext: false,
           filter: newFilter,
-          loading: false
+          loading: false,
+          disableNext: true
         });
       } else {
         this.setState({
           filter: newFilter,
-          loading: false
+          loading: false,
+          disableNext: false
         });
       }
     });
@@ -111,7 +113,7 @@ class TaskSearch extends React.Component {
               paginate={true}
               page={this.state.filter.page}
               pageSize={TaskSearch.TASKS_PER_PAGE + 1}
-              disableNext={this.props.taskHistory.length < TaskSearch.TASKS_PER_PAGE}
+              disableNext={this.state.disableNext}
               onPage={(page) => this.handlePage(page)}
               renderTableRow={(...args) => this.renderTableRow(...args)}
               loading={this.state.loading}
