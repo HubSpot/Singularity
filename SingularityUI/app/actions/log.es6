@@ -206,6 +206,10 @@ export const taskGroupFetchNext = taskGroupId =>
             return dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, true, maxLines));
           }
           return Promise.resolve();
+        }).error(error => {
+          if (error.status === 404) {
+            app.caughtError();
+          }
         });
         promise.taskId = taskId;
         return promise;
