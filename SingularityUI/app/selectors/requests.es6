@@ -2,19 +2,15 @@ import { createSelector } from 'reselect';
 
 import Utils from '../utils';
 
-const getStarred = (state) => new Set(state.ui.starred);
 const getRequests = (state) => state.api.requests;
 const getUser = (state) => state.api.user;
 
-export const combineStarredWithRequests = createSelector(
+export const getStarred = (state) => new Set(state.ui.starred);
+
+export const getStarredRequests = createSelector(
   [getStarred, getRequests],
   (starredData, requestsAPI) => {
-    return requestsAPI.data.map((r) => {
-      return {
-        ...r,
-        starred: starredData.has(r.request.id)
-      };
-    });
+    return requestsAPI.data.filter((r) => starredData.has(r.request.id));
   }
 );
 

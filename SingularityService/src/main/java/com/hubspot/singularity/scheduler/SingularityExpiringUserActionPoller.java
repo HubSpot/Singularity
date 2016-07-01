@@ -1,5 +1,6 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -12,10 +13,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -23,6 +26,7 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityTaskCleanup;
+import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.RequestManager;
@@ -148,6 +152,15 @@ public class SingularityExpiringUserActionPoller extends SingularityLeaderOnlyPo
             && taskCleanup.getActionId().isPresent() && expiringObject.getActionId().equals(taskCleanup.getActionId().get())) {
           LOG.info("Discarding cleanup for {} ({}) because of {}", taskCleanup.getTaskId(), taskCleanup, expiringObject);
           taskManager.deleteCleanupTask(taskCleanup.getTaskId().getId());
+          if (!taskManager.getTaskCleanup(taskCleanup.getTaskId().getId()).isPresent()) {
+            LOG.info("No other task cleanups found, removing task cleanup update for {}", taskCleanup.getTaskId());
+            List<SingularityTaskHistoryUpdate> historyUpdates = taskManager.getTaskHistoryUpdates(taskCleanup.getTaskId());
+            Collections.sort(historyUpdates);
+            if (Iterables.getLast(historyUpdates).getTaskState() == ExtendedTaskState.TASK_CLEANING) {
+              Optional<SingularityTaskHistoryUpdate> maybePreviousHistoryUpdate = historyUpdates.size() > 1 ? Optional.of(historyUpdates.get(historyUpdates.size() - 2)) : Optional.<SingularityTaskHistoryUpdate>absent();
+              taskManager.deleteTaskHistoryUpdate(taskCleanup.getTaskId(), ExtendedTaskState.TASK_CLEANING, maybePreviousHistoryUpdate);
+            }
+          }
         }
       }
 

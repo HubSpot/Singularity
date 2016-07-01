@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import Clipboard from 'clipboard';
 import Utils from '../../utils';
-import { FetchForDeploy as TaskHistoryFetchForDeploy } from '../../actions/api/taskHistory';
+import { FetchTaskHistoryForDeploy } from '../../actions/api/history';
 
 import { DeployState, InfoBox } from '../common/statelessComponents';
 
@@ -138,7 +138,7 @@ class DeployDetail extends React.Component {
           entries={tasks}
           paginate={tasks.length >= 5}
           perPage={5}
-          fetchAction={TaskHistoryFetchForDeploy}
+          fetchAction={FetchTaskHistoryForDeploy}
           dispatch={this.props.dispatch}
           fetchParams={[d.deploy.requestId, d.deploy.id]}
           headers={['Name', 'Last State', 'Started', 'Updated', '', '']}

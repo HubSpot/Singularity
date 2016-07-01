@@ -1,7 +1,7 @@
 import Controller from './Controller';
 import RequestFormView from '../views/requestForm';
-import { FetchAction as RequestFetchAction, SaveAction } from '../actions/api/request';
-import { FetchAction as RacksFetchAction } from '../actions/api/racks';
+import { FetchRequest, SaveRequest } from '../actions/api/requests';
+import { FetchRacks } from '../actions/api/racks';
 
 class RequestFormController extends Controller {
 
@@ -11,14 +11,14 @@ class RequestFormController extends Controller {
     this.store = store;
     this.requestId = requestId;
 
-    const racksPromise = this.store.dispatch(RacksFetchAction.trigger());
+    const racksPromise = this.store.dispatch(FetchRacks.trigger());
     let requestPromise;
     if (this.requestId) {
-      requestPromise = this.store.dispatch(RequestFetchAction.trigger(this.requestId));
+      requestPromise = this.store.dispatch(FetchRequest.trigger(this.requestId));
     } else {
-      requestPromise = this.store.dispatch(RequestFetchAction.clearData());
+      requestPromise = this.store.dispatch(FetchRequest.clearData());
     }
-    const clearSaveRequestDataPromise = this.store.dispatch(SaveAction.clearData());
+    const clearSaveRequestDataPromise = this.store.dispatch(SaveRequest.clearData());
 
     Promise.all([racksPromise, requestPromise, clearSaveRequestDataPromise]).then(() => {
       this.setView(new RequestFormView({store: this.store}));
