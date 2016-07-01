@@ -19,37 +19,36 @@ class TaskSearch extends React.Component {
         page: 1,
         count: TaskSearch.TASKS_PER_PAGE
       },
-      displayTasks: []
-    }
-  }
-
-  componentWillUpdate(nextProps, nextState) {
-    if (nextState.filter !== this.state.filter) {
-      this.props.fetchTaskHistory(nextState.filter);
-    }
-    if (nextProps.taskHistory != this.props.taskHistory) {
-      this.setState({
-        displayTasks: this.state.displayTasks.concat(nextProps.taskHistory)
-      });
+      disableNext: false
     }
   }
 
   handleSearch(filter) {
-    let newFilter = _.extend({page: 1}, this.state.filter, filter);
+    let newFilter = _.extend({}, this.state.filter, filter, {disableNext: false, page: 1});
     this.setState({
-      filter: newFilter,
-      displayTasks: []
+      filter: newFilter
     });
+    this.props.fetchTaskHistory(newFilter);
   }
 
   handlePage(page) {
-    this.setState({
-      filter: _.extend({}, this.state.filter, {page: page})
+    let newFilter = _.extend({}, this.state.filter, {page});
+    this.props.fetchTaskHistory(newFilter).then((resp) => {
+      if (resp.data.length < TaskSearch.TASKS_PER_PAGE) {
+        this.setState({
+          disableNext: false,
+          page
+        });
+      } else {
+        this.setState({
+          filter: newFilter
+        });
+      }
     });
   }
 
   render() {
-    console.log(this.state.displayTasks.length);
+    console.log(this.props.taskHistory, this.state.filter.page);
     return (
       <div>
         <Breadcrumbs
@@ -67,10 +66,10 @@ class TaskSearch extends React.Component {
         <div className="row">
           <div className="col-md-12">
             <TasksTable
-              data={this.state.displayTasks}
+              data={this.props.taskHistory}
               paginate={true}
               page={this.state.filter.page}
-              pageSize={TaskSearch.TASKS_PER_PAGE}
+              pageSize={TaskSearch.TASKS_PER_PAGE + 1}
               disableNext={this.props.taskHistory.length < TaskSearch.TASKS_PER_PAGE}
               onPage={(page) => this.handlePage(page)}
             />
