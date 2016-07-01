@@ -1,4 +1,5 @@
 import Q from 'q';
+import Utils from 'utils';
 
 import { fetchTasksForRequest } from './activeTasks';
 
@@ -206,11 +207,7 @@ export const taskGroupFetchNext = taskGroupId =>
             return dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, true, maxLines));
           }
           return Promise.resolve();
-        }).error(error => {
-          if (error.status === 404) {
-            app.caughtError();
-          }
-        });
+        }).error(error => Utils.ignore404(error));
         promise.taskId = taskId;
         return promise;
       }
