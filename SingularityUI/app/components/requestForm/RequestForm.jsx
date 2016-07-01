@@ -518,10 +518,14 @@ function navigateToRequestIfSuccess(promiseResult) {
   }
 }
 
-function mapStateToProps(state) {
+function mapStateToProps(state, ownProps) {
+  const request = state.api.request[ownProps.requestId]
+    ? state.api.request[ownProps.requestId].data
+    : null;
+
   return {
     racks: state.api.racks.data,
-    request: state.api.request ? state.api.request.data : null,
+    request,
     form: state.ui.form[FORM_ID],
     saveApiCall: state.api.saveRequest
   };
