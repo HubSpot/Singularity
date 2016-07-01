@@ -29,7 +29,8 @@ import {
   FetchRequest,
   SaveRequest,
   RemoveRequest,
-  UnpauseRequest
+  UnpauseRequest,
+  FetchRequestsInState
 } from '../../actions/api/requests';
 
 import { FetchTaskFiles } from '../../actions/api/sandbox';
@@ -62,6 +63,7 @@ const racks = buildApiActionReducer(FetchRacks, []);
 const request = buildKeyedApiActionReducer(FetchRequest);
 const saveRequest = buildApiActionReducer(SaveRequest);
 const requests = buildApiActionReducer(FetchRequests, []);
+const requestsInState = buildApiActionReducer(FetchRequestsInState, []);
 const status = buildApiActionReducer(FetchSingularityStatus);
 const deploy = buildApiActionReducer(FetchDeployForRequest);
 const deploys = buildApiActionReducer(FetchPendingDeploys, []);
@@ -85,6 +87,7 @@ export default combineReducers({
   request,
   saveRequest,
   requests,
+  requestsInState,
   status,
   deploy,
   saveDeploy,

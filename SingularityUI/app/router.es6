@@ -1,6 +1,5 @@
 let NotFoundController;
 let RequestDetailController;
-let RequestsTableController;
 let TaskSearchController;
 let Utils;
 
@@ -16,7 +15,7 @@ import NewDeployFormController from 'controllers/NewDeployForm';
 
 RequestDetailController = require('controllers/RequestDetail');
 
-RequestsTableController = require('controllers/RequestsTable');
+import RequestsTableController from 'controllers/RequestsTable';
 
 import TasksTableController from 'controllers/TasksTable';
 
@@ -77,6 +76,7 @@ class Router extends Backbone.Router {
       searchFilter = '';
     }
     return this.app.bootstrapController(new RequestsTableController({
+      store: this.app.store,
       state,
       subFilter,
       searchFilter
