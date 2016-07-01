@@ -14,6 +14,7 @@ import { FetchAction as DeployFetchAction } from '../../actions/api/deploy';
 import { FetchAction as DeploysFetchAction } from '../../actions/api/deploys';
 import { FetchForDeployAction as TasksFetchForDeployAction } from '../../actions/api/tasks';
 import { FetchForDeploy as TaskHistoryFetchForDeploy } from '../../actions/api/taskHistory';
+import { FetchAction as TaskHistoryForRequestFetchAction } from '../../actions/api/taskHistory';
 import { FetchAction as TaskCleanupsFetchAction } from '../../actions/api/taskCleanups';
 import { FetchAction as TaskFilesFetchAction } from '../../actions/api/taskFiles';
 import { FetchAction as TaskResourceUsageFetchAction } from '../../actions/api/taskResourceUsage';
@@ -32,6 +33,7 @@ const deploy = buildApiActionReducer(DeployFetchAction);
 const deploys = buildApiActionReducer(DeploysFetchAction, []);
 const activeTasksForDeploy = buildApiActionReducer(TasksFetchForDeployAction);
 const taskHistoryForDeploy = buildApiActionReducer(TaskHistoryFetchForDeploy);
+const taskHistory = buildApiActionReducer(TaskHistoryForRequestFetchAction, []);
 const taskCleanups = buildApiActionReducer(TaskCleanupsFetchAction, []);
 const taskFiles = buildKeyedApiActionReducer(TaskFilesFetchAction, []);
 const taskResourceUsage = buildApiActionReducer(TaskResourceUsageFetchAction);
@@ -57,5 +59,6 @@ export default combineReducers({
   taskResourceUsage,
   taskS3Logs,
   deploys,
-  taskShellCommandResponse
+  taskShellCommandResponse,
+  taskHistory
 });
