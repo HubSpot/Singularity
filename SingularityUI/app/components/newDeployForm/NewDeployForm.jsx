@@ -1410,9 +1410,9 @@ class NewDeployForm extends Component {
   }
 }
 
-function mapStateToProps(state) {
+function mapStateToProps(state, ownProps) {
   return {
-    request: state.api.request.data,
+    request: state.api.request[ownProps.requestId].data,
     form: state.ui.form[FORM_ID],
     saveApiCall: state.api.saveDeploy
   };
