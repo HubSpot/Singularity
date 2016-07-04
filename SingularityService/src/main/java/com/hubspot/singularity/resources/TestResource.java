@@ -20,6 +20,7 @@ import com.hubspot.singularity.SingularityLeaderController;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.mesos.SingularityDriver;
+import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 
@@ -32,13 +33,15 @@ public class TestResource {
   private final SingularityLeaderController managed;
   private final SingularityConfiguration configuration;
   private final SingularityDriver driver;
+  private final SingularityTaskReconciliation taskReconciliation;
 
   @Inject
-  public TestResource(SingularityConfiguration configuration, SingularityLeaderController managed, SingularityAbort abort, final SingularityDriver driver) {
+  public TestResource(SingularityConfiguration configuration, SingularityLeaderController managed, SingularityAbort abort, final SingularityDriver driver, SingularityTaskReconciliation taskReconciliation) {
     this.configuration = configuration;
     this.managed = managed;
     this.abort = abort;
     this.driver = driver;
+    this.taskReconciliation = taskReconciliation;
   }
 
   @POST
@@ -103,5 +106,12 @@ public class TestResource {
   @ApiOperation("Trigger an exception.")
   public void throwException(@QueryParam("message") @DefaultValue("test exception") String message) {
     throw new RuntimeException(message);
+  }
+
+  @POST
+  @Path("/reconcile")
+  @ApiOperation("Trigger a task reconciliation")
+  public SingularityTaskReconciliation.ReconciliationState reconcile() {
+    return taskReconciliation.startReconciliation();
   }
 }

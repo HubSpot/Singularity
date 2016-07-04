@@ -68,7 +68,7 @@ public class SingularityTaskReconciliation {
     this.executorService = executorServiceFactory.get(getClass().getSimpleName());
   }
 
-  enum ReconciliationState {
+  public enum ReconciliationState {
     ALREADY_RUNNING, STARTED, NO_DRIVER;
   }
 
