@@ -180,6 +180,7 @@ public class SingularityMesosScheduler implements Scheduler {
             offerHolder.addMatchedTask(accepted.get());
             addedTaskInLastLoop = true;
             taskRequests.remove(accepted.get().getTaskRequest());
+            numDueTasks--;
           }
 
           if (taskRequests.isEmpty()) {
@@ -212,7 +213,7 @@ public class SingularityMesosScheduler implements Scheduler {
     }
 
     LOG.info("Finished handling {} offer(s) ({}), {} accepted, {} declined, {} outstanding tasks", offers.size(), JavaUtils.duration(start), acceptedOffers.size(),
-        offers.size() - acceptedOffers.size(), numDueTasks - acceptedOffers.size());
+        offers.size() - acceptedOffers.size(), numDueTasks);
   }
 
   private Optional<SingularityTask> match(Collection<SingularityTaskRequest> taskRequests, SingularitySchedulerStateCache stateCache, SingularityOfferHolder offerHolder) {
