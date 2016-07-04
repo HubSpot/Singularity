@@ -6,7 +6,9 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
 
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.TaskState;
@@ -25,6 +27,7 @@ import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 
 @Path(TestResource.PATH)
+@Produces({ MediaType.APPLICATION_JSON })
 @Api(description="Misc testing endpoints.", value=TestResource.PATH)
 public class TestResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/test";
