@@ -96,7 +96,7 @@ class RequestsPage extends React.Component {
 
   render() {
     const displayRequests = filterSelector({requestsInState: this.props.requestsInState, filter: this.state.filter});
-    console.log(displayRequests);
+
     let table;
     if (this.state.loading) {
       table = <div className="page-loader fixed"></div>;
