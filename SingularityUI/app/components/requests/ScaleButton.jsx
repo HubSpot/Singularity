@@ -18,10 +18,9 @@ export default class ScaleButton extends Component {
   };
 
   handleScale(data) {
-    console.log(data);
-    this.props.scaleAction(this.props.requestId, {instances: data.instances, durationMillis: data.durationMillis, message: data.message}).then((r) => console.log(r));
+    this.props.scaleAction(this.props.requestId, {instances: data.instances, durationMillis: data.durationMillis, message: data.message});
     if (data.bounce) {
-      this.props.bounceAction(this.props.requestId, {incremental: !!data.incremental}).then((r) => console.log(r));
+      this.props.bounceAction(this.props.requestId, {incremental: !!data.incremental});
     }
   }
 
