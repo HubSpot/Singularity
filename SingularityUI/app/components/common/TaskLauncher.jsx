@@ -10,7 +10,7 @@ import { FetchRequestRunHistory } from '../../actions/api/history';
 import { FetchTaskFiles } from '../../actions/api/sandbox';
 
 class TaskLauncher extends Component {
-  propTypes = {
+  static propTypes = {
     fetchRequestRun: PropTypes.func.isRequired,
     fetchRequestRunHistory: PropTypes.func.isRequired,
     fetchTaskFiles: PropTypes.func.isRequired,
