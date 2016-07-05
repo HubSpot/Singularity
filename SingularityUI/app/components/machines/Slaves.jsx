@@ -14,7 +14,7 @@ function __in__(needle, haystack) {
 
 class Slaves extends React.Component {
 
-  propTypes = {
+  static propTypes = {
     freezeSlave: PropTypes.func.isRequired,
     slaves: PropTypes.arrayOf(PropTypes.shape({
       state: PropTypes.string
