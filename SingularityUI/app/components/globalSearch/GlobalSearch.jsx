@@ -94,11 +94,11 @@ class GlobalSearch extends React.Component {
       if (matchInfo.match) {
         return <strong>{matchInfo.char}</strong>;
       } else {
-        return <span>{matchInfo.char}</span>;
+        return matchInfo.char;
       }
     });
 
-    return <span key={index}>{bolded}</span>;
+    return bolded;
   }
 
   getValueFromOption(option) {
