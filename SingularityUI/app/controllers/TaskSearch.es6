@@ -1,7 +1,7 @@
 import Controller from './Controller';
 import TaskSearchView from '../views/taskSearch';
 import { FetchRequest } from '../actions/api/requests';
-import { FetchAction as FetchTaskHistory } from '../actions/api/taskHistory';
+import { FetchTaskSearchParams  } from '../actions/api/history';
 import TaskSearch from '../components/taskSearch/TaskSearch';
 
 class TaskSearchController extends Controller {
@@ -14,7 +14,7 @@ class TaskSearchController extends Controller {
 
       const promises = [];
       promises.push(this.store.dispatch(FetchRequest.trigger(this.requestId)));
-      promises.push(this.store.dispatch(FetchTaskHistory.trigger({requestId: this.requestId, page: 1, count: TaskSearch.TASKS_PER_PAGE})));
+      promises.push(this.store.dispatch(FetchTaskSearchParams.trigger({requestId: this.requestId, page: 1, count: TaskSearch.TASKS_PER_PAGE})));
 
       Promise.all(promises).then((r) => {
         this.setView(new TaskSearchView(store, this.requestId));

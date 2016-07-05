@@ -10,7 +10,8 @@ import {
   FetchActiveTasksForRequest,
   FetchActiveTasksForDeploy,
   FetchTaskHistoryForDeploy,
-  FetchDeployForRequest
+  FetchDeployForRequest,
+  FetchTaskSearchParams
 } from '../../actions/api/history';
 
 import { FetchTaskS3Logs } from '../../actions/api/logs';
@@ -50,8 +51,6 @@ import {
 
 import { FetchWebhooks } from '../../actions/api/webhooks';
 
-import { FetchAction as TaskHistory } from '../../actions/api/taskHistory';
-
 const user = buildApiActionReducer(FetchUser);
 const webhooks = buildApiActionReducer(FetchWebhooks, []);
 const slaves = buildApiActionReducer(FetchSlaves, []);
@@ -71,7 +70,7 @@ const taskResourceUsage = buildApiActionReducer(FetchTaskStatistics);
 const taskS3Logs = buildApiActionReducer(FetchTaskS3Logs, []);
 const taskShellCommandResponse = buildApiActionReducer(RunCommandOnTask);
 const task = buildKeyedApiActionReducer(FetchTaskHistory);
-const taskHistory = buildApiActionReducer(TaskHistory, []);
+const taskHistory = buildApiActionReducer(FetchTaskSearchParams, []);
 
 export default combineReducers({
   user,

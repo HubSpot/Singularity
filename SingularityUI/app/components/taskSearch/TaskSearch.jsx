@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { FetchAction } from '../../actions/api/taskHistory';
+import { FetchTaskSearchParams } from '../../actions/api/history';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import TasksTable from './TasksTable';
@@ -134,7 +134,7 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    fetchTaskHistory: (...args) => dispatch(FetchAction.trigger(...args))
+    fetchTaskHistory: (...args) => dispatch(FetchTaskSearchParams.trigger(...args))
   };
 }
 
