@@ -1,25 +1,63 @@
 import React from 'react';
 import classNames from 'classnames';
+import { connect } from 'react-redux';
+import { FetchRequests } from '../../actions/api/requests';
 
 import { Typeahead } from 'react-typeahead';
 import fuzzy from 'fuzzy';
 
 class GlobalSearch extends React.Component {
+
   constructor(...args) {
     super(...args);
+    this.state = {
+      visible: false
+    }
     this.optionSelected = this.optionSelected.bind(this);
     this.resetSelection = this.resetSelection.bind(this);
-    this.clear = this.clear.bind(this);
-    this.focus = this.focus.bind(this);
-    this.componentDidUpdate = this.componentDidUpdate.bind(this);
-    this.render = this.render.bind(this);
+  }
+
+  componentWillMount() {
+    this.props.getRequests();
+  }
+
+  componentDidMount() {
+    window.addEventListener('keydown', (event) => {
+      const focusBody = $(event.target).is('body');
+      const focusInput = $(event.target).is($('input.big-search-box'));
+
+      const modifierKey = event.metaKey || event.shiftKey || event.ctrlKey;
+      // s and t
+      const loadSearchKeysPressed = [83, 84].indexOf(event.keyCode) >= 0 && !modifierKey;
+      const escPressed = event.keyCode === 27;
+
+      if (escPressed && (focusBody || focusInput)) {
+        this.setState({
+          visible: false
+        });
+      } else if (loadSearchKeysPressed && focusBody) {
+        this.props.getRequests();
+        this.setState({
+          visible: true
+        });
+        event.preventDefault();
+      }
+    });
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.visible && !prevState.visible) {
+      this.focus();
+    }
   }
 
   optionSelected(requestIdObject) {
     const requestId = this.getValueFromOption(requestIdObject);
     app.router.navigate(`/request/${ requestId }`, { trigger: true });
     this.clear();
-    return this.props.onHide();
+    this.setState({
+      visible: false
+    });
   }
 
   resetSelection() {
@@ -30,12 +68,12 @@ class GlobalSearch extends React.Component {
 
   clear() {
     this.refs.typeahead.setEntryText('');
-    return this.resetSelection();
+    this.resetSelection();
   }
 
   focus() {
     this.refs.typeahead.focus();
-    return this.resetSelection();
+    this.resetSelection();
   }
 
   searchOptions(inputValue, options) {
@@ -67,25 +105,19 @@ class GlobalSearch extends React.Component {
     return option.original;
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    if (this.props.visible && (this.props.visible !== prevProps.visible)) {
-      return this.focus();
-    }
-  }
-
   render() {
-    const options = _.pluck(this.props.requests.toJSON(), 'id');
+    const options = _.map(this.props.requests, (r) => r.request.id);
 
     const globalSearchClasses = classNames({
       'global-search': true,
-      'global-search-active': this.props.visible
+      'global-search-active': this.state.visible
     });
 
     return (
       <div className={globalSearchClasses}>
         <div className='container'>
           <div className='close-button-container'>
-            <a onClick={this.props.onHide}>&times;</a>
+            <a onClick={() => this.setState({visible: false})}>&times;</a>
           </div>
 
           <p className='hidden-xs text-muted tip'>
@@ -111,4 +143,16 @@ class GlobalSearch extends React.Component {
   }
 }
 
-export default GlobalSearch;
+function mapDispatchToProps(dispatch) {
+  return {
+    getRequests: () => dispatch(FetchRequests.trigger())
+  };
+}
+
+function mapStateToProps(state) {
+  return {
+    requests: state.api.requests.data
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(GlobalSearch);

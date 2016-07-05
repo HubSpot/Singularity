@@ -38,7 +38,7 @@ class Application {
     $('body').prepend(this.views.nav.$el);
 
     // wire up global search
-    this.views.globalSearch = new GlobalSearchView();
+    this.views.globalSearch = new GlobalSearchView({store: this.store});
     this.views.globalSearch.render();
     $('body').append(this.views.globalSearch.$el);
 

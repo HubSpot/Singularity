@@ -1,70 +1,24 @@
 import ReactView from './reactView';
 
-import Requests from '../collections/Requests';
-
 import GlobalSearch from '../components/globalSearch/GlobalSearch';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { Provider } from 'react-redux';
 
 class GlobalSearchView extends ReactView {
-  constructor(...args) {
-    super(...args);
-    this.show = this.show.bind(this);
-    this.hide = this.hide.bind(this);
-    this.focusSearch = this.focusSearch.bind(this);
 
-    this.searchActive = false;
-  }
-
-  show() {
-    this.searchActive = true;
-    this.collection.fetch().done(() => {
-      return this.render();
-    });
-
-    this.render();
-    return this.focusSearch();
-  }
-
-  hide() {
-    this.searchActive = false;
-    return this.render();
-  }
-
-  focusSearch() {
-    return this.ref.focus();
-  }
-
-  initialize({state}) {
-    this.state = state;
-    this.collection = new Requests([], {state: 'all'});
-
-    return $(window).on('keydown', event => {
-      const focusBody = $(event.target).is('body');
-      const focusInput = $(event.target).is(this.$('input.big-search-box'));
-
-      const modifierKey = event.metaKey || event.shiftKey || event.ctrlKey;
-      // s and t
-      const loadSearchKeysPressed = [83, 84].indexOf(event.keyCode) >= 0 && !modifierKey;
-      const escPressed = event.keyCode === 27;
-
-      if (escPressed && (focusBody || focusInput)) {
-        return this.hide();
-      } else if (loadSearchKeysPressed && focusBody) {
-        this.show();
-        return event.preventDefault();
-      }
-    });
+  initialize({store}) {
+    this.store = store;
   }
 
   render() {
-    return this.ref = ReactDOM.render(
-      <GlobalSearch
-        requests={this.collection}
-        visible={this.searchActive}
-        onHide={this.hide}
-      />,
+    ReactDOM.render(
+      <Provider store={this.store}>
+        <GlobalSearch
+          requests={this.collection}
+        />
+      </Provider>,
       this.el
     );
   }
