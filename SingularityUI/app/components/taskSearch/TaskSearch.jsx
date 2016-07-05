@@ -1,5 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import classNames from 'classnames';
 import { FetchTaskSearchParams } from '../../actions/api/history';
 
 import Breadcrumbs from '../common/Breadcrumbs';
@@ -24,6 +25,15 @@ class TaskSearch extends React.Component {
       disableNext: false,
       loading: false
     }
+  }
+
+  setCount(count) {
+    TaskSearch.TASKS_PER_PAGE = count;
+    const newFilter = _.extend({}, this.state.filter, {count: count, page: 1});
+    this.setState({
+      filter: newFilter
+    });
+    this.props.fetchTaskHistory(newFilter);
   }
 
   handleSearch(filter) {
@@ -103,8 +113,18 @@ class TaskSearch extends React.Component {
     }
   }
 
+  renderPageOptions() {
+    return (
+      <span className="pull-right count-options">
+        Results per page:
+        <a className={classNames({inactive: TaskSearch.TASKS_PER_PAGE === 5})} onClick={() => this.setCount(5)}>5</a>
+        <a className={classNames({inactive: TaskSearch.TASKS_PER_PAGE === 10})} onClick={() => this.setCount(10)}>10</a>
+        <a className={classNames({inactive: TaskSearch.TASKS_PER_PAGE === 20})} onClick={() => this.setCount(20)}>20</a>
+      </span>
+    );
+  }
+
   render() {
-    // console.log(this.props.taskHistory);
     return (
       <div>
         {this.renderBreadcrumbs()}
@@ -112,6 +132,7 @@ class TaskSearch extends React.Component {
         {this.props.requestId && <h3 className="inline-header" style={{marginLeft: '10px'}}>for {this.props.requestId}</h3>}
         <h2>Search Parameters</h2>
         <TaskSearchFilters requestId={this.props.requestId} onSearch={(filter) => this.handleSearch(filter)} />
+        {this.renderPageOptions()}
         <div className="row">
           <div className="col-md-12">
             <TasksTable
