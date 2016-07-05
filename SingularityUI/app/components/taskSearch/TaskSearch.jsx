@@ -114,14 +114,16 @@ class TaskSearch extends React.Component {
   }
 
   renderPageOptions() {
-    return (
-      <span className="pull-right count-options">
-        Results per page:
-        <a className={classNames({inactive: TaskSearch.TASKS_PER_PAGE === 5})} onClick={() => this.setCount(5)}>5</a>
-        <a className={classNames({inactive: TaskSearch.TASKS_PER_PAGE === 10})} onClick={() => this.setCount(10)}>10</a>
-        <a className={classNames({inactive: TaskSearch.TASKS_PER_PAGE === 25})} onClick={() => this.setCount(25)}>25</a>
-      </span>
-    );
+    if (this.props.taskHistory.length) {
+      return (
+        <span className="pull-right count-options">
+          Results per page:
+          <a className={classNames({inactive: TaskSearch.TASKS_PER_PAGE === 5})} onClick={() => this.setCount(5)}>5</a>
+          <a className={classNames({inactive: TaskSearch.TASKS_PER_PAGE === 10})} onClick={() => this.setCount(10)}>10</a>
+          <a className={classNames({inactive: TaskSearch.TASKS_PER_PAGE === 25})} onClick={() => this.setCount(25)}>25</a>
+        </span>
+      );
+    }    
   }
 
   render() {
