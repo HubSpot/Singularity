@@ -1,9 +1,9 @@
 import React, {Component, PropTypes} from 'react';
-import CheckBox from '../CheckBox';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
+import Checkbox from '../Checkbox';
 
-class CheckBoxFormGroup extends Component {
+class CheckboxFormGroup extends Component {
   static propTypes = {
     id: PropTypes.string.isRequired,
     label: PropTypes.string.isRequired,
@@ -17,7 +17,7 @@ class CheckBoxFormGroup extends Component {
   render() {
     const checkbox = (
       <label htmlFor={this.props.id}>
-        <CheckBox
+        <Checkbox
           id = {this.props.id}
           onChange = {() => this.props.onChange(!this.props.checked)}
           checked = {this.props.checked}
@@ -47,4 +47,4 @@ class CheckBoxFormGroup extends Component {
   }
 }
 
-export default CheckBoxFormGroup;
+export default CheckboxFormGroup;

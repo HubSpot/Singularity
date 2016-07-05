@@ -6,7 +6,7 @@ import MultiSelect from '../common/formItems/MultiSelect';
 import MultiInputFormGroup from '../common/formItems/formGroups/MultiInputFormGroup';
 import SelectFormGroup from '../common/formItems/formGroups/SelectFormGroup';
 import TextFormGroup from '../common/formItems/formGroups/TextFormGroup';
-import CheckBoxFormGroup from '../common/formItems/formGroups/CheckBoxFormGroup';
+import CheckboxFormGroup from '../common/formItems/formGroups/CheckboxFormGroup';
 import { ModifyField, ClearForm } from '../../actions/ui/form';
 import { SaveRequest } from '../../actions/api/requests';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
@@ -278,7 +278,7 @@ class RequestForm extends React.Component {
       />
     );
     const rackSensitive = (
-      <CheckBoxFormGroup
+      <CheckboxFormGroup
         id="rack-sensitive"
         label="Rack Sensitive"
         checked={this.getValue('rackSensitive') || false}
@@ -286,7 +286,7 @@ class RequestForm extends React.Component {
       />
     );
     const hideEvenNumberAcrossRacksHint = (
-      <CheckBoxFormGroup
+      <CheckboxFormGroup
         id="hide-distribute-evenly-across-racks-hint"
         label="Hide Distribute Evenly Across Racks Hint"
         checked={this.getValue('hideEvenNumberAcrossRacksHint') || false}
@@ -294,7 +294,7 @@ class RequestForm extends React.Component {
       />
     );
     const loadBalanced = (
-      <CheckBoxFormGroup
+      <CheckboxFormGroup
         id="load-balanced"
         label="Load balanced"
         checked={this.getValue('loadBalanced') || false}

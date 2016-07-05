@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react';
+import ReactDOM from 'react-dom';
 import Waypoint from 'react-waypoint';
 import classNames from 'classnames';
 import _ from 'underscore';
@@ -310,10 +311,14 @@ class UITable extends Component {
     return true;
   }
 
+  getTableDOMNode() {
+    return ReactDOM.findDOMNode(this.refs.table);
+  }
+
   render() {
     return (
       <div>
-        <BootstrapTable responsive={true} striped={true} className={this.props.className}>
+        <BootstrapTable ref="table" responsive={true} striped={true} className={this.props.className}>
           <thead>
             {this.renderTableHeader()}
           </thead>

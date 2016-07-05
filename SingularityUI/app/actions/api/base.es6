@@ -60,15 +60,14 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
         .then((data) => {
           if (apiResponse.status >= 200 && apiResponse.status < 300) {
             return dispatch(success(data, key));
+          } else {
+            return dispatch(error(data, key));
           }
           if (data.message) {
             return dispatch(error({message: data.message}, key));
           }
           return dispatch(error({message: data}, key));
         })
-        .catch(ex => {
-          return dispatch(error(ex, key));
-        });
     };
   }
 

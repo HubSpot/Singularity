@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import SelectFormGroup from '../common/formItems/formGroups/SelectFormGroup';
 import TextFormGroup from '../common/formItems/formGroups/TextFormGroup';
 import MultiInputFormGroup from '../common/formItems/formGroups/MultiInputFormGroup';
-import CheckBoxFormGroup from '../common/formItems/formGroups/CheckBoxFormGroup';
+import CheckboxFormGroup from '../common/formItems/formGroups/CheckboxFormGroup';
 
 import { ModifyField } from '../../actions/ui/form';
 import { SaveDeploy } from '../../actions/api/deploys';
@@ -641,7 +641,7 @@ class NewDeployForm extends Component {
       />
     );
     const preserveSandbox = (
-      <CheckBoxFormGroup
+      <CheckboxFormGroup
         id = "preserve-sandbox"
         label="Preserve task sandbox after finish"
         checked = {this.props.form.preserveTaskSandboxAfterFinish}
@@ -649,7 +649,7 @@ class NewDeployForm extends Component {
       />
     );
     const skipLogrotateAndCompress = (
-      <CheckBoxFormGroup
+      <CheckboxFormGroup
         id = "skip-lr-compress"
         label="Skip lorotate compress"
         checked = {this.props.form.skipLogrotateAndCompress}
@@ -939,7 +939,7 @@ class NewDeployForm extends Component {
       />
     );
     const privileged = (
-      <CheckBoxFormGroup
+      <CheckboxFormGroup
         id = "privileged"
         label="Privileged"
         checked = {this.props.form.privileged}
@@ -947,7 +947,7 @@ class NewDeployForm extends Component {
       />
     );
     const forcePullImage = (
-      <CheckBoxFormGroup
+      <CheckboxFormGroup
         id = "force-pull"
         label="Force Pull Image"
         checked = {this.props.form.forcePullImage}
@@ -1173,7 +1173,7 @@ class NewDeployForm extends Component {
       />
     );
     const skipHealthchecksOnDeploy = (
-      <CheckBoxFormGroup
+      <CheckboxFormGroup
         id = "skip-healthcheck"
         label="Skip healthcheck on deploy"
         checked = {this.props.form.skipHealthchecksOnDeploy}
@@ -1234,7 +1234,7 @@ class NewDeployForm extends Component {
       />
     );
     const unpauseOnSuccessfulDeploy = (
-      <CheckBoxFormGroup
+      <CheckboxFormGroup
         id = "deploy-to-unpause"
         label="Unpause on successful deploy"
         checked = {this.props.form.unpauseOnSuccessfulDeploy}

@@ -36,3 +36,10 @@ export const FetchDeployForRequest = buildApiAction(
     url: `/history/request/${requestId}/deploy/${deployId}`
   })
 );
+
+export const FetchRequestRunHistory = buildApiAction(
+  'FETCH_REQUEST_RUN_HISTORY',
+  (requestId, runId) => ({
+    url: `/history/request/${ requestId }/run/${runId}`
+  })
+);
