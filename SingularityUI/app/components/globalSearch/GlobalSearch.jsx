@@ -54,13 +54,13 @@ class GlobalSearch extends React.Component {
     // transform fuzzy string into react component
     const bolded = option.string.map(function(matchInfo) {
       if (matchInfo.match) {
-        return <b>{matchInfo.char}</b>;
+        return <strong>{matchInfo.char}</strong>;
       } else {
         return <span>{matchInfo.char}</span>;
       }
     });
 
-    return <span>{bolded}</span>;
+    return <span key={index}>{bolded}</span>;
   }
 
   getValueFromOption(option) {
