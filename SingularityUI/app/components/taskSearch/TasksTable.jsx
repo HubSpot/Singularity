@@ -36,28 +36,6 @@ export default class TasksTable extends React.Component {
   }
 
   renderTable() {
-    // if (!this.props.loading) {
-    //   return (
-    //     <div>
-    //       <Table responsive striped>
-    //         <thead>
-    //           {this.renderHeaders()}
-    //         </thead>
-    //         <tbody>
-    //           {this.renderTableRows()}
-    //         </tbody>
-    //       </Table>
-    //     </div>
-    //   );
-    // } else {
-    //   return (
-    //     <div className="text-center">
-    //       <div className="page-loader"></div>
-    //     </div>
-    //   );
-    // }
-
-    /* Revisit that (shrinking issue) */
     return (
       <div>
         <Table responsive striped>
