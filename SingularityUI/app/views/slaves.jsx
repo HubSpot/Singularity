@@ -14,7 +14,7 @@ class SlavesView extends ReactView {
   }
 
   render() {
-    ReactDOM.render(<Provider store={this.store}><SlavesPage/></Provider>, this.el);
+    ReactDOM.render(<Provider store={this.store}><SlavesPage /></Provider>, this.el);
   }
 }
 

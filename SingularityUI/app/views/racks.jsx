@@ -14,8 +14,8 @@ class RacksView extends ReactView {
   }
 
   render() {
-    ReactDOM.render(<Provider store={this.store}><RacksPage/></Provider>, this.el);
-  }
+    ReactDOM.render(<Provider store={this.store}><RacksPage /></Provider>, this.el);
+  }x
 }
 
 
