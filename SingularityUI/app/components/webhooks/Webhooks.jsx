@@ -8,6 +8,7 @@ import Link from '../common/atomicDisplayItems/Link';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 import NewWebhookForm from './NewWebhookForm';
 import vex from 'vex';
+import { FetchWebhooks } from '../../actions/api/webhooks';
 import { connect } from 'react-redux';
 
 const Webhooks = React.createClass({
@@ -22,7 +23,8 @@ const Webhooks = React.createClass({
     }),
     collections: PropTypes.shape({
       webhooks: PropTypes.array.isRequired
-    }).isRequired
+    }).isRequired,
+    fetchWebhooks: PropTypes.func.isRequired
   },
 
   defaultRowsPerPage: 10,
@@ -69,7 +71,7 @@ const Webhooks = React.createClass({
     return $.ajax({
       url: `${ config.apiRoot }/webhooks/?webhookId=${ webhook.id }`,
       type: 'DELETE',
-      success: () => this.props.collections.webhooks.fetch().done(() => this.forceUpdate())
+      success: () => this.props.fetchWebhooks()
     });
   },
 
@@ -102,7 +104,7 @@ const Webhooks = React.createClass({
       type: 'POST',
       contentType: 'application/json',
       data: JSON.stringify(data),
-      success: () => this.props.collections.webhooks.fetch().done(() => this.forceUpdate())
+      success: () => this.props.fetchWebhooks()
     });
   },
 
@@ -251,5 +253,13 @@ function mapStateToProps(state) {
   };
 }
 
-export default connect(mapStateToProps)(Webhooks);
+function mapDispatchToProps(dispatch) {
+  return {
+    fetchWebhooks() {
+      dispatch(FetchWebhooks.trigger());
+    }
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Webhooks);
 
