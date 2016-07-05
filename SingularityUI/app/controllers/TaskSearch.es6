@@ -13,7 +13,9 @@ class TaskSearchController extends Controller {
       this.requestId = requestId;
 
       const promises = [];
-      promises.push(this.store.dispatch(FetchRequest.trigger(this.requestId)));
+      if (this.requestId) {
+        promises.push(this.store.dispatch(FetchRequest.trigger(this.requestId)));
+      }
       promises.push(this.store.dispatch(FetchTaskSearchParams.trigger({requestId: this.requestId, page: 1, count: TaskSearch.TASKS_PER_PAGE})));
 
       Promise.all(promises).then((r) => {

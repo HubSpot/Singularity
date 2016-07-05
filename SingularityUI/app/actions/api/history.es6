@@ -39,8 +39,9 @@ export const FetchDeployForRequest = buildApiAction(
 
 export const FetchTaskSearchParams = buildApiAction(
   'FETCH_TASK_HISTORY',
-  ({requestId, deployId = null, host = null, lastTaskStatus = null, startedAfter = null, startedBefore = null, orderDirection = null, count, page}) => {
+  ({requestId = null, deployId = null, host = null, lastTaskStatus = null, startedAfter = null, startedBefore = null, orderDirection = null, count, page}) => {
     let params = [];
+    if (requestId) params.push(`&requestId=${requestId}`);
     if (deployId) params.push(`&deployId=${deployId}`);
     if (host) params.push(`&host=${host}`);
     if (lastTaskStatus) params.push(`&lastTaskStatus=${lastTaskStatus}`);
@@ -48,6 +49,6 @@ export const FetchTaskSearchParams = buildApiAction(
     if (startedBefore) params.push(`&startedBefore=${startedBefore}`);
     if (orderDirection) params.push(`&orderDirection=${orderDirection}`);
     return {
-      url: `/history/request/${requestId}/tasks?count=${count}&page=${page}${params.join('')}`
+      url: `/history/tasks?count=${count}&page=${page}${params.join('')}`
     };
 });

@@ -43,7 +43,7 @@ class TaskSearchFilters extends React.Component {
           <div className="row">
             <div className="form-group col-md-4">
               <label for="requestId">Request ID</label>
-              <input className="form-control" disabled {...requestId} />
+              <input className="form-control" disabled={!!this.props.requestId} {...requestId} />
             </div>
             <div className="form-group col-md-4">
               <label for="deployId">Deploy ID</label>
@@ -93,13 +93,14 @@ const validate = values => {
   if (values.dateStart && values.dateEnd && parseInt(values.dateEnd) < parseInt(values.dateStart)) {
     errors.dateEnd = "End date must be after start";
   }
+
   return errors
 }
 
 function mapStateToProps(state, ownProps) {
   return {
     initialValues: {
-      requestId: ownProps.requestId,
+      requestId: ownProps.requestId || '',
       dateStart: null,
       dateEnd: null
     }

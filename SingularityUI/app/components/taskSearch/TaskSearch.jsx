@@ -87,10 +87,9 @@ class TaskSearch extends React.Component {
     );
   }
 
-  render() {
-    // console.log(this.props.taskHistory);
-    return (
-      <div>
+  renderBreadcrumbs() {
+    if (this.props.requestId) {
+      return (
         <Breadcrumbs
           items={[
             {
@@ -100,8 +99,17 @@ class TaskSearch extends React.Component {
             }
           ]}
         />
-        <h1 className="inline-header">Historical Tasks </h1>
-        <h3 className="inline-header" style={{marginLeft: '10px'}}>for {this.props.requestId}</h3>
+      )
+    }
+  }
+
+  render() {
+    // console.log(this.props.taskHistory);
+    return (
+      <div>
+        {this.renderBreadcrumbs()}
+        <h1 className="inline-header">{!this.props.requestId && 'Global '}Historical Tasks </h1>
+        {this.props.requestId && <h3 className="inline-header" style={{marginLeft: '10px'}}>for {this.props.requestId}</h3>}
         <h2>Search Parameters</h2>
         <TaskSearchFilters requestId={this.props.requestId} onSearch={(filter) => this.handleSearch(filter)} />
         <div className="row">
