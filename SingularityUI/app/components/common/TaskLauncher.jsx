@@ -49,9 +49,9 @@ class TaskLauncher extends Component {
             taskStarted: true
           });
           if (tailFilename) {
-            this.logFilePoll(_.first(responses).id, tailFilename);
+            this.logFilePoll(_.first(responses).taskId.id, tailFilename);
           } else {
-            app.router.navigate(`task/${_.first(responses).id}`, {trigger: true});
+            app.router.navigate(`task/${_.first(responses).taskId.id}`, {trigger: true});
           }
         }
       });

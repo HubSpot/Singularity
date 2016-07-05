@@ -93,6 +93,7 @@ class RequestsPage extends Component {
 
   render() {
     const displayRequests = filterSelector({requestsInState: this.props.requestsInState, filter: this.state.filter});
+
     let table;
     if (this.state.loading) {
       table = <div className="page-loader fixed"></div>;
@@ -125,13 +126,16 @@ class RequestsPage extends Component {
 
 function mapStateToProps(state) {
   const requestsInState = state.api.requestsInState.data;
-  const modifiedRequests = requestsInState.map((r) => ({
-    ...r,
-    hasActiveDeploy: !!(r.activeDeploy || (r.requestDeployState && r.requestDeployState.activeDeploy)),
-    canBeRunNow: r.state === 'ACTIVE' && _.contains(['SCHEDULED', 'ON_DEMAND'], r.request.requestType) && r.hasActiveDeploy,
-    canBeScaled: _.contains(['ACTIVE', 'SYSTEM_COOLDOWN'], r.state) && r.hasActiveDeploy && _.contains(['WORKER', 'SERVICE'], r.request.requestType),
-    id: r.request ? r.request.id : r.requestId
-  }));
+  const modifiedRequests = requestsInState.map((r) => {
+    const hasActiveDeploy = !!(r.activeDeploy || (r.requestDeployState && r.requestDeployState.activeDeploy));
+    return {
+      ...r,
+      hasActiveDeploy,
+      canBeRunNow: r.state === 'ACTIVE' && _.contains(['SCHEDULED', 'ON_DEMAND'], r.request.requestType) && hasActiveDeploy,
+      canBeScaled: _.contains(['ACTIVE', 'SYSTEM_COOLDOWN'], r.state) && hasActiveDeploy && _.contains(['WORKER', 'SERVICE'], r.request.requestType),
+      id: r.request ? r.request.id : r.requestId
+    };
+  });
 
   return {
     requestsInState: modifiedRequests

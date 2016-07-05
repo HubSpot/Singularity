@@ -39,13 +39,13 @@ class ScaleModal extends Component {
         durationMillis,
         message
       }
-    ).then((r) => console.log(r));
+    );
     if (data.bounce) {
       this.props.bounceRequest(
         {
           incremental: !!data.incremental
         }
-      ).then((r) => console.log(r));
+      );
     }
   }
 
