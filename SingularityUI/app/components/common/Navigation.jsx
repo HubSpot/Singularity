@@ -6,7 +6,7 @@ export default class Navigation extends Component {
 
   render() {
     return (
-      <Navbar>
+      <Navbar fluid>
         <Navbar.Header>
           <Navbar.Brand>
             <a href={config.appRoot}>{config.title}</a>
