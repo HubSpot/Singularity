@@ -1,7 +1,7 @@
 import React from 'react';
 import FormField from './FormField';
 
-class CheckBox extends React.Component {
+class Checkbox extends React.Component {
 
   render() {
     return (
@@ -20,4 +20,4 @@ class CheckBox extends React.Component {
   }
 }
 
-export default CheckBox;
+export default Checkbox;

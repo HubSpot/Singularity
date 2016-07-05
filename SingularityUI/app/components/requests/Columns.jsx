@@ -8,11 +8,14 @@ import JSONButton from '../common/JSONButton';
 import RequestStar from './RequestStar';
 import UnpauseButton from './UnpauseButton';
 import RemoveButton from './RemoveButton';
+import RunNowButton from './RunNowButton';
+import ScaleButton from './ScaleButton';
 
 export const Starred = (
   <Column
     label=""
     id="starred"
+    key="starred"
     cellData={
       (rowData) => rowData.request.id
     }
@@ -28,6 +31,7 @@ export const DeployUser = (
   <Column
     label="Deploy User"
     id="user"
+    key="user"
     cellData={
       (rowData) => {
         const activeDeployUser = Utils.maybe(rowData, [
@@ -52,6 +56,7 @@ export const LastDeploy = (
   <Column
     label="Time of Last Deploy"
     id="lastDeploy"
+    key="lastDeploy"
     cellData={
       (rowData) => {
         const activeDeployTimestamp = Utils.maybe(rowData, [
@@ -63,9 +68,10 @@ export const LastDeploy = (
         return activeDeployTimestamp;
       }
     }
+    sortData={(cellData) => cellData || 0}
     cellRender={
       (cellData) => {
-        if (cellData !== null) {
+        if (cellData) {
           return Utils.timeStampFromNow(cellData);
         }
         return '';
@@ -79,9 +85,12 @@ export const RequestId = (
   <Column
     label="Request"
     id="requestId"
+    key="requestId"
+    className="keep-in-check"
     cellData={
-      (rowData) => rowData.request.id
+      (rowData) => rowData.id
     }
+    sortData={(cellData) => cellData.toLowerCase()}
     cellRender={
       (cellData) => (
         <a href={`${config.appRoot}/request/${cellData}`}>
@@ -97,6 +106,7 @@ export const State = (
   <Column
     label="Status"
     id="state"
+    key="state"
     cellData={
       (rowData) => Utils.humanizeText(rowData.state)
     }
@@ -108,6 +118,7 @@ export const Type = (
   <Column
     label="Type"
     id="type"
+    key="type"
     cellData={
       (rowData) => Utils.humanizeText(rowData.request.requestType)
     }
@@ -115,42 +126,158 @@ export const Type = (
   />
 );
 
-export const Actions = ({unpauseAction, removeAction, showEditButton}) => (
+export const Instances = (
   <Column
-    label=""
-    id="actions"
-    className="actions-column"
+    label="Instances"
+    id="instances"
+    key="instances"
     cellData={
-      (rowData) => rowData.request.id
+      (rowData) => rowData.request.instances
     }
-    cellRender={
-      (requestId, rowData) => {
-        let maybeEditButton;
-        if (showEditButton) {
-          maybeEditButton = (
-            <a href={`${config.appRoot}/requests/edit/${requestId}`} alt="Edit">
-              <span className="glyphicon glyphicon-edit"></span>
-            </a>
-          );
-        }
-
-        return (
-          <div className="hidden-xs">
-            <UnpauseButton requestId={requestId} unpauseAction={unpauseAction} />
-            <RemoveButton requestId={requestId} removeAction={removeAction} />
-            <JSONButton className="inline" object={rowData}>
-              {'{ }'}
-            </JSONButton>
-            {maybeEditButton}
-          </div>
-        );
-      }
-    }
+    sortData={(cellData) => cellData || 0}
+    sortable={true}
   />
 );
 
-Actions.propTypes = {
-  unpauseAction: PropTypes.func.isRequired,
-  removeAction: PropTypes.func.isRequired,
-  showEditButton: PropTypes.bool
+export const DeployId = (
+  <Column
+    label="Deploy ID"
+    id="deployId"
+    key="deployId"
+    cellData={
+      (rowData) => rowData.requestDeployState && rowData.requestDeployState.activeDeploy
+    }
+    sortData={(cellData) => (cellData ? cellData.deployId : '')}
+    cellRender={(cellData) => {
+      if (cellData) {
+        return (
+          <a href={`${config.appRoot}/request/${cellData.requestId}/deploy/${cellData.deployId}`}>
+            {cellData.deployId}
+          </a>
+        );
+      }
+      return undefined;
+    }}
+    sortable={true}
+  />
+);
+
+export const Schedule = (
+  <Column
+    label="Schedule"
+    id="schedule"
+    key="schedule"
+    cellData={
+      (rowData) => rowData.request.quartzSchedule
+    }
+    sortData={(cellData) => cellData || ''}
+    sortable={true}
+  />
+);
+
+export const Actions = (removeAction, unpauseAction, runAction, fetchRun, fetchRunHistory, fetchTaskFiles, scaleAction, bounceAction) => {
+
+  return (
+    <Column
+      label=""
+      id="actions"
+      key="actions"
+      className="actions-column"
+      cellData={
+        (rowData) => rowData
+      }
+      cellRender={
+        (rowData) => {
+          const edit = !config.hideNewRequestButton && (
+            <a href={`${config.appRoot}/requests/edit/${rowData.id}`} alt="Edit">
+              <span className="glyphicon glyphicon-edit"></span>
+            </a>
+          );
+
+          const unpause = rowData.state === 'PAUSED' && (
+            <UnpauseButton requestId={rowData.id} unpauseAction={unpauseAction} />
+          );
+
+          const scale = rowData.canBeScaled && (
+            <ScaleButton requestId={rowData.id} scaleAction={scaleAction} bounceAction={bounceAction} currentInstances={rowData.request.instances} />
+          );
+
+          const runNow = rowData.canBeRunNow && (
+            <RunNowButton
+              requestId={rowData.id}
+              runAction={runAction}
+              fetchRunAction={fetchRun}
+              fetchRunHistoryAction={fetchRunHistory}
+              fetchTaskFilesAction={fetchTaskFiles}
+            />
+          );
+
+          return (
+            <div className="hidden-xs">
+              {scale}
+              {runNow}
+              {unpause}
+              <RemoveButton requestId={rowData.id} removeAction={removeAction} />
+              <JSONButton className="inline" object={rowData}>
+                {'{ }'}
+              </JSONButton>
+              {edit}
+            </div>
+          );
+        }
+      }
+    />
+  );
 };
+
+export const PendingType = (
+  <Column
+    label="Pending Type"
+    id="schedule"
+    key="schedule"
+    sortable={true}
+    cellData={
+      (rowData) => rowData.pendingType
+    }
+    cellRender={(cellData) => Utils.humanizeText(cellData)}
+  />
+);
+
+export const CleaningUser = (
+  <Column
+    label="User"
+    id="user"
+    key="user"
+    sortable={true}
+    cellData={
+      (rowData) => rowData.user
+    }
+    cellRender={(cellData) => cellData.split('@')[0]}
+  />
+);
+
+export const CleaningTimestamp = (
+  <Column
+    label="Timestamp"
+    id="timestamp"
+    key="timestamp"
+    sortable={true}
+    cellData={
+      (rowData) => rowData.timestamp
+    }
+    cellRender={(cellData) => Utils.timeStampFromNow(cellData)}
+  />
+);
+
+export const CleanupType = (
+  <Column
+    label="Cleaning Type"
+    id="cleanupType"
+    key="cleanupType"
+    sortable={true}
+    cellData={
+      (rowData) => rowData.cleanupType
+    }
+    cellRender={(cellData) => Utils.humanizeText(cellData)}
+  />
+);

@@ -3,7 +3,6 @@ import { combineReducers } from 'redux';
 import taskGroups from './taskGroups';
 import activeRequest from './activeRequest';
 import tasks from './tasks';
-import form from './form';
 import api from './api';
 import ui from './ui';
 import {reducer as formReducer} from 'redux-form';
@@ -62,7 +61,6 @@ export default combineReducers({
   showDebugInfo,
   taskGroups,
   tasks,
-  form,
   activeRequest,
   path,
   activeColor,

@@ -52,3 +52,10 @@ export const FetchTaskSearchParams = buildApiAction(
       url: `/history/tasks?count=${count}&page=${page}${params.join('')}`
     };
 });
+
+export const FetchRequestRunHistory = buildApiAction(
+  'FETCH_REQUEST_RUN_HISTORY',
+  (requestId, runId) => ({
+    url: `/history/request/${ requestId }/run/${runId}`
+  })
+);

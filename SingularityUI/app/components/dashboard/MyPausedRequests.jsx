@@ -28,7 +28,7 @@ const MyPausedRequests = ({userRequests, unpauseAction, removeAction}) => {
         {RequestId}
         {Type}
         {LastDeploy}
-        {Actions({unpauseAction, removeAction})}
+        {Actions(removeAction, unpauseAction)}
       </UITable>
     );
   }

@@ -104,7 +104,7 @@ class TaskDetail extends React.Component {
             </p>
           </span>
         </FormModal>
-      <a className="btn btn-danger" onClick={() => this.refs.confirmKillTask.show()}>
+        <a className="btn btn-danger" onClick={() => this.refs.confirmKillTask.show()}>
           {removeText}
         </a>
       </span>
@@ -155,7 +155,7 @@ class TaskDetail extends React.Component {
   }
 
   renderFiles(t, files) {
-    if (!files || !files.currentDirectory) {
+    if (!files || _.isUndefined(files.currentDirectory)) {
       return (
         <Section title="Files">
           <div className="empty-table-message">
