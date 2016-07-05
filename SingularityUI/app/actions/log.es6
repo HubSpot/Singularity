@@ -104,6 +104,13 @@ export const taskFileDoesNotExist = (taskGroupId, taskId) =>
   })
 ;
 
+export const finishedLogExists = (taskId) =>
+  ({
+    taskId,
+    type: 'LOG_FINISHED_LOG_EXISTS'
+  })
+;
+
 export const taskGroupReady = taskGroupId =>
   ({
     taskGroupId,
@@ -121,6 +128,21 @@ export const taskHistory = (taskGroupId, taskId, taskHistory) =>
 ;
 
 export const getTasks = (taskGroup, tasks) => taskGroup.taskIds.map(taskId => tasks[taskId]);
+
+export const doesFinishedLogExist = (taskIds) =>
+  (dispatch) => {
+    taskIds.map((taskId) => {
+      const actualPath = config.finishedTaskLogPath.replace('$TASK_ID', taskId);
+      return fetchData(taskId, actualPath)
+      .done(() => dispatch(finishedLogExists(taskId)))
+      .error((error) => {
+        if (error.status === 404) {
+          app.caughtError();
+        }
+      });
+    });
+  }
+;
 
 export const updateFilesizes = () =>
   function(dispatch, getState) {

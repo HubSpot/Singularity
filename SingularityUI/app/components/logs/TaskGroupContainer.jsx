@@ -3,10 +3,17 @@ import TaskGroupHeader from './TaskGroupHeader';
 import LogLines from './LogLines';
 import LoadingSpinner from './LoadingSpinner';
 import FileNotFound from './FileNotFound';
+import {doesFinishedLogExist} from '../../actions/log';
 
 import { connect } from 'react-redux';
 
 class TaskGroupContainer extends React.Component {
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.path === config.runningTaskLogPath && !nextProps.finishedLogExists) {
+      this.props.doesFinishedLogExist(this.props.taskIds);
+    }
+  }
+
   getContainerWidth() {
     return 12 / this.props.taskGroupContainerCount;
   }
@@ -20,13 +27,17 @@ class TaskGroupContainer extends React.Component {
         <div>
           <LogLines
             taskGroupId={this.props.taskGroupId}
-            fileNotFound={<FileNotFound fileName={this.props.path} noLongerExists={true} />}
+            fileNotFound={<FileNotFound fileName={this.props.path} noLongerExists={true} finishedLogExists={this.props.finishedLogExists} />}
           />
         </div>
       );
     }
     if (this.props.initialDataLoaded && !this.props.fileExists) {
-      return <div className="tail-contents"><FileNotFound fileName={this.props.path} /></div>;
+      return (
+        <div className="tail-contents">
+          <FileNotFound fileName={this.props.path} finishedLogExists={this.props.finishedLogExists} />
+        </div>
+      );
     }
     return <LoadingSpinner centered={true}>Loading logs...</LoadingSpinner>;
   }
@@ -45,7 +56,10 @@ TaskGroupContainer.propTypes = {
 
   initialDataLoaded: React.PropTypes.bool.isRequired,
   fileExists: React.PropTypes.bool.isRequired,
-  terminated: React.PropTypes.bool.isRequired
+  terminated: React.PropTypes.bool.isRequired,
+  finishedLogExists: React.PropTypes.bool,
+  doesFinishedLogExist: React.PropTypes.func.isRequired,
+  taskIds: React.PropTypes.arrayOf(React.PropTypes.string)
 };
 
 const mapStateToProps = (state, ownProps) => {
@@ -64,10 +78,14 @@ const mapStateToProps = (state, ownProps) => {
     initialDataLoaded: _.all(_.pluck(tasks, 'initialDataLoaded')),
     logDataLoaded: _.all(_.pluck(tasks, 'logDataLoaded')),
     fileExists: _.any(_.pluck(tasks, 'exists')),
+    finishedLogExists: _.any(_.pluck(tasks, 'taskFinishedLogExists')),
     terminated: _.all(_.pluck(tasks, 'terminated')),
-    path: state.path
+    path: state.path,
+    taskIds: taskGroup.taskIds
   };
 };
 
-export default connect(mapStateToProps)(TaskGroupContainer);
+const mapDispatchToProps = { doesFinishedLogExist };
+
+export default connect(mapStateToProps, mapDispatchToProps)(TaskGroupContainer);
 

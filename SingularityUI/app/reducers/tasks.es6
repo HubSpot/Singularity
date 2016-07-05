@@ -52,6 +52,11 @@ const ACTIONS = {
     delete newState[taskId];
     return newState;
   },
+  LOG_FINISHED_LOG_EXISTS(state, {taskId}) {
+    const newState = Object.assign({}, state);
+    newState[taskId].taskFinishedLogExists = true;
+    return newState;
+  },
   LOG_TASK_INIT(state, {taskId, path, offset, exists}) {
     return updateTask(state, taskId, {
       path,
