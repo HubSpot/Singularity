@@ -36,6 +36,13 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 class NavView extends ReactView {
+
+  initialize() {
+    window.addEventListener('viewChange', () => {
+      this.render();
+    });
+  }
+
   render() {
     ReactDOM.render(<Navigation path={Backbone.history.fragment} />, this.el);
   }
