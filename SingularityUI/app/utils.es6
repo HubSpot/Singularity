@@ -446,9 +446,6 @@ const Utils = {
     isDeploying: (r) => {
       return Utils.maybe(r, ['pendingDeploy'], false);
     },
-    isBouncing: (r) => {
-      throw Error('Implement this', r);
-    },
     isLongRunning: (r) => {
       return Utils.request.LONG_RUNNING_TYPES.has(r.request.requestType);
     },

@@ -175,60 +175,51 @@ export const Schedule = (
   />
 );
 
-export const Actions = (removeAction, unpauseAction, runAction, fetchRun, fetchRunHistory, fetchTaskFiles, scaleAction, bounceAction) => {
+export const Actions = (
+  <Column
+    label=""
+    id="actions"
+    key="actions"
+    className="actions-column"
+    cellRender={
+      (cellData) => {
+        const edit = !config.hideNewRequestButton && (
+          <a href={`${config.appRoot}/requests/edit/${cellData.id}`} alt="Edit">
+            <span className="glyphicon glyphicon-edit"></span>
+          </a>
+        );
 
-  return (
-    <Column
-      label=""
-      id="actions"
-      key="actions"
-      className="actions-column"
-      cellData={
-        (rowData) => rowData
+        const unpause = cellData.state === 'PAUSED' && (
+          <UnpauseButton requestId={cellData.id} />
+        );
+
+        const scale = cellData.canBeScaled && (
+          <ScaleButton
+            requestId={cellData.id}
+            currentInstances={cellData.request.instances}
+          />
+        );
+
+        const runNow = cellData.canBeRunNow && (
+          <RunNowButton requestId={cellData.id} />
+        );
+
+        return (
+          <div className="hidden-xs">
+            {scale}
+            {runNow}
+            {unpause}
+            <RemoveButton requestId={cellData.id} />
+            <JSONButton className="inline" object={cellData}>
+              {'{ }'}
+            </JSONButton>
+            {edit}
+          </div>
+        );
       }
-      cellRender={
-        (rowData) => {
-          const edit = !config.hideNewRequestButton && (
-            <a href={`${config.appRoot}/requests/edit/${rowData.id}`} alt="Edit">
-              <span className="glyphicon glyphicon-edit"></span>
-            </a>
-          );
-
-          const unpause = rowData.state === 'PAUSED' && (
-            <UnpauseButton requestId={rowData.id} unpauseAction={unpauseAction} />
-          );
-
-          const scale = rowData.canBeScaled && (
-            <ScaleButton requestId={rowData.id} scaleAction={scaleAction} bounceAction={bounceAction} currentInstances={rowData.request.instances} />
-          );
-
-          const runNow = rowData.canBeRunNow && (
-            <RunNowButton
-              requestId={rowData.id}
-              runAction={runAction}
-              fetchRunAction={fetchRun}
-              fetchRunHistoryAction={fetchRunHistory}
-              fetchTaskFilesAction={fetchTaskFiles}
-            />
-          );
-
-          return (
-            <div className="hidden-xs">
-              {scale}
-              {runNow}
-              {unpause}
-              <RemoveButton requestId={rowData.id} removeAction={removeAction} />
-              <JSONButton className="inline" object={rowData}>
-                {'{ }'}
-              </JSONButton>
-              {edit}
-            </div>
-          );
-        }
-      }
-    />
-  );
-};
+    }
+  />
+);
 
 export const PendingType = (
   <Column

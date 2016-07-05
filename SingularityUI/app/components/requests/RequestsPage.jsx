@@ -1,18 +1,7 @@
-import React from 'react';
+import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import {
-  FetchRequestsInState,
-  RemoveRequest,
-  UnpauseRequest,
-  RunRequest,
-  ScaleRequest,
-  BounceRequest,
-  FetchRequestRun
-} from '../../actions/api/requests';
-
-import { FetchRequestRunHistory } from '../../actions/api/history';
-import { FetchTaskFiles } from '../../actions/api/sandbox';
+import { FetchRequestsInState } from '../../actions/api/requests';
 
 import UITable from '../common/table/UITable';
 import RequestFilters from './RequestFilters';
@@ -21,7 +10,15 @@ import * as Cols from './Columns';
 import Utils from '../../utils';
 import filterSelector from '../../selectors/requests/filterSelector';
 
-class RequestsPage extends React.Component {
+class RequestsPage extends Component {
+  static propTypes = {
+    state: PropTypes.string.isRequired,
+    subFilter: PropTypes.string.isRequired,
+    searchFilter: PropTypes.string.isRequired,
+    requestsInState: PropTypes.arrayOf(PropTypes.object).isRequired,
+    updateFilters: PropTypes.func.isRequired,
+    fetchFilter: PropTypes.func.isRequired
+  };
 
   constructor(props) {
     super(props);
@@ -63,7 +60,7 @@ class RequestsPage extends React.Component {
   }
 
   getColumns() {
-    switch(this.state.filter.state) {
+    switch (this.state.filter.state) {
       case 'pending':
         return [Cols.RequestId, Cols.PendingType];
       case 'cleanup':
@@ -76,7 +73,7 @@ class RequestsPage extends React.Component {
           Cols.State,
           Cols.Instances,
           Cols.Schedule,
-          Cols.Actions(this.props.removeRequest, this.props.unpauseRequest, this.props.runNow, this.props.fetchRun, this.props.fetchRunHistory, this.props.fetchTaskFiles, this.props.scaleRequest, this.props.bounceRequest)
+          Cols.Actions
         ];
       default:
         return [
@@ -89,14 +86,13 @@ class RequestsPage extends React.Component {
           Cols.DeployUser,
           Cols.LastDeploy,
           Cols.Schedule,
-          Cols.Actions(this.props.removeRequest, this.props.unpauseRequest, this.props.runNow, this.props.fetchRun, this.props.fetchRunHistory, this.props.fetchTaskFiles, this.props.scaleRequest, this.props.bounceRequest)
+          Cols.Actions
         ];
     }
   }
 
   render() {
     const displayRequests = filterSelector({requestsInState: this.props.requestsInState, filter: this.state.filter});
-    console.log(displayRequests);
     let table;
     if (this.state.loading) {
       table = <div className="page-loader fixed"></div>;
@@ -145,15 +141,10 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch) {
   return {
     fetchFilter: (state) => dispatch(FetchRequestsInState.trigger(state)),
-    removeRequest: (requestid, data) => dispatch(RemoveRequest.trigger(requestid, data)),
-    unpauseRequest: (requestId, data) => dispatch(UnpauseRequest.trigger(requestId, data)),
-    runNow: (requestId, data) => dispatch(RunRequest.trigger(requestId, data)),
-    fetchRun: (requestId, runId) => dispatch(FetchRequestRun.trigger(requestId, runId)),
-    fetchRunHistory: (requestId, runId) => dispatch(FetchRequestRunHistory.trigger(requestId, runId)),
-    fetchTaskFiles: (taskId, path) => dispatch(FetchTaskFiles.trigger(taskId, path)),
-    scaleRequest: (requestId, data) => dispatch(ScaleRequest.trigger(requestId, data)),
-    bounceRequest: (requestId, data) => dispatch(BounceRequest.trigger(requestId, data))
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(RequestsPage);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(RequestsPage);

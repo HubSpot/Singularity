@@ -7,7 +7,7 @@ import RequestStar from '../requests/RequestStar';
 import RequestActionButtons from './RequestActionButtons';
 import RequestAlerts from './RequestAlerts';
 
-const RequestHeader = ({requestParent, }) => {
+const RequestHeader = ({requestParent, bounces}) => {
   const {request, requestDeployState, state} = requestParent;
 
   return (
@@ -32,14 +32,15 @@ const RequestHeader = ({requestParent, }) => {
         </Col>
       </Row>
       <Row>
-        <RequestAlerts requestParent={requestParent} />
+        <RequestAlerts requestParent={requestParent} bounces={bounces} />
       </Row>
     </header>
   );
 };
 
 RequestHeader.propTypes = {
-  requestParent: PropTypes.object.isRequired
+  requestParent: PropTypes.object.isRequired,
+  bounces: PropTypes.arrayOf(PropTypes.object).isRequired
 };
 
 export default RequestHeader;

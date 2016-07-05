@@ -1,20 +1,23 @@
-import React from 'react';
+import React, { Component, PropTypes } from 'react';
+import { connect } from 'react-redux';
 
-import FormModal from './FormModal';
+import { KillTask } from '../../actions/api/tasks';
 
-export default class KillTaskModal extends React.Component {
+import FormModal from '../common/FormModal';
+
+class KillTaskModal extends Component {
+  static propTypes = {
+    taskId: PropTypes.string.isRequired,
+    killTask: PropTypes.func.isRequired
+  };
 
   constructor() {
     super();
-    this.state = {
-      taskId: null
-    }
+
+    this.show = this.show.bind(this);
   }
 
-  show(taskId) {
-    this.setState({
-      taskId: taskId
-    });
+  show() {
     this.refs.confirmKillTask.show();
   }
 
@@ -23,7 +26,7 @@ export default class KillTaskModal extends React.Component {
       <FormModal
         ref="confirmKillTask"
         action="Kill Task"
-        onConfirm={(data) => this.props.onTaskKill(this.state.taskId, data)}
+        onConfirm={(data) => this.props.killTask(data)}
         buttonStyle="danger"
         formElements={[
           {
@@ -40,7 +43,7 @@ export default class KillTaskModal extends React.Component {
         ]}>
         <span>
           <p>Are you sure you want to kill this task?</p>
-          <pre>{this.state.taskId}</pre>
+          <pre>{this.props.taskId}</pre>
           <p>
               Long running process will be started again instantly, scheduled
               tasks will behave as if the task failed and may be rescheduled
@@ -52,3 +55,14 @@ export default class KillTaskModal extends React.Component {
     );
   }
 }
+
+const mapDispatchToProps = (dispatch, ownProps) => ({
+  killTask: (data) => dispatch(KillTask.trigger(ownProps.taskId, data))
+});
+
+export default connect(
+  null,
+  mapDispatchToProps,
+  null,
+  { withRef: true }
+)(KillTaskModal);

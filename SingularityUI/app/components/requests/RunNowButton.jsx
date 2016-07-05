@@ -1,37 +1,21 @@
 import React, { Component, PropTypes } from 'react';
 
-import RunNowModal from '../common/RunNowModal';
-import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
-import TaskLauncher from '../common/TaskLauncher';
+import { Glyphicon } from 'react-bootstrap';
 
-export default class UnpauseButton extends Component {
+import RunNowModal from './RunNowModal';
 
+export default class RunNowButton extends Component {
   static propTypes = {
-    requestId: PropTypes.string.isRequired,
-    runAction: PropTypes.func.isRequired
+    requestId: PropTypes.string.isRequired
   };
-
-  handleRunNow(requestId, data) {
-    this.props.runAction(requestId, data).then((response) => {
-      if (_.contains([RunNowModal.AFTER_TRIGGER.SANDBOX.value, RunNowModal.AFTER_TRIGGER.TAIL.value], data.afterTrigger)) {
-        this.refs.taskLauncher.startPolling(response.data.request.id, response.data.pendingRequest.runId, data.afterTrigger === RunNowModal.AFTER_TRIGGER.TAIL.value && data.fileToTail);
-      }
-    });
-  }
 
   render() {
     return (
       <span>
-        <a onClick={() => this.refs.runModal.show(this.props.requestId)}><Glyphicon iconClass="flash" /></a>
+        <a onClick={() => this.refs.runModal.getWrappedInstance().show()}><Glyphicon glyph="flash" /></a>
         <RunNowModal
           ref="runModal"
-          onRunNow={(...args) => this.handleRunNow(...args)}
-        />
-        <TaskLauncher
-          ref="taskLauncher"
-          fetchTaskRun={(...args) => this.props.fetchRunAction(...args)}
-          fetchTaskRunHistory={(...args) => this.props.fetchRunHistoryAction(...args)}
-          fetchTaskFiles={(...args) => this.props.fetchTaskFilesAction(...args)}
+          requestId={this.props.requestId}
         />
       </span>
     );

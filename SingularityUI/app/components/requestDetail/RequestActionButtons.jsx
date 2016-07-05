@@ -3,6 +3,8 @@ import { Button } from 'react-bootstrap';
 
 import JSONButton from '../common/JSONButton';
 
+import RemoveButton from '../requests/RemoveButton';
+
 import Utils from '../../utils';
 
 const RequestActionButtons = ({requestParent}) => {
@@ -99,9 +101,9 @@ const RequestActionButtons = ({requestParent}) => {
 
   let removeButton;
   removeButton = (
-    <Button bsStyle="danger">
+    <RemoveButton className="btn btn-danger" requestId={request.id}>
       Remove
-    </Button>
+    </RemoveButton>
   );
 
   return (
