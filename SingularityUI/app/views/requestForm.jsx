@@ -5,7 +5,7 @@ import View from './view';
 
 import { Provider } from 'react-redux';
 
-import RequestFormPage from '../components/requestForm/RequestForm'
+import RequestFormPage from '../components/requestForm/RequestForm';
 
 
 class RequestFormView extends View {
