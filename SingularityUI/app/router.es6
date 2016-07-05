@@ -1,4 +1,3 @@
-let NotFoundController;
 let RequestDetailController;
 let TaskSearchController;
 
@@ -24,7 +23,7 @@ import RacksController from 'controllers/Racks';
 
 import SlavesController from 'controllers/Slaves';
 
-NotFoundController = require('controllers/NotFound');
+import NotFoundController from 'controllers/NotFound';
 
 import DeployDetailController from 'controllers/DeployDetail';
 
