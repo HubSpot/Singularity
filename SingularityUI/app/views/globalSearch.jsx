@@ -1,6 +1,7 @@
 import ReactView from './reactView';
 
 import GlobalSearch from '../components/globalSearch/GlobalSearch';
+import { SetVisibility } from '../actions/ui/globalSearch';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -10,6 +11,14 @@ class GlobalSearchView extends ReactView {
 
   initialize({store}) {
     this.store = store;
+  }
+
+  show() {
+    this.store.dispatch(SetVisibility(true));
+  }
+
+  hide() {
+    this.store.dispatch(SetVisibility(false));
   }
 
   render() {

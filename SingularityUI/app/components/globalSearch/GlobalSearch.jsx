@@ -2,6 +2,7 @@ import React from 'react';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
 import { FetchRequests } from '../../actions/api/requests';
+import { SetVisibility } from '../../actions/ui/globalSearch';
 
 import { Typeahead } from 'react-typeahead';
 import fuzzy from 'fuzzy';
@@ -11,14 +12,12 @@ class GlobalSearch extends React.Component {
   static propTypes = {
     requests: React.PropTypes.array,
     visible: React.PropTypes.bool,
-    getRequests: React.PropTypes.func
+    getRequests: React.PropTypes.func,
+    setVisibility: React.PropTypes.func
   }
 
   constructor(...args) {
     super(...args);
-    this.state = {
-      visible: false
-    };
     this.optionSelected = this.optionSelected.bind(this);
     this.resetSelection = this.resetSelection.bind(this);
   }
@@ -38,32 +37,19 @@ class GlobalSearch extends React.Component {
       const escPressed = event.keyCode === 27;
 
       if (escPressed && (focusBody || focusInput)) {
-        this.setState({
-          visible: false
-        });
+        this.props.setVisibility(false);
       } else if (loadSearchKeysPressed && focusBody) {
         this.props.getRequests();
-        this.setState({
-          visible: true
-        });
+        this.props.setVisibility(true);
         event.preventDefault();
       }
     });
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    if (this.state.visible && !prevState.visible) {
+  componentDidUpdate(prevProps) {
+    if (this.props.visible && !prevProps.visible) {
       this.focus();
     }
-  }
-
-  optionSelected(requestIdObject) {
-    const requestId = this.getValueFromOption(requestIdObject);
-    app.router.navigate(`/request/${ requestId }`, { trigger: true });
-    this.clear();
-    this.setState({
-      visible: false
-    });
   }
 
   resetSelection() {
@@ -98,6 +84,13 @@ class GlobalSearch extends React.Component {
     return option.original;
   }
 
+  optionSelected(requestIdObject) {
+    const requestId = this.getValueFromOption(requestIdObject);
+    app.router.navigate(`/request/${ requestId }`, { trigger: true });
+    this.clear();
+    this.props.setVisibility(false);
+  }
+
   renderOption(option, index) {
     // transform fuzzy string into react component
     const bolded = option.string.map((matchInfo) => {
@@ -115,14 +108,14 @@ class GlobalSearch extends React.Component {
 
     const globalSearchClasses = classNames({
       'global-search': true,
-      'global-search-active': this.state.visible
+      'global-search-active': this.props.visible
     });
 
     return (
       <div className={globalSearchClasses}>
         <div className="container">
           <div className="close-button-container">
-            <a onClick={() => this.setState({visible: false})}>&times;</a>
+            <a onClick={() => this.props.setVisibility(false)}>&times;</a>
           </div>
 
           <p className="hidden-xs text-muted tip">
@@ -150,7 +143,8 @@ class GlobalSearch extends React.Component {
 
 function mapDispatchToProps(dispatch) {
   return {
-    getRequests: () => dispatch(FetchRequests.trigger())
+    getRequests: () => dispatch(FetchRequests.trigger()),
+    setVisibility: (visible) => dispatch(SetVisibility(visible))
   };
 }
 
