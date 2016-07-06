@@ -1,14 +1,12 @@
-import Router from 'router';
+import ReactDOM from 'react-dom';
+
+import getRouter from './router';
 
 import configureStore from 'store';
 import { FetchUser } from 'actions/api/auth';
 
-import NavView from 'views/nav';
-import GlobalSearchView from 'views/globalSearch';
-
 import Sortable from 'sortable';
 import Utils from './utils';
-
 
 class Application {
   initialize() {
@@ -18,7 +16,7 @@ class Application {
     this.handleAjaxError = this.handleAjaxError.bind(this);
 
     // set up views
-    this.views = {};
+    // this.views = {};
 
     // set up Redux store
     this.store = configureStore();
@@ -38,24 +36,27 @@ class Application {
     // hide loading animation
     $('.page-loader.fixed').hide();
 
-    // set up router
-    this.router = new Router(this);
+    // Render the page content
+    ReactDOM.render(getRouter(this.store), this.page);
 
-    // set up Backbone history
-    window.Backbone.history.start({
-      pushState: true,
-      root: this.getRootPath()
-    });
-
-    // wire up nav
-    this.views.nav = new NavView;
-    this.views.nav.render();
-    $('body').prepend(this.views.nav.$el);
-
-    // wire up global search
-    this.views.globalSearch = new GlobalSearchView();
-    this.views.globalSearch.render();
-    $('body').append(this.views.globalSearch.$el);
+    // // set up router
+    // this.router = new Router(this);
+    //
+    // // set up Backbone history
+    // window.Backbone.history.start({
+    //   pushState: true,
+    //   root: this.getRootPath()
+    // });
+    //
+    // // wire up nav
+    // this.views.nav = new NavView;
+    // this.views.nav.render();
+    // $('body').prepend(this.views.nav.$el);
+    //
+    // // wire up global search
+    // this.views.globalSearch = new GlobalSearchView();
+    // this.views.globalSearch.render();
+    // $('body').append(this.views.globalSearch.$el);
 
     // set up global refresh
     this.blurred = false;

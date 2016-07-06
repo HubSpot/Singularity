@@ -1,4 +1,5 @@
 import { combineReducers } from 'redux';
+import { routerReducer as routing } from 'react-router-redux';
 
 import taskGroups from './taskGroups';
 import activeRequest from './activeRequest';
@@ -7,14 +8,14 @@ import tasks from './tasks';
 import api from './api';
 import ui from './ui';
 
-const path = (state='', action) => {
+const path = (state = '', action) => {
   if (action.type === 'LOG_INIT') {
     return action.path;
   }
   return state;
 };
 
-const activeColor = (state='default', action) => {
+const activeColor = (state = 'default', action) => {
   if (action.type === 'LOG_INIT') {
     return window.localStorage.logColor || 'default';
   } else if (action.type === 'LOG_SELECT_COLOR') {
@@ -24,27 +25,27 @@ const activeColor = (state='default', action) => {
   return state;
 };
 
-const colors = (state=[]) => state;
+const colors = (state = []) => state;
 
-const viewMode = (state='custom', action) => {
+const viewMode = (state = 'custom', action) => {
   if (action.type === 'LOG_SWITCH_VIEW_MODE' || action.type === 'LOG_INIT') {
     return action.viewMode;
   }
   return state;
 };
 
-const search = (state='', action) => {
+const search = (state = '', action) => {
   if (action.type === 'LOG_INIT') {
     return action.search;
   }
   return state;
 };
 
-const logRequestLength = (state=30000, action) => state;
+const logRequestLength = (state = 30000) => state;
 
-const maxLines = (state=100000, action) => state;
+const maxLines = (state = 100000) => state;
 
-const showDebugInfo = (state=false, action) => {
+const showDebugInfo = (state = false, action) => {
   if (action.type === 'LOG_INIT') {
     return Boolean(window.localStorage.showDebugInfo) || false;
   }
@@ -58,6 +59,7 @@ const showDebugInfo = (state=false, action) => {
 export default combineReducers({
   api,
   ui,
+  routing,
   showDebugInfo,
   taskGroups,
   tasks,

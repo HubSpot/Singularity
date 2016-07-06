@@ -112,28 +112,28 @@ class Router extends Backbone.Router {
     }
     return this.app.bootstrapController(new TasksTableController({
       store: this.app.store,
-      state: state,
-      requestsSubFilter: requestsSubFilter,
-      searchFilter: searchFilter
+      state,
+      requestsSubFilter,
+      searchFilter
     }));
   }
 
   taskDetail(taskId) {
     return this.app.bootstrapController(new TaskDetailController({
       store: this.app.store,
-      taskId: taskId,
+      taskId,
       filePath: taskId
     }));
   }
 
   taskFileBrowser(taskId, filePath) {
     if (filePath == null) {
-      filePath = "";
+      filePath = '';
     }
     return this.app.bootstrapController(new TaskDetailController({
       store: this.app.store,
-      taskId: taskId,
-      filePath: filePath
+      taskId,
+      filePath
     }));
   }
 
@@ -176,8 +176,8 @@ class Router extends Backbone.Router {
   deployDetail(requestId, deployId) {
     return this.app.bootstrapController(new DeployDetailController({
       store: this.app.store,
-      requestId: requestId,
-      deployId: deployId
+      requestId,
+      deployId
     }));
   }
 
