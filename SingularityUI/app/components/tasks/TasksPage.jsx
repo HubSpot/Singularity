@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {PropTypes} from 'react';
 import { connect } from 'react-redux';
 import {
   getDecomissioningTasks,
@@ -35,6 +35,18 @@ import {
 
 class TasksPage extends React.Component {
   static propTypes = {
+    state: PropTypes.string,
+    requestsSubFilter: PropTypes.string,
+    searchFilter: PropTypes.string,
+    updateFilters: PropTypes.func,
+    fetchFilter: PropTypes.func,
+    killTask: PropTypes.func,
+    runRequest: PropTypes.func,
+    taskRun: PropTypes.func,
+    taskRunHistory: PropTypes.func,
+    taskFiles: PropTypes.func,
+    tasks: PropTypes.array,
+    cleanups: PropTypes.array
   };
 
   constructor(props) {
@@ -76,7 +88,7 @@ class TasksPage extends React.Component {
   handleRunNow(requestId, data) {
     this.props.runRequest(requestId, data).then((response) => {
       if (_.contains([RunNowModal.AFTER_TRIGGER.SANDBOX, RunNowModal.AFTER_TRIGGER.TAIL], data.afterTrigger)) {
-        this.refs.taskLauncher.startPolling(response.data.request.id, response.data.pendingRequest.runId, data.afterTrigger == RunNowModal.AFTER_TRIGGER.TAIL && data.fileToTail);
+        this.refs.taskLauncher.startPolling(response.data.request.id, response.data.pendingRequest.runId, data.afterTrigger === RunNowModal.AFTER_TRIGGER.TAIL && data.fileToTail);
       }
     });
   }
