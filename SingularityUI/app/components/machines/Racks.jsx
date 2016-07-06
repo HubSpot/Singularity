@@ -3,9 +3,11 @@ import MachinesPage from './MachinesPage';
 import PlainText from '../common/atomicDisplayItems/PlainText';
 import TimeStamp from '../common/atomicDisplayItems/TimeStamp';
 import Link from '../common/atomicDisplayItems/Link';
-import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
+import Glyphicon from 'react-bootstrap/lib/Glyphicon';
+import ModalButton from './ModalButton';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
+import { DecommissionRack, RemoveRack, ReactivateRack } from '../../actions/api/racks';
 
 function __in__(needle, haystack) {
   return haystack.indexOf(needle) >= 0;
@@ -16,7 +18,10 @@ const Racks = React.createClass({
   propTypes: {
     racks: PropTypes.arrayOf(PropTypes.shape({
       state: PropTypes.string
-    }))
+    })),
+    decommissionRack: PropTypes.func.isRequired,
+    removeRack: PropTypes.func.isRequired,
+    reactivateRack: PropTypes.func.isRequired
   },
 
   typeName: {
@@ -67,61 +72,45 @@ const Racks = React.createClass({
   },
 
   getMaybeReactivateButton(rack) {
-    if (__in__(rack.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION'])) {
-      return (
-      <Link
-        prop = {{
-          text: <Glyphicon
-            iconClass = "new-window"
-                />,
-          onClickFn: (event) => { this.promptReactivate(event, rack); },
-          title: 'Reactivate',
-          altText: `Reactivate ${rack.id}`,
-          overlayTrigger: true,
-          overlayTriggerPlacement: 'top',
-          overlayToolTipContent: `Reactivate ${rack.id}`,
-          overlayId: `reactivate${rack.id}`
-        }}
-      />
-      );
-    }
-    return null;
+    return (__in__(rack.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&
+      <ModalButton
+        buttonChildren={<Glyphicon glyph="new-window" />}
+        action="Reactivate Rack"
+        onConfirm={(data) => this.props.reactivateRack(rack.id, data.message)}
+        tooltipText={`Reactivate ${rack.id}`}>
+        <p>Are you sure you want to cancel decommission and reactivate this rack??</p>
+        <pre>{rack.id}</pre>
+        <p>Reactivating a rack will cancel the decommission without erasing the rack's history and move it back to the active state.</p>
+      </ModalButton>
+    );
   },
 
   getDecommissionOrRemoveButton(rack) {
     if (rack.currentState.state === 'ACTIVE') {
       return (
-      <Link
-        prop = {{
-          text: <Glyphicon
-            iconClass = "trash"
-                />,
-          onClickFn: (event) => { this.promptDecommission(event, rack); },
-          title: 'Decommission',
-          altText: `Decommission ${rack.id}`,
-          overlayTrigger: true,
-          overlayTriggerPlacement: 'top',
-          overlayToolTipContent: `Decommission ${rack.id}`,
-          overlayId: `decommission${rack.id}`
-        }}
-      />
+        <ModalButton
+          buttonChildren={<Glyphicon glyph="trash" />}
+          action="Decommission Rack"
+          onConfirm={(data) => this.props.decommissionRack(rack.id, data.message)}
+          tooltipText={`Decommission ${rack.id}`}>
+          <p>Are you sure you want to decommission this rack?</p>
+          <pre>{rack.id}</pre>
+          <p>
+            Decommissioning a rack causes all tasks currently running on it to be rescheduled and executed elsewhere, as new tasks will no longer consider the rack with id <code>{rack.id}</code> a valid target for execution. This process may take time as replacement tasks must be considered healthy before old tasks are killed.
+          </p>
+        </ModalButton>
       );
     }
     return (
-    <Link
-      prop = {{
-        text: <Glyphicon
-          iconClass = "remove"
-              />,
-        onClickFn: (event) => { this.promptRemove(event, rack); },
-        title: 'Remove',
-        altText: `Remove ${rack.id}`,
-        overlayTrigger: true,
-        overlayTriggerPlacement: 'top',
-        overlayToolTipContent: `Remove ${rack.id}`,
-        overlayId: `remove${rack.id}`
-      }}
-    />
+      <ModalButton
+        buttonChildren={<Glyphicon glyph="remove" />}
+        action="Remove Rack"
+        onConfirm={(data) => this.props.removeRack(rack.id, data.message)}
+        tooltipText={`Remove ${rack.id}`}>
+        <p>Are you sure you want to remove this rack??</p>
+        <pre>{rack.id}</pre>
+        <p>Removing a decommissioned rack will cause that rack to become active again if the mesos-rack process is still running.</p>
+      </ModalButton>
     );
   },
 
@@ -232,4 +221,12 @@ function mapStateToProps(state) {
   };
 }
 
-export default connect(mapStateToProps)(Racks);
+function mapDispatchToProps(dispatch) {
+  return {
+    decommissionRack: (rack, message) => { dispatch(DecommissionRack.trigger(rack.id, message)); },
+    removeRack: (rack, message) => { dispatch(RemoveRack.trigger(rack.id, message)); },
+    reactivateRack: (rack, message) => { dispatch(ReactivateRack.trigger(rack.id, message)); }
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Racks);

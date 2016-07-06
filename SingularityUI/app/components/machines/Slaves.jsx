@@ -3,10 +3,11 @@ import MachinesPage from './MachinesPage';
 import PlainText from '../common/atomicDisplayItems/PlainText';
 import TimeStamp from '../common/atomicDisplayItems/TimeStamp';
 import Link from '../common/atomicDisplayItems/Link';
-import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
+import Glyphicon from 'react-bootstrap/lib/Glyphicon';
+import ModalButton from './ModalButton';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
-import { FreezeSlave } from '../../actions/api/slaves';
+import { FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSlave } from '../../actions/api/slaves';
 
 function __in__(needle, haystack) {
   return haystack.indexOf(needle) >= 0;
@@ -16,6 +17,9 @@ class Slaves extends React.Component {
 
   static propTypes = {
     freezeSlave: PropTypes.func.isRequired,
+    decommissionSlave: PropTypes.func.isRequired,
+    removeSlave: PropTypes.func.isRequired,
+    reactivateSlave: PropTypes.func.isRequired,
     slaves: PropTypes.arrayOf(PropTypes.shape({
       state: PropTypes.string
     }))
@@ -57,107 +61,61 @@ class Slaves extends React.Component {
     return heads;
   }
 
-  // TODO: dont
-  refresh() { return this.props.slaves.fetch().done(() => this.forceUpdate()); }
-
-  promptReactivate(event, slaveModel) {
-    event.preventDefault();
-    return slaveModel.promptReactivate(() => this.refresh());
-  }
-
-  promptDecommission(event, slaveModel) {
-    event.preventDefault();
-    return slaveModel.promptDecommission(() => this.refresh());
-  }
-
-  promptFreeze(event, slaveModel) {
-    event.preventDefault();
-    return slaveModel.promptFreeze(() => this.refresh());
-  }
-
-  promptRemove(event, slaveModel) {
-    event.preventDefault();
-    return slaveModel.promptRemove(() => this.refresh());
-  }
-
   getMaybeReactivateButton(slave) {
-    if (__in__(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN'])) {
-      return (
-        <Link
-          prop = {{
-            text: <Glyphicon
-              iconClass = "new-window"
-                  />,
-            onClickFn: (event) => {this.promptReactivate(event, slave); },
-            title: 'Reactivate',
-            altText: `Reactivate ${slave.id}`,
-            overlayTrigger: true,
-            overlayTriggerPlacement: 'top',
-            overlayToolTipContent: `Reactivate ${slave.id}`,
-            overlayId: `reactivate${slave.id}`,
-          }}
-        />
-      );
-    }
-    return null;
+    return (__in__(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']) &&
+      <ModalButton
+        buttonChildren={<Glyphicon glyph="new-window" />}
+        action="Reactivate Slave"
+        onConfirm={(data) => this.props.reactivateSlave(slave.id, data.message)}
+        tooltipText={`Reactivate ${slave.id}`}>
+        <p>Are you sure you want to cancel decommission and reactivate this slave??</p>
+        <pre>{slave.id}</pre>
+        <p>Reactivating a slave will cancel the decommission without erasing the slave's history and move it back to the active state.</p>
+      </ModalButton>
+    );
   }
 
   getMaybeFreezeButton(slave) {
-    if (slave.currentState.state === 'ACTIVE') {
-      return (
-      <Link
-        prop = {{
-          text: <Glyphicon
-            iconClass = "stop"
-                />,
-          onClickFn: (event) => {event.preventDefault(); this.props.freezeSlave(slave);},
-          title: 'Freeze',
-          altText: `Freeze ${slave.id}`,
-          overlayTrigger: true,
-          overlayTriggerPlacement: 'top',
-          overlayToolTipContent: `Freeze ${slave.id}`,
-          overlayId: `freeze${slave.id}`
-        }}
-      />
-      );
-    }
-    return null;
+    return (slave.currentState.state === 'ACTIVE' &&
+      <ModalButton
+        buttonChildren={<Glyphicon glyph="stop" />}
+        action="Freeze Slave"
+        onConfirm={(data) => this.props.freezeSlave(slave.id, data.message)}
+        tooltipText={`Freeze ${slave.id}`}>
+        <p>Are you sure you want to freeze this slave?</p>
+        <pre>{slave.id}</pre>
+        <p>Freezing a slave will prevent new tasks from being launched. Previously running tasks will be unaffected.</p>
+      </ModalButton>
+    );
   }
 
   getDecommissionOrRemoveButton(slave) {
     if (__in__(slave.currentState.state, ['ACTIVE', 'FROZEN'])) {
       return (
-      <Link
-        prop = {{
-          text: <Glyphicon
-            iconClass = "trash"
-                />,
-          onClickFn: (event) => {this.promptDecommission(event, slave);},
-          title: 'Decommission',
-          altText: `Decommission ${slave.id}`,
-          overlayTrigger: true,
-          overlayTriggerPlacement: 'top',
-          overlayToolTipContent: `Decommission ${slave.id}`,
-          overlayId: `decommission${slave.id}`
-        }}
-      />
+        <ModalButton
+          buttonChildren={<Glyphicon glyph="trash" />}
+          action="Decommission Slave"
+          onConfirm={(data) => this.props.decommissionSlave(slave.id, data.message)}
+          tooltipText={`Decommission ${slave.id}`}>
+          <p>Are you sure you want to decommission this slave?</p>
+          <pre>{slave.id}</pre>
+          <p>Decommissioning a slave causes all tasks currently running on it to be rescheduled and executed elsewhere, as new tasks will no longer consider the slave with id <code>{slave.id}</code> a valid target for execution. This process may take time as replacement tasks must be considered healthy before old tasks are killed.</p>
+        </ModalButton>
       );
     }
     return (
-    <Link
-      prop = {{
-        text: <Glyphicon
-          iconClass = "remove"
-              />,
-        onClickFn: (event) => {this.promptRemove(event, slave);},
-        title: 'Remove',
-        altText: `Remove ${slave.id}`,
-        overlayTrigger: true,
-        overlayTriggerPlacement: 'top',
-        overlayToolTipContent: `Remove ${slave.id}`,
-        overlayId: `remove${slave.id}`,
-      }}
-    />
+      <ModalButton
+        buttonChildren={<Glyphicon glyph="remove" />}
+        action="Remove Slave"
+        onConfirm={(data) => this.props.removeSlave(slave.id, data.message)}
+        tooltipText={`Remove ${slave.id}`}>
+        <p>Are you sure you want to remove this slave?</p>
+        <pre>{slave.id}</pre>
+        {__in__(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&
+        <p>
+          Removing a decommissioned slave will cause that slave to become active again if the mesos-slave process is still running.
+        </p>}
+      </ModalButton>
     );
   }
 
@@ -313,7 +271,10 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    freezeSlave: (slave) => { dispatch(FreezeSlave.trigger(slave.id)); }
+    freezeSlave: (slave, message) => { dispatch(FreezeSlave.trigger(slave.id, message)); },
+    decommissionSlave: (slave, message) => { dispatch(DecommissionSlave.trigger(slave.id, message)); },
+    removeSlave: (slave, message) => { dispatch(RemoveSlave.trigger(slave.id, message)); },
+    reactivateSlave: (slave, message) => { dispatch(ReactivateSlave.trigger(slave.id, message)); }
   };
 }
 
