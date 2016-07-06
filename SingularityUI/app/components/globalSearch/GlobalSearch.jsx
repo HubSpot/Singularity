@@ -8,11 +8,17 @@ import fuzzy from 'fuzzy';
 
 class GlobalSearch extends React.Component {
 
+  static propTypes = {
+    requests: React.PropTypes.array,
+    visible: React.PropTypes.bool,
+    getRequests: React.PropTypes.func
+  }
+
   constructor(...args) {
     super(...args);
     this.state = {
       visible: false
-    }
+    };
     this.optionSelected = this.optionSelected.bind(this);
     this.resetSelection = this.resetSelection.bind(this);
   }
@@ -88,21 +94,20 @@ class GlobalSearch extends React.Component {
     return searched;
   }
 
-  renderOption(option, index) {
-    // transform fuzzy string into react component
-    const bolded = option.string.map(function(matchInfo) {
-      if (matchInfo.match) {
-        return <strong>{matchInfo.char}</strong>;
-      } else {
-        return matchInfo.char;
-      }
-    });
-
-    return bolded;
-  }
-
   getValueFromOption(option) {
     return option.original;
+  }
+
+  renderOption(option, index) {
+    // transform fuzzy string into react component
+    const bolded = option.string.map((matchInfo) => {
+      if (matchInfo.match) {
+        return <strong>{matchInfo.char}</strong>;
+      }
+      return matchInfo.char;
+    });
+
+    return <span key={index}>{bolded}</span>;
   }
 
   render() {
@@ -115,22 +120,22 @@ class GlobalSearch extends React.Component {
 
     return (
       <div className={globalSearchClasses}>
-        <div className='container'>
-          <div className='close-button-container'>
+        <div className="container">
+          <div className="close-button-container">
             <a onClick={() => this.setState({visible: false})}>&times;</a>
           </div>
 
-          <p className='hidden-xs text-muted tip'>
+          <p className="hidden-xs text-muted tip">
             Protip: You can press <kbd>s</kbd> or <kbd>t</kbd> to open global search and <kbd>esc</kbd> to close it.
           </p>
           <Typeahead
-            ref='typeahead'
+            ref="typeahead"
             options={options}
             maxVisible={10}
             customClasses={{
               input: 'big-search-box'
             }}
-            placeholder='Search all requests'
+            placeholder="Search all requests"
             onOptionSelected={this.optionSelected}
             searchOptions={this.searchOptions}
             displayOption={this.renderOption}
@@ -151,7 +156,8 @@ function mapDispatchToProps(dispatch) {
 
 function mapStateToProps(state) {
   return {
-    requests: state.api.requests.data
+    requests: state.api.requests.data,
+    visible: state.ui.globalSearch.visible
   };
 }
 
