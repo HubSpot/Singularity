@@ -1,7 +1,5 @@
-let NotFoundController;
 let RequestDetailController;
 let TaskSearchController;
-let Utils;
 
 const hasProp = {}.hasOwnProperty;
 
@@ -25,7 +23,7 @@ import RacksController from 'controllers/Racks';
 
 import SlavesController from 'controllers/Slaves';
 
-NotFoundController = require('controllers/NotFound');
+import NotFoundController from 'controllers/NotFound';
 
 import DeployDetailController from 'controllers/DeployDetail';
 
@@ -35,7 +33,7 @@ TaskSearchController = require('controllers/TaskSearch');
 
 import WebhooksController from 'controllers/Webhooks';
 
-Utils = require('./utils').default;
+import Utils from './utils';
 
 class Router extends Backbone.Router {
   constructor(app) {

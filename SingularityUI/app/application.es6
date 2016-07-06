@@ -31,17 +31,6 @@ class Application {
 
     this.page = $('#page')[0];
 
-    // wire up nav
-    this.views = {};
-    this.views.nav = new NavView;
-    this.views.nav.render();
-    $('body').prepend(this.views.nav.$el);
-
-    // wire up global search
-    this.views.globalSearch = new GlobalSearchView();
-    this.views.globalSearch.render();
-    $('body').append(this.views.globalSearch.$el);
-
     // hide loading animation
     $('.page-loader.fixed').hide();
 
@@ -53,6 +42,17 @@ class Application {
       pushState: true,
       root: this.getRootPath()
     });
+
+    // wire up nav
+    this.views = {};
+    this.views.nav = new NavView;
+    this.views.nav.render();
+    $('body').prepend(this.views.nav.$el);
+
+    // wire up global search
+    this.views.globalSearch = new GlobalSearchView();
+    this.views.globalSearch.render();
+    $('body').append(this.views.globalSearch.$el);
 
     // set up global refresh
     this.blurred = false;
