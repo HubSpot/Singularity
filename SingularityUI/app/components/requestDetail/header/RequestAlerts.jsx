@@ -3,13 +3,14 @@ import { connect } from 'react-redux';
 
 import { Well, Alert } from 'react-bootstrap';
 
-import Utils from '../../utils';
+import Utils from '../../../utils';
 
-import { getBouncesForRequest } from '../../selectors/tasks';
+import { getBouncesForRequest } from '../../../selectors/tasks';
 
 const RequestAlerts = ({requestParent, bounces, activeTasksForRequest}) => {
   let maybeBouncing;
   if (bounces.length > 0) {
+    const runningInstanceCount = Utils.request.runningInstanceCount(activeTasksForRequest);
     maybeBouncing = (
       <Alert bsStyle="warning">
         <b>Request is bouncing:</b> {runningInstanceCount} of {requestParent.request.instances} replacement tasks are currently running.

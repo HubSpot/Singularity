@@ -495,6 +495,20 @@ const Utils = {
 
       return taskStates;
     },
+    runningInstanceCount: (activeTasksForRequest) => {
+      return activeTasksForRequest.filter(
+        (t) => t.lastTaskState === 'TASK_RUNNING'
+      ).length;
+    },
+    deployingInstanceCount: (r, activeTasksForRequest) => {
+      if (!r.pendingDeploy) {
+        return 0;
+      }
+      return activeTasksForRequest.filter((t) => (
+        t.lastTaskState === 'TASK_RUNNING'
+        && t.deployId === r.pendingDeploy.id
+      )).length;
+    },
     // other
     canDisableHealthchecks: (r) => {
       return !!r.activeDeploy
