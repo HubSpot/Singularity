@@ -17,6 +17,11 @@ class GlobalSearch extends React.Component {
     setVisibility: React.PropTypes.func
   }
 
+  constructor() {
+    super();
+    _.bindAll(this, 'optionSelected', 'getValueFromOption');
+  }
+
   componentWillMount() {
     this.props.getRequests();
 
