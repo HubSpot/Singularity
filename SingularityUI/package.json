@@ -45,6 +45,8 @@
     "react-json-tree": "^0.8.0",
     "react-list": "~0.7.3",
     "react-redux": "^4.4.5",
+    "react-router": "^2.5.2",
+    "react-router-redux": "^4.0.5",
     "react-select": "1.0.0-beta13",
     "react-tagsinput": "^3.9.0",
     "react-typeahead": "git://github.com/HubSpot/react-typeahead.git#hubspot-3",

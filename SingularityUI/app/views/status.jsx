@@ -13,7 +13,7 @@ class StatusView extends ReactView {
   }
 
   render() {
-    ReactDOM.render(<Provider store={this.store}><StatusPage/></Provider>, this.el);
+    ReactDOM.render(<Provider store={this.store}><StatusPage /></Provider>, this.el);
   }
 }
 

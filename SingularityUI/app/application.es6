@@ -7,6 +7,7 @@ import NavView from 'views/nav';
 import GlobalSearchView from 'views/globalSearch';
 
 import Sortable from 'sortable';
+import Utils from './utils';
 
 
 class Application {
@@ -41,7 +42,7 @@ class Application {
     this.router = new Router(this);
 
     // set up Backbone history
-    Backbone.history.start({
+    window.Backbone.history.start({
       pushState: true,
       root: this.getRootPath()
     });
@@ -87,7 +88,7 @@ class Application {
     if (this.blurred) {
       clearInterval(this.globalRefreshInterval);
     } else {
-      return this.currentController.refresh();
+      this.currentController.refresh();
     }
   }
 
@@ -96,7 +97,11 @@ class Application {
   }
 
   handleAjaxError(e, jqxhr, settings) {
-    let error, id, options, selector, serverMessage, url;
+    let id;
+    let options;
+    let selector;
+    let serverMessage;
+
     if (this.caughtThisError) {
       this.caughtThisError = false;
       return;
@@ -113,19 +118,19 @@ class Application {
     if (this.blurred && jqxhr.statusText === 'timeout') {
       return;
     }
-    url = settings.url.replace(config.appRoot, '');
+    const url = settings.url.replace(config.appRoot, '');
     if (jqxhr.status === 502) {
-      return Messenger().info({
+      window.Messenger().info({
         message: 'Singularity is deploying, your requests cannot be handled. Things should resolve in a few seconds so just hang tight!'
       });
     } else if (jqxhr.status === 401 && config.redirectOnUnauthorizedUrl) {
-      return window.location.href = config.redirectOnUnauthorizedUrl.replace('{URL}', encodeURIComponent(window.location.href));
+      window.location.href = config.redirectOnUnauthorizedUrl.replace('{URL}', encodeURIComponent(window.location.href));
     } else if (jqxhr.statusText === 'timeout') {
-      return Messenger().error({
+      window.Messenger().error({
         message: `<p>A <code>${jqxhr.statusText}</code> error occurred while accessing:</p><pre>${url}</pre>`
       });
     } else if (jqxhr.status === 0) {
-      return Messenger().error({
+      window.Messenger().error({
         message: '<p>Could not reach the Singularity API. Please make sure SingularityUI is properly set up.</p><p>If running through locally, this might be your browser blocking cross-domain requests.</p>'
       });
     } else {
@@ -134,7 +139,7 @@ class Application {
       } catch (error) {
         if (jqxhr.status === 200) {
           console.error(jqxhr.responseText);
-          Messenger().error({
+          window.Messenger().error({
             message: `<p>Expected JSON but received ${jqxhr.responseText.startsWith('<!DOCTYPE html>') ? 'html' : 'something else'}. The response has been saved to your js console.</p>`
           });
           throw new Error(`Expected JSON in response but received ${jqxhr.responseText.startsWith('<!DOCTYPE html>') ? 'html' : 'something else'}`);
@@ -144,7 +149,7 @@ class Application {
       serverMessage = _.escape(serverMessage);
       id = `message_${Date.now()}`;
       selector = `#${id}`;
-      Messenger().error({
+      window.Messenger().error({
         message: `<div id="${id}"><p>An uncaught error occurred with your request. The server said:</p><pre class="copy-text">${serverMessage}</pre><p>The error has been saved to your JS console. <span class='copy-link'>Copy error message</span>.</p></div>`
       });
       console.error(jqxhr);
@@ -153,7 +158,7 @@ class Application {
         linkText: 'Copy error message',
         copyLink: '.copy-link'
       };
-      utils.makeMeCopy(options);
+      Utils.makeMeCopy(options);
       throw new Error('AJAX Error');
     }
   }
@@ -171,7 +176,8 @@ class Application {
   }
 
   bootstrapController(controller) {
-    return this.currentController = controller;
+    this.currentController = controller;
+    return controller;
   }
 
   showView(view) {
@@ -185,9 +191,8 @@ class Application {
     if (this.page.children.length) {
       this.page.replaceChild(view.el, this.page.children[0]);
       return Sortable.init();
-    } else {
-      return this.page.appendChild(view.el);
     }
+    return this.page.appendChild(view.el);
   }
 
   getUsername() {
@@ -195,9 +200,8 @@ class Application {
 
     if (state.api.user.receivedAt && state.api.user.data) {
       return state.api.user.data.user.id;
-    } else {
-      return '';
     }
+    return '';
   }
 
   getRootPath() {
