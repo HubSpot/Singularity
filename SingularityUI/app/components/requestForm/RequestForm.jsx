@@ -322,7 +322,7 @@ class RequestForm extends React.Component {
         <MultiSelect
           id="rack-affinity"
           onChange={ value => this.updateField('rackAffinity', value) }
-          value={ this.getValue('rackAffinity') }
+          value={ this.getValue('rackAffinity') || [] }
           options={rackOptions}
           splits={[',', ' ']}
         />
