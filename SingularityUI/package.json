@@ -31,6 +31,7 @@
     "isomorphic-fetch": "^2.2.1",
     "jquery": "~1.11.1",
     "juration": "*",
+    "keymaster": "^1.6.2",
     "linkifyjs": "~2.0.0-beta.9",
     "messenger": "git://github.com/HubSpot/messenger.git#set-main-field",
     "micromatch": "^2.3.8",
