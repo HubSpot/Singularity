@@ -27,10 +27,8 @@ export default class Navigation extends Component {
               <MenuItem divider />
               <MenuItem eventKey={5.4} href={`${config.appRoot}/taskSearch`}>Task search</MenuItem>
             </NavDropdown>
-          </Nav>
-          <Nav pullRight>
-            <NavItem eventKey={1} target="blank" href={config.apiDocs}>API Docs <small>(Beta)</small></NavItem>
-            <NavItem eventKey={2} className="global-search-button">
+            <NavItem eventKey={6} target="blank" href={config.apiDocs}>API Docs <small>(Beta)</small></NavItem>
+            <NavItem eventKey={7} className="global-search-button">
               <Glyphicon glyph="search" />
               <span className="icon-search-adjacent-text"> Search</span>
             </NavItem>
