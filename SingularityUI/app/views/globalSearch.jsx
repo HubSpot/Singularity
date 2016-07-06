@@ -24,9 +24,7 @@ class GlobalSearchView extends ReactView {
   render() {
     ReactDOM.render(
       <Provider store={this.store}>
-        <GlobalSearch
-          requests={this.collection}
-        />
+        <GlobalSearch />
       </Provider>,
       this.el
     );
