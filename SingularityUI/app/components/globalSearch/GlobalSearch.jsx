@@ -23,10 +23,10 @@ class GlobalSearch extends React.Component {
     // Key events with the 'input' scope get triggered even when an input is focused
     key.filter = (event) => {
       const tagName = (event.target || event.srcElement).tagName;
-      key.setScope(/^(INPUT|TEXTAREA|SELECT)$/.test(tagName) ? 'input' : 'other');
+      key.setScope(/^(INPUT|TEXTAREA|SELECT)$/.test(tagName) ? 'input' : 'noInput');
       return true;
     };
-    key('t, s', () => {
+    key('t, s', 'noInput', () => {
       this.props.setVisibility(true);
       return false;
     });
