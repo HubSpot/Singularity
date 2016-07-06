@@ -497,7 +497,7 @@ const Utils = {
     const array = [];
     for(var key in source) {
       if (source[key]) {
-        array.push(encodeURIComponent(key) + "=" + encodeURIComponent(source[key]));
+        array.push(`${encodeURIComponent(key)}=${encodeURIComponent(source[key])}`);
       }
     }
     return array.join("&");
