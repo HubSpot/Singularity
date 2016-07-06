@@ -6,6 +6,7 @@ import { SetVisibility } from '../../actions/ui/globalSearch';
 
 import { Typeahead } from 'react-typeahead';
 import fuzzy from 'fuzzy';
+import key from 'keymaster';
 
 class GlobalSearch extends React.Component {
 
@@ -16,40 +17,30 @@ class GlobalSearch extends React.Component {
     setVisibility: React.PropTypes.func
   }
 
-  constructor(...args) {
-    super(...args);
-    this.optionSelected = this.optionSelected.bind(this);
-    this.resetSelection = this.resetSelection.bind(this);
-  }
-
   componentWillMount() {
     this.props.getRequests();
-  }
 
-  componentDidMount() {
-    window.addEventListener('keydown', (event) => {
-      const focusBody = $(event.target).is('body');
-      const focusInput = $(event.target).is($('input.big-search-box'));
-
-      const modifierKey = event.metaKey || event.shiftKey || event.ctrlKey;
-      // s and t
-      const loadSearchKeysPressed = [83, 84].indexOf(event.keyCode) >= 0 && !modifierKey;
-      const escPressed = event.keyCode === 27;
-
-      if (escPressed && (focusBody || focusInput)) {
-        this.props.setVisibility(false);
-      } else if (loadSearchKeysPressed && focusBody) {
-        this.props.getRequests();
-        this.props.setVisibility(true);
-        event.preventDefault();
-      }
+    // Key events with the 'input' scope get triggered even when an input is focused
+    key.filter = (event) => {
+      const tagName = (event.target || event.srcElement).tagName;
+      key.setScope(/^(INPUT|TEXTAREA|SELECT)$/.test(tagName) ? 'input' : 'other');
+      return true;
+    };
+    key('t, s', () => {
+      this.props.setVisibility(true);
+      return false;
     });
+    key('esc, escape', 'input', () => this.props.setVisibility(false));
   }
 
   componentDidUpdate(prevProps) {
     if (this.props.visible && !prevProps.visible) {
       this.focus();
     }
+  }
+
+  componentWillUnmount() {
+    key.unbind('s, t, esc, escape');
   }
 
   resetSelection() {
@@ -106,38 +97,40 @@ class GlobalSearch extends React.Component {
   render() {
     const options = _.map(this.props.requests, (r) => r.request.id);
 
-    const globalSearchClasses = classNames({
-      'global-search': true,
+    const globalSearchClasses = classNames('global-search', {
       'global-search-active': this.props.visible
     });
 
-    return (
-      <div className={globalSearchClasses}>
-        <div className="container">
-          <div className="close-button-container">
-            <a onClick={() => this.props.setVisibility(false)}>&times;</a>
-          </div>
+    if (this.props.visible) {
+      return (
+        <div className={globalSearchClasses}>
+          <div className="container">
+            <div className="close-button-container">
+              <a onClick={() => this.props.setVisibility(false)}>&times;</a>
+            </div>
 
-          <p className="hidden-xs text-muted tip">
-            Protip: You can press <kbd>s</kbd> or <kbd>t</kbd> to open global search and <kbd>esc</kbd> to close it.
-          </p>
-          <Typeahead
-            ref="typeahead"
-            options={options}
-            maxVisible={10}
-            customClasses={{
-              input: 'big-search-box'
-            }}
-            placeholder="Search all requests"
-            onOptionSelected={this.optionSelected}
-            searchOptions={this.searchOptions}
-            displayOption={this.renderOption}
-            formInputOption={this.getValueFromOption}
-            inputDisplayOption={this.getValueFromOption}
-          />
+            <p className="hidden-xs text-muted tip">
+              Protip: You can press <kbd>s</kbd> or <kbd>t</kbd> to open global search and <kbd>esc</kbd> to close it.
+            </p>
+            <Typeahead
+              ref="typeahead"
+              options={options}
+              maxVisible={10}
+              customClasses={{
+                input: 'big-search-box'
+              }}
+              placeholder="Search all requests"
+              onOptionSelected={this.optionSelected}
+              searchOptions={this.searchOptions}
+              displayOption={this.renderOption}
+              formInputOption={this.getValueFromOption}
+              inputDisplayOption={this.getValueFromOption}
+            />
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
+    return null;
   }
 }
 
