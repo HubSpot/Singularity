@@ -14,7 +14,7 @@ class TaskSearchFilters extends React.Component {
     onSearch: React.PropTypes.func.isRequired,
     requestId: React.PropTypes.string,
     valid: React.PropTypes.bool,
-    fields: React.PropTypes.obj,
+    fields: React.PropTypes.object,
     resetForm: React.PropTypes.func
   }
 

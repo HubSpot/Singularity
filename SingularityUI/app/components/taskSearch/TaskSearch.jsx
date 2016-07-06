@@ -13,10 +13,10 @@ import Utils from '../../utils';
 class TaskSearch extends React.Component {
 
   static propTypes = {
-    requestId: React.PropTypes.string.isRequired,
+    requestId: React.PropTypes.string,
     fetchTaskHistory: React.PropTypes.func.isRequired,
-    request: React.PropTypes.obj,
-    taskHistory: React.PropTypes.obj
+    request: React.PropTypes.object,
+    taskHistory: React.PropTypes.array
   }
 
   constructor(props) {
