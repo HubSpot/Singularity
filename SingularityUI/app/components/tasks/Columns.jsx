@@ -115,28 +115,25 @@ export const Memory = (
   />
 );
 
-export const ActiveActions = (onTaskKill) => {
-  return (
-    <Column
-      label=""
-      id="actions"
-      key="actions"
-      className="actions-column"
-      cellData={
-        (rowData) => rowData
-      }
-      cellRender={(cellData) => {
-        return (
-          <div className="hidden-xs">
-            <a data-action="remove" onClick={() => onTaskKill(cellData.taskId.id)}><Glyphicon iconClass="remove" /></a>
-            <JSONButton className="inline" object={cellData}>
-              {'{ }'}
-            </JSONButton>
-          </div>
-        );}}
-    />
-  );
-};
+export const ActiveActions = (onTaskKill) =>
+  <Column
+    label=""
+    id="actions"
+    key="actions"
+    className="actions-column"
+    cellData={
+      (rowData) => rowData
+    }
+    cellRender={(cellData) =>
+      <div className="hidden-xs">
+        <a data-action="remove" onClick={() => onTaskKill(cellData.taskId.id)}><Glyphicon iconClass="remove" /></a>
+        <JSONButton className="inline" object={cellData}>
+          {'{ }'}
+        </JSONButton>
+      </div>
+    }
+  />
+;
 
 export const NextRun = (
   <Column
@@ -171,13 +168,11 @@ export const PendingType = (
     cellData={
       (rowData) => rowData.pendingTask.pendingTaskId.pendingType
     }
-    cellRender={(cellData) => {
-      return (
-        <div>
-          {Utils.humanizeText(cellData)}
-        </div>
-      );
-    }}
+    cellRender={(cellData) =>
+      <div>
+        {Utils.humanizeText(cellData)}
+      </div>
+    }
     sortable={true}
   />
 );
@@ -191,38 +186,32 @@ export const DeployId = (
       (rowData) => rowData.pendingTask.pendingTaskId
     }
     sortData={(cellData) => cellData.deployId}
-    cellRender={(cellData) => {
-      return (
-        <a href={`${config.appRoot}/request/${cellData.requestId}/deploy/${cellData.deployId}`}>{cellData.deployId}</a>
-      );
-    }}
+    cellRender={(cellData) =>
+      <a href={`${config.appRoot}/request/${cellData.requestId}/deploy/${cellData.deployId}`}>{cellData.deployId}</a>
+    }
     sortable={true}
   />
 );
 
-export const ScheduledActions = (onRunNow) => {
-  return (
-    <Column
-      label=""
-      id="actions"
-      key="actions"
-      className="actions-column"
-      cellData={
-        (rowData) => rowData
-      }
-      cellRender={(cellData) => {
-        return (
-          <div className="hidden-xs">
-            <a onClick={() => onRunNow(cellData.pendingTask.pendingTaskId.requestId)}><Glyphicon iconClass="flash" /></a>
-            <JSONButton className="inline" object={cellData}>
-              {'{ }'}
-            </JSONButton>
-          </div>
-        );
-      }}
-    />
-  );
-};
+export const ScheduledActions = (onRunNow) =>
+  <Column
+    label=""
+    id="actions"
+    key="actions"
+    className="actions-column"
+    cellData={
+      (rowData) => rowData
+    }
+    cellRender={(cellData) =>
+      <div className="hidden-xs">
+        <a onClick={() => onRunNow(cellData.pendingTask.pendingTaskId.requestId)}><Glyphicon iconClass="flash" /></a>
+        <JSONButton className="inline" object={cellData}>
+          {'{ }'}
+        </JSONButton>
+      </div>
+    }
+  />
+;
 
 export const ScheduledTaskId = (
   <Column
@@ -270,15 +259,13 @@ export const JSONAction = (
     cellData={
       (rowData) => rowData
     }
-    cellRender={(cellData) => {
-      return (
-        <div className="hidden-xs">
-          <JSONButton className="inline" object={cellData}>
-            {'{ }'}
-          </JSONButton>
-        </div>
-      );
-    }}
+    cellRender={(cellData) =>
+      <div className="hidden-xs">
+        <JSONButton className="inline" object={cellData}>
+          {'{ }'}
+        </JSONButton>
+      </div>
+    }
   />
 );
 
