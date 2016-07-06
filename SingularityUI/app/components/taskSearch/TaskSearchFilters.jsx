@@ -10,10 +10,18 @@ import Utils from '../../utils';
 
 class TaskSearchFilters extends React.Component {
 
+  static propTypes = {
+    onSearch: React.PropTypes.func.isRequired,
+    requestId: React.PropTypes.string,
+    valid: React.PropTypes.bool,
+    fields: React.PropTypes.obj,
+    resetForm: React.PropTypes.func
+  }
+
   handleSubmit(e) {
     e.preventDefault();
     if (this.props.valid) {
-      const result = _.mapObject(this.props.fields, (v, k) => v.value);
+      const result = _.mapObject(this.props.fields, (v) => v.value);
       this.props.onSearch(result);
     }
   }
@@ -42,32 +50,32 @@ class TaskSearchFilters extends React.Component {
         <form onSubmit={(...args) => this.handleSubmit(...args)}>
           <div className="row">
             <div className="form-group col-md-4">
-              <label for="requestId">Request ID</label>
+              <label htmlFor="requestId">Request ID</label>
               <input className="form-control" disabled={!!this.props.requestId} {...requestId} />
             </div>
             <div className="form-group col-md-4">
-              <label for="deployId">Deploy ID</label>
+              <label htmlFor="deployId">Deploy ID</label>
               <input className="form-control" {...deployId} />
             </div>
             <div className="form-group col-md-4">
-              <label for="host">Host</label>
+              <label htmlFor="host">Host</label>
               <input className="form-control" {...host} />
             </div>
           </div>
           <div className="row">
-            <div className={classNames("form-group col-md-4", {"has-error": startedAfter.error || startedBefore.error})}>
+            <div className={classNames('form-group col-md-4', {'has-error': startedAfter.error || startedBefore.error})}>
               <label className="control-label">Started Between</label>
               <div className="row">
                 <div className="col-md-6">
                   <DateTimeField defaultText="" maxDate={moment()} {...startedAfter} />
                 </div>
                 <div className="col-md-6">
-                  <DateTimeField defaultText="" minDate={moment(startedAfter.value ? parseInt(startedAfter.value) : moment(0))} maxDate={moment()} {...startedBefore} />
+                  <DateTimeField defaultText="" minDate={moment(startedAfter.value ? parseInt(startedAfter.value, 10) : moment(0))} maxDate={moment()} {...startedBefore} />
                 </div>
               </div>
               <span className="text-center help-block">{startedAfter.error || startedBefore.error}</span>
             </div><div className="form-group col-md-4">
-              <label for="lastTaskStatus">Last Task Status</label>
+              <label htmlFor="lastTaskStatus">Last Task Status</label>
               <ReduxSelect options={statusOptions} optionRenderer={this.renderStatusOptions} valueRenderer={this.renderStatusOptions} {...lastTaskStatus} />
             </div>
             <div className="col-md-4 text-right">
@@ -83,19 +91,19 @@ class TaskSearchFilters extends React.Component {
 }
 
 const validate = values => {
-  const errors = {}
-  if (values.dateStart && !moment(parseInt(values.dateStart)).isValid()) {
-    errors.dateStart = "Please enter a valid date";
+  const errors = {};
+  if (values.dateStart && !moment(parseInt(values.dateStart, 10)).isValid()) {
+    errors.dateStart = 'Please enter a valid date';
   }
-  if (values.dateEnd && !moment(parseInt(values.dateEnd)).isValid()) {
-    errors.dateEnd = "Please enter a valid date";
+  if (values.dateEnd && !moment(parseInt(values.dateEnd, 10)).isValid()) {
+    errors.dateEnd = 'Please enter a valid date';
   }
-  if (values.dateStart && values.dateEnd && parseInt(values.dateEnd) < parseInt(values.dateStart)) {
-    errors.dateEnd = "End date must be after start";
+  if (values.dateStart && values.dateEnd && parseInt(values.dateEnd, 10) < parseInt(values.dateStart, 10)) {
+    errors.dateEnd = 'End date must be after start';
   }
 
-  return errors
-}
+  return errors;
+};
 
 function mapStateToProps(state, ownProps) {
   return {
@@ -104,7 +112,7 @@ function mapStateToProps(state, ownProps) {
       dateStart: null,
       dateEnd: null
     }
-  }
+  };
 }
 
 export default reduxForm({

@@ -12,7 +12,12 @@ import Utils from '../../utils';
 
 class TaskSearch extends React.Component {
 
-  static TASKS_PER_PAGE = 10;
+  static propTypes = {
+    requestId: React.PropTypes.string.isRequired,
+    fetchTaskHistory: React.PropTypes.func.isRequired,
+    request: React.PropTypes.obj,
+    taskHistory: React.PropTypes.obj
+  }
 
   constructor(props) {
     super(props);
@@ -24,12 +29,14 @@ class TaskSearch extends React.Component {
       },
       disableNext: false,
       loading: false
-    }
+    };
   }
+
+  static TASKS_PER_PAGE = 10;
 
   setCount(count) {
     TaskSearch.TASKS_PER_PAGE = count;
-    const newFilter = _.extend({}, this.state.filter, {count: count, page: 1});
+    const newFilter = _.extend({}, this.state.filter, {count, page: 1});
     this.setState({
       filter: newFilter
     });
@@ -37,7 +44,7 @@ class TaskSearch extends React.Component {
   }
 
   handleSearch(filter) {
-    let newFilter = _.extend({}, this.state.filter, filter, {page: 1});
+    const newFilter = _.extend({}, this.state.filter, filter, {page: 1});
     this.setState({
       filter: newFilter,
       disableNext: false
@@ -46,7 +53,7 @@ class TaskSearch extends React.Component {
   }
 
   handlePage(page) {
-    let newFilter = _.extend({}, this.state.filter, {page});
+    const newFilter = _.extend({}, this.state.filter, {page});
     this.setState({
       loading: true
     });
@@ -103,14 +110,15 @@ class TaskSearch extends React.Component {
         <Breadcrumbs
           items={[
             {
-              label: "Request",
+              label: 'Request',
               text: this.props.request.request.id,
               link: `${config.appRoot}/request/${this.props.request.request.id}`
             }
           ]}
         />
-      )
+      );
     }
+    return null;
   }
 
   renderPageOptions() {
@@ -123,7 +131,8 @@ class TaskSearch extends React.Component {
           <a className={classNames({inactive: TaskSearch.TASKS_PER_PAGE === 25})} onClick={() => this.setCount(25)}>25</a>
         </span>
       );
-    }    
+    }
+    return null;
   }
 
   render() {
