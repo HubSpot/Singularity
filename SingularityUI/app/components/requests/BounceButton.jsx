@@ -4,27 +4,26 @@ import { Glyphicon } from 'react-bootstrap';
 
 import { getClickComponent } from '../common/modal/ModalWrapper';
 
-import ScaleModal from './ScaleModal';
+import BounceModal from './BounceModal';
 
-export default class ScaleButton extends Component {
+export default class BounceButton extends Component {
+
   static propTypes = {
     requestId: PropTypes.string.isRequired,
-    currentInstances: PropTypes.number,
     children: PropTypes.node
   };
 
   static defaultProps = {
-    children: <a><Glyphicon glyph="signal" /></a>
+    children: <a><Glyphicon glyph="refresh" /></a>
   };
 
   render() {
     return (
       <span>
         {getClickComponent(this)}
-        <ScaleModal
+        <BounceModal
           ref="modal"
           requestId={this.props.requestId}
-          currentInstances={this.props.currentInstances}
         />
       </span>
     );

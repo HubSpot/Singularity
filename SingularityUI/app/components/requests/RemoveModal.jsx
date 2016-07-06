@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 
 import { RemoveRequest } from '../../actions/api/requests';
 
-import FormModal from '../common/FormModal';
+import FormModal from '../common/modal/FormModal';
 
 class RemoveModal extends Component {
   static propTypes = {

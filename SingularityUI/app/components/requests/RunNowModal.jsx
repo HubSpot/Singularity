@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { RunRequest } from '../../actions/api/requests';
 
 import TaskLauncher from '../common/TaskLauncher';
-import FormModal from '../common/FormModal';
+import FormModal from '../common/modal/FormModal';
 
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 
@@ -38,7 +38,7 @@ class RunNowModal extends Component {
 
   render() {
     return (
-      <div>
+      <span>
         <TaskLauncher
           ref="taskLauncher"
         />
@@ -76,7 +76,7 @@ class RunNowModal extends Component {
             <pre>{this.props.requestId}</pre>
           </span>
         </FormModal>
-      </div>
+      </span>
     );
   }
 }

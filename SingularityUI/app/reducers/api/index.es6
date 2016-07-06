@@ -29,7 +29,9 @@ import {
   FetchRequest,
   SaveRequest,
   RemoveRequest,
+  PauseRequest,
   UnpauseRequest,
+  ExitRequestCooldown,
   FetchRequestsInState
 } from '../../actions/api/requests';
 
@@ -69,7 +71,7 @@ const deploy = buildApiActionReducer(FetchDeployForRequest);
 const deploys = buildApiActionReducer(FetchPendingDeploys, []);
 const saveDeploy = buildApiActionReducer(SaveDeploy);
 const activeTasksForDeploy = buildApiActionReducer(FetchActiveTasksForDeploy);
-const activeTasksForRequest = buildKeyedApiActionReducer(FetchActiveTasksForRequest);
+const activeTasksForRequest = buildKeyedApiActionReducer(FetchActiveTasksForRequest, []);
 const taskHistoryForDeploy = buildApiActionReducer(FetchTaskHistoryForDeploy);
 const taskCleanups = buildApiActionReducer(FetchTaskCleanups, []);
 const taskFiles = buildKeyedApiActionReducer(FetchTaskFiles, []);

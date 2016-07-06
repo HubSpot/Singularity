@@ -1,23 +1,20 @@
 import React from 'react';
 import classNames from 'classnames';
-import Utils from '../../../utils';
 
 const DropDown = React.createClass({
 
   getValue(element) {
     if (typeof element === 'object') {
       return element.value;
-    } else {
-      return element;
     }
+    return element;
   },
 
   getUserReadable(element) {
     if (typeof element === 'object') {
       return element.user;
-    } else {
-      return element;
     }
+    return element;
   },
 
   dropDownOpts() {

@@ -3,9 +3,27 @@ import classNames from 'classnames';
 
 import { Modal, Button } from 'react-bootstrap';
 import TagsInput from 'react-tagsinput';
-import Duration from './formItems/Duration';
+import Duration from '../formItems/Duration';
 
 export default class FormModal extends React.Component {
+  constructor(props) {
+    super(props);
+    const formState = {};
+    _.each(props.formElements, (e) => {
+      formState[e.name] = e.defaultValue && e.defaultValue.toString();
+    });
+
+    this.state = {
+      visible: false,
+      formState,
+      errors: {}
+    };
+
+    this.hide = this.hide.bind(this);
+    this.show = this.show.bind(this);
+    this.confirm = this.confirm.bind(this);
+  }
+
   static INPUT_TYPES = {
     BOOLEAN: 'BOOLEAN',
     STRING: 'STRING',
@@ -27,22 +45,6 @@ export default class FormModal extends React.Component {
     return null;
   };
 
-  constructor(props) {
-    super(props);
-    const formState = {};
-    _.each(props.formElements, (e) => {
-      formState[e.name] = e.defaultValue && e.defaultValue.toString();
-    });
-    this.state = {
-      visible: false,
-      formState,
-      errors: {}
-    };
-
-    this.hide = this.hide.bind(this);
-    this.show = this.show.bind(this);
-    this.confirm = this.confirm.bind(this);
-  }
 
   hide() {
     this.setState({
@@ -116,7 +118,8 @@ export default class FormModal extends React.Component {
   renderForm() {
     const inputs = this.props.formElements.map((e) => {
       const error = this.state.errors[e.name];
-      const help = error && <span className="help-block">{error}</span>;
+      const errorBlock = error && <span className="help-block">{error}</span>;
+      const help = e.help && <span className="help-block">{e.help}</span>;
 
       switch (e.type) {
 
@@ -124,7 +127,7 @@ export default class FormModal extends React.Component {
           return (
             <FormModal.FormItem element={e} formState={this.state.formState} key={e.name}>
               <div className={classNames('form-group', {'has-error': !!error})}>
-                <label className="control-label" htmlFor={e.name}>
+                <label className="control-label">
                   <input
                     type="checkbox"
                     name={e.name}
@@ -132,6 +135,7 @@ export default class FormModal extends React.Component {
                     onChange={(event) => this.handleFormChange(e.name, event.target.checked)}
                   /> {e.label}
                 </label>
+                {errorBlock}
                 {help}
               </div>
             </FormModal.FormItem>
@@ -148,6 +152,7 @@ export default class FormModal extends React.Component {
                   value={this.state.formState[e.name] || ''}
                   onChange={(event) => this.handleFormChange(e.name, event.target.value)}
                 />
+                {errorBlock}
                 {help}
               </div>
             </FormModal.FormItem>
@@ -206,6 +211,7 @@ export default class FormModal extends React.Component {
                   value={this.state.formState[e.name] || ''}
                   onChange={(event) => this.handleFormChange(e.name, event.target.value)}
                 />
+                {errorBlock}
                 {help}
               </div>
             </FormModal.FormItem>
@@ -220,6 +226,7 @@ export default class FormModal extends React.Component {
                   value={this.state.formState[e.name] || 0}
                   onChange={(value) => this.handleFormChange(e.name, value)}
                 />
+                {errorBlock}
                 {help}
               </div>
             </FormModal.FormItem>

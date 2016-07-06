@@ -4,27 +4,26 @@ import { Glyphicon } from 'react-bootstrap';
 
 import { getClickComponent } from '../common/modal/ModalWrapper';
 
-import ScaleModal from './ScaleModal';
+import ExitCooldownModal from './ExitCooldownModal';
 
-export default class ScaleButton extends Component {
+export default class ExitCooldownButton extends Component {
+
   static propTypes = {
     requestId: PropTypes.string.isRequired,
-    currentInstances: PropTypes.number,
     children: PropTypes.node
   };
 
   static defaultProps = {
-    children: <a><Glyphicon glyph="signal" /></a>
+    children: <a><Glyphicon glyph="ice-lolly-tasted" /></a>
   };
 
   render() {
     return (
       <span>
         {getClickComponent(this)}
-        <ScaleModal
+        <ExitCooldownModal
           ref="modal"
           requestId={this.props.requestId}
-          currentInstances={this.props.currentInstances}
         />
       </span>
     );

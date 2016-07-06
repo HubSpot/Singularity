@@ -13,20 +13,15 @@ class RequestDetailController extends Controller {
 
     this.title(this.requestId);
 
-    this.refresh().then(() => {
-      this.setView(new RequestDetailView({store, requestId}));
-      app.showView(this.view);
-    });
+    this.refresh();
+    this.setView(new RequestDetailView({store, requestId}));
+    app.showView(this.view);
   }
 
   refresh() {
-    const requestPromise = this.store.dispatch(FetchRequest.trigger(this.requestId));
-    const activeTasksPromise = this.store.dispatch(FetchActiveTasksForRequest.trigger(this.requestId));
-    const taskCleanupsPromise = this.store.dispatch(FetchTaskCleanups.trigger());
-
-    const promises = [requestPromise, activeTasksPromise, taskCleanupsPromise];
-
-    return Promise.all(promises);
+    this.store.dispatch(FetchRequest.trigger(this.requestId));
+    this.store.dispatch(FetchActiveTasksForRequest.trigger(this.requestId));
+    this.store.dispatch(FetchTaskCleanups.trigger());
   }
 }
 

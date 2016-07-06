@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 
 import { KillTask } from '../../actions/api/tasks';
 
-import FormModal from '../common/FormModal';
+import FormModal from '../common/modal/FormModal';
 
 class KillTaskModal extends Component {
   static propTypes = {

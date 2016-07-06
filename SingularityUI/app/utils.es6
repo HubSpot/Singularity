@@ -437,6 +437,16 @@ const Utils = {
     return defaultValue;
   },
 
+  api: {
+    isFirstLoad: (api) => {
+      return !api || (
+        api.isFetching &&
+        !api.error &&
+        !api.receivedAt
+      );
+    }
+  },
+
   request: {
     // all of these expect a RequestParent object
     LONG_RUNNING_TYPES: new Set(['WORKER', 'SERVICE']),
@@ -462,6 +472,28 @@ const Utils = {
       return new Set(['ACTIVE', 'SYSTEM_COOLDOWN']).has(r.state)
         && Utils.request.hasActiveDeploy(r)
         && Utils.request.isLongRunning(r);
+    },
+    instanceBreakdown: (activeTasksForRequest) => {
+      const taskStates = {
+        TASK_LAUNCHED: 0,
+        TASK_STAGING: 0,
+        TASK_STARTING: 0,
+        TASK_RUNNING: 0,
+        TASK_CLEANING: 0,
+        TASK_KILLING: 0,
+        TASK_FINISHED: 0,
+        TASK_FAILED: 0,
+        TASK_KILLED: 0,
+        TASK_LOST: 0,
+        TASK_LOST_WHILE_DOWN: 0,
+        TASK_ERROR: 0
+      };
+
+      activeTasksForRequest.forEach((t) => {
+        taskStates[t.lastTaskState] += (taskStates[t.lastTaskState] || 0) + 1;
+      });
+
+      return taskStates;
     },
     // other
     canDisableHealthchecks: (r) => {

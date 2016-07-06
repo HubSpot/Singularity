@@ -6,7 +6,7 @@ import {
   BounceRequest
 } from '../../actions/api/requests';
 
-import FormModal from '../common/FormModal';
+import FormModal from '../common/modal/FormModal';
 
 class ScaleModal extends Component {
   static propTypes = {

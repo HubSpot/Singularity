@@ -4,27 +4,28 @@ import { Glyphicon } from 'react-bootstrap';
 
 import { getClickComponent } from '../common/modal/ModalWrapper';
 
-import ScaleModal from './ScaleModal';
+import PauseModal from './PauseModal';
 
-export default class ScaleButton extends Component {
+export default class PauseButton extends Component {
+
   static propTypes = {
     requestId: PropTypes.string.isRequired,
-    currentInstances: PropTypes.number,
+    isScheduled: PropTypes.bool.isRequired,
     children: PropTypes.node
   };
 
   static defaultProps = {
-    children: <a><Glyphicon glyph="signal" /></a>
+    children: <a><Glyphicon glyph="play" /></a>
   };
 
   render() {
     return (
       <span>
         {getClickComponent(this)}
-        <ScaleModal
+        <PauseModal
           ref="modal"
           requestId={this.props.requestId}
-          currentInstances={this.props.currentInstances}
+          isScheduled={this.props.isScheduled}
         />
       </span>
     );

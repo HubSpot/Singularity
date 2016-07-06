@@ -1,13 +1,24 @@
 import React, { PropTypes } from 'react';
+import { connect } from 'react-redux';
+
 import { Button } from 'react-bootstrap';
 
-import JSONButton from '../common/JSONButton';
+import JSONButton from '../../common/JSONButton';
 
-import RemoveButton from '../requests/RemoveButton';
+import RunNowButton from '../../requests/RunNowButton';
+import RemoveButton from '../../requests/RemoveButton';
+import PauseButton from '../../requests/PauseButton';
+import UnpauseButton from '../../requests/UnpauseButton';
+import BounceButton from '../../requests/BounceButton';
+import ScaleButton from '../../requests/ScaleButton';
+import ExitCooldownButton from '../../requests/ExitCooldownButton';
 
-import Utils from '../../utils';
+import Utils from '../../../utils';
 
 const RequestActionButtons = ({requestParent}) => {
+  if (!requestParent || !requestParent.request) {
+    return null;
+  }
   const {request, state} = requestParent;
 
   let maybeNewDeployButton;
@@ -22,27 +33,33 @@ const RequestActionButtons = ({requestParent}) => {
   let maybeRunNowButton;
   if (Utils.request.canBeRunNow(requestParent)) {
     maybeRunNowButton = (
-      <Button bsStyle="primary">
-        Run now
-      </Button>
+      <RunNowButton requestId={request.id}>
+        <Button bsStyle="primary">
+          Run now
+        </Button>
+      </RunNowButton>
     );
   }
 
   let maybeExitCooldownButton;
   if (state === 'SYSTEM_COOLDOWN') {
     maybeExitCooldownButton = (
-      <Button bsStyle="primary">
-        Exit Cooldown
-      </Button>
+      <ExitCooldownButton requestId={request.id}>
+        <Button bsStyle="primary">
+          Exit Cooldown
+        </Button>
+      </ExitCooldownButton>
     );
   }
 
   let maybeScaleButton;
   if (Utils.request.canBeScaled(requestParent)) {
     maybeScaleButton = (
-      <Button bsStyle="primary" disabled={Utils.request.scaleDisabled(requestParent)}>
-        Scale
-      </Button>
+      <ScaleButton requestId={request.id} currentInstances={request.instances}>
+        <Button bsStyle="primary" disabled={Utils.request.scaleDisabled(requestParent)}>
+          Scale
+        </Button>
+      </ScaleButton>
     );
   }
 
@@ -52,24 +69,30 @@ const RequestActionButtons = ({requestParent}) => {
       // make sure the action removes the expiring pause
     }
     togglePauseButton = (
-      <Button bsStyle="primary">
-        Unpause
-      </Button>
+      <UnpauseButton requestId={request.id}>
+        <Button bsStyle="primary">
+          Unpause
+        </Button>
+      </UnpauseButton>
     );
   } else {
     togglePauseButton = (
-      <Button bsStyle="primary" disabled={Utils.request.pauseDisabled(requestParent)}>
-        Pause
-      </Button>
+      <PauseButton requestId={request.id} isScheduled={request.requestType === 'SCHEDULED'}>
+        <Button bsStyle="primary" disabled={Utils.request.pauseDisabled(requestParent)}>
+          Pause
+        </Button>
+      </PauseButton>
     );
   }
 
   let maybeBounceButton;
   if (Utils.request.canBeBounced(requestParent)) {
     maybeBounceButton = (
-      <Button bsStyle="primary" disabled={Utils.request.bounceDisabled(requestParent)}>
-        Bounce
-      </Button>
+      <BounceButton requestId={request.id}>
+        <Button bsStyle="primary" disabled={Utils.request.bounceDisabled(requestParent)}>
+          Bounce
+        </Button>
+      </BounceButton>
     );
   }
 
@@ -101,8 +124,10 @@ const RequestActionButtons = ({requestParent}) => {
 
   let removeButton;
   removeButton = (
-    <RemoveButton className="btn btn-danger" requestId={request.id}>
-      Remove
+    <RemoveButton requestId={request.id}>
+      <Button bsStyle="danger">
+        Remove
+      </Button>
     </RemoveButton>
   );
 
@@ -123,7 +148,14 @@ const RequestActionButtons = ({requestParent}) => {
 };
 
 RequestActionButtons.propTypes = {
-  requestParent: PropTypes.object.isRequired
+  requestId: PropTypes.string.isRequired,
+  requestParent: PropTypes.object
 };
 
-export default RequestActionButtons;
+const mapStateToProps = (state, ownProps) => ({
+  requestParent: Utils.maybe(state.api.request, [ownProps.requestId, 'data'])
+});
+
+export default connect(
+  mapStateToProps
+)(RequestActionButtons);
