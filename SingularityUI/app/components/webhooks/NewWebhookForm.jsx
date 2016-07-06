@@ -1,14 +1,15 @@
 import React, {PropTypes} from 'react';
 import Utils from '../../utils';
 import classNames from 'classnames';
-import FormField from '../common/formItems/FormField';
+import TextFormGroup from '../common/formItems/formGroups/TextFormGroup';
 
 const NewWebhookForm = React.createClass({
   propTypes: {
     setType: PropTypes.func.isRequired,
     setUri: PropTypes.func.isRequired,
     getErrors: PropTypes.func.isRequired,
-    webhookTypes: PropTypes.arrayOf(PropTypes.string).isRequired
+    webhookTypes: PropTypes.arrayOf(PropTypes.string).isRequired,
+    validateUri: PropTypes.func.isRequired
   },
 
   getInitialState() {
@@ -64,19 +65,14 @@ const NewWebhookForm = React.createClass({
           <br />
           {this.buttons()}
         </div>
-        <div className="form-group">
-          <label>URI</label>
-          <FormField
-            id = "uri"
-            prop = {{
-              placeholder: 'https://www.example.com/path/to/webhook',
-              inputType: 'text',
-              updateFn: this.updateUri,
-              value: this.state.uri,
-              required: true
-            }}
-          />
-        </div>
+        <TextFormGroup
+          id="uri"
+          onChange={event => this.updateUri(event)}
+          value={this.state.uri}
+          label="URI"
+          required={true}
+          feedback={this.state.uri && this.props.validateUri(this.state.uri) && 'SUCCESS' || 'ERROR'}
+        />
       </div>
     );
   }

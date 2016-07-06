@@ -124,6 +124,7 @@ const Webhooks = React.createClass({
           ['getErrors']: () => this.errors,
           'webhookTypes': this.webhookTypes,
           ['setType']: (selected) => { this.type = selected; },
+          'validateUri': this.validateInput,
           ['setUri']: (uri) => { this.uri = uri; } }), $('.new-webhook').get(0));
       },
       beforeClose: () => {
