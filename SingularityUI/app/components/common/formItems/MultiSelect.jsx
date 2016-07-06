@@ -13,19 +13,25 @@ const MultiSelect = (props) => {
       }
     }
     if (!cleansedValueToAdd || props.value.indexOf(cleansedValueToAdd) !== -1) {
-      return;
+      return false;
     }
-    if (props.options && !props.options.filter(option => option.value === cleansedValueToAdd)) {
-      return;
+    if (_.find(props.value, option => option.value === cleansedValueToAdd)) {
+      return false;
+    }
+    const chosenOption = _.find(props.options, option => option.value === cleansedValueToAdd);
+    if (!chosenOption) {
+      return false;
     }
     const newValue = props.value.slice() || [];
-    newValue.push(cleansedValueToAdd);
+    newValue.push(chosenOption);
     props.onChange(newValue);
+    return true;
   };
   const checkInputChange = (value) => {
-    if (props.splits && props.splits.indexOf(value.slice(-1)) !== -1) {
-      addNewOption(value);
+    if (props.splits && props.splits.indexOf(value.slice(-1)) !== -1 && addNewOption(value)) { // Side effect!
+      return '';
     }
+    return value;
   };
   return (
     <Select
@@ -33,7 +39,7 @@ const MultiSelect = (props) => {
       onChange={ props.onChange }
       onInputChange={ value => checkInputChange(value) }
       value={ props.value }
-      options={ props.options || [{ label: null, value: null}] }
+      options={ props.options }
       onBlurResetsInput={ false }
       multi={ true }
       onBlur={ event => addNewOption(event.target.value) }
@@ -52,7 +58,7 @@ MultiSelect.propTypes = {
   options: PropTypes.arrayOf(PropTypes.shape({
     label: PropTypes.string,
     value: PropTypes.string
-  })),
+  })).isRequired,
   onChange: PropTypes.func.isRequired,
   placeholder: PropTypes.string,
   allowCreate: PropTypes.bool,
