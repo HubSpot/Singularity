@@ -7,7 +7,7 @@ import Glyphicon from 'react-bootstrap/lib/Glyphicon';
 import ModalButton from './ModalButton';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
-import { FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSlave } from '../../actions/api/slaves';
+import { FetchSlaves, FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSlave } from '../../actions/api/slaves';
 
 function __in__(needle, haystack) {
   return haystack.indexOf(needle) >= 0;
@@ -20,9 +20,15 @@ class Slaves extends React.Component {
     decommissionSlave: PropTypes.func.isRequired,
     removeSlave: PropTypes.func.isRequired,
     reactivateSlave: PropTypes.func.isRequired,
+    clear: PropTypes.func.isRequired,
+    error: PropTypes.string,
     slaves: PropTypes.arrayOf(PropTypes.shape({
       state: PropTypes.string
     }))
+  }
+
+  componentWillUnmount() {
+    this.props.clear();
   }
 
   showUser(slave) {
@@ -66,7 +72,7 @@ class Slaves extends React.Component {
       <ModalButton
         buttonChildren={<Glyphicon glyph="new-window" />}
         action="Reactivate Slave"
-        onConfirm={(data) => this.props.reactivateSlave(slave.id, data.message)}
+        onConfirm={(data) => this.props.clear().then(() => this.props.reactivateSlave(slave, data.message))}
         tooltipText={`Reactivate ${slave.id}`}>
         <p>Are you sure you want to cancel decommission and reactivate this slave??</p>
         <pre>{slave.id}</pre>
@@ -80,7 +86,7 @@ class Slaves extends React.Component {
       <ModalButton
         buttonChildren={<Glyphicon glyph="stop" />}
         action="Freeze Slave"
-        onConfirm={(data) => this.props.freezeSlave(slave.id, data.message)}
+        onConfirm={(data) => this.props.clear().then(() => this.props.freezeSlave(slave, data.message))}
         tooltipText={`Freeze ${slave.id}`}>
         <p>Are you sure you want to freeze this slave?</p>
         <pre>{slave.id}</pre>
@@ -95,11 +101,13 @@ class Slaves extends React.Component {
         <ModalButton
           buttonChildren={<Glyphicon glyph="trash" />}
           action="Decommission Slave"
-          onConfirm={(data) => this.props.decommissionSlave(slave.id, data.message)}
+          onConfirm={(data) => this.props.clear().then(() => this.props.decommissionSlave(slave, data.message))}
           tooltipText={`Decommission ${slave.id}`}>
           <p>Are you sure you want to decommission this slave?</p>
           <pre>{slave.id}</pre>
-          <p>Decommissioning a slave causes all tasks currently running on it to be rescheduled and executed elsewhere, as new tasks will no longer consider the slave with id <code>{slave.id}</code> a valid target for execution. This process may take time as replacement tasks must be considered healthy before old tasks are killed.</p>
+          <p>Decommissioning a slave causes all tasks currently running on it to be rescheduled and executed elsewhere,
+          as new tasks will no longer consider the slave with id <code>{slave.id}</code> a valid target for execution.
+          This process may take time as replacement tasks must be considered healthy before old tasks are killed.</p>
         </ModalButton>
       );
     }
@@ -107,7 +115,7 @@ class Slaves extends React.Component {
       <ModalButton
         buttonChildren={<Glyphicon glyph="remove" />}
         action="Remove Slave"
-        onConfirm={(data) => this.props.removeSlave(slave.id, data.message)}
+        onConfirm={(data) => this.props.clear().then(() => this.props.removeSlave(slave, data.message))}
         tooltipText={`Remove ${slave.id}`}>
         <p>Are you sure you want to remove this slave?</p>
         <pre>{slave.id}</pre>
@@ -252,6 +260,7 @@ class Slaves extends React.Component {
     <MachinesPage
       header = "Slaves"
       states = {this.getStates()}
+      error = {this.props.error}
     />
     );
   }
@@ -263,18 +272,41 @@ Slaves.prototype.typeName = {
   'decommissioning': 'Decommissioned By'
 };
 
+function getErrorFromState(state) {
+  if (state.api.freezeSlave.error) {
+    return `Error freezing slave: ${ state.api.freezeSlave.error.message }`;
+  }
+  if (state.api.decommissionSlave.error) {
+    return `Error decommissioning slave: ${ state.api.decommissionSlave.error.message }`;
+  }
+  if (state.api.removeSlave.error) {
+    return `Error removing slave: ${ state.api.removeSlave.error.message }`;
+  }
+  if (state.api.reactivateSlave.error) {
+    return `Error reactivating slave: ${ state.api.reactivateSlave.error.message }`;
+  }
+  return null;
+}
+
 function mapStateToProps(state) {
   return {
-    slaves: state.api.slaves.data
+    slaves: state.api.slaves.data,
+    error: getErrorFromState(state)
   };
 }
 
 function mapDispatchToProps(dispatch) {
   return {
-    freezeSlave: (slave, message) => { dispatch(FreezeSlave.trigger(slave.id, message)); },
-    decommissionSlave: (slave, message) => { dispatch(DecommissionSlave.trigger(slave.id, message)); },
-    removeSlave: (slave, message) => { dispatch(RemoveSlave.trigger(slave.id, message)); },
-    reactivateSlave: (slave, message) => { dispatch(ReactivateSlave.trigger(slave.id, message)); }
+    freezeSlave: (slave, message) => { dispatch(FreezeSlave.trigger(slave.id, message)).then(dispatch(FetchSlaves.trigger())); },
+    decommissionSlave: (slave, message) => { dispatch(DecommissionSlave.trigger(slave.id, message)).then(dispatch(FetchSlaves.trigger())); },
+    removeSlave: (slave, message) => { dispatch(RemoveSlave.trigger(slave.id, message)).then(dispatch(FetchSlaves.trigger())); },
+    reactivateSlave: (slave, message) => { dispatch(ReactivateSlave.trigger(slave.id, message)).then(dispatch(FetchSlaves.trigger())); },
+    clear: () => Promise.all([
+      dispatch(FreezeSlave.clear()),
+      dispatch(DecommissionSlave.clear()),
+      dispatch(RemoveSlave.clear()),
+      dispatch(ReactivateSlave.clear())
+    ])
   };
 }
 

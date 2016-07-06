@@ -34,13 +34,13 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
   }
 
   function clearData() {
-    return function (dispatch) {
+    return (dispatch) => {
       dispatch(clear());
     };
   }
 
   function trigger(...args) {
-    return function (dispatch) {
+    return (dispatch) => {
       let key;
       if (keyFunc) {
         key = keyFunc(...args);
@@ -52,6 +52,9 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
       return fetch(config.apiRoot + options.url, _.extend({credentials: 'include'}, _.omit(options, 'url')))
         .then(response => {
           apiResponse = response;
+          if (response.status === 204) {
+            return Promise.resolve();
+          }
           if (response.headers.get('Content-Type') === 'application/json') {
             return response.json();
           }
@@ -60,14 +63,13 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
         .then((data) => {
           if (apiResponse.status >= 200 && apiResponse.status < 300) {
             return dispatch(success(data, key));
-          } else {
-            return dispatch(error(data, key));
           }
           if (data.message) {
             return dispatch(error({message: data.message}, key));
           }
           return dispatch(error({message: data}, key));
         })
+        .catch((ex) => dispatch(error(ex, key)));
     };
   }
 

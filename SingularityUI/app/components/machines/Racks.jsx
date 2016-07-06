@@ -2,7 +2,6 @@ import React, {PropTypes} from 'react';
 import MachinesPage from './MachinesPage';
 import PlainText from '../common/atomicDisplayItems/PlainText';
 import TimeStamp from '../common/atomicDisplayItems/TimeStamp';
-import Link from '../common/atomicDisplayItems/Link';
 import Glyphicon from 'react-bootstrap/lib/Glyphicon';
 import ModalButton from './ModalButton';
 import Utils from '../../utils';
@@ -21,7 +20,13 @@ const Racks = React.createClass({
     })),
     decommissionRack: PropTypes.func.isRequired,
     removeRack: PropTypes.func.isRequired,
-    reactivateRack: PropTypes.func.isRequired
+    reactivateRack: PropTypes.func.isRequired,
+    clear: PropTypes.func.isRequired,
+    error: PropTypes.string
+  },
+
+  componentWillUnmount() {
+    this.props.clear();
   },
 
   typeName: {
@@ -56,27 +61,12 @@ const Racks = React.createClass({
     return heads;
   },
 
-  promptReactivate(event, rackModel) {
-    event.preventDefault();
-    return rackModel.promptReactivate(() => this.refresh());
-  },
-
-  promptDecommission(event, rackModel) {
-    event.preventDefault();
-    return rackModel.promptDecommission(() => this.refresh());
-  },
-
-  promptRemove(event, rackModel) {
-    event.preventDefault();
-    return rackModel.promptRemove(() => this.refresh());
-  },
-
   getMaybeReactivateButton(rack) {
     return (__in__(rack.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&
       <ModalButton
         buttonChildren={<Glyphicon glyph="new-window" />}
         action="Reactivate Rack"
-        onConfirm={(data) => this.props.reactivateRack(rack.id, data.message)}
+        onConfirm={(data) => this.props.clear().then(() => this.props.reactivateRack(rack, data.message))}
         tooltipText={`Reactivate ${rack.id}`}>
         <p>Are you sure you want to cancel decommission and reactivate this rack??</p>
         <pre>{rack.id}</pre>
@@ -91,12 +81,14 @@ const Racks = React.createClass({
         <ModalButton
           buttonChildren={<Glyphicon glyph="trash" />}
           action="Decommission Rack"
-          onConfirm={(data) => this.props.decommissionRack(rack.id, data.message)}
+          onConfirm={(data) => this.props.clear().then(() => this.props.decommissionRack(rack, data.message))}
           tooltipText={`Decommission ${rack.id}`}>
           <p>Are you sure you want to decommission this rack?</p>
           <pre>{rack.id}</pre>
           <p>
-            Decommissioning a rack causes all tasks currently running on it to be rescheduled and executed elsewhere, as new tasks will no longer consider the rack with id <code>{rack.id}</code> a valid target for execution. This process may take time as replacement tasks must be considered healthy before old tasks are killed.
+            Decommissioning a rack causes all tasks currently running on it to be rescheduled and executed elsewhere,
+            as new tasks will no longer consider the rack with id <code>{rack.id}</code> a valid target for execution.
+            This process may take time as replacement tasks must be considered healthy before old tasks are killed.
           </p>
         </ModalButton>
       );
@@ -105,7 +97,7 @@ const Racks = React.createClass({
       <ModalButton
         buttonChildren={<Glyphicon glyph="remove" />}
         action="Remove Rack"
-        onConfirm={(data) => this.props.removeRack(rack.id, data.message)}
+        onConfirm={(data) => this.props.clear().then(() => this.props.removeRack(rack, data.message))}
         tooltipText={`Remove ${rack.id}`}>
         <p>Are you sure you want to remove this rack??</p>
         <pre>{rack.id}</pre>
@@ -210,14 +202,29 @@ const Racks = React.createClass({
     <MachinesPage
       header = "Racks"
       states = {this.getStates()}
+      error = {this.props.error}
     />
     );
   }
 });
 
+function getErrorFromState(state) {
+  if (state.api.decommissionRack.error) {
+    return `Error decommissioning rack: ${ state.api.decommissionRack.error.message }`;
+  }
+  if (state.api.removeRack.error) {
+    return `Error removing rack: ${ state.api.removeRack.error.message }`;
+  }
+  if (state.api.reactivateRack.error) {
+    return `Error reactivating rack: ${ state.api.reactivateRack.error.message }`;
+  }
+  return null;
+}
+
 function mapStateToProps(state) {
   return {
-    racks: state.api.racks.data
+    racks: state.api.racks.data,
+    error: getErrorFromState(state)
   };
 }
 
@@ -225,7 +232,12 @@ function mapDispatchToProps(dispatch) {
   return {
     decommissionRack: (rack, message) => { dispatch(DecommissionRack.trigger(rack.id, message)); },
     removeRack: (rack, message) => { dispatch(RemoveRack.trigger(rack.id, message)); },
-    reactivateRack: (rack, message) => { dispatch(ReactivateRack.trigger(rack.id, message)); }
+    reactivateRack: (rack, message) => { dispatch(ReactivateRack.trigger(rack.id, message)); },
+    clear: () => Promise.all([
+      dispatch(DecommissionRack.clear()),
+      dispatch(RemoveRack.clear()),
+      dispatch(ReactivateRack.clear())
+    ])
   };
 }
 

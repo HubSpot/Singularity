@@ -18,7 +18,7 @@ export const DecommissionSlave = buildJsonApiAction(
   'DECOMMISSION_SLAVE',
   'POST',
   (slaveId, message) => ({
-    url: `/slaves/slave/${slaveId}/decomission`,
+    url: `/slaves/slave/${slaveId}/decommission`,
     body: { message }
   })
 );

@@ -4,6 +4,7 @@ import OldTable from '../common/OldTable';
 const MachinesPage = React.createClass({
 
   propTypes: {
+    error: React.PropTypes.string,
     header: React.PropTypes.string.isRequired, // Eg. 'Slaves', 'Racks'
     states: React.PropTypes.arrayOf(React.PropTypes.shape({
       stateName: React.PropTypes.string.isRequired, // Eg. 'Active', 'Frozen', etc
@@ -44,9 +45,18 @@ const MachinesPage = React.createClass({
     );
   },
 
+  renderError() {
+    return (this.props.error &&
+      <p className="alert alert-danger">
+        {this.props.error}
+      </p>
+    );
+  },
+
   render() {
     return (
     <div>
+      {this.renderError()}
       <h1> {this.props.header} </h1>
       {this.props.states.map(this.renderState)}
     </div>

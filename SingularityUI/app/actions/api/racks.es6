@@ -9,7 +9,7 @@ export const FreezeRack = buildJsonApiAction(
   'FREEZE_RACK',
   'POST',
   (rackId, message) => ({
-    url: `/racks/${rackId}/freeze`,
+    url: `/racks/rack/${rackId}/freeze`,
     body: { message }
   })
 );
@@ -18,7 +18,7 @@ export const DecommissionRack = buildJsonApiAction(
   'DECOMMISSION_RACK',
   'POST',
   (rackId, message) => ({
-    url: `/racks/${rackId}/decommission`,
+    url: `/racks/rack/${rackId}/decommission`,
     body: { message }
   })
 );
@@ -27,7 +27,7 @@ export const RemoveRack = buildJsonApiAction(
   'REMOVE_RACK',
   'DELETE',
   (rackId, message) => ({
-    url: `/racks/${rackId}`,
+    url: `/racks/rack/${rackId}`,
     body: { message }
   })
 );
@@ -36,7 +36,7 @@ export const ReactivateRack = buildJsonApiAction(
   'ACTIVATE_RACK',
   'POST',
   (rackId, message) => ({
-    url: `/racks/${rackId}/activate`,
+    url: `/racks/rack/${rackId}/activate`,
     body: { message }
   })
 );
