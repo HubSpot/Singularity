@@ -48,7 +48,7 @@ export default class JSONButton extends Component {
         <a className={this.props.linkClassName} onClick={this.showJSON} alt="Show JSON">{this.props.children}</a>
         <Modal show={this.state.modalOpen} onHide={this.hideJSON} bsSize="large">
           <Modal.Body>
-            <div className="constrained-modal">
+            <div className="constrained-modal json-modal">
               <JSONTree
                 data={this.props.object}
                 shouldExpandNode={() => true}
