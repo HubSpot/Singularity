@@ -115,8 +115,7 @@ const Webhooks = React.createClass({
       afterOpen: () => {
         this.validateInput = input => {
           try {
-            new URL(input);
-            return true;
+            return new URL(input);
           } catch (err) {
             return false;
           }
