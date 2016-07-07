@@ -7,14 +7,14 @@ import { syncHistoryWithStore } from 'react-router-redux';
 import Application from './components/common/Application';
 import NotFound from './components/common/NotFound';
 
-const getRouter = (store) => {
+const AppRouter = (props) => {
   let history = useRouterHistory(createHistory)({
     basename: config.appRoot
   });
-  history = syncHistoryWithStore(history, store);
+  history = syncHistoryWithStore(history, props.store);
 
   return (
-    <Provider store={store}>
+    <Provider store={props.store}>
       <Router history={history}>
         <Route path="/" component={Application}>
           <IndexRoute component={NotFound} />
@@ -25,4 +25,8 @@ const getRouter = (store) => {
   );
 };
 
-export default getRouter;
+AppRouter.propTypes = {
+  store: React.PropTypes.object.isRequired
+};
+
+export default AppRouter;

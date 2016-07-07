@@ -1,6 +1,7 @@
+import React from 'react';
 import ReactDOM from 'react-dom';
 
-import getRouter from './router';
+import AppRouter from './router';
 
 import configureStore from 'store';
 import { FetchUser } from 'actions/api/auth';
@@ -37,7 +38,7 @@ class Application {
     $('.page-loader.fixed').hide();
 
     // Render the page content
-    ReactDOM.render(getRouter(this.store), this.page);
+    ReactDOM.render(<AppRouter store={this.store} />, this.page);
 
     // // set up router
     // this.router = new Router(this);
