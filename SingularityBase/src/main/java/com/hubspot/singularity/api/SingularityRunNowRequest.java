@@ -5,6 +5,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
+import com.hubspot.mesos.Resources;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityRunNowRequest {
@@ -13,14 +14,16 @@ public class SingularityRunNowRequest {
   private final Optional<String> runId;
   private final Optional<List<String>> commandLineArgs;
   private final Optional<Boolean> skipHealthchecks;
+  private final Optional<Resources> resources;
 
   @JsonCreator
   public SingularityRunNowRequest(@JsonProperty("message") Optional<String> message, @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
-      @JsonProperty("runId") Optional<String> runId, @JsonProperty("commandLineArgs") Optional<List<String>> commandLineArgs) {
+      @JsonProperty("runId") Optional<String> runId, @JsonProperty("commandLineArgs") Optional<List<String>> commandLineArgs, @JsonProperty("resources") Optional<Resources> resources) {
     this.message = message;
     this.commandLineArgs = commandLineArgs;
     this.runId = runId;
     this.skipHealthchecks = skipHealthchecks;
+    this.resources = resources;
   }
 
   @ApiModelProperty(required=false, value="A message to show to users about why this action was taken")
@@ -43,9 +46,14 @@ public class SingularityRunNowRequest {
     return skipHealthchecks;
   }
 
+  @ApiModelProperty(required=false, value="Override the resources from the active deploy for this run")
+  public Optional<Resources> getResources() {
+    return resources;
+  }
+
   @Override
   public String toString() {
-    return "SingularityRunNowRequest [message=" + message + ", runId=" + runId + ", commandLineArgs=" + commandLineArgs + ", skipHealthchecks=" + skipHealthchecks + "]";
+    return "SingularityRunNowRequest [message=" + message + ", runId=" + runId + ", commandLineArgs=" + commandLineArgs + ", skipHealthchecks=" + skipHealthchecks + ", resources=" + resources + "]";
   }
 
 }
