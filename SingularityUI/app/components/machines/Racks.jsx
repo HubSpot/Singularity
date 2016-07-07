@@ -4,6 +4,7 @@ import PlainText from '../common/atomicDisplayItems/PlainText';
 import TimeStamp from '../common/atomicDisplayItems/TimeStamp';
 import {Glyphicon} from 'react-bootstrap';
 import ModalButton from './ModalButton';
+import MessageElement from './MessageElement';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
 import { DecommissionRack, RemoveRack, ReactivateRack, FetchRacks } from '../../actions/api/racks';
@@ -67,7 +68,8 @@ const Racks = React.createClass({
         buttonChildren={<Glyphicon glyph="new-window" />}
         action="Reactivate Rack"
         onConfirm={(data) => this.props.reactivateRack(rack, data.message)}
-        tooltipText={`Reactivate ${rack.id}`}>
+        tooltipText={`Reactivate ${rack.id}`}
+        formElements={[MessageElement]}>
         <p>Are you sure you want to cancel decommission and reactivate this rack??</p>
         <pre>{rack.id}</pre>
         <p>Reactivating a rack will cancel the decommission without erasing the rack's history and move it back to the active state.</p>
@@ -82,7 +84,8 @@ const Racks = React.createClass({
           buttonChildren={<Glyphicon glyph="trash" />}
           action="Decommission Rack"
           onConfirm={(data) => this.props.decommissionRack(rack, data.message)}
-          tooltipText={`Decommission ${rack.id}`}>
+          tooltipText={`Decommission ${rack.id}`}
+          formElements={[MessageElement]}>
           <p>Are you sure you want to decommission this rack?</p>
           <pre>{rack.id}</pre>
           <p>
@@ -98,7 +101,8 @@ const Racks = React.createClass({
         buttonChildren={<Glyphicon glyph="remove" />}
         action="Remove Rack"
         onConfirm={(data) => this.props.removeRack(rack, data.message)}
-        tooltipText={`Remove ${rack.id}`}>
+        tooltipText={`Remove ${rack.id}`}
+        formElements={[MessageElement]}>
         <p>Are you sure you want to remove this rack??</p>
         <pre>{rack.id}</pre>
         <p>Removing a decommissioned rack will cause that rack to become active again if the mesos-rack process is still running.</p>

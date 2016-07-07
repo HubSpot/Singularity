@@ -5,6 +5,7 @@ import TimeStamp from '../common/atomicDisplayItems/TimeStamp';
 import Link from '../common/atomicDisplayItems/Link';
 import {Glyphicon} from 'react-bootstrap';
 import ModalButton from './ModalButton';
+import MessageElement from './MessageElement';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
 import { FetchSlaves, FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSlave } from '../../actions/api/slaves';
@@ -73,7 +74,8 @@ class Slaves extends React.Component {
         buttonChildren={<Glyphicon glyph="new-window" />}
         action="Reactivate Slave"
         onConfirm={(data) => this.props.reactivateSlave(slave, data.message)}
-        tooltipText={`Reactivate ${slave.id}`}>
+        tooltipText={`Reactivate ${slave.id}`}
+        formElements={[MessageElement]}>
         <p>Are you sure you want to cancel decommission and reactivate this slave??</p>
         <pre>{slave.id}</pre>
         <p>Reactivating a slave will cancel the decommission without erasing the slave's history and move it back to the active state.</p>
@@ -87,7 +89,8 @@ class Slaves extends React.Component {
         buttonChildren={<Glyphicon glyph="stop" />}
         action="Freeze Slave"
         onConfirm={(data) => this.props.freezeSlave(slave, data.message)}
-        tooltipText={`Freeze ${slave.id}`}>
+        tooltipText={`Freeze ${slave.id}`}
+        formElements={[MessageElement]}>
         <p>Are you sure you want to freeze this slave?</p>
         <pre>{slave.id}</pre>
         <p>Freezing a slave will prevent new tasks from being launched. Previously running tasks will be unaffected.</p>
@@ -102,7 +105,8 @@ class Slaves extends React.Component {
           buttonChildren={<Glyphicon glyph="trash" />}
           action="Decommission Slave"
           onConfirm={(data) => this.props.decommissionSlave(slave, data.message)}
-          tooltipText={`Decommission ${slave.id}`}>
+          tooltipText={`Decommission ${slave.id}`}
+          formElements={[MessageElement]}>
           <p>Are you sure you want to decommission this slave?</p>
           <pre>{slave.id}</pre>
           <p>Decommissioning a slave causes all tasks currently running on it to be rescheduled and executed elsewhere,
@@ -116,7 +120,8 @@ class Slaves extends React.Component {
         buttonChildren={<Glyphicon glyph="remove" />}
         action="Remove Slave"
         onConfirm={(data) => this.props.removeSlave(slave, data.message)}
-        tooltipText={`Remove ${slave.id}`}>
+        tooltipText={`Remove ${slave.id}`}
+        formElements={[MessageElement]}>
         <p>Are you sure you want to remove this slave?</p>
         <pre>{slave.id}</pre>
         {__in__(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&

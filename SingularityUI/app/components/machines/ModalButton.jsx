@@ -4,17 +4,13 @@ import {OverlayTrigger, Tooltip} from 'react-bootstrap';
 
 class ModalButton extends React.Component {
 
-  button() {
-    return <a onClick={() => this.refs.modal.show()} >{this.props.buttonChildren}</a>;
-  }
-
   buttonWithMaybeTooltip() {
     if (this.props.tooltipText) {
       return (
         <OverlayTrigger
           placement="top"
           overlay={<Tooltip id="overlay">{this.props.tooltipText}</Tooltip>}>
-          {this.button()}
+          <a onClick={() => this.refs.modal.show()} >{this.props.buttonChildren}</a>
         </OverlayTrigger>
       );
     }
@@ -30,13 +26,7 @@ class ModalButton extends React.Component {
           action={this.props.action}
           onConfirm={(data) => this.props.onConfirm(data)}
           buttonStyle="danger"
-          formElements={[
-            {
-              name: 'message',
-              type: FormModal.INPUT_TYPES.STRING,
-              label: 'Message (optional)'
-            }
-          ]}>
+          formElements={this.props.formElements}>
           {this.props.children}
         </FormModal>
       </span>
@@ -49,7 +39,12 @@ ModalButton.propTypes = {
   action: PropTypes.string.isRequired,
   onConfirm: PropTypes.func.isRequired,
   children: PropTypes.node.isRequired,
-  tooltipText: PropTypes.string
+  tooltipText: PropTypes.string,
+  formElements: PropTypes.arrayOf(PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    type: PropTypes.string.isRequired,
+    label: PropTypes.string
+  }))
 };
 
 export default ModalButton;
