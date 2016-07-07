@@ -273,16 +273,17 @@ Slaves.prototype.typeName = {
 };
 
 function getErrorFromState(state) {
-  if (state.api.freezeSlave.error) {
+  const { freezeSlave, decommissionSlave, removeSlave, reactivateSlave } = state.api;
+  if (freezeSlave.error) {
     return `Error freezing slave: ${ state.api.freezeSlave.error.message }`;
   }
-  if (state.api.decommissionSlave.error) {
+  if (decommissionSlave.error) {
     return `Error decommissioning slave: ${ state.api.decommissionSlave.error.message }`;
   }
-  if (state.api.removeSlave.error) {
+  if (removeSlave.error) {
     return `Error removing slave: ${ state.api.removeSlave.error.message }`;
   }
-  if (state.api.reactivateSlave.error) {
+  if (reactivateSlave.error) {
     return `Error reactivating slave: ${ state.api.reactivateSlave.error.message }`;
   }
   return null;

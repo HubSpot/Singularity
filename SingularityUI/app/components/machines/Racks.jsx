@@ -209,13 +209,14 @@ const Racks = React.createClass({
 });
 
 function getErrorFromState(state) {
-  if (state.api.decommissionRack.error) {
+  const { decommissionRack, removeRack, reactivateRack } = state.api;
+  if (decommissionRack.error) {
     return `Error decommissioning rack: ${ state.api.decommissionRack.error.message }`;
   }
-  if (state.api.removeRack.error) {
+  if (removeRack.error) {
     return `Error removing rack: ${ state.api.removeRack.error.message }`;
   }
-  if (state.api.reactivateRack.error) {
+  if (reactivateRack.error) {
     return `Error reactivating rack: ${ state.api.reactivateRack.error.message }`;
   }
   return null;
