@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import PageComponent from '../common/PageComponent';
+import rootComponent from '../../rootComponent';
 import { FetchSingularityStatus } from '../../actions/api/state';
 
 import HostStates from './HostStates';
@@ -10,15 +10,11 @@ import Link from '../common/atomicDisplayItems/Link';
 import TimeStamp from '../common/atomicDisplayItems/TimeStamp';
 import PlainText from '../common/atomicDisplayItems/PlainText';
 
-export default class StatusPage extends PageComponent {
+class StatusPage extends React.Component {
 
-  constructor() {
-    super();
-    this.title = 'Status';
-  }
-
-  refresh() {
-    this.props.fetchStatus();
+  static propTypes = {
+    fetchStatus: React.PropTypes.func.isRequired,
+    status: React.PropTypes.object
   }
 
   requestDetail(model) {
@@ -172,7 +168,7 @@ export default class StatusPage extends PageComponent {
             display: 'duration',
             prefix: 'Max Task Lag:'
           }}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 />
+          />
         </h4>
       );
     }
@@ -347,4 +343,8 @@ function mapStateToProps(state) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(StatusPage);
+function refresh(props) {
+  return props.fetchStatus();
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent('Status', refresh, StatusPage));

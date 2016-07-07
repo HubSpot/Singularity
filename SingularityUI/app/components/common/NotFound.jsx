@@ -1,12 +1,7 @@
 import React from 'react';
-import PageComponent from './PageComponent';
+import rootComponent from '../../rootComponent';
 
-class NotFound extends PageComponent {
-
-  constructor() {
-    super();
-    this.title = 'Not Found';
-  }
+class NotFound extends React.Component {
 
   render() {
     return (
@@ -28,4 +23,4 @@ NotFound.propTypes = {
   location: React.PropTypes.object
 };
 
-export default NotFound;
+export default rootComponent('Not Found', null, NotFound);

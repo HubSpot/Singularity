@@ -23,7 +23,7 @@ const Navigation = (props) => {
           <NavItem eventKey={2} active={fragment === 'status'} onClick={(e) => goTo(props.history, e, 'status')}>Status</NavItem>
           <NavItem eventKey={3} active={_.contains(['requests', 'request'], fragment)} onClick={(e) => goTo(props.history, e, 'requests')}>Requests</NavItem>
           <NavItem eventKey={4} active={_.contains(['tasks', 'task'], fragment)} onClick={(e) => goTo(props.history, e, 'tasks')}>Tasks</NavItem>
-          <NavDropdown eventKey={5} active={_.contains(['racks', 'slaves', 'webhooks'], fragment)} title="Admin">
+          <NavDropdown id="admin-dropdown" eventKey={5} active={_.contains(['racks', 'slaves', 'webhooks'], fragment)} title="Admin">
             <MenuItem eventKey={5.1} onClick={(e) => goTo(props.history, e, 'racks')}>Racks</MenuItem>
             <MenuItem eventKey={5.2} onClick={(e) => goTo(props.history, e, 'slaves')}>Slaves</MenuItem>
             <MenuItem eventKey={5.3} onClick={(e) => goTo(props.history, e, 'webhooks')}>Webhooks</MenuItem>
