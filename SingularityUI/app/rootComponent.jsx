@@ -4,7 +4,7 @@ const rootComponent = (title, refresh, Wrapped) => class extends React.Component
 
   constructor(props) {
     super(props);
-    _.bindAll(this, 'startRefreshInterval', 'stopRefreshInterval');
+    _.bindAll(this, 'handleBlur', 'handleFocus');
     this.state = {
       loading: typeof refresh === 'function'
     };
@@ -25,18 +25,26 @@ const rootComponent = (title, refresh, Wrapped) => class extends React.Component
     }
 
     this.startRefreshInterval();
-    window.addEventListener('blur', this.stopRefreshInterval);
-    window.addEventListener('focus', this.startRefreshInterval);
+    window.addEventListener('blur', this.handleBlur);
+    window.addEventListener('focus', this.handleFocus);
   }
 
   componentWillUnmount() {
     this.stopRefreshInterval();
-    window.removeEventListener('blur', this.stopRefreshInterval);
-    window.removeEventListener('focus', this.startRefreshInterval);
+    window.removeEventListener('blur', this.handleBlur);
+    window.removeEventListener('focus', this.handleFocus);
+  }
+
+  handleBlur() {
+    this.stopRefreshInterval();
+  }
+
+  handleFocus() {
+    refresh(this.props);
+    this.startRefreshInterval();
   }
 
   startRefreshInterval() {
-    refresh(this.props);
     this.refreshInterval = setInterval(() => refresh(this.props), config.globalRefreshInterval);
   }
 

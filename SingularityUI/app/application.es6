@@ -22,34 +22,6 @@ class Application {
     ReactDOM.render(<AppRouter store={this.store} />, document.getElementById('root'));
   }
 
-  handleBlur() {
-    this.blurred = true;
-    clearInterval(this.globalRefreshInterval);
-  }
-
-  handleFocus() {
-    this.blurred = false;
-    this.globalRefresh();
-    this.setRefreshInterval();
-  }
-
-  setRefreshInterval() {
-    clearInterval(this.globalRefreshInterval);
-    setInterval(this.globalRefresh, this.globalRefreshTime);
-  }
-
-  globalRefresh() {
-    if (localStorage.getItem('suppressRefresh') === 'true') {
-      return;
-    }
-
-    if (this.blurred) {
-      clearInterval(this.globalRefreshInterval);
-    } else {
-      this.currentController.refresh();
-    }
-  }
-
   caughtError() {
     this.caughtThisError = true;
   }
