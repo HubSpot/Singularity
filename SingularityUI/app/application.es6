@@ -1,23 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-
 import AppRouter from './router';
-
 import configureStore from 'store';
 import { FetchUser } from 'actions/api/auth';
-
-import Sortable from 'sortable';
 import Utils from './utils';
 
 class Application {
   initialize() {
-    this.globalRefresh = this.globalRefresh.bind(this);
-    this.handleBlur = this.handleBlur.bind(this);
-    this.handleFocus = this.handleFocus.bind(this);
     this.handleAjaxError = this.handleAjaxError.bind(this);
-
-    // set up views
-    // this.views = {};
 
     // set up Redux store
     this.store = configureStore();
@@ -25,45 +15,11 @@ class Application {
     // set up user
     this.store.dispatch(FetchUser.trigger());
 
-    // set up ajax error handling
-    this.unloading = false;
-    $(window).on('beforeunload', () => {
-      this.unloading = true;
-    });
-    $(document).on('ajaxError', this.handleAjaxError);
-
-    this.page = $('#root')[0];
-
     // hide loading animation
     $('.page-loader.fixed').hide();
 
     // Render the page content
-    ReactDOM.render(<AppRouter store={this.store} />, this.page);
-
-    // // set up router
-    // this.router = new Router(this);
-    //
-    // // set up Backbone history
-    // window.Backbone.history.start({
-    //   pushState: true,
-    //   root: this.getRootPath()
-    // });
-    //
-    // // wire up nav
-    // this.views.nav = new NavView;
-    // this.views.nav.render();
-    // $('body').prepend(this.views.nav.$el);
-    //
-    // // wire up global search
-    // this.views.globalSearch = new GlobalSearchView();
-    // this.views.globalSearch.render();
-    // $('body').append(this.views.globalSearch.$el);
-
-    // set up global refresh
-    // this.blurred = false;
-    // this.setRefreshInterval();
-    // $(window).on('blur', this.handleBlur);
-    // $(window).on('focus', this.handleFocus);
+    ReactDOM.render(<AppRouter store={this.store} />, document.getElementById('root'));
   }
 
   handleBlur() {
@@ -164,57 +120,6 @@ class Application {
       throw new Error('AJAX Error');
     }
   }
-
-  showPageLoader() {
-    return $('#page').html("<div class='page-loader centered cushy'></div>");
-  }
-
-  showFixedPageLoader() {
-    return $('#page').append("<div class='page-loader page-loader-fixed'></div>");
-  }
-
-  hideFixedPageLoader() {
-    return $('#page').find('.page-loader-fixed').remove();
-  }
-
-  bootstrapController(controller) {
-    this.currentController = controller;
-    return controller;
-  }
-
-  showView(view) {
-    window.dispatchEvent(new Event('viewChange'));
-    if (this.views.current) {
-      this.views.current.remove();
-    }
-    $(window).scrollTop(0);
-    this.views.current = view;
-    view.render();
-    if (this.page.children.length) {
-      this.page.replaceChild(view.el, this.page.children[0]);
-      return Sortable.init();
-    }
-    return this.page.appendChild(view.el);
-  }
-
-  getUsername() {
-    const state = this.store.getState();
-
-    if (state.api.user.receivedAt && state.api.user.data) {
-      return state.api.user.data.user.id;
-    }
-    return '';
-  }
-
-  getRootPath() {
-    const el = document.createElement('a');
-    el.href = config.appRoot || '/';
-    return el.pathname;
-  }
 }
-
-Application.prototype.globalRefreshInterval = void 0;
-
-Application.prototype.globalRefreshTime = 60000;
 
 export default new Application;
