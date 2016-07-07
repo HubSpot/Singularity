@@ -31,7 +31,7 @@ class Application {
     });
     $(document).on('ajaxError', this.handleAjaxError);
 
-    this.page = $('#page')[0];
+    this.page = $('#root')[0];
 
     // hide loading animation
     $('.page-loader.fixed').hide();

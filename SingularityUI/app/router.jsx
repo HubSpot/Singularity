@@ -4,7 +4,7 @@ import { Router, Route, IndexRoute, useRouterHistory } from 'react-router';
 import { createHistory } from 'history';
 import { syncHistoryWithStore } from 'react-router-redux';
 
-import Navigation from './components/common/Navigation';
+import Application from './components/common/Application';
 import NotFound from './components/common/NotFound';
 
 const getRouter = (store) => {
@@ -16,8 +16,8 @@ const getRouter = (store) => {
   return (
     <Provider store={store}>
       <Router history={history}>
-        <Route path="/" component={Navigation}>
-          <IndexRoute component={Navigation} />
+        <Route path="/" component={Application}>
+          <IndexRoute component={NotFound} />
           <Route path="*" component={NotFound} />
         </Route>
       </Router>

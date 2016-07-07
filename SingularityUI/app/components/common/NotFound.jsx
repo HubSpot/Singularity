@@ -1,7 +1,6 @@
 import React from 'react';
 
 const NotFound = (props) => {
-  console.log(404);
   return (
     <div>
       <div className="row text-center">
