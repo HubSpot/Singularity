@@ -273,8 +273,6 @@ public class SingularityMesosScheduler implements Scheduler {
 
         taskManager.createTaskAndDeletePendingTask(zkTask);
 
-        schedulerPriority.notifyTaskLaunched(task.getTaskId());
-
         stateCache.getActiveTaskIds().add(task.getTaskId());
         stateCache.getScheduledTasks().remove(taskRequest.getPendingTask());
 

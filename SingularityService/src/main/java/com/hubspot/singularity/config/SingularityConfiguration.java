@@ -268,6 +268,10 @@ public class SingularityConfiguration extends Configuration {
   @Min(0)
   private long checkPriorityKillsEveryMillis = TimeUnit.SECONDS.toMillis(30);
 
+  @Min(0)
+  @Max(5)
+  private double schedulerPriorityWeightFactor = 1.0;
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -1074,5 +1078,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setCheckPriorityKillsEveryMillis(long checkPriorityKillsEveryMillis) {
     this.checkPriorityKillsEveryMillis = checkPriorityKillsEveryMillis;
+  }
+
+  public double getSchedulerPriorityWeightFactor() {
+    return schedulerPriorityWeightFactor;
+  }
+
+  public void setSchedulerPriorityWeightFactor(double schedulerPriorityWeightFactor) {
+    this.schedulerPriorityWeightFactor = schedulerPriorityWeightFactor;
   }
 }
