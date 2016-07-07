@@ -2,21 +2,8 @@ import React, {PropTypes} from 'react';
 import MultiInput from '../MultiInput';
 import { FormGroup, ControlLabel } from 'react-bootstrap/lib';
 
-const feedback = (props) => {
-  if (!_.isEmpty(props.errorIndices)) {
-    return 'error';
-  }
-  if (_.isEmpty(props.value) && props.required) {
-    return 'error';
-  }
-  if (!_.isEmpty(props.value)) {
-    return 'success';
-  }
-  return null;
-};
-
 const MultiInputFormGroup = (props) => (
-  <FormGroup id={props.id} className={props.required && 'required'} validationState={feedback(props)}>
+  <FormGroup id={props.id} className={props.required && 'required'}>
     <ControlLabel>{props.label}</ControlLabel>
     <MultiInput
       id={props.id}
