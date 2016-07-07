@@ -6,7 +6,7 @@ import {Glyphicon} from 'react-bootstrap';
 import ModalButton from './ModalButton';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
-import { DecommissionRack, RemoveRack, ReactivateRack } from '../../actions/api/racks';
+import { DecommissionRack, RemoveRack, ReactivateRack, FetchRacks } from '../../actions/api/racks';
 
 function __in__(needle, haystack) {
   return haystack.indexOf(needle) >= 0;
@@ -66,7 +66,7 @@ const Racks = React.createClass({
       <ModalButton
         buttonChildren={<Glyphicon glyph="new-window" />}
         action="Reactivate Rack"
-        onConfirm={(data) => this.props.clear().then(() => this.props.reactivateRack(rack, data.message))}
+        onConfirm={(data) => this.props.reactivateRack(rack, data.message)}
         tooltipText={`Reactivate ${rack.id}`}>
         <p>Are you sure you want to cancel decommission and reactivate this rack??</p>
         <pre>{rack.id}</pre>
@@ -81,7 +81,7 @@ const Racks = React.createClass({
         <ModalButton
           buttonChildren={<Glyphicon glyph="trash" />}
           action="Decommission Rack"
-          onConfirm={(data) => this.props.clear().then(() => this.props.decommissionRack(rack, data.message))}
+          onConfirm={(data) => this.props.decommissionRack(rack, data.message)}
           tooltipText={`Decommission ${rack.id}`}>
           <p>Are you sure you want to decommission this rack?</p>
           <pre>{rack.id}</pre>
@@ -97,7 +97,7 @@ const Racks = React.createClass({
       <ModalButton
         buttonChildren={<Glyphicon glyph="remove" />}
         action="Remove Rack"
-        onConfirm={(data) => this.props.clear().then(() => this.props.removeRack(rack, data.message))}
+        onConfirm={(data) => this.props.removeRack(rack, data.message)}
         tooltipText={`Remove ${rack.id}`}>
         <p>Are you sure you want to remove this rack??</p>
         <pre>{rack.id}</pre>
@@ -230,15 +230,18 @@ function mapStateToProps(state) {
 }
 
 function mapDispatchToProps(dispatch) {
-  return {
-    decommissionRack: (rack, message) => { dispatch(DecommissionRack.trigger(rack.id, message)); },
-    removeRack: (rack, message) => { dispatch(RemoveRack.trigger(rack.id, message)); },
-    reactivateRack: (rack, message) => { dispatch(ReactivateRack.trigger(rack.id, message)); },
-    clear: () => Promise.all([
+  function clear() {
+    return Promise.all([
       dispatch(DecommissionRack.clear()),
       dispatch(RemoveRack.clear()),
       dispatch(ReactivateRack.clear())
-    ])
+    ]);
+  }
+  return {
+    decommissionRack: (rack, message) => { clear().then(dispatch(DecommissionRack.trigger(rack.id, message))).then(dispatch(FetchRacks.trigger())); },
+    removeRack: (rack, message) => { clear().then(dispatch(RemoveRack.trigger(rack.id, message))).then(dispatch(FetchRacks.trigger())); },
+    reactivateRack: (rack, message) => { clear().then(dispatch(ReactivateRack.trigger(rack.id, message))).then(dispatch(FetchRacks.trigger())); },
+    clear
   };
 }
 

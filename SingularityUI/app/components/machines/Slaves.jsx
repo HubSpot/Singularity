@@ -72,7 +72,7 @@ class Slaves extends React.Component {
       <ModalButton
         buttonChildren={<Glyphicon glyph="new-window" />}
         action="Reactivate Slave"
-        onConfirm={(data) => this.props.clear().then(() => this.props.reactivateSlave(slave, data.message))}
+        onConfirm={(data) => this.props.reactivateSlave(slave, data.message)}
         tooltipText={`Reactivate ${slave.id}`}>
         <p>Are you sure you want to cancel decommission and reactivate this slave??</p>
         <pre>{slave.id}</pre>
@@ -86,7 +86,7 @@ class Slaves extends React.Component {
       <ModalButton
         buttonChildren={<Glyphicon glyph="stop" />}
         action="Freeze Slave"
-        onConfirm={(data) => this.props.clear().then(() => this.props.freezeSlave(slave, data.message))}
+        onConfirm={(data) => this.props.freezeSlave(slave, data.message)}
         tooltipText={`Freeze ${slave.id}`}>
         <p>Are you sure you want to freeze this slave?</p>
         <pre>{slave.id}</pre>
@@ -101,7 +101,7 @@ class Slaves extends React.Component {
         <ModalButton
           buttonChildren={<Glyphicon glyph="trash" />}
           action="Decommission Slave"
-          onConfirm={(data) => this.props.clear().then(() => this.props.decommissionSlave(slave, data.message))}
+          onConfirm={(data) => this.props.decommissionSlave(slave, data.message)}
           tooltipText={`Decommission ${slave.id}`}>
           <p>Are you sure you want to decommission this slave?</p>
           <pre>{slave.id}</pre>
@@ -115,7 +115,7 @@ class Slaves extends React.Component {
       <ModalButton
         buttonChildren={<Glyphicon glyph="remove" />}
         action="Remove Slave"
-        onConfirm={(data) => this.props.clear().then(() => this.props.removeSlave(slave, data.message))}
+        onConfirm={(data) => this.props.removeSlave(slave, data.message)}
         tooltipText={`Remove ${slave.id}`}>
         <p>Are you sure you want to remove this slave?</p>
         <pre>{slave.id}</pre>
@@ -297,17 +297,20 @@ function mapStateToProps(state) {
 }
 
 function mapDispatchToProps(dispatch) {
-  return {
-    freezeSlave: (slave, message) => { dispatch(FreezeSlave.trigger(slave.id, message)).then(dispatch(FetchSlaves.trigger())); },
-    decommissionSlave: (slave, message) => { dispatch(DecommissionSlave.trigger(slave.id, message)).then(dispatch(FetchSlaves.trigger())); },
-    removeSlave: (slave, message) => { dispatch(RemoveSlave.trigger(slave.id, message)).then(dispatch(FetchSlaves.trigger())); },
-    reactivateSlave: (slave, message) => { dispatch(ReactivateSlave.trigger(slave.id, message)).then(dispatch(FetchSlaves.trigger())); },
-    clear: () => Promise.all([
+  function clear() {
+    return Promise.all([
       dispatch(FreezeSlave.clear()),
       dispatch(DecommissionSlave.clear()),
       dispatch(RemoveSlave.clear()),
       dispatch(ReactivateSlave.clear())
-    ])
+    ]);
+  }
+  return {
+    freezeSlave: (slave, message) => { clear().then(dispatch(FreezeSlave.trigger(slave.id, message)).then(dispatch(FetchSlaves.trigger()))); },
+    decommissionSlave: (slave, message) => { clear().then(dispatch(DecommissionSlave.trigger(slave.id, message)).then(dispatch(FetchSlaves.trigger()))); },
+    removeSlave: (slave, message) => { clear().then(dispatch(RemoveSlave.trigger(slave.id, message)).then(dispatch(FetchSlaves.trigger()))); },
+    reactivateSlave: (slave, message) => { clear().then(dispatch(ReactivateSlave.trigger(slave.id, message)).then(dispatch(FetchSlaves.trigger()))); },
+    clear
   };
 }
 
