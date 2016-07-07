@@ -11,6 +11,7 @@ import StatusPage from './components/status/StatusPage';
 import RequestsPage from './components/requests/RequestsPage';
 import Racks from './components/machines/Racks';
 import Slaves from './components/machines/Slaves';
+import Webhooks from './components/webhooks/Webhooks';
 
 const AppRouter = (props) => {
   let history = useRouterHistory(createHistory)({
@@ -27,6 +28,7 @@ const AppRouter = (props) => {
           <Route path="requests(/:state)(/:subFilter)(/:searchFilter)" component={RequestsPage} />
           <Route path="racks" component={Racks} />
           <Route path="slaves" component={Slaves} />
+          <Route path="webhooks" component={Webhooks} />
           <Route path="*" component={NotFound} />
         </Route>
       </Router>
