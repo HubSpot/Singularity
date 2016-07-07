@@ -94,7 +94,8 @@ export default class TaskFilters extends React.Component {
         placeholder="Filter tasks"
         value={this.props.filter.filterText}
         onChange={(...args) => this.handleSearchChange(...args)}
-        maxlength="128" />
+        maxLength="128"
+      />
     );
   }
 
@@ -103,7 +104,7 @@ export default class TaskFilters extends React.Component {
       return (
         <li key={index} className={_.contains(this.props.filter.requestTypes, t) ? 'active' : ''}>
           <a onClick={() => this.toggleRequestType(t)}>
-            <Glyphicon iconClass='ok' /> {Utils.humanizeText(t)}
+            <Glyphicon iconClass="ok" /> {Utils.humanizeText(t)}
           </a>
         </li>
       );
@@ -145,5 +146,6 @@ TaskFilters.propTypes = {
     taskStatus: React.PropTypes.string.isRequired,
     requestTypes: React.PropTypes.array.isRequired,
     filterText: React.PropTypes.string.isRequired
-  }).isRequired
+  }).isRequired,
+  displayRequestTypeFilters: React.PropTypes.bool
 };
