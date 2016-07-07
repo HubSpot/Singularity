@@ -1,33 +1,49 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { FetchRequest } from '../actions/api/requests';
-import { FetchActiveTasksForRequest } from '../actions/api/history';
-import { FetchTaskCleanups } from '../actions/api/tasks';
+import * as RefreshActions from '../../actions/ui/refresh';
+
+import { FetchRequest } from '../../actions/api/requests';
+import { FetchActiveTasksForRequest } from '../../actions/api/history';
+import { FetchTaskCleanups } from '../../actions/api/tasks';
 
 import RequestHeader from './RequestHeader';
 import TaskStateBreakdown from './TaskStateBreakdown';
 
 class RequestDetailPage extends Component {
-  render() {
+  componentDidMount() {
+    this.props.refresh();
+  }
 
+  componentWillUnmount() {
+    this.props.cancelRefresh();
+  }
+
+  render() {
     return (
       <div>
-        <RequestHeader requestId={requestId} />
-        <TaskStateBreakdown requestId={requestId} />
+        <RequestHeader requestId={this.props.requestId} />
+        <TaskStateBreakdown requestId={this.props.requestId} />
       </div>
     );
   }
 }
 
 RequestDetailPage.propTypes = {
-  requestId: PropTypes.string.isRequired
+  requestId: PropTypes.string.isRequired,
+  refresh: PropTypes.func.isRequired,
+  cancelRefresh: PropTypes.func.isRequired
 };
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  fetchRequest: FetchRequest.trigger(ownProps.requestId),
-  fetchActiveTasksForRequest: FetchActiveTasksForRequest.trigger(ownProps.requestId),
-  fetchTaskCleanups: FetchTaskCleanups.trigger()
+  refresh: () => dispatch(RefreshActions.BeginAutoRefresh('RequestDetailPage', [
+    FetchRequest.trigger(ownProps.requestId),
+    FetchActiveTasksForRequest.trigger(ownProps.requestId),
+    FetchTaskCleanups.trigger()
+  ], 10000)),
+  cancelRefresh: () => dispatch(
+    RefreshActions.CancelAutoRefresh('RequestDetailPage')
+  )
 });
 
 export default connect(
