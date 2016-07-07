@@ -1,5 +1,6 @@
 import React from 'react';
 
+// eslint-disable-next-line no-unused-vars react/no-multi-comp
 const rootComponent = (Wrapped, title, refresh = _.noop) => class extends React.Component {
 
   constructor(props) {

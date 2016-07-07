@@ -1,12 +1,14 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { withRouter } from 'react-router';
+import rootComponent from '../../rootComponent';
 import {
   getDecomissioningTasks,
   getFilteredTasks
 } from '../../selectors/tasks';
 
 import TaskFilters from './TaskFilters';
-import { FetchTasksInState, KillTask } from '../../actions/api/tasks';
+import { FetchTasksInState, FetchTaskCleanups, KillTask } from '../../actions/api/tasks';
 import { FetchRequestRun, RunRequest } from '../../actions/api/requests';
 import { FetchRequestRunHistory } from '../../actions/api/history';
 import { FetchTaskFiles } from '../../actions/api/sandbox';
@@ -35,15 +37,25 @@ import {
 
 class TasksPage extends React.Component {
   static propTypes = {
+    params: React.PropTypes.object,
+    router: React.PropTypes.object,
+    fetchFilter: React.PropTypes.func,
+    killTask: React.PropTypes.func,
+    runRequest: React.PropTypes.func,
+    tasks: React.PropTypes.array,
+    cleanups: React.PropTypes.array,
+    taskRun: React.PropTypes.object,
+    taskRunHistory: React.PropTypes.object,
+    taskFiles: React.PropTypes.array
   };
 
   constructor(props) {
     super(props);
     this.state = {
       filter: {
-        taskStatus: props.state,
-        requestTypes: props.requestsSubFilter === 'all' ? TaskFilters.REQUEST_TYPES : props.requestsSubFilter.split(','),
-        filterText: props.searchFilter,
+        taskStatus: props.params.state || 'active',
+        requestTypes: !props.params.requestsSubFilter || props.params.requestsSubFilter === 'all' ? TaskFilters.REQUEST_TYPES : props.params.requestsSubFilter.split(','),
+        filterText: props.params.searchFilter || '',
         loading: false
       }
     };
@@ -57,8 +69,7 @@ class TasksPage extends React.Component {
     });
 
     const requestTypes = filter.requestTypes.length === TaskFilters.REQUEST_TYPES.length ? 'all' : filter.requestTypes.join(',');
-    this.props.updateFilters(filter.taskStatus, requestTypes, filter.filterText);
-    app.router.navigate(`/tasks/${filter.taskStatus}/${requestTypes}/${filter.filterText}`);
+    this.props.router.push(`/tasks/${filter.taskStatus}/${requestTypes}/${filter.filterText}`);
 
     if (lastFilterTaskStatus !== filter.taskStatus) {
       this.props.fetchFilter(filter.taskStatus).then(() => {
@@ -76,7 +87,7 @@ class TasksPage extends React.Component {
   handleRunNow(requestId, data) {
     this.props.runRequest(requestId, data).then((response) => {
       if (_.contains([RunNowModal.AFTER_TRIGGER.SANDBOX, RunNowModal.AFTER_TRIGGER.TAIL], data.afterTrigger)) {
-        this.refs.taskLauncher.startPolling(response.data.request.id, response.data.pendingRequest.runId, data.afterTrigger == RunNowModal.AFTER_TRIGGER.TAIL && data.fileToTail);
+        this.refs.taskLauncher.startPolling(response.data.request.id, response.data.pendingRequest.runId, data.afterTrigger === RunNowModal.AFTER_TRIGGER.TAIL && data.fileToTail);
       }
     });
   }
@@ -161,6 +172,7 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch) {
   return {
     fetchFilter: (state) => dispatch(FetchTasksInState.trigger(state)),
+    fetchCleanups: () => dispatch(FetchTaskCleanups.trigger()),
     killTask: (taskId, data) => dispatch(KillTask.trigger(taskId, data)),
     runRequest: (requestId, data) => dispatch(RunRequest.trigger(requestId, data)),
     taskRun: (requestId, runId) => dispatch(FetchRequestRun.trigger(requestId, runId)),
@@ -169,4 +181,11 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(TasksPage);
+function refresh(props) {
+  const promises = [];
+  promises.push(props.fetchFilter(props.params.state || 'active'));
+  promises.push(props.fetchCleanups());
+  return Promise.all(promises);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TasksPage), 'Tasks', refresh));

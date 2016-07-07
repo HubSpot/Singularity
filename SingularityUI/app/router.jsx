@@ -9,6 +9,7 @@ import NotFound from './components/common/NotFound';
 import DashboardPage from './components/dashboard/DashboardPage';
 import StatusPage from './components/status/StatusPage';
 import RequestsPage from './components/requests/RequestsPage';
+import TasksPage from './components/tasks/TasksPage';
 import Racks from './components/machines/Racks';
 import Slaves from './components/machines/Slaves';
 import Webhooks from './components/webhooks/Webhooks';
@@ -26,6 +27,7 @@ const AppRouter = (props) => {
           <IndexRoute component={DashboardPage} />
           <Route path="status" component={StatusPage} />
           <Route path="requests(/:state)(/:subFilter)(/:searchFilter)" component={RequestsPage} />
+          <Route path="tasks(/:state)(/:requestsSubFilter)(/:searchFilter)" component={TasksPage} />
           <Route path="racks" component={Racks} />
           <Route path="slaves" component={Slaves} />
           <Route path="webhooks" component={Webhooks} />
