@@ -7,6 +7,10 @@ import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 
 export default class RequestFilters extends React.Component {
 
+  static propTypes = {
+    displayRequestTypeFilters: React.PropTypes.bool
+  }
+
   static REQUEST_STATES = [
     {
       filterVal: 'all',
@@ -98,7 +102,8 @@ export default class RequestFilters extends React.Component {
         placeholder="Filter requests"
         value={this.props.filter.searchFilter}
         onChange={(...args) => this.handleSearchChange(...args)}
-        maxlength="128" />
+        maxLength="128"
+      />
     );
   }
 
@@ -107,7 +112,7 @@ export default class RequestFilters extends React.Component {
       return (
         <li key={index} className={_.contains(this.props.filter.subFilter, t) ? 'active' : ''}>
           <a onClick={() => this.toggleRequestType(t)}>
-            <Glyphicon iconClass='ok' /> {Utils.humanizeText(t)}
+            <Glyphicon iconClass="ok" /> {Utils.humanizeText(t)}
           </a>
         </li>
       );

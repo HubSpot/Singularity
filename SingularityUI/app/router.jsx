@@ -8,6 +8,7 @@ import Application from './components/common/Application';
 import NotFound from './components/common/NotFound';
 import DashboardPage from './components/dashboard/DashboardPage';
 import StatusPage from './components/status/StatusPage';
+import RequestsPage from './components/requests/RequestsPage';
 
 const AppRouter = (props) => {
   let history = useRouterHistory(createHistory)({
@@ -21,6 +22,7 @@ const AppRouter = (props) => {
         <Route path="/" component={Application}>
           <IndexRoute component={DashboardPage} />
           <Route path="status" component={StatusPage} />
+          <Route path="requests(/:state)(/:subFilter)(/:searchFilter)" component={RequestsPage} />
           <Route path="*" component={NotFound} />
         </Route>
       </Router>

@@ -18,7 +18,7 @@ const Utils = {
   viewJSON(model, callback) {
     let ajaxRequest, closeButton, copyButton, j, json, key, len, modelJSON, objectToSerialise, ref;
     if (model == null) {
-      if (typeof callback === "function") {
+      if (typeof callback === 'function') {
         callback({
           error: 'Invalid model given'
         });
@@ -33,7 +33,7 @@ const Utils = {
       ajaxRequest.error(((_this => () => {
         app.caughtError();
         return _this.viewJSON(new Backbone.Model({
-          message: "There was an error with the server"
+          message: 'There was an error with the server'
         }));
       }))(this));
       return;
@@ -56,9 +56,9 @@ const Utils = {
       text: 'Close'
     });
     copyButton = {
-      text: "Copy",
-      type: "button",
-      className: "vex-dialog-button-secondary copy-button"
+      text: 'Copy',
+      type: 'button',
+      className: 'vex-dialog-button-secondary copy-button'
     };
     return vex.dialog.open({
       buttons: [closeButton, copyButton],
@@ -67,8 +67,8 @@ const Utils = {
       afterOpen($vexContent) {
         let $button, clipboard;
         $vexContent.parents('.vex').scrollTop(0);
-        $button = $vexContent.find(".copy-button");
-        $button.attr("data-clipboard-text", $vexContent.find("pre").html());
+        $button = $vexContent.find('.copy-button');
+        $button.attr('data-clipboard-text', $vexContent.find('pre').html());
         return clipboard = new Clipboard($button[0]);
       }
     });
@@ -76,14 +76,14 @@ const Utils = {
 
   setupCopyLinks($element) {
     let $items;
-    $items = $element.find(".horizontal-description-list li");
+    $items = $element.find('.horizontal-description-list li');
     return _.each($items, $item => {
       let $copyLink, text;
       $item = $($item);
       if (!$item.find('a').length) {
         text = $item.find('p').html();
         $copyLink = $(`<a data-clipboard-text='${_.escape(text)}'>Copy</a>`);
-        $item.find("h4").append($copyLink);
+        $item.find('h4').append($copyLink);
         return new Clipboard($copyLink[0]);
       }
     });
@@ -102,10 +102,10 @@ const Utils = {
 
   fixTableColumns($table) {
     let $heading, $headings, j, len, percentage, sortable, totalWidth;
-    $headings = $table.find("th");
+    $headings = $table.find('th');
     if ($headings.length && $table.css('table-layout') !== 'fixed') {
-      $table.css("table-layout", "auto");
-      $headings.css("width", "auto");
+      $table.css('table-layout', 'auto');
+      $headings.css('width', 'auto');
       totalWidth = $table.width();
       sortable = $table.attr('data-sortable') !== void 0;
       if (!sortable) {
@@ -113,9 +113,9 @@ const Utils = {
           $heading = $headings[j];
           $heading = $($heading);
           percentage = $heading.width() / totalWidth * 100;
-          $heading.css("width", `${percentage}%`);
+          $heading.css('width', `${percentage}%`);
         }
-        return $table.css("table-layout", "fixed");
+        return $table.css('table-layout', 'fixed');
       }
     }
   },
@@ -123,7 +123,7 @@ const Utils = {
   pathToBreadcrumbs(path) {
     let pathComponents, results;
     if (path == null) {
-      path = "";
+      path = '';
     }
     pathComponents = path.split('/');
     results = _.map(pathComponents, ((_this => (crumb, index) => {
@@ -135,8 +135,8 @@ const Utils = {
       };
     }))(this));
     results.unshift({
-      name: "root",
-      path: ""
+      name: 'root',
+      path: ''
     });
     return results;
   },
@@ -163,14 +163,14 @@ const Utils = {
       $el.animate({
         minHeight: '0px'
       }, shrinkTime);
-      if (typeof shrinkCallback === "function") {
+      if (typeof shrinkCallback === 'function') {
         shrinkCallback();
       }
       return removeEvent();
     }))(this);
     checkForShrink = ((_this => () => {
       let frameRequest;
-      if (typeof frameRequest !== "undefined" && frameRequest !== null) {
+      if (typeof frameRequest !== 'undefined' && frameRequest !== null) {
         cancelAnimationFrame(frameRequest);
       }
       return frameRequest = requestAnimationFrame(() => {
@@ -215,7 +215,7 @@ const Utils = {
 
   getQueryParams() {
     if (location.search) {
-      return JSON.parse(`{"${decodeURI(location.search.substring(1).replace(/&/g, "\",\"").replace(/\=/g, "\":\""))}"}`);
+      return JSON.parse(`{"${decodeURI(location.search.substring(1).replace(/&/g, '","').replace(/\=/g, '":"'))}"}`);
     } else {
       return {};
     }
@@ -244,18 +244,18 @@ const Utils = {
 
   humanizeCamelcase(text) {
     return text.replace(/^[a-z]|[A-Z]/g, function(v, i) {
-        return i === 0 ? v.toUpperCase() : " " + v.toLowerCase();
+      return i === 0 ? v.toUpperCase() : ' ' + v.toLowerCase();
     });
   },
 
   timeStampFromNow(millis) {
-      let timeObject = moment(millis);
-      return `${timeObject.fromNow()} (${timeObject.format(window.config.timestampFormat)})`;
+    let timeObject = moment(millis);
+    return `${timeObject.fromNow()} (${timeObject.format(window.config.timestampFormat)})`;
   },
 
   absoluteTimestamp(millis) {
-      let timeObject = moment(millis);
-      return timeObject.format(window.config.timestampFormat);
+    let timeObject = moment(millis);
+    return timeObject.format(window.config.timestampFormat);
   },
 
   timestampWithinSeconds(timestamp, seconds) {
@@ -265,7 +265,7 @@ const Utils = {
   },
 
   duration(millis) {
-      return moment.duration(millis).humanize();
+    return moment.duration(millis).humanize();
   },
 
   substituteTaskId(value, taskId) {

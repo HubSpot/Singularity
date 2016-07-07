@@ -1,5 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { withRouter } from 'react-router';
+import rootComponent from '../../rootComponent';
 
 import {
   FetchRequestsInState,
@@ -23,13 +25,29 @@ import filterSelector from '../../selectors/requests/filterSelector';
 
 class RequestsPage extends React.Component {
 
+  static propTypes = {
+    requestsInState: React.PropTypes.object,
+    fetchFilter: React.PropTypes.func,
+    removeRequest: React.PropTypes.func,
+    unpauseRequest: React.PropTypes.func,
+    runNow: React.PropTypes.func,
+    fetchRun: React.PropTypes.func,
+    fetchRunHistory: React.PropTypes.func,
+    fetchTaskFiles: React.PropTypes.func,
+    scaleRequest: React.PropTypes.func,
+    bounceRequest: React.PropTypes.func,
+    params: React.PropTypes.object,
+    router: React.PropTypes.object
+  };
+
   constructor(props) {
     super(props);
+
     this.state = {
       filter: {
-        state: props.state,
-        subFilter: props.subFilter === 'all' ? RequestFilters.REQUEST_TYPES : props.subFilter.split(','),
-        searchFilter: props.searchFilter
+        state: props.params.state || 'all',
+        subFilter: !props.params.subFilter || props.params.subFilter === 'all' ? RequestFilters.REQUEST_TYPES : props.params.subFilter.split(','),
+        searchFilter: props.params.searchFilter || ''
       },
       loading: false
     };
@@ -50,8 +68,7 @@ class RequestsPage extends React.Component {
     });
 
     const subFilter = filter.subFilter.length === RequestFilters.REQUEST_TYPES.length ? 'all' : filter.subFilter.join(',');
-    this.props.updateFilters(filter.state, subFilter, filter.searchFilter);
-    app.router.navigate(`/requests/${filter.state}/${subFilter}/${filter.searchFilter}`);
+    this.props.router.push(`/requests/${filter.state}/${subFilter}/${filter.searchFilter}`);
 
     if (lastFilterState !== filter.state) {
       this.props.fetchFilter(filter.state).then(() => {
@@ -63,7 +80,7 @@ class RequestsPage extends React.Component {
   }
 
   getColumns() {
-    switch(this.state.filter.state) {
+    switch (this.state.filter.state) {
       case 'pending':
         return [Cols.RequestId, Cols.PendingType];
       case 'cleanup':
@@ -159,4 +176,9 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(RequestsPage);
+function refresh(props) {
+  const state = props.params.state || 'all';
+  return props.fetchFilter(state);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(RequestsPage), 'Requests', refresh));
