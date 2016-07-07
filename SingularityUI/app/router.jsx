@@ -13,6 +13,7 @@ import TasksPage from './components/tasks/TasksPage';
 import Racks from './components/machines/Racks';
 import Slaves from './components/machines/Slaves';
 import Webhooks from './components/webhooks/Webhooks';
+import TaskDetail from './components/taskDetail/TaskDetail';
 
 const AppRouter = (props) => {
   let history = useRouterHistory(createHistory)({
@@ -31,6 +32,7 @@ const AppRouter = (props) => {
           <Route path="racks" component={Racks} />
           <Route path="slaves" component={Slaves} />
           <Route path="webhooks" component={Webhooks} />
+          <Route path="task/:taskId" component={TaskDetail} store={props.store} />
           <Route path="*" component={NotFound} />
         </Route>
       </Router>
