@@ -1,7 +1,6 @@
 import React, {PropTypes} from 'react';
 import Select from 'react-select';
 import { connect } from 'react-redux';
-import FormField from '../common/formItems/FormField';
 import MultiSelect from '../common/formItems/MultiSelect';
 import MultiInputFormGroup from '../common/formItems/formGroups/MultiInputFormGroup';
 import SelectFormGroup from '../common/formItems/formGroups/SelectFormGroup';
@@ -10,6 +9,7 @@ import CheckboxFormGroup from '../common/formItems/formGroups/CheckboxFormGroup'
 import { ModifyField, ClearForm } from '../../actions/ui/form';
 import { SaveRequest } from '../../actions/api/requests';
 import { OverlayTrigger, Tooltip} from 'react-bootstrap/lib';
+import { FormGroup, ControlLabel, FormControl, Form, Row, Col } from 'react-bootstrap';
 import Utils from '../../utils';
 import classNames from 'classnames';
 import {FIELDS_BY_REQUEST_TYPE, INDEXED_FIELDS} from './fields';
@@ -218,28 +218,6 @@ class RequestForm extends React.Component {
     return CRON_SCHEDULE;
   }
 
-  getScheduleFeedback() {
-    const scheduleFeedback = this.feedback(this.getScheduleType());
-    const scheduleClassName = classNames(
-      'col-sm-7',
-      {
-        'has-feedback': scheduleFeedback,
-        'has-success': scheduleFeedback === 'SUCCESS',
-        'has-error': scheduleFeedback === 'ERROR',
-        'has-warning': scheduleFeedback === 'WARN'
-      });
-    const scheduleIconClassName = classNames(
-      'glyphicon',
-      'form-control-feedback',
-      {
-        'glyphicon-ok': scheduleFeedback === 'SUCCESS',
-        'glyphicon-warning-sign': scheduleFeedback === 'WARN',
-        'glyphicon-remove': scheduleFeedback === 'ERROR'
-      }
-    );
-    return {scheduleFeedback, scheduleClassName, scheduleIconClassName};
-  }
-
   renderRequestTypeSelectors() {
     const tooltip = (
       <Tooltip id="cannotChangeRequestTypeAfterCreation">Option cannot be altered after creation</Tooltip>
@@ -327,43 +305,43 @@ class RequestForm extends React.Component {
         />
       </div>
     );
-    const {scheduleFeedback, scheduleClassName, scheduleIconClassName} = this.getScheduleFeedback();
+    const scheduleFeedback = this.feedback(this.getScheduleType()).toLowerCase();
     const schedule = (
-      <div className={classNames('form-group', {required: INDEXED_FIELDS[this.getScheduleType()].required})}>
-        <label htmlFor="schedule">Schedule</label>
-        <div className="row" id="schedule">
-          <div className={scheduleClassName}>
-            <FormField
-              prop={{
-                updateFn: event => this.updateField(this.getScheduleType(), event.target.value),
-                placeholder: this.getScheduleType() === QUARTZ_SCHEDULE ? 'eg: 0 */5 * * * ?' : 'eg: */5 * * * *',
-                inputType: 'text',
-                value: this.getValue(this.getScheduleType()),
-                required: INDEXED_FIELDS[this.getScheduleType()].required
-              }}
-              feedback={this.feedback(this.getScheduleType())}
-            />
-            {scheduleFeedback && <span className={scheduleIconClassName} />}
-          </div>
-          <div className="col-sm-5">
-            <Select
-              onChange={value => this.updateField('scheduleType', value.value)}
-              options={[
-                {
-                  value: CRON_SCHEDULE,
-                  label: 'Cron Schedule'
-                },
-                {
-                  value: QUARTZ_SCHEDULE,
-                  label: 'Quartz Schedule'
-                }
-              ]}
-              clearable={false}
-              value={ this.getScheduleType() }
-            />
-          </div>
-        </div>
-      </div>
+      <FormGroup
+        id="schedule"
+        className={INDEXED_FIELDS[this.getScheduleType()].required && 'required'}
+        validationState={scheduleFeedback}>
+        <ControlLabel>Schedule</ControlLabel>
+          <Row>
+            <Col md={7}>
+              <FormControl
+                onChange={(event) => this.updateField(this.getScheduleType(), event.target.value)}
+                placeholder={this.getScheduleType() === QUARTZ_SCHEDULE ? 'eg: 0 */5 * * * ?' : 'eg: */5 * * * *'}
+                type="text"
+                value={this.getValue(this.getScheduleType())}
+                feedback={this.feedback(this.getScheduleType())}
+              />
+              {scheduleFeedback && <FormControl.Feedback />}
+            </Col>
+            <Col md={5}>
+              <Select
+                onChange={value => this.updateField('scheduleType', value.value)}
+                options={[
+                  {
+                    value: CRON_SCHEDULE,
+                    label: 'Cron Schedule'
+                  },
+                  {
+                    value: QUARTZ_SCHEDULE,
+                    label: 'Quartz Schedule'
+                  }
+                ]}
+                clearable={false}
+                value={ this.getScheduleType() }
+              />
+            </Col>
+          </Row>
+      </FormGroup>
     );
     const numRetriesOnFailure = (
       <TextFormGroup
@@ -494,10 +472,10 @@ class RequestForm extends React.Component {
       </p>
     );
     return (
-      <div className="row new-form">
-        <div className="col-md-5 col-md-offset-3">
+      <Row className="new-form">
+        <Col md={5} mdOffset={3}>
           { header }
-          <form role="form" onSubmit={event => this.submitForm(event)}>
+          <Form onSubmit={event => this.submitForm(event)}>
             { !this.isEditing() && id }
             { owners }
             { requestTypeSelectors }
@@ -506,9 +484,9 @@ class RequestForm extends React.Component {
             { this.renderRequestTypeSpecificFormFields() }
             { saveButton }
             { errorMessage }
-          </form>
-        </div>
-      </div>
+          </Form>
+        </Col>
+      </Row>
     );
   }
 }
