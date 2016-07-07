@@ -2,11 +2,17 @@ export const CANCEL_AUTO_REFRESH = 'CANCEL_AUTO_REFRESH';
 
 export const CancelAutoRefresh = (key, isExpired = false) => {
   return (dispatch, getState) => {
-    const intervalId = getState().ui.refresh[key].intervalId;
+    const state = getState();
+    if (!state.ui.refresh.hasOwnProperty(key)) {
+      // don't beat dead horse, it's already gone
+      return;
+    }
+
+    const intervalId = state.ui.refresh[key].intervalId;
 
     // clear automatic expiration if this is the expiration notice
     if (!isExpired) {
-      const timeoutId = getState().ui.refresh[key].timeoutId;
+      const timeoutId = state.ui.refresh[key].timeoutId;
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
