@@ -60,10 +60,10 @@ class Application {
     // $('body').append(this.views.globalSearch.$el);
 
     // set up global refresh
-    this.blurred = false;
-    this.setRefreshInterval();
-    $(window).on('blur', this.handleBlur);
-    $(window).on('focus', this.handleFocus);
+    // this.blurred = false;
+    // this.setRefreshInterval();
+    // $(window).on('blur', this.handleBlur);
+    // $(window).on('focus', this.handleFocus);
   }
 
   handleBlur() {

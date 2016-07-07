@@ -6,6 +6,7 @@ import { syncHistoryWithStore } from 'react-router-redux';
 
 import Application from './components/common/Application';
 import NotFound from './components/common/NotFound';
+import StatusPage from './components/status/StatusPage';
 
 const AppRouter = (props) => {
   let history = useRouterHistory(createHistory)({
@@ -18,6 +19,7 @@ const AppRouter = (props) => {
       <Router history={history}>
         <Route path="/" component={Application}>
           <IndexRoute component={NotFound} />
+          <Route path="status" component={StatusPage} />
           <Route path="*" component={NotFound} />
         </Route>
       </Router>
