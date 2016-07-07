@@ -47,7 +47,6 @@ export const BeginAutoRefresh = (key, actions, interval = 30000, expiration = nu
       key,
       intervalId,
       timeoutId,
-      actions,
       type: BEGIN_AUTO_REFRESH
     });
   };
