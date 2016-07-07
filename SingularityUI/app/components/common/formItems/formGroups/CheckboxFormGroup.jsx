@@ -1,29 +1,31 @@
-import React, {Component, PropTypes} from 'react';
-import Checkbox from '../Checkbox';
+import React, {PropTypes} from 'react';
+import { FormGroup, Checkbox } from 'react-bootstrap/lib';
 
-class CheckboxFormGroup extends Component {
-  static propTypes = {
-    id: PropTypes.string.isRequired,
-    label: PropTypes.string.isRequired,
-    onChange: PropTypes.func.isRequired,
-    checked: PropTypes.bool
-  }
+const CheckboxFormGroup = (props) => {
+  return (
+    <FormGroup controlId={props.id}>
+      <Checkbox
+        onChange={() => props.onChange(!props.checked)}
+        checked={props.checked || false}
+        inline={true}
+        disabled={props.disabled}
+      >
+        {props.disabled &&
+          <div className="subtle">{props.label} <strong>{props.tooltipText}</strong></div> ||
+          <strong>{props.label}</strong>}
+      </Checkbox>
+    </FormGroup>
+  );
+};
 
-  render() {
-    return (
-      <div className="form-group">
-        <label htmlFor={this.props.id}>
-          <Checkbox
-            id = {this.props.id}
-            onChange = {() => this.props.onChange(!this.props.checked)}
-            checked = {this.props.checked}
-            noFormControlClass = {true}
-          />
-          {` ${this.props.label}`}
-        </label>
-      </div>
-    );
-  }
-}
+CheckboxFormGroup.propTypes = {
+  id: PropTypes.string.isRequired,
+  label: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  checked: PropTypes.bool,
+  disabled: PropTypes.bool,
+  hasTooltip: PropTypes.bool,
+  tooltipText: PropTypes.string
+};
 
 export default CheckboxFormGroup;
