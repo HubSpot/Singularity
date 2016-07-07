@@ -6,6 +6,8 @@ import Link from '../common/atomicDisplayItems/Link';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
+import rootComponent from '../../rootComponent';
+import { FetchRacks } from '../../actions/api/racks';
 
 function __in__(needle, haystack) {
   return haystack.indexOf(needle) >= 0;
@@ -232,4 +234,14 @@ function mapStateToProps(state) {
   };
 }
 
-export default connect(mapStateToProps)(Racks);
+function mapDispatchToProps(dispatch) {
+  return {
+    fetchRacks: () => dispatch(FetchRacks.trigger())
+  };
+}
+
+function refresh(props) {
+  return props.fetchRacks();
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Racks, 'Racks', refresh));

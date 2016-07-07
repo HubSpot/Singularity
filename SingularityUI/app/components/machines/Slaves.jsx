@@ -6,7 +6,8 @@ import Link from '../common/atomicDisplayItems/Link';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
-import { FreezeSlave } from '../../actions/api/slaves';
+import { FreezeSlave, FetchSlaves } from '../../actions/api/slaves';
+import rootComponent from '../../rootComponent';
 
 function __in__(needle, haystack) {
   return haystack.indexOf(needle) >= 0;
@@ -313,8 +314,13 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    freezeSlave: (slave) => { dispatch(FreezeSlave.trigger(slave.id)); }
+    freezeSlave: (slave) => dispatch(FreezeSlave.trigger(slave.id)),
+    fetchSlaves: () => dispatch(FetchSlaves.trigger())
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Slaves);
+function refresh(props) {
+  return props.fetchSlaves();
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Slaves, 'Slaves', refresh));
