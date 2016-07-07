@@ -347,4 +347,4 @@ function refresh(props) {
   return props.fetchStatus();
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent('Status', refresh, StatusPage));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(StatusPage, 'Status', refresh));

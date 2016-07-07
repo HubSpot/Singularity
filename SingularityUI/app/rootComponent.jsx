@@ -1,27 +1,25 @@
 import React from 'react';
 
-const rootComponent = (title, refresh, Wrapped) => class extends React.Component {
+const rootComponent = (Wrapped, title, refresh = _.noop) => class extends React.Component {
 
   constructor(props) {
     super(props);
     _.bindAll(this, 'handleBlur', 'handleFocus');
     this.state = {
-      loading: typeof refresh === 'function'
+      loading: refresh !== _.noop
     };
   }
 
   componentDidMount() {
     document.title = `${title} - ${config.title}`;
 
-    if (refresh) {
-      const promise = refresh(this.props);
-      if (promise) {
-        promise.then(() => {
-          this.setState({
-            loading: false
-          });
+    const promise = refresh(this.props);
+    if (promise) {
+      promise.then(() => {
+        this.setState({
+          loading: false
         });
-      }
+      });
     }
 
     this.startRefreshInterval();

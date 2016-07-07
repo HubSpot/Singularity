@@ -23,4 +23,4 @@ NotFound.propTypes = {
   location: React.PropTypes.object
 };
 
-export default rootComponent('Not Found', null, NotFound);
+export default rootComponent(NotFound, 'Not Found');
