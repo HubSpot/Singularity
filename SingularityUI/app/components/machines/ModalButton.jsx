@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react';
 import FormModal from '../common/FormModal';
-import {OverlayTrigger, Tooltip} from 'react-bootstrap/lib';
+import {OverlayTrigger, Tooltip} from 'react-bootstrap';
 
 class ModalButton extends React.Component {
 

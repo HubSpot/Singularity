@@ -3,7 +3,7 @@ import MachinesPage from './MachinesPage';
 import PlainText from '../common/atomicDisplayItems/PlainText';
 import TimeStamp from '../common/atomicDisplayItems/TimeStamp';
 import Link from '../common/atomicDisplayItems/Link';
-import Glyphicon from 'react-bootstrap/lib/Glyphicon';
+import {Glyphicon} from 'react-bootstrap';
 import ModalButton from './ModalButton';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
