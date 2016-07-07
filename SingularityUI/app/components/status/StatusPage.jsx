@@ -344,7 +344,6 @@ function mapStateToProps(state) {
 }
 
 function refresh(props) {
-  console.log('status refresh');
   return props.fetchStatus();
 }
 
