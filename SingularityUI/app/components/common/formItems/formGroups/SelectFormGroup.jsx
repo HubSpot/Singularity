@@ -1,35 +1,31 @@
-import React, {Component, PropTypes} from 'react';
+import React, {PropTypes} from 'react';
 import Select from 'react-select';
-import classNames from 'classnames';
+import { FormGroup, ControlLabel } from 'react-bootstrap/lib';
 
-class SelectFormGroup extends Component {
-  static propTypes = {
-    id: PropTypes.string.isRequired,
-    label: PropTypes.string.isRequired,
-    options: PropTypes.arrayOf(PropTypes.shape({
-      value: PropTypes.string.isRequired,
-      label: PropTypes.string.isRequired
-    })).isRequired,
-    onChange: PropTypes.func.isRequired,
-    value: PropTypes.string,
-    required: PropTypes.bool
-  }
+const SelectFormGroup = (props) => (
+  <FormGroup id={props.id} className={props.required && 'required'}>
+    <ControlLabel>{props.label}</ControlLabel>
+    <Select
+      id={props.id}
+      className={props.id}
+      options={props.options}
+      onChange={props.onChange}
+      value={props.value}
+      clearable={false}
+    />
+  </FormGroup>
+);
 
-  render() {
-    return (
-      <div className={classNames('form-group', {required: this.props.required})}>
-        <label htmlFor={this.props.id}>{this.props.label}</label>
-        <Select
-          id={this.props.id}
-          className={this.props.id}
-          options={this.props.options}
-          onChange={this.props.onChange}
-          value={this.props.value}
-          clearable={false}
-        />
-      </div>
-    );
-  }
-}
+SelectFormGroup.propTypes = {
+  id: PropTypes.string.isRequired,
+  label: PropTypes.string.isRequired,
+  options: PropTypes.arrayOf(PropTypes.shape({
+    value: PropTypes.string.isRequired,
+    label: PropTypes.string.isRequired
+  })).isRequired,
+  onChange: PropTypes.func.isRequired,
+  value: PropTypes.string,
+  required: PropTypes.bool
+};
 
 export default SelectFormGroup;

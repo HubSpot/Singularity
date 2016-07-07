@@ -1,60 +1,59 @@
-import React from 'react';
+import React, {PropTypes} from 'react';
 import Select from 'react-select';
 import { connect } from 'react-redux';
-import FormField from '../common/formItems/FormField';
-import DropDown from '../common/formItems/DropDown';
 import MultiSelect from '../common/formItems/MultiSelect';
-import Checkbox from '../common/formItems/Checkbox';
+import MultiInputFormGroup from '../common/formItems/formGroups/MultiInputFormGroup';
+import SelectFormGroup from '../common/formItems/formGroups/SelectFormGroup';
+import TextFormGroup from '../common/formItems/formGroups/TextFormGroup';
+import CheckboxFormGroup from '../common/formItems/formGroups/CheckboxFormGroup';
 import { ModifyField, ClearForm } from '../../actions/ui/form';
 import { SaveRequest } from '../../actions/api/requests';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
+import { OverlayTrigger, Tooltip} from 'react-bootstrap/lib';
+import { FormGroup, ControlLabel, FormControl, Form, Row, Col } from 'react-bootstrap';
 import Utils from '../../utils';
 import classNames from 'classnames';
+import {FIELDS_BY_REQUEST_TYPE, INDEXED_FIELDS} from './fields';
 
 const QUARTZ_SCHEDULE = 'quartzSchedule';
 const CRON_SCHEDULE = 'cronSchedule';
 
 const FORM_ID = 'requestForm';
 
-const REQUEST_TYPES = ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'];
+const REQUEST_ID_REGEX = /[a-zA-Z0-9._-]*/;
 
-const FIELDS_BY_REQUEST_TYPE = {
-  ALL: [
-    'id',
-    'owners',
-    'requestType',
-    'slavePlacement'
-  ],
-  SERVICE: [
-    'instances',
-    'rackSensitive',
-    'hideEvenNumberAcrossRacksHint',
-    'loadBalanced',
-    'rackAffinity'
-  ],
-  WORKER: [
-    'instances',
-    'rackSensitive',
-    'hideEvenNumberAcrossRacksHint',
-    'waitAtLeastMillisAfterTaskFinishesForReschedule',
-    'rackAffinity'
-  ],
-  SCHEDULED: [
-    QUARTZ_SCHEDULE,
-    CRON_SCHEDULE,
-    'scheduleType',
-    'numRetriesOnFailure',
-    'killOldNonLongRunningTasksAfterMillis',
-    'scheduledExpectedRuntimeMillis'
-  ],
-  ON_DEMAND: ['killOldNonLongRunningTasksAfterMillis'],
-  RUN_ONCE: ['killOldNonLongRunningTasksAfterMillis']
-};
+const REQUEST_TYPES = ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'];
 
 class RequestForm extends React.Component {
   static propTypes = {
   };
+
+  static propTypes = {
+    clearForm: PropTypes.func.isRequired,
+    update: PropTypes.func.isRequired,
+    save: PropTypes.func.isRequired,
+    racks: PropTypes.arrayOf(PropTypes.shape({
+      id: PropTypes.string.isRequired
+    })).isRequired,
+    request: PropTypes.shape({
+      request: PropTypes.shape({
+        id: PropTypes.string.isRequired,
+        slavePlacement: PropTypes.oneOf(['', 'SEPARATE', 'SEPARATE_BY_REQUEST', 'GREEDY', 'OPTIMISTIC'])
+      })
+    }),
+    saveApiCall: PropTypes.shape({
+      isFetching: PropTypes.bool,
+      error: PropTypes.shape({
+        message: PropTypes.string
+      }),
+      data: PropTypes.shape({
+        message: PropTypes.string
+      })
+    }).isRequired,
+    form: PropTypes.shape({
+      slavePlacement: PropTypes.oneOf(['', 'SEPARATE', 'SEPARATE_BY_REQUEST', 'GREEDY', 'OPTIMISTIC']),
+      scheduleType: PropTypes.string
+    })
+  }
 
   componentDidMount() {
     this.props.clearForm(FORM_ID);
@@ -71,25 +70,85 @@ class RequestForm extends React.Component {
   getValue(fieldId) {
     if (this.props.form && this.props.form[fieldId] !== undefined) {
       return this.props.form[fieldId];
-    } else if (this.isEditing() && this.props.request.request[fieldId] !== undefined) {
-      return this.props.request.request[fieldId];
-    } else {
-      return '';
     }
+    if (this.isEditing() && this.props.request.request[fieldId] !== undefined) {
+      return this.props.request.request[fieldId];
+    }
+    return '';
+  }
+
+  validateField(fieldId) {
+    const value = this.getValue(fieldId);
+    const {required, type} = INDEXED_FIELDS[fieldId];
+    if (required && (_.isEmpty(value))) {
+      return false;
+    }
+    if (!value || _.isEmpty(value)) {
+      return true;
+    }
+    if (type === 'number') {
+      const numericalValue = parseInt(value, 10);
+      if (numericalValue !== 0 && !numericalValue) {
+        return false;
+      }
+    }
+    if (type === 'request-id') {
+      if (value.match(REQUEST_ID_REGEX)[0] !== value) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  feedback(fieldId) {
+    const value = this.getValue(fieldId);
+    const {required} = INDEXED_FIELDS[fieldId];
+    if (required && (_.isEmpty(value))) {
+      return 'ERROR';
+    }
+    if (_.isEmpty(value)) {
+      return null;
+    }
+    if (this.validateField(fieldId)) {
+      return 'SUCCESS';
+    }
+    return 'ERROR';
   }
 
   cantSubmit() {
-    return this.props.saveApiCall.isFetching ||
-      !this.getValue('id') ||
-      !this.getValue('requestType') ||
-      (this.getValue('requestType') === 'SCHEDULED' && !this.getValue(this.getScheduleType()));
+    if (this.props.saveApiCall.isFetching) {
+      return true;
+    }
+    for (const field of FIELDS_BY_REQUEST_TYPE.ALL) {
+      if (!this.validateField(field.id)) {
+        return true;
+      }
+    }
+    const scheduleType = this.getScheduleType();
+    const requestTypeSpecificFields = FIELDS_BY_REQUEST_TYPE[this.getValue('requestType')];
+    if (_.isEmpty(requestTypeSpecificFields)) {
+      return true;
+    }
+    for (const field of requestTypeSpecificFields) {
+      if (field.id === CRON_SCHEDULE && scheduleType !== CRON_SCHEDULE) {
+        continue;
+      }
+      if (field.id === QUARTZ_SCHEDULE && scheduleType !== QUARTZ_SCHEDULE) {
+        continue;
+      }
+      if (!this.validateField(field.id)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   submitForm(event) {
     event.preventDefault();
     const request = {};
-    const copyOverField = (fieldId) => {
-      if (this.getValue(fieldId) && fieldId != QUARTZ_SCHEDULE && fieldId != CRON_SCHEDULE && fieldId != 'scheduleType') {
+    const copyOverField = (field) => {
+      const fieldId = field.id;
+      if (this.getValue(fieldId) && fieldId !== QUARTZ_SCHEDULE && fieldId !== CRON_SCHEDULE && fieldId !== 'scheduleType') {
         request[fieldId] = this.getValue(fieldId);
       }
     };
@@ -111,9 +170,7 @@ class RequestForm extends React.Component {
       request.daemon = true;
     }
 
-    if (request.owners) {
-      request.owners = request.owners.map(owner => owner.value);
-    }
+
     if (request.rackAffinity) {
       request.rackAffinity = request.rackAffinity.map(rack => rack.value);
     }
@@ -125,19 +182,18 @@ class RequestForm extends React.Component {
   shouldRenderField(fieldId) {
     if (!this.getValue('requestType')) {
       return false;
-    } else if (FIELDS_BY_REQUEST_TYPE[this.getValue('requestType')].indexOf(fieldId) === -1) {
-      return false;
-    } else {
-      return true;
     }
+    if (_.pluck(FIELDS_BY_REQUEST_TYPE[this.getValue('requestType')], 'id').indexOf(fieldId) === -1) {
+      return false;
+    }
+    return true;
   }
 
   getButtonsDisabled(type) {
     if (this.isEditing() && this.getValue('requestType') !== type) {
       return 'disabled';
-    } else {
-      return null;
     }
+    return null;
   }
 
   updateField(fieldId, newValue) {
@@ -153,16 +209,13 @@ class RequestForm extends React.Component {
     if (this.isEditing() && !(this.props.form && this.props.form.scheduleType)) {
       if (this.props.request.request[QUARTZ_SCHEDULE]) {
         return QUARTZ_SCHEDULE;
-      } else {
-        return CRON_SCHEDULE;
       }
-    } else {
-      if (this.props.form && this.props.form.scheduleType) {
-        return this.props.form.scheduleType;
-      } else {
-        return CRON_SCHEDULE;
-      }
+      return CRON_SCHEDULE;
     }
+    if (this.props.form && this.props.form.scheduleType) {
+      return this.props.form.scheduleType;
+    }
+    return CRON_SCHEDULE;
   }
 
   renderRequestTypeSelectors() {
@@ -183,101 +236,61 @@ class RequestForm extends React.Component {
       );
       if (this.isEditing() && requestType === this.getValue('requestType')) {
         return <OverlayTrigger placement="top" key={key} overlay={tooltip}>{selector}</OverlayTrigger>;
-      } else {
-        return selector;
       }
+      return selector;
     });
     return <div className="btn-group">{selectors}</div>;
   }
 
-  renderLoadBalanced() {
-    const checkbox = (
-      <label htmlFor="load-balanced" className={classNames({subtle: this.isEditing()})}>
-        <Checkbox
-          id = "load-balanced"
-          onChange = {event => this.updateField('loadBalanced', !this.getValue('loadBalanced'))}
-          checked = {this.getValue('loadBalanced')}
-          disabled = {this.isEditing()}
-          noFormControlClass = {true}
-        />
-        {" Load balanced"}
-      </label>
-    );
-    let field;
-    if (this.isEditing()) {
-      field = (
-        <OverlayTrigger
-          placement="top"
-          overlay={<Tooltip id="cannotChangeLoadBalancedAfterCreation">Option cannot be altered after creation</Tooltip>}>
-          {checkbox}
-        </OverlayTrigger>
-      );
-    } else {
-      field = checkbox;
-    }
-    return (
-      <div className="form-group">
-        {field}
-      </div>
-    );
-  }
-
   renderRequestTypeSpecificFormFields() {
     const instances = (
-      <div className="form-group">
-        <label htmlFor="instances">Instances</label>
-        <FormField
-          id = "instances"
-          prop = {{
-            updateFn: event => this.updateField('instances', event.target.value),
-            placeholder: '1',
-            inputType: 'text',
-            value: this.getValue('instances')
-          }}
-        />
-      </div>
+      <TextFormGroup
+        id="instances"
+        onChange={event => this.updateField('instances', event.target.value)}
+        value={this.getValue('instances')}
+        label="Instances"
+        placeholder="1"
+        feedback={this.feedback('instances')}
+        required={INDEXED_FIELDS.instances.required}
+      />
     );
     const rackSensitive = (
-      <div className="form-group">
-        <label htmlFor="rack-sensitive">
-          <Checkbox
-            id="rack-sensitive"
-            onChange={event => this.updateField('rackSensitive', !this.getValue('rackSensitive'))}
-            checked={this.getValue('rackSensitive')}
-            noFormControlClass={true}
-          />
-          {" Rack Sensitive"}
-        </label>
-      </div>
+      <CheckboxFormGroup
+        id="rack-sensitive"
+        label="Rack Sensitive"
+        checked={this.getValue('rackSensitive') || false}
+        onChange={(newValue) => this.updateField('rackSensitive', newValue)}
+      />
     );
     const hideEvenNumberAcrossRacksHint = (
-      <div className="form-group">
-        <label htmlFor="hide-distribute-evenly-across-racks-hint">
-          <Checkbox
-            id="hide-distribute-evenly-across-racks-hint"
-            onChange={event => this.updateField('hideEvenNumberAcrossRacksHint', !this.getValue('hideEvenNumberAcrossRacksHint'))}
-            checked={this.getValue('hideEvenNumberAcrossRacksHint')}
-            noFormControlClass={true}
-          />
-          {" Hide Distribute Evenly Across Racks Hint"}
-        </label>
-      </div>
+      <CheckboxFormGroup
+        id="hide-distribute-evenly-across-racks-hint"
+        label="Hide Distribute Evenly Across Racks Hint"
+        checked={this.getValue('hideEvenNumberAcrossRacksHint') || false}
+        onChange={(newValue) => this.updateField('hideEvenNumberAcrossRacksHint', newValue)}
+      />
+    );
+    const loadBalanced = (
+      <CheckboxFormGroup
+        id="load-balanced"
+        label="Load balanced"
+        checked={this.getValue('loadBalanced') || false}
+        onChange={(newValue) => this.updateField('loadBalanced', newValue)}
+        disabled={this.isEditing() && true}
+        hasTooltip={this.isEditing() && true}
+        tooltipText="Option cannot be altered after creation"
+      />
     );
     const waitAtLeastMillisAfterTaskFinishesForReschedule = (
-      <div className="form-group">
-        <label htmlFor="waitAtLeast">Task rescheduling delay</label>
-        <div className="input-group">
-          <FormField
-            id="waitAtLeast"
-            prop={{
-              updateFn: event => this.updateField('waitAtLeastMillisAfterTaskFinishesForReschedule', event.target.value),
-              inputType: 'text',
-              value: this.getValue('waitAtLeastMillisAfterTaskFinishesForReschedule')
-            }}
-          />
-          <div className="input-group-addon">milliseconds</div>
-        </div>
-      </div>
+      <TextFormGroup
+        id="waitAtLeast"
+        onChange={event => this.updateField('waitAtLeastMillisAfterTaskFinishesForReschedule', event.target.value)}
+        value={this.getValue('waitAtLeastMillisAfterTaskFinishesForReschedule')}
+        label="Task rescheduling delay"
+        inputGroupAddon="milliseconds"
+        required={INDEXED_FIELDS.waitAtLeastMillisAfterTaskFinishesForReschedule.required}
+        feedback={this.feedback('waitAtLeastMillisAfterTaskFinishesForReschedule')}
+      />
     );
     const rackOptions = _.pluck(this.props.racks, 'id').map(id => ({value: id, label: id}));
     const rackAffinity = (
@@ -286,97 +299,88 @@ class RequestForm extends React.Component {
         <MultiSelect
           id="rack-affinity"
           onChange={ value => this.updateField('rackAffinity', value) }
-          value={ this.getValue('rackAffinity') }
+          value={ this.getValue('rackAffinity') || [] }
           options={rackOptions}
           splits={[',', ' ']}
         />
       </div>
     );
+    const scheduleFeedback = this.feedback(this.getScheduleType()).toLowerCase();
     const schedule = (
-      <div className="form-group required">
-        <label htmlFor="schedule">Schedule</label>
-        <div className="row" id="schedule">
-          <div className="col-sm-7">
-            <FormField
-              prop={{
-                updateFn: event => this.updateField(this.getScheduleType(), event.target.value),
-                placeholder: this.getScheduleType() === QUARTZ_SCHEDULE ? 'eg: 0 */5 * * * ?' : 'eg: */5 * * * *',
-                inputType: 'text',
-                value: this.getValue(this.getScheduleType())
-              }}
-            />
-          </div>
-          <div className="col-sm-5">
-            <Select
-              onChange={value => this.updateField('scheduleType', value)}
-              options={[
-                {
-                  value: CRON_SCHEDULE,
-                  label: 'Cron Schedule'
-                },
-                {
-                  value: QUARTZ_SCHEDULE,
-                  label: 'Quartz Schedule'
-                }
-              ]}
-              clearable={false}
-              value={ this.getScheduleType() }
-            />
-          </div>
-        </div>
-      </div>
+      <FormGroup
+        id="schedule"
+        className={INDEXED_FIELDS[this.getScheduleType()].required && 'required'}
+        validationState={scheduleFeedback}>
+        <ControlLabel>Schedule</ControlLabel>
+          <Row>
+            <Col md={7}>
+              <FormControl
+                onChange={(event) => this.updateField(this.getScheduleType(), event.target.value)}
+                placeholder={this.getScheduleType() === QUARTZ_SCHEDULE ? 'eg: 0 */5 * * * ?' : 'eg: */5 * * * *'}
+                type="text"
+                value={this.getValue(this.getScheduleType())}
+                feedback={this.feedback(this.getScheduleType())}
+              />
+              {scheduleFeedback && <FormControl.Feedback />}
+            </Col>
+            <Col md={5}>
+              <Select
+                onChange={value => this.updateField('scheduleType', value.value)}
+                options={[
+                  {
+                    value: CRON_SCHEDULE,
+                    label: 'Cron Schedule'
+                  },
+                  {
+                    value: QUARTZ_SCHEDULE,
+                    label: 'Quartz Schedule'
+                  }
+                ]}
+                clearable={false}
+                value={ this.getScheduleType() }
+              />
+            </Col>
+          </Row>
+      </FormGroup>
     );
     const numRetriesOnFailure = (
-      <div className="form-group">
-        <label htmlFor="retries-on-failure">Number of retries on failure</label>
-        <FormField
-          id="retries-on-failure"
-          prop={{
-            updateFn: event => this.updateField('numRetriesOnFailure', event.target.value),
-            inputType: 'text',
-            value: this.getValue('numRetriesOnFailure')
-          }}
-        />
-      </div>
+      <TextFormGroup
+        id="retries-on-failure"
+        onChange={event => this.updateField('numRetriesOnFailure', event.target.value)}
+        value={this.getValue('numRetriesOnFailure')}
+        label="Number of retries on failure"
+        required={INDEXED_FIELDS.numRetriesOnFailure.required}
+        feedback={this.feedback('numRetriesOnFailure')}
+      />
     );
     const killOldNonLongRunningTasksAfterMillis = (
-      <div className="form-group">
-        <label htmlFor="killOldNRL">Kill cleaning task(s) after</label>
-        <div className="input-group">
-          <FormField
-            id="killOldNRL"
-            prop={{
-              updateFn: event => this.updateField('killOldNonLongRunningTasksAfterMillis', event.target.value),
-              inputType: 'text',
-              value: this.getValue('killOldNonLongRunningTasksAfterMillis')
-            }}
-          />
-          <div className="input-group-addon">milliseconds</div>
-        </div>
-      </div>
+      <TextFormGroup
+        id="killOldNRL"
+        onChange={event => this.updateField('killOldNonLongRunningTasksAfterMillis', event.target.value)}
+        value={this.getValue('killOldNonLongRunningTasksAfterMillis')}
+        label="Kill cleaning task(s) after"
+        inputGroupAddon="milliseconds"
+        required={INDEXED_FIELDS.killOldNonLongRunningTasksAfterMillis.required}
+        feedback={this.feedback('killOldNonLongRunningTasksAfterMillis')}
+      />
     );
     const scheduledExpectedRuntimeMillis = (
-      <div className="form-group">
-        <label htmlFor="expected-runtime">Maximum task duration</label>
-        <div className="input-group">
-          <FormField
-            id="expected-runtime"
-            prop={{
-              updateFn: event => this.updateField('scheduledExpectedRuntimeMillis', event.target.value),
-              inputType: 'text',
-              value: this.getValue('scheduledExpectedRuntimeMillis')
-            }}
-          />
-          <div className="input-group-addon">milliseconds</div>
-        </div>
-      </div>
+      <TextFormGroup
+        id="expected-runtime"
+        onChange={event => this.updateField('scheduledExpectedRuntimeMillis', event.target.value)}
+        value={this.getValue('scheduledExpectedRuntimeMillis')}
+        label="Maximum task duration"
+        inputGroupAddon="milliseconds"
+        required={INDEXED_FIELDS.scheduledExpectedRuntimeMillis.required}
+        feedback={this.feedback('scheduledExpectedRuntimeMillis')}
+      />
     );
     return (
       <div>
         { this.shouldRenderField('instances') && instances }
         { this.shouldRenderField('rackSensitive') && rackSensitive }
         { this.shouldRenderField('hideEvenNumberAcrossRacksHint') && hideEvenNumberAcrossRacksHint }
-        { this.shouldRenderField('loadBalanced') && this.renderLoadBalanced() }
+        { this.shouldRenderField('loadBalanced') && loadBalanced }
         { this.shouldRenderField('waitAtLeastMillisAfterTaskFinishesForReschedule') && waitAtLeastMillisAfterTaskFinishesForReschedule }
         { this.shouldRenderField('rackAffinity') && rackAffinity }
         { (this.shouldRenderField(CRON_SCHEDULE) || this.shouldRenderField(QUARTZ_SCHEDULE)) && schedule }
@@ -392,37 +396,31 @@ class RequestForm extends React.Component {
     const header = (
       this.isEditing() ?
         <h3>
-          Editing <a href={`${config.appRoot}/request/${this.props.request.request.id}`}>{this.props.request.request.id}</a>
+          Editing <a href={`${config.appRoot}/request/${requestId}`}>{requestId}</a>
         </h3> :
         <h3>New Request</h3>
     );
     const id = (
-      <div className="form-group required">
-        <label htmlFor="id">ID</label>
-        <FormField
-          id="id"
-          prop={{
-            updateFn: event => {
-              this.updateField('id', event.target.value);
-            },
-            placeholder: 'eg: my-awesome-request',
-            inputType: 'text',
-            value: this.getValue('id'),
-            required: true
-          }}
-        />
-      </div>
+      <TextFormGroup
+        id="id"
+        onChange={event => this.updateField('id', event.target.value)}
+        value={this.getValue('id')}
+        label="ID"
+        required={INDEXED_FIELDS.id.required}
+        placeholder="eg: my-awesome-request"
+        feedback={this.feedback('id')}
+      />
     );
     const owners = (
-      <div className="form-group">
-        <label htmlFor="owners">Owners <span className="form-label-tip">separate multiple owners with commas</span></label>
-        <MultiSelect
-          id="owners"
-          onChange={ value => this.updateField('owners', value) }
-          value={ this.getValue('owners') }
-          splits={[',', ' ']}
-        />
-      </div>
+      <MultiInputFormGroup
+        id="owners"
+        value={this.getValue('owners') || []}
+        onChange={(newValue) => this.updateField('owners', newValue)}
+        label="Owners"
+        required={INDEXED_FIELDS.owners.required}
+        errorIndices={INDEXED_FIELDS.owners.required && _.isEmpty(this.getValue('owners')) && [0] || []}
+        couldHaveFeedback={true}
+      />
     );
     const requestTypeSelectors = (
       <div className="form-group">
@@ -438,39 +436,21 @@ class RequestForm extends React.Component {
       </div>
     );
     const slavePlacement = (
-      <div className="form-group slavePlacement">
-        <label htmlFor="slavePlacement" className="control-label">
-          Slave Placement
-        </label>
-        <DropDown
-          id="slavePlacement"
-          prop={{
-            updateFn: event => {
-              this.updateField('slavePlacement', event.target.value);
-            },
-            forceChooseValue: true,
-            choices: [
-              {
-                value: '',
-                user: 'Default'
-              },
-              {
-                value: 'SEPARATE',
-                user: 'Separate'
-              },
-              {
-                value: 'OPTIMISTIC',
-                user: 'Optimistic'
-              },
-              {
-                value: 'GREEDY',
-                user: 'Greedy'
-              }
-            ],
-            value: this.getValue('slavePlacement') || ''
-          }}
-        />
-      </div>
+      <SelectFormGroup
+        id="slave-placement"
+        label="Slave Placement"
+        value={this.getValue('slavePlacement') || ''}
+        defaultValue=""
+        required={INDEXED_FIELDS.slavePlacement.required}
+        onChange={newValue => this.updateField('slavePlacement', newValue.value)}
+        options={[
+          { label: 'Default', value: '' },
+          { label: 'Separate', value: 'SEPARATE' },
+          { label: 'Optimistic', value: 'OPTIMISTIC' },
+          { label: 'Greedy', value: 'GREEDY' },
+          { label: 'Separate by request', value: 'SEPARATE_BY_REQUEST'}
+        ]}
+      />
     );
     const saveButton = (
       <div id="button-row">
@@ -482,21 +462,20 @@ class RequestForm extends React.Component {
       </div>
     );
     const errorMessage = (
-      this.props.saveApiCall.error ?
-        <p className="alert alert-danger">
-          There was a problem saving your request: {this.props.saveApiCall.error.message}
-        </p> :
-        this.props.saveApiCall.data && this.props.saveApiCall.data.message ?
-        <p className="alert alert-danger">
-          There was a problem saving your request: {this.props.saveApiCall.data.message}
-        </p> :
-        null
+      this.props.saveApiCall.error &&
+      <p className="alert alert-danger">
+        There was a problem saving your request: {this.props.saveApiCall.error.message}
+      </p> ||
+      this.props.saveApiCall.data && this.props.saveApiCall.data.message &&
+      <p className="alert alert-danger">
+        There was a problem saving your request: {this.props.saveApiCall.data.message}
+      </p>
     );
     return (
-      <div className="row new-form">
-        <div className="col-md-5 col-md-offset-3">
+      <Row className="new-form">
+        <Col md={5} mdOffset={3}>
           { header }
-          <form role="form" onSubmit={event => this.submitForm(event)}>
+          <Form onSubmit={event => this.submitForm(event)}>
             { !this.isEditing() && id }
             { owners }
             { requestTypeSelectors }
@@ -505,9 +484,9 @@ class RequestForm extends React.Component {
             { this.renderRequestTypeSpecificFormFields() }
             { saveButton }
             { errorMessage }
-          </form>
-        </div>
-      </div>
+          </Form>
+        </Col>
+      </Row>
     );
   }
 }

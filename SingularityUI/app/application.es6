@@ -16,6 +16,9 @@ class Application {
     this.handleFocus = this.handleFocus.bind(this);
     this.handleAjaxError = this.handleAjaxError.bind(this);
 
+    // set up views
+    this.views = {};
+
     // set up Redux store
     this.store = configureStore();
 
@@ -31,17 +34,6 @@ class Application {
 
     this.page = $('#page')[0];
 
-    // wire up nav
-    this.views = {};
-    this.views.nav = new NavView;
-    this.views.nav.render();
-    $('body').prepend(this.views.nav.$el);
-
-    // wire up global search
-    this.views.globalSearch = new GlobalSearchView({store: this.store});
-    this.views.globalSearch.render();
-    $('body').append(this.views.globalSearch.$el);
-
     // hide loading animation
     $('.page-loader.fixed').hide();
 
@@ -53,6 +45,16 @@ class Application {
       pushState: true,
       root: this.getRootPath()
     });
+
+    // wire up nav
+    this.views.nav = new NavView;
+    this.views.nav.render();
+    $('body').prepend(this.views.nav.$el);
+
+    // wire up global search
+    this.views.globalSearch = new GlobalSearchView({store: this.store});
+    this.views.globalSearch.render();
+    $('body').append(this.views.globalSearch.$el);
 
     // set up global refresh
     this.blurred = false;
@@ -114,7 +116,7 @@ class Application {
     url = settings.url.replace(config.appRoot, '');
     if (jqxhr.status === 502) {
       return Messenger().info({
-        message: "Singularity is deploying, your requests cannot be handled. Things should resolve in a few seconds so just hang tight!"
+        message: 'Singularity is deploying, your requests cannot be handled. Things should resolve in a few seconds so just hang tight!'
       });
     } else if (jqxhr.status === 401 && config.redirectOnUnauthorizedUrl) {
       return window.location.href = config.redirectOnUnauthorizedUrl.replace('{URL}', encodeURIComponent(window.location.href));
@@ -124,7 +126,7 @@ class Application {
       });
     } else if (jqxhr.status === 0) {
       return Messenger().error({
-        message: "<p>Could not reach the Singularity API. Please make sure SingularityUI is properly set up.</p><p>If running through locally, this might be your browser blocking cross-domain requests.</p>"
+        message: '<p>Could not reach the Singularity API. Please make sure SingularityUI is properly set up.</p><p>If running through locally, this might be your browser blocking cross-domain requests.</p>'
       });
     } else {
       try {
@@ -152,7 +154,7 @@ class Application {
         copyLink: '.copy-link'
       };
       utils.makeMeCopy(options);
-      throw new Error("AJAX Error");
+      throw new Error('AJAX Error');
     }
   }
 
