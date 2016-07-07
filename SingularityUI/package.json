@@ -39,7 +39,7 @@
     "promise-polyfill": "^5.2.0",
     "q": "^1.4.1",
     "react": "^15.1.0",
-    "react-bootstrap": "^0.28.3",
+    "react-bootstrap": "^0.29.5",
     "react-dom": "^15.1.0",
     "react-interval": "^1.2.1",
     "react-json-tree": "^0.8.0",

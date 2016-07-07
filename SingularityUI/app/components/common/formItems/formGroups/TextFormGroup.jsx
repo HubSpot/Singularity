@@ -1,61 +1,28 @@
 import React, {PropTypes} from 'react';
-import FormField from '../FormField';
-import classNames from 'classnames';
+import { FormGroup, ControlLabel, FormControl, InputGroup } from 'react-bootstrap/lib';
 
 const TextFormGroup = (props) => {
-  const formGroupClassNames = classNames(
-    'form-group',
-    {
-      required: props.required,
-      'has-success': props.feedback === 'SUCCESS',
-      'has-error': props.feedback === 'ERROR',
-      'has-warning': props.feedback === 'WARN',
-      'has-feedback': props.feedback
-    }
-  );
-  const iconClassNames = classNames(
-    'glyphicon',
-    'form-control-feedback',
-    {
-      'glyphicon-ok': props.feedback === 'SUCCESS',
-      'glyphicon-warning-sign': props.feedback === 'WARN',
-      'glyphicon-remove': props.feedback === 'ERROR'
-    }
-  );
-  const label = <label htmlFor={props.id}>{props.label}</label>;
   const formField = (
-    <FormField
-      id={props.id}
-      className={props.id}
-      prop = {{
-        updateFn: props.onChange,
-        inputType: 'text',
-        value: props.value,
-        required: props.required,
-        placeholder: props.placeholder
-      }}
+    <FormControl
+      type="text"
+      value={props.value || ''}
+      placeholder={props.placeholder}
+      onChange={(event) => props.onChange(event)}
     />
   );
-  const feedback = props.feedback && <span className={iconClassNames} />;
-  if (props.inputGroupAddon) {
-    return (
-      <div className={formGroupClassNames}>
-        {label}
-        <div className="input-group">
-          {formField}
-          <div className="input-group-addon">
-            {props.inputGroupAddon}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const feedback = props.feedback && <FormControl.Feedback />;
   return (
-    <div className={formGroupClassNames}>
-      {label}
-      {formField}
-      {feedback}
-    </div>
+    <FormGroup controlId={props.id} validationState={props.feedback && props.feedback.toLowerCase()} className={props.required && 'required'}>
+      <ControlLabel>{props.label}</ControlLabel>
+      {props.inputGroupAddon &&
+        <InputGroup>
+          {formField}
+          <InputGroup.Addon>{props.inputGroupAddon}</InputGroup.Addon>
+        </InputGroup>
+      }
+      {!props.inputGroupAddon && formField}
+      {!props.inputGroupAddon && feedback}
+    </FormGroup>
   );
 };
 

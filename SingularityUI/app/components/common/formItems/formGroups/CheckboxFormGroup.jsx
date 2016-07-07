@@ -1,37 +1,20 @@
 import React, {PropTypes} from 'react';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import ToolTip from 'react-bootstrap/lib/Tooltip';
-import Checkbox from '../Checkbox';
+import { FormGroup, Checkbox } from 'react-bootstrap/lib';
 
 const CheckboxFormGroup = (props) => {
-  const checkbox = (
-    <label htmlFor={props.id}>
-      <Checkbox
-        id = {props.id}
-        onChange = {() => props.onChange(!props.checked)}
-        checked = {props.checked}
-        disabled = {props.disabled}
-        noFormControlClass = {true}
-      />
-      {` ${props.label}`}
-    </label>
-  );
-  let field;
-  if (props.hasTooltip) {
-    field = (
-      <OverlayTrigger
-        placement="top"
-        overlay={<ToolTip id={`${props.id}-tooltip`}>{props.tooltipText}</ToolTip>}>
-        {checkbox}
-      </OverlayTrigger>
-    );
-  } else {
-    field = checkbox;
-  }
   return (
-    <div className="form-group">
-      {field}
-    </div>
+    <FormGroup controlId={props.id}>
+      <Checkbox
+        onChange={() => props.onChange(!props.checked)}
+        checked={props.checked || false}
+        inline={true}
+        disabled={props.disabled}
+      >
+        {props.disabled &&
+          <div className="subtle">{props.label} <strong>{props.tooltipText}</strong></div> ||
+          <strong>{props.label}</strong>}
+      </Checkbox>
+    </FormGroup>
   );
 };
 

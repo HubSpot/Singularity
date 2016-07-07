@@ -1,10 +1,10 @@
 import React, {PropTypes} from 'react';
 import Select from 'react-select';
-import classNames from 'classnames';
+import { FormGroup, ControlLabel } from 'react-bootstrap/lib';
 
 const SelectFormGroup = (props) => (
-  <div className={classNames('form-group', {required: props.required})}>
-    <label htmlFor={props.id}>{props.label}</label>
+  <FormGroup id={props.id} className={props.required && 'required'}>
+    <ControlLabel>{props.label}</ControlLabel>
     <Select
       id={props.id}
       className={props.id}
@@ -13,7 +13,7 @@ const SelectFormGroup = (props) => (
       value={props.value}
       clearable={false}
     />
-  </div>
+  </FormGroup>
 );
 
 SelectFormGroup.propTypes = {
