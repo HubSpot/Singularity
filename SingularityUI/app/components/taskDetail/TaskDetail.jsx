@@ -319,15 +319,15 @@ class TaskDetail extends React.Component {
   }
 }
 
-function mapHealthchecksToProps(t) {
-  if (!t) return t;
-  const hcs = t.healthcheckResults;
-  t.hasSuccessfulHealthcheck = hcs && hcs.length > 0 && !!_.find(hcs, (h) => h.statusCode === 200);
-  t.lastHealthcheckFailed = hcs && hcs.length > 0 && hcs[0].statusCode !== 200;
-  t.healthcheckFailureReasonMessage = Utils.healthcheckFailureReasonMessage(t);
-  t.tooManyRetries = hcs && hcs.length > t.task.taskRequest.deploy.healthcheckMaxRetries && t.task.taskRequest.deploy.healthcheckMaxRetries > 0;
-  t.secondsElapsed = t.taskRequest && t.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds ? t.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds : config.defaultDeployHealthTimeoutSeconds;
-  return t;
+function mapHealthchecksToProps(task) {
+  if (!task) return task;
+  const hcs = task.healthcheckResults;
+  task.hasSuccessfulHealthcheck = hcs && hcs.length > 0 && !!_.find(hcs, (h) => h.statusCode === 200);
+  task.lastHealthcheckFailed = hcs && hcs.length > 0 && hcs[0].statusCode !== 200;
+  task.healthcheckFailureReasonMessage = Utils.healthcheckFailureReasonMessage(task);
+  task.tooManyRetries = hcs && hcs.length > task.task.taskRequest.deploy.healthcheckMaxRetries && task.task.taskRequest.deploy.healthcheckMaxRetries > 0;
+  task.secondsElapsed = task.task.taskRequest && task.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds || config.defaultDeployHealthTimeoutSeconds;
+  return task;
 }
 
 function mapTaskToProps(task) {
@@ -358,7 +358,8 @@ function mapTaskToProps(task) {
 }
 
 function mapStateToProps(state, ownProps) {
-  let task = mapTaskToProps(state.api.task[ownProps.taskId].data);
+  let task = state.api.task[ownProps.taskId].data;
+  task = mapTaskToProps(task);
   task = mapHealthchecksToProps(task);
   return {
     task,
