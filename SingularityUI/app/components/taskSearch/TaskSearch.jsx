@@ -1,166 +1,181 @@
 import React from 'react';
+import { connect } from 'react-redux';
+import classNames from 'classnames';
+import { FetchTaskSearchParams } from '../../actions/api/history';
+
+import Breadcrumbs from '../common/Breadcrumbs';
+import TasksTable from './TasksTable';
+import TaskSearchFilters from './TaskSearchFilters';
+import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
+import JSONButton from '../common/JSONButton';
 import Utils from '../../utils';
-import Enums from './Enums';
-import TaskSearchForm from './TaskSearchForm';
-import DisplayResults from './DisplayResults';
-import Header from './Header';
 
-let TaskSearch = React.createClass({
+class TaskSearch extends React.Component {
 
-    countChoices: [5, 10, 25],
+  static propTypes = {
+    requestId: React.PropTypes.string,
+    fetchTaskHistory: React.PropTypes.func.isRequired,
+    request: React.PropTypes.object,
+    taskHistory: React.PropTypes.array
+  }
 
-    defaultCount: 10,
+  constructor(props) {
+    super(props);
+    this.state = {
+      filter: {
+        requestId: props.requestId,
+        page: 1,
+        count: TaskSearch.TASKS_PER_PAGE
+      },
+      disableNext: false,
+      loading: false
+    };
+  }
 
-    defaultSortDirection: 'DESC',
+  static TASKS_PER_PAGE = 10;
 
-    getInitialState() {
-        return {
-            form: {
-                requestId: this.props.initialRequestId || '',
-                deployId: this.props.initialDeployId || '',
-                host: this.props.initialHost || '',
-                lastTaskStatus: this.props.initialTaskStatus || '',
-                startedBefore: this.props.initialStartedBefore || '',
-                startedAfter: this.props.initialStartedAfter || ''
-            },
-            sortDirection: this.props.initialSortDirection || this.defaultSortDirection,
-            queryParams: {
-                requestId: this.props.initialRequestId || '',
-                deployId: this.props.initialDeployId || '',
-                host: this.props.initialHost || '',
-                lastTaskStatus: this.props.initialTaskStatus || '',
-                startedBefore: this.props.initialStartedBefore || '',
-                startedAfter: this.props.initialStartedAfter || ''
-            },
-            pageNumber: 1,
-            count: this.props.initialCount || this.defaultCount,
-            hasDoneAnySearch: false
-        };
-    },
+  setCount(count) {
+    TaskSearch.TASKS_PER_PAGE = count;
+    const newFilter = _.extend({}, this.state.filter, {count, page: 1});
+    this.setState({
+      filter: newFilter
+    });
+    this.props.fetchTaskHistory(newFilter);
+  }
 
-    handleSubmit(event) {
-        event.preventDefault();
-        return this.setState({
-            queryParams: this.state.form,
-            pageNumber: 1, // If you narrow down your search you most likely want to go back to page 1
-            hasDoneAnySearch: true
+  handleSearch(filter) {
+    const newFilter = _.extend({}, this.state.filter, filter, {page: 1});
+    this.setState({
+      filter: newFilter,
+      disableNext: false
+    });
+    this.props.fetchTaskHistory(newFilter);
+  }
+
+  handlePage(page) {
+    const newFilter = _.extend({}, this.state.filter, {page});
+    this.setState({
+      loading: true
+    });
+
+    this.props.fetchTaskHistory(newFilter).then((resp) => {
+      if (!resp.data.length) {
+        this.props.fetchTaskHistory(_.extend({}, newFilter, {page: page - 1})).then(() => {
+          this.setState({
+            disableNext: true,
+            loading: false
+          });
         });
-    },
+      } else if (resp.data.length < TaskSearch.TASKS_PER_PAGE) {
+        this.setState({
+          filter: newFilter,
+          loading: false,
+          disableNext: true
+        });
+      } else {
+        this.setState({
+          filter: newFilter,
+          loading: false,
+          disableNext: false
+        });
+      }
+    });
+  }
 
-    isAnyQueryParams() {
-        return this.state.queryParams.requestId || this.state.queryParams.deployId || this.state.queryParams.host || this.state.queryParams.lastTaskStatus || this.state.queryParams.startedBefore || this.state.queryParams.startedAfter;
-    },
+  renderTableRow(data, i) {
+    return (
+      <tr key={i}>
+        <td className="actions-column"><a href={`${config.appRoot}/task/${data.taskId.id}`}><Glyphicon iconClass="link" /></a></td>
+        <td><a href={`${config.appRoot}/request/${data.taskId.requestId}`}>{data.taskId.requestId}</a></td>
+        <td><a href={`${config.appRoot}/request/${data.taskId.requestId}/deploy/${data.taskId.deployId}`}>{data.taskId.deployId}</a></td>
+        <td><a href={`${config.appRoot}/tasks/active/all/${data.taskId.host}`}>{data.taskId.host}</a></td>
+        <td>
+          <span className={`label label-${Utils.getLabelClassFromTaskState(data.lastTaskState)}`}>
+            {Utils.humanizeText(data.lastTaskState)}
+          </span>
+        </td>
+        <td>{Utils.timeStampFromNow(data.taskId.startedAt)}</td>
+        <td>{Utils.timeStampFromNow(data.updatedAt)}</td>
+        <td className="actions-column">
+          <a href={`${config.appRoot}/task/${data.taskId.id}/tail/${config.finishedTaskLogPath}`}>···</a>
+          <JSONButton object={data}>{'{ }'}</JSONButton>
+        </td>
+      </tr>
+    );
+  }
 
-    // Annoying that we need a new function for each property.
-    // Unfortuantely using a curried function doesn't seem to work.
-    updateReqeustId(event) {
-        if (this.props.global) {
-            let form = $.extend({}, this.state.form);
-            form.requestId = event.target.value;
-            return this.setState({ form });
-        }
-    },
-
-    updateDeployId(event) {
-        let form = $.extend({}, this.state.form);
-        form.deployId = event.target.value;
-        return this.setState({ form });
-    },
-
-    updateHost(event) {
-        let form = $.extend({}, this.state.form);
-        form.host = event.target.value;
-        return this.setState({ form });
-    },
-
-    updateLastTaskStatus(event) {
-        let form = $.extend({}, this.state.form);
-        form.lastTaskStatus = event.target.value;
-        return this.setState({ form });
-    },
-
-    updateStartedBefore(event) {
-        let form = $.extend({}, this.state.form);
-        form.startedBefore = event.date;
-        return this.setState({ form });
-    },
-
-    updateStartedAfter(event) {
-        let form = $.extend({}, this.state.form);
-        form.startedAfter = event.date;
-        return this.setState({ form });
-    },
-
-    resetForm() {
-        return this.setState(this.getInitialState());
-    },
-
-    updateSortDirection(event) {
-        if (this.state.sortDirection === Enums.sortDirections()[0].value) {
-            return this.setState({ sortDirection: Enums.sortDirections()[1].value });
-        } else {
-            return this.setState({ sortDirection: Enums.sortDirections()[0].value });
-        }
-    },
-
-    updatePageNumber(event) {
-        return this.setState({ pageNumber: event.target.value });
-    },
-
-    increasePageNumber(event) {
-        return this.setState({ pageNumber: this.state.pageNumber + 1 });
-    },
-
-    setPageNumber(pageNumber) {
-        if (pageNumber > 0) {
-            return this.setState({ pageNumber });
-        }
-    },
-
-    decreasePageNumber(event) {
-        if (this.state.pageNumber > 1) {
-            return this.setState({ pageNumber: this.state.pageNumber - 1 });
-        }
-    },
-
-    updateCount(newCount) {
-        return this.setState({ count: newCount });
-    },
-
-    clearRequestId(event) {
-        if (this.props.global) {
-            return this.setState({ requestId: '' });
-        }
-    },
-
-    clearDeployId(event) {
-        return this.setState({ deployId: '' });
-    },
-
-    clearHost(event) {
-        return this.setState({ host: '' });
-    },
-
-    clearSortDirection(event) {
-        return this.setState({ sortDirection: '' });
-    },
-
-    clearLastTaskStatus(event) {
-        return this.setState({ lastTaskStatus: '' });
-    },
-
-    clearStartedBefore(event) {
-        return this.setState({ startedBefore: '' });
-    },
-
-    clearStartedAfter(event) {
-        return this.setState({ startedAfter: '' });
-    },
-
-    render() {
-        return <div><Header global={this.props.global} requestId={this.props.initialRequestId} /><h2> Search Parameters </h2><TaskSearchForm handleSubmit={this.handleSubmit} requestId={this.state.form.requestId} requestIdCurrentSearch={this.state.queryParams.requestId} global={this.props.global} updateReqeustId={this.updateReqeustId} deployId={this.state.form.deployId} updateDeployId={this.updateDeployId} deployIdCurrentSearch={this.state.queryParams.deployId} host={this.state.form.host} updateHost={this.updateHost} hostCurrentSearch={this.state.queryParams.host} lastTaskStatus={this.state.form.lastTaskStatus} updateLastTaskStatus={this.updateLastTaskStatus} lastTaskStatusCurrentSearch={this.state.queryParams.lastTaskStatus} startedAfter={this.state.form.startedAfter} updateStartedAfter={this.updateStartedAfter} startedAfterCurrentSearch={this.state.queryParams.startedAfter ? this.state.queryParams.startedAfter.format(window.config.timestampFormat) : undefined} startedBefore={this.state.form.startedBefore} updateStartedBefore={this.updateStartedBefore} startedBeforeCurrentSearch={this.state.queryParams.startedBefore ? this.state.queryParams.startedBefore.format(window.config.timestampFormat) : undefined} resetForm={this.resetForm} /><h2>Tasks</h2><DisplayResults requestId={this.state.queryParams.requestId} deployId={this.state.queryParams.deployId} host={this.state.queryParams.host} lastTaskStatus={this.state.queryParams.lastTaskStatus} startedAfter={this.state.queryParams.startedAfter} startedBefore={this.state.queryParams.startedBefore} sortDirection={this.state.sortDirection} increasePageNumber={this.increasePageNumber} setPageNumber={this.setPageNumber} decreasePageNumber={this.decreasePageNumber} page={this.state.pageNumber} count={this.state.count} updateCount={this.updateCount} countChoices={this.countChoices} updateSortDirection={this.updateSortDirection} clearRequestId={this.clearRequestId} clearDeployId={this.clearDeployId} clearHost={this.clearHost} clearLastTaskStatus={this.clearLastTaskStatus} clearStartedAfter={this.clearStartedAfter} clearStartedBefore={this.clearStartedBefore} clearSortDirection={this.clearSortDirection} global={this.props.global} hasDoneAnySearch={this.state.hasDoneAnySearch} holdOffOnSearching={!(this.isAnyQueryParams() || this.state.hasDoneAnySearch)} /></div>;
+  renderBreadcrumbs() {
+    if (this.props.requestId) {
+      return (
+        <Breadcrumbs
+          items={[
+            {
+              label: 'Request',
+              text: this.props.request.request.id,
+              link: `${config.appRoot}/request/${this.props.request.request.id}`
+            }
+          ]}
+        />
+      );
     }
-});
+    return null;
+  }
 
-export default TaskSearch;
+  renderPageOptions() {
+    if (this.props.taskHistory.length) {
+      return (
+        <span className="pull-right count-options">
+          Results per page:
+          <a className={classNames({inactive: TaskSearch.TASKS_PER_PAGE === 5})} onClick={() => this.setCount(5)}>5</a>
+          <a className={classNames({inactive: TaskSearch.TASKS_PER_PAGE === 10})} onClick={() => this.setCount(10)}>10</a>
+          <a className={classNames({inactive: TaskSearch.TASKS_PER_PAGE === 25})} onClick={() => this.setCount(25)}>25</a>
+        </span>
+      );
+    }
+    return null;
+  }
 
+  render() {
+    return (
+      <div>
+        {this.renderBreadcrumbs()}
+        <h1 className="inline-header">{!this.props.requestId && 'Global '}Historical Tasks </h1>
+        {this.props.requestId && <h3 className="inline-header" style={{marginLeft: '10px'}}>for {this.props.requestId}</h3>}
+        <h2>Search Parameters</h2>
+        <TaskSearchFilters requestId={this.props.requestId} onSearch={(filter) => this.handleSearch(filter)} />
+        {this.renderPageOptions()}
+        <div className="row">
+          <div className="col-md-12">
+            <TasksTable
+              emptyMessage={"No matching tasks"}
+              headers={['', 'Request ID', 'Deploy ID', 'Host', 'Last Status', 'Started', 'Updated', '']}
+              data={this.props.taskHistory}
+              paginate={true}
+              page={this.state.filter.page}
+              pageSize={TaskSearch.TASKS_PER_PAGE + 1}
+              disableNext={this.state.disableNext}
+              onPage={(page) => this.handlePage(page)}
+              renderTableRow={(...args) => this.renderTableRow(...args)}
+              loading={this.state.loading}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+}
+
+function mapStateToProps(state) {
+  return {
+    request: state.api.request.data,
+    taskHistory: state.api.taskHistory.data
+  };
+}
+
+function mapDispatchToProps(dispatch) {
+  return {
+    fetchTaskHistory: (...args) => dispatch(FetchTaskSearchParams.trigger(...args))
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(TaskSearch);

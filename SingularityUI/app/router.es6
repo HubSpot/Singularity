@@ -1,5 +1,4 @@
 let RequestDetailController;
-let TaskSearchController;
 
 const hasProp = {}.hasOwnProperty;
 
@@ -29,7 +28,7 @@ import DeployDetailController from 'controllers/DeployDetail';
 
 import LogViewerController from 'controllers/LogViewer';
 
-TaskSearchController = require('controllers/TaskSearch');
+import TaskSearchController from 'controllers/TaskSearch';
 
 import WebhooksController from 'controllers/Webhooks';
 
@@ -89,6 +88,7 @@ class Router extends Backbone.Router {
 
   taskSearch(requestId) {
     return this.app.bootstrapController(new TaskSearchController({
+      store: this.app.store,
       requestId
     }));
   }
@@ -112,28 +112,28 @@ class Router extends Backbone.Router {
     }
     return this.app.bootstrapController(new TasksTableController({
       store: this.app.store,
-      state: state,
-      requestsSubFilter: requestsSubFilter,
-      searchFilter: searchFilter
+      state,
+      requestsSubFilter,
+      searchFilter
     }));
   }
 
   taskDetail(taskId) {
     return this.app.bootstrapController(new TaskDetailController({
       store: this.app.store,
-      taskId: taskId,
+      taskId,
       filePath: taskId
     }));
   }
 
   taskFileBrowser(taskId, filePath) {
     if (filePath == null) {
-      filePath = "";
+      filePath = '';
     }
     return this.app.bootstrapController(new TaskDetailController({
       store: this.app.store,
-      taskId: taskId,
-      filePath: filePath
+      taskId,
+      filePath
     }));
   }
 
@@ -176,8 +176,8 @@ class Router extends Backbone.Router {
   deployDetail(requestId, deployId) {
     return this.app.bootstrapController(new DeployDetailController({
       store: this.app.store,
-      requestId: requestId,
-      deployId: deployId
+      requestId,
+      deployId
     }));
   }
 

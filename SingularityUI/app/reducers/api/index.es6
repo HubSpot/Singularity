@@ -13,7 +13,8 @@ import {
   FetchActiveTasksForRequest,
   FetchActiveTasksForDeploy,
   FetchTaskHistoryForDeploy,
-  FetchDeployForRequest
+  FetchDeployForRequest,
+  FetchTaskSearchParams
 } from '../../actions/api/history';
 
 import { FetchTaskS3Logs } from '../../actions/api/logs';
@@ -60,7 +61,7 @@ const user = buildApiActionReducer(FetchUser);
 const webhooks = buildApiActionReducer(FetchWebhooks, []);
 const slaves = buildApiActionReducer(FetchSlaves, []);
 const racks = buildApiActionReducer(FetchRacks, []);
-const request = buildKeyedApiActionReducer(FetchRequest);
+const request = buildApiActionReducer(FetchRequest);
 const saveRequest = buildApiActionReducer(SaveRequest);
 const requests = buildApiActionReducer(FetchRequests, []);
 const requestsInState = buildApiActionReducer(FetchRequestsInState, []);
@@ -77,6 +78,7 @@ const taskResourceUsage = buildApiActionReducer(FetchTaskStatistics);
 const taskS3Logs = buildApiActionReducer(FetchTaskS3Logs, []);
 const taskShellCommandResponse = buildApiActionReducer(RunCommandOnTask);
 const task = buildKeyedApiActionReducer(FetchTaskHistory);
+const taskHistory = buildApiActionReducer(FetchTaskSearchParams, []);
 const tasks = buildApiActionReducer(FetchTasksInState, []);
 
 export default combineReducers({
@@ -101,5 +103,6 @@ export default combineReducers({
   taskResourceUsage,
   taskS3Logs,
   deploys,
-  taskShellCommandResponse
+  taskShellCommandResponse,
+  taskHistory
 });
