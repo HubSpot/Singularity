@@ -499,10 +499,8 @@ function navigateToRequestIfSuccess(promiseResult) {
   }
 }
 
-function mapStateToProps(state, ownProps) {
-  const request = state.api.request[ownProps.requestId]
-    ? state.api.request[ownProps.requestId].data
-    : null;
+function mapStateToProps(state) {
+  const request = state.api.request.data;
 
   return {
     racks: state.api.racks.data,

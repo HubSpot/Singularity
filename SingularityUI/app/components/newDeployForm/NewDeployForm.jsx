@@ -1,13 +1,15 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
+import rootComponent from '../../rootComponent';
 
 import SelectFormGroup from '../common/formItems/formGroups/SelectFormGroup';
 import TextFormGroup from '../common/formItems/formGroups/TextFormGroup';
 import MultiInputFormGroup from '../common/formItems/formGroups/MultiInputFormGroup';
 import CheckboxFormGroup from '../common/formItems/formGroups/CheckboxFormGroup';
 
-import { ModifyField } from '../../actions/ui/form';
+import { ModifyField, ClearForm } from '../../actions/ui/form';
 import { SaveDeploy } from '../../actions/api/deploys';
+import { FetchRequest, SaveRequest } from '../../actions/api/requests';
 
 import {
   FIELDS, ARTIFACT_FIELDS, DOCKER_PORT_MAPPING_FIELDS, DOCKER_VOLUME_FIELDS,
@@ -1419,9 +1421,9 @@ class NewDeployForm extends Component {
   }
 }
 
-function mapStateToProps(state, ownProps) {
+function mapStateToProps(state) {
   return {
-    request: state.api.request[ownProps.requestId].data,
+    request: state.api.request.data,
     form: state.ui.form[FORM_ID],
     saveApiCall: state.api.saveDeploy
   };
@@ -1434,8 +1436,25 @@ function mapDispatchToProps(dispatch) {
     },
     save(deployBody) {
       dispatch(SaveDeploy.trigger(deployBody));
+    },
+    fetchRequest(requestId) {
+      return dispatch(FetchRequest.trigger(requestId));
+    },
+    clearForm() {
+      return dispatch(ClearForm('newDeployForm'));
+    },
+    clearSaveDeployDataPromise() {
+      return dispatch(SaveRequest.clearData());
     }
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(NewDeployForm);
+function refresh(props) {
+  const promises = [];
+  promises.push(props.fetchRequest(props.params.requestId));
+  promises.push(props.clearForm());
+  promises.push(props.clearSaveDeployDataPromise());
+  return Promise.all(promises);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(NewDeployForm, 'New Deploy', refresh));
