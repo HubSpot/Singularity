@@ -34,9 +34,11 @@ const AppRouter = (props) => {
           <Route path="requests/new" component={RequestForm} />
           <Route path="requests/edit/:requestId" component={RequestForm} />
           <Route path="requests(/:state)(/:subFilter)(/:searchFilter)" component={RequestsPage} />
-          <Route path="request/:requestId/taskSearch" component={TaskSearch} />
-          <Route path="request/:requestId/deploy" component={NewDeployForm} />
-          <Route path="request/:requestId/deploy/:deployId" component={DeployDetail} store={props.store} />
+          <Route path="request">
+            <Route path=":requestId/taskSearch" component={TaskSearch} />
+            <Route path=":requestId/deploy" component={NewDeployForm} />
+            <Route path=":requestId/deploy/:deployId" component={DeployDetail} store={props.store} />
+          </Route>
           <Route path="tasks(/:state)(/:requestsSubFilter)(/:searchFilter)" component={TasksPage} />
           <Route path="task/:taskId(/files/**)" component={TaskDetail} store={props.store} />
           <Route path="racks" component={Racks} />
