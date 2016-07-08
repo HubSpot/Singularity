@@ -31,8 +31,7 @@ const AppRouter = (props) => {
           <Route path="requests(/:state)(/:subFilter)(/:searchFilter)" component={RequestsPage} />
           <Route path="request/:requestId/taskSearch" component={TaskSearch} />
           <Route path="tasks(/:state)(/:requestsSubFilter)(/:searchFilter)" component={TasksPage} />
-          <Route path="task/:taskId" component={TaskDetail} store={props.store} />
-          <Route path="task/:taskId/files/**" component={TaskDetail} store={props.store} />
+          <Route path="task/:taskId(/files/**)" component={TaskDetail} store={props.store} />
           <Route path="racks" component={Racks} />
           <Route path="slaves" component={Slaves} />
           <Route path="webhooks" component={Webhooks} />

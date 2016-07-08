@@ -197,7 +197,7 @@ class TaskDetail extends React.Component {
               this.setState({
                 currentFilePath: path
               });
-              this.props.router.push(Utils.joinPath(`#task/${this.props.params.taskId}/files/`, path));
+              this.props.router.push(Utils.joinPath(`task/${this.props.params.taskId}/files/`, path));
             });
           }}
         />
