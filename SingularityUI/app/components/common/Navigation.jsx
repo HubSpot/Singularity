@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { withRouter } from 'react-router';
+import { withRouter, Link } from 'react-router';
 import { ToggleVisibility } from '../../actions/ui/globalSearch';
 
 import { Navbar, NavItem, Nav, NavDropdown, MenuItem, Glyphicon } from 'react-bootstrap';
@@ -22,7 +22,7 @@ const Navigation = (props) => {
     <Navbar fluid={true}>
       <Navbar.Header>
         <Navbar.Brand>
-          <a href={config.appRoot}>{config.title}</a>
+          <Link to="/">{config.title}</Link>
         </Navbar.Brand>
         <Navbar.Toggle />
       </Navbar.Header>
