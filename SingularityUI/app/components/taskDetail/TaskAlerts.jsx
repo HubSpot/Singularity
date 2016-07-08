@@ -12,8 +12,8 @@ const TaskAlerts = (props) => {
     if (Utils.isCauseOfFailure(props.task, props.deploy)) {
       alerts.push(
         <Alert key="failure" bsStyle="danger">
-          <p>This contributed to the failure of <a href={`${config.appRoot}/request/${props.deploy.requestId}/deploy/${props.deploy.deployId}`}>
-            Deploy {props.deploy.deployId}
+          <p>This task contributed to the failure of <a href={`${config.appRoot}/request/${props.deploy.deploy.requestId}/deploy/${props.deploy.deploy.id}`}>
+            Deploy {props.deploy.deploy.id}
           </a> because <strong>{Utils.causeOfDeployFailure(props.task, props.deploy)}</strong>.</p>
         </Alert>
       );

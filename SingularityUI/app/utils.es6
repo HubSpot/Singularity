@@ -379,25 +379,21 @@ const Utils = {
   },
 
   isCauseOfFailure(task, deploy) {
-    deploy.deployResult.deployFailures.map(failure => {
-      if (failure.taskId && failure.taskId.id === task.taskId) {
+    for (const failure of deploy.deployResult.deployFailures) {
+      if (failure.taskId && failure.taskId.id === task.task.taskId.id) {
         return true;
       }
-    });
+    }
     return false;
   },
 
   causeOfDeployFailure(task, deploy) {
-    let failureCause;
-    failureCause = '';
-    deploy.deployResult.deployFailures.map(failure => {
-      if (failure.taskId && failure.taskId.id === task.taskId) {
-        return failureCause = Handlebars.helpers.humanizeText(failure.reason);
+    for (const failure of deploy.deployResult.deployFailures) {
+      if (failure.taskId && failure.taskId.id === task.task.taskId.id) {
+        return this.humanizeText(failure.reason);
       }
-    });
-    if (failureCause) {
-      return failureCause;
     }
+    return '';
   },
 
   ifDeployFailureCausedTaskToBeKilled(task) {
