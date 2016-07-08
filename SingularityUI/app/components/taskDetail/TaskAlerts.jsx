@@ -102,14 +102,14 @@ const TaskAlerts = (props) => {
 
   // Killed due to HC fail
   if (props.task.lastHealthcheckFailed && !props.task.isStillRunning) {
+    const lastHealthcheck = _.last(props.task.healthcheckResults);
     alerts.push(
-      <Alert key="hcFail" bsStyle="danger">
+      <Alert key="hcFail" bsStyle="warning">
         <strong>Task killed due to no passing healthchecks after {props.task.tooManyRetries ? `${props.task.healthcheckResults.length.toString()} tries. ` : `${props.task.secondsElapsed.toString()} seconds. `}</strong>
-        Last healthcheck {props.task.healthcheckResults[0].statusCode ?
-          <span>responded with <span className="label label-danger">HTTP {props.task.healthcheckResults[0].statusCode}</span></span> :
-          <span>did not respond after <code>{props.task.healthcheckResults[0].durationMillis && `${props.task.healthcheckResults[0].durationMillis.toString()} ms`}</code> at {Utils.absoluteTimestamp(props.task.healthcheckResults[0].timestamp)}</span>}
-        <a href="#healthchecks"> View all healthchecks</a>
-        <a href="#logs"> View service logs</a>
+        Last healthcheck {lastHealthcheck.statusCode ?
+          <span>responded with <span className="label label-danger">HTTP {lastHealthcheck.statusCode}</span></span> :
+          <span>did not respond after <code>{lastHealthcheck.durationMillis && `${lastHealthcheck.durationMillis.toString()} ms`}</code> at {Utils.absoluteTimestampWithSeconds(lastHealthcheck.timestamp)}</span>}.
+        <a href="#healthchecks"> View all healthchecks</a> or <a href="#logs"> View service logs</a>.
         {props.task.healthcheckFailureReasonMessage && <p>The healthcheck failed because {props.task.healthcheckFailureReasonMessage}</p>}
       </Alert>
     );

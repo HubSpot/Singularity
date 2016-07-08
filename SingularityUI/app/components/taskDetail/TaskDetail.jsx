@@ -321,47 +321,47 @@ class TaskDetail extends React.Component {
 
 function mapHealthchecksToProps(t) {
   if (!t) return t;
-  let hcs = t.healthcheckResults;
-  t.hasSuccessfulHealthcheck = hcs && hcs.length > 0 && !!_.find(hcs, (h) => h.statusCode == 200);
-  t.lastHealthcheckFailed = hcs && hcs.length > 0 && hcs[0].statusCode != 200;
+  const hcs = t.healthcheckResults;
+  t.hasSuccessfulHealthcheck = hcs && hcs.length > 0 && !!_.find(hcs, (h) => h.statusCode === 200);
+  t.lastHealthcheckFailed = hcs && hcs.length > 0 && hcs[0].statusCode !== 200;
   t.healthcheckFailureReasonMessage = Utils.healthcheckFailureReasonMessage(t);
   t.tooManyRetries = hcs && hcs.length > t.task.taskRequest.deploy.healthcheckMaxRetries && t.task.taskRequest.deploy.healthcheckMaxRetries > 0;
   t.secondsElapsed = t.taskRequest && t.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds ? t.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds : config.defaultDeployHealthTimeoutSeconds;
   return t;
 }
 
-function mapTaskToProps(t) {
-  t.lastKnownState = _.last(t.taskUpdates);
-   let isStillRunning = true;
-   if (t.taskUpdates && _.contains(Utils.TERMINAL_TASK_STATES, t.lastKnownState.taskState)) {
-     isStillRunning = false;
-   }
-   t.isStillRunning = isStillRunning;
+function mapTaskToProps(task) {
+  task.lastKnownState = _.last(task.taskUpdates);
+  let isStillRunning = true;
+  if (task.taskUpdates && _.contains(Utils.TERMINAL_TASK_STATES, task.lastKnownState.taskState)) {
+    isStillRunning = false;
+  }
+  task.isStillRunning = isStillRunning;
 
-   t.isCleaning = t.lastKnownState.taskState == 'TASK_CLEANING';
+  task.isCleaning = task.lastKnownState.taskState === 'TASK_CLEANING';
 
-   let ports = [];
-   if (t.task.taskRequest.deploy.resources.numPorts > 0) {
-     for (let resource of t.task.mesosTask.resources) {
-       if (resource.name == 'ports') {
-         for (let range of resource.ranges.range) {
-           for (let port of Utils.range(range.begin, range.end + 1)) {
-             ports.push(port);
-           }
-         }
-       }
-     }
-   }
-   t.ports = ports;
+  const ports = [];
+  if (task.task.taskRequest.deploy.resources.numPorts > 0) {
+    for (const resource of task.task.mesosTask.resources) {
+      if (resource.name === 'ports') {
+        for (const range of resource.ranges.range) {
+          for (const port of Utils.range(range.begin, range.end + 1)) {
+            ports.push(port);
+          }
+        }
+      }
+    }
+  }
+  task.ports = ports;
 
-   return t;
+  return task;
 }
 
 function mapStateToProps(state, ownProps) {
-  let task = mapHealthchecksToProps(state.api.task[ownProps.taskId].data);
-  task = mapTaskToProps(task);
+  let task = mapTaskToProps(state.api.task[ownProps.taskId].data);
+  task = mapHealthchecksToProps(task);
   return {
-    task: task,
+    task,
     taskCleanups: state.api.taskCleanups.data,
     files: state.api.taskFiles,
     resourceUsage: state.api.taskResourceUsage.data,

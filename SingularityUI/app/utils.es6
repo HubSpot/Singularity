@@ -258,6 +258,10 @@ const Utils = {
       return timeObject.format(window.config.timestampFormat);
   },
 
+  absoluteTimestampWithSeconds(millis) {
+    return moment(millis).format(window.config.timestampWithSecondsFormat);
+  },
+
   timestampWithinSeconds(timestamp, seconds) {
     const before = moment().subtract(seconds, 'seconds');
     const after = moment().add(seconds, 'seconds');
@@ -412,11 +416,11 @@ const Utils = {
   },
 
   healthcheckFailureReasonMessage(task) {
-    let healthcheckResults = task.healthcheckResults;
+    const healthcheckResults = task.healthcheckResults;
     if (healthcheckResults && healthcheckResults.length > 0) {
-      if (healthcheckResults[0].errorMessage && healthcheckResults[0].errorMessage.toLowerCase().indexOf('connection refused') != -1) {
-        let portIndex = task.task.taskRequest.deploy.healthcheckPortIndex || 0;
-        let port = task.ports && task.ports.length > portIndex ? task[portIndex] : false;
+      if (_.last(healthcheckResults).errorMessage && _.last(healthcheckResults).errorMessage.toLowerCase().indexOf('connection refused') !== -1) {
+        const portIndex = task.task.taskRequest.deploy.healthcheckPortIndex || 0;
+        const port = task.ports && task.ports.length > portIndex ? task.ports[portIndex] : false;
         return `a refused connection. It is possible your app did not start properly or was not listening on the anticipated port (${port}). Please check the logs for more details.`;
       }
     }
