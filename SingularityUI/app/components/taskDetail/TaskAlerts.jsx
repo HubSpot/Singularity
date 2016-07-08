@@ -7,7 +7,6 @@ import SimpleTable from '../common/SimpleTable';
 
 const TaskAlerts = (props) => {
   let alerts = [];
-
   if (props.deploy.deployResult && props.deploy.deployResult.deployState === 'FAILED') {
     // Did this task cause a deploy to fail?
     if (Utils.isCauseOfFailure(props.task, props.deploy)) {
@@ -161,7 +160,7 @@ TaskAlerts.propTypes = {
     }).isRequired,
     taskUpdates: PropTypes.arrayOf(PropTypes.shape({
       taskState: PropTypes.string,
-      statusMessage: PropTypes.arrayOf(PropTypes.string)
+      statusMessage: PropTypes.string
     })),
     healthcheckResults: PropTypes.arrayOf(PropTypes.shape({
       statusCode: PropTypes.number,
