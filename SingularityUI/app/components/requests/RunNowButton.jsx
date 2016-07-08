@@ -1,14 +1,18 @@
 import React, { Component, PropTypes } from 'react';
+import { withRouter } from 'react-router';
 
 import RunNowModal from '../common/RunNowModal';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 import TaskLauncher from '../common/TaskLauncher';
 
-export default class UnpauseButton extends Component {
+class RunNowButton extends Component {
 
   static propTypes = {
     requestId: PropTypes.string.isRequired,
-    runAction: PropTypes.func.isRequired
+    runAction: PropTypes.func.isRequired,
+    fetchRunAction: PropTypes.func,
+    fetchRunHistoryAction: PropTypes.func,
+    fetchTaskFilesAction: PropTypes.func
   };
 
   handleRunNow(requestId, data) {
@@ -32,8 +36,11 @@ export default class UnpauseButton extends Component {
           fetchTaskRun={(...args) => this.props.fetchRunAction(...args)}
           fetchTaskRunHistory={(...args) => this.props.fetchRunHistoryAction(...args)}
           fetchTaskFiles={(...args) => this.props.fetchTaskFilesAction(...args)}
+          router={this.props.router}
         />
       </span>
     );
   }
 }
+
+export default withRouter(RunNowButton);

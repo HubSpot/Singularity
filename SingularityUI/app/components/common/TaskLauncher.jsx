@@ -1,10 +1,10 @@
 import React from 'react';
 import classNames from 'classnames';
 
-import { Modal, Button } from 'react-bootstrap';
+import { Modal } from 'react-bootstrap';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 
-export default class ShellCommandLauncher extends React.Component {
+class TaskLauncher extends React.Component {
 
   constructor() {
     super();
@@ -13,16 +13,16 @@ export default class ShellCommandLauncher extends React.Component {
       taskStarted: false,
       fileExists: false,
       tailFilename: null
-    }
+    };
   }
 
   componentWillUnmount() {
     this.clearIntervals();
   }
 
-  startPolling(requestId, runId, tailFilename=null) {
+  startPolling(requestId, runId, tailFilename = null) {
     this.setState({
-      tailFilename: tailFilename
+      tailFilename
     });
     this.show();
 
@@ -32,16 +32,17 @@ export default class ShellCommandLauncher extends React.Component {
       promises.push(this.props.fetchTaskRun(requestId, runId));
       promises.push(this.props.fetchTaskRunHistory(requestId, runId));
       Promise.all(promises).then((responses) => {
-        responses = _.without(_.pluck(responses, 'data'), undefined);
-        if (responses.length) {
+        const responseList = _.without(_.pluck(responses, 'data'), undefined);
+        if (responseList.length) {
           this.clearIntervals();
           this.setState({
             taskStarted: true
           });
+          const task = _.first(responseList);
           if (tailFilename) {
-            this.logFilePoll(_.first(responses).taskId.id, tailFilename);
+            this.logFilePoll(task.taskId ? task.taskId.id : task.id, tailFilename);
           } else {
-            app.router.navigate(`task/${_.first(responses).taskId.id}`, {trigger: true});
+            this.props.router.push(`task/${task.taskId ? task.taskId.id : task.id}`);
           }
         }
       });
@@ -60,7 +61,7 @@ export default class ShellCommandLauncher extends React.Component {
               fileExists: true
             });
             this.clearIntervals();
-            app.router.navigate(`task/${taskId}/tail/${taskId}/${filename}`, {trigger: true});
+            this.props.router.push(`task/${taskId}/tail/${taskId}/${filename}`);
           }
         }
       });
@@ -88,13 +89,13 @@ export default class ShellCommandLauncher extends React.Component {
   stepStatus(state, text) {
     return (
       <li className={classNames({'complete text-success': state}, {'waiting': !state})}>
-        {!state ? <div className="page-loader loader-small" /> : <Glyphicon iconClass='ok' />} {text}...
+        {!state ? <div className="page-loader loader-small" /> : <Glyphicon iconClass="ok" />} {text}...
       </li>
     );
   }
 
   renderStatusList() {
-    const fileExists = this.state.tailFilename && this.stepStatus(this.state.fileExists, `Waiting for ${this.state.tailFilename} to exist`)
+    const fileExists = this.state.tailFilename && this.stepStatus(this.state.fileExists, `Waiting for ${this.state.tailFilename} to exist`);
     return (
       <ul className="status-list">
         {this.stepStatus(this.state.taskStarted, 'Waiting for task to launch')}
@@ -106,11 +107,11 @@ export default class ShellCommandLauncher extends React.Component {
   render() {
     return (
       <Modal show={this.state.visible} onHide={() => this.hide()} bsSize="small" backdrop="static">
-        <Modal.Header closeButton>
+        <Modal.Header closeButton={true}>
             <Modal.Title>Launching</Modal.Title>
           </Modal.Header>
         <Modal.Body>
-          <div className='constrained-modal'>
+          <div className="constrained-modal">
             {this.renderStatusList()}
           </div>
         </Modal.Body>
@@ -118,3 +119,5 @@ export default class ShellCommandLauncher extends React.Component {
     );
   }
 }
+
+export default TaskLauncher;

@@ -5,22 +5,22 @@ import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 
 export default class RunNowModal extends React.Component {
 
+  constructor() {
+    super();
+    this.state = {
+      requestId: null
+    };
+  }
+
   static AFTER_TRIGGER = {
     STAY: {label: 'Stay on this page', value: 'STAY'},
     SANDBOX: {label: 'Wait for task to start, then browse its sandbox', value: 'SANDBOX'},
     TAIL: {label: 'Wait for task to start, then start tailing:', value: 'TAIL'}
   };
 
-  constructor() {
-    super();
-    this.state = {
-      requestId: null
-    }
-  }
-
   show(requestId) {
     this.setState({
-      requestId: requestId
+      requestId
     });
     this.refs.runNow.show();
   }
