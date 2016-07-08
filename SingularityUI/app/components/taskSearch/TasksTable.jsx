@@ -23,13 +23,14 @@ export default class TasksTable extends React.Component {
       return (
         <div className="pagination-container">
           <Pagination
-            prev
-            next
+            prev={true}
+            next={true}
             maxButtons={1}
             ellipsis={false}
             activePage={this.props.page}
             items={this.props.page + (this.props.disableNext ? 0 : 1)}
-            onSelect={(event, selectedEvent) => this.props.onPage(selectedEvent.eventKey)} />
+            onSelect={(eventKey) => this.props.onPage(eventKey)}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             />
         </div>
       );
     }
@@ -38,7 +39,7 @@ export default class TasksTable extends React.Component {
   renderTable() {
     return (
       <div>
-        <Table responsive striped>
+        <Table responsive={true} striped={true}>
           <thead>
             {this.renderHeaders()}
           </thead>
