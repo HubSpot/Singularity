@@ -137,7 +137,7 @@ TaskAlerts.propTypes = {
     deploy: PropTypes.shape({
       requestId: PropTypes.string,
       id: PropTypes.string
-    }).isRequired,
+    }),
     deployStatistics: PropTypes.shape({
       averageRuntimeMillis: PropTypes.number
     }),
