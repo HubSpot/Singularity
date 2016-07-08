@@ -1,7 +1,5 @@
 import React from 'react';
 
-import GlobalSearch from './components/globalSearch/GlobalSearch';
-
 // eslint-disable-next-line no-unused-vars react/no-multi-comp
 const rootComponent = (Wrapped, title, refresh = _.noop) => class extends React.Component {
 
@@ -61,7 +59,6 @@ const rootComponent = (Wrapped, title, refresh = _.noop) => class extends React.
       <div>
         {loader}
         {page}
-        <GlobalSearch />
       </div>
     );
   }
