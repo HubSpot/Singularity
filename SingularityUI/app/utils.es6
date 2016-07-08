@@ -397,17 +397,16 @@ const Utils = {
   },
 
   ifDeployFailureCausedTaskToBeKilled(task) {
-    let deployFailed, taskKilled;
-    deployFailed = false;
-    taskKilled = false;
-    task.taskUpdates.map(update => {
+    let deployFailed = false;
+    let taskKilled = false;
+    for (const update of task.taskUpdates) {
       if (update.statusMessage && update.statusMessage.indexOf('DEPLOY_FAILED' !== -1)) {
         deployFailed = true;
       }
       if (update.taskState === 'TASK_KILLED') {
-        return taskKilled = true;
+        taskKilled = true;
       }
-    });
+    }
     return deployFailed && taskKilled;
   },
 

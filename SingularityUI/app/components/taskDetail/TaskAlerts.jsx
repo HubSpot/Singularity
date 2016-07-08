@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react';
 import Utils from '../../utils';
-import { Alert } from 'react-bootstrap';
+import { Alert, Button } from 'react-bootstrap';
 
 import JSONButton from '../common/JSONButton';
 import SimpleTable from '../common/SimpleTable';
@@ -12,25 +12,28 @@ const TaskAlerts = (props) => {
     if (Utils.isCauseOfFailure(props.task, props.deploy)) {
       alerts.push(
         <Alert key="failure" bsStyle="danger">
-          <p>This task contributed to the failure of <a href={`${config.appRoot}/request/${props.deploy.deploy.requestId}/deploy/${props.deploy.deploy.id}`}>
-            Deploy {props.deploy.deploy.id}
-          </a> because <strong>{Utils.causeOfDeployFailure(props.task, props.deploy)}</strong>.</p>
+          <p>
+            <strong>
+              {Utils.causeOfDeployFailure(props.task, props.deploy)}.
+            </strong>
+          </p>
+          <p>
+            This
+            {props.deploy.deployResult.deployFailures.length === 1 && ' caused ' || ' contributed to '}
+            the failure of
+            <a href={`${config.appRoot}/request/${props.deploy.deploy.requestId}/deploy/${props.deploy.deploy.id}`}>
+              {' '}Deploy {props.deploy.deploy.id}
+            </a>
+            .
+          </p>
         </Alert>
       );
     } else {
       // Did a deploy cause this task to fail?
-      const fails = props.deploy.deployResult.deployFailures.map((fail, key) => {
-        if (fail.taskId) {
-          return <li key={key}><a href={`${config.appRoot}/task/${fail.taskId.id}`}>{fail.taskId.id}</a>: {Utils.humanizeText(fail.reason)} {fail.message}</li>;
-        }
-        return <li key={key}>{Utils.humanizeText(fail.reason)} {fail.message}</li>;
-      });
       alerts.push(
         <Alert key="failure" bsStyle="danger">
-          <a href={`${config.appRoot}/request/${props.deploy.deploy.requestId}/deploy/${props.deploy.deploy.id}`}>Deploy {props.deploy.deploy.id} </a>failed.
-          {Utils.ifDeployFailureCausedTaskToBeKilled(props.task) && ' This task was killed as a result of the failing deploy. '}
-          {props.deploy.deployResult.deployFailures.length && ' The deploy failure was caused by: '}
-          <ul>{fails}</ul>
+          {Utils.ifDeployFailureCausedTaskToBeKilled(props.task) && 'This task was killed becasue '}
+          <a href={`${config.appRoot}/request/${props.deploy.deploy.requestId}/deploy/${props.deploy.deploy.id}`}>Deploy {props.deploy.deploy.id}</a> failed.
         </Alert>
       );
     }
@@ -105,12 +108,30 @@ const TaskAlerts = (props) => {
     const lastHealthcheck = _.last(props.task.healthcheckResults);
     alerts.push(
       <Alert key="hcFail" bsStyle="warning">
-        <strong>Task killed due to no passing healthchecks after {props.task.tooManyRetries ? `${props.task.healthcheckResults.length.toString()} tries. ` : `${props.task.secondsElapsed.toString()} seconds. `}</strong>
-        Last healthcheck {lastHealthcheck.statusCode ?
-          <span>responded with <span className="label label-danger">HTTP {lastHealthcheck.statusCode}</span></span> :
-          <span>did not respond after <code>{lastHealthcheck.durationMillis && `${lastHealthcheck.durationMillis.toString()} ms`}</code> at {Utils.absoluteTimestampWithSeconds(lastHealthcheck.timestamp)}</span>}.
-        <a href="#healthchecks"> View all healthchecks</a> or <a href="#logs"> View service logs</a>.
-        {props.task.healthcheckFailureReasonMessage && <p>The healthcheck failed because {props.task.healthcheckFailureReasonMessage}</p>}
+        <p>
+          <strong>
+            Task killed due to no passing healthchecks after
+            {props.task.tooManyRetries ? ` ${props.task.healthcheckResults.length.toString()} tries.` : ` ${props.task.secondsElapsed.toString()} seconds.`}
+          </strong>
+        </p>
+        <p>
+          Last healthcheck {lastHealthcheck.statusCode ?
+            `responded with ${<span className="label label-danger"> HTTP {lastHealthcheck.statusCode}</span>}` :
+            <span>
+              did not respond after{' '}
+              <code>
+                {lastHealthcheck.durationMillis && `${lastHealthcheck.durationMillis.toString()} ms`}
+              </code>
+              {' '}at {Utils.absoluteTimestampWithSeconds(lastHealthcheck.timestamp)}
+            </span>}.
+        </p>
+        {props.task.healthcheckFailureReasonMessage && <p>The healthcheck failed because of {props.task.healthcheckFailureReasonMessage}</p>}
+        <p><li>
+          <a href="#healthchecks">View all healthchecks</a>
+        </li>
+        <li>
+          <a href="#logs">View service logs</a>
+        </li></p>
       </Alert>
     );
   }
