@@ -26,7 +26,12 @@ class DeployDetail extends React.Component {
     activeTasks: React.PropTypes.array,
     taskHistory: React.PropTypes.object,
     latestHealthchecks: React.PropTypes.array,
-    fetchTaskHistoryForDeploy: React.PropTypes.func
+    fetchTaskHistoryForDeploy: React.PropTypes.func,
+    params: React.PropTypes.object
+  }
+
+  componentWillMount() {
+    this.props.fetchTaskHistoryForDeploy(this.props.params.requestId, this.props.params.deployId, 5, 1);
   }
 
   componentDidMount() {
@@ -287,7 +292,6 @@ function refresh(props) {
   promises.push(props.fetchDeployForRequest(props.params.requestId, props.params.deployId));
   promises.push(props.fetchActiveTasksForDeploy(props.params.requestId, props.params.deployId));
   promises.push(props.clearTaskHistoryForDeploy());
-  promises.push(props.fetchTaskHistoryForDeploy(props.params.requestId, props.params.deployId, 5, 1));
 
   const allPromises = Promise.all(promises);
   allPromises.then(() => {
