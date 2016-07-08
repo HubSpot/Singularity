@@ -1,14 +1,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import View from './view';
+import ReactView from './reactView';
 
 import { Provider } from 'react-redux';
 
-import RequestFormPage from '../components/requestForm/RequestForm'
+import RequestFormPage from '../components/requestForm/RequestForm';
 
 
-class RequestFormView extends View {
+class RequestFormView extends ReactView {
   initialize({store, requestId}) {
     this.store = store;
     this.requestId = requestId;

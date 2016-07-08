@@ -421,6 +421,7 @@ class NewDeployForm extends Component {
         onChange={(newValue) => this.updateField('arguments', newValue)}
         label="Arguments"
         errorIndices={this.errorsInArrayField(INDEXED_FIELDS.arguments, () => this.props.form.arguments)}
+        couldHaveFeedback={true}
       />
     );
     const artifacts = (
@@ -431,6 +432,7 @@ class NewDeployForm extends Component {
         label="Artifacts"
         placeholder="eg: http://s3.example/my-artifact"
         errorIndices={this.errorsInArrayField(INDEXED_FIELDS.uris, () => this.props.form.uris)}
+        couldHaveFeedback={true}
       />
     );
     return (
@@ -576,6 +578,7 @@ class NewDeployForm extends Component {
         label="Extra command args"
         placeholder="eg: -jar MyThing.jar"
         errorIndices={this.errorsInArrayField(INDEXED_FIELDS.extraCmdLineArgs, () => this.props.form.extraCmdLineArgs)}
+        couldHaveFeedback={true}
       />
     );
     const user = (
@@ -605,6 +608,7 @@ class NewDeployForm extends Component {
         onChange={(newValue) => this.updateField('successfulExitCodes', newValue)}
         label="Successful exit codes"
         errorIndices={this.errorsInArrayField(INDEXED_FIELDS.successfulExitCodes, () => this.props.form.successfulExitCodes)}
+        couldHaveFeedback={true}
       />
     );
     const maxTaskThreads = (
@@ -633,6 +637,7 @@ class NewDeployForm extends Component {
         label="Logging extra fields"
         placeholder="format: key=value"
         errorIndices={this.errorsInArrayField(INDEXED_FIELDS.loggingExtraFields, () => this.props.form.loggingExtraFields)}
+        couldHaveFeedback={true}
       />
     );
     const preserveSandbox = (
@@ -957,6 +962,7 @@ class NewDeployForm extends Component {
         label="Docker Parameters"
         placeholder="format: key=value"
         errorIndices={this.errorsInArrayField(INDEXED_FIELDS.parameters, () => this.props.form.parameters)}
+        couldHaveFeedback={true}
       />
     );
     //
@@ -1092,6 +1098,7 @@ class NewDeployForm extends Component {
         placeholder="format: key=value"
         label="Environment variables"
         errorIndices={this.errorsInArrayField(INDEXED_FIELDS.env, () => this.props.form.env)}
+        couldHaveFeedback={true}
       />
     );
     const healthcheckUri = (
@@ -1202,6 +1209,7 @@ class NewDeployForm extends Component {
         label="Load balancer groups"
         required={true}
         errorIndices={this.errorsInArrayField(INDEXED_FIELDS.loadBalancerGroups, () => this.props.form.loadBalancerGroups)}
+        couldHaveFeedback={true}
       />
     );
     const loadBalancerOptions = (
@@ -1212,6 +1220,7 @@ class NewDeployForm extends Component {
         label="Load balancer options"
         placeholder="format: key=value"
         errorIndices={this.errorsInArrayField(INDEXED_FIELDS.loadBalancerOptions, () => this.props.form.loadBalancerOptions)}
+        couldHaveFeedback={true}
       />
     );
     const loadBalancerPortIndex = (
