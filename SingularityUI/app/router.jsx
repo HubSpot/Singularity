@@ -15,6 +15,7 @@ import Slaves from './components/machines/Slaves';
 import Webhooks from './components/webhooks/Webhooks';
 import TaskDetail from './components/taskDetail/TaskDetail';
 import TaskSearch from './components/taskSearch/TaskSearch';
+import DeployDetail from './components/deployDetail/DeployDetail';
 
 const AppRouter = (props) => {
   let history = useRouterHistory(createHistory)({
@@ -30,6 +31,7 @@ const AppRouter = (props) => {
           <Route path="status" component={StatusPage} />
           <Route path="requests(/:state)(/:subFilter)(/:searchFilter)" component={RequestsPage} />
           <Route path="request/:requestId/taskSearch" component={TaskSearch} />
+          <Route path="request/:requestId/deploy/:deployId" component={DeployDetail} store={props.store} />
           <Route path="tasks(/:state)(/:requestsSubFilter)(/:searchFilter)" component={TasksPage} />
           <Route path="task/:taskId(/files/**)" component={TaskDetail} store={props.store} />
           <Route path="racks" component={Racks} />

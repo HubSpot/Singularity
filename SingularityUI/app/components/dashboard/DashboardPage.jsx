@@ -24,7 +24,7 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-function refresh(props, context) {
+function refresh(props) {
   return props.fetchRequests();
 }
 

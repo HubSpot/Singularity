@@ -14,20 +14,20 @@ export default class ServerSideTable extends SimpleTable {
     });
   }
 
-  handleSelect(event, selectedEvent) {
-    let inc = selectedEvent.eventKey > this.state.serverPage ? 1 : -1;
-    this.props.dispatch(this.props.fetchAction.trigger(...this.props.fetchParams, this.props.perPage, this.state.serverPage + inc));
-    let state = {
+  handleSelect(eventKey) {
+    const inc = eventKey > this.state.serverPage ? 1 : -1;
+    this.props.fetchAction(...this.props.fetchParams, this.props.perPage, this.state.serverPage + inc);
+    const state = {
       serverPage: this.state.serverPage + inc
-    }
+    };
     if (inc < 0) _.extend(state, {atEnd: false});
     this.setState(state);
   }
 
   updateDisplay(nextProps) {
-    let newState = {};
-    if (this.props.entries && this.props.entries.length > 0 && nextProps.entries.length == 0 && this.state.serverPage > 1) {
-      this.props.dispatch(this.props.fetchAction.trigger(...this.props.fetchParams, this.props.perPage, this.state.serverPage - 1));
+    const newState = {};
+    if (this.props.entries && this.props.entries.length > 0 && nextProps.entries.length === 0 && this.state.serverPage > 1) {
+      this.props.fetchAction(...this.props.fetchParams, this.props.perPage, this.state.serverPage);
       _.extend(newState, {
         serverPage: this.state.serverPage - 1,
         atEnd: true
@@ -64,7 +64,8 @@ export default class ServerSideTable extends SimpleTable {
             items={this.state.atEnd ? this.state.serverPage : this.state.serverPage + 1}
             maxButtons={1}
             activePage={this.state.serverPage}
-            onSelect={this.handleSelect.bind(this)} />
+            onSelect={this.handleSelect.bind(this)}
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             />
         </div>
       );
     }
@@ -72,10 +73,7 @@ export default class ServerSideTable extends SimpleTable {
 }
 
 ServerSideTable.propTypes = _.extend({}, SimpleTable.propTypes, {
-  fetchAction: React.PropTypes.shape({
-      trigger: React.PropTypes.func.isRequired
-  }),
-  dispatch: React.PropTypes.func.isRequired,
+  fetchAction: React.PropTypes.func,
   fetchParams: React.PropTypes.array,
   paginate: React.PropTypes.bool
 });

@@ -16,7 +16,7 @@ const rootComponent = (Wrapped, title, refresh = _.noop) => class extends React.
     };
   }
 
-  componentDidMount() {
+  componentWillMount() {
     document.title = `${title} - ${config.title}`;
 
     const promise = refresh(this.props);
@@ -25,6 +25,10 @@ const rootComponent = (Wrapped, title, refresh = _.noop) => class extends React.
         this.setState({
           loading: false
         });
+      });
+    } else {
+      this.setState({
+        loading: false
       });
     }
 
