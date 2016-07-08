@@ -108,10 +108,10 @@
         <div class="well">
             <p>
                 <b>Deploy </b><code><a href="{{appRoot}}/request/{{ data.id }}/deploy/{{ data.pendingDeploy.id }}">{{data.pendingDeploy.id}}</a></code><b> is pending:</b>
-                {{#if data.pendingDeployState.deployProgress}}
-                    {{#ifEqual data.pendingDeployState.deployProgress.targetActiveInstances data.instances}}
+                {{#if data.pendingDeployState.deployProgress}} !!maybeDeployProgress
+                    {{#ifEqual data.pendingDeployState.deployProgress.targetActiveInstances data.instances}} !!maybeDeployInstanceTarget
                         {{ deployingInstanceCount }} of {{ data.instances }} new tasks are currently running.{{#ifEqual deployingInstanceCount data.instances}} Waiting for new tasks to become healthy.{{/ifEqual}}
-                    {{else}}
+                    {{else}} !!maybe
                         {{#if data.pendingDeployState.deployProgress.stepComplete}}
                             {{#if data.pendingDeployState.deployProgress.autoAdvanceDeploySteps}}
                                 Finished deploying {{data.pendingDeployState.deployProgress.targetActiveInstances}} of {{ data.instances }} total instances, next deploy step {{timestampFromNow nextDeployStepTimestamp}}

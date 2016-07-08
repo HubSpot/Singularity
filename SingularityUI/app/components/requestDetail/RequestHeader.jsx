@@ -17,7 +17,9 @@ const RequestHeader = ({requestId}) => (
       </Col>
     </Row>
     <Row>
-      <RequestAlerts requestId={requestId} />
+      <Col md={12}>
+        <RequestAlerts requestId={requestId} />
+      </Col>
     </Row>
   </header>
 );

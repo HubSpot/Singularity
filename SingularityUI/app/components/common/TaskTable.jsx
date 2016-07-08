@@ -111,14 +111,14 @@ let TaskTable = React.createClass({
                     className: 'hidden-sm hidden-xs',
                     prop: {
                         timestamp: task.taskId.startedAt,
-                        display: 'timeStampFromNow'
+                        display: 'timestampFromNow'
                     }
                 }, {
                     component: TimeStamp,
                     className: 'hidden-xs',
                     prop: {
                         timestamp: task.updatedAt,
-                        display: 'timeStampFromNow'
+                        display: 'timestampFromNow'
                     }
                 }, {
                     component: Link,

@@ -1,4 +1,4 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
 import Column from '../common/table/Column';
 
 import Utils from '../../utils';
@@ -72,7 +72,7 @@ export const LastDeploy = (
     cellRender={
       (cellData) => {
         if (cellData) {
-          return Utils.timeStampFromNow(cellData);
+          return Utils.timestampFromNow(cellData);
         }
         return '';
       }
@@ -256,7 +256,7 @@ export const CleaningTimestamp = (
     cellData={
       (rowData) => rowData.timestamp
     }
-    cellRender={(cellData) => Utils.timeStampFromNow(cellData)}
+    cellRender={(cellData) => Utils.timestampFromNow(cellData)}
   />
 );
 

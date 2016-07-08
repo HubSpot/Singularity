@@ -37,7 +37,7 @@ export const SaveRequest = buildJsonApiAction(
 export const RemoveRequest = buildJsonApiAction(
   'REMOVE_REQUEST',
   'DELETE',
-  (requestId, message) => ({
+  (requestId, { message }) => ({
     url: `/requests/request/${requestId}`,
     body: { message }
   })

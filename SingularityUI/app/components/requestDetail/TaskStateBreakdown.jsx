@@ -22,42 +22,44 @@ const taskStateOrder = [
   'TASK_ERROR'
 ];
 
-const taskStateProps = (s) => {
+const taskStateProps = (s, num, total) => {
+  const numberString = `${num}/${total}`;
   switch (s) {
     case 'TASK_LAUNCHED':
-      return { bsStyle: 'info', label: 'launched', striped: true};
+      return { bsStyle: 'info', label: `launched ${numberString}`, striped: true};
     case 'TASK_STAGING':
-      return { bsStyle: 'info', label: 'staging', striped: true};
+      return { bsStyle: 'info', label: `staging ${numberString}`, striped: true};
     case 'TASK_STARTING':
-      return { bsStyle: 'info', label: 'starting', striped: true, active: true};
+      return { bsStyle: 'info', label: `starting ${numberString}`, striped: true, active: true};
     case 'TASK_RUNNING':
-      return { bsStyle: 'success', label: 'running'};
+      return { bsStyle: 'success', label: `running ${numberString}`};
     case 'TASK_CLEANING':
-      return { bsStyle: 'warning', label: 'cleaning', striped: true};
+      return { bsStyle: 'warning', label: `cleaning ${numberString}`, striped: true, active: true};
     case 'TASK_KILLING':
-      return { bsStyle: 'warning', label: 'killing', striped: true, active: true};
+      return { bsStyle: 'danger', label: `killing ${numberString}`, striped: true, active: true};
     case 'TASK_FINISHED':
-      return { bsStyle: 'success', label: 'finished'};
+      return { bsStyle: 'success', label: `finished ${numberString}`};
     case 'TASK_FAILED':
-      return { bsStyle: 'danger', label: 'failed'};
+      return { bsStyle: 'danger', label: `failed ${numberString}`};
     case 'TASK_KILLED':
-      return { bsStyle: 'danger', label: 'killed'};
+      return { bsStyle: 'danger', label: `killed ${numberString}`};
     case 'TASK_LOST':
+      return { bsStyle: 'danger', label: `lost ${numberString}`};
     case 'TASK_LOST_WHILE_DOWN':
-      return { bsStyle: 'danger', label: 'lost'};
+      return { bsStyle: 'danger', label: `singularity lost ${numberString}`};
     case 'TASK_ERROR':
-      return { bsStyle: 'danger', label: 'error'};
+      return { bsStyle: 'danger', label: `error ${numberString}`};
     default:
-      return { bsStyle: 'danger', label: 'unknown'};
+      return { bsStyle: 'danger', label: `unknown ${numberString}`};
   }
 };
 
-const TaskStateBreakdown = ({activeTasksForRequest, refresh}) => {
-  if (!activeTasksForRequest) {
+const TaskStateBreakdown = ({activeTasksForRequest, futureTasks, refresh}) => {
+  if (!activeTasksForRequest && !futureTasks) {
     return null;
   }
 
-  const instanceBreakdown = Utils.request.instanceBreakdown(activeTasksForRequest);
+  const instanceBreakdown = Utils.task.instanceBreakdown(activeTasksForRequest);
   const totalInstances = taskStateOrder.reduce((last, cur) => (
     last + (instanceBreakdown[cur] || 0)
   ), 0);
@@ -66,9 +68,15 @@ const TaskStateBreakdown = ({activeTasksForRequest, refresh}) => {
     return null;
   }
 
-  const taskStateProgressBars = taskStateOrder.map((s) => (
-    <ProgressBar key={s} now={100 * (instanceBreakdown[s] / totalInstances)} {...taskStateProps(s)} />
-  ));
+  const taskStateProgressBars = taskStateOrder.map((s) => {
+    const percentage = 100 * (instanceBreakdown[s] / totalInstances);
+    const progressProps = taskStateProps(
+      s,
+      instanceBreakdown[s],
+      totalInstances
+    );
+    return <ProgressBar key={s} now={percentage} {...progressProps} />;
+  });
 
 
   return (
@@ -81,6 +89,7 @@ const TaskStateBreakdown = ({activeTasksForRequest, refresh}) => {
 TaskStateBreakdown.propTypes = {
   requestId: PropTypes.string.isRequired,
   activeTasksForRequest: PropTypes.arrayOf(PropTypes.object).isRequired,
+  futureTasks: PropTypes.arrayOf(PropTypes.object).isRequired,
   refresh: PropTypes.func.isRequired
 };
 

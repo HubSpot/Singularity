@@ -248,9 +248,9 @@ const Utils = {
     });
   },
 
-  timeStampFromNow(millis) {
-      let timeObject = moment(millis);
-      return `${timeObject.fromNow()} (${timeObject.format(window.config.timestampFormat)})`;
+  timestampFromNow(millis) {
+    const timeObject = moment(millis);
+    return `${timeObject.fromNow()} (${timeObject.format(window.config.timestampFormat)})`;
   },
 
   absoluteTimestamp(millis) {
@@ -446,7 +446,30 @@ const Utils = {
       );
     }
   },
+  task: {
+    instanceBreakdown: (tasks) => {
+      const taskStates = {
+        TASK_LAUNCHED: 0,
+        TASK_STAGING: 0,
+        TASK_STARTING: 0,
+        TASK_RUNNING: 0,
+        TASK_CLEANING: 0,
+        TASK_KILLING: 0,
+        TASK_FINISHED: 0,
+        TASK_FAILED: 0,
+        TASK_KILLED: 0,
+        TASK_LOST: 0,
+        TASK_LOST_WHILE_DOWN: 0,
+        TASK_ERROR: 0
+      };
 
+      tasks.forEach((t) => {
+        taskStates[t.lastTaskState] += (taskStates[t.lastTaskState] || 0) + 1;
+      });
+
+      return taskStates;
+    }
+  },
   request: {
     // all of these expect a RequestParent object
     LONG_RUNNING_TYPES: new Set(['WORKER', 'SERVICE']),
@@ -473,28 +496,6 @@ const Utils = {
         && Utils.request.hasActiveDeploy(r)
         && Utils.request.isLongRunning(r);
     },
-    instanceBreakdown: (activeTasksForRequest) => {
-      const taskStates = {
-        TASK_LAUNCHED: 0,
-        TASK_STAGING: 0,
-        TASK_STARTING: 0,
-        TASK_RUNNING: 0,
-        TASK_CLEANING: 0,
-        TASK_KILLING: 0,
-        TASK_FINISHED: 0,
-        TASK_FAILED: 0,
-        TASK_KILLED: 0,
-        TASK_LOST: 0,
-        TASK_LOST_WHILE_DOWN: 0,
-        TASK_ERROR: 0
-      };
-
-      activeTasksForRequest.forEach((t) => {
-        taskStates[t.lastTaskState] += (taskStates[t.lastTaskState] || 0) + 1;
-      });
-
-      return taskStates;
-    },
     runningInstanceCount: (activeTasksForRequest) => {
       return activeTasksForRequest.filter(
         (t) => t.lastTaskState === 'TASK_RUNNING'
@@ -506,7 +507,7 @@ const Utils = {
       }
       return activeTasksForRequest.filter((t) => (
         t.lastTaskState === 'TASK_RUNNING'
-        && t.deployId === r.pendingDeploy.id
+        && t.taskId.deployId === r.pendingDeploy.id
       )).length;
     },
     // other

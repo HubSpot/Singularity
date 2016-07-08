@@ -37,7 +37,7 @@ export const StartedAt = (
     }
     cellRender={
       (cellData) => (
-        Utils.timeStampFromNow(cellData)
+        Utils.timestampFromNow(cellData)
       )
     }
     sortable={true}
@@ -150,7 +150,7 @@ export const NextRun = (
       }
       return (
         <div>
-          {Utils.timeStampFromNow(cellData)} {label}
+          {Utils.timestampFromNow(cellData)} {label}
         </div>
       );
     }}
