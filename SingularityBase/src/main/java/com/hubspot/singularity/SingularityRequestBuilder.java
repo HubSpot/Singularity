@@ -45,6 +45,8 @@ public class SingularityRequestBuilder {
   private Optional<String> taskLogErrorRegex;
   private Optional<Boolean> taskLogErrorRegexCaseSensitive;
 
+  private Optional<String> loadBalancerServiceIdOverride;
+
   public SingularityRequestBuilder(String id, RequestType requestType) {
     this.id = checkNotNull(id, "id cannot be null");
     this.requestType = checkNotNull(requestType, "requestType cannot be null");
@@ -71,12 +73,13 @@ public class SingularityRequestBuilder {
     this.hideEvenNumberAcrossRacksHint = Optional.absent();
     this.taskLogErrorRegex = Optional.absent();
     this.taskLogErrorRegexCaseSensitive = Optional.absent();
+    this.loadBalancerServiceIdOverride = Optional.absent();
   }
 
   public SingularityRequest build() {
     return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule,
         rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readOnlyGroups,
-        bounceAfterScale, skipHealthchecks, emailConfigurationOverrides, Optional.<Boolean>absent(), hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive);
+        bounceAfterScale, skipHealthchecks, emailConfigurationOverrides, Optional.<Boolean>absent(), hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, loadBalancerServiceIdOverride);
   }
 
   public Optional<Boolean> getSkipHealthchecks() {
@@ -280,6 +283,15 @@ public class SingularityRequestBuilder {
     return this;
   }
 
+  public Optional<String> getLoadBalancerServiceIdOverride() {
+    return loadBalancerServiceIdOverride;
+  }
+
+  public SingularityRequestBuilder setLoadBalancerServiceIdOverride(Optional<String> loadBalancerServiceIdOverride) {
+    this.loadBalancerServiceIdOverride = loadBalancerServiceIdOverride;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityRequestBuilder[" +
@@ -308,6 +320,7 @@ public class SingularityRequestBuilder {
             ", hideEvenNumberAcrossRacksHint=" + hideEvenNumberAcrossRacksHint +
             ", taskLogErrorRegex=" + taskLogErrorRegex +
             ", taskLogErrorRegexCaseSensitive=" + taskLogErrorRegexCaseSensitive +
+            ", loadBalancerServiceIdOverride=" + loadBalancerServiceIdOverride +
             ']';
   }
 
@@ -344,7 +357,8 @@ public class SingularityRequestBuilder {
             Objects.equals(emailConfigurationOverrides, that.emailConfigurationOverrides) &&
             Objects.equals(hideEvenNumberAcrossRacksHint, that.hideEvenNumberAcrossRacksHint) &&
             Objects.equals(taskLogErrorRegex, that.taskLogErrorRegex) &&
-            Objects.equals(taskLogErrorRegexCaseSensitive, that.taskLogErrorRegexCaseSensitive);
+            Objects.equals(taskLogErrorRegexCaseSensitive, that.taskLogErrorRegexCaseSensitive) &&
+            Objects.equals(loadBalancerServiceIdOverride, that.loadBalancerServiceIdOverride);
   }
 
   @Override
@@ -352,7 +366,7 @@ public class SingularityRequestBuilder {
     return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis,
         scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement,
         requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale, skipHealthchecks, emailConfigurationOverrides,
-        hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive);
+        hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, loadBalancerServiceIdOverride);
   }
 
 }

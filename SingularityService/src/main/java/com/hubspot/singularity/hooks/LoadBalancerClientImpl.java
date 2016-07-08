@@ -170,7 +170,7 @@ public class LoadBalancerClientImpl implements LoadBalancerClient {
       List<SingularityTask> remove) {
     final List<String> serviceOwners = request.getOwners().or(Collections.<String> emptyList());
     final Set<String> loadBalancerGroups = deploy.getLoadBalancerGroups().or(Collections.<String>emptySet());
-    final BaragonService lbService = new BaragonService(request.getId(), serviceOwners, deploy.getServiceBasePath().get(),
+    final BaragonService lbService = new BaragonService(request.getLoadBalancerServiceIdOverride().or(request.getId()), serviceOwners, deploy.getServiceBasePath().get(),
       deploy.getLoadBalancerAdditionalRoutes().or(Collections.<String>emptyList()), loadBalancerGroups, deploy.getLoadBalancerOptions().orNull(),
       deploy.getLoadBalancerTemplate(), deploy.getLoadBalancerDomains().or(Collections.<String>emptySet()));
 
