@@ -39,6 +39,7 @@ import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskHistoryUpdate;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
+import com.hubspot.singularity.SingularityTaskRequestWithPriority;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.SlaveMatchState;
 import com.hubspot.singularity.config.CustomExecutorConfiguration;
@@ -53,7 +54,6 @@ import com.hubspot.singularity.data.transcoders.SingularityTranscoderException;
 import com.hubspot.singularity.scheduler.SingularityHealthchecker;
 import com.hubspot.singularity.scheduler.SingularityNewTaskChecker;
 import com.hubspot.singularity.scheduler.SingularityScheduler;
-import com.hubspot.singularity.scheduler.SingularitySchedulerPriority;
 import com.hubspot.singularity.scheduler.SingularitySchedulerStateCache;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
 
@@ -75,7 +75,6 @@ public class SingularityMesosScheduler implements Scheduler {
   private final SingularityHealthchecker healthchecker;
   private final SingularityNewTaskChecker newTaskChecker;
   private final SingularitySlaveAndRackManager slaveAndRackManager;
-  private final SingularitySchedulerPriority schedulerPriority;
   private final SingularityLogSupport logSupport;
   private final SingularityTaskSizeOptimizer taskSizeOptimizer;
 
@@ -89,7 +88,7 @@ public class SingularityMesosScheduler implements Scheduler {
 
   @Inject
   SingularityMesosScheduler(MesosConfiguration mesosConfiguration, SingularityConfiguration configuration, TaskManager taskManager, PriorityManager priorityManager, SingularityScheduler scheduler, SingularitySlaveAndRackManager slaveAndRackManager,
-      SingularitySchedulerPriority schedulerPriority, SingularityNewTaskChecker newTaskChecker, SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, RequestManager requestManager,
+      SingularityNewTaskChecker newTaskChecker, SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, RequestManager requestManager,
       Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager, SingularityExceptionNotifier exceptionNotifier,SingularityMesosFrameworkMessageHandler messageHandler,
       @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier, SingularityTaskSizeOptimizer taskSizeOptimizer, final IdTranscoder<SingularityTaskId> taskIdTranscoder, CustomExecutorConfiguration customExecutorConfiguration) {
     this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
@@ -97,7 +96,6 @@ public class SingularityMesosScheduler implements Scheduler {
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.priorityManager = priorityManager;
-    this.schedulerPriority = schedulerPriority;
     this.newTaskChecker = newTaskChecker;
     this.slaveAndRackManager = slaveAndRackManager;
     this.scheduler = scheduler;
@@ -172,8 +170,7 @@ public class SingularityMesosScheduler implements Scheduler {
     int numDueTasks = 0;
 
     try {
-      final List<SingularityTaskRequest> taskRequests = scheduler.getDueTasks();
-      schedulerPriority.sortTaskRequestsInPriorityOrder(taskRequests);
+      final List<SingularityTaskRequest> taskRequests = getSortedDueTasks(scheduler.getDueTasks());
 
       for (SingularityTaskRequest taskRequest : taskRequests) {
         LOG.trace("Task {} is due", taskRequest.getPendingTask().getPendingTaskId());
@@ -241,6 +238,26 @@ public class SingularityMesosScheduler implements Scheduler {
         offers.size() - acceptedOffers.size(), numDueTasks - acceptedOffers.size());
   }
 
+  public List<SingularityTaskRequest> getSortedDueTasks(List<SingularityTaskRequest> dueTasks) {
+    long now = System.currentTimeMillis();
+    List<SingularityTaskRequestWithPriority> taskRequestWithPriorities = new ArrayList<>();
+    for (SingularityTaskRequest taskRequest : dueTasks) {
+      taskRequestWithPriorities.add(new SingularityTaskRequestWithPriority(taskRequest, getWeightedPriority(taskRequest, now)));
+    }
+    Collections.sort(taskRequestWithPriorities, SingularityTaskRequestWithPriority.weightedPriorityComparator());
+    List<SingularityTaskRequest> taskRequests = new ArrayList<>();
+    for (SingularityTaskRequestWithPriority taskRequestWithPriority : taskRequestWithPriorities) {
+      taskRequests.add(taskRequestWithPriority.getTaskRequest());
+    }
+    return taskRequests;
+  }
+
+  private double getWeightedPriority(SingularityTaskRequest taskRequest, long now) {
+    Long overdueMillis = Math.max(now - taskRequest.getPendingTask().getPendingTaskId().getNextRunAt(), 1);
+    Double requestPriority = priorityManager.getTaskPriorityLevelForRequest(taskRequest.getRequest());
+    return overdueMillis * Math.pow(requestPriority, configuration.getSchedulerPriorityWeightFactor());
+  }
+
   private Optional<SingularityTask> match(Collection<SingularityTaskRequest> taskRequests, SingularitySchedulerStateCache stateCache, SingularityOfferHolder offerHolder) {
 
     for (SingularityTaskRequest taskRequest : taskRequests) {
@@ -272,8 +289,6 @@ public class SingularityMesosScheduler implements Scheduler {
         LOG.info("Launching task {} slot on slave {} ({})", task.getTaskId(), offerHolder.getOffer().getSlaveId().getValue(), offerHolder.getOffer().getHostname());
 
         taskManager.createTaskAndDeletePendingTask(zkTask);
-
-        schedulerPriority.notifyTaskLaunched(task.getTaskId());
 
         stateCache.getActiveTaskIds().add(task.getTaskId());
         stateCache.getScheduledTasks().remove(taskRequest.getPendingTask());

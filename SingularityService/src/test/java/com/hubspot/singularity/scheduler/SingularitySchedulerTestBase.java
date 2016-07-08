@@ -142,8 +142,6 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
   @Inject
   protected TestingLoadBalancerClient testingLbClient;
   @Inject
-  protected SingularitySchedulerPriority schedulerPriority;
-  @Inject
   protected SingularityTaskReconciliation taskReconciliation;
   @Inject
   protected SingularityMailer mailer;
