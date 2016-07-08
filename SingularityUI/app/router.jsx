@@ -16,6 +16,7 @@ import Webhooks from './components/webhooks/Webhooks';
 import TaskDetail from './components/taskDetail/TaskDetail';
 import TaskSearch from './components/taskSearch/TaskSearch';
 import DeployDetail from './components/deployDetail/DeployDetail';
+import RequestForm from './components/requestForm/RequestForm';
 
 const AppRouter = (props) => {
   let history = useRouterHistory(createHistory)({
@@ -29,6 +30,8 @@ const AppRouter = (props) => {
         <Route path="/" component={Application}>
           <IndexRoute component={DashboardPage} />
           <Route path="status" component={StatusPage} />
+          <Route path="requests/new" component={RequestForm} />
+          <Route path="requests/edit/:requestId" component={RequestForm} />
           <Route path="requests(/:state)(/:subFilter)(/:searchFilter)" component={RequestsPage} />
           <Route path="request/:requestId/taskSearch" component={TaskSearch} />
           <Route path="request/:requestId/deploy/:deployId" component={DeployDetail} store={props.store} />
