@@ -1,5 +1,7 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
+import { ToggleVisibility } from '../../actions/ui/globalSearch';
 
 import { Navbar, NavItem, Nav, NavDropdown, MenuItem, Glyphicon } from 'react-bootstrap';
 
@@ -7,6 +9,12 @@ function goTo(router, event, route) {
   event.preventDefault();
   router.push(route);
 }
+
+function handleSearchClick(event, toggleGlobalSearch) {
+  event.preventDefault();
+  toggleGlobalSearch();
+}
+
 // put into page wrapper, render children
 const Navigation = (props) => {
   const fragment = props.location.pathname.split('/')[1];
@@ -32,7 +40,7 @@ const Navigation = (props) => {
             <MenuItem eventKey={5.4} onClick={(e) => goTo(props.router, e, 'taskSearch')}>Task search</MenuItem>
           </NavDropdown>
           <NavItem eventKey={6} target="blank" href={config.apiDocs}>API Docs <small>(Beta)</small></NavItem>
-          <NavItem eventKey={7} className="global-search-button">
+          <NavItem eventKey={7} className="global-search-button" onClick={(e) => handleSearchClick(e, props.toggleGlobalSearch)}>
             <Glyphicon glyph="search" />
             <span className="icon-search-adjacent-text"> Search</span>
           </NavItem>
@@ -44,7 +52,14 @@ const Navigation = (props) => {
 
 Navigation.propTypes = {
   location: React.PropTypes.object.isRequired,
-  router: React.PropTypes.object.isRequired
+  router: React.PropTypes.object.isRequired,
+  toggleGlobalSearch: React.PropTypes.func
 };
 
-export default withRouter(Navigation);
+function mapDispatchToProps(dispatch) {
+  return {
+    toggleGlobalSearch: () => dispatch(ToggleVisibility())
+  };
+}
+
+export default connect(null, mapDispatchToProps)(withRouter(Navigation));
