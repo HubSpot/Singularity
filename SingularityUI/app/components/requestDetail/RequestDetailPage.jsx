@@ -8,6 +8,7 @@ import { FetchActiveTasksForRequest } from '../../actions/api/history';
 import { FetchTaskCleanups } from '../../actions/api/tasks';
 
 import RequestHeader from './RequestHeader';
+import RequestActionExpirations from './RequestActionExpirations';
 import TaskStateBreakdown from './TaskStateBreakdown';
 import RequestDeployHistory from './RequestDeployHistory';
 
@@ -24,6 +25,7 @@ class RequestDetailPage extends Component {
     return (
       <div>
         <RequestHeader requestId={this.props.requestId} />
+        <RequestActionExpirations requestId={this.props.requestId} />
         <TaskStateBreakdown requestId={this.props.requestId} />
         <RequestDeployHistory requestId={this.props.requestId} />
       </div>

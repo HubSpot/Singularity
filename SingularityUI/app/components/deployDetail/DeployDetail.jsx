@@ -15,10 +15,11 @@ import SimpleTable from '../common/SimpleTable';
 import ServerSideTable from '../common/ServerSideTable';
 import CollapsableSection from '../common/CollapsableSection';
 
+import ActiveTasksTable from './ActiveTasksTable';
+
 class DeployDetail extends React.Component {
   static propTypes = {
     deploy: PropTypes.object.isRequired,
-    activeTasks: PropTypes.arrayOf(PropTypes.object).isRequired,
     taskHistory: PropTypes.arrayOf(PropTypes.object).isRequired,
     latestHealthchecks: PropTypes.arrayOf(PropTypes.object).isRequired,
     dispatch: PropTypes.func.isRequired
@@ -58,14 +59,14 @@ class DeployDetail extends React.Component {
       if (fails.length) {
         failures = (
           <div className="row">
-              <div className="col-md-12">
-                  <div className="panel panel-danger">
-                      <div className="panel-heading text-muted">Deploy had {fails.length} failure{fails.length > 1 ? 's' : ''}:</div>
-                      <div className="panel-body">
-                        {fails}
-                      </div>
-                  </div>
+            <div className="col-md-12">
+              <div className="panel panel-danger">
+                <div className="panel-heading text-muted">Deploy had {fails.length} failure{fails.length > 1 ? 's' : ''}:</div>
+                <div className="panel-body">
+                  {fails}
+                </div>
               </div>
+            </div>
           </div>
         );
       }
@@ -107,33 +108,14 @@ class DeployDetail extends React.Component {
     );
   }
 
-  renderActiveTasks(d, tasks) {
+  renderActiveTasks(d) {
     return (
       <div>
         <div className="page-header">
           <h2>Active Tasks</h2>
         </div>
-        <SimpleTable
-          emptyMessage="No tasks"
-          entries={tasks}
-          perPage={5}
-          first={true}
-          last={true}
-          headers={['Name', 'Last State', 'Started', 'Updated', '', '']}
-          renderTableRow={(data, index) => {
-            return (
-              <tr key={index}>
-                <td><a href={`${config.appRoot}/task/${data.taskId.id}`}>{data.taskId.id}</a></td>
-                <td><span className={`label label-${Utils.getLabelClassFromTaskState(data.lastTaskState)}`}>{Utils.humanizeText(data.lastTaskState)}</span></td>
-                <td>{Utils.timestampFromNow(data.taskId.startedAt)}</td>
-                <td>{Utils.timestampFromNow(data.updatedAt)}</td>
-                <td className="actions-column"><a href={`${config.appRoot}/request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log">&middot;&middot;&middot;</a></td>
-                <td className="actions-column"><JSONButton object={data}>{'{ }'}</JSONButton></td>
-              </tr>
-            );
-          }}
-        />
-    </div>
+        <ActiveTasksTable deployId={d.id} />
+      </div>
     );
   }
 
@@ -263,7 +245,6 @@ function mapStateToProps(state) {
 
   return {
     deploy: state.api.deploy.data,
-    activeTasks: state.api.activeTasksForDeploy.data,
     taskHistory: state.api.taskHistoryForDeploy.data,
     latestHealthchecks
   };

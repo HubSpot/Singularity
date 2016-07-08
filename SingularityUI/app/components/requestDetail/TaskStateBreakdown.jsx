@@ -54,8 +54,8 @@ const taskStateProps = (s, num, total) => {
   }
 };
 
-const TaskStateBreakdown = ({activeTasksForRequest, futureTasks, refresh}) => {
-  if (!activeTasksForRequest && !futureTasks) {
+const TaskStateBreakdown = ({activeTasksForRequest, refresh}) => {
+  if (!activeTasksForRequest) {
     return null;
   }
 
@@ -89,7 +89,6 @@ const TaskStateBreakdown = ({activeTasksForRequest, futureTasks, refresh}) => {
 TaskStateBreakdown.propTypes = {
   requestId: PropTypes.string.isRequired,
   activeTasksForRequest: PropTypes.arrayOf(PropTypes.object).isRequired,
-  futureTasks: PropTypes.arrayOf(PropTypes.object).isRequired,
   refresh: PropTypes.func.isRequired
 };
 

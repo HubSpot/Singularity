@@ -1,19 +1,18 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-const RequestDeployHistory = () => {
+const RequestActionExpirations = () => {
   return <span />;
 };
 
-RequestDeployHistory.propTypes = {
+RequestActionExpirations.propTypes = {
 
 };
 
 const mapStateToProps = (state, ownProps) => ({
-
 });
 
 export default connect(
   mapStateToProps,
   null
-)(RequestDeployHistory);
+)(RequestActionExpirations);
