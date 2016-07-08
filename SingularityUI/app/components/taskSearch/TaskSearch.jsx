@@ -1,6 +1,8 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import rootComponent from '../../rootComponent';
 import classNames from 'classnames';
+import { FetchRequest } from '../../actions/api/requests';
 import { FetchTaskSearchParams } from '../../actions/api/history';
 
 import Breadcrumbs from '../common/Breadcrumbs';
@@ -14,16 +16,18 @@ class TaskSearch extends React.Component {
 
   static propTypes = {
     requestId: React.PropTypes.string,
+    fetchRequest: React.PropTypes.func.isRequired,
     fetchTaskHistory: React.PropTypes.func.isRequired,
     request: React.PropTypes.object,
-    taskHistory: React.PropTypes.array
+    taskHistory: React.PropTypes.array,
+    params: React.PropTypes.object
   }
 
   constructor(props) {
     super(props);
     this.state = {
       filter: {
-        requestId: props.requestId,
+        requestId: props.params.requestId,
         page: 1,
         count: TaskSearch.TASKS_PER_PAGE
       },
@@ -105,7 +109,7 @@ class TaskSearch extends React.Component {
   }
 
   renderBreadcrumbs() {
-    if (this.props.requestId) {
+    if (this.props.params.requestId) {
       return (
         <Breadcrumbs
           items={[
@@ -139,10 +143,10 @@ class TaskSearch extends React.Component {
     return (
       <div>
         {this.renderBreadcrumbs()}
-        <h1 className="inline-header">{!this.props.requestId && 'Global '}Historical Tasks </h1>
-        {this.props.requestId && <h3 className="inline-header" style={{marginLeft: '10px'}}>for {this.props.requestId}</h3>}
+        <h1 className="inline-header">{!this.props.params.requestId && 'Global '}Historical Tasks </h1>
+        {this.props.params.requestId && <h3 className="inline-header" style={{marginLeft: '10px'}}>for {this.props.params.requestId}</h3>}
         <h2>Search Parameters</h2>
-        <TaskSearchFilters requestId={this.props.requestId} onSearch={(filter) => this.handleSearch(filter)} />
+        <TaskSearchFilters requestId={this.props.params.requestId} onSearch={(filter) => this.handleSearch(filter)} />
         {this.renderPageOptions()}
         <div className="row">
           <div className="col-md-12">
@@ -174,8 +178,18 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    fetchTaskHistory: (...args) => dispatch(FetchTaskSearchParams.trigger(...args))
+    fetchTaskHistory: (...args) => dispatch(FetchTaskSearchParams.trigger(...args)),
+    fetchRequest: (requestId) => dispatch(FetchRequest.trigger(requestId))
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(TaskSearch);
+function refresh(props) {
+  const promises = [];
+  if (props.params.requestId) {
+    promises.push(props.fetchRequest(props.params.requestId));
+  }
+  promises.push(props.fetchTaskHistory({requestId: props.params.requestId, page: 1, count: TaskSearch.TASKS_PER_PAGE}));
+  return Promise.all(promises);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(TaskSearch, 'Task Search', refresh));

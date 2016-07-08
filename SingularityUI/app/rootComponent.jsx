@@ -6,6 +6,11 @@ const rootComponent = (Wrapped, title, refresh = _.noop) => class extends React.
   constructor(props) {
     super(props);
     _.bindAll(this, 'handleBlur', 'handleFocus');
+
+    /*
+     NOTE: I tried moving this state into redux but it resulted in page transitions being signifcantly slower.
+     Maybe revisit this in the future. (see branch rootcomponent_redux for implementation)
+    */
     this.state = {
       loading: refresh !== _.noop
     };
