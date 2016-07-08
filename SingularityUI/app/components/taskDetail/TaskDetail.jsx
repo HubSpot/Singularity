@@ -62,7 +62,7 @@ class TaskDetail extends React.Component {
     super(props);
     this.state = {
       previousUsage: null,
-      currentFilePath: props.params.filePath
+      currentFilePath: props.params.splat || props.params.taskId
     };
   }
 
@@ -197,7 +197,7 @@ class TaskDetail extends React.Component {
               this.setState({
                 currentFilePath: path
               });
-              app.router.navigate(Utils.joinPath(`#task/${this.props.params.taskId}/files/`, path));
+              this.props.router.push(Utils.joinPath(`#task/${this.props.params.taskId}/files/`, path));
             });
           }}
         />
@@ -284,7 +284,7 @@ class TaskDetail extends React.Component {
     const cleanup = _.find(this.props.params.taskCleanups, (c) => {
       return c.taskId.id === this.props.params.taskId;
     });
-    const filesToDisplay = this.analyzeFiles(this.props.files[`${this.props.params.taskId}/${this.state.currentFilePath}`].data);
+    const filesToDisplay = this.props.files[`${this.props.params.taskId}/${this.state.currentFilePath}`] && this.analyzeFiles(this.props.files[`${this.props.params.taskId}/${this.state.currentFilePath}`].data);
 
     return (
       <div className="task-detail detail-view">
@@ -361,10 +361,12 @@ function mapTaskToProps(t) {
   }
   t.isStillRunning = isStillRunning;
 
-  t.isCleaning = t.lastKnownState.taskState === 'TASK_CLEANING';
+  if (t.lastKnownState) {
+    t.isCleaning = t.lastKnownState.taskState === 'TASK_CLEANING';
+  }
 
   const ports = [];
-  if (t.task.taskRequest.deploy.resources.numPorts > 0) {
+  if (t.task && t.task.taskRequest.deploy.resources.numPorts > 0) {
     for (const resource of t.task.mesosTask.resources) {
       if (resource.name === 'ports') {
         for (const range of resource.ranges.range) {
@@ -409,12 +411,12 @@ function mapDispatchToProps(dispatch) {
     fetchDeployForRequest: (taskId, deployId) => dispatch(FetchDeployForRequest.trigger(taskId, deployId)),
     fetchTaskCleanups: () => dispatch(FetchTaskCleanups.trigger()),
     fetchPendingDeploys: () => dispatch(FetchPendingDeploys.trigger()),
-    fechS3Logs: (taskId) => dispatch(FetchTaskS3Logs.trigger(taskId))
+    fechS3Logs: (taskId) => dispatch(FetchTaskS3Logs.trigger(taskId)),
   };
 }
 
 function refresh(props) {
-  console.log('refresh task');
+  props.fetchTaskFiles(props.params.taskId, props.params.splat || props.params.taskId);
   const promises = [];
   const taskPromise = props.fetchTaskHistory(props.params.taskId);
   taskPromise.then(() => {
