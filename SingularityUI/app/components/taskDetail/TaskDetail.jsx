@@ -433,4 +433,4 @@ function refresh(props) {
   return Promise.all(promises);
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TaskDetail), 'Task', refresh));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TaskDetail), (props) => props.params.taskId, refresh));

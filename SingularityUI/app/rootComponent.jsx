@@ -66,7 +66,6 @@ const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true,
     clearInterval(this.refreshInterval);
   }
 
-
   render() {
     const loader = this.state.loading && <div className="page-loader fixed" />;
     const page = !this.state.loading && <Wrapped {...this.props} />;

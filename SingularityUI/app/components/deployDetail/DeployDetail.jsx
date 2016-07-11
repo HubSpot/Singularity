@@ -303,4 +303,4 @@ function refresh(props) {
   return allPromises;
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(DeployDetail, 'Deploy', refresh));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(DeployDetail, (props) => `${props.params.requestId} Deploy ${props.params.deployId}`, refresh));
