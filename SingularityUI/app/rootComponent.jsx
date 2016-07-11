@@ -18,7 +18,8 @@ const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true,
   }
 
   componentWillMount() {
-    document.title = `${title} - ${config.title}`;
+    const titleString = typeof title === 'function' ? title(this.props) : title;
+    document.title = `${titleString} - ${config.title}`;
 
     const promise = refresh(this.props);
     if (promise) {

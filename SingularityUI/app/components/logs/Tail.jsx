@@ -17,6 +17,11 @@ const mapDispatchToProps = {
   initializeUsingActiveTasks: LogActions.initializeUsingActiveTasks
 };
 
+function getTitle(props) {
+  const file = _.last(props.params.splat.split('/'));
+  return `Tail of ${file}`;
+}
+
 function refreshTail(props) {
   const splits = props.params.taskId.split('-');
   const requestId = splits.slice(0, splits.length - 5).join('-');
@@ -27,7 +32,7 @@ function refreshTail(props) {
     props.updateActiveTasks(requestId);
   });
 }
-export const Tail = connect(null, mapDispatchToProps)(rootComponent(TailPage, 'Tail of', refreshTail, false, false));
+export const Tail = connect(null, mapDispatchToProps)(rootComponent(TailPage, getTitle, refreshTail, false, false));
 
 function refreshAggregateTail(props) {
   const viewMode = props.location.query.viewMode || 'split';
@@ -37,4 +42,4 @@ function refreshAggregateTail(props) {
     props.updateActiveTasks(props.params.requestId);
   });
 }
-export const AggregateTail = connect(null, mapDispatchToProps)(rootComponent(TailPage, 'Tail of', refreshAggregateTail, false, false));
+export const AggregateTail = connect(null, mapDispatchToProps)(rootComponent(TailPage, getTitle, refreshAggregateTail, false, false));
