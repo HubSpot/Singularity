@@ -1,6 +1,6 @@
 import React, { PropTypes } from 'react';
 import Utils from '../../utils';
-import { Alert, Button } from 'react-bootstrap';
+import { Alert } from 'react-bootstrap';
 
 import JSONButton from '../common/JSONButton';
 import SimpleTable from '../common/SimpleTable';
@@ -111,7 +111,7 @@ const TaskAlerts = (props) => {
         <p>
           <strong>
             Task killed due to no passing healthchecks after
-            {props.task.tooManyRetries ? ` ${props.task.healthcheckResults.length.toString()} tries.` : ` ${props.task.secondsElapsed.toString()} seconds.`}
+            {props.task.tooManyRetries ? ` ${props.task.healthcheckResults.length} tries.` : ` ${props.task.secondsElapsed} seconds.`}
           </strong>
         </p>
         <p>
@@ -120,7 +120,7 @@ const TaskAlerts = (props) => {
             <span>
               did not respond after{' '}
               <code>
-                {lastHealthcheck.durationMillis && `${lastHealthcheck.durationMillis.toString()} ms`}
+                {lastHealthcheck.durationMillis && `${Utils.millisecondsToSecondsRoundToTenth(lastHealthcheck.durationMillis)} seconds`}
               </code>
               {' '}at {Utils.absoluteTimestampWithSeconds(lastHealthcheck.timestamp)}
             </span>}.

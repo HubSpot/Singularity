@@ -378,6 +378,10 @@ const Utils = {
     return filename.replace(new RegExp(finalRegex), '');
   },
 
+  millisecondsToSecondsRoundToTenth(millis) {
+    return Math.round(millis / 100) / 10;
+  },
+
   isCauseOfFailure(task, deploy) {
     for (const failure of deploy.deployResult.deployFailures) {
       if (failure.taskId && failure.taskId.id === task.task.taskId.id) {
