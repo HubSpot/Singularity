@@ -12,6 +12,8 @@ import UnpauseButton from '../../requests/UnpauseButton';
 import BounceButton from '../../requests/BounceButton';
 import ScaleButton from '../../requests/ScaleButton';
 import ExitCooldownButton from '../../requests/ExitCooldownButton';
+import EnableHealthchecksButton from '../../requests/EnableHealthchecksButton';
+import DisableHealthchecksButton from '../../requests/DisableHealthchecksButton';
 
 import Utils from '../../../utils';
 
@@ -109,15 +111,19 @@ const RequestActionButtons = ({requestParent}) => {
   if (Utils.request.canDisableHealthchecks(requestParent)) {
     if (request.skipHealthchecks) {
       maybeToggleHealthchecksButton = (
-        <Button bsStyle="warning">
-          Enable Healthchecks
-        </Button>
+        <EnableHealthchecksButton requestId={request.id}>
+          <Button bsStyle="warning">
+            Enable Healthchecks
+          </Button>
+        </EnableHealthchecksButton>
       );
     } else {
       maybeToggleHealthchecksButton = (
-        <Button bsStyle="warning">
-          Disable Healthchecks
-        </Button>
+        <DisableHealthchecksButton requestId={request.id}>
+          <Button bsStyle="primary">
+            Disable Healthchecks
+          </Button>
+        </DisableHealthchecksButton>
       );
     }
   }

@@ -68,6 +68,14 @@ export const PauseRequest = buildJsonApiAction(
   })
 );
 
+export const PersistRequestPause = buildJsonApiAction(
+  'PERSIST_REQUEST_PAUSE',
+  'DELETE',
+  (requestId) => ({
+    url: `/requests/request/${requestId}/pause`
+  })
+);
+
 export const UnpauseRequest = buildJsonApiAction(
   'UNPAUSE_REQUEST',
   'POST',
@@ -76,6 +84,15 @@ export const UnpauseRequest = buildJsonApiAction(
     body: { skipHealthchecks, message, actionId }
   })
 );
+
+// Remove when Unpause automatically removes the ExpiringPause
+export const UnpauseAndPersistRequest = (requestId, data) => {
+  return (dispatch) => {
+    return dispatch(UnpauseRequest.trigger(requestId, data)).then(
+      () => dispatch(PersistRequestPause.trigger(requestId))
+    );
+  };
+};
 
 export const ExitRequestCooldown = buildJsonApiAction(
   'EXIT_REQUEST_COOLDOWN',
@@ -95,21 +112,28 @@ export const SkipRequestHealthchecks = buildJsonApiAction(
   })
 );
 
-export const DeleteSkipRequestHealthchecks = buildJsonApiAction(
-  'DELETE_SKIP_REQUEST_HEALTHCHECKS',
+export const PersistSkipRequestHealthchecks = buildJsonApiAction(
+  'PERSIST_SKIP_REQUEST_HEALTHCHECKS',
   'DELETE',
-  (requestId, {skipHealthchecks, durationMillis, message, actionId}) => ({
-    url: `/requests/request/${requestId}/skipHealthchecks`,
-    body: { skipHealthchecks, durationMillis, message, actionId }
+  (requestId) => ({
+    url: `/requests/request/${requestId}/skipHealthchecks`
   })
 );
 
 export const ScaleRequest = buildJsonApiAction(
   'SCALE_REQUEST',
   'PUT',
-  (requestId, data) => ({
+  (requestId, {instances, skipHealthchecks, durationMillis, message, actionId}) => ({
     url: `/requests/request/${requestId}/scale`,
-    body: data
+    body: { instances, skipHealthchecks, durationMillis, message, actionId }
+  })
+);
+
+export const PersistRequestScale = buildJsonApiAction(
+  'PERSIST_REQUEST_SCALE',
+  'DELETE',
+  (requestId) => ({
+    url: `/requests/request/${requestId}/scale`
   })
 );
 
@@ -119,5 +143,13 @@ export const BounceRequest = buildJsonApiAction(
   (requestId, data) => ({
     url: `/requests/request/${requestId}/bounce`,
     body: data
+  })
+);
+
+export const CancelRequestBounce = buildJsonApiAction(
+  'CANCEL_REQUEST_BOUNCE',
+  'DELETE',
+  (requestId) => ({
+    url: `/requests/request/${requestId}/bounce`
   })
 );

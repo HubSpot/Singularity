@@ -514,7 +514,7 @@ const Utils = {
     canDisableHealthchecks: (r) => {
       return !!r.activeDeploy
         && !!r.activeDeploy.healthcheckUri
-        && !r.state === 'PAUSED'
+        && r.state !== 'PAUSED'
         && !r.expiringSkipHealthchecks;
     },
     pauseDisabled: (r) => {

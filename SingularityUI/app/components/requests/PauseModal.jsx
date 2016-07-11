@@ -19,7 +19,7 @@ class PauseModal extends Component {
   render() {
     let formElements = [
       {
-        name: 'duration',
+        name: 'durationMillis',
         type: FormModal.INPUT_TYPES.DURATION,
         label: 'Expiration (optional)'
       },
