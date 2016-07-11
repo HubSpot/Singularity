@@ -271,7 +271,7 @@ class TaskDetail extends React.Component {
         <TaskHistory task={task} />
         <TaskLatestLog task={task} />
         {this.renderFiles(task, filesToDisplay)}
-        <TaskS3Logs task={task} s3Files={this.props.s3Logs} />
+        <TaskS3Logs taskId={task.task.taskId.id} s3Files={this.props.s3Logs} />
         <TaskLbUpdates task={task} />
         <TaskInfo task={task} />
         {this.renderResourceUsage(task, this.props.resourceUsage)}
