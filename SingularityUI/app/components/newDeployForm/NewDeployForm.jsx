@@ -105,12 +105,14 @@ class NewDeployForm extends Component {
       }).isRequired
     }).isRequired,
     saveApiCall: PropTypes.shape({
-      error: PropTypes.shape({
-        message: PropTypes.string
-      }),
+      error: PropTypes.string,
       data: PropTypes.shape({
         message: PropTypes.string,
         activeDeploy: PropTypes.shape({
+          id: PropTypes.string,
+          requestId: PropTypes.string
+        }),
+        pendingDeploy: PropTypes.shape({
           id: PropTypes.string,
           requestId: PropTypes.string
         })
@@ -148,7 +150,7 @@ class NewDeployForm extends Component {
       return true;
     }
     if (type === 'number') {
-      const number = parseInt(value, 10);
+      const number = parseFloat(value, 10);
       return number === 0 || number; // NaN is invalid
     } else if (type === 'map') {
       for (const element of value) {
@@ -313,7 +315,7 @@ class NewDeployForm extends Component {
         if (fieldId.type === 'text' || fieldId.type === 'array') {
           deployObject[fieldId.id] = value;
         } else if (fieldId.type === 'number') {
-          deployObject[fieldId.id] = parseInt(value, 10);
+          deployObject[fieldId.id] = parseFloat(value, 10);
         } else if (fieldId.type === 'base64') {
           deployObject[fieldId.id] = btoa(value);
         } else if (fieldId.type === 'map') {
@@ -1364,7 +1366,7 @@ class NewDeployForm extends Component {
     const errorMessage = (
       this.props.saveApiCall.error &&
         <p className="alert alert-danger">
-          There was a problem saving your request: {this.props.saveApiCall.error.message}
+          There was a problem saving your request: {this.props.saveApiCall.error}
         </p> ||
         this.props.saveApiCall.data && this.props.saveApiCall.data.message &&
         <p className="alert alert-danger">
@@ -1379,6 +1381,15 @@ class NewDeployForm extends Component {
             href={`${config.appRoot}/request/${ this.props.saveApiCall.data.activeDeploy.requestId }/deploy/${ this.props.saveApiCall.data.activeDeploy.id }`}
             >
             {` ${this.props.saveApiCall.data.activeDeploy.id} `}
+          </a>
+          succesfully created!
+        </p> || this.props.saveApiCall.data.pendingDeploy &&
+        <p className="alert alert-success">
+          Deploy
+          <a
+            href={`${config.appRoot}/request/${ this.props.saveApiCall.data.pendingDeploy.requestId }/deploy/${ this.props.saveApiCall.data.pendingDeploy.id }`}
+            >
+            {` ${this.props.saveApiCall.data.pendingDeploy.id} `}
           </a>
           succesfully created!
         </p>
@@ -1419,9 +1430,9 @@ class NewDeployForm extends Component {
   }
 }
 
-function mapStateToProps(state, ownProps) {
+function mapStateToProps(state) {
   return {
-    request: state.api.request[ownProps.requestId].data,
+    request: state.api.request.data,
     form: state.ui.form[FORM_ID],
     saveApiCall: state.api.saveDeploy
   };
