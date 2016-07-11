@@ -7,7 +7,7 @@ import LogContainer from './LogContainer';
 import LogActions from '../../actions/log';
 import { updateActiveTasks } from '../../actions/activeTasks';
 
-const Tail = () => {
+const TailPage = () => {
   return <LogContainer />;
 };
 
@@ -17,8 +17,7 @@ const mapDispatchToProps = {
   initializeUsingActiveTasks: LogActions.initializeUsingActiveTasks
 };
 
-function refresh(props) {
-  console.log(props);
+function refreshTail(props) {
   const splits = props.params.taskId.split('-');
   const requestId = splits.slice(0, splits.length - 5).join('-');
   const search = props.location.query.search || '';
@@ -28,5 +27,14 @@ function refresh(props) {
     props.updateActiveTasks(requestId);
   });
 }
+export const Tail = connect(null, mapDispatchToProps)(rootComponent(TailPage, 'Tail of', refreshTail, false, false));
 
-export default connect(null, mapDispatchToProps)(rootComponent(Tail, 'Tail of', refresh, false, false));
+function refreshAggregateTail(props) {
+  const viewMode = props.location.query.viewMode || 'split';
+  const search = props.location.query.search || '';
+  const initPromise = props.initializeUsingActiveTasks(props.params.requestId, props.params.splat, search, viewMode);
+  initPromise.then(() => {
+    props.updateActiveTasks(props.params.requestId);
+  });
+}
+export const AggregateTail = connect(null, mapDispatchToProps)(rootComponent(TailPage, 'Tail of', refreshAggregateTail, false, false));
