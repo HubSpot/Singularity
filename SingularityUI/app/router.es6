@@ -1,7 +1,3 @@
-let NotFoundController;
-let TaskSearchController;
-let Utils;
-
 const hasProp = {}.hasOwnProperty;
 
 import DashboardController from 'controllers/Dashboard';
