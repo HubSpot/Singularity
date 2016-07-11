@@ -50,6 +50,8 @@ public class SingularityState {
 
   private final Optional<Boolean> authDatastoreHealthy;
 
+  private final Optional<Long> taskReconciliationStartedAt;
+
   @JsonCreator
   public SingularityState(@JsonProperty("activeTasks") int activeTasks, @JsonProperty("activeRequests") int activeRequests, @JsonProperty("cooldownRequests") int cooldownRequests,
       @JsonProperty("pausedRequests") int pausedRequests, @JsonProperty("scheduledTasks") int scheduledTasks, @JsonProperty("pendingRequests") int pendingRequests, @JsonProperty("lbCleanupTasks") int lbCleanupTasks,
@@ -59,7 +61,8 @@ public class SingularityState {
       @JsonProperty("lateTasks") int lateTasks, @JsonProperty("futureTasks") int futureTasks, @JsonProperty("maxTaskLag") long maxTaskLag, @JsonProperty("generatedAt") long generatedAt,
       @JsonProperty("overProvisionedRequestIds") List<String> overProvisionedRequestIds, @JsonProperty("underProvisionedRequestIds") List<String> underProvisionedRequestIds,
       @JsonProperty("overProvisionedRequests") int overProvisionedRequests, @JsonProperty("underProvisionedRequests") int underProvisionedRequests, @JsonProperty("finishedRequests") int finishedRequests,
-      @JsonProperty("unknownRacks") int unknownRacks, @JsonProperty("unknownSlaves") int unknownSlaves, @JsonProperty("authDatastoreHealthy") Optional<Boolean> authDatastoreHealthy) {
+      @JsonProperty("unknownRacks") int unknownRacks, @JsonProperty("unknownSlaves") int unknownSlaves, @JsonProperty("authDatastoreHealthy") Optional<Boolean> authDatastoreHealthy,
+      @JsonProperty("taskReconciliationStartedAt") Optional<Long> taskReconciliationStartedAt) {
     this.activeTasks = activeTasks;
     this.activeRequests = activeRequests;
     this.pausedRequests = pausedRequests;
@@ -91,6 +94,7 @@ public class SingularityState {
     this.overProvisionedRequestIds = overProvisionedRequestIds;
     this.underProvisionedRequestIds = underProvisionedRequestIds;
     this.authDatastoreHealthy = authDatastoreHealthy;
+    this.taskReconciliationStartedAt = taskReconciliationStartedAt;
   }
 
   public int getFinishedRequests() {
@@ -231,6 +235,10 @@ public class SingularityState {
     return authDatastoreHealthy;
   }
 
+  public Optional<Long> getTaskReconciliationStartedAt() {
+    return taskReconciliationStartedAt;
+  }
+
   @Override
   public String toString() {
     return "SingularityState [activeTasks=" + activeTasks + ", pausedRequests=" + pausedRequests + ", activeRequests=" + activeRequests + ", cooldownRequests=" + cooldownRequests + ", scheduledTasks=" + scheduledTasks
@@ -239,7 +247,7 @@ public class SingularityState {
         + activeSlaves + ", deadSlaves=" + deadSlaves + ", decommissioningSlaves=" + decommissioningSlaves + ", unknownSlaves=" + unknownSlaves + ", activeRacks=" + activeRacks + ", deadRacks="
         + deadRacks + ", decommissioningRacks=" + decommissioningRacks + ", unknownRacks=" + unknownRacks + ", oldestDeploy=" + oldestDeploy + ", numDeploys=" + numDeploys + ", generatedAt="
         + generatedAt + ", hostStates=" + hostStates + ", overProvisionedRequestIds=" + overProvisionedRequestIds + ", underProvisionedRequestIds=" + underProvisionedRequestIds
-        + ", overProvisionedRequests=" + overProvisionedRequests + ", underProvisionedRequests=" + underProvisionedRequests + ", authDatastoreHealthy=" + authDatastoreHealthy + "]";
+        + ", overProvisionedRequests=" + overProvisionedRequests + ", underProvisionedRequests=" + underProvisionedRequests + ", authDatastoreHealthy=" + authDatastoreHealthy + ", taskReconciliationStartedAt=" + taskReconciliationStartedAt + "]";
   }
 
 }

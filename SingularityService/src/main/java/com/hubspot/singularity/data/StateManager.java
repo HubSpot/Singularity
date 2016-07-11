@@ -34,6 +34,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
+import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
 
 @Singleton
 public class StateManager extends CuratorManager {
@@ -52,11 +53,12 @@ public class StateManager extends CuratorManager {
   private final Transcoder<SingularityHostState> hostStateTranscoder;
   private final SingularityConfiguration singularityConfiguration;
   private final SingularityAuthDatastore authDatastore;
+  private final SingularityTaskReconciliation taskReconciliation;
 
   @Inject
   public StateManager(CuratorFramework curatorFramework, SingularityConfiguration configuration, MetricRegistry metricRegistry, RequestManager requestManager, TaskManager taskManager,
       DeployManager deployManager, SlaveManager slaveManager, RackManager rackManager, Transcoder<SingularityState> stateTranscoder, Transcoder<SingularityHostState> hostStateTranscoder,
-      SingularityConfiguration singularityConfiguration, SingularityAuthDatastore authDatastore) {
+      SingularityConfiguration singularityConfiguration, SingularityAuthDatastore authDatastore, SingularityTaskReconciliation taskReconciliation) {
     super(curatorFramework, configuration, metricRegistry);
 
     this.requestManager = requestManager;
@@ -68,6 +70,7 @@ public class StateManager extends CuratorManager {
     this.deployManager = deployManager;
     this.singularityConfiguration = singularityConfiguration;
     this.authDatastore = authDatastore;
+    this.taskReconciliation = taskReconciliation;
   }
 
   public void save(SingularityHostState hostState) throws InterruptedException {
@@ -291,9 +294,11 @@ public class StateManager extends CuratorManager {
 
     final Optional<Boolean> authDatastoreHealthy = authDatastore.isHealthy();
 
+    final Optional<Long> taskReconciliationStartedAt = taskReconciliation.getTaskReconciliationStartedAt();
+
     return new SingularityState(activeTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, lbCleanupRequests, cleaningRequests, activeSlaves,
         deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, scheduledTasksInfo.getNumLateTasks(),
         scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
-            includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy);
+            includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, taskReconciliationStartedAt);
   }
 }
