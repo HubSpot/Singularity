@@ -4,6 +4,7 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 
 import Utils from '../../utils';
+import { Link } from 'react-router';
 
 import { connect } from 'react-redux';
 
@@ -22,7 +23,7 @@ class TaskGroupHeader extends React.Component {
       return <span className="instance-link">Viewing Instances {this.props.tasks.map(({ taskId }) => Utils.getTaskDataFromTaskId(taskId).instanceNo).join(', ')}</span>;
     } else if (this.props.tasks.length > 0) {
       let taskData = Utils.getTaskDataFromTaskId(this.props.tasks[0].taskId);
-      return <span><div className="width-constrained"><OverlayTrigger placement="bottom" overlay={this.getInstanceNoToolTip(taskData)}><a className="instance-link" href={`${ config.appRoot }/task/${ this.props.tasks[0].taskId }`}>Instance {taskData.instanceNo}</a></OverlayTrigger></div><TaskStatusIndicator status={this.props.tasks[0].lastTaskStatus} /></span>;
+      return <span><div className="width-constrained"><OverlayTrigger placement="bottom" overlay={this.getInstanceNoToolTip(taskData)}><Link className="instance-link" to={`task/${ this.props.tasks[0].taskId }`}>Instance {taskData.instanceNo}</Link></OverlayTrigger></div><TaskStatusIndicator status={this.props.tasks[0].lastTaskStatus} /></span>;
     } else {
       return <div className="width-constrained" />;
     }
