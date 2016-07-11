@@ -33,7 +33,7 @@ ActiveTasksTable.propTypes = {
   tasks: PropTypes.arrayOf(PropTypes.object).isRequired
 };
 
-const mapStateToProps = (state, ownProps) => ({
+const mapStateToProps = (state) => ({
   tasks: state.api.activeTasksForDeploy.data
 });
 
