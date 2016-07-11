@@ -1,16 +1,10 @@
 import React from 'react';
 import Utils from '../../utils';
-import { InfoBox, UsageInfo } from '../common/statelessComponents';
 import { Alert } from 'react-bootstrap';
-import FormGroup from 'react-bootstrap/lib/FormGroup';
 import { Link } from 'react-router';
 
 import JSONButton from '../common/JSONButton';
-import Section from '../common/Section';
-import ConfirmationDialog from '../common/ConfirmationDialog';
-import CollapsableSection from '../common/CollapsableSection';
 import SimpleTable from '../common/SimpleTable';
-import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 
 export default (props) => {
   const t = props.task;

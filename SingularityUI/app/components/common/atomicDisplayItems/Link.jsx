@@ -22,7 +22,7 @@ let Link = React.createClass({
   },
 
   getLink() {
-    if (this.props.prop.url) {
+    if (this.props.prop.url && !this.props.prop.url.startsWith('http')) {
       return <RouterLink to={this.props.prop.url} title={this.props.prop.title} onClick={this.props.prop.onClickFn} className={this.props.prop.className} id={this.props.id}>{this.props.prop.text}</RouterLink>;
     } else {
       return <a href={this.props.prop.url} title={this.props.prop.title} onClick={this.props.prop.onClickFn} className={this.props.prop.className} id={this.props.id}>{this.props.prop.text}</a>;
