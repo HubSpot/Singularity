@@ -18,4 +18,3 @@ let TaskStateLabel = React.createClass({
 });
 
 export default TaskStateLabel;
-

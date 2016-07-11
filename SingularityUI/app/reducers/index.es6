@@ -3,9 +3,9 @@ import { combineReducers } from 'redux';
 import taskGroups from './taskGroups';
 import activeRequest from './activeRequest';
 import tasks from './tasks';
-
 import api from './api';
 import ui from './ui';
+import {reducer as formReducer} from 'redux-form';
 
 const path = (state='', action) => {
   if (action.type === 'LOG_INIT') {
@@ -68,5 +68,6 @@ export default combineReducers({
   viewMode,
   search,
   logRequestLength,
-  maxLines
+  maxLines,
+  form: formReducer
 });

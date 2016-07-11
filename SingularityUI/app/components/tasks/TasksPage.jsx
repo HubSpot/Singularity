@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {PropTypes} from 'react';
 import { connect } from 'react-redux';
 
 import {
@@ -31,6 +31,18 @@ import {
 
 class TasksPage extends React.Component {
   static propTypes = {
+    state: PropTypes.string,
+    requestsSubFilter: PropTypes.string,
+    searchFilter: PropTypes.string,
+    updateFilters: PropTypes.func,
+    fetchFilter: PropTypes.func,
+    killTask: PropTypes.func,
+    runRequest: PropTypes.func,
+    taskRun: PropTypes.func,
+    taskRunHistory: PropTypes.func,
+    taskFiles: PropTypes.func,
+    tasks: PropTypes.array,
+    cleanups: PropTypes.array
   };
 
   constructor(props) {

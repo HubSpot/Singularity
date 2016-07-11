@@ -1,4 +1,5 @@
 import { buildApiAction } from './base';
+import Utils from '../../utils';
 
 export const FetchTaskHistory = buildApiAction(
   'FETCH_TASK_HISTORY',
@@ -36,6 +37,23 @@ export const FetchDeployForRequest = buildApiAction(
     url: `/history/request/${requestId}/deploy/${deployId}`
   })
 );
+
+export const FetchTaskSearchParams = buildApiAction(
+  'FETCH_TASK_HISTORY',
+  ({requestId = null, deployId = null, host = null, lastTaskStatus = null, startedAfter = null, startedBefore = null, orderDirection = null, count, page}) => {
+    const args = {
+      requestId,
+      deployId,
+      host,
+      lastTaskStatus,
+      startedAfter,
+      startedBefore,
+      orderDirection
+    };
+    return {
+      url: `/history/tasks?count=${count}&page=${page}&${Utils.queryParams(args)}`
+    };
+});
 
 export const FetchRequestRunHistory = buildApiAction(
   'FETCH_REQUEST_RUN_HISTORY',

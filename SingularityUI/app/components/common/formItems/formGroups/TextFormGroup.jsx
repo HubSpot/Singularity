@@ -1,61 +1,40 @@
-import React, {Component, PropTypes} from 'react';
-import FormField from '../FormField';
-import classNames from 'classnames';
+import React, {PropTypes} from 'react';
+import { FormGroup, ControlLabel, FormControl, InputGroup } from 'react-bootstrap/lib';
 
-class TextFormGroup extends Component {
-  static propTypes = {
-    id: PropTypes.string.isRequired,
-    label: PropTypes.string.isRequired,
-    onChange: PropTypes.func.isRequired,
-    placeholder: PropTypes.string,
-    value: PropTypes.string,
-    required: PropTypes.bool,
-    feedback: PropTypes.oneOf(['SUCCESS', 'ERROR', 'WARN'])
-  }
-
-  formGroupClassNames() {
-    return classNames(
-      'form-group',
-      {
-        required: this.props.required,
-        'has-success': this.props.feedback === 'SUCCESS',
-        'has-error': this.props.feedback === 'ERROR',
-        'has-warning': this.props.feedback === 'WARN',
-        'has-feedback': this.props.feedback
-      });
-  }
-
-  iconClassNames() {
-    return classNames(
-      'glyphicon',
-      'form-control-feedback',
-      {
-        'glyphicon-ok': this.props.feedback === 'SUCCESS',
-        'glyphicon-warning-sign': this.props.feedback === 'WARN',
-        'glyphicon-remove': this.props.feedback === 'ERROR'
+const TextFormGroup = (props) => {
+  const formField = (
+    <FormControl
+      type="text"
+      value={props.value || ''}
+      placeholder={props.placeholder}
+      onChange={(event) => props.onChange(event)}
+    />
+  );
+  const feedback = props.feedback && <FormControl.Feedback />;
+  return (
+    <FormGroup controlId={props.id} validationState={props.feedback && props.feedback.toLowerCase()} className={props.required && 'required'}>
+      <ControlLabel>{props.label}</ControlLabel>
+      {props.inputGroupAddon &&
+        <InputGroup>
+          {formField}
+          <InputGroup.Addon>{props.inputGroupAddon}</InputGroup.Addon>
+        </InputGroup>
       }
-    );
-  }
+      {!props.inputGroupAddon && formField}
+      {!props.inputGroupAddon && feedback}
+    </FormGroup>
+  );
+};
 
-  render() {
-    return (
-      <div className={this.formGroupClassNames()}>
-        <label htmlFor={this.props.id}>{this.props.label}</label>
-        <FormField
-          id={this.props.id}
-          className={this.props.id}
-          prop = {{
-            updateFn: this.props.onChange,
-            inputType: 'text',
-            value: this.props.value,
-            required: this.props.required,
-            placeholder: this.props.placeholder
-          }}
-        />
-        {this.props.feedback && <span className={this.iconClassNames()} />}
-      </div>
-    );
-  }
-}
+TextFormGroup.propTypes = {
+  id: PropTypes.string.isRequired,
+  label: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  placeholder: PropTypes.string,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  required: PropTypes.bool,
+  feedback: PropTypes.oneOf(['SUCCESS', 'ERROR', 'WARN']),
+  inputGroupAddon: PropTypes.oneOfType([PropTypes.element, PropTypes.string])
+};
 
 export default TextFormGroup;

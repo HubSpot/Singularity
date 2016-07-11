@@ -1,5 +1,5 @@
 import React, {Component, PropTypes} from 'react';
-import FormField from './FormField';
+import {FormControl} from 'react-bootstrap';
 import classNames from 'classnames';
 
 class MultiInput extends Component {
@@ -73,13 +73,11 @@ class MultiInput extends Component {
           valueClone.map((value, key) => {
             return (
               <div className={this.formGroupClassNames(key, value)} key={key} >
-                <FormField
-                  prop = {{
-                    value: value,
-                    updateFn: event => this.change(key, event.target.value),
-                    type: 'text',
-                    placeholder: this.props.placeholder
-                  }}
+                <FormControl
+                  value={value}
+                  onChange={(event) => this.change(key, event.target.value)}
+                  type="text"
+                  placeholder={this.props.placeholder}
                 />
                 {this.feedbackType(key, value) && <span className={this.iconClassNames(key, value)} />}
               </div>

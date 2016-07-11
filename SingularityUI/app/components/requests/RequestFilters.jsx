@@ -2,8 +2,7 @@ import React from 'react';
 import Utils from '../../utils';
 import classNames from 'classnames';
 
-import { Nav, NavItem } from 'react-bootstrap';
-import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
+import { Nav, NavItem, Glyphicon, Button } from 'react-bootstrap';
 
 export default class RequestFilters extends React.Component {
 
@@ -98,7 +97,8 @@ export default class RequestFilters extends React.Component {
         placeholder="Filter requests"
         value={this.props.filter.searchFilter}
         onChange={(...args) => this.handleSearchChange(...args)}
-        maxlength="128" />
+        maxLength="128"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         />
     );
   }
 
@@ -107,7 +107,7 @@ export default class RequestFilters extends React.Component {
       return (
         <li key={index} className={_.contains(this.props.filter.subFilter, t) ? 'active' : ''}>
           <a onClick={() => this.toggleRequestType(t)}>
-            <Glyphicon iconClass='ok' /> {Utils.humanizeText(t)}
+            <Glyphicon glyph="ok" /> {Utils.humanizeText(t)}
           </a>
         </li>
       );
@@ -126,8 +126,15 @@ export default class RequestFilters extends React.Component {
     return (
       <div>
         <div className="row">
-          <div className="col-md-12">
+          <div className="col-md-10">
             {this.renderStatusFilter()}
+          </div>
+          <div className="col-md-2 text-right">
+            <a href={`${config.appRoot}/requests/new`}>
+              <Button bsStyle="success">
+                <Glyphicon glyph="plus" /> New Request
+              </Button>
+            </a>
           </div>
         </div>
         <div className="row">

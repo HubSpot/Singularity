@@ -535,6 +535,16 @@ const Utils = {
         ? (expiringBounce.startMillis + expiringBounce.expiringAPIRequestObject.durationMillis) > new Date().getTime()
         : false;
     }
+  },
+
+  queryParams(source) {
+    const array = [];
+    for(var key in source) {
+      if (source[key]) {
+        array.push(`${encodeURIComponent(key)}=${encodeURIComponent(source[key])}`);
+      }
+    }
+    return array.join("&");
   }
 };
 
