@@ -60,6 +60,19 @@ class RequestsPage extends React.Component {
     }
   }
 
+  componentWillReceiveProps(nextProps) {
+    if (this.props.params !== nextProps.params) {
+      this.setState({
+        filter: {
+          state: nextProps.params.state || 'all',
+          subFilter: !nextProps.params.subFilter || nextProps.params.subFilter === 'all' ? RequestFilters.REQUEST_TYPES : nextProps.params.subFilter.split(','),
+          searchFilter: nextProps.params.searchFilter || ''
+        },
+        loading: false
+      });
+    }
+  }
+
   handleFilterChange(filter) {
     const lastFilterState = this.state.filter.state;
     this.setState({

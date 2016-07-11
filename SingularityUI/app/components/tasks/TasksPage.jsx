@@ -61,6 +61,19 @@ class TasksPage extends React.Component {
     };
   }
 
+  componentWillReceiveProps(nextProps) {
+    if (this.props.params !== nextProps.params) {
+      this.setState({
+        filter: {
+          taskStatus: nextProps.params.state || 'active',
+          requestTypes: !nextProps.params.requestsSubFilter || nextProps.params.requestsSubFilter === 'all' ? TaskFilters.REQUEST_TYPES : nextProps.params.requestsSubFilter.split(','),
+          filterText: nextProps.params.searchFilter || '',
+          loading: false
+        }
+      });
+    }
+  }
+
   handleFilterChange(filter) {
     const lastFilterTaskStatus = this.state.filter.taskStatus;
     this.setState({
