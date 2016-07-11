@@ -1,22 +1,13 @@
-import React from 'react';
-import Utils from '../../utils';
-import { InfoBox, UsageInfo } from '../common/statelessComponents';
-import { Alert } from 'react-bootstrap';
-import FormGroup from 'react-bootstrap/lib/FormGroup';
+import React, { PropTypes } from 'react';
+import { InfoBox } from '../common/statelessComponents';
 
-import JSONButton from '../common/JSONButton';
-import Section from '../common/Section';
-import ConfirmationDialog from '../common/ConfirmationDialog';
 import CollapsableSection from '../common/CollapsableSection';
-import SimpleTable from '../common/SimpleTable';
-import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 
-export default (props) => {
-  const t = props.task;
-  if (!t.task.mesosTask.executor) return null;
+function TaskEnvVars (props) {
+  if (!props.task.task.mesosTask.executor) return null;
   let vars = [];
-  for (let v of t.task.mesosTask.executor.command.environment.variables) {
-    vars.push(<InfoBox key={v.name} copyableClassName="info-copyable" name={v.name} value={v.value} />);
+  for (const variable of props.task.task.mesosTask.executor.command.environment.variables) {
+    vars.push(<InfoBox key={variable.name} copyableClassName="info-copyable" name={variable.name} value={variable.value} />);
   }
 
   return (
@@ -29,3 +20,24 @@ export default (props) => {
     </CollapsableSection>
   );
 }
+
+TaskEnvVars.propTypes = {
+  task: PropTypes.shape({
+    task: PropTypes.shape({
+      mesosTask: PropTypes.shape({
+        executor: PropTypes.shape({
+          command: PropTypes.shape({
+            environment: PropTypes.shape({
+              variables: PropTypes.arrayOf(PropTypes.shape({
+                name: PropTypes.string,
+                value: PropTypes.string
+              }))
+            }).isRequired
+          }).isRequired
+        })
+      }).isRequired
+    }).isRequired
+  }).isRequired
+};
+
+export default TaskEnvVars;
