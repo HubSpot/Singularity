@@ -1,4 +1,5 @@
 import fetch from 'isomorphic-fetch';
+import Messenger from 'messenger';
 
 const JSON_HEADERS = {'Content-Type': 'application/json', 'Accept': 'application/json'};
 
@@ -25,7 +26,20 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
     return { type: STARTED, key };
   }
 
-  function error(error, key = undefined) {
+  function error(e, url, apiResponse, key = undefined) {
+    if (apiResponse.status === 502) { // Singularity is deploying
+      Messenger().info({
+        message: 'Singularity is deploying, your requests cannot be handled. Things should resolve in a few seconds so just hang tight!'
+      });
+    } else if (apiResponse.status === 401 && config.redirectOnUnauthorizedUrl) { // Redirect to login
+      window.location.href = config.redirectOnUnauthorizedUrl.replace('{URL}', encodeURIComponent(window.location.href));
+    } else { // Something else happened, display the error
+      Messenger().post({
+        message: `<p>A <code>${e}</code> error occurred while accessing:</p><pre>${url}</pre>`,
+        type: 'error'
+      });
+    }
+
     return { type: ERROR, error, key };
   }
 
@@ -61,13 +75,9 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
           if (apiResponse.status >= 200 && apiResponse.status < 300) {
             return dispatch(success(data, key));
           } else {
-            return dispatch(error(data, key));
+            return dispatch(error(data, options.url, apiResponse, key));
           }
-          if (data.message) {
-            return dispatch(error({message: data.message}, key));
-          }
-          return dispatch(error({message: data}, key));
-        })
+        });
     };
   }
 
