@@ -1,6 +1,4 @@
-import React from 'react';
-import PlainText from '../common/atomicDisplayItems/PlainText';
-import TimeStamp from '../common/atomicDisplayItems/TimeStamp';
+import React, { PropTypes } from 'react';
 import Utils from '../../utils';
 
 import Breadcrumbs from '../common/Breadcrumbs';
@@ -8,76 +6,90 @@ import SimpleTable from '../common/SimpleTable';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 import Link from '../common/atomicDisplayItems/Link';
 
-export default class TaskFileBrowser extends React.Component {
-
-  navigateTo(link) {
-    this.props.changeDir(link);
+function TaskFileBrowser (props) {
+  function navigateTo(link) {
+    props.changeDir(link);
   }
 
-  render() {
-    let pathItems = [];
+  let pathItems = [];
+  pathItems.push({
+    text: 'root',
+    onClick: () => navigateTo('')
+  });
+
+  let pathSoFar = '';
+  const links = {};
+  for (const pathItem of props.files.currentDirectory.split('/')) {
+    pathSoFar += pathItem;
+    links[pathItem] = pathSoFar;
     pathItems.push({
-      text: "root",
-      onClick: () => this.navigateTo('')
+      text: pathItem,
+      onClick: () => navigateTo(links[pathItem])
     });
-
-    let p = '';
-    let links = {};
-    for (let s of _.without(this.props.files.currentDirectory.split('/'), '')) {
-      p += `${s}`;
-      links[s] = p;
-      pathItems.push({
-        text: s,
-        onClick: () => this.navigateTo(links[s])
-      })
-      p += '/';
-    }
-    pathItems[pathItems.length - 1].onClick = null;
-
-    return (
-      <div>
-        <Breadcrumbs items={pathItems} />
-        <SimpleTable
-          emptyMessage="No files exist in this directory"
-          entries={_.sortBy(this.props.files.files, 'isDirectory').reverse()}
-          perPage={10}
-          first={this.props.files.files.length >= 30}
-          last={this.props.files.files.length >= 30}
-          headers={['Name', 'Size', 'Last Modified', '']}
-          renderTableRow={(data, index) => {
-            let nameLink = "";
-            let icon = <Glyphicon iconClass={data.isDirectory ? 'folder-open' : 'file'} />;
-            if (data.isTailable) {
-              nameLink = <a href={`${config.appRoot}/task/${this.props.taskId}/tail/${data.uiPath}`}>{icon}<span className="file-name">{data.name}</span></a>;
-            } else if (!data.isTailable && !data.isDirectory) {
-              nameLink = <span>{icon} {data.name}</span>;
-            } else {
-              nameLink = <a onClick={() => this.navigateTo(`${this.props.files.currentDirectory}/${data.name}`)}>{icon}<span className="file-name">{data.name}</span></a>;
-            }
-            let linkProps = {
-              text: <Glyphicon iconClass='download-alt' />,
-              url: data.downloadLink,
-              title: 'Download',
-              altText: `Download ${data.name}`,
-              overlayTrigger: true,
-              overlayTriggerPlacement: 'left',
-              overlayToolTipContent: `Download ${data.name}`,
-              overlayId: `downloadFile${data.name}`
-            };
-            const link = !data.isDirectory ? <Link prop={linkProps} /> : null;
-            return (
-              <tr key={index}>
-                <td>{nameLink}</td>
-                <td>{Utils.humanizeFileSize(data.size)}</td>
-                <td>{Utils.absoluteTimestamp(data.mtime * 1000)}</td>
-                <td className="actions-column">
-                  {link}
-                </td>
-              </tr>
-            );
-          }}
-        />
-      </div>
-    );
+    pathSoFar += '/';
   }
+  pathItems[pathItems.length - 1].onClick = null;
+
+  return (
+    <div>
+      <Breadcrumbs items={pathItems} />
+      <SimpleTable
+        emptyMessage="No files exist in this directory"
+        entries={_.sortBy(props.files.files, 'isDirectory').reverse()}
+        perPage={10}
+        first={props.files.files.length >= 30}
+        last={props.files.files.length >= 30}
+        headers={['Name', 'Size', 'Last Modified', '']}
+        renderTableRow={(data, index) => {
+          let nameLink = '';
+          let icon = <Glyphicon iconClass={data.isDirectory ? 'folder-open' : 'file'} />;
+          if (data.isTailable) {
+            nameLink = <a href={`${config.appRoot}/task/${props.taskId}/tail/${data.uiPath}`}>{icon}<span className="file-name">{data.name}</span></a>;
+          } else if (!data.isTailable && !data.isDirectory) {
+            nameLink = <span>{icon} {data.name}</span>;
+          } else {
+            nameLink = <a onClick={() => navigateTo(`${props.files.currentDirectory}/${data.name}`)}>{icon}<span className="file-name">{data.name}</span></a>;
+          }
+          let linkProps = {
+            text: <Glyphicon iconClass="download-alt" />,
+            url: data.downloadLink,
+            title: 'Download',
+            altText: `Download ${data.name}`,
+            overlayTrigger: true,
+            overlayTriggerPlacement: 'left',
+            overlayToolTipContent: `Download ${data.name}`,
+            overlayId: `downloadFile${data.name}`
+          };
+          const link = !data.isDirectory && <Link prop={linkProps} />;
+          return (
+            <tr key={index}>
+              <td>{nameLink}</td>
+              <td>{Utils.humanizeFileSize(data.size)}</td>
+              <td>{Utils.absoluteTimestamp(data.mtime * 1000)}</td>
+              <td className="actions-column">
+                {link}
+              </td>
+            </tr>
+          );
+        }}
+      />
+    </div>
+  );
 }
+
+TaskFileBrowser.propTypes = {
+  files: PropTypes.shape({
+    files: PropTypes.arrayOf(PropTypes.shape({
+      isDirectory: PropTypes.bool,
+      isTailable: PropTypes.bool,
+      name: PropTypes.string,
+      downloadLink: PropTypes.string,
+      size: PropTypes.number,
+      mtime: PropTypes.number
+    })),
+    currentDirectory: PropTypes.string
+  }).isRequired,
+  taskId: PropTypes.string.isRequired
+};
+
+export default TaskFileBrowser;
