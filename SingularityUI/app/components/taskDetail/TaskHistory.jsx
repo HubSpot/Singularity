@@ -8,7 +8,7 @@ function TaskHistory (props) {
     <Section title="History">
       <SimpleTable
         emptyMessage="This task has no history yet"
-        entries={props.task.taskUpdates.concat().reverse()}
+        entries={props.taskUpdates.concat().reverse()}
         perPage={5}
         headers={['Status', 'Message', 'Time']}
         renderTableRow={(data, index) => {
@@ -26,13 +26,11 @@ function TaskHistory (props) {
 }
 
 TaskHistory.propTypes = {
-  task: PropTypes.shape({
-    taskUpdates: PropTypes.arrayOf(PropTypes.shape({
-      taskState: PropTypes.string,
-      statusMessage: PropTypes.string,
-      timestamp: PropTypes.number
-    })).isRequired
-  }).isRequired
+  taskUpdates: PropTypes.arrayOf(PropTypes.shape({
+    taskState: PropTypes.string,
+    statusMessage: PropTypes.string,
+    timestamp: PropTypes.number
+  })).isRequired
 };
 
 export default TaskHistory;

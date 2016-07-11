@@ -6,20 +6,20 @@ import CollapsableSection from '../common/CollapsableSection';
 import SimpleTable from '../common/SimpleTable';
 
 function TaskHealthchecks (props) {
-  const healthchecks = props.task.healthcheckResults;
+  const healthchecks = props.healthcheckResults;
   return healthchecks && (healthchecks.length !== 0) && (
     <CollapsableSection title="Healthchecks" id="healthchecks">
       <div className="well">
         <span>
           Beginning on <strong>Task running</strong>, hit
-          <a className="healthcheck-link" target="_blank" href={`http://${props.task.task.offer.hostname}:${_.first(props.task.ports)}${props.task.task.taskRequest.deploy.healthcheckUri}`}>
-            {props.task.task.taskRequest.deploy.healthcheckUri}
+          <a className="healthcheck-link" target="_blank" href={`http://${props.task.offer.hostname}:${_.first(props.ports)}${props.task.taskRequest.deploy.healthcheckUri}`}>
+            {props.task.taskRequest.deploy.healthcheckUri}
           </a>
-          with a <strong>{props.task.task.taskRequest.deploy.healthcheckTimeoutSeconds || config.defaultHealthcheckTimeoutSeconds}</strong> second timeout
-          every <strong>{props.task.task.taskRequest.deploy.healthcheckIntervalSeconds || config.defaultHealthcheckIntervalSeconds}</strong> second(s)
+          with a <strong>{props.task.taskRequest.deploy.healthcheckTimeoutSeconds || config.defaultHealthcheckTimeoutSeconds}</strong> second timeout
+          every <strong>{props.task.taskRequest.deploy.healthcheckIntervalSeconds || config.defaultHealthcheckIntervalSeconds}</strong> second(s)
           until <strong>HTTP 200</strong> is recieved,
-          <strong>{props.task.task.taskRequest.deploy.healthcheckMaxRetries}</strong> retries have failed,
-          or <strong>{props.task.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds || config.defaultDeployHealthTimeoutSeconds}</strong> seconds have elapsed.
+          <strong>{props.task.taskRequest.deploy.healthcheckMaxRetries}</strong> retries have failed,
+          or <strong>{props.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds || config.defaultDeployHealthTimeoutSeconds}</strong> seconds have elapsed.
         </span>
       </div>
       <SimpleTable
@@ -47,29 +47,27 @@ function TaskHealthchecks (props) {
 
 TaskHealthchecks.propTypes = {
   task: PropTypes.shape({
-    task: PropTypes.shape({
-      taskRequest: PropTypes.shape({
-        deploy: PropTypes.shape({
-          healthcheckUri: PropTypes.string,
-          healthcheckTimeoutSeconds: PropTypes.number,
-          healthcheckIntervalSeconds: PropTypes.number,
-          healthcheckMaxRetries: PropTypes.number,
-          healthcheckMaxTotalTimeoutSeconds: PropTypes.number
-        }).isRequired
-      }).isRequired,
-      offer: PropTypes.shape({
-        hostname: PropTypes.string
-      }).isRequired,
+    taskRequest: PropTypes.shape({
+      deploy: PropTypes.shape({
+        healthcheckUri: PropTypes.string,
+        healthcheckTimeoutSeconds: PropTypes.number,
+        healthcheckIntervalSeconds: PropTypes.number,
+        healthcheckMaxRetries: PropTypes.number,
+        healthcheckMaxTotalTimeoutSeconds: PropTypes.number
+      }).isRequired
     }).isRequired,
-    healthcheckResults: PropTypes.arrayOf(PropTypes.shape({
-      timestamp: PropTypes.number,
-      durationMillis: PropTypes.number,
-      statusCode: PropTypes.number,
-      errorMessage: PropTypes.string,
-      responseBody: PropTypes.string
-    })),
-    ports: PropTypes.arrayOf(PropTypes.number)
-  }).isRequired
+    offer: PropTypes.shape({
+      hostname: PropTypes.string
+    }).isRequired,
+  }).isRequired,
+  healthcheckResults: PropTypes.arrayOf(PropTypes.shape({
+    timestamp: PropTypes.number,
+    durationMillis: PropTypes.number,
+    statusCode: PropTypes.number,
+    errorMessage: PropTypes.string,
+    responseBody: PropTypes.string
+  })),
+  ports: PropTypes.arrayOf(PropTypes.number)
 };
 
 export default TaskHealthchecks;

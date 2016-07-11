@@ -19,7 +19,7 @@ function TaskFileBrowser (props) {
 
   let pathSoFar = '';
   const links = {};
-  for (const pathItem of props.files.currentDirectory.split('/')) {
+  for (const pathItem of props.currentDirectory.split('/')) {
     pathSoFar += pathItem;
     links[pathItem] = pathSoFar;
     pathItems.push({
@@ -35,10 +35,10 @@ function TaskFileBrowser (props) {
       <Breadcrumbs items={pathItems} />
       <SimpleTable
         emptyMessage="No files exist in this directory"
-        entries={_.sortBy(props.files.files, 'isDirectory').reverse()}
+        entries={_.sortBy(props.files, 'isDirectory').reverse()}
         perPage={10}
-        first={props.files.files.length >= 30}
-        last={props.files.files.length >= 30}
+        first={props.files.length >= 30}
+        last={props.files.length >= 30}
         headers={['Name', 'Size', 'Last Modified', '']}
         renderTableRow={(data, index) => {
           let nameLink = '';
@@ -48,7 +48,7 @@ function TaskFileBrowser (props) {
           } else if (!data.isTailable && !data.isDirectory) {
             nameLink = <span>{icon} {data.name}</span>;
           } else {
-            nameLink = <a onClick={() => navigateTo(`${props.files.currentDirectory}/${data.name}`)}>{icon}<span className="file-name">{data.name}</span></a>;
+            nameLink = <a onClick={() => navigateTo(`${props.currentDirectory}/${data.name}`)}>{icon}<span className="file-name">{data.name}</span></a>;
           }
           let linkProps = {
             text: <Glyphicon iconClass="download-alt" />,
@@ -78,17 +78,15 @@ function TaskFileBrowser (props) {
 }
 
 TaskFileBrowser.propTypes = {
-  files: PropTypes.shape({
-    files: PropTypes.arrayOf(PropTypes.shape({
-      isDirectory: PropTypes.bool,
-      isTailable: PropTypes.bool,
-      name: PropTypes.string,
-      downloadLink: PropTypes.string,
-      size: PropTypes.number,
-      mtime: PropTypes.number
-    })),
-    currentDirectory: PropTypes.string
-  }).isRequired,
+  files: PropTypes.arrayOf(PropTypes.shape({
+    isDirectory: PropTypes.bool,
+    isTailable: PropTypes.bool,
+    name: PropTypes.string,
+    downloadLink: PropTypes.string,
+    size: PropTypes.number,
+    mtime: PropTypes.number
+  })),
+  currentDirectory: PropTypes.string,
   taskId: PropTypes.string.isRequired
 };
 

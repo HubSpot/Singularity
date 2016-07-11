@@ -11,33 +11,25 @@ import Utils from '../../utils';
 export default class ShellCommands extends Component {
 
   static propTypes = {
-    task: PropTypes.shape({
-      isStillRunning: PropTypes.bool,
-      shellCommandHistory: PropTypes.arrayOf(PropTypes.shape({
-        shellUpdates: PropTypes.arrayOf(PropTypes.shape({
-          timestamp: PropTypes.number,
-          outputFilename: PropTypes.string,
-          updateType: PropTypes.string
-        })),
-        shellRequest: PropTypes.shape({
-          user: PropTypes.string,
-          timestamp: PropTypes.number,
-          shellCommand: PropTypes.shape({
-            name: PropTypes.string
-          }).isRequired,
-          taskId: PropTypes.shape({
-            id: PropTypes.string
-          }).isRequired
-        }).isRequired
+    isStillRunning: PropTypes.bool,
+    shellCommandHistory: PropTypes.arrayOf(PropTypes.shape({
+      shellUpdates: PropTypes.arrayOf(PropTypes.shape({
+        timestamp: PropTypes.number,
+        outputFilename: PropTypes.string,
+        updateType: PropTypes.string
       })),
-      task: PropTypes.shape({
-        taskRequest: PropTypes.shape({
-          deploy: PropTypes.shape({
-            customExecutorCmd: PropTypes.string
-          }).isRequired
+      shellRequest: PropTypes.shape({
+        user: PropTypes.string,
+        timestamp: PropTypes.number,
+        shellCommand: PropTypes.shape({
+          name: PropTypes.string
+        }).isRequired,
+        taskId: PropTypes.shape({
+          id: PropTypes.string
         }).isRequired
       }).isRequired
-    }).isRequired,
+    })),
+    customExecutorCmd: PropTypes.string,
     shellCommandResponse: PropTypes.shape({
       timestamp: PropTypes.number
     }),
@@ -95,9 +87,9 @@ export default class ShellCommands extends Component {
       return <option key={shellCommand.name} value={shellCommand.name}>{shellCommand.name}</option>;
     });
 
-    const form = this.props.task.isStillRunning &&
-    this.props.task.task.taskRequest.deploy.customExecutorCmd &&
-    this.props.task.task.taskRequest.deploy.customExecutorCmd.indexOf('singularity-executor') !== -1 && (
+    const form = this.props.isStillRunning &&
+    this.props.customExecutorCmd &&
+    this.props.customExecutorCmd.indexOf('singularity-executor') !== -1 && (
       <div className="row">
         <form className="col-md-6">
           <h3>Execute a command</h3>
@@ -122,12 +114,12 @@ export default class ShellCommands extends Component {
       </div>
     );
 
-    const history = !!this.props.task.shellCommandHistory.length && (
+    const history = !!this.props.shellCommandHistory.length && (
       <div>
         <h3>Command History</h3>
           <SimpleTable
             emptyMessage="No commands run"
-            entries={this.props.task.shellCommandHistory}
+            entries={this.props.shellCommandHistory}
             perPage={5}
             first={true}
             last={true}
@@ -150,17 +142,15 @@ export default class ShellCommands extends Component {
                     </ul>
                   </td>
                   <td className="actions-column">
-                    {filename ? (
+                    {filename && (
                       <Link prop={{
                         url: `${config.appRoot}/task/${data.shellRequest.taskId.id}/tail/${data.shellRequest.taskId.id}/${filename}`,
                         text: '···',
                         overlayTrigger: true,
                         overlayId: filename,
                         overlayTriggerPlacement: 'left',
-                        overlayToolTipContent: 'View output file'
-                      }}
-                      />
-                    ) : null}
+                        overlayToolTipContent: 'View output file'}} />
+                    )}
                   </td>
                 </tr>
               );
@@ -171,7 +161,7 @@ export default class ShellCommands extends Component {
 
     const launcher = this.state.showLauncher && (
       <ShellCommandLauncher
-        commandHistory={this.props.task.shellCommandHistory}
+        commandHistory={this.props.shellCommandHistory}
         close={() => this.setState({showLauncher: false})}
         updateTask={this.props.updateTask}
         updateFiles={this.props.updateFiles}

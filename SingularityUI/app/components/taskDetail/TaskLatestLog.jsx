@@ -4,12 +4,12 @@ import Section from '../common/Section';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 
 function TaskLatestLog (props) {
-  const link = props.task.isStillRunning ? (
-    <a href={`${config.appRoot}/task/${props.task.task.taskId.id}/tail/${Utils.substituteTaskId(config.runningTaskLogPath, props.task.task.taskId.id)}`} title="Log">
+  const link = props.isStillRunning ? (
+    <a href={`${config.appRoot}/task/${props.task.taskId.id}/tail/${Utils.substituteTaskId(config.runningTaskLogPath, props.task.taskId.id)}`} title="Log">
         <span><Glyphicon iconClass="file" /> {Utils.fileName(config.runningTaskLogPath)}</span>
     </a>
   ) : (
-    <a href={`${config.appRoot}/task/${props.task.task.taskId.id}/tail/${Utils.substituteTaskId(config.finishedTaskLogPath, props.task.task.taskId.id)}`} title="Log">
+    <a href={`${config.appRoot}/task/${props.task.taskId.id}/tail/${Utils.substituteTaskId(config.finishedTaskLogPath, props.task.taskId.id)}`} title="Log">
         <span><Glyphicon iconClass="file" /> {Utils.fileName(config.finishedTaskLogPath)}</span>
     </a>
   );
@@ -26,13 +26,11 @@ function TaskLatestLog (props) {
 
 TaskLatestLog.propTypes = {
   task: PropTypes.shape({
-    task: PropTypes.shape({
-      taskId: PropTypes.shape({
-        id: PropTypes.string
-      }).isRequired
-    }).isRequired,
-    isStillRunning: PropTypes.bool
-  }).isRequired
+    taskId: PropTypes.shape({
+      id: PropTypes.string
+    }).isRequired
+  }).isRequired,
+  isStillRunning: PropTypes.bool
 };
 
 export default TaskLatestLog;

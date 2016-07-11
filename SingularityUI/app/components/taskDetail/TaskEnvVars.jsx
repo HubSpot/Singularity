@@ -4,9 +4,9 @@ import { InfoBox } from '../common/statelessComponents';
 import CollapsableSection from '../common/CollapsableSection';
 
 function TaskEnvVars (props) {
-  if (!props.task.task.mesosTask.executor) return null;
+  if (!props.executor) return null;
   let vars = [];
-  for (const variable of props.task.task.mesosTask.executor.command.environment.variables) {
+  for (const variable of props.executor.command.environment.variables) {
     vars.push(<InfoBox key={variable.name} copyableClassName="info-copyable" name={variable.name} value={variable.value} />);
   }
 
@@ -22,22 +22,16 @@ function TaskEnvVars (props) {
 }
 
 TaskEnvVars.propTypes = {
-  task: PropTypes.shape({
-    task: PropTypes.shape({
-      mesosTask: PropTypes.shape({
-        executor: PropTypes.shape({
-          command: PropTypes.shape({
-            environment: PropTypes.shape({
-              variables: PropTypes.arrayOf(PropTypes.shape({
-                name: PropTypes.string,
-                value: PropTypes.string
-              }))
-            }).isRequired
-          }).isRequired
-        })
+  executor: PropTypes.shape({
+    command: PropTypes.shape({
+      environment: PropTypes.shape({
+        variables: PropTypes.arrayOf(PropTypes.shape({
+          name: PropTypes.string,
+          value: PropTypes.string
+        }))
       }).isRequired
     }).isRequired
-  }).isRequired
+  })
 };
 
 export default TaskEnvVars;
