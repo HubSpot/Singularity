@@ -407,7 +407,7 @@ function mapDispatchToProps(dispatch) {
     killTask: (taskId, data) => dispatch(KillTask.trigger(taskId, data)),
     fetchTaskHistory: (taskId) => dispatch(FetchTaskHistory.trigger(taskId)),
     fetchTaskStatistics: (taskId) => dispatch(FetchTaskStatistics.trigger(taskId)),
-    fetchTaskFiles: (taskId, path) => dispatch(FetchTaskFiles.trigger(taskId, path)),
+    fetchTaskFiles: (...args) => dispatch(FetchTaskFiles.trigger(...args)),
     fetchDeployForRequest: (taskId, deployId) => dispatch(FetchDeployForRequest.trigger(taskId, deployId)),
     fetchTaskCleanups: () => dispatch(FetchTaskCleanups.trigger()),
     fetchPendingDeploys: () => dispatch(FetchPendingDeploys.trigger()),
@@ -416,7 +416,7 @@ function mapDispatchToProps(dispatch) {
 }
 
 function refresh(props) {
-  props.fetchTaskFiles(props.params.taskId, props.params.splat || props.params.taskId);
+  props.fetchTaskFiles(props.params.taskId, props.params.splat || props.params.taskId, [400]);
   const promises = [];
   const taskPromise = props.fetchTaskHistory(props.params.taskId);
   taskPromise.then(() => {

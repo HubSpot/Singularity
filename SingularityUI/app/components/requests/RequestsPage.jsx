@@ -168,9 +168,11 @@ function mapDispatchToProps(dispatch) {
     removeRequest: (requestid, data) => dispatch(RemoveRequest.trigger(requestid, data)),
     unpauseRequest: (requestId, data) => dispatch(UnpauseRequest.trigger(requestId, data)),
     runNow: (requestId, data) => dispatch(RunRequest.trigger(requestId, data)),
-    fetchRun: (requestId, runId) => dispatch(FetchRequestRun.trigger(requestId, runId)),
-    fetchRunHistory: (requestId, runId) => dispatch(FetchRequestRunHistory.trigger(requestId, runId)),
-    fetchTaskFiles: (taskId, path) => dispatch(FetchTaskFiles.trigger(taskId, path)),
+    fetchRun: (...args) => dispatch(FetchRequestRun.trigger(...args)),
+    fetchRunHistory: (...args) => dispatch(FetchRequestRunHistory.trigger(...args)),
+    fetchTaskFiles: (...args) => {
+      return dispatch(FetchTaskFiles.trigger(...args));
+    },
     scaleRequest: (requestId, data) => dispatch(ScaleRequest.trigger(requestId, data)),
     bounceRequest: (requestId, data) => dispatch(BounceRequest.trigger(requestId, data))
   };

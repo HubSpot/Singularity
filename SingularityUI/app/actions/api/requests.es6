@@ -54,8 +54,9 @@ export const RunRequest = buildJsonApiAction(
 
 export const FetchRequestRun = buildApiAction(
   'FETCH_REQUEST_RUN',
-  (requestId, runId) => ({
-    url: `/requests/request/${ requestId }/run/${runId}`
+  (requestId, runId, successResponseCodes = null) => ({
+    url: `/requests/request/${ requestId }/run/${runId}`,
+    successResponseCodes
   })
 );
 

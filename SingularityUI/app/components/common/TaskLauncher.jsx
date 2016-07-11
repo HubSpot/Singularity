@@ -29,8 +29,8 @@ class TaskLauncher extends React.Component {
     // Wait for task to start
     this.taskInterval = setInterval(() => {
       const promises = [];
-      promises.push(this.props.fetchTaskRun(requestId, runId));
-      promises.push(this.props.fetchTaskRunHistory(requestId, runId));
+      promises.push(this.props.fetchTaskRun(requestId, runId, [404]));
+      promises.push(this.props.fetchTaskRunHistory(requestId, runId, [404]));
       Promise.all(promises).then((responses) => {
         const responseList = _.without(_.pluck(responses, 'data'), undefined);
         if (responseList.length) {
@@ -39,10 +39,12 @@ class TaskLauncher extends React.Component {
             taskStarted: true
           });
           const task = _.first(responseList);
+          const taskId = task.taskId ? task.taskId.id : task.id;
+
           if (tailFilename) {
-            this.logFilePoll(task.taskId ? task.taskId.id : task.id, tailFilename);
+            this.logFilePoll(taskId, tailFilename);
           } else {
-            this.props.router.push(`task/${task.taskId ? task.taskId.id : task.id}`);
+            this.props.router.push(`task/${taskId}`);
           }
         }
       });
@@ -52,7 +54,7 @@ class TaskLauncher extends React.Component {
   logFilePoll(taskId, filename) {
     this.fileInterval = setInterval(() => {
       const directory = filename.indexOf('/') !== -1 ? '/' + _.initial(filename.split('/')).join('/') : '';
-      this.props.fetchTaskFiles(taskId, `${taskId}${directory}`).then((response) => {
+      this.props.fetchTaskFiles(taskId, `${taskId}${directory}`, [400]).then((response) => {
         const files = response.data && response.data.files;
         if (files) {
           const file = _.find(files, (f) => f.name == _.last(filename.split('/')));
