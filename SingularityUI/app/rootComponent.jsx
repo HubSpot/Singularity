@@ -1,7 +1,7 @@
 import React from 'react';
 
 // eslint-disable-next-line no-unused-vars react/no-multi-comp
-const rootComponent = (Wrapped, title, refresh = _.noop) => class extends React.Component {
+const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true) => class extends React.Component {
 
   constructor(props) {
     super(props);
@@ -32,15 +32,19 @@ const rootComponent = (Wrapped, title, refresh = _.noop) => class extends React.
       });
     }
 
-    this.startRefreshInterval();
-    window.addEventListener('blur', this.handleBlur);
-    window.addEventListener('focus', this.handleFocus);
+    if (refreshInterval) {
+      this.startRefreshInterval();
+      window.addEventListener('blur', this.handleBlur);
+      window.addEventListener('focus', this.handleFocus);
+    }
   }
 
   componentWillUnmount() {
-    this.stopRefreshInterval();
-    window.removeEventListener('blur', this.handleBlur);
-    window.removeEventListener('focus', this.handleFocus);
+    if (refreshInterval) {
+      this.stopRefreshInterval();
+      window.removeEventListener('blur', this.handleBlur);
+      window.removeEventListener('focus', this.handleFocus);
+    }
   }
 
   handleBlur() {

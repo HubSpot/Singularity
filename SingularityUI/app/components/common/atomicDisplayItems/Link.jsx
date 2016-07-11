@@ -3,7 +3,7 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 import { Link as RouterLink } from 'react-router';
 
-let Link = React.createClass({
+const Link = React.createClass({
 
   propTypes: {
     prop: React.PropTypes.shape({

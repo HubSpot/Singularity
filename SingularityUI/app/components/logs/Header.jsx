@@ -42,7 +42,8 @@ class Header extends React.Component {
   }
 
   render() {
-    return (<div className="tail-header">
+    return (
+      <div className="tail-header">
         <div className="row">
           <div className="col-md-3">
             <ul className="breadcrumb breadcrumb-request">
@@ -50,7 +51,7 @@ class Header extends React.Component {
                 Request&nbsp;
                 <Link to={`request/${this.props.requestId}`}>
                   {this.props.requestId}
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -67,7 +68,8 @@ class Header extends React.Component {
             {this.renderAnchorButtons()}
           </div>
         </div>
-      </div>);
+      </div>
+    );
   }
 }
 
