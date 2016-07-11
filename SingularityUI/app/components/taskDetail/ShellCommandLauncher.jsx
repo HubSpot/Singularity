@@ -1,11 +1,30 @@
-import React from 'react';
+import React, {Component, PropTypes} from 'react';
 import classNames from 'classnames';
 
-import { Modal, Button } from 'react-bootstrap';
+import { Modal } from 'react-bootstrap';
 
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 
-export default class ShellCommandLauncher extends React.Component {
+export default class ShellCommandLauncher extends Component {
+
+  static propTypes = {
+    shellCommandResponse: PropTypes.shape({
+      timestamp: PropTypes.number
+    }),
+    commandHistory: PropTypes.arrayOf(PropTypes.shape({
+      shellRequest: PropTypes.shape({
+        timestamp: PropTypes.number
+      }).isRequired,
+      shellUpdates: PropTypes.arrayOf(PropTypes.shape({
+        updateType: PropTypes.string,
+        outputFilename: PropTypes.string
+      }))
+    })),
+    taskFiles: PropTypes.object,
+    updateTask: PropTypes.func.isRequired,
+    updateFiles: PropTypes.func.isRequired,
+    close: PropTypes.func.isRequired
+  }
 
   constructor() {
     super();
@@ -16,7 +35,7 @@ export default class ShellCommandLauncher extends React.Component {
       outputFilename: null,
       commandFailed: false,
       commandFailedMessage: null
-    }
+    };
   }
 
   componentDidMount() {
@@ -24,6 +43,23 @@ export default class ShellCommandLauncher extends React.Component {
     this.taskInterval = setInterval(() => {
       this.props.updateTask();
     }, 1000);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const timestamp = nextProps.shellCommandResponse.timestamp;
+    const cmdStatus = _.find(nextProps.commandHistory, (commandHistoryItem) => commandHistoryItem.shellRequest.timestamp === timestamp);
+    if (!cmdStatus || !cmdStatus.shellUpdates) return;
+    const failedStatus = _.find(cmdStatus.shellUpdates, (shellUpdate) => shellUpdate.updateType === 'FAILED' || shellUpdate.updateType === 'INVALID');
+    const ackedStatus = _.find(cmdStatus.shellUpdates, (shellUpdate) => shellUpdate.updateType === 'ACKED');
+    this.setState({
+      commandAcked: !!ackedStatus,
+      commandStarted: !!_.find(cmdStatus.shellUpdates, (shellUpdate) => shellUpdate.updateType === 'STARTED'),
+      commandFailed: !!failedStatus,
+      commandFailedMessage: failedStatus && failedStatus.message
+    });
+    if (ackedStatus) {
+      this.outputFilename = ackedStatus.outputFilename;
+    }
   }
 
   componentWillUpdate(nextProps, nextState) {
@@ -36,35 +72,18 @@ export default class ShellCommandLauncher extends React.Component {
 
     if (!this.state.commandAcked && !this.state.commandStarted && nextState.commandAcked && nextState.commandStarted) {
       clearInterval(this.taskInterval);
-      const cmdStatus = _.find(nextProps.commandHistory, (c) => c.shellRequest.timestamp == this.props.shellCommandResponse.timestamp);
-      const outputFilePath = _.find(cmdStatus.shellUpdates, (u) => u.updateType == "ACKED").outputFilename;
+      const cmdStatus = _.find(nextProps.commandHistory, (commandHistoryItem) => commandHistoryItem.shellRequest.timestamp === this.props.shellCommandResponse.timestamp);
+      const outputFilePath = _.find(cmdStatus.shellUpdates, (shellUpdate) => shellUpdate.updateType === 'ACKED').outputFilename;
       const taskId = _.first(cmdStatus.shellUpdates).shellRequestId.taskId.id;
       this.fileInterval = setInterval(() => {
-        let directory = this.props.taskFiles[`${taskId}/${taskId}`].data;
-        if (_.find(directory.files, (f) => f.name == outputFilePath)) {
+        const directory = this.props.taskFiles[`${taskId}/${taskId}`].data;
+        if (_.find(directory.files, (file) => file.name === outputFilePath)) {
           clearInterval(this.fileInterval);
           app.router.navigate(`task/${taskId}/tail/${taskId}/${outputFilePath}`, {trigger: true});
         } else {
           this.props.updateFiles(taskId, taskId);
         }
       }, 1000);
-    }
-  }
-
-  componentWillReceiveProps(nextProps) {
-    let timestamp = nextProps.shellCommandResponse.timestamp;
-    let cmdStatus = _.find(nextProps.commandHistory, (c) => c.shellRequest.timestamp == timestamp);
-    if (!cmdStatus || !cmdStatus.shellUpdates) return;
-    let failedStatus = _.find(cmdStatus.shellUpdates, (u) => u.updateType == 'FAILED' || u.updateType == 'INVALID');
-    let ackedStatus = _.find(cmdStatus.shellUpdates, (u) => u.updateType == 'ACKED');
-    this.setState({
-      commandAcked: !!ackedStatus,
-      commandStarted: !!_.find(cmdStatus.shellUpdates, (u) => u.updateType == 'STARTED'),
-      commandFailed: !!failedStatus,
-      commandFailedMessage: failedStatus ? failedStatus.message : null
-    });
-    if (ackedStatus) {
-      this.outputFilename = ackedStatus.outputFilename;
     }
   }
 
@@ -76,7 +95,7 @@ export default class ShellCommandLauncher extends React.Component {
   stepStatus(state, text) {
     return (
       <li className={classNames({'complete text-success': state}, {'waiting': !state})}>
-        {!state ? <div className="page-loader loader-small" /> : <Glyphicon iconClass='ok' />} {text}...
+        {!state ? <div className="page-loader loader-small" /> : <Glyphicon iconClass="ok" />} {text}...
       </li>
     );
   }
@@ -94,17 +113,17 @@ export default class ShellCommandLauncher extends React.Component {
   render() {
     return (
       <Modal show={true} onHide={this.props.close} bsSize="small" backdrop="static">
-        <Modal.Header closeButton>
+        <Modal.Header closeButton={true}>
             <Modal.Title>Redirecting to output</Modal.Title>
           </Modal.Header>
         <Modal.Body>
-          <div className='constrained-modal'>
+          <div className="constrained-modal">
             {this.renderStatusList()}
-            {this.state.commandFailed ? (
+            {this.state.commandFailed && (
               <p className="text-danger">
-                <Glyphicon iconClass='remove' /> Command failed: {this.state.commandFailedMessage}
+                <Glyphicon iconClass="remove" /> Command failed: {this.state.commandFailedMessage}
               </p>
-            ): null}
+            )}
           </div>
         </Modal.Body>
       </Modal>
