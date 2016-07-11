@@ -128,7 +128,7 @@ class StatusPage extends React.Component {
           beforeFill: r.type,
           prop: {
             text: `${r.count} ${r.label} ${this.renderPercentage(r.count, model.totalRequests)}`,
-            url: `${config.appRoot}${r.link}`,
+            url: r.link,
             value: r.count,
             id: r.type
           }
@@ -145,7 +145,7 @@ class StatusPage extends React.Component {
         beforeFill: t.type,
         prop: {
           text: `${t.count} ${t.label} ${this.renderPercentage(t.count, model.totalTasks)}`,
-          url: `${config.appRoot}${t.link}`,
+          url: t.link,
           value: t.count,
           id: t.type
         }
@@ -225,7 +225,7 @@ class StatusPage extends React.Component {
                   component: Link,
                   prop: {
                     text: `${m.activeRacks} Active Racks`,
-                    url: `${config.appRoot}/racks/active`,
+                    url: 'racks/active',
                     id: 'activeracks',
                     value: m.activeRacks
                   }
@@ -234,7 +234,7 @@ class StatusPage extends React.Component {
                   component: Link,
                   prop: {
                     text: `${m.decomissioningRacks} Decommissioning Racks`,
-                    url: `${config.appRoot}/racks/decommission`,
+                    url: 'racks/decommission',
                     id: 'decomracks',
                     value: m.decomissioningRacks
                   }
@@ -243,7 +243,7 @@ class StatusPage extends React.Component {
                   component: Link,
                   prop: {
                     text: `${m.deadRacks} Inactive Racks`,
-                    url: `${config.appRoot}/racks/inactive`,
+                    url: 'racks/inactive',
                     id: 'inactiveracks',
                     value: m.deadRacks
                   }
@@ -259,7 +259,7 @@ class StatusPage extends React.Component {
                   component: Link,
                   prop: {
                     text: `${m.activeSlaves} Active Slaves`,
-                    url: `${config.appRoot}/slaves/active`,
+                    url: 'slaves/active',
                     value: m.activeSlaves,
                     id: 'activeslaves'
                   }
@@ -268,7 +268,7 @@ class StatusPage extends React.Component {
                   component: Link,
                   prop: {
                     text: `${m.decomissioningSlaves} Decommissioning Slaves`,
-                    url: `${config.appRoot}/slaves/decommission`,
+                    url: 'slaves/decommission',
                     value: m.decomissioningSlaves,
                     id: 'decomslaves'
                   }
@@ -277,7 +277,7 @@ class StatusPage extends React.Component {
                   component: Link,
                   prop: {
                     text: `${m.deadSlaves} Inactive Slaves`,
-                    url: `${config.appRoot}/slaves/inactive`,
+                    url: 'slaves/inactive',
                     className: m.deadSlaves > 0 ? 'color-warning' : '',
                     value: m.deadSlaves,
                     id: 'deadslaves'
@@ -287,7 +287,7 @@ class StatusPage extends React.Component {
                   component: Link,
                   prop: {
                     text: `${m.unknownSlaves} Unknown Slaves`,
-                    url: `${config.appRoot}/slaves/inactive`,
+                    url: 'slaves/inactive',
                     className: 'color-warning',
                     value: m.unknownSlaves,
                     id: 'unknownslaves'

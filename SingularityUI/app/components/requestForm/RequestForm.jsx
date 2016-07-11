@@ -1,6 +1,7 @@
 import React, {PropTypes} from 'react';
 import Select from 'react-select';
 import { connect } from 'react-redux';
+import { Link } from 'react-router';
 import rootComponent from '../../rootComponent';
 import MultiSelect from '../common/formItems/MultiSelect';
 import MultiInputFormGroup from '../common/formItems/formGroups/MultiInputFormGroup';
@@ -398,7 +399,7 @@ class RequestForm extends React.Component {
     const header = (
       this.isEditing() ?
         <h3>
-          Editing <a href={`${config.appRoot}/request/${requestId}`}>{requestId}</a>
+          Editing <Link to={`request/${requestId}`}>{requestId}</Link>
         </h3> :
         <h3>New Request</h3>
     );

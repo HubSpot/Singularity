@@ -1,6 +1,7 @@
 import React from 'react';
 import Utils from '../../utils';
 import classNames from 'classnames';
+import { Link } from 'react-router';
 
 import { Nav, NavItem, Glyphicon, Button } from 'react-bootstrap';
 
@@ -134,11 +135,11 @@ export default class RequestFilters extends React.Component {
             {this.renderStatusFilter()}
           </div>
           <div className="col-md-2 text-right">
-            <a href={`${config.appRoot}/requests/new`}>
+            <Link to={'requests/new'}>
               <Button bsStyle="success">
                 <Glyphicon glyph="plus" /> New Request
               </Button>
-            </a>
+            </Link>
           </div>
         </div>
         <div className="row">

@@ -1,5 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { Link } from 'react-router';
 import rootComponent from '../../rootComponent';
 import classNames from 'classnames';
 import { FetchRequest } from '../../actions/api/requests';
@@ -89,10 +90,10 @@ class TaskSearch extends React.Component {
   renderTableRow(data, i) {
     return (
       <tr key={i}>
-        <td className="actions-column"><a href={`${config.appRoot}/task/${data.taskId.id}`}><Glyphicon iconClass="link" /></a></td>
-        <td><a href={`${config.appRoot}/request/${data.taskId.requestId}`}>{data.taskId.requestId}</a></td>
-        <td><a href={`${config.appRoot}/request/${data.taskId.requestId}/deploy/${data.taskId.deployId}`}>{data.taskId.deployId}</a></td>
-        <td><a href={`${config.appRoot}/tasks/active/all/${data.taskId.host}`}>{data.taskId.host}</a></td>
+        <td className="actions-column"><Link to={`task/${data.taskId.id}`}><Glyphicon iconClass="link" /></Link></td>
+        <td><Link to={`request/${data.taskId.requestId}`}>{data.taskId.requestId}</Link></td>
+        <td><Link to={`request/${data.taskId.requestId}/deploy/${data.taskId.deployId}`}>{data.taskId.deployId}</Link></td>
+        <td><Link to={`tasks/active/all/${data.taskId.host}`}>{data.taskId.host}</Link></td>
         <td>
           <span className={`label label-${Utils.getLabelClassFromTaskState(data.lastTaskState)}`}>
             {Utils.humanizeText(data.lastTaskState)}
@@ -101,7 +102,7 @@ class TaskSearch extends React.Component {
         <td>{Utils.timeStampFromNow(data.taskId.startedAt)}</td>
         <td>{Utils.timeStampFromNow(data.updatedAt)}</td>
         <td className="actions-column">
-          <a href={`${config.appRoot}/task/${data.taskId.id}/tail/${config.finishedTaskLogPath}`}>···</a>
+          <Link to={`task/${data.taskId.id}/tail/${config.finishedTaskLogPath}`}>···</Link>
           <JSONButton object={data}>{'{ }'}</JSONButton>
         </td>
       </tr>
@@ -116,7 +117,7 @@ class TaskSearch extends React.Component {
             {
               label: 'Request',
               text: this.props.request.request.id,
-              link: `${config.appRoot}/request/${this.props.request.request.id}`
+              link: `request/${this.props.request.request.id}`
             }
           ]}
         />

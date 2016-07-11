@@ -146,12 +146,12 @@ class TaskDetail extends React.Component {
                 {
                   label: 'Request',
                   text: t.task.taskId.requestId,
-                  link: `${config.appRoot}/request/${t.task.taskId.requestId}`
+                  link: `request/${t.task.taskId.requestId}`
                 },
                 {
                   label: 'Deploy',
                   text: t.task.taskId.deployId,
-                  link: `${config.appRoot}/request/${t.task.taskId.requestId}/deploy/${t.task.taskId.deployId}`
+                  link: `request/${t.task.taskId.requestId}/deploy/${t.task.taskId.deployId}`
                 },
                 {
                   label: 'Instance',

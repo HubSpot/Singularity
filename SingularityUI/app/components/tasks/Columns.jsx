@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router';
 import Column from '../common/table/Column';
 
 import Utils from '../../utils';
@@ -16,9 +17,9 @@ export const TaskId = (
     }
     cellRender={
       (cellData) => (
-        <a href={`${config.appRoot}/task/${cellData}`}>
+        <Link to={`task/${cellData}`}>
           {cellData}
-        </a>
+        </Link>
       )
     }
     sortable={true}
@@ -53,9 +54,9 @@ export const Host = (
     }
     cellRender={
       (cellData) => (
-        <a href={`${config.appRoot}/tasks/active/all/${cellData}`}>
+        <Link to={`tasks/active/all/${cellData}`}>
           {cellData}
-        </a>
+        </Link>
       )
     }
     sortable={true}
@@ -72,9 +73,9 @@ export const Rack = (
     }
     cellRender={
       (cellData) => (
-        <a href={`${config.appRoot}/tasks/active/all/${cellData}`}>
+        <Link to={`tasks/active/all/${cellData}`}>
           {cellData}
-        </a>
+        </Link>
       )
     }
     sortable={true}
@@ -187,7 +188,7 @@ export const DeployId = (
     }
     sortData={(cellData) => cellData.deployId}
     cellRender={(cellData) =>
-      <a href={`${config.appRoot}/request/${cellData.requestId}/deploy/${cellData.deployId}`}>{cellData.deployId}</a>
+      <Link to={`request/${cellData.requestId}/deploy/${cellData.deployId}`}>{cellData.deployId}</Link>
     }
     sortable={true}
   />
@@ -223,9 +224,9 @@ export const ScheduledTaskId = (
     }
     cellRender={
       (cellData) => (
-        <a href={`${config.appRoot}/task/${cellData}`}>
+        <Link to={`task/${cellData}`}>
           {cellData}
-        </a>
+        </Link>
       )
     }
     sortable={true}

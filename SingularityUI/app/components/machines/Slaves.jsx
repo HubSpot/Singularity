@@ -169,7 +169,7 @@ class Slaves extends React.Component {
         component: Link,
         prop: {
           text: slave.id,
-          url: `${config.appRoot}/tasks/active/all/${slave.host}`,
+          url: `tasks/active/all/${slave.host}`,
           altText: `All tasks running on host ${slave.host}`
         }
       },

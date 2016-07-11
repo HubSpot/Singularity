@@ -1,6 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
+import { Link } from 'react-router';
 
 import SelectFormGroup from '../common/formItems/formGroups/SelectFormGroup';
 import TextFormGroup from '../common/formItems/formGroups/TextFormGroup';
@@ -1377,11 +1378,11 @@ class NewDeployForm extends Component {
       this.props.saveApiCall.data.activeDeploy &&
         <p className="alert alert-success">
           Deploy
-          <a
-            href={`${config.appRoot}/request/${ this.props.saveApiCall.data.activeDeploy.requestId }/deploy/${ this.props.saveApiCall.data.activeDeploy.id }`}
+          <Link
+            to={`request/${ this.props.saveApiCall.data.activeDeploy.requestId }/deploy/${ this.props.saveApiCall.data.activeDeploy.id }`}
             >
             {` ${this.props.saveApiCall.data.activeDeploy.id} `}
-          </a>
+          </Link>
           succesfully created!
         </p>
     );
@@ -1389,7 +1390,7 @@ class NewDeployForm extends Component {
     return (
       <div>
         <h2>
-          New deploy for <a href={`${ config.appRoot }/request/${ this.props.request.request.id }`}>{ this.props.request.request.id }</a>
+          New deploy for <Link to={`request/${ this.props.request.request.id }`}>{ this.props.request.request.id }</Link>
         </h2>
         <div className="row new-form">
           <form className="col-md-8" role="form" onSubmit={event => this.submit(event)}>

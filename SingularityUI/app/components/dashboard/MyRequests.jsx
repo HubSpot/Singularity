@@ -20,32 +20,32 @@ const MyRequests = ({userRequestTotals, userAPI}) => {
       <RequestCount
         label={'total'}
         count={totals.total}
-        link={`${config.appRoot}/requests/active/all/${deployUser}`}
+        link={`requests/active/all/${deployUser}`}
       />
       <RequestCount
         label={'on demand'}
         count={totals.ON_DEMAND}
-        link={`${config.appRoot}/requests/active/ON_DEMAND/${deployUser}`}
+        link={`requests/active/ON_DEMAND/${deployUser}`}
       />
       <RequestCount
         label={'worker'}
         count={totals.WORKER}
-        link={`${config.appRoot}/requests/active/WORKER/${deployUser}`}
+        link={`requests/active/WORKER/${deployUser}`}
       />
       <RequestCount
         label={'scheduled'}
         count={totals.SCHEDULED}
-        link={`${config.appRoot}/requests/active/SCHEDULED/${deployUser}`}
+        link={`requests/active/SCHEDULED/${deployUser}`}
       />
       <RequestCount
         label={'run once'}
         count={totals.RUN_ONCE}
-        link={`${config.appRoot}/requests/active/RUN_ONCE/${deployUser}`}
+        link={`requests/active/RUN_ONCE/${deployUser}`}
       />
       <RequestCount
         label={'service'}
         count={totals.SERVICE}
-        link={`${config.appRoot}/requests/active/SERVICE/${deployUser}`}
+        link={`requests/active/SERVICE/${deployUser}`}
       />
     </RequestCounts>
   );

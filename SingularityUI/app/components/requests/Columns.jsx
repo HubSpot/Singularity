@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
+import { Link } from 'react-router';
 import Column from '../common/table/Column';
 
 import Utils from '../../utils';
@@ -93,9 +94,9 @@ export const RequestId = (
     sortData={(cellData) => cellData.toLowerCase()}
     cellRender={
       (cellData) => (
-        <a href={`${config.appRoot}/request/${cellData}`}>
+        <Link to={`request/${cellData}`}>
           {cellData}
-        </a>
+        </Link>
       )
     }
     sortable={true}
@@ -151,9 +152,9 @@ export const DeployId = (
     cellRender={(cellData) => {
       if (cellData) {
         return (
-          <a href={`${config.appRoot}/request/${cellData.requestId}/deploy/${cellData.deployId}`}>
+          <Link to={`request/${cellData.requestId}/deploy/${cellData.deployId}`}>
             {cellData.deployId}
-          </a>
+          </Link>
         );
       }
       return undefined;
@@ -176,7 +177,6 @@ export const Schedule = (
 );
 
 export const Actions = (removeAction, unpauseAction, runAction, fetchRun, fetchRunHistory, fetchTaskFiles, scaleAction, bounceAction) => {
-
   return (
     <Column
       label=""
@@ -189,9 +189,9 @@ export const Actions = (removeAction, unpauseAction, runAction, fetchRun, fetchR
       cellRender={
         (rowData) => {
           const edit = !config.hideNewRequestButton && (
-            <a href={`${config.appRoot}/requests/edit/${rowData.id}`} alt="Edit">
+            <Link to={`requests/edit/${rowData.id}`} alt="Edit">
               <span className="glyphicon glyphicon-edit"></span>
-            </a>
+            </Link>
           );
 
           const unpause = rowData.state === 'PAUSED' && (

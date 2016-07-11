@@ -3,6 +3,7 @@ import Utils from '../../utils';
 import { InfoBox, UsageInfo } from '../common/statelessComponents';
 import { Alert } from 'react-bootstrap';
 import FormGroup from 'react-bootstrap/lib/FormGroup';
+import { Link } from 'react-router';
 
 import JSONButton from '../common/JSONButton';
 import Section from '../common/Section';
@@ -21,24 +22,24 @@ export default (props) => {
     // Did this task cause a deploy to fail?
     if (Utils.isCauseOfFailure(t, deploy)) {
       alerts.push(
-        <Alert key='failure' bsStyle='danger'>
-          <p>This task casued <a href={`${config.appRoot}/request/${deploy.requestId}/deploy/${deploy.deployId}`}>
+        <Alert key="failure" bsStyle="danger">
+          <p>This task casued <Link to={`request/${deploy.requestId}/deploy/${deploy.deployId}`}>
             Deploy {deploy.deployId}
-          </a> to fail. Cause: {Utils.causeOfDeployFailure(t, deploy)}</p>
+          </Link> to fail. Cause: {Utils.causeOfDeployFailure(t, deploy)}</p>
         </Alert>
       );
     } else {
       // Did a deploy cause this task to fail?
       const fails = deploy.deployResult.deployFailures.map((f, i) => {
         if (f.taskId) {
-          return <li key={i}><a href={`${config.appRoot}/task/${f.taskId.id}`}>{f.taskId.id}</a>: {Utils.humanizeText(f.reason)} {f.message}</li>;
+          return <li key={i}><Link to={`task/${f.taskId.id}`}>{f.taskId.id}</Link>: {Utils.humanizeText(f.reason)} {f.message}</li>;
         } else {
           return <li key={i}>{Utils.humanizeText(f.reason)} {f.message}</li>;
         }
       });
       alerts.push(
-        <Alert key='failure' bsStyle='danger'>
-          <a href={`${config.appRoot}/request/${deploy.deploy.requestId}/deploy/${deploy.deploy.id}`}>Deploy {deploy.deploy.id} </a>failed.
+        <Alert key="failure" bsStyle="danger">
+          <Link to={`/request/${deploy.deploy.requestId}/deploy/${deploy.deploy.id}`}>Deploy {deploy.deploy.id} </Link>failed.
           {Utils.ifDeployFailureCausedTaskToBeKilled(t) ? ' This task was killed as a result of the failing deploy. ' : ''}
           {deploy.deployResult.deployFailures.length ? ' The deploy failure was caused by: ' : ''}
           <ul>{fails}</ul>
@@ -54,7 +55,7 @@ export default (props) => {
     let threshold = config.warnIfScheduledJobIsRunningPastNextRunPct / 100;
     if (current > (avg * threshold)) {
       alerts.push(
-        <Alert key='runLong' bsStyle='warning'>
+        <Alert key="runLong" bsStyle="warning">
           <strong>Warning: </strong>
           This scheduled task has been running longer than <code>{threshold}</code> times the average for the request and may be stuck.
         </Alert>
@@ -66,28 +67,28 @@ export default (props) => {
   if (!t.isStillRunning) {
     let decomMessage = _.find(t.taskUpdates, (u) => {
       return u.statusMessage && u.statusMessage.indexOf('DECOMISSIONING') != -1 && u.taskState == 'TASK_CLEANING';
-    })
+    });
     let killedMessage = _.find(t.taskUpdates, (u) => {
       return u.taskState == 'TASK_KILLED';
     });
     if (decomMessage && killedMessage) {
       alerts.push(
-        <Alert key='decom' bsStyle='warning'>This task was replaced then killed by Singularity due to a slave decommissioning.</Alert>
+        <Alert key="decom" bsStyle="warning">This task was replaced then killed by Singularity due to a slave decommissioning.</Alert>
       );
     }
   }
 
   // Healthcheck notification
   if (_.find(pendingDeploys, (d) => {
-    d.deployMarker.requestId == t.task.taskId.requestId && d.deployMarker.deployId == t.task.taskId.deployId && d.currentDeployState == 'WAITING'
+    d.deployMarker.requestId == t.task.taskId.requestId && d.deployMarker.deployId == t.task.taskId.deployId && d.currentDeployState == 'WAITING';
   })) {
     const hcTable = t.healthcheckResults > 0 && (
       <SimpleTable
         emptyMessage="No healthchecks"
         entries={[t.healthcheckResults[0]]}
         perPage={5}
-        first
-        last
+        first={true}
+        last={true}
         headers={['Timestamp', 'Duration', 'Status', 'Message']}
         renderTableRow={(data, index) => {
           return (
@@ -104,9 +105,9 @@ export default (props) => {
     );
     const pending = <span><strong>Deploy <code>{t.task.taskId.deployId}</code> is pending:</strong> Waiting for task to become healthy.</span>;
     alerts.push(
-      <Alert key='hc' bsStyle='warning'>
+      <Alert key="hc" bsStyle="warning">
         <strong>Deploy <code>{t.task.taskId.deployId}</code> is pending: </strong>
-        {t.hasSuccessfulHealthcheck ? "Waiting for successful load balancer update" : (t.healthcheckResults > 0 ? hcTable : pending)}
+        {t.hasSuccessfulHealthcheck ? 'Waiting for successful load balancer update' : (t.healthcheckResults > 0 ? hcTable : pending)}
       </Alert>
     );
   }
@@ -114,7 +115,7 @@ export default (props) => {
   // Killed due to HC fail
   if (t.lastHealthcheckFailed && !t.isStillRunning) {
     alerts.push(
-      <Alert key='hcFail' bsStyle='danger'>
+      <Alert key="hcFail" bsStyle="danger">
         <strong>Task killed due to no passing healthchecks after {t.tooManyRetries ? t.healthcheckResults.length.toString() + ' tries. ' : t.secondsElapsed.toString() + ' seconds. '}</strong>
         Last healthcheck {t.healthcheckResults[0].statusCode ?
           <span>responded with <span className="label label-danger">HTTP {t.healthcheckResults[0].statusCode}</span></span> :
@@ -123,7 +124,7 @@ export default (props) => {
           <a href="#logs"> View service logs</a>
           {t.healthcheckFailureReasonMessage ? <p>The healthcheck failed because {t.healthcheckFailureReasonMessage}</p> : ''}
       </Alert>
-    )
+    );
   }
 
   return (
@@ -131,4 +132,4 @@ export default (props) => {
       {alerts}
     </div>
   );
-}
+};

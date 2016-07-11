@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 import Clipboard from 'clipboard';
 import Utils from '../../utils';
+import { Link } from 'react-router';
 import {
   FetchTaskHistory,
   FetchActiveTasksForDeploy,
@@ -57,9 +58,9 @@ class DeployDetail extends React.Component {
       let k = 0;
       for (const f of d.deployResult.deployFailures) {
         fails.push(f.taskId ?
-          <a key={k} href={`${config.appRoot}/task/${f.taskId.id}`} className="list-group-item">
+          <Link key={k} to={`task/${f.taskId.id}`} className="list-group-item">
             <strong>{f.taskId.id}</strong>: {f.reason} (Instance {f.taskId.instanceNo}): {f.message}
-          </a>
+          </Link>
           :
           <li key={k} className="list-group-item">{f.reason}: {f.message}</li>
         );
@@ -89,7 +90,7 @@ class DeployDetail extends React.Component {
                 {
                   label: 'Request',
                   text: d.deploy.requestId,
-                  link: `${config.appRoot}/request/${d.deploy.requestId}`
+                  link: `request/${d.deploy.requestId}`
                 },
                 {
                   label: 'Deploy',
@@ -133,11 +134,11 @@ class DeployDetail extends React.Component {
           renderTableRow={(data, index) => {
             return (
               <tr key={index}>
-                <td><a href={`${config.appRoot}/task/${data.taskId.id}`}>{data.taskId.id}</a></td>
+                <td><Link to={`task/${data.taskId.id}`}>{data.taskId.id}</Link></td>
                 <td><span className={`label label-${Utils.getLabelClassFromTaskState(data.lastTaskState)}`}>{Utils.humanizeText(data.lastTaskState)}</span></td>
                 <td>{Utils.timeStampFromNow(data.taskId.startedAt)}</td>
                 <td>{Utils.timeStampFromNow(data.updatedAt)}</td>
-                <td className="actions-column"><a href={`${config.appRoot}/request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log">&middot;&middot;&middot;</a></td>
+                <td className="actions-column"><Link to={`request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log">&middot;&middot;&middot;</Link></td>
                 <td className="actions-column"><JSONButton object={data}>{'{ }'}</JSONButton></td>
               </tr>
             );
@@ -164,11 +165,11 @@ class DeployDetail extends React.Component {
           renderTableRow={(data, index) => {
             return (
               <tr key={index}>
-                <td><a href={`${config.appRoot}/task/${data.taskId.id}`}>{data.taskId.id}</a></td>
+                <td><Link to={`task/${data.taskId.id}`}>{data.taskId.id}</Link></td>
                 <td><span className={`label label-${Utils.getLabelClassFromTaskState(data.lastTaskState)}`}>{Utils.humanizeText(data.lastTaskState)}</span></td>
                 <td>{Utils.timeStampFromNow(data.taskId.startedAt)}</td>
                 <td>{Utils.timeStampFromNow(data.updatedAt)}</td>
-                <td className="actions-column"><a href={`${config.appRoot}/request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log">&middot;&middot;&middot;</a></td>
+                <td className="actions-column"><Link to={`request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log">&middot;&middot;&middot;</Link></td>
                 <td className="actions-column"><JSONButton object={data}>{'{ }'}</JSONButton></td>
               </tr>
             );
@@ -231,7 +232,7 @@ class DeployDetail extends React.Component {
           renderTableRow={(data, index) => {
             return (
               <tr key={index}>
-                <td><a href={`${config.appRoot}/task/${data.taskId.id}`}>{data.taskId.id}</a></td>
+                <td><Link to={`task/${data.taskId.id}`}>{data.taskId.id}</Link></td>
                 <td>{Utils.absoluteTimestamp(data.timestamp)}</td>
                 <td>{data.durationMillis} {data.durationMillis ? 'ms' : ''}</td>
                 <td>{data.statusCode ? <span className={`label label-${data.statusCode === 200 ? 'success' : 'danger'}`}>HTTP {data.statusCode}</span> : <span className="label label-warning">No Response</span>}</td>
