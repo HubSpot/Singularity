@@ -322,8 +322,7 @@ const Utils = {
   },
 
   getTaskDataFromTaskId(taskId) {
-    let splits;
-    splits = taskId.split('-');
+    const splits = taskId.split('-');
     return {
       id: taskId,
       rackId: splits[splits.length - 1],
@@ -495,12 +494,12 @@ const Utils = {
 
   queryParams(source) {
     const array = [];
-    for(var key in source) {
+    for (var key in source) {
       if (source[key]) {
         array.push(`${encodeURIComponent(key)}=${encodeURIComponent(source[key])}`);
       }
     }
-    return array.join("&");
+    return array.join('&');
   }
 };
 

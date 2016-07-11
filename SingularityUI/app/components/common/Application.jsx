@@ -6,9 +6,7 @@ const Application = (props) => (
   <div>
     <Navigation location={props.location} history={props.history} />
     <GlobalSearch />
-    <div id="page" className="container-fluid">
-      {props.children}
-    </div>
+    {props.children}
   </div>
 );
 

@@ -23,11 +23,10 @@ function refresh(props) {
   const requestId = splits.slice(0, splits.length - 5).join('-');
   const search = props.location.query.search || '';
   const path = props.params.splat.replace(props.params.taskId, '$TASK_ID');
-  // const requestId =
   const initPromise = props.initialize(requestId, path, search, [props.params.taskId], props.location.query.viewMode || 'split');
   initPromise.then(() => {
-    props.updateActiveTasks(props.params.requestId);
+    props.updateActiveTasks(requestId);
   });
 }
 
-export default connect(null, mapDispatchToProps)(rootComponent(Tail, 'Tail of', refresh, false));
+export default connect(null, mapDispatchToProps)(rootComponent(Tail, 'Tail of', refresh, false, false));

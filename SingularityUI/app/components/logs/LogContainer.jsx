@@ -46,7 +46,7 @@ class LogContainer extends React.Component {
 
   render() {
     const cb = this.props.updateGroups;
-    return <div><Interval enabled={this.props.ready} timeout={2000} callback={cb} /><Interval enabled={true} timeout={10000} callback={this.props.updateTaskStatuses} /><Header />{this.renderTaskGroups()}</div>;
+    return <div className="tail-root"><Interval enabled={this.props.ready} timeout={2000} callback={cb} /><Interval enabled={true} timeout={10000} callback={this.props.updateTaskStatuses} /><Header />{this.renderTaskGroups()}</div>;
   }
 }
 

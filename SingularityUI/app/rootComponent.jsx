@@ -1,7 +1,8 @@
 import React from 'react';
+import classNames from 'classnames';
 
 // eslint-disable-next-line no-unused-vars react/no-multi-comp
-const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true) => class extends React.Component {
+const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true, pageMargin = true) => class extends React.Component {
 
   constructor(props) {
     super(props);
@@ -69,7 +70,7 @@ const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true)
     const loader = this.state.loading && <div className="page-loader fixed" />;
     const page = !this.state.loading && <Wrapped {...this.props} />;
     return (
-      <div>
+      <div className={classNames({'page container-fluid': pageMargin})}>
         {loader}
         {page}
       </div>
