@@ -19,9 +19,7 @@ export default class FormModal extends React.Component {
       errors: {}
     };
 
-    this.hide = this.hide.bind(this);
-    this.show = this.show.bind(this);
-    this.confirm = this.confirm.bind(this);
+    _.bindAll(this, ['hide', 'show', 'confirm']);
   }
 
   static INPUT_TYPES = {
