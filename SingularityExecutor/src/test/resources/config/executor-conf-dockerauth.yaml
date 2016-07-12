@@ -1,29 +1,4 @@
 executor:
-  # Folder to store task metadata in (used by SingularityExecutorCleanup)
-  globalTaskDefinitionDirectory: path/to/tasks
-
-  # Default user to run tasks as
-  defaultRunAsUser: root
-
-  # Folder to store rotated logs
-  logrotateToDirectory: logs
-
-  # AWS S3 bucket name
-  s3UploaderBucket: bucket-name
-
-  # Filename format to use when uploading logs to S3
-  s3UploaderKeyPattern: '%requestId/%Y/%m/%taskId_%index-%s%fileext'
-
-  # Additional files to logrotate
-  logrotateAdditionalFiles:
-  - logs/access.log
-  - logs/gc.log
-
-  # Path to logrotate command
-  logrotateCommand: /usr/sbin/logrotate
-
-  # Whether or not to use the SingularityS3Downloader service to download artifacts
-  useLocalDownloadService: true
 
   dockerAuthConfig:
     Username: dockeruser
