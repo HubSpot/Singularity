@@ -21,8 +21,6 @@ import apiRootPromptTemplate from './templates/vex/apiRootPrompt';
 
 // Set up third party configurations
 import 'thirdPartyConfigurations';
-// Set up the Handlebars helpers
-import 'handlebarsHelpers';
 
 // Initialize the app on DOMContentReady
 $(() => {
