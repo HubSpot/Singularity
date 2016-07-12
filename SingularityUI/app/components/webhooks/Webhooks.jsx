@@ -2,6 +2,7 @@ import React, {PropTypes} from 'react';
 import ReactDOM from 'react-dom';
 import Utils from '../../utils';
 import OldTable from '../common/OldTable';
+import FormModal from '../common/FormModal';
 import PlainText from '../common/atomicDisplayItems/PlainText';
 import TimeStamp from '../common/atomicDisplayItems/TimeStamp';
 import Link from '../common/atomicDisplayItems/Link';
@@ -26,6 +27,8 @@ const Webhooks = React.createClass({
     }).isRequired,
     fetchWebhooks: PropTypes.func.isRequired
   },
+
+  getInitialState() { return {}; },
 
   defaultRowsPerPage: 10,
 
@@ -75,20 +78,9 @@ const Webhooks = React.createClass({
     });
   },
 
-  promptDeleteWebhook(webhook) {
-    const deleteWebhook = webhookToDelete => this.deleteWebhook(webhookToDelete);
-    return vex.dialog.confirm({
-      message: "<div class='delete-webhook' />", // This is not react
-      afterOpen: () => {
-        return ReactDOM.render(<div><pre>({webhook.type}) {webhook.uri}</pre><p>Are you sure you want to delete this webhook?</p></div>, $('.delete-webhook').get(0));
-      },
-      callback: confirmed => {
-        if (!confirmed) {
-          return;
-        }
-        deleteWebhook(webhook);
-      }
-    });
+  promptDeleteWebhook(webhookToDelete) {
+    this.setState({webhookToDelete});
+    this.refs.deleteModal.show();
   },
 
   newWebhook(uri, type) {
@@ -109,6 +101,10 @@ const Webhooks = React.createClass({
   },
 
   promptNewWebhook() {
+    this.refs.newWebhookModal.show();
+  },
+
+  promptNewWebhook2() {
     const newWebhook = (uri, type) => this.newWebhook(uri, type);
     return vex.dialog.open({
       message: "<div class='new-webhook' />",
@@ -214,6 +210,50 @@ const Webhooks = React.createClass({
     return data;
   },
 
+  renderDeleteWebhookModal() {
+    const webhookToDelete = this.state.webhookToDelete;
+    return (
+      <FormModal
+        ref="deleteModal"
+        action="Delete"
+        onConfirm={() => this.deleteWebhook(webhookToDelete)}
+        buttonStyle="danger"
+        formElements={[]}>
+        <div>
+          {webhookToDelete &&
+            <pre>
+              ({webhookToDelete.type}) {webhookToDelete.uri}
+            </pre>}
+          <p>
+            Are you sure you want to delete this webhook?
+          </p>
+        </div>
+      </FormModal>
+    );
+  },
+
+  renderNewWebhookModal() {
+    return (
+      <FormModal
+        ref="newWebhookModal"
+        action="Create Webhook"
+        buttonStyle="success"
+        onConfirm={(data) => this.newWebhook(data.uri, data.type)}
+        formElements={[
+          {
+            type: FormModal.INPUT_TYPES.SELECT,
+            name: 'type',
+            label: 'Type',
+            options: this.webhookTypes.map((type) => ({
+              label: Utils.humanizeText(type),
+              value: type
+            }))
+          }
+        ]}
+      />
+    );
+  },
+
   render() {
     return (
       <div>
@@ -240,6 +280,8 @@ const Webhooks = React.createClass({
           emptyTableMessage="No Webhooks"
           dataCollection="webhooks"
         />
+        {this.renderNewWebhookModal()}
+        {this.renderDeleteWebhookModal()}
       </div>
     );
   }
