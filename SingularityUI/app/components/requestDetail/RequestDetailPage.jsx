@@ -5,8 +5,7 @@ import * as RefreshActions from '../../actions/ui/refresh';
 
 import { FetchRequest } from '../../actions/api/requests';
 import {
-  FetchActiveTasksForRequest,
-  FetchTaskHistoryForRequest
+  FetchActiveTasksForRequest
 } from '../../actions/api/history';
 import { FetchTaskCleanups } from '../../actions/api/tasks';
 
@@ -14,7 +13,8 @@ import RequestHeader from './RequestHeader';
 import RequestActionExpirations from './RequestActionExpirations';
 import ActiveTasksTable from './ActiveTasksTable';
 import TaskHistoryTable from './TaskHistoryTable';
-import RequestDeployHistory from './RequestDeployHistory';
+import DeployHistoryTable from './DeployHistoryTable';
+import RequestHistoryTable from './RequestHistoryTable';
 
 class RequestDetailPage extends Component {
   componentDidMount() {
@@ -26,13 +26,15 @@ class RequestDetailPage extends Component {
   }
 
   render() {
+    const { requestId } = this.props;
     return (
       <div>
-        <RequestHeader requestId={this.props.requestId} />
-        <RequestActionExpirations requestId={this.props.requestId} />
-        <ActiveTasksTable requestId={this.props.requestId} />
-        <TaskHistoryTable requestId={this.props.requestId} />
-        <RequestDeployHistory requestId={this.props.requestId} />
+        <RequestHeader requestId={requestId} />
+        <RequestActionExpirations requestId={requestId} />
+        <ActiveTasksTable requestId={requestId} />
+        <TaskHistoryTable requestId={requestId} />
+        <DeployHistoryTable requestId={requestId} />
+        <RequestHistoryTable requestId={requestId} />
       </div>
     );
   }

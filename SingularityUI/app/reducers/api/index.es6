@@ -15,7 +15,9 @@ import {
   FetchActiveTasksForDeploy,
   FetchTaskHistoryForDeploy,
   FetchDeployForRequest,
-  FetchTaskSearchParams
+  FetchDeploysForRequest,
+  FetchTaskSearchParams,
+  FetchRequestHistory
 } from '../../actions/api/history';
 
 import { FetchTaskS3Logs } from '../../actions/api/logs';
@@ -68,14 +70,16 @@ const request = buildKeyedApiActionReducer(FetchRequest);
 const saveRequest = buildApiActionReducer(SaveRequest);
 const requests = buildApiActionReducer(FetchRequests, []);
 const requestsInState = buildApiActionReducer(FetchRequestsInState, []);
+const requestHistory = buildKeyedApiActionReducer(FetchRequestHistory, []);
 const status = buildApiActionReducer(FetchSingularityStatus);
 const deploy = buildApiActionReducer(FetchDeployForRequest);
 const deploys = buildApiActionReducer(FetchPendingDeploys, []);
+const deploysForRequest = buildKeyedApiActionReducer(FetchDeploysForRequest, []);
 const saveDeploy = buildApiActionReducer(SaveDeploy);
 const activeTasksForDeploy = buildApiActionReducer(FetchActiveTasksForDeploy);
 const activeTasksForRequest = buildKeyedApiActionReducer(FetchActiveTasksForRequest, []);
 const taskHistoryForDeploy = buildApiActionReducer(FetchTaskHistoryForDeploy);
-const taskHistoryForRequest = buildApiActionReducer(FetchTaskHistoryForRequest);
+const taskHistoryForRequest = buildApiActionReducer(FetchTaskHistoryForRequest, []);
 const taskCleanups = buildApiActionReducer(FetchTaskCleanups, []);
 const taskFiles = buildKeyedApiActionReducer(FetchTaskFiles, []);
 const taskResourceUsage = buildApiActionReducer(FetchTaskStatistics);
@@ -94,8 +98,11 @@ export default combineReducers({
   saveRequest,
   requests,
   requestsInState,
+  requestHistory,
   status,
   deploy,
+  deploys,
+  deploysForRequest,
   saveDeploy,
   task,
   tasks,
@@ -107,7 +114,6 @@ export default combineReducers({
   taskFiles,
   taskResourceUsage,
   taskS3Logs,
-  deploys,
   taskShellCommandResponse,
   taskHistory
 });

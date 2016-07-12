@@ -1,6 +1,8 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 
+import { Button, Glyphicon } from 'react-bootstrap';
+
 import Utils from '../../utils';
 
 import { FetchTaskHistoryForRequest } from '../../actions/api/history';
@@ -9,9 +11,21 @@ import ServerSideTable from '../common/ServerSideTable';
 import JSONButton from '../common/JSONButton';
 
 const TaskHistoryTable = ({requestId, tasks}) => {
+  let maybeSearchButton;
+  if (tasks.length) {
+    maybeSearchButton = (
+      <Button bsStyle="primary" href={`${config.appRoot}/request/${requestId}/taskSearch`}>
+        <Glyphicon glyph="search" aria-hidden="true" /><span> Search</span>
+      </Button>
+    );
+  }
+
   return (
     <div>
-      <h2>Task history</h2>
+      <h2>
+        <span>Task history </span>
+        {maybeSearchButton}
+      </h2>
       <ServerSideTable
         emptyMessage="No tasks"
         entries={tasks}

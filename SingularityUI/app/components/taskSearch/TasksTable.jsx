@@ -30,7 +30,7 @@ export default class TasksTable extends React.Component {
             activePage={this.props.page}
             items={this.props.page + (this.props.disableNext ? 0 : 1)}
             onSelect={(eventKey) => this.props.onPage(eventKey)}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             />
+          />
         </div>
       );
     }

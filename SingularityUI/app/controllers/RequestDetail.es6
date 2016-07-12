@@ -3,7 +3,9 @@ import RequestDetailView from '../views/request';
 import { FetchRequest } from '../actions/api/requests';
 import {
   FetchActiveTasksForRequest,
-  FetchTaskHistoryForRequest
+  FetchTaskHistoryForRequest,
+  FetchDeploysForRequest,
+  FetchRequestHistory
 } from '../actions/api/history';
 import { FetchTaskCleanups } from '../actions/api/tasks';
 
@@ -26,6 +28,8 @@ class RequestDetailController extends Controller {
     this.store.dispatch(FetchActiveTasksForRequest.trigger(this.requestId));
     this.store.dispatch(FetchTaskCleanups.trigger());
     this.store.dispatch(FetchTaskHistoryForRequest.trigger(this.requestId, 5, 1));
+    this.store.dispatch(FetchDeploysForRequest.trigger(this.requestId, 5, 1));
+    this.store.dispatch(FetchRequestHistory.trigger(this.requestId, 5, 1));
   }
 }
 
