@@ -21,8 +21,7 @@ class DeployDetail extends React.Component {
   static propTypes = {
     deploy: PropTypes.object.isRequired,
     taskHistory: PropTypes.arrayOf(PropTypes.object).isRequired,
-    latestHealthchecks: PropTypes.arrayOf(PropTypes.object).isRequired,
-    dispatch: PropTypes.func.isRequired
+    latestHealthchecks: PropTypes.arrayOf(PropTypes.object).isRequired
   };
 
   componentDidMount() {
@@ -131,7 +130,6 @@ class DeployDetail extends React.Component {
           paginate={tasks.length >= 5}
           perPage={5}
           fetchAction={FetchTaskHistoryForDeploy}
-          dispatch={this.props.dispatch}
           fetchParams={[d.deploy.requestId, d.deploy.id]}
           headers={['Name', 'Last State', 'Started', 'Updated', '', '']}
           renderTableRow={(data, index) => {

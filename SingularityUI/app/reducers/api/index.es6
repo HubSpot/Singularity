@@ -11,6 +11,7 @@ import {
 import {
   FetchTaskHistory,
   FetchActiveTasksForRequest,
+  FetchTaskHistoryForRequest,
   FetchActiveTasksForDeploy,
   FetchTaskHistoryForDeploy,
   FetchDeployForRequest,
@@ -74,6 +75,7 @@ const saveDeploy = buildApiActionReducer(SaveDeploy);
 const activeTasksForDeploy = buildApiActionReducer(FetchActiveTasksForDeploy);
 const activeTasksForRequest = buildKeyedApiActionReducer(FetchActiveTasksForRequest, []);
 const taskHistoryForDeploy = buildApiActionReducer(FetchTaskHistoryForDeploy);
+const taskHistoryForRequest = buildApiActionReducer(FetchTaskHistoryForRequest);
 const taskCleanups = buildApiActionReducer(FetchTaskCleanups, []);
 const taskFiles = buildKeyedApiActionReducer(FetchTaskFiles, []);
 const taskResourceUsage = buildApiActionReducer(FetchTaskStatistics);
@@ -100,6 +102,7 @@ export default combineReducers({
   activeTasksForDeploy,
   activeTasksForRequest,
   taskHistoryForDeploy,
+  taskHistoryForRequest,
   taskCleanups,
   taskFiles,
   taskResourceUsage,
