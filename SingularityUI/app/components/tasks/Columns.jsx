@@ -301,6 +301,29 @@ export const CleanupType = (
   />
 );
 
+export const LogLinkAndJSON = (
+  <Column
+    label=""
+    id="logLink"
+    key="logLink"
+    className="actions-column"
+    cellData={(rowData) => rowData.taskId}
+    cellRender={(taskId, rowData) => (
+      <div className="hidden-xs">
+        <a
+          href={`${config.appRoot}/request/${taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${taskId.id}`}
+          title="Log"
+        >
+          &middot;&middot;&middot;
+        </a>
+        <JSONButton className="inline" object={rowData}>
+          {'{ }'}
+        </JSONButton>
+      </div>
+    )}
+  />
+);
+
 export const JSONAction = (
   <Column
     label=""
