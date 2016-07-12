@@ -7,14 +7,13 @@ const refresh = (state = {}, action) => {
       console.error(`Key ${action.key} was used twice in auto refresh.`); // eslint-disable-line no-console
     }
 
-    const { key, intervalId, timeoutId, actions } = action;
+    const { key, intervalId, timeoutId } = action;
 
     const newState = {
       ...state,
       [key]: {
         intervalId,
-        timeoutId,
-        actions,
+        timeoutId
       }
     };
 
