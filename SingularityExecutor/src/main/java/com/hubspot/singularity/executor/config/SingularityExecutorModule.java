@@ -17,6 +17,7 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 import com.ning.http.client.extra.ThrottleRequestFilter;
 import com.spotify.docker.client.DefaultDockerClient;
+import com.spotify.docker.client.DefaultDockerClient.Builder;
 import com.spotify.docker.client.DockerClient;
 
 public class SingularityExecutorModule extends AbstractModule {
@@ -95,10 +96,15 @@ public class SingularityExecutorModule extends AbstractModule {
   @Provides
   @Singleton
   public DockerClient providesDockerClient(SingularityExecutorConfiguration configuration) {
-    return DefaultDockerClient.builder()
+    Builder dockerClientBuilder = DefaultDockerClient.builder()
       .uri(URI.create("unix://localhost/var/run/docker.sock"))
-      .connectionPoolSize(configuration.getDockerClientConnectionPoolSize())
-      .build();
+      .connectionPoolSize(configuration.getDockerClientConnectionPoolSize());
+
+    if(configuration.getDockerAuthConfig().isPresent()) {
+      dockerClientBuilder.authConfig(configuration.getDockerAuthConfig().get());
+    }
+
+    return dockerClientBuilder.build();
   }
 
   @Provides
