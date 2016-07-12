@@ -9,10 +9,11 @@ import { getBouncesForRequest } from '../../../selectors/tasks';
 
 import CancelDeployButton from './CancelDeployButton';
 
-const RequestAlerts = ({requestId, requestParent, bounces, activeTasksForRequest}) => {
+const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) => {
   let maybeBouncing;
+  const requestParent = requestAPI.data;
   if (bounces.length > 0) {
-    const runningInstanceCount = Utils.request.runningInstanceCount(activeTasksForRequest);
+    const runningInstanceCount = Utils.request.runningInstanceCount(activeTasksForRequest.data);
     maybeBouncing = (
       <Alert bsStyle="warning">
         <b>Request is bouncing:</b> {runningInstanceCount} of {requestParent.request.instances} replacement tasks are currently running.
@@ -23,7 +24,7 @@ const RequestAlerts = ({requestId, requestParent, bounces, activeTasksForRequest
   let maybeDeploying;
   const { pendingDeploy, activeDeploy } = requestParent;
   if (pendingDeploy) {
-    const deployingInstanceCount = Utils.request.deployingInstanceCount(requestParent, activeTasksForRequest);
+    const deployingInstanceCount = Utils.request.deployingInstanceCount(requestParent, activeTasksForRequest.data);
     const { instances } = requestParent.request;
     const pendingDeployProgress = (
       <span>{`${deployingInstanceCount} of ${instances} new tasks are currently running`}</span>
@@ -135,7 +136,7 @@ const RequestAlerts = ({requestId, requestParent, bounces, activeTasksForRequest
         {maybeTimestamp}
       </div>
     );
-  } else {
+  } else if (!Utils.api.isFirstLoad(requestAPI)) {
     maybeActiveDeploy = (
       <span className="text-danger">
         No active deploy
@@ -165,16 +166,16 @@ const RequestAlerts = ({requestId, requestParent, bounces, activeTasksForRequest
 
 RequestAlerts.propTypes = {
   requestId: PropTypes.string.isRequired,
-  requestParent: PropTypes.object.isRequired,
+  requestAPI: PropTypes.object.isRequired,
   bounces: PropTypes.arrayOf(PropTypes.object).isRequired,
-  activeTasksForRequest: PropTypes.arrayOf(PropTypes.object).isRequired
+  activeTasksForRequest: PropTypes.object.isRequired
 };
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    requestParent: Utils.maybe(state.api.request, [ownProps.requestId, 'data']),
+    requestAPI: Utils.maybe(state.api.request, [ownProps.requestId]),
     bounces: getBouncesForRequest(ownProps.requestId)(state),
-    activeTasksForRequest: Utils.maybe(state.api, ['activeTasksForRequest', ownProps.requestId, 'data'])
+    activeTasksForRequest: Utils.maybe(state.api, ['activeTasksForRequest', ownProps.requestId])
   };
 };
 
