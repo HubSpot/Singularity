@@ -33,7 +33,7 @@ const TaskHistoryTable = ({requestId, tasks}) => {
         perPage={5}
         fetchAction={FetchTaskHistoryForRequest}
         fetchParams={[requestId]}
-        headers={['Name', 'Last State', 'Deploy ID', 'Started At', 'Updated At', '']}
+        headers={['Name', 'Last State', 'Deploy ID', 'Started At', 'Updated At', '', '']}
         renderTableRow={(data, index) => {
           return (
             <tr key={index}>
