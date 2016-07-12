@@ -67,8 +67,7 @@ class RequestsPage extends React.Component {
           state: nextProps.params.state || 'all',
           subFilter: !nextProps.params.subFilter || nextProps.params.subFilter === 'all' ? RequestFilters.REQUEST_TYPES : nextProps.params.subFilter.split(','),
           searchFilter: nextProps.params.searchFilter || ''
-        },
-        loading: false
+        }
       });
     }
   }
