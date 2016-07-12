@@ -32,24 +32,19 @@ module.exports = {
   devtool: 'source-map',
   module: {
     loaders: [
-      { test: /\.es6$/, exclude: /node_modules/, loader: "babel-loader" },
-      { test: /\.jsx$/, exclude: /node_modules/, loader: "babel-loader" },
-      { test: /\.cjsx$/, loaders: ['coffee', 'cjsx']},
+      { test: /\.es6$/, exclude: /node_modules/, loader: 'babel-loader' },
+      { test: /\.jsx$/, exclude: /node_modules/, loader: 'babel-loader' },
       { test: /\.coffee$/, loader: 'coffee'},
-      { test: /\.hbs/, loader: "handlebars-template-loader" },
       { test: /[\/]messenger\.js$/, loader: 'exports?Messenger'},
       { test: /[\/]sortable\.js$/, loader: 'exports?Sortable'}
     ]
   },
   resolve: {
     root: path.resolve('./app'),
-    extensions: ['', '.js', '.es6', '.jsx', '.cjsx', '.coffee', '.hbs'],
+    extensions: ['', '.js', '.es6', '.jsx', '.coffee'],
     alias: {
       'vex': 'vex-js/js/vex.js',
       'vex.dialog': 'vex-helper.es6',
-      'handlebars': 'handlebars/runtime.js',
-      'sortable': 'sortable/js/sortable.js',
-      'datatables': 'datatables/media/js/jquery.dataTables.js',
       'bootstrap': 'bootstrap/dist/js/bootstrap.js'
     }
   },
