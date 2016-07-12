@@ -9,7 +9,7 @@ export default class FormModal extends React.Component {
   constructor(props) {
     super(props);
     const formState = {};
-    _.each(props.formElements, (e) => {
+    props.formElements.forEach((e) => {
       formState[e.name] = e.defaultValue && e.defaultValue.toString();
     });
 
@@ -69,7 +69,7 @@ export default class FormModal extends React.Component {
   validateForm() {
     // Check required values
     const errors = {};
-    _.each(this.props.formElements, (e) => {
+    this.props.formElements.forEach((e) => {
       if (!this.state.formState[e.name] && e.isRequired) {
         errors[e.name] = 'This field is required';
       }
@@ -104,7 +104,7 @@ export default class FormModal extends React.Component {
     if (this.validateForm()) {
       this.props.onConfirm(this.parseFormState(this.state.formState));
       const formState = {};
-      _.each(this.props.formElements, (e) => {
+      this.props.formElements.forEach((e) => {
         formState[e.name] = e.defaultValue;
       });
       this.setState({
@@ -159,7 +159,7 @@ export default class FormModal extends React.Component {
           );
 
         case FormModal.INPUT_TYPES.RADIO:
-          const buttons = _.map(e.values, (v, i) => {
+          const buttons = e.values.map((v, i) => {
             return (
               <div key={i} className="radio">
                 <label>
