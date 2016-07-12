@@ -388,7 +388,7 @@ const Utils = {
     failureCause = '';
     deploy.deployResult.deployFailures.map(failure => {
       if (failure.taskId && failure.taskId.id === task.taskId) {
-        return failureCause = Handlebars.helpers.humanizeText(failure.reason);
+        return failureCause = Utils.humanizeText(failure.reason);
       }
     });
     if (failureCause) {

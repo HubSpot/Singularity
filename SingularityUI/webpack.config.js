@@ -12,7 +12,6 @@ module.exports = {
       'underscore',
       'clipboard',
       'select2',
-      'handlebars',
       'moment',
       'messenger',
       'bootstrap',
@@ -20,8 +19,6 @@ module.exports = {
       'react-interval',
       'react-dom',
       'fuzzy',
-      'datatables',
-      'sortable',
       'juration',
       'backbone',
       'vex-js'

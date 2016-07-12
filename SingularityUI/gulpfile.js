@@ -105,7 +105,6 @@ gulp.task('styles', function () {
       'node_modules/select2/*.css',
       'node_modules/bootstrap/dist/css/bootstrap.css',
       'node_modules/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.css',
-      'node_modules/sortable/css/sortable-theme-bootstrap.css',
       'node_modules/react-virtualized/styles.css',
       'node_modules/react-select/dist/react-select.css',
       'node_modules/react-tagsinput/react-tagsinput.css',
