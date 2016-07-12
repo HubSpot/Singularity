@@ -21,7 +21,7 @@ import {
   ActiveActions,
   NextRun,
   PendingType,
-  DeployId,
+  PendingDeployId,
   ScheduledActions,
   ScheduledTaskId,
   CleanupType,
@@ -83,7 +83,7 @@ class TasksPage extends React.Component {
       case 'active':
         return [TaskId, StartedAt, Host, Rack, CPUs, Memory, ActiveActions];
       case 'scheduled':
-        return [ScheduledTaskId, NextRun, PendingType, DeployId, ScheduledActions];
+        return [ScheduledTaskId, NextRun, PendingType, PendingDeployId, ScheduledActions];
       case 'cleaning':
         return [TaskId, CleanupType, JSONAction];
       case 'lbcleanup':

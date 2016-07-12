@@ -26,7 +26,11 @@ class UITable extends Component {
       UITable.SortDirection.DESC
     ]),
     className: PropTypes.string,
-    asyncSort: PropTypes.bool
+    asyncSort: PropTypes.bool,
+    emptyTableMessage: PropTypes.oneOfType([
+      PropTypes.node,
+      PropTypes.string
+    ])
   };
 
   static defaultProps = {
@@ -316,16 +320,28 @@ class UITable extends Component {
   }
 
   render() {
+    let maybeTable = (
+      <BootstrapTable ref="table" responsive={true} striped={true} className={this.props.className}>
+        <thead>
+          {this.renderTableHeader()}
+        </thead>
+        <tbody>
+          {this.renderTableRows()}
+        </tbody>
+      </BootstrapTable>
+    );
+
+    if (this.props.emptyTableMessage && !this.props.data.length) {
+      maybeTable = (
+        <div className="empty-table-message">
+          {this.props.emptyTableMessage}
+        </div>
+      );
+    }
+
     return (
       <div>
-        <BootstrapTable ref="table" responsive={true} striped={true} className={this.props.className}>
-          <thead>
-            {this.renderTableHeader()}
-          </thead>
-          <tbody>
-            {this.renderTableRows()}
-          </tbody>
-        </BootstrapTable>
+        {maybeTable}
         {this.renderPagination()}
       </div>
     );

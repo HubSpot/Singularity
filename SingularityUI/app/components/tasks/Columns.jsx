@@ -1,5 +1,6 @@
 import React from 'react';
 import Column from '../common/table/Column';
+import classNames from 'classnames';
 
 import Utils from '../../utils';
 
@@ -27,6 +28,31 @@ export const TaskId = (
   />
 );
 
+export const LastTaskState = (
+  <Column
+    label="Status"
+    id="lastTaskState"
+    key="lastTaskState"
+    cellData={
+      (rowData) => rowData.lastTaskState
+    }
+    cellRender={
+      (cellData) => {
+        const className = classNames(
+          'label',
+          `label-${Utils.getLabelClassFromTaskState(cellData)}`
+        );
+        return (
+          <span className={className}>
+            {Utils.humanizeText(cellData)}
+          </span>
+        );
+      }
+    }
+    sortable={true}
+  />
+);
+
 export const StartedAt = (
   <Column
     label="Started At"
@@ -34,6 +60,23 @@ export const StartedAt = (
     key="startedAt"
     cellData={
       (rowData) => (rowData.taskId ? rowData.taskId.startedAt : rowData.startedAt)
+    }
+    cellRender={
+      (cellData) => (
+        Utils.timestampFromNow(cellData)
+      )
+    }
+    sortable={true}
+  />
+);
+
+export const UpdatedAt = (
+  <Column
+    label="Updated At"
+    id="updatedAt"
+    key="updatedAt"
+    cellData={
+      (rowData) => rowData.updatedAt
     }
     cellRender={
       (cellData) => (
@@ -180,6 +223,21 @@ export const DeployId = (
     label="Deploy ID"
     id="deployId"
     key="deployId"
+    cellData={
+      (rowData) => rowData.taskId.deployId
+    }
+    cellRender={(deployId, task) => (
+      <a href={`${config.appRoot}/request/${task.taskId.requestId}/deploy/${deployId}`}>{deployId}</a>
+    )}
+    sortable={true}
+  />
+);
+
+export const PendingDeployId = (
+  <Column
+    label="Deploy ID"
+    id="pendingDeployId"
+    key="pendingDeployId"
     cellData={
       (rowData) => rowData.pendingTask.pendingTaskId
     }

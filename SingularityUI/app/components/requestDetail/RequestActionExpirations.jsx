@@ -195,7 +195,7 @@ const mapStateToProps = (state, ownProps) => ({
 });
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  scale: (instances) => dispatch(ScaleRequest.trigger(ownProps.requestId, instances)),
+  scale: (instances) => dispatch(ScaleRequest.trigger(ownProps.requestId, {instances})),
   persistScale: () => dispatch(PersistRequestScale.trigger(ownProps.requestId)),
   cancelBounce: () => dispatch(CancelRequestBounce.trigger(ownProps.requestId)),
   persistPause: () => dispatch(PersistRequestPause.trigger(ownProps.requestId)),

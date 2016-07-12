@@ -464,7 +464,7 @@ const Utils = {
       };
 
       tasks.forEach((t) => {
-        taskStates[t.lastTaskState] += (taskStates[t.lastTaskState] || 0) + 1;
+        taskStates[t.lastTaskState] = (taskStates[t.lastTaskState] || 0) + 1;
       });
 
       return taskStates;
