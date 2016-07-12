@@ -1434,7 +1434,7 @@ class NewDeployForm extends Component {
 
 function mapStateToProps(state, ownProps) {
   return {
-    request: Utils.maybe(state.api.request, [ownProps.request.request.id, 'data']),
+    request: Utils.maybe(state.api.request, [ownProps.requestId, 'data']),
     form: state.ui.form[FORM_ID],
     saveApiCall: state.api.saveDeploy
   };
