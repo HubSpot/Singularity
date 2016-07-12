@@ -12,7 +12,7 @@ import { FetchTasksInState } from '../../actions/api/tasks';
 import UITable from '../common/table/UITable';
 
 import {
-  TaskId,
+  TaskIdShortened,
   StartedAt,
   Host,
   Rack,
@@ -81,17 +81,17 @@ class TasksPage extends React.Component {
   getColumns() {
     switch (this.state.filter.taskStatus) {
       case 'active':
-        return [TaskId, StartedAt, Host, Rack, CPUs, Memory, ActiveActions];
+        return [TaskIdShortened, StartedAt, Host, Rack, CPUs, Memory, ActiveActions];
       case 'scheduled':
         return [ScheduledTaskId, NextRun, PendingType, PendingDeployId, ScheduledActions];
       case 'cleaning':
-        return [TaskId, CleanupType, JSONAction];
+        return [TaskIdShortened, CleanupType, JSONAction];
       case 'lbcleanup':
-        return [TaskId, StartedAt, Host, Rack, InstanceNumber, JSONAction];
+        return [TaskIdShortened, StartedAt, Host, Rack, InstanceNumber, JSONAction];
       case 'decommissioning':
-        return [TaskId, StartedAt, Host, Rack, CPUs, Memory, ActiveActions];
+        return [TaskIdShortened, StartedAt, Host, Rack, CPUs, Memory, ActiveActions];
       default:
-        return [TaskId, JSONAction];
+        return [TaskIdShortened, JSONAction];
     }
   }
 

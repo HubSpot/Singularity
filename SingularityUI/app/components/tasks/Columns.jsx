@@ -24,6 +24,25 @@ export const TaskId = (
       )
     }
     sortable={true}
+  />
+);
+
+export const TaskIdShortened = (
+  <Column
+    label="Task ID"
+    id="taskIdShort"
+    key="taskIdShort"
+    cellData={
+      (rowData) => (rowData.taskId ? rowData.taskId.id : rowData.id)
+    }
+    cellRender={
+      (cellData) => (
+        <a href={`${config.appRoot}/task/${cellData}`}>
+          {cellData}
+        </a>
+      )
+    }
+    sortable={true}
     className="keep-in-check"
   />
 );
