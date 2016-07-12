@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom';
 import AppRouter from './router';
 import configureStore from 'store';
 import { FetchUser } from 'actions/api/auth';
-import Utils from './utils';
 
 class Application {
   initialize() {
@@ -14,7 +13,7 @@ class Application {
     this.store.dispatch(FetchUser.trigger());
 
     // hide loading animation
-    $('.page-loader.fixed').hide();
+    document.getElementById('static-loader').remove();
 
     // Render the page content
     ReactDOM.render(<AppRouter store={this.store} />, document.getElementById('root'));
