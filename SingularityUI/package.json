@@ -27,7 +27,7 @@
     "es6-object-assign": "^1.0.1",
     "fuse.js": "~1.2.2",
     "fuzzy": "git://github.com/HubSpot/fuzzy.git#v0.1.1-plus-return-match-structure",
-    "history": "^3.0.0",
+    "history": "^2.1.2",
     "humanize-plus": "^1.8.1",
     "isomorphic-fetch": "^2.2.1",
     "jquery": "~1.11.1",
