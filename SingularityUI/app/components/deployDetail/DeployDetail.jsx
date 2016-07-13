@@ -25,7 +25,7 @@ class DeployDetail extends React.Component {
     dispatch: React.PropTypes.func,
     deploy: React.PropTypes.object,
     activeTasks: React.PropTypes.array,
-    taskHistory: React.PropTypes.object,
+    taskHistory: React.PropTypes.array,
     latestHealthchecks: React.PropTypes.array,
     fetchTaskHistoryForDeploy: React.PropTypes.func,
     params: React.PropTypes.object
