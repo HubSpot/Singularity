@@ -218,12 +218,12 @@ const Webhooks = React.createClass({
     return (
       <div>
         <div className="row">
-          <div className="col-md-10">
+          <div className="col-md-10 col-xs-6">
             <span className="h1">Webhooks</span>
           </div>
-          <div className="col-md-2 button-container">
+          <div className="col-md-2 col-xs-6 button-container">
             <button
-              className="btn btn-success"
+              className="btn btn-success pull-right"
               alt="Create a new webhook"
               title="newWebhook"
               onClick={this.promptNewWebhook}>
