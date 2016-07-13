@@ -5,7 +5,7 @@ dest = path.resolve(__dirname, 'dist');
 
 module.exports = {
   entry: {
-    app: './app/initialize.es6',
+    app: './app/initialize.jsx',
     vendor: [
       'react',
       'jquery',
@@ -35,11 +35,11 @@ module.exports = {
   devtool: 'source-map',
   module: {
     loaders: [
-      { test: /\.es6$/, exclude: /node_modules/, loader: "babel-loader" },
-      { test: /\.jsx$/, exclude: /node_modules/, loader: "babel-loader" },
+      { test: /\.es6$/, exclude: /node_modules/, loader: 'babel-loader' },
+      { test: /\.jsx$/, exclude: /node_modules/, loader: 'babel-loader' },
       { test: /\.cjsx$/, loaders: ['coffee', 'cjsx']},
       { test: /\.coffee$/, loader: 'coffee'},
-      { test: /\.hbs/, loader: "handlebars-template-loader" },
+      { test: /\.hbs/, loader: 'handlebars-template-loader' },
       { test: /[\/]messenger\.js$/, loader: 'exports?Messenger'},
       { test: /[\/]sortable\.js$/, loader: 'exports?Sortable'}
     ]

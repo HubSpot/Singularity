@@ -2,7 +2,7 @@ import React from 'react';
 import classNames from 'classnames';
 
 import { Modal, Button } from 'react-bootstrap';
-import TagsInput from 'react-tagsinput'
+import TagsInput from 'react-tagsinput';
 import Duration from './formItems/Duration';
 
 export default class FormModal extends React.Component {
@@ -36,9 +36,9 @@ export default class FormModal extends React.Component {
     });
     this.state = {
       visible: false,
-      formState: formState,
+      formState,
       errors: {}
-    }
+    };
   }
 
   hide() {
@@ -57,7 +57,7 @@ export default class FormModal extends React.Component {
     const formState = this.state.formState;
     formState[name] = value;
     this.setState({
-      formState: formState
+      formState
     });
   }
 
@@ -66,11 +66,11 @@ export default class FormModal extends React.Component {
     const errors = {};
     _.each(this.props.formElements, (e) => {
       if (!this.state.formState[e.name] && e.isRequired) {
-        errors[e.name] = 'This field is required'
+        errors[e.name] = 'This field is required';
       }
     });
     this.setState({
-      errors: errors
+      errors
     });
 
     // Returns true if form is valid
@@ -81,7 +81,7 @@ export default class FormModal extends React.Component {
     const parsed = {};
     _.mapObject(state, (val, key) => {
       const element = _.find(this.props.formElements, (e) => e.name == key);
-      switch(element.type) {
+      switch (element.type) {
         case FormModal.INPUT_TYPES.BOOLEAN:
           parsed[key] = Boolean(val);
           break;
@@ -104,24 +104,24 @@ export default class FormModal extends React.Component {
       });
       this.setState({
         visible: false,
-        formState: formState,
+        formState,
         errors: {}
       });
     }
   }
 
   renderForm() {
-      const inputs = this.props.formElements.map((e) => {
+    const inputs = this.props.formElements.map((e) => {
       const error = this.state.errors[e.name];
       const help = error && <span className="help-block">{error}</span>;
 
-      switch(e.type) {
+      switch (e.type) {
 
         case FormModal.INPUT_TYPES.BOOLEAN:
           return (
             <FormModal.FormItem element={e} formState={this.state.formState} key={e.name}>
               <div className={classNames('form-group', {'has-error': !!error})}>
-                <label className="control-label" for={e.name}>
+                <label className="control-label" htmlFor={e.name}>
                   <input
                     type="checkbox"
                     name={e.name}
@@ -138,7 +138,7 @@ export default class FormModal extends React.Component {
           return (
             <FormModal.FormItem element={e} formState={this.state.formState} key={e.name}>
               <div className={classNames('form-group', {'has-error': !!error})}>
-                <label className="control-label" for={e.name}>{e.label}</label>
+                <label className="control-label" htmlFor={e.name}>{e.label}</label>
                 <input type="text"
                   name={e.name}
                   className="form-control input-large"
@@ -176,14 +176,14 @@ export default class FormModal extends React.Component {
         case FormModal.INPUT_TYPES.TAGS:
           return (
             <FormModal.FormItem element={e} formState={this.state.formState} key={e.name}>
-              <label style={{display: "block", width: "100%"}}>
+              <label style={{display: 'block', width: '100%'}}>
                 {e.label}
                 <TagsInput
                   value={this.state.formState[e.name] || []}
                   onChange={(tags) => this.handleFormChange(e.name, tags)}
-                  addOnBlur
-                  addOnPaste
-                  inputProps={{className: "form-control input-large", placeholder: ""}}
+                  addOnBlur={true}
+                  addOnPaste={true}
+                  inputProps={{className: 'form-control input-large', placeholder: ''}}
                 />
               </label>
             </FormModal.FormItem>
@@ -193,7 +193,7 @@ export default class FormModal extends React.Component {
           return (
             <FormModal.FormItem element={e} formState={this.state.formState} key={e.name}>
               <div className={classNames('form-group', {'has-error': !!error})}>
-                <label className="control-label" for={e.name}>{e.label}</label>
+                <label className="control-label" htmlFor={e.name}>{e.label}</label>
                 <input type="number"
                   name={e.name}
                   min={e.min}
@@ -208,11 +208,11 @@ export default class FormModal extends React.Component {
             </FormModal.FormItem>
           );
 
-      case FormModal.INPUT_TYPES.DURATION:
-        return (
+        case FormModal.INPUT_TYPES.DURATION:
+          return (
           <FormModal.FormItem element={e} formState={this.state.formState} key={e.name}>
             <div className={classNames('form-group', {'has-error': !!error})}>
-              <label className="control-label" for={e.name}>{e.label}</label>
+              <label className="control-label" htmlFor={e.name}>{e.label}</label>
               <Duration type="text"
                 value={this.state.formState[e.name] || 0}
                 onChange={(value) => this.handleFormChange(e.name, value)}
@@ -232,15 +232,17 @@ export default class FormModal extends React.Component {
   }
 
   render() {
+    const cancel = !this.props.mustFill && <Button bsStyle="default" onClick={this.hide.bind(this)}>Cancel</Button>;
+
     return (
-      <Modal show={this.state.visible} onHide={this.hide.bind(this)}>
+      <Modal show={this.state.visible} onHide={this.hide.bind(this)} backdrop={this.props.mustFill ? 'static' : undefined}>
         <Modal.Body>
           {this.props.children}
-          {this.props.children && !!this.props.formElements.length && <hr/>}
+          {this.props.children && !!this.props.formElements.length && <hr />}
           {this.renderForm()}
         </Modal.Body>
         <Modal.Footer>
-          <Button bsStyle="default" onClick={this.hide.bind(this)}>Cancel</Button>
+          {cancel}
           <Button bsStyle={this.props.buttonStyle} onClick={this.confirm.bind(this)}>{this.props.action}</Button>
         </Modal.Footer>
       </Modal>
@@ -252,6 +254,7 @@ FormModal.propTypes = {
   action: React.PropTypes.node.isRequired,
   onConfirm: React.PropTypes.func.isRequired,
   buttonStyle: React.PropTypes.string,
+  mustFill: React.PropTypes.bool,
   formElements: React.PropTypes.arrayOf(React.PropTypes.shape({
     name: React.PropTypes.string.isRequired,
     type: React.PropTypes.oneOf(_.keys(FormModal.INPUT_TYPES)).isRequired,
