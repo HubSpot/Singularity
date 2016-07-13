@@ -233,7 +233,7 @@ export const taskGroupFetchNext = taskGroupId =>
         promise.taskId = taskId;
         return promise;
       }
-      return Promise.resolve(); // reject("initialDataLoaded is false for task #{taskId}")
+      return Promise.resolve();
     });
 
     return Promise.all(promises).then(() => dispatch({taskGroupId, type: 'LOG_REQUEST_END'})).catch((error) => {
