@@ -1,10 +1,20 @@
 import { createSelector } from 'reselect';
 import micromatch from 'micromatch';
 import fuzzy from 'fuzzy';
+
 import Utils from '../utils';
 
+const getTaskCleanups = (state) => state.api.taskCleanups;
 const getTasks = (state) => state.tasks;
 const getCleanups = (state) => state.cleanups;
+
+export const getBouncesForRequest = (requestId) => createSelector(
+  [getTaskCleanups],
+  (taskCleanups) => (
+  taskCleanups.data || []).filter((tc) => (
+    tc.cleanupType === 'BOUNCING' && tc.taskId.requestId === requestId
+  ))
+);
 
 // warning, these selectors are dependent not on the application store
 // but rather on the arg passed in a render method

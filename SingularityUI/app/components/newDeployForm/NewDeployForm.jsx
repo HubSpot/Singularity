@@ -1,6 +1,8 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
+import Utils from '../../utils';
+
 import SelectFormGroup from '../common/formItems/formGroups/SelectFormGroup';
 import TextFormGroup from '../common/formItems/formGroups/TextFormGroup';
 import MultiInputFormGroup from '../common/formItems/formGroups/MultiInputFormGroup';
@@ -1430,9 +1432,9 @@ class NewDeployForm extends Component {
   }
 }
 
-function mapStateToProps(state) {
+function mapStateToProps(state, ownProps) {
   return {
-    request: state.api.request.data,
+    request: Utils.maybe(state.api.request, [ownProps.requestId, 'data']),
     form: state.ui.form[FORM_ID],
     saveApiCall: state.api.saveDeploy
   };

@@ -3,7 +3,9 @@ export default function buildApiActionReducer(ActionGroup, initialData={}) {
   const initialState = {
     isFetching: false,
     error: null,
+    statusCode: null,
     receivedAt: null,
+    erroredAt: null,
     data: initialData
   };
 
@@ -16,13 +18,19 @@ export default function buildApiActionReducer(ActionGroup, initialData={}) {
         return initialState;
 
       case ActionGroup.ERROR:
-        newData = _.extend({}, state, {isFetching: false, error: action.error});
+        newData = _.extend({}, state, {
+          isFetching: false,
+          error: action.error,
+          statusCode: action.statusCode,
+          erroredAt: Date.now()
+        });
         return _.extend({}, state, newData);
 
       case ActionGroup.SUCCESS:
         newData = _.extend({}, state, {
           isFetching: false,
           error: null,
+          statusCode: action.statusCode,
           receivedAt: Date.now(),
           data: action.data
         });
@@ -30,8 +38,7 @@ export default function buildApiActionReducer(ActionGroup, initialData={}) {
 
       case ActionGroup.STARTED:
         newData = _.extend({}, state, {
-          isFetching: true,
-          error: null
+          isFetching: true
         });
         return _.extend({}, state, newData);
 

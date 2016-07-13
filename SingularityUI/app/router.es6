@@ -1,5 +1,3 @@
-let RequestDetailController;
-
 const hasProp = {}.hasOwnProperty;
 
 import DashboardController from 'controllers/Dashboard';
@@ -10,7 +8,7 @@ import RequestFormController from 'controllers/RequestForm';
 
 import NewDeployFormController from 'controllers/NewDeployForm';
 
-RequestDetailController = require('controllers/RequestDetail');
+import RequestDetailController from 'controllers/RequestDetail';
 
 import RequestsTableController from 'controllers/RequestsTable';
 
@@ -82,6 +80,7 @@ class Router extends Backbone.Router {
 
   requestDetail(requestId) {
     return this.app.bootstrapController(new RequestDetailController({
+      store: this.app.store,
       requestId
     }));
   }

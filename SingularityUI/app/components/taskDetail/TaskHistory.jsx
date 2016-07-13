@@ -16,7 +16,7 @@ function TaskHistory (props) {
             <tr key={index} className={index === 0 ? 'medium-weight' : ''}>
               <td>{Utils.humanizeText(data.taskState)}</td>
               <td>{data.statusMessage ? data.statusMessage : '—'}</td>
-              <td>{Utils.timeStampFromNow(data.timestamp)}</td>
+              <td>{Utils.timestampFromNow(data.timestamp)}</td>
             </tr>
           );
         }}

@@ -19,7 +19,7 @@ import { Alert } from 'react-bootstrap';
 import Breadcrumbs from '../common/Breadcrumbs';
 import JSONButton from '../common/JSONButton';
 import Section from '../common/Section';
-import FormModal from '../common/FormModal';
+import FormModal from '../common/modal/FormModal';
 import CollapsableSection from '../common/CollapsableSection';
 import NotFound from '../common/NotFound';
 
