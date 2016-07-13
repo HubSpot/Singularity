@@ -244,6 +244,7 @@ const Webhooks = React.createClass({
             type: FormModal.INPUT_TYPES.SELECT,
             name: 'type',
             label: 'Type',
+            isRequired: true,
             options: this.webhookTypes.map((type) => ({
               label: Utils.humanizeText(type),
               value: type

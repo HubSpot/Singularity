@@ -122,7 +122,7 @@ export default class FormModal extends React.Component {
       const errorBlock = error && <span className="help-block">{error}</span>;
       const help = formElement.help && <span className="help-block">{formElement.help}</span>;
 
-      const buttons = () => _.map(formElement.values, (value, key) => {
+      const radioButtons = () => _.map(formElement.values, (value, key) => {
         return (
           <div key={key} className="radio">
             <label>
@@ -179,7 +179,7 @@ export default class FormModal extends React.Component {
           return (
             <FormModal.FormItem element={formElement} formState={this.state.formState} key={formElement.name}>
               <strong>{formElement.label}</strong>
-              {buttons()}
+              {radioButtons()}
             </FormModal.FormItem>
           );
 
@@ -229,21 +229,46 @@ export default class FormModal extends React.Component {
                   onChange={(value) => this.handleFormChange(formElement.name, value)}
                 />
                 {errorBlock}
+                {help}
               </div>
             </FormModal.FormItem>
           );
 
         case FormModal.INPUT_TYPES.SELECT:
+          if (formElement.options.length < 6 && !formElement.useSelectDespiteFewOptions) {
+            const buttons = formElement.options.map((option, key) =>
+              <button
+                key={key}
+                value={option.value}
+                className={classNames('btn', 'btn-default', {active: this.state.formState[formElement.name] === option.value})}
+                onClick={(event) => {event.preventDefault(); return this.handleFormChange(formElement.name, option.value);}}
+              >
+                {option.label}
+              </button>
+            );
+            return (
+              <FormModal.FormItem element={formElement} formState={this.state.formState} key={formElement.name}>
+                <div className={classNames('form-group', {'has-error': !!error})}>
+                  <label className="control-label" htmlFor={formElement.name}>{formElement.label}</label>
+                  <div id={formElement.name} className="btn-group">{buttons}</div>
+                  {errorBlock}
+                  {help}
+                </div>
+              </FormModal.FormItem>
+            );
+          }
           return (
             <FormModal.FormItem element={formElement} formState={this.state.formState} key={formElement.name}>
               <div className={classNames('form-group', {'has-error': !!error})}>
                 <label className="control-label" htmlFor={formElement.name}>{formElement.label}</label>
                 <Select
                   options={formElement.options}
+                  clearable={formElement.clearable}
                   value={this.state.formState[formElement.name] || ''}
                   id={formElement.name}
                   onChange={(value) => this.handleFormChange(formElement.name, value.value)}
                 />
+                {errorBlock}
                 {help}
               </div>
             </FormModal.FormItem>
@@ -288,10 +313,12 @@ FormModal.propTypes = {
       value: React.PropTypes.string.isRequired,
       label: React.PropTypes.string.isRequired
     })),
+    useSelectDespiteFewOptions: React.PropTypes.bool,
+    clearable: React.PropTypes.bool,
     name: React.PropTypes.string.isRequired,
     type: React.PropTypes.oneOf(_.keys(FormModal.INPUT_TYPES)).isRequired,
     label: React.PropTypes.string,
-    required: React.PropTypes.bool,
+    isRequired: React.PropTypes.bool,
     values: React.PropTypes.array,
     defaultValue: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.bool, React.PropTypes.number]),
     validateField: React.PropTypes.func, // String -> String, return field validation error or falsey value if valid
