@@ -284,10 +284,10 @@ FormModal.propTypes = {
   buttonStyle: React.PropTypes.string,
   children: React.PropTypes.node,
   formElements: React.PropTypes.arrayOf(React.PropTypes.shape({
-    options: React.PropTypes.shape({
+    options: React.PropTypes.arrayOf(React.PropTypes.shape({
       value: React.PropTypes.string.isRequired,
       label: React.PropTypes.string.isRequired
-    }),
+    })),
     name: React.PropTypes.string.isRequired,
     type: React.PropTypes.oneOf(_.keys(FormModal.INPUT_TYPES)).isRequired,
     label: React.PropTypes.string,
