@@ -6,7 +6,7 @@ import PlainText from '../common/atomicDisplayItems/PlainText';
 import TimeStamp from '../common/atomicDisplayItems/TimeStamp';
 import Link from '../common/atomicDisplayItems/Link';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
-import { FetchWebhooks } from '../../actions/api/webhooks';
+import { FetchWebhooks, DeleteWebhook, NewWebhook } from '../../actions/api/webhooks';
 import { connect } from 'react-redux';
 
 const Webhooks = React.createClass({
@@ -19,10 +19,10 @@ const Webhooks = React.createClass({
         }))
       }).isRequired
     }),
-    collections: PropTypes.shape({
-      webhooks: PropTypes.array.isRequired
-    }).isRequired,
-    fetchWebhooks: PropTypes.func.isRequired
+    webhooks: PropTypes.array.isRequired,
+    fetchWebhooks: PropTypes.func.isRequired,
+    newWebhook: PropTypes.func.isRequired,
+    deleteWebhook: PropTypes.func.isRequired
   },
 
   getInitialState() { return {}; },
@@ -76,11 +76,7 @@ const Webhooks = React.createClass({
   },
 
   deleteWebhook(webhook) {
-    return $.ajax({
-      url: `${ config.apiRoot }/webhooks/?webhookId=${ webhook.id }`,
-      type: 'DELETE',
-      success: () => this.props.fetchWebhooks()
-    });
+    this.props.deleteWebhook(webhook.id).then(this.props.fetchWebhooks());
   },
 
   promptDeleteWebhook(webhookToDelete) {
@@ -89,20 +85,11 @@ const Webhooks = React.createClass({
   },
 
   newWebhook(uri, type) {
-    const data = {
-      uri,
-      type
-    };
+    let user;
     if (app.user && app.user.attributes.authenticated) {
-      data.user = app.user.attributes.user.id;
+      user = app.user.attributes.user.id;
     }
-    return $.ajax({
-      url: `${ config.apiRoot }/webhooks`,
-      type: 'POST',
-      contentType: 'application/json',
-      data: JSON.stringify(data),
-      success: () => this.props.fetchWebhooks()
-    });
+    this.props.newWebhook(uri, type, user).then(this.props.fetchWebhooks());
   },
 
   promptNewWebhook() {
@@ -111,7 +98,7 @@ const Webhooks = React.createClass({
 
   getWebhookTableData() {
     const data = [];
-    this.props.collections.webhooks.map(webhook => data.push({
+    this.props.webhooks.map(webhook => data.push({
       dataId: webhook.id,
       dataCollection: 'webhooks',
       data: [{
@@ -249,17 +236,15 @@ const Webhooks = React.createClass({
 
 function mapStateToProps(state) {
   return {
-    collections: {
-      webhooks: state.api.webhooks.data
-    }
+    webhooks: state.api.webhooks.data
   };
 }
 
 function mapDispatchToProps(dispatch) {
   return {
-    fetchWebhooks() {
-      dispatch(FetchWebhooks.trigger());
-    }
+    fetchWebhooks() { return dispatch(FetchWebhooks.trigger()); },
+    newWebhook(uri, type, user) { return dispatch(NewWebhook.trigger(uri, type, user)); },
+    deleteWebhook(id) { return dispatch(DeleteWebhook.trigger(id)); }
   };
 }
 
