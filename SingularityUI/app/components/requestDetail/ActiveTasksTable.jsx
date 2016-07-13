@@ -15,7 +15,13 @@ import {
 
 import TaskStateBreakdown from './TaskStateBreakdown';
 
-const ActiveTasksTable = ({requestId, tasks}) => {
+const ActiveTasksTable = ({requestId, tasksAPI}) => {
+  const tasks = tasksAPI ? tasksAPI.data : [];
+  const emptyTableMessage = (Utils.api.isFirstLoad(tasksAPI)
+    ? <p>Loading...</p>
+    : <p>No active tasks</p>
+  );
+
   return (
     <div>
       <h2>Running instances</h2>
@@ -23,7 +29,7 @@ const ActiveTasksTable = ({requestId, tasks}) => {
       <UITable
         data={tasks}
         keyGetter={(t) => t.taskId.id}
-        emptyTableMessage={<p>No active tasks</p>}
+        emptyTableMessage={emptyTableMessage}
       >
         {TaskId}
         {LastTaskState}
@@ -38,14 +44,13 @@ const ActiveTasksTable = ({requestId, tasks}) => {
 
 ActiveTasksTable.propTypes = {
   requestId: PropTypes.string.isRequired,
-  tasks: PropTypes.arrayOf(PropTypes.object).isRequired
+  tasksAPI: PropTypes.object.isRequired
 };
 
 const mapStateToProps = (state, ownProps) => ({
-  tasks: Utils.maybe(
+  tasksAPI: Utils.maybe(
     state.api.activeTasksForRequest,
-    [ownProps.requestId, 'data'],
-    []
+    [ownProps.requestId]
   )
 });
 

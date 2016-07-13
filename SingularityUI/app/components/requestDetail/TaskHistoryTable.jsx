@@ -10,7 +10,13 @@ import { FetchTaskHistoryForRequest } from '../../actions/api/history';
 import ServerSideTable from '../common/ServerSideTable';
 import JSONButton from '../common/JSONButton';
 
-const TaskHistoryTable = ({requestId, tasks}) => {
+const TaskHistoryTable = ({requestId, tasksAPI}) => {
+  const tasks = tasksAPI ? tasksAPI.data : [];
+  const emptyTableMessage = (Utils.api.isFirstLoad(tasksAPI)
+    ? 'Loading...'
+    : 'No tasks'
+  );
+
   let maybeSearchButton;
   if (tasks.length) {
     maybeSearchButton = (
@@ -27,7 +33,7 @@ const TaskHistoryTable = ({requestId, tasks}) => {
         {maybeSearchButton}
       </h2>
       <ServerSideTable
-        emptyMessage="No tasks"
+        emptyMessage={emptyTableMessage}
         entries={tasks}
         paginate={tasks.length >= 5}
         perPage={5}
@@ -54,11 +60,11 @@ const TaskHistoryTable = ({requestId, tasks}) => {
 
 TaskHistoryTable.propTypes = {
   requestId: PropTypes.string.isRequired,
-  tasks: PropTypes.arrayOf(PropTypes.object).isRequired
+  tasksAPI: PropTypes.object.isRequired
 };
 
 const mapStateToProps = (state) => ({
-  tasks: state.api.taskHistoryForRequest.data
+  tasksAPI: state.api.taskHistoryForRequest
 });
 
 export default connect(

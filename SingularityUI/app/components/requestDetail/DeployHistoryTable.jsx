@@ -8,12 +8,17 @@ import { FetchDeploysForRequest } from '../../actions/api/history';
 import ServerSideTable from '../common/ServerSideTable';
 import JSONButton from '../common/JSONButton';
 
-const DeployHistoryTable = ({requestId, deploys}) => {
+const DeployHistoryTable = ({requestId, deploysAPI}) => {
+  const deploys = deploysAPI ? deploysAPI.data : [];
+  const emptyTableMessage = (Utils.api.isFirstLoad(deploysAPI)
+    ? 'Loading...'
+    : 'No deploys'
+  );
   return (
     <div>
       <h2>Deploy history</h2>
       <ServerSideTable
-        emptyMessage="No deploys"
+        emptyMessage={emptyTableMessage}
         entries={deploys}
         paginate={deploys.length >= 5}
         perPage={5}
@@ -22,7 +27,6 @@ const DeployHistoryTable = ({requestId, deploys}) => {
         headers={['Deploy ID', 'Status', 'User', 'Timestamp', '']}
         renderTableRow={(data, index) => {
           const { deployMarker, deployResult } = data;
-
           return (
             <tr key={index}>
               <td>
@@ -52,11 +56,14 @@ const DeployHistoryTable = ({requestId, deploys}) => {
 
 DeployHistoryTable.propTypes = {
   requestId: PropTypes.string.isRequired,
-  deploys: PropTypes.arrayOf(PropTypes.object).isRequired
+  deploysAPI: PropTypes.object.isRequired
 };
 
 const mapStateToProps = (state, ownProps) => ({
-  deploys: Utils.maybe(state.api.deploysForRequest, [ownProps.requestId, 'data'])
+  deploysAPI: Utils.maybe(
+    state.api.deploysForRequest,
+    [ownProps.requestId]
+  )
 });
 
 export default connect(
