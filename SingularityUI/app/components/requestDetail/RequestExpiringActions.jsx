@@ -17,9 +17,9 @@ import UnpauseButton from '../requests/UnpauseButton';
 import EnableHealthchecksButton from '../requests/EnableHealthchecksButton';
 import DisableHealthchecksButton from '../requests/DisableHealthchecksButton';
 
-import ExpirableActionNotice from './ExpirableActionNotice';
+import ExpiringActionNotice from './ExpiringActionNotice';
 
-const RequestActionExpirations = ({
+const RequestExpiringActions = ({
   requestId,
   requestParent,
   scale,
@@ -47,7 +47,7 @@ const RequestActionExpirations = ({
     const endMillis = startMillis + durationMillis;
     if (endMillis > new Date().getTime()) {
       maybeScaleExpiration = (
-        <ExpirableActionNotice
+        <ExpiringActionNotice
           action={`Scale (to ${instances} instances)`}
           user={user ? user.split('@')[0] : ''}
           endMillis={endMillis}
@@ -79,7 +79,7 @@ const RequestActionExpirations = ({
     const endMillis = startMillis + (durationMillis || (config.defaultBounceExpirationMinutes * 60 * 1000));
     if (endMillis > new Date().getTime()) {
       maybeBounceExpiration = (
-        <ExpirableActionNotice
+        <ExpiringActionNotice
           action="Bounce"
           user={user ? user.split('@')[0] : ''}
           endMillis={endMillis}
@@ -107,7 +107,7 @@ const RequestActionExpirations = ({
     const endMillis = startMillis + durationMillis;
     if (endMillis > new Date().getTime()) {
       maybePauseExpiration = (
-        <ExpirableActionNotice
+        <ExpiringActionNotice
           action="Pause"
           user={user ? user.split('@')[0] : ''}
           endMillis={endMillis}
@@ -156,7 +156,7 @@ const RequestActionExpirations = ({
       }
 
       maybeSkipHealthchecksExpiration = (
-        <ExpirableActionNotice
+        <ExpiringActionNotice
           action={skipHealthchecks ? 'Disable Healthchecks' : 'Enable Healthchecks'}
           user={user ? user.split('@')[0] : ''}
           endMillis={endMillis}
@@ -180,7 +180,7 @@ const RequestActionExpirations = ({
   );
 };
 
-RequestActionExpirations.propTypes = {
+RequestExpiringActions.propTypes = {
   requestId: PropTypes.string.isRequired,
   requestParent: PropTypes.object.isRequired,
   scale: PropTypes.func.isRequired,
@@ -205,4 +205,4 @@ const mapDispatchToProps = (dispatch, ownProps) => ({
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(RequestActionExpirations);
+)(RequestExpiringActions);
