@@ -1,13 +1,12 @@
 import React, {PropTypes} from 'react';
 import Utils from '../../utils';
-import OldTable from '../common/OldTable';
 import FormModal from '../common/modal/FormModal';
-import PlainText from '../common/atomicDisplayItems/PlainText';
-import TimeStamp from '../common/atomicDisplayItems/TimeStamp';
-import Link from '../common/atomicDisplayItems/Link';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 import { FetchWebhooks, DeleteWebhook, NewWebhook } from '../../actions/api/webhooks';
 import { connect } from 'react-redux';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import ToolTip from 'react-bootstrap/lib/Tooltip';
+import SimpleTable from '../common/SimpleTable';
 
 const Webhooks = React.createClass({
 
@@ -19,7 +18,14 @@ const Webhooks = React.createClass({
         }))
       }).isRequired
     }),
-    webhooks: PropTypes.array.isRequired,
+    webhooks: PropTypes.arrayOf(PropTypes.shape({
+      uri: PropTypes.string.isRequired,
+      id: PropTypes.string.isRequired,
+      type: PropTypes.string.isRequired,
+      timestamp: PropTypes.number.isRequired,
+      user: PropTypes.string,
+      queueSize: PropTypes.number
+    })).isRequired,
     fetchWebhooks: PropTypes.func.isRequired,
     newWebhook: PropTypes.func.isRequired,
     deleteWebhook: PropTypes.func.isRequired
@@ -27,45 +33,7 @@ const Webhooks = React.createClass({
 
   getInitialState() { return {}; },
 
-  defaultRowsPerPage: 10,
-
-  rowsPerPageChoices: [10, 20],
-
   webhookTypes: ['REQUEST', 'DEPLOY', 'TASK'],
-
-  sortBy(field, sortDirectionAscending) {
-    this.props.api.webhooks.data.sortBy(field, sortDirectionAscending);
-    return this.forceUpdate();
-  },
-
-  webhookColumns() {
-    const { sortBy } = this; // JS is annoying
-    return [{
-      data: 'URL',
-      sortable: true,
-      doSort: sortDirectionAscending => sortBy('uri', sortDirectionAscending)
-    }, {
-      data: 'Type',
-      sortable: true,
-      doSort: sortDirectionAscending => sortBy('type', sortDirectionAscending)
-    }, {
-      data: 'Timestamp',
-      className: 'hidden-xs',
-      sortable: true,
-      doSort: sortDirectionAscending => sortBy('timestamp', sortDirectionAscending)
-    }, {
-      data: 'User',
-      className: 'hidden-xs',
-      sortable: true,
-      doSort: sortDirectionAscending => sortBy('user', sortDirectionAscending)
-    }, {
-      data: 'Queue Size',
-      sortable: true,
-      doSort: sortDirectionAscending => sortBy('queueSize', sortDirectionAscending)
-    }, {
-      className: 'hidden-xs'
-    }];
-  },
 
   checkWebhookUri(uri) {
     try {
@@ -96,55 +64,15 @@ const Webhooks = React.createClass({
     this.refs.newWebhookModal.show();
   },
 
-  getWebhookTableData() {
-    const data = [];
-    this.props.webhooks.map(webhook => data.push({
-      dataId: webhook.id,
-      dataCollection: 'webhooks',
-      data: [{
-        component: PlainText,
-        prop: {
-          text: webhook.uri
-        }
-      }, {
-        component: PlainText,
-        prop: {
-          text: Utils.humanizeText(webhook.type)
-        }
-      }, {
-        component: TimeStamp,
-        className: 'hidden-xs',
-        prop: {
-          timestamp: webhook.timestamp,
-          display: 'absoluteTimestamp'
-        }
-      }, {
-        component: PlainText,
-        className: 'hidden-xs',
-        prop: {
-          text: webhook.user || 'N/A'
-        }
-      }, {
-        component: PlainText,
-        prop: {
-          text: <b>{webhook.queueSize}</b>
-        }
-      }, {
-        component: Link,
-        className: 'hidden-xs actions-column',
-        prop: {
-          text: <Glyphicon iconClass="trash" />,
-          onClickFn: () => this.promptDeleteWebhook(webhook),
-          title: 'Delete',
-          altText: 'Delete this webhook',
-          overlayTrigger: true,
-          overlayTriggerPlacement: 'top',
-          overlayToolTipContent: 'Delete This Webhook',
-          overlayId: `deleteWebhook${ webhook.id }`
-        }
-      }]
-    }));
-    return data;
+  renderDeleteWebhookLink(webhook) {
+    const toolTip = <ToolTip id={`delete-${ webhook.id }`}>Delete This Webhook</ToolTip>;
+    return (
+      <OverlayTrigger placement="top" overlay={toolTip}>
+        <a onClick={() => this.promptDeleteWebhook(webhook)}>
+          <Glyphicon iconClass="trash" />
+        </a>
+      </OverlayTrigger>
+    );
   },
 
   renderDeleteWebhookModal() {
@@ -218,14 +146,23 @@ const Webhooks = React.createClass({
             </button>
           </div>
         </div>
-        <OldTable
-          defaultRowsPerPage={this.defaultRowsPerPage}
-          rowsPerPageChoices={this.rowsPerPageChoices}
-          tableClassOpts="table-striped"
-          columnHeads={this.webhookColumns()}
-          tableRows={this.getWebhookTableData()}
-          emptyTableMessage="No Webhooks"
-          dataCollection="webhooks"
+        <SimpleTable
+          emptyMessage="No Webhooks"
+          entries={this.props.webhooks}
+          perPage={20}
+          headers={['URL', 'Type', 'Timestamp', 'User', 'Queue Size', '']}
+          renderTableRow={(webhook, index) => {
+            return (
+              <tr key={index}>
+                <td>{webhook.uri}</td>
+                <td>{Utils.humanizeText(webhook.type)}</td>
+                <td>{Utils.absoluteTimestamp(webhook.timestamp)}</td>
+                <td>{webhook.user || 'N/A'}</td>
+                <td>{webhook.queueSize || 0}</td>
+                <td>{this.renderDeleteWebhookLink(webhook)}</td>
+              </tr>
+            );
+          }}
         />
         {this.renderNewWebhookModal()}
         {this.renderDeleteWebhookModal()}
