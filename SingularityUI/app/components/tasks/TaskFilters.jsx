@@ -48,6 +48,10 @@ export default class TaskFilters extends React.Component {
     this.props.onFilterChange(_.extend({}, this.props.filter, {filterText: e.target.value}));
   }
 
+  clearSearch() {
+    this.props.onFilterChange(_.extend({}, this.props.filter, {filterText: ''}));
+  }
+
   toggleRequestType(t) {
     let selected = this.props.filter.requestTypes;
     if (selected.length === TaskFilters.REQUEST_TYPES.length) {
@@ -87,15 +91,18 @@ export default class TaskFilters extends React.Component {
 
   renderSearchInput() {
     return (
-      <input
-        type="search"
-        ref="search"
-        className="big-search-box"
-        placeholder="Filter tasks"
-        value={this.props.filter.filterText}
-        onChange={(...args) => this.handleSearchChange(...args)}
-        maxLength="128"
-      />
+      <div>
+        <input
+          type="search"
+          ref="search"
+          className="big-search-box"
+          placeholder="Filter tasks"
+          value={this.props.filter.filterText}
+          onChange={(...args) => this.handleSearchChange(...args)}
+          maxLength="128"
+        />
+        <div className="remove-button" onClick={() => this.clearSearch()}></div>
+      </div>
     );
   }
 

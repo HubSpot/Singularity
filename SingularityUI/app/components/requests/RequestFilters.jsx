@@ -65,6 +65,10 @@ export default class RequestFilters extends React.Component {
     this.props.onFilterChange(_.extend({}, this.props.filter, {subFilter: selected}));
   }
 
+  clearSearch() {
+    this.props.onFilterChange(_.extend({}, this.props.filter, {searchFilter: ''}));
+  }
+
   renderStatusFilter() {
     const selectedIndex = _.findIndex(RequestFilters.REQUEST_STATES, (s) => s.filterVal === this.props.filter.state);
     const navItems = RequestFilters.REQUEST_STATES.map((s, index) => {
@@ -90,15 +94,18 @@ export default class RequestFilters extends React.Component {
 
   renderSearchInput() {
     return (
-      <input
-        type="search"
-        ref="search"
-        className="big-search-box"
-        placeholder="Filter requests"
-        value={this.props.filter.searchFilter}
-        onChange={(...args) => this.handleSearchChange(...args)}
-        maxLength="128"
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         />
+      <div>
+        <input
+          type="search"
+          ref="search"
+          className="big-search-box"
+          placeholder="Filter requests"
+          value={this.props.filter.searchFilter}
+          onChange={(...args) => this.handleSearchChange(...args)}
+          maxLength="128"
+        />
+        <div className="remove-button" onClick={() => this.clearSearch()}></div>
+      </div>
     );
   }
 

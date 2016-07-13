@@ -2,7 +2,6 @@ var gulp = require('gulp');
 var gutil = require('gulp-util');
 var path = require('path');
 var del = require('del');
-var child_process = require('child_process');
 
 var mustache = require('gulp-mustache');
 var stylus = require('gulp-stylus');
@@ -16,7 +15,7 @@ var streamqueue = require('streamqueue');
 
 var eslint = require('gulp-eslint');
 
-var serverBase = process.env.SINGULARITY_BASE_URI || '/singularity'
+var serverBase = process.env.SINGULARITY_BASE_URI || '/singularity';
 
 var templateData = {
   staticRoot: process.env.SINGULARITY_STATIC_URI || (serverBase + '/static'),
@@ -32,19 +31,19 @@ var templateData = {
   defaultHealthcheckTimeoutSeconds: process.env.SINGULARITY_HEALTHCHECK_TIMEOUT_SECONDS || 5,
   defaultDeployHealthTimeoutSeconds: process.env.SINGULARITY_DEPLOY_HEALTH_TIMEOUT_SECONDS || 120,
   defaultHealthcheckMaxRetries: process.env.SINGULARITY_HEALTHCHECK_MAX_RETRIES || 0,
-  hideNewDeployButton: process.env.SINGULARITY_HIDE_NEW_DEPLOY_BUTTON || "false",
-  hideNewRequestButton: process.env.SINGULARITY_HIDE_NEW_REQUEST_BUTTON || "false",
-  loadBalancingEnabled: process.env.SINGULARITY_LOAD_BALANCING_ENABLED || "false",
-  runningTaskLogPath:  process.env.SINGULARITY_RUNNING_TASK_LOG_PATH || "stdout",
-  finishedTaskLogPath: process.env.SINGULARITY_FINISHED_TASK_LOG_PATH || "stdout",
-  commonHostnameSuffixToOmit: process.env.SINGULARITY_COMMON_HOSTNAME_SUFFIX_TO_OMIT || "",
+  hideNewDeployButton: process.env.SINGULARITY_HIDE_NEW_DEPLOY_BUTTON || 'false',
+  hideNewRequestButton: process.env.SINGULARITY_HIDE_NEW_REQUEST_BUTTON || 'false',
+  loadBalancingEnabled: process.env.SINGULARITY_LOAD_BALANCING_ENABLED || 'false',
+  runningTaskLogPath: process.env.SINGULARITY_RUNNING_TASK_LOG_PATH || 'stdout',
+  finishedTaskLogPath: process.env.SINGULARITY_FINISHED_TASK_LOG_PATH || 'stdout',
+  commonHostnameSuffixToOmit: process.env.SINGULARITY_COMMON_HOSTNAME_SUFFIX_TO_OMIT || '',
   taskS3LogOmitPrefix: process.env.SINGULARITY_TASK_S3_LOG_OMIT_PREFIX || '',
   warnIfScheduledJobIsRunningPastNextRunPct: process.env.SINGULARITY_WARN_IF_SCHEDULED_JOB_IS_RUNNING_PAST_NEXT_RUN_PCT || 200,
-  shellCommands: process.env.SINGULARITY_SHELL_COMMANDS || "[]",
+  shellCommands: process.env.SINGULARITY_SHELL_COMMANDS || '[]',
   timestampFormat: process.env.SINGULARITY_TIMESTAMP_FORMAT || 'lll',
   timestampWithSecondsFormat: process.env.SINGULARITY_TIMESTAMP_WITH_SECONDS_FORMAT || 'lll:ss',
   redirectOnUnauthorizedUrl: process.env.SINGULARITY_REDIRECT_ON_UNAUTHORIZED_URL || ''
-}
+};
 
 var dest = path.resolve(__dirname, 'dist');
 
@@ -53,7 +52,7 @@ var webpack = require('webpack');
 var webpackConfig = require('./webpack.config');
 var WebpackDevServer = require('webpack-dev-server');
 
-gulp.task("clean", function() {
+gulp.task('clean', function() {
   return del(dest);
 });
 
@@ -79,13 +78,13 @@ gulp.task('scripts', function () {
 
   return gulp.src(prodConfig.entry.app)
     .pipe(webpackStream(prodConfig))
-    .pipe(gulp.dest(dest + '/static/js'))
+    .pipe(gulp.dest(dest + '/static/js'));
 });
 
 gulp.task('html', function () {
   return gulp.src('app/assets/index.mustache')
     .pipe(mustache(templateData, {extension: '.html'}))
-    .pipe(gulp.dest(dest))
+    .pipe(gulp.dest(dest));
 });
 
 gulp.task('css-images', function () {
@@ -100,21 +99,19 @@ gulp.task('images', function () {
 
 gulp.task('styles', function () {
   var stylusStyles = gulp.src([
-      'node_modules/vex-js/css/*.css',
-      'node_modules/messenger/build/css/*.css',
-      'node_modules/select2/*.css',
-      'node_modules/bootstrap/dist/css/bootstrap.css',
-      'node_modules/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.css',
-      'node_modules/sortable/css/sortable-theme-bootstrap.css',
-      'node_modules/react-virtualized/styles.css',
-      'node_modules/react-select/dist/react-select.css',
-      'node_modules/react-tagsinput/react-tagsinput.css',
-      'app/**/*.styl'
-    ])
-    .pipe(stylus({
-      use: nib(),
-      'include css': true
-    }));
+    'node_modules/vex-js/css/*.css',
+    'node_modules/messenger/build/css/*.css',
+    'node_modules/select2/*.css',
+    'node_modules/bootstrap/dist/css/bootstrap.css',
+    'node_modules/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.css',
+    'node_modules/react-select/dist/react-select.css',
+    'node_modules/react-tagsinput/react-tagsinput.css',
+    'app/**/*.styl'
+  ])
+  .pipe(stylus({
+    use: nib(),
+    'include css': true
+  }));
 
   var sassStyles = gulp.src('app/styles/scss/**/*.scss')
     .pipe(sass({errLogToConsole: true}));
@@ -141,10 +138,10 @@ gulp.task('serve', ['html', 'styles', 'fonts', 'images', 'css-images', 'lint'], 
   new WebpackDevServer(webpack(webpackMerge(webpackConfig, {devtool: 'eval'})), {
     contentBase: dest,
     historyApiFallback: true
-  }).listen(3334, "localhost", function (err) {
-    if(err) throw new gutil.PluginError("webpack-dev-server", err);
-    gutil.log("[webpack-dev-server]", "Development server running on port 3334");
+  }).listen(3334, 'localhost', function (err) {
+    if (err) throw new gutil.PluginError('webpack-dev-server', err);
+    gutil.log('[webpack-dev-server]', 'Development server running on port 3334');
   });
 });
 
-gulp.task("default", ["build"]);
+gulp.task('default', ['build']);

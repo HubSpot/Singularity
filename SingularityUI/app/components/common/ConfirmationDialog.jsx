@@ -8,7 +8,7 @@ export default class ConfirmationDialog extends React.Component {
     super(props);
     this.state = {
       visible: false
-    }
+    };
   }
 
   hide() {
