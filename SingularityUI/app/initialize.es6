@@ -24,8 +24,13 @@ import 'thirdPartyConfigurations';
 // Set up the Handlebars helpers
 import 'handlebarsHelpers';
 
+<<<<<<< Updated upstream
 // Initialize the app on DOMContentReady
 $(() => {
+=======
+// Initialize the app on DOMContentLoaded
+document.addEventListener('DOMContentLoaded', () => {
+>>>>>>> Stashed changes
   if (window.config.apiRoot) {
     return window.app.initialize();
   }

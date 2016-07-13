@@ -24,7 +24,11 @@ const activeColor = (state='default', action) => {
   return state;
 };
 
+<<<<<<< Updated upstream
 const colors = (state=[]) => state;
+=======
+const colors = (state = ['Default', 'Light', 'Dark']) => state;
+>>>>>>> Stashed changes
 
 const viewMode = (state='custom', action) => {
   if (action.type === 'LOG_SWITCH_VIEW_MODE' || action.type === 'LOG_INIT') {
