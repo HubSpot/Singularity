@@ -7,14 +7,14 @@ import api from './api';
 import ui from './ui';
 import {reducer as formReducer} from 'redux-form';
 
-const path = (state='', action) => {
+const path = (state = '', action) => {
   if (action.type === 'LOG_INIT') {
     return action.path;
   }
   return state;
 };
 
-const activeColor = (state='default', action) => {
+const activeColor = (state = 'default', action) => {
   if (action.type === 'LOG_INIT') {
     return window.localStorage.logColor || 'default';
   } else if (action.type === 'LOG_SELECT_COLOR') {
@@ -24,31 +24,27 @@ const activeColor = (state='default', action) => {
   return state;
 };
 
-<<<<<<< Updated upstream
-const colors = (state=[]) => state;
-=======
 const colors = (state = ['Default', 'Light', 'Dark']) => state;
->>>>>>> Stashed changes
 
-const viewMode = (state='custom', action) => {
+const viewMode = (state = 'custom', action) => {
   if (action.type === 'LOG_SWITCH_VIEW_MODE' || action.type === 'LOG_INIT') {
     return action.viewMode;
   }
   return state;
 };
 
-const search = (state='', action) => {
+const search = (state = '', action) => {
   if (action.type === 'LOG_INIT') {
     return action.search;
   }
   return state;
 };
 
-const logRequestLength = (state=30000, action) => state;
+const logRequestLength = (state = 30000, action) => state;
 
-const maxLines = (state=100000, action) => state;
+const maxLines = (state = 100000, action) => state;
 
-const showDebugInfo = (state=false, action) => {
+const showDebugInfo = (state = false, action) => {
   if (action.type === 'LOG_INIT') {
     return Boolean(window.localStorage.showDebugInfo) || false;
   }
