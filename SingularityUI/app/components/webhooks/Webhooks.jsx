@@ -1,15 +1,12 @@
 import React, {PropTypes} from 'react';
-import ReactDOM from 'react-dom';
 import Utils from '../../utils';
-import OldTable from '../common/OldTable';
-import PlainText from '../common/atomicDisplayItems/PlainText';
-import TimeStamp from '../common/atomicDisplayItems/TimeStamp';
-import Link from '../common/atomicDisplayItems/Link';
+import FormModal from '../common/modal/FormModal';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
-import NewWebhookForm from './NewWebhookForm';
-import vex from 'vex';
-import { FetchWebhooks } from '../../actions/api/webhooks';
+import { FetchWebhooks, DeleteWebhook, NewWebhook } from '../../actions/api/webhooks';
 import { connect } from 'react-redux';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import ToolTip from 'react-bootstrap/lib/Tooltip';
+import SimpleTable from '../common/SimpleTable';
 
 const Webhooks = React.createClass({
 
@@ -21,209 +18,127 @@ const Webhooks = React.createClass({
         }))
       }).isRequired
     }),
-    collections: PropTypes.shape({
-      webhooks: PropTypes.array.isRequired
-    }).isRequired,
-    fetchWebhooks: PropTypes.func.isRequired
+    webhooks: PropTypes.arrayOf(PropTypes.shape({
+      uri: PropTypes.string.isRequired,
+      id: PropTypes.string.isRequired,
+      type: PropTypes.string.isRequired,
+      timestamp: PropTypes.number.isRequired,
+      user: PropTypes.string,
+      queueSize: PropTypes.number
+    })).isRequired,
+    fetchWebhooks: PropTypes.func.isRequired,
+    newWebhook: PropTypes.func.isRequired,
+    deleteWebhook: PropTypes.func.isRequired
   },
 
-  defaultRowsPerPage: 10,
-
-  rowsPerPageChoices: [10, 20],
+  getInitialState() { return {}; },
 
   webhookTypes: ['REQUEST', 'DEPLOY', 'TASK'],
 
-  sortBy(field, sortDirectionAscending) {
-    this.props.api.webhooks.data.sortBy(field, sortDirectionAscending);
-    return this.forceUpdate();
-  },
-
-  webhookColumns() {
-    const { sortBy } = this; // JS is annoying
-    return [{
-      data: 'URL',
-      sortable: true,
-      doSort: sortDirectionAscending => sortBy('uri', sortDirectionAscending)
-    }, {
-      data: 'Type',
-      sortable: true,
-      doSort: sortDirectionAscending => sortBy('type', sortDirectionAscending)
-    }, {
-      data: 'Timestamp',
-      className: 'hidden-xs',
-      sortable: true,
-      doSort: sortDirectionAscending => sortBy('timestamp', sortDirectionAscending)
-    }, {
-      data: 'User',
-      className: 'hidden-xs',
-      sortable: true,
-      doSort: sortDirectionAscending => sortBy('user', sortDirectionAscending)
-    }, {
-      data: 'Queue Size',
-      sortable: true,
-      doSort: sortDirectionAscending => sortBy('queueSize', sortDirectionAscending)
-    }, {
-      className: 'hidden-xs'
-    }];
+  checkWebhookUri(uri) {
+    try {
+      return !new URL(uri);
+    } catch (err) {
+      return 'Invalid URL';
+    }
   },
 
   deleteWebhook(webhook) {
-    return $.ajax({
-      url: `${ config.apiRoot }/webhooks/?webhookId=${ webhook.id }`,
-      type: 'DELETE',
-      success: () => this.props.fetchWebhooks()
-    });
+    this.props.deleteWebhook(webhook.id).then(this.props.fetchWebhooks());
   },
 
-  promptDeleteWebhook(webhook) {
-    const deleteWebhook = webhookToDelete => this.deleteWebhook(webhookToDelete);
-    return vex.dialog.confirm({
-      message: "<div class='delete-webhook' />", // This is not react
-      afterOpen: () => {
-        return ReactDOM.render(<div><pre>({webhook.type}) {webhook.uri}</pre><p>Are you sure you want to delete this webhook?</p></div>, $('.delete-webhook').get(0));
-      },
-      callback: confirmed => {
-        if (!confirmed) {
-          return;
-        }
-        deleteWebhook(webhook);
-      }
-    });
+  promptDeleteWebhook(webhookToDelete) {
+    this.setState({webhookToDelete});
+    this.refs.deleteModal.show();
   },
 
   newWebhook(uri, type) {
-    const data = {
-      uri,
-      type
-    };
+    let user;
     if (app.user && app.user.attributes.authenticated) {
-      data.user = app.user.attributes.user.id;
+      user = app.user.attributes.user.id;
     }
-    return $.ajax({
-      url: `${ config.apiRoot }/webhooks`,
-      type: 'POST',
-      contentType: 'application/json',
-      data: JSON.stringify(data),
-      success: () => this.props.fetchWebhooks()
-    });
+    this.props.newWebhook(uri, type, user).then(this.props.fetchWebhooks());
   },
 
   promptNewWebhook() {
-    const newWebhook = (uri, type) => this.newWebhook(uri, type);
-    return vex.dialog.open({
-      message: "<div class='new-webhook' />",
-      afterOpen: () => {
-        this.validateInput = input => {
-          try {
-            return new URL(input);
-          } catch (err) {
-            return false;
-          }
-        };
-        this.renderedForm = ReactDOM.render(React.createElement(NewWebhookForm, {
-          ['getErrors']: () => this.errors,
-          'webhookTypes': this.webhookTypes,
-          ['setType']: (selected) => { this.type = selected; },
-          'validateUri': this.validateInput,
-          ['setUri']: (uri) => { this.uri = uri; } }), $('.new-webhook').get(0));
-      },
-      beforeClose: () => {
-        if (!this.data) {
-          return true;
-        }
-        this.errors = [];
-        const uriValidated = this.validateInput(this.uri);
-        if (!this.type) {
-          this.errors.push('Please select a type');
-        }
-        if (!uriValidated) {
-          this.errors.push('Invalid URL entered');
-        }
-        if (!uriValidated || !this.type) {
-          this.renderedForm.forceUpdate();
-        }
-        if (!uriValidated) {
-          return false;
-        }
-        if (!this.type) {
-          return false;
-        }
-        this.type = '';
-        this.uri = '';
-        return true;
-      },
-      callback: data => {
-        this.data = data;
-        if (!this.type || !data || !this.validateInput(this.uri)) {
-          return;
-        }
-        const { type } = this;
-        newWebhook(this.uri, type);
-      }
-    });
+    this.refs.newWebhookModal.show();
   },
 
-  getWebhookTableData() {
-    const data = [];
-    this.props.collections.webhooks.map(webhook => data.push({
-      dataId: webhook.id,
-      dataCollection: 'webhooks',
-      data: [{
-        component: PlainText,
-        prop: {
-          text: webhook.uri
-        }
-      }, {
-        component: PlainText,
-        prop: {
-          text: Utils.humanizeText(webhook.type)
-        }
-      }, {
-        component: TimeStamp,
-        className: 'hidden-xs',
-        prop: {
-          timestamp: webhook.timestamp,
-          display: 'absoluteTimestamp'
-        }
-      }, {
-        component: PlainText,
-        className: 'hidden-xs',
-        prop: {
-          text: webhook.user || 'N/A'
-        }
-      }, {
-        component: PlainText,
-        prop: {
-          text: <b>{webhook.queueSize}</b>
-        }
-      }, {
-        component: Link,
-        className: 'hidden-xs actions-column',
-        prop: {
-          text: <Glyphicon iconClass="trash" />,
-          onClickFn: () => this.promptDeleteWebhook(webhook),
-          title: 'Delete',
-          altText: 'Delete this webhook',
-          overlayTrigger: true,
-          overlayTriggerPlacement: 'top',
-          overlayToolTipContent: 'Delete This Webhook',
-          overlayId: `deleteWebhook${ webhook.id }`
-        }
-      }]
-    }));
-    return data;
+  renderDeleteWebhookLink(webhook) {
+    const toolTip = <ToolTip id={`delete-${ webhook.id }`}>Delete This Webhook</ToolTip>;
+    return (
+      <OverlayTrigger placement="top" overlay={toolTip}>
+        <a onClick={() => this.promptDeleteWebhook(webhook)}>
+          <Glyphicon iconClass="trash" />
+        </a>
+      </OverlayTrigger>
+    );
+  },
+
+  renderDeleteWebhookModal() {
+    const webhookToDelete = this.state.webhookToDelete;
+    return (
+      <FormModal
+        ref="deleteModal"
+        name="Delete Webhook"
+        action="Delete Webhook"
+        onConfirm={() => this.deleteWebhook(webhookToDelete)}
+        buttonStyle="danger"
+        formElements={[]}>
+        <div>
+          {webhookToDelete &&
+            <pre>
+              ({webhookToDelete.type}) {webhookToDelete.uri}
+            </pre>}
+          <p>
+            Are you sure you want to delete this webhook?
+          </p>
+        </div>
+      </FormModal>
+    );
+  },
+
+  renderNewWebhookModal() {
+    return (
+      <FormModal
+        ref="newWebhookModal"
+        name="New Webhook"
+        action="Create Webhook"
+        buttonStyle="success"
+        onConfirm={(data) => this.newWebhook(data.uri, data.type)}
+        formElements={[
+          {
+            type: FormModal.INPUT_TYPES.SELECT,
+            name: 'type',
+            label: 'Type',
+            isRequired: true,
+            options: this.webhookTypes.map((type) => ({
+              label: Utils.humanizeText(type),
+              value: type
+            }))
+          },
+          {
+            type: FormModal.INPUT_TYPES.STRING,
+            name: 'uri',
+            label: 'URI',
+            isRequired: true,
+            validateField: (value) => this.checkWebhookUri(value)
+          }
+        ]}
+      />
+    );
   },
 
   render() {
     return (
       <div>
         <div className="row">
-          <div className="col-md-10">
+          <div className="col-md-10 col-xs-6">
             <span className="h1">Webhooks</span>
           </div>
-          <div className="col-md-2 button-container">
+          <div className="col-md-2 col-xs-6 button-container">
             <button
-              className="btn btn-success"
+              className="btn btn-success pull-right"
               alt="Create a new webhook"
               title="newWebhook"
               onClick={this.promptNewWebhook}>
@@ -231,15 +146,26 @@ const Webhooks = React.createClass({
             </button>
           </div>
         </div>
-        <OldTable
-          defaultRowsPerPage={this.defaultRowsPerPage}
-          rowsPerPageChoices={this.rowsPerPageChoices}
-          tableClassOpts="table-striped"
-          columnHeads={this.webhookColumns()}
-          tableRows={this.getWebhookTableData()}
-          emptyTableMessage="No Webhooks"
-          dataCollection="webhooks"
+        <SimpleTable
+          emptyMessage="No Webhooks"
+          entries={this.props.webhooks}
+          perPage={20}
+          headers={['URL', 'Type', 'Timestamp', 'User', 'Queue Size', '']}
+          renderTableRow={(webhook, index) => {
+            return (
+              <tr key={index}>
+                <td>{webhook.uri}</td>
+                <td>{Utils.humanizeText(webhook.type)}</td>
+                <td>{Utils.absoluteTimestamp(webhook.timestamp)}</td>
+                <td>{webhook.user || 'N/A'}</td>
+                <td>{webhook.queueSize || 0}</td>
+                <td>{this.renderDeleteWebhookLink(webhook)}</td>
+              </tr>
+            );
+          }}
         />
+        {this.renderNewWebhookModal()}
+        {this.renderDeleteWebhookModal()}
       </div>
     );
   }
@@ -247,17 +173,15 @@ const Webhooks = React.createClass({
 
 function mapStateToProps(state) {
   return {
-    collections: {
-      webhooks: state.api.webhooks.data
-    }
+    webhooks: state.api.webhooks.data
   };
 }
 
 function mapDispatchToProps(dispatch) {
   return {
-    fetchWebhooks() {
-      dispatch(FetchWebhooks.trigger());
-    }
+    fetchWebhooks() { return dispatch(FetchWebhooks.trigger()); },
+    newWebhook(uri, type, user) { return dispatch(NewWebhook.trigger(uri, type, user)); },
+    deleteWebhook(id) { return dispatch(DeleteWebhook.trigger(id)); }
   };
 }
 
