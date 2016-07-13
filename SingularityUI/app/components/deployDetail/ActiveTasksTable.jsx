@@ -2,6 +2,7 @@ import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 
 import Utils from '../../utils';
+import { Link } from 'react-router';
 
 import SimpleTable from '../common/SimpleTable';
 import JSONButton from '../common/JSONButton';
@@ -17,11 +18,11 @@ const ActiveTasksTable = ({tasks}) => (
     renderTableRow={(data, index) => {
       return (
         <tr key={index}>
-          <td><a href={`${config.appRoot}/task/${data.taskId.id}`}>{data.taskId.id}</a></td>
+          <td><Link to={`task/${data.taskId.id}`}>{data.taskId.id}</Link></td>
           <td><span className={`label label-${Utils.getLabelClassFromTaskState(data.lastTaskState)}`}>{Utils.humanizeText(data.lastTaskState)}</span></td>
           <td>{Utils.timestampFromNow(data.taskId.startedAt)}</td>
           <td>{Utils.timestampFromNow(data.updatedAt)}</td>
-          <td className="actions-column"><a href={`${config.appRoot}/request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log">&middot;&middot;&middot;</a></td>
+          <td className="actions-column"><Link to={`$request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log">&middot;&middot;&middot;</Link></td>
           <td className="actions-column"><JSONButton object={data}>{'{ }'}</JSONButton></td>
         </tr>
       );

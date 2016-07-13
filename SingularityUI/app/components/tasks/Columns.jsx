@@ -38,9 +38,9 @@ export const TaskIdShortened = (
     }
     cellRender={
       (cellData) => (
-        <a href={`${config.appRoot}/task/${cellData}`}>
+        <Link to={`task/${cellData}`}>
           {cellData}
-        </a>
+        </Link>
       )
     }
     sortable={true}
@@ -247,7 +247,7 @@ export const DeployId = (
       (rowData) => rowData.taskId.deployId
     }
     cellRender={(deployId, task) => (
-      <a href={`${config.appRoot}/request/${task.taskId.requestId}/deploy/${deployId}`}>{deployId}</a>
+      <Link to={`request/${task.taskId.requestId}/deploy/${deployId}`}>{deployId}</Link>
     )}
     sortable={true}
   />
@@ -332,12 +332,12 @@ export const LogLinkAndJSON = (
     cellData={(rowData) => rowData.taskId}
     cellRender={(taskId, rowData) => (
       <div className="hidden-xs">
-        <a
-          href={`${config.appRoot}/request/${taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${taskId.id}`}
+        <Link
+          to={`request/${taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${taskId.id}`}
           title="Log"
         >
           &middot;&middot;&middot;
-        </a>
+        </Link>
         <JSONButton className="inline" object={rowData}>
           {'{ }'}
         </JSONButton>

@@ -1391,11 +1391,11 @@ class NewDeployForm extends Component {
         </p> || this.props.saveApiCall.data.pendingDeploy &&
         <p className="alert alert-success">
           Deploy
-          <a
-            href={`${config.appRoot}/request/${ this.props.saveApiCall.data.pendingDeploy.requestId }/deploy/${ this.props.saveApiCall.data.pendingDeploy.id }`}
+          <Link
+            to={`request/${ this.props.saveApiCall.data.pendingDeploy.requestId }/deploy/${ this.props.saveApiCall.data.pendingDeploy.id }`}
             >
             {` ${this.props.saveApiCall.data.pendingDeploy.id} `}
-          </a>
+          </Link>
           succesfully created!
         </p>
     );
