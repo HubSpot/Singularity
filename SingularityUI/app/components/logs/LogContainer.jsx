@@ -4,11 +4,8 @@ import Header from './Header';
 import TaskGroupContainer from './TaskGroupContainer';
 
 import { connect } from 'react-redux';
-import rootComponent from '../../rootComponent';
 
 import { updateGroups, updateTaskStatuses } from '../../actions/log';
-import LogActions from '../../actions/log';
-import { updateActiveTasks } from '../../actions/activeTasks';
 
 class LogContainer extends React.Component {
   renderTaskGroups() {
