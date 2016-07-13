@@ -70,6 +70,14 @@ const Webhooks = React.createClass({
     }];
   },
 
+  checkWebhookUri(uri) {
+    try {
+      return !new URL(uri);
+    } catch (err) {
+      return 'Invalid URL';
+    }
+  },
+
   deleteWebhook(webhook) {
     return $.ajax({
       url: `${ config.apiRoot }/webhooks/?webhookId=${ webhook.id }`,
@@ -102,61 +110,6 @@ const Webhooks = React.createClass({
 
   promptNewWebhook() {
     this.refs.newWebhookModal.show();
-  },
-
-  promptNewWebhook2() {
-    const newWebhook = (uri, type) => this.newWebhook(uri, type);
-    return vex.dialog.open({
-      message: "<div class='new-webhook' />",
-      afterOpen: () => {
-        this.validateInput = input => {
-          try {
-            return new URL(input);
-          } catch (err) {
-            return false;
-          }
-        };
-        this.renderedForm = ReactDOM.render(React.createElement(NewWebhookForm, {
-          ['getErrors']: () => this.errors,
-          'webhookTypes': this.webhookTypes,
-          ['setType']: (selected) => { this.type = selected; },
-          'validateUri': this.validateInput,
-          ['setUri']: (uri) => { this.uri = uri; } }), $('.new-webhook').get(0));
-      },
-      beforeClose: () => {
-        if (!this.data) {
-          return true;
-        }
-        this.errors = [];
-        const uriValidated = this.validateInput(this.uri);
-        if (!this.type) {
-          this.errors.push('Please select a type');
-        }
-        if (!uriValidated) {
-          this.errors.push('Invalid URL entered');
-        }
-        if (!uriValidated || !this.type) {
-          this.renderedForm.forceUpdate();
-        }
-        if (!uriValidated) {
-          return false;
-        }
-        if (!this.type) {
-          return false;
-        }
-        this.type = '';
-        this.uri = '';
-        return true;
-      },
-      callback: data => {
-        this.data = data;
-        if (!this.type || !data || !this.validateInput(this.uri)) {
-          return;
-        }
-        const { type } = this;
-        newWebhook(this.uri, type);
-      }
-    });
   },
 
   getWebhookTableData() {
@@ -215,7 +168,8 @@ const Webhooks = React.createClass({
     return (
       <FormModal
         ref="deleteModal"
-        action="Delete"
+        name="Delete Webhook"
+        action="Delete Webhook"
         onConfirm={() => this.deleteWebhook(webhookToDelete)}
         buttonStyle="danger"
         formElements={[]}>
@@ -236,6 +190,7 @@ const Webhooks = React.createClass({
     return (
       <FormModal
         ref="newWebhookModal"
+        name="New Webhook"
         action="Create Webhook"
         buttonStyle="success"
         onConfirm={(data) => this.newWebhook(data.uri, data.type)}
@@ -249,6 +204,13 @@ const Webhooks = React.createClass({
               label: Utils.humanizeText(type),
               value: type
             }))
+          },
+          {
+            type: FormModal.INPUT_TYPES.STRING,
+            name: 'uri',
+            label: 'URI',
+            isRequired: true,
+            validateField: (value) => this.checkWebhookUri(value)
           }
         ]}
       />

@@ -290,6 +290,8 @@ export default class FormModal extends React.Component {
     return (
       <Modal show={this.state.visible} onHide={this.hide}>
         <Modal.Body>
+          {this.props.name && <h3>{this.props.name}</h3>}
+          {this.props.name && <hr />}
           {this.props.children}
           {this.props.children && !!this.props.formElements.length && <hr />}
           {this.renderForm()}
@@ -307,6 +309,7 @@ FormModal.propTypes = {
   action: React.PropTypes.node.isRequired,
   onConfirm: React.PropTypes.func.isRequired,
   buttonStyle: React.PropTypes.string,
+  name: React.PropTypes.string,
   children: React.PropTypes.node,
   formElements: React.PropTypes.arrayOf(React.PropTypes.shape({
     options: React.PropTypes.arrayOf(React.PropTypes.shape({
