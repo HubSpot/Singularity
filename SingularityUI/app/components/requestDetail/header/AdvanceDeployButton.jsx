@@ -4,9 +4,9 @@ import { Button } from 'react-bootstrap';
 
 import { getClickComponent } from '../../common/modal/ModalWrapper';
 
-import CancelDeployModal from './CancelDeployModal';
+import AdvanceDeployModal from './AdvanceDeployModal';
 
-export default class CancelDeployButton extends Component {
+export default class AdvanceDeployButton extends Component {
   static propTypes = {
     requestId: PropTypes.string.isRequired,
     deployId: PropTypes.string.isRequired
@@ -14,17 +14,17 @@ export default class CancelDeployButton extends Component {
 
   static defaultProps = {
     children: (
-      <Button bsStyle="warning">
-        Cancel Deploy
+      <Button bsStyle="primary">
+        Advance Deploy
       </Button>
     )
   };
 
   render() {
     return (
-      <span>
+      <span style={{margin: 5}}>
         {getClickComponent(this)}
-        <CancelDeployModal
+        <AdvanceDeployModal
           ref="modal"
           deployId={this.props.deployId}
           requestId={this.props.requestId}

@@ -31,7 +31,7 @@ const DeployHistoryTable = ({requestId, deploys}) => {
                 </a>
               </td>
               <td>
-                {Utils.humanizeText(deployResult.deployState)}
+                {deployResult ? Utils.humanizeText(deployResult.deployState) : 'Pending'}
               </td>
               <td>
                 {deployMarker.user.split('@')[0]}

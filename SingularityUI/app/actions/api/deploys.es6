@@ -17,8 +17,9 @@ export const SaveDeploy = buildJsonApiAction(
 export const AdvanceDeploy = buildJsonApiAction(
   'ADVANCE_DEPLOY',
   'POST',
-  (deployId, requestId, {}) => ({
-    url: `/deploys/deploy/${deployId}/request/${requestId}`
+  (deployId, requestId, targetActiveInstances) => ({
+    url: '/deploys/update',
+    body: { deployId, requestId, targetActiveInstances }
   })
 );
 

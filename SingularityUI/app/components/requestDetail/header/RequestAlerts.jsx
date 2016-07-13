@@ -1,13 +1,14 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { Row, Col, Well, Alert, Button } from 'react-bootstrap';
+import { Row, Col, Well, Alert } from 'react-bootstrap';
 
 import Utils from '../../../utils';
 
 import { getBouncesForRequest } from '../../../selectors/tasks';
 
 import CancelDeployButton from './CancelDeployButton';
+import AdvanceDeployButton from './AdvanceDeployButton';
 
 const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) => {
   let maybeBouncing;
@@ -35,12 +36,14 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) 
 
     const { pendingDeployState } = requestParent;
     if (pendingDeployState && pendingDeployState.deployProgress) {
-      const { deployProgress } = pendingDeployState;
+      const { deployProgress, deployMarker } = pendingDeployState;
       const {
         targetActiveInstances,
         stepComplete,
         autoAdvanceDeploySteps
       } = deployProgress;
+
+      const { deployId } = deployMarker;
 
       if (targetActiveInstances === instances) {
         // all instances have launched, but it's still pending... wait for them to become healthy
@@ -52,9 +55,7 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) 
         );
       } else {
         maybeAdvanceDeploy = (
-          <Button style={{float: 'right'}} bsStyle="primary" data-action="stepDeploy">
-            Advance Deploy
-          </Button>
+          <AdvanceDeployButton requestId={requestId} deployId={deployId} />
         );
         // not all instances have launched, wait for that to happen
         if (stepComplete) {
@@ -87,7 +88,7 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) 
     maybeDeploying = (
       <Well>
         <Row>
-          <Col md={10} sm={8}>
+          <Col md={8}>
             <b>Deploy </b>
             <code>
               <a href={`${config.appRoot}/request/${requestId}/deploy/${pendingDeploy.id}`}>
@@ -97,9 +98,11 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) 
             <b> is pending: </b>
             {maybeDeployProgress}
           </Col>
-          <Col md={2} sm={4}>
-            {maybeAdvanceDeploy}
-            <CancelDeployButton deployId={pendingDeploy.id} requestId={requestId} />
+          <Col md={4}>
+            <div style={{textAlign: 'right'}}>
+              {maybeAdvanceDeploy}
+              <CancelDeployButton deployId={pendingDeploy.id} requestId={requestId} />
+            </div>
           </Col>
         </Row>
       </Well>
