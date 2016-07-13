@@ -76,6 +76,7 @@ export default class ServerSideTable extends SimpleTable {
   }
 }
 
+// TODO: This is probably an antipattern that we should get rid of
 const mapDispatchToProps = (dispatch) => ({
   dispatch
 });

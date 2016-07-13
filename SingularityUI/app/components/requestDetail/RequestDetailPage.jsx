@@ -10,7 +10,7 @@ import {
 import { FetchTaskCleanups } from '../../actions/api/tasks';
 
 import RequestHeader from './RequestHeader';
-import RequestActionExpirations from './RequestActionExpirations';
+import RequestExpiringActions from './RequestExpiringActions';
 import ActiveTasksTable from './ActiveTasksTable';
 import TaskHistoryTable from './TaskHistoryTable';
 import DeployHistoryTable from './DeployHistoryTable';
@@ -30,7 +30,7 @@ class RequestDetailPage extends Component {
     return (
       <div>
         <RequestHeader requestId={requestId} />
-        <RequestActionExpirations requestId={requestId} />
+        <RequestExpiringActions requestId={requestId} />
         <ActiveTasksTable requestId={requestId} />
         <TaskHistoryTable requestId={requestId} />
         <DeployHistoryTable requestId={requestId} />

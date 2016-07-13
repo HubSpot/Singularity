@@ -1,18 +1,20 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { Row, Col, Well, Alert, Button } from 'react-bootstrap';
+import { Row, Col, Well, Alert } from 'react-bootstrap';
 
 import Utils from '../../../utils';
 
 import { getBouncesForRequest } from '../../../selectors/tasks';
 
 import CancelDeployButton from './CancelDeployButton';
+import AdvanceDeployButton from './AdvanceDeployButton';
 
-const RequestAlerts = ({requestId, requestParent, bounces, activeTasksForRequest}) => {
+const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) => {
   let maybeBouncing;
+  const requestParent = requestAPI.data;
   if (bounces.length > 0) {
-    const runningInstanceCount = Utils.request.runningInstanceCount(activeTasksForRequest);
+    const runningInstanceCount = Utils.request.runningInstanceCount(activeTasksForRequest.data);
     maybeBouncing = (
       <Alert bsStyle="warning">
         <b>Request is bouncing:</b> {runningInstanceCount} of {requestParent.request.instances} replacement tasks are currently running.
@@ -23,7 +25,7 @@ const RequestAlerts = ({requestId, requestParent, bounces, activeTasksForRequest
   let maybeDeploying;
   const { pendingDeploy, activeDeploy } = requestParent;
   if (pendingDeploy) {
-    const deployingInstanceCount = Utils.request.deployingInstanceCount(requestParent, activeTasksForRequest);
+    const deployingInstanceCount = Utils.request.deployingInstanceCount(requestParent, activeTasksForRequest.data);
     const { instances } = requestParent.request;
     const pendingDeployProgress = (
       <span>{`${deployingInstanceCount} of ${instances} new tasks are currently running`}</span>
@@ -34,12 +36,14 @@ const RequestAlerts = ({requestId, requestParent, bounces, activeTasksForRequest
 
     const { pendingDeployState } = requestParent;
     if (pendingDeployState && pendingDeployState.deployProgress) {
-      const { deployProgress } = pendingDeployState;
+      const { deployProgress, deployMarker } = pendingDeployState;
       const {
         targetActiveInstances,
         stepComplete,
         autoAdvanceDeploySteps
       } = deployProgress;
+
+      const { deployId } = deployMarker;
 
       if (targetActiveInstances === instances) {
         // all instances have launched, but it's still pending... wait for them to become healthy
@@ -51,9 +55,7 @@ const RequestAlerts = ({requestId, requestParent, bounces, activeTasksForRequest
         );
       } else {
         maybeAdvanceDeploy = (
-          <Button style={{float: 'right'}} bsStyle="primary" data-action="stepDeploy">
-            Advance Deploy
-          </Button>
+          <AdvanceDeployButton requestId={requestId} deployId={deployId} />
         );
         // not all instances have launched, wait for that to happen
         if (stepComplete) {
@@ -86,7 +88,7 @@ const RequestAlerts = ({requestId, requestParent, bounces, activeTasksForRequest
     maybeDeploying = (
       <Well>
         <Row>
-          <Col md={10} sm={8}>
+          <Col md={8}>
             <b>Deploy </b>
             <code>
               <a href={`${config.appRoot}/request/${requestId}/deploy/${pendingDeploy.id}`}>
@@ -96,9 +98,11 @@ const RequestAlerts = ({requestId, requestParent, bounces, activeTasksForRequest
             <b> is pending: </b>
             {maybeDeployProgress}
           </Col>
-          <Col md={2} sm={4}>
-            {maybeAdvanceDeploy}
-            <CancelDeployButton deployId={pendingDeploy.id} requestId={requestId} />
+          <Col md={4}>
+            <div style={{textAlign: 'right'}}>
+              {maybeAdvanceDeploy}
+              <CancelDeployButton deployId={pendingDeploy.id} requestId={requestId} />
+            </div>
           </Col>
         </Row>
       </Well>
@@ -135,7 +139,7 @@ const RequestAlerts = ({requestId, requestParent, bounces, activeTasksForRequest
         {maybeTimestamp}
       </div>
     );
-  } else {
+  } else if (!Utils.api.isFirstLoad(requestAPI)) {
     maybeActiveDeploy = (
       <span className="text-danger">
         No active deploy
@@ -165,16 +169,16 @@ const RequestAlerts = ({requestId, requestParent, bounces, activeTasksForRequest
 
 RequestAlerts.propTypes = {
   requestId: PropTypes.string.isRequired,
-  requestParent: PropTypes.object.isRequired,
+  requestAPI: PropTypes.object.isRequired,
   bounces: PropTypes.arrayOf(PropTypes.object).isRequired,
-  activeTasksForRequest: PropTypes.arrayOf(PropTypes.object).isRequired
+  activeTasksForRequest: PropTypes.object.isRequired
 };
 
 const mapStateToProps = (state, ownProps) => {
   return {
-    requestParent: Utils.maybe(state.api.request, [ownProps.requestId, 'data']),
+    requestAPI: Utils.maybe(state.api.request, [ownProps.requestId]),
     bounces: getBouncesForRequest(ownProps.requestId)(state),
-    activeTasksForRequest: Utils.maybe(state.api, ['activeTasksForRequest', ownProps.requestId, 'data'])
+    activeTasksForRequest: Utils.maybe(state.api, ['activeTasksForRequest', ownProps.requestId])
   };
 };
 

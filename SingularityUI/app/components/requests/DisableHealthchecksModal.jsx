@@ -16,10 +16,14 @@ class DisableHealthchecksModal extends Component {
   }
 
   promptDisableHealthchecksDuration(data) {
+    // TODO: this is a copy from the backbone/vex/handlebars UI, and it's
+    // probably worth a UX overhaul.
     if (data.durationMillis < 3600000) {
+      // if less than an hour confirm the potentially unsafe move with the user
       this.setState(data); // we need the data onConfirm of the next modal here...
       this.refs.promptDisableHealthchecksDurationModal.show();
     } else {
+      // if more than an hour just go with it
       this.props.disableHealthchecks(data);
     }
   }

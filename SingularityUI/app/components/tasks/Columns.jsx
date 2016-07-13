@@ -24,6 +24,25 @@ export const TaskId = (
       )
     }
     sortable={true}
+  />
+);
+
+export const TaskIdShortened = (
+  <Column
+    label="Task ID"
+    id="taskIdShort"
+    key="taskIdShort"
+    cellData={
+      (rowData) => (rowData.taskId ? rowData.taskId.id : rowData.id)
+    }
+    cellRender={
+      (cellData) => (
+        <a href={`${config.appRoot}/task/${cellData}`}>
+          {cellData}
+        </a>
+      )
+    }
+    sortable={true}
     className="keep-in-check"
   />
 );
@@ -298,6 +317,29 @@ export const CleanupType = (
       )
     }
     sortable={true}
+  />
+);
+
+export const LogLinkAndJSON = (
+  <Column
+    label=""
+    id="logLink"
+    key="logLink"
+    className="actions-column"
+    cellData={(rowData) => rowData.taskId}
+    cellRender={(taskId, rowData) => (
+      <div className="hidden-xs">
+        <a
+          href={`${config.appRoot}/request/${taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${taskId.id}`}
+          title="Log"
+        >
+          &middot;&middot;&middot;
+        </a>
+        <JSONButton className="inline" object={rowData}>
+          {'{ }'}
+        </JSONButton>
+      </div>
+    )}
   />
 );
 

@@ -3,7 +3,7 @@ import { Alert, Button } from 'react-bootstrap';
 
 import Utils from '../../utils';
 
-const ExpirableAction = (props) => {
+const ExpiringActionNotice = (props) => {
   let maybeCanRevert;
   if (props.canRevert) {
     maybeCanRevert = props.revertButton || (
@@ -43,7 +43,7 @@ const ExpirableAction = (props) => {
   );
 };
 
-ExpirableAction.propTypes = {
+ExpiringActionNotice.propTypes = {
   action: PropTypes.string,
   user: PropTypes.string,
   endMillis: PropTypes.number,
@@ -57,4 +57,4 @@ ExpirableAction.propTypes = {
   message: PropTypes.string
 };
 
-export default ExpirableAction;
+export default ExpiringActionNotice;

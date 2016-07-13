@@ -9,7 +9,8 @@ import {
   LastTaskState,
   DeployId,
   StartedAt,
-  UpdatedAt
+  UpdatedAt,
+  LogLinkAndJSON
 } from '../tasks/Columns';
 
 import TaskStateBreakdown from './TaskStateBreakdown';
@@ -29,6 +30,7 @@ const ActiveTasksTable = ({requestId, tasks}) => {
         {DeployId}
         {StartedAt}
         {UpdatedAt}
+        {LogLinkAndJSON}
       </UITable>
     </div>
   );

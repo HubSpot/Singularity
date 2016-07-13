@@ -10,7 +10,7 @@ export default class FormModal extends React.Component {
   constructor(props) {
     super(props);
     const formState = {};
-    _.each(props.formElements, (formElement) => {
+    props.formElements.forEach((formElement) => {
       formState[formElement.name] = formElement.defaultValue && formElement.defaultValue.toString();
     });
 
@@ -20,9 +20,7 @@ export default class FormModal extends React.Component {
       errors: {}
     };
 
-    this.hide = this.hide.bind(this);
-    this.show = this.show.bind(this);
-    this.confirm = this.confirm.bind(this);
+    _.bindAll(this, 'hide', 'show', 'confirm');
   }
 
   static FormItem = (props) => {
@@ -67,7 +65,7 @@ export default class FormModal extends React.Component {
   validateForm() {
     // Check required values
     const errors = {};
-    _.each(this.props.formElements, (formElement) => {
+    this.props.formElements.forEach((formElement) => {
       if (!this.state.formState[formElement.name] && formElement.isRequired) {
         errors[formElement.name] = 'This field is required';
       } else if (formElement.validateField) {
@@ -105,7 +103,7 @@ export default class FormModal extends React.Component {
     if (this.validateForm()) {
       this.props.onConfirm(this.parseFormState(this.state.formState));
       const formState = {};
-      _.each(this.props.formElements, (formElement) => {
+      this.props.formElements.forEach((formElement) => {
         formState[formElement.name] = formElement.defaultValue;
       });
       this.setState({
@@ -150,7 +148,8 @@ export default class FormModal extends React.Component {
                     name={formElement.name}
                     checked={this.state.formState[formElement.name] || false}
                     onChange={(event) => this.handleFormChange(formElement.name, event.target.checked)}
-                  /> {formElement.label}
+                  />
+                  {formElement.label}
                 </label>
                 {errorBlock}
                 {help}
