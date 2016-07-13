@@ -1,11 +1,15 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
+import rootComponent from '../../rootComponent';
 
 import * as RefreshActions from '../../actions/ui/refresh';
 
 import { FetchRequest } from '../../actions/api/requests';
 import {
-  FetchActiveTasksForRequest
+  FetchActiveTasksForRequest,
+  FetchTaskHistoryForRequest,
+  FetchDeploysForRequest,
+  FetchRequestHistory
 } from '../../actions/api/history';
 import { FetchTaskCleanups } from '../../actions/api/tasks';
 
@@ -26,7 +30,7 @@ class RequestDetailPage extends Component {
   }
 
   render() {
-    const { requestId } = this.props;
+    const { requestId } = this.props.params;
     return (
       <div>
         <RequestHeader requestId={requestId} />
@@ -41,15 +45,15 @@ class RequestDetailPage extends Component {
 }
 
 RequestDetailPage.propTypes = {
-  requestId: PropTypes.string.isRequired,
+  params: PropTypes.object.isRequired,
   refresh: PropTypes.func.isRequired,
   cancelRefresh: PropTypes.func.isRequired
 };
 
 const mapDispatchToProps = (dispatch, ownProps) => {
   const refreshActions = [
-    FetchRequest.trigger(ownProps.requestId),
-    FetchActiveTasksForRequest.trigger(ownProps.requestId),
+    FetchRequest.trigger(ownProps.params.requestId),
+    FetchActiveTasksForRequest.trigger(ownProps.params.requestId),
     FetchTaskCleanups.trigger()
   ];
   return {
@@ -60,11 +64,26 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     )),
     cancelRefresh: () => dispatch(
       RefreshActions.CancelAutoRefresh('RequestDetailPage')
-    )
+    ),
+    fetchRequest: (requestId) => dispatch(FetchRequest.trigger(requestId)),
+    fetchActiveTasksForRequest: (requestId) => dispatch(FetchActiveTasksForRequest.trigger(requestId)),
+    fetchTaskCleanups: () => dispatch(FetchTaskCleanups.trigger()),
+    fetchTaskHistoryForRequest: (requestId, count, page) => dispatch(FetchTaskHistoryForRequest.trigger(requestId, count, page)),
+    fetchDeploysForRequest: (requestId, count, page) => dispatch(FetchDeploysForRequest.trigger(requestId, count, page)),
+    fetchRequestHistory: (requestId, count, page) => dispatch(FetchRequestHistory.trigger(requestId, count, page)),
   };
 };
+
+function refresh(props) {
+  props.fetchRequest(props.params.requestId);
+  props.fetchActiveTasksForRequest(props.params.requestId);
+  props.fetchTaskCleanups();
+  props.fetchTaskHistoryForRequest(props.params.requestId, 5, 1);
+  props.fetchDeploysForRequest(props.params.requestId, 5, 1);
+  props.fetchRequestHistory(props.params.requestId, 5, 1);
+}
 
 export default connect(
   null,
   mapDispatchToProps
-)(RequestDetailPage);
+)(rootComponent(RequestDetailPage, (props) => props.params.requestId, refresh, false));

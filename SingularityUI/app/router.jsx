@@ -19,6 +19,7 @@ import DeployDetail from './components/deployDetail/DeployDetail';
 import RequestForm from './components/requestForm/RequestForm';
 import NewDeployForm from './components/newDeployForm/NewDeployForm';
 import { Tail, AggregateTail } from './components/logs/Tail';
+import RequestDetailPage from './components/requestDetail/RequestDetailPage';
 
 const AppRouter = (props) => {
   let history = useRouterHistory(createHistory)({
@@ -36,6 +37,7 @@ const AppRouter = (props) => {
           <Route path="requests/edit/:requestId" component={RequestForm} />
           <Route path="requests(/:state)(/:subFilter)(/:searchFilter)" component={RequestsPage} />
           <Route path="request">
+            <Route path=":requestId" component={RequestDetailPage} />
             <Route path=":requestId/taskSearch" component={TaskSearch} />
             <Route path=":requestId/deploy" component={NewDeployForm} />
             <Route path=":requestId/deploy/:deployId" component={DeployDetail} store={props.store} />
