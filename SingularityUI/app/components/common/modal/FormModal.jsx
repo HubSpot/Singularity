@@ -250,7 +250,7 @@ export default class FormModal extends React.Component {
               <FormModal.FormItem element={formElement} formState={this.state.formState} key={formElement.name}>
                 <div className={classNames('form-group', {'has-error': !!error})}>
                   <label className="control-label" htmlFor={formElement.name}>{formElement.label}</label>
-                  <div id={formElement.name} className="btn-group">{buttons}</div>
+                  <div id={formElement.name} className="input-group-btn btn-group">{buttons}</div>
                   {errorBlock}
                   {help}
                 </div>
