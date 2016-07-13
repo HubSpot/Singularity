@@ -3,7 +3,7 @@ import TaskGroupHeader from './TaskGroupHeader';
 import LogLines from './LogLines';
 import LoadingSpinner from './LoadingSpinner';
 import FileNotFound from './FileNotFound';
-import {doesFinishedLogExist} from '../../actions/log';
+import { doesFinishedLogExist } from '../../actions/log';
 
 import { connect } from 'react-redux';
 
