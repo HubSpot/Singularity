@@ -298,7 +298,7 @@ class RequestForm extends React.Component {
     const rackOptions = _.pluck(this.props.racks, 'id').map(id => ({value: id, label: id}));
     const rackAffinity = (
       <div className="form-group">
-        <label htmlFor="rack-affinity">Rack Affinity <span className="form-label-tip">choose any sub</span></label>
+        <label htmlFor="rack-affinity">Rack Affinity <span className="form-label-tip">choose any subset</span></label>
         <MultiSelect
           id="rack-affinity"
           onChange={ value => this.updateField('rackAffinity', value) }
