@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
       formElements={[
         {
           name: 'apiRoot',
-          type: FormModal.INPUT_TYPES.STRING,
+          type: FormModal.INPUT_TYPES.URL,
           label: 'API Root URL',
           isRequired: true
         }

@@ -13,7 +13,8 @@ export default class FormModal extends React.Component {
     RADIO: 'RADIO',
     TAGS: 'TAGS',
     NUMBER: 'NUMBER',
-    DURATION: 'DURATION'
+    DURATION: 'DURATION',
+    URL: 'URL'
   };
 
   static FormItem = (props) => {
@@ -95,7 +96,10 @@ export default class FormModal extends React.Component {
     return parsed;
   }
 
-  confirm() {
+  confirm(event) {
+    if (event) {
+      event.preventDefault();
+    }
     if (this.validateForm()) {
       this.props.onConfirm(this.parseFormState(this.state.formState));
       const formState = {};
@@ -221,11 +225,27 @@ export default class FormModal extends React.Component {
             </div>
           </FormModal.FormItem>
         );
+
+        case FormModal.INPUT_TYPES.URL:
+          return (
+          <FormModal.FormItem element={e} formState={this.state.formState} key={e.name}>
+            <div className={classNames('form-group', {'has-error': !!error})}>
+              <label className="control-label" htmlFor={e.name}>{e.label}</label>
+              <input type="url"
+                name={e.name}
+                className="form-control input-large"
+                value={this.state.formState[e.name] || ''}
+                onChange={(event) => this.handleFormChange(e.name, event.target.value)}
+              />
+              {help}
+            </div>
+          </FormModal.FormItem>
+        );
       }
     });
 
     return (
-      <form className="modal-form">
+      <form className="modal-form" onSubmit={(e) => this.confirm(e)}>
         {inputs}
       </form>
     );
@@ -243,7 +263,7 @@ export default class FormModal extends React.Component {
         </Modal.Body>
         <Modal.Footer>
           {cancel}
-          <Button bsStyle={this.props.buttonStyle} onClick={this.confirm.bind(this)}>{this.props.action}</Button>
+          <Button bsStyle={this.props.buttonStyle} onClick={() => this.confirm()}>{this.props.action}</Button>
         </Modal.Footer>
       </Modal>
     );
