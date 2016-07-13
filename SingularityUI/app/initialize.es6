@@ -25,7 +25,7 @@ import 'thirdPartyConfigurations';
 import 'handlebarsHelpers';
 
 // Initialize the app on DOMContentReady
-$(() => {
+document.addEventListener('DOMContentLoaded', () => {
   if (window.config.apiRoot) {
     return window.app.initialize();
   }
