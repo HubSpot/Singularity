@@ -15,7 +15,7 @@ export default class Duration extends React.Component {
     return (
       <div className="form-inline duration-input row">
         <div className="form-group col-md-4">
-          <label for="hours">Hours</label>
+          <label htmlFor="hours">Hours</label>
           <input
             id="hours"
             ref="hours"
@@ -28,7 +28,7 @@ export default class Duration extends React.Component {
           />
         </div>
         <div className="form-group col-md-4">
-          <label for="minutes">Minutes</label>
+          <label htmlFor="minutes">Minutes</label>
           <input
             id="minutes"
             ref="minutes"
@@ -41,7 +41,7 @@ export default class Duration extends React.Component {
           />
         </div>
         <div className="form-group col-md-4">
-          <label for="seconds">Seconds</label>
+          <label htmlFor="seconds">Seconds</label>
           <input
             id="seconds"
             ref="seconds"

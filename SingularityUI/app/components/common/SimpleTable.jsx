@@ -13,49 +13,48 @@ export default class SimpleTable extends React.Component {
     };
   }
 
+  componentWillReceiveProps(nextProps) {
+    this.updateDisplay(nextProps);
+  }
+
   updateDisplay(nextProps) {
     this.setState({
       displayItems: nextProps.entries
     });
   }
 
-  componentWillReceiveProps(nextProps) {
-    this.updateDisplay(nextProps);
-  }
-
-  handleSelect(event, selectedEvent) {
+  handleSelect(event) {
     this.setState({
-      activePage: selectedEvent.eventKey
+      activePage: event
     });
   }
 
   renderTableRows() {
-    let page = this.state.activePage - 1;
-    let items = this.props.perPage;
-    let entries = this.state.displayItems.slice(page * items, (page * items) + items);
-    const rows = entries.map((e, i) => {
-      return this.props.renderTableRow(e, i);
+    const page = this.state.activePage - 1;
+    const items = this.props.perPage;
+    const entries = this.state.displayItems.slice(page * items, (page * items) + items);
+    const rows = entries.map((entry, key) => {
+      return this.props.renderTableRow(entry, key);
     });
     return rows;
   }
 
   renderPagination() {
-    if (this.state.displayItems.length > this.props.perPage) {
-      return (
-        <div className="pagination-container">
-          <Pagination
-            prev={true}
-            next={true}
-            first={this.props.first}
-            last={this.props.last}
-            ellipsis={false}
-            items={Math.ceil(this.state.displayItems.length / this.props.perPage)}
-            maxButtons={this.props.maxButtons || 1}
-            activePage={this.state.activePage}
-            onSelect={this.handleSelect.bind(this)} />
-        </div>
-      );
-    }
+    return (this.state.displayItems.length > this.props.perPage) && (
+      <div className="pagination-container">
+        <Pagination
+          prev={true}
+          next={true}
+          first={this.props.first}
+          last={this.props.last}
+          ellipsis={false}
+          items={Math.ceil(this.state.displayItems.length / this.props.perPage)}
+          maxButtons={this.props.maxButtons || 1}
+          activePage={this.state.activePage}
+          onSelect={(event) => this.handleSelect(event)}
+        />
+      </div>
+    );
   }
 
   renderHeaders() {
@@ -69,7 +68,7 @@ export default class SimpleTable extends React.Component {
     if (this.state.displayItems.length > 0) {
       return (
         <div className="table-container">
-          <Table responsive>
+          <Table responsive={true}>
             <thead>
               {this.renderHeaders()}
             </thead>
@@ -80,13 +79,12 @@ export default class SimpleTable extends React.Component {
           {this.renderPagination()}
         </div>
       );
-    } else {
-      return (
-        <div className="empty-table-message">
-            {this.props.emptyMessage}
-        </div>
-      );
     }
+    return (
+      <div className="empty-table-message">
+          {this.props.emptyMessage}
+      </div>
+    );
   }
 }
 
@@ -97,5 +95,6 @@ SimpleTable.propTypes = {
   first: React.PropTypes.bool,
   last: React.PropTypes.bool,
   headers: React.PropTypes.array.isRequired,
-  renderTableRow: React.PropTypes.func.isRequired
+  renderTableRow: React.PropTypes.func.isRequired,
+  maxButtons: React.PropTypes.number
 };

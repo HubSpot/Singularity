@@ -48,6 +48,10 @@ export default class TaskFilters extends React.Component {
     this.props.onFilterChange(_.extend({}, this.props.filter, {filterText: e.target.value}));
   }
 
+  clearSearch() {
+    this.props.onFilterChange(_.extend({}, this.props.filter, {filterText: ''}));
+  }
+
   toggleRequestType(t) {
     let selected = this.props.filter.requestTypes;
     if (selected.length === TaskFilters.REQUEST_TYPES.length) {
@@ -87,14 +91,18 @@ export default class TaskFilters extends React.Component {
 
   renderSearchInput() {
     return (
-      <input
-        type="search"
-        ref="search"
-        className="big-search-box"
-        placeholder="Filter tasks"
-        value={this.props.filter.filterText}
-        onChange={(...args) => this.handleSearchChange(...args)}
-        maxlength="128" />
+      <div>
+        <input
+          type="search"
+          ref="search"
+          className="big-search-box"
+          placeholder="Filter tasks"
+          value={this.props.filter.filterText}
+          onChange={(...args) => this.handleSearchChange(...args)}
+          maxLength="128"
+        />
+        <div className="remove-button" onClick={() => this.clearSearch()}></div>
+      </div>
     );
   }
 
@@ -103,7 +111,7 @@ export default class TaskFilters extends React.Component {
       return (
         <li key={index} className={_.contains(this.props.filter.requestTypes, t) ? 'active' : ''}>
           <a onClick={() => this.toggleRequestType(t)}>
-            <Glyphicon iconClass='ok' /> {Utils.humanizeText(t)}
+            <Glyphicon iconClass="ok" /> {Utils.humanizeText(t)}
           </a>
         </li>
       );
@@ -145,5 +153,6 @@ TaskFilters.propTypes = {
     taskStatus: React.PropTypes.string.isRequired,
     requestTypes: React.PropTypes.array.isRequired,
     filterText: React.PropTypes.string.isRequired
-  }).isRequired
+  }).isRequired,
+  displayRequestTypeFilters: React.PropTypes.bool
 };

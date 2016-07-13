@@ -1,4 +1,4 @@
-import FormModal from '../common/FormModal';
+import FormModal from '../common/modal/FormModal';
 
 const MessageElement = {
   name: 'message',

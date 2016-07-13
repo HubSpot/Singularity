@@ -25,12 +25,12 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
     return { type: STARTED, key };
   }
 
-  function error(error, key = undefined) {
-    return { type: ERROR, error, key };
+  function error(err, statusCode, key = undefined) {
+    return { type: ERROR, error: err, statusCode, key };
   }
 
-  function success(data, key = undefined) {
-    return { type: SUCCESS, data, key };
+  function success(data, statusCode, key = undefined) {
+    return { type: SUCCESS, data, statusCode, key };
   }
 
   function clearData() {
@@ -65,11 +65,10 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
             return dispatch(success(data, key));
           }
           if (data.message) {
-            return dispatch(error({message: data.message}, key));
+            return dispatch(error(data, apiResponse.status, key));
           }
-          return dispatch(error({message: data}, key));
-        })
-        .catch((ex) => dispatch(error(ex, key)));
+          return dispatch(error({message: data}, apiResponse.status, key));
+        });
     };
   }
 

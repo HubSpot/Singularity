@@ -248,9 +248,9 @@ const Utils = {
     });
   },
 
-  timeStampFromNow(millis) {
-      let timeObject = moment(millis);
-      return `${timeObject.fromNow()} (${timeObject.format(window.config.timestampFormat)})`;
+  timestampFromNow(millis) {
+    const timeObject = moment(millis);
+    return `${timeObject.fromNow()} (${timeObject.format(window.config.timestampFormat)})`;
   },
 
   absoluteTimestamp(millis) {
@@ -388,7 +388,7 @@ const Utils = {
     failureCause = '';
     deploy.deployResult.deployFailures.map(failure => {
       if (failure.taskId && failure.taskId.id === task.taskId) {
-        return failureCause = Handlebars.helpers.humanizeText(failure.reason);
+        return failureCause = Utils.humanizeText(failure.reason);
       }
     });
     if (failureCause) {
@@ -437,6 +437,39 @@ const Utils = {
     return defaultValue;
   },
 
+  api: {
+    isFirstLoad: (api) => {
+      return !api || (
+        api.isFetching &&
+        !api.error &&
+        !api.receivedAt
+      );
+    }
+  },
+  task: {
+    instanceBreakdown: (tasks) => {
+      const taskStates = {
+        TASK_LAUNCHED: 0,
+        TASK_STAGING: 0,
+        TASK_STARTING: 0,
+        TASK_RUNNING: 0,
+        TASK_CLEANING: 0,
+        TASK_KILLING: 0,
+        TASK_FINISHED: 0,
+        TASK_FAILED: 0,
+        TASK_KILLED: 0,
+        TASK_LOST: 0,
+        TASK_LOST_WHILE_DOWN: 0,
+        TASK_ERROR: 0
+      };
+
+      tasks.forEach((t) => {
+        taskStates[t.lastTaskState] = (taskStates[t.lastTaskState] || 0) + 1;
+      });
+
+      return taskStates;
+    }
+  },
   request: {
     // all of these expect a RequestParent object
     LONG_RUNNING_TYPES: new Set(['WORKER', 'SERVICE']),
@@ -445,9 +478,6 @@ const Utils = {
     },
     isDeploying: (r) => {
       return Utils.maybe(r, ['pendingDeploy'], false);
-    },
-    isBouncing: (r) => {
-      throw Error('Implement this', r);
     },
     isLongRunning: (r) => {
       return Utils.request.LONG_RUNNING_TYPES.has(r.request.requestType);
@@ -466,11 +496,25 @@ const Utils = {
         && Utils.request.hasActiveDeploy(r)
         && Utils.request.isLongRunning(r);
     },
+    runningInstanceCount: (activeTasksForRequest) => {
+      return activeTasksForRequest.filter(
+        (t) => t.lastTaskState === 'TASK_RUNNING'
+      ).length;
+    },
+    deployingInstanceCount: (r, activeTasksForRequest) => {
+      if (!r.pendingDeploy) {
+        return 0;
+      }
+      return activeTasksForRequest.filter((t) => (
+        t.lastTaskState === 'TASK_RUNNING'
+        && t.taskId.deployId === r.pendingDeploy.id
+      )).length;
+    },
     // other
     canDisableHealthchecks: (r) => {
       return !!r.activeDeploy
         && !!r.activeDeploy.healthcheckUri
-        && !r.state === 'PAUSED'
+        && r.state !== 'PAUSED'
         && !r.expiringSkipHealthchecks;
     },
     pauseDisabled: (r) => {
@@ -491,6 +535,16 @@ const Utils = {
         ? (expiringBounce.startMillis + expiringBounce.expiringAPIRequestObject.durationMillis) > new Date().getTime()
         : false;
     }
+  },
+
+  queryParams(source) {
+    const array = [];
+    for(var key in source) {
+      if (source[key]) {
+        array.push(`${encodeURIComponent(key)}=${encodeURIComponent(source[key])}`);
+      }
+    }
+    return array.join("&");
   }
 };
 

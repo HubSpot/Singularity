@@ -37,7 +37,7 @@ export const SaveRequest = buildJsonApiAction(
 export const RemoveRequest = buildJsonApiAction(
   'REMOVE_REQUEST',
   'DELETE',
-  (requestId, message) => ({
+  (requestId, { message }) => ({
     url: `/requests/request/${requestId}`,
     body: { message }
   })
@@ -48,32 +48,92 @@ export const RunRequest = buildJsonApiAction(
   'POST',
   (requestId, data) => ({
     url: `/requests/request/${requestId}/run`,
-    body: { data }
+    body: data
   })
 );
 
 export const FetchRequestRun = buildApiAction(
   'FETCH_REQUEST_RUN',
   (requestId, runId) => ({
-    url: `/requests/request/${ requestId }/run/${runId}`
+    url: `/requests/request/${requestId}/run/${runId}`
+  })
+);
+
+export const PauseRequest = buildJsonApiAction(
+  'PAUSE_REQUEST',
+  'POST',
+  (requestId, { durationMillis, killTasks, message, actionId }) => ({
+    url: `/requests/request/${requestId}/pause`,
+    body: { durationMillis, killTasks, message, actionId }
+  })
+);
+
+export const PersistRequestPause = buildJsonApiAction(
+  'PERSIST_REQUEST_PAUSE',
+  'DELETE',
+  (requestId) => ({
+    url: `/requests/request/${requestId}/pause`
   })
 );
 
 export const UnpauseRequest = buildJsonApiAction(
   'UNPAUSE_REQUEST',
   'POST',
-  (requestId, message) => ({
+  (requestId, { skipHealthchecks, message, actionId }) => ({
     url: `/requests/request/${requestId}/unpause`,
-    body: { message }
+    body: { skipHealthchecks, message, actionId }
+  })
+);
+
+// Remove when Unpause automatically removes the ExpiringPause
+export const UnpauseAndPersistRequest = (requestId, data) => {
+  return (dispatch) => {
+    return dispatch(UnpauseRequest.trigger(requestId, data)).then(
+      () => dispatch(PersistRequestPause.trigger(requestId))
+    );
+  };
+};
+
+export const ExitRequestCooldown = buildJsonApiAction(
+  'EXIT_REQUEST_COOLDOWN',
+  'POST',
+  (requestId, {skipHealthchecks, message, actionId}) => ({
+    url: `/requests/request/${requestId}/exit-cooldown`,
+    body: { skipHealthchecks, message, actionId }
+  })
+);
+
+export const SkipRequestHealthchecks = buildJsonApiAction(
+  'SKIP_REQUEST_HEALTHCHECKS',
+  'PUT',
+  (requestId, {skipHealthchecks, durationMillis, message, actionId}) => ({
+    url: `/requests/request/${requestId}/skipHealthchecks`,
+    body: { skipHealthchecks, durationMillis, message, actionId }
+  })
+);
+
+export const PersistSkipRequestHealthchecks = buildJsonApiAction(
+  'PERSIST_SKIP_REQUEST_HEALTHCHECKS',
+  'DELETE',
+  (requestId) => ({
+    url: `/requests/request/${requestId}/skipHealthchecks`
   })
 );
 
 export const ScaleRequest = buildJsonApiAction(
   'SCALE_REQUEST',
   'PUT',
-  (requestId, data) => ({
+  (requestId, {instances, skipHealthchecks, durationMillis, message, actionId}) => ({
     url: `/requests/request/${requestId}/scale`,
-    body: data
+    body: { instances, skipHealthchecks, durationMillis, message, actionId }
+  })
+);
+
+export const PersistRequestScale = buildJsonApiAction(
+  'PERSIST_REQUEST_SCALE',
+  'DELETE',
+  (requestId) => ({
+    url: `/requests/request/${requestId}/scale`
   })
 );
 
@@ -83,5 +143,13 @@ export const BounceRequest = buildJsonApiAction(
   (requestId, data) => ({
     url: `/requests/request/${requestId}/bounce`,
     body: data
+  })
+);
+
+export const CancelRequestBounce = buildJsonApiAction(
+  'CANCEL_REQUEST_BOUNCE',
+  'DELETE',
+  (requestId) => ({
+    url: `/requests/request/${requestId}/bounce`
   })
 );
