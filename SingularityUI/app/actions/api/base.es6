@@ -25,22 +25,22 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
     return { type: STARTED, key };
   }
 
-  function error(error, key = undefined) {
-    return { type: ERROR, error, key };
+  function error(err, statusCode, key = undefined) {
+    return { type: ERROR, error: err, statusCode, key };
   }
 
-  function success(data, key = undefined) {
-    return { type: SUCCESS, data, key };
+  function success(data, statusCode, key = undefined) {
+    return { type: SUCCESS, data, statusCode, key };
   }
 
   function clearData() {
-    return function (dispatch) {
+    return (dispatch) => {
       dispatch(clear());
     };
   }
 
   function trigger(...args) {
-    return function (dispatch) {
+    return (dispatch) => {
       let key;
       if (keyFunc) {
         key = keyFunc(...args);
@@ -59,15 +59,11 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
         })
         .then((data) => {
           if (apiResponse.status >= 200 && apiResponse.status < 300) {
-            return dispatch(success(data, key));
-          } else {
-            return dispatch(error(data, key));
+            return dispatch(success(data, apiResponse.status, key));
           }
-          if (data.message) {
-            return dispatch(error({message: data.message}, key));
-          }
-          return dispatch(error({message: data}, key));
-        })
+          return dispatch(error(data, apiResponse.status, key));
+        }
+      );
     };
   }
 

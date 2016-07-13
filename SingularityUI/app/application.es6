@@ -6,9 +6,6 @@ import { FetchUser } from 'actions/api/auth';
 import NavView from 'views/nav';
 import GlobalSearchView from 'views/globalSearch';
 
-import Sortable from 'sortable';
-
-
 class Application {
   initialize() {
     this.globalRefresh = this.globalRefresh.bind(this);
@@ -184,7 +181,7 @@ class Application {
     view.render();
     if (this.page.children.length) {
       this.page.replaceChild(view.el, this.page.children[0]);
-      return Sortable.init();
+      return true;
     } else {
       return this.page.appendChild(view.el);
     }

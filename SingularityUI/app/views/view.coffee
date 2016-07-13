@@ -1,9 +1,3 @@
-Sortable = require 'sortable'
-
-DataTables = require 'datatables'
-
-require('linkifyjs/jquery')($, document)
-
 class View extends Backbone.View
 
     # Keep track of any subviews we may have
@@ -38,23 +32,5 @@ class View extends Backbone.View
         url = url.replace(config.appRoot, '')
 
         app.router.navigate url, trigger: true
-
-    afterRender: ->
-      $('.linkify').linkify()
-
-      Sortable.init()
-
-      # Paginate client side collections
-      $('table.paginated:not([id])').DataTable
-        ordering: false
-        bFilter: false
-        info: false
-        lengthChange: false
-        pageLength: 5
-        pagingType: 'simple'
-        language: paginate:
-          previous: '<span class="glyphicon glyphicon-chevron-left"></span>'
-          next: '<span class="glyphicon glyphicon-chevron-right"></span>'
-      $('table.paginated').css('display', 'table');
-
+      
 module.exports = View

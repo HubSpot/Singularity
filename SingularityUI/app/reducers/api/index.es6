@@ -11,10 +11,13 @@ import {
 import {
   FetchTaskHistory,
   FetchActiveTasksForRequest,
+  FetchTaskHistoryForRequest,
   FetchActiveTasksForDeploy,
   FetchTaskHistoryForDeploy,
   FetchDeployForRequest,
-  FetchTaskSearchParams
+  FetchDeploysForRequest,
+  FetchTaskSearchParams,
+  FetchRequestHistory
 } from '../../actions/api/history';
 
 import { FetchTaskS3Logs } from '../../actions/api/logs';
@@ -30,7 +33,9 @@ import {
   FetchRequest,
   SaveRequest,
   RemoveRequest,
+  PauseRequest,
   UnpauseRequest,
+  ExitRequestCooldown,
   FetchRequestsInState
 } from '../../actions/api/requests';
 
@@ -61,17 +66,20 @@ const user = buildApiActionReducer(FetchUser);
 const webhooks = buildApiActionReducer(FetchWebhooks, []);
 const slaves = buildApiActionReducer(FetchSlaves, []);
 const racks = buildApiActionReducer(FetchRacks, []);
-const request = buildApiActionReducer(FetchRequest);
+const request = buildKeyedApiActionReducer(FetchRequest);
 const saveRequest = buildApiActionReducer(SaveRequest);
 const requests = buildApiActionReducer(FetchRequests, []);
 const requestsInState = buildApiActionReducer(FetchRequestsInState, []);
+const requestHistory = buildKeyedApiActionReducer(FetchRequestHistory, []);
 const status = buildApiActionReducer(FetchSingularityStatus);
 const deploy = buildApiActionReducer(FetchDeployForRequest);
 const deploys = buildApiActionReducer(FetchPendingDeploys, []);
+const deploysForRequest = buildKeyedApiActionReducer(FetchDeploysForRequest, []);
 const saveDeploy = buildApiActionReducer(SaveDeploy);
 const activeTasksForDeploy = buildApiActionReducer(FetchActiveTasksForDeploy);
-const activeTasksForRequest = buildKeyedApiActionReducer(FetchActiveTasksForRequest);
+const activeTasksForRequest = buildKeyedApiActionReducer(FetchActiveTasksForRequest, []);
 const taskHistoryForDeploy = buildApiActionReducer(FetchTaskHistoryForDeploy);
+const taskHistoryForRequest = buildApiActionReducer(FetchTaskHistoryForRequest, []);
 const taskCleanups = buildApiActionReducer(FetchTaskCleanups, []);
 const taskFiles = buildKeyedApiActionReducer(FetchTaskFiles, []);
 const taskResourceUsage = buildApiActionReducer(FetchTaskStatistics);
@@ -90,19 +98,22 @@ export default combineReducers({
   saveRequest,
   requests,
   requestsInState,
+  requestHistory,
   status,
   deploy,
+  deploys,
+  deploysForRequest,
   saveDeploy,
   task,
   tasks,
   activeTasksForDeploy,
   activeTasksForRequest,
   taskHistoryForDeploy,
+  taskHistoryForRequest,
   taskCleanups,
   taskFiles,
   taskResourceUsage,
   taskS3Logs,
-  deploys,
   taskShellCommandResponse,
   taskHistory
 });

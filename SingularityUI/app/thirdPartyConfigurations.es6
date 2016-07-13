@@ -1,6 +1,5 @@
 import vex from 'vex';
 import moment from 'moment';
-import Handlebars from 'handlebars';
 import Messenger from 'messenger';
 
 // Set Vex default className
@@ -42,11 +41,6 @@ Messenger.options = {
     hideAfter: false,
     showCloseButton: true
   }
-};
-
-// Overwrite Handlebars logging
-Handlebars.logger.log = (...stuff) => {
-  return stuff.slice(1).map(n => console.log(n)); //eslint-disable-line no-console
 };
 
 // Color scheme for json view
