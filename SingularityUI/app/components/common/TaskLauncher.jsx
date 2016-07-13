@@ -1,10 +1,21 @@
-import React from 'react';
+import React, { Component, PropTypes } from 'react';
+import { connect } from 'react-redux';
 import classNames from 'classnames';
 
 import { Modal } from 'react-bootstrap';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 
-class TaskLauncher extends React.Component {
+import { FetchRequestRun } from '../../actions/api/requests';
+import { FetchRequestRunHistory } from '../../actions/api/history';
+import { FetchTaskFiles } from '../../actions/api/sandbox';
+
+class TaskLauncher extends Component {
+  static propTypes = {
+    fetchRequestRun: PropTypes.func.isRequired,
+    fetchRequestRunHistory: PropTypes.func.isRequired,
+    fetchTaskFiles: PropTypes.func.isRequired,
+    router: PropTypes.object.isRequired
+  };
 
   constructor() {
     super();
@@ -29,8 +40,8 @@ class TaskLauncher extends React.Component {
     // Wait for task to start
     this.taskInterval = setInterval(() => {
       const promises = [];
-      promises.push(this.props.fetchTaskRun(requestId, runId, [404]));
-      promises.push(this.props.fetchTaskRunHistory(requestId, runId, [404]));
+      promises.push(this.props.fetchRequestRun(requestId, runId, [404]));
+      promises.push(this.props.fetchRequestRunHistory(requestId, runId, [404]));
       Promise.all(promises).then((responses) => {
         const responseList = _.without(_.pluck(responses, 'data'), undefined);
         if (responseList.length) {
@@ -53,11 +64,11 @@ class TaskLauncher extends React.Component {
 
   logFilePoll(taskId, filename) {
     this.fileInterval = setInterval(() => {
-      const directory = filename.indexOf('/') !== -1 ? '/' + _.initial(filename.split('/')).join('/') : '';
+      const directory = filename.indexOf('/') !== -1 ? `/${_.initial(filename.split('/')).join('/')}` : '';
       this.props.fetchTaskFiles(taskId, `${taskId}${directory}`, [400]).then((response) => {
         const files = response.data && response.data.files;
         if (files) {
-          const file = _.find(files, (f) => f.name == _.last(filename.split('/')));
+          const file = _.find(files, (f) => f.name === _.last(filename.split('/')));
           if (file) {
             this.setState({
               fileExists: true
@@ -122,4 +133,15 @@ class TaskLauncher extends React.Component {
   }
 }
 
-export default TaskLauncher;
+const mapDispatchToProps = (dispatch) => ({
+  fetchRequestRun: (...args) => dispatch(FetchRequestRun.trigger(...args)),
+  fetchRequestRunHistory: (...args) => dispatch(FetchRequestRunHistory.trigger(...args)),
+  fetchTaskFiles: (...args) => dispatch(FetchTaskFiles.trigger(...args))
+});
+
+export default connect(
+  null,
+  mapDispatchToProps,
+  null,
+  { withRef: true }
+)(TaskLauncher);

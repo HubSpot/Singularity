@@ -17,8 +17,8 @@ let TimeStamp = React.createClass({
     render() {
         let formatted = '';
         // Feel free to add more options if you need them
-        if (this.props.prop.display === 'timeStampFromNow') {
-            formatted = Utils.timeStampFromNow(this.props.prop.timestamp);
+        if (this.props.prop.display === 'timestampFromNow') {
+            formatted = Utils.timestampFromNow(this.props.prop.timestamp);
         } else if (this.props.prop.display === 'absoluteTimestamp') {
             formatted = Utils.absoluteTimestamp(this.props.prop.timestamp);
         } else if (this.props.prop.display === 'duration') {

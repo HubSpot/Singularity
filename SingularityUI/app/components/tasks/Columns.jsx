@@ -1,11 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router';
 import Column from '../common/table/Column';
+import classNames from 'classnames';
 
 import Utils from '../../utils';
 
 import JSONButton from '../common/JSONButton';
-import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
+import KillTaskButton from '../tasks/KillTaskButton';
+import RunNowButton from '../requests/RunNowButton';
 
 export const TaskId = (
   <Column
@@ -23,7 +25,51 @@ export const TaskId = (
       )
     }
     sortable={true}
+  />
+);
+
+export const TaskIdShortened = (
+  <Column
+    label="Task ID"
+    id="taskIdShort"
+    key="taskIdShort"
+    cellData={
+      (rowData) => (rowData.taskId ? rowData.taskId.id : rowData.id)
+    }
+    cellRender={
+      (cellData) => (
+        <a href={`${config.appRoot}/task/${cellData}`}>
+          {cellData}
+        </a>
+      )
+    }
+    sortable={true}
     className="keep-in-check"
+  />
+);
+
+export const LastTaskState = (
+  <Column
+    label="Status"
+    id="lastTaskState"
+    key="lastTaskState"
+    cellData={
+      (rowData) => rowData.lastTaskState
+    }
+    cellRender={
+      (cellData) => {
+        const className = classNames(
+          'label',
+          `label-${Utils.getLabelClassFromTaskState(cellData)}`
+        );
+        return (
+          <span className={className}>
+            {Utils.humanizeText(cellData)}
+          </span>
+        );
+      }
+    }
+    sortable={true}
   />
 );
 
@@ -37,7 +83,24 @@ export const StartedAt = (
     }
     cellRender={
       (cellData) => (
-        Utils.timeStampFromNow(cellData)
+        Utils.timestampFromNow(cellData)
+      )
+    }
+    sortable={true}
+  />
+);
+
+export const UpdatedAt = (
+  <Column
+    label="Updated At"
+    id="updatedAt"
+    key="updatedAt"
+    cellData={
+      (rowData) => rowData.updatedAt
+    }
+    cellRender={
+      (cellData) => (
+        Utils.timestampFromNow(cellData)
       )
     }
     sortable={true}
@@ -116,25 +179,22 @@ export const Memory = (
   />
 );
 
-export const ActiveActions = (onTaskKill) =>
+export const ActiveActions = (
   <Column
     label=""
     id="actions"
     key="actions"
     className="actions-column"
-    cellData={
-      (rowData) => rowData
-    }
-    cellRender={(cellData) =>
+    cellRender={(cellData) => (
       <div className="hidden-xs">
-        <a data-action="remove" onClick={() => onTaskKill(cellData.taskId.id)}><Glyphicon iconClass="remove" /></a>
+        <KillTaskButton taskId={cellData.taskId.id} />
         <JSONButton className="inline" object={cellData}>
           {'{ }'}
         </JSONButton>
       </div>
-    }
+    )}
   />
-;
+);
 
 export const NextRun = (
   <Column
@@ -153,7 +213,7 @@ export const NextRun = (
       }
       return (
         <div>
-          {Utils.timeStampFromNow(cellData)} {label}
+          {Utils.timestampFromNow(cellData)} {label}
         </div>
       );
     }}
@@ -169,11 +229,11 @@ export const PendingType = (
     cellData={
       (rowData) => rowData.pendingTask.pendingTaskId.pendingType
     }
-    cellRender={(cellData) =>
+    cellRender={(cellData) => (
       <div>
         {Utils.humanizeText(cellData)}
       </div>
-    }
+    )}
     sortable={true}
   />
 );
@@ -183,6 +243,21 @@ export const DeployId = (
     label="Deploy ID"
     id="deployId"
     key="deployId"
+    cellData={
+      (rowData) => rowData.taskId.deployId
+    }
+    cellRender={(deployId, task) => (
+      <a href={`${config.appRoot}/request/${task.taskId.requestId}/deploy/${deployId}`}>{deployId}</a>
+    )}
+    sortable={true}
+  />
+);
+
+export const PendingDeployId = (
+  <Column
+    label="Deploy ID"
+    id="pendingDeployId"
+    key="pendingDeployId"
     cellData={
       (rowData) => rowData.pendingTask.pendingTaskId
     }
@@ -194,25 +269,22 @@ export const DeployId = (
   />
 );
 
-export const ScheduledActions = (onRunNow) =>
+export const ScheduledActions = (
   <Column
     label=""
     id="actions"
     key="actions"
     className="actions-column"
-    cellData={
-      (rowData) => rowData
-    }
-    cellRender={(cellData) =>
+    cellRender={(cellData) => (
       <div className="hidden-xs">
-        <a onClick={() => onRunNow(cellData.pendingTask.pendingTaskId.requestId)}><Glyphicon iconClass="flash" /></a>
+        <RunNowButton requestId={cellData.pendingTask.pendingTaskId.requestId} />
         <JSONButton className="inline" object={cellData}>
           {'{ }'}
         </JSONButton>
       </div>
-    }
+    )}
   />
-;
+);
 
 export const ScheduledTaskId = (
   <Column
@@ -251,22 +323,42 @@ export const CleanupType = (
   />
 );
 
+export const LogLinkAndJSON = (
+  <Column
+    label=""
+    id="logLink"
+    key="logLink"
+    className="actions-column"
+    cellData={(rowData) => rowData.taskId}
+    cellRender={(taskId, rowData) => (
+      <div className="hidden-xs">
+        <a
+          href={`${config.appRoot}/request/${taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${taskId.id}`}
+          title="Log"
+        >
+          &middot;&middot;&middot;
+        </a>
+        <JSONButton className="inline" object={rowData}>
+          {'{ }'}
+        </JSONButton>
+      </div>
+    )}
+  />
+);
+
 export const JSONAction = (
   <Column
     label=""
     id="jsonAction"
     key="jsonAction"
     className="actions-column"
-    cellData={
-      (rowData) => rowData
-    }
-    cellRender={(cellData) =>
+    cellRender={(cellData) => (
       <div className="hidden-xs">
         <JSONButton className="inline" object={cellData}>
           {'{ }'}
         </JSONButton>
       </div>
-    }
+    )}
   />
 );
 

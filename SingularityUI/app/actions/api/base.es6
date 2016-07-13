@@ -43,18 +43,18 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
     return { type: ERROR, error, key };
   }
 
-  function success(data, key = undefined) {
-    return { type: SUCCESS, data, key };
+  function success(data, statusCode, key = undefined) {
+    return { type: SUCCESS, data, statusCode, key };
   }
 
   function clearData() {
-    return function (dispatch) {
+    return (dispatch) => {
       dispatch(clear());
     };
   }
 
   function trigger(...args) {
-    return function (dispatch) {
+    return (dispatch) => {
       let key;
       if (keyFunc) {
         key = keyFunc(...args);
@@ -73,10 +73,9 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
         })
         .then((data) => {
           if ((apiResponse.status >= 200 && apiResponse.status < 300) || (options.successResponseCodes && _.contains(options.successResponseCodes, apiResponse.status))) {
-            return dispatch(success(data, key));
-          } else {
-            return dispatch(error(data, options, apiResponse, key));
+            return dispatch(success(data, apiResponse.status, key));
           }
+          return dispatch(error(data, options, apiResponse, key));
         });
     };
   }

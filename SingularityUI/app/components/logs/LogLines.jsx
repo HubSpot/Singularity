@@ -105,6 +105,7 @@ class LogLines extends React.Component {
         {this.renderLoadingPrevious()}
         {this.renderLogLines()}
         {this.renderLoadingMore()}
+        {this.props.fileNotFound}
       </div>
     </div>;
   }
@@ -123,7 +124,9 @@ LogLines.propTypes = {
   bytesRemainingBefore: React.PropTypes.number.isRequired,
   bytesRemainingAfter: React.PropTypes.number.isRequired,
   activeColor: React.PropTypes.string.isRequired,
-}
+
+  fileNotFound: React.PropTypes.element
+};
 
 function mapStateToProps(state, ownProps) {
   const taskGroup = state.taskGroups[ownProps.taskGroupId]

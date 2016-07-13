@@ -1,8 +1,9 @@
 import Q from 'q';
+import Utils from 'utils';
 
 import { fetchTasksForRequest } from './activeTasks';
 
-let fetchData = function(taskId, path, offset=undefined, length=0) {
+let fetchData = function(taskId, path, offset = undefined, length = 0) {
   length = Math.max(length, 0);  // API breaks if you request a negative length
   return $.ajax(
     {url: `${ config.apiRoot }/sandbox/${ taskId }/read?${$.param({path, length, offset})}`});
@@ -45,7 +46,6 @@ export const initialize = (requestId, path, search, taskIds, viewMode) =>
         })
         .error(function({status}) {
           if (status === 404) {
-            app.caughtError();
             dispatch(taskFileDoesNotExist(taskGroupId, taskId));
             return taskInitDeferred.resolve();
           } else {
@@ -103,6 +103,13 @@ export const taskFileDoesNotExist = (taskGroupId, taskId) =>
   })
 ;
 
+export const finishedLogExists = (taskId) =>
+  ({
+    taskId,
+    type: 'LOG_FINISHED_LOG_EXISTS'
+  })
+;
+
 export const taskGroupReady = taskGroupId =>
   ({
     taskGroupId,
@@ -121,13 +128,23 @@ export const taskHistory = (taskGroupId, taskId, taskHistory) =>
 
 export const getTasks = (taskGroup, tasks) => taskGroup.taskIds.map(taskId => tasks[taskId]);
 
+export const doesFinishedLogExist = (taskIds) =>
+  (dispatch) => {
+    taskIds.map((taskId) => {
+      const actualPath = config.finishedTaskLogPath.replace('$TASK_ID', taskId);
+      return fetchData(taskId, actualPath)
+      .done(() => dispatch(finishedLogExists(taskId)));
+    });
+  }
+;
+
 export const updateFilesizes = () =>
   function(dispatch, getState) {
     let tasks;
     tasks = getState();
     for (let taskId of tasks) {
       fetchData(taskId, tasks[taskId.path]).done(({offset}) => {
-        dispatch(taskFilesize(taskId, offset))
+        dispatch(taskFilesize(taskId, offset));
       });
     }
   }
@@ -170,12 +187,26 @@ export const updateTaskStatus = (taskGroupId, taskId) =>
 
 ;
 
-export const taskGroupFetchNext = taskGroupId =>
-  function(dispatch, getState) {
-    let {tasks, taskGroups, logRequestLength, maxLines} = getState();
+export const taskData = (taskGroupId, taskId, data, offset, nextOffset, append, maxLines) =>
+  ({
+    taskGroupId,
+    taskId,
+    data,
+    offset,
+    nextOffset,
+    append,
+    maxLines,
+    type: 'LOG_TASK_DATA'
+  })
+;
 
-    let taskGroup = taskGroups[taskGroupId];
-    tasks = getTasks(taskGroup, tasks);
+export const taskGroupFetchNext = taskGroupId =>
+  (dispatch, getState) => {
+    const state = getState();
+    const {taskGroups, logRequestLength, maxLines} = state;
+
+    const taskGroup = taskGroups[taskGroupId];
+    const tasks = getTasks(taskGroup, state.tasks);
 
     // bail early if there's already a pending request
     if (taskGroup.pendingRequests) {
@@ -183,21 +214,27 @@ export const taskGroupFetchNext = taskGroupId =>
     }
 
     dispatch({taskGroupId, type: 'LOG_REQUEST_START'});
-    let promises = tasks.map(function({taskId, exists, maxOffset, path, initialDataLoaded}) {
+    const promises = tasks.map(({taskId, exists, maxOffset, path, initialDataLoaded}) => {
       if (initialDataLoaded && exists !== false) {
-        let xhr = fetchData(taskId, path, maxOffset, logRequestLength);
-        return xhr.done(function({data, offset, nextOffset}) {
+        const xhr = fetchData(taskId, path, maxOffset, logRequestLength);
+        const promise = xhr.done(({data, offset, nextOffset}) => {
           if (data.length > 0) {
             nextOffset = offset + data.length;
             return dispatch(taskData(taskGroupId, taskId, data, offset, nextOffset, true, maxLines));
           }
-        });
-      } else {
-        return Promise.resolve(); // reject("initialDataLoaded is false for task #{taskId}")
+          return Promise.resolve();
+        }).error(error => Utils.ignore404(error));
+        promise.taskId = taskId;
+        return promise;
       }
+      return Promise.resolve();
     });
 
-    return Promise.all(promises).then(() => dispatch({taskGroupId, type: 'LOG_REQUEST_END'}));
+    return Promise.all(promises).then(() => dispatch({taskGroupId, type: 'LOG_REQUEST_END'})).catch((error) => {
+      if (error.status === 404) {
+        dispatch(taskFileDoesNotExist(taskGroupId, error.taskId));
+      }
+    });
   }
 ;
 
@@ -237,19 +274,6 @@ export const taskGroupFetchPrevious = taskGroupId =>
   }
 ;
 
-export const taskData = (taskGroupId, taskId, data, offset, nextOffset, append, maxLines) =>
-  ({
-    taskGroupId,
-    taskId,
-    data,
-    offset,
-    nextOffset,
-    append,
-    maxLines,
-    type: 'LOG_TASK_DATA'
-  })
-;
-
 export const taskFilesize = (taskId, filesize) =>
   ({
     taskId,
@@ -269,7 +293,7 @@ export const taskGroupTop = (taskGroupId, visible) =>
   }
 ;
 
-export const taskGroupBottom = (taskGroupId, visible, tailing=false) =>
+export const taskGroupBottom = (taskGroupId, visible, tailing = false) =>
   function(dispatch, getState) {
     let { taskGroups, tasks } = getState();
     let taskGroup = taskGroups[taskGroupId];

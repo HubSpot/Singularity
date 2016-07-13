@@ -109,7 +109,7 @@ export default class RequestFilters extends React.Component {
           onChange={(...args) => this.handleSearchChange(...args)}
           maxLength="128"
         />
-      <div className="remove-button" onClick={() => this.clearSearch()}></div>
+        <div className="remove-button" onClick={() => this.clearSearch()}></div>
       </div>
     );
   }

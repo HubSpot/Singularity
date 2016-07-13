@@ -17,12 +17,10 @@ import 'bootstrap';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import FormModal from './components/common/FormModal';
+import FormModal from './components/common/modal/FormModal';
 
 // Set up third party configurations
 import 'thirdPartyConfigurations';
-// Set up the Handlebars helpers
-import 'handlebarsHelpers';
 
 function setApiRoot(data) {
   if (data.apiRoot) {

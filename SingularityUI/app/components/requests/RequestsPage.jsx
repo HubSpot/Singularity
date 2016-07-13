@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import rootComponent from '../../rootComponent';
@@ -12,7 +12,6 @@ import {
   BounceRequest,
   FetchRequestRun
 } from '../../actions/api/requests';
-
 import { FetchRequestRunHistory } from '../../actions/api/history';
 import { FetchTaskFiles } from '../../actions/api/sandbox';
 
@@ -23,7 +22,15 @@ import * as Cols from './Columns';
 import Utils from '../../utils';
 import filterSelector from '../../selectors/requests/filterSelector';
 
-class RequestsPage extends React.Component {
+class RequestsPage extends Component {
+  static propTypes = {
+    state: PropTypes.string.isRequired,
+    subFilter: PropTypes.string.isRequired,
+    searchFilter: PropTypes.string.isRequired,
+    requestsInState: PropTypes.arrayOf(PropTypes.object).isRequired,
+    updateFilters: PropTypes.func.isRequired,
+    fetchFilter: PropTypes.func.isRequired
+  };
 
   static propTypes = {
     requestsInState: React.PropTypes.array,
@@ -105,7 +112,7 @@ class RequestsPage extends React.Component {
           Cols.State,
           Cols.Instances,
           Cols.Schedule,
-          Cols.Actions(this.props.removeRequest, this.props.unpauseRequest, this.props.runNow, this.props.fetchRun, this.props.fetchRunHistory, this.props.fetchTaskFiles, this.props.scaleRequest, this.props.bounceRequest)
+          Cols.Actions
         ];
       default:
         return [
@@ -118,7 +125,7 @@ class RequestsPage extends React.Component {
           Cols.DeployUser,
           Cols.LastDeploy,
           Cols.Schedule,
-          Cols.Actions(this.props.removeRequest, this.props.unpauseRequest, this.props.runNow, this.props.fetchRun, this.props.fetchRunHistory, this.props.fetchTaskFiles, this.props.scaleRequest, this.props.bounceRequest)
+          Cols.Actions
         ];
     }
   }

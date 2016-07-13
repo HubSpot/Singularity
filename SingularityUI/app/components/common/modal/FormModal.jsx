@@ -1,0 +1,297 @@
+import React from 'react';
+import classNames from 'classnames';
+
+import { Modal, Button } from 'react-bootstrap';
+import TagsInput from 'react-tagsinput';
+import Duration from '../formItems/Duration';
+
+export default class FormModal extends React.Component {
+  constructor(props) {
+    super(props);
+    const formState = {};
+    props.formElements.forEach((e) => {
+      formState[e.name] = e.defaultValue && e.defaultValue.toString();
+    });
+
+    this.state = {
+      visible: false,
+      formState,
+      errors: {}
+    };
+
+    _.bindAll(this, 'hide', 'show', 'confirm');
+  }
+
+  static INPUT_TYPES = {
+    BOOLEAN: 'BOOLEAN',
+    STRING: 'STRING',
+    RADIO: 'RADIO',
+    TAGS: 'TAGS',
+    NUMBER: 'NUMBER',
+    DURATION: 'DURATION',
+    URL: 'URL'
+  };
+
+  static FormItem = (props) => {
+    if ((props.element.dependsOn && props.formState[props.element.dependsOn]) || !props.element.dependsOn) {
+      return (
+        <div className={classNames(props.className, {'childItem': props.formState[props.element.dependsOn]})}>
+          {props.children}
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  hide() {
+    this.setState({
+      visible: false
+    });
+  }
+
+  show() {
+    this.setState({
+      visible: true
+    });
+  }
+
+  handleFormChange(name, value) {
+    const formState = this.state.formState;
+    formState[name] = value;
+    this.setState({
+      formState
+    });
+  }
+
+  validateForm() {
+    // Check required values
+    const errors = {};
+    this.props.formElements.forEach((e) => {
+      if (!this.state.formState[e.name] && e.isRequired) {
+        errors[e.name] = 'This field is required';
+      }
+    });
+    this.setState({
+      errors
+    });
+
+    // Returns true if form is valid
+    return _.isEmpty(errors);
+  }
+
+  parseFormState(state) {
+    const parsed = {};
+    _.mapObject(state, (val, key) => {
+      const element = _.find(this.props.formElements, (e) => e.name === key);
+      switch (element.type) {
+        case FormModal.INPUT_TYPES.BOOLEAN:
+          parsed[key] = Boolean(val);
+          break;
+        case FormModal.INPUT_TYPES.NUMBER:
+          parsed[key] = Number.parseFloat(val);
+          break;
+        default:
+          parsed[key] = val;
+      }
+    });
+    return parsed;
+  }
+
+  confirm(event) {
+    if (event) {
+      event.preventDefault();
+    }
+    if (this.validateForm()) {
+      this.props.onConfirm(this.parseFormState(this.state.formState));
+      const formState = {};
+      this.props.formElements.forEach((e) => {
+        formState[e.name] = e.defaultValue;
+      });
+      this.setState({
+        visible: false,
+        formState,
+        errors: {}
+      });
+    }
+  }
+
+  renderForm() {
+    const inputs = this.props.formElements.map((e) => {
+      const error = this.state.errors[e.name];
+      const errorBlock = error && <span className="help-block">{error}</span>;
+      const help = e.help && <span className="help-block">{e.help}</span>;
+
+      switch (e.type) {
+
+        case FormModal.INPUT_TYPES.BOOLEAN:
+          return (
+            <FormModal.FormItem element={e} formState={this.state.formState} key={e.name}>
+              <div className={classNames('form-group', {'has-error': !!error})}>
+                <label className="control-label">
+                  <input
+                    type="checkbox"
+                    name={e.name}
+                    checked={this.state.formState[e.name] || false}
+                    onChange={(event) => this.handleFormChange(e.name, event.target.checked)}
+                  /> {e.label}
+                </label>
+                {errorBlock}
+                {help}
+              </div>
+            </FormModal.FormItem>
+          );
+
+        case FormModal.INPUT_TYPES.STRING:
+          return (
+            <FormModal.FormItem element={e} formState={this.state.formState} key={e.name}>
+              <div className={classNames('form-group', {'has-error': !!error})}>
+                <label className="control-label" htmlFor={e.name}>{e.label}</label>
+                <input type="text"
+                  name={e.name}
+                  className="form-control input-large"
+                  value={this.state.formState[e.name] || ''}
+                  onChange={(event) => this.handleFormChange(e.name, event.target.value)}
+                />
+                {errorBlock}
+                {help}
+              </div>
+            </FormModal.FormItem>
+          );
+
+        case FormModal.INPUT_TYPES.RADIO:
+          const buttons = e.values.map((v, i) => {
+            return (
+              <div key={i} className="radio">
+                <label>
+                  <input type="radio"
+                    name={e.name}
+                    checked={v.value.toString() === this.state.formState[e.name]}
+                    value={v.value}
+                    onChange={(event) => this.handleFormChange(e.name, event.target.value)}
+                  />
+                {v.label}
+                </label>
+              </div>
+            );
+          });
+          return (
+            <FormModal.FormItem element={e} formState={this.state.formState} key={e.name}>
+              <strong>{e.label}</strong>
+              {buttons}
+            </FormModal.FormItem>
+          );
+
+        case FormModal.INPUT_TYPES.TAGS:
+          return (
+            <FormModal.FormItem element={e} formState={this.state.formState} key={e.name}>
+              <label style={{display: 'block', width: '100%'}}>
+                {e.label}
+                <TagsInput
+                  value={this.state.formState[e.name] || []}
+                  onChange={(tags) => this.handleFormChange(e.name, tags)}
+                  addOnBlur={true}
+                  addOnPaste={true}
+                  inputProps={{className: 'form-control input-large', placeholder: ''}}
+                />
+              </label>
+            </FormModal.FormItem>
+          );
+
+        case FormModal.INPUT_TYPES.NUMBER:
+          return (
+            <FormModal.FormItem element={e} formState={this.state.formState} key={e.name}>
+              <div className={classNames('form-group', {'has-error': !!error})}>
+                <label className="control-label" htmlFor={e.name}>{e.label}</label>
+                <input type="number"
+                  name={e.name}
+                  min={e.min}
+                  max={e.max}
+                  step={e.step}
+                  className="form-control input-large"
+                  value={this.state.formState[e.name] || ''}
+                  onChange={(event) => this.handleFormChange(e.name, event.target.value)}
+                />
+                {errorBlock}
+                {help}
+              </div>
+            </FormModal.FormItem>
+          );
+
+        case FormModal.INPUT_TYPES.DURATION:
+          return (
+            <FormModal.FormItem element={e} formState={this.state.formState} key={e.name}>
+              <div className={classNames('form-group', {'has-error': !!error})}>
+                <label className="control-label" htmlFor={e.name}>{e.label}</label>
+                <Duration type="text"
+                  value={this.state.formState[e.name] || 0}
+                  onChange={(value) => this.handleFormChange(e.name, value)}
+                />
+                {errorBlock}
+                {help}
+              </div>
+            </FormModal.FormItem>
+          );
+
+        case FormModal.INPUT_TYPES.URL:
+          return (
+          <FormModal.FormItem element={e} formState={this.state.formState} key={e.name}>
+            <div className={classNames('form-group', {'has-error': !!error})}>
+              <label className="control-label" htmlFor={e.name}>{e.label}</label>
+              <input type="url"
+                name={e.name}
+                className="form-control input-large"
+                value={this.state.formState[e.name] || ''}
+                onChange={(event) => this.handleFormChange(e.name, event.target.value)}
+              />
+              {help}
+            </div>
+          </FormModal.FormItem>
+        );
+
+        default:
+          return undefined;
+      }
+    });
+
+    return (
+      <form className="modal-form" onSubmit={(e) => this.confirm(e)}>
+        {inputs}
+      </form>
+    );
+  }
+
+  render() {
+    const cancel = !this.props.mustFill && <Button bsStyle="default" onClick={this.hide.bind(this)}>Cancel</Button>;
+
+    return (
+      <Modal show={this.state.visible} onHide={this.hide}>
+        <Modal.Body>
+          {this.props.children}
+          {this.props.children && !!this.props.formElements.length && <hr />}
+          {this.renderForm()}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button bsStyle="default" onClick={this.hide}>Cancel</Button>
+          <Button bsStyle={this.props.buttonStyle} onClick={this.confirm}>{this.props.action}</Button>
+        </Modal.Footer>
+      </Modal>
+    );
+  }
+}
+
+FormModal.propTypes = {
+  action: React.PropTypes.node.isRequired,
+  onConfirm: React.PropTypes.func.isRequired,
+  buttonStyle: React.PropTypes.string,
+  mustFill: React.PropTypes.bool,
+  formElements: React.PropTypes.arrayOf(React.PropTypes.shape({
+    name: React.PropTypes.string.isRequired,
+    type: React.PropTypes.oneOf(_.keys(FormModal.INPUT_TYPES)).isRequired,
+    label: React.PropTypes.string,
+    required: React.PropTypes.bool,
+    values: React.PropTypes.array,
+    defaultValue: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.bool, React.PropTypes.number]),
+    dependsOn: React.PropTypes.string // Only show this item if the other item (referenced by name) has a truthy value
+  })).isRequired
+};

@@ -1,4 +1,5 @@
 import React from 'react';
+import { connect } from 'react-redux';
 
 import SimpleTable from './SimpleTable';
 import Pagination from 'react-bootstrap/lib/Pagination';
@@ -12,11 +13,13 @@ export default class ServerSideTable extends SimpleTable {
       atEnd: false,
       paginate: props.paginate
     });
+
+    this.handleSelect = this.handleSelect.bind(this);
   }
 
   handleSelect(eventKey) {
     const inc = eventKey > this.state.serverPage ? 1 : -1;
-    this.props.fetchAction(...this.props.fetchParams, this.props.perPage, this.state.serverPage + inc);
+    this.props.dispatch(this.props.fetchAction.trigger(...this.props.fetchParams, this.props.perPage, this.state.serverPage + inc));
     const state = {
       serverPage: this.state.serverPage + inc
     };
@@ -27,7 +30,7 @@ export default class ServerSideTable extends SimpleTable {
   updateDisplay(nextProps) {
     const newState = {};
     if (this.props.entries && this.props.entries.length > 0 && nextProps.entries.length === 0 && this.state.serverPage > 1) {
-      this.props.fetchAction(...this.props.fetchParams, this.props.perPage, this.state.serverPage);
+      this.props.dispatch(this.props.fetchAction.trigger(...this.props.fetchParams, this.props.perPage, this.state.serverPage - 1));
       _.extend(newState, {
         serverPage: this.state.serverPage - 1,
         atEnd: true
@@ -64,16 +67,30 @@ export default class ServerSideTable extends SimpleTable {
             items={this.state.atEnd ? this.state.serverPage : this.state.serverPage + 1}
             maxButtons={1}
             activePage={this.state.serverPage}
-            onSelect={this.handleSelect.bind(this)}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             />
+            onSelect={this.handleSelect}
+          />
         </div>
       );
     }
+    return undefined;
   }
 }
 
+// TODO: This is probably an antipattern that we should get rid of
+const mapDispatchToProps = (dispatch) => ({
+  dispatch
+});
+
 ServerSideTable.propTypes = _.extend({}, SimpleTable.propTypes, {
-  fetchAction: React.PropTypes.func,
+  fetchAction: React.PropTypes.shape({
+    trigger: React.PropTypes.func.isRequired
+  }),
+  dispatch: React.PropTypes.func.isRequired,
   fetchParams: React.PropTypes.array,
   paginate: React.PropTypes.bool
 });
+
+export default connect(
+  null,
+  mapDispatchToProps
+)(ServerSideTable);

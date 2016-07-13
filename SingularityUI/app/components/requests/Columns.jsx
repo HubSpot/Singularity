@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router';
+
 import Column from '../common/table/Column';
 
 import Utils from '../../utils';
@@ -73,7 +74,7 @@ export const LastDeploy = (
     cellRender={
       (cellData) => {
         if (cellData) {
-          return Utils.timeStampFromNow(cellData);
+          return Utils.timestampFromNow(cellData);
         }
         return '';
       }
@@ -176,59 +177,51 @@ export const Schedule = (
   />
 );
 
-export const Actions = (removeAction, unpauseAction, runAction, fetchRun, fetchRunHistory, fetchTaskFiles, scaleAction, bounceAction) => {
-  return (
-    <Column
-      label=""
-      id="actions"
-      key="actions"
-      className="actions-column"
-      cellData={
-        (rowData) => rowData
+export const Actions = (
+  <Column
+    label=""
+    id="actions"
+    key="actions"
+    className="actions-column"
+    cellRender={
+      (cellData, rowData) => {
+        const edit = !config.hideNewRequestButton && (
+          <Link to={`requests/edit/${rowData.id}`} alt="Edit">
+            <span className="glyphicon glyphicon-edit"></span>
+          </Link>
+        );
+
+        const unpause = cellData.state === 'PAUSED' && (
+          <UnpauseButton requestId={cellData.id} />
+        );
+
+        const scale = cellData.canBeScaled && (
+          <ScaleButton
+            requestId={cellData.id}
+            currentInstances={cellData.request.instances}
+          />
+        );
+
+        const runNow = cellData.canBeRunNow && (
+          <RunNowButton requestId={cellData.id} />
+        );
+
+        return (
+          <div className="hidden-xs">
+            {scale}
+            {runNow}
+            {unpause}
+            <RemoveButton requestId={cellData.id} />
+            <JSONButton className="inline" object={cellData}>
+              {'{ }'}
+            </JSONButton>
+            {edit}
+          </div>
+        );
       }
-      cellRender={
-        (rowData) => {
-          const edit = !config.hideNewRequestButton && (
-            <Link to={`requests/edit/${rowData.id}`} alt="Edit">
-              <span className="glyphicon glyphicon-edit"></span>
-            </Link>
-          );
-
-          const unpause = rowData.state === 'PAUSED' && (
-            <UnpauseButton requestId={rowData.id} unpauseAction={unpauseAction} />
-          );
-
-          const scale = rowData.canBeScaled && (
-            <ScaleButton requestId={rowData.id} scaleAction={scaleAction} bounceAction={bounceAction} currentInstances={rowData.request.instances} />
-          );
-
-          const runNow = rowData.canBeRunNow && (
-            <RunNowButton
-              requestId={rowData.id}
-              runAction={runAction}
-              fetchRunAction={fetchRun}
-              fetchRunHistoryAction={fetchRunHistory}
-              fetchTaskFilesAction={fetchTaskFiles}
-            />
-          );
-
-          return (
-            <div className="hidden-xs">
-              {scale}
-              {runNow}
-              {unpause}
-              <RemoveButton requestId={rowData.id} removeAction={removeAction} />
-              <JSONButton className="inline" object={rowData}>
-                {'{ }'}
-              </JSONButton>
-              {edit}
-            </div>
-          );
-        }
-      }
-    />
-  );
-};
+    }
+  />
+);
 
 export const PendingType = (
   <Column
@@ -265,7 +258,7 @@ export const CleaningTimestamp = (
     cellData={
       (rowData) => rowData.timestamp
     }
-    cellRender={(cellData) => Utils.timeStampFromNow(cellData)}
+    cellRender={(cellData) => Utils.timestampFromNow(cellData)}
   />
 );
 

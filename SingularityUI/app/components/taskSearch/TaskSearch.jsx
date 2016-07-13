@@ -99,8 +99,8 @@ class TaskSearch extends React.Component {
             {Utils.humanizeText(data.lastTaskState)}
           </span>
         </td>
-        <td>{Utils.timeStampFromNow(data.taskId.startedAt)}</td>
-        <td>{Utils.timeStampFromNow(data.updatedAt)}</td>
+        <td>{Utils.timestampFromNow(data.taskId.startedAt)}</td>
+        <td>{Utils.timestampFromNow(data.updatedAt)}</td>
         <td className="actions-column">
           <Link to={`task/${data.taskId.id}/tail/${config.finishedTaskLogPath}`}>···</Link>
           <JSONButton object={data}>{'{ }'}</JSONButton>
@@ -129,12 +129,16 @@ class TaskSearch extends React.Component {
   renderPageOptions() {
     if (this.props.taskHistory.length) {
       return (
-        <span className="pull-right count-options">
-          Results per page:
-          <a className={classNames({inactive: TaskSearch.TASKS_PER_PAGE === 5})} onClick={() => this.setCount(5)}>5</a>
-          <a className={classNames({inactive: TaskSearch.TASKS_PER_PAGE === 10})} onClick={() => this.setCount(10)}>10</a>
-          <a className={classNames({inactive: TaskSearch.TASKS_PER_PAGE === 25})} onClick={() => this.setCount(25)}>25</a>
-        </span>
+        <div className="row">
+          <div className="col-md-12">
+            <div className="pull-right count-options">
+              Results per page:
+              <a className={classNames({inactive: TaskSearch.TASKS_PER_PAGE === 5})} onClick={() => this.setCount(5)}>5</a>
+              <a className={classNames({inactive: TaskSearch.TASKS_PER_PAGE === 10})} onClick={() => this.setCount(10)}>10</a>
+              <a className={classNames({inactive: TaskSearch.TASKS_PER_PAGE === 25})} onClick={() => this.setCount(25)}>25</a>
+            </div>
+          </div>
+        </div>
       );
     }
     return null;
@@ -170,9 +174,9 @@ class TaskSearch extends React.Component {
   }
 }
 
-function mapStateToProps(state) {
+function mapStateToProps(state, ownProps) {
   return {
-    request: state.api.request.data,
+    request: Utils.maybe(state.api.request, [ownProps.requestId, 'data']),
     taskHistory: state.api.taskHistory.data
   };
 }

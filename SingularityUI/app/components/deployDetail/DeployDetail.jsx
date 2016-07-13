@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
+
 import Clipboard from 'clipboard';
+
 import Utils from '../../utils';
 import { Link } from 'react-router';
 import {
@@ -19,7 +21,14 @@ import SimpleTable from '../common/SimpleTable';
 import ServerSideTable from '../common/ServerSideTable';
 import CollapsableSection from '../common/CollapsableSection';
 
+import ActiveTasksTable from './ActiveTasksTable';
+
 class DeployDetail extends React.Component {
+  static propTypes = {
+    deploy: PropTypes.object.isRequired,
+    taskHistory: PropTypes.arrayOf(PropTypes.object).isRequired,
+    latestHealthchecks: PropTypes.arrayOf(PropTypes.object).isRequired
+  };
 
   static propTypes = {
     dispatch: React.PropTypes.func,
@@ -36,7 +45,7 @@ class DeployDetail extends React.Component {
   }
 
   componentDidMount() {
-    new Clipboard('.info-copyable');
+    new Clipboard('.info-copyable'); // eslint-disable-line no-new
   }
 
   renderHeader(d) {
@@ -69,14 +78,14 @@ class DeployDetail extends React.Component {
       if (fails.length) {
         failures = (
           <div className="row">
-              <div className="col-md-12">
-                  <div className="panel panel-danger">
-                      <div className="panel-heading text-muted">Deploy had {fails.length} failure{fails.length > 1 ? 's' : ''}:</div>
-                      <div className="panel-body">
-                        {fails}
-                      </div>
-                  </div>
+            <div className="col-md-12">
+              <div className="panel panel-danger">
+                <div className="panel-heading text-muted">Deploy had {fails.length} failure{fails.length > 1 ? 's' : ''}:</div>
+                <div className="panel-body">
+                  {fails}
+                </div>
               </div>
+            </div>
           </div>
         );
       }
@@ -118,33 +127,14 @@ class DeployDetail extends React.Component {
     );
   }
 
-  renderActiveTasks(d, tasks) {
+  renderActiveTasks(d) {
     return (
       <div>
         <div className="page-header">
           <h2>Active Tasks</h2>
         </div>
-        <SimpleTable
-          emptyMessage="No tasks"
-          entries={tasks}
-          perPage={5}
-          first={true}
-          last={true}
-          headers={['Name', 'Last State', 'Started', 'Updated', '', '']}
-          renderTableRow={(data, index) => {
-            return (
-              <tr key={index}>
-                <td><Link to={`task/${data.taskId.id}`}>{data.taskId.id}</Link></td>
-                <td><span className={`label label-${Utils.getLabelClassFromTaskState(data.lastTaskState)}`}>{Utils.humanizeText(data.lastTaskState)}</span></td>
-                <td>{Utils.timeStampFromNow(data.taskId.startedAt)}</td>
-                <td>{Utils.timeStampFromNow(data.updatedAt)}</td>
-                <td className="actions-column"><Link to={`request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log">&middot;&middot;&middot;</Link></td>
-                <td className="actions-column"><JSONButton object={data}>{'{ }'}</JSONButton></td>
-              </tr>
-            );
-          }}
-        />
-    </div>
+        <ActiveTasksTable deployId={d.id} />
+      </div>
     );
   }
 
@@ -159,7 +149,7 @@ class DeployDetail extends React.Component {
           entries={tasks}
           paginate={tasks.length >= 5}
           perPage={5}
-          fetchAction={this.props.fetchTaskHistoryForDeploy}
+          fetchAction={FetchTaskHistoryForDeploy}
           fetchParams={[d.deploy.requestId, d.deploy.id]}
           headers={['Name', 'Last State', 'Started', 'Updated', '', '']}
           renderTableRow={(data, index) => {
@@ -167,8 +157,8 @@ class DeployDetail extends React.Component {
               <tr key={index}>
                 <td><Link to={`task/${data.taskId.id}`}>{data.taskId.id}</Link></td>
                 <td><span className={`label label-${Utils.getLabelClassFromTaskState(data.lastTaskState)}`}>{Utils.humanizeText(data.lastTaskState)}</span></td>
-                <td>{Utils.timeStampFromNow(data.taskId.startedAt)}</td>
-                <td>{Utils.timeStampFromNow(data.updatedAt)}</td>
+                <td>{Utils.timestampFromNow(data.taskId.startedAt)}</td>
+                <td>{Utils.timestampFromNow(data.updatedAt)}</td>
                 <td className="actions-column"><Link to={`request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log">&middot;&middot;&middot;</Link></td>
                 <td className="actions-column"><JSONButton object={data}>{'{ }'}</JSONButton></td>
               </tr>
@@ -183,10 +173,10 @@ class DeployDetail extends React.Component {
     let stats = [];
 
     if (d.deployMarker.timestamp) {
-      stats.push(<InfoBox key="initiated" copyableClassName="info-copyable" name="Initiated" value={Utils.timeStampFromNow(d.deployMarker.timestamp)} />);
+      stats.push(<InfoBox key="initiated" copyableClassName="info-copyable" name="Initiated" value={Utils.timestampFromNow(d.deployMarker.timestamp)} />);
     }
     if (d.deployResult.timestamp) {
-      stats.push(<InfoBox key="completed" copyableClassName="info-copyable" name="Completed" value={Utils.timeStampFromNow(d.deployResult.timestamp)} />);
+      stats.push(<InfoBox key="completed" copyableClassName="info-copyable" name="Completed" value={Utils.timestampFromNow(d.deployResult.timestamp)} />);
     }
     if (d.deploy.executorData && d.deploy.executorData.cmd) {
       stats.push(<InfoBox key="cmd" copyableClassName="info-copyable" name="Command" value={d.deploy.executorData.cmd} />);
@@ -247,13 +237,14 @@ class DeployDetail extends React.Component {
   }
 
   render() {
+    const { deploy, activeTasks, taskHistory, latestHealthchecks } = this.props;
     return (
       <div>
-        {this.renderHeader(this.props.deploy)}
-        {this.renderActiveTasks(this.props.deploy, this.props.activeTasks)}
-        {this.renderTaskHistory(this.props.deploy, this.props.taskHistory)}
-        {this.renderInfo(this.props.deploy)}
-        {this.renderHealthchecks(this.props.deploy, this.props.latestHealthchecks)}
+        {this.renderHeader(deploy)}
+        {this.renderActiveTasks(deploy, activeTasks)}
+        {this.renderTaskHistory(deploy, taskHistory)}
+        {this.renderInfo(deploy)}
+        {this.renderHealthchecks(deploy, latestHealthchecks)}
       </div>
     );
   }
@@ -282,7 +273,6 @@ function mapStateToProps(state) {
 
   return {
     deploy: state.api.deploy.data,
-    activeTasks: state.api.activeTasksForDeploy.data,
     taskHistory: state.api.taskHistoryForDeploy.data,
     latestHealthchecks
   };

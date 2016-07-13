@@ -17,6 +17,14 @@ export const FetchActiveTasksForRequest = buildApiAction(
   (requestId) => requestId
 );
 
+export const FetchTaskHistoryForRequest = buildApiAction(
+  'FETCH_TASK_HISTORY_FOR_REQUEST',
+  (requestId, count, page) => ({
+    url: `/history/request/${requestId}/tasks?requestId=${requestId}&count=${count}&page=${page}`
+  }),
+  (requestId) => requestId
+);
+
 export const FetchActiveTasksForDeploy = buildApiAction(
   'FETCH_ACTIVE_TASKS_FOR_DEPLOY',
   (requestId, deployId) => ({
@@ -36,6 +44,14 @@ export const FetchDeployForRequest = buildApiAction(
   (requestId, deployId) => ({
     url: `/history/request/${requestId}/deploy/${deployId}`
   })
+);
+
+export const FetchDeploysForRequest = buildApiAction(
+  'FETCH_DEPLOYS_FOR_REQUEST',
+  (requestId, count, page) => ({
+    url: `/history/request/${requestId}/deploys?count=${count}&page=${page}`
+  }),
+  (requestId) => requestId
 );
 
 export const FetchTaskSearchParams = buildApiAction(
@@ -61,4 +77,12 @@ export const FetchRequestRunHistory = buildApiAction(
     url: `/history/request/${ requestId }/run/${runId}`,
     successResponseCodes
   })
+);
+
+export const FetchRequestHistory = buildApiAction(
+  'FETCH_REQUEST_HISTORY',
+  (requestId, count, page) => ({
+    url: `/history/request/${requestId}/requests?count=${count}&page=${page}`
+  }),
+  (requestId) => requestId
 );
