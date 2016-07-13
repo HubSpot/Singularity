@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { Row, Col, Well, Alert } from 'react-bootstrap';
 
 import Utils from '../../../utils';
+import { Link } from 'react-router';
 
 import { getBouncesForRequest } from '../../../selectors/tasks';
 
@@ -91,9 +92,9 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) 
           <Col md={8}>
             <b>Deploy </b>
             <code>
-              <a href={`${config.appRoot}/request/${requestId}/deploy/${pendingDeploy.id}`}>
+              <Link to={`request/${requestId}/deploy/${pendingDeploy.id}`}>
                 {pendingDeploy.id}
-              </a>
+              </Link>
             </code>
             <b> is pending: </b>
             {maybeDeployProgress}
@@ -131,9 +132,9 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) 
       <div>
         <span>Active deploy </span>
         <code>
-          <a href={`${config.appRoot}/request/${requestId}/deploy/${activeDeploy.id}`}>
+          <Link to={`request/${requestId}/deploy/${activeDeploy.id}`}>
             {activeDeploy.id}
-          </a>
+          </Link>
         </code>
         {maybeDeployedBy}
         {maybeTimestamp}
