@@ -203,8 +203,8 @@ class UITable extends Component {
     return undefined;
   }
 
-  handlePageChange(event, selectedEvent) {
-    const page = selectedEvent.eventKey;
+  handlePageChange(eventKey) {
+    const page = eventKey;
     const numPages = Math.ceil(this.state.data.length / this.props.rowChunkSize);
 
     this.setState({
