@@ -1,5 +1,4 @@
 import React, {PropTypes} from 'react';
-import ReactDOM from 'react-dom';
 import Utils from '../../utils';
 import OldTable from '../common/OldTable';
 import FormModal from '../common/modal/FormModal';
@@ -7,8 +6,6 @@ import PlainText from '../common/atomicDisplayItems/PlainText';
 import TimeStamp from '../common/atomicDisplayItems/TimeStamp';
 import Link from '../common/atomicDisplayItems/Link';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
-import NewWebhookForm from './NewWebhookForm';
-import vex from 'vex';
 import { FetchWebhooks } from '../../actions/api/webhooks';
 import { connect } from 'react-redux';
 
