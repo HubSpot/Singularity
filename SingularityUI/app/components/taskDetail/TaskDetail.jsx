@@ -51,7 +51,7 @@ class TaskDetail extends React.Component {
     fetchTaskStatistics: React.PropTypes.func,
     fetchTaskFiles: React.PropTypes.func,
     resourceUsage: React.PropTypes.object,
-    files: React.PropTypes.array,
+    files: React.PropTypes.object,
     pendingDeploys: React.PropTypes.array,
     deploy: React.PropTypes.object,
     s3Logs: React.PropTypes.array,

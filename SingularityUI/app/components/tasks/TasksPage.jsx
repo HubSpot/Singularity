@@ -44,9 +44,9 @@ class TasksPage extends React.Component {
     runRequest: React.PropTypes.func,
     tasks: React.PropTypes.array,
     cleanups: React.PropTypes.array,
-    taskRun: React.PropTypes.object,
-    taskRunHistory: React.PropTypes.object,
-    taskFiles: React.PropTypes.array
+    taskRun: React.PropTypes.func,
+    taskRunHistory: React.PropTypes.func,
+    taskFiles: React.PropTypes.func
   };
 
   constructor(props) {

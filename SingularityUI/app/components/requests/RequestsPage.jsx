@@ -26,7 +26,7 @@ import filterSelector from '../../selectors/requests/filterSelector';
 class RequestsPage extends React.Component {
 
   static propTypes = {
-    requestsInState: React.PropTypes.object,
+    requestsInState: React.PropTypes.array,
     fetchFilter: React.PropTypes.func,
     removeRequest: React.PropTypes.func,
     unpauseRequest: React.PropTypes.func,
