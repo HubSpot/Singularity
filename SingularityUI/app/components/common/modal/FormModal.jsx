@@ -242,7 +242,7 @@ export default class FormModal extends React.Component {
                   options={formElement.options}
                   value={this.state.formState[formElement.name] || ''}
                   id={formElement.name}
-                  onChange={(value) => this.handleFormChange(formElement.name, value)}
+                  onChange={(value) => this.handleFormChange(formElement.name, value.value)}
                 />
                 {help}
               </div>
