@@ -176,7 +176,7 @@ class TaskSearch extends React.Component {
 
 function mapStateToProps(state, ownProps) {
   return {
-    request: Utils.maybe(state.api.request, [ownProps.requestId, 'data']),
+    request: Utils.maybe(state.api.request, [ownProps.params.requestId, 'data']),
     taskHistory: state.api.taskHistory.data
   };
 }
