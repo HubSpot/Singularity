@@ -1,5 +1,4 @@
 import React from 'react';
-import Utils from '../../utils';
 
 export default class StatusList extends React.Component {
 
@@ -11,57 +10,49 @@ export default class StatusList extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    let changes = [];
-    for (let d of nextProps.data) {
-      if (!d || !d.prop.id) return;
-      let matchingData = _.find(this.props.data, (data) => {
-        if (data.prop.id == d.prop.id) {
-          return true;
-        }
-      });
-      if (d.prop.value && matchingData && d.prop.value != matchingData.prop.value) {
+    const changes = [];
+    for (const nextDataItem of nextProps.data) {
+      if (!nextDataItem || !nextDataItem.prop.id) continue;
+      const matchingData = _.find(this.props.data, (currentDataItem) => (currentDataItem.prop.id === nextDataItem.prop.id));
+      if (nextDataItem.prop.value && matchingData && nextDataItem.prop.value !== matchingData.prop.value) {
         changes.push({
-          id: d.prop.id,
-          diff: d.prop.value - matchingData.prop.value
+          id: nextDataItem.prop.id,
+          diff: nextDataItem.prop.value - matchingData.prop.value
         });
       }
     }
-    this.setState({
-      changes: changes
-    });
+    this.setState({ changes });
   }
 
-  renderBefore(d) {
-    if (d.beforeFill) {
-      return (
-        <span className={`chart__legend-fill chart-fill-${d.beforeFill}`}></span>
-      );
-    }
+  getDiffFor(diff) {
+    if (!diff.prop.id) return null;
+    return _.find(this.state.changes, (change) => { return change.id === diff.prop.id; });
   }
 
   renderItems() {
-    return this.props.data.map((d, i) => {
-      if (!d) {return}
-      let ComponentClass = d.component;
-      let diff = this.getDiffFor(d)
-      let cn = {className: ''};
+    return this.props.data.map((dataItem, key) => {
+      if (!dataItem) { return null; }
+      let ComponentClass = dataItem.component;
+      const diff = this.getDiffFor(dataItem);
+      let className = {className: ''};
       if (diff) {
-        cn = {className: diff.diff > 0 ? 'changed-direction-increase' : 'changed-direction-decrease'};
+        className = {className: diff.diff > 0 ? 'changed-direction-increase' : 'changed-direction-decrease'};
       }
 
       return (
-        <li key={i} className="list-group-item">
-          {this.renderBefore(d)}
-          <ComponentClass prop={_.extend(d.prop, cn)} />
+        <li key={key} className="list-group-item">
+          {this.renderBefore(dataItem)}
+          <ComponentClass prop={_.extend(dataItem.prop, className)} />
           {this.renderDiff(diff)}
         </li>
       );
     });
   }
 
-  getDiffFor(d) {
-    if (!d.prop.id) return null;
-    return _.find(this.state.changes, (c) => { return c.id == d.prop.id});
+  renderBefore(d) {
+    return d.beforeFill && (
+      <span className={`chart__legend-fill chart-fill-${d.beforeFill}`}></span>
+    );
   }
 
   renderDiff(change) {
@@ -73,6 +64,7 @@ export default class StatusList extends React.Component {
         <span className={`changeDifference ${change.diff > 0 ? 'color-success' : 'color-warning'}`}>{`${change.diff > 0 ? '+' : ''}${change.diff}`}</span>
       );
     }
+    return null;
   }
 
   render() {
@@ -88,11 +80,11 @@ export default class StatusList extends React.Component {
 StatusList.propTypes = {
   header: React.PropTypes.string,
   data: React.PropTypes.arrayOf(React.PropTypes.shape({
-      component: React.PropTypes.func.isRequired,
-      value: React.PropTypes.number,
-      prop: React.PropTypes.object,
-      id: React.PropTypes.string,
-      className: React.PropTypes.string,
-      beforeFill: React.PropTypes.string
+    component: React.PropTypes.func.isRequired,
+    value: React.PropTypes.number,
+    prop: React.PropTypes.object,
+    id: React.PropTypes.string,
+    className: React.PropTypes.string,
+    beforeFill: React.PropTypes.string
   })).isRequired
 };

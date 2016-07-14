@@ -1,88 +1,54 @@
-import React from 'react';
-import OldTable from '../common/OldTable';
-import PlainText from '../common/atomicDisplayItems/PlainText';
-import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
-import Timestamp from '../common/atomicDisplayItems/TimeStamp';
+import React, { PropTypes } from 'react';
+import SimpleTable from '../common/SimpleTable';
+import { Glyphicon } from 'react-bootstrap';
 import Utils from '../../utils';
 
-export default class HostStates extends React.Component {
-
-  getTableHeaders() {
-    return ([
-      { data: "Hostname" },
-      { data: "Driver status" },
-      { data: "Connected" },
-      { data: "Uptime" },
-      { data: "Time since last offer" }
-    ]);
-  }
-
-  getStatusTextColor(status) {
-    switch(status) {
-      case 'DRIVER_RUNNING': return 'color-success';
-      case 'DRIVER_NOT_STARTED': return 'text-muted';
-      default: return '';
-    }
-  }
-
-  getTableRows(hosts) {
-    if (hosts) {
-      return hosts.map((h) => {
-        return {
-          dataId: h.hostname,
-          data: [
-            {
-              component: PlainText,
-              prop: {
-                  text: h.hostname
-              }
-            },
-            {
-              component: PlainText,
-              className: this.getStatusTextColor(h.driverStatus),
-              prop: {
-                  text: Utils.humanizeText(h.driverStatus)
-              }
-            },
-            {
-              component: Glyphicon,
-              className: h.driverStatus == "DRIVER_RUNNING" && h.mesosConnected ? 'color-success': 'color-error',
-              prop: {
-                  iconClass: h.driverStatus == "DRIVER_RUNNING" && h.mesosConnected ? 'ok' : 'remove'
-              }
-            },
-            {
-              component: Timestamp,
-              prop: {
-                  timestamp: h.uptime,
-                  display: 'duration'
-              }
-            },
-            {
-              component: Timestamp,
-              prop: {
-                  timestamp: h.millisSinceLastOffer,
-                  display: 'duration'
-              }
-            },
-          ]
-        };
-      });
-    }
-  }
-
-  render() {
-    return (
-      <div>
-          <h2>Singularity scheduler instances</h2>
-          <OldTable
-            noPages
-            columnHeads={this.getTableHeaders()}
-            tableRows={this.getTableRows(this.props.hosts) || []}
-            />
-      </div>
-    );
+function getStatusTextColor(status) {
+  switch (status) {
+    case 'DRIVER_RUNNING': return 'color-success';
+    case 'DRIVER_NOT_STARTED': return 'text-muted';
+    default: return '';
   }
 }
 
-HostStates.propTypes = {};
+function HostStates(props) {
+  return (
+    <div>
+      <h2>Singularity scheduler instances</h2>
+      <SimpleTable
+        emptyMessage="No hosts"
+        entries={props.hosts || []}
+        perPage={100}
+        headers={['Hostname', 'Driver status', 'Connected', 'Uptime', 'Time since last offer']}
+        renderTableRow={(host, key) => (
+          <tr key={key}>
+            <td>{host.hostname}</td>
+            <td className={getStatusTextColor(host.driverStatus)}>
+              {Utils.humanizeText(host.driverStatus)}
+            </td>
+            <td>
+              <Glyphicon
+                className={(host.driverStatus === 'DRIVER_RUNNING' && host.mesosConnected) ? 'color-success' : 'color-error'}
+                glyph={(host.driverStatus === 'DRIVER_RUNNING' && host.mesosConnected) ? 'ok' : 'remove'}
+              />
+            </td>
+            <td>{Utils.duration(host.uptime)}</td>
+            <td>{Utils.duration(host.millisSinceLastOffer)}</td>
+          </tr>
+        )}
+      />
+    </div>
+    );
+}
+
+HostStates.propTypes = {
+  hosts: PropTypes.arrayOf(PropTypes.shape({
+    hostname: PropTypes.string.isRequired,
+    driverStatus: PropTypes.string.isRequired,
+    mesosConnected: PropTypes.bool.isRequired,
+    uptime: PropTypes.number.isRequired,
+    millisSinceLastOffer: PropTypes.number
+  }))
+};
+
+export default HostStates;
