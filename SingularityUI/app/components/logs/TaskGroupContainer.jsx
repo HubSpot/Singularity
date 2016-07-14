@@ -9,8 +9,8 @@ import { connect } from 'react-redux';
 
 class TaskGroupContainer extends React.Component {
   componentWillReceiveProps(nextProps) {
-    if (nextProps.path === config.runningTaskLogPath && !nextProps.finishedLogExists) {
-      this.props.doesFinishedLogExist(this.props.taskIds);
+    if (nextProps.path === config.runningTaskLogPath && !nextProps.finishedLogExists && this.nextProps.taskIds) {
+      this.props.doesFinishedLogExist(this.nextProps.taskIds);
     }
   }
 
