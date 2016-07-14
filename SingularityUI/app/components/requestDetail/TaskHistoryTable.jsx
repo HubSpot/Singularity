@@ -7,6 +7,8 @@ import Utils from '../../utils';
 
 import { FetchTaskHistoryForRequest } from '../../actions/api/history';
 
+import Section from '../common/Section';
+
 import ServerSideTable from '../common/ServerSideTable';
 import JSONButton from '../common/JSONButton';
 
@@ -26,12 +28,15 @@ const TaskHistoryTable = ({requestId, tasksAPI}) => {
     );
   }
 
+  const title = (
+    <span>
+      <span>Task history </span>
+      {maybeSearchButton}
+    </span>
+  );
+
   return (
-    <div>
-      <h2>
-        <span>Task history </span>
-        {maybeSearchButton}
-      </h2>
+    <Section id="task-history" title={title}>
       <ServerSideTable
         emptyMessage={emptyTableMessage}
         entries={tasks}
@@ -54,7 +59,7 @@ const TaskHistoryTable = ({requestId, tasksAPI}) => {
           );
         }}
       />
-    </div>
+    </Section>
   );
 };
 
@@ -63,8 +68,11 @@ TaskHistoryTable.propTypes = {
   tasksAPI: PropTypes.object.isRequired
 };
 
-const mapStateToProps = (state) => ({
-  tasksAPI: state.api.taskHistoryForRequest
+const mapStateToProps = (state, ownProps) => ({
+  tasksAPI: Utils.maybe(
+    state.api.taskHistoryForRequest,
+    [ownProps.requestId]
+  )
 });
 
 export default connect(

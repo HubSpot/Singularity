@@ -1,6 +1,8 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 
+import Section from '../common/Section';
+
 import Utils from '../../utils';
 
 import UITable from '../common/table/UITable';
@@ -23,8 +25,7 @@ const ActiveTasksTable = ({requestId, tasksAPI}) => {
   );
 
   return (
-    <div>
-      <h2>Running instances</h2>
+    <Section id="running-instances" title="Running instances">
       { localStorage.enableTaskStateBreakdown ? <TaskStateBreakdown requestId={requestId} /> : null }
       <UITable
         data={tasks}
@@ -38,7 +39,7 @@ const ActiveTasksTable = ({requestId, tasksAPI}) => {
         {UpdatedAt}
         {LogLinkAndJSON}
       </UITable>
-    </div>
+    </Section>
   );
 };
 
