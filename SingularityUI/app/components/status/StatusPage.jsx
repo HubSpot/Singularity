@@ -1,14 +1,13 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import classNames from 'classnames';
 import rootComponent from '../../rootComponent';
 import { FetchSingularityStatus } from '../../actions/api/state';
 
 import HostStates from './HostStates';
 import StatusList from './StatusList';
 import Breakdown from './Breakdown';
-import Link from '../common/atomicDisplayItems/Link';
-import TimeStamp from '../common/atomicDisplayItems/TimeStamp';
-import PlainText from '../common/atomicDisplayItems/PlainText';
+import Utils from '../../utils';
 
 class StatusPage extends React.Component {
 
@@ -121,34 +120,34 @@ class StatusPage extends React.Component {
   }
 
   getRequestsData(model) {
-    return model.requests.map((r) => {
+    return model.requests.map((request) => {
       return (
         {
-          component: Link,
-          beforeFill: r.type,
-          prop: {
-            text: `${r.count} ${r.label} ${this.renderPercentage(r.count, model.totalRequests)}`,
-            url: r.link,
-            value: r.count,
-            id: r.type
-          }
+          component: (className) => (
+            <a href={request.link} className={className}>
+              {request.count} {request.label} {this.renderPercentage(request.count, model.totalRequests)}
+            </a>
+          ),
+          beforeFill: request.type,
+          value: request.count,
+          id: request.type
         }
       );
     });
   }
 
   getTasksData(model) {
-    const res = model.tasks.map((t) => {
+    const res = model.tasks.map((task) => {
       return (
       {
-        component: Link,
-        beforeFill: t.type,
-        prop: {
-          text: `${t.count} ${t.label} ${this.renderPercentage(t.count, model.totalTasks)}`,
-          url: t.link,
-          value: t.count,
-          id: t.type
-        }
+        component: (className) => (
+          <a href={task.link} className={className}>
+            {task.count} {task.label} {this.renderPercentage(task.count, model.totalTasks)}
+          </a>
+        ),
+        beforeFill: task.type,
+        value: task.count,
+        id: task.type
       }
       );
     });
@@ -156,23 +155,11 @@ class StatusPage extends React.Component {
   }
 
   renderPercentage(number, total) {
-    return number > 0 ? `(${Math.round(number / total * 100)}%)` : '';
+    return number > 0 && `(${Math.round(number / total * 100)}%)`;
   }
 
   renderTaskLag(model) {
-    if (model.maxTaskLag > 0) {
-      return (
-        <h4>
-          <TimeStamp prop={{
-            timestamp: model.maxTaskLag,
-            display: 'duration',
-            prefix: 'Max Task Lag:'
-          }}
-          />
-        </h4>
-      );
-    }
-    return null;
+    return model.maxTaskLag > 0 && (<h4>Max Task Lag: {Utils.duration(model.maxTaskLag)}</h4>);
   }
 
   render() {
@@ -222,31 +209,31 @@ class StatusPage extends React.Component {
               header="Racks"
               data={[
                 {
-                  component: Link,
-                  prop: {
-                    text: `${m.activeRacks} Active Racks`,
-                    url: 'racks/active',
-                    id: 'activeracks',
-                    value: m.activeRacks
-                  }
+                  component: (className) => (
+                    <a href="racks/active" className={className}>
+                      {m.activeRacks} Active Racks
+                    </a>
+                  ),
+                  id: 'activeracks',
+                  value: m.activeRacks
                 },
                 {
-                  component: Link,
-                  prop: {
-                    text: `${m.decomissioningRacks} Decommissioning Racks`,
-                    url: 'racks/decommission',
-                    id: 'decomracks',
-                    value: m.decomissioningRacks
-                  }
+                  component: (className) => (
+                    <a href="racks/decommission" className={className}>
+                      {m.decomissioningRacks} Decommissioning Racks
+                    </a>
+                  ),
+                  id: 'decomracks',
+                  value: m.decomissioningRacks
                 },
                 {
-                  component: Link,
-                  prop: {
-                    text: `${m.deadRacks} Inactive Racks`,
-                    url: 'racks/inactive',
-                    id: 'inactiveracks',
-                    value: m.deadRacks
-                  }
+                  component: (className) => (
+                    <a href="racks/inactive" className={className}>
+                      {m.deadRacks} Inactive Racks
+                    </a>
+                  ),
+                  id: 'inactiveracks',
+                  value: m.deadRacks
                 }
               ]}
             />
@@ -256,43 +243,43 @@ class StatusPage extends React.Component {
               header="Slaves"
               data={[
                 {
-                  component: Link,
-                  prop: {
-                    text: `${m.activeSlaves} Active Slaves`,
-                    url: 'slaves/active',
-                    value: m.activeSlaves,
-                    id: 'activeslaves'
-                  }
+                  component: (className) => (
+                    <a href="slaves/active" className={className}>
+                      {m.activeSlaves} Active Slaves
+                    </a>
+                  ),
+                  value: m.activeSlaves,
+                  id: 'activeslaves'
                 },
                 {
-                  component: Link,
-                  prop: {
-                    text: `${m.decomissioningSlaves} Decommissioning Slaves`,
-                    url: 'slaves/decommission',
-                    value: m.decomissioningSlaves,
-                    id: 'decomslaves'
-                  }
+                  component: (className) => (
+                    <a href="slaves/decommission" className={className}>
+                      {m.decomissioningSlaves} Decommissioning Slaves
+                    </a>
+                  ),
+                  value: m.decomissioningSlaves,
+                  id: 'decomslaves'
                 },
                 {
-                  component: Link,
-                  prop: {
-                    text: `${m.deadSlaves} Inactive Slaves`,
-                    url: 'slaves/inactive',
-                    className: m.deadSlaves > 0 ? 'color-warning' : '',
-                    value: m.deadSlaves,
-                    id: 'deadslaves'
-                  }
+                  component: (className) => (
+                    <a href="slaves/inactive" className={className}>
+                      {m.deadSlaves} Inactive Slaves
+                    </a>
+                  ),
+                  className: m.deadSlaves > 0 ? 'color-warning' : '',
+                  value: m.deadSlaves,
+                  id: 'deadslaves'
                 },
                 m.unknownSlaves ? {
-                  component: Link,
-                  prop: {
-                    text: `${m.unknownSlaves} Unknown Slaves`,
-                    url: 'slaves/inactive',
-                    className: 'color-warning',
-                    value: m.unknownSlaves,
-                    id: 'unknownslaves'
-                  }
-                } : undefined
+                  component: (className) => (
+                    <a href="slaves/inactive" className={className}>
+                      {m.unknownSlaves} Unknown Slaves
+                    </a>
+                  ),
+                  className: 'color-warning',
+                  value: m.unknownSlaves,
+                  id: 'unknownslaves'
+                } : null
               ]}
             />
           </div>
@@ -301,22 +288,21 @@ class StatusPage extends React.Component {
               header="Deploys"
               data={[
                 {
-                  component: PlainText,
-                  prop: {
-                    text: `${m.numDeploys} Active Deploys`,
-                    className: m.numDeploys < 2 ? 'text-muted' : '',
-                    value: m.numDeploys,
-                    id: 'numdeploys'
-                  }
+                  component: (className) => (
+                    <span className={classNames(className, m.numDeploys < 2 && 'text-muted')}>
+                      <strong>{m.numDeploys}</strong> Active Deploys
+                    </span>
+                  ),
+                  value: m.numDeploys,
+                  id: 'numdeploys'
                 },
                 m.oldestDeploy !== 0 ? {
-                  component: TimeStamp,
-                  prop: {
-                    timestamp: m.oldestDeploy,
-                    display: 'duration',
-                    postfix: 'since last deploy'
-                  }
-                } : undefined
+                  component: (className) => (
+                    <span className={className}>
+                      <strong>{Utils.duration(m.oldestDeploy)}</strong> since last deploy
+                    </span>
+                  )
+                } : null
               ]}
             />
           </div>
