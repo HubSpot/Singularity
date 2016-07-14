@@ -2,7 +2,7 @@ import React, { PropTypes } from 'react';
 import Utils from '../../utils';
 import Section from '../common/Section';
 import SimpleTable from '../common/SimpleTable';
-import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
+import { Glyphicon } from 'react-bootstrap';
 
 function TaskS3Logs (props) {
   return (
@@ -24,7 +24,7 @@ function TaskS3Logs (props) {
               <td>{Utils.absoluteTimestamp(data.lastModified)}</td>
               <td className="actions-column">
                 <a href={data.getUrl} target="_blank" title="Download">
-                  <Glyphicon iconClass="download-alt" />
+                  <Glyphicon glyph="download-alt" />
                 </a>
               </td>
             </tr>

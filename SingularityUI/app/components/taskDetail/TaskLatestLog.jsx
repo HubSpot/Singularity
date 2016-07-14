@@ -1,16 +1,16 @@
 import React, { PropTypes } from 'react';
 import Utils from '../../utils';
 import Section from '../common/Section';
-import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
+import { Glyphicon } from 'react-bootstrap';
 
 function TaskLatestLog (props) {
   const link = props.isStillRunning ? (
     <a href={`${config.appRoot}/task/${props.task.taskId.id}/tail/${Utils.substituteTaskId(config.runningTaskLogPath, props.task.taskId.id)}`} title="Log">
-        <span><Glyphicon iconClass="file" /> {Utils.fileName(config.runningTaskLogPath)}</span>
+        <span><Glyphicon glyph="file" /> {Utils.fileName(config.runningTaskLogPath)}</span>
     </a>
   ) : (
     <a href={`${config.appRoot}/task/${props.task.taskId.id}/tail/${Utils.substituteTaskId(config.finishedTaskLogPath, props.task.taskId.id)}`} title="Log">
-        <span><Glyphicon iconClass="file" /> {Utils.fileName(config.finishedTaskLogPath)}</span>
+        <span><Glyphicon glyph="file" /> {Utils.fileName(config.finishedTaskLogPath)}</span>
     </a>
   );
   return (

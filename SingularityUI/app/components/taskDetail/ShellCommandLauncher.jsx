@@ -1,9 +1,7 @@
 import React, {Component, PropTypes} from 'react';
 import classNames from 'classnames';
 
-import { Modal } from 'react-bootstrap';
-
-import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
+import { Modal, Glyphicon } from 'react-bootstrap';
 
 export default class ShellCommandLauncher extends Component {
 
@@ -95,7 +93,7 @@ export default class ShellCommandLauncher extends Component {
   stepStatus(state, text) {
     return (
       <li className={classNames({'complete text-success': state}, {'waiting': !state})}>
-        {!state ? <div className="page-loader loader-small" /> : <Glyphicon iconClass="ok" />} {text}...
+        {!state ? <div className="page-loader loader-small" /> : <Glyphicon glyph="ok" />} {text}...
       </li>
     );
   }
@@ -121,7 +119,7 @@ export default class ShellCommandLauncher extends Component {
             {this.renderStatusList()}
             {this.state.commandFailed && (
               <p className="text-danger">
-                <Glyphicon iconClass="remove" /> Command failed: {this.state.commandFailedMessage}
+                <Glyphicon glyph="remove" /> Command failed: {this.state.commandFailedMessage}
               </p>
             )}
           </div>

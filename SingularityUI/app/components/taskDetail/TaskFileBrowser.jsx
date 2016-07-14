@@ -1,10 +1,11 @@
 import React, { PropTypes } from 'react';
 import Utils from '../../utils';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import ToolTip from 'react-bootstrap/lib/Tooltip';
+import { Glyphicon } from 'react-bootstrap';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import SimpleTable from '../common/SimpleTable';
-import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
-import Link from '../common/atomicDisplayItems/Link';
 
 function TaskFileBrowser (props) {
   function navigateTo(link) {
@@ -42,7 +43,7 @@ function TaskFileBrowser (props) {
         headers={['Name', 'Size', 'Last Modified', '']}
         renderTableRow={(data, index) => {
           let nameLink = '';
-          let icon = <Glyphicon iconClass={data.isDirectory ? 'folder-open' : 'file'} />;
+          let icon = <Glyphicon glyph={data.isDirectory ? 'folder-open' : 'file'} />;
           if (data.isTailable) {
             nameLink = <a href={`${config.appRoot}/task/${props.taskId}/tail/${data.uiPath}`}>{icon}<span className="file-name">{data.name}</span></a>;
           } else if (!data.isTailable && !data.isDirectory) {
@@ -50,17 +51,13 @@ function TaskFileBrowser (props) {
           } else {
             nameLink = <a onClick={() => navigateTo(`${props.currentDirectory}/${data.name}`)}>{icon}<span className="file-name">{data.name}</span></a>;
           }
-          let linkProps = {
-            text: <Glyphicon iconClass="download-alt" />,
-            url: data.downloadLink,
-            title: 'Download',
-            altText: `Download ${data.name}`,
-            overlayTrigger: true,
-            overlayTriggerPlacement: 'left',
-            overlayToolTipContent: `Download ${data.name}`,
-            overlayId: `downloadFile${data.name}`
-          };
-          const link = !data.isDirectory && <Link prop={linkProps} />;
+          const link = !data.isDirectory && (
+            <OverlayTrigger placement="left" overlay={<ToolTip id={`downloadFile${data.name}`}>Download {data.name}</ToolTip>}>
+              <a href={data.downloadLink}>
+                <Glyphicon glyph="download-alt" />
+              </a>
+            </OverlayTrigger>
+          );
           return (
             <tr key={index}>
               <td>{nameLink}</td>

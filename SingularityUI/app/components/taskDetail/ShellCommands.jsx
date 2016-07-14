@@ -1,11 +1,11 @@
 import React, { Component, PropTypes } from 'react';
-import { Button } from 'react-bootstrap';
+import { Button, Glyphicon } from 'react-bootstrap';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import ToolTip from 'react-bootstrap/lib/Tooltip';
 
 import ShellCommandLauncher from './ShellCommandLauncher';
 
 import SimpleTable from '../common/SimpleTable';
-import Link from '../common/atomicDisplayItems/Link';
-import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 import Utils from '../../utils';
 
 export default class ShellCommands extends Component {
@@ -105,11 +105,11 @@ export default class ShellCommands extends Component {
             </label>
           </div>
           <Button bsStyle="success" onClick={(event) => this.handleRun(event)} disabled={this.state.submitDisabled}>Run</Button>
-          {this.state.responseText ? (
+          {this.state.responseText && (
             <span className="text-success" style={{marginLeft: '10px'}}>
-              <Glyphicon iconClass="ok" /> {this.state.responseText}
+              <Glyphicon glyph="ok" /> {this.state.responseText}
             </span>
-          ) : null}
+          )}
         </form>
       </div>
     );
@@ -143,13 +143,9 @@ export default class ShellCommands extends Component {
                   </td>
                   <td className="actions-column">
                     {filename && (
-                      <Link prop={{
-                        url: `${config.appRoot}/task/${data.shellRequest.taskId.id}/tail/${data.shellRequest.taskId.id}/${filename}`,
-                        text: '···',
-                        overlayTrigger: true,
-                        overlayId: filename,
-                        overlayTriggerPlacement: 'left',
-                        overlayToolTipContent: 'View output file'}} />
+                      <OverlayTrigger placement="left" overlay={<ToolTip id={filename}>View output file</ToolTip>}>
+                        <a href={`${config.appRoot}/task/${data.shellRequest.taskId.id}/tail/${data.shellRequest.taskId.id}/${filename}`}>···</a>
+                      </OverlayTrigger>
                     )}
                   </td>
                 </tr>
