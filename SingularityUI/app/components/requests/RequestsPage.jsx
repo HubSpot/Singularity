@@ -28,7 +28,6 @@ class RequestsPage extends Component {
     subFilter: PropTypes.string.isRequired,
     searchFilter: PropTypes.string.isRequired,
     requestsInState: PropTypes.arrayOf(PropTypes.object).isRequired,
-    updateFilters: PropTypes.func.isRequired,
     fetchFilter: PropTypes.func.isRequired
   };
 
