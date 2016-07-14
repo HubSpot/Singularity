@@ -1,14 +1,9 @@
-import app from 'application';
-
-window.app = app;
-
-import Messenger from 'messenger'; // eslint-disable-line no-unused-vars
-
-import 'bootstrap';
-
 import React from 'react';
 import ReactDOM from 'react-dom';
 import FormModal from './components/common/modal/FormModal';
+import AppRouter from './router';
+import configureStore from 'store';
+import { FetchUser } from 'actions/api/auth';
 
 // Set up third party configurations
 import 'thirdPartyConfigurations';
@@ -17,14 +12,24 @@ function setApiRoot(data) {
   if (data.apiRoot) {
     localStorage.setItem('apiRootOverride', data.apiRoot);
   }
-  window.location = window.location.href;
-  return window.location;
+  return location.reload();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   if (window.config.apiRoot) {
-    return window.app.initialize();
+    // set up Redux store
+    const store = configureStore();
+
+    // set up user
+    store.dispatch(FetchUser.trigger());
+
+    // Render the page content
+    return ReactDOM.render(<AppRouter store={store} />, document.getElementById('root'), () => {
+      // hide loading animation
+      document.getElementById('static-loader').remove();
+    });
   }
+
   return ReactDOM.render(
     <FormModal
       action="Set API Root"
