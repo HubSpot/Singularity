@@ -44,46 +44,32 @@ class RequestsPage extends Component {
     scaleRequest: React.PropTypes.func,
     bounceRequest: React.PropTypes.func,
     params: React.PropTypes.object,
-    router: React.PropTypes.object
+    router: React.PropTypes.object,
+    filter: React.PropTypes.shape({
+      state: React.PropTypes.string,
+      subFilter: React.PropTypes.array,
+      searchFilter: React.PropTypes.string
+    }).isRequired
   };
 
   constructor(props) {
     super(props);
-
     this.state = {
-      filter: {
-        state: props.params.state || 'all',
-        subFilter: !props.params.subFilter || props.params.subFilter === 'all' ? RequestFilters.REQUEST_TYPES : props.params.subFilter.split(','),
-        searchFilter: props.params.searchFilter || ''
-      },
       loading: false
     };
   }
 
   componentDidMount() {
-    if (filterSelector({requestsInState: this.props.requestsInState, filter: this.state.filter}).length) {
+    if (filterSelector({requestsInState: this.props.requestsInState, filter: this.props.filter}).length) {
       // legacy, remove asap
       Utils.fixTableColumns($(this.refs.table.getTableDOMNode()));
     }
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (this.props.params !== nextProps.params) {
-      this.setState({
-        filter: {
-          state: nextProps.params.state || 'all',
-          subFilter: !nextProps.params.subFilter || nextProps.params.subFilter === 'all' ? RequestFilters.REQUEST_TYPES : nextProps.params.subFilter.split(','),
-          searchFilter: nextProps.params.searchFilter || ''
-        }
-      });
-    }
-  }
-
   handleFilterChange(filter) {
-    const lastFilterState = this.state.filter.state;
+    const lastFilterState = this.props.filter.state;
     this.setState({
-      loading: lastFilterState !== filter.state,
-      filter
+      loading: lastFilterState !== filter.state
     });
 
     const subFilter = filter.subFilter.length === RequestFilters.REQUEST_TYPES.length ? 'all' : filter.subFilter.join(',');
@@ -99,7 +85,7 @@ class RequestsPage extends Component {
   }
 
   getColumns() {
-    switch (this.state.filter.state) {
+    switch (this.props.filter.state) {
       case 'pending':
         return [Cols.RequestId, Cols.PendingType];
       case 'cleanup':
@@ -131,7 +117,7 @@ class RequestsPage extends Component {
   }
 
   render() {
-    const displayRequests = filterSelector({requestsInState: this.props.requestsInState, filter: this.state.filter});
+    const displayRequests = filterSelector({requestsInState: this.props.requestsInState, filter: this.props.filter});
 
     let table;
     if (this.state.loading) {
@@ -153,9 +139,9 @@ class RequestsPage extends Component {
     return (
       <div>
         <RequestFilters
-          filter={this.state.filter}
+          filter={this.props.filter}
           onFilterChange={(filter) => this.handleFilterChange(filter)}
-          displayRequestTypeFilters={!_.contains(['pending', 'cleanup'], this.state.filter.state)}
+          displayRequestTypeFilters={!_.contains(['pending', 'cleanup'], this.props.filter.state)}
         />
         {table}
       </div>
@@ -163,7 +149,7 @@ class RequestsPage extends Component {
   }
 }
 
-function mapStateToProps(state) {
+function mapStateToProps(state, ownProps) {
   const requestsInState = state.api.requestsInState.data;
   const modifiedRequests = requestsInState.map((r) => {
     const hasActiveDeploy = !!(r.activeDeploy || (r.requestDeployState && r.requestDeployState.activeDeploy));
@@ -175,9 +161,15 @@ function mapStateToProps(state) {
       id: r.request ? r.request.id : r.requestId
     };
   });
+  const filter = {
+    state: ownProps.params.state || 'all',
+    subFilter: !ownProps.params.subFilter || ownProps.params.subFilter === 'all' ? RequestFilters.REQUEST_TYPES : ownProps.params.subFilter.split(','),
+    searchFilter: ownProps.params.searchFilter || ''
+  };
 
   return {
-    requestsInState: modifiedRequests
+    requestsInState: modifiedRequests,
+    filter
   };
 }
 

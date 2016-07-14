@@ -46,39 +46,25 @@ class TasksPage extends React.Component {
     cleanups: React.PropTypes.array,
     taskRun: React.PropTypes.func,
     taskRunHistory: React.PropTypes.func,
-    taskFiles: React.PropTypes.func
+    taskFiles: React.PropTypes.func,
+    filter: React.PropTypes.shape({
+      taskStatus: React.PropTypes.string,
+      requestTypes: React.PropTypes.array,
+      filterText: React.PropTypes.string
+    }).isRequired
   };
 
   constructor(props) {
     super(props);
     this.state = {
-      filter: {
-        taskStatus: props.params.state || 'active',
-        requestTypes: !props.params.requestsSubFilter || props.params.requestsSubFilter === 'all' ? TaskFilters.REQUEST_TYPES : props.params.requestsSubFilter.split(','),
-        filterText: props.params.searchFilter || '',
-        loading: false
-      }
+      loading: false
     };
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (this.props.params !== nextProps.params) {
-      this.setState({
-        filter: {
-          taskStatus: nextProps.params.state || 'active',
-          requestTypes: !nextProps.params.requestsSubFilter || nextProps.params.requestsSubFilter === 'all' ? TaskFilters.REQUEST_TYPES : nextProps.params.requestsSubFilter.split(','),
-          filterText: nextProps.params.searchFilter || '',
-          loading: false
-        }
-      });
-    }
-  }
-
   handleFilterChange(filter) {
-    const lastFilterTaskStatus = this.state.filter.taskStatus;
+    const lastFilterTaskStatus = this.props.filter.taskStatus;
     this.setState({
-      loading: lastFilterTaskStatus !== filter.taskStatus,
-      filter
+      loading: lastFilterTaskStatus !== filter.taskStatus
     });
 
     const requestTypes = filter.requestTypes.length === TaskFilters.REQUEST_TYPES.length ? 'all' : filter.requestTypes.join(',');
@@ -95,7 +81,7 @@ class TasksPage extends React.Component {
 
 
   getColumns() {
-    switch (this.state.filter.taskStatus) {
+    switch (this.props.filter.taskStatus) {
       case 'active':
         return [TaskIdShortened, StartedAt, Host, Rack, CPUs, Memory, ActiveActions];
       case 'scheduled':
@@ -112,7 +98,7 @@ class TasksPage extends React.Component {
   }
 
   getDefaultSortAttribute(t) {
-    switch (this.state.filter.taskStatus) {
+    switch (this.props.filter.taskStatus) {
       case 'active':
       case 'decommissioning':
         return t.taskId.startedAt;
@@ -125,11 +111,11 @@ class TasksPage extends React.Component {
   }
 
   render() {
-    const displayRequestTypeFilters = this.state.filter.taskStatus === 'active';
-    const displayTasks = this.state.filter.taskStatus !== 'decommissioning' ?
-      _.sortBy(getFilteredTasks({tasks: this.props.tasks, filter: this.state.filter}), (t) => this.getDefaultSortAttribute(t)) :
+    const displayRequestTypeFilters = this.props.filter.taskStatus === 'active';
+    const displayTasks = this.props.filter.taskStatus !== 'decommissioning' ?
+      _.sortBy(getFilteredTasks({tasks: this.props.tasks, filter: this.props.filter}), (t) => this.getDefaultSortAttribute(t)) :
       _.sortBy(getDecomissioningTasks({tasks: this.props.tasks, cleanups: this.props.cleanups}), (t) => this.getDefaultSortAttribute(t));
-    if (_.contains(['active', 'decommissioning'], this.state.filter.taskStatus)) displayTasks.reverse();
+    if (_.contains(['active', 'decommissioning'], this.props.filter.taskStatus)) displayTasks.reverse();
 
     let table;
     if (this.state.loading) {
@@ -149,17 +135,23 @@ class TasksPage extends React.Component {
 
     return (
       <div>
-        <TaskFilters filter={this.state.filter} onFilterChange={(...args) => this.handleFilterChange(...args)} displayRequestTypeFilters={displayRequestTypeFilters} />
+        <TaskFilters filter={this.props.filter} onFilterChange={(...args) => this.handleFilterChange(...args)} displayRequestTypeFilters={displayRequestTypeFilters} />
         {table}
       </div>
     );
   }
 }
 
-function mapStateToProps(state) {
+function mapStateToProps(state, ownProps) {
+  const filter = {
+    taskStatus: ownProps.params.state || 'active',
+    requestTypes: !ownProps.params.requestsSubFilter || ownProps.params.requestsSubFilter === 'all' ? TaskFilters.REQUEST_TYPES : ownProps.params.requestsSubFilter.split(','),
+    filterText: ownProps.params.searchFilter || ''
+  };
   return {
     tasks: state.api.tasks.data,
-    cleanups: state.api.taskCleanups.data
+    cleanups: state.api.taskCleanups.data,
+    filter
   };
 }
 
