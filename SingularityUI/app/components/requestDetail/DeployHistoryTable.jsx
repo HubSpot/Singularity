@@ -1,6 +1,8 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 
+import Section from '../common/Section';
+
 import Utils from '../../utils';
 
 import { FetchDeploysForRequest } from '../../actions/api/history';
@@ -15,8 +17,7 @@ const DeployHistoryTable = ({requestId, deploysAPI}) => {
     : 'No deploys'
   );
   return (
-    <div>
-      <h2>Deploy history</h2>
+    <Section id="deploy-history" title="Deploy history">
       <ServerSideTable
         emptyMessage={emptyTableMessage}
         entries={deploys}
@@ -50,7 +51,7 @@ const DeployHistoryTable = ({requestId, deploysAPI}) => {
           );
         }}
       />
-    </div>
+    </Section>
   );
 };
 

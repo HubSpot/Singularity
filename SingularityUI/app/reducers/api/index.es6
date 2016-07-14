@@ -25,7 +25,9 @@ import { FetchTaskS3Logs } from '../../actions/api/logs';
 import {
   FetchRacks,
   FreezeRack,
-  DecommissionRack
+  DecommissionRack,
+  RemoveRack,
+  ReactivateRack
 } from '../../actions/api/racks';
 
 import {
@@ -44,7 +46,9 @@ import { FetchTaskFiles } from '../../actions/api/sandbox';
 import {
   FetchSlaves,
   FreezeSlave,
-  DecommissionSlave
+  DecommissionSlave,
+  RemoveSlave,
+  ReactivateSlave
 } from '../../actions/api/slaves';
 
 import {
@@ -53,6 +57,7 @@ import {
 
 import {
   FetchTasksInState,
+  FetchScheduledTasksForRequest,
   FetchTask, // currently FetchTaskHistory is used for `task` in the store
   KillTask,
   FetchTaskCleanups,
@@ -65,7 +70,15 @@ import { FetchWebhooks } from '../../actions/api/webhooks';
 const user = buildApiActionReducer(FetchUser);
 const webhooks = buildApiActionReducer(FetchWebhooks, []);
 const slaves = buildApiActionReducer(FetchSlaves, []);
+const freezeSlave = buildApiActionReducer(FreezeSlave, []);
+const decommissionSlave = buildApiActionReducer(DecommissionSlave, []);
+const removeSlave = buildApiActionReducer(RemoveSlave, []);
+const reactivateSlave = buildApiActionReducer(ReactivateSlave, []);
 const racks = buildApiActionReducer(FetchRacks, []);
+const freezeRack = buildApiActionReducer(FreezeRack, []);
+const decommissionRack = buildApiActionReducer(DecommissionRack, []);
+const removeRack = buildApiActionReducer(RemoveRack, []);
+const reactivateRack = buildApiActionReducer(ReactivateRack, []);
 const request = buildKeyedApiActionReducer(FetchRequest);
 const saveRequest = buildApiActionReducer(SaveRequest);
 const requests = buildApiActionReducer(FetchRequests, []);
@@ -78,8 +91,9 @@ const deploysForRequest = buildKeyedApiActionReducer(FetchDeploysForRequest, [])
 const saveDeploy = buildApiActionReducer(SaveDeploy);
 const activeTasksForDeploy = buildApiActionReducer(FetchActiveTasksForDeploy);
 const activeTasksForRequest = buildKeyedApiActionReducer(FetchActiveTasksForRequest, []);
+const scheduledTasksForRequest = buildKeyedApiActionReducer(FetchScheduledTasksForRequest, []);
 const taskHistoryForDeploy = buildApiActionReducer(FetchTaskHistoryForDeploy);
-const taskHistoryForRequest = buildApiActionReducer(FetchTaskHistoryForRequest, []);
+const taskHistoryForRequest = buildKeyedApiActionReducer(FetchTaskHistoryForRequest, []);
 const taskCleanups = buildApiActionReducer(FetchTaskCleanups, []);
 const taskFiles = buildKeyedApiActionReducer(FetchTaskFiles, []);
 const taskResourceUsage = buildApiActionReducer(FetchTaskStatistics);
@@ -93,7 +107,15 @@ export default combineReducers({
   user,
   webhooks,
   slaves,
+  freezeSlave,
+  decommissionSlave,
+  removeSlave,
+  reactivateSlave,
   racks,
+  freezeRack,
+  decommissionRack,
+  removeRack,
+  reactivateRack,
   request,
   saveRequest,
   requests,
@@ -108,6 +130,7 @@ export default combineReducers({
   tasks,
   activeTasksForDeploy,
   activeTasksForRequest,
+  scheduledTasksForRequest,
   taskHistoryForDeploy,
   taskHistoryForRequest,
   taskCleanups,
