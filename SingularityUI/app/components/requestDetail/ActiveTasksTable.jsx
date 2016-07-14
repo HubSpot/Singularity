@@ -1,6 +1,8 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 
+import { Button } from 'react-bootstrap';
+
 import Section from '../common/Section';
 
 import Utils from '../../utils';
@@ -24,8 +26,21 @@ const ActiveTasksTable = ({requestId, tasksAPI}) => {
     : <p>No active tasks</p>
   );
 
+  let maybeAggregateTailButton;
+  if (tasks.length > 1) {
+    maybeAggregateTailButton = (
+      <Button
+        className="pull-right"
+        href={`${config.appRoot}/request/${requestId}/tail/$TASK_ID/${config.runningTaskLogPath}`}>
+        View Aggregate Logs
+      </Button>
+    );
+  }
+
+  const title = <span>Running instances {maybeAggregateTailButton}</span>;
+
   return (
-    <Section id="running-instances" title="Running instances">
+    <Section id="running-instances" title={title}>
       { localStorage.enableTaskStateBreakdown ? <TaskStateBreakdown requestId={requestId} /> : null }
       <UITable
         data={tasks}
