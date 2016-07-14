@@ -66,6 +66,9 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
       return fetch(config.apiRoot + options.url, _.extend({credentials: 'include'}, _.omit(options, 'url')))
         .then(response => {
           apiResponse = response;
+          if (response.status === 204) {
+            return Promise.resolve();
+          }
           if (response.headers.get('Content-Type') === 'application/json') {
             return response.json();
           }
@@ -75,7 +78,10 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
           if ((apiResponse.status >= 200 && apiResponse.status < 300) || (options.successResponseCodes && _.contains(options.successResponseCodes, apiResponse.status))) {
             return dispatch(success(data, apiResponse.status, key));
           }
-          return dispatch(error(data, options, apiResponse, key));
+          if (data.message) {
+            return dispatch(error(data, apiResponse.status, key));
+          }
+          return dispatch(error({message: data}, apiResponse.status, key));
         });
     };
   }
