@@ -349,7 +349,7 @@ function mapHealthchecksToProps(task) {
   task.lastHealthcheckFailed = hcs && hcs.length > 0 && hcs[0].statusCode !== 200;
   task.healthcheckFailureReasonMessage = Utils.healthcheckFailureReasonMessage(task);
   task.tooManyRetries = hcs && hcs.length > task.task.taskRequest.deploy.healthcheckMaxRetries && task.task.taskRequest.deploy.healthcheckMaxRetries > 0;
-  task.secondsElapsed = task.task.taskRequest && task.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds || config.defaultDeployHealthTimeoutSeconds;
+  task.secondsElapsed = task.task && task.task.taskRequest && task.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds || config.defaultDeployHealthTimeoutSeconds;
   return task;
 }
 
@@ -361,10 +361,10 @@ function mapTaskToProps(task) {
   }
   task.isStillRunning = isStillRunning;
 
-  task.isCleaning = task.lastKnownState.taskState === 'TASK_CLEANING';
+  task.isCleaning = task.lastKnownState && task.lastKnownState.taskState === 'TASK_CLEANING';
 
   const ports = [];
-  if (task.task.taskRequest.deploy.resources.numPorts > 0) {
+  if (task.task && task.task.taskRequest.deploy.resources.numPorts > 0) {
     for (const resource of task.task.mesosTask.resources) {
       if (resource.name === 'ports') {
         for (const range of resource.ranges.range) {
@@ -381,9 +381,11 @@ function mapTaskToProps(task) {
 }
 
 function mapStateToProps(state, ownProps) {
-  let task = state.api.task[ownProps.params.taskId].data;
-  task = mapTaskToProps(task);
-  task = mapHealthchecksToProps(task);
+  let task = state.api.task[ownProps.params.taskId];
+  if (task && task.data) {
+    task = mapTaskToProps(task.data);
+    task = mapHealthchecksToProps(task);
+  }
   return {
     task,
     taskCleanups: state.api.taskCleanups.data,
