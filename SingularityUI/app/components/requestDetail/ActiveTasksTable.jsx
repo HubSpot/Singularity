@@ -1,6 +1,8 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 
+import Section from '../common/Section';
+
 import Utils from '../../utils';
 
 import UITable from '../common/table/UITable';
@@ -15,15 +17,20 @@ import {
 
 import TaskStateBreakdown from './TaskStateBreakdown';
 
-const ActiveTasksTable = ({requestId, tasks}) => {
+const ActiveTasksTable = ({requestId, tasksAPI}) => {
+  const tasks = tasksAPI ? tasksAPI.data : [];
+  const emptyTableMessage = (Utils.api.isFirstLoad(tasksAPI)
+    ? <p>Loading...</p>
+    : <p>No active tasks</p>
+  );
+
   return (
-    <div>
-      <h2>Running instances</h2>
+    <Section id="running-instances" title="Running instances">
       { localStorage.enableTaskStateBreakdown ? <TaskStateBreakdown requestId={requestId} /> : null }
       <UITable
         data={tasks}
         keyGetter={(t) => t.taskId.id}
-        emptyTableMessage={<p>No active tasks</p>}
+        emptyTableMessage={emptyTableMessage}
       >
         {TaskId}
         {LastTaskState}
@@ -32,20 +39,19 @@ const ActiveTasksTable = ({requestId, tasks}) => {
         {UpdatedAt}
         {LogLinkAndJSON}
       </UITable>
-    </div>
+    </Section>
   );
 };
 
 ActiveTasksTable.propTypes = {
   requestId: PropTypes.string.isRequired,
-  tasks: PropTypes.arrayOf(PropTypes.object).isRequired
+  tasksAPI: PropTypes.object.isRequired
 };
 
 const mapStateToProps = (state, ownProps) => ({
-  tasks: Utils.maybe(
+  tasksAPI: Utils.maybe(
     state.api.activeTasksForRequest,
-    [ownProps.requestId, 'data'],
-    []
+    [ownProps.requestId]
   )
 });
 

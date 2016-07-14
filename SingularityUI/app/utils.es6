@@ -258,6 +258,10 @@ const Utils = {
       return timeObject.format(window.config.timestampFormat);
   },
 
+  absoluteTimestampWithSeconds(millis) {
+    return moment(millis).format(window.config.timestampWithSecondsFormat);
+  },
+
   timestampWithinSeconds(timestamp, seconds) {
     const before = moment().subtract(seconds, 'seconds');
     const after = moment().add(seconds, 'seconds');
@@ -374,49 +378,48 @@ const Utils = {
     return filename.replace(new RegExp(finalRegex), '');
   },
 
+  millisecondsToSecondsRoundToTenth(millis) {
+    return Math.round(millis / 100) / 10;
+  },
+
   isCauseOfFailure(task, deploy) {
-    deploy.deployResult.deployFailures.map(failure => {
-      if (failure.taskId && failure.taskId.id === task.taskId) {
+    for (const failure of deploy.deployResult.deployFailures) {
+      if (failure.taskId && failure.taskId.id === task.task.taskId.id) {
         return true;
       }
-    });
+    }
     return false;
   },
 
   causeOfDeployFailure(task, deploy) {
-    let failureCause;
-    failureCause = '';
-    deploy.deployResult.deployFailures.map(failure => {
-      if (failure.taskId && failure.taskId.id === task.taskId) {
-        return failureCause = Utils.humanizeText(failure.reason);
+    for (const failure of deploy.deployResult.deployFailures) {
+      if (failure.taskId && failure.taskId.id === task.task.taskId.id) {
+        return this.humanizeText(failure.reason);
       }
-    });
-    if (failureCause) {
-      return failureCause;
     }
+    return '';
   },
 
   ifDeployFailureCausedTaskToBeKilled(task) {
-    let deployFailed, taskKilled;
-    deployFailed = false;
-    taskKilled = false;
-    task.taskUpdates.map(update => {
+    let deployFailed = false;
+    let taskKilled = false;
+    for (const update of task.taskUpdates) {
       if (update.statusMessage && update.statusMessage.indexOf('DEPLOY_FAILED' !== -1)) {
         deployFailed = true;
       }
       if (update.taskState === 'TASK_KILLED') {
-        return taskKilled = true;
+        taskKilled = true;
       }
-    });
+    }
     return deployFailed && taskKilled;
   },
 
   healthcheckFailureReasonMessage(task) {
-    let healthcheckResults = task.healthcheckResults;
+    const healthcheckResults = task.healthcheckResults;
     if (healthcheckResults && healthcheckResults.length > 0) {
-      if (healthcheckResults[0].errorMessage && healthcheckResults[0].errorMessage.toLowerCase().indexOf('connection refused') != -1) {
-        let portIndex = task.task.taskRequest.deploy.healthcheckPortIndex || 0;
-        let port = task.ports && task.ports.length > portIndex ? task[portIndex] : false;
+      if (_.last(healthcheckResults).errorMessage && _.last(healthcheckResults).errorMessage.toLowerCase().indexOf('connection refused') !== -1) {
+        const portIndex = task.task.taskRequest.deploy.healthcheckPortIndex || 0;
+        const port = task.ports && task.ports.length > portIndex ? task.ports[portIndex] : false;
         return `a refused connection. It is possible your app did not start properly or was not listening on the anticipated port (${port}). Please check the logs for more details.`;
       }
     }

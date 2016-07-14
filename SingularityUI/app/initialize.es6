@@ -23,8 +23,7 @@ import ReactDOM from 'react-dom';
 
 import ApiRootOverride from './components/common/ApiRootOverride';
 
-// Initialize the app on DOMContentReady
-$(() => {
+document.addEventListener('DOMContentLoaded', () => {
   if (window.config.apiRoot) {
     return window.app.initialize();
   }
