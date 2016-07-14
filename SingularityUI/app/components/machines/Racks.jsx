@@ -1,7 +1,5 @@
 import React, {PropTypes} from 'react';
 import MachinesPage from './MachinesPage';
-import PlainText from '../common/atomicDisplayItems/PlainText';
-import TimeStamp from '../common/atomicDisplayItems/TimeStamp';
 import {Glyphicon} from 'react-bootstrap';
 import ModalButton from './ModalButton';
 import MessageElement from './MessageElement';
@@ -38,28 +36,6 @@ const Racks = React.createClass({
 
   showUser(rack) {
     return __in__(rack.currentState.state, ['ACTIVE', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']);
-  },
-
-  columnHeads(type) {
-    const heads = [
-      {
-        data: 'ID'
-      },
-      {
-        data: 'Current State'
-      },
-      {
-        data: 'Uptime'
-      }
-    ];
-    if (this.typeName[type]) {
-      heads.push({
-        data: this.typeName[type]
-      });
-    }
-    heads.push({ data: 'Message' });
-    heads.push({}); // Reactivate button and Decommission or Remove button
-    return heads;
   },
 
   getMaybeReactivateButton(rack) {
@@ -110,60 +86,35 @@ const Racks = React.createClass({
     );
   },
 
-
-  getData(type, rack) {
-    const data = [
-      {
-        component: PlainText,
-        prop: {
-          text: rack.id
-        }
-      },
-      {
-        component: PlainText,
-        prop: {
-          text: Utils.humanizeText(rack.currentState.state)
-        }
-      },
-      {
-        component: TimeStamp,
-        prop: {
-          display: 'duration',
-          timestamp: Date.now() - rack.firstSeenAt
-        }
-      }
-    ];
+  columnHeads(type) {
+    const heads = ['ID', 'Current State', 'Uptime'];
     if (this.typeName[type]) {
-      data.push({
-        component: PlainText,
-        prop: {
-          text: this.showUser(rack) && rack.currentState.user ? rack.currentState.user : ''
-        }
-      });
+      heads.push(this.typeName[type]);
     }
-    data.push({
-      component: PlainText,
-      prop: {
-        text: rack.currentState.message || ''
-      }
-    });
-    data.push({
-      component: PlainText,
-      className: 'actions-column',
-      prop: {
-        text: <div>{this.getMaybeReactivateButton(rack)} {this.getDecommissionOrRemoveButton(rack)} </div>
-      }
-    });
-    return data;
+    heads.push('Message');
+    heads.push(''); // Reactivate button and Decommission or Remove button
+    return heads;
+  },
+
+
+  getRow(type, rack) {
+    return (
+      <tr key={rack.id}>
+        <td>{rack.id}</td>
+        <td>{Utils.humanizeText(rack.currentState.state)}</td>
+        <td>{Utils.duration(Date.now() - rack.firstSeenAt)}</td>
+        {this.typeName[type] && <td>{this.showUser(rack) && rack.currentState.user}</td>}
+        <td>{rack.currentState.message}</td>
+        <td className="actions-column">
+          {this.getMaybeReactivateButton(rack)}
+          {this.getDecommissionOrRemoveButton(rack)}
+        </td>
+      </tr>
+    );
   },
 
   getRacks(type, racks) {
-    return racks.map(rack => {
-      return {
-        dataId: rack.id,
-        data: this.getData(type, rack)
-      };
-    });
+    return racks.map(rack => this.getRow(type, rack));
   },
 
   getActiveRacks() {
@@ -182,20 +133,20 @@ const Racks = React.createClass({
     return [
       {
         stateName: 'Active',
-        emptyTableMessage: 'No Active Racks',
-        stateTableColumnMetadata: this.columnHeads('active'),
+        emptyMessage: 'No Active Racks',
+        headers: this.columnHeads('active'),
         hostsInState: this.getRacks('active', this.getActiveRacks())
       },
       {
         stateName: 'Decommissioning',
-        emptyTableMessage: 'No Decommissioning Racks',
-        stateTableColumnMetadata: this.columnHeads('decommissioning'),
+        emptyMessage: 'No Decommissioning Racks',
+        headers: this.columnHeads('decommissioning'),
         hostsInState: this.getRacks('decommissioning', this.getDecommissioningRacks())
       },
       {
         stateName: 'Inactive',
-        emptyTableMessage: 'No Inactive Racks',
-        stateTableColumnMetadata: this.columnHeads('inactive'),
+        emptyMessage: 'No Inactive Racks',
+        headers: this.columnHeads('inactive'),
         hostsInState: this.getRacks('inactive', this.getInactiveRacks())
       }
     ];

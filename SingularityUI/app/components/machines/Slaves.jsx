@@ -1,8 +1,5 @@
 import React, {PropTypes} from 'react';
 import MachinesPage from './MachinesPage';
-import PlainText from '../common/atomicDisplayItems/PlainText';
-import TimeStamp from '../common/atomicDisplayItems/TimeStamp';
-import Link from '../common/atomicDisplayItems/Link';
 import {Glyphicon} from 'react-bootstrap';
 import ModalButton from './ModalButton';
 import MessageElement from './MessageElement';
