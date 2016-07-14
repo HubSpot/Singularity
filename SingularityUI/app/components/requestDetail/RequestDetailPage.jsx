@@ -11,11 +11,15 @@ import {
   FetchDeploysForRequest,
   FetchRequestHistory
 } from '../../actions/api/history';
-import { FetchTaskCleanups } from '../../actions/api/tasks';
+import {
+  FetchScheduledTasksForRequest,
+  FetchTaskCleanups
+} from '../../actions/api/tasks';
 
 import RequestHeader from './RequestHeader';
 import RequestExpiringActions from './RequestExpiringActions';
 import ActiveTasksTable from './ActiveTasksTable';
+import PendingTasksTable from './PendingTasksTable';
 import TaskHistoryTable from './TaskHistoryTable';
 import DeployHistoryTable from './DeployHistoryTable';
 import RequestHistoryTable from './RequestHistoryTable';
@@ -36,6 +40,7 @@ class RequestDetailPage extends Component {
         <RequestHeader requestId={requestId} />
         <RequestExpiringActions requestId={requestId} />
         <ActiveTasksTable requestId={requestId} />
+        <PendingTasksTable requestId={requestId} />
         <TaskHistoryTable requestId={requestId} />
         <DeployHistoryTable requestId={requestId} />
         <RequestHistoryTable requestId={requestId} />
@@ -54,6 +59,7 @@ const mapDispatchToProps = (dispatch, ownProps) => {
   const refreshActions = [
     FetchRequest.trigger(ownProps.params.requestId),
     FetchActiveTasksForRequest.trigger(ownProps.params.requestId),
+    FetchScheduledTasksForRequest.trigger(ownProps.params.requestId),
     FetchTaskCleanups.trigger()
   ];
   return {
@@ -67,6 +73,7 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     ),
     fetchRequest: (requestId) => dispatch(FetchRequest.trigger(requestId)),
     fetchActiveTasksForRequest: (requestId) => dispatch(FetchActiveTasksForRequest.trigger(requestId)),
+    fetchScheduledTasksForRequest: (requestId) => dispatch(FetchScheduledTasksForRequest.trigger(requestId)),
     fetchTaskCleanups: () => dispatch(FetchTaskCleanups.trigger()),
     fetchTaskHistoryForRequest: (requestId, count, page) => dispatch(FetchTaskHistoryForRequest.trigger(requestId, count, page)),
     fetchDeploysForRequest: (requestId, count, page) => dispatch(FetchDeploysForRequest.trigger(requestId, count, page)),
@@ -81,6 +88,7 @@ function refresh(props) {
   props.fetchTaskHistoryForRequest(props.params.requestId, 5, 1);
   props.fetchDeploysForRequest(props.params.requestId, 5, 1);
   props.fetchRequestHistory(props.params.requestId, 5, 1);
+  props.fetchScheduledTasksForRequest(props.params.requestId);
 }
 
 export default connect(

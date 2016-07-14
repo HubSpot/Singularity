@@ -53,7 +53,7 @@ const RequestTitle = ({requestId, requestAPI}) => {
 
 RequestTitle.propTypes = {
   requestId: PropTypes.string.isRequired,
-  requestAPI: PropTypes.object.isRequired
+  requestAPI: PropTypes.object
 };
 
 const mapStateToProps = (state, ownProps) => ({
