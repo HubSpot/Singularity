@@ -15,7 +15,7 @@ const RequestHistoryTable = ({requestId, requestEventsAPI}) => {
     : 'No request history'
   );
   return (
-    <div>
+    <div id="deploy-history">
       <h2>Request history</h2>
       <ServerSideTable
         emptyMessage={emptyTableMessage}
