@@ -12,6 +12,20 @@ moment.locale('en', {
   }
 });
 
+// Time out requests within 10 seconds
+$.ajaxSetup(
+  {timeout: 10 * 1000}
+);
+
+// Patch jQuery ajax to always use xhrFields.withCredentials true
+const _oldAjax = jQuery.ajax;
+jQuery.ajax = (opts) => {
+  if (opts.xhrFields == null) { opts.xhrFields = {}; }
+  opts.xhrFields.withCredentials = true;
+
+  return _oldAjax.call(jQuery, opts);
+};
+
 // Messenger options
 Messenger.options = {
   extraClasses: 'messenger-fixed messenger-on-top',
