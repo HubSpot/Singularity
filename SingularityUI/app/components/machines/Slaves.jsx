@@ -2,7 +2,7 @@ import React, {PropTypes} from 'react';
 import MachinesPage from './MachinesPage';
 import {Glyphicon} from 'react-bootstrap';
 import ModalButton from './ModalButton';
-import MessageElement from './MessageElement';
+import messageElement from './messageElement';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
 import { FetchSlaves, FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSlave } from '../../actions/api/slaves';
