@@ -3,6 +3,10 @@ import Utils from 'utils';
 
 import { fetchTasksForRequest } from './activeTasks';
 
+function __in__(needle, haystack) {
+  return haystack.indexOf(needle) >= 0;
+}
+
 const fetchData = (taskId, path, offset = undefined, length = 0) => {
   length = Math.max(length, 0);  // API breaks if you request a negative length
   return $.ajax(
@@ -394,7 +398,3 @@ export const scrollAllToBottom = () =>
   };
 
 export default { initialize, initializeUsingActiveTasks, taskGroupFetchNext, taskGroupFetchPrevious, clickPermalink, updateGroups, updateTaskStatuses, updateFilesizes, taskGroupTop, taskGroupBottom, selectLogColor, switchViewMode, setCurrentSearch, toggleTaskLog, scrollToTop, scrollAllToTop, scrollToBottom, scrollAllToBottom, removeTaskGroup, expandTaskGroup };
-
-function __in__(needle, haystack) {
-  return haystack.indexOf(needle) >= 0;
-}
