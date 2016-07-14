@@ -58,13 +58,6 @@ class RequestsPage extends Component {
     };
   }
 
-  componentDidMount() {
-    if (filterSelector({requestsInState: this.props.requestsInState, filter: this.props.filter}).length) {
-      // legacy, remove asap
-      Utils.fixTableColumns($(this.refs.table.getTableDOMNode()));
-    }
-  }
-
   handleFilterChange(filter) {
     const lastFilterState = this.props.filter.state;
     this.setState({
