@@ -7,6 +7,7 @@ import TaskLauncher from '../common/TaskLauncher';
 import FormModal from '../common/modal/FormModal';
 
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
+import Messenger from 'messenger';
 
 class RunNowModal extends Component {
   static propTypes = {
@@ -27,7 +28,12 @@ class RunNowModal extends Component {
 
   handleRunNow(data) {
     this.props.runNow(data).then((response) => {
-      if (_.contains([RunNowModal.AFTER_TRIGGER.SANDBOX.value, RunNowModal.AFTER_TRIGGER.TAIL.value], data.afterTrigger)) {
+      if (response.error) {
+        Messenger().post({
+          message: '<p>This request cannot be run now. This is likely because it is already running.</p>',
+          type: 'error'
+        });
+      } else if (_.contains([RunNowModal.AFTER_TRIGGER.SANDBOX.value, RunNowModal.AFTER_TRIGGER.TAIL.value], data.afterTrigger)) {
         this.refs.taskLauncher.getWrappedInstance().startPolling(
           response.data.request.id,
           response.data.pendingRequest.runId,
