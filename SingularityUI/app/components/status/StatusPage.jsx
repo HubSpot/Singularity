@@ -1,6 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
+import { Link } from 'react-router';
 import rootComponent from '../../rootComponent';
 import { FetchSingularityStatus } from '../../actions/api/state';
 
@@ -124,9 +125,9 @@ class StatusPage extends React.Component {
       return (
         {
           component: (className) => (
-            <a href={request.link} className={className}>
+            <Link to={request.link} className={className}>
               {request.count} {request.label} {this.renderPercentage(request.count, model.totalRequests)}
-            </a>
+            </Link>
           ),
           beforeFill: request.type,
           value: request.count,
@@ -141,9 +142,9 @@ class StatusPage extends React.Component {
       return (
       {
         component: (className) => (
-          <a href={task.link} className={className}>
+          <Link to={task.link} className={className}>
             {task.count} {task.label} {this.renderPercentage(task.count, model.totalTasks)}
-          </a>
+          </Link>
         ),
         beforeFill: task.type,
         value: task.count,
@@ -210,27 +211,27 @@ class StatusPage extends React.Component {
               data={[
                 {
                   component: (className) => (
-                    <a href="racks/active" className={className}>
+                    <Link to="racks/active" className={className}>
                       {m.activeRacks} Active Racks
-                    </a>
+                    </Link>
                   ),
                   id: 'activeracks',
                   value: m.activeRacks
                 },
                 {
                   component: (className) => (
-                    <a href="racks/decommission" className={className}>
+                    <Link to="racks/decommission" className={className}>
                       {m.decomissioningRacks} Decommissioning Racks
-                    </a>
+                    </Link>
                   ),
                   id: 'decomracks',
                   value: m.decomissioningRacks
                 },
                 {
                   component: (className) => (
-                    <a href="racks/inactive" className={className}>
+                    <Link to="racks/inactive" className={className}>
                       {m.deadRacks} Inactive Racks
-                    </a>
+                    </Link>
                   ),
                   id: 'inactiveracks',
                   value: m.deadRacks
@@ -244,27 +245,27 @@ class StatusPage extends React.Component {
               data={[
                 {
                   component: (className) => (
-                    <a href="slaves/active" className={className}>
+                    <Link to="slaves/active" className={className}>
                       {m.activeSlaves} Active Slaves
-                    </a>
+                    </Link>
                   ),
                   value: m.activeSlaves,
                   id: 'activeslaves'
                 },
                 {
                   component: (className) => (
-                    <a href="slaves/decommission" className={className}>
+                    <Link to="slaves/decommission" className={className}>
                       {m.decomissioningSlaves} Decommissioning Slaves
-                    </a>
+                    </Link>
                   ),
                   value: m.decomissioningSlaves,
                   id: 'decomslaves'
                 },
                 {
                   component: (className) => (
-                    <a href="slaves/inactive" className={className}>
+                    <Link to="slaves/inactive" className={className}>
                       {m.deadSlaves} Inactive Slaves
-                    </a>
+                    </Link>
                   ),
                   className: m.deadSlaves > 0 ? 'color-warning' : '',
                   value: m.deadSlaves,
@@ -272,9 +273,9 @@ class StatusPage extends React.Component {
                 },
                 m.unknownSlaves ? {
                   component: (className) => (
-                    <a href="slaves/inactive" className={className}>
+                    <Link to="slaves/inactive" className={className}>
                       {m.unknownSlaves} Unknown Slaves
-                    </a>
+                    </Link>
                   ),
                   className: 'color-warning',
                   value: m.unknownSlaves,
