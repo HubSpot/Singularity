@@ -14,6 +14,7 @@ class TaskLauncher extends Component {
     fetchRequestRun: PropTypes.func.isRequired,
     fetchRequestRunHistory: PropTypes.func.isRequired,
     fetchTaskFiles: PropTypes.func.isRequired,
+    router: PropTypes.object.isRequired
   };
 
   constructor() {
@@ -39,19 +40,22 @@ class TaskLauncher extends Component {
     // Wait for task to start
     this.taskInterval = setInterval(() => {
       const promises = [];
-      promises.push(this.props.fetchRequestRun(requestId, runId));
-      promises.push(this.props.fetchRequestRunHistory(requestId, runId));
+      promises.push(this.props.fetchRequestRun(requestId, runId, [404]));
+      promises.push(this.props.fetchRequestRunHistory(requestId, runId, [404]));
       Promise.all(promises).then((responses) => {
-        responses = _.without(_.pluck(responses, 'data'), undefined);
-        if (responses.length) {
+        const responseList = _.filter(_.pluck(responses, 'data'), (r) => !!r);
+        if (responseList.length) {
           this.clearIntervals();
           this.setState({
             taskStarted: true
           });
+          const task = _.first(responseList);
+          const taskId = task.taskId ? task.taskId.id : task.id;
+
           if (tailFilename) {
-            this.logFilePoll(_.first(responses).taskId.id, tailFilename);
+            this.logFilePoll(taskId, tailFilename);
           } else {
-            app.router.navigate(`task/${_.first(responses).taskId.id}`, {trigger: true});
+            this.props.router.push(`task/${taskId}`);
           }
         }
       });
@@ -61,7 +65,7 @@ class TaskLauncher extends Component {
   logFilePoll(taskId, filename) {
     this.fileInterval = setInterval(() => {
       const directory = filename.indexOf('/') !== -1 ? `/${_.initial(filename.split('/')).join('/')}` : '';
-      this.props.fetchTaskFiles(taskId, `${taskId}${directory}`).then((response) => {
+      this.props.fetchTaskFiles(taskId, `${taskId}${directory}`, [400]).then((response) => {
         const files = response.data && response.data.files;
         if (files) {
           const file = _.find(files, (f) => f.name === _.last(filename.split('/')));
@@ -70,7 +74,7 @@ class TaskLauncher extends Component {
               fileExists: true
             });
             this.clearIntervals();
-            app.router.navigate(`task/${taskId}/tail/${taskId}/${filename}`, {trigger: true});
+            this.props.router.push(`task/${taskId}/tail/${taskId}/${filename}`);
           }
         }
       });
@@ -130,9 +134,9 @@ class TaskLauncher extends Component {
 }
 
 const mapDispatchToProps = (dispatch) => ({
-  fetchRequestRun: (requestId, runId) => dispatch(FetchRequestRun.trigger(requestId, runId)),
-  fetchRequestRunHistory: (requestId, runId) => dispatch(FetchRequestRunHistory.trigger(requestId, runId)),
-  fetchTaskFiles: (taskId, path) => dispatch(FetchTaskFiles.trigger(taskId, path))
+  fetchRequestRun: (...args) => dispatch(FetchRequestRun.trigger(...args)),
+  fetchRequestRunHistory: (...args) => dispatch(FetchRequestRunHistory.trigger(...args)),
+  fetchTaskFiles: (...args) => dispatch(FetchTaskFiles.trigger(...args))
 });
 
 export default connect(

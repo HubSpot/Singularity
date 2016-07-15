@@ -1,11 +1,11 @@
 var webpack = require('webpack');
 var path = require('path');
 
-dest = path.resolve(__dirname, 'dist');
+var dest = path.resolve(__dirname, 'dist');
 
 module.exports = {
   entry: {
-    app: './app/initialize.es6',
+    app: './app/initialize.jsx',
     vendor: [
       'react',
       'jquery',

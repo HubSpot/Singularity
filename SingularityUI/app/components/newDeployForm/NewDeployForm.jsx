@@ -1,5 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
+import rootComponent from '../../rootComponent';
+import { Link } from 'react-router';
 
 import Utils from '../../utils';
 
@@ -8,8 +10,9 @@ import TextFormGroup from '../common/formItems/formGroups/TextFormGroup';
 import MultiInputFormGroup from '../common/formItems/formGroups/MultiInputFormGroup';
 import CheckboxFormGroup from '../common/formItems/formGroups/CheckboxFormGroup';
 
-import { ModifyField } from '../../actions/ui/form';
+import { ModifyField, ClearForm } from '../../actions/ui/form';
 import { SaveDeploy } from '../../actions/api/deploys';
+import { FetchRequest, SaveRequest } from '../../actions/api/requests';
 
 import {
   FIELDS, ARTIFACT_FIELDS, DOCKER_PORT_MAPPING_FIELDS, DOCKER_VOLUME_FIELDS,
@@ -1380,20 +1383,20 @@ class NewDeployForm extends Component {
       this.props.saveApiCall.data.activeDeploy &&
         <p className="alert alert-success">
           Deploy
-          <a
-            href={`${config.appRoot}/request/${ this.props.saveApiCall.data.activeDeploy.requestId }/deploy/${ this.props.saveApiCall.data.activeDeploy.id }`}
+          <Link
+            to={`request/${ this.props.saveApiCall.data.activeDeploy.requestId }/deploy/${ this.props.saveApiCall.data.activeDeploy.id }`}
             >
             {` ${this.props.saveApiCall.data.activeDeploy.id} `}
-          </a>
+          </Link>
           succesfully created!
         </p> || this.props.saveApiCall.data.pendingDeploy &&
         <p className="alert alert-success">
           Deploy
-          <a
-            href={`${config.appRoot}/request/${ this.props.saveApiCall.data.pendingDeploy.requestId }/deploy/${ this.props.saveApiCall.data.pendingDeploy.id }`}
+          <Link
+            to={`request/${ this.props.saveApiCall.data.pendingDeploy.requestId }/deploy/${ this.props.saveApiCall.data.pendingDeploy.id }`}
             >
             {` ${this.props.saveApiCall.data.pendingDeploy.id} `}
-          </a>
+          </Link>
           succesfully created!
         </p>
     );
@@ -1401,7 +1404,7 @@ class NewDeployForm extends Component {
     return (
       <div>
         <h2>
-          New deploy for <a href={`${ config.appRoot }/request/${ this.props.request.request.id }`}>{ this.props.request.request.id }</a>
+          New deploy for <Link to={`request/${ this.props.request.request.id }`}>{ this.props.request.request.id }</Link>
         </h2>
         <div className="row new-form">
           <form className="col-md-8" role="form" onSubmit={event => this.submit(event)}>
@@ -1435,7 +1438,7 @@ class NewDeployForm extends Component {
 
 function mapStateToProps(state, ownProps) {
   return {
-    request: Utils.maybe(state.api.request, [ownProps.requestId, 'data']),
+    request: Utils.maybe(state.api.request, [ownProps.params.requestId, 'data']),
     form: state.ui.form[FORM_ID],
     saveApiCall: state.api.saveDeploy
   };
@@ -1448,8 +1451,25 @@ function mapDispatchToProps(dispatch) {
     },
     save(deployBody) {
       dispatch(SaveDeploy.trigger(deployBody));
+    },
+    fetchRequest(requestId) {
+      return dispatch(FetchRequest.trigger(requestId));
+    },
+    clearForm() {
+      return dispatch(ClearForm('newDeployForm'));
+    },
+    clearSaveDeployDataPromise() {
+      return dispatch(SaveRequest.clearData());
     }
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(NewDeployForm);
+function refresh(props) {
+  const promises = [];
+  promises.push(props.fetchRequest(props.params.requestId));
+  promises.push(props.clearForm());
+  promises.push(props.clearSaveDeployDataPromise());
+  return Promise.all(promises);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(NewDeployForm, 'New Deploy', refresh));

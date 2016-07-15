@@ -9,14 +9,14 @@ import { updateGroups, updateTaskStatuses } from '../../actions/log';
 
 class LogContainer extends React.Component {
   renderTaskGroups() {
-    let rows = [];
+    const rows = [];
 
-    let tasksPerRow = this.props.taskGroupsCount === 4 ? 2 : 3;
+    const tasksPerRow = this.props.taskGroupsCount === 4 ? 2 : 3;
 
     let row = [];
-    let iterable = __range__(1, Math.min(this.props.taskGroupsCount, tasksPerRow), true);
+    const iterable = __range__(1, Math.min(this.props.taskGroupsCount, tasksPerRow), true);
     for (let j = 0; j < iterable.length; j++) {
-      var i = iterable[j];
+      const i = iterable[j];
       row.push(<TaskGroupContainer key={i - 1} taskGroupId={i - 1} taskGroupContainerCount={Math.min(this.props.taskGroupsCount, tasksPerRow)} />);
     }
 
@@ -24,9 +24,9 @@ class LogContainer extends React.Component {
 
     if (this.props.taskGroupsCount > tasksPerRow) {
       row = [];
-      let iterable1 = __range__(tasksPerRow + 1, Math.min(this.props.taskGroupsCount, 6), true);
+      const iterable1 = __range__(tasksPerRow + 1, Math.min(this.props.taskGroupsCount, 6), true);
       for (let k = 0; k < iterable1.length; k++) {
-        var i = iterable1[k];
+        const i = iterable1[k];
         row.push(<TaskGroupContainer key={i - 1} taskGroupId={i - 1} taskGroupContainerCount={Math.min(this.props.taskGroupsCount, 6) - tasksPerRow} />);
       }
       rows.push(row);
@@ -38,12 +38,12 @@ class LogContainer extends React.Component {
       rowClassName = 'row tail-row-half';
     }
 
-    return rows.map((row, i) => <div key={i} className={rowClassName}>{row}</div>);
+    return rows.map((r, i) => <div key={i} className={rowClassName}>{r}</div>);
   }
 
   render() {
-    const cb = this.props.updateGroups
-    return <div><Interval enabled={this.props.ready} timeout={2000} callback={cb} /><Interval enabled={true} timeout={10000} callback={this.props.updateTaskStatuses} /><Header />{this.renderTaskGroups()}</div>;
+    const cb = this.props.updateGroups;
+    return <div className="tail-root"><Interval enabled={this.props.ready} timeout={2000} callback={cb} /><Interval enabled={true} timeout={10000} callback={this.props.updateTaskStatuses} /><Header />{this.renderTaskGroups()}</div>;
   }
 }
 
@@ -62,7 +62,10 @@ function mapStateToProps(state) {
   };
 }
 
-const mapDispatchToProps = { updateGroups, updateTaskStatuses };
+const mapDispatchToProps = {
+  updateGroups,
+  updateTaskStatuses
+};
 
 export default connect(mapStateToProps, mapDispatchToProps)(LogContainer);
 
@@ -75,4 +78,3 @@ function __range__(left, right, inclusive) {
   }
   return range;
 }
-

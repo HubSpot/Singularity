@@ -6,6 +6,7 @@ import messageElement from './messageElement';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
 import { DecommissionRack, RemoveRack, ReactivateRack, FetchRacks } from '../../actions/api/racks';
+import rootComponent from '../../rootComponent';
 
 function __in__(needle, haystack) {
   return haystack.indexOf(needle) >= 0;
@@ -196,8 +197,13 @@ function mapDispatchToProps(dispatch) {
     decommissionRack: (rack, message) => { clear().then(dispatch(DecommissionRack.trigger(rack.id, message))).then(dispatch(FetchRacks.trigger())); },
     removeRack: (rack, message) => { clear().then(dispatch(RemoveRack.trigger(rack.id, message))).then(dispatch(FetchRacks.trigger())); },
     reactivateRack: (rack, message) => { clear().then(dispatch(ReactivateRack.trigger(rack.id, message))).then(dispatch(FetchRacks.trigger())); },
+    fetchRacks: () => dispatch(FetchRacks.trigger()),
     clear
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Racks);
+function refresh(props) {
+  return props.fetchRacks();
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Racks, 'Racks', refresh));

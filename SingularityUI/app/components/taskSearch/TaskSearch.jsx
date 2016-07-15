@@ -1,6 +1,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { Link } from 'react-router';
+import rootComponent from '../../rootComponent';
 import classNames from 'classnames';
+import { FetchRequest } from '../../actions/api/requests';
 import { FetchTaskSearchParams } from '../../actions/api/history';
 
 import Breadcrumbs from '../common/Breadcrumbs';
@@ -14,16 +17,18 @@ class TaskSearch extends React.Component {
 
   static propTypes = {
     requestId: React.PropTypes.string,
+    fetchRequest: React.PropTypes.func.isRequired,
     fetchTaskHistory: React.PropTypes.func.isRequired,
     request: React.PropTypes.object,
-    taskHistory: React.PropTypes.array
+    taskHistory: React.PropTypes.array,
+    params: React.PropTypes.object
   }
 
   constructor(props) {
     super(props);
     this.state = {
       filter: {
-        requestId: props.requestId,
+        requestId: props.params.requestId,
         page: 1,
         count: TaskSearch.TASKS_PER_PAGE
       },
@@ -85,10 +90,10 @@ class TaskSearch extends React.Component {
   renderTableRow(data, i) {
     return (
       <tr key={i}>
-        <td className="actions-column"><a href={`${config.appRoot}/task/${data.taskId.id}`}><Glyphicon iconClass="link" /></a></td>
-        <td><a href={`${config.appRoot}/request/${data.taskId.requestId}`}>{data.taskId.requestId}</a></td>
-        <td><a href={`${config.appRoot}/request/${data.taskId.requestId}/deploy/${data.taskId.deployId}`}>{data.taskId.deployId}</a></td>
-        <td><a href={`${config.appRoot}/tasks/active/all/${data.taskId.host}`}>{data.taskId.host}</a></td>
+        <td className="actions-column"><Link to={`task/${data.taskId.id}`}><Glyphicon iconClass="link" /></Link></td>
+        <td><Link to={`request/${data.taskId.requestId}`}>{data.taskId.requestId}</Link></td>
+        <td><Link to={`request/${data.taskId.requestId}/deploy/${data.taskId.deployId}`}>{data.taskId.deployId}</Link></td>
+        <td><Link to={`tasks/active/all/${data.taskId.host}`}>{data.taskId.host}</Link></td>
         <td>
           <span className={`label label-${Utils.getLabelClassFromTaskState(data.lastTaskState)}`}>
             {Utils.humanizeText(data.lastTaskState)}
@@ -97,7 +102,7 @@ class TaskSearch extends React.Component {
         <td>{Utils.timestampFromNow(data.taskId.startedAt)}</td>
         <td>{Utils.timestampFromNow(data.updatedAt)}</td>
         <td className="actions-column">
-          <a href={`${config.appRoot}/task/${data.taskId.id}/tail/${config.finishedTaskLogPath}`}>···</a>
+          <Link to={`task/${data.taskId.id}/tail/${config.finishedTaskLogPath}`}>···</Link>
           <JSONButton object={data}>{'{ }'}</JSONButton>
         </td>
       </tr>
@@ -105,14 +110,14 @@ class TaskSearch extends React.Component {
   }
 
   renderBreadcrumbs() {
-    if (this.props.requestId) {
+    if (this.props.params.requestId) {
       return (
         <Breadcrumbs
           items={[
             {
               label: 'Request',
               text: this.props.request.request.id,
-              link: `${config.appRoot}/request/${this.props.request.request.id}`
+              link: `request/${this.props.request.request.id}`
             }
           ]}
         />
@@ -143,10 +148,10 @@ class TaskSearch extends React.Component {
     return (
       <div>
         {this.renderBreadcrumbs()}
-        <h1 className="inline-header">{!this.props.requestId && 'Global '}Historical Tasks </h1>
-        {this.props.requestId && <h3 className="inline-header" style={{marginLeft: '10px'}}>for {this.props.requestId}</h3>}
+        <h1 className="inline-header">{!this.props.params.requestId && 'Global '}Historical Tasks </h1>
+        {this.props.params.requestId && <h3 className="inline-header" style={{marginLeft: '10px'}}>for {this.props.params.requestId}</h3>}
         <h2>Search Parameters</h2>
-        <TaskSearchFilters requestId={this.props.requestId} onSearch={(filter) => this.handleSearch(filter)} />
+        <TaskSearchFilters requestId={this.props.params.requestId} onSearch={(filter) => this.handleSearch(filter)} />
         {this.renderPageOptions()}
         <div className="row">
           <div className="col-md-12">
@@ -171,15 +176,25 @@ class TaskSearch extends React.Component {
 
 function mapStateToProps(state, ownProps) {
   return {
-    request: Utils.maybe(state.api.request, [ownProps.requestId, 'data']),
+    request: Utils.maybe(state.api.request, [ownProps.params.requestId, 'data']),
     taskHistory: state.api.taskHistory.data
   };
 }
 
 function mapDispatchToProps(dispatch) {
   return {
-    fetchTaskHistory: (...args) => dispatch(FetchTaskSearchParams.trigger(...args))
+    fetchTaskHistory: (...args) => dispatch(FetchTaskSearchParams.trigger(...args)),
+    fetchRequest: (requestId) => dispatch(FetchRequest.trigger(requestId))
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(TaskSearch);
+function refresh(props) {
+  const promises = [];
+  if (props.params.requestId) {
+    promises.push(props.fetchRequest(props.params.requestId));
+  }
+  promises.push(props.fetchTaskHistory({requestId: props.params.requestId, page: 1, count: TaskSearch.TASKS_PER_PAGE}));
+  return Promise.all(promises);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(TaskSearch, 'Task Search', refresh));

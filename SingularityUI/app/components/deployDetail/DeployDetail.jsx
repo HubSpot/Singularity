@@ -1,11 +1,17 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
+import rootComponent from '../../rootComponent';
 
 import Clipboard from 'clipboard';
 
 import Utils from '../../utils';
-
-import { FetchTaskHistoryForDeploy } from '../../actions/api/history';
+import { Link } from 'react-router';
+import {
+  FetchTaskHistory,
+  FetchActiveTasksForDeploy,
+  FetchTaskHistoryForDeploy,
+  FetchDeployForRequest
+} from '../../actions/api/history';
 
 import { DeployState, InfoBox } from '../common/statelessComponents';
 
@@ -23,6 +29,20 @@ class DeployDetail extends React.Component {
     taskHistory: PropTypes.arrayOf(PropTypes.object).isRequired,
     latestHealthchecks: PropTypes.arrayOf(PropTypes.object).isRequired
   };
+
+  static propTypes = {
+    dispatch: React.PropTypes.func,
+    deploy: React.PropTypes.object,
+    activeTasks: React.PropTypes.array,
+    taskHistory: React.PropTypes.array,
+    latestHealthchecks: React.PropTypes.array,
+    fetchTaskHistoryForDeploy: React.PropTypes.func,
+    params: React.PropTypes.object
+  }
+
+  componentWillMount() {
+    this.props.fetchTaskHistoryForDeploy(this.props.params.requestId, this.props.params.deployId, 5, 1);
+  }
 
   componentDidMount() {
     new Clipboard('.info-copyable'); // eslint-disable-line no-new
@@ -47,9 +67,9 @@ class DeployDetail extends React.Component {
       let k = 0;
       for (const f of d.deployResult.deployFailures) {
         fails.push(f.taskId ?
-          <a key={k} href={`${config.appRoot}/task/${f.taskId.id}`} className="list-group-item">
+          <Link key={k} to={`task/${f.taskId.id}`} className="list-group-item">
             <strong>{f.taskId.id}</strong>: {f.reason} (Instance {f.taskId.instanceNo}): {f.message}
-          </a>
+          </Link>
           :
           <li key={k} className="list-group-item">{f.reason}: {f.message}</li>
         );
@@ -79,7 +99,7 @@ class DeployDetail extends React.Component {
                 {
                   label: 'Request',
                   text: d.deploy.requestId,
-                  link: `${config.appRoot}/request/${d.deploy.requestId}`
+                  link: `request/${d.deploy.requestId}`
                 },
                 {
                   label: 'Deploy',
@@ -135,11 +155,11 @@ class DeployDetail extends React.Component {
           renderTableRow={(data, index) => {
             return (
               <tr key={index}>
-                <td><a href={`${config.appRoot}/task/${data.taskId.id}`}>{data.taskId.id}</a></td>
+                <td><Link to={`task/${data.taskId.id}`}>{data.taskId.id}</Link></td>
                 <td><span className={`label label-${Utils.getLabelClassFromTaskState(data.lastTaskState)}`}>{Utils.humanizeText(data.lastTaskState)}</span></td>
                 <td>{Utils.timestampFromNow(data.taskId.startedAt)}</td>
                 <td>{Utils.timestampFromNow(data.updatedAt)}</td>
-                <td className="actions-column"><a href={`${config.appRoot}/request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log">&middot;&middot;&middot;</a></td>
+                <td className="actions-column"><Link to={`request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log">&middot;&middot;&middot;</Link></td>
                 <td className="actions-column"><JSONButton object={data}>{'{ }'}</JSONButton></td>
               </tr>
             );
@@ -202,7 +222,7 @@ class DeployDetail extends React.Component {
           renderTableRow={(data, index) => {
             return (
               <tr key={index}>
-                <td><a href={`${config.appRoot}/task/${data.taskId.id}`}>{data.taskId.id}</a></td>
+                <td><Link to={`task/${data.taskId.id}`}>{data.taskId.id}</Link></td>
                 <td>{Utils.absoluteTimestamp(data.timestamp)}</td>
                 <td>{data.durationMillis} {data.durationMillis ? 'ms' : ''}</td>
                 <td>{data.statusCode ? <span className={`label label-${data.statusCode === 200 ? 'success' : 'danger'}`}>HTTP {data.statusCode}</span> : <span className="label label-warning">No Response</span>}</td>
@@ -230,8 +250,18 @@ class DeployDetail extends React.Component {
   }
 }
 
+function mapDispatchToProps(dispatch) {
+  return {
+    fetchDeployForRequest: (requestId, deployId) => dispatch(FetchDeployForRequest.trigger(requestId, deployId)),
+    fetchActiveTasksForDeploy: (requestId, deployId) => dispatch(FetchActiveTasksForDeploy.trigger(requestId, deployId)),
+    clearTaskHistoryForDeploy: () => dispatch(FetchTaskHistoryForDeploy.clearData()),
+    fetchTaskHistoryForDeploy: (requestId, deployId, count, page) => dispatch(FetchTaskHistoryForDeploy.trigger(requestId, deployId, count, page)),
+    fetchTaskHistory: (taskId) => dispatch(FetchTaskHistory.trigger(taskId))
+  };
+}
+
 function mapStateToProps(state) {
-  let latestHealthchecks = _.mapObject(state.api.task, (val, key) => {
+  let latestHealthchecks = _.mapObject(state.api.task, (val) => {
     if (val.data && val.data.healthcheckResults && val.data.healthcheckResults.length > 0) {
       return _.max(val.data.healthcheckResults, (hc) => {
         return hc.timestamp;
@@ -248,4 +278,19 @@ function mapStateToProps(state) {
   };
 }
 
-export default connect(mapStateToProps)(DeployDetail);
+function refresh(props) {
+  const promises = [];
+  promises.push(props.fetchDeployForRequest(props.params.requestId, props.params.deployId));
+  promises.push(props.fetchActiveTasksForDeploy(props.params.requestId, props.params.deployId));
+  promises.push(props.clearTaskHistoryForDeploy());
+
+  const allPromises = Promise.all(promises);
+  allPromises.then(() => {
+    for (const t of props.route.store.getState().api.activeTasksForDeploy.data) {
+      props.fetchTaskHistory(t.taskId.id);
+    }
+  });
+  return allPromises;
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(DeployDetail, (props) => `${props.params.requestId} Deploy ${props.params.deployId}`, refresh));
