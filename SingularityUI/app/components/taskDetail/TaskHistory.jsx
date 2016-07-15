@@ -2,6 +2,7 @@ import React, { PropTypes } from 'react';
 import Utils from '../../utils';
 import Section from '../common/Section';
 import SimpleTable from '../common/SimpleTable';
+import classNames from 'classnames';
 
 function TaskHistory (props) {
   return (
@@ -13,7 +14,7 @@ function TaskHistory (props) {
         headers={['Status', 'Message', 'Time']}
         renderTableRow={(data, index) => {
           return (
-            <tr key={index} className={index === 0 ? 'medium-weight' : ''}>
+            <tr key={index} className={classNames({'medium-weight' :index === 0})}>
               <td>{Utils.humanizeText(data.taskState)}</td>
               <td>{data.statusMessage ? data.statusMessage : '—'}</td>
               <td>{Utils.timestampFromNow(data.timestamp)}</td>
