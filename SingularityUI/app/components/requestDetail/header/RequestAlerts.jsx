@@ -19,7 +19,7 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) 
   let maybeBouncing;
 
   const requestParent = requestAPI.data;
-  if (bounces.length > 0) {
+  if (bounces.length > 0 && requestParent.request) {
     const runningInstanceCount = Utils.request.runningInstanceCount(activeTasksForRequest.data);
     maybeBouncing = (
       <Alert bsStyle="warning">
