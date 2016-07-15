@@ -24,6 +24,16 @@ import TaskHistoryTable from './TaskHistoryTable';
 import DeployHistoryTable from './DeployHistoryTable';
 import RequestHistoryTable from './RequestHistoryTable';
 
+function refresh(props) {
+  props.fetchRequest(props.params.requestId);
+  props.fetchActiveTasksForRequest(props.params.requestId);
+  props.fetchTaskCleanups();
+  props.fetchTaskHistoryForRequest(props.params.requestId, 5, 1);
+  props.fetchDeploysForRequest(props.params.requestId, 5, 1);
+  props.fetchRequestHistory(props.params.requestId, 5, 1);
+  props.fetchScheduledTasksForRequest(props.params.requestId);
+}
+
 class RequestDetailPage extends Component {
   componentDidMount() {
     this.props.refresh();
@@ -86,16 +96,6 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     fetchRequestHistory: (requestId, count, page) => dispatch(FetchRequestHistory.trigger(requestId, count, page)),
   };
 };
-
-function refresh(props) {
-  props.fetchRequest(props.params.requestId);
-  props.fetchActiveTasksForRequest(props.params.requestId);
-  props.fetchTaskCleanups();
-  props.fetchTaskHistoryForRequest(props.params.requestId, 5, 1);
-  props.fetchDeploysForRequest(props.params.requestId, 5, 1);
-  props.fetchRequestHistory(props.params.requestId, 5, 1);
-  props.fetchScheduledTasksForRequest(props.params.requestId);
-}
 
 export default connect(
   null,
