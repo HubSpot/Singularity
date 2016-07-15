@@ -43,7 +43,7 @@ class TaskLauncher extends Component {
       promises.push(this.props.fetchRequestRun(requestId, runId, [404]));
       promises.push(this.props.fetchRequestRunHistory(requestId, runId, [404]));
       Promise.all(promises).then((responses) => {
-        const responseList = _.without(_.pluck(responses, 'data'), undefined);
+        const responseList = _.filter(_.pluck(responses, 'data'), (r) => !!r);
         if (responseList.length) {
           this.clearIntervals();
           this.setState({

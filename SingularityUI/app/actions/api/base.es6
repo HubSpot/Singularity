@@ -1,5 +1,6 @@
 import fetch from 'isomorphic-fetch';
 import Messenger from 'messenger';
+import Utils from '../../utils';
 
 const JSON_HEADERS = {'Content-Type': 'application/json', 'Accept': 'application/json'};
 
@@ -26,7 +27,11 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
     return { type: STARTED, key };
   }
 
-  function error(e, options, apiResponse, key = undefined) {
+  function error(err, options, apiResponse, key = undefined) {
+    const action = { type: ERROR, error: err, key };
+    if (Utils.isIn(apiResponse.status, options.catchStatusCodes)) {
+      return action;
+    }
     if (apiResponse.status === 502) { // Singularity is deploying
       Messenger().info({
         message: 'Singularity is deploying, your requests cannot be handled. Things should resolve in a few seconds so just hang tight!'
@@ -35,12 +40,12 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
       window.location.href = config.redirectOnUnauthorizedUrl.replace('{URL}', encodeURIComponent(window.location.href));
     } else { // Something else happened, display the error
       Messenger().post({
-        message: `<p>A <code>${e}</code> error occurred while accessing:</p><pre>${options.url}</pre>`,
+        message: `<p>An error occurred while accessing <code>${options.url}</code></p><pre>${err}</pre>`,
         type: 'error'
       });
     }
 
-    return { type: ERROR, error, key };
+    return action;
   }
 
   function success(data, statusCode, key = undefined) {
@@ -66,14 +71,20 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
       return fetch(config.apiRoot + options.url, _.extend({credentials: 'include'}, _.omit(options, 'url')))
         .then(response => {
           apiResponse = response;
+          if (response.status === 204) {
+            return Promise.resolve();
+          }
           if (response.headers.get('Content-Type') === 'application/json') {
             return response.json();
           }
           return response.text();
         })
         .then((data) => {
-          if ((apiResponse.status >= 200 && apiResponse.status < 300) || (options.successResponseCodes && _.contains(options.successResponseCodes, apiResponse.status))) {
+          if (apiResponse.status >= 200 && apiResponse.status < 300) {
             return dispatch(success(data, apiResponse.status, key));
+          }
+          if (data.message) {
+            return dispatch(error(data.message, options, apiResponse, key));
           }
           return dispatch(error(data, options, apiResponse, key));
         });

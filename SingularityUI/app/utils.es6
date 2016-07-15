@@ -1,11 +1,3 @@
-const indexOf = [].indexOf || function(item) { for (let i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
-
-import Clipboard from 'clipboard';
-
-import vex from 'vex.dialog';
-
-import micromatch from 'micromatch';
-
 import moment from 'moment';
 
 const Utils = {
@@ -15,210 +7,8 @@ const Utils = {
 
   GLOB_CHARS: ['*', '!', '?', '[', ']'],
 
-  viewJSON(model, callback) {
-    let ajaxRequest, closeButton, copyButton, j, json, key, len, modelJSON, objectToSerialise, ref;
-    if (model == null) {
-      if (typeof callback === 'function') {
-        callback({
-          error: 'Invalid model given'
-        });
-      }
-      console.error('Invalid model given');
-      return;
-    }
-    if ((model.synced != null) && !model.synced) {
-      vex.showLoading();
-      ajaxRequest = model.fetch();
-      ajaxRequest.done(((_this => () => _this.viewJSON(model)))(this));
-      ajaxRequest.error(((_this => () => {
-        app.caughtError();
-        return _this.viewJSON(new Backbone.Model({
-          message: 'There was an error with the server'
-        }));
-      }))(this));
-      return;
-    }
-    vex.hideLoading();
-    if (model.ignoreAttributes == null) {
-      model.ignoreAttributes = ['id'];
-    }
-    objectToSerialise = {};
-    modelJSON = model.toJSON();
-    ref = _.keys(modelJSON);
-    for (j = 0, len = ref.length; j < len; j++) {
-      key = ref[j];
-      if (indexOf.call(model.ignoreAttributes, key) < 0) {
-        objectToSerialise[key] = modelJSON[key];
-      }
-    }
-    json = JSON.stringify(objectToSerialise, void 0, 4);
-    closeButton = _.extend(_.clone(vex.dialog.buttons.YES), {
-      text: 'Close'
-    });
-    copyButton = {
-      text: 'Copy',
-      type: 'button',
-      className: 'vex-dialog-button-secondary copy-button'
-    };
-    return vex.dialog.open({
-      buttons: [closeButton, copyButton],
-      message: `<pre>${_.escape(json)}</pre>`,
-      className: 'vex vex-theme-default json-modal',
-      afterOpen($vexContent) {
-        let $button, clipboard;
-        $vexContent.parents('.vex').scrollTop(0);
-        $button = $vexContent.find('.copy-button');
-        $button.attr('data-clipboard-text', $vexContent.find('pre').html());
-        return clipboard = new Clipboard($button[0]);
-      }
-    });
-  },
-
-  setupCopyLinks($element) {
-    let $items;
-    $items = $element.find('.horizontal-description-list li');
-    return _.each($items, $item => {
-      let $copyLink, text;
-      $item = $($item);
-      if (!$item.find('a').length) {
-        text = $item.find('p').html();
-        $copyLink = $(`<a data-clipboard-text='${_.escape(text)}'>Copy</a>`);
-        $item.find('h4').append($copyLink);
-        return new Clipboard($copyLink[0]);
-      }
-    });
-  },
-
-  makeMeCopy(options) {
-    let $copyLink, $element, linkText, text, textSelector;
-    $element = $(options.selector);
-    linkText = options.linkText || 'Copy';
-    textSelector = options.textSelector || '.copy-text';
-    text = $element.find(textSelector).html();
-    $copyLink = $(`<a data-clipboard-text='${_.escape(text)}'>${linkText}</a>`);
-    $(options.copyLink).html($copyLink);
-    return new Clipboard($copyLink[0]);
-  },
-
-  fixTableColumns($table) {
-    let $heading, $headings, j, len, percentage, sortable, totalWidth;
-    $headings = $table.find('th');
-    if ($headings.length && $table.css('table-layout') !== 'fixed') {
-      $table.css('table-layout', 'auto');
-      $headings.css('width', 'auto');
-      totalWidth = $table.width();
-      sortable = $table.attr('data-sortable') !== void 0;
-      if (!sortable) {
-        for (j = 0, len = $headings.length; j < len; j++) {
-          $heading = $headings[j];
-          $heading = $($heading);
-          percentage = $heading.width() / totalWidth * 100;
-          $heading.css('width', `${percentage}%`);
-        }
-        return $table.css('table-layout', 'fixed');
-      }
-    }
-  },
-
-  pathToBreadcrumbs(path) {
-    let pathComponents, results;
-    if (path == null) {
-      path = '';
-    }
-    pathComponents = path.split('/');
-    results = _.map(pathComponents, ((_this => (crumb, index) => {
-      path = _.first(pathComponents, index);
-      path.push(crumb);
-      return {
-        name: crumb,
-        path: path.join('/')
-      };
-    }))(this));
-    results.unshift({
-      name: 'root',
-      path: ''
-    });
-    return results;
-  },
-
-  animatedExpansion($el, shrinkCallback) {
-    let checkForShrink, newHeight, offset, removeEvent, scroll, shrink, shrinkTime;
-    newHeight = $(window).height();
-    offset = $el.offset().top;
-    $('body').css('min-height', `${offset + newHeight}px`);
-    $el.css('min-height', `${$el.height()}px`);
-    $el.animate({
-      duration: 1000,
-      minHeight: `${newHeight}px`
-    });
-    scroll = ((_this => () => $(window).scrollTop($el.offset().top - 20)))(this);
-    scroll();
-    setTimeout(scroll, 200);
-    shrinkTime = 1000;
-    removeEvent = ((_this => () => $(window).off('scroll', checkForShrink)))(this);
-    shrink = ((_this => () => {
-      $('html, body').animate({
-        minHeight: '0px'
-      }, shrinkTime);
-      $el.animate({
-        minHeight: '0px'
-      }, shrinkTime);
-      if (typeof shrinkCallback === 'function') {
-        shrinkCallback();
-      }
-      return removeEvent();
-    }))(this);
-    checkForShrink = ((_this => () => {
-      let frameRequest;
-      if (typeof frameRequest !== 'undefined' && frameRequest !== null) {
-        cancelAnimationFrame(frameRequest);
-      }
-      return frameRequest = requestAnimationFrame(() => {
-        let $window, childScrollBottom, elOffset, lastChild, scrolledEnoughBottom, scrolledEnoughTop, shouldShrink, windowScrollBottom, windowScrollTop;
-        if (!$el) {
-          removeEvent();
-        }
-        $window = $(window);
-        lastChild = $(_.last($el.children()));
-        if (!lastChild) {
-          shrink();
-        }
-        elOffset = $el.offset().top;
-        childScrollBottom = lastChild.height() + lastChild.offset().top;
-        windowScrollTop = $window.scrollTop();
-        windowScrollBottom = $window.height() + windowScrollTop;
-        scrolledEnoughTop = windowScrollTop < elOffset - 50;
-        scrolledEnoughBottom = windowScrollTop > elOffset + 50;
-        scrolledEnoughBottom = scrolledEnoughBottom && windowScrollBottom > childScrollBottom;
-        shouldShrink = scrolledEnoughTop || scrolledEnoughBottom;
-        if (shouldShrink) {
-          return shrink();
-        }
-      });
-    }))(this);
-    return setTimeout(((_this => () => {
-      $(window).on('scroll', checkForShrink);
-      return $el.on('shrink', shrink);
-    }))(this), 100);
-  },
-
-  scrollTo(path, offset) {
-    let location;
-    if (offset == null) {
-      offset = 50;
-    }
-    location = $(`${path}`).offset().top - offset;
-    return $('html, body').animate({
-      'scrollTop': `${location}px`
-    }, 1000);
-  },
-
-  getQueryParams() {
-    if (location.search) {
-      return JSON.parse(`{"${decodeURI(location.search.substring(1).replace(/&/g, '","').replace(/\=/g, '":"'))}"}`);
-    } else {
-      return {};
-    }
+  isIn(needle, haystack) {
+    return !_.isEmpty(haystack) && haystack.indexOf(needle) >= 0;
   },
 
   humanizeText(text) {
@@ -232,20 +22,19 @@ const Utils = {
   },
 
   humanizeFileSize(bytes) {
-    let i, k, sizes;
-    k = 1024;
-    sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    const kilo = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
     if (bytes === 0) {
       return '0 B';
     }
-    i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
-    return `${+(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
+    const numberOfPowers = Math.min(Math.floor(Math.log(bytes) / Math.log(kilo)), sizes.length - 1);
+    return `${+(bytes / Math.pow(kilo, numberOfPowers)).toFixed(2)} ${sizes[numberOfPowers]}`;
   },
 
   humanizeCamelcase(text) {
-    return text.replace(/^[a-z]|[A-Z]/g, function(v, i) {
-      return i === 0 ? v.toUpperCase() : ' ' + v.toLowerCase();
-    });
+    return text.replace(/^[a-z]|[A-Z]/g, (character, key) => (
+      key === 0 ? character.toUpperCase() : ` ${character.toLowerCase()}`
+    ));
   },
 
   timestampFromNow(millis) {
@@ -254,8 +43,11 @@ const Utils = {
   },
 
   absoluteTimestamp(millis) {
-    let timeObject = moment(millis);
-    return timeObject.format(window.config.timestampFormat);
+    return moment(millis).format(window.config.timestampFormat);
+  },
+
+  absoluteTimestampWithSeconds(millis) {
+    return moment(millis).format(window.config.timestampWithSecondsFormat);
   },
 
   timestampWithinSeconds(timestamp, seconds) {
@@ -300,10 +92,7 @@ const Utils = {
   },
 
   isGlobFilter(filter) {
-    let char, j, len, ref;
-    ref = this.GLOB_CHARS;
-    for (j = 0, len = ref.length; j < len; j++) {
-      char = ref[j];
+    for (const char of this.GLOB_CHARS) {
       if (filter.indexOf(char) !== -1) {
         return true;
       }
@@ -316,9 +105,8 @@ const Utils = {
       return fuzzyObject.score * 10;
     } else if (fuzzyObject.original.id.toLowerCase().indexOf(filter.toLowerCase()) > -1) {
       return fuzzyObject.score * 5;
-    } else {
-      return fuzzyObject.score;
     }
+    return fuzzyObject.score;
   },
 
   getTaskDataFromTaskId(taskId) {
@@ -340,13 +128,7 @@ const Utils = {
 
   ignore404(response) {
     if (response.status === 404) {
-      return app.caughtError();
-    }
-  },
-
-  ignore400(response) {
-    if (response.status === 400) {
-      return app.caughtError();
+      app.caughtError();
     }
   },
 
@@ -357,7 +139,7 @@ const Utils = {
   },
 
   range(begin, end, interval = 1) {
-    let res = [];
+    const res = [];
     for (let i = begin; i < end; i += interval) {
       res.push(i);
     }
@@ -365,57 +147,55 @@ const Utils = {
   },
 
   trimS3File(filename, taskId) {
-    let finalRegex;
     if (!config.taskS3LogOmitPrefix) {
       return filename;
     }
-    finalRegex = config.taskS3LogOmitPrefix.replace('%taskId', taskId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).replace('%index', '[0-9]+').replace('%s', '[0-9]+');
+    const finalRegex = config.taskS3LogOmitPrefix.replace('%taskId', taskId.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).replace('%index', '[0-9]+').replace('%s', '[0-9]+');
     return filename.replace(new RegExp(finalRegex), '');
   },
 
+  millisecondsToSecondsRoundToTenth(millis) {
+    return Math.round(millis / 100) / 10;
+  },
+
   isCauseOfFailure(task, deploy) {
-    deploy.deployResult.deployFailures.map(failure => {
-      if (failure.taskId && failure.taskId.id === task.taskId) {
+    for (const failure of deploy.deployResult.deployFailures) {
+      if (failure.taskId && failure.taskId.id === task.task.taskId.id) {
         return true;
       }
-    });
+    }
     return false;
   },
 
   causeOfDeployFailure(task, deploy) {
-    let failureCause;
-    failureCause = '';
-    deploy.deployResult.deployFailures.map(failure => {
-      if (failure.taskId && failure.taskId.id === task.taskId) {
-        return failureCause = Utils.humanizeText(failure.reason);
+    for (const failure of deploy.deployResult.deployFailures) {
+      if (failure.taskId && failure.taskId.id === task.task.taskId.id) {
+        return this.humanizeText(failure.reason);
       }
-    });
-    if (failureCause) {
-      return failureCause;
     }
+    return '';
   },
 
   ifDeployFailureCausedTaskToBeKilled(task) {
-    let deployFailed, taskKilled;
-    deployFailed = false;
-    taskKilled = false;
-    task.taskUpdates.map(update => {
+    let deployFailed = false;
+    let taskKilled = false;
+    for (const update of task.taskUpdates) {
       if (update.statusMessage && update.statusMessage.indexOf('DEPLOY_FAILED' !== -1)) {
         deployFailed = true;
       }
       if (update.taskState === 'TASK_KILLED') {
-        return taskKilled = true;
+        taskKilled = true;
       }
-    });
+    }
     return deployFailed && taskKilled;
   },
 
   healthcheckFailureReasonMessage(task) {
-    let healthcheckResults = task.healthcheckResults;
+    const healthcheckResults = task.healthcheckResults;
     if (healthcheckResults && healthcheckResults.length > 0) {
-      if (healthcheckResults[0].errorMessage && healthcheckResults[0].errorMessage.toLowerCase().indexOf('connection refused') != -1) {
-        let portIndex = task.task.taskRequest.deploy.healthcheckPortIndex || 0;
-        let port = task.ports && task.ports.length > portIndex ? task[portIndex] : false;
+      if (_.last(healthcheckResults).errorMessage && _.last(healthcheckResults).errorMessage.toLowerCase().indexOf('connection refused') !== -1) {
+        const portIndex = task.task.taskRequest.deploy.healthcheckPortIndex || 0;
+        const port = task.ports && task.ports.length > portIndex ? task.ports[portIndex] : false;
         return `a refused connection. It is possible your app did not start properly or was not listening on the anticipated port (${port}). Please check the logs for more details.`;
       }
     }
@@ -538,7 +318,7 @@ const Utils = {
 
   queryParams(source) {
     const array = [];
-    for (var key in source) {
+    for (const key in source) {
       if (source[key]) {
         array.push(`${encodeURIComponent(key)}=${encodeURIComponent(source[key])}`);
       }

@@ -6,10 +6,9 @@ import { Row, Col } from 'react-bootstrap';
 import UITable from '../common/table/UITable';
 import { RequestId, Type, LastDeploy, Actions } from '../requests/Columns';
 
-import * as RequestsActions from '../../actions/api/requests';
 import * as RequestsSelectors from '../../selectors/requests';
 
-const MyPausedRequests = ({userRequests, unpauseAction, removeAction}) => {
+const MyPausedRequests = ({userRequests}) => {
   let pausedRequestsSection = (
     <div className="empty-table-message"><p>No paused requests</p></div>
   );
@@ -28,7 +27,7 @@ const MyPausedRequests = ({userRequests, unpauseAction, removeAction}) => {
         {RequestId}
         {Type}
         {LastDeploy}
-        {Actions(removeAction, unpauseAction)}
+        {Actions}
       </UITable>
     );
   }
@@ -46,9 +45,7 @@ const MyPausedRequests = ({userRequests, unpauseAction, removeAction}) => {
 };
 
 MyPausedRequests.propTypes = {
-  userRequests: PropTypes.arrayOf(PropTypes.object).isRequired,
-  unpauseAction: PropTypes.func.isRequired,
-  removeAction: PropTypes.func.isRequired
+  userRequests: PropTypes.arrayOf(PropTypes.object).isRequired
 };
 
 const mapStateToProps = (state) => {
@@ -57,18 +54,6 @@ const mapStateToProps = (state) => {
   };
 };
 
-const mapDispatchToProps = (dispatch) => {
-  return {
-    unpauseAction: (requestId, message) => {
-      dispatch(RequestsActions.UnpauseRequest.trigger(requestId, message));
-    },
-    removeAction: (requestId, message) => {
-      dispatch(RequestsActions.RemoveRequest.trigger(requestId, message));
-    }
-  };
-};
-
 export default connect(
-  mapStateToProps,
-  mapDispatchToProps
+  mapStateToProps
 )(MyPausedRequests);

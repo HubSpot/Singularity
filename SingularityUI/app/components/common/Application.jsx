@@ -13,7 +13,7 @@ const Application = (props) => (
 Application.propTypes = {
   location: React.PropTypes.object.isRequired,
   history: React.PropTypes.object.isRequired,
-  children: React.PropTypes.object.isRequired
+  children: React.PropTypes.object
 };
 
 export default Application;

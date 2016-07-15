@@ -500,12 +500,11 @@ function navigateToRequestIfSuccess(promiseResult) {
   }
 }
 
-function mapStateToProps(state) {
-  const request = state.api.request.data;
-
+function mapStateToProps(state, ownProps) {
+  const request = ownProps.params.requestId && state.api.request[ownProps.params.requestId];
   return {
     racks: state.api.racks.data,
-    request,
+    request: request && request.data,
     form: state.ui.form[FORM_ID],
     saveApiCall: state.api.saveRequest
   };

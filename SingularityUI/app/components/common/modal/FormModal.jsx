@@ -265,14 +265,14 @@ export default class FormModal extends React.Component {
     const cancel = !this.props.mustFill && <Button bsStyle="default" onClick={this.hide.bind(this)}>Cancel</Button>;
 
     return (
-      <Modal show={this.state.visible} onHide={this.hide}>
+      <Modal show={this.state.visible} onHide={this.hide} backdrop={this.props.mustFill ? 'static' : true}>
         <Modal.Body>
           {this.props.children}
           {this.props.children && !!this.props.formElements.length && <hr />}
           {this.renderForm()}
         </Modal.Body>
         <Modal.Footer>
-          <Button bsStyle="default" onClick={this.hide}>Cancel</Button>
+          {cancel}
           <Button bsStyle={this.props.buttonStyle} onClick={this.confirm}>{this.props.action}</Button>
         </Modal.Footer>
       </Modal>

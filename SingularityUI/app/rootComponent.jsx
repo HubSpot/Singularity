@@ -24,9 +24,11 @@ const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true,
     const promise = refresh(this.props);
     if (promise) {
       promise.then(() => {
-        this.setState({
-          loading: false
-        });
+        if (!this.unmounted) {
+          this.setState({
+            loading: false
+          });
+        }
       });
     } else {
       this.setState({
@@ -42,6 +44,7 @@ const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true,
   }
 
   componentWillUnmount() {
+    this.unmounted = true;
     if (refreshInterval) {
       this.stopRefreshInterval();
       window.removeEventListener('blur', this.handleBlur);

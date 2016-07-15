@@ -5,6 +5,8 @@ import Utils from '../../utils';
 
 import { FetchRequestHistory } from '../../actions/api/history';
 
+import Section from '../common/Section';
+
 import ServerSideTable from '../common/ServerSideTable';
 import JSONButton from '../common/JSONButton';
 
@@ -15,8 +17,7 @@ const RequestHistoryTable = ({requestId, requestEventsAPI}) => {
     : 'No request history'
   );
   return (
-    <div>
-      <h2>Request history</h2>
+    <Section id="deploy-history" title="Request history">
       <ServerSideTable
         emptyMessage={emptyTableMessage}
         entries={requestEvents}
@@ -48,7 +49,7 @@ const RequestHistoryTable = ({requestId, requestEventsAPI}) => {
           );
         }}
       />
-    </div>
+    </Section>
   );
 };
 

@@ -342,32 +342,30 @@ class TaskDetail extends React.Component {
   }
 }
 
-function mapHealthchecksToProps(t) {
-  if (!t) return t;
-  const hcs = t.healthcheckResults;
-  t.hasSuccessfulHealthcheck = hcs && hcs.length > 0 && !!_.find(hcs, (h) => h.statusCode === 200);
-  t.lastHealthcheckFailed = hcs && hcs.length > 0 && hcs[0].statusCode !== 200;
-  t.healthcheckFailureReasonMessage = Utils.healthcheckFailureReasonMessage(t);
-  t.tooManyRetries = hcs && hcs.length > t.task.taskRequest.deploy.healthcheckMaxRetries && t.task.taskRequest.deploy.healthcheckMaxRetries > 0;
-  t.secondsElapsed = t.taskRequest && t.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds ? t.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds : config.defaultDeployHealthTimeoutSeconds;
-  return t;
+function mapHealthchecksToProps(task) {
+  if (!task) return task;
+  const hcs = task.healthcheckResults;
+  task.hasSuccessfulHealthcheck = hcs && hcs.length > 0 && !!_.find(hcs, (h) => h.statusCode === 200);
+  task.lastHealthcheckFailed = hcs && hcs.length > 0 && hcs[0].statusCode !== 200;
+  task.healthcheckFailureReasonMessage = Utils.healthcheckFailureReasonMessage(task);
+  task.tooManyRetries = hcs && hcs.length > task.task.taskRequest.deploy.healthcheckMaxRetries && task.task.taskRequest.deploy.healthcheckMaxRetries > 0;
+  task.secondsElapsed = task.task && task.task.taskRequest && task.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds || config.defaultDeployHealthTimeoutSeconds;
+  return task;
 }
 
-function mapTaskToProps(t) {
-  t.lastKnownState = _.last(t.taskUpdates);
+function mapTaskToProps(task) {
+  task.lastKnownState = _.last(task.taskUpdates);
   let isStillRunning = true;
-  if (t.taskUpdates && _.contains(Utils.TERMINAL_TASK_STATES, t.lastKnownState.taskState)) {
+  if (task.taskUpdates && _.contains(Utils.TERMINAL_TASK_STATES, task.lastKnownState.taskState)) {
     isStillRunning = false;
   }
-  t.isStillRunning = isStillRunning;
+  task.isStillRunning = isStillRunning;
 
-  if (t.lastKnownState) {
-    t.isCleaning = t.lastKnownState.taskState === 'TASK_CLEANING';
-  }
+  task.isCleaning = task.lastKnownState && task.lastKnownState.taskState === 'TASK_CLEANING';
 
   const ports = [];
-  if (t.task && t.task.taskRequest.deploy.resources.numPorts > 0) {
-    for (const resource of t.task.mesosTask.resources) {
+  if (task.task && task.task.taskRequest.deploy.resources.numPorts > 0) {
+    for (const resource of task.task.mesosTask.resources) {
       if (resource.name === 'ports') {
         for (const range of resource.ranges.range) {
           for (const port of Utils.range(range.begin, range.end + 1)) {
@@ -377,16 +375,16 @@ function mapTaskToProps(t) {
       }
     }
   }
-  t.ports = ports;
+  task.ports = ports;
 
-  return t;
+  return task;
 }
 
 function mapStateToProps(state, ownProps) {
-  let task;
-  if (state.api.task[ownProps.params.taskId]) {
-    task = mapHealthchecksToProps(state.api.task[ownProps.params.taskId].data);
-    task = mapTaskToProps(task);
+  let task = state.api.task[ownProps.params.taskId];
+  if (task && task.data) {
+    task = mapTaskToProps(task.data);
+    task = mapHealthchecksToProps(task);
   }
   return {
     task,

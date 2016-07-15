@@ -12,9 +12,14 @@ import CancelDeployButton from './CancelDeployButton';
 import AdvanceDeployButton from './AdvanceDeployButton';
 
 const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) => {
+  if (!requestAPI) {
+    return undefined;
+  }
+
   let maybeBouncing;
+
   const requestParent = requestAPI.data;
-  if (bounces.length > 0) {
+  if (bounces.length > 0 && requestParent.request) {
     const runningInstanceCount = Utils.request.runningInstanceCount(activeTasksForRequest.data);
     maybeBouncing = (
       <Alert bsStyle="warning">
