@@ -29,6 +29,10 @@ class RequestDetailPage extends Component {
     this.props.refresh();
   }
 
+  componentWillReceiveProps(nextProps) {
+    refresh(nextProps);
+  }
+
   componentWillUnmount() {
     this.props.cancelRefresh();
   }
