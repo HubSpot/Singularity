@@ -1,4 +1,5 @@
 import React, { Component, PropTypes } from 'react';
+import { Link } from 'react-router';
 import { Button, Glyphicon } from 'react-bootstrap';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
@@ -144,7 +145,7 @@ export default class ShellCommands extends Component {
                   <td className="actions-column">
                     {filename && (
                       <OverlayTrigger placement="left" overlay={<ToolTip id={filename}>View output file</ToolTip>}>
-                        <a href={`task/${data.shellRequest.taskId.id}/tail/${data.shellRequest.taskId.id}/${filename}`}>···</a>
+                        <Link to={`task/${data.shellRequest.taskId.id}/tail/${data.shellRequest.taskId.id}/${filename}`}>···</Link>
                       </OverlayTrigger>
                     )}
                   </td>
