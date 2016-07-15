@@ -1,4 +1,4 @@
-import React, { Component, PropTypes } from 'react';
+import { Component, PropTypes } from 'react';
 
 class Column extends Component {
   static propTypes = {
@@ -12,7 +12,10 @@ class Column extends Component {
     sortable: PropTypes.bool,
     sortData: PropTypes.func,
     sortFunc: PropTypes.func,
-    className: PropTypes.string,
+    className: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.func
+    ]),
     headerClassName: PropTypes.string
   };
 
@@ -32,10 +35,6 @@ class Column extends Component {
       return 0;
     }
   };
-
-  constructor(props) {
-    super(props);
-  }
 }
 
 export default Column;
