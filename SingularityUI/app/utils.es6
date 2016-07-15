@@ -11,16 +11,6 @@ const Utils = {
     return !_.isEmpty(haystack) && haystack.indexOf(needle) >= 0;
   },
 
-  getUser(state) {
-    const data = state.api.user.data;
-    if (data) {
-      if (data.authEnabled && data.authenticated && data.user) {
-        return data.user;
-      }
-    }
-    return null;
-  },
-
   humanizeText(text) {
     if (!text) {
       return '';

@@ -170,11 +170,7 @@ const Webhooks = React.createClass({
 });
 
 function mapStateToProps(state) {
-  const userData = Utils.getUser(state);
-  let user;
-  if (userData) {
-    user = userData.name;
-  }
+  const user = Utils.maybe(state, ['api', 'user', 'data', 'user', 'name']);
   return {
     user,
     webhooks: state.api.webhooks.data
