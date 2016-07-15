@@ -25,7 +25,7 @@ public class SingularityRequest {
   private final Optional<String> schedule;
   private final Optional<String> quartzSchedule;
   private final Optional<ScheduleType> scheduleType;
-  private final Optional<TimeZone> scheduledTimeZone;
+  private final Optional<TimeZone> scheduleTimeZone;
 
   private final Optional<Long> killOldNonLongRunningTasksAfterMillis;
   private final Optional<Long> scheduledExpectedRuntimeMillis;
@@ -59,7 +59,7 @@ public class SingularityRequest {
       @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure, @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("instances") Optional<Integer> instances,
       @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive, @JsonProperty("loadBalanced") Optional<Boolean> loadBalanced,
       @JsonProperty("killOldNonLongRunningTasksAfterMillis") Optional<Long> killOldNonLongRunningTasksAfterMillis, @JsonProperty("scheduleType") Optional<ScheduleType> scheduleType,
-      @JsonProperty("quartzSchedule") Optional<String> quartzSchedule, @JsonProperty("scheduledTimeZone") Optional<TimeZone> scheduledTimeZone, @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity,
+      @JsonProperty("quartzSchedule") Optional<String> quartzSchedule, @JsonProperty("scheduleTimeZone") Optional<TimeZone> scheduleTimeZone, @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity,
       @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement, @JsonProperty("requiredSlaveAttributes") Optional<Map<String, String>> requiredSlaveAttributes,
       @JsonProperty("allowedSlaveAttributes") Optional<Map<String, String>> allowedSlaveAttributes, @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis,
       @JsonProperty("waitAtLeastMillisAfterTaskFinishesForReschedule") Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule, @JsonProperty("group") Optional<String> group,
@@ -78,7 +78,7 @@ public class SingularityRequest {
     this.killOldNonLongRunningTasksAfterMillis = killOldNonLongRunningTasksAfterMillis;
     this.scheduleType = scheduleType;
     this.quartzSchedule = quartzSchedule;
-    this.scheduledTimeZone = scheduledTimeZone;
+    this.scheduleTimeZone = scheduleTimeZone;
     this.rackAffinity = rackAffinity;
     this.slavePlacement = slavePlacement;
     this.requiredSlaveAttributes = requiredSlaveAttributes;
@@ -111,7 +111,7 @@ public class SingularityRequest {
     .setKillOldNonLongRunningTasksAfterMillis(killOldNonLongRunningTasksAfterMillis)
     .setScheduleType(scheduleType)
     .setQuartzSchedule(quartzSchedule)
-    .setScheduledTimeZone(scheduledTimeZone)
+    .setScheduleTimeZone(scheduleTimeZone)
     .setRackAffinity(copyOfList(rackAffinity))
     .setWaitAtLeastMillisAfterTaskFinishesForReschedule(waitAtLeastMillisAfterTaskFinishesForReschedule)
     .setSlavePlacement(slavePlacement)
@@ -148,8 +148,8 @@ public class SingularityRequest {
     return quartzSchedule;
   }
 
-  public Optional<TimeZone> getScheduledTimeZone() {
-    return scheduledTimeZone;
+  public Optional<TimeZone> getScheduleTimeZone() {
+    return scheduleTimeZone;
   }
 
   public Optional<Integer> getInstances() {
@@ -288,7 +288,7 @@ public class SingularityRequest {
             ", numRetriesOnFailure=" + numRetriesOnFailure +
             ", schedule=" + schedule +
             ", quartzSchedule=" + quartzSchedule +
-            ", scheduledTimeZone=" + scheduledTimeZone +
+            ", scheduleTimeZone=" + scheduleTimeZone +
             ", scheduleType=" + scheduleType +
             ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis +
             ", scheduledExpectedRuntimeMillis=" + scheduledExpectedRuntimeMillis +
@@ -325,7 +325,7 @@ public class SingularityRequest {
             Objects.equals(numRetriesOnFailure, request.numRetriesOnFailure) &&
             Objects.equals(schedule, request.schedule) &&
             Objects.equals(quartzSchedule, request.quartzSchedule) &&
-            Objects.equals(scheduledTimeZone, request.scheduledTimeZone) &&
+            Objects.equals(scheduleTimeZone, request.scheduleTimeZone) &&
             Objects.equals(scheduleType, request.scheduleType) &&
             Objects.equals(killOldNonLongRunningTasksAfterMillis, request.killOldNonLongRunningTasksAfterMillis) &&
             Objects.equals(scheduledExpectedRuntimeMillis, request.scheduledExpectedRuntimeMillis) &&
@@ -348,6 +348,6 @@ public class SingularityRequest {
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduledTimeZone, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides, hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleTimeZone, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides, hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive);
   }
 }

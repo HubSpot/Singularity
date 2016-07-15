@@ -696,7 +696,7 @@ public class SingularityScheduler {
           } else {
             scheduleFrom = new Date(now);
             final CronExpression cronExpression = new CronExpression(request.getQuartzScheduleSafe());
-            Optional<TimeZone> scheduledTimeZone = request.getScheduledTimeZone();
+            Optional<TimeZone> scheduledTimeZone = request.getScheduleTimeZone();
             if (scheduledTimeZone.isPresent()) {
               cronExpression.setTimeZone(scheduledTimeZone.get());
             }
