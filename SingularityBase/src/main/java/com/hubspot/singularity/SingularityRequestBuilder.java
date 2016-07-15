@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TimeZone;
 
 import com.google.common.base.Optional;
 
@@ -20,7 +19,7 @@ public class SingularityRequestBuilder {
 
   private Optional<String> schedule;
   private Optional<String> quartzSchedule;
-  private Optional<TimeZone> scheduleTimeZone;
+  private Optional<String> scheduleTimeZone;
   private Optional<ScheduleType> scheduleType;
 
   private Optional<Long> killOldNonLongRunningTasksAfterMillis;
@@ -176,11 +175,11 @@ public class SingularityRequestBuilder {
     return this;
   }
 
-  public Optional<TimeZone> getScheduleTimeZone() {
+  public Optional<String> getScheduleTimeZone() {
     return scheduleTimeZone;
   }
 
-  public SingularityRequestBuilder setScheduleTimeZone(Optional<TimeZone> scheduleTimeZone) {
+  public SingularityRequestBuilder setScheduleTimeZone(Optional<String> scheduleTimeZone) {
     this.scheduleTimeZone = scheduleTimeZone;
     return this;
   }

@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TimeZone;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -25,7 +24,7 @@ public class SingularityRequest {
   private final Optional<String> schedule;
   private final Optional<String> quartzSchedule;
   private final Optional<ScheduleType> scheduleType;
-  private final Optional<TimeZone> scheduleTimeZone;
+  private final Optional<String> scheduleTimeZone;
 
   private final Optional<Long> killOldNonLongRunningTasksAfterMillis;
   private final Optional<Long> scheduledExpectedRuntimeMillis;
@@ -59,7 +58,7 @@ public class SingularityRequest {
       @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure, @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("instances") Optional<Integer> instances,
       @JsonProperty("rackSensitive") Optional<Boolean> rackSensitive, @JsonProperty("loadBalanced") Optional<Boolean> loadBalanced,
       @JsonProperty("killOldNonLongRunningTasksAfterMillis") Optional<Long> killOldNonLongRunningTasksAfterMillis, @JsonProperty("scheduleType") Optional<ScheduleType> scheduleType,
-      @JsonProperty("quartzSchedule") Optional<String> quartzSchedule, @JsonProperty("scheduleTimeZone") Optional<TimeZone> scheduleTimeZone, @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity,
+      @JsonProperty("quartzSchedule") Optional<String> quartzSchedule, @JsonProperty("scheduleTimeZone") Optional<String> scheduleTimeZone, @JsonProperty("rackAffinity") Optional<List<String>> rackAffinity,
       @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement, @JsonProperty("requiredSlaveAttributes") Optional<Map<String, String>> requiredSlaveAttributes,
       @JsonProperty("allowedSlaveAttributes") Optional<Map<String, String>> allowedSlaveAttributes, @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis,
       @JsonProperty("waitAtLeastMillisAfterTaskFinishesForReschedule") Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule, @JsonProperty("group") Optional<String> group,
@@ -148,7 +147,7 @@ public class SingularityRequest {
     return quartzSchedule;
   }
 
-  public Optional<TimeZone> getScheduleTimeZone() {
+  public Optional<String> getScheduleTimeZone() {
     return scheduleTimeZone;
   }
 
