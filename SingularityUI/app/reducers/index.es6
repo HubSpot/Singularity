@@ -1,4 +1,5 @@
 import { combineReducers } from 'redux';
+import { routerReducer as routing } from 'react-router-redux';
 
 import taskGroups from './taskGroups';
 import activeRequest from './activeRequest';
@@ -40,6 +41,7 @@ const search = (state = '', action) => {
   return state;
 };
 
+
 const logRequestLength = (state = 30000, action) => state;
 
 const maxLines = (state = 100000, action) => state;
@@ -58,6 +60,7 @@ const showDebugInfo = (state = false, action) => {
 export default combineReducers({
   api,
   ui,
+  routing,
   showDebugInfo,
   taskGroups,
   tasks,

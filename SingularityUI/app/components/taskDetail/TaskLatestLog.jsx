@@ -1,17 +1,19 @@
 import React, { PropTypes } from 'react';
 import Utils from '../../utils';
-import Section from '../common/Section';
 import { Glyphicon } from 'react-bootstrap';
+import { Link } from 'react-router';
+
+import Section from '../common/Section';
 
 function TaskLatestLog (props) {
   const link = props.isStillRunning ? (
-    <a href={`${config.appRoot}/task/${props.task.taskId.id}/tail/${Utils.substituteTaskId(config.runningTaskLogPath, props.task.taskId.id)}`} title="Log">
+    <Link to={`task/${props.taskId}/tail/${Utils.substituteTaskId(config.runningTaskLogPath, props.taskId)}`} title="Log">
         <span><Glyphicon glyph="file" /> {Utils.fileName(config.runningTaskLogPath)}</span>
-    </a>
+    </Link>
   ) : (
-    <a href={`${config.appRoot}/task/${props.task.taskId.id}/tail/${Utils.substituteTaskId(config.finishedTaskLogPath, props.task.taskId.id)}`} title="Log">
+    <Link to={`task/${props.taskId}/tail/${Utils.substituteTaskId(config.finishedTaskLogPath, props.taskId)}`} title="Log">
         <span><Glyphicon glyph="file" /> {Utils.fileName(config.finishedTaskLogPath)}</span>
-    </a>
+    </Link>
   );
   return (
     <Section title="Logs" id="logs">
@@ -25,11 +27,7 @@ function TaskLatestLog (props) {
 }
 
 TaskLatestLog.propTypes = {
-  task: PropTypes.shape({
-    taskId: PropTypes.shape({
-      id: PropTypes.string
-    }).isRequired
-  }).isRequired,
+  taskId: PropTypes.string.isRequired,
   isStillRunning: PropTypes.bool
 };
 

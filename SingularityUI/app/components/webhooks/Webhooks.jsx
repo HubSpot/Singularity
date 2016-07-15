@@ -10,6 +10,7 @@ import NewWebhookForm from './NewWebhookForm';
 import vex from 'vex';
 import { FetchWebhooks } from '../../actions/api/webhooks';
 import { connect } from 'react-redux';
+import rootComponent from '../../rootComponent';
 
 const Webhooks = React.createClass({
 
@@ -255,11 +256,12 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    fetchWebhooks() {
-      dispatch(FetchWebhooks.trigger());
-    }
+    fetchWebhooks: () => dispatch(FetchWebhooks.trigger())
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Webhooks);
+function refresh(props) {
+  return props.fetchWebhooks();
+}
 
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Webhooks, 'Webhooks', refresh));

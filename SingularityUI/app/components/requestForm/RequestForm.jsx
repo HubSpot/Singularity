@@ -1,18 +1,21 @@
 import React, {PropTypes} from 'react';
 import Select from 'react-select';
 import { connect } from 'react-redux';
+import { Link } from 'react-router';
+import rootComponent from '../../rootComponent';
 import MultiSelect from '../common/formItems/MultiSelect';
 import MultiInputFormGroup from '../common/formItems/formGroups/MultiInputFormGroup';
 import SelectFormGroup from '../common/formItems/formGroups/SelectFormGroup';
 import TextFormGroup from '../common/formItems/formGroups/TextFormGroup';
 import CheckboxFormGroup from '../common/formItems/formGroups/CheckboxFormGroup';
 import { ModifyField, ClearForm } from '../../actions/ui/form';
-import { SaveRequest } from '../../actions/api/requests';
+import { SaveRequest, FetchRequest } from '../../actions/api/requests';
 import { OverlayTrigger, Tooltip} from 'react-bootstrap/lib';
 import { FormGroup, ControlLabel, FormControl, Form, Row, Col } from 'react-bootstrap';
 import Utils from '../../utils';
 import classNames from 'classnames';
 import {FIELDS_BY_REQUEST_TYPE, INDEXED_FIELDS} from './fields';
+import { FetchRacks } from '../../actions/api/racks';
 
 const QUARTZ_SCHEDULE = 'quartzSchedule';
 const CRON_SCHEDULE = 'cronSchedule';
@@ -295,7 +298,7 @@ class RequestForm extends React.Component {
     const rackOptions = _.pluck(this.props.racks, 'id').map(id => ({value: id, label: id}));
     const rackAffinity = (
       <div className="form-group">
-        <label htmlFor="rack-affinity">Rack Affinity <span className="form-label-tip">separate multiple racks with commas</span></label>
+        <label htmlFor="rack-affinity">Rack Affinity <span className="form-label-tip">choose any subset</span></label>
         <MultiSelect
           id="rack-affinity"
           onChange={ value => this.updateField('rackAffinity', value) }
@@ -396,7 +399,7 @@ class RequestForm extends React.Component {
     const header = (
       this.isEditing() ?
         <h3>
-          Editing <a href={`${config.appRoot}/request/${requestId}`}>{requestId}</a>
+          Editing <Link to={`request/${requestId}`}>{requestId}</Link>
         </h3> :
         <h3>New Request</h3>
     );
@@ -498,13 +501,10 @@ function navigateToRequestIfSuccess(promiseResult) {
 }
 
 function mapStateToProps(state, ownProps) {
-  const request = state.api.request[ownProps.requestId]
-    ? state.api.request[ownProps.requestId].data
-    : null;
-
+  const request = ownProps.params.requestId && state.api.request[ownProps.params.requestId];
   return {
     racks: state.api.racks.data,
-    request,
+    request: request && request.data,
     form: state.ui.form[FORM_ID],
     saveApiCall: state.api.saveRequest
   };
@@ -520,8 +520,34 @@ function mapDispatchToProps(dispatch) {
     },
     save(requestBody) {
       dispatch(SaveRequest.trigger(requestBody)).then((response) => navigateToRequestIfSuccess(response));
+    },
+    fetchRequest(requestId) {
+      dispatch(FetchRequest.trigger(requestId));
+    },
+    fetchRacks() {
+      dispatch(FetchRacks.trigger());
+    },
+    clearRequestData() {
+      dispatch(FetchRequest.clearData());
+    },
+    clearSaveRequestData() {
+      dispatch(SaveRequest.clearData());
     }
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(RequestForm);
+function refresh(props) {
+  const promises = [];
+
+  promises.push(props.fetchRacks());
+  if (props.params.requestId) {
+    promises.push(props.fetchRequest(props.params.requestId));
+  } else {
+    promises.push(props.clearRequestData());
+  }
+  promises.push(props.clearSaveRequestData());
+
+  return Promise.all(promises);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(RequestForm, 'New Request', refresh));

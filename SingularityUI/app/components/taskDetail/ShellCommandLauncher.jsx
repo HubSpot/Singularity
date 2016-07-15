@@ -1,9 +1,10 @@
 import React, {Component, PropTypes} from 'react';
+import { withRouter } from 'react-router';
 import classNames from 'classnames';
 
 import { Modal, Glyphicon } from 'react-bootstrap';
 
-export default class ShellCommandLauncher extends Component {
+class ShellCommandLauncher extends Component {
 
   static propTypes = {
     shellCommandResponse: PropTypes.shape({
@@ -18,6 +19,7 @@ export default class ShellCommandLauncher extends Component {
         outputFilename: PropTypes.string
       }))
     })),
+    router: PropTypes.array.isRequired,
     taskFiles: PropTypes.object,
     updateTask: PropTypes.func.isRequired,
     updateFiles: PropTypes.func.isRequired,
@@ -77,7 +79,7 @@ export default class ShellCommandLauncher extends Component {
         const directory = this.props.taskFiles[`${taskId}/${taskId}`].data;
         if (_.find(directory.files, (file) => file.name === outputFilePath)) {
           clearInterval(this.fileInterval);
-          app.router.navigate(`task/${taskId}/tail/${taskId}/${outputFilePath}`, {trigger: true});
+          this.props.router.push(`task/${taskId}/tail/${taskId}/${outputFilePath}`);
         } else {
           this.props.updateFiles(taskId, taskId);
         }
@@ -128,3 +130,5 @@ export default class ShellCommandLauncher extends Component {
     );
   }
 }
+
+export default withRouter(ShellCommandLauncher);

@@ -3,7 +3,7 @@ import Utils from 'utils';
 
 import { fetchTasksForRequest } from './activeTasks';
 
-let fetchData = function(taskId, path, offset=undefined, length=0) {
+let fetchData = function(taskId, path, offset = undefined, length = 0) {
   length = Math.max(length, 0);  // API breaks if you request a negative length
   return $.ajax(
     {url: `${ config.apiRoot }/sandbox/${ taskId }/read?${$.param({path, length, offset})}`});
@@ -46,7 +46,6 @@ export const initialize = (requestId, path, search, taskIds, viewMode) =>
         })
         .error(function({status}) {
           if (status === 404) {
-            app.caughtError();
             dispatch(taskFileDoesNotExist(taskGroupId, taskId));
             return taskInitDeferred.resolve();
           } else {
@@ -134,12 +133,7 @@ export const doesFinishedLogExist = (taskIds) =>
     taskIds.map((taskId) => {
       const actualPath = config.finishedTaskLogPath.replace('$TASK_ID', taskId);
       return fetchData(taskId, actualPath)
-      .done(() => dispatch(finishedLogExists(taskId)))
-      .error((error) => {
-        if (error.status === 404) {
-          app.caughtError();
-        }
-      });
+      .done(() => dispatch(finishedLogExists(taskId)));
     });
   }
 ;
@@ -150,7 +144,7 @@ export const updateFilesizes = () =>
     tasks = getState();
     for (let taskId of tasks) {
       fetchData(taskId, tasks[taskId.path]).done(({offset}) => {
-        dispatch(taskFilesize(taskId, offset))
+        dispatch(taskFilesize(taskId, offset));
       });
     }
   }
@@ -299,7 +293,7 @@ export const taskGroupTop = (taskGroupId, visible) =>
   }
 ;
 
-export const taskGroupBottom = (taskGroupId, visible, tailing=false) =>
+export const taskGroupBottom = (taskGroupId, visible, tailing = false) =>
   function(dispatch, getState) {
     let { taskGroups, tasks } = getState();
     let taskGroup = taskGroups[taskGroupId];

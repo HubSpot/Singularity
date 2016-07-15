@@ -144,7 +144,7 @@ export default class ShellCommands extends Component {
                   <td className="actions-column">
                     {filename && (
                       <OverlayTrigger placement="left" overlay={<ToolTip id={filename}>View output file</ToolTip>}>
-                        <a href={`${config.appRoot}/task/${data.shellRequest.taskId.id}/tail/${data.shellRequest.taskId.id}/${filename}`}>···</a>
+                        <a href={`task/${data.shellRequest.taskId.id}/tail/${data.shellRequest.taskId.id}/${filename}`}>···</a>
                       </OverlayTrigger>
                     )}
                   </td>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router';
 import Column from '../common/table/Column';
 import classNames from 'classnames';
 
@@ -18,9 +19,9 @@ export const TaskId = (
     }
     cellRender={
       (cellData) => (
-        <a href={`${config.appRoot}/task/${cellData}`}>
+        <Link to={`task/${cellData}`}>
           {cellData}
-        </a>
+        </Link>
       )
     }
     sortable={true}
@@ -37,9 +38,9 @@ export const TaskIdShortened = (
     }
     cellRender={
       (cellData) => (
-        <a href={`${config.appRoot}/task/${cellData}`}>
+        <Link to={`task/${cellData}`}>
           {cellData}
-        </a>
+        </Link>
       )
     }
     sortable={true}
@@ -116,9 +117,9 @@ export const Host = (
     }
     cellRender={
       (cellData) => (
-        <a href={`${config.appRoot}/tasks/active/all/${cellData}`}>
+        <Link to={`tasks/active/all/${cellData}`}>
           {cellData}
-        </a>
+        </Link>
       )
     }
     sortable={true}
@@ -135,9 +136,9 @@ export const Rack = (
     }
     cellRender={
       (cellData) => (
-        <a href={`${config.appRoot}/tasks/active/all/${cellData}`}>
+        <Link to={`tasks/active/all/${cellData}`}>
           {cellData}
-        </a>
+        </Link>
       )
     }
     sortable={true}
@@ -246,7 +247,7 @@ export const DeployId = (
       (rowData) => rowData.taskId.deployId
     }
     cellRender={(deployId, task) => (
-      <a href={`${config.appRoot}/request/${task.taskId.requestId}/deploy/${deployId}`}>{deployId}</a>
+      <Link to={`request/${task.taskId.requestId}/deploy/${deployId}`}>{deployId}</Link>
     )}
     sortable={true}
   />
@@ -261,9 +262,9 @@ export const PendingDeployId = (
       (rowData) => rowData.pendingTask.pendingTaskId
     }
     sortData={(cellData) => cellData.deployId}
-    cellRender={(cellData) => (
-      <a href={`${config.appRoot}/request/${cellData.requestId}/deploy/${cellData.deployId}`}>{cellData.deployId}</a>
-    )}
+    cellRender={(cellData) =>
+      <Link to={`request/${cellData.requestId}/deploy/${cellData.deployId}`}>{cellData.deployId}</Link>
+    }
     sortable={true}
   />
 );
@@ -293,11 +294,13 @@ export const ScheduledTaskId = (
     cellData={
       (rowData) => rowData.pendingTask.pendingTaskId.id
     }
-    cellRender={(cellData) => (
-      <a href={`${config.appRoot}/task/${cellData}`}>
-        {cellData}
-      </a>
-    )}
+    cellRender={
+      (cellData) => (
+        <Link to={`task/${cellData}`}>
+          {cellData}
+        </Link>
+      )
+    }
     sortable={true}
     className="keep-in-check"
   />
@@ -329,12 +332,12 @@ export const LogLinkAndJSON = (
     cellData={(rowData) => rowData.taskId}
     cellRender={(taskId, rowData) => (
       <div className="hidden-xs">
-        <a
-          href={`${config.appRoot}/request/${taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${taskId.id}`}
+        <Link
+          to={`request/${taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${taskId.id}`}
           title="Log"
         >
           &middot;&middot;&middot;
-        </a>
+        </Link>
         <JSONButton className="inline" object={rowData}>
           {'{ }'}
         </JSONButton>

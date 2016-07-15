@@ -2,6 +2,7 @@ import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 
 import { Button } from 'react-bootstrap';
+import { Link } from 'react-router';
 
 import JSONButton from '../../common/JSONButton';
 
@@ -26,9 +27,11 @@ const RequestActionButtons = ({requestParent}) => {
   let maybeNewDeployButton;
   if (!config.hideNewDeployButton) {
     maybeNewDeployButton = (
-      <Button href={`${config.appRoot}/request/${request.id}/deploy`} bsStyle="success">
-        Deploy
-      </Button>
+      <Link to={`request/${request.id}/deploy`}>
+        <Button bsStyle="success">
+          Deploy
+        </Button>
+      </Link>
     );
   }
 
@@ -101,9 +104,11 @@ const RequestActionButtons = ({requestParent}) => {
   let maybeEditButton;
   if (!config.hideNewRequestButton) {
     maybeEditButton = (
-      <Button bsStyle="primary" href={`${config.appRoot}/requests/edit/${request.id}`}>
-        Edit
-      </Button>
+      <Link to={`requests/edit/${request.id}`}>
+        <Button bsStyle="primary">
+          Edit
+        </Button>
+      </Link>
     );
   }
 

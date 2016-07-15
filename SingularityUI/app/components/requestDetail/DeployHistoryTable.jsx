@@ -5,6 +5,8 @@ import Section from '../common/Section';
 
 import Utils from '../../utils';
 
+import { Link } from 'react-router';
+
 import { FetchDeploysForRequest } from '../../actions/api/history';
 
 import ServerSideTable from '../common/ServerSideTable';
@@ -31,9 +33,9 @@ const DeployHistoryTable = ({requestId, deploysAPI}) => {
           return (
             <tr key={index}>
               <td>
-                <a href={`${config.appRoot}/request/${deployMarker.requestId}/deploy/${deployMarker.deployId}`}>
+                <Link to={`request/${deployMarker.requestId}/deploy/${deployMarker.deployId}`}>
                   {deployMarker.deployId}
-                </a>
+                </Link>
               </td>
               <td>
                 {deployResult ? Utils.humanizeText(deployResult.deployState) : 'Pending'}

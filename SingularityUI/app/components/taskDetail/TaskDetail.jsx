@@ -1,17 +1,23 @@
 import React, { PropTypes, Component } from 'react';
 import { connect } from 'react-redux';
+import { withRouter } from 'react-router';
+import rootComponent from '../../rootComponent';
 import Utils from '../../utils';
 
 import { FetchTaskFiles } from '../../actions/api/sandbox';
 import {
   FetchTaskStatistics,
   KillTask,
-  RunCommandOnTask
+  RunCommandOnTask,
+  FetchTaskCleanups
 } from '../../actions/api/tasks';
 
 import {
   FetchTaskHistory,
+  FetchDeployForRequest
 } from '../../actions/api/history';
+import { FetchPendingDeploys } from '../../actions/api/deploys';
+import { FetchTaskS3Logs } from '../../actions/api/logs';
 
 import { InfoBox, UsageInfo } from '../common/statelessComponents';
 import { Alert } from 'react-bootstrap';
@@ -87,21 +93,30 @@ class TaskDetail extends Component {
         id: PropTypes.string
       }).isRequired
     })).isRequired,
+    router: PropTypes.object.isRequired,
     s3Logs: PropTypes.array,
     deploy: PropTypes.object,
     pendingDeploys: PropTypes.array,
     shellCommandResponse: PropTypes.object,
-    files: PropTypes.object,
+    files: PropTypes.shape({
+      files: PropTypes.array,
+      currentDirectory: PropTypes.string
+    }),
     filePath: PropTypes.string,
     taskId: PropTypes.string.isRequired,
-    dispatch: PropTypes.func.isRequired
-  }
+    params: PropTypes.object,
+    fetchTaskHistory: PropTypes.func.isRequired,
+    fetchTaskStatistics: PropTypes.func.isRequired,
+    fetchTaskFiles: PropTypes.func.isRequired,
+    killTask: PropTypes.func.isRequired,
+    runCommandOnTask: PropTypes.func.isRequired
+  };
 
   constructor(props) {
     super(props);
     this.state = {
       previousUsage: null,
-      currentFilePath: props.filePath
+      currentFilePath: props.params.splat || props.params.taskId
     };
   }
 
@@ -109,7 +124,7 @@ class TaskDetail extends Component {
     if (!this.props.task) return;
     // Get a second sample for CPU usage right away
     if (this.props.task.isStillRunning) {
-      this.props.dispatch(FetchTaskStatistics.trigger(this.props.taskId));
+      this.props.fetchTaskStatistics(this.props.params.taskId);
     }
   }
 
@@ -153,8 +168,8 @@ class TaskDetail extends Component {
   }
 
   killTask(data) {
-    this.props.dispatch(KillTask.trigger(this.props.taskId, data)).then(() => {
-      this.props.dispatch(FetchTaskHistory.trigger(this.props.taskId));
+    this.props.killTask(this.props.params.taskId, data).then(() => {
+      this.props.fetchTaskHistory(this.props.params.taskId);
     });
   }
 
@@ -163,7 +178,7 @@ class TaskDetail extends Component {
       return (
         <Section title="Files">
           <div className="empty-table-message">
-              {'Could not retrieve files. The host of this task is likely offline or its directory has been cleaned up.'}
+            {'Could not retrieve files. The host of this task is likely offline or its directory has been cleaned up.'}
           </div>
         </Section>
       );
@@ -171,16 +186,16 @@ class TaskDetail extends Component {
     return (
       <Section title="Files">
         <TaskFileBrowser
-          taskId={this.props.task.task.taskId.id}
+          taskId={this.props.taskId}
           files={files.files}
           currentDirectory={files.currentDirectory}
           changeDir={(path) => {
             if (path.startsWith('/')) path = path.substring(1);
-            this.props.dispatch(FetchTaskFiles.trigger(this.props.taskId, path)).then(() => {
+            this.props.fetchTaskFiles(this.props.params.taskId, path).then(() => {
               this.setState({
                 currentFilePath: path
               });
-              app.router.navigate(Utils.joinPath(`#task/${this.props.taskId}/files/`, path));
+              this.props.router.push(Utils.joinPath(`task/${this.props.params.taskId}/files/`, path));
             });
           }}
         />
@@ -227,7 +242,7 @@ class TaskDetail extends Component {
           ]}>
           <span>
             <p>Are you sure you want to kill this task?</p>
-            <pre>{this.props.taskId}</pre>
+            <pre>{this.props.params.taskId}</pre>
             <p>
                 Long running process will be started again instantly, scheduled
                 tasks will behave as if the task failed and may be rescheduled
@@ -256,12 +271,12 @@ class TaskDetail extends Component {
                 {
                   label: 'Request',
                   text: this.props.task.task.taskId.requestId,
-                  link: `${config.appRoot}/request/${this.props.task.task.taskId.requestId}`
+                  link: `/request/${this.props.task.task.taskId.requestId}`
                 },
                 {
                   label: 'Deploy',
                   text: this.props.task.task.taskId.deployId,
-                  link: `${config.appRoot}/request/${this.props.task.task.taskId.requestId}/deploy/${this.props.task.task.taskId.deployId}`
+                  link: `/request/${this.props.task.task.taskId.requestId}/deploy/${this.props.task.task.taskId.deployId}`
                 },
                 {
                   label: 'Instance',
@@ -296,13 +311,13 @@ class TaskDetail extends Component {
           taskFiles={this.props.files}
           shellCommandResponse={this.props.shellCommandResponse}
           runShellCommand={(commandName) => {
-            return this.props.dispatch(RunCommandOnTask.trigger(this.props.taskId, commandName));
+            return this.props.runCommandOnTask(this.props.taskId, commandName);
           }}
           updateTask={() => {
-            this.props.dispatch(FetchTaskHistory.trigger(this.props.taskId));
+            this.props.fetchTaskHistory(this.props.taskId);
           }}
           updateFiles={(path) => {
-            this.props.dispatch(FetchTaskFiles.trigger(this.props.taskId, path));
+            this.props.fetchTaskFiles(this.props.taskId, path);
           }}
         />
       </CollapsableSection>
@@ -366,7 +381,7 @@ class TaskDetail extends Component {
     const cleanup = _.find(this.props.taskCleanups, (cleanupToTest) => {
       return cleanupToTest.taskId.id === this.props.taskId;
     });
-    const filesToDisplay = this.analyzeFiles(this.props.files[`${this.props.taskId}/${this.state.currentFilePath}`].data);
+    const filesToDisplay = this.props.files[`${this.props.params.taskId}/${this.state.currentFilePath}`] && this.analyzeFiles(this.props.files[`${this.props.taskId}/${this.state.currentFilePath}`].data);
 
     return (
       <div className="task-detail detail-view">
@@ -374,7 +389,7 @@ class TaskDetail extends Component {
         <TaskAlerts task={this.props.task} deploy={this.props.deploy} pendingDeploys={this.props.pendingDeploys} />
         <TaskMetadataAlerts task={this.props.task} />
         <TaskHistory taskUpdates={this.props.task.taskUpdates} />
-        <TaskLatestLog task={this.props.task.task} isStillRunning={this.props.task.isStillRunning} />
+        <TaskLatestLog taskId={this.props.taskId} isStillRunning={this.props.task.isStillRunning} />
         {this.renderFiles(filesToDisplay)}
         <TaskS3Logs taskId={this.props.task.task.taskId.id} s3Files={this.props.s3Logs} />
         <TaskLbUpdates task={this.props.task} />
@@ -395,7 +410,7 @@ function mapHealthchecksToProps(task) {
   task.lastHealthcheckFailed = hcs && hcs.length > 0 && hcs[0].statusCode !== 200;
   task.healthcheckFailureReasonMessage = Utils.healthcheckFailureReasonMessage(task);
   task.tooManyRetries = hcs && hcs.length > task.task.taskRequest.deploy.healthcheckMaxRetries && task.task.taskRequest.deploy.healthcheckMaxRetries > 0;
-  task.secondsElapsed = task.task.taskRequest && task.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds || config.defaultDeployHealthTimeoutSeconds;
+  task.secondsElapsed = task.task && task.task.taskRequest && task.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds || config.defaultDeployHealthTimeoutSeconds;
   return task;
 }
 
@@ -407,10 +422,10 @@ function mapTaskToProps(task) {
   }
   task.isStillRunning = isStillRunning;
 
-  task.isCleaning = task.lastKnownState.taskState === 'TASK_CLEANING';
+  task.isCleaning = task.lastKnownState && task.lastKnownState.taskState === 'TASK_CLEANING';
 
   const ports = [];
-  if (task.task.taskRequest.deploy.resources.numPorts > 0) {
+  if (task.task && task.task.taskRequest.deploy.resources.numPorts > 0) {
     for (const resource of task.task.mesosTask.resources) {
       if (resource.name === 'ports') {
         for (const range of resource.ranges.range) {
@@ -427,12 +442,13 @@ function mapTaskToProps(task) {
 }
 
 function mapStateToProps(state, ownProps) {
-  let task = state.api.task[ownProps.taskId].data;
-  if (!task.task) return {};
-  task = mapTaskToProps(task);
+  let task = state.api.task[ownProps.params.taskId];
+  if (!(task && task.data)) return {};
+  task = mapTaskToProps(task.data);
   task = mapHealthchecksToProps(task);
   return {
     task,
+    taskId: ownProps.params.taskId,
     taskCleanups: state.api.taskCleanups.data,
     files: state.api.taskFiles,
     resourceUsage: state.api.taskResourceUsage.data,
@@ -444,4 +460,36 @@ function mapStateToProps(state, ownProps) {
   };
 }
 
-export default connect(mapStateToProps)(TaskDetail);
+function mapDispatchToProps(dispatch) {
+  return {
+    runCommandOnTask: (taskId, commandName) => dispatch(RunCommandOnTask.trigger(taskId, commandName)),
+    killTask: (taskId, data) => dispatch(KillTask.trigger(taskId, data)),
+    fetchTaskHistory: (taskId) => dispatch(FetchTaskHistory.trigger(taskId)),
+    fetchTaskStatistics: (taskId) => dispatch(FetchTaskStatistics.trigger(taskId)),
+    fetchTaskFiles: (...args) => dispatch(FetchTaskFiles.trigger(...args)),
+    fetchDeployForRequest: (taskId, deployId) => dispatch(FetchDeployForRequest.trigger(taskId, deployId)),
+    fetchTaskCleanups: () => dispatch(FetchTaskCleanups.trigger()),
+    fetchPendingDeploys: () => dispatch(FetchPendingDeploys.trigger()),
+    fechS3Logs: (taskId) => dispatch(FetchTaskS3Logs.trigger(taskId)),
+  };
+}
+
+function refresh(props) {
+  props.fetchTaskFiles(props.params.taskId, props.params.splat || props.params.taskId, [400]);
+  const promises = [];
+  const taskPromise = props.fetchTaskHistory(props.params.taskId);
+  taskPromise.then(() => {
+    const task = props.route.store.getState().api.task[props.params.taskId].data;
+    promises.push(props.fetchDeployForRequest(task.task.taskId.requestId, task.task.taskId.deployId));
+    if (task.isStillRunning) {
+      promises.push(props.fetchTaskStatistics(props.params.taskId));
+    }
+  });
+  promises.push(taskPromise);
+  promises.push(props.fetchTaskCleanups());
+  promises.push(props.fetchPendingDeploys());
+  promises.push(props.fechS3Logs(props.params.taskId));
+  return Promise.all(promises);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TaskDetail), (props) => props.params.taskId, refresh));

@@ -1,6 +1,7 @@
 import React from 'react';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
+import { withRouter } from 'react-router';
 import { FetchRequests } from '../../actions/api/requests';
 import { SetVisibility } from '../../actions/ui/globalSearch';
 
@@ -14,7 +15,8 @@ class GlobalSearch extends React.Component {
     requests: React.PropTypes.array,
     visible: React.PropTypes.bool,
     getRequests: React.PropTypes.func,
-    setVisibility: React.PropTypes.func
+    setVisibility: React.PropTypes.func,
+    router: React.PropTypes.object
   }
 
   constructor() {
@@ -45,7 +47,9 @@ class GlobalSearch extends React.Component {
   }
 
   componentWillUnmount() {
-    key.unbind('s, t, esc, escape');
+    key.unbind('t', 'noInput');
+    key.unbind('s', 'noInput');
+    key.unbind('esc, escape', 'input');
   }
 
   resetSelection() {
@@ -82,7 +86,7 @@ class GlobalSearch extends React.Component {
 
   optionSelected(requestIdObject) {
     const requestId = this.getValueFromOption(requestIdObject);
-    app.router.navigate(`/request/${ requestId }`, { trigger: true });
+    this.props.router.push(`/request/${ requestId }`, { trigger: true });
     this.clear();
     this.props.setVisibility(false);
   }
@@ -153,4 +157,4 @@ function mapStateToProps(state) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(GlobalSearch);
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(GlobalSearch));

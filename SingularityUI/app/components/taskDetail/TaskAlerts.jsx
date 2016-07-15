@@ -1,6 +1,7 @@
 import React, { PropTypes } from 'react';
 import Utils from '../../utils';
 import { Alert } from 'react-bootstrap';
+import { Link } from 'react-router';
 
 import JSONButton from '../common/JSONButton';
 import SimpleTable from '../common/SimpleTable';

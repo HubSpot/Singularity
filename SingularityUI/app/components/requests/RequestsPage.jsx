@@ -1,7 +1,19 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
+import { withRouter } from 'react-router';
+import rootComponent from '../../rootComponent';
 
-import { FetchRequestsInState } from '../../actions/api/requests';
+import {
+  FetchRequestsInState,
+  RemoveRequest,
+  UnpauseRequest,
+  RunRequest,
+  ScaleRequest,
+  BounceRequest,
+  FetchRequestRun
+} from '../../actions/api/requests';
+import { FetchRequestRunHistory } from '../../actions/api/history';
+import { FetchTaskFiles } from '../../actions/api/sandbox';
 
 import UITable from '../common/table/UITable';
 import RequestFilters from './RequestFilters';
@@ -16,39 +28,44 @@ class RequestsPage extends Component {
     subFilter: PropTypes.string.isRequired,
     searchFilter: PropTypes.string.isRequired,
     requestsInState: PropTypes.arrayOf(PropTypes.object).isRequired,
-    updateFilters: PropTypes.func.isRequired,
     fetchFilter: PropTypes.func.isRequired
+  };
+
+  static propTypes = {
+    requestsInState: React.PropTypes.array,
+    fetchFilter: React.PropTypes.func,
+    removeRequest: React.PropTypes.func,
+    unpauseRequest: React.PropTypes.func,
+    runNow: React.PropTypes.func,
+    fetchRun: React.PropTypes.func,
+    fetchRunHistory: React.PropTypes.func,
+    fetchTaskFiles: React.PropTypes.func,
+    scaleRequest: React.PropTypes.func,
+    bounceRequest: React.PropTypes.func,
+    params: React.PropTypes.object,
+    router: React.PropTypes.object,
+    filter: React.PropTypes.shape({
+      state: React.PropTypes.string,
+      subFilter: React.PropTypes.array,
+      searchFilter: React.PropTypes.string
+    }).isRequired
   };
 
   constructor(props) {
     super(props);
     this.state = {
-      filter: {
-        state: props.state,
-        subFilter: props.subFilter === 'all' ? RequestFilters.REQUEST_TYPES : props.subFilter.split(','),
-        searchFilter: props.searchFilter
-      },
       loading: false
     };
   }
 
-  componentDidMount() {
-    if (filterSelector({requestsInState: this.props.requestsInState, filter: this.state.filter}).length) {
-      // legacy, remove asap
-      Utils.fixTableColumns($(this.refs.table.getTableDOMNode()));
-    }
-  }
-
   handleFilterChange(filter) {
-    const lastFilterState = this.state.filter.state;
+    const lastFilterState = this.props.filter.state;
     this.setState({
-      loading: lastFilterState !== filter.state,
-      filter
+      loading: lastFilterState !== filter.state
     });
 
     const subFilter = filter.subFilter.length === RequestFilters.REQUEST_TYPES.length ? 'all' : filter.subFilter.join(',');
-    this.props.updateFilters(filter.state, subFilter, filter.searchFilter);
-    app.router.navigate(`/requests/${filter.state}/${subFilter}/${filter.searchFilter}`);
+    this.props.router.push(`/requests/${filter.state}/${subFilter}/${filter.searchFilter}`);
 
     if (lastFilterState !== filter.state) {
       this.props.fetchFilter(filter.state).then(() => {
@@ -60,7 +77,7 @@ class RequestsPage extends Component {
   }
 
   getColumns() {
-    switch (this.state.filter.state) {
+    switch (this.props.filter.state) {
       case 'pending':
         return [Cols.RequestId, Cols.PendingType];
       case 'cleanup':
@@ -92,7 +109,7 @@ class RequestsPage extends Component {
   }
 
   render() {
-    const displayRequests = filterSelector({requestsInState: this.props.requestsInState, filter: this.state.filter});
+    const displayRequests = filterSelector({requestsInState: this.props.requestsInState, filter: this.props.filter});
 
     let table;
     if (this.state.loading) {
@@ -114,9 +131,9 @@ class RequestsPage extends Component {
     return (
       <div>
         <RequestFilters
-          filter={this.state.filter}
+          filter={this.props.filter}
           onFilterChange={(filter) => this.handleFilterChange(filter)}
-          displayRequestTypeFilters={!_.contains(['pending', 'cleanup'], this.state.filter.state)}
+          displayRequestTypeFilters={!_.contains(['pending', 'cleanup'], this.props.filter.state)}
         />
         {table}
       </div>
@@ -124,7 +141,7 @@ class RequestsPage extends Component {
   }
 }
 
-function mapStateToProps(state) {
+function mapStateToProps(state, ownProps) {
   const requestsInState = state.api.requestsInState.data;
   const modifiedRequests = requestsInState.map((r) => {
     const hasActiveDeploy = !!(r.activeDeploy || (r.requestDeployState && r.requestDeployState.activeDeploy));
@@ -136,19 +153,37 @@ function mapStateToProps(state) {
       id: r.request ? r.request.id : r.requestId
     };
   });
+  const filter = {
+    state: ownProps.params.state || 'all',
+    subFilter: !ownProps.params.subFilter || ownProps.params.subFilter === 'all' ? RequestFilters.REQUEST_TYPES : ownProps.params.subFilter.split(','),
+    searchFilter: ownProps.params.searchFilter || ''
+  };
 
   return {
-    requestsInState: modifiedRequests
+    requestsInState: modifiedRequests,
+    filter
   };
 }
 
 function mapDispatchToProps(dispatch) {
   return {
     fetchFilter: (state) => dispatch(FetchRequestsInState.trigger(state)),
+    removeRequest: (requestid, data) => dispatch(RemoveRequest.trigger(requestid, data)),
+    unpauseRequest: (requestId, data) => dispatch(UnpauseRequest.trigger(requestId, data)),
+    runNow: (requestId, data) => dispatch(RunRequest.trigger(requestId, data)),
+    fetchRun: (...args) => dispatch(FetchRequestRun.trigger(...args)),
+    fetchRunHistory: (...args) => dispatch(FetchRequestRunHistory.trigger(...args)),
+    fetchTaskFiles: (...args) => {
+      return dispatch(FetchTaskFiles.trigger(...args));
+    },
+    scaleRequest: (requestId, data) => dispatch(ScaleRequest.trigger(requestId, data)),
+    bounceRequest: (requestId, data) => dispatch(BounceRequest.trigger(requestId, data))
   };
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(RequestsPage);
+function refresh(props) {
+  const state = props.params.state || 'all';
+  return props.fetchFilter(state);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(RequestsPage), 'Requests', refresh));

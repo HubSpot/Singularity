@@ -6,6 +6,7 @@ import { Glyphicon } from 'react-bootstrap';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import SimpleTable from '../common/SimpleTable';
+import { Link } from 'react-router';
 
 function TaskFileBrowser (props) {
   function navigateTo(link) {
@@ -20,7 +21,7 @@ function TaskFileBrowser (props) {
 
   let pathSoFar = '';
   const links = {};
-  for (const pathItem of props.currentDirectory.split('/')) {
+  for (const pathItem of _.without(props.currentDirectory.split('/'), '')) {
     pathSoFar += pathItem;
     links[pathItem] = pathSoFar;
     pathItems.push({
@@ -45,7 +46,7 @@ function TaskFileBrowser (props) {
           let nameLink = '';
           let icon = <Glyphicon glyph={data.isDirectory ? 'folder-open' : 'file'} />;
           if (data.isTailable) {
-            nameLink = <a href={`${config.appRoot}/task/${props.taskId}/tail/${data.uiPath}`}>{icon}<span className="file-name">{data.name}</span></a>;
+            nameLink = <Link to={`${config.appRoot}/task/${props.taskId}/tail/${data.uiPath}`}>{icon}<span className="file-name">{data.name}</span></Link>;
           } else if (!data.isTailable && !data.isDirectory) {
             nameLink = <span>{icon} {data.name}</span>;
           } else {
@@ -83,7 +84,7 @@ TaskFileBrowser.propTypes = {
     size: PropTypes.number,
     mtime: PropTypes.number
   })),
-  currentDirectory: PropTypes.string,
+  currentDirectory: PropTypes.string.isRequired,
   taskId: PropTypes.string.isRequired
 };
 
