@@ -271,12 +271,12 @@ class TaskDetail extends Component {
                 {
                   label: 'Request',
                   text: this.props.task.task.taskId.requestId,
-                  link: `/request/${this.props.task.task.taskId.requestId}`
+                  link: `request/${this.props.task.task.taskId.requestId}`
                 },
                 {
                   label: 'Deploy',
                   text: this.props.task.task.taskId.deployId,
-                  link: `/request/${this.props.task.task.taskId.requestId}/deploy/${this.props.task.task.taskId.deployId}`
+                  link: `request/${this.props.task.task.taskId.requestId}/deploy/${this.props.task.task.taskId.deployId}`
                 },
                 {
                   label: 'Instance',
@@ -376,7 +376,7 @@ class TaskDetail extends Component {
 
   render() {
     if (!this.props.task) {
-      return <NotFound path={`/task/ ${this.props.taskId}`} />;
+      return <NotFound path={`task/ ${this.props.taskId}`} />;
     }
     const cleanup = _.find(this.props.taskCleanups, (cleanupToTest) => {
       return cleanupToTest.taskId.id === this.props.taskId;
