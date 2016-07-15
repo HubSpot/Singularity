@@ -12,7 +12,6 @@
     "_": true,
     "config": true,
     "app": true,
-    "Promise": true,
-    "Backbone": true
+    "Promise": true
   }
 }
