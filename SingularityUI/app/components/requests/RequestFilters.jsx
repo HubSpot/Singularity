@@ -135,6 +135,14 @@ export default class RequestFilters extends React.Component {
   }
 
   render() {
+    const newRequestButton = !config.hideNewRequestButton && (
+      <Link to={'requests/new'}>
+        <Button bsStyle="success">
+          <Glyphicon glyph="plus" /> New Request
+        </Button>
+      </Link>
+    );
+
     return (
       <div>
         <div className="row">
@@ -142,11 +150,7 @@ export default class RequestFilters extends React.Component {
             {this.renderStatusFilter()}
           </div>
           <div className="col-md-2 text-right">
-            <Link to={'requests/new'}>
-              <Button bsStyle="success">
-                <Glyphicon glyph="plus" /> New Request
-              </Button>
-            </Link>
+            {newRequestButton}
           </div>
         </div>
         <div className="row">
