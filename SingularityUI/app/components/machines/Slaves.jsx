@@ -2,9 +2,10 @@ import React, {PropTypes} from 'react';
 import MachinesPage from './MachinesPage';
 import {Glyphicon} from 'react-bootstrap';
 import ModalButton from './ModalButton';
-import MessageElement from './MessageElement';
+import messageElement from './messageElement';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
+import rootComponent from '../../rootComponent';
 import { FetchSlaves, FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSlave } from '../../actions/api/slaves';
 
 function __in__(needle, haystack) {
@@ -40,7 +41,7 @@ class Slaves extends React.Component {
         action="Reactivate Slave"
         onConfirm={(data) => this.props.reactivateSlave(slave, data.message)}
         tooltipText={`Reactivate ${slave.id}`}
-        formElements={[MessageElement]}>
+        formElements={[messageElement]}>
         <p>Are you sure you want to cancel decommission and reactivate this slave??</p>
         <pre>{slave.id}</pre>
         <p>Reactivating a slave will cancel the decommission without erasing the slave's history and move it back to the active state.</p>
@@ -55,7 +56,7 @@ class Slaves extends React.Component {
         action="Freeze Slave"
         onConfirm={(data) => this.props.freezeSlave(slave, data.message)}
         tooltipText={`Freeze ${slave.id}`}
-        formElements={[MessageElement]}>
+        formElements={[messageElement]}>
         <p>Are you sure you want to freeze this slave?</p>
         <pre>{slave.id}</pre>
         <p>Freezing a slave will prevent new tasks from being launched. Previously running tasks will be unaffected.</p>
@@ -71,7 +72,7 @@ class Slaves extends React.Component {
           action="Decommission Slave"
           onConfirm={(data) => this.props.decommissionSlave(slave, data.message)}
           tooltipText={`Decommission ${slave.id}`}
-          formElements={[MessageElement]}>
+          formElements={[messageElement]}>
           <p>Are you sure you want to decommission this slave?</p>
           <pre>{slave.id}</pre>
           <p>Decommissioning a slave causes all tasks currently running on it to be rescheduled and executed elsewhere,
@@ -86,7 +87,7 @@ class Slaves extends React.Component {
         action="Remove Slave"
         onConfirm={(data) => this.props.removeSlave(slave, data.message)}
         tooltipText={`Remove ${slave.id}`}
-        formElements={[MessageElement]}>
+        formElements={[messageElement]}>
         <p>Are you sure you want to remove this slave?</p>
         <pre>{slave.id}</pre>
         {__in__(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&
@@ -232,6 +233,7 @@ function mapDispatchToProps(dispatch) {
     ]);
   }
   return {
+    fetchSlaves: () => dispatch(FetchSlaves.trigger()),
     freezeSlave: (slave, message) => { clear().then(dispatch(FreezeSlave.trigger(slave.id, message)).then(dispatch(FetchSlaves.trigger()))); },
     decommissionSlave: (slave, message) => { clear().then(dispatch(DecommissionSlave.trigger(slave.id, message)).then(dispatch(FetchSlaves.trigger()))); },
     removeSlave: (slave, message) => { clear().then(dispatch(RemoveSlave.trigger(slave.id, message)).then(dispatch(FetchSlaves.trigger()))); },
@@ -240,4 +242,8 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Slaves);
+function refresh(props) {
+  return props.fetchSlaves();
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Slaves, 'Slaves', refresh));

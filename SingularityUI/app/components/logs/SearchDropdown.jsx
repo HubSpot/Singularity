@@ -11,6 +11,7 @@ class SearchDropdown extends React.Component {
     this.state = {
       searchValue: this.props.search
     };
+    _.bindAll(this, 'handleSearchToggle', 'handleSearchUpdate', 'toggleSearchDropdown', 'handleSearchKeyDown');
   }
 
   handleSearchToggle() {
@@ -49,7 +50,7 @@ class SearchDropdown extends React.Component {
       <ul className="dropdown-menu dropdown-menu-right">
         <li>
           <div className="input-group log-search">
-            <input ref="searchInput" type="text" className="form-control" placeholder="Grep Logs" value={this.state.searchValue} onKeyDown={this.handleSearchKeyDown} onChange={function (e) { this.setState({searchValue: e.target.value}); }} />
+            <input ref="searchInput" type="text" className="form-control" placeholder="Grep Logs" value={this.state.searchValue} onKeyDown={this.handleSearchKeyDown} onChange={(e) => { this.setState({searchValue: e.target.value}); }} />
             <span className="input-group-btn">
               <button className="btn btn-info no-margin" type="button" onClick={this.handleSearchUpdate}><span className="glyphicon glyphicon-search"></span></button>
             </span>

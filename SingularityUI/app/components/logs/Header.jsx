@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router';
 import classNames from 'classnames';
 import ColorDropdown from './ColorDropdown';
 import SearchDropdown from './SearchDropdown';
@@ -20,36 +21,37 @@ class Header extends React.Component {
 
   renderViewButtons() {
     if (this.props.multipleTasks) {
-      return <div className="btn-group" role="group" title="Select View Type">
+      return (<div className="btn-group" role="group" title="Select View Type">
         <button type="button" className={classNames({btn: true, 'btn-sm': true, 'btn-default': true, 'no-margin': true, active: this.props.viewMode === 'unified'})} onClick={function () { this.props.switchViewMode('unified'); }}>Unified</button>
         <button type="button" className={classNames({btn: true, 'btn-sm': true, 'btn-default': true, 'no-margin': true, active: this.props.viewMode === 'split'})} onClick={function () { this.props.switchViewMode('split'); }}>Split</button>
-      </div>;
+      </div>);
     }
   }
 
   renderAnchorButtons() {
     if (this.props.taskGroupCount > 1) {
-      return <span>
+      return (<span>
         <a className="btn btn-default btn-sm tail-bottom-button" onClick={this.props.scrollAllToBottom} title="Scroll All to Bottom">
           <span className="glyphicon glyphicon-chevron-down"></span>
         </a>
         <a className="btn btn-default btn-sm tail-top-button" onClick={this.props.scrollAllToTop} title="Scroll All to Top">
           <span className="glyphicon glyphicon-chevron-up"></span>
         </a>
-      </span>;
+      </span>);
     }
   }
 
   render() {
-    return <div className="tail-header">
+    return (
+      <div className="tail-header">
         <div className="row">
           <div className="col-md-3">
             <ul className="breadcrumb breadcrumb-request">
               <li>
                 Request&nbsp;
-                <a href={`${config.appRoot}/request/${this.props.requestId}`}>
+                <Link to={`request/${this.props.requestId}`}>
                   {this.props.requestId}
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -66,7 +68,8 @@ class Header extends React.Component {
             {this.renderAnchorButtons()}
           </div>
         </div>
-      </div>;
+      </div>
+    );
   }
 }
 
@@ -79,7 +82,7 @@ Header.propTypes = {
   switchViewMode: React.PropTypes.func.isRequired,
   scrollAllToBottom: React.PropTypes.func.isRequired,
   scrollAllToTop: React.PropTypes.func.isRequired,
-}
+};
 
 function mapStateToProps(state) {
   return {
@@ -89,8 +92,8 @@ function mapStateToProps(state) {
     viewMode: state.viewMode,
     requestId: state.activeRequest.requestId,
   };
-};
+}
 
 const mapDispatchToProps = { switchViewMode, scrollAllToBottom, scrollAllToTop };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Header)
+export default connect(mapStateToProps, mapDispatchToProps)(Header);

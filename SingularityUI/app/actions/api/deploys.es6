@@ -10,7 +10,8 @@ export const SaveDeploy = buildJsonApiAction(
   'POST',
   (deployData) => ({
     url: '/deploys',
-    body: deployData
+    body: deployData,
+    catchStatusCodes: [400]
   })
 );
 

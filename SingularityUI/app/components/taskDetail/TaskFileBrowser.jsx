@@ -7,6 +7,7 @@ import Breadcrumbs from '../common/Breadcrumbs';
 import SimpleTable from '../common/SimpleTable';
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 import Link from '../common/atomicDisplayItems/Link';
+import { Link as RouterLink } from 'react-router';
 
 export default class TaskFileBrowser extends React.Component {
 
@@ -17,7 +18,7 @@ export default class TaskFileBrowser extends React.Component {
   render() {
     let pathItems = [];
     pathItems.push({
-      text: "root",
+      text: 'root',
       onClick: () => this.navigateTo('')
     });
 
@@ -29,7 +30,7 @@ export default class TaskFileBrowser extends React.Component {
       pathItems.push({
         text: s,
         onClick: () => this.navigateTo(links[s])
-      })
+      });
       p += '/';
     }
     pathItems[pathItems.length - 1].onClick = null;
@@ -45,17 +46,17 @@ export default class TaskFileBrowser extends React.Component {
           last={this.props.files.files.length >= 30}
           headers={['Name', 'Size', 'Last Modified', '']}
           renderTableRow={(data, index) => {
-            let nameLink = "";
+            let nameLink = '';
             let icon = <Glyphicon iconClass={data.isDirectory ? 'folder-open' : 'file'} />;
             if (data.isTailable) {
-              nameLink = <a href={`${config.appRoot}/task/${this.props.taskId}/tail/${data.uiPath}`}>{icon}<span className="file-name">{data.name}</span></a>;
+              nameLink = <RouterLink to={`task/${this.props.taskId}/tail/${data.uiPath}`}>{icon}<span className="file-name">{data.name}</span></RouterLink>;
             } else if (!data.isTailable && !data.isDirectory) {
               nameLink = <span>{icon} {data.name}</span>;
             } else {
               nameLink = <a onClick={() => this.navigateTo(`${this.props.files.currentDirectory}/${data.name}`)}>{icon}<span className="file-name">{data.name}</span></a>;
             }
             let linkProps = {
-              text: <Glyphicon iconClass='download-alt' />,
+              text: <Glyphicon iconClass="download-alt" />,
               url: data.downloadLink,
               title: 'Download',
               altText: `Download ${data.name}`,

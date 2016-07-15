@@ -99,7 +99,10 @@ export default class FormModal extends React.Component {
     return parsed;
   }
 
-  confirm() {
+  confirm(event) {
+    if (event) {
+      event.preventDefault();
+    }
     if (this.validateForm()) {
       this.props.onConfirm(this.parseFormState(this.state.formState));
       const formState = {};
@@ -273,21 +276,39 @@ export default class FormModal extends React.Component {
             </FormModal.FormItem>
           );
 
+        case FormModal.INPUT_TYPES.URL:
+          return (
+          <FormModal.FormItem element={formElement} formState={this.state.formState} key={formElement.name}>
+            <div className={classNames('form-group', {'has-error': !!error})}>
+              <label className="control-label" htmlFor={formElement.name}>{formElement.label}</label>
+              <input type="url"
+                name={formElement.name}
+                className="form-control input-large"
+                value={this.state.formState[formElement.name] || ''}
+                onChange={(event) => this.handleFormChange(formElement.name, event.target.value)}
+              />
+              {help}
+            </div>
+          </FormModal.FormItem>
+        );
+
         default:
           return undefined;
       }
     });
 
     return (
-      <form className="modal-form">
+      <form className="modal-form" onSubmit={(event) => this.confirm(event)}>
         {inputs}
       </form>
     );
   }
 
   render() {
+    const cancel = !this.props.mustFill && <Button bsStyle="default" onClick={this.hide}>Cancel</Button>;
+
     return (
-      <Modal show={this.state.visible} onHide={this.hide}>
+      <Modal show={this.state.visible} onHide={this.hide} backdrop={this.props.mustFill ? 'static' : true}>
         <Modal.Body>
           {this.props.name && <h3>{this.props.name}</h3>}
           {this.props.name && <hr />}
@@ -296,7 +317,7 @@ export default class FormModal extends React.Component {
           {this.renderForm()}
         </Modal.Body>
         <Modal.Footer>
-          <Button bsStyle="default" onClick={this.hide}>Cancel</Button>
+          {cancel}
           <Button bsStyle={this.props.buttonStyle} onClick={this.confirm}>{this.props.action}</Button>
         </Modal.Footer>
       </Modal>
@@ -310,6 +331,7 @@ FormModal.propTypes = {
   buttonStyle: React.PropTypes.string,
   name: React.PropTypes.string,
   children: React.PropTypes.node,
+  mustFill: React.PropTypes.bool,
   formElements: React.PropTypes.arrayOf(React.PropTypes.shape({
     options: React.PropTypes.arrayOf(React.PropTypes.shape({
       value: React.PropTypes.string.isRequired,

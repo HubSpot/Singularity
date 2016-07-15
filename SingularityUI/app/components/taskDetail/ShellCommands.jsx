@@ -115,7 +115,7 @@ export default class ShellCommands extends React.Component {
                   <td className="actions-column">
                     {filename ? (
                       <Link prop={{
-                        url: `${config.appRoot}/task/${data.shellRequest.taskId.id}/tail/${data.shellRequest.taskId.id}/${filename}`,
+                        url: `task/${data.shellRequest.taskId.id}/tail/${data.shellRequest.taskId.id}/${filename}`,
                         text: '···',
                         overlayTrigger: true,
                         overlayId: filename,

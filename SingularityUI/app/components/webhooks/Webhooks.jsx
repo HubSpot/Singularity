@@ -7,6 +7,7 @@ import { connect } from 'react-redux';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 import SimpleTable from '../common/SimpleTable';
+import rootComponent from '../../rootComponent';
 
 const Webhooks = React.createClass({
 
@@ -26,6 +27,7 @@ const Webhooks = React.createClass({
       user: PropTypes.string,
       queueSize: PropTypes.number
     })).isRequired,
+    user: PropTypes.string,
     fetchWebhooks: PropTypes.func.isRequired,
     newWebhook: PropTypes.func.isRequired,
     deleteWebhook: PropTypes.func.isRequired
@@ -53,11 +55,7 @@ const Webhooks = React.createClass({
   },
 
   newWebhook(uri, type) {
-    let user;
-    if (app.user && app.user.attributes.authenticated) {
-      user = app.user.attributes.user.id;
-    }
-    this.props.newWebhook(uri, type, user).then(this.props.fetchWebhooks());
+    this.props.newWebhook(uri, type, this.props.user).then(this.props.fetchWebhooks());
   },
 
   promptNewWebhook() {
@@ -172,18 +170,27 @@ const Webhooks = React.createClass({
 });
 
 function mapStateToProps(state) {
+  const userData = Utils.getUser(state);
+  let user;
+  if (userData) {
+    user = userData.name;
+  }
   return {
+    user,
     webhooks: state.api.webhooks.data
   };
 }
 
 function mapDispatchToProps(dispatch) {
   return {
-    fetchWebhooks() { return dispatch(FetchWebhooks.trigger()); },
-    newWebhook(uri, type, user) { return dispatch(NewWebhook.trigger(uri, type, user)); },
-    deleteWebhook(id) { return dispatch(DeleteWebhook.trigger(id)); }
+    newWebhook: (uri, type, user) => dispatch(NewWebhook.trigger(uri, type, user)),
+    deleteWebhook: (id) => dispatch(DeleteWebhook.trigger(id)),
+    fetchWebhooks: () => dispatch(FetchWebhooks.trigger())
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Webhooks);
+function refresh(props) {
+  return props.fetchWebhooks();
+}
 
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Webhooks, 'Webhooks', refresh));

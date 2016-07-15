@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router';
 
 export default class Breadcrumbs extends React.Component {
 
@@ -6,7 +7,7 @@ export default class Breadcrumbs extends React.Component {
     return this.props.items.map((i, n) => {
       if (i.link) {
         return (
-          <li key={n}>{i.label} <a href={i.link}>{i.text}</a></li>
+          <li key={n}>{i.label} <Link to={i.link}>{i.text}</Link></li>
         );
       } else if (i.onClick) {
         return (
@@ -32,9 +33,9 @@ export default class Breadcrumbs extends React.Component {
 
 Breadcrumbs.propTypes = {
   items: React.PropTypes.arrayOf(React.PropTypes.shape({
-      label: React.PropTypes.string,
-      text: React.PropTypes.oneOfType([React.PropTypes.string.isRequired, React.PropTypes.number.isRequired]),
-      link: React.PropTypes.string
+    label: React.PropTypes.string,
+    text: React.PropTypes.oneOfType([React.PropTypes.string.isRequired, React.PropTypes.number.isRequired]),
+    link: React.PropTypes.string
   })).isRequired,
   right: React.PropTypes.element
 };

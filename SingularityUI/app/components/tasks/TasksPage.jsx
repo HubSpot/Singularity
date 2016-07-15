@@ -1,5 +1,7 @@
 import React, {PropTypes} from 'react';
 import { connect } from 'react-redux';
+import { withRouter } from 'react-router';
+import rootComponent from '../../rootComponent';
 
 import {
   getDecomissioningTasks,
@@ -7,7 +9,11 @@ import {
 } from '../../selectors/tasks';
 
 import TaskFilters from './TaskFilters';
-import { FetchTasksInState } from '../../actions/api/tasks';
+
+import { FetchTasksInState, FetchTaskCleanups, KillTask } from '../../actions/api/tasks';
+import { FetchRequestRun, RunRequest } from '../../actions/api/requests';
+import { FetchRequestRunHistory } from '../../actions/api/history';
+import { FetchTaskFiles } from '../../actions/api/sandbox';
 
 import UITable from '../common/table/UITable';
 
@@ -31,42 +37,38 @@ import {
 
 class TasksPage extends React.Component {
   static propTypes = {
-    state: PropTypes.string,
-    requestsSubFilter: PropTypes.string,
-    searchFilter: PropTypes.string,
-    updateFilters: PropTypes.func,
-    fetchFilter: PropTypes.func,
-    killTask: PropTypes.func,
-    runRequest: PropTypes.func,
-    taskRun: PropTypes.func,
-    taskRunHistory: PropTypes.func,
-    taskFiles: PropTypes.func,
-    tasks: PropTypes.array,
-    cleanups: PropTypes.array
+    params: React.PropTypes.object,
+    router: React.PropTypes.object,
+    fetchFilter: React.PropTypes.func,
+    killTask: React.PropTypes.func,
+    runRequest: React.PropTypes.func,
+    tasks: React.PropTypes.array,
+    cleanups: React.PropTypes.array,
+    taskRun: React.PropTypes.func,
+    taskRunHistory: React.PropTypes.func,
+    taskFiles: React.PropTypes.func,
+    filter: React.PropTypes.shape({
+      taskStatus: React.PropTypes.string,
+      requestTypes: React.PropTypes.array,
+      filterText: React.PropTypes.string
+    }).isRequired
   };
 
   constructor(props) {
     super(props);
     this.state = {
-      filter: {
-        taskStatus: props.state,
-        requestTypes: props.requestsSubFilter === 'all' ? TaskFilters.REQUEST_TYPES : props.requestsSubFilter.split(','),
-        filterText: props.searchFilter,
-        loading: false
-      }
+      loading: false
     };
   }
 
   handleFilterChange(filter) {
-    const lastFilterTaskStatus = this.state.filter.taskStatus;
+    const lastFilterTaskStatus = this.props.filter.taskStatus;
     this.setState({
-      loading: lastFilterTaskStatus !== filter.taskStatus,
-      filter
+      loading: lastFilterTaskStatus !== filter.taskStatus
     });
 
     const requestTypes = filter.requestTypes.length === TaskFilters.REQUEST_TYPES.length ? 'all' : filter.requestTypes.join(',');
-    this.props.updateFilters(filter.taskStatus, requestTypes, filter.filterText);
-    app.router.navigate(`/tasks/${filter.taskStatus}/${requestTypes}/${filter.filterText}`);
+    this.props.router.push(`/tasks/${filter.taskStatus}/${requestTypes}/${filter.filterText}`);
 
     if (lastFilterTaskStatus !== filter.taskStatus) {
       this.props.fetchFilter(filter.taskStatus).then(() => {
@@ -79,7 +81,7 @@ class TasksPage extends React.Component {
 
 
   getColumns() {
-    switch (this.state.filter.taskStatus) {
+    switch (this.props.filter.taskStatus) {
       case 'active':
         return [TaskIdShortened, StartedAt, Host, Rack, CPUs, Memory, ActiveActions];
       case 'scheduled':
@@ -96,7 +98,7 @@ class TasksPage extends React.Component {
   }
 
   getDefaultSortAttribute(t) {
-    switch (this.state.filter.taskStatus) {
+    switch (this.props.filter.taskStatus) {
       case 'active':
       case 'decommissioning':
         return t.taskId.startedAt;
@@ -109,11 +111,11 @@ class TasksPage extends React.Component {
   }
 
   render() {
-    const displayRequestTypeFilters = this.state.filter.taskStatus === 'active';
-    const displayTasks = this.state.filter.taskStatus !== 'decommissioning' ?
-      _.sortBy(getFilteredTasks({tasks: this.props.tasks, filter: this.state.filter}), (t) => this.getDefaultSortAttribute(t)) :
+    const displayRequestTypeFilters = this.props.filter.taskStatus === 'active';
+    const displayTasks = this.props.filter.taskStatus !== 'decommissioning' ?
+      _.sortBy(getFilteredTasks({tasks: this.props.tasks, filter: this.props.filter}), (t) => this.getDefaultSortAttribute(t)) :
       _.sortBy(getDecomissioningTasks({tasks: this.props.tasks, cleanups: this.props.cleanups}), (t) => this.getDefaultSortAttribute(t));
-    if (_.contains(['active', 'decommissioning'], this.state.filter.taskStatus)) displayTasks.reverse();
+    if (_.contains(['active', 'decommissioning'], this.props.filter.taskStatus)) displayTasks.reverse();
 
     let table;
     if (this.state.loading) {
@@ -133,24 +135,43 @@ class TasksPage extends React.Component {
 
     return (
       <div>
-        <TaskFilters filter={this.state.filter} onFilterChange={(...args) => this.handleFilterChange(...args)} displayRequestTypeFilters={displayRequestTypeFilters} />
+        <TaskFilters filter={this.props.filter} onFilterChange={(...args) => this.handleFilterChange(...args)} displayRequestTypeFilters={displayRequestTypeFilters} />
         {table}
       </div>
     );
   }
 }
 
-function mapStateToProps(state) {
+function mapStateToProps(state, ownProps) {
+  const filter = {
+    taskStatus: ownProps.params.state || 'active',
+    requestTypes: !ownProps.params.requestsSubFilter || ownProps.params.requestsSubFilter === 'all' ? TaskFilters.REQUEST_TYPES : ownProps.params.requestsSubFilter.split(','),
+    filterText: ownProps.params.searchFilter || ''
+  };
   return {
     tasks: state.api.tasks.data,
-    cleanups: state.api.taskCleanups.data
+    cleanups: state.api.taskCleanups.data,
+    filter
   };
 }
 
 function mapDispatchToProps(dispatch) {
   return {
-    fetchFilter: (state) => dispatch(FetchTasksInState.trigger(state))
+    fetchFilter: (state) => dispatch(FetchTasksInState.trigger(state)),
+    fetchCleanups: () => dispatch(FetchTaskCleanups.trigger()),
+    killTask: (taskId, data) => dispatch(KillTask.trigger(taskId, data)),
+    runRequest: (requestId, data) => dispatch(RunRequest.trigger(requestId, data)),
+    taskRun: (requestId, runId) => dispatch(FetchRequestRun.trigger(requestId, runId)),
+    taskRunHistory: (requestId, runId) => dispatch(FetchRequestRunHistory.trigger(requestId, runId)),
+    taskFiles: (taskId, path) => dispatch(FetchTaskFiles.trigger(taskId, path)),
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(TasksPage);
+function refresh(props) {
+  const promises = [];
+  promises.push(props.fetchFilter(props.params.state || 'active'));
+  promises.push(props.fetchCleanups());
+  return Promise.all(promises);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(withRouter(TasksPage), 'Tasks', refresh));

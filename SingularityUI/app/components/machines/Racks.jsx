@@ -2,10 +2,11 @@ import React, {PropTypes} from 'react';
 import MachinesPage from './MachinesPage';
 import {Glyphicon} from 'react-bootstrap';
 import ModalButton from './ModalButton';
-import MessageElement from './MessageElement';
+import messageElement from './messageElement';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
 import { DecommissionRack, RemoveRack, ReactivateRack, FetchRacks } from '../../actions/api/racks';
+import rootComponent from '../../rootComponent';
 
 function __in__(needle, haystack) {
   return haystack.indexOf(needle) >= 0;
@@ -45,7 +46,7 @@ const Racks = React.createClass({
         action="Reactivate Rack"
         onConfirm={(data) => this.props.reactivateRack(rack, data.message)}
         tooltipText={`Reactivate ${rack.id}`}
-        formElements={[MessageElement]}>
+        formElements={[messageElement]}>
         <p>Are you sure you want to cancel decommission and reactivate this rack??</p>
         <pre>{rack.id}</pre>
         <p>Reactivating a rack will cancel the decommission without erasing the rack's history and move it back to the active state.</p>
@@ -61,7 +62,7 @@ const Racks = React.createClass({
           action="Decommission Rack"
           onConfirm={(data) => this.props.decommissionRack(rack, data.message)}
           tooltipText={`Decommission ${rack.id}`}
-          formElements={[MessageElement]}>
+          formElements={[messageElement]}>
           <p>Are you sure you want to decommission this rack?</p>
           <pre>{rack.id}</pre>
           <p>
@@ -78,7 +79,7 @@ const Racks = React.createClass({
         action="Remove Rack"
         onConfirm={(data) => this.props.removeRack(rack, data.message)}
         tooltipText={`Remove ${rack.id}`}
-        formElements={[MessageElement]}>
+        formElements={[messageElement]}>
         <p>Are you sure you want to remove this rack??</p>
         <pre>{rack.id}</pre>
         <p>Removing a decommissioned rack will cause that rack to become active again if the mesos-rack process is still running.</p>
@@ -196,8 +197,13 @@ function mapDispatchToProps(dispatch) {
     decommissionRack: (rack, message) => { clear().then(dispatch(DecommissionRack.trigger(rack.id, message))).then(dispatch(FetchRacks.trigger())); },
     removeRack: (rack, message) => { clear().then(dispatch(RemoveRack.trigger(rack.id, message))).then(dispatch(FetchRacks.trigger())); },
     reactivateRack: (rack, message) => { clear().then(dispatch(ReactivateRack.trigger(rack.id, message))).then(dispatch(FetchRacks.trigger())); },
+    fetchRacks: () => dispatch(FetchRacks.trigger()),
     clear
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Racks);
+function refresh(props) {
+  return props.fetchRacks();
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Racks, 'Racks', refresh));

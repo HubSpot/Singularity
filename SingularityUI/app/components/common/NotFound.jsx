@@ -1,19 +1,23 @@
-import React, { Component } from 'react';
+import React from 'react';
+import rootComponent from '../../rootComponent';
 
-export default class NotFound extends Component {
+import { Link } from 'react-router';
 
-  render() {
-    return (
-      <div>
-        <div className="row text-center">
-          <h1>Not found</h1>
-          <h4>The page you are looking for doesn't exist:</h4>
-          <code>{this.props.path}</code>
-        </div>
-        <div className="row text-center">
-          <h4><a href={config.appRoot}>{"Go home"}</a></h4>
-        </div>
-      </div>
-    );
-  }
-}
+const NotFound = (props) => (
+  <div>
+    <div className="row text-center">
+      <h1>Not found</h1>
+      <h4>The page you are looking for doesn't exist:</h4>
+      <code>{props.location.pathname}</code>
+    </div>
+    <div className="row text-center">
+      <h4><Link to="">{"Go home"}</Link></h4>
+    </div>
+  </div>
+);
+
+NotFound.propTypes = {
+  location: React.PropTypes.object
+};
+
+export default rootComponent(NotFound, 'Not Found');

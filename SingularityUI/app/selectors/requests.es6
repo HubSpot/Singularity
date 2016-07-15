@@ -13,7 +13,7 @@ const findRequestIds = function(requests) {
   return _.map(requests, (r) => {
     return _.extend({}, r, {id: r.request ? r.request.id : r.requestId});
   });
-}
+};
 
 export const getStarred = (state) => new Set(state.ui.starred);
 

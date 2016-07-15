@@ -1,11 +1,12 @@
 import React from 'react';
+import { withRouter } from 'react-router';
 import classNames from 'classnames';
 
 import { Modal, Button } from 'react-bootstrap';
 
 import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 
-export default class ShellCommandLauncher extends React.Component {
+class ShellCommandLauncher extends React.Component {
 
   constructor() {
     super();
@@ -16,7 +17,7 @@ export default class ShellCommandLauncher extends React.Component {
       outputFilename: null,
       commandFailed: false,
       commandFailedMessage: null
-    }
+    };
   }
 
   componentDidMount() {
@@ -37,13 +38,13 @@ export default class ShellCommandLauncher extends React.Component {
     if (!this.state.commandAcked && !this.state.commandStarted && nextState.commandAcked && nextState.commandStarted) {
       clearInterval(this.taskInterval);
       const cmdStatus = _.find(nextProps.commandHistory, (c) => c.shellRequest.timestamp == this.props.shellCommandResponse.timestamp);
-      const outputFilePath = _.find(cmdStatus.shellUpdates, (u) => u.updateType == "ACKED").outputFilename;
+      const outputFilePath = _.find(cmdStatus.shellUpdates, (u) => u.updateType == 'ACKED').outputFilename;
       const taskId = _.first(cmdStatus.shellUpdates).shellRequestId.taskId.id;
       this.fileInterval = setInterval(() => {
         let directory = this.props.taskFiles[`${taskId}/${taskId}`].data;
         if (_.find(directory.files, (f) => f.name == outputFilePath)) {
           clearInterval(this.fileInterval);
-          app.router.navigate(`task/${taskId}/tail/${taskId}/${outputFilePath}`, {trigger: true});
+          this.props.router.push(`task/${taskId}/tail/${taskId}/${outputFilePath}`);
         } else {
           this.props.updateFiles(taskId, taskId);
         }
@@ -76,7 +77,7 @@ export default class ShellCommandLauncher extends React.Component {
   stepStatus(state, text) {
     return (
       <li className={classNames({'complete text-success': state}, {'waiting': !state})}>
-        {!state ? <div className="page-loader loader-small" /> : <Glyphicon iconClass='ok' />} {text}...
+        {!state ? <div className="page-loader loader-small" /> : <Glyphicon iconClass="ok" />} {text}...
       </li>
     );
   }
@@ -94,20 +95,22 @@ export default class ShellCommandLauncher extends React.Component {
   render() {
     return (
       <Modal show={true} onHide={this.props.close} bsSize="small" backdrop="static">
-        <Modal.Header closeButton>
+        <Modal.Header closeButton={true}>
             <Modal.Title>Redirecting to output</Modal.Title>
           </Modal.Header>
         <Modal.Body>
-          <div className='constrained-modal'>
+          <div className="constrained-modal">
             {this.renderStatusList()}
             {this.state.commandFailed ? (
               <p className="text-danger">
-                <Glyphicon iconClass='remove' /> Command failed: {this.state.commandFailedMessage}
+                <Glyphicon iconClass="remove" /> Command failed: {this.state.commandFailedMessage}
               </p>
-            ): null}
+            ) : null}
           </div>
         </Modal.Body>
       </Modal>
     );
   }
 }
+
+export default withRouter(ShellCommandLauncher);
