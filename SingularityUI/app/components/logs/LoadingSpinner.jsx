@@ -4,10 +4,10 @@ import classNames from 'classnames';
 function LoadingSpinner(props) {
   let className = classNames({
     'page-loader': true,
-    centered: this.props.centered
+    centered: props.centered
   });
 
-  if (this.props.children.length > 0) {
+  if (props.children.length > 0) {
     return <div className="page-loader-with-message"><div className={className} /><p>{props.children}</p></div>;
   }
   return <div className={className} />;
@@ -15,7 +15,8 @@ function LoadingSpinner(props) {
 
 LoadingSpinner.propTypes = {
   text: React.PropTypes.string,
-  centered: React.PropTypes.bool
+  centered: React.PropTypes.bool,
+  children: React.PropTypes.node
 };
 
 export default LoadingSpinner;
