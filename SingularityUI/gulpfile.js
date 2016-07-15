@@ -15,7 +15,8 @@ var streamqueue = require('streamqueue');
 
 var eslint = require('gulp-eslint');
 
-var serverBase = process.env.SINGULARITY_BASE_URI || '/singularity';
+// we used the wrong variable here, in the next version we will remove SINGULARITY_BASE_URI
+var serverBase = process.env.SINGULARITY_URI_BASE || process.env.SINGULARITY_BASE_URI || '/singularity';
 
 var templateData = {
   staticRoot: process.env.SINGULARITY_STATIC_URI || (serverBase + '/static'),
