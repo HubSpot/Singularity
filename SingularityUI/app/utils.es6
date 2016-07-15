@@ -7,6 +7,10 @@ const Utils = {
 
   GLOB_CHARS: ['*', '!', '?', '[', ']'],
 
+  isIn(needle, haystack) {
+    return !_.isEmpty(haystack) && haystack.indexOf(needle) >= 0;
+  },
+
   humanizeText(text) {
     if (!text) {
       return '';
