@@ -36,7 +36,6 @@ import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
@@ -197,7 +196,7 @@ public class SingularityValidator {
     try {
       new URI(webhook.getUri());
     } catch (URISyntaxException e) {
-      WebExceptions.badRequest("Invalid URI provided");
+      badRequest("Invalid URI provided");
     }
 
     return webhook;
@@ -415,7 +414,7 @@ public class SingularityValidator {
         newDayOfWeekValue = "SAT";
         break;
       default:
-        WebExceptions.badRequest("Schedule %s is invalid, day of week (%s) is not 0-7", schedule, dayOfWeekValue);
+        badRequest("Schedule %s is invalid, day of week (%s) is not 0-7", schedule, dayOfWeekValue);
         break;
     }
 
