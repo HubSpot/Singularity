@@ -20,7 +20,6 @@ module.exports = {
       'react-dom',
       'fuzzy',
       'juration',
-      'backbone',
       'vex-js'
     ],
   },
@@ -34,14 +33,12 @@ module.exports = {
     loaders: [
       { test: /\.es6$/, exclude: /node_modules/, loader: 'babel-loader' },
       { test: /\.jsx$/, exclude: /node_modules/, loader: 'babel-loader' },
-      { test: /\.coffee$/, loader: 'coffee'},
-      { test: /[\/]messenger\.js$/, loader: 'exports?Messenger'},
-      { test: /[\/]sortable\.js$/, loader: 'exports?Sortable'}
+      { test: /[\/]messenger\.js$/, loader: 'exports?Messenger'}
     ]
   },
   resolve: {
     root: path.resolve('./app'),
-    extensions: ['', '.js', '.es6', '.jsx', '.coffee'],
+    extensions: ['', '.js', '.es6', '.jsx'],
     alias: {
       'vex': 'vex-js/js/vex.js',
       'vex.dialog': 'vex-helper.es6',
