@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -695,6 +696,10 @@ public class SingularityScheduler {
           } else {
             scheduleFrom = new Date(now);
             final CronExpression cronExpression = new CronExpression(request.getQuartzScheduleSafe());
+            Optional<TimeZone> scheduledTimeZone = request.getScheduledTimeZone();
+            if (scheduledTimeZone.isPresent()) {
+              cronExpression.setTimeZone(scheduledTimeZone.get());
+            }
             nextRunAtDate = cronExpression.getNextValidTimeAfter(scheduleFrom);
           }
 
