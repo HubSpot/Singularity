@@ -30,7 +30,9 @@ class RequestDetailPage extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    refresh(nextProps);
+    if (nextProps.params !== this.props.params) {
+      refresh(nextProps);
+    }
   }
 
   componentWillUnmount() {
