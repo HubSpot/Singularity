@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TimeZone;
 
 import com.google.common.base.Optional;
 
@@ -19,6 +20,7 @@ public class SingularityRequestBuilder {
 
   private Optional<String> schedule;
   private Optional<String> quartzSchedule;
+  private Optional<TimeZone> scheduledTimeZone;
   private Optional<ScheduleType> scheduleType;
 
   private Optional<Long> killOldNonLongRunningTasksAfterMillis;
@@ -57,6 +59,7 @@ public class SingularityRequestBuilder {
     this.rackSensitive = Optional.absent();
     this.loadBalanced = Optional.absent();
     this.quartzSchedule = Optional.absent();
+    this.scheduledTimeZone = Optional.absent();
     this.rackAffinity = Optional.absent();
     this.slavePlacement = Optional.absent();
     this.requiredSlaveAttributes = Optional.absent();
@@ -74,7 +77,7 @@ public class SingularityRequestBuilder {
   }
 
   public SingularityRequest build() {
-    return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule,
+    return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule, scheduledTimeZone,
         rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readOnlyGroups,
         bounceAfterScale, skipHealthchecks, emailConfigurationOverrides, Optional.<Boolean>absent(), hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive);
   }
@@ -170,6 +173,15 @@ public class SingularityRequestBuilder {
 
   public SingularityRequestBuilder setQuartzSchedule(Optional<String> quartzSchedule) {
     this.quartzSchedule = quartzSchedule;
+    return this;
+  }
+
+  public Optional<TimeZone> getScheduledTimeZone() {
+    return scheduledTimeZone;
+  }
+
+  public SingularityRequestBuilder setScheduledTimeZone(Optional<TimeZone> scheduledTimeZone) {
+    this.scheduledTimeZone = scheduledTimeZone;
     return this;
   }
 
@@ -289,6 +301,7 @@ public class SingularityRequestBuilder {
             ", numRetriesOnFailure=" + numRetriesOnFailure +
             ", schedule=" + schedule +
             ", quartzSchedule=" + quartzSchedule +
+            ", scheduledTimeZone=" + scheduledTimeZone +
             ", scheduleType=" + scheduleType +
             ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis +
             ", scheduledExpectedRuntimeMillis=" + scheduledExpectedRuntimeMillis +
@@ -326,6 +339,7 @@ public class SingularityRequestBuilder {
             Objects.equals(numRetriesOnFailure, that.numRetriesOnFailure) &&
             Objects.equals(schedule, that.schedule) &&
             Objects.equals(quartzSchedule, that.quartzSchedule) &&
+            Objects.equals(scheduledTimeZone, that.scheduledTimeZone) &&
             Objects.equals(scheduleType, that.scheduleType) &&
             Objects.equals(killOldNonLongRunningTasksAfterMillis, that.killOldNonLongRunningTasksAfterMillis) &&
             Objects.equals(scheduledExpectedRuntimeMillis, that.scheduledExpectedRuntimeMillis) &&
@@ -349,7 +363,7 @@ public class SingularityRequestBuilder {
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis,
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduledTimeZone, scheduleType, killOldNonLongRunningTasksAfterMillis,
         scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement,
         requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale, skipHealthchecks, emailConfigurationOverrides,
         hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive);
