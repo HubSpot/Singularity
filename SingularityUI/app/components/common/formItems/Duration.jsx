@@ -1,8 +1,13 @@
-import React from 'react';
+import React, { PropTypes } from 'react';
 
 import moment from 'moment';
 
 export default class Duration extends React.Component {
+
+  static propTypes = {
+    value: PropTypes.number, // Duration in millis
+    onChange: PropTypes.func
+  };
 
   handleChange(event) {
     event.preventDefault();
@@ -56,9 +61,4 @@ export default class Duration extends React.Component {
       </div>
     );
   }
-}
-
-Duration.PropTypes = {
-  value: React.PropTypes.number, // Duration in millis
-  onChange: React.PropTypes.func
 }
