@@ -73,9 +73,9 @@ export const FetchTaskSearchParams = buildApiAction(
 
 export const FetchRequestRunHistory = buildApiAction(
   'FETCH_REQUEST_RUN_HISTORY',
-  (requestId, runId, successResponseCodes = null) => ({
+  (requestId, runId, catchStatusCodes = null) => ({
     url: `/history/request/${ requestId }/run/${runId}`,
-    successResponseCodes
+    catchStatusCodes
   })
 );
 

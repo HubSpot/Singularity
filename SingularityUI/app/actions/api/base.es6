@@ -80,7 +80,7 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
           return response.text();
         })
         .then((data) => {
-          if ((apiResponse.status >= 200 && apiResponse.status < 300) || (options.successResponseCodes && _.contains(options.successResponseCodes, apiResponse.status))) {
+          if (apiResponse.status >= 200 && apiResponse.status < 300) {
             return dispatch(success(data, apiResponse.status, key));
           }
           if (data.message) {
