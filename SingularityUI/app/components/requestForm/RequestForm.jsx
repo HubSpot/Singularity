@@ -1,7 +1,10 @@
 import React, {PropTypes} from 'react';
 import Select from 'react-select';
 import { connect } from 'react-redux';
+
 import { Link } from 'react-router';
+import { withRouter } from 'react-router';
+
 import rootComponent from '../../rootComponent';
 import MultiSelect from '../common/formItems/MultiSelect';
 import MultiInputFormGroup from '../common/formItems/formGroups/MultiInputFormGroup';
@@ -55,8 +58,9 @@ class RequestForm extends React.Component {
     form: PropTypes.shape({
       slavePlacement: PropTypes.oneOf(['', 'SEPARATE', 'SEPARATE_BY_REQUEST', 'GREEDY', 'OPTIMISTIC']),
       scheduleType: PropTypes.string
-    })
-  }
+    }),
+    router: PropTypes.object.isRequired
+  };
 
   componentDidMount() {
     this.props.clearForm(FORM_ID);
@@ -494,12 +498,6 @@ class RequestForm extends React.Component {
   }
 }
 
-function navigateToRequestIfSuccess(promiseResult) {
-  if (promiseResult.type === 'SAVE_REQUEST_SUCCESS') {
-    Backbone.history.navigate(`/request/${ promiseResult.data.request.id }`, {trigger: true});
-  }
-}
-
 function mapStateToProps(state, ownProps) {
   const request = ownProps.params.requestId && state.api.request[ownProps.params.requestId];
   return {
@@ -510,7 +508,7 @@ function mapStateToProps(state, ownProps) {
   };
 }
 
-function mapDispatchToProps(dispatch) {
+function mapDispatchToProps(dispatch, ownProps) {
   return {
     update(formId, fieldId, newValue) {
       dispatch(ModifyField(formId, fieldId, newValue));
@@ -519,7 +517,11 @@ function mapDispatchToProps(dispatch) {
       dispatch(ClearForm(formId));
     },
     save(requestBody) {
-      dispatch(SaveRequest.trigger(requestBody)).then((response) => navigateToRequestIfSuccess(response));
+      dispatch(SaveRequest.trigger(requestBody)).then((response) => {
+        if (response.type === 'SAVE_REQUEST_SUCCESS') {
+          ownProps.router.push(`request/${response.data.request.id}`);
+        }
+      });
     },
     fetchRequest(requestId) {
       dispatch(FetchRequest.trigger(requestId));
@@ -550,4 +552,7 @@ function refresh(props) {
   return Promise.all(promises);
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(RequestForm, 'New Request', refresh));
+export default withRouter(connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(rootComponent(RequestForm, 'New Request', refresh)));
