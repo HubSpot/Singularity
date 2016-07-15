@@ -30,7 +30,8 @@ export const SaveRequest = buildJsonApiAction(
   'POST',
   (requestData) => ({
     url: '/requests',
-    body: requestData
+    body: requestData,
+    catchStatusCodes: [400]
   })
 );
 
