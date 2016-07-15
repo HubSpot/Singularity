@@ -3,10 +3,6 @@ import Utils from 'utils';
 
 import { fetchTasksForRequest } from './activeTasks';
 
-function __in__(needle, haystack) {
-  return haystack.indexOf(needle) >= 0;
-}
-
 const fetchData = (taskId, path, offset = undefined, length = 0) => {
   length = Math.max(length, 0);  // API breaks if you request a negative length
   return $.ajax(
@@ -310,7 +306,7 @@ export const switchViewMode = newViewMode =>
   (dispatch, getState) => {
     const { taskGroups, path, activeRequest, search, viewMode } = getState();
 
-    if (__in__(newViewMode, ['custom', viewMode])) {
+    if (Utils.isIn(newViewMode, ['custom', viewMode])) {
       return null;
     }
 
@@ -350,7 +346,7 @@ export const toggleTaskLog = taskId =>
       dispatch(initTask(taskId, offset, resolvedPath, true));
 
       return getState().taskGroups.map((taskGroup, taskGroupId) => {
-        if (__in__(taskId, taskGroup.taskIds)) {
+        if (Utils.isIn(taskId, taskGroup.taskIds)) {
           dispatch(updateTaskStatus(taskGroupId, taskId));
           return dispatch(taskGroupFetchPrevious(taskGroupId)).then(() => dispatch(taskGroupReady(taskGroupId)));
         }
