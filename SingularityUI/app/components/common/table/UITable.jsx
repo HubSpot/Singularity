@@ -143,13 +143,21 @@ class UITable extends Component {
   }
 
   renderTableRow(rowData) {
-    const row = this.props.children.map((col, tdIndex) => {
+    const row = this.props.children.map((col) => {
+      const cellData = col.props.cellData(rowData);
       const cell = col.props.cellRender(
-        col.props.cellData(rowData),
+        cellData,
         rowData
       );
 
-      return <td key={col.props.id} className={col.props.className}>{cell}</td>;
+      let className;
+      if (typeof col.props.className === 'function') {
+        className = col.props.className(cellData, rowData);
+      } else if (col.props.className) {
+        className = col.props.className;
+      }
+
+      return <td key={col.props.id} className={className}>{cell}</td>;
     });
     return <tr key={`row-${this.props.keyGetter(rowData)}`}>{row}</tr>;
   }

@@ -16,7 +16,7 @@ export default class Breakdown extends React.Component {
               style={{height: `${d.percent}%`}}
               className={`chart__data-point chart-fill-${d.type}`}
               data-original-title={`${d.count} ${d.label}`}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  />
+            />
           </OverlayTrigger>
         </Link>
       );
