@@ -46,7 +46,7 @@ function TaskFileBrowser (props) {
           let nameLink = '';
           let icon = <Glyphicon glyph={data.isDirectory ? 'folder-open' : 'file'} />;
           if (data.isTailable) {
-            nameLink = <Link to={`${config.appRoot}/task/${props.taskId}/tail/${data.uiPath}`}>{icon}<span className="file-name">{data.name}</span></Link>;
+            nameLink = <Link to={`task/${props.taskId}/tail/${data.uiPath}`}>{icon}<span className="file-name">{data.name}</span></Link>;
           } else if (!data.isTailable && !data.isDirectory) {
             nameLink = <span>{icon} {data.name}</span>;
           } else {
