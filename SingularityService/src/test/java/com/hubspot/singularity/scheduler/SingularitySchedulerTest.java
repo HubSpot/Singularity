@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import javax.ws.rs.WebApplicationException;
+
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.SlaveID;
 import org.apache.mesos.Protos.TaskID;
@@ -3056,6 +3058,14 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
     Assert.assertEquals(newScheduleQuartz, requestManager.getRequest(requestId).get().getRequest().getQuartzScheduleSafe());
+  }
+
+  @Test(expected=WebApplicationException.class)
+  public void testInvalidQuartzTimeZoneErrors() {
+    SingularityRequestBuilder bldr = new SingularityRequestBuilder("timezone_id", RequestType.SCHEDULED);
+    bldr.setSchedule(Optional.of("*/1 * * * * ? 2100"));
+    bldr.setScheduleTimeZone(Optional.of("bad_timezone_code"));
+    requestResource.postRequest(bldr.build());
   }
 
   @Test
