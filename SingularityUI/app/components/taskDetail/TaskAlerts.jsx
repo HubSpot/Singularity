@@ -22,9 +22,9 @@ const TaskAlerts = (props) => {
             This
             {props.deploy.deployResult.deployFailures.length === 1 && ' caused ' || ' contributed to '}
             the failure of
-            <a href={`${config.appRoot}/request/${props.deploy.deploy.requestId}/deploy/${props.deploy.deploy.id}`}>
+            <Link to={`$request/${props.deploy.deploy.requestId}/deploy/${props.deploy.deploy.id}`}>
               {' '}Deploy {props.deploy.deploy.id}
-            </a>
+            </Link>
             .
           </p>
         </Alert>
@@ -34,7 +34,7 @@ const TaskAlerts = (props) => {
       alerts.push(
         <Alert key="failure" bsStyle="danger">
           {Utils.ifDeployFailureCausedTaskToBeKilled(props.task) && 'This task was killed becasue '}
-          <a href={`${config.appRoot}/request/${props.deploy.deploy.requestId}/deploy/${props.deploy.deploy.id}`}>Deploy {props.deploy.deploy.id}</a> failed.
+          <Link to={`request/${props.deploy.deploy.requestId}/deploy/${props.deploy.deploy.id}`}>Deploy {props.deploy.deploy.id}</Link> failed.
         </Alert>
       );
     }

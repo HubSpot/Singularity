@@ -1,6 +1,7 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 
+import { Link } from 'react-router';
 import { Button } from 'react-bootstrap';
 
 import Section from '../common/Section';
@@ -29,11 +30,11 @@ const ActiveTasksTable = ({requestId, tasksAPI}) => {
   let maybeAggregateTailButton;
   if (tasks.length > 1) {
     maybeAggregateTailButton = (
-      <Button
-        className="pull-right"
-        href={`${config.appRoot}/request/${requestId}/tail/$TASK_ID/${config.runningTaskLogPath}`}>
-        View Aggregate Logs
-      </Button>
+      <Link to={`request/${requestId}/tail/${config.runningTaskLogPath}`}>
+        <Button className="pull-right">
+          View Aggregate Logs
+        </Button>
+      </Link>
     );
   }
 
