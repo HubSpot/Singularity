@@ -137,6 +137,10 @@ DOCKER_OPTIONS="--name=$CONTAINER_NAME --cgroup-parent=$PARENT_CGROUP -w $DOCKER
 DOCKER_OPTIONS="$DOCKER_OPTIONS --privileged"
 {{/if}}
 
+{{#each envContext.dockerInfo.parameters}}
+DOCKER_OPTIONS="$DOCKER_OPTIONS --{{{key}}}={{{value}}}"
+{{/each}}
+
 echo "Ensuring {{{ runContext.taskAppDirectory }}} is owned by {{{ runContext.user }}}"
 mkdir -p {{{ runContext.taskAppDirectory }}}
 sudo chown -R {{{ runContext.user }}} {{{ runContext.taskAppDirectory }}}
