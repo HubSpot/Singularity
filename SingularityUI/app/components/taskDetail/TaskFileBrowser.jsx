@@ -9,6 +9,25 @@ import Column from '../common/table/Column';
 import UITable from '../common/table/UITable';
 import { Link } from 'react-router';
 
+function makeComparator(attribute) {
+  return (file1, file2) => {
+    if (file1.isDirectory && !file2.isDirectory) {
+      return -1;
+    }
+    if (file2.isDirectory && !file1.isDirectory) {
+      return 1;
+    }
+    if (file1[attribute] === file2[attribute]) {
+      return 0;
+    }
+    return file1[attribute] > file2[attribute] ? 1 : -1;
+  };
+}
+
+function sortData(cellData, file) {
+  return file;
+}
+
 function TaskFileBrowser (props) {
   let pathItems = [];
   pathItems.push({
@@ -38,8 +57,6 @@ function TaskFileBrowser (props) {
       <Breadcrumbs items={pathItems} />
       <UITable
         data={getFiles() || []}
-        paginated={true}
-        rowChunkSize={10}
         keyGetter={(file) => file.name}
         emptyTableMessage="No files exist in this directory"
       >
@@ -58,6 +75,8 @@ function TaskFileBrowser (props) {
             return <a onClick={() => props.changeDir(`${props.currentDirectory}/${file.name}`)}>{icon}<span className="file-name">{file.name}</span></a>;
           }}
           sortable={true}
+          sortFunc={makeComparator('name')}
+          sortData={sortData}
         />
         <Column
           label="Size"
@@ -65,6 +84,8 @@ function TaskFileBrowser (props) {
           key="size"
           cellData={(file) => Utils.humanizeFileSize(file.size)}
           sortable={true}
+          sortFunc={makeComparator('size')}
+          sortData={sortData}
         />
         <Column
           label="Last Modified"
@@ -72,6 +93,8 @@ function TaskFileBrowser (props) {
           key="last-modified"
           cellData={(file) => Utils.absoluteTimestamp(file.mtime * 1000)}
           sortable={true}
+          sortFunc={makeComparator('mtime')}
+          sortData={sortData}
         />
         <Column
           label=""
