@@ -9,11 +9,6 @@ import { Pagination } from 'react-bootstrap';
 
 class UITable extends Component {
 
-  static SortDirection = {
-    ASC: 'ASC',
-    DESC: 'DESC'
-  };
-
   static propTypes = {
     data: PropTypes.arrayOf(PropTypes.object).isRequired,
     keyGetter: PropTypes.func.isRequired,
@@ -34,16 +29,6 @@ class UITable extends Component {
     ])
   };
 
-  static defaultProps = {
-    paginated: false,
-    rowChunkSize: 30,
-    defaultSortBy: undefined,
-    defaultSortDirection: UITable.SortDirection.DESC,
-    asyncSort: false
-  };
-
-  state;
-
   constructor(props) {
     super(props);
 
@@ -61,6 +46,21 @@ class UITable extends Component {
   componentWillReceiveProps(nextProps) {
     this.updateSort(nextProps.data, this.state.sortBy, this.state.sortDirection);
   }
+
+  state;
+
+  static SortDirection = {
+    ASC: 'ASC',
+    DESC: 'DESC'
+  };
+
+  static defaultProps = {
+    paginated: false,
+    rowChunkSize: 30,
+    defaultSortBy: undefined,
+    defaultSortDirection: UITable.SortDirection.DESC,
+    asyncSort: false
+  };
 
   updateSort(data, sortBy, sortDirection) {
     if (this.props.asyncSort) {
@@ -143,6 +143,61 @@ class UITable extends Component {
     return sorted;
   }
 
+  handlePageChange(eventKey) {
+    const page = eventKey;
+    const numPages = Math.ceil(this.state.data.length / this.props.rowChunkSize);
+
+    this.setState({
+      chunkNum: Math.min(Math.max(1, page), numPages)
+    });
+  }
+
+  sortIndicator(sortable, thisColumnSorted, sortDirection) {
+    if (sortable) {
+      let classes = classNames({
+        'glyphicon': thisColumnSorted,
+        'glyphicon-triangle-bottom': thisColumnSorted && sortDirection === UITable.SortDirection.DESC,
+        'glyphicon-triangle-top': thisColumnSorted && sortDirection === UITable.SortDirection.ASC,
+        'pull-right': thisColumnSorted
+      });
+
+      return <span className={classes} />;
+    }
+
+    return undefined;
+  }
+
+  handleSortClick(col) {
+    const colId = col.props.id;
+    if (colId === this.state.sortBy) {
+      // swap sort direction
+      let newSortDirection;
+      if (this.state.sortDirection === UITable.SortDirection.ASC) {
+        newSortDirection = UITable.SortDirection.DESC;
+      } else {
+        newSortDirection = UITable.SortDirection.ASC;
+      }
+
+      this.updateSort(
+        this.props.data,
+        colId,
+        newSortDirection
+      );
+    } else {
+      this.updateSort(
+        this.props.data,
+        colId,
+        UITable.SortDirection.DESC
+      );
+    }
+
+    return true;
+  }
+
+  getTableDOMNode() {
+    return ReactDOM.findDOMNode(this.refs.table);
+  }
+
   renderTableRow(rowData) {
     const row = this.props.children.map((col) => {
       const cellData = col.props.cellData(rowData);
@@ -212,15 +267,6 @@ class UITable extends Component {
     return undefined;
   }
 
-  handlePageChange(eventKey) {
-    const page = eventKey;
-    const numPages = Math.ceil(this.state.data.length / this.props.rowChunkSize);
-
-    this.setState({
-      chunkNum: Math.min(Math.max(1, page), numPages)
-    });
-  }
-
   renderWaypoint() {
     return (
       <tr key={'waypoint'}>
@@ -245,7 +291,7 @@ class UITable extends Component {
   }
 
   renderTableHeader() {
-    const headerRow = this.props.children.map((col, thIndex) => {
+    const headerRow = this.props.children.map((col) => {
       let cell;
       if (typeof col.props.label === 'function') {
         cell = col.props.label(this.props.data);
@@ -280,52 +326,6 @@ class UITable extends Component {
 
 
     return <tr>{headerRow}</tr>;
-  }
-
-  sortIndicator(sortable, thisColumnSorted, sortDirection) {
-    if (sortable) {
-      let classes = classNames({
-        'glyphicon': thisColumnSorted,
-        'glyphicon-triangle-bottom': thisColumnSorted && sortDirection === UITable.SortDirection.DESC,
-        'glyphicon-triangle-top': thisColumnSorted && sortDirection === UITable.SortDirection.ASC,
-        'pull-right': thisColumnSorted
-      });
-
-      return <span className={classes} />;
-    }
-
-    return undefined;
-  }
-
-  handleSortClick(col) {
-    const colId = col.props.id;
-    if (colId === this.state.sortBy) {
-      // swap sort direction
-      let newSortDirection;
-      if (this.state.sortDirection === UITable.SortDirection.ASC) {
-        newSortDirection = UITable.SortDirection.DESC;
-      } else {
-        newSortDirection = UITable.SortDirection.ASC;
-      }
-
-      this.updateSort(
-        this.props.data,
-        colId,
-        newSortDirection
-      );
-    } else {
-      this.updateSort(
-        this.props.data,
-        colId,
-        UITable.SortDirection.DESC
-      );
-    }
-
-    return true;
-  }
-
-  getTableDOMNode() {
-    return ReactDOM.findDOMNode(this.refs.table);
   }
 
   render() {

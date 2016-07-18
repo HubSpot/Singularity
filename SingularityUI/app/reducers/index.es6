@@ -42,9 +42,9 @@ const search = (state = '', action) => {
 };
 
 
-const logRequestLength = (state = 30000, action) => state;
+const logRequestLength = (state = 30000) => state;
 
-const maxLines = (state = 100000, action) => state;
+const maxLines = (state = 100000) => state;
 
 const showDebugInfo = (state = false, action) => {
   if (action.type === 'LOG_INIT') {
