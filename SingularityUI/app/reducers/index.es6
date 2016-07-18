@@ -41,6 +41,13 @@ const search = (state = '', action) => {
   return state;
 };
 
+const taskSearch = (state = {}, action) => {
+  if (action.type === 'UPDATE_TASK_SEARCH_FILTER') {
+    return action.filter;
+  }
+  return state;
+};
+
 
 const logRequestLength = (state = 30000) => state;
 
@@ -63,6 +70,7 @@ export default combineReducers({
   routing,
   showDebugInfo,
   taskGroups,
+  taskSearch,
   tasks,
   activeRequest,
   path,

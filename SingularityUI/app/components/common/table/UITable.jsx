@@ -24,6 +24,9 @@ class UITable extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
+    if (_.isEmpty(nextProps.data) && nextProps.pageNum > 1 && nextProps.serverSide) {
+      nextProps.handlePageChange(nextProps.pageNum - 1);
+    }
     this.updateSort(nextProps.data, this.state.sortBy, this.state.sortDirection);
   }
 
@@ -124,6 +127,10 @@ class UITable extends Component {
   }
 
   handlePageChange(eventKey) {
+    if (this.props.handlePageChange) {
+      this.props.handlePageChange(eventKey);
+      return;
+    }
     const page = eventKey;
     const numPages = Math.ceil(this.state.data.length / this.props.rowChunkSize);
 
@@ -238,7 +245,7 @@ class UITable extends Component {
           ellipsis={false}
           items={numPages}
           maxButtons={this.props.maxButtons || 10}
-          activePage={this.state.chunkNum}
+          activePage={this.props.pageNum || this.state.chunkNum}
           onSelect={this.handlePageChange}
         />
       );
@@ -342,6 +349,9 @@ UITable.propTypes = {
   keyGetter: PropTypes.func.isRequired,
   children: PropTypes.arrayOf(PropTypes.node).isRequired,
   paginated: PropTypes.bool,
+  pageNum: PropTypes.number, // Provide to override default paging
+  handlePageChange: PropTypes.func, // Required if pageNum provided
+  serverSide: PropTypes.bool,
   rowChunkSize: PropTypes.number,
   maxButtons: PropTypes.number,
   defaultSortBy: PropTypes.string,

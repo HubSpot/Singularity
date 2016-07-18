@@ -4,92 +4,50 @@ import { Link } from 'react-router';
 import { Glyphicon } from 'react-bootstrap';
 import rootComponent from '../../rootComponent';
 import classNames from 'classnames';
-import { FetchRequest } from '../../actions/api/requests';
 import { FetchTaskSearchParams } from '../../actions/api/history';
+import { UpdateFilter } from '../../actions/ui/TaskSearch';
 
 import Breadcrumbs from '../common/Breadcrumbs';
-import TasksTable from './TasksTable';
 import TaskSearchFilters from './TaskSearchFilters';
 import JSONButton from '../common/JSONButton';
+import ServerSideTable from '../common/ServerSideTable';
 import Utils from '../../utils';
+
+const INITIAL_TASKS_PER_PAGE = 10;
 
 class TaskSearch extends React.Component {
 
   static propTypes = {
-    requestId: React.PropTypes.string,
-    fetchRequest: React.PropTypes.func.isRequired,
     fetchTaskHistory: React.PropTypes.func.isRequired,
-    request: React.PropTypes.object,
+    updateFilter: React.PropTypes.func.isRequired,
     taskHistory: React.PropTypes.array,
-    params: React.PropTypes.object
+    filter: React.PropTypes.shape({
+      count: React.PropTypes.number,
+      page: React.PropTypes.number
+    }),
+    params: React.PropTypes.shape({
+      requestId: React.PropTypes.string
+    })
   }
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      filter: {
-        requestId: props.params.requestId,
-        page: 1,
-        count: TaskSearch.TASKS_PER_PAGE
-      },
-      disableNext: false,
-      loading: false
-    };
+  setPage(page) {
+    this.props.updateFilter(_.extend({}, this.props.filter, {page}));
   }
-
-  static TASKS_PER_PAGE = 10;
 
   setCount(count) {
-    TaskSearch.TASKS_PER_PAGE = count;
-    const newFilter = _.extend({}, this.state.filter, {count, page: 1});
-    this.setState({
-      filter: newFilter
-    });
-    this.props.fetchTaskHistory(newFilter);
+    this.props.updateFilter(_.extend({}, this.props.filter, {count}));
   }
 
   handleSearch(filter) {
-    const newFilter = _.extend({}, this.state.filter, filter, {page: 1});
-    this.setState({
-      filter: newFilter,
-      disableNext: false
-    });
-    this.props.fetchTaskHistory(newFilter);
+    const count = this.props.filter.count || INITIAL_TASKS_PER_PAGE;
+    const page = this.props.filter.page || 1;
+    const newFilter = _.extend({}, _.omit(filter, (value) => !value), {count, page});
+    this.props.updateFilter(newFilter);
   }
 
-  handlePage(page) {
-    const newFilter = _.extend({}, this.state.filter, {page});
-    this.setState({
-      loading: true
-    });
-
-    this.props.fetchTaskHistory(newFilter).then((resp) => {
-      if (!resp.data.length) {
-        this.props.fetchTaskHistory(_.extend({}, newFilter, {page: page - 1})).then(() => {
-          this.setState({
-            disableNext: true,
-            loading: false
-          });
-        });
-      } else if (resp.data.length < TaskSearch.TASKS_PER_PAGE) {
-        this.setState({
-          filter: newFilter,
-          loading: false,
-          disableNext: true
-        });
-      } else {
-        this.setState({
-          filter: newFilter,
-          loading: false,
-          disableNext: false
-        });
-      }
-    });
-  }
-
-  renderTableRow(data, i) {
+  renderTableRow(data, key) {
     return (
-      <tr key={i}>
+      <tr key={key}>
         <td className="actions-column"><Link to={`task/${data.taskId.id}`}><Glyphicon glyph="link" /></Link></td>
         <td><Link to={`request/${data.taskId.requestId}`}>{data.taskId.requestId}</Link></td>
         <td><Link to={`request/${data.taskId.requestId}/deploy/${data.taskId.deployId}`}>{data.taskId.deployId}</Link></td>
@@ -110,38 +68,30 @@ class TaskSearch extends React.Component {
   }
 
   renderBreadcrumbs() {
-    if (this.props.params.requestId) {
-      return (
-        <Breadcrumbs
-          items={[
-            {
-              label: 'Request',
-              text: this.props.request.request.id,
-              link: `request/${this.props.request.request.id}`
-            }
-          ]}
-        />
-      );
-    }
-    return null;
+    return this.props.params.requestId && (
+      <Breadcrumbs
+        items={[
+          {
+            label: 'Request',
+            text: this.props.params.requestId,
+            link: `request/${this.props.params.requestId}`
+          }
+        ]}
+      />
+    );
   }
 
   renderPageOptions() {
-    if (this.props.taskHistory.length) {
-      return (
-        <div className="row">
-          <div className="col-md-12">
-            <div className="pull-right count-options">
-              Results per page:
-              <a className={classNames({inactive: TaskSearch.TASKS_PER_PAGE === 5})} onClick={() => this.setCount(5)}>5</a>
-              <a className={classNames({inactive: TaskSearch.TASKS_PER_PAGE === 10})} onClick={() => this.setCount(10)}>10</a>
-              <a className={classNames({inactive: TaskSearch.TASKS_PER_PAGE === 25})} onClick={() => this.setCount(25)}>25</a>
-            </div>
-          </div>
+    return this.props.taskHistory.length && (
+      <div className="row">
+        <div className="pull-right count-options">
+          Results per page:
+          <a className={classNames({inactive: this.props.filter.count === 5})} onClick={() => this.setCount(5)}>5</a>
+          <a className={classNames({inactive: this.props.filter.count === 10})} onClick={() => this.setCount(10)}>10</a>
+          <a className={classNames({inactive: this.props.filter.count === 25})} onClick={() => this.setCount(25)}>25</a>
         </div>
-      );
-    }
-    return null;
+      </div>
+    );
   }
 
   render() {
@@ -153,48 +103,39 @@ class TaskSearch extends React.Component {
         <h2>Search Parameters</h2>
         <TaskSearchFilters requestId={this.props.params.requestId} onSearch={(filter) => this.handleSearch(filter)} />
         {this.renderPageOptions()}
-        <div className="row">
-          <div className="col-md-12">
-            <TasksTable
-              emptyMessage={"No matching tasks"}
-              headers={['', 'Request ID', 'Deploy ID', 'Host', 'Last Status', 'Started', 'Updated', '']}
-              data={this.props.taskHistory}
-              paginate={true}
-              page={this.state.filter.page}
-              pageSize={TaskSearch.TASKS_PER_PAGE + 1}
-              disableNext={this.state.disableNext}
-              onPage={(page) => this.handlePage(page)}
-              renderTableRow={(...args) => this.renderTableRow(...args)}
-              loading={this.state.loading}
-            />
-          </div>
-        </div>
+        <ServerSideTable
+          emptyMessage="No matching tasks"
+          entries={this.props.taskHistory}
+          paginate={true}
+          perPage={this.props.filter.count || INITIAL_TASKS_PER_PAGE}
+          fetchAction={FetchTaskSearchParams}
+          fetchParams={[this.props.filter]}
+          headers={['', 'Request ID', 'Deploy ID', 'Host', 'Last Status', 'Started', 'Updated', '']}
+          renderTableRow={(...args) => this.renderTableRow(...args)}
+        />
       </div>
     );
   }
 }
 
-function mapStateToProps(state, ownProps) {
+function mapStateToProps(state) {
   return {
-    request: Utils.maybe(state.api.request, [ownProps.params.requestId, 'data']),
-    taskHistory: state.api.taskHistory.data
+    taskHistory: state.api.taskHistory.data,
+    filter: state.taskSearch || { requestId: state.api.taskHistory.data }
   };
 }
 
 function mapDispatchToProps(dispatch) {
   return {
-    fetchTaskHistory: (...args) => dispatch(FetchTaskSearchParams.trigger(...args)),
-    fetchRequest: (requestId) => dispatch(FetchRequest.trigger(requestId))
+    fetchTaskHistory: (count, page, ...args) => dispatch(FetchTaskSearchParams.trigger(...args, count, page)),
+    updateFilter: (newFilter) => dispatch(UpdateFilter(newFilter))
   };
 }
 
 function refresh(props) {
-  const promises = [];
-  if (props.params.requestId) {
-    promises.push(props.fetchRequest(props.params.requestId));
-  }
-  promises.push(props.fetchTaskHistory({requestId: props.params.requestId, page: 1, count: TaskSearch.TASKS_PER_PAGE}));
-  return Promise.all(promises);
+  const count = props.filter && props.filter.count || INITIAL_TASKS_PER_PAGE;
+  const filter = _.extend({}, {requestId: props.params.requestId}, props.filter);
+  return props.fetchTaskHistory(count, 1, filter);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(TaskSearch, 'Task Search', refresh));

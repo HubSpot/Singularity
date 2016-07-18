@@ -66,7 +66,7 @@ export default class ServerSideTable extends SimpleTable {
             ellipsis={false}
             items={this.state.atEnd ? this.state.serverPage : this.state.serverPage + 1}
             maxButtons={1}
-            activePage={this.state.serverPage}
+            activePage={this.props.page || this.state.serverPage}
             onSelect={this.handleSelect}
           />
         </div>
