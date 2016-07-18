@@ -17,10 +17,22 @@ function makeComparator(attribute) {
     if (file2.isDirectory && !file1.isDirectory) {
       return 1;
     }
-    if (file1[attribute] === file2[attribute]) {
+    let property1;
+    let property2;
+    if (typeof file1[attribute] === 'string') {
+      property1 = file1[attribute].trim();
+    } else {
+      property1 = file1[attribute];
+    }
+    if (typeof file2[attribute] === 'string') {
+      property2 = file2[attribute].trim();
+    } else {
+      property2 = file2[attribute];
+    }
+    if (property1 === property2) {
       return 0;
     }
-    return file1[attribute] > file2[attribute] ? 1 : -1;
+    return property1 > property2 ? 1 : -1;
   };
 }
 
