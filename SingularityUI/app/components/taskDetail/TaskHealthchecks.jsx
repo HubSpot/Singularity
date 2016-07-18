@@ -1,48 +1,40 @@
-import React from 'react';
+import React, { PropTypes } from 'react';
 import Utils from '../../utils';
-import { InfoBox, UsageInfo } from '../common/statelessComponents';
-import { Alert } from 'react-bootstrap';
-import FormGroup from 'react-bootstrap/lib/FormGroup';
 
 import JSONButton from '../common/JSONButton';
-import Section from '../common/Section';
-import ConfirmationDialog from '../common/ConfirmationDialog';
 import CollapsableSection from '../common/CollapsableSection';
 import SimpleTable from '../common/SimpleTable';
-import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 
-export default (props) => {
-  const t = props.task;
-  const healthchecks = props.task.healthcheckResults;
-  if (!healthchecks || healthchecks.length == 0) return null;
-  return (
+function TaskHealthchecks (props) {
+  const healthchecks = props.healthcheckResults;
+  return healthchecks && (healthchecks.length !== 0) && (
     <CollapsableSection title="Healthchecks" id="healthchecks">
       <div className="well">
         <span>
           Beginning on <strong>Task running</strong>, hit
-          <a className="healthcheck-link" target="_blank" href={`http://${t.task.offer.hostname}:${_.first(t.ports)}${t.task.taskRequest.deploy.healthcheckUri}`}>
-            {t.task.taskRequest.deploy.healthcheckUri}
+          <a className="healthcheck-link" target="_blank" href={`http://${props.task.offer.hostname}:${_.first(props.ports)}${props.task.taskRequest.deploy.healthcheckUri}`}>
+            {props.task.taskRequest.deploy.healthcheckUri}
           </a>
-          with a <strong>{t.task.taskRequest.deploy.healthcheckTimeoutSeconds || config.defaultHealthcheckTimeoutSeconds}</strong> second timeout
-          every <strong>{t.task.taskRequest.deploy.healthcheckIntervalSeconds || config.defaultHealthcheckIntervalSeconds}</strong> second(s)
+          with a <strong>{props.task.taskRequest.deploy.healthcheckTimeoutSeconds || config.defaultHealthcheckTimeoutSeconds}</strong> second timeout
+          every <strong>{props.task.taskRequest.deploy.healthcheckIntervalSeconds || config.defaultHealthcheckIntervalSeconds}</strong> second(s)
           until <strong>HTTP 200</strong> is recieved,
-          <strong>{t.task.taskRequest.deploy.healthcheckMaxRetries}</strong> retries have failed,
-          or <strong>{t.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds || config.defaultDeployHealthTimeoutSeconds}</strong> seconds have elapsed.
+          <strong>{props.task.taskRequest.deploy.healthcheckMaxRetries}</strong> retries have failed,
+          or <strong>{props.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds || config.defaultDeployHealthTimeoutSeconds}</strong> seconds have elapsed.
         </span>
       </div>
       <SimpleTable
         emptyMessage="No healthchecks"
         entries={healthchecks}
         perPage={5}
-        first
-        last
+        first={true}
+        last={true}
         headers={['Timestamp', 'Duration', 'Status', 'Message', '']}
         renderTableRow={(data, index) => {
           return (
             <tr key={index}>
               <td>{Utils.absoluteTimestamp(data.timestamp)}</td>
               <td>{data.durationMillis} {data.durationMillis ? 'ms' : ''}</td>
-              <td>{data.statusCode ? <span className={`label label-${data.statusCode == 200 ? 'success' : 'danger'}`}>HTTP {data.statusCode}</span> : <span className="label label-warning">No Response</span>}</td>
+              <td>{data.statusCode ? <span className={`label label-${data.statusCode === 200 ? 'success' : 'danger'}`}>HTTP {data.statusCode}</span> : <span className="label label-warning">No Response</span>}</td>
               <td><pre className="healthcheck-message">{data.errorMessage || data.responseBody}</pre></td>
               <td className="actions-column"><JSONButton object={data}>{'{ }'}</JSONButton></td>
             </tr>
@@ -52,3 +44,30 @@ export default (props) => {
     </CollapsableSection>
   );
 }
+
+TaskHealthchecks.propTypes = {
+  task: PropTypes.shape({
+    taskRequest: PropTypes.shape({
+      deploy: PropTypes.shape({
+        healthcheckUri: PropTypes.string,
+        healthcheckTimeoutSeconds: PropTypes.number,
+        healthcheckIntervalSeconds: PropTypes.number,
+        healthcheckMaxRetries: PropTypes.number,
+        healthcheckMaxTotalTimeoutSeconds: PropTypes.number
+      }).isRequired
+    }).isRequired,
+    offer: PropTypes.shape({
+      hostname: PropTypes.string
+    }).isRequired,
+  }).isRequired,
+  healthcheckResults: PropTypes.arrayOf(PropTypes.shape({
+    timestamp: PropTypes.number,
+    durationMillis: PropTypes.number,
+    statusCode: PropTypes.number,
+    errorMessage: PropTypes.string,
+    responseBody: PropTypes.string
+  })),
+  ports: PropTypes.arrayOf(PropTypes.number)
+};
+
+export default TaskHealthchecks;

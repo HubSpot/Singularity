@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { PropTypes, Component } from 'react';
 import { connect } from 'react-redux';
 import { withRouter } from 'react-router';
 import rootComponent from '../../rootComponent';
@@ -27,6 +27,7 @@ import JSONButton from '../common/JSONButton';
 import Section from '../common/Section';
 import FormModal from '../common/modal/FormModal';
 import CollapsableSection from '../common/CollapsableSection';
+import NotFound from '../common/NotFound';
 
 import TaskFileBrowser from './TaskFileBrowser';
 import ShellCommands from './ShellCommands';
@@ -40,22 +41,75 @@ import TaskInfo from './TaskInfo';
 import TaskEnvVars from './TaskEnvVars';
 import TaskHealthchecks from './TaskHealthchecks';
 
-class TaskDetail extends React.Component {
+class TaskDetail extends Component {
 
   static propTypes = {
-    params: React.PropTypes.object,
-    task: React.PropTypes.object,
-    runCommandOnTask: React.PropTypes.func,
-    killTask: React.PropTypes.func,
-    fetchTaskHistory: React.PropTypes.func,
-    fetchTaskStatistics: React.PropTypes.func,
-    fetchTaskFiles: React.PropTypes.func,
-    resourceUsage: React.PropTypes.object,
-    files: React.PropTypes.object,
-    pendingDeploys: React.PropTypes.array,
-    deploy: React.PropTypes.object,
-    s3Logs: React.PropTypes.array,
-    shellCommandResponse: React.PropTypes.object
+    task: PropTypes.shape({
+      task: PropTypes.shape({
+        taskId: PropTypes.shape({
+          id: PropTypes.string.isRequired,
+          requestId: PropTypes.string.isRequired,
+          deployId: PropTypes.string.isRequired,
+          instanceNo: PropTypes.number.isRequired
+        }).isRequired,
+        taskRequest: PropTypes.shape({
+          deploy: PropTypes.shape({
+            customExecutorCmd: PropTypes.string
+          }).isRequired
+        }).isRequired,
+        offer: PropTypes.shape({
+          hostname: PropTypes.string
+        }).isRequired,
+        mesosTask: PropTypes.shape({
+          executor: PropTypes.object
+        }).isRequired,
+      }).isRequired,
+      shellCommandHistory: PropTypes.array.isRequired,
+      taskUpdates: PropTypes.arrayOf(PropTypes.shape({
+        taskState: PropTypes.string
+      })),
+      healthcheckResults: PropTypes.array,
+      ports: PropTypes.array,
+      directory: PropTypes.string,
+      isStillRunning: PropTypes.bool,
+      isCleaning: PropTypes.bool
+    }),
+    resourceUsage: PropTypes.shape({
+      cpusSystemTimeSecs: PropTypes.number,
+      cpusUserTimeSecs: PropTypes.number,
+      cpusLimit: PropTypes.number,
+      memLimitBytes: PropTypes.number,
+      memRssBytes: PropTypes.number,
+      cpusNrPeriods: PropTypes.number,
+      cpusNrThrottled: PropTypes.number,
+      cpusThrottledTimeSecs: PropTypes.number,
+      memAnonBytes: PropTypes.number,
+      memFileBytes: PropTypes.number,
+      memMappedFileBytes: PropTypes.number,
+      timestamp: PropTypes.number
+    }),
+    taskCleanups: PropTypes.arrayOf(PropTypes.shape({
+      taskId: PropTypes.shape({
+        id: PropTypes.string
+      }).isRequired
+    })).isRequired,
+    router: PropTypes.object.isRequired,
+    s3Logs: PropTypes.array,
+    deploy: PropTypes.object,
+    pendingDeploys: PropTypes.array,
+    shellCommandResponse: PropTypes.object,
+    files: PropTypes.shape({
+      files: PropTypes.array,
+      currentDirectory: PropTypes.string
+    }),
+    filePath: PropTypes.string,
+    taskId: PropTypes.string.isRequired,
+    params: PropTypes.object,
+    fetchTaskHistory: PropTypes.func.isRequired,
+    fetchTaskStatistics: PropTypes.func.isRequired,
+    fetchTaskFiles: PropTypes.func.isRequired,
+    killTask: PropTypes.func.isRequired,
+    runCommandOnTask: PropTypes.func.isRequired
   };
 
   constructor(props) {
@@ -67,6 +121,7 @@ class TaskDetail extends React.Component {
   }
 
   componentDidMount() {
+    if (!this.props.task) return;
     // Get a second sample for CPU usage right away
     if (this.props.task.isStillRunning) {
       this.props.fetchTaskStatistics(this.props.params.taskId);
@@ -74,6 +129,7 @@ class TaskDetail extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
+    if (!this.props.task) return;
     if (nextProps.resourceUsage.timestamp !== this.props.resourceUsage.timestamp) {
       this.setState({
         previousUsage: this.props.resourceUsage
@@ -81,26 +137,95 @@ class TaskDetail extends React.Component {
     }
   }
 
-  renderHeader(t, cleanup) {
-    const taskState = t.taskUpdates && (
+  analyzeFiles(files) {
+    if (files && files.files) {
+      for (const file of files.files) {
+        file.isDirectory = file.mode[0] === 'd';
+        let httpPrefix = 'http';
+        let httpPort = config.slaveHttpPort;
+        if (config.slaveHttpsPort) {
+          httpPrefix = 'https';
+          httpPort = config.slaveHttpsPort;
+        }
+
+        if (files.currentDirectory) {
+          file.uiPath = `${files.currentDirectory}/${file.name}`;
+        } else {
+          file.uiPath = file.name;
+        }
+
+        file.fullPath = `${files.fullPathToRoot}/${files.currentDirectory}/${file.name}`;
+        file.downloadLink = `${httpPrefix}://${files.slaveHostname}:${httpPort}/files/download.json?path=${file.fullPath}`;
+
+        if (!file.isDirectory) {
+          const regex = /(?:\.([^.]+))?$/;
+          const extension = regex.exec(file.name)[1];
+          file.isTailable = !_.contains(['zip', 'gz', 'jar'], extension);
+        }
+      }
+    }
+    return files;
+  }
+
+  killTask(data) {
+    this.props.killTask(this.props.params.taskId, data).then(() => {
+      this.props.fetchTaskHistory(this.props.params.taskId);
+    });
+  }
+
+  renderFiles(files) {
+    if (!files || _.isUndefined(files.currentDirectory)) {
+      return (
+        <Section title="Files">
+          <div className="empty-table-message">
+            {'Could not retrieve files. The host of this task is likely offline or its directory has been cleaned up.'}
+          </div>
+        </Section>
+      );
+    }
+    return (
+      <Section title="Files">
+        <TaskFileBrowser
+          taskId={this.props.taskId}
+          files={files.files}
+          currentDirectory={files.currentDirectory}
+          changeDir={(path) => {
+            if (path.startsWith('/')) path = path.substring(1);
+            this.props.fetchTaskFiles(this.props.params.taskId, path).then(() => {
+              this.setState({
+                currentFilePath: path
+              });
+              this.props.router.push(Utils.joinPath(`task/${this.props.params.taskId}/files/`, path));
+            });
+          }}
+        />
+      </Section>
+    );
+  }
+
+  renderHeader(cleanup) {
+    const taskState = this.props.task.taskUpdates && (
       <div className="col-xs-6 task-state-header">
         <h1>
-          <span className={`label label-${Utils.getLabelClassFromTaskState(_.last(t.taskUpdates).taskState)} task-state-header-label`}>
-            {Utils.humanizeText(_.last(t.taskUpdates).taskState)} {cleanup ? `(${Utils.humanizeText(cleanup.cleanupType)})` : ''}
+          <span className={`label label-${Utils.getLabelClassFromTaskState(_.last(this.props.task.taskUpdates).taskState)} task-state-header-label`}>
+            {Utils.humanizeText(_.last(this.props.task.taskUpdates).taskState)} {cleanup && `(${Utils.humanizeText(cleanup.cleanupType)})`}
           </span>
         </h1>
       </div>
     );
 
-    const removeText = cleanup ?
-      (cleanup.isImmediate ? 'Destroy task' : 'Override cleanup') :
-      (t.isCleaning ? 'Destroy task' : 'Kill Task');
-    const removeBtn = t.isStillRunning && (
+    let removeText;
+    if (cleanup) {
+      removeText = cleanup.isImmediate ? 'Destroy task' : 'Override cleanup';
+    } else {
+      removeText = this.props.task.isCleaning ? 'Destroy task' : 'Kill Task';
+    }
+    const removeBtn = this.props.task.isStillRunning && (
       <span>
         <FormModal
           ref="confirmKillTask"
           action={removeText}
-          onConfirm={() => this.killTask()}
+          onConfirm={(event) => this.killTask(event)}
           buttonStyle="danger"
           formElements={[
             {
@@ -131,7 +256,7 @@ class TaskDetail extends React.Component {
         </a>
       </span>
     );
-    const terminationAlert = t.isStillRunning && !cleanup && t.isCleaning && (
+    const terminationAlert = this.props.task.isStillRunning && !cleanup && this.props.task.isCleaning && (
       <Alert bsStyle="warning">
           <strong>Task is terminating:</strong> To issue a non-graceful termination (kill -term), click Destroy Task.
       </Alert>
@@ -145,27 +270,27 @@ class TaskDetail extends React.Component {
               items={[
                 {
                   label: 'Request',
-                  text: t.task.taskId.requestId,
-                  link: `request/${t.task.taskId.requestId}`
+                  text: this.props.task.task.taskId.requestId,
+                  link: `request/${this.props.task.task.taskId.requestId}`
                 },
                 {
                   label: 'Deploy',
-                  text: t.task.taskId.deployId,
-                  link: `request/${t.task.taskId.requestId}/deploy/${t.task.taskId.deployId}`
+                  text: this.props.task.task.taskId.deployId,
+                  link: `request/${this.props.task.task.taskId.requestId}/deploy/${this.props.task.task.taskId.deployId}`
                 },
                 {
                   label: 'Instance',
-                  text: t.task.taskId.instanceNo,
+                  text: this.props.task.task.taskId.instanceNo,
                 }
               ]}
-              right={<span><strong>Hostname: </strong>{t.task.offer.hostname}</span>}
+              right={<span><strong>Hostname: </strong>{this.props.task.task.offer.hostname}</span>}
             />
           </div>
         </div>
         <div className="row">
           {taskState}
           <div className={`col-xs-${taskState ? '6' : '12'} button-container`}>
-            <JSONButton object={t} linkClassName="btn btn-default">
+            <JSONButton object={this.props.task} linkClassName="btn btn-default">
               JSON
             </JSONButton>
             {removeBtn}
@@ -176,45 +301,39 @@ class TaskDetail extends React.Component {
     );
   }
 
-  renderFiles(t, files) {
-    if (!files || _.isUndefined(files.currentDirectory)) {
-      return (
-        <Section title="Files">
-          <div className="empty-table-message">
-              {'Could not retrieve files. The host of this task is likely offline or its directory has been cleaned up.'}
-          </div>
-        </Section>
-      );
-    }
-    return (
-      <Section title="Files">
-        <TaskFileBrowser
-          taskId={t.task.taskId.id}
-          files={files}
-          changeDir={(path) => {
-            if (path.startsWith('/')) path = path.substring(1);
-            this.props.fetchTaskFiles(this.props.params.taskId, path).then(() => {
-              this.setState({
-                currentFilePath: path
-              });
-              this.props.router.push(Utils.joinPath(`task/${this.props.params.taskId}/files/`, path));
-            });
+  renderShellCommands() {
+    return (this.props.task.isStillRunning || this.props.task.shellCommandHistory.length > 0) && (
+      <CollapsableSection title="Shell commands">
+        <ShellCommands
+          customExecutorCmd={this.props.task.task.taskRequest.deploy.customExecutorCmd}
+          isStillRunning={this.props.task.isStillRunning}
+          shellCommandHistory={this.props.task.shellCommandHistory}
+          taskFiles={this.props.files}
+          shellCommandResponse={this.props.shellCommandResponse}
+          runShellCommand={(commandName) => {
+            return this.props.runCommandOnTask(this.props.taskId, commandName);
+          }}
+          updateTask={() => {
+            this.props.fetchTaskHistory(this.props.taskId);
+          }}
+          updateFiles={(path) => {
+            this.props.fetchTaskFiles(this.props.taskId, path);
           }}
         />
-      </Section>
+      </CollapsableSection>
     );
   }
 
-  renderResourceUsage(t, usage) {
-    if (!t.isStillRunning) return null;
+  renderResourceUsage() {
+    if (!this.props.task.isStillRunning) return null;
     let cpuUsage = 0;
     let cpuUsageExceeding = false;
     if (this.state.previousUsage) {
-      const currentTime = usage.cpusSystemTimeSecs + usage.cpusUserTimeSecs;
+      const currentTime = this.props.resourceUsage.cpusSystemTimeSecs + this.props.resourceUsage.cpusUserTimeSecs;
       const previousTime = this.state.previousUsage.cpusSystemTimeSecs + this.state.previousUsage.cpusUserTimeSecs;
-      const timestampDiff = usage.timestamp - this.state.previousUsage.timestamp;
+      const timestampDiff = this.props.resourceUsage.timestamp - this.state.previousUsage.timestamp;
       cpuUsage = (currentTime - previousTime) / timestampDiff;
-      cpuUsageExceeding = (cpuUsage / usage.cpusLimit) > 1.10;
+      cpuUsageExceeding = (cpuUsage / this.props.resourceUsage.cpusLimit) > 1.10;
     }
 
     const exceedingWarning = cpuUsageExceeding && (
@@ -228,26 +347,26 @@ class TaskDetail extends React.Component {
             <UsageInfo
               title="Memory (rss vs limit)"
               style="success"
-              total={usage.memLimitBytes}
-              used={usage.memRssBytes}
-              text={`${Utils.humanizeFileSize(usage.memRssBytes)} / ${Utils.humanizeFileSize(usage.memLimitBytes)}`}
+              total={this.props.resourceUsage.memLimitBytes}
+              used={this.props.resourceUsage.memRssBytes}
+              text={`${Utils.humanizeFileSize(this.props.resourceUsage.memRssBytes)} / ${Utils.humanizeFileSize(this.props.resourceUsage.memLimitBytes)}`}
             />
             <UsageInfo
               title="CPU Usage"
               style={cpuUsageExceeding ? 'danger' : 'success'}
-              total={usage.cpusLimit}
+              total={this.props.resourceUsage.cpusLimit}
               used={Math.round(cpuUsage * 100) / 100}
-              text={<span><p>{`${Math.round(cpuUsage * 100) / 100} used / ${usage.cpusLimit} allocated CPUs`}</p>{exceedingWarning}</span>}
+              text={<span><p>{`${Math.round(cpuUsage * 100) / 100} used / ${this.props.resourceUsage.cpusLimit} allocated CPUs`}</p>{exceedingWarning}</span>}
             />
           </div>
           <div className="col-md-9">
             <ul className="list-unstyled horizontal-description-list">
-              {usage.cpusNrPeriods ? <InfoBox copyableClassName="info-copyable" name="CPUs number of periods" value={usage.cpusNrPeriods} /> : null}
-              {usage.cpusNrThrottled ? <InfoBox copyableClassName="info-copyable" name="CPUs number throttled" value={usage.cpusNrThrottled} /> : null}
-              {usage.cpusThrottledTimeSecs ? <InfoBox copyableClassName="info-copyable" name="Throttled time (sec)" value={usage.cpusThrottledTimeSecs} /> : null}
-              <InfoBox copyableClassName="info-copyable" name="Memory (anon)" value={Utils.humanizeFileSize(usage.memAnonBytes)} />
-              <InfoBox copyableClassName="info-copyable" name="Memory (file)" value={Utils.humanizeFileSize(usage.memFileBytes)} />
-              <InfoBox copyableClassName="info-copyable" name="Memory (mapped file)" value={Utils.humanizeFileSize(usage.memMappedFileBytes)} />
+              {this.props.resourceUsage.cpusNrPeriods && <InfoBox copyableClassName="info-copyable" name="CPUs number of periods" value={this.props.resourceUsage.cpusNrPeriods} />}
+              {this.props.resourceUsage.cpusNrThrottled && <InfoBox copyableClassName="info-copyable" name="CPUs number throttled" value={this.props.resourceUsage.cpusNrThrottled} />}
+              {this.props.resourceUsage.cpusThrottledTimeSecs && <InfoBox copyableClassName="info-copyable" name="Throttled time (sec)" value={this.props.resourceUsage.cpusThrottledTimeSecs} />}
+              <InfoBox copyableClassName="info-copyable" name="Memory (anon)" value={Utils.humanizeFileSize(this.props.resourceUsage.memAnonBytes)} />
+              <InfoBox copyableClassName="info-copyable" name="Memory (file)" value={Utils.humanizeFileSize(this.props.resourceUsage.memFileBytes)} />
+              <InfoBox copyableClassName="info-copyable" name="Memory (mapped file)" value={Utils.humanizeFileSize(this.props.resourceUsage.memMappedFileBytes)} />
             </ul>
           </div>
         </div>
@@ -255,90 +374,32 @@ class TaskDetail extends React.Component {
     );
   }
 
-  renderShellCommands(t, shellCommandResponse, taskFiles) {
-    if (t.isStillRunning || t.shellCommandHistory.length > 0) {
-      return (
-        <CollapsableSection title="Shell commands">
-          <ShellCommands
-            task={t}
-            taskFiles={taskFiles}
-            shellCommandResponse={shellCommandResponse}
-            runShellCommand={(commandName) => {
-              return this.props.runCommandOnTask(this.props.params.taskId, commandName);
-            }}
-            updateTask={() => {
-              this.props.fetchTaskHistory(this.props.params.taskId);
-            }}
-            updateFiles={(path) => {
-              this.props.fetchTaskFiles(this.props.params.taskId, path);
-            }}
-          />
-        </CollapsableSection>
-      );
-    }
-    return null;
-  }
-
   render() {
-    let task = this.props.task;
-    const cleanup = _.find(this.props.params.taskCleanups, (c) => {
-      return c.taskId.id === this.props.params.taskId;
+    if (!this.props.task) {
+      return <NotFound path={`task/ ${this.props.taskId}`} />;
+    }
+    const cleanup = _.find(this.props.taskCleanups, (cleanupToTest) => {
+      return cleanupToTest.taskId.id === this.props.taskId;
     });
-    const filesToDisplay = this.props.files[`${this.props.params.taskId}/${this.state.currentFilePath}`] && this.analyzeFiles(this.props.files[`${this.props.params.taskId}/${this.state.currentFilePath}`].data);
+    const filesToDisplay = this.props.files[`${this.props.params.taskId}/${this.state.currentFilePath}`] && this.analyzeFiles(this.props.files[`${this.props.taskId}/${this.state.currentFilePath}`].data);
 
     return (
       <div className="task-detail detail-view">
-        {this.renderHeader(task, cleanup)}
-        <TaskAlerts task={task} deploy={this.props.deploy} pendingDeploys={this.props.pendingDeploys} />
-        <TaskMetadataAlerts task={task} />
-        <TaskHistory task={task} />
-        <TaskLatestLog task={task} />
-        {this.renderFiles(task, filesToDisplay)}
-        <TaskS3Logs task={task} s3Files={this.props.s3Logs} />
-        <TaskLbUpdates task={task} />
-        <TaskInfo task={task} />
-        {this.renderResourceUsage(task, this.props.resourceUsage)}
-        <TaskEnvVars task={task} />
-        <TaskHealthchecks task={task} />
-        {this.renderShellCommands(task, this.props.shellCommandResponse, this.props.files)}
+        {this.renderHeader(cleanup)}
+        <TaskAlerts task={this.props.task} deploy={this.props.deploy} pendingDeploys={this.props.pendingDeploys} />
+        <TaskMetadataAlerts task={this.props.task} />
+        <TaskHistory taskUpdates={this.props.task.taskUpdates} />
+        <TaskLatestLog taskId={this.props.taskId} isStillRunning={this.props.task.isStillRunning} />
+        {this.renderFiles(filesToDisplay)}
+        <TaskS3Logs taskId={this.props.task.task.taskId.id} s3Files={this.props.s3Logs} />
+        <TaskLbUpdates task={this.props.task} />
+        <TaskInfo task={this.props.task.task} ports={this.props.task.ports} directory={this.props.task.directory} />
+        {this.renderResourceUsage()}
+        <TaskEnvVars executor={this.props.task.task.mesosTask.executor} />
+        <TaskHealthchecks task={this.props.task.task} healthcheckResults={this.props.task.healthcheckResults} ports={this.props.task.ports} />
+        {this.renderShellCommands()}
       </div>
     );
-  }
-
-  analyzeFiles(files) {
-    if (files && files.files) {
-      for (const f of files.files) {
-        f.isDirectory = f.mode[0] === 'd';
-        let httpPrefix = 'http';
-        let httpPort = config.slaveHttpPort;
-        if (config.slaveHttpsPort) {
-          httpPrefix = 'https';
-          httpPort = config.slaveHttpsPort;
-        }
-
-        if (files.currentDirectory) {
-          f.uiPath = `${files.currentDirectory}/${f.name}`;
-        } else {
-          f.uiPath = f.name;
-        }
-
-        f.fullPath = `${files.fullPathToRoot}/${files.currentDirectory}/${f.name}`;
-        f.downloadLink = `${httpPrefix}://${files.slaveHostname}:${httpPort}/files/download.json?path=${f.fullPath}`;
-
-        if (!f.isDirectory) {
-          const re = /(?:\.([^.]+))?$/;
-          const extension = re.exec(f.name)[1];
-          f.isTailable = !_.contains(['zip', 'gz', 'jar'], extension);
-        }
-      }
-    }
-    return files;
-  }
-
-  killTask(data) {
-    this.props.killTask(this.props.params.taskId, data).then(() => {
-      this.props.fetchTaskHistory(this.props.params.taskId);
-    });
   }
 }
 
@@ -382,12 +443,12 @@ function mapTaskToProps(task) {
 
 function mapStateToProps(state, ownProps) {
   let task = state.api.task[ownProps.params.taskId];
-  if (task && task.data) {
-    task = mapTaskToProps(task.data);
-    task = mapHealthchecksToProps(task);
-  }
+  if (!(task && task.data)) return {};
+  task = mapTaskToProps(task.data);
+  task = mapHealthchecksToProps(task);
   return {
     task,
+    taskId: ownProps.params.taskId,
     taskCleanups: state.api.taskCleanups.data,
     files: state.api.taskFiles,
     resourceUsage: state.api.taskResourceUsage.data,

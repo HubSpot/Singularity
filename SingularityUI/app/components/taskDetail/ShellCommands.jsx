@@ -1,14 +1,44 @@
-import React from 'react';
-import { Button } from 'react-bootstrap';
+import React, { Component, PropTypes } from 'react';
+import { Link } from 'react-router';
+import { Button, Glyphicon } from 'react-bootstrap';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import ToolTip from 'react-bootstrap/lib/Tooltip';
 
 import ShellCommandLauncher from './ShellCommandLauncher';
 
 import SimpleTable from '../common/SimpleTable';
-import Link from '../common/atomicDisplayItems/Link';
-import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 import Utils from '../../utils';
 
-export default class ShellCommands extends React.Component {
+export default class ShellCommands extends Component {
+
+  static propTypes = {
+    isStillRunning: PropTypes.bool,
+    shellCommandHistory: PropTypes.arrayOf(PropTypes.shape({
+      shellUpdates: PropTypes.arrayOf(PropTypes.shape({
+        timestamp: PropTypes.number,
+        outputFilename: PropTypes.string,
+        updateType: PropTypes.string
+      })),
+      shellRequest: PropTypes.shape({
+        user: PropTypes.string,
+        timestamp: PropTypes.number,
+        shellCommand: PropTypes.shape({
+          name: PropTypes.string
+        }).isRequired,
+        taskId: PropTypes.shape({
+          id: PropTypes.string
+        }).isRequired
+      }).isRequired
+    })),
+    customExecutorCmd: PropTypes.string,
+    shellCommandResponse: PropTypes.shape({
+      timestamp: PropTypes.number
+    }),
+    runShellCommand: PropTypes.func.isRequired,
+    updateTask: PropTypes.func.isRequired,
+    taskFiles: PropTypes.object,
+    updateFiles: PropTypes.func.isRequired
+  }
 
   constructor(props) {
     super(props);
@@ -17,7 +47,7 @@ export default class ShellCommands extends React.Component {
       openLog: true,
       responseText: null,
       showLauncher: false,
-      submitDisabled: config.shellCommands.length == 0
+      submitDisabled: config.shellCommands.length === 0
     };
   }
 
@@ -25,21 +55,21 @@ export default class ShellCommands extends React.Component {
     clearTimeout(this.timeout);
   }
 
-  onOpenLogChange(e) {
+  onOpenLogChange(event) {
     this.setState({
-      openLog: e.target.checked
+      openLog: event.target.checked
     });
   }
 
-  onCommandChange(e) {
-    e.preventDefault();
+  onCommandChange(event) {
+    event.preventDefault();
     this.setState({
-      selectedCmd: _.find(config.shellCommands, (c) => c.name == e.target.value)
+      selectedCmd: _.find(config.shellCommands, (shellCommand) => shellCommand.name === event.target.value)
     });
   }
 
-  handleRun(e) {
-    e.preventDefault();
+  handleRun(event) {
+    event.preventDefault();
     this.setState({
       submitDisabled: true
     });
@@ -54,76 +84,70 @@ export default class ShellCommands extends React.Component {
   }
 
   render() {
-    const options = config.shellCommands.map((c) => {
-      return <option key={c.name} value={c.name}>{c.name}</option>;
+    const options = config.shellCommands.map((shellCommand) => {
+      return <option key={shellCommand.name} value={shellCommand.name}>{shellCommand.name}</option>;
     });
 
-    const form = this.props.task.isStillRunning &&
-    this.props.task.task.taskRequest.deploy.customExecutorCmd &&
-    this.props.task.task.taskRequest.deploy.customExecutorCmd.indexOf('singularity-executor') != -1 && (
+    const form = this.props.isStillRunning &&
+    this.props.customExecutorCmd &&
+    this.props.customExecutorCmd.indexOf('singularity-executor') !== -1 && (
       <div className="row">
         <form className="col-md-6">
           <h3>Execute a command</h3>
           <div className="form-group required">
             <label htmlFor="cmd">Select command</label>
-            <select name="cmd" className="form-control input-large" onChange={this.onCommandChange.bind(this)}>
+            <select name="cmd" className="form-control input-large" onChange={(event) => this.onCommandChange(event)}>
               {options}
             </select>
-            <p className="cmd-description">{this.state.selectedCmd ? this.state.selectedCmd.description : ''}</p>
+            <p className="cmd-description">{this.state.selectedCmd && this.state.selectedCmd.description}</p>
 
             <label className="check-label">
-              <input type="checkbox" name="openLog" checked={this.state.openLog} onChange={this.onOpenLogChange.bind(this)} /> Redirect to command output upon success
+              <input type="checkbox" name="openLog" checked={this.state.openLog} onChange={(event) => this.onOpenLogChange(event)} /> Redirect to command output upon success
             </label>
           </div>
-          <Button bsStyle="success" onClick={this.handleRun.bind(this)} disabled={this.state.submitDisabled}>Run</Button>
-          {this.state.responseText ? (
+          <Button bsStyle="success" onClick={(event) => this.handleRun(event)} disabled={this.state.submitDisabled}>Run</Button>
+          {this.state.responseText && (
             <span className="text-success" style={{marginLeft: '10px'}}>
-              <Glyphicon iconClass="ok" /> {this.state.responseText}
+              <Glyphicon glyph="ok" /> {this.state.responseText}
             </span>
-          ) : null}
+          )}
         </form>
       </div>
     );
 
-    const history = !!this.props.task.shellCommandHistory.length && (
+    const history = !!this.props.shellCommandHistory.length && (
       <div>
         <h3>Command History</h3>
           <SimpleTable
             emptyMessage="No commands run"
-            entries={this.props.task.shellCommandHistory}
+            entries={this.props.shellCommandHistory}
             perPage={5}
             first={true}
             last={true}
             headers={['Timestamp', 'Command', 'User', 'Status', 'Message', '']}
             renderTableRow={(data, index) => {
-              let updates = _.sortBy(data.shellUpdates, 'timestamp');
-              let withFilename = _.find(updates, (u) => u.outputFilename);
-              let filename = withFilename ? withFilename.outputFilename : null;
+              const updates = _.sortBy(data.shellUpdates, 'timestamp');
+              const withFilename = _.find(updates, (update) => update.outputFilename);
+              const filename = withFilename && withFilename.outputFilename;
               return (
                 <tr key={index}>
                   <td>{Utils.absoluteTimestamp(data.shellRequest.timestamp)}</td>
                   <td><code>{data.shellRequest.shellCommand.name}</code></td>
                   <td>{data.shellRequest.user}</td>
-                  <td>{updates.length ? _.last(updates).updateType : null}</td>
+                  <td>{updates.length && _.last(updates).updateType}</td>
                   <td>
                     <ul>
-                      {updates.map((u) => {
-                        return <li key={u.timestamp}>{Utils.absoluteTimestamp(u.timestamp)}: {u.message}</li>;
+                      {updates.map((update) => {
+                        return <li key={update.timestamp}>{Utils.absoluteTimestamp(update.timestamp)}: {update.message}</li>;
                       })}
                     </ul>
                   </td>
                   <td className="actions-column">
-                    {filename ? (
-                      <Link prop={{
-                        url: `task/${data.shellRequest.taskId.id}/tail/${data.shellRequest.taskId.id}/${filename}`,
-                        text: '···',
-                        overlayTrigger: true,
-                        overlayId: filename,
-                        overlayTriggerPlacement: 'left',
-                        overlayToolTipContent: 'View output file'
-                      }}
-                      />
-                    ) : null}
+                    {filename && (
+                      <OverlayTrigger placement="left" overlay={<ToolTip id={filename}>View output file</ToolTip>}>
+                        <Link to={`task/${data.shellRequest.taskId.id}/tail/${data.shellRequest.taskId.id}/${filename}`}>···</Link>
+                      </OverlayTrigger>
+                    )}
                   </td>
                 </tr>
               );
@@ -134,7 +158,7 @@ export default class ShellCommands extends React.Component {
 
     const launcher = this.state.showLauncher && (
       <ShellCommandLauncher
-        commandHistory={this.props.task.shellCommandHistory}
+        commandHistory={this.props.shellCommandHistory}
         close={() => this.setState({showLauncher: false})}
         updateTask={this.props.updateTask}
         updateFiles={this.props.updateFiles}
