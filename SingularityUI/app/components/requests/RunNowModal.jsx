@@ -1,12 +1,12 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
+import { Glyphicon } from 'react-bootstrap';
 
 import { RunRequest } from '../../actions/api/requests';
 
 import TaskLauncher from '../common/TaskLauncher';
 import FormModal from '../common/modal/FormModal';
 
-import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 import Messenger from 'messenger';
 
 class RunNowModal extends Component {
@@ -52,7 +52,7 @@ class RunNowModal extends Component {
         />
         <FormModal
           ref="runNowModal"
-          action={<span><Glyphicon iconClass="flash" /> Run Task</span>}
+          action={<span><Glyphicon glyph="flash" /> Run Task</span>}
           onConfirm={(data) => this.handleRunNow(data)}
           buttonStyle="primary"
           formElements={[

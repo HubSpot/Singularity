@@ -1,8 +1,7 @@
 import React from 'react';
 import Utils from '../../utils';
 
-import { Nav, NavItem, OverlayTrigger, Tooltip } from 'react-bootstrap';
-import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
+import { Nav, NavItem, OverlayTrigger, Tooltip, Glyphicon } from 'react-bootstrap';
 
 export default class TaskFilters extends React.Component {
 
@@ -111,7 +110,7 @@ export default class TaskFilters extends React.Component {
       return (
         <li key={index} className={_.contains(this.props.filter.requestTypes, t) ? 'active' : ''}>
           <a onClick={() => this.toggleRequestType(t)}>
-            <Glyphicon iconClass="ok" /> {Utils.humanizeText(t)}
+            <Glyphicon glyph="ok" /> {Utils.humanizeText(t)}
           </a>
         </li>
       );

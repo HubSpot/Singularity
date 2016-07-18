@@ -1,7 +1,7 @@
 import React, {PropTypes} from 'react';
 import Utils from '../../utils';
 import FormModal from '../common/modal/FormModal';
-import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
+import { Glyphicon } from 'react-bootstrap';
 import { FetchWebhooks, DeleteWebhook, NewWebhook } from '../../actions/api/webhooks';
 import { connect } from 'react-redux';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
@@ -67,7 +67,7 @@ const Webhooks = React.createClass({
     return (
       <OverlayTrigger placement="top" overlay={toolTip}>
         <a onClick={() => this.promptDeleteWebhook(webhook)}>
-          <Glyphicon iconClass="trash" />
+          <Glyphicon glyph="trash" />
         </a>
       </OverlayTrigger>
     );
