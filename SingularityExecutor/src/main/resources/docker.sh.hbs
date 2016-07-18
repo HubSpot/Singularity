@@ -137,8 +137,8 @@ DOCKER_OPTIONS="--name=$CONTAINER_NAME --cgroup-parent=$PARENT_CGROUP -w $DOCKER
 DOCKER_OPTIONS="$DOCKER_OPTIONS --privileged"
 {{/if}}
 
-{{#each envContext.dockerInfo.parameters}}
-DOCKER_OPTIONS="$DOCKER_OPTIONS --{{{key}}}={{{value}}}"
+{{#each envContext.dockerParameters}}
+DOCKER_OPTIONS="$DOCKER_OPTIONS --{{{this.key}}}={{{this.value}}}"
 {{/each}}
 
 echo "Ensuring {{{ runContext.taskAppDirectory }}} is owned by {{{ runContext.user }}}"
