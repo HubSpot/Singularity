@@ -67,12 +67,12 @@ function TaskFileBrowser (props) {
           cellData={(file) => {
             const icon = <Glyphicon glyph={file.isDirectory ? 'folder-open' : 'file'} />;
             if (file.isTailable) {
-              return <Link to={`task/${props.taskId}/tail/${file.uiPath}`}>{icon}<span className="file-name">{file.name}</span></Link>;
+              return <Link to={`task/${props.taskId}/tail/${file.uiPath}`}>{icon}<span className="file-name">{file.name.trim()}</span></Link>;
             }
             if (!file.isTailable && !file.isDirectory) {
-              return <span>{icon} {file.name}</span>;
+              return <span>{icon}<span className="file-name">{file.name.trim()}</span></span>;
             }
-            return <a onClick={() => props.changeDir(`${props.currentDirectory}/${file.name}`)}>{icon}<span className="file-name">{file.name}</span></a>;
+            return <a onClick={() => props.changeDir(`${props.currentDirectory}/${file.name}`)}>{icon}<span className="file-name">{file.name.trim()}</span></a>;
           }}
           sortable={true}
           sortFunc={makeComparator('name')}
