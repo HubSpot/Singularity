@@ -21,10 +21,10 @@ class Column extends Component {
 
   static defaultProps = {
     cellData: (rowData) => rowData,
-    cellRender: (cellData, rowData) => cellData,
+    cellRender: (cellData) => cellData,
     label: '',
     sortable: false,
-    sortData: (cellData, rowData) => cellData,
+    sortData: (cellData) => cellData,
     sortFunc: (a, b) => {
       if (a < b) {
         return -1;

@@ -1,12 +1,19 @@
-import React from 'react';
+import React, { PropTypes } from 'react';
 
 export default class CollapsableSection extends React.Component {
+
+  static propTypes = {
+    defaultExpanded: PropTypes.bool,
+    title: PropTypes.string,
+    children: PropTypes.object,
+    id: PropTypes.string
+  }
 
   constructor(props) {
     super();
     this.state = {
       expanded: props.defaultExpanded
-    }
+    };
   }
 
   toggle() {
@@ -22,11 +29,11 @@ export default class CollapsableSection extends React.Component {
             <h2>
               {this.props.title}
               <small>
-                  <a data-action="expandToggle" onClick={this.toggle.bind(this)}>{this.state.expanded ? 'Collapse' : 'View'}</a>
+                  <a data-action="expandToggle" onClick={() => this.toggle()}>{this.state.expanded ? 'Collapse' : 'View'}</a>
               </small>
             </h2>
         </div>
-        {this.state.expanded ? this.props.children : <div></div>}
+        {this.state.expanded && this.props.children}
       </div>
     );
   }

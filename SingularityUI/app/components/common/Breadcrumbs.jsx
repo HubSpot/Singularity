@@ -13,11 +13,10 @@ export default class Breadcrumbs extends React.Component {
         return (
           <li key={n}>{i.label} <a onClick={i.onClick}>{i.text}</a></li>
         );
-      } else {
-        return (
-          <li key={n}>{i.label} {i.text}</li>
-        );
       }
+      return (
+        <li key={n}>{i.label} {i.text}</li>
+      );
     });
   }
 

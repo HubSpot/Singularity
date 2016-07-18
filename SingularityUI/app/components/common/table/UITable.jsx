@@ -8,6 +8,7 @@ import BootstrapTable from 'react-bootstrap/lib/Table';
 import { Pagination } from 'react-bootstrap';
 
 class UITable extends Component {
+
   static SortDirection = {
     ASC: 'ASC',
     DESC: 'DESC'
