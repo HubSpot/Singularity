@@ -168,7 +168,7 @@ public class SingularityValidator {
 
     if (request.getScheduleTimeZone().isPresent()) {
       if (!ArrayUtils.contains(TimeZone.getAvailableIDs(), request.getScheduleTimeZone().get())) {
-        badRequest("scheduleTimeZone %s was not a valid timezone code (e.g. 'GMT')", request.getScheduleTimeZone().get());
+        badRequest("scheduleTimeZone %s was not a valid timezone code (e.g. 'US/Eastern' or 'GMT')", request.getScheduleTimeZone().get());
       }
     }
 
