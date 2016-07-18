@@ -1,24 +1,21 @@
 import React, { PropTypes } from 'react';
-
+import Utils from '../../utils';
 import { Alert } from 'react-bootstrap';
 
-import Utils from '../../utils';
-
 const TaskMetadataAlerts = (props) => {
-  const t = props.task;
   const alerts = [];
 
-  for (const i in t.taskMetadata) {
-    if (t.taskMetadata.hasOwnProperty(i)) {
-      const md = t.taskMetadata[i];
-      const message = md.message && (
-        <pre className="pre-scrollable">{md.message}</pre>
+  for (const index in props.task.taskMetadata) {
+    if (props.task.taskMetadata.hasOwnProperty(index)) {
+      const metadataItem = props.task.taskMetadata[index];
+      const message = metadataItem.message && (
+        <pre className="pre-scrollable">{metadataItem.message}</pre>
       );
       alerts.push(
-        <Alert key={i} bsStyle={md.level === 'ERROR' ? 'danger' : 'warning'}>
-          <h4>{md.title}</h4>
+        <Alert key={index} bsStyle={metadataItem.level === 'ERROR' ? 'danger' : 'warning'}>
+          <h4>{metadataItem.title}</h4>
           <p>
-            <strong>{Utils.timestampFromNow(md.timestamp)}</strong> | Type: {md.type} {md.user ? `| User: ${md.user}` : null}
+            <strong>{Utils.timestampFromNow(metadataItem.timestamp)}</strong> | Type: {metadataItem.type} {metadataItem.user ? `| User: ${metadataItem.user}` : null}
           </p>
           {message}
         </Alert>
@@ -34,7 +31,16 @@ const TaskMetadataAlerts = (props) => {
 };
 
 TaskMetadataAlerts.propTypes = {
-  task: PropTypes.object.isRequired
+  task: PropTypes.shape({
+    taskMetadata: PropTypes.arrayOf(PropTypes.shape({
+      message: PropTypes.string,
+      level: PropTypes.string.isRequired,
+      title: PropTypes.string.isRequired,
+      timestamp: PropTypes.number.isRequired,
+      type: PropTypes.string.isRequired,
+      user: PropTypes.string
+    })).isRequired
+  }).isRequired
 };
 
 export default TaskMetadataAlerts;

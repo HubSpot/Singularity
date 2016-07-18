@@ -1,19 +1,18 @@
-import React from 'react';
+import React, { PropTypes } from 'react';
 import Utils from '../../utils';
+import { Glyphicon } from 'react-bootstrap';
 import { Link } from 'react-router';
 
 import Section from '../common/Section';
-import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 
-export default (props) => {
-  const t = props.task;
-  const link = t.isStillRunning ? (
-    <Link to={`task/${t.task.taskId.id}/tail/${Utils.substituteTaskId(config.runningTaskLogPath, t.task.taskId.id)}`} title="Log">
-        <span><Glyphicon iconClass="file" /> {Utils.fileName(config.runningTaskLogPath)}</span>
+function TaskLatestLog (props) {
+  const link = props.isStillRunning ? (
+    <Link to={`task/${props.taskId}/tail/${Utils.substituteTaskId(config.runningTaskLogPath, props.taskId)}`} title="Log">
+        <span><Glyphicon glyph="file" /> {Utils.fileName(config.runningTaskLogPath)}</span>
     </Link>
   ) : (
-    <Link to={`task/${t.task.taskId.id}/tail/${Utils.substituteTaskId(config.finishedTaskLogPath, t.task.taskId.id)}`} title="Log">
-        <span><Glyphicon iconClass="file" /> {Utils.fileName(config.finishedTaskLogPath)}</span>
+    <Link to={`task/${props.taskId}/tail/${Utils.substituteTaskId(config.finishedTaskLogPath, props.taskId)}`} title="Log">
+        <span><Glyphicon glyph="file" /> {Utils.fileName(config.finishedTaskLogPath)}</span>
     </Link>
   );
   return (
@@ -25,4 +24,11 @@ export default (props) => {
       </div>
     </Section>
   );
+}
+
+TaskLatestLog.propTypes = {
+  taskId: PropTypes.string.isRequired,
+  isStillRunning: PropTypes.bool
 };
+
+export default TaskLatestLog;
