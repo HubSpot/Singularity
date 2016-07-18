@@ -7,6 +7,7 @@ import Utils from '../../utils';
 import { connect } from 'react-redux';
 import { DecommissionRack, RemoveRack, ReactivateRack, FetchRacks } from '../../actions/api/racks';
 import rootComponent from '../../rootComponent';
+import { Link } from 'react-router';
 
 function __in__(needle, haystack) {
   return haystack.indexOf(needle) >= 0;
@@ -101,7 +102,11 @@ const Racks = React.createClass({
   getRow(type, rack) {
     return (
       <tr key={rack.id}>
-        <td>{rack.id}</td>
+        <td>
+          <Link to={`tasks/active/all/${rack.id}`} title={`All tasks running on rack ${rack.id}`}>
+            {rack.id}
+          </Link>
+        </td>
         <td>{Utils.humanizeText(rack.currentState.state)}</td>
         <td>{Utils.duration(Date.now() - rack.firstSeenAt)}</td>
         {this.typeName[type] && <td>{this.showUser(rack) && rack.currentState.user}</td>}

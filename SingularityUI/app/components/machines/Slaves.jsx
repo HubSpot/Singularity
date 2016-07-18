@@ -6,6 +6,7 @@ import messageElement from './messageElement';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
+import { Link } from 'react-router';
 import { FetchSlaves, FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSlave } from '../../actions/api/slaves';
 
 function __in__(needle, haystack) {
@@ -113,9 +114,9 @@ class Slaves extends React.Component {
     return (
       <tr key={slave.id}>
         <td>
-          <a href={`${config.appRoot}/tasks/active/all/${slave.host}`} title={`All tasks running on host ${slave.host}`}>
+          <Link to={`tasks/active/all/${slave.host}`} title={`All tasks running on host ${slave.host}`}>
             {slave.id}
-          </a>
+          </Link>
         </td>
         <td>{Utils.humanizeText(slave.currentState.state)}</td>
         <td>{Utils.absoluteTimestamp(slave.currentState.timestamp)}</td>
