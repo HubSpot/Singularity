@@ -5,7 +5,7 @@ export default class CollapsableSection extends React.Component {
   static propTypes = {
     defaultExpanded: PropTypes.bool,
     title: PropTypes.string,
-    children: PropTypes.object,
+    children: PropTypes.node,
     id: PropTypes.string
   }
 
