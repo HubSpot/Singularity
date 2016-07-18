@@ -14,7 +14,7 @@ function TaskHistory (props) {
         headers={['Status', 'Message', 'Time']}
         renderTableRow={(data, index) => {
           return (
-            <tr key={index} className={classNames({'medium-weight' :index === 0})}>
+            <tr key={index} className={classNames({'medium-weight': index === 0})}>
               <td>{Utils.humanizeText(data.taskState)}</td>
               <td>{data.statusMessage ? data.statusMessage : '—'}</td>
               <td>{Utils.timestampFromNow(data.timestamp)}</td>
