@@ -9,26 +9,6 @@ import { Pagination } from 'react-bootstrap';
 
 class UITable extends Component {
 
-  static propTypes = {
-    data: PropTypes.arrayOf(PropTypes.object).isRequired,
-    keyGetter: PropTypes.func.isRequired,
-    children: PropTypes.arrayOf(PropTypes.node).isRequired,
-    paginated: PropTypes.bool,
-    rowChunkSize: PropTypes.number,
-    maxButtons: PropTypes.number,
-    defaultSortBy: PropTypes.string,
-    defaultSortDirection: PropTypes.oneOf([
-      UITable.SortDirection.ASC,
-      UITable.SortDirection.DESC
-    ]),
-    className: PropTypes.string,
-    asyncSort: PropTypes.bool,
-    emptyTableMessage: PropTypes.oneOfType([
-      PropTypes.node,
-      PropTypes.string
-    ])
-  };
-
   constructor(props) {
     super(props);
 
@@ -47,8 +27,6 @@ class UITable extends Component {
     this.updateSort(nextProps.data, this.state.sortBy, this.state.sortDirection);
   }
 
-  state;
-
   static SortDirection = {
     ASC: 'ASC',
     DESC: 'DESC'
@@ -61,6 +39,8 @@ class UITable extends Component {
     defaultSortDirection: UITable.SortDirection.DESC,
     asyncSort: false
   };
+
+  state;
 
   updateSort(data, sortBy, sortDirection) {
     if (this.props.asyncSort) {
@@ -356,5 +336,25 @@ class UITable extends Component {
     );
   }
 }
+
+UITable.propTypes = {
+  data: PropTypes.arrayOf(PropTypes.object).isRequired,
+  keyGetter: PropTypes.func.isRequired,
+  children: PropTypes.arrayOf(PropTypes.node).isRequired,
+  paginated: PropTypes.bool,
+  rowChunkSize: PropTypes.number,
+  maxButtons: PropTypes.number,
+  defaultSortBy: PropTypes.string,
+  defaultSortDirection: PropTypes.oneOf([
+    UITable.SortDirection.ASC,
+    UITable.SortDirection.DESC
+  ]),
+  className: PropTypes.string,
+  asyncSort: PropTypes.bool,
+  emptyTableMessage: PropTypes.oneOfType([
+    PropTypes.node,
+    PropTypes.string
+  ])
+};
 
 export default UITable;
