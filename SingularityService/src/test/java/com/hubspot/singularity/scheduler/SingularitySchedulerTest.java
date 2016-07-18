@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.WebApplicationException;
 
+import org.apache.commons.jexl2.UnifiedJEXL.Exception;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.SlaveID;
 import org.apache.mesos.Protos.TaskID;
@@ -41,6 +42,7 @@ import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityDeployProgress;
@@ -3060,12 +3062,52 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertEquals(newScheduleQuartz, requestManager.getRequest(requestId).get().getRequest().getQuartzScheduleSafe());
   }
 
+  @Test
+  public void testValidQuartzTimeZone() {
+    SingularityRequest req = new SingularityRequestBuilder(requestId, RequestType.SCHEDULED)
+        .setQuartzSchedule(Optional.of("*/1 * * * * ? 2020"))
+        .setScheduleType(Optional.of(ScheduleType.QUARTZ))
+        .setScheduleTimeZone(Optional.of("GMT"))
+        .build();
+
+    requestResource.postRequest(req);
+  }
+
   @Test(expected=WebApplicationException.class)
   public void testInvalidQuartzTimeZoneErrors() {
-    SingularityRequestBuilder bldr = new SingularityRequestBuilder("timezone_id", RequestType.SCHEDULED);
-    bldr.setSchedule(Optional.of("*/1 * * * * ? 2100"));
-    bldr.setScheduleTimeZone(Optional.of("bad_timezone_code"));
-    requestResource.postRequest(bldr.build());
+    SingularityRequest req = new SingularityRequestBuilder(requestId, RequestType.SCHEDULED)
+        .setQuartzSchedule(Optional.of("*/1 * * * * ? 2020"))
+        .setScheduleType(Optional.of(ScheduleType.QUARTZ))
+        .setScheduleTimeZone(Optional.of("invalid_timezone"))
+        .build();
+
+    requestResource.postRequest(req);
+  }
+
+  @Test
+  public void testDifferentQuartzTimeZone() {
+    final Optional<String> schedule = Optional.of("* 30 14 22 3 ? 2233");
+
+    SingularityRequest requestEST = new SingularityRequestBuilder("est_id", RequestType.SCHEDULED)
+        .setSchedule(schedule)
+        .setScheduleType(Optional.of(ScheduleType.QUARTZ))
+        .setScheduleTimeZone(Optional.of("EST")) // fixed in relation to GMT
+        .build();
+    requestResource.postRequest(requestEST);
+
+    SingularityRequest requestGMT = new SingularityRequestBuilder("gmt_id", RequestType.SCHEDULED)
+        .setSchedule(schedule)
+        .setScheduleType(Optional.of(ScheduleType.QUARTZ))
+        .setScheduleTimeZone(Optional.of("GMT"))
+        .build();
+    requestResource.postRequest(requestGMT);
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    System.out.println(taskManager.getPendingTaskIds());
+//    Assert.assertTrue(!requestResource.getActiveRequests().isEmpty());
+//    Assert.assertTrue(requestManager.getRequest("est_id").get().getState() == RequestState.ACTIVE);
+//    Assert.assertTrue(requestManager.getRequest("gmt_id").get().getState() == RequestState.ACTIVE);
+
   }
 
   @Test
