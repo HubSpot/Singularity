@@ -1,6 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
+import { Glyphicon } from 'react-bootstrap';
 import rootComponent from '../../rootComponent';
 import classNames from 'classnames';
 import { FetchRequest } from '../../actions/api/requests';
@@ -9,7 +10,6 @@ import { FetchTaskSearchParams } from '../../actions/api/history';
 import Breadcrumbs from '../common/Breadcrumbs';
 import TasksTable from './TasksTable';
 import TaskSearchFilters from './TaskSearchFilters';
-import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
 import JSONButton from '../common/JSONButton';
 import Utils from '../../utils';
 
@@ -90,7 +90,7 @@ class TaskSearch extends React.Component {
   renderTableRow(data, i) {
     return (
       <tr key={i}>
-        <td className="actions-column"><Link to={`task/${data.taskId.id}`}><Glyphicon iconClass="link" /></Link></td>
+        <td className="actions-column"><Link to={`task/${data.taskId.id}`}><Glyphicon glyph="link" /></Link></td>
         <td><Link to={`request/${data.taskId.requestId}`}>{data.taskId.requestId}</Link></td>
         <td><Link to={`request/${data.taskId.requestId}/deploy/${data.taskId.deployId}`}>{data.taskId.deployId}</Link></td>
         <td><Link to={`tasks/active/all/${data.taskId.host}`}>{data.taskId.host}</Link></td>

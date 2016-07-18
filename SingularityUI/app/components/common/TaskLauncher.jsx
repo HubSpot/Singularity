@@ -2,8 +2,7 @@ import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 
-import { Modal } from 'react-bootstrap';
-import Glyphicon from '../common/atomicDisplayItems/Glyphicon';
+import { Modal, Glyphicon } from 'react-bootstrap';
 
 import { FetchRequestRun } from '../../actions/api/requests';
 import { FetchRequestRunHistory } from '../../actions/api/history';
@@ -102,7 +101,7 @@ class TaskLauncher extends Component {
   stepStatus(state, text) {
     return (
       <li className={classNames({'complete text-success': state}, {'waiting': !state})}>
-        {!state ? <div className="page-loader loader-small" /> : <Glyphicon iconClass="ok" />} {text}...
+        {!state ? <div className="page-loader loader-small" /> : <Glyphicon glyph="ok" />} {text}...
       </li>
     );
   }
