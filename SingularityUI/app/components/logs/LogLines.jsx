@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { PropTypes, Component } from 'react';
 import LogLine from './LogLine';
 import Humanize from 'humanize-plus';
 import classNames from 'classnames';
@@ -8,22 +8,18 @@ import { taskGroupTop, taskGroupBottom } from '../../actions/log';
 
 function sum (numbers) {
   let total = 0;
-  for (let i=0; i<numbers.length; i++) {
+  for (let i = 0; i < numbers.length; i++) {
     total += numbers[i];
   }
   return total;
 }
 
-class LogLines extends React.Component {
+class LogLines extends Component {
   componentDidMount() {
     window.addEventListener('resize', this.handleScroll.bind(this));
   }
 
-  componentWillUnmount() {
-    window.removeEventListener('resize', this.handleScroll.bind(this));
-  }
-
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps) {
     if (prevProps.updatedAt !== this.props.updatedAt) {
       if (this.props.tailing) {
         this.refs.tailContents.scrollTop = this.refs.tailContents.scrollHeight;
@@ -35,56 +31,12 @@ class LogLines extends React.Component {
     }
   }
 
-  renderLoadingPrevious() {
-    if (this.props.initialDataLoaded) {
-      if (!this.props.reachedStartOfFile) {
-        if (this.props.search) {
-          return <div>Searching for '{this.props.search}'... ({Humanize.filesize(this.props.bytesRemainingBefore)} remaining)</div>;
-        } else {
-          return <div>Loading previous... ({Humanize.filesize(this.props.bytesRemainingBefore)} remaining)</div>;
-        }
-      }
-    }
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.handleScroll.bind(this));
   }
-
-  renderLogLines() {
-    const initialOffset = this.props.initialOffset;
-    const colorMap = this.props.colorMap;
-    return this.props.logLines.map(function ({data, offset, taskId, timestamp}) {
-      return <LogLine
-        content={data}
-        key={taskId + '_' + offset}
-        offset={offset}
-        taskId={taskId}
-        timestamp={timestamp}
-        isHighlighted={offset === initialOffset}
-        color={colorMap[taskId]} />;
-    });
-  }
-
-  renderLoadingMore() {
-    if (this.props.terminated) {
-      return null
-    } else if (this.props.initialDataLoaded) {
-      if (this.props.reachedEndOfFile) {
-        if (this.props.search) {
-          return <div>Tailing for '{this.props.search}'...</div>;
-        } else {
-          return <div>Tailing...</div>;
-        }
-      } else {
-        if (this.props.search) {
-          return <div>Searching for '{this.props.search}'... ({Humanize.filesize(this.props.bytesRemainingAfter)} remaining)</div>;
-        } else {
-          return <div>Loading more... ({Humanize.filesize(this.props.bytesRemainingAfter)} remaining)</div>;
-        }
-      }
-    }
-  }
-
 
   handleScroll() {
-    const {scrollTop, scrollHeight, clientHeight} = this.refs.tailContents
+    const {scrollTop, scrollHeight, clientHeight} = this.refs.tailContents;
 
     if (scrollTop < clientHeight) {
       this.props.taskGroupTop(this.props.taskGroupId, true);
@@ -99,45 +51,99 @@ class LogLines extends React.Component {
     }
   }
 
+  renderLoadingMore() {
+    if (this.props.terminated) {
+      return null;
+    } else if (this.props.initialDataLoaded) {
+      if (this.props.reachedEndOfFile) {
+        if (this.props.search) {
+          return <div>Tailing for '{this.props.search}'...</div>;
+        }
+        return <div>Tailing...</div>;
+      }
+      if (this.props.search) {
+        return <div>Searching for '{this.props.search}'... ({Humanize.filesize(this.props.bytesRemainingAfter)} remaining)</div>;
+      }
+      return <div>Loading more... ({Humanize.filesize(this.props.bytesRemainingAfter)} remaining)</div>;
+    }
+    return null;
+  }
+
+  renderLogLines() {
+    return this.props.logLines.map(({data, offset, taskId, timestamp}) => (
+      <LogLine
+        content={data}
+        key={`${taskId}_${offset}`}
+        offset={offset}
+        taskId={taskId}
+        timestamp={timestamp}
+        isHighlighted={offset === this.props.initialOffset}
+        color={this.props.colorMap[taskId]}
+      />
+    ));
+  }
+
+  renderLoadingPrevious() {
+    if (this.props.initialDataLoaded) {
+      if (!this.props.reachedStartOfFile) {
+        if (this.props.search) {
+          return <div>Searching for '{this.props.search}'... ({Humanize.filesize(this.props.bytesRemainingBefore)} remaining)</div>;
+        }
+        return <div>Loading previous... ({Humanize.filesize(this.props.bytesRemainingBefore)} remaining)</div>;
+      }
+    }
+    return null;
+  }
+
   render() {
-    return <div className="contents-container">
-      <div className={classNames(['tail-contents', this.props.activeColor])} ref="tailContents" onScroll={(event) => { this.handleScroll(event); }}>
-        {this.renderLoadingPrevious()}
-        {this.renderLogLines()}
-        {this.renderLoadingMore()}
-        {this.props.fileNotFound}
+    return (
+      <div className="contents-container">
+        <div className={classNames(['tail-contents', this.props.activeColor])} ref="tailContents" onScroll={(event) => { this.handleScroll(event); }}>
+          {this.renderLoadingPrevious()}
+          {this.renderLogLines()}
+          {this.renderLoadingMore()}
+          {this.props.fileNotFound}
+        </div>
       </div>
-    </div>;
+    );
   }
 }
 
 LogLines.propTypes = {
-  taskGroupTop: React.PropTypes.func.isRequired,
-  taskGroupBottom: React.PropTypes.func.isRequired,
+  taskGroupTop: PropTypes.func.isRequired,
+  taskGroupBottom: PropTypes.func.isRequired,
 
-  taskGroupId: React.PropTypes.number.isRequired,
-  logLines: React.PropTypes.array.isRequired,
+  taskGroupId: PropTypes.number.isRequired,
+  logLines: PropTypes.array.isRequired,
 
-  initialDataLoaded: React.PropTypes.bool.isRequired,
-  reachedStartOfFile: React.PropTypes.bool.isRequired,
-  reachedEndOfFile: React.PropTypes.bool.isRequired,
-  bytesRemainingBefore: React.PropTypes.number.isRequired,
-  bytesRemainingAfter: React.PropTypes.number.isRequired,
-  activeColor: React.PropTypes.string.isRequired,
+  initialDataLoaded: PropTypes.bool.isRequired,
+  reachedStartOfFile: PropTypes.bool.isRequired,
+  reachedEndOfFile: PropTypes.bool.isRequired,
+  bytesRemainingBefore: PropTypes.number.isRequired,
+  bytesRemainingAfter: PropTypes.number.isRequired,
+  activeColor: PropTypes.string.isRequired,
+  search: PropTypes.string,
+  initialOffset: PropTypes.number,
+  colorMap: PropTypes.object,
+  terminated: PropTypes.bool,
+  prependedLineCount: PropTypes.number,
+  linesRemovedFromTop: PropTypes.number,
+  tailing: PropTypes.bool,
 
-  fileNotFound: React.PropTypes.element
+  fileNotFound: PropTypes.element,
+  updatedAt: PropTypes.number
 };
 
 function mapStateToProps(state, ownProps) {
-  const taskGroup = state.taskGroups[ownProps.taskGroupId]
-  const tasks = taskGroup.taskIds.map(function (taskId) { return state.tasks[taskId]; });
+  const taskGroup = state.taskGroups[ownProps.taskGroupId];
+  const tasks = taskGroup.taskIds.map((taskId) => state.tasks[taskId]);
 
-  const colorMap = {}
+  const colorMap = {};
   if (taskGroup.taskIds.length > 1) {
-    let i = 0
-    for (taskId of taskGroup.taskIds) {
+    let i = 0;
+    for (const taskId of taskGroup.taskIds) {
       colorMap[taskId] = `hsla(${(360 / taskGroup.taskIds.length) * i}, 100%, 50%, 0.1)`;
-      i++
+      i++;
     }
   }
 
@@ -152,13 +158,13 @@ function mapStateToProps(state, ownProps) {
     bottom: taskGroup.bottom,
     initialDataLoaded: _.all(_.pluck(tasks, 'initialDataLoaded')),
     terminated: _.all(_.pluck(tasks, 'terminated')),
-    reachedStartOfFile: _.all(tasks.map( function ({minOffset}) { return minOffset === 0; })),
-    reachedEndOfFile: _.all(tasks.map( function ({maxOffset, filesize}) { return maxOffset >= filesize; })),
+    reachedStartOfFile: _.all(tasks.map(({minOffset}) => minOffset === 0)),
+    reachedEndOfFile: _.all(tasks.map(({maxOffset, filesize}) => maxOffset >= filesize)),
     bytesRemainingBefore: sum(_.pluck(tasks, 'minOffset')),
-    bytesRemainingAfter: sum(tasks.map( function ({filesize, maxOffset}) { return Math.max(filesize - maxOffset, 0); })),
-    colorMap: colorMap,
+    bytesRemainingAfter: sum(tasks.map(({filesize, maxOffset}) => Math.max(filesize - maxOffset, 0))),
+    colorMap,
     search: state.search,
-  }
+  };
 }
 
 const mapDispatchToProps = { taskGroupTop, taskGroupBottom };

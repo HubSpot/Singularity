@@ -10,35 +10,34 @@ import { switchViewMode, scrollAllToTop, scrollAllToBottom } from '../../actions
 
 class Header extends React.Component {
   renderBreadcrumbs() {
-    return this.props.path.split('/').map(function (subpath, i) {
+    return this.props.path.split('/').map((subpath, key) => {
       if (subpath === '$TASK_ID') {
-        return <li key={i}><span className="label label-info">Task ID</span></li>;
-      } else {
-        return <li key={i}>{subpath}</li>;
+        return <li key={key}><span className="label label-info">Task ID</span></li>;
       }
+      return <li key={key}>{subpath}</li>;
     });
   }
 
   renderViewButtons() {
-    if (this.props.multipleTasks) {
-      return (<div className="btn-group" role="group" title="Select View Type">
-        <button type="button" className={classNames({btn: true, 'btn-sm': true, 'btn-default': true, 'no-margin': true, active: this.props.viewMode === 'unified'})} onClick={function () { this.props.switchViewMode('unified'); }}>Unified</button>
-        <button type="button" className={classNames({btn: true, 'btn-sm': true, 'btn-default': true, 'no-margin': true, active: this.props.viewMode === 'split'})} onClick={function () { this.props.switchViewMode('split'); }}>Split</button>
-      </div>);
-    }
+    return this.props.multipleTasks && (
+      <div className="btn-group" role="group" title="Select View Type">
+        <button type="button" className={classNames({btn: true, 'btn-sm': true, 'btn-default': true, 'no-margin': true, active: this.props.viewMode === 'unified'})} onClick={() => this.props.switchViewMode('unified')}>Unified</button>
+        <button type="button" className={classNames({btn: true, 'btn-sm': true, 'btn-default': true, 'no-margin': true, active: this.props.viewMode === 'split'})} onClick={() => this.props.switchViewMode('split')}>Split</button>
+      </div>
+    );
   }
 
   renderAnchorButtons() {
-    if (this.props.taskGroupCount > 1) {
-      return (<span>
+    return (this.props.taskGroupCount > 1) && (
+      <span>
         <a className="btn btn-default btn-sm tail-bottom-button" onClick={this.props.scrollAllToBottom} title="Scroll All to Bottom">
           <span className="glyphicon glyphicon-chevron-down"></span>
         </a>
         <a className="btn btn-default btn-sm tail-top-button" onClick={this.props.scrollAllToTop} title="Scroll All to Top">
           <span className="glyphicon glyphicon-chevron-up"></span>
         </a>
-      </span>);
-    }
+      </span>
+    );
   }
 
   render() {
@@ -78,7 +77,7 @@ Header.propTypes = {
   path: React.PropTypes.string.isRequired,
   multipleTasks: React.PropTypes.bool.isRequired,
   viewMode: React.PropTypes.string.isRequired,
-
+  taskGroupCount: React.PropTypes.number.isRequired,
   switchViewMode: React.PropTypes.func.isRequired,
   scrollAllToBottom: React.PropTypes.func.isRequired,
   scrollAllToTop: React.PropTypes.func.isRequired,
