@@ -3073,7 +3073,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     requestResource.postRequest(req);
   }
 
-  @Test(expected=WebApplicationException.class)
+  @Test(expected = WebApplicationException.class)
   public void testInvalidQuartzTimeZoneErrors() {
     SingularityRequest req = new SingularityRequestBuilder(requestId, RequestType.SCHEDULED)
         .setQuartzSchedule(Optional.of("*/1 * * * * ? 2020"))
@@ -3085,7 +3085,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
-  public void testDifferentQuartzTimeZone() {
+  public void testDifferentQuartzTimeZones() {
     final Optional<String> schedule = Optional.of("* 30 14 22 3 ? 2233");
 
     SingularityRequest requestEST = new SingularityRequestBuilder("est_id", RequestType.SCHEDULED)
@@ -3093,17 +3093,67 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
         .setScheduleType(Optional.of(ScheduleType.QUARTZ))
         .setScheduleTimeZone(Optional.of("EST")) // fixed in relation to GMT
         .build();
-    requestResource.postRequest(requestEST);
 
     SingularityRequest requestGMT = new SingularityRequestBuilder("gmt_id", RequestType.SCHEDULED)
         .setSchedule(schedule)
         .setScheduleType(Optional.of(ScheduleType.QUARTZ))
         .setScheduleTimeZone(Optional.of("GMT"))
         .build();
+
+    requestResource.postRequest(requestEST);
     requestResource.postRequest(requestGMT);
 
-    scheduler.drainPendingQueue(stateCacheProvider.get());
+    SingularityDeploy deployEST = new SingularityDeployBuilder(requestEST.getId(), "est_deploy_id")
+        .setCommand(Optional.of("sleep 1"))
+        .build();
+
+    SingularityDeploy deployGMT = new SingularityDeployBuilder(requestGMT.getId(), "gmt_deploy_id")
+        .setCommand(Optional.of("sleep 1"))
+        .build();
+
+    System.out.println("----------------");
+    System.out.println(requestManager.getPendingRequests());
+    System.out.println(requestManager.getActiveRequests());
     System.out.println(taskManager.getPendingTaskIds());
+    System.out.println(taskManager.getActiveTaskIds());
+    System.out.println(deployManager.getPendingDeploys());
+    System.out.println(deployManager.getAllDeployIds());
+    System.out.println(scheduler.getDueTasks());
+
+    deployResource.deploy(new SingularityDeployRequest(deployEST, Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<SingularityRequest>absent()));
+    deployResource.deploy(new SingularityDeployRequest(deployGMT, Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<SingularityRequest>absent()));
+
+    System.out.println("----------------");
+    System.out.println(requestManager.getPendingRequests());
+    System.out.println(requestManager.getActiveRequests());
+    System.out.println(taskManager.getPendingTaskIds());
+    System.out.println(taskManager.getActiveTaskIds());
+    System.out.println(deployManager.getPendingDeploys());
+    System.out.println(deployManager.getAllDeployIds());
+    System.out.println(scheduler.getDueTasks());
+
+    deployChecker.checkDeploys();
+
+    System.out.println("----------------");
+    System.out.println(requestManager.getPendingRequests());
+    System.out.println(requestManager.getActiveRequests());
+    System.out.println(taskManager.getPendingTaskIds());
+    System.out.println(taskManager.getActiveTaskIds());
+    System.out.println(deployManager.getPendingDeploys());
+    System.out.println(deployManager.getAllDeployIds());
+    System.out.println(scheduler.getDueTasks());
+
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    System.out.println("----------------");
+    System.out.println(requestManager.getPendingRequests());
+    System.out.println(requestManager.getActiveRequests());
+    System.out.println(taskManager.getPendingTaskIds());
+    System.out.println(taskManager.getActiveTaskIds());
+    System.out.println(deployManager.getPendingDeploys());
+    System.out.println(deployManager.getAllDeployIds());
+    System.out.println(scheduler.getDueTasks());
+
 //    Assert.assertTrue(!requestResource.getActiveRequests().isEmpty());
 //    Assert.assertTrue(requestManager.getRequest("est_id").get().getState() == RequestState.ACTIVE);
 //    Assert.assertTrue(requestManager.getRequest("gmt_id").get().getState() == RequestState.ACTIVE);
