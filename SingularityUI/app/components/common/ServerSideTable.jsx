@@ -19,6 +19,7 @@ export default class ServerSideTable extends SimpleTable {
 
   handleSelect(eventKey) {
     const inc = eventKey > this.state.serverPage ? 1 : -1;
+    if (this.state.serverPage + inc < 1) { return; }
     this.props.dispatch(this.props.fetchAction.trigger(...this.props.fetchParams, this.props.perPage, this.state.serverPage + inc));
     const state = {
       serverPage: this.state.serverPage + inc
@@ -61,7 +62,8 @@ export default class ServerSideTable extends SimpleTable {
 
   componentWillReceiveProps(nextProps) {
     if (this.didFetchParamsUpdate(nextProps)) {
-      this.props.dispatch(nextProps.fetchAction.trigger(...nextProps.fetchParams, nextProps.perPage, this.state.serverPage));
+      this.setState({serverPage: 1});
+      this.props.dispatch(nextProps.fetchAction.trigger(...nextProps.fetchParams, nextProps.perPage, 1));
     }
     this.updateDisplay(nextProps);
   }
@@ -87,11 +89,6 @@ export default class ServerSideTable extends SimpleTable {
     return undefined;
   }
 }
-
-// TODO: This is probably an antipattern that we should get rid of
-const mapDispatchToProps = (dispatch) => ({
-  dispatch
-});
 
 ServerSideTable.propTypes = _.extend({}, SimpleTable.propTypes, {
   fetchAction: React.PropTypes.shape({

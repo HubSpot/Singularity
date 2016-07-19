@@ -32,6 +32,7 @@ class TaskSearch extends React.Component {
 
   componentWillMount() {
     this.props.fetchTaskHistory(INITIAL_TASKS_PER_PAGE, 1, {requestId: this.props.params.requestId});
+    this.props.updateFilter(_.extend({}, { requestId: this.props.params.requestId }, this.props.filter));
   }
 
   setCount(count) {
@@ -48,7 +49,7 @@ class TaskSearch extends React.Component {
   handleSearch(filter) {
     const count = this.props.filter.count || INITIAL_TASKS_PER_PAGE;
     const page = this.props.filter.page || 1;
-    const newFilter = _.extend({}, _.omit(filter, (value) => !value), {count, page});
+    const newFilter = _.extend({}, {requestId: this.props.params.requestId}, _.omit(filter, (value) => !value), {count, page});
     this.props.updateFilter(newFilter);
   }
 
@@ -128,7 +129,7 @@ class TaskSearch extends React.Component {
 function mapStateToProps(state) {
   return {
     taskHistory: state.api.taskHistory.data,
-    filter: state.taskSearch || { requestId: state.api.taskHistory.data }
+    filter: state.taskSearch
   };
 }
 
