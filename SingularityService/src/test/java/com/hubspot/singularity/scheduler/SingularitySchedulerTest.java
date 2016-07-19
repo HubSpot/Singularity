@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.WebApplicationException;
 
-import org.apache.commons.jexl2.UnifiedJEXL.Exception;
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.SlaveID;
 import org.apache.mesos.Protos.TaskID;
@@ -3060,17 +3059,6 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
     Assert.assertEquals(newScheduleQuartz, requestManager.getRequest(requestId).get().getRequest().getQuartzScheduleSafe());
-  }
-
-  @Test
-  public void testValidQuartzTimeZone() {
-    SingularityRequest req = new SingularityRequestBuilder(requestId, RequestType.SCHEDULED)
-        .setQuartzSchedule(Optional.of("*/1 * * * * ? 2020"))
-        .setScheduleType(Optional.of(ScheduleType.QUARTZ))
-        .setScheduleTimeZone(Optional.of("GMT"))
-        .build();
-
-    requestResource.postRequest(req);
   }
 
   @Test(expected = WebApplicationException.class)
