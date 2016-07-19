@@ -157,7 +157,7 @@ public class SingularityValidator {
           quartzSchedule = getQuartzScheduleFromCronSchedule(originalSchedule);
         }
 
-        checkBadRequest(isValidCronSchedule(quartzSchedule), "Schedule %s (from: %s) was not valid", quartzSchedule, originalSchedule);
+        checkBadRequest(isValidCronSchedule(quartzSchedule), "Schedule %s (from: %s) is not valid", quartzSchedule, originalSchedule);
       } else {
         checkForValidRFC5545Schedule(request.getSchedule().get());
       }
@@ -168,7 +168,7 @@ public class SingularityValidator {
 
     if (request.getScheduleTimeZone().isPresent()) {
       if (!ArrayUtils.contains(TimeZone.getAvailableIDs(), request.getScheduleTimeZone().get())) {
-        badRequest("scheduleTimeZone %s was not a valid timezone code (e.g. 'US/Eastern' or 'GMT')", request.getScheduleTimeZone().get());
+        badRequest("scheduleTimeZone %s does not map to a valid Java TimeZone object (e.g. 'US/Eastern' or 'GMT')", request.getScheduleTimeZone().get());
       }
     }
 
@@ -193,7 +193,7 @@ public class SingularityValidator {
     try {
       new RecurrenceRule(schedule);
     } catch (InvalidRecurrenceRuleException ex) {
-      badRequest("Schedule %s was not a valid RFC5545 schedule, error was: %s", schedule, ex);
+      badRequest("Schedule %s is not a valid RFC5545 schedule, error is: %s", schedule, ex);
     }
   }
 
