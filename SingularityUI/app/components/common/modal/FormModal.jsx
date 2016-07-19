@@ -148,11 +148,12 @@ export default class FormModal extends React.Component {
                 <label className="control-label" htmlFor={formElement.name}>
                   <input
                     type="checkbox"
+                    id={formElement.name}
                     name={formElement.name}
                     checked={this.state.formState[formElement.name] || false}
                     onChange={(event) => this.handleFormChange(formElement.name, event.target.checked)}
                   />
-                  {formElement.label}
+                  {' '}{formElement.label}
                 </label>
                 {errorBlock}
                 {help}
