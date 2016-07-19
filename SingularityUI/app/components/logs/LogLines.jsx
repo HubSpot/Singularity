@@ -6,7 +6,7 @@ import classNames from 'classnames';
 import { connect } from 'react-redux';
 import { taskGroupTop, taskGroupBottom } from '../../actions/log';
 
-function sum (numbers) {
+function sum(numbers) {
   let total = 0;
   for (let i = 0; i < numbers.length; i++) {
     total += numbers[i];

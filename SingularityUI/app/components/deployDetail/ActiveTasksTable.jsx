@@ -22,7 +22,7 @@ const ActiveTasksTable = ({tasks}) => (
           <td><span className={`label label-${Utils.getLabelClassFromTaskState(data.lastTaskState)}`}>{Utils.humanizeText(data.lastTaskState)}</span></td>
           <td>{Utils.timestampFromNow(data.taskId.startedAt)}</td>
           <td>{Utils.timestampFromNow(data.updatedAt)}</td>
-          <td className="actions-column"><Link to={`$request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log">&middot;&middot;&middot;</Link></td>
+          <td className="actions-column"><Link to={`request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log">&middot;&middot;&middot;</Link></td>
           <td className="actions-column"><JSONButton object={data}>{'{ }'}</JSONButton></td>
         </tr>
       );

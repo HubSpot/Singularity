@@ -32,6 +32,7 @@ function refreshTail(props) {
     props.updateActiveTasks(requestId);
   });
 }
+
 export const Tail = connect(null, mapDispatchToProps)(rootComponent(TailPage, getTitle, refreshTail, false, false));
 
 function refreshAggregateTail(props) {
@@ -42,4 +43,5 @@ function refreshAggregateTail(props) {
     props.updateActiveTasks(props.params.requestId);
   });
 }
+
 export const AggregateTail = connect(null, mapDispatchToProps)(rootComponent(TailPage, getTitle, refreshAggregateTail, false, false));
