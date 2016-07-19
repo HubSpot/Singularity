@@ -27,6 +27,15 @@ export default class ServerSideTable extends SimpleTable {
     this.setState(state);
   }
 
+  didFetchParamsUpdate(nextProps) {
+    for (const fetchParamIndex in nextProps.fetchParams) {
+      if (!_.isEqual(nextProps.fetchParams[fetchParamIndex], this.props.fetchParams[fetchParamIndex])) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   updateDisplay(nextProps) {
     const newState = {};
     if (this.props.entries && this.props.entries.length > 0 && nextProps.entries.length === 0 && this.state.serverPage > 1) {
@@ -51,6 +60,9 @@ export default class ServerSideTable extends SimpleTable {
   }
 
   componentWillReceiveProps(nextProps) {
+    if (this.didFetchParamsUpdate(nextProps)) {
+      this.props.dispatch(nextProps.fetchAction.trigger(...nextProps.fetchParams, nextProps.perPage, this.state.serverPage));
+    }
     this.updateDisplay(nextProps);
   }
 
@@ -90,7 +102,4 @@ ServerSideTable.propTypes = _.extend({}, SimpleTable.propTypes, {
   paginate: React.PropTypes.bool
 });
 
-export default connect(
-  null,
-  mapDispatchToProps
-)(ServerSideTable);
+export default connect()(ServerSideTable);

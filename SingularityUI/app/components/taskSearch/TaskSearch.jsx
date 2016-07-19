@@ -30,12 +30,19 @@ class TaskSearch extends React.Component {
     })
   }
 
-  setPage(page) {
-    this.props.updateFilter(_.extend({}, this.props.filter, {page}));
+  componentWillMount() {
+    this.props.fetchTaskHistory(INITIAL_TASKS_PER_PAGE, 1, {requestId: this.props.params.requestId});
   }
 
   setCount(count) {
     this.props.updateFilter(_.extend({}, this.props.filter, {count}));
+  }
+
+  isCurrentCount(count) {
+    if (this.props.filter.count) {
+      return this.props.filter.count === count;
+    }
+    return INITIAL_TASKS_PER_PAGE === count;
   }
 
   handleSearch(filter) {
@@ -86,9 +93,9 @@ class TaskSearch extends React.Component {
       <div className="row">
         <div className="pull-right count-options">
           Results per page:
-          <a className={classNames({inactive: this.props.filter.count === 5})} onClick={() => this.setCount(5)}>5</a>
-          <a className={classNames({inactive: this.props.filter.count === 10})} onClick={() => this.setCount(10)}>10</a>
-          <a className={classNames({inactive: this.props.filter.count === 25})} onClick={() => this.setCount(25)}>25</a>
+          <a className={classNames({inactive: this.isCurrentCount(5)})} onClick={() => this.setCount(5)}>5</a>
+          <a className={classNames({inactive: this.isCurrentCount(10)})} onClick={() => this.setCount(10)}>10</a>
+          <a className={classNames({inactive: this.isCurrentCount(25)})} onClick={() => this.setCount(25)}>25</a>
         </div>
       </div>
     );
@@ -132,10 +139,4 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-function refresh(props) {
-  const count = props.filter && props.filter.count || INITIAL_TASKS_PER_PAGE;
-  const filter = _.extend({}, {requestId: props.params.requestId}, props.filter);
-  return props.fetchTaskHistory(count, 1, filter);
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(TaskSearch, 'Task Search', refresh));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(TaskSearch, 'Task Search'));
