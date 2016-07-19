@@ -3086,7 +3086,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
   @Test
   public void testDifferentQuartzTimeZones() {
-    final Optional<String> schedule = Optional.of("* 30 14 22 3 ? 2233");
+    final Optional<String> schedule = Optional.of("* 30 14 22 3 ? 2083");
 
     SingularityRequest requestEST = new SingularityRequestBuilder("est_id", RequestType.SCHEDULED)
         .setSchedule(schedule)
@@ -3111,53 +3111,26 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
         .setCommand(Optional.of("sleep 1"))
         .build();
 
-    System.out.println("----------------");
-    System.out.println(requestManager.getPendingRequests());
-    System.out.println(requestManager.getActiveRequests());
-    System.out.println(taskManager.getPendingTaskIds());
-    System.out.println(taskManager.getActiveTaskIds());
-    System.out.println(deployManager.getPendingDeploys());
-    System.out.println(deployManager.getAllDeployIds());
-    System.out.println(scheduler.getDueTasks());
-
     deployResource.deploy(new SingularityDeployRequest(deployEST, Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<SingularityRequest>absent()));
     deployResource.deploy(new SingularityDeployRequest(deployGMT, Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<SingularityRequest>absent()));
 
-    System.out.println("----------------");
-    System.out.println(requestManager.getPendingRequests());
-    System.out.println(requestManager.getActiveRequests());
-    System.out.println(taskManager.getPendingTaskIds());
-    System.out.println(taskManager.getActiveTaskIds());
-    System.out.println(deployManager.getPendingDeploys());
-    System.out.println(deployManager.getAllDeployIds());
-    System.out.println(scheduler.getDueTasks());
-
     deployChecker.checkDeploys();
-
-    System.out.println("----------------");
-    System.out.println(requestManager.getPendingRequests());
-    System.out.println(requestManager.getActiveRequests());
-    System.out.println(taskManager.getPendingTaskIds());
-    System.out.println(taskManager.getActiveTaskIds());
-    System.out.println(deployManager.getPendingDeploys());
-    System.out.println(deployManager.getAllDeployIds());
-    System.out.println(scheduler.getDueTasks());
-
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
-    System.out.println("----------------");
-    System.out.println(requestManager.getPendingRequests());
-    System.out.println(requestManager.getActiveRequests());
-    System.out.println(taskManager.getPendingTaskIds());
-    System.out.println(taskManager.getActiveTaskIds());
-    System.out.println(deployManager.getPendingDeploys());
-    System.out.println(deployManager.getAllDeployIds());
-    System.out.println(scheduler.getDueTasks());
+    final long nextRunEST;
+    final long nextRunGMT;
+    final long fiveHoursInMilliseconds = 5 * 60 * 60 * 1000;
+    final List<SingularityPendingTaskId> pendingTaskIds = taskManager.getPendingTaskIds();
+    if (pendingTaskIds.get(0).getRequestId().equals(requestEST.getId())) {
+      nextRunEST = pendingTaskIds.get(0).getNextRunAt();
+      nextRunGMT = pendingTaskIds.get(1).getNextRunAt();
+    } else {
+      nextRunEST = pendingTaskIds.get(1).getNextRunAt();
+      nextRunGMT = pendingTaskIds.get(0).getNextRunAt();
+    }
 
-//    Assert.assertTrue(!requestResource.getActiveRequests().isEmpty());
-//    Assert.assertTrue(requestManager.getRequest("est_id").get().getState() == RequestState.ACTIVE);
-//    Assert.assertTrue(requestManager.getRequest("gmt_id").get().getState() == RequestState.ACTIVE);
-
+    // GMT happens first, so EST is a larger timestamp
+    Assert.assertEquals(nextRunEST - nextRunGMT, fiveHoursInMilliseconds);
   }
 
   @Test
