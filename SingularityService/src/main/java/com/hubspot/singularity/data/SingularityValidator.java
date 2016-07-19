@@ -9,12 +9,14 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
 import javax.ws.rs.HEAD;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 import org.dmfs.rfc5545.recur.RecurrenceRule;
@@ -175,6 +177,12 @@ public class SingularityValidator {
       checkBadRequest(!request.getScheduleType().isPresent(), "ScheduleType can only be set for scheduled requests");
     }
 
+    if (request.getScheduleTimeZone().isPresent()) {
+      if (!ArrayUtils.contains(TimeZone.getAvailableIDs(), request.getScheduleTimeZone().get())) {
+        badRequest("scheduleTimeZone %s was not a valid timezone code (e.g. 'US/Eastern' or 'GMT')", request.getScheduleTimeZone().get());
+      }
+    }
+
     if (!request.isLongRunning()) {
       checkBadRequest(!request.isLoadBalanced(), "non-longRunning (scheduled/oneoff) requests can not be load balanced");
       checkBadRequest(!request.isRackSensitive(), "non-longRunning (scheduled/oneoff) requests can not be rack sensitive");
@@ -207,7 +215,7 @@ public class SingularityValidator {
     try {
       new URI(webhook.getUri());
     } catch (URISyntaxException e) {
-      WebExceptions.badRequest("Invalid URI provided");
+      badRequest("Invalid URI provided");
     }
 
     return webhook;
@@ -429,7 +437,7 @@ public class SingularityValidator {
         newDayOfWeekValue = "SAT";
         break;
       default:
-        WebExceptions.badRequest("Schedule %s is invalid, day of week (%s) is not 0-7", schedule, dayOfWeekValue);
+        badRequest("Schedule %s is invalid, day of week (%s) is not 0-7", schedule, dayOfWeekValue);
         break;
     }
 
