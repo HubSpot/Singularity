@@ -21,11 +21,19 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) 
   const requestParent = requestAPI.data;
   if (bounces.length > 0 && requestParent.request) {
     const runningInstanceCount = Utils.request.runningInstanceCount(activeTasksForRequest.data);
-    maybeBouncing = (
-      <Alert bsStyle="warning">
-        <b>Request is bouncing:</b> {runningInstanceCount} of {requestParent.request.instances} replacement tasks are currently running.
-      </Alert>
-    );
+    if (runningInstanceCount > requestParent.request.instances) {
+      maybeBouncing = (
+        <Alert bsStyle="warning">
+          <b>Request is bouncing:</b> {runningInstanceCount} tasks are currently running. All but {requestParent.request.instances} will be killed.
+        </Alert>
+      );
+    } else {
+      maybeBouncing = (
+        <Alert bsStyle="warning">
+          <b>Request is bouncing:</b> {runningInstanceCount} of {requestParent.request.instances} replacement tasks are currently running.
+        </Alert>
+      );
+    }
   }
 
   let maybeDeploying;
