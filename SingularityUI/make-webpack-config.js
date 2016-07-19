@@ -109,7 +109,6 @@ module.exports = function(options) {
           loader: 'babel-loader',
           query: extend({}, pkg.babel, {
             cacheDirectory: useHMR,
-            plugins: (isDebug && useHMR) ? ['react-hot-loader/babel'] : [],
           }),
         },
         {
@@ -122,7 +121,7 @@ module.exports = function(options) {
         },
         {
           test: /\.(png|jpg|jpeg|gif|ico)$/,
-          loader: 'file-loader?name=images/[name].[ext]',
+          loader: 'url-loader?limit=100000&name=images/[name].[ext]',
         },
         {
           test: /\.(eot|ttf|woff|woff2|svg)$/,
