@@ -38,7 +38,7 @@ module.exports = function(options) {
         'select2',
         'moment',
         'messenger',
-        'bootstrap',
+        'bootstrap-sass',
         'classnames',
         'react-interval',
         'react-dom',
@@ -126,9 +126,12 @@ module.exports = function(options) {
         },
         {
           test: /\.(eot|ttf|woff|woff2|svg)$/,
-          loader: 'file-loader?name=fonts/[name].[ext]',
+          loader: 'url-loader?limit=100000&fonts/[name].[ext]',
         },
-        { test: /[\/]messenger\.js$/, loader: 'exports?Messenger'}
+        {
+          test: /[\/]messenger\.js$/,
+          loader: 'exports?Messenger',
+        },
       ],
     },
 
