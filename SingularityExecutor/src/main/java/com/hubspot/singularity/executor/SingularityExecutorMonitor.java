@@ -413,6 +413,11 @@ public class SingularityExecutorMonitor {
 
     final SingularityExecutorTask task = maybeTask.get();
 
+    if (!destroy && task.wasForceDestroyed()) {
+      task.getLog().debug("Already force destroyed, will not issue additional kill");
+      return KillState.DESTROYING_PROCESS;
+    }
+
     task.getLog().info("Executor asked to kill {}", taskId);
 
     ListenableFuture<ProcessBuilder> processBuilderFuture = null;
