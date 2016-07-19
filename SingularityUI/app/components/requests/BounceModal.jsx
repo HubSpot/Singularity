@@ -62,9 +62,9 @@ class BounceModal extends Component {
             label: 'Message (optional)'
           }
         ]}>
-        <p>Are you sure you want to remove this request?</p>
+        <p>Are you sure you want to bounce this request?</p>
         <pre>{this.props.requestId}</pre>
-        <p>If not paused, removing this request will kill all active and scheduled tasks and tasks for it will not run again unless it is reposted to Singularity.</p>
+        <p>Bouncing a request will cause replacement tasks to be scheduled and (under normal conditions) executed immediately.</p>
       </FormModal>
     );
   }
