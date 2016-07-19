@@ -3159,7 +3159,7 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     final long nextRunEST;
     final long nextRunGMT;
-    final long fiveHoursInMilliseconds = 5 * 60 * 60 * 1000;
+    final long fiveHoursInMilliseconds = TimeUnit.HOURS.toMillis(5);
     final List<SingularityPendingTaskId> pendingTaskIds = taskManager.getPendingTaskIds();
     if (pendingTaskIds.get(0).getRequestId().equals(requestEST.getId())) {
       nextRunEST = pendingTaskIds.get(0).getNextRunAt();
