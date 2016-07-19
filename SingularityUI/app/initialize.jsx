@@ -5,6 +5,11 @@ import AppRouter from './router';
 import configureStore from 'store';
 import { FetchUser } from 'actions/api/auth';
 
+import './assets/static/images/favicon.ico';
+
+import './styles/index.scss';
+import './styles/index.styl';
+
 // Set up third party configurations
 import 'thirdPartyConfigurations';
 
