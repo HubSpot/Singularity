@@ -68,6 +68,7 @@ import com.hubspot.singularity.api.SingularityDeployRequest;
 import com.hubspot.singularity.api.SingularityKillTaskRequest;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.api.SingularityPauseRequest;
+import com.hubspot.singularity.api.SingularityRunNowRequest;
 import com.hubspot.singularity.api.SingularityScaleRequest;
 import com.hubspot.singularity.api.SingularitySkipHealthchecksRequest;
 import com.hubspot.singularity.api.SingularityUnpauseRequest;
@@ -2403,6 +2404,24 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     sms.resourceOffers(driver, Arrays.asList(createOffer(1, 129, "slave1", "host1", Optional.of("rack1"))));
 
     Assert.assertEquals(MachineState.DECOMMISSIONED, slaveManager.getObject("slave1").get().getCurrentState().getState());
+  }
+
+  @Test
+  public void testScheduledJobRetryKeepsArgs() {
+    Optional<List<String>> cmdLinArgs = Optional.of(Arrays.asList("arg1", "arg2"));
+    initScheduledRequest();
+    SingularityRequest request = requestResource.getRequest(requestId).getRequest();
+    SingularityRequest newRequest = request.toBuilder().setNumRetriesOnFailure(Optional.of(2)).build();
+    requestResource.postRequest(newRequest);
+    initFirstDeploy();
+
+    requestResource.scheduleImmediately(requestId, Optional.of(new SingularityRunNowRequest(Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), cmdLinArgs)));
+    resourceOffers();
+
+    SingularityTask task = taskManager.getActiveTasks().get(0);
+    statusUpdate(task, TaskState.TASK_FAILED);
+
+    Assert.assertEquals(cmdLinArgs, taskManager.getPendingTasks().get(0).getCmdLineArgsList());
   }
 
   @Test
