@@ -7,9 +7,15 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <title>{{ title }}</title>
-    <link rel="shortcut icon" href="{{{staticRoot}}}/images/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    {{#isDebug}}
+    <link rel="shortcut icon" href="/static/images/favicon.ico" />
+    {{/isDebug}}
+    {{^isDebug}}
+    <link rel="shortcut icon" href="{{{staticRoot}}}/images/favicon.ico" />
     <link rel="stylesheet" href="{{{staticRoot}}}/css/app.css" type="text/css">
+    <link rel="stylesheet" href="{{{staticRoot}}}/css/extra.css" type="text/css">
+    {{/isDebug}}
 
     <script>
         window.config = {
@@ -45,8 +51,14 @@
             globalRefreshInterval: 60000
         };
     </script>
+    {{#isDebug}}
+    <script src="/static/js/app.bundle.js"></script>
+    <script src="/static/js/vendor.bundle.js"></script>
+    {{/isDebug}}
+    {{^isDebug}}
+    <script src="{{{staticRoot}}}/js/app.bundle.js"></script>
     <script src="{{{staticRoot}}}/js/vendor.bundle.js"></script>
-    <script src="{{{staticRoot}}}/js/app.js"></script>
+    {{/isDebug}}
 </head>
 {{#navColor}}
 <body class="env-color-{{{.}}}">
