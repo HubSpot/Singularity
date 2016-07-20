@@ -2441,6 +2441,24 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
   }
 
   @Test
+  public void testScheduledJobRetryKeepsArgs() {
+    Optional<List<String>> cmdLinArgs = Optional.of(Arrays.asList("arg1", "arg2"));
+    initScheduledRequest();
+    SingularityRequest request = requestResource.getRequest(requestId).getRequest();
+    SingularityRequest newRequest = request.toBuilder().setNumRetriesOnFailure(Optional.of(2)).build();
+    requestResource.postRequest(newRequest);
+    initFirstDeploy();
+
+    requestResource.scheduleImmediately(requestId, Optional.of(new SingularityRunNowRequest(Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(), cmdLinArgs, Optional.<Resources>absent())));
+    resourceOffers();
+
+    SingularityTask task = taskManager.getActiveTasks().get(0);
+    statusUpdate(task, TaskState.TASK_FAILED);
+
+    Assert.assertEquals(cmdLinArgs, taskManager.getPendingTasks().get(0).getCmdLineArgsList());
+  }
+
+  @Test
   public void testJobRescheduledWhenItFinishesDuringDecommission() {
     initScheduledRequest();
     initFirstDeploy();
