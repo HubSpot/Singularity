@@ -31,9 +31,6 @@ const REQUEST_TYPES = ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'
 
 class RequestForm extends React.Component {
   static propTypes = {
-  };
-
-  static propTypes = {
     clearForm: PropTypes.func.isRequired,
     update: PropTypes.func.isRequired,
     save: PropTypes.func.isRequired,
@@ -469,9 +466,13 @@ class RequestForm extends React.Component {
       </div>
     );
     const errorMessage = (
-      this.props.saveApiCall.error &&
+      this.props.saveApiCall.error && this.props.saveApiCall.error.message &&
       <p className="alert alert-danger">
         There was a problem saving your request: {this.props.saveApiCall.error.message}
+      </p> ||
+      this.props.saveApiCall.error &&
+      <p className="alert alert-danger">
+        There was a problem saving your request: {this.props.saveApiCall.error}
       </p> ||
       this.props.saveApiCall.data && this.props.saveApiCall.data.message &&
       <p className="alert alert-danger">
