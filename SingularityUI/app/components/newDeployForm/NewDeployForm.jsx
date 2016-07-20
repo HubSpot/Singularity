@@ -1467,7 +1467,9 @@ function mapDispatchToProps(dispatch) {
 function refresh(props) {
   const promises = [];
   promises.push(props.fetchRequest(props.params.requestId));
-  promises.push(props.clearForm());
+  if (!props.form) {
+    promises.push(props.clearForm());
+  }
   promises.push(props.clearSaveDeployDataPromise());
   return Promise.all(promises);
 }
