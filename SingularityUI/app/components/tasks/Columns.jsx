@@ -205,11 +205,11 @@ export const NextRun = (
       (rowData) => rowData.pendingTask.pendingTaskId.nextRunAt
     }
     cellRender={(cellData) => {
-      let label = <span className="label label-default">SCHEDULED</span>;
+      let label = <span className={`label label-${Utils.getLabelClassFromTaskState('TASK_SCHEDULED')}`}>SCHEDULED</span>;
       if (Utils.timestampWithinSeconds(cellData, config.pendingWithinSeconds)) {
-        label = <span className="label label-info">PENDING</span>;
+        label = <span className={`label label-${Utils.getLabelClassFromTaskState('TASK_PENDING')}`}>PENDING</span>;
       } else if (cellData < Date.now() - config.pendingWithinSeconds * 1000) {
-        label = <span className="label label-danger">OVERDUE</span>;
+        label = <span className={`label label-${Utils.getLabelClassFromTaskState('TASK_OVERDUE')}`}>OVERDUE</span>;
       }
       return (
         <div>
