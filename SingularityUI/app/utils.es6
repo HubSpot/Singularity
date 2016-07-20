@@ -67,26 +67,27 @@ const Utils = {
   getLabelClassFromTaskState(state) {
     switch (state) {
       case 'TASK_STAGING':
-      case 'TASK_STARTING':
-      case 'TASK_SCHEDULED':
-        return 'info'; // Not serving requests but no action necessary
-      case 'TASK_PENDING':
       case 'TASK_LAUNCHED':
+      case 'TASK_STARTING':
+        return 'info'; // Not serving requests but no action necessary.
       case 'TASK_FINISHED':
-        return 'primary'; // Not serving requests but no action necessary; Distinguishes similar states
+      case 'TASK_KILLED':
+        return 'primary'; // Not serving requests but no action necessary.
       case 'TASK_RUNNING':
       case 'TASK_CLEANING':
-        return 'success'; // Currently serving requests
+        return 'success'; // Currently (maybe) serving requests.
       case 'TASK_LOST':
       case 'TASK_FAILED':
       case 'TASK_LOST_WHILE_DOWN':
       case 'TASK_ERROR':
+        return 'danger'; // Big problems, investigate.
       case 'TASK_OVERDUE':
-        return 'danger'; // Big problems
-      case 'TASK_KILLED':
-        return 'warning'; // Small or no problems but not a task initiated completion
+        return 'warning'; // Small problems, they might go away on their own.
+      case 'TASK_SCHEDULED':
+      case 'TASK_PENDING':
+        return 'default'; // Good things will happen on their own. No action necessary.
       default:
-        return 'default'; // Unknown state
+        return 'danger'; // Unknown state.
     }
   },
 
