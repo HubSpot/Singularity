@@ -1,6 +1,8 @@
 import Select from 'react-select';
 import React, { PropTypes } from 'react';
 
+import 'react-select/scss/default';
+
 // Wrapper for multi-selects in which pressing comma, space, or enter,
 // or blurring, causes the option to be autocompleted and added.
 

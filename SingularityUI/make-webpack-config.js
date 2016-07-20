@@ -16,10 +16,6 @@ module.exports = function(options) {
     disable: isDebug
   });
 
-  var extractStylus = new ExtractTextPlugin('css/extra.css', {
-    disable: isDebug
-  });
-
   var config = {
 
     // The base directory for resolving the entry option
@@ -95,7 +91,6 @@ module.exports = function(options) {
         'window.jQuery': 'jquery'
       }),
       extractCSS,
-      extractStylus,
     ],
 
     // Options affecting the normal modules
@@ -113,11 +108,15 @@ module.exports = function(options) {
         },
         {
           test: /\.scss/,
-          loader: extractCSS.extract('style', 'style-loader?sourceMap!css-loader?sourceMap!resolve-url?fail!sass?sourceMap')
+          loader: extractCSS.extract('style', 'style-loader?sourceMap!css-loader?sourceMap!resolve-url?fail!sass?sourceMap'),
         },
         {
           test: /\.styl/,
-          loader: extractStylus.extract('style', 'style-loader?sourceMap!css-loader?sourceMap!stylus?sourceMap')
+          loader: extractCSS.extract('style', 'style-loader?sourceMap!css-loader?sourceMap!stylus?sourceMap'),
+        },
+        {
+          test: /\.css/,
+          loader: extractCSS.extract('style', 'style-loader?sourceMap!css-loader?sourceMap'),
         },
         {
           test: /\.(png|jpg|jpeg|gif|ico)$/,
@@ -139,9 +138,9 @@ module.exports = function(options) {
         path.resolve('./app'),
         path.resolve('node_modules/bootstrap-sass/assets/fonts/bootstrap'),
       ],
-      extensions: ['', '.js', '.es6', '.jsx', '.scss', '.styl'],
+      extensions: ['', '.js', '.es6', '.jsx', '.scss', '.styl', '.css'],
       alias: {
-        // 'bootstrap': 'bootstrap/dist/js/bootstrap.js',
+        'bootstrap': 'bootstrap/dist/js/bootstrap.js',
       },
     },
 

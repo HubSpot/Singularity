@@ -49,8 +49,11 @@ class DeployDetail extends React.Component {
   }
 
   renderHeader(d) {
+    if (!d) {
+      return null;
+    }
     let message;
-    if (d.deployResult.message) {
+    if (d.deployResult && d.deployResult.message) {
       message = (
         <div className="row">
             <div className="col-md-12">
@@ -62,7 +65,7 @@ class DeployDetail extends React.Component {
       );
     }
     let failures;
-    if (d.deployResult.deployFailures) {
+    if (d.deployResult && d.deployResult.deployFailures) {
       let fails = [];
       let k = 0;
       for (const f of d.deployResult.deployFailures) {

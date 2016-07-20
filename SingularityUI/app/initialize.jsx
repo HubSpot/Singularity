@@ -5,13 +5,13 @@ import AppRouter from './router';
 import configureStore from 'store';
 import { FetchUser } from 'actions/api/auth';
 
+// Set up third party configurations
+import { loadThirdParty } from 'thirdPartyConfigurations';
+
 import './assets/static/images/favicon.ico';
 
 import './styles/index.scss';
 import './styles/index.styl';
-
-// Set up third party configurations
-import 'thirdPartyConfigurations';
 
 function setApiRoot(data) {
   if (data.apiRoot) {
@@ -21,6 +21,8 @@ function setApiRoot(data) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  loadThirdParty();
+
   if (window.config.apiRoot) {
     // set up Redux store
     const store = configureStore();
