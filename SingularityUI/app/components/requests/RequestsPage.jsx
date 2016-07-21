@@ -19,7 +19,6 @@ import UITable from '../common/table/UITable';
 import RequestFilters from './RequestFilters';
 import * as Cols from './Columns';
 
-import Utils from '../../utils';
 import filterSelector from '../../selectors/requests/filterSelector';
 
 class RequestsPage extends Component {

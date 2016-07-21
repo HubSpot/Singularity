@@ -9,11 +9,11 @@ const getRequestsAPI = (state) => state.api.requests;
 const getUserAPI = (state) => state.api.user;
 const getSearchFilter = (state) => state.ui.requestsPage;
 
-const findRequestIds = function(requests) {
+function findRequestIds(requests) {
   return _.map(requests, (r) => {
     return _.extend({}, r, {id: r.request ? r.request.id : r.requestId});
   });
-};
+}
 
 export const getStarred = (state) => new Set(state.ui.starred);
 
