@@ -1,5 +1,7 @@
 import React from 'react';
 import classNames from 'classnames';
+import ansiStyleParser from 'ansi-style-parser';
+import 'styles/scss/ansi-log-styles';
 
 import { connect } from 'react-redux';
 import { clickPermalink } from '../../actions/log';
@@ -8,10 +10,13 @@ class LogLine extends React.Component {
   highlightContent(content) {
     const { search } = this.props;
     if (!search || _.isEmpty(search)) {
+      const ansiStyled = ansiStyleParser(content).map((p, i) => {
+        return <span key={i} className={p.styles}>{p.text}</span>;
+      });
       if (this.props.showDebugInfo) {
-        return `${ this.props.offset } | ${ this.props.timestamp } | ${ content }`;
+        return `${ this.props.offset } | ${ this.props.timestamp } | ${ ansiStyled }`;
       }
-      return content;
+      return ansiStyled;
     }
 
     const regex = RegExp(search, 'g');
