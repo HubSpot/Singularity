@@ -28,6 +28,100 @@ export const splitChunkIntoLines = (chunk) => {
   return partialLines;
 };
 
+const initialState = {
+
+};
+
+const createMissingMarker = (start, end = undefined) => ({
+  isMissingMarker: true,
+  byteLength: (end !== undefined) ? (end - start) : undefined,
+  start,
+  end,
+  hasNewline: false
+});
+
+/*
+Lines can be (and usually are) incomplete, let's place the new lines in the
+list of partial lines, combining lines where necessary.
+*/
+export const combinePartialLines = (existingPartialLines, newPartialLines) => {
+  if (!newPartialLines.length) {
+    return existingPartialLines;
+  }
+
+  // the first line and last line could be the same
+  const firstLine = newPartialLines[0];
+  const lastLine = newPartialLines[newPartialLines.length - 1];
+
+  const firstOffset = firstLine.start;
+  const lastOffset = lastLine.end;
+
+  let combinedLines = [];
+
+  // make sure the log has been initialized
+  if (!existingPartialLines.length) {
+    const afterMissingMarker = createMissingMarker(lastOffset);
+    if (firstOffset !== 0) {
+      // create a missing marker for the chunk before this
+      const beforeMissingMarker = createMissingMarker(0, firstOffset);
+
+      combinedLines = [
+        beforeMissingMarker,
+        ...newPartialLines,
+        afterMissingMarker
+      ];
+
+      return combinedLines;
+    }
+
+    // looks like we're starting this file from the beginning
+    combinedLines = [
+      ...newPartialLines,
+      afterMissingMarker
+    ];
+
+    return combinedLines;
+  }
+
+  // looks like we already have some of this file, let's merge these new lines in
+
+  // search for the line/marker that contains our first offset
+  const intersectIndex = existingPartialLines.findIndex((pl) => {
+    return pl.start >= firstOffset;
+  });
+
+  if (intersectIndex === -1) {
+    // I can't think of how this would happen, but it probably can
+    console.error( // eslint-disable-line no-console
+      'Assertion failed: intersectIndex === -1',
+      existingPartialLines,
+      newPartialLines
+    );
+
+    // bail
+    return existingPartialLines;
+  }
+
+  // Okay, we have an intersection point
+  const intersection = existingPartialLines[intersectIndex];
+  if (intersection.hasOwnProperty('text')) {
+    // this is a loaded piece, handle carefully \u{1F52B}
+
+    // we want to replace the part that we have with the part
+    // TODO: some of this
+
+    // repeat intersection finding until we've exited this
+  }
+  // okay, this is a marker we're looking at, let's figure out if we need to
+  // shrink it, remove it, or shrink it and put a new one at the end.
+};
+
+const chunkReducer = (state = initialState, action) => {
+
+};
+
+export default chunkReducer;
+
 /*
 Justifying the algorithm used:
 
