@@ -26,9 +26,10 @@ class RequestTitle extends Component {
   constructor(props) {
     super(props);
     this.state = {hover: false};
+    this.onMouseOver = this.onMouseOver.bind(this);
   }
 
-  onMouseOver () {
+  onMouseOver() {
     this.setState({ hover: true });
   }
 
@@ -60,7 +61,7 @@ class RequestTitle extends Component {
     const requestIdToDisplay = Utils.maybe(requestAPI, ['data', 'request', 'id']) || requestId;
 
     return (
-      <div onMouseOver={() => this.onMouseOver()}>
+      <div onMouseOver={this.onMouseOver}>
         <h4>
           {maybeInfo}
         </h4>
