@@ -1,8 +1,9 @@
-import { TextEncoder } from 'text-encoding'; // polyfill
+import { TextEncoder, TextDecoder } from 'text-encoding'; // polyfill
 
 import { ADD_CHUNK } from '../actions';
 
 const TE = new TextEncoder();
+const TD = new TextDecoder();
 
 // see big comment at bottom of file for perf info
 export const splitChunkIntoLines = (chunk) => {
@@ -20,7 +21,7 @@ export const splitChunkIntoLines = (chunk) => {
     const lineLength = byteLengths[i] + (hasNewline ? 1 : 0);
     partialLines[i] = {
       text: line,
-      byteLength: lineLength,
+      byteLength: byteLengths[i],
       start: currentOffset,
       end: currentOffset += lineLength,
       hasNewline
@@ -59,6 +60,54 @@ const getBookends = (partialLines) => {
     firstOffset: firstLine.start,
     lastOffset: lastLine.end
   };
+};
+
+export const combineSingleLine = (existing, incoming) => {
+  const incomingStart = incoming.start;
+  const incomingEnd = incoming.start + incoming.byteLength;
+  const existingStart = existing.start;
+  const existingEnd = existing.start + existing.byteLength;
+  // condition: new text is at beginning
+  if (existingStart === incomingStart) {
+    if (existingEnd && existingEnd > incomingEnd) {
+      // existing line goes beyond what we have here
+      const existingBytes = TE.encode(existing.text);
+      const newBytes = TE.encode(incoming.text);
+
+      const last = existingBytes.subarray(
+        existingEnd - incomingEnd,
+        existingEnd - incomingStart
+      );
+
+      // If this can be made better, it should be!
+      // allocate a new array for both, and decode the text
+      const combinedByteLength = newBytes.byteLength + last.byteLength;
+      const combined = new Uint8Array(combinedByteLength);
+      combined.set(newBytes);
+      combined.set(last, newBytes.byteLength);
+
+      return {
+        text: TD.decode(combined),
+        byteLength: combinedByteLength,
+        start: incomingStart,
+        end: existing.end, // has newline if there is one
+        hasNewline: existing.hasNewline
+      };
+    }
+    // existing line is completely encompassed by this line
+    return incoming;
+  }
+  // condition: new text is not at the beginning
+
+
+  // condition: new text is at end
+  // condition: new text is only in middle
+  // condition: new text encompasses entire existing line
+
+  if (existing.hasOwnProperty('text')) {
+    // text being replaced by text
+
+  }
 };
 
 /*

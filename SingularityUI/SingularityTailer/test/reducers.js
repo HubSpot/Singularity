@@ -5,7 +5,10 @@ import reducer from '../src/reducers';
 import * as types from '../src/actions';
 
 
-import { splitChunkIntoLines } from '../src/reducers/chunk';
+import {
+  splitChunkIntoLines,
+  combineSingleLine
+} from '../src/reducers/chunk';
 
 describe('chunk splitter helper', () => {
   it('should count the next newlines correctly', () => {
@@ -18,14 +21,14 @@ describe('chunk splitter helper', () => {
     ).toEqual([
       {
         text: 'asdf',
-        byteLength: 5,
+        byteLength: 4,
         start: 0,
         end: 5,
         hasNewline: true
       },
       {
         text: 'asdg',
-        byteLength: 5,
+        byteLength: 4,
         start: 5,
         end: 10,
         hasNewline: true
@@ -68,7 +71,7 @@ describe('chunk splitter helper', () => {
     ).toEqual([
       {
         text: '\u{1F643}',
-        byteLength: 5,
+        byteLength: 4,
         start: 1000,
         end: 1005,
         hasNewline: true
@@ -93,7 +96,7 @@ describe('chunk splitter helper', () => {
     ).toEqual([
       {
         text: '',
-        byteLength: 1,
+        byteLength: 0,
         start: 1000,
         end: 1001,
         hasNewline: true
@@ -115,4 +118,37 @@ describe('partial line combiner', () => {
   it('should create markers for area after if starting from beginning');
 
   it('should create markers for areas before and after even if no data returned');
+});
+
+describe('combineSingleLine helper', () => {
+  describe('with new text at beginning', () => {
+    it('should replace existing if the new encompasses it', () => {
+      expect(
+        combineSingleLine(
+          {
+            text: 'asdf',
+            byteLength: 4,
+            start: 1000,
+            end: 1005,
+            hasNewline: true
+          },
+          {
+            text: 'as',
+            byteLength: 2,
+            start: 1000,
+            end: 1002,
+            hasNewline: false
+          }
+        )
+      ).toEqual(
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 1000,
+          end: 1005,
+          hasNewline: true
+        }
+      );
+    });
+  });
 });
