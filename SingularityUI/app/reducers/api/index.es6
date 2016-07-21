@@ -84,6 +84,10 @@ const saveRequest = buildApiActionReducer(SaveRequest);
 const requests = buildApiActionReducer(FetchRequests, []);
 const requestsInState = buildApiActionReducer(FetchRequestsInState, []);
 const requestHistory = buildKeyedApiActionReducer(FetchRequestHistory, []);
+const removeRequest = buildKeyedApiActionReducer(RemoveRequest, []);
+const pauseRequest = buildKeyedApiActionReducer(PauseRequest, []);
+const unpauseRequest = buildKeyedApiActionReducer(UnpauseRequest, []);
+const exitRequestCooldown = buildKeyedApiActionReducer(ExitRequestCooldown, []);
 const status = buildApiActionReducer(FetchSingularityStatus);
 const deploy = buildApiActionReducer(FetchDeployForRequest);
 const deploys = buildApiActionReducer(FetchPendingDeploys, []);
@@ -99,6 +103,8 @@ const taskFiles = buildKeyedApiActionReducer(FetchTaskFiles, []);
 const taskResourceUsage = buildApiActionReducer(FetchTaskStatistics);
 const taskS3Logs = buildApiActionReducer(FetchTaskS3Logs, []);
 const taskShellCommandResponse = buildApiActionReducer(RunCommandOnTask);
+const runningTask = buildApiActionReducer(FetchTask);
+const taskKill = buildApiActionReducer(KillTask);
 const task = buildKeyedApiActionReducer(FetchTaskHistory);
 const taskHistory = buildApiActionReducer(FetchTaskSearchParams, []);
 const tasks = buildApiActionReducer(FetchTasksInState, []);
@@ -118,6 +124,10 @@ export default combineReducers({
   reactivateRack,
   request,
   saveRequest,
+  removeRequest,
+  pauseRequest,
+  unpauseRequest,
+  exitRequestCooldown,
   requests,
   requestsInState,
   requestHistory,
@@ -138,5 +148,7 @@ export default combineReducers({
   taskResourceUsage,
   taskS3Logs,
   taskShellCommandResponse,
+  runningTask,
+  taskKill,
   taskHistory
 });

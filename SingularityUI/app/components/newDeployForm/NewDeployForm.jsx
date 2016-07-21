@@ -12,7 +12,7 @@ import CheckboxFormGroup from '../common/formItems/formGroups/CheckboxFormGroup'
 
 import { ModifyField, ClearForm } from '../../actions/ui/form';
 import { SaveDeploy } from '../../actions/api/deploys';
-import { FetchRequest, SaveRequest } from '../../actions/api/requests';
+import { FetchRequest } from '../../actions/api/requests';
 
 import {
   FIELDS, ARTIFACT_FIELDS, DOCKER_PORT_MAPPING_FIELDS, DOCKER_VOLUME_FIELDS,
@@ -123,9 +123,16 @@ class NewDeployForm extends Component {
         })
       })
     }),
+    clearForm: PropTypes.func.isRequired,
+    clearSaveDeployData: PropTypes.func.isRequired,
     update: PropTypes.func.isRequired,
     save: PropTypes.func.isRequired
   };
+
+  componentDidMount() {
+    this.props.clearForm();
+    this.props.clearSaveDeployData();
+  }
 
   updateField(fieldId, newValue) {
     this.props.update(FORM_ID, fieldId, newValue);
@@ -1458,8 +1465,8 @@ function mapDispatchToProps(dispatch) {
     clearForm() {
       return dispatch(ClearForm('newDeployForm'));
     },
-    clearSaveDeployDataPromise() {
-      return dispatch(SaveRequest.clearData());
+    clearSaveDeployData() {
+      return dispatch(SaveDeploy.clearData());
     }
   };
 }
@@ -1467,8 +1474,9 @@ function mapDispatchToProps(dispatch) {
 function refresh(props) {
   const promises = [];
   promises.push(props.fetchRequest(props.params.requestId));
-  promises.push(props.clearForm());
-  promises.push(props.clearSaveDeployDataPromise());
+  if (!props.form) {
+    promises.push(props.clearForm());
+  }
   return Promise.all(promises);
 }
 

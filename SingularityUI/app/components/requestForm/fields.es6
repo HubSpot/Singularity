@@ -9,7 +9,7 @@ const KILL_OLD_NRL_FIELD = {id: 'killOldNonLongRunningTasksAfterMillis', type: '
 export const FIELDS_BY_REQUEST_TYPE = {
   ALL: [
     {id: 'id', type: 'request-id', required: true},
-    {id: 'owners', type: 'array', required: true},
+    {id: 'owners', type: 'array'},
     {id: 'requestType', type: 'text', required: true},
     {id: 'slavePlacement', type: 'text'}
   ],
