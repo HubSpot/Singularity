@@ -119,7 +119,7 @@ public class SingularityValidator {
     checkBadRequest(request.getRequestType() != null, "RequestType cannot be null or missing");
 
     if (request.getOwners().isPresent()) {
-      checkBadRequest(!request.getOwners().get().contains(null), "Request owner(s) must not be null");
+      checkBadRequest(!request.getOwners().get().contains(null), "Request owners cannot contain null values");
     }
 
     if (!allowRequestsWithoutOwners) {
