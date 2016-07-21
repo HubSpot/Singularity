@@ -1,6 +1,5 @@
 import React, { PropTypes, Component } from 'react';
 import { connect } from 'react-redux';
-import { Row, Col } from 'react-bootstrap';
 
 import Utils from '../../../utils';
 
@@ -66,14 +65,8 @@ class RequestTitle extends Component {
           {maybeInfo}
         </h4>
         <h2>
-          <Row>
-            <Col md={10} className="request-title">{requestIdToDisplay}</Col>
-            {hover && (
-              <Col md={2} className="pull-left">
-                <a className="copy-btn" data-clipboard-text={requestIdToDisplay}>Copy</a>
-              </Col>
-            )}
-          </Row>
+            {hover && <span><a className="copy-btn" data-clipboard-text={requestIdToDisplay}>Copy</a> </span>}
+            {requestIdToDisplay}
         </h2>
       </div>
     );
