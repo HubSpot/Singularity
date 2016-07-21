@@ -55,7 +55,7 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) 
         maybeDeployProgress = (
           <span>
             {pendingDeployProgress}
-            <p>{deployingInstanceCount === instances ? ' Waiting for new tasks to become healthy.' : ''}</p>
+            <p>{deployingInstanceCount === instances && ' Waiting for new tasks to become healthy.'}</p>
           </span>
         );
       } else {
@@ -73,14 +73,14 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) 
           }
           maybeDeployProgress = (
             <span>
-              Finished deploying {targetActiveInstances} of {instances} total instances, {nextDeployStepRemark}
+              Finished deploying {targetActiveInstances} total instances, {nextDeployStepRemark}
             </span>
           );
         } else {
           maybeDeployProgress = (
             <span>
               {
-                `Trying to deploy ${targetActiveInstances} of ${instances}
+                `Trying to deploy ${targetActiveInstances}
                 instances, ${deployingInstanceCount} of
                 ${targetActiveInstances} new tasks are currently running.`
               }
