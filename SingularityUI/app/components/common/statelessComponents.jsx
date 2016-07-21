@@ -1,5 +1,6 @@
 import React, { PropTypes } from 'react';
 import { Panel, ProgressBar } from 'react-bootstrap';
+import classNames from 'classnames';
 
 export const DeployState = (props) => {
   return (
@@ -17,7 +18,7 @@ export const InfoBox = (props) => {
   return (
     <li className="col-sm-6 col-md-3">
         <div>
-            <h4>{props.name}<a className={props.copyableClassName} data-clipboard-text={props.value}>Copy</a></h4>
+            <h4>{props.name}<a className={classNames(props.copyableClassName, 'copy-btn')} data-clipboard-text={props.value}>Copy</a></h4>
             <p>{props.value}</p>
         </div>
     </li>
