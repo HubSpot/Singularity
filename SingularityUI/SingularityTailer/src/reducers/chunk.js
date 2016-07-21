@@ -1,5 +1,7 @@
 import { TextEncoder } from 'text-encoding'; // polyfill
 
+import { ADD_CHUNK } from '../actions';
+
 const TE = new TextEncoder();
 
 // see big comment at bottom of file for perf info
@@ -40,6 +42,25 @@ const createMissingMarker = (start, end = undefined) => ({
   hasNewline: false
 });
 
+// get the first and offsets of a list of Partial Lines (sorted)
+// partialLines must have length
+const getBookends = (partialLines) => {
+  if (!partialLines.length) {
+    console.error( // eslint-disable-line no-console
+      'Assertion failed: partialLines.length',
+      partialLines
+    );
+  }
+  // the first line and last line could be the same
+  const firstLine = partialLines[0];
+  const lastLine = partialLines[partialLines.length - 1];
+
+  return {
+    firstOffset: firstLine.start,
+    lastOffset: lastLine.end
+  };
+};
+
 /*
 Lines can be (and usually are) incomplete, let's place the new lines in the
 list of partial lines, combining lines where necessary.
@@ -49,39 +70,7 @@ export const combinePartialLines = (existingPartialLines, newPartialLines) => {
     return existingPartialLines;
   }
 
-  // the first line and last line could be the same
-  const firstLine = newPartialLines[0];
-  const lastLine = newPartialLines[newPartialLines.length - 1];
-
-  const firstOffset = firstLine.start;
-  const lastOffset = lastLine.end;
-
-  let combinedLines = [];
-
-  // make sure the log has been initialized
-  if (!existingPartialLines.length) {
-    const afterMissingMarker = createMissingMarker(lastOffset);
-    if (firstOffset !== 0) {
-      // create a missing marker for the chunk before this
-      const beforeMissingMarker = createMissingMarker(0, firstOffset);
-
-      combinedLines = [
-        beforeMissingMarker,
-        ...newPartialLines,
-        afterMissingMarker
-      ];
-
-      return combinedLines;
-    }
-
-    // looks like we're starting this file from the beginning
-    combinedLines = [
-      ...newPartialLines,
-      afterMissingMarker
-    ];
-
-    return combinedLines;
-  }
+  const { firstOffset, lastOffset } = getBookends(partialLines);
 
   // looks like we already have some of this file, let's merge these new lines in
 
@@ -93,7 +82,7 @@ export const combinePartialLines = (existingPartialLines, newPartialLines) => {
   if (intersectIndex === -1) {
     // I can't think of how this would happen, but it probably can
     console.error( // eslint-disable-line no-console
-      'Assertion failed: intersectIndex === -1',
+      'Assertion failed: intersectIndex !== -1',
       existingPartialLines,
       newPartialLines
     );
@@ -116,8 +105,69 @@ export const combinePartialLines = (existingPartialLines, newPartialLines) => {
   // shrink it, remove it, or shrink it and put a new one at the end.
 };
 
-const chunkReducer = (state = initialState, action) => {
+const initializeLog = (partialLines) => {
+  if (!partialLines.length) {
+    // we don't have any data, but we should init the log anyway
+    // create a tail marker (this is similar to the case where we have data
+    // starting from the beginning, but this is *only* the tail marker
+    return [
+      createMissingMarker(0)
+    ];
+  }
 
+  // we have data
+  const { firstOffset, lastOffset } = getBookends(partialLines);
+
+  const missingTailMarker = createMissingMarker(lastOffset);
+  if (firstOffset !== 0) {
+    // create a missing marker for the chunk before this
+    const missingDataMarker = createMissingMarker(0, firstOffset);
+
+    return [
+      missingDataMarker,
+      ...partialLines,
+      missingTailMarker
+    ];
+  }
+
+  // looks like we're starting this file from the beginning
+  return [
+    ...partialLines,
+    missingTailMarker
+  ];
+};
+
+const addChunkReducer = (state, action) => {
+  const { id, chunk } = action;
+  const partialLines = splitChunkIntoLines(chunk);
+
+  // condition: has not been init
+  if (!state.hasOwnProperty(id)) {
+    return {
+      [id]: initializeLog(partialLines),
+      ...state
+    };
+  }
+
+  // has been init but has no new data
+  if (!chunk.length) {
+    return state;
+  }
+
+  // has been init and has new data
+  return {
+    [id]: combinePartialLines(state[id], partialLines),
+    ...state
+  };
+};
+
+const chunkReducer = (state = initialState, action) => {
+  switch (action.type) {
+    case ADD_CHUNK:
+      return addChunkReducer(state, action);
+    default:
+      return state;
+  }
 };
 
 export default chunkReducer;
