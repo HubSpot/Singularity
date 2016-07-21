@@ -31,8 +31,9 @@ class TaskSearch extends React.Component {
   }
 
   componentWillMount() {
-    this.props.fetchTaskHistory(INITIAL_TASKS_PER_PAGE, 1, {requestId: this.props.params.requestId});
-    this.props.updateFilter(_.extend({}, { requestId: this.props.params.requestId }, this.props.filter));
+    const filter = _.extend({}, { requestId: this.props.params.requestId }, this.props.filter);
+    this.props.fetchTaskHistory(INITIAL_TASKS_PER_PAGE, 1, filter);
+    this.props.updateFilter(filter);
   }
 
   setCount(count) {
