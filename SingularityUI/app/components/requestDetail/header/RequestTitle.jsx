@@ -1,5 +1,6 @@
-import React, { PropTypes } from 'react';
+import React, { PropTypes, Component } from 'react';
 import { connect } from 'react-redux';
+import { Row, Col } from 'react-bootstrap';
 
 import Utils from '../../../utils';
 
@@ -16,40 +17,67 @@ const errorDescription = (requestAPI) => {
   }
 };
 
-const RequestTitle = ({requestId, requestAPI}) => {
-  let maybeInfo;
-  if (Utils.api.isFirstLoad(requestAPI)) {
-    maybeInfo = <em>Loading...</em>;
-  } else if (requestAPI.error) {
-    const errorText = errorDescription(requestAPI);
-    maybeInfo = <p className="text-danger">{requestAPI.statusCode}: {errorText}</p>;
-  } else {
-    const requestParent = requestAPI.data;
-    const {request, state} = requestParent;
-    maybeInfo = (
-      <span>
-        <RequestStar requestId={request.id} />
-        <span className="request-state" data-state={state}>
-          {Utils.humanizeText(state)}
-        </span>
-        <span className="request-type">
-          {Utils.humanizeText(request.requestType)}
-        </span>
-      </span>
-    );
+class RequestTitle extends Component {
+  static propTypes = {
+    requestId: PropTypes.string.isRequired,
+    requestAPI: PropTypes.object
+  };
+
+  constructor(props) {
+    super(props);
+    this.state = {hover: false};
   }
 
-  return (
-    <div>
-      <h4>
-        {maybeInfo}
-      </h4>
-      <h2>
-        {Utils.maybe(requestAPI, ['data', 'request', 'id']) || requestId}
-      </h2>
-    </div>
-  );
-};
+  onMouseOver () {
+    this.setState({ hover: true });
+  }
+
+  render() {
+    const {requestAPI, requestId} = this.props;
+    const {hover} = this.state;
+    let maybeInfo;
+    if (Utils.api.isFirstLoad(requestAPI)) {
+      maybeInfo = <em>Loading...</em>;
+    } else if (requestAPI.error) {
+      const errorText = errorDescription(requestAPI);
+      maybeInfo = <p className="text-danger">{requestAPI.statusCode}: {errorText}</p>;
+    } else {
+      const requestParent = requestAPI.data;
+      const {request, state} = requestParent;
+      maybeInfo = (
+        <span>
+          <RequestStar requestId={request.id} />
+          <span className="request-state" data-state={state}>
+            {Utils.humanizeText(state)}
+          </span>
+          <span className="request-type">
+            {Utils.humanizeText(request.requestType)}
+          </span>
+        </span>
+      );
+    }
+
+    const requestIdToDisplay = Utils.maybe(requestAPI, ['data', 'request', 'id']) || requestId;
+
+    return (
+      <div onMouseOver={() => this.onMouseOver()}>
+        <h4>
+          {maybeInfo}
+        </h4>
+        <h2>
+          <Row>
+            <Col md={10} className="request-title">{requestIdToDisplay}</Col>
+            {hover && (
+              <Col md={2} className="pull-left">
+                <a className="copy-btn" data-clipboard-text={requestIdToDisplay}>Copy</a>
+              </Col>
+            )}
+          </Row>
+        </h2>
+      </div>
+    );
+  }
+}
 
 RequestTitle.propTypes = {
   requestId: PropTypes.string.isRequired,
