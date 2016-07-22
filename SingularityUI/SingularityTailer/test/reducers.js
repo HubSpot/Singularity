@@ -4,6 +4,8 @@ import reducer from '../src/reducers';
 
 import * as types from '../src/actions';
 
+import { List } from 'immutable';
+
 
 import {
   splitChunkIntoLines,
@@ -121,10 +123,14 @@ describe('partial line combiner', () => {
   it('should create markers for areas before and after even if no data returned');
 });
 
+const mergeChunksTestHelper = (incoming, existing) => {
+  return mergeChunks(incoming, new List(existing)).toArray();
+};
+
 describe('mergeChunks', () => {
   it('should be able to add chunks to empty list', () => {
     expect(
-      mergeChunks(
+      mergeChunksTestHelper(
         {
           text: 'asdf',
           byteLength: 4,
@@ -146,7 +152,7 @@ describe('mergeChunks', () => {
   });
   it('should be able to add chunks that don\'t interfere', () => {
     expect(
-      mergeChunks(
+      mergeChunksTestHelper(
         {
           text: 'asdf',
           byteLength: 4,
@@ -180,7 +186,7 @@ describe('mergeChunks', () => {
     );
 
     expect(
-      mergeChunks(
+      mergeChunksTestHelper(
         {
           text: 'asdf',
           byteLength: 4,
@@ -215,7 +221,7 @@ describe('mergeChunks', () => {
   });
   it('should be able to add a chunk right before another', () => {
     expect(
-      mergeChunks(
+      mergeChunksTestHelper(
         {
           text: 'asdf',
           byteLength: 4,
@@ -250,7 +256,7 @@ describe('mergeChunks', () => {
   });
   it('should be able to add a chunk right after another', () => {
     expect(
-      mergeChunks(
+      mergeChunksTestHelper(
         {
           text: 'asdf',
           byteLength: 4,
@@ -285,7 +291,7 @@ describe('mergeChunks', () => {
   });
   it('should be able to merge a chunk that overlaps the end of another chunk', () => {
     expect(
-      mergeChunks(
+      mergeChunksTestHelper(
         {
           text: 'great',
           byteLength: 5,
@@ -314,7 +320,7 @@ describe('mergeChunks', () => {
   });
   it('should be able to merge a chunk that overlaps the beginning of another chunk', () => {
     expect(
-      mergeChunks(
+      mergeChunksTestHelper(
         {
           text: 'fact:',
           byteLength: 5,
@@ -343,7 +349,7 @@ describe('mergeChunks', () => {
   });
   it('should be able to merge a chunk that is in the middle of another chunk', () => {
     expect(
-      mergeChunks(
+      mergeChunksTestHelper(
         {
           text: 'butterfish',
           byteLength: 10,
@@ -372,7 +378,7 @@ describe('mergeChunks', () => {
   });
   it('should be able to merge a chunk that fully overlaps multiple chunks', () => {
     expect(
-      mergeChunks(
+      mergeChunksTestHelper(
         {
           text: '1234567890',
           byteLength: 10,
@@ -407,7 +413,7 @@ describe('mergeChunks', () => {
   });
   it('should be able to merge a chunk that partially overlaps multiple chunks', () => {
     expect(
-      mergeChunks(
+      mergeChunksTestHelper(
         {
           text: '1234567890',
           byteLength: 10,
@@ -441,7 +447,7 @@ describe('mergeChunks', () => {
     );
 
     expect(
-      mergeChunks(
+      mergeChunksTestHelper(
         {
           text: '1234567890',
           byteLength: 10,
@@ -475,7 +481,7 @@ describe('mergeChunks', () => {
     );
 
     expect(
-      mergeChunks(
+      mergeChunksTestHelper(
         {
           text: '1234567890',
           byteLength: 10,

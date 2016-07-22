@@ -36,6 +36,7 @@
     "babel-runtime": "^6.9.2",
     "classnames": "^2.2.5",
     "clipboard": "^1.5.12",
+    "immutable": "^3.8.1",
     "isomorphic-fetch": "^2.2.1",
     "react": "^15.2.1",
     "react-bootstrap": "^0.29.5",

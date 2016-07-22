@@ -1,4 +1,5 @@
 import { TextEncoder, TextDecoder } from 'text-encoding'; // polyfill
+import { List } from 'immutable';
 
 import { ADD_CHUNK } from '../actions';
 
@@ -64,13 +65,21 @@ const getBookends = (partialLines) => {
 
 const findIntersectingChunks = (incoming, existing) => {
   // TODO
-  return [];
+  return new List();
 };
 
 export const mergeChunks = (incoming, existing) => {
   const intersectingChunks = findIntersectingChunks(incoming, existing);
 
-  // TODO
+  if (intersectingChunks.length) {
+    // okay, we know that there are some chunks that overlap with us
+  } else {
+    // find where to put this
+    const indexBefore = existing.findIndex((c) => incoming.start >= c.end);
+
+    // works even if indexBefore === -1
+    return existing.insert(indexBefore + 1, incoming);
+  }
 };
 
 
