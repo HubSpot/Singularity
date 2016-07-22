@@ -7,6 +7,7 @@ import * as types from '../src/actions';
 
 import {
   splitChunkIntoLines,
+  mergeChunks,
   combineSingleLine
 } from '../src/reducers/chunk';
 
@@ -118,6 +119,395 @@ describe('partial line combiner', () => {
   it('should create markers for area after if starting from beginning');
 
   it('should create markers for areas before and after even if no data returned');
+});
+
+describe('mergeChunks', () => {
+  it('should be able to add chunks to empty list', () => {
+    expect(
+      mergeChunks(
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 0,
+          end: 4
+        },
+        []
+      )
+    ).toEqual(
+      [
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 0,
+          end: 4
+        }
+      ]
+    );
+  });
+  it('should be able to add chunks that don\'t interfere', () => {
+    expect(
+      mergeChunks(
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 0,
+          end: 4
+        },
+        [
+          {
+            text: 'hi there',
+            byteLength: 8,
+            start: 1000,
+            end: 1008
+          }
+        ]
+      )
+    ).toEqual(
+      [
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 0,
+          end: 4
+        },
+        {
+          text: 'hi there',
+          byteLength: 8,
+          start: 1000,
+          end: 1008
+        }
+      ]
+    );
+
+    expect(
+      mergeChunks(
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 2000,
+          end: 2004
+        },
+        [
+          {
+            text: 'hi there',
+            byteLength: 8,
+            start: 1000,
+            end: 1008
+          }
+        ]
+      )
+    ).toEqual(
+      [
+        {
+          text: 'hi there',
+          byteLength: 8,
+          start: 1000,
+          end: 1008
+        },
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 2000,
+          end: 2004
+        }
+      ]
+    );
+  });
+  it('should be able to add a chunk right before another', () => {
+    expect(
+      mergeChunks(
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 2000,
+          end: 2004
+        },
+        [
+          {
+            text: 'hi there',
+            byteLength: 8,
+            start: 2004,
+            end: 2012
+          }
+        ]
+      )
+    ).toEqual(
+      [
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 2000,
+          end: 2004
+        },
+        {
+          text: 'hi there',
+          byteLength: 8,
+          start: 2004,
+          end: 2012
+        }
+      ]
+    );
+  });
+  it('should be able to add a chunk right after another', () => {
+    expect(
+      mergeChunks(
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 2008,
+          end: 2012
+        },
+        [
+          {
+            text: 'hi there',
+            byteLength: 8,
+            start: 2000,
+            end: 2008
+          }
+        ]
+      )
+    ).toEqual(
+      [
+        {
+          text: 'hi there',
+          byteLength: 8,
+          start: 2000,
+          end: 2008
+        },
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 2008,
+          end: 2012
+        }
+      ]
+    );
+  });
+  it('should be able to merge a chunk that overlaps the end of another chunk', () => {
+    expect(
+      mergeChunks(
+        {
+          text: 'great',
+          byteLength: 5,
+          start: 1021,
+          end: 1026
+        },
+        [
+          {
+            text: 'these sandwiches are bad',
+            byteLength: 24,
+            start: 1000,
+            end: 1024
+          }
+        ]
+      )
+    ).toEqual(
+      [
+        {
+          text: 'these sandwiches are great',
+          byteLength: 26,
+          start: 1000,
+          end: 1026
+        }
+      ]
+    );
+  });
+  it('should be able to merge a chunk that overlaps the beginning of another chunk', () => {
+    expect(
+      mergeChunks(
+        {
+          text: 'fact:',
+          byteLength: 5,
+          start: 1000,
+          end: 1005
+        },
+        [
+          {
+            text: 'these sandwiches are bad',
+            byteLength: 24,
+            start: 1000,
+            end: 1024
+          }
+        ]
+      )
+    ).toEqual(
+      [
+        {
+          text: 'fact: sandwiches are bad',
+          byteLength: 24,
+          start: 1000,
+          end: 1024
+        }
+      ]
+    );
+  });
+  it('should be able to merge a chunk that is in the middle of another chunk', () => {
+    expect(
+      mergeChunks(
+        {
+          text: 'butterfish',
+          byteLength: 10,
+          start: 1006,
+          end: 1016
+        },
+        [
+          {
+            text: 'these sandwiches are great',
+            byteLength: 26,
+            start: 1000,
+            end: 1026
+          }
+        ]
+      )
+    ).toEqual(
+      [
+        {
+          text: 'these butterfish are great',
+          byteLength: 26,
+          start: 1000,
+          end: 1026
+        }
+      ]
+    );
+  });
+  it('should be able to merge a chunk that fully overlaps multiple chunks', () => {
+    expect(
+      mergeChunks(
+        {
+          text: '1234567890',
+          byteLength: 10,
+          start: 1000,
+          end: 1010
+        },
+        [
+          {
+            text: 'abc',
+            byteLength: 3,
+            start: 1000,
+            end: 1003
+          },
+          {
+            text: 'blb',
+            byteLength: 3,
+            start: 1006,
+            end: 1009
+          }
+        ]
+      )
+    ).toEqual(
+      [
+        {
+          text: '1234567890',
+          byteLength: 10,
+          start: 1000,
+          end: 1010
+        }
+      ]
+    );
+  });
+  it('should be able to merge a chunk that partially overlaps multiple chunks', () => {
+    expect(
+      mergeChunks(
+        {
+          text: '1234567890',
+          byteLength: 10,
+          start: 1000,
+          end: 1010
+        },
+        [
+          {
+            text: 'abc',
+            byteLength: 3,
+            start: 998,
+            end: 1001
+          },
+          {
+            text: 'blb',
+            byteLength: 3,
+            start: 1006,
+            end: 1009
+          }
+        ]
+      )
+    ).toEqual(
+      [
+        {
+          text: 'ab1234567890',
+          byteLength: 12,
+          start: 998,
+          end: 1010
+        }
+      ]
+    );
+
+    expect(
+      mergeChunks(
+        {
+          text: '1234567890',
+          byteLength: 10,
+          start: 1000,
+          end: 1010
+        },
+        [
+          {
+            text: 'abc',
+            byteLength: 3,
+            start: 1001,
+            end: 1004
+          },
+          {
+            text: 'blb',
+            byteLength: 3,
+            start: 1009,
+            end: 1012
+          }
+        ]
+      )
+    ).toEqual(
+      [
+        {
+          text: '1234567890lb',
+          byteLength: 12,
+          start: 1000,
+          end: 1012
+        }
+      ]
+    );
+
+    expect(
+      mergeChunks(
+        {
+          text: '1234567890',
+          byteLength: 10,
+          start: 1000,
+          end: 1010
+        },
+        [
+          {
+            text: 'abc',
+            byteLength: 3,
+            start: 998,
+            end: 1001
+          },
+          {
+            text: 'blb',
+            byteLength: 3,
+            start: 1009,
+            end: 1012
+          }
+        ]
+      )
+    ).toEqual(
+      [
+        {
+          text: 'ab1234567890lb',
+          byteLength: 14,
+          start: 998,
+          end: 1012
+        }
+      ]
+    );
+  });
 });
 
 describe('combineSingleLine helper', () => {

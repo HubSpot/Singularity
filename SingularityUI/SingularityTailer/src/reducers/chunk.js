@@ -62,6 +62,17 @@ const getBookends = (partialLines) => {
   };
 };
 
+const findIntersectingChunks = (incoming, existing) => {
+  // TODO
+  return [];
+};
+
+export const mergeChunks = (incoming, existing) => {
+  const intersectingChunks = findIntersectingChunks(incoming, existing);
+
+  // TODO
+};
+
 
 // if the combination fails, an upstream method will catch the DecodingError
 // and invalidate the whole log
