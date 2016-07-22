@@ -35,7 +35,6 @@ class RequestView extends View
             'click [data-action="makeSkipHealthchecksPermanent"]': 'makeSkipHealthchecksPermanent'
             'click [data-action="cancelBounce"]': 'cancelBounce'
 
-            'click [data-action="revertPause"]': 'revertPause'
             'click [data-action="revertScale"]': 'revertScale'
             'click [data-action="revertSkipHealthchecks"]': 'revertSkipHealthchecks'
 
@@ -137,10 +136,6 @@ class RequestView extends View
     cancelBounce: (e) =>
         @model.cancelBounce =>
             @trigger 'refreshrequest'
-
-    revertPause: (e) =>
-        @model.promptUnpause =>
-            @makePausePermanent()
 
     revertScale: (e) =>
         @model.scale
