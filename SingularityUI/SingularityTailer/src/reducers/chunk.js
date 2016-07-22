@@ -48,7 +48,7 @@ const createMissingMarker = (start, end = undefined) => ({
 const getBookends = (partialLines) => {
   if (!partialLines.length) {
     console.error( // eslint-disable-line no-console
-      'Assertion failed: partialLines.length',
+      'LogTailer assertion failed: partialLines.length',
       partialLines
     );
   }
@@ -62,6 +62,9 @@ const getBookends = (partialLines) => {
   };
 };
 
+
+// if the combination fails, an upstream method will catch the DecodingError
+// and invalidate the whole log
 export const combineSingleLine = (existing, incoming) => {
   const incomingStart = incoming.start;
   const incomingEnd = incoming.start + incoming.byteLength;
@@ -102,7 +105,7 @@ export const combineSingleLine = (existing, incoming) => {
 
       return [
         {
-          text: TD.decode(combined),
+          text: TD.decode(combined), // if this fails, we invalidate the whole log
           byteLength: combinedByteLength,
           start: incomingStart,
           end: existing.end, // has newline if there is one
@@ -136,6 +139,7 @@ export const combineSingleLine = (existing, incoming) => {
       ];
     }
     // real text data
+    // this is a loaded piece, handle carefully \u{1F52B}
     const existingBytes = TE.encode(existing.text);
     const newBytes = TE.encode(incoming.text);
 
@@ -158,7 +162,7 @@ export const combineSingleLine = (existing, incoming) => {
 
     return [
       {
-        text: TD.decode(combined), // in future, handle decoding failures seamlessly
+        text: TD.decode(combined), // if this fails, we invalidate the whole log
         byteLength: combinedByteLength,
         start: existingStart,
         end: existing.end, // has newline if there is one
@@ -196,7 +200,7 @@ export const combineSingleLine = (existing, incoming) => {
 
   return [
     {
-      text: TD.decode(combined),
+      text: TD.decode(combined), // if this fails, we invalidate the whole log
       byteLength: combinedByteLength,
       start: existingStart,
       end: incoming.end, // has newline if there is one
@@ -226,7 +230,7 @@ export const combinePartialLines = (existingPartialLines, newPartialLines) => {
   if (intersectIndex === -1) {
     // I can't think of how this would happen, but it probably can
     console.error( // eslint-disable-line no-console
-      'Assertion failed: intersectIndex !== -1',
+      'LogTailer assertion failed: intersectIndex !== -1',
       existingPartialLines,
       newPartialLines
     );
@@ -237,6 +241,26 @@ export const combinePartialLines = (existingPartialLines, newPartialLines) => {
 
   // Okay, we have an intersection point
   const intersection = existingPartialLines[intersectIndex];
+
+  // search for the line/marker that contains our first offset
+  const lastIntersectIndex = existingPartialLines.findIndex((pl) => {
+    return pl.end < lastOffset;
+  });
+
+  const mergedLines = [];
+
+  const linesBefore = existingPartialLines.slice(0, intersectIndex);
+  if (linesBefore.length) {
+    mergedLines.push(...linesBefore);
+  }
+
+  const firstMergedLine = combineSingleLine(intersection, newPartialLines[0]);
+  if (firstMergedLine.length > 1) {
+
+  }
+  // okay let's try this again
+
+  // search for the last intersection point
   if (intersection.hasOwnProperty('text')) {
     // this is a loaded piece, handle carefully \u{1F52B}
 
@@ -281,15 +305,15 @@ const initializeLog = (partialLines) => {
   ];
 };
 
-const addChunkReducer = (state, action) => {
+export const addChunkReducer = (state, action) => {
   const { id, chunk } = action;
   const partialLines = splitChunkIntoLines(chunk);
 
   // condition: has not been init
-  if (!state.hasOwnProperty(id)) {
+  if (!state[id]) {
     return {
-      [id]: initializeLog(partialLines),
-      ...state
+      ...state,
+      [id]: initializeLog(partialLines)
     };
   }
 
@@ -300,15 +324,39 @@ const addChunkReducer = (state, action) => {
 
   // has been init and has new data
   return {
-    [id]: combinePartialLines(state[id], partialLines),
-    ...state
+    ...state,
+    [id]: combinePartialLines(state[id], partialLines)
   };
+};
+
+export const removeLogReducer = (state, action) => {
+  const { id } = action;
+
+  if (state[id]) {
+    return {
+      ...state,
+      [id]: undefined
+    };
+  }
+
+  return state;
 };
 
 const chunkReducer = (state = initialState, action) => {
   switch (action.type) {
     case ADD_CHUNK:
-      return addChunkReducer(state, action);
+      try {
+        return addChunkReducer(state, action);
+      } catch (e) {
+        console.warn( // eslint-disable-line no-console
+          `LogTailer caught ${e.name}. Invalidating log`,
+          e
+        );
+        return addChunkReducer(
+          removeLogReducer(state, action),
+          action
+        );
+      }
     default:
       return state;
   }
