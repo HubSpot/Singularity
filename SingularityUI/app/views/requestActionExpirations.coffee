@@ -55,7 +55,7 @@ class requestActionExpirations extends View
                 cancelText: 'Make Permanent'
                 cancelAction: 'makePausePermanent'
                 revertText: "Unpause"
-                revertAction: 'revertPause'
+                revertAction: 'unpauseRequest'
                 message: request.expiringPause.expiringAPIRequestObject.message
 
         if request.expiringSkipHealthchecks and (request.expiringSkipHealthchecks.startMillis + request.expiringSkipHealthchecks.expiringAPIRequestObject.durationMillis) > new Date().getTime()
