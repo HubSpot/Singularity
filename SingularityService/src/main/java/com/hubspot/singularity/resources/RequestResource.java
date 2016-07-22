@@ -364,6 +364,8 @@ public class RequestResource extends AbstractRequestResource {
       skipHealthchecks = unpauseRequest.get().getSkipHealthchecks();
     }
 
+    requestManager.deleteExpiringObject(SingularityExpiringPause.class, requestId);
+
     final long now = requestHelper.unpause(requestWithState.getRequest(), JavaUtils.getUserEmail(user), message, skipHealthchecks);
 
     return fillEntireRequest(new SingularityRequestWithState(requestWithState.getRequest(), RequestState.ACTIVE, now));
