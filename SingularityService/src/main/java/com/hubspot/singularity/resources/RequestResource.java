@@ -43,7 +43,6 @@ import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
-import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
@@ -359,6 +358,8 @@ public class RequestResource extends AbstractRequestResource {
       message = unpauseRequest.get().getMessage();
       skipHealthchecks = unpauseRequest.get().getSkipHealthchecks();
     }
+
+    requestManager.deleteExpiringObject(SingularityExpiringPause.class, requestId);
 
     final long now = requestHelper.unpause(requestWithState.getRequest(), JavaUtils.getUserEmail(user), message, skipHealthchecks);
 
