@@ -3,7 +3,7 @@ import { TextEncoder, TextDecoder } from 'text-encoding'; // polyfill
 import { ADD_CHUNK } from '../actions';
 
 const TE = new TextEncoder();
-const TD = new TextDecoder();
+const TD = new TextDecoder('utf-8', {fatal: true});
 
 // see big comment at bottom of file for perf info
 export const splitChunkIntoLines = (chunk) => {
@@ -71,6 +71,20 @@ export const combineSingleLine = (existing, incoming) => {
   if (existingStart === incomingStart) {
     if (existingEnd && existingEnd > incomingEnd) {
       // existing line goes beyond what we have here
+      // new:   [    ]
+      // exist: [           ]
+
+      if (existing.isMissingMarker) {
+        // marker being partially replaced by text
+        return [
+          incoming,
+          createMissingMarker(
+            incoming.end,
+            existing.end
+          )
+        ];
+      }
+
       const existingBytes = TE.encode(existing.text);
       const newBytes = TE.encode(incoming.text);
 
@@ -86,28 +100,109 @@ export const combineSingleLine = (existing, incoming) => {
       combined.set(newBytes);
       combined.set(last, newBytes.byteLength);
 
-      return {
-        text: TD.decode(combined),
-        byteLength: combinedByteLength,
-        start: incomingStart,
-        end: existing.end, // has newline if there is one
-        hasNewline: existing.hasNewline
-      };
+      return [
+        {
+          text: TD.decode(combined),
+          byteLength: combinedByteLength,
+          start: incomingStart,
+          end: existing.end, // has newline if there is one
+          hasNewline: existing.hasNewline
+        }
+      ];
     }
     // existing line is completely encompassed by this line
-    return incoming;
+    // new:   [           ]
+    // exist: [        ]
+    return [
+      incoming
+    ];
   }
   // condition: new text is not at the beginning
+  if (existingEnd && existingEnd > incomingEnd) {
+    // existing line goes beyond this
+    // new:     [    ]
+    // exist: [           ]
+    if (existing.isMissingMarker) {
+      return [
+        createMissingMarker(
+          existingStart,
+          incomingStart
+        ),
+        incoming,
+        createMissingMarker(
+          incoming.end, // don't account for nl
+          existing.end
+        )
+      ];
+    }
+    // real text data
+    const existingBytes = TE.encode(existing.text);
+    const newBytes = TE.encode(incoming.text);
 
+    const first = existingBytes.subarray(
+      0,
+      incomingStart - existingEnd
+    );
 
-  // condition: new text is at end
-  // condition: new text is only in middle
-  // condition: new text encompasses entire existing line
+    const last = existingBytes.subarray(
+      first.byteLength + newBytes.byteLength
+    );
 
-  if (existing.hasOwnProperty('text')) {
-    // text being replaced by text
+    // If this can be made better, it should be!
+    // allocate a new array for both, and decode the text
+    const combinedByteLength = first.byteLength + newBytes.byteLength + last.byteLength;
+    const combined = new Uint8Array(combinedByteLength);
+    combined.set(first);
+    combined.set(newBytes, first.byteLength);
+    combined.set(last, first.byteLength + newBytes.byteLength);
 
+    return [
+      {
+        text: TD.decode(combined), // in future, handle decoding failures seamlessly
+        byteLength: combinedByteLength,
+        start: existingStart,
+        end: existing.end, // has newline if there is one
+        hasNewline: existing.hasNewline
+      }
+    ];
   }
+  // existing line ends before new
+  // new:      [    ]
+  // exist: [      ]
+  if (existing.isMissingMarker) {
+    return [
+      createMissingMarker(
+        existingStart,
+        incomingStart
+      ),
+      incoming
+    ];
+  }
+
+  const existingBytes = TE.encode(existing.text);
+  const newBytes = TE.encode(incoming.text);
+
+  const first = existingBytes.subarray(
+    0,
+    incomingStart - existingStart
+  );
+
+  // If this can be made better, it should be!
+  // allocate a new array for both, and decode the text
+  const combinedByteLength = first.byteLength + newBytes.byteLength;
+  const combined = new Uint8Array(combinedByteLength);
+  combined.set(first);
+  combined.set(newBytes, first.byteLength);
+
+  return [
+    {
+      text: TD.decode(combined),
+      byteLength: combinedByteLength,
+      start: existingStart,
+      end: incoming.end, // has newline if there is one
+      hasNewline: incoming.hasNewline
+    }
+  ];
 };
 
 /*

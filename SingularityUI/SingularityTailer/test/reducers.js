@@ -141,13 +141,291 @@ describe('combineSingleLine helper', () => {
           }
         )
       ).toEqual(
-        {
-          text: 'asdf',
-          byteLength: 4,
-          start: 1000,
-          end: 1005,
-          hasNewline: true
-        }
+        [
+          {
+            text: 'asdf',
+            byteLength: 4,
+            start: 1000,
+            end: 1005,
+            hasNewline: true
+          }
+        ]
+      );
+    });
+
+    it('should replace part of existing if the new is shorter', () => {
+      expect(
+        combineSingleLine(
+          {
+            text: 'abcd',
+            byteLength: 4,
+            start: 1000,
+            end: 1005,
+            hasNewline: true
+          },
+          {
+            text: 'zq',
+            byteLength: 2,
+            start: 1000,
+            end: 1002,
+            hasNewline: false
+          }
+        )
+      ).toEqual(
+        [
+          {
+            text: 'zqcd',
+            byteLength: 4,
+            start: 1000,
+            end: 1005,
+            hasNewline: true
+          }
+        ]
+      );
+    });
+
+    it('should replace existing marker if the new encompasses it', () => {
+      expect(
+        combineSingleLine(
+          {
+            isMissingMarker: true,
+            byteLength: 4,
+            start: 1000,
+            end: 1004,
+            hasNewline: false
+          },
+          {
+            text: 'abcdefgh',
+            byteLength: 8,
+            start: 1000,
+            end: 1008,
+            hasNewline: false
+          }
+        )
+      ).toEqual(
+        [
+          {
+            text: 'abcdefgh',
+            byteLength: 8,
+            start: 1000,
+            end: 1008,
+            hasNewline: false
+          }
+        ]
+      );
+    });
+
+    it('should replace part of existing marker if the new is shorter', () => {
+      expect(
+        combineSingleLine(
+          {
+            isMissingMarker: true,
+            byteLength: 4,
+            start: 1000,
+            end: 1004,
+            hasNewline: false
+          },
+          {
+            text: 'zq',
+            byteLength: 2,
+            start: 1000,
+            end: 1002,
+            hasNewline: false
+          }
+        )
+      ).toEqual(
+        [
+          {
+            text: 'zq',
+            byteLength: 2,
+            start: 1000,
+            end: 1002,
+            hasNewline: false
+          },
+          {
+            isMissingMarker: true,
+            byteLength: 2,
+            start: 1002,
+            end: 1004,
+            hasNewline: false
+          }
+        ]
+      );
+    });
+  });
+
+  describe('with new text not at beginning', () => {
+    it('should partially replace existing if the new goes beyond it', () => {
+      expect(
+        combineSingleLine(
+          {
+            text: 'asdf',
+            byteLength: 4,
+            start: 1000,
+            end: 1004,
+            hasNewline: false
+          },
+          {
+            text: '12',
+            byteLength: 2,
+            start: 1002,
+            end: 1004,
+            hasNewline: false
+          }
+        )
+      ).toEqual(
+        [
+          {
+            text: 'as12',
+            byteLength: 4,
+            start: 1000,
+            end: 1004,
+            hasNewline: false
+          }
+        ]
+      );
+
+      expect(
+        combineSingleLine(
+          {
+            text: 'asdf',
+            byteLength: 4,
+            start: 1000,
+            end: 1004,
+            hasNewline: false
+          },
+          {
+            text: '12345',
+            byteLength: 5,
+            start: 1002,
+            end: 1007,
+            hasNewline: false
+          }
+        )
+      ).toEqual(
+        [
+          {
+            text: 'as12345',
+            byteLength: 7,
+            start: 1000,
+            end: 1007,
+            hasNewline: false
+          }
+        ]
+      );
+    });
+
+    it('should splice new into middle of existing if the new is shorter', () => {
+      expect(
+        combineSingleLine(
+          {
+            text: 'abcdefgh',
+            byteLength: 8,
+            start: 1000,
+            end: 1008,
+            hasNewline: true
+          },
+          {
+            text: '12',
+            byteLength: 2,
+            start: 1003,
+            end: 1005,
+            hasNewline: false
+          }
+        )
+      ).toEqual(
+        [
+          {
+            text: 'abc12fgh',
+            byteLength: 8,
+            start: 1000,
+            end: 1008,
+            hasNewline: true
+          }
+        ]
+      );
+    });
+
+    it('should splice into existing marker if the new goes beyond it', () => {
+      expect(
+        combineSingleLine(
+          {
+            isMissingMarker: true,
+            byteLength: 8,
+            start: 1000,
+            end: 1008,
+            hasNewline: false
+          },
+          {
+            text: '12',
+            byteLength: 2,
+            start: 1002,
+            end: 1004,
+            hasNewline: false
+          }
+        )
+      ).toEqual(
+        [
+          {
+            isMissingMarker: true,
+            byteLength: 2,
+            start: 1000,
+            end: 1002,
+            hasNewline: false
+          },
+          {
+            text: '12',
+            byteLength: 2,
+            start: 1002,
+            end: 1004,
+            hasNewline: false
+          },
+          {
+            isMissingMarker: true,
+            byteLength: 4,
+            start: 1004,
+            end: 1008,
+            hasNewline: false
+          }
+        ]
+      );
+    });
+
+    it('should replace part of existing marker if the new is shorter', () => {
+      expect(
+        combineSingleLine(
+          {
+            isMissingMarker: true,
+            byteLength: 8,
+            start: 1000,
+            end: 1008,
+            hasNewline: false
+          },
+          {
+            text: '1234567890',
+            byteLength: 10,
+            start: 1002,
+            end: 1012,
+            hasNewline: false
+          }
+        )
+      ).toEqual(
+        [
+          {
+            isMissingMarker: true,
+            byteLength: 2,
+            start: 1000,
+            end: 1002,
+            hasNewline: false
+          },
+          {
+            text: '1234567890',
+            byteLength: 10,
+            start: 1002,
+            end: 1012,
+            hasNewline: false
+          }
+        ]
       );
     });
   });
