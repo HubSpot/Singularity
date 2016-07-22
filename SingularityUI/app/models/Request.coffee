@@ -145,7 +145,7 @@ class Request extends Model
 
     makeSkipHealthchecksPermanent: (callback) =>
         $.ajax(
-          url: "#{ @url() }/skipHealthchecks"
+          url: "#{ @url() }/skip-healthchecks"
           type: "DELETE"
         ).then () =>
           @unset('expiringSkipHealthchecks')
@@ -189,7 +189,7 @@ class Request extends Model
             data.durationMillis = duration
         $.ajax
             type: "PUT"
-            url:  "#{ @url() }/skipHealthchecks"
+            url:  "#{ @url() }/skip-healthchecks"
             contentType: 'application/json'
             data: JSON.stringify data
 
@@ -203,7 +203,7 @@ class Request extends Model
             data.durationMillis = duration
         $.ajax
             type: "PUT"
-            url:  "#{ @url() }/skipHealthchecks"
+            url:  "#{ @url() }/skip-healthchecks"
             contentType: 'application/json'
             data: JSON.stringify data
 
