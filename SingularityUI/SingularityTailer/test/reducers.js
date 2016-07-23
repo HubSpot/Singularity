@@ -218,6 +218,64 @@ describe('mergeChunks', () => {
         }
       ]
     );
+
+    expect(
+      mergeChunksTestHelper(
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 2000,
+          end: 2004
+        },
+        [
+          {
+            text: 'hi there',
+            byteLength: 8,
+            start: 1000,
+            end: 1008
+          },
+          {
+            text: 'what\'s happening',
+            byteLength: 16,
+            start: 3000,
+            end: 3016
+          },
+          {
+            text: 'hi there',
+            byteLength: 8,
+            start: 4000,
+            end: 4008
+          }
+        ]
+      )
+    ).toEqual(
+      [
+        {
+          text: 'hi there',
+          byteLength: 8,
+          start: 1000,
+          end: 1008
+        },
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 2000,
+          end: 2004
+        },
+        {
+          text: 'what\'s happening',
+          byteLength: 16,
+          start: 3000,
+          end: 3016
+        },
+        {
+          text: 'hi there',
+          byteLength: 8,
+          start: 4000,
+          end: 4008
+        }
+      ]
+    );
   });
   it('should be able to add a chunk right before another', () => {
     expect(
@@ -510,6 +568,40 @@ describe('mergeChunks', () => {
           byteLength: 14,
           start: 998,
           end: 1012
+        }
+      ]
+    );
+
+    expect(
+      mergeChunksTestHelper(
+        {
+          text: 'and',
+          byteLength: 3,
+          start: 1008,
+          end: 1011
+        },
+        [
+          {
+            text: 'waffles  ',
+            byteLength: 9,
+            start: 1000,
+            end: 1009
+          },
+          {
+            text: '  pancakes',
+            byteLength: 10,
+            start: 1010,
+            end: 1020
+          }
+        ]
+      )
+    ).toEqual(
+      [
+        {
+          text: 'waffles and pancakes',
+          byteLength: 20,
+          start: 1000,
+          end: 1020
         }
       ]
     );
