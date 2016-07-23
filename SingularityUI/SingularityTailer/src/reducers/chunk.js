@@ -63,23 +63,109 @@ const getBookends = (partialLines) => {
   };
 };
 
-const findIntersectingChunks = (incoming, existing) => {
-  // TODO
-  return new List();
+// Checks if two chunks overlap
+const isOverlapping = (c1, c2) => {
+  return Math.max(c1.start, c2.start) < Math.min(c1.end, c2.end);
+};
+
+const findReplacementRange = (incoming, existing) => {
+  return {
+    start: existing.findIndex((c) => isOverlapping(incoming, c)),
+    end: existing.findLastIndex((c) => isOverlapping(incoming, c))
+  };
+};
+
+const getChunksInRange = (chunks, range) => {
+  const { start, end } = range;
+  if (start === -1) {
+    return new List();
+  }
+
+  return chunks.slice(start, end + 1);
 };
 
 export const mergeChunks = (incoming, existing) => {
-  const intersectingChunks = findIntersectingChunks(incoming, existing);
+  const replacementRange = findReplacementRange(incoming, existing);
+  const intersectingChunks = getChunksInRange(existing, replacementRange);
 
-  if (intersectingChunks.length) {
+  if (intersectingChunks.size) {
     // okay, we know that there are some chunks that overlap with us
-  } else {
-    // find where to put this
-    const indexBefore = existing.findIndex((c) => incoming.start >= c.end);
+    // we only need to merge the first and last and only if each goes beyond
+    // the chunks
+    let firstBytes;
+    const firstIntersectingChunk = intersectingChunks.first();
+    if (firstIntersectingChunk.start < incoming.start) {
+      // let's slice and dice this one
+      // this is a loaded piece, handle carefully \u{1F52B}
+      firstBytes = TE.encode(firstIntersectingChunk.text).subarray(
+        0,
+        incoming.start - firstIntersectingChunk.start
+      );
+    }
 
-    // works even if indexBefore === -1
-    return existing.insert(indexBefore + 1, incoming);
+    // the last could also be the first, but that's fine
+    let lastBytes;
+    const lastIntersectingChunk = intersectingChunks.last();
+    if (lastIntersectingChunk.end > incoming.end) {
+      // let's also slice and dice this one
+      // this math can almost certainly be simplified, but this works
+      lastBytes = TE.encode(lastIntersectingChunk.text).subarray(
+        lastIntersectingChunk.byteLength -
+        (lastIntersectingChunk.end - incoming.end)
+      );
+    }
+
+    const chunksToReplace = replacementRange.end - replacementRange.start + 1;
+
+    let newChunk;
+    // combine the bytes together if needed
+    if (firstBytes || lastBytes) {
+      // we have to convert the incoming chunk to bytes to combine
+      const incomingBytes = TE.encode(incoming.text);
+
+      // If this can be made better, it should be!
+      // allocate a new array for both, and decode the text
+      const combinedByteLength = (
+        (firstBytes ? firstBytes.byteLength : 0) +
+        incomingBytes.byteLength +
+        (lastBytes ? lastBytes.byteLength : 0)
+      );
+
+      const combined = new Uint8Array(combinedByteLength);
+      if (firstBytes) {
+        combined.set(firstBytes);
+        combined.set(incomingBytes, firstBytes.byteLength);
+      } else {
+        combined.set(incomingBytes);
+      }
+
+      if (lastBytes) {
+        // oh you think you're clever don't you
+        combined.set(lastBytes, combinedByteLength - lastBytes.byteLength);
+      }
+
+      newChunk = {
+        text: TD.decode(combined),
+        byteLength: combinedByteLength,
+        start: (firstBytes ? firstIntersectingChunk.start : incoming.start),
+        end: (lastBytes ? lastIntersectingChunk.end : incoming.end)
+      };
+    } else {
+      newChunk = incoming;
+    }
+
+    return existing.splice(
+      replacementRange.start,
+      chunksToReplace,
+      newChunk
+    );
   }
+  // oh, this is so much more simple
+  // find where to put this chunk
+  const indexBefore = existing.findIndex((c) => incoming.start >= c.end);
+
+  // works even if indexBefore === -1
+  return existing.insert(indexBefore + 1, incoming);
 };
 
 
