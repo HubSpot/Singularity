@@ -1,4 +1,10 @@
-import React, { Component } from 'react';
+import React, { Component, PropTypes } from 'react';
+import { connect } from 'react-redux';
+
+import TailerProvider from '../src/components/TailerProvider';
+import { Log } from '../src/components';
+
+import { sandboxSetApiRoot } from '../src/actions';
 
 class App extends Component {
   constructor() {
@@ -9,6 +15,10 @@ class App extends Component {
     };
 
     this.tailLog = this.tailLog.bind(this);
+  }
+
+  onComponentWillMount() {
+    this.props.setSandboxApi();
   }
 
   tailLog(e) {
@@ -38,9 +48,24 @@ class App extends Component {
           </button>
         </form>
         <p>{this.state.taskId}</p>
+        <TailerProvider getTailerState={(state) => state.tailer}>
+          <div>
+            <Log id={this.state.taskId} />
+          </div>
+        </TailerProvider>
       </div>
     );
   }
 }
 
-export default App;
+App.propTypes = {
+  setSandboxApi: PropTypes.func.isRequired
+};
+
+const mapDispatchToProps = (dispatch) => ({
+  setSandboxApi: () => dispatch(sandboxSetApiRoot('localhost'))
+});
+
+export default connect(
+  mapDispatchToProps
+)(App);
