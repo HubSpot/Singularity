@@ -1490,6 +1490,278 @@ describe('addChunkReducer', () => {
       );
     });
 
-    it('in between the existing data');
+    it('in between the existing data', () => {
+      expect(
+        addChunkReducerHelper(
+          {
+            'test': {
+              chunks: [
+                {
+                  text: 'non-empty log',
+                  byteLength: 13,
+                  start: 0,
+                  end: 13
+                },
+                {
+                  text: 'far away chunk',
+                  byteLength: 14,
+                  start: 1000,
+                  end: 1014
+                }
+              ],
+              lines: [
+                {
+                  text: 'non-empty log',
+                  byteLength: 13,
+                  start: 0,
+                  end: 13,
+                  hasNewline: false
+                },
+                createMissingMarker(13, 1000),
+                {
+                  text: 'far away chunk',
+                  byteLength: 14,
+                  start: 1000,
+                  end: 1014,
+                  hasNewline: false
+                }
+              ]
+            }
+          },
+          Actions.addChunk('test', {
+            text: ' and some more text',
+            byteLength: 19,
+            start: 503,
+            end: 522
+          })
+        )
+      ).toEqual(
+        {
+          'test': {
+            chunks: [
+              {
+                text: 'non-empty log',
+                byteLength: 13,
+                start: 0,
+                end: 13
+              },
+              {
+                text: ' and some more text',
+                byteLength: 19,
+                start: 503,
+                end: 522
+              },
+              {
+                text: 'far away chunk',
+                byteLength: 14,
+                start: 1000,
+                end: 1014
+              }
+            ],
+            lines: [
+              {
+                text: 'non-empty log',
+                byteLength: 13,
+                start: 0,
+                end: 13,
+                hasNewline: false
+              },
+              createMissingMarker(13, 503),
+              {
+                text: ' and some more text',
+                byteLength: 19,
+                start: 503,
+                end: 522,
+                hasNewline: false
+              },
+              createMissingMarker(522, 1000),
+              {
+                text: 'far away chunk',
+                byteLength: 14,
+                start: 1000,
+                end: 1014,
+                hasNewline: false
+              }
+            ]
+          }
+        }
+      );
+
+      expect(
+        addChunkReducerHelper(
+          {
+            'test': {
+              chunks: [
+                {
+                  text: 'non-empty log',
+                  byteLength: 13,
+                  start: 0,
+                  end: 13
+                },
+                {
+                  text: 'far away chunk',
+                  byteLength: 14,
+                  start: 1000,
+                  end: 1014
+                }
+              ],
+              lines: [
+                {
+                  text: 'non-empty log',
+                  byteLength: 13,
+                  start: 0,
+                  end: 13,
+                  hasNewline: false
+                },
+                createMissingMarker(13, 1000),
+                {
+                  text: 'far away chunk',
+                  byteLength: 14,
+                  start: 1000,
+                  end: 1014,
+                  hasNewline: false
+                }
+              ]
+            }
+          },
+          Actions.addChunk('test', {
+            text: ' and some more text',
+            byteLength: 19,
+            start: 13,
+            end: 32
+          })
+        )
+      ).toEqual(
+        {
+          'test': {
+            chunks: [
+              {
+                text: 'non-empty log',
+                byteLength: 13,
+                start: 0,
+                end: 13
+              },
+              {
+                text: ' and some more text',
+                byteLength: 19,
+                start: 13,
+                end: 32
+              },
+              {
+                text: 'far away chunk',
+                byteLength: 14,
+                start: 1000,
+                end: 1014
+              }
+            ],
+            lines: [
+              {
+                text: 'non-empty log and some more text',
+                byteLength: 32,
+                start: 0,
+                end: 32,
+                hasNewline: false
+              },
+              createMissingMarker(32, 1000),
+              {
+                text: 'far away chunk',
+                byteLength: 14,
+                start: 1000,
+                end: 1014,
+                hasNewline: false
+              }
+            ]
+          }
+        }
+      );
+
+      expect(
+        addChunkReducerHelper(
+          {
+            'test': {
+              chunks: [
+                {
+                  text: 'non-empty log',
+                  byteLength: 13,
+                  start: 0,
+                  end: 13
+                },
+                {
+                  text: 'far away chunk',
+                  byteLength: 14,
+                  start: 1019,
+                  end: 1033
+                }
+              ],
+              lines: [
+                {
+                  text: 'non-empty log',
+                  byteLength: 13,
+                  start: 0,
+                  end: 13,
+                  hasNewline: false
+                },
+                createMissingMarker(13, 1019),
+                {
+                  text: 'far away chunk',
+                  byteLength: 14,
+                  start: 1019,
+                  end: 1033,
+                  hasNewline: false
+                }
+              ]
+            }
+          },
+          Actions.addChunk('test', {
+            text: 'and some more text ',
+            byteLength: 19,
+            start: 1000,
+            end: 1019
+          })
+        )
+      ).toEqual(
+        {
+          'test': {
+            chunks: [
+              {
+                text: 'non-empty log',
+                byteLength: 13,
+                start: 0,
+                end: 13
+              },
+              {
+                text: 'and some more text ',
+                byteLength: 19,
+                start: 1000,
+                end: 1019
+              },
+              {
+                text: 'far away chunk',
+                byteLength: 14,
+                start: 1019,
+                end: 1033
+              }
+            ],
+            lines: [
+              {
+                text: 'non-empty log',
+                byteLength: 13,
+                start: 0,
+                end: 13,
+                hasNewline: false
+              },
+              createMissingMarker(13, 1000),
+              {
+                text: 'and some more text far away chunk',
+                byteLength: 33,
+                start: 1000,
+                end: 1033,
+                hasNewline: false
+              }
+            ]
+          }
+        }
+      );
+    });
   });
 });

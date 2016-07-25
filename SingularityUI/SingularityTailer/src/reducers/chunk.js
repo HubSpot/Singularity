@@ -6,6 +6,12 @@ import { ADD_CHUNK } from '../actions';
 const TE = new TextEncoder();
 const TD = new TextDecoder('utf-8', {fatal: true});
 
+// Key concept: rangeLike
+// most of the objects in this file use the concept of a range-like, which
+// is a duck-typed object that has a `start` and `end` field.
+// the start and end fields are byte offsets into the file that we are dealing
+// with. Many functions use them to figure out where to splice and dice lists.
+
 export const createMissingMarker = (start, end) => ({
   isMissingMarker: true,
   byteLength: end - start,
@@ -14,7 +20,6 @@ export const createMissingMarker = (start, end) => ({
   hasNewline: false
 });
 
-// see big comment at bottom of file for perf info
 export const splitChunkIntoLines = (chunk) => {
   const { text, start, end, byteLength } = chunk;
 
@@ -39,7 +44,64 @@ export const splitChunkIntoLines = (chunk) => {
 
   return partialLines;
 };
+/*
+Justifying the byteLength algorithm used:
 
+hipster text actual byte length: 2399 (generated at: http://hipsum.co/?paras=4&type=hipster-centric)
+
+Speed tests:
+
+benchmark = (f) => { then = Date.now(); for(let i=0; i<100000; i++) { f() } console.log(Date.now() - then); }
+const te = new TextEncoder();
+
+Byte count
+----------
+
+TextEncoder:
+benchmark(() => { te.encode(hipster).byteLength; });
+-> 1216
+
+byteCount:
+function byteCount(s) {
+  return encodeURI(s).split(/%..|./).length - 1;
+}
+benchmark(() => { byteCount(hipster); });
+-> 19114
+
+For small strings, byteCount is way faster, because it doesn't need to make a Uint8Array
+For big strings, TextEncoder is way faster, because it's not a hack.
+
+Split
+-----
+
+Uint8Array:
+benchmark(() => {
+  byteArray.reduce((newLines, b, index) => ((b === 10) ? newLines.concat([index]) : newLines), [])
+});
+-> 13624
+
+let newLines;
+benchmark(() => {
+  newLines = []; byteArray.forEach((b, index) => { (b === 10) && newLines.push(index); });
+});
+-> 23690
+
+String split:
+benchmark(() => { hipster.split('\n') });
+-> 19
+
+
+Combination
+-----------
+String split then byte count with byteCount:
+benchmark(() => hipster.split("p").map((l) => byteCount(l)))
+-> 23771
+
+benchmark(() => hipster.split("p").map((l) => te.encode(l).byteLength))
+-> 8267
+*/
+
+// get the byte start and end of a list
 const getBookends = (list) => {
   if (!list.size) {
     return {
@@ -54,7 +116,7 @@ const getBookends = (list) => {
   };
 };
 
-// Checks if two chunks overlap
+// Checks if two chunks/ranges overlap
 const isOverlapping = (c1, c2, inclusive = false) => {
   const maxStart = Math.max(c1.start, c2.start);
   const minEnd = Math.min(c1.end, c2.end);
@@ -297,9 +359,7 @@ export const removeLogReducer = (state, action) => {
   return state;
 };
 
-const initialState = {
-
-};
+const initialState = {};
 
 const chunkReducer = (state = initialState, action) => {
   switch (action.type) {
@@ -322,60 +382,3 @@ const chunkReducer = (state = initialState, action) => {
 };
 
 export default chunkReducer;
-
-/*
-Justifying the algorithm used:
-
-hipster text actual byte length: 2399 (generated at: http://hipsum.co/?paras=4&type=hipster-centric)
-
-Speed tests:
-
-benchmark = (f) => { then = Date.now(); for(let i=0; i<100000; i++) { f() } console.log(Date.now() - then); }
-const te = new TextEncoder();
-
-Byte count
-----------
-
-TextEncoder:
-benchmark(() => { te.encode(hipster).byteLength; });
--> 1216
-
-byteCount:
-function byteCount(s) {
-  return encodeURI(s).split(/%..|./).length - 1;
-}
-benchmark(() => { byteCount(hipster); });
--> 19114
-
-For small strings, byteCount is way faster, because it doesn't need to make a Uint8Array
-For big strings, TextEncoder is way faster, because it's not a hack.
-
-Split
------
-
-Uint8Array:
-benchmark(() => {
-  byteArray.reduce((newLines, b, index) => ((b === 10) ? newLines.concat([index]) : newLines), [])
-});
--> 13624
-
-let newLines;
-benchmark(() => {
-  newLines = []; byteArray.forEach((b, index) => { (b === 10) && newLines.push(index); });
-});
--> 23690
-
-String split:
-benchmark(() => { hipster.split('\n') });
--> 19
-
-
-Combination
------------
-String split then byte count with byteCount:
-benchmark(() => hipster.split("p").map((l) => byteCount(l)))
--> 23771
-
-benchmark(() => hipster.split("p").map((l) => te.encode(l).byteLength))
--> 8267
-*/
