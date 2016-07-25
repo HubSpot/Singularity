@@ -34,12 +34,6 @@ class TaskSearch extends React.Component {
     })
   }
 
-  componentWillMount() {
-    const filter = _.extend({}, { requestId: this.props.params.requestId }, this.props.filter);
-    this.props.fetchTaskHistory(INITIAL_TASKS_PER_PAGE, 1, filter);
-    this.props.updateFilter(filter);
-  }
-
   setCount(count) {
     this.props.updateFilter(_.extend({}, this.props.filter, {count}));
   }
@@ -166,4 +160,18 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(TaskSearch, 'Task Search'));
+let firstLoad = true;
+
+function refresh(props) {
+  if (!firstLoad) {
+    return null;
+  }
+  firstLoad = false;
+  const promises = [];
+  const filter = _.extend({}, { requestId: props.params.requestId }, props.filter);
+  promises.push(props.fetchTaskHistory(INITIAL_TASKS_PER_PAGE, 1, filter));
+  promises.push(props.updateFilter(filter));
+  return Promise.all(promises);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(TaskSearch, 'Task Search', refresh));
