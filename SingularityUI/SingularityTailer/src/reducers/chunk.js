@@ -6,9 +6,9 @@ import { ADD_CHUNK } from '../actions';
 const TE = new TextEncoder();
 const TD = new TextDecoder('utf-8', {fatal: true});
 
-export const createMissingMarker = (start, end = undefined) => ({
+export const createMissingMarker = (start, end) => ({
   isMissingMarker: true,
-  byteLength: (end !== undefined) ? (end - start) : undefined,
+  byteLength: end - start,
   start,
   end,
   hasNewline: false
@@ -40,22 +40,17 @@ export const splitChunkIntoLines = (chunk) => {
   return partialLines;
 };
 
-// get the first and offsets of a list of Partial Lines (sorted)
-// partialLines must have length
-const getBookends = (partialLines) => {
-  if (!partialLines.length) {
-    console.error( // eslint-disable-line no-console
-      'LogTailer assertion failed: partialLines.length',
-      partialLines
-    );
+const getBookends = (list) => {
+  if (!list.size) {
+    return {
+      start: 0,
+      end: 0
+    };
   }
-  // the first line and last line could be the same
-  const firstLine = partialLines[0];
-  const lastLine = partialLines[partialLines.length - 1];
 
   return {
-    firstOffset: firstLine.start,
-    lastOffset: lastLine.end
+    start: list.first().start,
+    end: list.last().end
   };
 };
 
@@ -86,6 +81,7 @@ const getOverlap = (list, rangeLike) => {
   return getIndexRange(list, findOverlap(list, rangeLike));
 };
 
+// incoming: single chunk
 export const mergeChunks = (incoming, existing) => {
   const replacementRange = findOverlap(existing, incoming);
   const intersectingChunks = getIndexRange(existing, replacementRange);
@@ -205,59 +201,71 @@ export const createLines = (chunks, range) => {
   );
 };
 
-const initializeLog = (partialLines) => {
-  if (!partialLines.length) {
-    // we don't have any data, but we should init the log anyway
-    // create a tail marker (this is similar to the case where we have data
-    // starting from the beginning, but this is *only* the tail marker
-    return [
-      createMissingMarker(0)
-    ];
+// incoming: List of lines
+export const mergeLines = (incoming, existing, replacementRange) => {
+  const generatedByteRange = getBookends(incoming);
+  const replacementByteRange = {
+    start: existing.get(replacementRange.startIndex).start,
+    end: existing.get(replacementRange.endIndex).end
+  };
+
+  // see if we need to add a missing marker to the start
+  if (generatedByteRange.start !== replacementByteRange.start) {
+    incoming = incoming.unshift(createMissingMarker(
+      replacementByteRange.start,
+      generatedByteRange.start
+    ));
   }
 
-  // we have data
-  const { firstOffset, lastOffset } = getBookends(partialLines);
-
-  const missingTailMarker = createMissingMarker(lastOffset);
-  if (firstOffset !== 0) {
-    // create a missing marker for the chunk before this
-    const missingDataMarker = createMissingMarker(0, firstOffset);
-
-    return [
-      missingDataMarker,
-      ...partialLines,
-      missingTailMarker
-    ];
+  // and to the end
+  if (generatedByteRange.end !== replacementByteRange.end) {
+    incoming = incoming.unshift(createMissingMarker(
+      generatedByteRange.end,
+      replacementByteRange.end
+    ));
   }
 
-  // looks like we're starting this file from the beginning
-  return [
-    ...partialLines,
-    missingTailMarker
-  ];
+  return existing
+    .slice(0, replacementRange.startIndex)
+    .concat(incoming)
+    .concat(existing.slice(replacementRange.endIndex + 1));
 };
 
 export const addChunkReducer = (state, action) => {
   const { id, chunk } = action;
-  const partialLines = splitChunkIntoLines(chunk);
 
-  // condition: has not been init
   if (!state[id]) {
+    const chunks = mergeChunks(chunk, new List());
+    const bookends = getBookends(chunks);
     return {
       ...state,
-      [id]: initializeLog(partialLines)
+      [id]: {
+        chunks,
+        lines: createLines(chunks, bookends).unshift(
+          createMissingMarker(0, bookends.start)
+        )
+      }
     };
   }
 
   // has been init but has no new data
-  if (!chunk.length) {
+  if (!chunk.byteLength) {
     return state;
   }
 
   // has been init and has new data
+
+  const chunks = mergeChunks(chunk, state[id].chunks);
   return {
     ...state,
-    [id]: combinePartialLines(state[id], partialLines)
+    [id]: {
+      chunks,
+      lines: mergeLines(
+        createLines(chunks, chunk),
+        state[id].lines,
+        findOverlap(state[id].lines, chunk)
+      )
+    }
   };
 };
 

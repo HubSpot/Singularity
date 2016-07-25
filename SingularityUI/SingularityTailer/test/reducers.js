@@ -10,15 +10,16 @@ import { List } from 'immutable';
 import {
   createMissingMarker,
   splitChunkIntoLines,
+  mergeChunks,
   createLines,
-  mergeChunks
+  mergeLines
 } from '../src/reducers/chunk';
 
 const splitChunkIntoLinesHelper = (chunk) => {
   return splitChunkIntoLines(chunk).toArray();
 };
 
-describe('chunk splitter helper', () => {
+describe('splitChunkIntoLines', () => {
   it('should count the next newlines correctly', () => {
     expect(
       splitChunkIntoLinesHelper({
@@ -1009,5 +1010,26 @@ describe('createLines', () => {
         ]
       );
     });
+  });
+});
+
+const mergeLinesHelper = (incoming, existing) => {
+  return mergeLines(new List(incoming), new List(existing)).toArray();
+};
+
+describe('mergeLines', () => {
+  it('should be able to merge lines with empty'); // maybe not?
+  it('should be able to merge lines to the beginning');
+  it('should be able to merge lines at the end');
+  it('should be able to merge lines in the middle');
+  it('should be able to replace lines in the middle');
+});
+
+describe('addChunkReducer', () => {
+  it('should be able to initialize an empty log');
+  describe('should be able to add a chunk to an existing log', () => {
+    it('before the existing data');
+    it('after the existing data');
+    it('in between the existing data');
   });
 });
