@@ -2,7 +2,7 @@
 import expect from 'expect';
 import reducer from '../src/reducers';
 
-import * as types from '../src/actions';
+import * as Actions from '../src/actions';
 
 import { List } from 'immutable';
 
@@ -12,7 +12,8 @@ import {
   splitChunkIntoLines,
   mergeChunks,
   createLines,
-  mergeLines
+  mergeLines,
+  addChunkReducer
 } from '../src/reducers/chunk';
 
 const splitChunkIntoLinesHelper = (chunk) => {
@@ -1025,11 +1026,125 @@ describe('mergeLines', () => {
   it('should be able to replace lines in the middle');
 });
 
+const addChunkReducerHelper = (state, action) => {
+  const modifiedState = {};
+  for (const key of Object.keys(state)) {
+    modifiedState[key] = {
+      chunks: new List(state[key].chunks),
+      lines: new List(state[key].lines)
+    };
+  }
+
+  const modifiedReturn = {};
+  const returned = addChunkReducer(modifiedState, action);
+  for (const key of Object.keys(returned)) {
+    modifiedReturn[key] = {
+      chunks: returned[key].chunks.toArray(),
+      lines: returned[key].lines.toArray()
+    };
+  }
+
+  return modifiedReturn;
+};
+
 describe('addChunkReducer', () => {
-  it('should be able to initialize an empty log');
+  it('should be able to initialize an empty log', () => {
+    expect(
+      addChunkReducerHelper({},
+        Actions.addChunk('test', {
+          text: 'should be able to initialize an empty log',
+          byteLength: 41,
+          start: 0,
+          end: 41
+        })
+      )
+    ).toEqual({
+      'test': {
+        chunks: [
+          {
+            text: 'should be able to initialize an empty log',
+            byteLength: 41,
+            start: 0,
+            end: 41
+          }
+        ],
+        lines: [
+          {
+            text: 'should be able to initialize an empty log',
+            byteLength: 41,
+            start: 0,
+            end: 41,
+            hasNewline: false
+          }
+        ]
+      }
+    });
+  });
+
   describe('should be able to add a chunk to an existing log', () => {
     it('before the existing data');
-    it('after the existing data');
+
+    it('after the existing data', () => {
+      expect(
+        addChunkReducerHelper(
+          {
+            'test': {
+              chunks: [
+                {
+                  text: 'non-empty log',
+                  byteLength: 13,
+                  start: 0,
+                  end: 13
+                }
+              ],
+              lines: [
+                {
+                  text: 'non-empty log',
+                  byteLength: 13,
+                  start: 0,
+                  end: 13,
+                  hasNewline: false
+                }
+              ]
+            }
+          },
+          Actions.addChunk('test', {
+            text: ' and some more text',
+            byteLength: 19,
+            start: 13,
+            end: 32
+          })
+        )
+      ).toEqual(
+        {
+          'test': {
+            chunks: [
+              {
+                text: 'non-empty log',
+                byteLength: 13,
+                start: 0,
+                end: 13
+              },
+              {
+                text: ' and some more text',
+                byteLength: 19,
+                start: 13,
+                end: 32
+              }
+            ],
+            lines: [
+              {
+                text: 'non-empty log and some more text',
+                byteLength: 32,
+                start: 0,
+                end: 32,
+                hasNewline: false
+              }
+            ]
+          }
+        }
+      );
+    });
     it('in between the existing data');
   });
 });

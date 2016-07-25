@@ -2,7 +2,8 @@ const frameworkName = 'SINGULARITY_TAILER';
 
 export const ADD_CHUNK = `${frameworkName}_ADD_CHUNK`;
 
-export const addChunk = (chunk) => ({
+export const addChunk = (id, chunk) => ({
   type: ADD_CHUNK,
-  data: chunk
+  id,
+  chunk
 });

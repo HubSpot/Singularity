@@ -55,16 +55,25 @@ const getBookends = (list) => {
 };
 
 // Checks if two chunks overlap
-const isOverlapping = (c1, c2) => {
-  return Math.max(c1.start, c2.start) < Math.min(c1.end, c2.end);
+const isOverlapping = (c1, c2, inclusive = false) => {
+  const maxStart = Math.max(c1.start, c2.start);
+  const minEnd = Math.min(c1.end, c2.end);
+  if (inclusive) {
+    return maxStart <= minEnd;
+  }
+  return maxStart < minEnd;
 };
 
 // rangeLike can be a range object (start, end), a chunk, or a line
 // (they all have start and end byte fields)
-const findOverlap = (chunks, rangeLike) => {
+const findOverlap = (chunks, rangeLike, inclusive = false) => {
   return {
-    startIndex: chunks.findIndex((c) => isOverlapping(rangeLike, c)),
-    endIndex: chunks.findLastIndex((c) => isOverlapping(rangeLike, c))
+    startIndex: chunks.findIndex(
+      (c) => isOverlapping(rangeLike, c, inclusive)
+    ),
+    endIndex: chunks.findLastIndex(
+      (c) => isOverlapping(rangeLike, c, inclusive)
+    )
   };
 };
 
@@ -77,8 +86,8 @@ const getIndexRange = (list, indexRange) => {
   return list.slice(startIndex, endIndex + 1);
 };
 
-const getOverlap = (list, rangeLike) => {
-  return getIndexRange(list, findOverlap(list, rangeLike));
+const getOverlap = (list, rangeLike, inclusive = false) => {
+  return getIndexRange(list, findOverlap(list, rangeLike, inclusive));
 };
 
 // incoming: single chunk
@@ -169,10 +178,10 @@ export const mergeChunks = (incoming, existing) => {
 };
 
 export const createLines = (chunks, range) => {
-  // get chunks that overlap a byte range
-  return getOverlap(chunks, range).reduce(
+  // get chunks that overlap a byte range (inclusive)
+  return getOverlap(chunks, range, true).reduce(
     (accumulatedLines, c) => {
-      const chunkLines = getOverlap(splitChunkIntoLines(c), range);
+      const chunkLines = getOverlap(splitChunkIntoLines(c), range, true);
       if (accumulatedLines.size && chunkLines.size) {
         const existingPart = accumulatedLines.last();
         const newPart = chunkLines.first();
@@ -210,7 +219,7 @@ export const mergeLines = (incoming, existing, replacementRange) => {
   };
 
   // see if we need to add a missing marker to the start
-  if (generatedByteRange.start !== replacementByteRange.start) {
+  if (generatedByteRange.start < replacementByteRange.start) {
     incoming = incoming.unshift(createMissingMarker(
       replacementByteRange.start,
       generatedByteRange.start
@@ -218,7 +227,7 @@ export const mergeLines = (incoming, existing, replacementRange) => {
   }
 
   // and to the end
-  if (generatedByteRange.end !== replacementByteRange.end) {
+  if (generatedByteRange.end < replacementByteRange.end) {
     incoming = incoming.unshift(createMissingMarker(
       generatedByteRange.end,
       replacementByteRange.end
@@ -237,13 +246,19 @@ export const addChunkReducer = (state, action) => {
   if (!state[id]) {
     const chunks = mergeChunks(chunk, new List());
     const bookends = getBookends(chunks);
+    let lines = createLines(chunks, bookends);
+
+    if (bookends.start !== 0) {
+      lines = lines.unshift(
+        createMissingMarker(0, bookends.start)
+      );
+    }
+
     return {
       ...state,
       [id]: {
         chunks,
-        lines: createLines(chunks, bookends).unshift(
-          createMissingMarker(0, bookends.start)
-        )
+        lines
       }
     };
   }
@@ -263,7 +278,7 @@ export const addChunkReducer = (state, action) => {
       lines: mergeLines(
         createLines(chunks, chunk),
         state[id].lines,
-        findOverlap(state[id].lines, chunk)
+        findOverlap(state[id].lines, chunk, true)
       )
     }
   };
