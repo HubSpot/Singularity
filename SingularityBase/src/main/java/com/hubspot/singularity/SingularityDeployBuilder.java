@@ -35,7 +35,7 @@ public class SingularityDeployBuilder {
   private Optional<Map<Integer, Map<String, String>>> taskEnv;
   private Optional<List<String>> uris;
   private Optional<ExecutorData> executorData;
-  private Optional<Map<String, String>> labels;
+  private Optional<List<SingularityMesosTaskLabel>> labels;
   private Optional<Map<Integer, Map<String, String>>> taskLabels;
 
   private Optional<String> healthcheckUri;
@@ -392,11 +392,11 @@ public class SingularityDeployBuilder {
     return this;
   }
 
-  public Optional<Map<String, String>> getLabels() {
+  public Optional<List<SingularityMesosTaskLabel>> getLabels() {
     return labels;
   }
 
-  public SingularityDeployBuilder setLabels(Optional<Map<String, String>> labels) {
+  public SingularityDeployBuilder setLabels(Optional<List<SingularityMesosTaskLabel>> labels) {
     this.labels = labels;
     return this;
   }
