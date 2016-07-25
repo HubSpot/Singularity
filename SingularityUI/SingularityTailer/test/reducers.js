@@ -1014,13 +1014,82 @@ describe('createLines', () => {
   });
 });
 
-const mergeLinesHelper = (incoming, existing) => {
-  return mergeLines(new List(incoming), new List(existing)).toArray();
+const mergeLinesHelper = (incoming, existing, replacementRange) => {
+  return mergeLines(
+    new List(incoming),
+    new List(existing),
+    replacementRange
+  ).toArray();
 };
 
 describe('mergeLines', () => {
-  it('should be able to merge lines with empty'); // maybe not?
-  it('should be able to merge lines to the beginning');
+  it('should be able to merge lines to the beginning', () => {
+    expect(
+      mergeLinesHelper(
+        [
+          {
+            text: 'line at the beginning',
+            byteLength: 21,
+            start: 0,
+            end: 22,
+            hasNewline: true
+          },
+          {
+            text: 'another line',
+            byteLength: 12,
+            start: 22,
+            end: 35,
+            hasNewline: true
+          },
+          {
+            text: 'a line that has info',
+            byteLength: 20,
+            start: 35,
+            end: 56,
+            hasNewline: true
+          }
+        ],
+        [
+          {
+            text: 'a line that has info',
+            byteLength: 20,
+            start: 35,
+            end: 56,
+            hasNewline: true
+          }
+        ],
+        {
+          startIndex: 0,
+          endIndex: 0
+        }
+      )
+    ).toEqual(
+      [
+        {
+          text: 'line at the beginning',
+          byteLength: 21,
+          start: 0,
+          end: 22,
+          hasNewline: true
+        },
+        {
+          text: 'another line',
+          byteLength: 12,
+          start: 22,
+          end: 35,
+          hasNewline: true
+        },
+        {
+          text: 'a line that has info',
+          byteLength: 20,
+          start: 35,
+          end: 56,
+          hasNewline: true
+        }
+      ]
+    );
+  });
+
   it('should be able to merge lines at the end');
   it('should be able to merge lines in the middle');
   it('should be able to replace lines in the middle');

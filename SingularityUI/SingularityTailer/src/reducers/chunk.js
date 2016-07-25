@@ -219,7 +219,7 @@ export const mergeLines = (incoming, existing, replacementRange) => {
   };
 
   // see if we need to add a missing marker to the start
-  if (generatedByteRange.start < replacementByteRange.start) {
+  if (generatedByteRange.start > replacementByteRange.start) {
     incoming = incoming.unshift(createMissingMarker(
       replacementByteRange.start,
       generatedByteRange.start
@@ -228,7 +228,7 @@ export const mergeLines = (incoming, existing, replacementRange) => {
 
   // and to the end
   if (generatedByteRange.end < replacementByteRange.end) {
-    incoming = incoming.unshift(createMissingMarker(
+    incoming = incoming.push(createMissingMarker(
       generatedByteRange.end,
       replacementByteRange.end
     ));
@@ -269,7 +269,6 @@ export const addChunkReducer = (state, action) => {
   }
 
   // has been init and has new data
-
   const chunks = mergeChunks(chunk, state[id].chunks);
   return {
     ...state,
