@@ -91,7 +91,7 @@ const getOverlap = (list, rangeLike, inclusive = false) => {
 };
 
 // incoming: single chunk
-export const mergeChunks = (incoming, existing) => {
+export const mergeChunks = (existing, incoming) => {
   const replacementRange = findOverlap(existing, incoming);
   const intersectingChunks = getIndexRange(existing, replacementRange);
 
@@ -211,7 +211,7 @@ export const createLines = (chunks, range) => {
 };
 
 // incoming: List of lines
-export const mergeLines = (incoming, existing, replacementRange) => {
+export const mergeLines = (existing, incoming, replacementRange) => {
   const generatedByteRange = getBookends(incoming);
   const replacementByteRange = {
     start: existing.get(replacementRange.startIndex).start,
@@ -244,7 +244,7 @@ export const addChunkReducer = (state, action) => {
   const { id, chunk } = action;
 
   if (!state[id]) {
-    const chunks = mergeChunks(chunk, new List());
+    const chunks = mergeChunks(new List(), chunk);
     const bookends = getBookends(chunks);
     let lines = createLines(chunks, bookends);
 
@@ -269,15 +269,15 @@ export const addChunkReducer = (state, action) => {
   }
 
   // has been init and has new data
-  const chunks = mergeChunks(chunk, state[id].chunks);
+  const chunks = mergeChunks(state[id].chunks, chunk);
   const replacementRange = findOverlap(state[id].lines, chunk, true);
   return {
     ...state,
     [id]: {
       chunks,
       lines: mergeLines(
-        createLines(chunks, chunk),
         state[id].lines,
+        createLines(chunks, chunk),
         replacementRange
       )
     }

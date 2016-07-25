@@ -126,21 +126,21 @@ describe('splitChunkIntoLines', () => {
   });
 });
 
-const mergeChunksTestHelper = (incoming, existing) => {
-  return mergeChunks(incoming, new List(existing)).toArray();
+const mergeChunksTestHelper = (existing, incoming) => {
+  return mergeChunks(new List(existing), incoming).toArray();
 };
 
 describe('mergeChunks', () => {
   it('should be able to add chunks to empty list', () => {
     expect(
       mergeChunksTestHelper(
+        [],
         {
           text: 'asdf',
           byteLength: 4,
           start: 0,
           end: 4
-        },
-        []
+        }
       )
     ).toEqual(
       [
@@ -156,12 +156,6 @@ describe('mergeChunks', () => {
   it('should be able to add chunks that don\'t interfere', () => {
     expect(
       mergeChunksTestHelper(
-        {
-          text: 'asdf',
-          byteLength: 4,
-          start: 0,
-          end: 4
-        },
         [
           {
             text: 'hi there',
@@ -169,7 +163,13 @@ describe('mergeChunks', () => {
             start: 1000,
             end: 1008
           }
-        ]
+        ],
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 0,
+          end: 4
+        }
       )
     ).toEqual(
       [
@@ -190,12 +190,6 @@ describe('mergeChunks', () => {
 
     expect(
       mergeChunksTestHelper(
-        {
-          text: 'asdf',
-          byteLength: 4,
-          start: 2000,
-          end: 2004
-        },
         [
           {
             text: 'hi there',
@@ -203,7 +197,13 @@ describe('mergeChunks', () => {
             start: 1000,
             end: 1008
           }
-        ]
+        ],
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 2000,
+          end: 2004
+        }
       )
     ).toEqual(
       [
@@ -224,12 +224,6 @@ describe('mergeChunks', () => {
 
     expect(
       mergeChunksTestHelper(
-        {
-          text: 'asdf',
-          byteLength: 4,
-          start: 2000,
-          end: 2004
-        },
         [
           {
             text: 'hi there',
@@ -249,7 +243,13 @@ describe('mergeChunks', () => {
             start: 4000,
             end: 4008
           }
-        ]
+        ],
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 2000,
+          end: 2004
+        }
       )
     ).toEqual(
       [
@@ -283,12 +283,6 @@ describe('mergeChunks', () => {
   it('should be able to add a chunk right before another', () => {
     expect(
       mergeChunksTestHelper(
-        {
-          text: 'asdf',
-          byteLength: 4,
-          start: 2000,
-          end: 2004
-        },
         [
           {
             text: 'hi there',
@@ -296,7 +290,13 @@ describe('mergeChunks', () => {
             start: 2004,
             end: 2012
           }
-        ]
+        ],
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 2000,
+          end: 2004
+        }
       )
     ).toEqual(
       [
@@ -318,12 +318,6 @@ describe('mergeChunks', () => {
   it('should be able to add a chunk right after another', () => {
     expect(
       mergeChunksTestHelper(
-        {
-          text: 'asdf',
-          byteLength: 4,
-          start: 2008,
-          end: 2012
-        },
         [
           {
             text: 'hi there',
@@ -331,7 +325,13 @@ describe('mergeChunks', () => {
             start: 2000,
             end: 2008
           }
-        ]
+        ],
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 2008,
+          end: 2012
+        }
       )
     ).toEqual(
       [
@@ -353,12 +353,6 @@ describe('mergeChunks', () => {
   it('should be able to merge a chunk that overlaps the end of another chunk', () => {
     expect(
       mergeChunksTestHelper(
-        {
-          text: 'great',
-          byteLength: 5,
-          start: 1021,
-          end: 1026
-        },
         [
           {
             text: 'these sandwiches are bad',
@@ -366,7 +360,13 @@ describe('mergeChunks', () => {
             start: 1000,
             end: 1024
           }
-        ]
+        ],
+        {
+          text: 'great',
+          byteLength: 5,
+          start: 1021,
+          end: 1026
+        }
       )
     ).toEqual(
       [
@@ -382,12 +382,6 @@ describe('mergeChunks', () => {
   it('should be able to merge a chunk that overlaps the beginning of another chunk', () => {
     expect(
       mergeChunksTestHelper(
-        {
-          text: 'fact:',
-          byteLength: 5,
-          start: 1000,
-          end: 1005
-        },
         [
           {
             text: 'these sandwiches are bad',
@@ -395,7 +389,13 @@ describe('mergeChunks', () => {
             start: 1000,
             end: 1024
           }
-        ]
+        ],
+        {
+          text: 'fact:',
+          byteLength: 5,
+          start: 1000,
+          end: 1005
+        }
       )
     ).toEqual(
       [
@@ -411,12 +411,6 @@ describe('mergeChunks', () => {
   it('should be able to merge a chunk that is in the middle of another chunk', () => {
     expect(
       mergeChunksTestHelper(
-        {
-          text: 'butterfish',
-          byteLength: 10,
-          start: 1006,
-          end: 1016
-        },
         [
           {
             text: 'these sandwiches are great',
@@ -424,7 +418,13 @@ describe('mergeChunks', () => {
             start: 1000,
             end: 1026
           }
-        ]
+        ],
+        {
+          text: 'butterfish',
+          byteLength: 10,
+          start: 1006,
+          end: 1016
+        }
       )
     ).toEqual(
       [
@@ -440,12 +440,6 @@ describe('mergeChunks', () => {
   it('should be able to merge a chunk that fully overlaps multiple chunks', () => {
     expect(
       mergeChunksTestHelper(
-        {
-          text: '1234567890',
-          byteLength: 10,
-          start: 1000,
-          end: 1010
-        },
         [
           {
             text: 'abc',
@@ -459,7 +453,13 @@ describe('mergeChunks', () => {
             start: 1006,
             end: 1009
           }
-        ]
+        ],
+        {
+          text: '1234567890',
+          byteLength: 10,
+          start: 1000,
+          end: 1010
+        }
       )
     ).toEqual(
       [
@@ -475,12 +475,6 @@ describe('mergeChunks', () => {
   it('should be able to merge a chunk that partially overlaps multiple chunks', () => {
     expect(
       mergeChunksTestHelper(
-        {
-          text: '1234567890',
-          byteLength: 10,
-          start: 1000,
-          end: 1010
-        },
         [
           {
             text: 'abc',
@@ -494,7 +488,13 @@ describe('mergeChunks', () => {
             start: 1006,
             end: 1009
           }
-        ]
+        ],
+        {
+          text: '1234567890',
+          byteLength: 10,
+          start: 1000,
+          end: 1010
+        }
       )
     ).toEqual(
       [
@@ -509,12 +509,6 @@ describe('mergeChunks', () => {
 
     expect(
       mergeChunksTestHelper(
-        {
-          text: '1234567890',
-          byteLength: 10,
-          start: 1000,
-          end: 1010
-        },
         [
           {
             text: 'abc',
@@ -528,7 +522,13 @@ describe('mergeChunks', () => {
             start: 1009,
             end: 1012
           }
-        ]
+        ],
+        {
+          text: '1234567890',
+          byteLength: 10,
+          start: 1000,
+          end: 1010
+        }
       )
     ).toEqual(
       [
@@ -543,12 +543,6 @@ describe('mergeChunks', () => {
 
     expect(
       mergeChunksTestHelper(
-        {
-          text: '1234567890',
-          byteLength: 10,
-          start: 1000,
-          end: 1010
-        },
         [
           {
             text: 'abc',
@@ -562,7 +556,13 @@ describe('mergeChunks', () => {
             start: 1009,
             end: 1012
           }
-        ]
+        ],
+        {
+          text: '1234567890',
+          byteLength: 10,
+          start: 1000,
+          end: 1010
+        }
       )
     ).toEqual(
       [
@@ -577,12 +577,6 @@ describe('mergeChunks', () => {
 
     expect(
       mergeChunksTestHelper(
-        {
-          text: 'and',
-          byteLength: 3,
-          start: 1008,
-          end: 1011
-        },
         [
           {
             text: 'waffles  ',
@@ -596,7 +590,13 @@ describe('mergeChunks', () => {
             start: 1010,
             end: 1020
           }
-        ]
+        ],
+        {
+          text: 'and',
+          byteLength: 3,
+          start: 1008,
+          end: 1011
+        }
       )
     ).toEqual(
       [
@@ -1014,10 +1014,10 @@ describe('createLines', () => {
   });
 });
 
-const mergeLinesHelper = (incoming, existing, replacementRange) => {
+const mergeLinesHelper = (existing, incoming, replacementRange) => {
   return mergeLines(
-    new List(incoming),
     new List(existing),
+    new List(incoming),
     replacementRange
   ).toArray();
 };
@@ -1026,6 +1026,16 @@ describe('mergeLines', () => {
   it('should be able to merge lines to the beginning', () => {
     expect(
       mergeLinesHelper(
+        [
+          createMissingMarker(0, 35),
+          {
+            text: 'a line that has info',
+            byteLength: 20,
+            start: 35,
+            end: 56,
+            hasNewline: true
+          }
+        ],
         [
           {
             text: 'line at the beginning',
@@ -1039,16 +1049,6 @@ describe('mergeLines', () => {
             byteLength: 12,
             start: 22,
             end: 35,
-            hasNewline: true
-          }
-        ],
-        [
-          createMissingMarker(0, 35),
-          {
-            text: 'a line that has info',
-            byteLength: 20,
-            start: 35,
-            end: 56,
             hasNewline: true
           }
         ],
@@ -1086,6 +1086,16 @@ describe('mergeLines', () => {
     expect(
       mergeLinesHelper(
         [
+          createMissingMarker(0, 135),
+          {
+            text: 'a line that has info',
+            byteLength: 20,
+            start: 135,
+            end: 156,
+            hasNewline: true
+          }
+        ],
+        [
           {
             text: 'line at the beginning',
             byteLength: 21,
@@ -1098,16 +1108,6 @@ describe('mergeLines', () => {
             byteLength: 12,
             start: 22,
             end: 35,
-            hasNewline: true
-          }
-        ],
-        [
-          createMissingMarker(0, 135),
-          {
-            text: 'a line that has info',
-            byteLength: 20,
-            start: 135,
-            end: 156,
             hasNewline: true
           }
         ],
@@ -1144,7 +1144,73 @@ describe('mergeLines', () => {
     );
   });
 
-  it('should be able to merge lines at the end');
+  it('should be able to merge lines at the end', () => {
+    expect(
+      mergeLinesHelper(
+        [
+          {
+            text: 'line at the beginning',
+            byteLength: 21,
+            start: 0,
+            end: 22,
+            hasNewline: true
+          },
+          {
+            text: 'another line',
+            byteLength: 12,
+            start: 22,
+            end: 35,
+            hasNewline: true
+          }
+        ],
+        [
+          {
+            text: 'another line',
+            byteLength: 12,
+            start: 22,
+            end: 35,
+            hasNewline: true
+          },
+          {
+            text: 'a line that has info',
+            byteLength: 20,
+            start: 35,
+            end: 56,
+            hasNewline: true
+          }
+        ],
+        {
+          startIndex: 1,
+          endIndex: 1
+        }
+      )
+    ).toEqual(
+      [
+        {
+          text: 'line at the beginning',
+          byteLength: 21,
+          start: 0,
+          end: 22,
+          hasNewline: true
+        },
+        {
+          text: 'another line',
+          byteLength: 12,
+          start: 22,
+          end: 35,
+          hasNewline: true
+        },
+        {
+          text: 'a line that has info',
+          byteLength: 20,
+          start: 35,
+          end: 56,
+          hasNewline: true
+        }
+      ]
+    );
+  });
+
   it('should be able to merge lines in the middle');
   it('should be able to replace lines in the middle');
 });
@@ -1205,7 +1271,162 @@ describe('addChunkReducer', () => {
   });
 
   describe('should be able to add a chunk to an existing log', () => {
-    it('before the existing data');
+    it('before the existing data', () => {
+      expect(
+        addChunkReducerHelper(
+          {
+            'test': {
+              chunks: [
+                {
+                  text: 'non-empty log\nsup',
+                  byteLength: 17,
+                  start: 30,
+                  end: 47
+                }
+              ],
+              lines: [
+                {
+                  text: 'non-empty log',
+                  byteLength: 13,
+                  start: 30,
+                  end: 44,
+                  hasNewline: true
+                },
+                {
+                  text: 'sup',
+                  byteLength: 3,
+                  start: 44,
+                  end: 47,
+                  hasNewline: false
+                }
+              ]
+            }
+          },
+          Actions.addChunk('test', {
+            text: 'thirty characters right here \n',
+            byteLength: 30,
+            start: 0,
+            end: 30
+          })
+        )
+      ).toEqual(
+        {
+          'test': {
+            chunks: [
+              {
+                text: 'thirty characters right here \n',
+                byteLength: 30,
+                start: 0,
+                end: 30
+              },
+              {
+                text: 'non-empty log\nsup',
+                byteLength: 17,
+                start: 30,
+                end: 47
+              }
+            ],
+            lines: [
+              {
+                text: 'thirty characters right here ',
+                byteLength: 29,
+                start: 0,
+                end: 30,
+                hasNewline: true
+              },
+              {
+                text: 'non-empty log',
+                byteLength: 13,
+                start: 30,
+                end: 44,
+                hasNewline: true
+              },
+              {
+                text: 'sup',
+                byteLength: 3,
+                start: 44,
+                end: 47,
+                hasNewline: false
+              }
+            ]
+          }
+        }
+      );
+
+      expect(
+        addChunkReducerHelper(
+          {
+            'test': {
+              chunks: [
+                {
+                  text: 'non-empty log\nsup',
+                  byteLength: 17,
+                  start: 30,
+                  end: 47
+                }
+              ],
+              lines: [
+                {
+                  text: 'non-empty log',
+                  byteLength: 13,
+                  start: 30,
+                  end: 44,
+                  hasNewline: true
+                },
+                {
+                  text: 'sup',
+                  byteLength: 3,
+                  start: 44,
+                  end: 47,
+                  hasNewline: false
+                }
+              ]
+            }
+          },
+          Actions.addChunk('test', {
+            text: 'thirty characters right here k',
+            byteLength: 30,
+            start: 0,
+            end: 30
+          })
+        )
+      ).toEqual(
+        {
+          'test': {
+            chunks: [
+              {
+                text: 'thirty characters right here k',
+                byteLength: 30,
+                start: 0,
+                end: 30
+              },
+              {
+                text: 'non-empty log\nsup',
+                byteLength: 17,
+                start: 30,
+                end: 47
+              }
+            ],
+            lines: [
+              {
+                text: 'thirty characters right here knon-empty log',
+                byteLength: 43,
+                start: 0,
+                end: 44,
+                hasNewline: true
+              },
+              {
+                text: 'sup',
+                byteLength: 3,
+                start: 44,
+                end: 47,
+                hasNewline: false
+              }
+            ]
+          }
+        }
+      );
+    });
 
     it('after the existing data', () => {
       expect(
@@ -1268,6 +1489,7 @@ describe('addChunkReducer', () => {
         }
       );
     });
+
     it('in between the existing data');
   });
 });
