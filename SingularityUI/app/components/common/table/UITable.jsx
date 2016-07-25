@@ -229,12 +229,13 @@ class UITable extends Component {
     const rowsPerPage = this.props.rowChunkSize;
     if (this.props.paginated && numRows > rowsPerPage) {
       const numPages = Math.ceil(numRows / rowsPerPage);
+      const showFirstAndLast = this.props.maxButtons ? numPages > this.props.maxButtons : numPages > 10;
       return (
         <Pagination
           prev={true}
           next={true}
-          first={true}
-          last={true}
+          first={showFirstAndLast}
+          last={showFirstAndLast}
           ellipsis={false}
           items={numPages}
           maxButtons={this.props.maxButtons || 10}
