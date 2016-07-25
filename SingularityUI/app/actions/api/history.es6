@@ -41,8 +41,9 @@ export const FetchTaskHistoryForDeploy = buildApiAction(
 
 export const FetchDeployForRequest = buildApiAction(
   'FETCH_DEPLOY',
-  (requestId, deployId) => ({
-    url: `/history/request/${requestId}/deploy/${deployId}`
+  (requestId, deployId, isMainApiCall) => ({
+    url: `/history/request/${requestId}/deploy/${deployId}`,
+    isMainApiCall
   })
 );
 
