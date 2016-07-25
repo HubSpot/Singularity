@@ -1220,7 +1220,8 @@ const addChunkReducerHelper = (state, action) => {
   for (const key of Object.keys(state)) {
     modifiedState[key] = {
       chunks: new List(state[key].chunks),
-      lines: new List(state[key].lines)
+      lines: new List(state[key].lines),
+      logSize: state[key].logSize
     };
   }
 
@@ -1229,7 +1230,8 @@ const addChunkReducerHelper = (state, action) => {
   for (const key of Object.keys(returned)) {
     modifiedReturn[key] = {
       chunks: returned[key].chunks.toArray(),
-      lines: returned[key].lines.toArray()
+      lines: returned[key].lines.toArray(),
+      logSize: returned[key].logSize
     };
   }
 
@@ -1265,7 +1267,8 @@ describe('addChunkReducer', () => {
             end: 41,
             hasNewline: false
           }
-        ]
+        ],
+        logSize: 41
       }
     });
   });
@@ -1299,7 +1302,8 @@ describe('addChunkReducer', () => {
                   end: 47,
                   hasNewline: false
                 }
-              ]
+              ],
+              logSize: 47
             }
           },
           Actions.addChunk('test', {
@@ -1348,7 +1352,8 @@ describe('addChunkReducer', () => {
                 end: 47,
                 hasNewline: false
               }
-            ]
+            ],
+            logSize: 47
           }
         }
       );
@@ -1380,7 +1385,8 @@ describe('addChunkReducer', () => {
                   end: 47,
                   hasNewline: false
                 }
-              ]
+              ],
+              logSize: 47
             }
           },
           Actions.addChunk('test', {
@@ -1422,7 +1428,8 @@ describe('addChunkReducer', () => {
                 end: 47,
                 hasNewline: false
               }
-            ]
+            ],
+            logSize: 47
           }
         }
       );
@@ -1449,7 +1456,8 @@ describe('addChunkReducer', () => {
                   end: 13,
                   hasNewline: false
                 }
-              ]
+              ],
+              logSize: 13
             }
           },
           Actions.addChunk('test', {
@@ -1484,7 +1492,8 @@ describe('addChunkReducer', () => {
                 end: 32,
                 hasNewline: false
               }
-            ]
+            ],
+            logSize: 32
           }
         }
       );
@@ -1525,7 +1534,8 @@ describe('addChunkReducer', () => {
                   end: 1014,
                   hasNewline: false
                 }
-              ]
+              ],
+              logSize: 1014
             }
           },
           Actions.addChunk('test', {
@@ -1582,7 +1592,8 @@ describe('addChunkReducer', () => {
                 end: 1014,
                 hasNewline: false
               }
-            ]
+            ],
+            logSize: 1014
           }
         }
       );
@@ -1621,7 +1632,8 @@ describe('addChunkReducer', () => {
                   end: 1014,
                   hasNewline: false
                 }
-              ]
+              ],
+              logSize: 1014
             }
           },
           Actions.addChunk('test', {
@@ -1670,7 +1682,8 @@ describe('addChunkReducer', () => {
                 end: 1014,
                 hasNewline: false
               }
-            ]
+            ],
+            logSize: 1014
           }
         }
       );
@@ -1709,7 +1722,8 @@ describe('addChunkReducer', () => {
                   end: 1033,
                   hasNewline: false
                 }
-              ]
+              ],
+              logSize: 1033
             }
           },
           Actions.addChunk('test', {
@@ -1758,7 +1772,8 @@ describe('addChunkReducer', () => {
                 end: 1033,
                 hasNewline: false
               }
-            ]
+            ],
+            logSize: 1033
           }
         }
       );

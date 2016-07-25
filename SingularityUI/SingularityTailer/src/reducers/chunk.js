@@ -1,7 +1,7 @@
 import { TextEncoder, TextDecoder } from 'text-encoding'; // polyfill
 import { List } from 'immutable';
 
-import { ADD_CHUNK } from '../actions';
+import { ADD_CHUNK, SET_LOG_SIZE } from '../actions';
 
 const TE = new TextEncoder();
 const TD = new TextDecoder('utf-8', {fatal: true});
@@ -320,7 +320,8 @@ export const addChunkReducer = (state, action) => {
       ...state,
       [id]: {
         chunks,
-        lines
+        lines,
+        logSize: bookends.end
       }
     };
   }
@@ -341,7 +342,8 @@ export const addChunkReducer = (state, action) => {
         state[id].lines,
         createLines(chunks, chunk),
         replacementRange
-      )
+      ),
+      logSize: Math.max(state[id].logSize, chunk.end)
     }
   };
 };
@@ -376,6 +378,15 @@ const chunkReducer = (state = initialState, action) => {
           action
         );
       }
+    case SET_LOG_SIZE:
+      return {
+        ...state,
+        [action.id]: {
+          chunks: state[action.id].chunks,
+          lines: state[action.id].lines,
+          logSize: Math.max(state[action.id].logSize, action.logSize)
+        }
+      };
     default:
       return state;
   }
