@@ -46,7 +46,7 @@ class DeployDetail extends React.Component {
 
   renderHeader(deploy) {
     let message;
-    if (deploy.deployResult.message) {
+    if (deploy.deployResult && deploy.deployResult.message) {
       message = (
         <div className="row">
           <div className="col-md-12">
@@ -58,7 +58,7 @@ class DeployDetail extends React.Component {
       );
     }
     let failures;
-    if (deploy.deployResult.deployFailures) {
+    if (deploy.deployResult && deploy.deployResult.deployFailures) {
       let fails = [];
       let key = 0;
       for (const failure of deploy.deployResult.deployFailures) {
@@ -109,7 +109,7 @@ class DeployDetail extends React.Component {
           <div className="col-md-8">
             <h1>
               <span>{deploy.deploy.id}</span>
-              <DeployState state={deploy.deployResult.deployState} />
+              <DeployState state={deploy.deployResult && deploy.deployResult.deployState || 'PENDING'} />
             </h1>
           </div>
           <div className="col-md-4 button-container">
@@ -171,7 +171,7 @@ class DeployDetail extends React.Component {
     if (deploy.deployMarker.timestamp) {
       stats.push(<InfoBox key="initiated" copyableClassName="info-copyable" name="Initiated" value={Utils.timestampFromNow(deploy.deployMarker.timestamp)} />);
     }
-    if (deploy.deployResult.timestamp) {
+    if (deploy.deployResult && deploy.deployResult.timestamp) {
       stats.push(<InfoBox key="completed" copyableClassName="info-copyable" name="Completed" value={Utils.timestampFromNow(deploy.deployResult.timestamp)} />);
     }
     if (deploy.deploy.executorData && deploy.deploy.executorData.cmd) {
