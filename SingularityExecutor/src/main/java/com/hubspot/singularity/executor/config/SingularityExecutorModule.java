@@ -19,6 +19,7 @@ import com.ning.http.client.extra.ThrottleRequestFilter;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DefaultDockerClient.Builder;
 import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.messages.AuthConfig;
 
 public class SingularityExecutorModule extends AbstractModule {
 
@@ -101,7 +102,14 @@ public class SingularityExecutorModule extends AbstractModule {
       .connectionPoolSize(configuration.getDockerClientConnectionPoolSize());
 
     if(configuration.getDockerAuthConfig().isPresent()) {
-      dockerClientBuilder.authConfig(configuration.getDockerAuthConfig().get());
+      SingularityExecutorDockerAuthConfig authConfig = configuration.getDockerAuthConfig().get();
+
+      dockerClientBuilder.authConfig(AuthConfig.builder()
+        .email(authConfig.getEmail())
+        .username(authConfig.getUsername())
+        .password(authConfig.getPassword())
+        .serverAddress(authConfig.getServerAddress())
+        .build());
     }
 
     return dockerClientBuilder.build();

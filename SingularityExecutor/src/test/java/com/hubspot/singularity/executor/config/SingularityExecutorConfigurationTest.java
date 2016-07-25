@@ -23,9 +23,9 @@ public class SingularityExecutorConfigurationTest {
         SingularityExecutorConfiguration config = loadConfig("config/executor-conf-dockerauth.yaml");
         
         assertThat(config.getDockerAuthConfig().isPresent()).isTrue();
-        assertThat(config.getDockerAuthConfig().get().username()).isEqualTo("dockeruser");
-        assertThat(config.getDockerAuthConfig().get().password()).isEqualTo("dockerpassword");
-        assertThat(config.getDockerAuthConfig().get().serverAddress()).isEqualTo("https://private.docker.registry/path");
+        assertThat(config.getDockerAuthConfig().get().getUsername()).isEqualTo("dockeruser");
+        assertThat(config.getDockerAuthConfig().get().getPassword()).isEqualTo("dockerpassword");
+        assertThat(config.getDockerAuthConfig().get().getServerAddress()).isEqualTo("https://private.docker.registry/path");
     }
 
     private SingularityExecutorConfiguration loadConfig(String file)  {

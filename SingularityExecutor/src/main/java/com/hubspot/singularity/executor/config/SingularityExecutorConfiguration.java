@@ -22,7 +22,6 @@ import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandDe
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
-import com.spotify.docker.client.messages.AuthConfig;
 
 @Configuration(filename = "/etc/singularity.executor.yaml", consolidatedField = "executor")
 public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
@@ -220,7 +219,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private int dockerClientConnectionPoolSize = 5;
 
   @JsonProperty
-  private Optional<AuthConfig> dockerAuthConfig = Optional.absent();
+  private Optional<SingularityExecutorDockerAuthConfig> dockerAuthConfig = Optional.absent();
 
   @JsonProperty
   private ThreadCheckerType threadCheckerType = ThreadCheckerType.PS;
@@ -632,11 +631,11 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.dockerClientConnectionPoolSize = dockerClientConnectionPoolSize;
   }
 
-  public Optional<AuthConfig> getDockerAuthConfig() {
+  public Optional<SingularityExecutorDockerAuthConfig> getDockerAuthConfig() {
     return dockerAuthConfig;
   }
 
-  public void setDockerAuthConfig(Optional<AuthConfig> dockerAuthConfig) {
+  public void setDockerAuthConfig(Optional<SingularityExecutorDockerAuthConfig> dockerAuthConfig) {
     this.dockerAuthConfig = dockerAuthConfig;
   }
 
