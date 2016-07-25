@@ -17,7 +17,7 @@ class App extends Component {
     this.tailLog = this.tailLog.bind(this);
   }
 
-  onComponentWillMount() {
+  componentDidMount() {
     this.props.setSandboxApi();
   }
 
@@ -65,5 +65,6 @@ const mapDispatchToProps = (dispatch) => ({
 });
 
 export default connect(
+  null,
   mapDispatchToProps
 )(App);
