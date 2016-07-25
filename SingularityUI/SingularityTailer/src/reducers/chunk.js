@@ -6,43 +6,39 @@ import { ADD_CHUNK } from '../actions';
 const TE = new TextEncoder();
 const TD = new TextDecoder('utf-8', {fatal: true});
 
-// see big comment at bottom of file for perf info
-export const splitChunkIntoLines = (chunk) => {
-  const { data, offset, length } = chunk;
-
-  const lines = data.split('\n');
-  const byteLengths = lines.map((line) => TE.encode(line).byteLength);
-
-  const partialLines = [];
-
-  let currentOffset = offset;
-  lines.forEach((line, i) => {
-    const hasNewline = i !== lines.length - 1;
-    // add newline byte
-    const lineLength = byteLengths[i] + (hasNewline ? 1 : 0);
-    partialLines[i] = {
-      text: line,
-      byteLength: byteLengths[i],
-      start: currentOffset,
-      end: currentOffset += lineLength,
-      hasNewline
-    };
-  });
-
-  return partialLines;
-};
-
-const initialState = {
-
-};
-
-const createMissingMarker = (start, end = undefined) => ({
+export const createMissingMarker = (start, end = undefined) => ({
   isMissingMarker: true,
   byteLength: (end !== undefined) ? (end - start) : undefined,
   start,
   end,
   hasNewline: false
 });
+
+// see big comment at bottom of file for perf info
+export const splitChunkIntoLines = (chunk) => {
+  const { text, start, end, byteLength } = chunk;
+
+  const lines = new List(text.split('\n'));
+  const byteLengths = lines.map((line) => TE.encode(line).byteLength);
+
+  let partialLines = new List();
+
+  let currentOffset = start;
+  lines.forEach((line, i) => {
+    const hasNewline = i !== lines.size - 1;
+    // add newline byte
+    const lineLength = byteLengths.get(i) + (hasNewline ? 1 : 0);
+    partialLines = partialLines.insert(i, {
+      text: line,
+      byteLength: byteLengths.get(i),
+      start: currentOffset,
+      end: currentOffset += lineLength,
+      hasNewline
+    });
+  });
+
+  return partialLines;
+};
 
 // get the first and offsets of a list of Partial Lines (sorted)
 // partialLines must have length
@@ -68,25 +64,31 @@ const isOverlapping = (c1, c2) => {
   return Math.max(c1.start, c2.start) < Math.min(c1.end, c2.end);
 };
 
-const findReplacementRange = (incoming, existing) => {
+// rangeLike can be a range object (start, end), a chunk, or a line
+// (they all have start and end byte fields)
+const findOverlap = (chunks, rangeLike) => {
   return {
-    start: existing.findIndex((c) => isOverlapping(incoming, c)),
-    end: existing.findLastIndex((c) => isOverlapping(incoming, c))
+    startIndex: chunks.findIndex((c) => isOverlapping(rangeLike, c)),
+    endIndex: chunks.findLastIndex((c) => isOverlapping(rangeLike, c))
   };
 };
 
-const getChunksInRange = (chunks, range) => {
-  const { start, end } = range;
-  if (start === -1) {
+const getIndexRange = (list, indexRange) => {
+  const { startIndex, endIndex } = indexRange;
+  if (startIndex === -1) {
     return new List();
   }
 
-  return chunks.slice(start, end + 1);
+  return list.slice(startIndex, endIndex + 1);
+};
+
+const getOverlap = (list, rangeLike) => {
+  return getIndexRange(list, findOverlap(list, rangeLike));
 };
 
 export const mergeChunks = (incoming, existing) => {
-  const replacementRange = findReplacementRange(incoming, existing);
-  const intersectingChunks = getChunksInRange(existing, replacementRange);
+  const replacementRange = findOverlap(existing, incoming);
+  const intersectingChunks = getIndexRange(existing, replacementRange);
 
   if (intersectingChunks.size) {
     // okay, we know that there are some chunks that overlap with us
@@ -115,7 +117,9 @@ export const mergeChunks = (incoming, existing) => {
       );
     }
 
-    const chunksToReplace = replacementRange.end - replacementRange.start + 1;
+    const chunksToReplace = (
+      replacementRange.endIndex - replacementRange.startIndex + 1
+    );
 
     let newChunk;
     // combine the bytes together if needed
@@ -155,7 +159,7 @@ export const mergeChunks = (incoming, existing) => {
     }
 
     return existing.splice(
-      replacementRange.start,
+      replacementRange.startIndex,
       chunksToReplace,
       newChunk
     );
@@ -168,215 +172,37 @@ export const mergeChunks = (incoming, existing) => {
   return existing.insert(indexBefore + 1, incoming);
 };
 
+export const createLines = (chunks, range) => {
+  // get chunks that overlap a byte range
+  return getOverlap(chunks, range).reduce(
+    (accumulatedLines, c) => {
+      const chunkLines = getOverlap(splitChunkIntoLines(c), range);
+      if (accumulatedLines.size && chunkLines.size) {
+        const existingPart = accumulatedLines.last();
+        const newPart = chunkLines.first();
+        // create missing marker if the parts don't line up
+        if (existingPart.end !== newPart.start) {
+          accumulatedLines = accumulatedLines.push(createMissingMarker(
+            existingPart.end,
+            newPart.start
+          ));
+        } else if (!existingPart.hasNewline) {
+          // combine partial lines
+          accumulatedLines = accumulatedLines.set(-1, {
+            text: existingPart.text + newPart.text,
+            byteLength: existingPart.byteLength + newPart.byteLength,
+            start: existingPart.start,
+            end: newPart.end,
+            hasNewline: newPart.hasNewline
+          });
 
-// if the combination fails, an upstream method will catch the DecodingError
-// and invalidate the whole log
-export const combineSingleLine = (existing, incoming) => {
-  const incomingStart = incoming.start;
-  const incomingEnd = incoming.start + incoming.byteLength;
-  const existingStart = existing.start;
-  const existingEnd = existing.start + existing.byteLength;
-  // condition: new text is at beginning
-  if (existingStart === incomingStart) {
-    if (existingEnd && existingEnd > incomingEnd) {
-      // existing line goes beyond what we have here
-      // new:   [    ]
-      // exist: [           ]
-
-      if (existing.isMissingMarker) {
-        // marker being partially replaced by text
-        return [
-          incoming,
-          createMissingMarker(
-            incoming.end,
-            existing.end
-          )
-        ];
-      }
-
-      const existingBytes = TE.encode(existing.text);
-      const newBytes = TE.encode(incoming.text);
-
-      const last = existingBytes.subarray(
-        existingEnd - incomingEnd,
-        existingEnd - incomingStart
-      );
-
-      // If this can be made better, it should be!
-      // allocate a new array for both, and decode the text
-      const combinedByteLength = newBytes.byteLength + last.byteLength;
-      const combined = new Uint8Array(combinedByteLength);
-      combined.set(newBytes);
-      combined.set(last, newBytes.byteLength);
-
-      return [
-        {
-          text: TD.decode(combined), // if this fails, we invalidate the whole log
-          byteLength: combinedByteLength,
-          start: incomingStart,
-          end: existing.end, // has newline if there is one
-          hasNewline: existing.hasNewline
+          return accumulatedLines.concat(chunkLines.rest());
         }
-      ];
-    }
-    // existing line is completely encompassed by this line
-    // new:   [           ]
-    // exist: [        ]
-    return [
-      incoming
-    ];
-  }
-  // condition: new text is not at the beginning
-  if (existingEnd && existingEnd > incomingEnd) {
-    // existing line goes beyond this
-    // new:     [    ]
-    // exist: [           ]
-    if (existing.isMissingMarker) {
-      return [
-        createMissingMarker(
-          existingStart,
-          incomingStart
-        ),
-        incoming,
-        createMissingMarker(
-          incoming.end, // don't account for nl
-          existing.end
-        )
-      ];
-    }
-    // real text data
-    // this is a loaded piece, handle carefully \u{1F52B}
-    const existingBytes = TE.encode(existing.text);
-    const newBytes = TE.encode(incoming.text);
-
-    const first = existingBytes.subarray(
-      0,
-      incomingStart - existingEnd
-    );
-
-    const last = existingBytes.subarray(
-      first.byteLength + newBytes.byteLength
-    );
-
-    // If this can be made better, it should be!
-    // allocate a new array for both, and decode the text
-    const combinedByteLength = first.byteLength + newBytes.byteLength + last.byteLength;
-    const combined = new Uint8Array(combinedByteLength);
-    combined.set(first);
-    combined.set(newBytes, first.byteLength);
-    combined.set(last, first.byteLength + newBytes.byteLength);
-
-    return [
-      {
-        text: TD.decode(combined), // if this fails, we invalidate the whole log
-        byteLength: combinedByteLength,
-        start: existingStart,
-        end: existing.end, // has newline if there is one
-        hasNewline: existing.hasNewline
       }
-    ];
-  }
-  // existing line ends before new
-  // new:      [    ]
-  // exist: [      ]
-  if (existing.isMissingMarker) {
-    return [
-      createMissingMarker(
-        existingStart,
-        incomingStart
-      ),
-      incoming
-    ];
-  }
-
-  const existingBytes = TE.encode(existing.text);
-  const newBytes = TE.encode(incoming.text);
-
-  const first = existingBytes.subarray(
-    0,
-    incomingStart - existingStart
+      return accumulatedLines.concat(chunkLines);
+    },
+    new List()
   );
-
-  // If this can be made better, it should be!
-  // allocate a new array for both, and decode the text
-  const combinedByteLength = first.byteLength + newBytes.byteLength;
-  const combined = new Uint8Array(combinedByteLength);
-  combined.set(first);
-  combined.set(newBytes, first.byteLength);
-
-  return [
-    {
-      text: TD.decode(combined), // if this fails, we invalidate the whole log
-      byteLength: combinedByteLength,
-      start: existingStart,
-      end: incoming.end, // has newline if there is one
-      hasNewline: incoming.hasNewline
-    }
-  ];
-};
-
-/*
-Lines can be (and usually are) incomplete, let's place the new lines in the
-list of partial lines, combining lines where necessary.
-*/
-export const combinePartialLines = (existingPartialLines, newPartialLines) => {
-  if (!newPartialLines.length) {
-    return existingPartialLines;
-  }
-
-  const { firstOffset, lastOffset } = getBookends(partialLines);
-
-  // looks like we already have some of this file, let's merge these new lines in
-
-  // search for the line/marker that contains our first offset
-  const intersectIndex = existingPartialLines.findIndex((pl) => {
-    return pl.start >= firstOffset;
-  });
-
-  if (intersectIndex === -1) {
-    // I can't think of how this would happen, but it probably can
-    console.error( // eslint-disable-line no-console
-      'LogTailer assertion failed: intersectIndex !== -1',
-      existingPartialLines,
-      newPartialLines
-    );
-
-    // bail
-    return existingPartialLines;
-  }
-
-  // Okay, we have an intersection point
-  const intersection = existingPartialLines[intersectIndex];
-
-  // search for the line/marker that contains our first offset
-  const lastIntersectIndex = existingPartialLines.findIndex((pl) => {
-    return pl.end < lastOffset;
-  });
-
-  const mergedLines = [];
-
-  const linesBefore = existingPartialLines.slice(0, intersectIndex);
-  if (linesBefore.length) {
-    mergedLines.push(...linesBefore);
-  }
-
-  const firstMergedLine = combineSingleLine(intersection, newPartialLines[0]);
-  if (firstMergedLine.length > 1) {
-
-  }
-  // okay let's try this again
-
-  // search for the last intersection point
-  if (intersection.hasOwnProperty('text')) {
-    // this is a loaded piece, handle carefully \u{1F52B}
-
-    // we want to replace the part that we have with the part
-    // TODO: some of this
-
-    // repeat intersection finding until we've exited this
-  }
-  // okay, this is a marker we're looking at, let's figure out if we need to
-  // shrink it, remove it, or shrink it and put a new one at the end.
 };
 
 const initializeLog = (partialLines) => {
@@ -446,6 +272,10 @@ export const removeLogReducer = (state, action) => {
   }
 
   return state;
+};
+
+const initialState = {
+
 };
 
 const chunkReducer = (state = initialState, action) => {

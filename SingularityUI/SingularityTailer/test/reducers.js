@@ -8,18 +8,24 @@ import { List } from 'immutable';
 
 
 import {
+  createMissingMarker,
   splitChunkIntoLines,
-  mergeChunks,
-  combineSingleLine
+  createLines,
+  mergeChunks
 } from '../src/reducers/chunk';
+
+const splitChunkIntoLinesHelper = (chunk) => {
+  return splitChunkIntoLines(chunk).toArray();
+};
 
 describe('chunk splitter helper', () => {
   it('should count the next newlines correctly', () => {
     expect(
-      splitChunkIntoLines({
-        data: 'asdf\nasdg\nasdh',
-        offset: 0,
-        length: 14
+      splitChunkIntoLinesHelper({
+        text: 'asdf\nasdg\nasdh',
+        start: 0,
+        end: 14,
+        byteLength: 14
       })
     ).toEqual([
       {
@@ -48,9 +54,10 @@ describe('chunk splitter helper', () => {
 
   it('should count multi-byte characters correctly', () => {
     expect(
-      splitChunkIntoLines({
-        data: '\u{1F643}',
-        offset: 0,
+      splitChunkIntoLinesHelper({
+        text: '\u{1F643}',
+        start: 0,
+        end: 4,
         length: 4
       })
     ).toEqual([
@@ -66,9 +73,10 @@ describe('chunk splitter helper', () => {
 
   it('should handle newlines at the end of chunk', () => {
     expect(
-      splitChunkIntoLines({
-        data: '\u{1F643}\n',
-        offset: 1000,
+      splitChunkIntoLinesHelper({
+        text: '\u{1F643}\n',
+        start: 1000,
+        end: 1005,
         length: 5
       })
     ).toEqual([
@@ -91,9 +99,10 @@ describe('chunk splitter helper', () => {
 
   it('should handle newlines at the beginning of chunk', () => {
     expect(
-      splitChunkIntoLines({
-        data: '\n\u{1F643}',
-        offset: 1000,
+      splitChunkIntoLinesHelper({
+        text: '\n\u{1F643}',
+        start: 1000,
+        end: 1005,
         length: 5
       })
     ).toEqual([
@@ -113,14 +122,6 @@ describe('chunk splitter helper', () => {
       }
     ]);
   });
-});
-
-describe('partial line combiner', () => {
-  it('should create markers for areas before and after');
-
-  it('should create markers for area after if starting from beginning');
-
-  it('should create markers for areas before and after even if no data returned');
 });
 
 const mergeChunksTestHelper = (incoming, existing) => {
@@ -608,133 +609,174 @@ describe('mergeChunks', () => {
   });
 });
 
-describe('combineSingleLine helper', () => {
-  describe('with new text at beginning', () => {
-    it('should replace existing if the new encompasses it', () => {
+const createLinesHelper = (chunks, range) => {
+  return createLines(new List(chunks), range).toArray();
+};
+
+describe('createLines', () => {
+  it('should work for no input', () => {
+    expect(
+      createLinesHelper(
+        [],
+        {
+          start: 0,
+          end: 0
+        }
+      )
+    ).toEqual(
+      []
+    );
+  });
+
+  describe('single chunk', () => {
+    it('should work for the full range', () => {
       expect(
-        combineSingleLine(
+        createLinesHelper(
+          [
+            {
+              text: 'waffles\nand\npancakes',
+              byteLength: 20,
+              start: 0,
+              end: 20
+            }
+          ],
           {
-            text: 'asdf',
-            byteLength: 4,
-            start: 1000,
-            end: 1005,
-            hasNewline: true
-          },
-          {
-            text: 'as',
-            byteLength: 2,
-            start: 1000,
-            end: 1002,
-            hasNewline: false
+            start: 0,
+            end: 20
           }
         )
       ).toEqual(
         [
           {
-            text: 'asdf',
-            byteLength: 4,
-            start: 1000,
-            end: 1005,
-            hasNewline: true
-          }
-        ]
-      );
-    });
-
-    it('should replace part of existing if the new is shorter', () => {
-      expect(
-        combineSingleLine(
-          {
-            text: 'abcd',
-            byteLength: 4,
-            start: 1000,
-            end: 1005,
+            text: 'waffles',
+            byteLength: 7,
+            start: 0,
+            end: 8,
             hasNewline: true
           },
           {
-            text: 'zq',
-            byteLength: 2,
-            start: 1000,
-            end: 1002,
-            hasNewline: false
-          }
-        )
-      ).toEqual(
-        [
-          {
-            text: 'zqcd',
-            byteLength: 4,
-            start: 1000,
-            end: 1005,
+            text: 'and',
+            byteLength: 3,
+            start: 8,
+            end: 12,
             hasNewline: true
-          }
-        ]
-      );
-    });
-
-    it('should replace existing marker if the new encompasses it', () => {
-      expect(
-        combineSingleLine(
-          {
-            isMissingMarker: true,
-            byteLength: 4,
-            start: 1000,
-            end: 1004,
-            hasNewline: false
           },
           {
-            text: 'abcdefgh',
+            text: 'pancakes',
             byteLength: 8,
+            start: 12,
+            end: 20,
+            hasNewline: false
+          }
+        ]
+      );
+
+      expect(
+        createLinesHelper(
+          [
+            {
+              text: 'waffles\nand\npancakes',
+              byteLength: 20,
+              start: 1000,
+              end: 1020
+            }
+          ],
+          {
+            start: 1000,
+            end: 1020
+          }
+        )
+      ).toEqual(
+        [
+          {
+            text: 'waffles',
+            byteLength: 7,
             start: 1000,
             end: 1008,
-            hasNewline: false
-          }
-        )
-      ).toEqual(
-        [
+            hasNewline: true
+          },
           {
-            text: 'abcdefgh',
+            text: 'and',
+            byteLength: 3,
+            start: 1008,
+            end: 1012,
+            hasNewline: true
+          },
+          {
+            text: 'pancakes',
             byteLength: 8,
-            start: 1000,
-            end: 1008,
+            start: 1012,
+            end: 1020,
             hasNewline: false
           }
         ]
       );
     });
 
-    it('should replace part of existing marker if the new is shorter', () => {
+    it('should work for a partial range', () => {
       expect(
-        combineSingleLine(
+        createLinesHelper(
+          [
+            {
+              text: 'waffles\nand\npancakes',
+              byteLength: 20,
+              start: 0,
+              end: 20
+            }
+          ],
           {
-            isMissingMarker: true,
-            byteLength: 4,
-            start: 1000,
-            end: 1004,
-            hasNewline: false
-          },
-          {
-            text: 'zq',
-            byteLength: 2,
-            start: 1000,
-            end: 1002,
-            hasNewline: false
+            start: 0,
+            end: 10
           }
         )
       ).toEqual(
         [
           {
-            text: 'zq',
-            byteLength: 2,
-            start: 1000,
-            end: 1002,
-            hasNewline: false
+            text: 'waffles',
+            byteLength: 7,
+            start: 0,
+            end: 8,
+            hasNewline: true
           },
           {
-            isMissingMarker: true,
-            byteLength: 2,
-            start: 1002,
-            end: 1004,
+            text: 'and',
+            byteLength: 3,
+            start: 8,
+            end: 12,
+            hasNewline: true
+          }
+        ]
+      );
+
+      expect(
+        createLinesHelper(
+          [
+            {
+              text: 'waffles\nand\npancakes',
+              byteLength: 20,
+              start: 0,
+              end: 20
+            }
+          ],
+          {
+            start: 10,
+            end: 20
+          }
+        )
+      ).toEqual(
+        [
+          {
+            text: 'and',
+            byteLength: 3,
+            start: 8,
+            end: 12,
+            hasNewline: true
+          },
+          {
+            text: 'pancakes',
+            byteLength: 8,
+            start: 12,
+            end: 20,
             hasNewline: false
           }
         ]
@@ -742,176 +784,227 @@ describe('combineSingleLine helper', () => {
     });
   });
 
-  describe('with new text not at beginning', () => {
-    it('should partially replace existing if the new goes beyond it', () => {
+  describe('multiple chunks', () => {
+    it('should work for the full range with chunks that have no gap', () => {
       expect(
-        combineSingleLine(
+        createLinesHelper(
+          [
+            {
+              text: 'waffles\nand\npancakes',
+              byteLength: 20,
+              start: 1000,
+              end: 1020
+            },
+            {
+              text: 'waffles\nand\npancakes',
+              byteLength: 20,
+              start: 1020,
+              end: 1040
+            }
+          ],
           {
-            text: 'asdf',
-            byteLength: 4,
             start: 1000,
-            end: 1004,
-            hasNewline: false
-          },
-          {
-            text: '12',
-            byteLength: 2,
-            start: 1002,
-            end: 1004,
-            hasNewline: false
+            end: 1040
           }
         )
       ).toEqual(
         [
           {
-            text: 'as12',
-            byteLength: 4,
-            start: 1000,
-            end: 1004,
-            hasNewline: false
-          }
-        ]
-      );
-
-      expect(
-        combineSingleLine(
-          {
-            text: 'asdf',
-            byteLength: 4,
-            start: 1000,
-            end: 1004,
-            hasNewline: false
-          },
-          {
-            text: '12345',
-            byteLength: 5,
-            start: 1002,
-            end: 1007,
-            hasNewline: false
-          }
-        )
-      ).toEqual(
-        [
-          {
-            text: 'as12345',
+            text: 'waffles',
             byteLength: 7,
             start: 1000,
-            end: 1007,
+            end: 1008,
+            hasNewline: true
+          },
+          {
+            text: 'and',
+            byteLength: 3,
+            start: 1008,
+            end: 1012,
+            hasNewline: true
+          },
+          {
+            text: 'pancakeswaffles',
+            byteLength: 15,
+            start: 1012,
+            end: 1028,
+            hasNewline: true
+          },
+          {
+            text: 'and',
+            byteLength: 3,
+            start: 1028,
+            end: 1032,
+            hasNewline: true
+          },
+          {
+            text: 'pancakes',
+            byteLength: 8,
+            start: 1032,
+            end: 1040,
             hasNewline: false
           }
         ]
       );
     });
 
-    it('should splice new into middle of existing if the new is shorter', () => {
+    it('should work for the full range with chunks that have a gap', () => {
       expect(
-        combineSingleLine(
+        createLinesHelper(
+          [
+            {
+              text: 'waffles\nand\npancakes',
+              byteLength: 20,
+              start: 1000,
+              end: 1020
+            },
+            {
+              text: 'waffles\nand\npancakes',
+              byteLength: 20,
+              start: 2000,
+              end: 2020
+            }
+          ],
           {
-            text: 'abcdefgh',
-            byteLength: 8,
+            start: 1000,
+            end: 2020
+          }
+        )
+      ).toEqual(
+        [
+          {
+            text: 'waffles',
+            byteLength: 7,
             start: 1000,
             end: 1008,
             hasNewline: true
           },
           {
-            text: '12',
-            byteLength: 2,
-            start: 1003,
-            end: 1005,
+            text: 'and',
+            byteLength: 3,
+            start: 1008,
+            end: 1012,
+            hasNewline: true
+          },
+          {
+            text: 'pancakes',
+            byteLength: 8,
+            start: 1012,
+            end: 1020,
             hasNewline: false
+          },
+          createMissingMarker(1020, 2000),
+          {
+            text: 'waffles',
+            byteLength: 7,
+            start: 2000,
+            end: 2008,
+            hasNewline: true
+          },
+          {
+            text: 'and',
+            byteLength: 3,
+            start: 2008,
+            end: 2012,
+            hasNewline: true
+          },
+          {
+            text: 'pancakes',
+            byteLength: 8,
+            start: 2012,
+            end: 2020,
+            hasNewline: false
+          }
+        ]
+      );
+    });
+
+    it('should work for the partial range with chunks that have no gap', () => {
+      expect(
+        createLinesHelper(
+          [
+            {
+              text: 'waffles\nand\npancakes',
+              byteLength: 20,
+              start: 1000,
+              end: 1020
+            },
+            {
+              text: 'waffles\nand\npancakes',
+              byteLength: 20,
+              start: 1020,
+              end: 1040
+            }
+          ],
+          {
+            start: 1010,
+            end: 1030
           }
         )
       ).toEqual(
         [
           {
-            text: 'abc12fgh',
-            byteLength: 8,
-            start: 1000,
-            end: 1008,
+            text: 'and',
+            byteLength: 3,
+            start: 1008,
+            end: 1012,
+            hasNewline: true
+          },
+          {
+            text: 'pancakeswaffles',
+            byteLength: 15,
+            start: 1012,
+            end: 1028,
+            hasNewline: true
+          },
+          {
+            text: 'and',
+            byteLength: 3,
+            start: 1028,
+            end: 1032,
             hasNewline: true
           }
         ]
       );
     });
-
-    it('should splice into existing marker if the new goes beyond it', () => {
+    it('should work for the partial range with chunks that have a gap', () => {
       expect(
-        combineSingleLine(
+        createLinesHelper(
+          [
+            {
+              text: 'waffles\nand\npancakes',
+              byteLength: 20,
+              start: 1000,
+              end: 1020
+            },
+            {
+              text: 'waffles\nand\npancakes',
+              byteLength: 20,
+              start: 2000,
+              end: 2020
+            }
+          ],
           {
-            isMissingMarker: true,
-            byteLength: 8,
-            start: 1000,
-            end: 1008,
-            hasNewline: false
-          },
-          {
-            text: '12',
-            byteLength: 2,
-            start: 1002,
-            end: 1004,
-            hasNewline: false
+            start: 1015,
+            end: 2001
           }
         )
       ).toEqual(
         [
           {
-            isMissingMarker: true,
-            byteLength: 2,
-            start: 1000,
-            end: 1002,
-            hasNewline: false
-          },
-          {
-            text: '12',
-            byteLength: 2,
-            start: 1002,
-            end: 1004,
-            hasNewline: false
-          },
-          {
-            isMissingMarker: true,
-            byteLength: 4,
-            start: 1004,
-            end: 1008,
-            hasNewline: false
-          }
-        ]
-      );
-    });
-
-    it('should replace part of existing marker if the new is shorter', () => {
-      expect(
-        combineSingleLine(
-          {
-            isMissingMarker: true,
+            text: 'pancakes',
             byteLength: 8,
-            start: 1000,
-            end: 1008,
+            start: 1012,
+            end: 1020,
             hasNewline: false
           },
+          createMissingMarker(1020, 2000),
           {
-            text: '1234567890',
-            byteLength: 10,
-            start: 1002,
-            end: 1012,
-            hasNewline: false
-          }
-        )
-      ).toEqual(
-        [
-          {
-            isMissingMarker: true,
-            byteLength: 2,
-            start: 1000,
-            end: 1002,
-            hasNewline: false
-          },
-          {
-            text: '1234567890',
-            byteLength: 10,
-            start: 1002,
-            end: 1012,
-            hasNewline: false
+            text: 'waffles',
+            byteLength: 7,
+            start: 2000,
+            end: 2008,
+            hasNewline: true
           }
         ]
       );
