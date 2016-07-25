@@ -1040,16 +1040,10 @@ describe('mergeLines', () => {
             start: 22,
             end: 35,
             hasNewline: true
-          },
-          {
-            text: 'a line that has info',
-            byteLength: 20,
-            start: 35,
-            end: 56,
-            hasNewline: true
           }
         ],
         [
+          createMissingMarker(0, 35),
           {
             text: 'a line that has info',
             byteLength: 20,
@@ -1084,6 +1078,66 @@ describe('mergeLines', () => {
           byteLength: 20,
           start: 35,
           end: 56,
+          hasNewline: true
+        }
+      ]
+    );
+
+    expect(
+      mergeLinesHelper(
+        [
+          {
+            text: 'line at the beginning',
+            byteLength: 21,
+            start: 0,
+            end: 22,
+            hasNewline: true
+          },
+          {
+            text: 'another line',
+            byteLength: 12,
+            start: 22,
+            end: 35,
+            hasNewline: true
+          }
+        ],
+        [
+          createMissingMarker(0, 135),
+          {
+            text: 'a line that has info',
+            byteLength: 20,
+            start: 135,
+            end: 156,
+            hasNewline: true
+          }
+        ],
+        {
+          startIndex: 0,
+          endIndex: 0
+        }
+      )
+    ).toEqual(
+      [
+        {
+          text: 'line at the beginning',
+          byteLength: 21,
+          start: 0,
+          end: 22,
+          hasNewline: true
+        },
+        {
+          text: 'another line',
+          byteLength: 12,
+          start: 22,
+          end: 35,
+          hasNewline: true
+        },
+        createMissingMarker(35, 135),
+        {
+          text: 'a line that has info',
+          byteLength: 20,
+          start: 135,
+          end: 156,
           hasNewline: true
         }
       ]

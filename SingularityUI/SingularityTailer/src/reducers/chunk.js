@@ -66,12 +66,12 @@ const isOverlapping = (c1, c2, inclusive = false) => {
 
 // rangeLike can be a range object (start, end), a chunk, or a line
 // (they all have start and end byte fields)
-const findOverlap = (chunks, rangeLike, inclusive = false) => {
+const findOverlap = (list, rangeLike, inclusive = false) => {
   return {
-    startIndex: chunks.findIndex(
+    startIndex: list.findIndex(
       (c) => isOverlapping(rangeLike, c, inclusive)
     ),
-    endIndex: chunks.findLastIndex(
+    endIndex: list.findLastIndex(
       (c) => isOverlapping(rangeLike, c, inclusive)
     )
   };
@@ -270,6 +270,7 @@ export const addChunkReducer = (state, action) => {
 
   // has been init and has new data
   const chunks = mergeChunks(chunk, state[id].chunks);
+  const replacementRange = findOverlap(state[id].lines, chunk, true);
   return {
     ...state,
     [id]: {
@@ -277,7 +278,7 @@ export const addChunkReducer = (state, action) => {
       lines: mergeLines(
         createLines(chunks, chunk),
         state[id].lines,
-        findOverlap(state[id].lines, chunk, true)
+        replacementRange
       )
     }
   };
