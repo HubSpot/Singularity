@@ -43,7 +43,6 @@ import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
-import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
@@ -360,6 +359,8 @@ public class RequestResource extends AbstractRequestResource {
       skipHealthchecks = unpauseRequest.get().getSkipHealthchecks();
     }
 
+    requestManager.deleteExpiringObject(SingularityExpiringPause.class, requestId);
+
     final long now = requestHelper.unpause(requestWithState.getRequest(), JavaUtils.getUserEmail(user), message, skipHealthchecks);
 
     return fillEntireRequest(new SingularityRequestWithState(requestWithState.getRequest(), RequestState.ACTIVE, now));
@@ -585,8 +586,19 @@ public class RequestResource extends AbstractRequestResource {
     return deleteExpiringObject(SingularityExpiringScale.class, requestId);
   }
 
+  @Deprecated
   @DELETE
   @Path("/request/{requestId}/skipHealthchecks")
+  @ApiOperation(value="Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks request permanent.", response=SingularityRequestParent.class)
+  @ApiResponses({
+      @ApiResponse(code=404, message="No Request or expiring skipHealthchecks request for that ID"),
+  })
+  public SingularityRequestParent deleteExpiringSkipHealthchecksDeprecated(@ApiParam("The Request ID") @PathParam("requestId") String requestId) {
+    return deleteExpiringSkipHealthchecks(requestId);
+  }
+
+  @DELETE
+  @Path("/request/{requestId}/skip-healthchecks")
   @ApiOperation(value="Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks request permanent.", response=SingularityRequestParent.class)
   @ApiResponses({
     @ApiResponse(code=404, message="No Request or expiring skipHealthchecks request for that ID"),
@@ -615,8 +627,21 @@ public class RequestResource extends AbstractRequestResource {
     return deleteExpiringObject(SingularityExpiringBounce.class, requestId);
   }
 
+  @Deprecated
   @PUT
   @Path("/request/{requestId}/skipHealthchecks")
+  @Consumes({ MediaType.APPLICATION_JSON })
+  @ApiOperation(value="Update the skipHealthchecks field for the request, possibly temporarily", response=SingularityRequestParent.class)
+  @ApiResponses({
+      @ApiResponse(code=404, message="No Request with that ID"),
+  })
+  public SingularityRequestParent skipHealthchecksDeprecated(@ApiParam("The Request ID to scale") @PathParam("requestId") String requestId,
+                                                   @ApiParam("SkipHealtchecks options") SingularitySkipHealthchecksRequest skipHealthchecksRequest) {
+    return skipHealthchecks(requestId, skipHealthchecksRequest);
+  }
+
+  @PUT
+  @Path("/request/{requestId}/skip-healthchecks")
   @Consumes({ MediaType.APPLICATION_JSON })
   @ApiOperation(value="Update the skipHealthchecks field for the request, possibly temporarily", response=SingularityRequestParent.class)
   @ApiResponses({

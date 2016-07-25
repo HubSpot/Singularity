@@ -114,6 +114,10 @@ public class SingularityValidator {
     checkBadRequest(request.getId() != null && !StringUtils.containsAny(request.getId(), JOINER.join(REQUEST_ID_ILLEGAL_CHARACTERS)), "Id can not be null or contain any of the following characters: %s", REQUEST_ID_ILLEGAL_CHARACTERS);
     checkBadRequest(request.getRequestType() != null, "RequestType cannot be null or missing");
 
+    if (request.getOwners().isPresent()) {
+      checkBadRequest(!request.getOwners().get().contains(null), "Request owners cannot contain null values");
+    }
+
     if (!allowRequestsWithoutOwners) {
       checkBadRequest(request.getOwners().isPresent() && !request.getOwners().get().isEmpty(), "Request must have owners defined (this can be turned off in Singularity configuration)");
     }
