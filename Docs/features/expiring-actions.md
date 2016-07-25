@@ -116,7 +116,7 @@ This URL accepts a JSON object with this format:
 **NOTE:** The `user` field has been removed from this object.
 
 #### Disabling request healthchecks
-- `/requests/request/{requestId}/skipHealthchecks`
+- `/requests/request/{requestId}/skip-healthchecks`
 
 This URL accepts a JSON object with this format:
 
@@ -130,6 +130,6 @@ This URL accepts a JSON object with this format:
 ### New endpoints for cancelling actions
 These endpoints were added in order to support cancelling certain actions:
 - `DELETE /requests/request/{requestId}/scale` -- Cancel an expiring scale
-- `DELETE /requests/request/{requestId}/skipHealthchecks` -- Cancel an expiring skip healthchecks override
+- `DELETE /requests/request/{requestId}/skip-healthchecks` -- Cancel an expiring skip healthchecks override
 - `DELETE /request/{requestId}/pause` -- Cancel (unpause) an expiring pause
 - `DELETE /request/{requestId}/bounce` -- Cancel a bounce
