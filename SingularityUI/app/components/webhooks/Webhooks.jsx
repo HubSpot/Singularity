@@ -6,7 +6,8 @@ import { FetchWebhooks, DeleteWebhook, NewWebhook } from '../../actions/api/webh
 import { connect } from 'react-redux';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
-import SimpleTable from '../common/SimpleTable';
+import Column from '../common/table/Column';
+import UITable from '../common/table/UITable';
 import rootComponent from '../../rootComponent';
 
 const Webhooks = React.createClass({
@@ -20,11 +21,14 @@ const Webhooks = React.createClass({
       }).isRequired
     }),
     webhooks: PropTypes.arrayOf(PropTypes.shape({
-      uri: PropTypes.string.isRequired,
-      id: PropTypes.string.isRequired,
-      type: PropTypes.string.isRequired,
-      timestamp: PropTypes.number.isRequired,
-      user: PropTypes.string,
+      webhook: PropTypes.shape({
+        uri: PropTypes.string.isRequired,
+        id: PropTypes.string.isRequired,
+        type: PropTypes.string.isRequired,
+        timestamp: PropTypes.number.isRequired,
+        user: PropTypes.string,
+        queueSize: PropTypes.number
+      }).isRequired,
       queueSize: PropTypes.number
     })).isRequired,
     user: PropTypes.string,
@@ -144,24 +148,50 @@ const Webhooks = React.createClass({
             </button>
           </div>
         </div>
-        <SimpleTable
-          emptyMessage="No Webhooks"
-          entries={this.props.webhooks}
-          perPage={20}
-          headers={['URL', 'Type', 'Timestamp', 'User', 'Queue Size', '']}
-          renderTableRow={(webhook, index) => {
-            return (
-              <tr key={index}>
-                <td>{webhook.uri}</td>
-                <td>{Utils.humanizeText(webhook.type)}</td>
-                <td>{Utils.absoluteTimestamp(webhook.timestamp)}</td>
-                <td>{webhook.user || 'N/A'}</td>
-                <td>{webhook.queueSize || 0}</td>
-                <td>{this.renderDeleteWebhookLink(webhook)}</td>
-              </tr>
-            );
-          }}
-        />
+        <UITable
+          emptyTableMessage="No Webhooks"
+          data={this.props.webhooks}
+          keyGetter={(webhook) => webhook.webhook.timestamp}
+          rowChunkSize={20}
+          paginated={true}
+        >
+          <Column
+            label="URL"
+            id="url"
+            key="url"
+            cellData={(webhook) => webhook.webhook.uri}
+          />
+          <Column
+            label="Type"
+            id="type"
+            key="type"
+            cellData={(webhook) => Utils.humanizeText(webhook.webhook.type)}
+          />
+          <Column
+            label="Timestamp"
+            id="timestamp"
+            key="timestamp"
+            cellData={(webhook) => Utils.absoluteTimestamp(webhook.webhook.timestamp)}
+          />
+          <Column
+            label="User"
+            id="user"
+            key="user"
+            cellData={(webhook) => webhook.webhook.user || 'N/A'}
+          />
+          <Column
+            label="Queue Size"
+            id="queue-size"
+            key="queue-size"
+            cellData={(webhook) => webhook.queueSize || 0}
+          />
+          <Column
+            id="actions-column"
+            key="actions-column"
+            className="actions-column"
+            cellData={(webhook) => this.renderDeleteWebhookLink(webhook.webhook)}
+          />
+        </UITable>
         {this.renderNewWebhookModal()}
         {this.renderDeleteWebhookModal()}
       </div>
