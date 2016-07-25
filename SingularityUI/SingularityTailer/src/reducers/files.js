@@ -1,7 +1,7 @@
 import { TextEncoder, TextDecoder } from 'text-encoding'; // polyfill
 import { List } from 'immutable';
 
-import { ADD_CHUNK, SET_LOG_SIZE } from '../actions';
+import { ADD_FILE_CHUNK, SET_FILE_SIZE } from '../actions';
 
 const TE = new TextEncoder();
 const TD = new TextDecoder('utf-8', {fatal: true});
@@ -333,7 +333,7 @@ export const addChunkReducer = (state, action) => {
       [id]: {
         chunks,
         lines,
-        logSize: bookends.end
+        fileSize: bookends.end
       }
     };
   }
@@ -355,7 +355,7 @@ export const addChunkReducer = (state, action) => {
         createLines(chunks, chunk),
         replacementRange
       ),
-      logSize: Math.max(state[id].logSize, chunk.end)
+      fileSize: Math.max(state[id].fileSize, chunk.end)
     }
   };
 };
@@ -375,9 +375,9 @@ export const removeLogReducer = (state, action) => {
 
 const initialState = {};
 
-const chunkReducer = (state = initialState, action) => {
+const filesReducer = (state = initialState, action) => {
   switch (action.type) {
-    case ADD_CHUNK:
+    case ADD_FILE_CHUNK:
       try {
         return addChunkReducer(state, action);
       } catch (e) {
@@ -390,13 +390,13 @@ const chunkReducer = (state = initialState, action) => {
           action
         );
       }
-    case SET_LOG_SIZE:
+    case SET_FILE_SIZE:
       return {
         ...state,
         [action.id]: {
           chunks: state[action.id].chunks,
           lines: state[action.id].lines,
-          logSize: Math.max(state[action.id].logSize, action.logSize)
+          fileSize: Math.max(state[action.id].fileSize, action.fileSize)
         }
       };
     default:
@@ -404,4 +404,4 @@ const chunkReducer = (state = initialState, action) => {
   }
 };
 
-export default chunkReducer;
+export default filesReducer;

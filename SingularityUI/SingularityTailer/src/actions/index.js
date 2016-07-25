@@ -4,18 +4,18 @@ const frameworkName = 'SINGULARITY_TAILER';
 
 /* GENERIC CHUNK ACTIONS */
 
-export const ADD_CHUNK = `${frameworkName}_ADD_CHUNK`;
-export const addChunk = (id, chunk) => ({
-  type: ADD_CHUNK,
+export const ADD_FILE_CHUNK = `${frameworkName}_ADD_FILE_CHUNK`;
+export const addFileChunk = (id, chunk) => ({
+  type: ADD_FILE_CHUNK,
   id,
   chunk
 });
 
-export const SET_LOG_SIZE = `${frameworkName}_SET_LOG_SIZE`;
-export const setLogSize = (id, logSize) => ({
-  type: SET_LOG_SIZE,
+export const SET_FILE_SIZE = `${frameworkName}_SET_FILE_SIZE`;
+export const setFileSize = (id, fileSize) => ({
+  type: SET_FILE_SIZE,
   id,
-  logSize
+  fileSize
 });
 
 /* GENERAL API HELPERS */
@@ -32,9 +32,10 @@ const parseJSON = (response) => {
   return response.json();
 };
 
-/* SANDBOX API */
+/* SINGULARITY SANDBOX API */
 
 // must be used before calling a fetch
+// this sets the Singularity API root
 export const SANDBOX_SET_API_ROOT = `${frameworkName}_SANDBOX_SET_API_ROOT`;
 export const sandboxSetApiRoot = (apiRoot) => ({
   type: SANDBOX_SET_API_ROOT,
@@ -62,7 +63,7 @@ export const sandboxFetchChunk = (id, start, end) => {
       end
     });
 
-    const apiRoot = getState().singularityApiRoot;
+    const apiRoot = getState().config.singularityApiRoot;
     const query = `?path=${path}&offset=${start}&length=${end - start}`;
     const apiPath = `${apiRoot}/sandbox/${taskId}/read${query}`;
 
@@ -70,7 +71,7 @@ export const sandboxFetchChunk = (id, start, end) => {
       .then(checkStatus)
       .then(parseJSON)
       .then(({data, nextOffset, offset}) => {
-        return addChunk(id, {
+        return addFileChunk(id, {
           text: data,
           start: offset,
           end: nextOffset,
@@ -102,7 +103,7 @@ export const sandboxGetLength = (id) => {
       id
     });
 
-    const apiRoot = getState().singularityApiRoot;
+    const apiRoot = getState().config.singularityApiRoot;
     const query = `?path=${path}&offset=${0}&length=${0}`;
     const apiPath = `${apiRoot}/sandbox/${taskId}/read${query}`;
 
@@ -110,7 +111,7 @@ export const sandboxGetLength = (id) => {
       .then(checkStatus)
       .then(parseJSON)
       .then(({offset}) => {
-        return setLogSize(id, offset);
+        return setFileSize(id, offset);
       }).catch((error) => {
         return {
           type: SANDBOX_FETCH_CHUNK_ERROR,

@@ -1,11 +1,9 @@
 /* eslint-env node, mocha */
 import expect from 'expect';
-import reducer from '../src/reducers';
 
-import * as Actions from '../src/actions';
+import * as Actions from '../../src/actions';
 
 import { List } from 'immutable';
-
 
 import {
   createMissingMarker,
@@ -14,7 +12,7 @@ import {
   createLines,
   mergeLines,
   addChunkReducer
-} from '../src/reducers/chunk';
+} from '../../src/reducers/files';
 
 const splitChunkIntoLinesHelper = (chunk) => {
   return splitChunkIntoLines(chunk).toArray();
@@ -1221,7 +1219,7 @@ const addChunkReducerHelper = (state, action) => {
     modifiedState[key] = {
       chunks: new List(state[key].chunks),
       lines: new List(state[key].lines),
-      logSize: state[key].logSize
+      fileSize: state[key].fileSize
     };
   }
 
@@ -1231,7 +1229,7 @@ const addChunkReducerHelper = (state, action) => {
     modifiedReturn[key] = {
       chunks: returned[key].chunks.toArray(),
       lines: returned[key].lines.toArray(),
-      logSize: returned[key].logSize
+      fileSize: returned[key].fileSize
     };
   }
 
@@ -1242,7 +1240,7 @@ describe('addChunkReducer', () => {
   it('should be able to initialize an empty log', () => {
     expect(
       addChunkReducerHelper({},
-        Actions.addChunk('test', {
+        Actions.addFileChunk('test', {
           text: 'should be able to initialize an empty log',
           byteLength: 41,
           start: 0,
@@ -1268,7 +1266,7 @@ describe('addChunkReducer', () => {
             hasNewline: false
           }
         ],
-        logSize: 41
+        fileSize: 41
       }
     });
   });
@@ -1303,10 +1301,10 @@ describe('addChunkReducer', () => {
                   hasNewline: false
                 }
               ],
-              logSize: 47
+              fileSize: 47
             }
           },
-          Actions.addChunk('test', {
+          Actions.addFileChunk('test', {
             text: 'thirty characters right here \n',
             byteLength: 30,
             start: 0,
@@ -1353,7 +1351,7 @@ describe('addChunkReducer', () => {
                 hasNewline: false
               }
             ],
-            logSize: 47
+            fileSize: 47
           }
         }
       );
@@ -1386,10 +1384,10 @@ describe('addChunkReducer', () => {
                   hasNewline: false
                 }
               ],
-              logSize: 47
+              fileSize: 47
             }
           },
-          Actions.addChunk('test', {
+          Actions.addFileChunk('test', {
             text: 'thirty characters right here k',
             byteLength: 30,
             start: 0,
@@ -1429,7 +1427,7 @@ describe('addChunkReducer', () => {
                 hasNewline: false
               }
             ],
-            logSize: 47
+            fileSize: 47
           }
         }
       );
@@ -1457,10 +1455,10 @@ describe('addChunkReducer', () => {
                   hasNewline: false
                 }
               ],
-              logSize: 13
+              fileSize: 13
             }
           },
-          Actions.addChunk('test', {
+          Actions.addFileChunk('test', {
             text: ' and some more text',
             byteLength: 19,
             start: 13,
@@ -1493,7 +1491,7 @@ describe('addChunkReducer', () => {
                 hasNewline: false
               }
             ],
-            logSize: 32
+            fileSize: 32
           }
         }
       );
@@ -1535,10 +1533,10 @@ describe('addChunkReducer', () => {
                   hasNewline: false
                 }
               ],
-              logSize: 1014
+              fileSize: 1014
             }
           },
-          Actions.addChunk('test', {
+          Actions.addFileChunk('test', {
             text: ' and some more text',
             byteLength: 19,
             start: 503,
@@ -1593,7 +1591,7 @@ describe('addChunkReducer', () => {
                 hasNewline: false
               }
             ],
-            logSize: 1014
+            fileSize: 1014
           }
         }
       );
@@ -1633,10 +1631,10 @@ describe('addChunkReducer', () => {
                   hasNewline: false
                 }
               ],
-              logSize: 1014
+              fileSize: 1014
             }
           },
-          Actions.addChunk('test', {
+          Actions.addFileChunk('test', {
             text: ' and some more text',
             byteLength: 19,
             start: 13,
@@ -1683,7 +1681,7 @@ describe('addChunkReducer', () => {
                 hasNewline: false
               }
             ],
-            logSize: 1014
+            fileSize: 1014
           }
         }
       );
@@ -1723,10 +1721,10 @@ describe('addChunkReducer', () => {
                   hasNewline: false
                 }
               ],
-              logSize: 1033
+              fileSize: 1033
             }
           },
-          Actions.addChunk('test', {
+          Actions.addFileChunk('test', {
             text: 'and some more text ',
             byteLength: 19,
             start: 1000,
@@ -1773,7 +1771,7 @@ describe('addChunkReducer', () => {
                 hasNewline: false
               }
             ],
-            logSize: 1033
+            fileSize: 1033
           }
         }
       );
