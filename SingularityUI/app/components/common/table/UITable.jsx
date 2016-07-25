@@ -178,7 +178,7 @@ class UITable extends Component {
     return ReactDOM.findDOMNode(this.refs.table);
   }
 
-  renderTableRow(rowData) {
+  renderTableRow(rowData, index) {
     const row = this.props.children.map((col) => {
       const cellData = col.props.cellData(rowData);
       const cell = col.props.cellRender(
@@ -195,7 +195,13 @@ class UITable extends Component {
 
       return <td key={col.props.id} className={className}>{cell}</td>;
     });
-    return <tr key={`row-${this.props.keyGetter(rowData)}`}>{row}</tr>;
+    let rowClassName;
+    if (typeof this.props.rowClassName === 'function') {
+      rowClassName = this.props.rowClassName(rowData, index);
+    } else if (this.props.rowClassName) {
+      rowClassName = this.props.rowClassName;
+    }
+    return <tr key={`row-${this.props.keyGetter(rowData)}`} className={rowClassName}>{row}</tr>;
   }
 
   renderTableRows() {
@@ -203,8 +209,8 @@ class UITable extends Component {
       const page = this.state.chunkNum;
       const beginIndex = (page - 1) * this.props.rowChunkSize;
       const endIndex = page * this.props.rowChunkSize;
-      const rows = this.state.data.slice(beginIndex, endIndex).map((r) => {
-        return this.renderTableRow(r);
+      const rows = this.state.data.slice(beginIndex, endIndex).map((row, index) => {
+        return this.renderTableRow(row, index);
       });
 
       return rows;
@@ -352,6 +358,10 @@ UITable.propTypes = {
   ]),
   className: PropTypes.string,
   asyncSort: PropTypes.bool,
+  rowClassName: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.func
+  ]),
   emptyTableMessage: PropTypes.oneOfType([
     PropTypes.node,
     PropTypes.string
