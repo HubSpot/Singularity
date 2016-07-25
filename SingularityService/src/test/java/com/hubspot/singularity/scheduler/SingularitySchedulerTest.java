@@ -21,6 +21,7 @@ import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
@@ -1579,6 +1580,33 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     Assert.assertTrue(lbUpdate.isPresent());
     Assert.assertTrue(lbUpdate.get().getLoadBalancerState() == BaragonRequestState.SUCCESS);
     Assert.assertTrue(lbUpdate.get().getLoadBalancerRequestId().getAttemptNumber() == 2);
+  }
+
+  @Test
+  public void testLbCleanupDoesNotRemoveBeforeAdd() {
+    initLoadBalancedRequest();
+    initFirstDeploy();
+    SingularityTask taskOne = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+
+    initSecondDeploy();
+    SingularityTask taskTwo = launchTask(request, secondDeploy, 1, TaskState.TASK_RUNNING);
+    testingLbClient.setNextBaragonRequestState(BaragonRequestState.WAITING);
+    deployChecker.checkDeploys();
+
+    // First task from old deploy is still starting, never got added to LB so it should not have a removal request
+    Assert.assertFalse(taskManager.getLoadBalancerState(taskOne.getTaskId(), LoadBalancerRequestType.ADD).isPresent());
+    Assert.assertFalse(taskManager.getLoadBalancerState(taskOne.getTaskId(), LoadBalancerRequestType.REMOVE).isPresent());
+
+    // Second task should have an add request
+    Assert.assertTrue(taskManager.getLoadBalancerState(taskTwo.getTaskId(), LoadBalancerRequestType.ADD).isPresent());
+
+    testingLbClient.setNextBaragonRequestState(BaragonRequestState.SUCCESS);
+    deployChecker.checkDeploys();
+
+    // First task from old deploy should still have no LB updates, but should have a cleanup
+    Assert.assertFalse(taskManager.getLoadBalancerState(taskOne.getTaskId(), LoadBalancerRequestType.ADD).isPresent());
+    Assert.assertFalse(taskManager.getLoadBalancerState(taskOne.getTaskId(), LoadBalancerRequestType.REMOVE).isPresent());
+    Assert.assertTrue(taskManager.getCleanupTaskIds().contains(taskOne.getTaskId()));
   }
 
   @Test
