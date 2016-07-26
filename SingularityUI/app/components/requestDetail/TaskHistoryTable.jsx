@@ -23,7 +23,7 @@ const TaskHistoryTable = ({requestId, tasksAPI}) => {
   let maybeSearchButton;
   if (tasks.length) {
     maybeSearchButton = (
-      <Link to={`request/${requestId}/taskSearch`}>
+      <Link to={`request/${requestId}/task-search`}>
         <Button bsStyle="primary">
           <Glyphicon glyph="search" aria-hidden="true" /><span> Search</span>
         </Button>
@@ -56,7 +56,7 @@ const TaskHistoryTable = ({requestId, tasksAPI}) => {
               <td><Link to={`request/${data.taskId.requestId}/deploy/${data.taskId.deployId}`}>{data.taskId.deployId}</Link></td>
               <td>{Utils.timestampFromNow(data.taskId.startedAt)}</td>
               <td>{Utils.timestampFromNow(data.updatedAt)}</td>
-              <td className="actions-column"><Link to={`request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log">&middot;&middot;&middot;</Link></td>
+              <td className="actions-column"><Link to={`request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log"><Glyphicon glyph="file" /></Link></td>
               <td className="actions-column"><JSONButton object={data}>{'{ }'}</JSONButton></td>
             </tr>
           );

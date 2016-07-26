@@ -38,7 +38,7 @@ const AppRouter = (props) => {
           <Route path="requests(/:state)(/:subFilter)(/:searchFilter)" component={RequestsPage} />
           <Route path="request">
             <Route path=":requestId" component={RequestDetailPage} />
-            <Route path=":requestId/taskSearch" component={TaskSearch} />
+            <Route path=":requestId/task-search" component={TaskSearch} />
             <Route path=":requestId/deploy" component={NewDeployForm} />
             <Route path=":requestId/deploy/:deployId" component={DeployDetail} store={props.store} />
             <Route path=":requestId/tail/**" component={AggregateTail} />
@@ -51,7 +51,7 @@ const AppRouter = (props) => {
           <Route path="racks(/:state)" component={Racks} />
           <Route path="slaves(/:state)" component={Slaves} />
           <Route path="webhooks" component={Webhooks} />
-          <Route path="taskSearch" component={TaskSearch} />
+          <Route path="task-search" component={TaskSearch} />
           <Route path="*" component={NotFound} />
         </Route>
       </Router>

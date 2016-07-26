@@ -1,10 +1,12 @@
 import React from 'react';
 import classNames from 'classnames';
 
-import { Modal, Button } from 'react-bootstrap';
+import { Modal, Button, Popover, OverlayTrigger } from 'react-bootstrap';
 import TagsInput from 'react-tagsinput';
 import Duration from '../formItems/Duration';
 import Select from 'react-select';
+
+const TAGS_CHARACTER_LIMIT = 75;
 
 export default class FormModal extends React.Component {
   constructor(props) {
@@ -117,6 +119,33 @@ export default class FormModal extends React.Component {
     }
   }
 
+  renderTag(props) {
+    const {tag, key, onRemove, ...other} = props;
+    let tagDisplay;
+    if (tag.length > TAGS_CHARACTER_LIMIT) {
+      const tooltip = (
+        <Popover id="full-tag" className="tag-popover">{tag}</Popover>
+      );
+      tagDisplay = (
+        <OverlayTrigger
+          trigger="hover"
+          placement="left"
+          overlay={tooltip}
+        >
+          <span>{`${tag.substr(0, TAGS_CHARACTER_LIMIT)}...`}</span>
+        </OverlayTrigger>
+      );
+    } else {
+      tagDisplay = tag;
+    }
+    return (
+      <span key={key} {...other}>
+        {tagDisplay}
+        <a onClick={() => onRemove(key)} />
+      </span>
+    );
+  }
+
   renderForm() {
     const inputs = this.props.formElements.map((formElement) => {
       const error = this.state.errors[formElement.name];
@@ -197,6 +226,7 @@ export default class FormModal extends React.Component {
                   addOnBlur={true}
                   addOnPaste={true}
                   inputProps={{className: 'form-control input-large', placeholder: ''}}
+                  renderTag={this.renderTag}
                 />
               </label>
             </FormModal.FormItem>
