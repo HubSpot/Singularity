@@ -38,8 +38,11 @@ export default class ServerSideTable extends SimpleTable {
   }
 
   updateDisplay(nextProps) {
-    const newState = {};
-    if (this.props.entries && this.props.entries.length > 0 && nextProps.entries.length === 0 && this.state.serverPage > 1) {
+    let newState = {};
+    if (this.didFetchParamsUpdate(nextProps)) {
+      this.props.dispatch(nextProps.fetchAction.trigger(...nextProps.fetchParams, nextProps.perPage, 1));
+      newState = {serverPage: 1, atEnd: false, displayItems: []};
+    } else if (this.props.entries && this.props.entries.length > 0 && nextProps.entries.length === 0 && this.state.serverPage > 1) {
       this.props.dispatch(this.props.fetchAction.trigger(...this.props.fetchParams, this.props.perPage, this.state.serverPage - 1));
       _.extend(newState, {
         serverPage: this.state.serverPage - 1,
@@ -61,10 +64,6 @@ export default class ServerSideTable extends SimpleTable {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (this.didFetchParamsUpdate(nextProps)) {
-      this.setState({serverPage: 1});
-      this.props.dispatch(nextProps.fetchAction.trigger(...nextProps.fetchParams, nextProps.perPage, 1));
-    }
     this.updateDisplay(nextProps);
   }
 

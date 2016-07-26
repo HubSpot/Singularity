@@ -83,7 +83,7 @@ class TaskSearchFilters extends React.Component {
             </div>
           </div>
           <Button type="submit" bsStyle="primary" className="pull-right" disabled={!this.props.valid}>Submit</Button>
-          <Button type="button" bsStyle="default" className="pull-right" onClick={() => this.props.resetForm()}>Clear</Button>
+          <Button type="button" bsStyle="default" className="pull-right" onClick={() => this.props.resetForm()}>Clear Form</Button>
         </form>
       </Panel>
     );
