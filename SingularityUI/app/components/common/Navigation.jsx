@@ -37,7 +37,7 @@ const Navigation = (props) => {
             <MenuItem eventKey={5.2} onClick={(e) => goTo(props.router, e, 'slaves')}>Slaves</MenuItem>
             <MenuItem eventKey={5.3} onClick={(e) => goTo(props.router, e, 'webhooks')}>Webhooks</MenuItem>
             <MenuItem divider={true} />
-            <MenuItem eventKey={5.4} onClick={(e) => goTo(props.router, e, 'taskSearch')}>Task search</MenuItem>
+            <MenuItem eventKey={5.4} onClick={(e) => goTo(props.router, e, 'task-search')}>Task search</MenuItem>
           </NavDropdown>
           <NavItem eventKey={6} target="blank" href={config.apiDocs}>API Docs <small>(Beta)</small></NavItem>
           <NavItem eventKey={7} className="global-search-button" onClick={(e) => handleSearchClick(e, props.toggleGlobalSearch)}>
