@@ -63,26 +63,26 @@ export const sandboxFetchChunk = (id, start, end) => {
       end
     });
 
-    const apiRoot = getState().config.singularityApiRoot;
+    const apiRoot = getState().tailer.config.singularityApiRoot;
     const query = `?path=${path}&offset=${start}&length=${end - start}`;
     const apiPath = `${apiRoot}/sandbox/${taskId}/read${query}`;
 
-    return fetch(apiPath)
+    return fetch(apiPath, {credentials: 'include'})
       .then(checkStatus)
       .then(parseJSON)
       .then(({data, nextOffset, offset}) => {
-        return addFileChunk(id, {
+        return dispatch(addFileChunk(id, {
           text: data,
           start: offset,
-          end: nextOffset,
-          byteLength: nextOffset - offset
-        });
+          end: nextOffset || end,
+          byteLength: nextOffset ? (nextOffset - offset) : (end - offset)
+        }));
       }).catch((error) => {
-        return {
+        return dispatch({
           type: SANDBOX_FETCH_CHUNK_ERROR,
           name: error.name,
           message: error.message
-        };
+        });
       });
   };
 };
@@ -98,26 +98,27 @@ export const sandboxGetLength = (id) => {
   const path = id.split('/').slice(1).join('/');
   return (dispatch, getState) => {
     dispatch({
-      type: SANDBOX_FETCH_CHUNK_STARTED,
+      type: SANDBOX_FETCH_LENGTH_STARTED,
       startedAt: Date.now(),
       id
     });
 
-    const apiRoot = getState().config.singularityApiRoot;
-    const query = `?path=${path}&offset=${0}&length=${0}`;
+    const apiRoot = getState().tailer.config.singularityApiRoot;
+    console.warn('this is broken');
+    const query = `?path=${path}&length=${0}`;
     const apiPath = `${apiRoot}/sandbox/${taskId}/read${query}`;
 
-    return fetch(apiPath)
+    return fetch(apiPath, {credentials: 'include'})
       .then(checkStatus)
       .then(parseJSON)
       .then(({offset}) => {
-        return setFileSize(id, offset);
+        return dispatch(setFileSize(id, offset));
       }).catch((error) => {
-        return {
-          type: SANDBOX_FETCH_CHUNK_ERROR,
+        return dispatch({
+          type: SANDBOX_FETCH_LENGTH_ERROR,
           name: error.name,
           message: error.message
-        };
+        });
       });
   };
 };

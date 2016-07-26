@@ -17,7 +17,7 @@ class App extends Component {
   }
 
   componentDidMount() {
-    this.props.setSandboxApi();
+    this.props.setSandboxApi(localStorage.apiRootOverride);
   }
 
   tailLog(e) {
@@ -60,7 +60,7 @@ App.propTypes = {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-  setSandboxApi: () => dispatch(sandboxSetApiRoot('localhost'))
+  setSandboxApi: (uri) => dispatch(sandboxSetApiRoot(uri || 'localhost'))
 });
 
 export default connect(

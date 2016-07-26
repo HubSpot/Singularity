@@ -245,17 +245,17 @@ export const mergeChunks = (existing, incoming) => {
   }
   // oh, this is so much more simple
   // find where to put this chunk
-  const indexBefore = existing.findIndex((c) => incoming.start >= c.end);
+  const indexBefore = existing.findLastIndex((c) => incoming.start >= c.end);
 
   // works even if indexBefore === -1
   return existing.insert(indexBefore + 1, incoming);
 };
 
-export const createLines = (chunks, range) => {
+export const createLines = (chunks) => {
   // get chunks that overlap a byte range (inclusive)
-  return getOverlap(chunks, range, true).reduce(
+  return chunks.reduce(
     (accumulatedLines, c) => {
-      const chunkLines = getOverlap(splitChunkIntoLines(c), range, true);
+      const chunkLines = splitChunkIntoLines(c);
 
       if (accumulatedLines.size && chunkLines.size) {
         const existingPart = accumulatedLines.last();
@@ -283,6 +283,36 @@ export const createLines = (chunks, range) => {
     },
     new List()
   );
+};
+
+const getBoundingRange = (...ranges) => {
+  return {
+    start: Math.min(...ranges.map((r) => r.start)),
+    end: Math.max(...ranges.map((r) => r.end))
+  };
+};
+
+const createLinesForNewChunk = (existingLines, chunks, incomingRangeLike) => {
+  // get the full byte range of lines that the incoming chunk intersects
+  const overlappingLines = getOverlap(existingLines, incomingRangeLike, true);
+
+  if (!overlappingLines.size) {
+    // the range is beyond the range of existing lines, just make these
+    return createLines(getOverlap(chunks, incomingRangeLike));
+  }
+
+  const boundingByteRange = getBoundingRange(
+    getBookends(overlappingLines),
+    incomingRangeLike
+  );
+
+  // get the chunks that intersect that range
+  const overlappingChunks = getOverlap(chunks, boundingByteRange, true);
+
+  // generate all of the lines from the new overlappingChunks
+  const untrimmedLines = createLines(overlappingChunks);
+
+  return getOverlap(untrimmedLines, incomingRangeLike, true);
 };
 
 // incoming: List of lines
@@ -331,7 +361,7 @@ export const addChunkReducer = (state, action) => {
   if (!state[id]) {
     const chunks = mergeChunks(new List(), chunk);
     const bookends = getBookends(chunks);
-    let lines = createLines(chunks, bookends);
+    let lines = createLines(chunks);
 
     if (bookends.start !== 0) {
       lines = lines.unshift(
@@ -356,14 +386,17 @@ export const addChunkReducer = (state, action) => {
 
   // has been init and has new data
   const chunks = mergeChunks(state[id].chunks, chunk);
-  const replacementRange = findOverlap(state[id].lines, chunk, true);
+
+  const incomingLines = createLinesForNewChunk(state[id].lines, chunks, chunk);
+  const replacementRange = findOverlap(state[id].lines, getBookends(incomingLines));
+
   return {
     ...state,
     [id]: {
       chunks,
       lines: mergeLines(
         state[id].lines,
-        createLines(chunks, chunk),
+        incomingLines,
         replacementRange
       ),
       fileSize: Math.max(state[id].fileSize, chunk.end)
@@ -402,6 +435,17 @@ const filesReducer = (state = initialState, action) => {
         );
       }
     case SET_FILE_SIZE:
+      if (!state[action.id]) {
+        return {
+          ...state,
+          [action.id]: {
+            chunks: new List(),
+            lines: new List().push(createMissingMarker(0, action.fileSize)),
+            fileSize: action.fileSize
+          }
+        };
+      }
+
       return {
         ...state,
         [action.id]: {

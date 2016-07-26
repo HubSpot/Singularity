@@ -312,7 +312,54 @@ describe('mergeChunks', () => {
         }
       ]
     );
+
+    expect(
+      mergeChunksTestHelper(
+        [
+          {
+            text: 'asdf',
+            byteLength: 4,
+            start: 2000,
+            end: 2004
+          },
+          {
+            text: 'hi there',
+            byteLength: 8,
+            start: 2004,
+            end: 2012
+          }
+        ],
+        {
+          text: 'characters',
+          byteLength: 10,
+          start: 1990,
+          end: 2000
+        }
+      )
+    ).toEqual(
+      [
+        {
+          text: 'characters',
+          byteLength: 10,
+          start: 1990,
+          end: 2000
+        },
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 2000,
+          end: 2004
+        },
+        {
+          text: 'hi there',
+          byteLength: 8,
+          start: 2004,
+          end: 2012
+        }
+      ]
+    );
   });
+
   it('should be able to add a chunk right after another', () => {
     expect(
       mergeChunksTestHelper(
@@ -347,7 +394,136 @@ describe('mergeChunks', () => {
         }
       ]
     );
+
+    expect(
+      mergeChunksTestHelper(
+        [
+          {
+            text: 'hi there',
+            byteLength: 8,
+            start: 2000,
+            end: 2008
+          },
+          {
+            text: 'asdf',
+            byteLength: 4,
+            start: 2008,
+            end: 2012
+          }
+        ],
+        {
+          text: '1234',
+          byteLength: 4,
+          start: 2012,
+          end: 2016
+        }
+      )
+    ).toEqual(
+      [
+        {
+          text: 'hi there',
+          byteLength: 8,
+          start: 2000,
+          end: 2008
+        },
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 2008,
+          end: 2012
+        },
+        {
+          text: '1234',
+          byteLength: 4,
+          start: 2012,
+          end: 2016
+        }
+      ]
+    );
   });
+
+  it('should be able to add a chunk with a space after another', () => {
+    expect(
+      mergeChunksTestHelper(
+        [
+          {
+            text: 'hi there',
+            byteLength: 8,
+            start: 2000,
+            end: 2008
+          }
+        ],
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 2009,
+          end: 2013
+        }
+      )
+    ).toEqual(
+      [
+        {
+          text: 'hi there',
+          byteLength: 8,
+          start: 2000,
+          end: 2008
+        },
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 2009,
+          end: 2013
+        }
+      ]
+    );
+
+    expect(
+      mergeChunksTestHelper(
+        [
+          {
+            text: 'hi there',
+            byteLength: 8,
+            start: 2000,
+            end: 2008
+          },
+          {
+            text: 'password',
+            byteLength: 8,
+            start: 2008,
+            end: 2016
+          }
+        ],
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 2017,
+          end: 2021
+        }
+      )
+    ).toEqual(
+      [
+        {
+          text: 'hi there',
+          byteLength: 8,
+          start: 2000,
+          end: 2008
+        },
+        {
+          text: 'password',
+          byteLength: 8,
+          start: 2008,
+          end: 2016
+        },
+        {
+          text: 'asdf',
+          byteLength: 4,
+          start: 2017,
+          end: 2021
+        }
+      ]
+    );
+  });
+
   it('should be able to merge a chunk that overlaps the end of another chunk', () => {
     expect(
       mergeChunksTestHelper(
@@ -609,19 +785,15 @@ describe('mergeChunks', () => {
   });
 });
 
-const createLinesHelper = (chunks, range) => {
-  return createLines(new List(chunks), range).toArray();
+const createLinesHelper = (chunks) => {
+  return createLines(new List(chunks)).toArray();
 };
 
 describe('createLines', () => {
   it('should work for no input', () => {
     expect(
       createLinesHelper(
-        [],
-        {
-          start: 0,
-          end: 0
-        }
+        []
       )
     ).toEqual(
       []
@@ -639,11 +811,7 @@ describe('createLines', () => {
               start: 0,
               end: 20
             }
-          ],
-          {
-            start: 0,
-            end: 20
-          }
+          ]
         )
       ).toEqual(
         [
@@ -680,11 +848,7 @@ describe('createLines', () => {
               start: 1000,
               end: 1020
             }
-          ],
-          {
-            start: 1000,
-            end: 1020
-          }
+          ]
         )
       ).toEqual(
         [
@@ -712,76 +876,6 @@ describe('createLines', () => {
         ]
       );
     });
-
-    it('should work for a partial range', () => {
-      expect(
-        createLinesHelper(
-          [
-            {
-              text: 'waffles\nand\npancakes',
-              byteLength: 20,
-              start: 0,
-              end: 20
-            }
-          ],
-          {
-            start: 0,
-            end: 10
-          }
-        )
-      ).toEqual(
-        [
-          {
-            text: 'waffles',
-            byteLength: 7,
-            start: 0,
-            end: 8,
-            hasNewline: true
-          },
-          {
-            text: 'and',
-            byteLength: 3,
-            start: 8,
-            end: 12,
-            hasNewline: true
-          }
-        ]
-      );
-
-      expect(
-        createLinesHelper(
-          [
-            {
-              text: 'waffles\nand\npancakes',
-              byteLength: 20,
-              start: 0,
-              end: 20
-            }
-          ],
-          {
-            start: 10,
-            end: 20
-          }
-        )
-      ).toEqual(
-        [
-          {
-            text: 'and',
-            byteLength: 3,
-            start: 8,
-            end: 12,
-            hasNewline: true
-          },
-          {
-            text: 'pancakes',
-            byteLength: 8,
-            start: 12,
-            end: 20,
-            hasNewline: false
-          }
-        ]
-      );
-    });
   });
 
   describe('multiple chunks', () => {
@@ -801,11 +895,7 @@ describe('createLines', () => {
               start: 1020,
               end: 1040
             }
-          ],
-          {
-            start: 1000,
-            end: 1040
-          }
+          ]
         )
       ).toEqual(
         [
@@ -864,11 +954,7 @@ describe('createLines', () => {
               start: 2000,
               end: 2020
             }
-          ],
-          {
-            start: 1000,
-            end: 2020
-          }
+          ]
         )
       ).toEqual(
         [
@@ -914,97 +1000,6 @@ describe('createLines', () => {
             start: 2012,
             end: 2020,
             hasNewline: false
-          }
-        ]
-      );
-    });
-
-    it('should work for the partial range with chunks that have no gap', () => {
-      expect(
-        createLinesHelper(
-          [
-            {
-              text: 'waffles\nand\npancakes',
-              byteLength: 20,
-              start: 1000,
-              end: 1020
-            },
-            {
-              text: 'waffles\nand\npancakes',
-              byteLength: 20,
-              start: 1020,
-              end: 1040
-            }
-          ],
-          {
-            start: 1010,
-            end: 1030
-          }
-        )
-      ).toEqual(
-        [
-          {
-            text: 'and',
-            byteLength: 3,
-            start: 1008,
-            end: 1012,
-            hasNewline: true
-          },
-          {
-            text: 'pancakeswaffles',
-            byteLength: 15,
-            start: 1012,
-            end: 1028,
-            hasNewline: true
-          },
-          {
-            text: 'and',
-            byteLength: 3,
-            start: 1028,
-            end: 1032,
-            hasNewline: true
-          }
-        ]
-      );
-    });
-    it('should work for the partial range with chunks that have a gap', () => {
-      expect(
-        createLinesHelper(
-          [
-            {
-              text: 'waffles\nand\npancakes',
-              byteLength: 20,
-              start: 1000,
-              end: 1020
-            },
-            {
-              text: 'waffles\nand\npancakes',
-              byteLength: 20,
-              start: 2000,
-              end: 2020
-            }
-          ],
-          {
-            start: 1015,
-            end: 2001
-          }
-        )
-      ).toEqual(
-        [
-          {
-            text: 'pancakes',
-            byteLength: 8,
-            start: 1012,
-            end: 1020,
-            hasNewline: false
-          },
-          createMissingMarker(1020, 2000),
-          {
-            text: 'waffles',
-            byteLength: 7,
-            start: 2000,
-            end: 2008,
-            hasNewline: true
           }
         ]
       );
@@ -1286,6 +1281,7 @@ describe('addChunkReducer', () => {
                 }
               ],
               lines: [
+                createMissingMarker(0, 30),
                 {
                   text: 'non-empty log',
                   byteLength: 13,
@@ -1369,6 +1365,7 @@ describe('addChunkReducer', () => {
                 }
               ],
               lines: [
+                createMissingMarker(0, 30),
                 {
                   text: 'non-empty log',
                   byteLength: 13,
