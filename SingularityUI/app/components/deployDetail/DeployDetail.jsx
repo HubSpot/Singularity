@@ -6,6 +6,7 @@ import Clipboard from 'clipboard';
 
 import Utils from '../../utils';
 import { Link } from 'react-router';
+import { Glyphicon } from 'react-bootstrap';
 import {
   FetchTaskHistory,
   FetchActiveTasksForDeploy,
@@ -20,67 +21,62 @@ import JSONButton from '../common/JSONButton';
 import SimpleTable from '../common/SimpleTable';
 import ServerSideTable from '../common/ServerSideTable';
 import CollapsableSection from '../common/CollapsableSection';
+import NotFound from '../common/NotFound';
 
 import ActiveTasksTable from './ActiveTasksTable';
 
 class DeployDetail extends React.Component {
   static propTypes = {
-    deploy: PropTypes.object.isRequired,
-    taskHistory: PropTypes.arrayOf(PropTypes.object).isRequired,
-    latestHealthchecks: PropTypes.arrayOf(PropTypes.object).isRequired
-  };
-
-  static propTypes = {
-    dispatch: React.PropTypes.func,
-    deploy: React.PropTypes.object,
-    activeTasks: React.PropTypes.array,
-    taskHistory: React.PropTypes.array,
-    latestHealthchecks: React.PropTypes.array,
-    fetchTaskHistoryForDeploy: React.PropTypes.func,
-    params: React.PropTypes.object
-  }
-
-  componentWillMount() {
-    this.props.fetchTaskHistoryForDeploy(this.props.params.requestId, this.props.params.deployId, 5, 1);
+    location: PropTypes.shape({
+      pathname: PropTypes.string.isRequired
+    }).isRequired,
+    dispatch: PropTypes.func,
+    deploy: PropTypes.object,
+    activeTasks: PropTypes.array,
+    taskHistory: PropTypes.array,
+    latestHealthchecks: PropTypes.array,
+    fetchTaskHistoryForDeploy: PropTypes.func,
+    params: PropTypes.object,
+    notFound: PropTypes.bool
   }
 
   componentDidMount() {
-    new Clipboard('.info-copyable'); // eslint-disable-line no-new
+    return new Clipboard('.info-copyable');
   }
 
-  renderHeader(d) {
+  renderHeader(deploy) {
     let message;
-    if (d.deployResult.message) {
+    if (deploy.deployResult && deploy.deployResult.message) {
       message = (
         <div className="row">
-            <div className="col-md-12">
-                <div className="well text-muted">
-                    {d.deployResult.message}
-                </div>
+          <div className="col-md-12">
+            <div className="well text-muted">
+              {deploy.deployResult.message}
             </div>
+          </div>
         </div>
       );
     }
     let failures;
-    if (d.deployResult.deployFailures) {
+    if (deploy.deployResult && deploy.deployResult.deployFailures) {
       let fails = [];
-      let k = 0;
-      for (const f of d.deployResult.deployFailures) {
-        fails.push(f.taskId ?
-          <Link key={k} to={`task/${f.taskId.id}`} className="list-group-item">
-            <strong>{f.taskId.id}</strong>: {f.reason} (Instance {f.taskId.instanceNo}): {f.message}
+      let key = 0;
+      for (const failure of deploy.deployResult.deployFailures) {
+        fails.push(failure.taskId ?
+          <Link key={key} to={`task/${failure.taskId.id}`} className="list-group-item">
+            <strong>{failure.taskId.id}</strong>: {failure.reason} (Instance {failure.taskId.instanceNo}): {failure.message}
           </Link>
           :
-          <li key={k} className="list-group-item">{f.reason}: {f.message}</li>
+          <li key={key} className="list-group-item">{failure.reason}: {failure.message}</li>
         );
-        k++;
+        key++;
       }
       if (fails.length) {
         failures = (
           <div className="row">
             <div className="col-md-12">
               <div className="panel panel-danger">
-                <div className="panel-heading text-muted">Deploy had {fails.length} failure{fails.length > 1 ? 's' : ''}:</div>
+                <div className="panel-heading text-muted">Deploy had {fails.length} failure{fails.length > 1 && 's'}:</div>
                 <div className="panel-body">
                   {fails}
                 </div>
@@ -98,12 +94,12 @@ class DeployDetail extends React.Component {
               items={[
                 {
                   label: 'Request',
-                  text: d.deploy.requestId,
-                  link: `request/${d.deploy.requestId}`
+                  text: deploy.deploy.requestId,
+                  link: `request/${deploy.deploy.requestId}`
                 },
                 {
                   label: 'Deploy',
-                  text: d.deploy.id
+                  text: deploy.deploy.id
                 }
               ]}
             />
@@ -112,12 +108,12 @@ class DeployDetail extends React.Component {
         <div className="row">
           <div className="col-md-8">
             <h1>
-              <span>{d.deploy.id}</span>
-              <DeployState state={d.deployResult.deployState} />
+              <span>{deploy.deploy.id}</span>
+              <DeployState state={deploy.deployResult && deploy.deployResult.deployState || 'PENDING'} />
             </h1>
           </div>
           <div className="col-md-4 button-container">
-            <JSONButton object={d} linkClassName="btn btn-default">
+            <JSONButton object={deploy} linkClassName="btn btn-default">
               JSON
             </JSONButton>
           </div>
@@ -127,18 +123,18 @@ class DeployDetail extends React.Component {
     );
   }
 
-  renderActiveTasks(d) {
+  renderActiveTasks(deploy) {
     return (
       <div>
         <div className="page-header">
           <h2>Active Tasks</h2>
         </div>
-        <ActiveTasksTable deployId={d.id} />
+        <ActiveTasksTable deployId={deploy.id} />
       </div>
     );
   }
 
-  renderTaskHistory(d, tasks) {
+  renderTaskHistory(deploy, tasks) {
     return (
       <div>
         <div className="page-header">
@@ -146,11 +142,11 @@ class DeployDetail extends React.Component {
         </div>
         <ServerSideTable
           emptyMessage="No tasks"
-          entries={tasks}
-          paginate={tasks.length >= 5}
+          entries={tasks || []}
+          paginate={true}
           perPage={5}
           fetchAction={FetchTaskHistoryForDeploy}
-          fetchParams={[d.deploy.requestId, d.deploy.id]}
+          fetchParams={[deploy.deploy.requestId, deploy.deploy.id]}
           headers={['Name', 'Last State', 'Started', 'Updated', '', '']}
           renderTableRow={(data, index) => {
             return (
@@ -159,7 +155,7 @@ class DeployDetail extends React.Component {
                 <td><span className={`label label-${Utils.getLabelClassFromTaskState(data.lastTaskState)}`}>{Utils.humanizeText(data.lastTaskState)}</span></td>
                 <td>{Utils.timestampFromNow(data.taskId.startedAt)}</td>
                 <td>{Utils.timestampFromNow(data.updatedAt)}</td>
-                <td className="actions-column"><Link to={`request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log">&middot;&middot;&middot;</Link></td>
+                <td className="actions-column"><Link to={`request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log"><Glyphicon glyph="file" /></Link></td>
                 <td className="actions-column"><JSONButton object={data}>{'{ }'}</JSONButton></td>
               </tr>
             );
@@ -169,31 +165,31 @@ class DeployDetail extends React.Component {
     );
   }
 
-  renderInfo(d) {
+  renderInfo(deploy) {
     let stats = [];
 
-    if (d.deployMarker.timestamp) {
-      stats.push(<InfoBox key="initiated" copyableClassName="info-copyable" name="Initiated" value={Utils.timestampFromNow(d.deployMarker.timestamp)} />);
+    if (deploy.deployMarker.timestamp) {
+      stats.push(<InfoBox key="initiated" copyableClassName="info-copyable" name="Initiated" value={Utils.timestampFromNow(deploy.deployMarker.timestamp)} />);
     }
-    if (d.deployResult.timestamp) {
-      stats.push(<InfoBox key="completed" copyableClassName="info-copyable" name="Completed" value={Utils.timestampFromNow(d.deployResult.timestamp)} />);
+    if (deploy.deployResult && deploy.deployResult.timestamp) {
+      stats.push(<InfoBox key="completed" copyableClassName="info-copyable" name="Completed" value={Utils.timestampFromNow(deploy.deployResult.timestamp)} />);
     }
-    if (d.deploy.executorData && d.deploy.executorData.cmd) {
-      stats.push(<InfoBox key="cmd" copyableClassName="info-copyable" name="Command" value={d.deploy.executorData.cmd} />);
+    if (deploy.deploy.executorData && deploy.deploy.executorData.cmd) {
+      stats.push(<InfoBox key="cmd" copyableClassName="info-copyable" name="Command" value={deploy.deploy.executorData.cmd} />);
     }
-    if (d.deploy.resources.cpus) {
-      let value = `CPUs: ${d.deploy.resources.cpus} | Memory (Mb): ${d.deploy.resources.memoryMb} | Ports: ${d.deploy.resources.numPorts}`;
+    if (deploy.deploy.resources.cpus) {
+      let value = `CPUs: ${deploy.deploy.resources.cpus} | Memory (Mb): ${deploy.deploy.resources.memoryMb} | Ports: ${deploy.deploy.resources.numPorts}`;
       stats.push(<InfoBox key="cpus" copyableClassName="info-copyable" name="Resources" value={value} />);
     }
-    if (d.deploy.executorData && d.deploy.executorData.extraCmdLineArgs) {
-      stats.push(<InfoBox key="args" copyableClassName="info-copyable" name="Extra Command Line Arguments" value={d.deploy.executorData.extraCmdLineArgsd} />);
+    if (deploy.deploy.executorData && deploy.deploy.executorData.extraCmdLineArgs) {
+      stats.push(<InfoBox key="args" copyableClassName="info-copyable" name="Extra Command Line Arguments" value={deploy.deploy.executorData.extraCmdLineArgsd} />);
     }
 
-    for (let s in d.deployStatistics) {
-      if (typeof d.deployStatistics[s] !== 'object') {
-        let value = typeof d.deployStatistics[s] === 'string' ? Utils.humanizeText(d.deployStatistics[s]) : d.deployStatistics[s];
+    for (let statistic in deploy.deployStatistics) {
+      if (typeof deploy.deployStatistics[statistic] !== 'object') {
+        let value = typeof deploy.deployStatistics[statistic] === 'string' ? Utils.humanizeText(deploy.deployStatistics[statistic]) : deploy.deployStatistics[statistic];
         stats.push(
-          <InfoBox copyableClassName="info-copyable" key={s} name={Utils.humanizeCamelcase(s)} value={value} />
+          <InfoBox copyableClassName="info-copyable" key={statistic} name={Utils.humanizeCamelcase(statistic)} value={value} />
         );
       }
     }
@@ -208,7 +204,7 @@ class DeployDetail extends React.Component {
     );
   }
 
-  renderHealthchecks(d, healthchecks) {
+  renderHealthchecks(deploy, healthchecks) {
     if (healthchecks.length === 0) return <div></div>;
     return (
       <CollapsableSection title="Latest Healthchecks">
@@ -224,7 +220,7 @@ class DeployDetail extends React.Component {
               <tr key={index}>
                 <td><Link to={`task/${data.taskId.id}`}>{data.taskId.id}</Link></td>
                 <td>{Utils.absoluteTimestamp(data.timestamp)}</td>
-                <td>{data.durationMillis} {data.durationMillis ? 'ms' : ''}</td>
+                <td>{data.durationMillis} {data.durationMillis && 'ms'}</td>
                 <td>{data.statusCode ? <span className={`label label-${data.statusCode === 200 ? 'success' : 'danger'}`}>HTTP {data.statusCode}</span> : <span className="label label-warning">No Response</span>}</td>
                 <td><pre className="healthcheck-message">{data.errorMessage || data.responseBody}</pre></td>
                 <td className="actions-column"><JSONButton object={data}>{'{ }'}</JSONButton></td>
@@ -237,7 +233,10 @@ class DeployDetail extends React.Component {
   }
 
   render() {
-    const { deploy, activeTasks, taskHistory, latestHealthchecks } = this.props;
+    const { notFound, deploy, activeTasks, taskHistory, latestHealthchecks } = this.props;
+    if (notFound) {
+      return <NotFound location={{pathname: this.props.location.pathname}} />;
+    }
     return (
       <div>
         {this.renderHeader(deploy)}
@@ -252,7 +251,7 @@ class DeployDetail extends React.Component {
 
 function mapDispatchToProps(dispatch) {
   return {
-    fetchDeployForRequest: (requestId, deployId) => dispatch(FetchDeployForRequest.trigger(requestId, deployId)),
+    fetchDeployForRequest: (requestId, deployId) => dispatch(FetchDeployForRequest.trigger(requestId, deployId, true)),
     fetchActiveTasksForDeploy: (requestId, deployId) => dispatch(FetchActiveTasksForDeploy.trigger(requestId, deployId)),
     clearTaskHistoryForDeploy: () => dispatch(FetchTaskHistoryForDeploy.clearData()),
     fetchTaskHistoryForDeploy: (requestId, deployId, count, page) => dispatch(FetchTaskHistoryForDeploy.trigger(requestId, deployId, count, page)),
@@ -272,17 +271,24 @@ function mapStateToProps(state) {
   latestHealthchecks = _.without(latestHealthchecks, undefined);
 
   return {
+    notFound: state.api.deploy.statusCode === 404,
     deploy: state.api.deploy.data,
     taskHistory: state.api.taskHistoryForDeploy.data,
     latestHealthchecks
   };
 }
 
+let firstLoad = true;
+
 function refresh(props) {
   const promises = [];
   promises.push(props.fetchDeployForRequest(props.params.requestId, props.params.deployId));
   promises.push(props.fetchActiveTasksForDeploy(props.params.requestId, props.params.deployId));
   promises.push(props.clearTaskHistoryForDeploy());
+  if (firstLoad) {
+    firstLoad = false;
+    props.fetchTaskHistoryForDeploy(props.params.requestId, props.params.deployId, 5, 1);
+  }
 
   const allPromises = Promise.all(promises);
   allPromises.then(() => {
@@ -293,4 +299,4 @@ function refresh(props) {
   return allPromises;
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(DeployDetail, (props) => `${props.params.requestId} Deploy ${props.params.deployId}`, refresh));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(DeployDetail, (props) => `Deploy ${props.params.deployId}`, refresh));
