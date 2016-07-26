@@ -212,6 +212,7 @@ class DeployDetail extends React.Component {
         <UITable
           emptyTableMessage="No healthchecks"
           rowChunkSize={5}
+          paginated={true}
           keyGetter={(healthcheck) => healthcheck.timestamp}
           data={_.values(healthchecks)}
         >
