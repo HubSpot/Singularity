@@ -160,13 +160,7 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-let firstLoad = true;
-
 function refresh(props) {
-  if (!firstLoad) {
-    return null;
-  }
-  firstLoad = false;
   const promises = [];
   const filter = _.extend({}, { requestId: props.params.requestId }, props.filter);
   promises.push(props.fetchTaskHistory(INITIAL_TASKS_PER_PAGE, 1, filter));
@@ -174,4 +168,4 @@ function refresh(props) {
   return Promise.all(promises);
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(TaskSearch, 'Task Search', refresh));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(TaskSearch, 'Task Search', refresh, false));
