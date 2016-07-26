@@ -1776,5 +1776,79 @@ describe('addChunkReducer', () => {
         }
       );
     });
+
+    it('should handle new lines that are beyond the known eof', () => {
+      expect(
+        addChunkReducerHelper({
+          'tail': {
+            'chunks': [
+              {
+                'text': 'hit',
+                'start': 0,
+                'end': 3,
+                'byteLength': 3
+              }
+            ],
+            'lines': [
+              {
+                'text': 'hit',
+                'byteLength': 3,
+                'start': 0,
+                'end': 3,
+                'hasNewline': false
+              }
+            ],
+            'fileSize': 3
+          }
+        },
+        Actions.addFileChunk('tail', {
+          'text': 'lol',
+          'start': 10,
+          'end': 13,
+          'byteLength': 3
+        }))
+      ).toEqual({
+        'tail': {
+          'chunks': [
+            {
+              'text': 'hit',
+              'start': 0,
+              'end': 3,
+              'byteLength': 3
+            },
+            {
+              'text': 'lol',
+              'start': 10,
+              'end': 13,
+              'byteLength': 3
+            }
+          ],
+          'lines': [
+            {
+              'text': 'hit',
+              'byteLength': 3,
+              'start': 0,
+              'end': 3,
+              'hasNewline': false
+            },
+            {
+              'isMissingMarker': true,
+              'byteLength': 7,
+              'start': 3,
+              'end': 10,
+              'hasNewline': false
+            },
+            {
+              'text': 'lol',
+              'byteLength': 3,
+              'start': 10,
+              'end': 13,
+              'hasNewline': false
+            }
+          ],
+          'fileSize': 13
+        }
+      });
+    });
   });
 });

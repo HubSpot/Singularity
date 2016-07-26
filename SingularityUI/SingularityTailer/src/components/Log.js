@@ -6,7 +6,14 @@ import connectToTailer from './connectToTailer';
 const Log = ({id, data}) => {
   let maybeLog;
   if (data) {
-    maybeLog = <div>LOG LOADED</div>;
+    const logLines = data.lines.map((l) => {
+      return <p>{l.text}</p>;
+    });
+    maybeLog = (
+      <div>
+        {logLines}
+      </div>
+    );
   } else {
     maybeLog = <div>Log not loaded</div>;
   }

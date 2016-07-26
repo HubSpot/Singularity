@@ -256,6 +256,7 @@ export const createLines = (chunks, range) => {
   return getOverlap(chunks, range, true).reduce(
     (accumulatedLines, c) => {
       const chunkLines = getOverlap(splitChunkIntoLines(c), range, true);
+
       if (accumulatedLines.size && chunkLines.size) {
         const existingPart = accumulatedLines.last();
         const newPart = chunkLines.first();
@@ -286,7 +287,17 @@ export const createLines = (chunks, range) => {
 
 // incoming: List of lines
 export const mergeLines = (existing, incoming, replacementRange) => {
+  if (replacementRange.startIndex === -1) {
+    // the new lines don't overlap at all, this means that the new lines go at
+    // the end. There is also a space in between the last element and this one
+    // so let's always add a missing marker here.
+    return existing
+      .push(createMissingMarker(existing.last().end, incoming.first().start))
+      .concat(incoming);
+  }
+
   const generatedByteRange = getBookends(incoming);
+
   const replacementByteRange = {
     start: existing.get(replacementRange.startIndex).start,
     end: existing.get(replacementRange.endIndex).end

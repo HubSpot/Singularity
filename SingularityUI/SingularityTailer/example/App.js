@@ -1,8 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import TailerProvider from '../src/components/TailerProvider';
-import { Log } from '../src/components';
+import { Log, TailerProvider } from '../src/components';
 
 import { sandboxSetApiRoot } from '../src/actions';
 
