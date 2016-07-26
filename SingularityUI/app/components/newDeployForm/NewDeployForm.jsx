@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
-import { Link } from 'react-router';
+import { Link, withRouter } from 'react-router';
 
 import Utils from '../../utils';
 
@@ -1451,13 +1451,17 @@ function mapStateToProps(state, ownProps) {
   };
 }
 
-function mapDispatchToProps(dispatch) {
+function mapDispatchToProps(dispatch, ownProps) {
   return {
     update(formId, fieldId, newValue) {
       dispatch(ModifyField(formId, fieldId, newValue));
     },
     save(deployBody) {
-      dispatch(SaveDeploy.trigger(deployBody));
+      dispatch(SaveDeploy.trigger(deployBody)).then((response) => {
+        if (response.type === 'SAVE_DEPLOY_SUCCESS') {
+          ownProps.router.push(`request/${ownProps.params.requestId}/deploy/${response.data.pendingDeploy.id}`);
+        }
+      });
     },
     fetchRequest(requestId) {
       return dispatch(FetchRequest.trigger(requestId));
@@ -1480,4 +1484,4 @@ function refresh(props) {
   return Promise.all(promises);
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(NewDeployForm, 'New Deploy', refresh));
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(rootComponent(NewDeployForm, 'New Deploy', refresh)));

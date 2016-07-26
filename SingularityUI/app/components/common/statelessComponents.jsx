@@ -28,7 +28,11 @@ export const InfoBox = (props) => {
 InfoBox.propTypes = {
   name: PropTypes.string,
   copyableClassName: PropTypes.string,
-  value: PropTypes.string
+  value: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.number,
+    PropTypes.bool
+  ])
 };
 
 export const UsageInfo = (props) => {
