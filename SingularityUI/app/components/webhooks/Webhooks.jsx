@@ -154,36 +154,48 @@ const Webhooks = React.createClass({
           keyGetter={(webhook) => webhook.webhook.timestamp}
           rowChunkSize={20}
           paginated={true}
+          defaultSortBy="queue-size"
+          defaultSortDirection={UITable.SortDirection.ASC}
         >
           <Column
             label="URL"
             id="url"
             key="url"
+            sortable={true}
+            sortData={(cellData, webhook) => webhook.webhook.uri}
             cellData={(webhook) => webhook.webhook.uri}
           />
           <Column
             label="Type"
             id="type"
             key="type"
+            sortable={true}
+            sortData={(cellData, webhook) => webhook.webhook.type}
             cellData={(webhook) => Utils.humanizeText(webhook.webhook.type)}
           />
           <Column
             label="Timestamp"
             id="timestamp"
             key="timestamp"
+            sortable={true}
+            sortData={(cellData, webhook) => webhook.webhook.timestamp}
             cellData={(webhook) => Utils.absoluteTimestamp(webhook.webhook.timestamp)}
           />
           <Column
             label="User"
             id="user"
             key="user"
+            sortable={true}
+            sortData={(cellData, webhook) => webhook.webhook.user || 'N/A'}
             cellData={(webhook) => webhook.webhook.user || 'N/A'}
           />
           <Column
             label="Queue Size"
             id="queue-size"
             key="queue-size"
-            cellData={(webhook) => webhook.queueSize || 0}
+            sortable={true}
+            sortData={(cellData, webhook) => webhook.queueSize}
+            cellData={(webhook) => webhook.queueSize && <b>{webhook.queueSize}</b> || 0}
           />
           <Column
             id="actions-column"

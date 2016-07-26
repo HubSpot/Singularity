@@ -12,12 +12,18 @@ class UITable extends Component {
   constructor(props) {
     super(props);
 
+    let { data } = props;
+    const { defaultSortBy, defaultSortDirection } = props;
+    if (defaultSortBy) {
+      data = this.doSort(data, defaultSortBy, defaultSortDirection);
+    }
+
     this.state = {
-      sortBy: props.defaultSortBy,
-      sortDirection: props.defaultSortDirection,
+      sortBy: defaultSortBy,
+      sortDirection: defaultSortDirection,
       sortTime: null,
       chunkNum: 1,
-      data: props.data
+      data
     };
 
     this.handlePageChange = this.handlePageChange.bind(this);
