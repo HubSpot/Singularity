@@ -62,7 +62,7 @@ export const sandboxFetchChunk = (id, start, end) => {
       start,
       end
     });
-
+    console.warn('this getState() won\'t work outside the example, plsfix');
     const apiRoot = getState().tailer.config.singularityApiRoot;
     const query = `?path=${path}&offset=${start}&length=${end - start}`;
     const apiPath = `${apiRoot}/sandbox/${taskId}/read${query}`;
