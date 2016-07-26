@@ -18,7 +18,8 @@ import { DeployState, InfoBox } from '../common/statelessComponents';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import JSONButton from '../common/JSONButton';
-import SimpleTable from '../common/SimpleTable';
+import UITable from '../common/table/UITable';
+import Column from '../common/table/Column';
 import ServerSideTable from '../common/ServerSideTable';
 import CollapsableSection from '../common/CollapsableSection';
 import NotFound from '../common/NotFound';
@@ -208,26 +209,64 @@ class DeployDetail extends React.Component {
     if (healthchecks.length === 0) return <div></div>;
     return (
       <CollapsableSection title="Latest Healthchecks">
-        <SimpleTable
-          emptyMessage="No healthchecks"
-          entries={_.values(healthchecks)}
-          perPage={5}
-          first={true}
-          last={true}
-          headers={['Task', 'Timestamp', 'Duration', 'Status', 'Message', '']}
-          renderTableRow={(data, index) => {
-            return (
-              <tr key={index}>
-                <td><Link to={`task/${data.taskId.id}`}>{data.taskId.id}</Link></td>
-                <td>{Utils.absoluteTimestamp(data.timestamp)}</td>
-                <td>{data.durationMillis} {data.durationMillis && 'ms'}</td>
-                <td>{data.statusCode ? <span className={`label label-${data.statusCode === 200 ? 'success' : 'danger'}`}>HTTP {data.statusCode}</span> : <span className="label label-warning">No Response</span>}</td>
-                <td><pre className="healthcheck-message">{data.errorMessage || data.responseBody}</pre></td>
-                <td className="actions-column"><JSONButton object={data}>{'{ }'}</JSONButton></td>
-              </tr>
-            );
-          }}
-        />
+        <UITable
+          emptyTableMessage="No healthchecks"
+          rowChunkSize={5}
+          keyGetter={(healthcheck) => healthcheck.timestamp}
+          data={_.values(healthchecks)}
+        >
+          <Column
+            label="Task"
+            id="task"
+            key="task"
+            cellData={(healthcheck) => (
+              <Link to={`task/${healthcheck.taskId.id}`}>
+                {healthcheck.taskId.id}
+              </Link>
+            )}
+          />
+          <Column
+            label="Timestamp"
+            id="timestamp"
+            key="timestamp"
+            cellData={(healthcheck) => Utils.absoluteTimestamp(healthcheck.timestamp)}
+          />
+          <Column
+            label="Duration"
+            id="duration"
+            key="duration"
+            cellData={(healthcheck) => `${healthcheck.durationMillis} ${healthcheck.durationMillis && 'ms'}`}
+          />
+          <Column
+            label="Status"
+            id="status"
+            key="status"
+            cellData={(healthcheck) => (healthcheck.statusCode ?
+              <span className={`label label-${healthcheck.statusCode === 200 ? 'success' : 'danger'}`}>
+                HTTP {healthcheck.statusCode}
+              </span> :
+              <span className="label label-warning">
+                No Response
+              </span>
+            )}
+          />
+          <Column
+            label="Message"
+            id="message"
+            key="message"
+            cellData={(healthcheck) => (
+              <pre className="healthcheck-message">
+                {healthcheck.errorMessage || healthcheck.responseBody}
+              </pre>
+            )}
+          />
+          <Column
+            id="actions-column"
+            key="actions-column"
+            className="actions-column"
+            cellData={(healthcheck) => <JSONButton object={healthcheck}>{'{ }'}</JSONButton>}
+          />
+        </UITable>
       </CollapsableSection>
     );
   }
