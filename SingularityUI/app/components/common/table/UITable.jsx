@@ -43,7 +43,8 @@ class UITable extends Component {
     rowChunkSize: 30,
     defaultSortBy: undefined,
     defaultSortDirection: UITable.SortDirection.DESC,
-    asyncSort: false
+    asyncSort: false,
+    maxButtons: 10
   };
 
   state;
@@ -239,18 +240,18 @@ class UITable extends Component {
   renderPagination() {
     const numRows = this.state.data.length;
     const rowsPerPage = this.props.rowChunkSize;
+    const maxButtons = this.props.maxButtons;
     if (this.props.paginated && numRows > rowsPerPage) {
       const numPages = Math.ceil(numRows / rowsPerPage);
-      const showFirstAndLast = this.props.maxButtons ? numPages > this.props.maxButtons : numPages > 10;
       return (
         <Pagination
           prev={true}
           next={true}
-          first={showFirstAndLast}
-          last={showFirstAndLast}
+          first={numPages > maxButtons}
+          last={numPages > maxButtons}
           ellipsis={false}
           items={numPages}
-          maxButtons={this.props.maxButtons || 10}
+          maxButtons={maxButtons || 10}
           activePage={this.state.chunkNum}
           onSelect={this.handlePageChange}
         />
