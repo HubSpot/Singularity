@@ -46,7 +46,6 @@ class App extends Component {
             Tail!
           </button>
         </form>
-        <p>{this.state.taskId}</p>
         <TailerProvider getTailerState={(state) => state.tailer}>
           <Log id={this.state.taskId} />
         </TailerProvider>

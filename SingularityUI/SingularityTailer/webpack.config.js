@@ -24,6 +24,14 @@ module.exports = {
         loaders: ['babel'],
         exclude: /node_modules/,
       },
+      {
+        test: /\.css$/,
+        loader: 'style-loader!css-loader',
+      },
+      {
+        test: /\.scss$/,
+        loader: 'style-loader?sourceMap!css-loader?sourceMap!resolve-url?fail!sass?sourceMap',
+      },
     ],
   },
 };

@@ -1,36 +1,88 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import 'react-virtualized/styles.css';
+import '../styles/index.scss';
+
+import { AutoSizer, InfiniteLoader, VirtualScroll } from 'react-virtualized';
 
 import { sandboxGetLength, sandboxFetchChunk } from '../actions';
 
 import connectToTailer from './connectToTailer';
 
+const Line = ({data, isScrolling}) => {
+  if (data.isMissingMarker) {
+    const missingBytes = data.end - data.start;
+    return <div style={{backgroundColor: '#ddd'}} key={`${data.start}-${data.end}`}>{missingBytes} bytes</div>;
+  }
+  return <div key={`${data.start}-${data.end}`}>{data.text}</div>;
+};
+
 const Log = ({id, data, fetchLength, fetchChunk}) => {
   let maybeLog;
+
+  const overscanRowCount = 100;
+
+  const isRowLoaded = ({index}) => {
+    return index < data.lines.size && !data.lines.get(index).isMissingMarker;
+  };
+
+  const loadMoreRows = ({startIndex, stopIndex}) => {
+    console.log('loadMoreRows', startIndex, stopIndex);
+    let byteRangeStart;
+    let byteRangeEnd;
+    if (startIndex < data.lines.size) {
+      byteRangeStart = data.lines.get(startIndex).start;
+    } else {
+      byteRangeStart = data.lines.last().end;
+    }
+
+    if (stopIndex < data.lines.size) {
+      byteRangeEnd = data.lines.get(stopIndex).end;
+    } else {
+      byteRangeEnd = byteRangeStart + 65535;
+    }
+
+    return fetchChunk(byteRangeStart, byteRangeEnd);
+  };
+
+  const remoteRowCount = Math.max(
+    Math.ceil((data && data.fileSize || 0) / 150),
+    (data && data.fileSize)
+  ); // real solid math
+
   if (data) {
-    const logLines = data.lines.map((l) => {
-      if (l.isMissingMarker) {
-        const approxLines = Math.ceil((l.end - l.start) / 120); // this is an opinion
-        return <div style={{height: 1 * 20, backgroundColor: '#ddd'}} key={`${l.start}-${l.end}`}>{approxLines}</div>;
-      }
-      return <div style={{fontSize: 5, backgroundColor: '#fff'}} key={`${l.start}-${l.end}`}>{l.text}</div>;
-    });
     maybeLog = (
-      <div>
-        {logLines}
-        {data.fileSize}
-      </div>
+      <AutoSizer disableHeight>
+        {({width}) => (
+          <InfiniteLoader
+            isRowLoaded={isRowLoaded}
+            loadMoreRows={loadMoreRows}
+            rowCount={remoteRowCount}
+          >
+            {({onRowsRendered, registerChild}) => (
+              <VirtualScroll
+                ref={registerChild}
+                width={width}
+                height={500}
+                onRowsRendered={onRowsRendered}
+                overscanRowCount={overscanRowCount}
+                rowCount={data.lines.size}
+                rowHeight={({index}) => 20}
+                rowRenderer={({index, isScrolling}) => <Line data={data.lines.get(index)} />}
+                rowClassName="log-row"
+              />
+            )}
+          </InfiniteLoader>
+        )}
+      </AutoSizer>
     );
-  } else {
-    maybeLog = <div>Log not loaded</div>;
   }
-  return (
-    <div className="log-view">
-      {id}
+
+  const buttons = (
+    <div>
       <button onClick={() => fetchLength()}>
         load length
       </button>
-      {maybeLog}
       <button onClick={() => fetchChunk(0, data.fileSize)}>
         load whole
       </button>
@@ -46,6 +98,22 @@ const Log = ({id, data, fetchLength, fetchChunk}) => {
       </button>
     </div>
   );
+
+  return (
+    <div style={{position: 'relative'}}>
+      <section className="log-view">
+        <header>
+          {id}
+        </header>
+        <div className="infinite-wrapper">
+          {maybeLog}
+        </div>
+        <footer>
+          {buttons}
+        </footer>
+      </section>
+    </div>
+  );
 };
 
 const mapStateToProps = (state, ownProps) => ({
@@ -56,7 +124,7 @@ const mapDispatchToProps = (dispatch, ownProps) => ({
   fetchLength: () => dispatch(sandboxGetLength(ownProps.id)),
   fetchChunk: (start, end) => dispatch(
     sandboxFetchChunk(ownProps.id, start, end)
-  )
+  ),
 });
 
 export default connectToTailer(connect(

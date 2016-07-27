@@ -1,0 +1,33 @@
+section.log-view {
+  position: relative;
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+  font-family: Consolas,"Liberation Mono",Courier,monospace;
+
+  header {
+
+  }
+
+  div.infinite-wrapper {
+    flex: 2;
+    overflow: auto;
+
+    color: #839496;
+    background-color: #002b36;
+  }
+
+  .log-row {
+    white-space: nowrap;
+    min-height: 1.6em;
+    line-height: 1.6em;
+    padding: 0 2em;
+    white-space: pre;
+    font-size: 12px;
+    height: 100%;
+  }
+
+  footer {
+    min-height: 60px;
+  }
+}
