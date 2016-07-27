@@ -1,8 +1,10 @@
+import { TextEncoder } from 'text-encoding'; // polyfill
 import fetch from 'isomorphic-fetch';
 
 const frameworkName = 'SINGULARITY_TAILER';
 
 /* GENERIC CHUNK ACTIONS */
+const TE = new TextEncoder();
 
 export const ADD_FILE_CHUNK = `${frameworkName}_ADD_FILE_CHUNK`;
 export const addFileChunk = (id, chunk) => ({
@@ -70,12 +72,16 @@ export const sandboxFetchChunk = (id, start, end) => {
     return fetch(apiPath, {credentials: 'include'})
       .then(checkStatus)
       .then(parseJSON)
-      .then(({data, nextOffset, offset}) => {
+      .then(({data, offset}) => {
+        // the API lies, so let's just figure out the bytelength ourselves
+        // this code can't take lies.
+        const encodedData = TE.encode(data);
+        const byteLength = encodedData.byteLength;
         return dispatch(addFileChunk(id, {
           text: data,
           start: offset,
-          end: nextOffset || end,
-          byteLength: nextOffset ? (nextOffset - offset) : (end - offset)
+          end: offset + byteLength,
+          byteLength
         }));
       }).catch((error) => {
         return dispatch({

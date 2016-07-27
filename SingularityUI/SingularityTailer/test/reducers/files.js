@@ -1847,5 +1847,7 @@ describe('addChunkReducer', () => {
         }
       });
     });
+
+    it('should be able to handle adding data with zero character lines');
   });
 });

@@ -9,7 +9,11 @@ const Log = ({id, data, fetchLength, fetchChunk}) => {
   let maybeLog;
   if (data) {
     const logLines = data.lines.map((l) => {
-      return <p key={l.start}>{l.text}</p>;
+      if (l.isMissingMarker) {
+        const approxLines = Math.ceil((l.end - l.start) / 120); // this is an opinion
+        return <div style={{height: 1 * 20, backgroundColor: '#ddd'}} key={`${l.start}-${l.end}`}>{approxLines}</div>;
+      }
+      return <div style={{fontSize: 5, backgroundColor: '#fff'}} key={`${l.start}-${l.end}`}>{l.text}</div>;
     });
     maybeLog = (
       <div>
@@ -30,7 +34,14 @@ const Log = ({id, data, fetchLength, fetchChunk}) => {
       <button onClick={() => fetchChunk(0, data.fileSize)}>
         load whole
       </button>
-      <button onClick={() => fetchChunk((data && data.fileSize || 0), (data && data.fileSize || 0) + 100)}>
+      <button onClick={() => {
+        const intervalId = setInterval(() => {
+          const start = Math.floor(Math.random() * 65536);
+          const length = Math.floor(Math.random() * 2000);
+          fetchChunk(start, start + length);
+        }, 50);
+        setTimeout(() => clearInterval(intervalId), 10000);
+      }}>
         load more
       </button>
     </div>

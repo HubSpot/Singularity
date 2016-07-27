@@ -60,7 +60,7 @@ App.propTypes = {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-  setSandboxApi: (uri) => dispatch(sandboxSetApiRoot(uri || 'localhost'))
+  setSandboxApi: (uri) => dispatch(sandboxSetApiRoot('/singularity/api'))
 });
 
 export default connect(
