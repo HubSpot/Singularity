@@ -2,6 +2,10 @@ import React from 'react';
 import { connect } from 'react-redux';
 import 'react-virtualized/styles.css';
 import '../styles/index.scss';
+import Anser from 'anser';
+
+import classNames from 'classnames';
+
 
 import { AutoSizer, InfiniteLoader, VirtualScroll } from 'react-virtualized';
 
@@ -14,7 +18,18 @@ const Line = ({data, isScrolling}) => {
     const missingBytes = data.end - data.start;
     return <div style={{backgroundColor: '#ddd'}} key={`${data.start}-${data.end}`}>{missingBytes} bytes</div>;
   }
-  return <div key={`${data.start}-${data.end}`}>{data.text}</div>;
+
+  const ansiStyled = Anser.ansiToJson(data.text, {use_classes: true}).map((p, i) => {
+    const { content, fg, bg, decoration } = p;
+    const classes = classNames(
+      fg,
+      bg ? `${bg}-bg` : undefined,
+      decoration ? `ansi-${decoration}` : undefined
+    );
+    return <span key={i} className={classes}>{content}</span>;
+  });
+
+  return <div key={`${data.start}-${data.end}`}>{ansiStyled}</div>;
 };
 
 const Log = ({id, data, fetchLength, fetchChunk}) => {
