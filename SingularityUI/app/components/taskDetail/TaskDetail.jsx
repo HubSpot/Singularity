@@ -473,7 +473,7 @@ function mapDispatchToProps(dispatch) {
     killTask: (taskId, data) => dispatch(KillTask.trigger(taskId, data)),
     fetchTaskHistory: (taskId) => dispatch(FetchTaskHistory.trigger(taskId)),
     fetchTaskStatistics: (taskId) => dispatch(FetchTaskStatistics.trigger(taskId)),
-    fetchTaskFiles: (...args) => dispatch(FetchTaskFiles.trigger(...args)),
+    fetchTaskFiles: (taskId, path, catchStatusCodes = []) => dispatch(FetchTaskFiles.trigger(taskId, path, catchStatusCodes.concat([404]))),
     fetchDeployForRequest: (taskId, deployId) => dispatch(FetchDeployForRequest.trigger(taskId, deployId)),
     fetchTaskCleanups: () => dispatch(FetchTaskCleanups.trigger()),
     fetchPendingDeploys: () => dispatch(FetchPendingDeploys.trigger()),
