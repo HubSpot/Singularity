@@ -1,5 +1,4 @@
 import React, { Component, PropTypes } from 'react';
-import ReactDOM from 'react-dom';
 import Waypoint from 'react-waypoint';
 import classNames from 'classnames';
 import _ from 'underscore';
@@ -240,10 +239,7 @@ class UITable extends Component {
   }
 
   shouldRenderPagination(numRows, rowsPerPage) {
-    if (this.isServerSideTable()) {
-      return this.state.chunkNum !== 1 || numRows === rowsPerPage;
-    }
-    return this.props.paginated && numRows > rowsPerPage;
+    return this.isServerSideTable() || (this.props.paginated && numRows > rowsPerPage);
   }
 
   renderTableRow(rowData, index) {
@@ -415,9 +411,6 @@ class UITable extends Component {
   }
 
   render() {
-    if (this.props.isFetching) {
-      return <div className="page-loader fixed" />;
-    }
     let maybeTable = (
       <BootstrapTable responsive={true} striped={true} className={this.props.className}>
         <thead>
