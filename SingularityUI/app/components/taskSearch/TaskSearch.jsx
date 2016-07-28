@@ -163,13 +163,13 @@ class TaskSearch extends React.Component {
             )}
           />
           <Column
-            label="Started"
+            label="Started At"
             id="started"
             key="started"
             cellData={(task) => Utils.timestampFromNow(task.taskId.startedAt)}
           />
           <Column
-            label="Updated"
+            label="Updated At"
             id="updated"
             key="updated"
             cellData={(task) => Utils.timestampFromNow(task.updatedAt)}
