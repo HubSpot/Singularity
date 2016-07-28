@@ -405,11 +405,11 @@ class TaskDetail extends Component {
 
 function mapHealthchecksToProps(task) {
   if (!task) return task;
-  const hcs = task.healthcheckResults;
-  task.hasSuccessfulHealthcheck = hcs && hcs.length > 0 && !!_.find(hcs, (h) => h.statusCode === 200);
-  task.lastHealthcheckFailed = hcs && hcs.length > 0 && hcs[0].statusCode !== 200;
+  const { healthcheckResults } = task;
+  task.hasSuccessfulHealthcheck = healthcheckResults && healthcheckResults.length > 0 && !!_.find(healthcheckResults, (healthcheckResult) => healthcheckResult.statusCode === 200);
+  task.lastHealthcheckFailed = healthcheckResults && healthcheckResults.length > 0 && healthcheckResults[0].statusCode !== 200;
   task.healthcheckFailureReasonMessage = Utils.healthcheckFailureReasonMessage(task);
-  task.tooManyRetries = hcs && hcs.length > task.task.taskRequest.deploy.healthcheckMaxRetries && task.task.taskRequest.deploy.healthcheckMaxRetries > 0;
+  task.tooManyRetries = healthcheckResults && healthcheckResults.length > task.task.taskRequest.deploy.healthcheckMaxRetries && task.task.taskRequest.deploy.healthcheckMaxRetries > 0;
   task.secondsElapsed = task.task && task.task.taskRequest && task.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds || config.defaultDeployHealthTimeoutSeconds;
   return task;
 }
