@@ -236,10 +236,6 @@ class UITable extends Component {
     return true;
   }
 
-  getTableDOMNode() {
-    return ReactDOM.findDOMNode(this.refs.table);
-  }
-
   renderTableRow(rowData, index) {
     const row = this.props.children.map((col) => {
       const cellData = col.props.cellData(rowData);
@@ -413,7 +409,7 @@ class UITable extends Component {
       return <div className="page-loader fixed" />;
     }
     let maybeTable = (
-      <BootstrapTable ref="table" responsive={true} striped={true} className={this.props.className}>
+      <BootstrapTable responsive={true} striped={true} className={this.props.className}>
         <thead>
           {this.renderTableHeader()}
         </thead>
