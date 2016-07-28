@@ -117,7 +117,7 @@ const TaskAlerts = (props) => {
         </p>
         <p>
           Last healthcheck {lastHealthcheck.statusCode ?
-            `responded with ${<span className="label label-danger"> HTTP {lastHealthcheck.statusCode}</span>}` :
+            <span>responded with <span className="label label-danger"> HTTP {lastHealthcheck.statusCode}</span></span> :
             <span>
               did not respond after{' '}
               <code>
