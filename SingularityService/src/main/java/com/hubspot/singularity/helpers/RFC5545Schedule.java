@@ -27,12 +27,7 @@ public class RFC5545Schedule {
       if (schedule.contains("REPEAT") || schedule.contains("COUNT")) {
         this.dtStart = formatter.parseDateTime(matcher.group(1));
       } else {
-        org.joda.time.DateTime start = formatter.parseDateTime(matcher.group(1));
-        org.joda.time.DateTime now = org.joda.time.DateTime.now().withSecondOfMinute(0);
-        if (now.getMillis() > start.getMillis()) {
-          start = now;
-        }
-        this.dtStart = start;
+        this.dtStart = formatter.parseDateTime(matcher.group(1));
       }
       this.recurrenceRule = new RecurrenceRule(matcher.replaceAll("").replace("RRULE:", ""));
     } else {
