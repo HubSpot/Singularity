@@ -13,7 +13,7 @@ class UITable extends Component {
     super(props);
 
     let { data } = props;
-    const { defaultSortBy, defaultSortDirection } = props;
+    const { defaultSortBy, defaultSortDirection, rowChunkSize } = props;
     if (defaultSortBy) {
       data = this.doSort(data, defaultSortBy, defaultSortDirection);
     }
@@ -23,7 +23,8 @@ class UITable extends Component {
       sortDirection: defaultSortDirection,
       sortTime: null,
       chunkNum: 1,
-      data
+      data,
+      rowChunkSize
     };
 
     this.handlePageChange = this.handlePageChange.bind(this);
@@ -31,6 +32,15 @@ class UITable extends Component {
 
   componentWillReceiveProps(nextProps) {
     this.updateSort(nextProps.data, this.state.sortBy, this.state.sortDirection);
+    if (nextProps.isFetching) {
+      return;
+    }
+    if (this.isServerSideTable() && _.isEmpty(nextProps.data) && this.state.chunkNum > 1) {
+      this.fetchDataFromApi(this.state.chunkNum - 1, this.state.rowChunkSize, this.state.sortBy);
+      this.setState({ pastEnd: true });
+    } else if (this.isServerSideTable() && (this.state.pastEnd || nextProps.data.length < this.state.rowChunkSize)) {
+      this.setState({pastEnd: false, lastPage: true});
+    }
   }
 
   static SortDirection = {
@@ -49,7 +59,45 @@ class UITable extends Component {
 
   state;
 
+  isServerSideTable() {
+    return !!this.props.fetchDataFromApi;
+  }
+
+  resetPageAndChunkSizeWithoutChangingData(table) {
+    return () => {
+      table.setState({
+        chunkNum: 1,
+        rowChunkSize: this.props.rowChunkSize,
+        lastPage: false,
+        pastEnd: false
+      });
+    };
+  }
+
+  fetchDataFromApi(chunkNum, rowChunkSize, updateStateAfterFetching = false, sortBy = this.state.sortBy) {
+    let lastPage = this.state.lastPage;
+    if (chunkNum < this.state.chunkNum) {
+      lastPage = false;
+    }
+    if (!updateStateAfterFetching) {
+      this.setState({chunkNum, rowChunkSize, sortBy, lastPage});
+    }
+    return this.props.fetchDataFromApi(chunkNum, rowChunkSize, sortBy).then(() => {
+      if (updateStateAfterFetching) {
+        this.setState({chunkNum, rowChunkSize, sortBy, lastPage});
+      }
+    });
+  }
+
   updateSort(data, sortBy, sortDirection) {
+    if (this.isServerSideTable()) {
+      this.setState({
+        sortBy,
+        sortDirection,
+        sortTime: Date.now()
+      });
+      return;
+    }
     if (this.props.asyncSort) {
       const sortTimeStart = Date.now();
       this.setState({
@@ -89,7 +137,7 @@ class UITable extends Component {
 
     // we have to update pagination if the new list size doesn't
     // have enough pages for the current page
-    const numPages = Math.ceil(nextState.data.length / this.props.rowChunkSize);
+    const numPages = Math.ceil(nextState.data.length / this.state.rowChunkSize);
     const updatedPage = this.state.chunkNum > numPages
       ? numPages
       : this.state.chunkNum;
@@ -131,8 +179,12 @@ class UITable extends Component {
   }
 
   handlePageChange(eventKey) {
+    if (this.isServerSideTable()) {
+      this.fetchDataFromApi(eventKey, this.state.rowChunkSize);
+      return;
+    }
     const page = eventKey;
-    const numPages = Math.ceil(this.state.data.length / this.props.rowChunkSize);
+    const numPages = Math.ceil(this.state.data.length / this.state.rowChunkSize);
 
     this.setState({
       chunkNum: Math.min(Math.max(1, page), numPages)
@@ -155,6 +207,9 @@ class UITable extends Component {
   }
 
   handleSortClick(col) {
+    if (this.isServerSideTable()) {
+      this.props.fetchDataFromApi(this.state.chunkNum, this.state.rowChunkSize, false, col.props.id);
+    }
     const colId = col.props.id;
     if (colId === this.state.sortBy) {
       // swap sort direction
@@ -212,20 +267,24 @@ class UITable extends Component {
   }
 
   renderTableRows() {
-    if (this.props.paginated) {
+    if (this.props.paginated && !this.isServerSideTable()) {
       const page = this.state.chunkNum;
-      const beginIndex = (page - 1) * this.props.rowChunkSize;
-      const endIndex = page * this.props.rowChunkSize;
+      const beginIndex = (page - 1) * this.state.rowChunkSize;
+      const endIndex = page * this.state.rowChunkSize;
       const rows = this.state.data.slice(beginIndex, endIndex).map((row, index) => {
         return this.renderTableRow(row, index);
       });
 
       return rows;
+    } else if (this.props.paginated) {
+      return this.props.data.map((row, index) => {
+        return this.renderTableRow(row, index);
+      });
     }
     // infinite scrolling
     // Only render a number of rows at a time
     // check to see if we can render of everything
-    const maxVisibleRows = this.state.chunkNum * this.props.rowChunkSize;
+    const maxVisibleRows = this.state.chunkNum * this.state.rowChunkSize;
     const rows = this.state.data.slice(0, maxVisibleRows).map((r) => {
       return this.renderTableRow(r);
     });
@@ -237,21 +296,48 @@ class UITable extends Component {
     return rows;
   }
 
+  renderRowChunkSizeChoices() {
+    const setRowChunkSize = (rowChunkSize) => {
+      if (this.isServerSideTable()) {
+        this.fetchDataFromApi(1, rowChunkSize, true);
+      } else {
+        this.setState({chunkNum: 1, rowChunkSize});
+      }
+    };
+    return (
+      <div className="pull-right count-options">
+        Results per page:
+        {this.props.rowChunkSizeChoices.map((choice) =>
+          <a key={choice} className={classNames({inactive: choice === this.state.rowChunkSize})} onClick={() => setRowChunkSize(choice)}>
+            {choice}
+          </a>
+        )}
+      </div>
+    );
+  }
+
   renderPagination() {
     const numRows = this.state.data.length;
-    const rowsPerPage = this.props.rowChunkSize;
-    const maxButtons = this.props.maxButtons;
-    if (this.props.paginated && numRows > rowsPerPage) {
-      const numPages = Math.ceil(numRows / rowsPerPage);
+    const rowsPerPage = this.state.rowChunkSize;
+    const maxButtons = this.isServerSideTable() ? 1 : this.props.maxButtons;
+    if (this.isServerSideTable() || (this.props.paginated && numRows > rowsPerPage)) {
+      let numPages = Math.ceil(numRows / rowsPerPage);
+      if (this.isServerSideTable()) {
+        if (this.state.lastPage) {
+          numPages = this.state.chunkNum;
+        } else {
+          numPages = this.state.chunkNum + 1;
+        }
+      }
       return (
         <Pagination
           prev={true}
           next={true}
           first={numPages > maxButtons}
-          last={numPages > maxButtons}
+          last={!this.isServerSideTable() && numPages > maxButtons}
           ellipsis={false}
           items={numPages}
-          maxButtons={maxButtons || 10}
+          maxButtons={maxButtons}
           activePage={this.state.chunkNum}
           onSelect={this.handlePageChange}
         />
@@ -268,7 +354,7 @@ class UITable extends Component {
           <Waypoint
             key={'waypoint'}
             onEnter={() => {
-              const maxVisibleRows = this.state.chunkNum * this.props.rowChunkSize;
+              const maxVisibleRows = this.state.chunkNum * this.state.rowChunkSize;
               if (maxVisibleRows < this.state.data.length) {
                 _.defer(() => {
                   this.setState({
@@ -323,6 +409,9 @@ class UITable extends Component {
   }
 
   render() {
+    if (this.props.isFetching) {
+      return <div className="page-loader fixed" />;
+    }
     let maybeTable = (
       <BootstrapTable ref="table" responsive={true} striped={true} className={this.props.className}>
         <thead>
@@ -344,6 +433,7 @@ class UITable extends Component {
 
     return (
       <div>
+        {this.props.rowChunkSizeChoices && <div className="row">{this.renderRowChunkSizeChoices()}</div>}
         {maybeTable}
         {this.renderPagination()}
       </div>
@@ -357,6 +447,7 @@ UITable.propTypes = {
   children: PropTypes.arrayOf(PropTypes.node).isRequired,
   paginated: PropTypes.bool,
   rowChunkSize: PropTypes.number,
+  rowChunkSizeChoices: PropTypes.arrayOf(PropTypes.number),
   maxButtons: PropTypes.number,
   defaultSortBy: PropTypes.string,
   defaultSortDirection: PropTypes.oneOf([
@@ -365,6 +456,8 @@ UITable.propTypes = {
   ]),
   className: PropTypes.string,
   asyncSort: PropTypes.bool,
+  fetchDataFromApi: PropTypes.func, // (page, numberPerPage, sortBy) -> Promise // Makes this table server-side - no sorting
+  isFetching: PropTypes.bool,
   rowClassName: PropTypes.oneOfType([
     PropTypes.string,
     PropTypes.func
