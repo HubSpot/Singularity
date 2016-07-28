@@ -24,11 +24,7 @@ public class RFC5545Schedule {
 
     if (matcher.find()) {
       DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyyMMdd'T'HHmmss");
-      if (schedule.contains("REPEAT") || schedule.contains("COUNT")) {
-        this.dtStart = formatter.parseDateTime(matcher.group(1));
-      } else {
-        this.dtStart = formatter.parseDateTime(matcher.group(1));
-      }
+      this.dtStart = formatter.parseDateTime(matcher.group(1));
       this.recurrenceRule = new RecurrenceRule(matcher.replaceAll("").replace("RRULE:", ""));
     } else {
       this.recurrenceRule = new RecurrenceRule(schedule);
