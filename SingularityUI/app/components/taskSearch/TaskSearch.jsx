@@ -111,6 +111,7 @@ class TaskSearch extends React.Component {
           paginated={true}
           fetchDataFromApi={(page, numberPerPage, sortBy) => this.fetchDataFromApi(page, numberPerPage, sortBy)}
           isFetching={this.props.isFetching}
+          showPageLoaderWhenFetching={true}
           ref={(table) => this.bindResetPageAndCount(table)}
         >
           <Column

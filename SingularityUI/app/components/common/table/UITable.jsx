@@ -411,6 +411,9 @@ class UITable extends Component {
   }
 
   render() {
+    if (this.props.showPageLoaderWhenFetching && this.props.isFetching) {
+      return <div className="page-loader fixed" />;
+    }
     let maybeTable = (
       <BootstrapTable responsive={true} striped={true} className={this.props.className}>
         <thead>
@@ -457,6 +460,8 @@ UITable.propTypes = {
   asyncSort: PropTypes.bool,
   fetchDataFromApi: PropTypes.func, // (page, numberPerPage, sortBy) -> Promise // Makes this table server-side - no sorting
   isFetching: PropTypes.bool,
+  // For long API calls set this to true. As a future upgrade it would be nice to automatically detect if it's taking a long time:
+  showPageLoaderWhenFetching: PropTypes.bool,
   rowClassName: PropTypes.oneOfType([
     PropTypes.string,
     PropTypes.func
