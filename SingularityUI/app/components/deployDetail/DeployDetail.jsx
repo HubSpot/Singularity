@@ -38,6 +38,7 @@ class DeployDetail extends React.Component {
     latestHealthchecks: PropTypes.array,
     fetchTaskHistoryForDeploy: PropTypes.func,
     params: PropTypes.object,
+    isTaskHistoryFetching: PropTypes.bool,
     notFound: PropTypes.bool
   }
 
@@ -141,27 +142,61 @@ class DeployDetail extends React.Component {
         <div className="page-header">
           <h2>Task History</h2>
         </div>
-        <ServerSideTable
-          emptyMessage="No tasks"
-          entries={tasks || []}
-          paginate={true}
-          perPage={5}
-          fetchAction={FetchTaskHistoryForDeploy}
-          fetchParams={[deploy.deploy.requestId, deploy.deploy.id]}
-          headers={['Name', 'Last State', 'Started', 'Updated', '', '']}
-          renderTableRow={(data, index) => {
-            return (
-              <tr key={index}>
-                <td><Link to={`task/${data.taskId.id}`}>{data.taskId.id}</Link></td>
-                <td><span className={`label label-${Utils.getLabelClassFromTaskState(data.lastTaskState)}`}>{Utils.humanizeText(data.lastTaskState)}</span></td>
-                <td>{Utils.timestampFromNow(data.taskId.startedAt)}</td>
-                <td>{Utils.timestampFromNow(data.updatedAt)}</td>
-                <td className="actions-column"><Link to={`request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log"><Glyphicon glyph="file" /></Link></td>
-                <td className="actions-column"><JSONButton object={data}>{'{ }'}</JSONButton></td>
-              </tr>
-            );
-          }}
-        />
+        <UITable
+          emptyTableMessage="No tasks"
+          data={tasks || []}
+          keyGetter={(task) => task.taskId.id}
+          rowChunkSize={5}
+          paginated={true}
+          fetchDataFromApi={(page, numberPerPage) => this.props.fetchTaskHistoryForDeploy(deploy.deploy.requestId, deploy.deploy.id, numberPerPage, page)}
+          isFetching={this.props.isTaskHistoryFetching}
+        >
+          <Column
+            label="Name"
+            id="url"
+            key="url"
+            cellData={(task) => (
+              <Link to={`task/${task.taskId.id}`}>
+                {task.taskId.id}
+              </Link>
+            )}
+          />
+          <Column
+            label="Last State"
+            id="state"
+            key="state"
+            cellData={(task) => (
+              <span className={`label label-${Utils.getLabelClassFromTaskState(task.lastTaskState)}`}>
+                {Utils.humanizeText(task.lastTaskState)}
+              </span>
+            )}
+          />
+          <Column
+            label="Started"
+            id="started"
+            key="started"
+            cellData={(task) => Utils.timestampFromNow(task.taskId.startedAt)}
+          />
+          <Column
+            label="Updated"
+            id="updated"
+            key="updated"
+            cellData={(task) => Utils.timestampFromNow(task.updatedAt)}
+          />
+          <Column
+            id="actions-column"
+            key="actions-column"
+            className="actions-column"
+            cellData={(task) => (
+              <span>
+                <Link to={`task/${task.taskId.id}/tail/${config.finishedTaskLogPath}`}>
+                  <Glyphicon glyph="file" />
+                </Link>
+                <JSONButton object={task}>{'{ }'}</JSONButton>
+              </span>
+            )}
+          />
+        </UITable>
     </div>
     );
   }
@@ -314,6 +349,7 @@ function mapStateToProps(state) {
     notFound: state.api.deploy.statusCode === 404,
     deploy: state.api.deploy.data,
     taskHistory: state.api.taskHistoryForDeploy.data,
+    isTaskHistoryFetching: state.api.taskHistoryForDeploy.isFetching,
     latestHealthchecks
   };
 }
@@ -324,10 +360,10 @@ function refresh(props) {
   const promises = [];
   promises.push(props.fetchDeployForRequest(props.params.requestId, props.params.deployId));
   promises.push(props.fetchActiveTasksForDeploy(props.params.requestId, props.params.deployId));
-  promises.push(props.clearTaskHistoryForDeploy());
   if (firstLoad) {
     firstLoad = false;
-    props.fetchTaskHistoryForDeploy(props.params.requestId, props.params.deployId, 5, 1);
+    promises.push(props.clearTaskHistoryForDeploy());
+    promises.push(props.fetchTaskHistoryForDeploy(props.params.requestId, props.params.deployId, 5, 1));
   }
 
   const allPromises = Promise.all(promises);
