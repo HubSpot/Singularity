@@ -20,7 +20,6 @@ import Breadcrumbs from '../common/Breadcrumbs';
 import JSONButton from '../common/JSONButton';
 import UITable from '../common/table/UITable';
 import Column from '../common/table/Column';
-import ServerSideTable from '../common/ServerSideTable';
 import CollapsableSection from '../common/CollapsableSection';
 import NotFound from '../common/NotFound';
 
@@ -162,7 +161,7 @@ class DeployDetail extends React.Component {
             )}
           />
           <Column
-            label="Last State"
+            label="State"
             id="state"
             key="state"
             cellData={(task) => (

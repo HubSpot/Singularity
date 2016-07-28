@@ -179,6 +179,9 @@ class UITable extends Component {
   }
 
   handlePageChange(eventKey) {
+    if (eventKey === this.state.chunkNum) {
+      return;
+    }
     if (this.isServerSideTable()) {
       this.fetchDataFromApi(eventKey, this.state.rowChunkSize);
       return;
@@ -234,6 +237,13 @@ class UITable extends Component {
     }
 
     return true;
+  }
+
+  shouldRenderPagination(numRows, rowsPerPage) {
+    if (this.isServerSideTable()) {
+      return this.state.chunkNum !== 1 || numRows === rowsPerPage;
+    }
+    return this.props.paginated && numRows > rowsPerPage;
   }
 
   renderTableRow(rowData, index) {
@@ -316,7 +326,7 @@ class UITable extends Component {
     const numRows = this.state.data.length;
     const rowsPerPage = this.state.rowChunkSize;
     const maxButtons = this.isServerSideTable() ? 1 : this.props.maxButtons;
-    if (this.isServerSideTable() || (this.props.paginated && numRows > rowsPerPage)) {
+    if (this.shouldRenderPagination(numRows, rowsPerPage)) {
       let numPages = Math.ceil(numRows / rowsPerPage);
       if (this.isServerSideTable()) {
         if (this.state.lastPage) {
