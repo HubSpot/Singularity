@@ -281,8 +281,8 @@ class UITable extends Component {
     // Only render a number of rows at a time
     // check to see if we can render of everything
     const maxVisibleRows = this.state.chunkNum * this.state.rowChunkSize;
-    const rows = this.state.data.slice(0, maxVisibleRows).map((r) => {
-      return this.renderTableRow(r);
+    const rows = this.state.data.slice(0, maxVisibleRows).map((row) => {
+      return this.renderTableRow(row);
     });
 
     if (maxVisibleRows < this.state.data.length) {
