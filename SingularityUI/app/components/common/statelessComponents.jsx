@@ -39,7 +39,7 @@ export const UsageInfo = (props) => {
   return (
     <Panel header={props.title}>
       <ProgressBar active={true} bsStyle={props.style} max={props.total} now={props.used} />
-      <span>{props.text}</span>
+      <span>{props.children}</span>
     </Panel>
   );
 };
@@ -49,5 +49,5 @@ UsageInfo.propTypes = {
   style: PropTypes.string,
   total: PropTypes.number,
   used: PropTypes.number,
-  text: PropTypes.string
+  children: PropTypes.node
 };

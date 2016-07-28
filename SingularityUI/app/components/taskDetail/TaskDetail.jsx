@@ -349,15 +349,22 @@ class TaskDetail extends Component {
               style="success"
               total={this.props.resourceUsage.memLimitBytes}
               used={this.props.resourceUsage.memRssBytes}
-              text={`${Utils.humanizeFileSize(this.props.resourceUsage.memRssBytes)} / ${Utils.humanizeFileSize(this.props.resourceUsage.memLimitBytes)}`}
-            />
+            >
+              {Utils.humanizeFileSize(this.props.resourceUsage.memRssBytes)} / {Utils.humanizeFileSize(this.props.resourceUsage.memLimitBytes)}
+            </UsageInfo>
             <UsageInfo
               title="CPU Usage"
               style={cpuUsageExceeding ? 'danger' : 'success'}
               total={this.props.resourceUsage.cpusLimit}
               used={Math.round(cpuUsage * 100) / 100}
-              text={<span><p>{`${Math.round(cpuUsage * 100) / 100} used / ${this.props.resourceUsage.cpusLimit} allocated CPUs`}</p>{exceedingWarning}</span>}
-            />
+            >
+              <span>
+                <p>
+                  {Math.round(cpuUsage * 100) / 100} used / {this.props.resourceUsage.cpusLimit} allocated CPUs
+                </p>
+                {exceedingWarning}
+              </span>
+            </UsageInfo>
           </div>
           <div className="col-md-9">
             <ul className="list-unstyled horizontal-description-list">
