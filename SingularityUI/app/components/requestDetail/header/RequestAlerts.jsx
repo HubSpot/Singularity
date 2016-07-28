@@ -20,10 +20,9 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) 
 
   const requestParent = requestAPI.data;
   if (bounces.length > 0 && requestParent.request) {
-    const runningInstanceCount = Utils.request.runningInstanceCount(activeTasksForRequest.data);
     maybeBouncing = (
       <Alert bsStyle="warning">
-        <b>Request is bouncing:</b> {runningInstanceCount} of {requestParent.request.instances} replacement tasks are currently running.
+        <b>Request is bouncing:</b> Attempting to start <b>{requestParent.request.instances}</b> replacement tasks.
       </Alert>
     );
   }
@@ -56,7 +55,7 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) 
         maybeDeployProgress = (
           <span>
             {pendingDeployProgress}
-            <p>{deployingInstanceCount === instances ? ' Waiting for new tasks to become healthy.' : ''}</p>
+            <p>{deployingInstanceCount === instances && ' Waiting for new tasks to become healthy.'}</p>
           </span>
         );
       } else {
@@ -74,14 +73,14 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) 
           }
           maybeDeployProgress = (
             <span>
-              Finished deploying {targetActiveInstances} of {instances} total instances, {nextDeployStepRemark}
+              Finished deploying {targetActiveInstances} total instances, {nextDeployStepRemark}
             </span>
           );
         } else {
           maybeDeployProgress = (
             <span>
               {
-                `Trying to deploy ${targetActiveInstances} of ${instances}
+                `Trying to deploy ${targetActiveInstances}
                 instances, ${deployingInstanceCount} of
                 ${targetActiveInstances} new tasks are currently running.`
               }
