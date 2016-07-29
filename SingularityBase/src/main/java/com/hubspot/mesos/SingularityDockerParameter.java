@@ -3,18 +3,19 @@ package com.hubspot.mesos;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SingularityDockerParameter {
     private final String key;
     private final String value;
 
     @JsonCreator
-    public static SingularityDockerParameter fromString(String value) {
+    public static SingularityDockerParameter fromString(@JsonProperty String value) {
         return new SingularityDockerParameter(value, "");
     }
 
     @JsonCreator
-    public SingularityDockerParameter(String key, String value) {
+    public SingularityDockerParameter(@JsonProperty String key, @JsonProperty String value) {
         this.key = key;
         this.value = value;
     }
