@@ -39,10 +39,12 @@ public class SingularityMesosTaskLabel {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
+        }
         SingularityMesosTaskLabel that = (SingularityMesosTaskLabel) o;
         return Objects.equals(key, that.key) &&
             Objects.equals(value, that.value);
