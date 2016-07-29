@@ -15,11 +15,15 @@ DeployState.propTypes = {
 };
 
 export const InfoBox = (props) => {
+  let { value } = props;
+  if (value instanceof Array) {
+    value = value.join(props.join);
+  }
   return (
     <li className="col-sm-6 col-md-3">
         <div>
-            <h4>{props.name}<a className={classNames(props.copyableClassName, 'copy-btn')} data-clipboard-text={props.value}>Copy</a></h4>
-            <p>{props.value}</p>
+            <h4>{props.name}<a className={classNames(props.copyableClassName, 'copy-btn')} data-clipboard-text={value}>Copy</a></h4>
+            <p>{value}</p>
         </div>
     </li>
   );
@@ -28,11 +32,17 @@ export const InfoBox = (props) => {
 InfoBox.propTypes = {
   name: PropTypes.string,
   copyableClassName: PropTypes.string,
+  join: PropTypes.string,
   value: PropTypes.oneOfType([
     PropTypes.string,
     PropTypes.number,
-    PropTypes.bool
-  ])
+    PropTypes.bool,
+    PropTypes.arrayOf(PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.number,
+      PropTypes.bool
+    ]))
+  ]).isRequired
 };
 
 export const UsageInfo = (props) => {

@@ -13,8 +13,8 @@ function TaskInfo (props) {
           <InfoBox copyableClassName="info-copyable" name="Hostname" value={props.task.offer.hostname} />
           {!_.isEmpty(props.ports) && <InfoBox copyableClassName="info-copyable" name="Ports" value={props.ports.toString()} />}
           <InfoBox copyableClassName="info-copyable" name="Rack ID" value={props.task.rackId} />
-          {props.task.taskRequest.deploy.executorData && <InfoBox copyableClassName="info-copyable" name="Extra Cmd Line Arguments (for Deploy)" value={props.task.taskRequest.deploy.executorData.extraCmdLineArgs} />}
-          {props.task.taskRequest.pendingTask && props.task.taskRequest.pendingTask.cmdLineArgsList && <InfoBox copyableClassName="info-copyable" name="Extra Cmd Line Arguments (for Task)" value={props.task.taskRequest.pendingTask.cmdLineArgsList} />}
+          {props.task.taskRequest.deploy.executorData && <InfoBox copyableClassName="info-copyable" name="Extra Cmd Line Arguments (for Deploy)" join=" " value={props.task.taskRequest.deploy.executorData.extraCmdLineArgs} />}
+          {props.task.taskRequest.pendingTask && props.task.taskRequest.pendingTask.cmdLineArgsList && <InfoBox copyableClassName="info-copyable" name="Extra Cmd Line Arguments (for Task)" join=" " value={props.task.taskRequest.pendingTask.cmdLineArgsList} />}
         </ul>
       </div>
     </Section>
