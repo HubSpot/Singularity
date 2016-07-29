@@ -53,7 +53,7 @@ class UITable extends Component {
     defaultSortBy: undefined,
     defaultSortDirection: UITable.SortDirection.DESC,
     asyncSort: false,
-    maxButtons: 10
+    maxPaginationButtons: 10
   };
 
   state;
@@ -321,7 +321,7 @@ class UITable extends Component {
   renderPagination() {
     const numRows = this.state.data.length;
     const rowsPerPage = this.state.rowChunkSize;
-    const maxButtons = this.isApiPaginated() ? 1 : this.props.maxButtons;
+    const maxPaginationButtons = this.isApiPaginated() ? 1 : this.props.maxPaginationButtons;
     if (this.shouldRenderPagination(numRows, rowsPerPage)) {
       let numPages = Math.ceil(numRows / rowsPerPage);
       if (this.isApiPaginated()) {
@@ -335,11 +335,11 @@ class UITable extends Component {
         <Pagination
           prev={true}
           next={true}
-          first={numPages > maxButtons}
-          last={!this.isApiPaginated() && numPages > maxButtons}
+          first={numPages > maxPaginationButtons}
+          last={!this.isApiPaginated() && numPages > maxPaginationButtons}
           ellipsis={false}
           items={numPages}
-          maxButtons={maxButtons}
+          maxButtons={maxPaginationButtons}
           activePage={this.state.chunkNum}
           onSelect={this.handlePageChange}
         />
@@ -452,7 +452,7 @@ UITable.propTypes = {
   paginated: PropTypes.bool,
   rowChunkSize: PropTypes.number,
   rowChunkSizeChoices: PropTypes.arrayOf(PropTypes.number),
-  maxButtons: PropTypes.number,
+  maxPaginationButtons: PropTypes.number,
   defaultSortBy: PropTypes.string,
   defaultSortDirection: PropTypes.oneOf([
     UITable.SortDirection.ASC,
