@@ -351,10 +351,12 @@ class UITable extends Component {
 
   renderWaypoint() {
     return (
-      <tr key={'waypoint'}>
+      <tr key="waypoint">
         <td colSpan={this.props.children.length}>
+          Waypoint
           <Waypoint
-            key={'waypoint'}
+            scrollableAncestor={window}
+            key={`waypoint${this.state.chunkNum}`}
             onEnter={() => {
               const maxVisibleRows = this.state.chunkNum * this.state.rowChunkSize;
               if (maxVisibleRows < this.state.data.length) {
