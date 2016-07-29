@@ -31,6 +31,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.MachineState;
@@ -489,10 +490,14 @@ public class SingularityScheduler {
     }
 
     PendingType pendingType = PendingType.TASK_DONE;
+    Optional<List<String>> cmdLineArgsList = Optional.absent();
 
     if (!state.isSuccess() && shouldRetryImmediately(request, deployStatistics)) {
       LOG.debug("Retrying {} because {}", request.getId(), state);
       pendingType = PendingType.RETRY;
+      if (task.isPresent()) {
+        cmdLineArgsList = task.get().getTaskRequest().getPendingTask().getCmdLineArgsList();
+      }
     } else if (!request.isAlwaysRunning()) {
       return Optional.absent();
     }
@@ -505,7 +510,8 @@ public class SingularityScheduler {
     }
 
     SingularityPendingRequest pendingRequest = new SingularityPendingRequest(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId(),
-      System.currentTimeMillis(), Optional.<String>absent(), pendingType, Optional.<Boolean>absent(), Optional.<String>absent());
+      System.currentTimeMillis(), Optional.<String>absent(), pendingType, cmdLineArgsList, Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(),
+      Optional.<String>absent());
 
     scheduleTasks(stateCache, request, requestState, deployStatistics, pendingRequest, getMatchingTaskIds(stateCache, request, pendingRequest), maybePendingDeploy);
 
