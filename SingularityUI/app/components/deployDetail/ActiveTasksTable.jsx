@@ -13,7 +13,7 @@ const ActiveTasksTable = ({tasks}) => (
   <UITable
     emptyTableMessage="No tasks"
     data={tasks}
-    keyGetter={(task) => task.id}
+    keyGetter={(task) => task.taskId.id}
     rowChunkSize={5}
     paginated={true}
   >
