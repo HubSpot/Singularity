@@ -1,20 +1,46 @@
 import React, {PropTypes} from 'react';
 import Select from 'react-select';
 import { FormGroup, ControlLabel } from 'react-bootstrap/lib';
+import classNames from 'classnames';
 
-const SelectFormGroup = (props) => (
-  <FormGroup id={props.id} className={props.required && 'required'}>
-    <ControlLabel>{props.label}</ControlLabel>
-    <Select
-      id={props.id}
-      className={props.id}
-      options={props.options}
-      onChange={props.onChange}
-      value={props.value}
-      clearable={false}
-    />
-  </FormGroup>
-);
+const SelectFormGroup = (props) => {
+  let selectors;
+  if (props.options.length > 5) {
+    selectors = (
+      <Select
+        id={props.id}
+        className={props.id}
+        options={props.options}
+        onChange={props.onChange}
+        value={props.value || props.defaultValue}
+        clearable={false}
+        disabled={props.disabled}
+      />
+    );
+  } else {
+    selectors = (
+      <div id="type" className="btn-group">
+        {props.options.map((option, key) => (
+          <button
+            key={key}
+            value={option.value}
+            className={classNames('btn', 'btn-default', {active: props.value === option.value || (!props.value && props.defaultValue === option.value) })}
+            onClick={event => {event.preventDefault(); props.onChange(option);}}
+            disabled={props.disabled}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <FormGroup id={props.id} className={props.required && 'required'}>
+      <ControlLabel>{props.label}</ControlLabel>
+      {selectors}
+    </FormGroup>
+  );
+};
 
 SelectFormGroup.propTypes = {
   id: PropTypes.string.isRequired,
@@ -24,7 +50,9 @@ SelectFormGroup.propTypes = {
     label: PropTypes.string.isRequired
   })).isRequired,
   onChange: PropTypes.func.isRequired,
+  defaultValue: PropTypes.string,
   value: PropTypes.string,
+  disabled: PropTypes.bool,
   required: PropTypes.bool
 };
 

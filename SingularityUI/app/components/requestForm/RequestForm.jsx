@@ -1,5 +1,4 @@
 import React, {PropTypes} from 'react';
-import Select from 'react-select';
 import { connect } from 'react-redux';
 
 import { Link } from 'react-router';
@@ -14,7 +13,7 @@ import CheckboxFormGroup from '../common/formItems/formGroups/CheckboxFormGroup'
 import { ModifyField, ClearForm } from '../../actions/ui/form';
 import { SaveRequest, FetchRequest } from '../../actions/api/requests';
 import { OverlayTrigger, Tooltip} from 'react-bootstrap/lib';
-import { FormGroup, ControlLabel, FormControl, Form, Row, Col } from 'react-bootstrap';
+import { Form, Row, Col } from 'react-bootstrap';
 import Utils from '../../utils';
 import classNames from 'classnames';
 import {FIELDS_BY_REQUEST_TYPE, INDEXED_FIELDS} from './fields';
@@ -309,43 +308,41 @@ class RequestForm extends React.Component {
         />
       </div>
     );
-    const scheduleFeedback = this.feedback(this.getScheduleType()).toLowerCase();
+    const scheduleType = (
+      <SelectFormGroup
+        id="schedule-type"
+        label="Schedule Type"
+        value={this.getValue('scheduleType') || ''}
+        defaultValue={CRON_SCHEDULE}
+        required={INDEXED_FIELDS.scheduleType.required}
+        onChange={newValue => this.updateField('scheduleType', newValue.value)}
+        options={[
+          {value: CRON_SCHEDULE, label: 'Cron Schedule'},
+          {value: QUARTZ_SCHEDULE, label: 'Quartz Schedule'}
+        ]}
+      />
+    );
+    const scheduleTimeZone = (
+      <TextFormGroup
+        id="schedule-timezone"
+        onChange={event => this.updateField('scheduleTimeZone', event.target.value)}
+        value={this.getValue('scheduleTimeZone')}
+        label="Schedule Timezone"
+        placeholder="eg: UTC, US/Eastern"
+        required={INDEXED_FIELDS.scheduleTimeZone.required}
+        feedback={this.feedback('scheduleTimeZone')}
+      />
+    );
     const schedule = (
-      <FormGroup
+      <TextFormGroup
         id="schedule"
-        className={INDEXED_FIELDS[this.getScheduleType()].required && 'required'}
-        validationState={scheduleFeedback}>
-        <ControlLabel>Schedule</ControlLabel>
-          <Row>
-            <Col md={7}>
-              <FormControl
-                onChange={(event) => this.updateField(this.getScheduleType(), event.target.value)}
-                placeholder={this.getScheduleType() === QUARTZ_SCHEDULE ? 'eg: 0 */5 * * * ?' : 'eg: */5 * * * *'}
-                type="text"
-                value={this.getValue(this.getScheduleType())}
-                feedback={this.feedback(this.getScheduleType())}
-              />
-              {scheduleFeedback && <FormControl.Feedback />}
-            </Col>
-            <Col md={5}>
-              <Select
-                onChange={value => this.updateField('scheduleType', value.value)}
-                options={[
-                  {
-                    value: CRON_SCHEDULE,
-                    label: 'Cron Schedule'
-                  },
-                  {
-                    value: QUARTZ_SCHEDULE,
-                    label: 'Quartz Schedule'
-                  }
-                ]}
-                clearable={false}
-                value={ this.getScheduleType() }
-              />
-            </Col>
-          </Row>
-      </FormGroup>
+        onChange={event => this.updateField(this.getScheduleType(), event.target.value)}
+        value={this.getValue(this.getScheduleType())}
+        label="Schedule"
+        required={INDEXED_FIELDS[this.getScheduleType()].required}
+        placeholder={this.getScheduleType() === QUARTZ_SCHEDULE ? 'eg: 0 */5 * * * ?' : 'eg: */5 * * * *'}
+        feedback={this.feedback(this.getScheduleType())}
+      />
     );
     const numRetriesOnFailure = (
       <TextFormGroup
@@ -387,6 +384,8 @@ class RequestForm extends React.Component {
         { this.shouldRenderField('loadBalanced') && loadBalanced }
         { this.shouldRenderField('waitAtLeastMillisAfterTaskFinishesForReschedule') && waitAtLeastMillisAfterTaskFinishesForReschedule }
         { this.shouldRenderField('rackAffinity') && rackAffinity }
+        { this.shouldRenderField('scheduleType') && scheduleType }
+        { this.shouldRenderField('scheduleTimeZone') && scheduleTimeZone }
         { (this.shouldRenderField(CRON_SCHEDULE) || this.shouldRenderField(QUARTZ_SCHEDULE)) && schedule }
         { this.shouldRenderField('numRetriesOnFailure') && numRetriesOnFailure }
         { this.shouldRenderField('killOldNonLongRunningTasksAfterMillis') && killOldNonLongRunningTasksAfterMillis }

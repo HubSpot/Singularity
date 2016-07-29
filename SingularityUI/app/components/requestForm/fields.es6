@@ -30,6 +30,7 @@ export const FIELDS_BY_REQUEST_TYPE = {
   SCHEDULED: [
     QUARTZ_SCHEDULE_FIELD,
     CRON_SCHEDULE_FIELD,
+    {id: 'scheduleTimeZone', type: 'text'},
     {id: 'scheduleType', type: 'text'},
     {id: 'numRetriesOnFailure', type: 'number'},
     KILL_OLD_NRL_FIELD,
