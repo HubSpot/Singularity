@@ -460,7 +460,7 @@ UITable.propTypes = {
   ]),
   className: PropTypes.string,
   asyncSort: PropTypes.bool,
-  fetchDataFromApi: PropTypes.func, // (page, numberPerPage, sortBy) -> Promise // Makes this table server-side - no sorting
+  fetchDataFromApi: PropTypes.func, // (page, numberPerPage, sortBy) -> Promise // Makes this table API-paginated - no sorting
   isFetching: PropTypes.bool,
   // For long API calls set this to true. As a future upgrade it would be nice to automatically detect if it's taking a long time:
   showPageLoaderWhenFetching: PropTypes.bool,
