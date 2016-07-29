@@ -292,11 +292,6 @@ public class SingularityValidator {
 
       checkBadRequest(dockerInfo.getImage() != null, "docker image may not be null");
 
-      if (!dockerInfo.getPortMappings().isEmpty()) {
-        checkBadRequest(dockerInfo.getNetwork().or(SingularityDockerNetworkType.HOST) == SingularityDockerNetworkType.BRIDGE,
-            "Docker networking type must be BRIDGE if port mappings are set");
-      }
-
       for (SingularityDockerPortMapping portMapping : dockerInfo.getPortMappings()) {
         if (portMapping.getContainerPortType() == SingularityPortMappingType.FROM_OFFER) {
           checkBadRequest(portMapping.getContainerPort() >= 0 && portMapping.getContainerPort() < numPorts,
