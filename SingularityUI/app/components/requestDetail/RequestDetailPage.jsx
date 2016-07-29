@@ -24,6 +24,8 @@ import TaskHistoryTable from './TaskHistoryTable';
 import DeployHistoryTable from './DeployHistoryTable';
 import RequestHistoryTable from './RequestHistoryTable';
 
+import Utils from '../../utils';
+
 function refresh(props) {
   props.fetchRequest(props.params.requestId);
   props.fetchActiveTasksForRequest(props.params.requestId);
@@ -71,6 +73,14 @@ RequestDetailPage.propTypes = {
   cancelRefresh: PropTypes.func.isRequired
 };
 
+const mapStateToProps = (state, ownProps) => {
+  const statusCode = Utils.maybe(state, ['api', 'request', ownProps.params.requestId, 'statusCode']);
+  return {
+    notFound: statusCode === 404,
+    pathname: ownProps.location.pathname
+  };
+};
+
 const mapDispatchToProps = (dispatch, ownProps) => {
   const refreshActions = [
     FetchRequest.trigger(ownProps.params.requestId),
@@ -87,7 +97,7 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     cancelRefresh: () => dispatch(
       RefreshActions.CancelAutoRefresh('RequestDetailPage')
     ),
-    fetchRequest: (requestId) => dispatch(FetchRequest.trigger(requestId)),
+    fetchRequest: (requestId) => dispatch(FetchRequest.trigger(requestId, true)),
     fetchActiveTasksForRequest: (requestId) => dispatch(FetchActiveTasksForRequest.trigger(requestId)),
     fetchScheduledTasksForRequest: (requestId) => dispatch(FetchScheduledTasksForRequest.trigger(requestId)),
     fetchTaskCleanups: () => dispatch(FetchTaskCleanups.trigger()),
@@ -98,6 +108,6 @@ const mapDispatchToProps = (dispatch, ownProps) => {
 };
 
 export default connect(
-  null,
+  mapStateToProps,
   mapDispatchToProps
 )(rootComponent(RequestDetailPage, (props) => props.params.requestId, refresh, false));

@@ -19,8 +19,9 @@ export const FetchRequestsInState = buildApiAction(
 
 export const FetchRequest = buildApiAction(
   'FETCH_REQUEST',
-  (requestId) => ({
-    url: `/requests/request/${requestId}`
+  (requestId, isMainApiCall) => ({
+    url: `/requests/request/${requestId}`,
+    isMainApiCall
   }),
   (requestId) => requestId
 );
