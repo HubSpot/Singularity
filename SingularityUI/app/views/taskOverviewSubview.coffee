@@ -89,7 +89,7 @@ class taskOverviewSubview extends View
 
 
     killTask: (data) =>
-        @taskModel.kill(data.message, @model.has('cleanup') or @model.get('isCleaning'), data.waitForReplacementTask)
+        @taskModel.kill(data.message, (@model.has('cleanup') or @model.get('isCleaning')) and @model.get('cleanup').isImmediate, data.waitForReplacementTask)
             .done (data) =>
                 @collection.add [data], parse: true  # automatically response  object to the cleanup collection
             .error (response) =>
