@@ -3,8 +3,9 @@ import Utils from '../../utils';
 
 export const FetchTaskHistory = buildApiAction(
   'FETCH_TASK_HISTORY',
-  (taskId) => ({
-    url: `/history/task/${taskId}`
+  (taskId, isMainApiCall) => ({
+    url: `/history/task/${taskId}`,
+    isMainApiCall
   }),
   (taskId) => taskId
 );
