@@ -540,8 +540,16 @@ public class SingularityDeployChecker {
     final Map<SingularityTaskId, SingularityTask> tasks = taskManager.getTasks(Iterables.concat(deployActiveTasks, toShutDown));
     final LoadBalancerRequestId lbRequestId = getLoadBalancerRequestId(pendingDeploy);
 
+    List<SingularityTaskId> toRemoveFromLb = new ArrayList<>();
+    for (SingularityTaskId taskId : toShutDown) {
+      Optional<SingularityLoadBalancerUpdate> maybeAddUpdate = taskManager.getLoadBalancerState(taskId, LoadBalancerRequestType.ADD);
+      if (maybeAddUpdate.isPresent() && maybeAddUpdate.get().getLoadBalancerState() == BaragonRequestState.SUCCESS) {
+        toRemoveFromLb.add(taskId);
+      }
+    }
+
     updateLoadBalancerStateForTasks(deployActiveTasks, LoadBalancerRequestType.ADD, SingularityLoadBalancerUpdate.preEnqueue(lbRequestId));
-    updateLoadBalancerStateForTasks(toShutDown, LoadBalancerRequestType.REMOVE, SingularityLoadBalancerUpdate.preEnqueue(lbRequestId));
+    updateLoadBalancerStateForTasks(toRemoveFromLb, LoadBalancerRequestType.REMOVE, SingularityLoadBalancerUpdate.preEnqueue(lbRequestId));
     SingularityLoadBalancerUpdate enqueueResult = lbClient.enqueue(lbRequestId, request, deploy.get(), getTasks(deployActiveTasks, tasks), getTasks(toShutDown, tasks));
     return processLbState(request, deploy, pendingDeploy, updatePendingDeployRequest, deployActiveTasks, otherActiveTasks, toShutDown, enqueueResult);
   }
@@ -549,8 +557,17 @@ public class SingularityDeployChecker {
   private SingularityDeployResult processLbState(SingularityRequest request, Optional<SingularityDeploy> deploy, SingularityPendingDeploy pendingDeploy,
     Optional<SingularityUpdatePendingDeployRequest> updatePendingDeployRequest, Collection<SingularityTaskId> deployActiveTasks, Collection<SingularityTaskId> otherActiveTasks,
     Collection<SingularityTaskId> tasksToShutDown, SingularityLoadBalancerUpdate lbUpdate) {
+
+    List<SingularityTaskId> toRemoveFromLb = new ArrayList<>();
+    for (SingularityTaskId taskId : tasksToShutDown) {
+      Optional<SingularityLoadBalancerUpdate> maybeRemoveUpdate = taskManager.getLoadBalancerState(taskId, LoadBalancerRequestType.REMOVE);
+      if (maybeRemoveUpdate.isPresent() && maybeRemoveUpdate.get().getLoadBalancerRequestId().getId().equals(lbUpdate.getLoadBalancerRequestId().getId())) {
+        toRemoveFromLb.add(taskId);
+      }
+    }
+
     updateLoadBalancerStateForTasks(deployActiveTasks, LoadBalancerRequestType.ADD, lbUpdate);
-    updateLoadBalancerStateForTasks(tasksToShutDown, LoadBalancerRequestType.REMOVE, lbUpdate);
+    updateLoadBalancerStateForTasks(toRemoveFromLb, LoadBalancerRequestType.REMOVE, lbUpdate);
 
     DeployState deployState = interpretLoadBalancerState(lbUpdate, pendingDeploy.getCurrentDeployState());
     if (deployState == DeployState.SUCCEEDED) {
