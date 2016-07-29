@@ -488,7 +488,7 @@ function refresh(props) {
   taskPromise.then(() => {
     const apiData = props.route.store.getState().api.task[props.params.taskId];
     if (apiData.statusCode === 404) return;
-    const task = apiData.task;
+    const task = apiData.data;
     promises.push(props.fetchDeployForRequest(task.task.taskId.requestId, task.task.taskId.deployId));
     if (task.isStillRunning) {
       promises.push(props.fetchTaskStatistics(props.params.taskId));
