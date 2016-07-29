@@ -10,7 +10,7 @@ function TaskLbUpdates (props) {
     <Section title="Load Balancer Updates">
       <SimpleTable
         emptyMessage="No Load Balancer Info"
-        entries={props.task.loadBalancerUpdates}
+        entries={props.loadBalancerUpdates}
         perPage={5}
         headers={['Timestamp', 'Request Type', 'State', 'Message', '']}
         renderTableRow={(data, index) => {
@@ -32,16 +32,14 @@ function TaskLbUpdates (props) {
 }
 
 TaskLbUpdates.propTypes = {
-  task: PropTypes.shape({
-    loadBalancerUpdates: PropTypes.arrayOf(PropTypes.shape({
-      loadBalancerRequestId: PropTypes.shape({
-        requestType: PropTypes.string
-      }).isRequired,
-      timestamp: PropTypes.number,
-      loadBalancerState: PropTypes.string,
-      message: PropTypes.string
-    }))
-  }).isRequired
+  loadBalancerUpdates: PropTypes.arrayOf(PropTypes.shape({
+    loadBalancerRequestId: PropTypes.shape({
+      requestType: PropTypes.string
+    }).isRequired,
+    timestamp: PropTypes.number,
+    loadBalancerState: PropTypes.string,
+    message: PropTypes.string
+  })).isRequired
 };
 
 export default TaskLbUpdates;
