@@ -34,11 +34,11 @@ class UITable extends Component {
     if (nextProps.isFetching) {
       return;
     }
-    if (this.isServerSideTable() && _.isEmpty(nextProps.data) && this.state.chunkNum > 1) {
+    if (this.isApiPaginated() && _.isEmpty(nextProps.data) && this.state.chunkNum > 1) {
       this.fetchDataFromApi(this.state.chunkNum - 1, this.state.rowChunkSize, this.state.sortBy);
       this.setState({ pastEnd: true });
-    } else if (this.isServerSideTable() && (this.state.pastEnd || nextProps.data.length < this.state.rowChunkSize)) {
-      this.setState({pastEnd: false, lastPage: true});
+    } else if (this.isApiPaginated() && (this.state.pastEnd || nextProps.data.length < this.state.rowChunkSize)) {
+      this.setState({ pastEnd: false, lastPage: true });
     }
   }
 
@@ -58,7 +58,7 @@ class UITable extends Component {
 
   state;
 
-  isServerSideTable() {
+  isApiPaginated() {
     return !!this.props.fetchDataFromApi;
   }
 
@@ -89,7 +89,7 @@ class UITable extends Component {
   }
 
   updateSort(data, sortBy, sortDirection) {
-    if (this.isServerSideTable()) {
+    if (this.isApiPaginated()) {
       this.setState({
         sortBy,
         sortDirection,
@@ -181,7 +181,7 @@ class UITable extends Component {
     if (eventKey === this.state.chunkNum) {
       return;
     }
-    if (this.isServerSideTable()) {
+    if (this.isApiPaginated()) {
       this.fetchDataFromApi(eventKey, this.state.rowChunkSize);
       return;
     }
@@ -209,7 +209,7 @@ class UITable extends Component {
   }
 
   handleSortClick(col) {
-    if (this.isServerSideTable()) {
+    if (this.isApiPaginated()) {
       this.props.fetchDataFromApi(this.state.chunkNum, this.state.rowChunkSize, false, col.props.id);
     }
     const colId = col.props.id;
@@ -239,7 +239,7 @@ class UITable extends Component {
   }
 
   shouldRenderPagination(numRows, rowsPerPage) {
-    return this.isServerSideTable() || (this.props.paginated && numRows > rowsPerPage);
+    return this.isApiPaginated() || (this.props.paginated && numRows > rowsPerPage);
   }
 
   renderTableRow(rowData, index) {
@@ -269,7 +269,7 @@ class UITable extends Component {
   }
 
   renderTableRows() {
-    if (this.props.paginated && !this.isServerSideTable()) {
+    if (this.props.paginated && !this.isApiPaginated()) {
       const page = this.state.chunkNum;
       const beginIndex = (page - 1) * this.state.rowChunkSize;
       const endIndex = page * this.state.rowChunkSize;
@@ -300,7 +300,7 @@ class UITable extends Component {
 
   renderRowChunkSizeChoices() {
     const setRowChunkSize = (rowChunkSize) => {
-      if (this.isServerSideTable()) {
+      if (this.isApiPaginated()) {
         this.fetchDataFromApi(1, rowChunkSize, true);
       } else {
         this.setState({chunkNum: 1, rowChunkSize});
@@ -321,10 +321,10 @@ class UITable extends Component {
   renderPagination() {
     const numRows = this.state.data.length;
     const rowsPerPage = this.state.rowChunkSize;
-    const maxButtons = this.isServerSideTable() ? 1 : this.props.maxButtons;
+    const maxButtons = this.isApiPaginated() ? 1 : this.props.maxButtons;
     if (this.shouldRenderPagination(numRows, rowsPerPage)) {
       let numPages = Math.ceil(numRows / rowsPerPage);
-      if (this.isServerSideTable()) {
+      if (this.isApiPaginated()) {
         if (this.state.lastPage) {
           numPages = this.state.chunkNum;
         } else {
@@ -336,7 +336,7 @@ class UITable extends Component {
           prev={true}
           next={true}
           first={numPages > maxButtons}
-          last={!this.isServerSideTable() && numPages > maxButtons}
+          last={!this.isApiPaginated() && numPages > maxButtons}
           ellipsis={false}
           items={numPages}
           maxButtons={maxButtons}
