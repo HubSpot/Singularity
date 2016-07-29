@@ -1,5 +1,6 @@
 import React, { PropTypes, Component } from 'react';
 import { connect } from 'react-redux';
+import { OverlayTrigger, Popover } from 'react-bootstrap';
 
 import Utils from '../../../utils';
 
@@ -22,19 +23,8 @@ class RequestTitle extends Component {
     requestAPI: PropTypes.object
   };
 
-  constructor(props) {
-    super(props);
-    this.state = {hover: false};
-    this.onMouseOver = this.onMouseOver.bind(this);
-  }
-
-  onMouseOver() {
-    this.setState({ hover: true });
-  }
-
   render() {
     const {requestAPI, requestId} = this.props;
-    const {hover} = this.state;
     let maybeInfo;
     if (Utils.api.isFirstLoad(requestAPI)) {
       maybeInfo = <em>Loading...</em>;
@@ -58,15 +48,21 @@ class RequestTitle extends Component {
     }
 
     const requestIdToDisplay = Utils.maybe(requestAPI, ['data', 'request', 'id']) || requestId;
+    const copyLinkPopover = (
+      <Popover id="popover-trigger-focus">
+        Click to copy
+      </Popover>
+    );
 
     return (
-      <div onMouseOver={this.onMouseOver}>
+      <div>
         <h4>
           {maybeInfo}
         </h4>
         <h2>
-            {hover && <span><a className="copy-btn" data-clipboard-text={requestIdToDisplay}>Copy</a> </span>}
-            {requestIdToDisplay}
+          <OverlayTrigger trigger={['hover', 'focus', 'click']} placement="left" overlay={copyLinkPopover}>
+            <span className="copy-btn" data-clipboard-text={requestIdToDisplay}>{requestIdToDisplay}</span>
+          </OverlayTrigger>
         </h2>
       </div>
     );
