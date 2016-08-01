@@ -56,12 +56,7 @@ const SANDBOX_FETCH_CHUNK = `${frameworkName}_SANDBOX_FETCH_CHUNK`;
 export const SANDBOX_FETCH_CHUNK_STARTED = `${SANDBOX_FETCH_CHUNK}_STARTED`;
 export const SANDBOX_FETCH_CHUNK_ERROR = `${SANDBOX_FETCH_CHUNK}_ERROR`;
 
-export const sandboxFetchChunk = (id, start, end, config) => {
-  // meh, I kinda want to keep it generalized to one string at the top level,
-  // but I'm not sure this is the right way to do that.
-  // `id` is the taskId and path
-  const taskId = id.split('/')[0];
-  const path = id.split('/').slice(1).join('/');
+export const sandboxFetchChunk = (id, taskId, path, start, end, config) => {
   return (dispatch) => {
     dispatch({
       type: SANDBOX_FETCH_CHUNK_STARTED,
@@ -103,10 +98,7 @@ const SANDBOX_FETCH_LENGTH = `${frameworkName}_SANDBOX_FETCH_LENGTH`;
 export const SANDBOX_FETCH_LENGTH_STARTED = `${SANDBOX_FETCH_LENGTH}_STARTED`;
 export const SANDBOX_FETCH_LENGTH_ERROR = `${SANDBOX_FETCH_LENGTH}_ERROR`;
 
-export const sandboxGetLength = (id, config) => {
-  // `id` is the taskId and path
-  const taskId = id.split('/')[0];
-  const path = id.split('/').slice(1).join('/');
+export const sandboxGetLength = (id, taskId, path, config) => {
   return (dispatch) => {
     dispatch({
       type: SANDBOX_FETCH_LENGTH_STARTED,

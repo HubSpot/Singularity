@@ -1,19 +1,30 @@
 import React, { PropTypes } from 'react';
-import Log from './Log';
 
-const Pane = ({children}) => {
+import 'react-virtualized/styles.css';
+import '../styles/index.scss';
+
+const Pane = ({logHeader, logComponent, logFooter}) => {
   return (
-    <div className="log-pane">
-      {children}
+    <div>
+      <section className="log-pane">
+        <header>
+          {logHeader}
+        </header>
+        <div className="log-line-wrapper">
+          {logComponent}
+        </div>
+        <footer>
+          {logFooter}
+        </footer>
+      </section>
     </div>
   );
 };
 
 Pane.propTypes = {
-  children: PropTypes.oneOfType([
-    PropTypes.instanceOf(Log),
-    PropTypes.arrayOf(PropTypes.instanceOf(Pane))
-  ]).isRequired,
+  logHeader: PropTypes.node.isRequired,
+  logComponent: PropTypes.node.isRequired,
+  logFooter: PropTypes.node.isRequired
 };
 
 export default Pane;

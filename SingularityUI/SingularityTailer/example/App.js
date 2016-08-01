@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { Log, TailerProvider } from '../src/components';
+import { SandboxLog, TailerProvider } from '../src/components';
 
 import { sandboxSetApiRoot } from '../src/actions';
 
@@ -12,7 +12,9 @@ class App extends Component {
     super();
     this.state = {
       taskId: null,
-      enteredTaskId: ''
+      enteredTaskId: '',
+      path: null,
+      enteredPath: '',
     };
 
     this.tailLog = this.tailLog.bind(this);
@@ -24,7 +26,8 @@ class App extends Component {
 
   tailLog(e) {
     this.setState({
-      taskId: this.state.enteredTaskId
+      taskId: this.state.enteredTaskId,
+      path: this.state.enteredPath
     });
 
     if (e) {
@@ -33,6 +36,13 @@ class App extends Component {
   }
 
   render() {
+    const { taskId, path } = this.state;
+    let maybeLog;
+
+    if (taskId && path) {
+      maybeLog = <SandboxLog taskId={taskId} path={path} />;
+    }
+
     return (
       <div>
         <form onSubmit={this.tailLog}>
@@ -44,12 +54,22 @@ class App extends Component {
               onChange={(e) => this.setState({enteredTaskId: e.target.value})}
             />
           </label>
+          <label>
+            {'Path: '}
+            <input
+              type="text"
+              value={this.state.enteredPath}
+              onChange={(e) => this.setState({enteredPath: e.target.value})}
+            />
+          </label>
           <button type="submit" onClick={this.tailLog}>
             Tail!
           </button>
         </form>
         <TailerProvider getTailerState={(state) => state.tailer}>
-          <Log id={this.state.taskId} />
+          <div>
+            {maybeLog}
+          </div>
         </TailerProvider>
       </div>
     );

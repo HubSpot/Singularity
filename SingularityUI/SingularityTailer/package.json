@@ -45,7 +45,6 @@
     "react-virtualized": "^7.14.0",
     "redux": "^3.5.2",
     "reselect": "^2.5.3",
-    "reselect-map": "0.0.2",
     "text-encoding": "^0.6.0"
   },
   "devDependencies": {

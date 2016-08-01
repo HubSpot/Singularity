@@ -25,7 +25,7 @@ const ansiEnhancer = (line) => {
 };
 
 const getLines = (state, props) => {
-  const file = props.getTailerState(state).files[props.id];
+  const file = props.getTailerState(state).files[props.tailerId];
   if (file) {
     return file.lines;
   }
