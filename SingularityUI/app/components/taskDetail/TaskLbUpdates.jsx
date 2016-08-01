@@ -3,30 +3,50 @@ import Utils from '../../utils';
 
 import JSONButton from '../common/JSONButton';
 import Section from '../common/Section';
-import SimpleTable from '../common/SimpleTable';
+import UITable from '../common/table/UITable';
+import Column from '../common/table/Column';
 
 function TaskLbUpdates (props) {
   return (
     <Section title="Load Balancer Updates">
-      <SimpleTable
-        emptyMessage="No Load Balancer Info"
-        entries={props.loadBalancerUpdates}
-        perPage={5}
-        headers={['Timestamp', 'Request Type', 'State', 'Message', '']}
-        renderTableRow={(data, index) => {
-          return (
-            <tr key={index}>
-              <td>{Utils.absoluteTimestamp(data.timestamp)}</td>
-              <td>{Utils.humanizeText(data.loadBalancerRequestId.requestType)}</td>
-              <td>{Utils.humanizeText(data.loadBalancerState)}</td>
-              <td>{data.message}</td>
-              <td className="actions-column">
-                <JSONButton object={data}>{'{ }'}</JSONButton>
-              </td>
-            </tr>
-          );
-        }}
-      />
+      <UITable
+        emptyTableMessage="This task has no history yet"
+        data={props.loadBalancerUpdates}
+        keyGetter={(loadBalancerUpdate) => loadBalancerUpdate.timestamp}
+        rowChunkSize={5}
+        paginated={true}
+      >
+        <Column
+          label="Timestamp"
+          id="timestamp"
+          key="timestamp"
+          cellData={(loadBalancerUpdate) => Utils.timestampFromNow(loadBalancerUpdate.timestamp)}
+        />
+        <Column
+          label="Request Type"
+          id="request-type"
+          key="request-type"
+          cellData={(loadBalancerUpdate) => Utils.humanizeText(loadBalancerUpdate.loadBalancerRequestId.requestType)}
+        />
+        <Column
+          label="State"
+          id="state"
+          key="state"
+          cellData={(loadBalancerUpdate) => Utils.humanizeText(loadBalancerUpdate.loadBalancerState)}
+        />
+        <Column
+          label="Message"
+          id="message"
+          key="message"
+          cellData={(loadBalancerUpdate) => loadBalancerUpdate.message}
+        />
+        <Column
+          id="actions-column"
+          key="actions-column"
+          className="actions-column"
+          cellData={(loadBalancerUpdate) => <JSONButton object={loadBalancerUpdate}>{'{ }'}</JSONButton>}
+        />
+      </UITable>
     </Section>
   );
 }

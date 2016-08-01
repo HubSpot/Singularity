@@ -8,10 +8,7 @@ import { connect } from 'react-redux';
 import { DecommissionRack, RemoveRack, ReactivateRack, FetchRacks } from '../../actions/api/racks';
 import rootComponent from '../../rootComponent';
 import { Link } from 'react-router';
-
-function __in__(needle, haystack) {
-  return haystack.indexOf(needle) >= 0;
-}
+import Column from '../common/table/Column';
 
 const Racks = React.createClass({
 
@@ -37,11 +34,11 @@ const Racks = React.createClass({
   },
 
   showUser(rack) {
-    return __in__(rack.currentState.state, ['ACTIVE', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']);
+    return Utils.isIn(rack.currentState.state, ['ACTIVE', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']);
   },
 
   getMaybeReactivateButton(rack) {
-    return (__in__(rack.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&
+    return (Utils.isIn(rack.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&
       <ModalButton
         buttonChildren={<Glyphicon glyph="new-window" />}
         action="Reactivate Rack"
@@ -88,51 +85,81 @@ const Racks = React.createClass({
     );
   },
 
-  columnHeads(type) {
-    const heads = ['ID', 'Current State', 'Uptime'];
-    if (this.typeName[type]) {
-      heads.push(this.typeName[type]);
-    }
-    heads.push('Message');
-    heads.push(''); // Reactivate button and Decommission or Remove button
-    return heads;
-  },
-
-
-  getRow(type, rack) {
-    return (
-      <tr key={rack.id}>
-        <td>
+  getColumns(type) {
+    const columns = ([
+      <Column
+        label="ID"
+        id="id"
+        key="id"
+        sortable={true}
+        sortData={(cellData, rack) => rack.id}
+        cellData={(rack) => (
           <Link to={`tasks/active/all/${rack.id}`} title={`All tasks running on rack ${rack.id}`}>
             {rack.id}
           </Link>
-        </td>
-        <td>{Utils.humanizeText(rack.currentState.state)}</td>
-        <td>{Utils.duration(Date.now() - rack.firstSeenAt)}</td>
-        {this.typeName[type] && <td>{this.showUser(rack) && rack.currentState.user}</td>}
-        <td>{rack.currentState.message}</td>
-        <td className="actions-column">
-          {this.getMaybeReactivateButton(rack)}
-          {this.getDecommissionOrRemoveButton(rack)}
-        </td>
-      </tr>
+        )}
+      />,
+      <Column
+        label="Current State"
+        id="state"
+        key="state"
+        sortable={true}
+        sortData={(cellData, rack) => rack.currentState.state}
+        cellData={(rack) => Utils.humanizeText(rack.currentState.state)}
+      />,
+      <Column
+        label="Uptime"
+        id="uptime"
+        key="uptime"
+        sortable={true}
+        sortData={(cellData, rack) => rack.firstSeenAt}
+        cellData={(rack) => Utils.duration(Date.now() - rack.firstSeenAt)}
+      />
+    ]);
+    if (this.typeName[type]) {
+      columns.push(
+        <Column
+          label={this.typeName[type]}
+          id="typename"
+          key="typename"
+          sortable={true}
+          sortData={(cellData, rack) => rack.currentState.user || ''}
+          cellData={(rack) => this.showUser(rack) && rack.currentState.user}
+        />
+      );
+    }
+    columns.push(
+      <Column
+        label="Message"
+        id="message"
+        key="message"
+        cellData={(rack) => rack.currentState.message}
+      />,
+      <Column
+        id="actions-column"
+        key="actions-column"
+        className="actions-column"
+        cellData={(rack) => (
+          <span>
+            {this.getMaybeReactivateButton(rack)}
+            {this.getDecommissionOrRemoveButton(rack)}
+          </span>
+        )}
+      />
     );
-  },
-
-  getRacks(type, racks) {
-    return racks.map(rack => this.getRow(type, rack));
+    return columns;
   },
 
   getActiveRacks() {
-    return this.props.racks.filter(({currentState}) => __in__(currentState.state, ['ACTIVE']));
+    return this.props.racks.filter(({currentState}) => Utils.isIn(currentState.state, ['ACTIVE']));
   },
 
   getDecommissioningRacks() {
-    return this.props.racks.filter(({currentState}) => __in__(currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']));
+    return this.props.racks.filter(({currentState}) => Utils.isIn(currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']));
   },
 
   getInactiveRacks() {
-    return this.props.racks.filter(({currentState}) => __in__(currentState.state, ['DEAD', 'MISSING_ON_STARTUP']));
+    return this.props.racks.filter(({currentState}) => Utils.isIn(currentState.state, ['DEAD', 'MISSING_ON_STARTUP']));
   },
 
   getStates() {
@@ -140,20 +167,20 @@ const Racks = React.createClass({
       {
         stateName: 'Active',
         emptyMessage: 'No Active Racks',
-        headers: this.columnHeads('active'),
-        hostsInState: this.getRacks('active', this.getActiveRacks())
+        columns: this.getColumns('active'),
+        hostsInState: this.getActiveRacks()
       },
       {
         stateName: 'Decommissioning',
         emptyMessage: 'No Decommissioning Racks',
-        headers: this.columnHeads('decommissioning'),
-        hostsInState: this.getRacks('decommissioning', this.getDecommissioningRacks())
+        columns: this.getColumns('decommissioning'),
+        hostsInState: this.getDecommissioningRacks()
       },
       {
         stateName: 'Inactive',
         emptyMessage: 'No Inactive Racks',
-        headers: this.columnHeads('inactive'),
-        hostsInState: this.getRacks('inactive', this.getInactiveRacks())
+        columns: this.getColumns('inactive'),
+        hostsInState: this.getInactiveRacks()
       }
     ];
   },

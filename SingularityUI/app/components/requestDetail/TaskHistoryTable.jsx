@@ -10,11 +10,13 @@ import { FetchTaskHistoryForRequest } from '../../actions/api/history';
 
 import Section from '../common/Section';
 
-import ServerSideTable from '../common/ServerSideTable';
+import UITable from '../common/table/UITable';
+import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
 
-const TaskHistoryTable = ({requestId, tasksAPI}) => {
+const TaskHistoryTable = ({requestId, tasksAPI, fetchTaskHistoryForRequest}) => {
   const tasks = tasksAPI ? tasksAPI.data : [];
+  const isFetching = tasksAPI ? tasksAPI.isFetching : false;
   const emptyTableMessage = (Utils.api.isFirstLoad(tasksAPI)
     ? 'Loading...'
     : 'No tasks'
@@ -40,36 +42,86 @@ const TaskHistoryTable = ({requestId, tasksAPI}) => {
 
   return (
     <Section id="task-history" title={title}>
-      <ServerSideTable
-        emptyMessage={emptyTableMessage}
-        entries={tasks}
-        paginate={tasks.length >= 5}
-        perPage={5}
-        fetchAction={FetchTaskHistoryForRequest}
-        fetchParams={[requestId]}
-        headers={['Name', 'Last State', 'Deploy ID', 'Started At', 'Updated At', '', '']}
-        renderTableRow={(data, index) => {
-          return (
-            <tr key={index}>
-              <td><Link to={`task/${data.taskId.id}`}>{data.taskId.id}</Link></td>
-              <td><span className={`label label-${Utils.getLabelClassFromTaskState(data.lastTaskState)}`}>{Utils.humanizeText(data.lastTaskState)}</span></td>
-              <td><Link to={`request/${data.taskId.requestId}/deploy/${data.taskId.deployId}`}>{data.taskId.deployId}</Link></td>
-              <td>{Utils.timestampFromNow(data.taskId.startedAt)}</td>
-              <td>{Utils.timestampFromNow(data.updatedAt)}</td>
-              <td className="actions-column"><Link to={`request/${data.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${data.taskId.id}`} title="Log"><Glyphicon glyph="file" /></Link></td>
-              <td className="actions-column"><JSONButton object={data}>{'{ }'}</JSONButton></td>
-            </tr>
-          );
-        }}
-      />
+      <UITable
+        emptyTableMessage={emptyTableMessage}
+        data={tasks}
+        keyGetter={(task) => task.taskId.id}
+        rowChunkSize={5}
+        paginated={true}
+        fetchDataFromApi={(page, numberPerPage) => fetchTaskHistoryForRequest(requestId, numberPerPage, page)}
+        isFetching={isFetching}
+      >
+        <Column
+          label="Name"
+          id="url"
+          key="url"
+          cellData={(task) => (
+            <Link to={`task/${task.taskId.id}`}>
+              {task.taskId.id}
+            </Link>
+          )}
+        />
+        <Column
+          label="Last State"
+          id="state"
+          key="state"
+          cellData={(task) => (
+            <span className={`label label-${Utils.getLabelClassFromTaskState(task.lastTaskState)}`}>
+              {Utils.humanizeText(task.lastTaskState)}
+            </span>
+          )}
+        />
+        <Column
+          label="Deploy ID"
+          id="deploy-id"
+          key="deploy-id"
+          cellData={(task) => (
+            <Link to={`request/${task.taskId.requestId}/deploy/${task.taskId.deployId}`}>
+              {task.taskId.deployId}
+            </Link>
+          )}
+        />
+        <Column
+          label="Started At"
+          id="started"
+          key="started"
+          cellData={(task) => Utils.timestampFromNow(task.taskId.startedAt)}
+        />
+        <Column
+          label="Updated At"
+          id="updated"
+          key="updated"
+          cellData={(task) => Utils.timestampFromNow(task.updatedAt)}
+        />
+        <Column
+          id="actions-column"
+          key="actions-column"
+          className="actions-column"
+          cellData={(task) => (
+            <span>
+              <Link to={`task/${task.taskId.id}/tail/${config.finishedTaskLogPath}`}>
+                <Glyphicon glyph="file" />
+              </Link>
+              <JSONButton object={task}>
+                {'{ }'}
+              </JSONButton>
+            </span>
+          )}
+        />
+      </UITable>
     </Section>
   );
 };
 
 TaskHistoryTable.propTypes = {
   requestId: PropTypes.string.isRequired,
-  tasksAPI: PropTypes.object.isRequired
+  tasksAPI: PropTypes.object.isRequired,
+  fetchTaskHistoryForRequest: PropTypes.func.isRequired
 };
+
+const mapDispatchToProps = (dispatch) => ({
+  fetchTaskHistoryForRequest: (requestId, count, page) => dispatch(FetchTaskHistoryForRequest.trigger(requestId, count, page))
+});
 
 const mapStateToProps = (state, ownProps) => ({
   tasksAPI: Utils.maybe(
@@ -80,5 +132,5 @@ const mapStateToProps = (state, ownProps) => ({
 
 export default connect(
   mapStateToProps,
-  null
+  mapDispatchToProps
 )(TaskHistoryTable);
