@@ -36,9 +36,11 @@ class UITable extends Component {
     }
     if (this.isApiPaginated() && _.isEmpty(nextProps.data) && this.state.chunkNum > 1) {
       this.fetchDataFromApi(this.state.chunkNum - 1, this.state.rowChunkSize, this.state.sortBy);
-      this.setState({ pastEnd: true });
+      this.setState({ pastEnd: true, data: nextProps.data });
     } else if (this.isApiPaginated() && (this.state.pastEnd || nextProps.data.length < this.state.rowChunkSize)) {
-      this.setState({ pastEnd: false, lastPage: true });
+      this.setState({ pastEnd: false, lastPage: true, data: nextProps.data });
+    } else if (this.isApiPaginated()) {
+      this.setState({ data: nextProps.data });
     }
   }
 
@@ -325,7 +327,7 @@ class UITable extends Component {
     if (this.shouldRenderPagination(numRows, rowsPerPage)) {
       let numPages = Math.ceil(numRows / rowsPerPage);
       if (this.isApiPaginated()) {
-        if (this.state.lastPage) {
+        if (this.state.lastPage || numRows < rowsPerPage) {
           numPages = this.state.chunkNum;
         } else {
           numPages = this.state.chunkNum + 1;
