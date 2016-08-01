@@ -216,8 +216,8 @@ class DeployDetail extends React.Component {
       let value = `CPUs: ${deploy.deploy.resources.cpus} | Memory (Mb): ${deploy.deploy.resources.memoryMb} | Ports: ${deploy.deploy.resources.numPorts}`;
       stats.push(<InfoBox key="cpus" copyableClassName="info-copyable" name="Resources" value={value} />);
     }
-    if (deploy.deploy.executorData && deploy.deploy.executorData.extraCmdLineArgs) {
-      stats.push(<InfoBox key="args" copyableClassName="info-copyable" name="Extra Command Line Arguments" value={deploy.deploy.executorData.extraCmdLineArgsd} />);
+    if (deploy.deploy.executorData && !_.isEmpty(deploy.deploy.executorData.extraCmdLineArgs)) {
+      stats.push(<InfoBox key="args" copyableClassName="info-copyable" name="Extra Command Line Arguments" join=" " value={deploy.deploy.executorData.extraCmdLineArgsd} />);
     }
 
     for (let statistic in deploy.deployStatistics) {

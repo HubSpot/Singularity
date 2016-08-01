@@ -11,7 +11,7 @@ function TaskLbUpdates (props) {
     <Section title="Load Balancer Updates">
       <UITable
         emptyTableMessage="This task has no history yet"
-        data={props.task.loadBalancerUpdates}
+        data={props.loadBalancerUpdates}
         keyGetter={(loadBalancerUpdate) => loadBalancerUpdate.timestamp}
         rowChunkSize={5}
         paginated={true}
@@ -52,16 +52,14 @@ function TaskLbUpdates (props) {
 }
 
 TaskLbUpdates.propTypes = {
-  task: PropTypes.shape({
-    loadBalancerUpdates: PropTypes.arrayOf(PropTypes.shape({
-      loadBalancerRequestId: PropTypes.shape({
-        requestType: PropTypes.string
-      }).isRequired,
-      timestamp: PropTypes.number,
-      loadBalancerState: PropTypes.string,
-      message: PropTypes.string
-    }))
-  }).isRequired
+  loadBalancerUpdates: PropTypes.arrayOf(PropTypes.shape({
+    loadBalancerRequestId: PropTypes.shape({
+      requestType: PropTypes.string
+    }).isRequired,
+    timestamp: PropTypes.number,
+    loadBalancerState: PropTypes.string,
+    message: PropTypes.string
+  })).isRequired
 };
 
 export default TaskLbUpdates;
