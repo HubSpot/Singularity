@@ -1,7 +1,7 @@
 import React from 'react';
 import classNames from 'classnames';
 
-const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true, pageMargin = true) => class extends React.Component {
+const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true, pageMargin = true, initialize) => class extends React.Component {
 
   constructor(props) {
     super(props);
@@ -20,7 +20,7 @@ const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true,
     const titleString = typeof title === 'function' ? title(this.props) : title;
     document.title = `${titleString} - ${config.title}`;
 
-    const promise = refresh(this.props);
+    const promise = initialize ? initialize(this.props) : refresh(this.props);
     if (promise) {
       promise.then(() => {
         if (!this.unmounted) {
