@@ -48,7 +48,7 @@ import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerParameter;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityVolume;
-import com.hubspot.singularity.SingularityMesosTaskLabel;
+import com.hubspot.mesos.SingularityMesosTaskLabel;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
@@ -123,8 +123,8 @@ class SingularityMesosTaskBuilder {
 
     final Builder labelsBuilder = Labels.newBuilder();
     // apply request-specific labels, if any
-    if (taskRequest.getDeploy().getLabels().isPresent() && !taskRequest.getDeploy().getLabels().get().isEmpty()) {
-      for (SingularityMesosTaskLabel taskLabel : taskRequest.getDeploy().getLabels().get()) {
+    if (!taskRequest.getDeploy().getLabelsList().isEmpty()) {
+      for (SingularityMesosTaskLabel taskLabel : taskRequest.getDeploy().getLabelsList()) {
         final Label.Builder labelBuilder = Label.newBuilder()
             .setKey(taskLabel.getKey());
 
@@ -281,9 +281,9 @@ class SingularityMesosTaskBuilder {
         }
       }
 
-      if (!dockerInfo.get().getParameters().isEmpty()) {
+      if (!dockerInfo.get().getParametersList().isEmpty()) {
         List<Parameter> parameters = new ArrayList<>();
-        for (SingularityDockerParameter dockerParameter : dockerInfo.get().getParameters()) {
+        for (SingularityDockerParameter dockerParameter : dockerInfo.get().getParametersList()) {
           parameters.add(Parameter.newBuilder().setKey(dockerParameter.getKey()).setValue(dockerParameter.getValue()).build());
         }
         dockerInfoBuilder.addAllParameters(parameters);

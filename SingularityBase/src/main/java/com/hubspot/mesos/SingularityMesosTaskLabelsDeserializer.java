@@ -1,4 +1,4 @@
-package com.hubspot.singularity;
+package com.hubspot.mesos;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,9 +15,9 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Optional;
 
-public class SingularityMesosTaskLabelsDeserializer extends JsonDeserializer<List<SingularityMesosTaskLabel>> {
+public class SingularityMesosTaskLabelsDeserializer extends JsonDeserializer<SingularityMesosTaskLabels> {
     @Override
-    public List<SingularityMesosTaskLabel> deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+    public SingularityMesosTaskLabels deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
         final ObjectCodec oc = jp.getCodec();
         final JsonNode node = oc.readTree(jp);
 
@@ -28,7 +28,7 @@ public class SingularityMesosTaskLabelsDeserializer extends JsonDeserializer<Lis
                 labels.add(oc.treeToValue(item, SingularityMesosTaskLabel.class));
             }
 
-            return labels;
+            return new SingularityMesosTaskLabels(labels);
         } else if (node.isObject()) {
             final List<SingularityMesosTaskLabel> labels = new ArrayList<>();
 
@@ -38,7 +38,7 @@ public class SingularityMesosTaskLabelsDeserializer extends JsonDeserializer<Lis
                 labels.add(new SingularityMesosTaskLabel(entry.getKey(), Optional.of(entry.getValue().textValue())));
             }
 
-            return labels;
+            return new SingularityMesosTaskLabels(labels);
         } else {
             throw new JsonParseException("Don't know how to deserialize a List<SingularityMesosTaskLabel> object from node type " + node.getNodeType(), jp.getCurrentLocation());
         }

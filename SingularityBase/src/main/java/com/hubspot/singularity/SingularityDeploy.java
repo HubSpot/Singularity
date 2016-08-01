@@ -4,17 +4,22 @@ import static com.hubspot.singularity.JsonHelpers.copyOfList;
 import static com.hubspot.singularity.JsonHelpers.copyOfSet;
 import static com.hubspot.singularity.JsonHelpers.copyOfMap;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
+import com.hubspot.mesos.SingularityMesosTaskLabel;
+import com.hubspot.mesos.SingularityMesosTaskLabels;
+import com.hubspot.mesos.SingularityMesosTaskLabelsDeserializer;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityDeploy {
@@ -42,9 +47,7 @@ public class SingularityDeploy {
   private final Optional<Map<String, String>> env;
   private final Optional<List<String>> uris;
   private final Optional<ExecutorData> executorData;
-
-  @JsonDeserialize(using = SingularityMesosTaskLabelsDeserializer.class)
-  private final Optional<List<SingularityMesosTaskLabel>> labels;
+  private final Optional<SingularityMesosTaskLabels> labels;
 
   private final Optional<Map<Integer, Map<String, String>>> taskLabels;
   private final Optional<Map<Integer, Map<String, String>>> taskEnv;
@@ -100,7 +103,7 @@ public class SingularityDeploy {
       @JsonProperty("executorData") Optional<ExecutorData> executorData,
       @JsonProperty("version") Optional<String> version,
       @JsonProperty("timestamp") Optional<Long> timestamp,
-      @JsonProperty("labels") Optional<List<SingularityMesosTaskLabel>> labels,
+      @JsonProperty("labels") Optional<SingularityMesosTaskLabels> labels,
       @JsonProperty("taskLabels") Optional<Map<Integer, Map<String, String>>> taskLabels,
       @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
       @JsonProperty("healthcheckUri") Optional<String> healthcheckUri,
@@ -382,8 +385,13 @@ public class SingularityDeploy {
   }
 
   @ApiModelProperty(required=false, value="Labels for all tasks associated with this deploy")
-  public Optional<List<SingularityMesosTaskLabel>> getLabels() {
+  public Optional<SingularityMesosTaskLabels> getLabels() {
     return labels;
+  }
+
+  @JsonIgnore
+  public List<SingularityMesosTaskLabel> getLabelsList() {
+    return labels.isPresent() ? labels.get().getLabels() : Collections.<SingularityMesosTaskLabel>emptyList();
   }
 
   @ApiModelProperty(required=false, value="Labels for specific tasks associated with this deploy, indexed by instance number")

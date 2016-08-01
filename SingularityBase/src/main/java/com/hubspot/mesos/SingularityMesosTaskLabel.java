@@ -1,4 +1,4 @@
-package com.hubspot.singularity;
+package com.hubspot.mesos;
 
 import java.util.Objects;
 
@@ -11,7 +11,7 @@ public class SingularityMesosTaskLabel {
     private final Optional<String> value;
 
     @JsonCreator
-    public static SingularityMesosTaskLabel fromString(String value) {
+    public static SingularityMesosTaskLabel fromString(@JsonProperty("value") String value) {
         return new SingularityMesosTaskLabel(value, Optional.<String>absent());
     }
 

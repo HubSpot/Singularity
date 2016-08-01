@@ -10,12 +10,12 @@ public class SingularityDockerParameter {
     private final String value;
 
     @JsonCreator
-    public static SingularityDockerParameter fromString(@JsonProperty String value) {
+    public static SingularityDockerParameter fromString(@JsonProperty("value") String value) {
         return new SingularityDockerParameter(value, "");
     }
 
     @JsonCreator
-    public SingularityDockerParameter(@JsonProperty String key, @JsonProperty String value) {
+    public SingularityDockerParameter(@JsonProperty("key") String key, @JsonProperty("value") String value) {
         this.key = key;
         this.value = value;
     }

@@ -34,6 +34,7 @@ import com.hubspot.mesos.SingularityContainerType;
 import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerParameter;
+import com.hubspot.mesos.SingularityDockerParameters;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityDockerVolumeMode;
 import com.hubspot.mesos.SingularityPortMappingType;
@@ -138,7 +139,7 @@ public class SingularityMesosTaskBuilderTest {
         Optional.of(Arrays.asList(
             new SingularityVolume("/container", Optional.of("/host"), SingularityDockerVolumeMode.RW),
             new SingularityVolume("/container/${TASK_REQUEST_ID}/${TASK_DEPLOY_ID}", Optional.of("/host/${TASK_ID}"), SingularityDockerVolumeMode.RO))),
-        Optional.of(new SingularityDockerInfo("docker-image", true, SingularityDockerNetworkType.BRIDGE, Optional.of(Arrays.asList(literalMapping, offerMapping)), Optional.of(false), Optional.of(Arrays.asList(new SingularityDockerParameter("env", "var=value"))) )));
+        Optional.of(new SingularityDockerInfo("docker-image", true, SingularityDockerNetworkType.BRIDGE, Optional.of(Arrays.asList(literalMapping, offerMapping)), Optional.of(false), Optional.of(new SingularityDockerParameters(Arrays.asList(new SingularityDockerParameter("env", "var=value")))))));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
         .setContainerInfo(Optional.of(containerInfo))
         .setCommand(Optional.of("/bin/echo"))
@@ -190,7 +191,7 @@ public class SingularityMesosTaskBuilderTest {
         Optional.of(new SingularityDockerInfo("docker-image", true, SingularityDockerNetworkType.NONE,
             Optional.<List<SingularityDockerPortMapping>>absent(),
             Optional.<Boolean>absent(),
-            Optional.<List<SingularityDockerParameter>>absent())));
+            Optional.<SingularityDockerParameters>absent())));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
         .setContainerInfo(Optional.of(containerInfo))
         .build();
@@ -216,7 +217,7 @@ public class SingularityMesosTaskBuilderTest {
         Optional.of(new SingularityDockerInfo("docker-image", false, SingularityDockerNetworkType.BRIDGE,
             Optional.<List<SingularityDockerPortMapping>>absent(),
             Optional.<Boolean>absent(),
-            Optional.<List<SingularityDockerParameter>>absent())));
+            Optional.<SingularityDockerParameters>absent())));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
         .setContainerInfo(Optional.of(containerInfo))
         .build();

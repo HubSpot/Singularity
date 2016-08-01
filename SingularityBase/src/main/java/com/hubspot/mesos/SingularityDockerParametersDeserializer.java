@@ -14,9 +14,9 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 
-public class SingularityDockerParametersDeserializer extends JsonDeserializer<List<SingularityDockerParameter>> {
+public class SingularityDockerParametersDeserializer extends JsonDeserializer<SingularityDockerParameters> {
     @Override
-    public List<SingularityDockerParameter> deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+    public SingularityDockerParameters deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
         final ObjectCodec oc = jp.getCodec();
         final JsonNode node = oc.readTree(jp);
 
@@ -27,7 +27,7 @@ public class SingularityDockerParametersDeserializer extends JsonDeserializer<Li
                 parameters.add(oc.treeToValue(item, SingularityDockerParameter.class));
             }
 
-            return parameters;
+            return new SingularityDockerParameters(parameters);
         } else if (node.isObject()) {
             final List<SingularityDockerParameter> parameters = new ArrayList<>();
 
@@ -37,7 +37,7 @@ public class SingularityDockerParametersDeserializer extends JsonDeserializer<Li
                 parameters.add(new SingularityDockerParameter(entry.getKey(), entry.getValue().textValue()));
             }
 
-            return parameters;
+            return new SingularityDockerParameters(parameters);
         } else {
             throw new JsonParseException("Don't know how to deserialize a List<SingularityDockerParameter> object from node type " + node.getNodeType(), jp.getCurrentLocation());
         }
