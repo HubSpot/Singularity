@@ -70,6 +70,8 @@ function TaskFileBrowser (props) {
       <UITable
         data={getFiles() || []}
         keyGetter={(file) => file.name}
+        rowChunkSize={50}
+        paginated={true}
         emptyTableMessage="No files exist in this directory"
       >
         <Column
