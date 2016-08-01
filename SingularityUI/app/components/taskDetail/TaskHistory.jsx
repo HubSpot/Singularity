@@ -1,27 +1,40 @@
 import React, { PropTypes } from 'react';
 import Utils from '../../utils';
 import Section from '../common/Section';
-import SimpleTable from '../common/SimpleTable';
+import UITable from '../common/table/UITable';
+import Column from '../common/table/Column';
 import classNames from 'classnames';
 
 function TaskHistory (props) {
   return (
     <Section title="History">
-      <SimpleTable
-        emptyMessage="This task has no history yet"
-        entries={props.taskUpdates.concat().reverse()}
-        perPage={5}
-        headers={['Status', 'Message', 'Time']}
-        renderTableRow={(data, index) => {
-          return (
-            <tr key={index} className={classNames({'medium-weight': index === 0})}>
-              <td>{Utils.humanizeText(data.taskState)}</td>
-              <td>{data.statusMessage ? data.statusMessage : '—'}</td>
-              <td>{Utils.timestampFromNow(data.timestamp)}</td>
-            </tr>
-          );
-        }}
-      />
+      <UITable
+        emptyTableMessage="This task has no history yet"
+        data={props.taskUpdates.concat().reverse()}
+        keyGetter={(taskUpdate) => taskUpdate.timestamp}
+        rowChunkSize={5}
+        paginated={true}
+        rowClassName={(rowData, index) => classNames({'medium-weight': index === 0})}
+      >
+        <Column
+          label="Status"
+          id="status"
+          key="status"
+          cellData={(taskUpdate) => Utils.humanizeText(taskUpdate.taskState)}
+        />
+        <Column
+          label="Message"
+          id="message"
+          key="message"
+          cellData={(taskUpdate) => taskUpdate.statusMessage && taskUpdate.statusMessage || '—'}
+        />
+        <Column
+          label="Time"
+          id="time"
+          key="time"
+          cellData={(taskUpdate) => Utils.timestampFromNow(taskUpdate.timestamp)}
+        />
+      </UITable>
     </Section>
   );
 }
