@@ -109,7 +109,7 @@ export const SkipRequestHealthchecks = buildJsonApiAction(
   'SKIP_REQUEST_HEALTHCHECKS',
   'PUT',
   (requestId, {skipHealthchecks, durationMillis, message, actionId}) => ({
-    url: `/requests/request/${requestId}/skipHealthchecks`,
+    url: `/requests/request/${requestId}/skip-healthchecks`,
     body: { skipHealthchecks, durationMillis, message, actionId }
   })
 );
@@ -118,7 +118,7 @@ export const PersistSkipRequestHealthchecks = buildJsonApiAction(
   'PERSIST_SKIP_REQUEST_HEALTHCHECKS',
   'DELETE',
   (requestId) => ({
-    url: `/requests/request/${requestId}/skipHealthchecks`
+    url: `/requests/request/${requestId}/skip-healthchecks`
   })
 );
 
