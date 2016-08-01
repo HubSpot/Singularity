@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 import { Glyphicon, Label } from 'react-bootstrap';
 import rootComponent from '../../rootComponent';
 import { FetchTaskSearchParams } from '../../actions/api/history';
-import UpdateFilter from '../../actions/ui/taskSearch';
+import { UpdateFilter } from '../../actions/ui/taskSearch';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import TaskSearchFilters from './TaskSearchFilters';
