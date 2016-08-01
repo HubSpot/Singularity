@@ -15,6 +15,7 @@ import { SaveRequest, FetchRequest } from '../../actions/api/requests';
 import { OverlayTrigger, Tooltip} from 'react-bootstrap/lib';
 import { Form, Row, Col } from 'react-bootstrap';
 import Utils from '../../utils';
+import timeZones from '../../timeZones';
 import classNames from 'classnames';
 import {FIELDS_BY_REQUEST_TYPE, INDEXED_FIELDS} from './fields';
 import { FetchRacks } from '../../actions/api/racks';
@@ -27,6 +28,8 @@ const FORM_ID = 'requestForm';
 const REQUEST_ID_REGEX = /[a-zA-Z0-9._-]*/;
 
 const REQUEST_TYPES = ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'];
+
+const timeZoneOptions = timeZones.map(zone => ({label: zone, value: zone}));
 
 class RequestForm extends React.Component {
   static propTypes = {
@@ -323,14 +326,14 @@ class RequestForm extends React.Component {
       />
     );
     const scheduleTimeZone = (
-      <TextFormGroup
+      <SelectFormGroup
         id="schedule-timezone"
-        onChange={event => this.updateField('scheduleTimeZone', event.target.value)}
-        value={this.getValue('scheduleTimeZone')}
+        onChange={newValue => this.updateField('scheduleTimeZone', newValue ? newValue.value : null)}
+        value={this.getValue('scheduleTimeZone') || ''}
         label="Schedule Timezone"
-        placeholder="eg: UTC, US/Eastern"
         required={INDEXED_FIELDS.scheduleTimeZone.required}
-        feedback={this.feedback('scheduleTimeZone')}
+        clearable={true}
+        options={timeZoneOptions}
       />
     );
     const schedule = (

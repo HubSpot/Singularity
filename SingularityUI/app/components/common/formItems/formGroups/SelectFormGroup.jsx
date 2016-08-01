@@ -8,13 +8,10 @@ const SelectFormGroup = (props) => {
   if (props.options.length > 5) {
     selectors = (
       <Select
-        id={props.id}
         className={props.id}
-        options={props.options}
-        onChange={props.onChange}
         value={props.value || props.defaultValue}
-        clearable={false}
-        disabled={props.disabled}
+        clearable={props.clearable || false}
+        {...props}
       />
     );
   } else {
@@ -53,7 +50,8 @@ SelectFormGroup.propTypes = {
   defaultValue: PropTypes.string,
   value: PropTypes.string,
   disabled: PropTypes.bool,
-  required: PropTypes.bool
+  required: PropTypes.bool,
+  clearable: PropTypes.bool
 };
 
 export default SelectFormGroup;
