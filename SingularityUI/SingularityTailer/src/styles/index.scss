@@ -1,35 +1,33 @@
 section.log-view {
-  position: relative;
+  position: fixed;
   display: flex;
   flex-flow: column;
   height: 100%;
-  font-family: Consolas,"Liberation Mono",Courier,monospace;
+  width: 100%;
+
+
+  font-family: Consolas, "Liberation Mono", Courier, monospace;
 
   header {
-
+    flex: 0 1 auto;
   }
 
   div.infinite-wrapper {
-    flex: 2;
-    overflow: auto;
-
-    color: #839496;
-    background-color: #002b36;
+    flex: 1 1 auto;
   }
 
   .log-row {
     white-space: nowrap;
-    min-height: 1.6em;
-    line-height: 1.6em;
+    font-size: 12px;
+    line-height: 12px;
+    height: 12px;
     padding: 0 2em;
     white-space: pre;
-    font-size: 12px;
-    height: 100%;
   }
 
   footer {
-    min-height: 60px;
+    flex: 0 1 40px;
   }
 }
 
-@import './ansi-dark';
+@import './ansi';

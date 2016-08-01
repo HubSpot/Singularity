@@ -1,17 +1,14 @@
-import React from 'react';
+import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import 'react-virtualized/styles.css';
 import '../styles/index.scss';
-import Anser from 'anser';
-
-import classNames from 'classnames';
-
 
 import { AutoSizer, InfiniteLoader, VirtualScroll } from 'react-virtualized';
 
 import { sandboxGetLength, sandboxFetchChunk } from '../actions';
-
 import connectToTailer from './connectToTailer';
+
+import * as Selectors from '../selectors';
 
 const Line = ({data, isScrolling}) => {
   if (data.isMissingMarker) {
@@ -19,40 +16,44 @@ const Line = ({data, isScrolling}) => {
     return <div style={{backgroundColor: '#ddd'}} key={`${data.start}-${data.end}`}>{missingBytes} bytes</div>;
   }
 
-  const ansiStyled = Anser.ansiToJson(data.text, {use_classes: true}).map((p, i) => {
-    const { content, fg, bg, decoration } = p;
-    const classes = classNames(
-      fg,
-      bg ? `${bg}-bg` : undefined,
-      decoration ? `ansi-${decoration}` : undefined
-    );
-    return <span key={i} className={classes}>{content}</span>;
-  });
+  if (data.ansi) {
+    const ansiStyled = data.ansi.map((part, i) => (
+      <span key={i} className={null || part.classes}>
+        {part.content}
+      </span>
+    ));
 
-  return <div key={`${data.start}-${data.end}`}>{ansiStyled}</div>;
+    return <div key={`${data.start}-${data.end}`}>{ansiStyled}</div>;
+  }
+
+  return <div key={`${data.start}-${data.end}`}>{data.text}</div>;
 };
 
-const Log = ({id, data, fetchLength, fetchChunk}) => {
+Line.propTypes = {
+  data: PropTypes.object.isRequired,
+  isScrolling: PropTypes.bool
+};
+
+const Log = ({id, isLoaded, lines, fileSize, fetchLength, fetchChunk, config}) => {
   let maybeLog;
 
   const overscanRowCount = 100;
 
   const isRowLoaded = ({index}) => {
-    return index < data.lines.size && !data.lines.get(index).isMissingMarker;
+    return index < lines.size && !lines.get(index).isMissingMarker;
   };
 
   const loadMoreRows = ({startIndex, stopIndex}) => {
-    console.log('loadMoreRows', startIndex, stopIndex);
     let byteRangeStart;
     let byteRangeEnd;
-    if (startIndex < data.lines.size) {
-      byteRangeStart = data.lines.get(startIndex).start;
+    if (startIndex < lines.size) {
+      byteRangeStart = lines.get(startIndex).start;
     } else {
-      byteRangeStart = data.lines.last().end;
+      byteRangeStart = lines.last().end;
     }
 
-    if (stopIndex < data.lines.size) {
-      byteRangeEnd = data.lines.get(stopIndex).end;
+    if (stopIndex < lines.size) {
+      byteRangeEnd = lines.get(stopIndex).end;
     } else {
       byteRangeEnd = byteRangeStart + 65535;
     }
@@ -61,14 +62,16 @@ const Log = ({id, data, fetchLength, fetchChunk}) => {
   };
 
   const remoteRowCount = Math.max(
-    Math.ceil((data && data.fileSize || 0) / 150),
-    (data && data.fileSize)
+    Math.ceil((isLoaded && fileSize || 0) / 150),
+    (isLoaded && fileSize || 0)
   ); // real solid math
 
-  if (data) {
+  console.log(remoteRowCount);
+
+  if (isLoaded) {
     maybeLog = (
-      <AutoSizer disableHeight>
-        {({width}) => (
+      <AutoSizer>
+        {({width, height}) => (
           <InfiniteLoader
             isRowLoaded={isRowLoaded}
             loadMoreRows={loadMoreRows}
@@ -78,12 +81,13 @@ const Log = ({id, data, fetchLength, fetchChunk}) => {
               <VirtualScroll
                 ref={registerChild}
                 width={width}
-                height={500}
+                height={height}
+                tabIndex={null}
                 onRowsRendered={onRowsRendered}
                 overscanRowCount={overscanRowCount}
-                rowCount={data.lines.size}
-                rowHeight={({index}) => 20}
-                rowRenderer={({index, isScrolling}) => <Line data={data.lines.get(index)} />}
+                rowCount={lines.size}
+                rowHeight={({index}) => 14}
+                rowRenderer={({index, isScrolling}) => <Line data={lines.get(index)} />}
                 rowClassName="log-row"
               />
             )}
@@ -98,7 +102,7 @@ const Log = ({id, data, fetchLength, fetchChunk}) => {
       <button onClick={() => fetchLength()}>
         load length
       </button>
-      <button onClick={() => fetchChunk(0, data.fileSize)}>
+      <button onClick={() => fetchChunk(0, fileSize)}>
         load whole
       </button>
       <button onClick={() => {
@@ -115,7 +119,7 @@ const Log = ({id, data, fetchLength, fetchChunk}) => {
   );
 
   return (
-    <div style={{position: 'relative'}}>
+    <div>
       <section className="log-view">
         <header>
           {id}
@@ -131,18 +135,38 @@ const Log = ({id, data, fetchLength, fetchChunk}) => {
   );
 };
 
-const mapStateToProps = (state, ownProps) => ({
-  data: ownProps.getTailerState(state).files[ownProps.id]
-});
+const mapStateToProps = (state, ownProps) => {
+  const tailerState = ownProps.getTailerState(state);
+  const file = tailerState.files[ownProps.id];
+
+  const getLines = Selectors.makeGetEnhancedLines();
+
+  return {
+    isLoaded: !!file,
+    fileSize: file && file.fileSize,
+    lines: getLines(state, ownProps),
+    config: tailerState.config
+  };
+};
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  fetchLength: () => dispatch(sandboxGetLength(ownProps.id)),
-  fetchChunk: (start, end) => dispatch(
-    sandboxFetchChunk(ownProps.id, start, end)
+  fetchLength: (config) => dispatch(sandboxGetLength(ownProps.id, config)),
+  fetchChunk: (start, end, config) => dispatch(
+    sandboxFetchChunk(ownProps.id, start, end, config)
   ),
 });
 
+const mergeProps = (stateProps, dispatchProps, ownProps) => {
+  return {
+    ...stateProps,
+    ...ownProps,
+    fetchLength: () => dispatchProps.fetchLength(stateProps.config),
+    fetchChunk: (start, end) => dispatchProps.fetchChunk(start, end, stateProps.config),
+  };
+};
+
 export default connectToTailer(connect(
   mapStateToProps,
-  mapDispatchToProps
+  mapDispatchToProps,
+  mergeProps
 )(Log));

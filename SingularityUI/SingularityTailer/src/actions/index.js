@@ -20,6 +20,12 @@ export const setFileSize = (id, fileSize) => ({
   fileSize
 });
 
+/* GENERAL ACTIONS */
+export const TOGGLE_ANSI_COLORING = `${frameworkName}_TOGGLE_ANSI_COLORING`;
+export const toggleAnsiColoring = () => ({
+  type: TOGGLE_ANSI_COLORING
+});
+
 /* GENERAL API HELPERS */
 const checkStatus = (response) => {
   if (response.status >= 200 && response.status < 300) {
@@ -50,13 +56,13 @@ const SANDBOX_FETCH_CHUNK = `${frameworkName}_SANDBOX_FETCH_CHUNK`;
 export const SANDBOX_FETCH_CHUNK_STARTED = `${SANDBOX_FETCH_CHUNK}_STARTED`;
 export const SANDBOX_FETCH_CHUNK_ERROR = `${SANDBOX_FETCH_CHUNK}_ERROR`;
 
-export const sandboxFetchChunk = (id, start, end) => {
+export const sandboxFetchChunk = (id, start, end, config) => {
   // meh, I kinda want to keep it generalized to one string at the top level,
   // but I'm not sure this is the right way to do that.
   // `id` is the taskId and path
   const taskId = id.split('/')[0];
   const path = id.split('/').slice(1).join('/');
-  return (dispatch, getState) => {
+  return (dispatch) => {
     dispatch({
       type: SANDBOX_FETCH_CHUNK_STARTED,
       startedAt: Date.now(),
@@ -64,8 +70,7 @@ export const sandboxFetchChunk = (id, start, end) => {
       start,
       end
     });
-    console.warn('this getState() won\'t work outside the example, plsfix');
-    const apiRoot = getState().tailer.config.singularityApiRoot;
+    const apiRoot = config.singularityApiRoot;
     const query = `?path=${path}&offset=${start}&length=${end - start}`;
     const apiPath = `${apiRoot}/sandbox/${taskId}/read${query}`;
 
@@ -98,19 +103,18 @@ const SANDBOX_FETCH_LENGTH = `${frameworkName}_SANDBOX_FETCH_LENGTH`;
 export const SANDBOX_FETCH_LENGTH_STARTED = `${SANDBOX_FETCH_LENGTH}_STARTED`;
 export const SANDBOX_FETCH_LENGTH_ERROR = `${SANDBOX_FETCH_LENGTH}_ERROR`;
 
-export const sandboxGetLength = (id) => {
+export const sandboxGetLength = (id, config) => {
   // `id` is the taskId and path
   const taskId = id.split('/')[0];
   const path = id.split('/').slice(1).join('/');
-  return (dispatch, getState) => {
+  return (dispatch) => {
     dispatch({
       type: SANDBOX_FETCH_LENGTH_STARTED,
       startedAt: Date.now(),
       id
     });
 
-    const apiRoot = getState().tailer.config.singularityApiRoot;
-    console.warn('this is broken');
+    const apiRoot = config.singularityApiRoot;
     const query = `?path=${path}&length=${0}`;
     const apiPath = `${apiRoot}/sandbox/${taskId}/read${query}`;
 

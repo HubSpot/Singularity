@@ -5,6 +5,8 @@ import { Log, TailerProvider } from '../src/components';
 
 import { sandboxSetApiRoot } from '../src/actions';
 
+import './example.scss';
+
 class App extends Component {
   constructor() {
     super();

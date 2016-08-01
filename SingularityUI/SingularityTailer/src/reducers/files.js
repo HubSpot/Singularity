@@ -1,7 +1,10 @@
 import { TextEncoder, TextDecoder } from 'text-encoding'; // polyfill
 import { List } from 'immutable';
 
-import { ADD_FILE_CHUNK, SET_FILE_SIZE } from '../actions';
+import {
+  ADD_FILE_CHUNK,
+  SET_FILE_SIZE
+} from '../actions';
 
 const TE = new TextEncoder();
 const TD = new TextDecoder('utf-8', {fatal: true});
@@ -388,7 +391,10 @@ export const addChunkReducer = (state, action) => {
   const chunks = mergeChunks(state[id].chunks, chunk);
 
   const incomingLines = createLinesForNewChunk(state[id].lines, chunks, chunk);
-  const replacementRange = findOverlap(state[id].lines, getBookends(incomingLines));
+  const replacementRange = findOverlap(
+    state[id].lines,
+    getBookends(incomingLines)
+  );
 
   return {
     ...state,
@@ -449,8 +455,7 @@ const filesReducer = (state = initialState, action) => {
       return {
         ...state,
         [action.id]: {
-          chunks: state[action.id].chunks,
-          lines: state[action.id].lines,
+          ...state[action.id],
           fileSize: Math.max(state[action.id].fileSize, action.fileSize)
         }
       };
