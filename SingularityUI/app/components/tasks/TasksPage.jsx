@@ -24,6 +24,7 @@ import {
   Rack,
   CPUs,
   Memory,
+  Disk,
   ActiveActions,
   NextRun,
   PendingType,
@@ -81,9 +82,15 @@ class TasksPage extends React.Component {
 
 
   getColumns() {
+    let columns;
     switch (this.props.filter.taskStatus) {
       case 'active':
-        return [TaskIdShortened, StartedAt, Host, Rack, CPUs, Memory, ActiveActions];
+        columns = [TaskIdShortened, StartedAt, Host, Rack, CPUs, Memory];
+        if (config.showTaskDiskResource) {
+          columns.push(Disk);
+        }
+        columns.push(ActiveActions);
+        return columns;
       case 'scheduled':
         return [ScheduledTaskId, NextRun, PendingType, PendingDeployId, ScheduledActions];
       case 'cleaning':
@@ -91,7 +98,12 @@ class TasksPage extends React.Component {
       case 'lbcleanup':
         return [TaskIdShortened, StartedAt, Host, Rack, InstanceNumber, JSONAction];
       case 'decommissioning':
-        return [TaskIdShortened, StartedAt, Host, Rack, CPUs, Memory, ActiveActions];
+        columns = [TaskIdShortened, StartedAt, Host, Rack, CPUs, Memory, ActiveActions];
+        if (config.showTaskDiskResource) {
+          columns.push(Disk);
+        }
+        columns.push(ActiveActions);
+        return columns;
       default:
         return [TaskIdShortened, JSONAction];
     }
