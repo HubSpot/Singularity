@@ -22,6 +22,7 @@ var templateData = {
   staticRoot: process.env.SINGULARITY_STATIC_URI || (serverBase + '/static'),
   appRoot: process.env.SINGULARITY_APP_URI || (serverBase + '/ui'),
   apiRoot: process.env.SINGULARITY_API_URI || '',
+  apiDocs: process.env.SINGULARITY_API_DOCS || 'http://getsingularity.com/Docs/reference/apidocs/api-index.html',
   slaveHttpPort: process.env.SINGULARITY_SLAVE_HTTP_PORT || 5051,
   title: process.env.SINGULARITY_TITLE || 'Singularity (local dev)',
   navColor: process.env.SINGULARITY_NAV_COLOR,
