@@ -32,9 +32,6 @@ a.disabled:hover
 
 // Overrides
 
-.vex-loading-spinner
-    top 45% !important
-
 .messenger-message
     background #fff !important
 
@@ -57,12 +54,6 @@ a.disabled:hover
 table th
     text-align left
 
-#page, .navbar .container-fluid
-    max-width 1500px
-
-#page
-    padding 0 20px 50px 20px
-
 .page-header small
     margin-left 1em
 
@@ -76,6 +67,7 @@ code
 
 .healthcheck-link
     font-weight bolder
+    margin 0 0.5em
 
 .healthcheck-number
     font-weight bolder
@@ -94,6 +86,9 @@ code
 .messenger-message p:last-child
     margin-bottom 0
 
+.tag-popover
+    word-break break-all
+
 // Fix for FF
 @-moz-document url-prefix()
     fieldset
@@ -109,9 +104,6 @@ code
             font-weight normal
         .wait-for-file-exists
             font-weight bolder
-
-.vex.vex-theme-default .vex-dialog-form .vex-dialog-input.expiration-input
-    margin-bottom 0
 
 .help
     color #999

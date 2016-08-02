@@ -41,3 +41,22 @@ label
 
 #cmd-confirm
   color $green
+
+.remove-button
+    position absolute
+    top 0.75em
+    right 1.5em
+    width 2em
+    height 2em
+    line-height 1.75em
+    text-align center
+
+    &:hover
+        background #fff
+        border-radius 3px
+        cursor pointer
+
+    &:after
+        content '×'
+        font-size 20px
+        color #999
