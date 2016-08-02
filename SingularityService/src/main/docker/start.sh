@@ -3,11 +3,12 @@
 PATH=/usr/local/singularity/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/lib64/qt-3.3/bin:/usr/local/bin:/bin:/usr/bin
 
 if [ ${DOCKER_HOST} ]; then
-	HOST_AND_PORT=`echo $DOCKER_HOST | awk -F/ '{print $3}'`
-	HOST_IP="${HOST_AND_PORT%:*}"
+    HOST_AND_PORT=`echo $DOCKER_HOST | awk -F/ '{print $3}'`
+    DEFAULT_HOSTNAME="${HOST_AND_PORT%:*}"
+    SINGULARITY_HOSTNAME="${SINGULARITY_HOSTNAME:=$DEFAULT_HOSTNAME}"
 fi
 
-DEFAULT_URI_BASE="http://${HOST_IP:=localhost}:${SINGULARITY_PORT:=7099}${SINGULARITY_UI_BASE:=/singularity}"
+DEFAULT_URI_BASE="http://${SINGULARITY_HOSTNAME:=localhost}:${SINGULARITY_PORT:=7099}${SINGULARITY_UI_BASE:=/singularity}"
 
 
 [[ ! ${SINGULARITY_PORT:-} ]] || args+=( -Ddw.server.connector.port="$SINGULARITY_PORT" )
@@ -23,6 +24,7 @@ args+=( -Ddw.ui.baseUrl="${SINGULARITY_URI_BASE:=$DEFAULT_URI_BASE}" )
 [[ ! ${SINGULARITY_DB_USER:-} ]] || args+=( -Ddw.database.user="${SINGULARITY_DB_USER}" )
 [[ ! ${SINGULARITY_DB_PASSWORD:-} ]] || args+=( -Ddw.database.password="${SINGULARITY_DB_PASSWORD}" )
 [[ ! ${SINGULARITY_DB_URL:-} ]] || args+=( -Ddw.database.url="${SINGULARITY_DB_URL}" -Ddw.database.driverClass="${SINGULARITY_DB_DRIVER_CLASS:-com.mysql.jdbc.Driver}" )
+[[ ! ${SINGULARITY_HOSTNAME:-} ]] || args+=( -Ddw.hostname="${SINGULARITY_HOSTNAME}" )
 
 # SMTP
 [[ ! ${SINGULARITY_SMTP_USERNAME:-} ]] || args+=( -Ddw.smtp.username="${SINGULARITY_SMTP_USERNAME}" )
@@ -33,8 +35,8 @@ args+=( -Ddw.ui.baseUrl="${SINGULARITY_URI_BASE:=$DEFAULT_URI_BASE}" )
 [[ ! ${SINGULARITY_PERSIST_HISTORY_EVERY_SECONDS:-} ]] || args+=( -Ddw.persistHistoryEverySeconds="${SINGULARITY_PERSIST_HISTORY_EVERY_SECONDS}" )
 
 if [[ "${SINGULARITY_DB_MIGRATE:-}" != "" ]]; then
-	echo "Running: java ${args[@]} -jar /SingularityService.jar db migrate /etc/singularity/singularity.yaml --migrations /etc/singularity/migrations.sql"
-	java "${args[@]}" -jar /SingularityService.jar db migrate /etc/singularity/singularity.yaml --migrations /etc/singularity/migrations.sql
+    echo "Running: java ${args[@]} -jar /SingularityService.jar db migrate /etc/singularity/singularity.yaml --migrations /etc/singularity/migrations.sql"
+    java "${args[@]}" -jar /SingularityService.jar db migrate /etc/singularity/singularity.yaml --migrations /etc/singularity/migrations.sql
 fi
 
 echo "Running: java ${args[@]} -jar /SingularityService.jar $*"
