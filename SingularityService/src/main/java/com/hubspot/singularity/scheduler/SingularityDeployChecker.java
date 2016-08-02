@@ -121,13 +121,13 @@ public class SingularityDeployChecker {
     Optional<SingularityRequestWithState> maybeRequestWithState = requestManager.getRequest(pendingDeploy.getDeployMarker().getRequestId());
 
     if (!SingularityRequestWithState.isActive(maybeRequestWithState)) {
-      LOG.warn("Deploy {} request was {}, removing deploy", SingularityRequestWithState.getRequestState(maybeRequestWithState), pendingDeploy);
+      LOG.warn("Deploy {} request was {}, removing deploy", pendingDeploy, SingularityRequestWithState.getRequestState(maybeRequestWithState));
 
       if (shouldCancelLoadBalancer(pendingDeploy)) {
         cancelLoadBalancer(pendingDeploy, SingularityDeployFailure.deployRemoved());
       }
 
-      failPendingDeployDueToState(pendingDeploy, maybeRequestWithState.get(), deploy);
+      failPendingDeployDueToState(pendingDeploy, maybeRequestWithState, deploy);
       return;
     }
 
@@ -280,10 +280,16 @@ public class SingularityDeployChecker {
     deployManager.deletePendingDeploy(pendingDeploy.getDeployMarker().getRequestId());
   }
 
-  private void failPendingDeployDueToState(SingularityPendingDeploy pendingDeploy, SingularityRequestWithState requestWithState, Optional<SingularityDeploy> deploy) {
-    SingularityDeployResult deployResult = new SingularityDeployResult(DeployState.FAILED, Optional.of(String.format("Request in state %s is not deployable", requestWithState.getState())), Optional.<SingularityLoadBalancerUpdate>absent());
+  private void failPendingDeployDueToState(SingularityPendingDeploy pendingDeploy, Optional<SingularityRequestWithState> maybeRequestWithState, Optional<SingularityDeploy> deploy) {
+    SingularityDeployResult deployResult = new SingularityDeployResult(DeployState.FAILED, Optional.of(String.format("Request in state %s is not deployable", SingularityRequestWithState.getRequestState(maybeRequestWithState))), Optional.<SingularityLoadBalancerUpdate>absent());
+    if (!maybeRequestWithState.isPresent()) {
+      deployManager.saveDeployResult(pendingDeploy.getDeployMarker(), deploy, deployResult);
+      removePendingDeploy(pendingDeploy);
+      return;
+    }
+
     saveNewDeployState(pendingDeploy.getDeployMarker(), Optional.<SingularityDeployMarker> absent());
-    finishDeploy(requestWithState, deploy, pendingDeploy, Collections.<SingularityTaskId>emptyList(), deployResult);
+    finishDeploy(maybeRequestWithState.get(), deploy, pendingDeploy, Collections.<SingularityTaskId>emptyList(), deployResult);
   }
 
   private long getAllowedMillis(SingularityDeploy deploy) {
