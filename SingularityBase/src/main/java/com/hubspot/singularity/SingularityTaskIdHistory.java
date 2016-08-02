@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -7,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Iterables;
 
 public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHistory> {
 
@@ -15,17 +18,20 @@ public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHis
   private final Optional<ExtendedTaskState> lastTaskState;
   private final Optional<String> runId;
 
+  private static final Comparator<SingularityTaskHistoryUpdate> comparator = new Comparator<SingularityTaskHistoryUpdate>() {
+    @Override
+    public int compare(SingularityTaskHistoryUpdate o1, SingularityTaskHistoryUpdate o2) {
+      return o1.getTaskState().compareTo(o2.getTaskState());
+    }
+  };
+
   public static SingularityTaskIdHistory fromTaskIdAndTaskAndUpdates(SingularityTaskId taskId, SingularityTask task, List<SingularityTaskHistoryUpdate> updates) {
     ExtendedTaskState lastTaskState = null;
     long updatedAt = taskId.getStartedAt();
 
     if (updates != null && !updates.isEmpty()) {
-      SingularityTaskHistoryUpdate lastUpdate = updates.get(0);
-      for (SingularityTaskHistoryUpdate update : updates.subList(1, updates.size())) {
-        if (update.getTimestamp() > lastUpdate.getTimestamp()) {
-          lastUpdate = update;
-        }
-      }
+      Collections.sort(updates, comparator);
+      SingularityTaskHistoryUpdate lastUpdate = Iterables.getLast(updates);
       lastTaskState = lastUpdate.getTaskState();
       updatedAt = lastUpdate.getTimestamp();
     }
