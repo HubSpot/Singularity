@@ -6,7 +6,7 @@ import Clipboard from 'clipboard';
 
 import Utils from '../../utils';
 import { Link } from 'react-router';
-import { Glyphicon } from 'react-bootstrap';
+import { OverlayTrigger, Popover, Glyphicon } from 'react-bootstrap';
 import {
   FetchTaskHistory,
   FetchActiveTasksForDeploy,
@@ -86,6 +86,11 @@ class DeployDetail extends React.Component {
         );
       }
     }
+    const copyLinkPopover = (
+      <Popover id="popover-trigger-focus">
+        Click to copy
+      </Popover>
+    );
     return (
       <header className="detail-header">
         <div className="row">
@@ -108,7 +113,9 @@ class DeployDetail extends React.Component {
         <div className="row">
           <div className="col-md-8">
             <h1>
-              <span>{deploy.deploy.id}</span>
+              <OverlayTrigger trigger={['hover', 'focus', 'click']} placement="left" overlay={copyLinkPopover}>
+                <span className="copy-btn" data-clipboard-text={deploy.deploy.id}>{deploy.deploy.id}</span>
+              </OverlayTrigger>
               <DeployState state={deploy.deployResult && deploy.deployResult.deployState || 'PENDING'} />
             </h1>
           </div>
