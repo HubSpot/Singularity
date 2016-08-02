@@ -1,5 +1,6 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
+import { OverlayTrigger, Popover } from 'react-bootstrap';
 
 import Utils from '../../../utils';
 
@@ -39,13 +40,21 @@ const RequestTitle = ({requestId, requestAPI}) => {
     );
   }
 
+  const copyLinkPopover = (
+    <Popover id="popover-trigger-focus">
+      Click to copy
+    </Popover>
+  );
+
   return (
     <div>
       <h4>
         {maybeInfo}
       </h4>
       <h2>
-        {Utils.maybe(requestAPI, ['data', 'request', 'id']) || requestId}
+        <OverlayTrigger trigger={['hover', 'focus', 'click']} placement="left" overlay={copyLinkPopover}>
+          <span className="copy-btn" data-clipboard-text={requestId}>{requestId}</span>
+        </OverlayTrigger>
       </h2>
     </div>
   );
