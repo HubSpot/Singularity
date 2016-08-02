@@ -9,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Iterables;
 
 public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHistory> {
 
@@ -30,8 +29,7 @@ public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHis
     long updatedAt = taskId.getStartedAt();
 
     if (updates != null && !updates.isEmpty()) {
-      Collections.sort(updates, comparator);
-      SingularityTaskHistoryUpdate lastUpdate = Iterables.getLast(updates);
+      SingularityTaskHistoryUpdate lastUpdate = Collections.max(updates, comparator);
       lastTaskState = lastUpdate.getTaskState();
       updatedAt = lastUpdate.getTimestamp();
     }
