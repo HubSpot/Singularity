@@ -6,6 +6,8 @@ import Column from '../common/table/Column';
 import Utils from '../../utils';
 
 import JSONButton from '../common/JSONButton';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import ToolTip from 'react-bootstrap/lib/Tooltip';
 
 import RequestStar from './RequestStar';
 import UnpauseButton from './UnpauseButton';
@@ -177,6 +179,12 @@ export const Schedule = (
   />
 );
 
+const editTooltip = (
+  <ToolTip id="edit">
+    Edit Request
+  </ToolTip>
+);
+
 export const Actions = (
   <Column
     label=""
@@ -186,9 +194,11 @@ export const Actions = (
     cellRender={
       (cellData, rowData) => {
         const edit = !config.hideNewRequestButton && (
-          <Link to={`requests/edit/${rowData.id}`} alt="Edit">
-            <span className="glyphicon glyphicon-edit"></span>
-          </Link>
+          <OverlayTrigger placement="top" id="view-edit-overlay" overlay={editTooltip}>
+            <Link to={`requests/edit/${rowData.id}`} alt="Edit">
+              <span className="glyphicon glyphicon-edit"></span>
+            </Link>
+          </OverlayTrigger>
         );
 
         const unpause = cellData.state === 'PAUSED' && (

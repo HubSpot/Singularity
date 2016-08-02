@@ -1,10 +1,18 @@
 import React, { Component, PropTypes } from 'react';
 
 import { Glyphicon } from 'react-bootstrap';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import ToolTip from 'react-bootstrap/lib/Tooltip';
 
 import { getClickComponent } from '../common/modal/ModalWrapper';
 
 import KillTaskModal from './KillTaskModal';
+
+const killTooltip = (
+  <ToolTip id="kill">
+    Kill Task
+  </ToolTip>
+);
 
 export default class KillTaskButton extends Component {
   static propTypes = {
@@ -13,7 +21,13 @@ export default class KillTaskButton extends Component {
   };
 
   static defaultProps = {
-    children: <a><Glyphicon glyph="remove" /></a>
+    children: (
+      <OverlayTrigger placement="top" id="view-kill-overlay" overlay={killTooltip}>
+        <a>
+          <Glyphicon glyph="remove" />
+        </a>
+      </OverlayTrigger>
+    )
   };
 
   render() {

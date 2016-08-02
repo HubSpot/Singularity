@@ -1,10 +1,18 @@
 import React, { Component, PropTypes } from 'react';
 
 import { Glyphicon } from 'react-bootstrap';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import ToolTip from 'react-bootstrap/lib/Tooltip';
 
 import { getClickComponent } from '../common/modal/ModalWrapper';
 
 import ScaleModal from './ScaleModal';
+
+const scaleTooltip = (
+  <ToolTip id="scale">
+    Scale
+  </ToolTip>
+);
 
 export default class ScaleButton extends Component {
   static propTypes = {
@@ -14,7 +22,13 @@ export default class ScaleButton extends Component {
   };
 
   static defaultProps = {
-    children: <a><Glyphicon glyph="signal" /></a>
+    children: (
+      <OverlayTrigger placement="top" id="view-scale-overlay" overlay={scaleTooltip}>
+        <a title="Scale">
+          <Glyphicon glyph="signal" />
+        </a>
+      </OverlayTrigger>
+    )
   };
 
   render() {

@@ -1,5 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router';
+import { Glyphicon } from 'react-bootstrap';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import ToolTip from 'react-bootstrap/lib/Tooltip';
 import Column from '../common/table/Column';
 import classNames from 'classnames';
 
@@ -346,6 +349,12 @@ export const CleanupType = (
   />
 );
 
+const logTooltip = (
+  <ToolTip id="log">
+    Logs
+  </ToolTip>
+);
+
 export const LogLinkAndJSON = (
   <Column
     label=""
@@ -355,12 +364,14 @@ export const LogLinkAndJSON = (
     cellData={(rowData) => rowData.taskId}
     cellRender={(taskId, rowData) => (
       <div className="hidden-xs">
-        <Link
-          to={`request/${taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${taskId.id}`}
-          title="Log"
-        >
-          &middot;&middot;&middot;
-        </Link>
+        <OverlayTrigger placement="top" id="view-log-overlay" overlay={logTooltip}>
+          <Link
+            to={`request/${taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${taskId.id}`}
+            title="Log"
+          >
+            <Glyphicon glyph="file" />
+          </Link>
+        </OverlayTrigger>
         <JSONButton className="inline" object={rowData}>
           {'{ }'}
         </JSONButton>

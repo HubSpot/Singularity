@@ -1,10 +1,18 @@
 import React, { Component, PropTypes } from 'react';
 
 import { Glyphicon } from 'react-bootstrap';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import ToolTip from 'react-bootstrap/lib/Tooltip';
 
 import { getClickComponent } from '../common/modal/ModalWrapper';
 
 import RemoveModal from './RemoveModal';
+
+const removeTooltip = (
+  <ToolTip id="remove">
+    Remove Request
+  </ToolTip>
+);
 
 export default class RemoveButton extends Component {
   static propTypes = {
@@ -13,7 +21,13 @@ export default class RemoveButton extends Component {
   };
 
   static defaultProps = {
-    children: <a data-action="remove"><Glyphicon glyph="trash" /></a>
+    children: (
+      <OverlayTrigger placement="top" id="view-remove-overlay" overlay={removeTooltip}>
+        <a data-action="remove">
+          <Glyphicon glyph="trash" />
+        </a>
+      </OverlayTrigger>
+    )
   };
 
   render() {

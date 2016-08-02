@@ -1,10 +1,18 @@
 import React, { Component, PropTypes } from 'react';
 
 import { Glyphicon } from 'react-bootstrap';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import ToolTip from 'react-bootstrap/lib/Tooltip';
 
 import { getClickComponent } from '../common/modal/ModalWrapper';
 
 import ExitCooldownModal from './ExitCooldownModal';
+
+const exitCooldownTooltip = (
+  <ToolTip id="exit-cooldown">
+    Exit Cooldown
+  </ToolTip>
+);
 
 export default class ExitCooldownButton extends Component {
 
@@ -14,7 +22,11 @@ export default class ExitCooldownButton extends Component {
   };
 
   static defaultProps = {
-    children: <a><Glyphicon glyph="ice-lolly-tasted" /></a>
+    children: <OverlayTrigger placement="top" id="view-exit-cooldown-overlay" overlay={exitCooldownTooltip}>
+        <a>
+          <Glyphicon glyph="ice-lolly-tasted" />
+        </a>
+      </OverlayTrigger>
   };
 
   render() {

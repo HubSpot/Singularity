@@ -2,6 +2,8 @@ import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 
 import { Button, Glyphicon } from 'react-bootstrap';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import ToolTip from 'react-bootstrap/lib/Tooltip';
 import { Link } from 'react-router';
 
 import Utils from '../../utils';
@@ -38,6 +40,12 @@ const TaskHistoryTable = ({requestId, tasksAPI, fetchTaskHistoryForRequest}) => 
       <span>Task history </span>
       {maybeSearchButton}
     </span>
+  );
+
+  const logTooltip = (
+    <ToolTip id="log">
+      Logs
+    </ToolTip>
   );
 
   return (
@@ -99,9 +107,11 @@ const TaskHistoryTable = ({requestId, tasksAPI, fetchTaskHistoryForRequest}) => 
           className="actions-column"
           cellData={(task) => (
             <span>
-              <Link to={`task/${task.taskId.id}/tail/${config.finishedTaskLogPath}`}>
-                <Glyphicon glyph="file" />
-              </Link>
+              <OverlayTrigger placement="top" id="view-log-overlay" overlay={logTooltip}>
+                <Link to={`task/${task.taskId.id}/tail/${config.finishedTaskLogPath}`}>
+                  <Glyphicon glyph="file" />
+                </Link>
+              </OverlayTrigger>
               <JSONButton object={task}>
                 {'{ }'}
               </JSONButton>
