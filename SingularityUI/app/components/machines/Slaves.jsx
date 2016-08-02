@@ -9,6 +9,7 @@ import rootComponent from '../../rootComponent';
 import { Link } from 'react-router';
 import { FetchSlaves, FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSlave } from '../../actions/api/slaves';
 import Column from '../common/table/Column';
+import JSONButton from '../common/JSONButton';
 
 class Slaves extends React.Component {
 
@@ -180,6 +181,9 @@ class Slaves extends React.Component {
             {this.getMaybeReactivateButton(slave)}
             {this.getMaybeFreezeButton(slave)}
             {this.getDecommissionOrRemoveButton(slave)}
+            <JSONButton object={slave}>
+              {'{ }'}
+            </JSONButton>
           </span>
         )}
       />
