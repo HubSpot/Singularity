@@ -16,6 +16,7 @@ import { FetchRequestRunHistory } from '../../actions/api/history';
 import { FetchTaskFiles } from '../../actions/api/sandbox';
 
 import UITable from '../common/table/UITable';
+import Utils from '../../utils';
 
 import {
   TaskIdShortened,
@@ -160,7 +161,10 @@ function mapStateToProps(state, ownProps) {
     requestTypes: !ownProps.params.requestsSubFilter || ownProps.params.requestsSubFilter === 'all' ? TaskFilters.REQUEST_TYPES : ownProps.params.requestsSubFilter.split(','),
     filterText: ownProps.params.searchFilter || ''
   };
+  const statusCode = Utils.maybe(state, ['api', 'tasks', 'statusCode']);
   return {
+    pathname: ownProps.location.pathname,
+    notFound: statusCode === 404,
     tasks: state.api.tasks.data,
     cleanups: state.api.taskCleanups.data,
     filter
@@ -169,7 +173,7 @@ function mapStateToProps(state, ownProps) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    fetchFilter: (state) => dispatch(FetchTasksInState.trigger(state)),
+    fetchFilter: (state) => dispatch(FetchTasksInState.trigger(state, true)),
     fetchCleanups: () => dispatch(FetchTaskCleanups.trigger()),
     killTask: (taskId, data) => dispatch(KillTask.trigger(taskId, data)),
     runRequest: (requestId, data) => dispatch(RunRequest.trigger(requestId, data)),

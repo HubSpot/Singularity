@@ -33,7 +33,7 @@ export default class RequestFilters extends React.Component {
       displayVal: 'Pending'
     },
     {
-      filterVal: 'cleanup',
+      filterVal: 'cleaning',
       displayVal: 'Cleaning'
     },
     {

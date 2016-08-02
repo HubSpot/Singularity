@@ -21,6 +21,8 @@ import * as Cols from './Columns';
 
 import filterSelector from '../../selectors/requests/filterSelector';
 
+import Utils from '../../utils';
+
 class RequestsPage extends Component {
   static propTypes = {
     state: PropTypes.string.isRequired,
@@ -132,7 +134,7 @@ class RequestsPage extends Component {
         <RequestFilters
           filter={this.props.filter}
           onFilterChange={(filter) => this.handleFilterChange(filter)}
-          displayRequestTypeFilters={!_.contains(['pending', 'cleanup'], this.props.filter.state)}
+          displayRequestTypeFilters={!_.contains(['pending', 'cleaning'], this.props.filter.state)}
         />
         {table}
       </div>
@@ -157,8 +159,11 @@ function mapStateToProps(state, ownProps) {
     subFilter: !ownProps.params.subFilter || ownProps.params.subFilter === 'all' ? RequestFilters.REQUEST_TYPES : ownProps.params.subFilter.split(','),
     searchFilter: ownProps.params.searchFilter || ''
   };
+  const statusCode = Utils.maybe(state, ['api', 'requestsInState', 'statusCode']);
 
   return {
+    pathname: ownProps.location.pathname,
+    notFound: statusCode === 404,
     requestsInState: modifiedRequests,
     filter
   };
@@ -166,7 +171,7 @@ function mapStateToProps(state, ownProps) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    fetchFilter: (state) => dispatch(FetchRequestsInState.trigger(state)),
+    fetchFilter: (state) => dispatch(FetchRequestsInState.trigger(state === 'cleaning' ? 'cleanup' : state, true)),
     removeRequest: (requestid, data) => dispatch(RemoveRequest.trigger(requestid, data)),
     unpauseRequest: (requestId, data) => dispatch(UnpauseRequest.trigger(requestId, data)),
     runNow: (requestId, data) => dispatch(RunRequest.trigger(requestId, data)),

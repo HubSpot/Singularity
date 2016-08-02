@@ -7,13 +7,13 @@ export const FetchRequests = buildApiAction(
 
 export const FetchRequestsInState = buildApiAction(
   'FETCH_REQUESTS_IN_STATE',
-  (state) => {
+  (state, renderNotFoundIf404) => {
     if (_.contains(['pending', 'cleanup'], state)) {
-      return {url: `/requests/queued/${state}`};
+      return {url: `/requests/queued/${state}`, renderNotFoundIf404};
     } else if (_.contains(['all', 'noDeploy', 'activeDeploy'], state)) {
-      return {url: '/requests'};
+      return {url: '/requests', renderNotFoundIf404};
     }
-    return {url: `/requests/${state}`};
+    return {url: `/requests/${state}`, renderNotFoundIf404};
   }
 );
 
