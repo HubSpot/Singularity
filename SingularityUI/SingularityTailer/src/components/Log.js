@@ -36,12 +36,14 @@ class SandboxTailer extends Component {
   isRowLoaded({index}) {
     return (
       index < this.props.lines.size
-      && !this.props.lines.get(index).isMissingMarker
+      && (
+        !this.props.lines.get(index).isMissingMarker
+        || this.props.lines.get(index).isLoading // if loading don't try again
+      )
     );
   }
 
   loadMoreRows({startIndex, stopIndex}) {
-    console.log('loadMoreRows', startIndex, stopIndex);
     const { lines, fetchChunk } = this.props;
 
     let byteRangeStart;
@@ -58,6 +60,7 @@ class SandboxTailer extends Component {
       byteRangeEnd = byteRangeStart + this.sandboxMaxBytes;
     }
 
+    // if already in flight, don't request again
     if (!this.props.requests.has(byteRangeStart)) {
       fetchChunk(byteRangeStart, byteRangeEnd);
     }

@@ -1,7 +1,9 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { Log, TailerProvider } from '../src/components';
+import { withRouter } from 'react-router';
+
+import { TailerProvider } from '../src/components';
 
 import { sandboxSetApiRoot } from '../src/actions';
 
@@ -10,25 +12,24 @@ import './example.scss';
 class App extends Component {
   constructor() {
     super();
+
     this.state = {
-      taskId: null,
       enteredTaskId: '',
-      path: null,
       enteredPath: '',
     };
 
     this.tailLog = this.tailLog.bind(this);
   }
 
-  componentDidMount() {
+  componentWillMount() {
     this.props.setSandboxApi(localStorage.apiRootOverride);
   }
 
   tailLog(e) {
-    this.setState({
-      taskId: this.state.enteredTaskId,
-      path: this.state.enteredPath
-    });
+    const taskId = this.state.enteredTaskId;
+    const path = this.state.enteredPath;
+
+    this.props.router.push(`/${taskId}/tail/${path}`);
 
     if (e) {
       e.preventDefault();
@@ -36,13 +37,6 @@ class App extends Component {
   }
 
   render() {
-    const { taskId, path } = this.state;
-    let maybeLog;
-
-    if (taskId && path) {
-      maybeLog = <Log taskId={taskId} path={path} minLines={10} />;
-    }
-
     return (
       <div className="full">
         <div className="app-header">
@@ -70,7 +64,7 @@ class App extends Component {
         </div>
         <div className="app-content">
           <TailerProvider getTailerState={(state) => state.tailer}>
-            {maybeLog || <div />}
+            {this.props.children || <div />}
           </TailerProvider>
         </div>
       </div>
@@ -79,14 +73,16 @@ class App extends Component {
 }
 
 App.propTypes = {
-  setSandboxApi: PropTypes.func.isRequired
+  setSandboxApi: PropTypes.func.isRequired,
+  children: PropTypes.node,
+  router: PropTypes.object.isRequired
 };
 
 const mapDispatchToProps = (dispatch) => ({
   setSandboxApi: (uri) => dispatch(sandboxSetApiRoot('/singularity/api'))
 });
 
-export default connect(
+export default withRouter(connect(
   null,
   mapDispatchToProps
-)(App);
+)(App));

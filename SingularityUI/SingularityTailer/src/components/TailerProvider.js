@@ -17,7 +17,7 @@ export default class TailerProvider extends Component {
 
 TailerProvider.propTypes = {
   getTailerState: PropTypes.func.isRequired,
-  children: PropTypes.element.isRequired
+  children: PropTypes.element
 };
 
 TailerProvider.childContextTypes = {

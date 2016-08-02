@@ -9,7 +9,7 @@ import { Provider } from 'react-redux';
 
 import { default as singularityTailer } from '../src/reducers';
 
-import App from './App';
+import AppRouter from './AppRouter';
 
 const reducers = combineReducers({ tailer: singularityTailer });
 
@@ -24,21 +24,21 @@ const rootEl = document.getElementById('root');
 ReactDOM.render(
   <AppContainer>
     <Provider store={store}>
-      <App />
+      <AppRouter />
     </Provider>
   </AppContainer>,
   rootEl
 );
 
 if (module.hot) {
-  module.hot.accept('./App', () => {
+  module.hot.accept('./AppRouter', () => {
     // If you use Webpack 2 in ES modules mode, you can
     // use <App /> here rather than require() a <NextApp />.
-    const NextApp = require('./App').default;
+    const NextAppRouter = require('./AppRouter').default;
     ReactDOM.render(
       <AppContainer>
         <Provider store={store}>
-         <NextApp />
+         <NextAppRouter />
         </Provider>
       </AppContainer>,
       rootEl

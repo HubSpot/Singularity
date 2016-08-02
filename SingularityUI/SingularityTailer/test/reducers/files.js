@@ -1848,6 +1848,67 @@ describe('addChunkReducer', () => {
       });
     });
 
-    it('should be able to handle adding data with zero character lines');
+    it('should be able to handle adding data with zero character lines', () => {
+      expect(
+        addChunkReducerHelper(
+          addChunkReducerHelper(
+            {},
+            Actions.addFileChunk('tail', {
+              'text': 'what\nhit\n',
+              'start': 0,
+              'end': 9,
+              'byteLength': 9
+            })
+          ),
+          Actions.addFileChunk('tail', {
+            'text': 'new line\n',
+            'start': 9,
+            'end': 18,
+            'byteLength': 9
+          })
+        )
+      ).toEqual({
+        'tail': {
+          'chunks': [
+            {
+              'text': 'what\nhit\n',
+              'start': 0,
+              'end': 9,
+              'byteLength': 9
+            },
+            {
+              'text': 'new line\n',
+              'start': 9,
+              'end': 18,
+              'byteLength': 9
+            }
+          ],
+          'lines': [
+            {
+              'text': 'what',
+              'byteLength': 4,
+              'start': 0,
+              'end': 5,
+              'hasNewline': true
+            },
+            {
+              'text': 'hit',
+              'byteLength': 3,
+              'start': 5,
+              'end': 9,
+              'hasNewline': true
+            },
+            {
+              'text': 'new line',
+              'byteLength': 8,
+              'start': 9,
+              'end': 18,
+              'hasNewline': true
+            },
+          ],
+          'fileSize': 18
+        }
+      });
+    });
   });
 });
