@@ -355,7 +355,7 @@ class UITable extends Component {
     return (
       <tr key="waypoint">
         <td colSpan={this.props.children.length}>
-          Waypoint
+          Loading...
           <Waypoint
             scrollableAncestor={window}
             key={`waypoint${this.state.chunkNum}`}
