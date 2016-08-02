@@ -450,8 +450,15 @@ function mapTaskToProps(task) {
 }
 
 function mapStateToProps(state, ownProps) {
-  let task = state.api.task[ownProps.params.taskId];
+  const apiCallData = state.api.task[ownProps.params.taskId];
+  let task = apiCallData;
   if (!(task && task.data)) return {};
+  if (apiCallData.statusCode === 404) {
+    return {
+      notFound: true,
+      pathname: ownProps.location.pathname
+    };
+  }
   task = mapTaskToProps(task.data);
   task = mapHealthchecksToProps(task);
   return {
@@ -472,7 +479,7 @@ function mapDispatchToProps(dispatch) {
   return {
     runCommandOnTask: (taskId, commandName) => dispatch(RunCommandOnTask.trigger(taskId, commandName)),
     killTask: (taskId, data) => dispatch(KillTask.trigger(taskId, data)),
-    fetchTaskHistory: (taskId) => dispatch(FetchTaskHistory.trigger(taskId)),
+    fetchTaskHistory: (taskId) => dispatch(FetchTaskHistory.trigger(taskId, true)),
     fetchTaskStatistics: (taskId) => dispatch(FetchTaskStatistics.trigger(taskId)),
     fetchTaskFiles: (taskId, path, catchStatusCodes = []) => dispatch(FetchTaskFiles.trigger(taskId, path, catchStatusCodes.concat([404]))),
     fetchDeployForRequest: (taskId, deployId) => dispatch(FetchDeployForRequest.trigger(taskId, deployId)),
@@ -483,11 +490,13 @@ function mapDispatchToProps(dispatch) {
 }
 
 function refresh(props) {
-  props.fetchTaskFiles(props.params.taskId, props.params.splat || props.params.taskId, [400]);
+  props.fetchTaskFiles(props.params.taskId, props.params.splat || props.params.taskId, [400, 404]);
   const promises = [];
   const taskPromise = props.fetchTaskHistory(props.params.taskId);
   taskPromise.then(() => {
-    const task = props.route.store.getState().api.task[props.params.taskId].data;
+    const apiData = props.route.store.getState().api.task[props.params.taskId];
+    if (apiData.statusCode === 404) return;
+    const task = apiData.data;
     promises.push(props.fetchDeployForRequest(task.task.taskId.requestId, task.task.taskId.deployId));
     if (task.isStillRunning) {
       promises.push(props.fetchTaskStatistics(props.params.taskId));

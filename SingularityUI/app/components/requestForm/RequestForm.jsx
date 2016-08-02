@@ -502,6 +502,8 @@ class RequestForm extends React.Component {
 function mapStateToProps(state, ownProps) {
   const request = ownProps.params.requestId && state.api.request[ownProps.params.requestId];
   return {
+    notFound: request && request.statusCode === 404,
+    pathname: ownProps.location.pathname,
     racks: state.api.racks.data,
     request: request && request.data,
     form: state.ui.form[FORM_ID],
@@ -525,7 +527,7 @@ function mapDispatchToProps(dispatch, ownProps) {
       });
     },
     fetchRequest(requestId) {
-      dispatch(FetchRequest.trigger(requestId));
+      dispatch(FetchRequest.trigger(requestId, true));
     },
     fetchRacks() {
       dispatch(FetchRacks.trigger());

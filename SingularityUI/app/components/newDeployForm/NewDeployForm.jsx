@@ -1446,6 +1446,8 @@ class NewDeployForm extends Component {
 function mapStateToProps(state, ownProps) {
   return {
     request: Utils.maybe(state.api.request, [ownProps.params.requestId, 'data']),
+    notFound: Utils.maybe(state.api.request, [ownProps.params.requestId, 'statusCode']) === 404,
+    pathname: ownProps.location.pathname,
     form: state.ui.form[FORM_ID],
     saveApiCall: state.api.saveDeploy
   };
@@ -1464,7 +1466,7 @@ function mapDispatchToProps(dispatch, ownProps) {
       });
     },
     fetchRequest(requestId) {
-      return dispatch(FetchRequest.trigger(requestId));
+      return dispatch(FetchRequest.trigger(requestId, true));
     },
     clearForm() {
       return dispatch(ClearForm('newDeployForm'));

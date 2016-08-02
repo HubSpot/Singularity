@@ -21,7 +21,6 @@ import JSONButton from '../common/JSONButton';
 import UITable from '../common/table/UITable';
 import Column from '../common/table/Column';
 import CollapsableSection from '../common/CollapsableSection';
-import NotFound from '../common/NotFound';
 
 import ActiveTasksTable from './ActiveTasksTable';
 
@@ -307,10 +306,7 @@ class DeployDetail extends React.Component {
   }
 
   render() {
-    const { notFound, deploy, activeTasks, taskHistory, latestHealthchecks } = this.props;
-    if (notFound) {
-      return <NotFound location={{pathname: this.props.location.pathname}} />;
-    }
+    const { deploy, activeTasks, taskHistory, latestHealthchecks } = this.props;
     return (
       <div>
         {this.renderHeader(deploy)}
@@ -333,7 +329,7 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
-function mapStateToProps(state) {
+function mapStateToProps(state, ownProps) {
   let latestHealthchecks = _.mapObject(state.api.task, (val) => {
     if (val.data && val.data.healthcheckResults && val.data.healthcheckResults.length > 0) {
       return _.max(val.data.healthcheckResults, (hc) => {
@@ -346,6 +342,7 @@ function mapStateToProps(state) {
 
   return {
     notFound: state.api.deploy.statusCode === 404,
+    pathname: ownProps.location.pathname,
     deploy: state.api.deploy.data,
     taskHistory: state.api.taskHistoryForDeploy.data,
     isTaskHistoryFetching: state.api.taskHistoryForDeploy.isFetching,
