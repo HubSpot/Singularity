@@ -1,18 +1,13 @@
 import React, { Component, PropTypes } from 'react';
-
-import LogLines from './LogLines';
-
 import { connect } from 'react-redux';
 
 import Immutable from 'immutable';
 
-import { sandboxGetLength, sandboxFetchChunk } from '../actions';
-
-import * as Selectors from '../selectors';
-
 import connectToTailer from './connectToTailer';
 
-// import sandboxTailer from './sandboxTailer';
+import { sandboxGetLength, sandboxFetchChunk } from '../actions';
+import * as Selectors from '../selectors';
+import LogLines from './LogLines';
 
 class SandboxTailer extends Component {
   constructor(props, context) {
@@ -46,6 +41,7 @@ class SandboxTailer extends Component {
   }
 
   loadMoreRows({startIndex, stopIndex}) {
+    console.log('loadMoreRows', startIndex, stopIndex);
     const { lines, fetchChunk } = this.props;
 
     let byteRangeStart;
@@ -62,11 +58,20 @@ class SandboxTailer extends Component {
       byteRangeEnd = byteRangeStart + this.sandboxMaxBytes;
     }
 
-    return fetchChunk(byteRangeStart, byteRangeEnd);
+    if (!this.props.requests.has(byteRangeStart)) {
+      fetchChunk(byteRangeStart, byteRangeEnd);
+    }
   }
 
   onScroll({clientHeight, scrollHeight, scrollTop}) {
-    console.log('onScroll', clientHeight, scrollHeight, scrollTop);
+    console.log('onScroll', clientHeight, scrollHeight, scrollTop, scrollHeight - scrollTop - clientHeight);
+
+    // if at the bottom of the scroll window
+    if (scrollHeight - scrollTop - clientHeight === 0) {
+      if (!this.props.lines.size || this.props.lines.last().isMissingMarker) {
+
+      }
+    }
   }
 
   remoteRowCount() {
@@ -101,24 +106,13 @@ SandboxTailer.propTypes = {
   isLoaded: PropTypes.bool.isRequired,
   fileSize: PropTypes.number,
   lines: PropTypes.instanceOf(Immutable.List),
+  requests: PropTypes.instanceOf(Immutable.Map),
   minLines: PropTypes.number
 };
 
 SandboxTailer.defaultProps = {
   minLines: 10
 };
-
-// const Log = ({type, file}) => {
-//   return (
-//   )
-// };
-
-// Log.propTypes = {
-//   type: PropTypes.oneOf([
-//     'sandbox'
-//   ]).isRequired,
-//   file: PropTypes.object.isRequired
-// };
 
 const mapStateToProps = (state, ownProps) => {
   const tailerId = `${ownProps.taskId}/${ownProps.path}`;
@@ -127,14 +121,17 @@ const mapStateToProps = (state, ownProps) => {
 
   const getLines = Selectors.makeGetEnhancedLines();
 
+  const propsPlusTailerId = {
+    ...ownProps,
+    tailerId
+  };
+
   return {
     tailerId,
     isLoaded: !!file,
     fileSize: file && file.fileSize,
-    lines: getLines(state, {
-      ...ownProps,
-      tailerId
-    }),
+    lines: getLines(state, propsPlusTailerId),
+    requests: Selectors.getRequests(state, propsPlusTailerId),
     config: tailerState.config
   };
 };

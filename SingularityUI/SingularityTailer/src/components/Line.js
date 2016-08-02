@@ -3,7 +3,11 @@ import React, { PropTypes } from 'react';
 const Line = ({data}) => {
   if (data.isMissingMarker) {
     const missingBytes = data.end - data.start;
-    return <div style={{backgroundColor: '#ddd'}} key={`${data.start}-${data.end}`}>{missingBytes} bytes</div>;
+    return (
+      <div style={{backgroundColor: data.isLoading ? 'red' : 'green' }} key={`${data.start}-${data.end}`}>
+        {missingBytes} bytes
+      </div>
+    );
   }
 
   if (data.ansi) {

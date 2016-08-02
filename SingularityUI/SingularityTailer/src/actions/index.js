@@ -7,10 +7,15 @@ const frameworkName = 'SINGULARITY_TAILER';
 const TE = new TextEncoder();
 
 export const ADD_FILE_CHUNK = `${frameworkName}_ADD_FILE_CHUNK`;
-export const addFileChunk = (id, chunk) => ({
+// the returned chunk may have a different start and end point than we requested
+// but we still want to know what we originally requested so we can mark that
+// request done
+export const addFileChunk = (id, chunk, requestedStart, requestedEnd) => ({
   type: ADD_FILE_CHUNK,
   id,
-  chunk
+  chunk,
+  requestedStart,
+  requestedEnd
 });
 
 export const SET_FILE_SIZE = `${frameworkName}_SET_FILE_SIZE`;
@@ -24,6 +29,30 @@ export const setFileSize = (id, fileSize) => ({
 export const TOGGLE_ANSI_COLORING = `${frameworkName}_TOGGLE_ANSI_COLORING`;
 export const toggleAnsiColoring = () => ({
   type: TOGGLE_ANSI_COLORING
+});
+
+// API independent chunk fetching actions
+const FETCH_CHUNK = `${frameworkName}_FETCH_CHUNK`;
+
+export const FETCH_CHUNK_STARTED = `${FETCH_CHUNK}_STARTED`;
+const fetchChunkStarted = (apiName, id, start, end) => ({
+  type: FETCH_CHUNK_STARTED,
+  apiName,
+  startedAt: Date.now(),
+  id,
+  start,
+  end
+});
+
+export const FETCH_CHUNK_ERROR = `${FETCH_CHUNK}_ERROR`;
+const fetchChunkError = (apiName, id, start, end, error) => ({
+  type: FETCH_CHUNK_ERROR,
+  apiName,
+  id,
+  start,
+  end,
+  name: error.name,
+  message: error.message
 });
 
 /* GENERAL API HELPERS */
@@ -50,21 +79,12 @@ export const sandboxSetApiRoot = (apiRoot) => ({
   apiRoot
 });
 
-
-const SANDBOX_FETCH_CHUNK = `${frameworkName}_SANDBOX_FETCH_CHUNK`;
-
-export const SANDBOX_FETCH_CHUNK_STARTED = `${SANDBOX_FETCH_CHUNK}_STARTED`;
-export const SANDBOX_FETCH_CHUNK_ERROR = `${SANDBOX_FETCH_CHUNK}_ERROR`;
-
 export const sandboxFetchChunk = (id, taskId, path, start, end, config) => {
   return (dispatch) => {
-    dispatch({
-      type: SANDBOX_FETCH_CHUNK_STARTED,
-      startedAt: Date.now(),
-      id,
-      start,
-      end
-    });
+    dispatch(
+      fetchChunkStarted('SANDBOX', id, start, end)
+    );
+
     const apiRoot = config.singularityApiRoot;
     const query = `?path=${path}&offset=${start}&length=${end - start}`;
     const apiPath = `${apiRoot}/sandbox/${taskId}/read${query}`;
@@ -82,13 +102,11 @@ export const sandboxFetchChunk = (id, taskId, path, start, end, config) => {
           start: offset,
           end: offset + byteLength,
           byteLength
-        }));
+        }, start, end));
       }).catch((error) => {
-        return dispatch({
-          type: SANDBOX_FETCH_CHUNK_ERROR,
-          name: error.name,
-          message: error.message
-        });
+        return dispatch(
+          fetchChunkError('SANDBOX', id, start, end, error)
+        );
       });
   };
 };

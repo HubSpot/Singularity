@@ -1,6 +1,6 @@
 import { createSelector } from 'reselect';
 
-import { List } from 'immutable';
+import { List, Map } from 'immutable';
 
 import Anser from 'anser';
 import classNames from 'classnames';
@@ -32,14 +32,22 @@ const getLines = (state, props) => {
   return new List();
 };
 
+export const getRequests = (state, props) => (
+  props.getTailerState(state).requests[props.tailerId] || new Map()
+);
+
 const getConfig = (state, props) => (
   props.getTailerState(state).config
 );
 
-const getEnhancedLine = (line, config) => {
+const getEnhancedLine = (line, requests, config) => {
   const enhancedLine = {
     ...line
   };
+
+  if (line.isMissingMarker) {
+    enhancedLine.isLoading = requests.has(line.start);
+  }
 
   if (config.parseAnsi && !line.isMissingMarker) {
     enhancedLine.ansi = ansiEnhancer(line);
@@ -50,9 +58,9 @@ const getEnhancedLine = (line, config) => {
 
 export const makeGetEnhancedLines = () => {
   return createSelector(
-    [getLines, getConfig],
-    (lines, config) => {
-      return lines.map((line) => getEnhancedLine(line, config));
+    [getLines, getRequests, getConfig],
+    (lines, requests, config) => {
+      return lines.map((line) => getEnhancedLine(line, requests, config));
     }
   );
 };

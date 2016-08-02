@@ -40,7 +40,7 @@ class App extends Component {
     let maybeLog;
 
     if (taskId && path) {
-      maybeLog = <Log taskId={taskId} path={path} minLines={30} />;
+      maybeLog = <Log taskId={taskId} path={path} minLines={10} />;
     }
 
     return (
