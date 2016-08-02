@@ -40,7 +40,6 @@ const RequestTitle = ({requestId, requestAPI}) => {
     );
   }
 
-  const requestIdToDisplay = Utils.maybe(requestAPI, ['data', 'request', 'id']) || requestId;
   const copyLinkPopover = (
     <Popover id="popover-trigger-focus">
       Click to copy
@@ -54,7 +53,7 @@ const RequestTitle = ({requestId, requestAPI}) => {
       </h4>
       <h2>
         <OverlayTrigger trigger={['hover', 'focus', 'click']} placement="left" overlay={copyLinkPopover}>
-          <span className="copy-btn" data-clipboard-text={requestIdToDisplay}>{requestIdToDisplay}</span>
+          <span className="copy-btn" data-clipboard-text={requestId}>{requestId}</span>
         </OverlayTrigger>
       </h2>
     </div>
