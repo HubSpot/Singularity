@@ -208,6 +208,8 @@ public class SingularityDeploy {
     .setLoadBalancerDomains(copyOfSet(loadBalancerDomains))
     .setLoadBalancerAdditionalRoutes(copyOfList(loadBalancerAdditionalRoutes))
     .setLoadBalancerTemplate(loadBalancerTemplate)
+    .setLoadBalancerUpstreamGroup(loadBalancerUpstreamGroup)
+    .setLoadBalancerServiceIdOverride(loadBalancerServiceIdOverride)
     .setMetadata(copyOfMap(metadata))
     .setVersion(version)
     .setTimestamp(timestamp)
