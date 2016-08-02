@@ -1461,7 +1461,7 @@ function mapDispatchToProps(dispatch, ownProps) {
     save(deployBody) {
       dispatch(SaveDeploy.trigger(deployBody)).then((response) => {
         if (response.type === 'SAVE_DEPLOY_SUCCESS') {
-          ownProps.router.push(`request/${ownProps.params.requestId}/deploy/${response.data.pendingDeploy.id}`);
+          ownProps.router.push(`request/${ownProps.params.requestId}/deploy/${response.data.pendingDeployState.deployMarker.deployId}`);
         }
       });
     },
