@@ -350,17 +350,9 @@ function mapStateToProps(state, ownProps) {
   };
 }
 
-let firstLoad = true;
-
-function refresh(props) {
-  const promises = [];
+function refresh(props, promises = []) {
   promises.push(props.fetchDeployForRequest(props.params.requestId, props.params.deployId));
   promises.push(props.fetchActiveTasksForDeploy(props.params.requestId, props.params.deployId));
-  if (firstLoad) {
-    firstLoad = false;
-    promises.push(props.clearTaskHistoryForDeploy());
-    promises.push(props.fetchTaskHistoryForDeploy(props.params.requestId, props.params.deployId, 5, 1));
-  }
 
   const allPromises = Promise.all(promises);
   allPromises.then(() => {
@@ -371,4 +363,11 @@ function refresh(props) {
   return allPromises;
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(DeployDetail, (props) => `Deploy ${props.params.deployId}`, refresh));
+function initialize(props) {
+  const promises = [];
+  promises.push(props.clearTaskHistoryForDeploy());
+  promises.push(props.fetchTaskHistoryForDeploy(props.params.requestId, props.params.deployId, 5, 1));
+  return refresh(props, promises);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(DeployDetail, (props) => `Deploy ${props.params.deployId}`, refresh, true, true, initialize));

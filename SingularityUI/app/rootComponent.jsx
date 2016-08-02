@@ -2,7 +2,7 @@ import React, { PropTypes, Component } from 'react';
 import classNames from 'classnames';
 import NotFound from 'components/common/NotFound';
 
-const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true, pageMargin = true) => class extends Component {
+const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true, pageMargin = true, initialize) => class extends Component {
 
   static propTypes = {
     notFound: PropTypes.bool,
@@ -26,7 +26,7 @@ const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true,
     const titleString = typeof title === 'function' ? title(this.props) : title;
     document.title = `${titleString} - ${config.title}`;
 
-    const promise = refresh(this.props);
+    const promise = initialize ? initialize(this.props) : refresh(this.props);
     if (promise) {
       promise.then(() => {
         if (!this.unmounted) {
