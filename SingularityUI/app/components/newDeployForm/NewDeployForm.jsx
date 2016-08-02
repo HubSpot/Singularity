@@ -86,6 +86,7 @@ class NewDeployForm extends Component {
       cpus: PropTypes.string,
       memoryMb: PropTypes.string,
       numPorts: PropTypes.string,
+      diskMb: PropTypes.string,
       env: PropTypes.arrayOf(PropTypes.string),
       healthcheckUri: PropTypes.string,
       healthcheckIntervalSeconds: PropTypes.string,
@@ -1105,6 +1106,15 @@ class NewDeployForm extends Component {
         feedback={this.formFieldFeedback(INDEXED_FIELDS.numPorts, this.props.form.numPorts)}
       />
     );
+    const diskMb = (
+      <TextFormGroup
+        id="disk-mb"
+        onChange={event => this.updateField('diskMb', event.target.value)}
+        value={this.props.form.diskMb}
+        label="Disk (MB)"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.diskMb, this.props.form.diskMb)}
+      />
+    );
     const env = (
       <MultiInputFormGroup
         id="env-vars"
@@ -1303,6 +1313,13 @@ class NewDeployForm extends Component {
             <div className="col-sm-4">
               {numPorts}
             </div>
+          </div>
+          <div className="row">
+            {config.showTaskDiskResource &&
+              <div className="col-sm-4">
+                {diskMb}
+              </div>
+            }
           </div>
         </fieldset>
       </div>
