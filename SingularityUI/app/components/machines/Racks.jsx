@@ -9,6 +9,7 @@ import { DecommissionRack, RemoveRack, ReactivateRack, FetchRacks } from '../../
 import rootComponent from '../../rootComponent';
 import { Link } from 'react-router';
 import Column from '../common/table/Column';
+import JSONButton from '../common/JSONButton';
 
 const Racks = React.createClass({
 
@@ -143,6 +144,9 @@ const Racks = React.createClass({
           <span>
             {this.getMaybeReactivateButton(rack)}
             {this.getDecommissionOrRemoveButton(rack)}
+            <JSONButton object={rack}>
+              {'{ }'}
+            </JSONButton>
           </span>
         )}
       />
