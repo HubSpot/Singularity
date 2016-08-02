@@ -17,7 +17,7 @@ const errorDescription = (requestAPI) => {
   }
 };
 
-const RequestTitle = ({requestAPI, requestId}) => {
+const RequestTitle = ({requestId, requestAPI}) => {
   let maybeInfo;
   if (Utils.api.isFirstLoad(requestAPI)) {
     maybeInfo = <em>Loading...</em>;
