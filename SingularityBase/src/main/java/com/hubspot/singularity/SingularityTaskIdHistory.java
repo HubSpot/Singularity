@@ -17,19 +17,12 @@ public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHis
   private final Optional<ExtendedTaskState> lastTaskState;
   private final Optional<String> runId;
 
-  private static final Comparator<SingularityTaskHistoryUpdate> comparator = new Comparator<SingularityTaskHistoryUpdate>() {
-    @Override
-    public int compare(SingularityTaskHistoryUpdate o1, SingularityTaskHistoryUpdate o2) {
-      return o1.getTaskState().compareTo(o2.getTaskState());
-    }
-  };
-
   public static SingularityTaskIdHistory fromTaskIdAndTaskAndUpdates(SingularityTaskId taskId, SingularityTask task, List<SingularityTaskHistoryUpdate> updates) {
     ExtendedTaskState lastTaskState = null;
     long updatedAt = taskId.getStartedAt();
 
     if (updates != null && !updates.isEmpty()) {
-      SingularityTaskHistoryUpdate lastUpdate = Collections.max(updates, comparator);
+      SingularityTaskHistoryUpdate lastUpdate = Collections.max(updates);
       lastTaskState = lastUpdate.getTaskState();
       updatedAt = lastUpdate.getTimestamp();
     }
