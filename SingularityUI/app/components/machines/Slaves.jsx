@@ -8,10 +8,8 @@ import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 import { Link } from 'react-router';
 import { FetchSlaves, FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSlave } from '../../actions/api/slaves';
-
-function __in__(needle, haystack) {
-  return haystack.indexOf(needle) >= 0;
-}
+import Column from '../common/table/Column';
+import JSONButton from '../common/JSONButton';
 
 class Slaves extends React.Component {
 
@@ -32,11 +30,11 @@ class Slaves extends React.Component {
   }
 
   showUser(slave) {
-    return __in__(slave.currentState.state, ['ACTIVE', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']);
+    return Utils.isIn(slave.currentState.state, ['ACTIVE', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']);
   }
 
   getMaybeReactivateButton(slave) {
-    return (__in__(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']) &&
+    return (Utils.isIn(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']) &&
       <ModalButton
         buttonChildren={<Glyphicon glyph="new-window" />}
         action="Reactivate Slave"
@@ -66,7 +64,7 @@ class Slaves extends React.Component {
   }
 
   getDecommissionOrRemoveButton(slave) {
-    if (__in__(slave.currentState.state, ['ACTIVE', 'FROZEN'])) {
+    if (Utils.isIn(slave.currentState.state, ['ACTIVE', 'FROZEN'])) {
       return (
         <ModalButton
           buttonChildren={<Glyphicon glyph="trash" />}
@@ -91,7 +89,7 @@ class Slaves extends React.Component {
         formElements={[messageElement]}>
         <p>Are you sure you want to remove this slave?</p>
         <pre>{slave.id}</pre>
-        {__in__(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&
+        {Utils.isIn(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&
         <p>
           Removing a decommissioned slave will cause that slave to become active again if the mesos-slave process is still running.
         </p>}
@@ -99,43 +97,99 @@ class Slaves extends React.Component {
     );
   }
 
-  columnHeads(type) {
-    const heads = ['ID', 'State', 'Since', 'Rack', 'Host', 'Uptime'];
-    if (this.typeName[type]) {
-      heads.push(this.typeName[type]);
-    }
-    heads.push('Message');
-    heads.push(''); // Reactivate button and Decommission or Remove button
-    return heads;
-  }
-
-  getRow(type, slave) {
-    const now = +new Date();
-    return (
-      <tr key={slave.id}>
-        <td>
+  getColumns(type) {
+    const columns = [
+      <Column
+        label="ID"
+        id="id"
+        key="id"
+        sortable={true}
+        sortData={(cellData, slave) => slave.id}
+        cellData={(slave) => (
           <Link to={`tasks/active/all/${slave.host}`} title={`All tasks running on host ${slave.host}`}>
             {slave.id}
           </Link>
-        </td>
-        <td>{Utils.humanizeText(slave.currentState.state)}</td>
-        <td>{Utils.absoluteTimestamp(slave.currentState.timestamp)}</td>
-        <td>{slave.rackId}</td>
-        <td>{slave.host}</td>
-        <td>{Utils.duration(now - slave.firstSeenAt)}</td>
-        {this.typeName[type] && <td>{this.showUser(slave) && slave.currentState.user}</td> }
-        <td>{slave.currentState.message}</td>
-        <td className="actions-column">
-          {this.getMaybeReactivateButton(slave)}
-          {this.getMaybeFreezeButton(slave)}
-          {this.getDecommissionOrRemoveButton(slave)}
-        </td>
-      </tr>
-    );
-  }
+        )}
+      />,
+      <Column
+        label="State"
+        id="state"
+        key="state"
+        sortable={true}
+        sortData={(cellData, slave) => slave.currentState.state}
+        cellData={(slave) => Utils.humanizeText(slave.currentState.state)}
+      />,
+      <Column
+        label="Since"
+        id="timestamp"
+        key="timestamp"
+        sortable={true}
+        sortData={(cellData, slave) => slave.currentState.timestamp}
+        cellData={(slave) => Utils.absoluteTimestamp(slave.currentState.timestamp)}
+      />,
+      <Column
+        label="Rack"
+        id="rack"
+        key="rack"
+        sortable={true}
+        sortData={(cellData, slave) => slave.rackId}
+        cellData={(slave) => slave.rackId}
+      />,
+      <Column
+        label="Host"
+        id="host"
+        key="host"
+        sortable={true}
+        sortData={(cellData, slave) => slave.host}
+        cellData={(slave) => slave.host}
+      />,
+      <Column
+        label="Uptime"
+        id="uptime"
+        key="uptime"
+        sortable={true}
+        sortData={(cellData, slave) => slave.firstSeenAt}
+        cellData={(slave) => Utils.duration(Date.now() - slave.firstSeenAt)}
+      />
+    ];
 
-  getSlaves(type, slaves) {
-    return slaves.map(slave => this.getRow(type, slave));
+    if (this.typeName[type]) {
+      columns.push(
+        <Column
+          label={this.typeName[type]}
+          id="typename"
+          key="typename"
+          sortable={true}
+          sortData={(cellData, slave) => slave.currentState.user || ''}
+          cellData={(slave) => this.showUser(slave) && slave.currentState.user}
+        />
+      );
+    }
+    columns.push(
+      <Column
+        label="Message"
+        id="message"
+        key="message"
+        cellData={(slave) => slave.currentState.message}
+      />,
+      <Column
+        id="actions-column"
+        key="actions-column"
+        className="actions-column"
+        cellData={(slave) => (
+          <span>
+            {this.getMaybeReactivateButton(slave)}
+            {this.getMaybeFreezeButton(slave)}
+            {this.getDecommissionOrRemoveButton(slave)}
+            <JSONButton object={slave}>
+              {'{ }'}
+            </JSONButton>
+          </span>
+        )}
+      />
+    );
+
+    return columns;
   }
 
   getActiveSlaves() {
@@ -147,11 +201,11 @@ class Slaves extends React.Component {
   }
 
   getDecommissioningSlaves() {
-    return this.props.slaves.filter(({currentState}) => __in__(currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']));
+    return this.props.slaves.filter(({currentState}) => Utils.isIn(currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']));
   }
 
   getInactiveSlaves() {
-    return this.props.slaves.filter(({currentState}) => __in__(currentState.state, ['DEAD', 'MISSING_ON_STARTUP']));
+    return this.props.slaves.filter(({currentState}) => Utils.isIn(currentState.state, ['DEAD', 'MISSING_ON_STARTUP']));
   }
 
   getStates() {
@@ -159,26 +213,26 @@ class Slaves extends React.Component {
       {
         stateName: 'Active',
         emptyMessage: 'No Active Slaves',
-        headers: this.columnHeads('active'),
-        hostsInState: this.getSlaves('active', this.getActiveSlaves())
+        hostsInState: this.getActiveSlaves(),
+        columns: this.getColumns('active')
       },
       {
         stateName: 'Frozen',
         emptyMessage: 'No Frozen Slaves',
-        headers: this.columnHeads('frozen'),
-        hostsInState: this.getSlaves('decommissioning', this.getFrozenSlaves())
+        hostsInState: this.getFrozenSlaves(),
+        columns: this.getColumns('decommissioning')
       },
       {
         stateName: 'Decommissioning',
         emptyMessage: 'No Decommissioning Slaves',
-        headers: this.columnHeads('decommissioning'),
-        hostsInState: this.getSlaves('decommissioning', this.getDecommissioningSlaves())
+        hostsInState: this.getDecommissioningSlaves(),
+        columns: this.getColumns('decommissioning')
       },
       {
         stateName: 'Inactive',
         emptyMessage: 'No Inactive Slaves',
-        headers: this.columnHeads('inactive'),
-        hostsInState: this.getSlaves('inactive', this.getInactiveSlaves())
+        hostsInState: this.getInactiveSlaves(),
+        columns: this.getColumns('inactive')
       }
     ];
   }

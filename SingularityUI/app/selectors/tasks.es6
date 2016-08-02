@@ -12,7 +12,7 @@ export const getBouncesForRequest = (requestId) => createSelector(
   [getTaskCleanups],
   (taskCleanups) => (
   taskCleanups.data || []).filter((tc) => (
-    tc.cleanupType === 'BOUNCING' && tc.taskId.requestId === requestId
+    tc.cleanupType === 'BOUNCING' || tc.cleanupType === 'INCREMENTAL_BOUNCE' && tc.taskId.requestId === requestId
   ))
 );
 
@@ -68,7 +68,7 @@ export const getFilteredTasks = createSelector(
         _.each(tasks, (t) => {
           t.id = id.extract(t);
         });
-        const hostMatch = fuzzy.filter(filter.filterText, tasks, host);
+        const hostMatch = fuzzy.filter(filter.filterText.replace(/-/g, '_'), tasks, host);
         const idMatch = fuzzy.filter(filter.filterText, tasks, id);
         const rackMatch = fuzzy.filter(filter.filterText, tasks, rack);
         tasks = _.uniq(

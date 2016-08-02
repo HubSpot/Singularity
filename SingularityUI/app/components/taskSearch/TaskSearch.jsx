@@ -3,13 +3,13 @@ import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import { Glyphicon, Label } from 'react-bootstrap';
 import rootComponent from '../../rootComponent';
-import classNames from 'classnames';
 import { FetchTaskSearchParams } from '../../actions/api/history';
-import { UpdateFilter } from '../../actions/ui/TaskSearch';
+import { UpdateFilter } from '../../actions/ui/taskSearch';
 
 import Breadcrumbs from '../common/Breadcrumbs';
 import TaskSearchFilters from './TaskSearchFilters';
-import ServerSideTable from '../common/ServerSideTable';
+import UITable from '../common/table/UITable';
+import Column from '../common/table/Column';
 import Utils from '../../utils';
 
 const INITIAL_TASKS_PER_PAGE = 10;
@@ -20,8 +20,8 @@ class TaskSearch extends React.Component {
     fetchTaskHistory: React.PropTypes.func.isRequired,
     updateFilter: React.PropTypes.func.isRequired,
     taskHistory: React.PropTypes.array,
+    isFetching: React.PropTypes.bool,
     filter: React.PropTypes.shape({
-      count: React.PropTypes.number,
       requestId: React.PropTypes.string,
       deployId: React.PropTypes.string,
       host: React.PropTypes.string,
@@ -34,22 +34,28 @@ class TaskSearch extends React.Component {
     })
   }
 
-  setCount(count) {
-    this.props.updateFilter(_.extend({}, this.props.filter, {count}));
-  }
-
-  isCurrentCount(count) {
-    if (this.props.filter.count) {
-      return this.props.filter.count === count;
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.params.requestId !== this.props.params.requestId) {
+      FetchTaskSearchParams.clear();
+      nextProps.fetchTaskHistory(INITIAL_TASKS_PER_PAGE, 1, { requestId: nextProps.params.requestId }).then(this.resetTablePageAndCount);
+      nextProps.updateFilter({ requestId: nextProps.params.requestId });
     }
-    return INITIAL_TASKS_PER_PAGE === count;
   }
 
   handleSearch(filter) {
-    const count = this.props.filter.count || INITIAL_TASKS_PER_PAGE;
-    const page = 1;
-    const newFilter = _.extend({}, {requestId: this.props.params.requestId}, _.omit(filter, (value) => !value), {count, page});
+    const newFilter = _.extend({}, {requestId: this.props.params.requestId}, _.omit(filter, (value) => !value));
     this.props.updateFilter(newFilter);
+    this.props.fetchTaskHistory(INITIAL_TASKS_PER_PAGE, 1, filter);
+    this.resetTablePageAndCount();
+  }
+
+  fetchDataFromApi(page, numberPerPage, sortBy) {
+    return this.props.fetchTaskHistory(numberPerPage, page, _.extend({}, this.props.filter, { sortBy }));
+  }
+
+  bindResetPageAndCount(table) {
+    if (!table) return;
+    this.resetTablePageAndCount = table.resetPageAndChunkSizeWithoutChangingData(table);
   }
 
   renderTag(field, value) {
@@ -73,27 +79,6 @@ class TaskSearch extends React.Component {
       </div>);
   }
 
-  renderTableRow(data, key) {
-    return (
-      <tr key={key}>
-        <td className="actions-column"><Link to={`task/${data.taskId.id}`}><Glyphicon glyph="link" /></Link></td>
-        <td><Link to={`request/${data.taskId.requestId}`}>{data.taskId.requestId}</Link></td>
-        <td><Link to={`request/${data.taskId.requestId}/deploy/${data.taskId.deployId}`}>{data.taskId.deployId}</Link></td>
-        <td><Link to={`tasks/active/all/${data.taskId.host}`}>{data.taskId.host}</Link></td>
-        <td>
-          <span className={`label label-${Utils.getLabelClassFromTaskState(data.lastTaskState)}`}>
-            {Utils.humanizeText(data.lastTaskState)}
-          </span>
-        </td>
-        <td>{Utils.timestampFromNow(data.taskId.startedAt)}</td>
-        <td>{Utils.timestampFromNow(data.updatedAt)}</td>
-        <td className="actions-column">
-          <Link to={`task/${data.taskId.id}/tail/${config.finishedTaskLogPath}`}><Glyphicon glyph="file" /></Link>
-        </td>
-      </tr>
-    );
-  }
-
   renderBreadcrumbs() {
     return this.props.params.requestId && (
       <Breadcrumbs
@@ -108,17 +93,6 @@ class TaskSearch extends React.Component {
     );
   }
 
-  renderPageOptions() {
-    return this.props.taskHistory.length !== 0 && (
-      <div className="pull-right count-options">
-        Results per page:
-        <a className={classNames({inactive: this.isCurrentCount(5)})} onClick={() => this.setCount(5)}>5</a>
-        <a className={classNames({inactive: this.isCurrentCount(10)})} onClick={() => this.setCount(10)}>10</a>
-        <a className={classNames({inactive: this.isCurrentCount(25)})} onClick={() => this.setCount(25)}>25</a>
-      </div>
-    );
-  }
-
   render() {
     return (
       <div>
@@ -127,20 +101,92 @@ class TaskSearch extends React.Component {
         {this.props.params.requestId && <h3 className="inline-header" style={{marginLeft: '10px'}}>for {this.props.params.requestId}</h3>}
         <h2>Search Parameters</h2>
         <TaskSearchFilters requestId={this.props.params.requestId} onSearch={(filter) => this.handleSearch(filter)} />
-        <div className="row">
-          {this.renderTags()}
-          {this.renderPageOptions()}
-        </div>
-        <ServerSideTable
-          emptyMessage="No matching tasks"
-          entries={this.props.taskHistory}
-          paginate={true}
-          perPage={this.props.filter.count || INITIAL_TASKS_PER_PAGE}
-          fetchAction={FetchTaskSearchParams}
-          fetchParams={[this.props.filter]}
-          headers={['', 'Request ID', 'Deploy ID', 'Host', 'Last Status', 'Started', 'Updated', 'Logs']}
-          renderTableRow={(...args) => this.renderTableRow(...args)}
-        />
+        {this.renderTags()}
+        <UITable
+          emptyTableMessage="No matching tasks"
+          data={this.props.taskHistory}
+          keyGetter={(task) => task.taskId.id}
+          rowChunkSize={INITIAL_TASKS_PER_PAGE}
+          rowChunkSizeChoices={[5, 10, 25]}
+          paginated={true}
+          fetchDataFromApi={(page, numberPerPage, sortBy) => this.fetchDataFromApi(page, numberPerPage, sortBy)}
+          isFetching={this.props.isFetching}
+          showPageLoaderWhenFetching={true}
+          ref={(table) => this.bindResetPageAndCount(table)}
+        >
+          <Column
+            label=""
+            id="url"
+            key="url"
+            className="actions-column"
+            cellData={(task) => (
+              <Link to={`task/${task.taskId.id}`}>
+                <Glyphicon glyph="link" />
+              </Link>
+            )}
+          />
+          <Column
+            label="Request ID"
+            id="request-id"
+            key="request-id"
+            cellData={(task) => (
+              <Link to={`request/${task.taskId.requestId}`}>
+                {task.taskId.requestId}
+              </Link>
+            )}
+          />
+          <Column
+            label="Deploy ID"
+            id="deploy-id"
+            key="deploy-id"
+            cellData={(task) => (
+              <Link to={`request/${task.taskId.requestId}/deploy/${task.taskId.deployId}`}>
+                {task.taskId.deployId}
+              </Link>
+            )}
+          />
+          <Column
+            label="Host"
+            id="host"
+            key="host"
+            cellData={(task) => (
+              <Link to={`tasks/active/all/${task.taskId.host}`}>{task.taskId.host}</Link>
+            )}
+          />
+          <Column
+            label="Last Status"
+            id="status"
+            key="status"
+            cellData={(task) => (
+              <span className={`label label-${Utils.getLabelClassFromTaskState(task.lastTaskState)}`}>
+                {Utils.humanizeText(task.lastTaskState)}
+              </span>
+            )}
+          />
+          <Column
+            label="Started At"
+            id="started"
+            key="started"
+            cellData={(task) => Utils.timestampFromNow(task.taskId.startedAt)}
+          />
+          <Column
+            label="Updated At"
+            id="updated"
+            key="updated"
+            cellData={(task) => Utils.timestampFromNow(task.updatedAt)}
+          />
+          <Column
+            label="Logs"
+            id="actions-column"
+            key="actions-column"
+            className="actions-column"
+            cellData={(task) => (
+              <Link to={`task/${task.taskId.id}/tail/${config.finishedTaskLogPath}`}>
+                <Glyphicon glyph="file" />
+              </Link>
+            )}
+          />
+        </UITable>
       </div>
     );
   }
@@ -148,6 +194,7 @@ class TaskSearch extends React.Component {
 
 function mapStateToProps(state) {
   return {
+    isFetching: state.api.taskHistory.isFetching,
     taskHistory: state.api.taskHistory.data,
     filter: state.taskSearch
   };
@@ -161,10 +208,10 @@ function mapDispatchToProps(dispatch) {
 }
 
 function refresh(props) {
+  FetchTaskSearchParams.clear();
   const promises = [];
-  const filter = _.extend({}, { requestId: props.params.requestId }, props.filter);
-  promises.push(props.fetchTaskHistory(INITIAL_TASKS_PER_PAGE, 1, filter));
-  promises.push(props.updateFilter(filter));
+  promises.push(props.fetchTaskHistory(INITIAL_TASKS_PER_PAGE, 1, { requestId: props.params.requestId || undefined }));
+  promises.push(props.updateFilter({ requestId: props.params.requestId || undefined }));
   return Promise.all(promises);
 }
 

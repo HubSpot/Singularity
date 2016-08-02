@@ -10,7 +10,7 @@ class Column extends Component {
     cellData: PropTypes.func,
     cellRender: PropTypes.func,
     sortable: PropTypes.bool,
-    sortData: PropTypes.func,
+    sortData: PropTypes.func, // (cellData, object) -> any
     sortFunc: PropTypes.func,
     className: PropTypes.oneOfType([
       PropTypes.string,

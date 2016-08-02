@@ -32,6 +32,7 @@ var templateData = {
   defaultHealthcheckTimeoutSeconds: process.env.SINGULARITY_HEALTHCHECK_TIMEOUT_SECONDS || 5,
   defaultDeployHealthTimeoutSeconds: process.env.SINGULARITY_DEPLOY_HEALTH_TIMEOUT_SECONDS || 120,
   defaultHealthcheckMaxRetries: process.env.SINGULARITY_HEALTHCHECK_MAX_RETRIES || 0,
+  showTaskDiskResource: process.env.SINGULARITY_SHOW_TASK_DISK_RESOURCE || "false",
   hideNewDeployButton: process.env.SINGULARITY_HIDE_NEW_DEPLOY_BUTTON || 'false',
   hideNewRequestButton: process.env.SINGULARITY_HIDE_NEW_REQUEST_BUTTON || 'false',
   loadBalancingEnabled: process.env.SINGULARITY_LOAD_BALANCING_ENABLED || 'false',
@@ -43,7 +44,8 @@ var templateData = {
   shellCommands: process.env.SINGULARITY_SHELL_COMMANDS || '[]',
   timestampFormat: process.env.SINGULARITY_TIMESTAMP_FORMAT || 'lll',
   timestampWithSecondsFormat: process.env.SINGULARITY_TIMESTAMP_WITH_SECONDS_FORMAT || 'lll:ss',
-  redirectOnUnauthorizedUrl: process.env.SINGULARITY_REDIRECT_ON_UNAUTHORIZED_URL || ''
+  redirectOnUnauthorizedUrl: process.env.SINGULARITY_REDIRECT_ON_UNAUTHORIZED_URL || '',
+  extraScript: process.env.SINGULARITY_EXTRA_SCRIPT || ''
 };
 
 var dest = path.resolve(__dirname, 'dist');

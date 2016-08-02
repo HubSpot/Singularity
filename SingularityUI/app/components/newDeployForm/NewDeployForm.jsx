@@ -86,6 +86,7 @@ class NewDeployForm extends Component {
       cpus: PropTypes.string,
       memoryMb: PropTypes.string,
       numPorts: PropTypes.string,
+      diskMb: PropTypes.string,
       env: PropTypes.arrayOf(PropTypes.string),
       healthcheckUri: PropTypes.string,
       healthcheckIntervalSeconds: PropTypes.string,
@@ -1105,6 +1106,15 @@ class NewDeployForm extends Component {
         feedback={this.formFieldFeedback(INDEXED_FIELDS.numPorts, this.props.form.numPorts)}
       />
     );
+    const diskMb = (
+      <TextFormGroup
+        id="disk-mb"
+        onChange={event => this.updateField('diskMb', event.target.value)}
+        value={this.props.form.diskMb}
+        label="Disk (MB)"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.diskMb, this.props.form.diskMb)}
+      />
+    );
     const env = (
       <MultiInputFormGroup
         id="env-vars"
@@ -1304,6 +1314,13 @@ class NewDeployForm extends Component {
               {numPorts}
             </div>
           </div>
+          <div className="row">
+            {config.showTaskDiskResource &&
+              <div className="col-sm-4">
+                {diskMb}
+              </div>
+            }
+          </div>
         </fieldset>
       </div>
     );
@@ -1446,6 +1463,8 @@ class NewDeployForm extends Component {
 function mapStateToProps(state, ownProps) {
   return {
     request: Utils.maybe(state.api.request, [ownProps.params.requestId, 'data']),
+    notFound: Utils.maybe(state.api.request, [ownProps.params.requestId, 'statusCode']) === 404,
+    pathname: ownProps.location.pathname,
     form: state.ui.form[FORM_ID],
     saveApiCall: state.api.saveDeploy
   };
@@ -1459,12 +1478,12 @@ function mapDispatchToProps(dispatch, ownProps) {
     save(deployBody) {
       dispatch(SaveDeploy.trigger(deployBody)).then((response) => {
         if (response.type === 'SAVE_DEPLOY_SUCCESS') {
-          ownProps.router.push(`request/${ownProps.params.requestId}/deploy/${response.data.pendingDeploy.id}`);
+          ownProps.router.push(`request/${ownProps.params.requestId}/deploy/${response.data.pendingDeployState.deployMarker.deployId}`);
         }
       });
     },
     fetchRequest(requestId) {
-      return dispatch(FetchRequest.trigger(requestId));
+      return dispatch(FetchRequest.trigger(requestId, true));
     },
     clearForm() {
       return dispatch(ClearForm('newDeployForm'));

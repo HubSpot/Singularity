@@ -179,6 +179,29 @@ export const Memory = (
   />
 );
 
+export const Disk = (
+  <Column
+    label="Disk"
+    id="disk"
+    key="disk"
+    cellData={
+      (rowData) => {
+        const disk = _.find(rowData.mesosTask.resources, (resource) => resource.name === 'disk');
+        if (disk) {
+          return disk.scalar.value;
+        }
+        return null;
+      }
+    }
+    cellRender={
+      (cellData) => (cellData &&
+        <span>{cellData} MB</span>
+      )
+    }
+    sortable={true}
+  />
+);
+
 export const ActiveActions = (
   <Column
     label=""

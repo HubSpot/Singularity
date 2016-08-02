@@ -3,8 +3,9 @@ import Utils from '../../utils';
 
 export const FetchTaskHistory = buildApiAction(
   'FETCH_TASK_HISTORY',
-  (taskId) => ({
-    url: `/history/task/${taskId}`
+  (taskId, renderNotFoundIf404) => ({
+    url: `/history/task/${taskId}`,
+    renderNotFoundIf404
   }),
   (taskId) => taskId
 );
@@ -41,9 +42,9 @@ export const FetchTaskHistoryForDeploy = buildApiAction(
 
 export const FetchDeployForRequest = buildApiAction(
   'FETCH_DEPLOY',
-  (requestId, deployId, isMainApiCall) => ({
+  (requestId, deployId, renderNotFoundIf404) => ({
     url: `/history/request/${requestId}/deploy/${deployId}`,
-    isMainApiCall
+    renderNotFoundIf404
   })
 );
 

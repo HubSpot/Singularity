@@ -72,7 +72,8 @@ class TaskDetail extends Component {
       ports: PropTypes.array,
       directory: PropTypes.string,
       isStillRunning: PropTypes.bool,
-      isCleaning: PropTypes.bool
+      isCleaning: PropTypes.bool,
+      loadBalancerUpdates: PropTypes.array
     }),
     resourceUsage: PropTypes.shape({
       cpusSystemTimeSecs: PropTypes.number,
@@ -349,21 +350,28 @@ class TaskDetail extends Component {
               style="success"
               total={this.props.resourceUsage.memLimitBytes}
               used={this.props.resourceUsage.memRssBytes}
-              text={`${Utils.humanizeFileSize(this.props.resourceUsage.memRssBytes)} / ${Utils.humanizeFileSize(this.props.resourceUsage.memLimitBytes)}`}
-            />
+            >
+              {Utils.humanizeFileSize(this.props.resourceUsage.memRssBytes)} / {Utils.humanizeFileSize(this.props.resourceUsage.memLimitBytes)}
+            </UsageInfo>
             <UsageInfo
               title="CPU Usage"
               style={cpuUsageExceeding ? 'danger' : 'success'}
               total={this.props.resourceUsage.cpusLimit}
               used={Math.round(cpuUsage * 100) / 100}
-              text={<span><p>{`${Math.round(cpuUsage * 100) / 100} used / ${this.props.resourceUsage.cpusLimit} allocated CPUs`}</p>{exceedingWarning}</span>}
-            />
+            >
+              <span>
+                <p>
+                  {Math.round(cpuUsage * 100) / 100} used / {this.props.resourceUsage.cpusLimit} allocated CPUs
+                </p>
+                {exceedingWarning}
+              </span>
+            </UsageInfo>
           </div>
           <div className="col-md-9">
             <ul className="list-unstyled horizontal-description-list">
-              {this.props.resourceUsage.cpusNrPeriods && <InfoBox copyableClassName="info-copyable" name="CPUs number of periods" value={this.props.resourceUsage.cpusNrPeriods} />}
-              {this.props.resourceUsage.cpusNrThrottled && <InfoBox copyableClassName="info-copyable" name="CPUs number throttled" value={this.props.resourceUsage.cpusNrThrottled} />}
-              {this.props.resourceUsage.cpusThrottledTimeSecs && <InfoBox copyableClassName="info-copyable" name="Throttled time (sec)" value={this.props.resourceUsage.cpusThrottledTimeSecs} />}
+              {!!this.props.resourceUsage.cpusNrPeriods && <InfoBox copyableClassName="info-copyable" name="CPUs number of periods" value={this.props.resourceUsage.cpusNrPeriods} />}
+              {!!this.props.resourceUsage.cpusNrThrottled && <InfoBox copyableClassName="info-copyable" name="CPUs number throttled" value={this.props.resourceUsage.cpusNrThrottled} />}
+              {!!this.props.resourceUsage.cpusThrottledTimeSecs && <InfoBox copyableClassName="info-copyable" name="Throttled time (sec)" value={this.props.resourceUsage.cpusThrottledTimeSecs} />}
               <InfoBox copyableClassName="info-copyable" name="Memory (anon)" value={Utils.humanizeFileSize(this.props.resourceUsage.memAnonBytes)} />
               <InfoBox copyableClassName="info-copyable" name="Memory (file)" value={Utils.humanizeFileSize(this.props.resourceUsage.memFileBytes)} />
               <InfoBox copyableClassName="info-copyable" name="Memory (mapped file)" value={Utils.humanizeFileSize(this.props.resourceUsage.memMappedFileBytes)} />
@@ -391,8 +399,8 @@ class TaskDetail extends Component {
         <TaskHistory taskUpdates={this.props.task.taskUpdates} />
         <TaskLatestLog taskId={this.props.taskId} isStillRunning={this.props.task.isStillRunning} />
         {this.renderFiles(filesToDisplay)}
-        <TaskS3Logs taskId={this.props.task.task.taskId.id} s3Files={this.props.s3Logs} />
-        <TaskLbUpdates task={this.props.task} />
+        {_.isEmpty(this.props.s3Logs) || <TaskS3Logs taskId={this.props.task.task.taskId.id} s3Files={this.props.s3Logs} />}
+        {_.isEmpty(this.props.task.loadBalancerUpdates) || <TaskLbUpdates loadBalancerUpdates={this.props.task.loadBalancerUpdates} />}
         <TaskInfo task={this.props.task.task} ports={this.props.task.ports} directory={this.props.task.directory} />
         {this.renderResourceUsage()}
         <TaskEnvVars executor={this.props.task.task.mesosTask.executor} />
@@ -405,11 +413,11 @@ class TaskDetail extends Component {
 
 function mapHealthchecksToProps(task) {
   if (!task) return task;
-  const hcs = task.healthcheckResults;
-  task.hasSuccessfulHealthcheck = hcs && hcs.length > 0 && !!_.find(hcs, (h) => h.statusCode === 200);
-  task.lastHealthcheckFailed = hcs && hcs.length > 0 && hcs[0].statusCode !== 200;
+  const { healthcheckResults } = task;
+  task.hasSuccessfulHealthcheck = healthcheckResults && healthcheckResults.length > 0 && !!_.find(healthcheckResults, (healthcheckResult) => healthcheckResult.statusCode === 200);
+  task.lastHealthcheckFailed = healthcheckResults && healthcheckResults.length > 0 && healthcheckResults[0].statusCode !== 200;
   task.healthcheckFailureReasonMessage = Utils.healthcheckFailureReasonMessage(task);
-  task.tooManyRetries = hcs && hcs.length > task.task.taskRequest.deploy.healthcheckMaxRetries && task.task.taskRequest.deploy.healthcheckMaxRetries > 0;
+  task.tooManyRetries = healthcheckResults && healthcheckResults.length > task.task.taskRequest.deploy.healthcheckMaxRetries && task.task.taskRequest.deploy.healthcheckMaxRetries > 0;
   task.secondsElapsed = task.task && task.task.taskRequest && task.task.taskRequest.deploy.healthcheckMaxTotalTimeoutSeconds || config.defaultDeployHealthTimeoutSeconds;
   return task;
 }
@@ -442,8 +450,15 @@ function mapTaskToProps(task) {
 }
 
 function mapStateToProps(state, ownProps) {
-  let task = state.api.task[ownProps.params.taskId];
+  const apiCallData = state.api.task[ownProps.params.taskId];
+  let task = apiCallData;
   if (!(task && task.data)) return {};
+  if (apiCallData.statusCode === 404) {
+    return {
+      notFound: true,
+      pathname: ownProps.location.pathname
+    };
+  }
   task = mapTaskToProps(task.data);
   task = mapHealthchecksToProps(task);
   return {
@@ -464,9 +479,9 @@ function mapDispatchToProps(dispatch) {
   return {
     runCommandOnTask: (taskId, commandName) => dispatch(RunCommandOnTask.trigger(taskId, commandName)),
     killTask: (taskId, data) => dispatch(KillTask.trigger(taskId, data)),
-    fetchTaskHistory: (taskId) => dispatch(FetchTaskHistory.trigger(taskId)),
+    fetchTaskHistory: (taskId) => dispatch(FetchTaskHistory.trigger(taskId, true)),
     fetchTaskStatistics: (taskId) => dispatch(FetchTaskStatistics.trigger(taskId)),
-    fetchTaskFiles: (...args) => dispatch(FetchTaskFiles.trigger(...args)),
+    fetchTaskFiles: (taskId, path, catchStatusCodes = []) => dispatch(FetchTaskFiles.trigger(taskId, path, catchStatusCodes.concat([404]))),
     fetchDeployForRequest: (taskId, deployId) => dispatch(FetchDeployForRequest.trigger(taskId, deployId)),
     fetchTaskCleanups: () => dispatch(FetchTaskCleanups.trigger()),
     fetchPendingDeploys: () => dispatch(FetchPendingDeploys.trigger()),
@@ -475,11 +490,13 @@ function mapDispatchToProps(dispatch) {
 }
 
 function refresh(props) {
-  props.fetchTaskFiles(props.params.taskId, props.params.splat || props.params.taskId, [400]);
+  props.fetchTaskFiles(props.params.taskId, props.params.splat || props.params.taskId, [400, 404]);
   const promises = [];
   const taskPromise = props.fetchTaskHistory(props.params.taskId);
   taskPromise.then(() => {
-    const task = props.route.store.getState().api.task[props.params.taskId].data;
+    const apiData = props.route.store.getState().api.task[props.params.taskId];
+    if (apiData.statusCode === 404) return;
+    const task = apiData.data;
     promises.push(props.fetchDeployForRequest(task.task.taskId.requestId, task.task.taskId.deployId));
     if (task.isStillRunning) {
       promises.push(props.fetchTaskStatistics(props.params.taskId));
