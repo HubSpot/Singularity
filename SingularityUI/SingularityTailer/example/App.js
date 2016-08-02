@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { SandboxLog, TailerProvider } from '../src/components';
+import { Log, TailerProvider } from '../src/components';
 
 import { sandboxSetApiRoot } from '../src/actions';
 
@@ -40,37 +40,39 @@ class App extends Component {
     let maybeLog;
 
     if (taskId && path) {
-      maybeLog = <SandboxLog taskId={taskId} path={path} />;
+      maybeLog = <Log taskId={taskId} path={path} minLines={30} />;
     }
 
     return (
-      <div>
-        <form onSubmit={this.tailLog}>
-          <label>
-            {'TaskId: '}
-            <input
-              type="text"
-              value={this.state.enteredTaskId}
-              onChange={(e) => this.setState({enteredTaskId: e.target.value})}
-            />
-          </label>
-          <label>
-            {'Path: '}
-            <input
-              type="text"
-              value={this.state.enteredPath}
-              onChange={(e) => this.setState({enteredPath: e.target.value})}
-            />
-          </label>
-          <button type="submit" onClick={this.tailLog}>
-            Tail!
-          </button>
-        </form>
-        <TailerProvider getTailerState={(state) => state.tailer}>
-          <div>
-            {maybeLog}
-          </div>
-        </TailerProvider>
+      <div className="full">
+        <div className="app-header">
+          <form onSubmit={this.tailLog}>
+            <label>
+              {'TaskId: '}
+              <input
+                type="text"
+                value={this.state.enteredTaskId}
+                onChange={(e) => this.setState({enteredTaskId: e.target.value})}
+              />
+            </label>
+            <label>
+              {'Path: '}
+              <input
+                type="text"
+                value={this.state.enteredPath}
+                onChange={(e) => this.setState({enteredPath: e.target.value})}
+              />
+            </label>
+            <button type="submit" onClick={this.tailLog}>
+              Tail!
+            </button>
+          </form>
+        </div>
+        <div className="app-content">
+          <TailerProvider getTailerState={(state) => state.tailer}>
+            {maybeLog || <div />}
+          </TailerProvider>
+        </div>
       </div>
     );
   }

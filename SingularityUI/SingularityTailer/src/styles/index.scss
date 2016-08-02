@@ -1,10 +1,8 @@
 section.log-pane {
-  position: fixed;
+  align-items: stretch;
   display: flex;
   flex-flow: column;
-  height: 100%;
   width: 100%;
-
 
   font-family: Consolas, "Liberation Mono", Courier, monospace;
 

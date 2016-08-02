@@ -4,20 +4,22 @@ import { AutoSizer, InfiniteLoader, VirtualScroll } from 'react-virtualized';
 
 import Line from './Line';
 
+import '../styles/ansi.scss';
+
 const LogLines = (props) => {
   if (!props.isLoaded) {
     return <div>Not loaded</div>;
   }
 
   return (
-    <InfiniteLoader
-      isRowLoaded={props.isRowLoaded}
-      loadMoreRows={props.loadMoreRows}
-      rowCount={props.remoteRowCount}
-    >
-      {({onRowsRendered, registerChild}) => ( // eslint-disable-line react/prop-types
-        <AutoSizer>
-          {({width, height}) => ( // eslint-disable-line react/prop-types
+    <AutoSizer>
+      {({width, height}) => ( // eslint-disable-line react/prop-types
+        <InfiniteLoader
+          isRowLoaded={props.isRowLoaded}
+          loadMoreRows={props.loadMoreRows}
+          rowCount={props.remoteRowCount}
+        >
+          {({onRowsRendered, registerChild}) => ( // eslint-disable-line react/prop-types
             <VirtualScroll
               ref={registerChild}
               width={width}
@@ -34,9 +36,9 @@ const LogLines = (props) => {
               rowClassName="log-row"
             />
           )}
-        </AutoSizer>
+        </InfiniteLoader>
       )}
-    </InfiniteLoader>
+    </AutoSizer>
   );
 };
 
