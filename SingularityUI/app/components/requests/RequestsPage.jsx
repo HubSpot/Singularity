@@ -120,7 +120,7 @@ class RequestsPage extends Component {
         <UITable
           ref="table"
           data={displayRequests}
-          keyGetter={(r) => (r.request ? r.request.id : r.requestId)}
+          keyGetter={(request) => (request.request ? request.request.id : request.requestId)}
         >
           {this.getColumns()}
         </UITable>
@@ -142,14 +142,14 @@ class RequestsPage extends Component {
 
 function mapStateToProps(state, ownProps) {
   const requestsInState = state.api.requestsInState.data;
-  const modifiedRequests = requestsInState.map((r) => {
-    const hasActiveDeploy = !!(r.activeDeploy || (r.requestDeployState && r.requestDeployState.activeDeploy));
+  const modifiedRequests = requestsInState.map((request) => {
+    const hasActiveDeploy = !!(request.activeDeploy || (request.requestDeployState && request.requestDeployState.activeDeploy));
     return {
-      ...r,
+      ...request,
       hasActiveDeploy,
-      canBeRunNow: r.state === 'ACTIVE' && _.contains(['SCHEDULED', 'ON_DEMAND'], r.request.requestType) && hasActiveDeploy,
-      canBeScaled: _.contains(['ACTIVE', 'SYSTEM_COOLDOWN'], r.state) && hasActiveDeploy && _.contains(['WORKER', 'SERVICE'], r.request.requestType),
-      id: r.request ? r.request.id : r.requestId
+      canBeRunNow: request.state === 'ACTIVE' && _.contains(['SCHEDULED', 'ON_DEMAND'], request.request.requestType) && hasActiveDeploy,
+      canBeScaled: _.contains(['ACTIVE', 'SYSTEM_COOLDOWN'], request.state) && hasActiveDeploy && _.contains(['WORKER', 'SERVICE'], request.request.requestType),
+      id: request.request ? request.request.id : request.requestId
     };
   });
   const filter = {
