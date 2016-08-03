@@ -10,7 +10,7 @@ public class SingularityDockerParameter {
     private final String value;
 
     @JsonCreator
-    public static SingularityDockerParameter fromString(@JsonProperty("value") String value) {
+    public static SingularityDockerParameter fromString(String value) {
         return new SingularityDockerParameter(value, "");
     }
 
