@@ -24,8 +24,23 @@ const ansiEnhancer = (line) => {
   });
 };
 
-const getLines = (state, props) => {
-  const file = props.getTailerState(state).files[props.tailerId];
+export const getFile = (state, props) => {
+  return props.getTailerState(state).files[props.tailerId];
+};
+
+export const getIsLoaded = (state, props) => {
+  return !!getFile(state, props);
+};
+
+export const getFileSize = (state, props) => {
+  const isLoaded = getIsLoaded(state, props);
+  return isLoaded
+    ? getFile(state, props).fileSize
+    : null;
+};
+
+export const getLines = (state, props) => {
+  const file = getFile(state, props);
   if (file) {
     return file.lines;
   }
@@ -36,7 +51,7 @@ export const getRequests = (state, props) => (
   props.getTailerState(state).requests[props.tailerId] || new Map()
 );
 
-const getConfig = (state, props) => (
+export const getConfig = (state, props) => (
   props.getTailerState(state).config
 );
 

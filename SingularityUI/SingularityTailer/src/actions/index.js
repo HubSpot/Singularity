@@ -142,3 +142,42 @@ export const sandboxGetLength = (id, taskId, path, config) => {
       });
   };
 };
+
+/* STANDARD HTTP API */
+export const httpFetchChunk = (id, path, start, end) => {
+  return (dispatch) => {
+    dispatch(
+      fetchChunkStarted('HTTP', id, start, end)
+    );
+
+    const httpHeaders = new Headers();
+    if (start) {
+      httpHeaders.append('Range', `bytes=${start}-${end || ''}`);
+    }
+
+    const fetchInit = {
+      method: 'GET',
+      headers: httpHeaders
+    };
+
+    return fetch(path, fetchInit)
+      .then(checkStatus)
+      .then(parseJSON)
+      .then(({data}) => {
+        // the API lies, so let's just figure out the bytelength ourselves
+        // this code can't take lies.
+        const encodedData = TE.encode(data);
+        const byteLength = encodedData.byteLength;
+        return dispatch(addFileChunk(id, {
+          text: data,
+          start,
+          end: start + byteLength,
+          byteLength
+        }, start, end));
+      }).catch((error) => {
+        return dispatch(
+          fetchChunkError('HTTP', id, start, end, error)
+        );
+      });
+  };
+};

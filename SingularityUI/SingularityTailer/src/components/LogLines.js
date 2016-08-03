@@ -45,11 +45,11 @@ const LogLines = (props) => {
 LogLines.propTypes = {
   isLoaded: PropTypes.bool.isRequired,
   lines: PropTypes.instanceOf(Immutable.List).isRequired,
-  overscanRowCount: PropTypes.number,
-  onScroll: PropTypes.func,
+  remoteRowCount: PropTypes.number.isRequired,
   isRowLoaded: PropTypes.func.isRequired,
   loadMoreRows: PropTypes.func.isRequired,
-  remoteRowCount: PropTypes.number.isRequired
+  overscanRowCount: PropTypes.number,
+  onScroll: PropTypes.func
 };
 
 LogLines.defaultProps = {
