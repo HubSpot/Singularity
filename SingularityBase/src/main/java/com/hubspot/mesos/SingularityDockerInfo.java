@@ -3,11 +3,11 @@ package com.hubspot.mesos;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Optional;
 
 public class SingularityDockerInfo {
@@ -16,7 +16,7 @@ public class SingularityDockerInfo {
   private final Optional<SingularityDockerNetworkType> network;
   private final List<SingularityDockerPortMapping> portMappings;
   private final boolean forcePullImage;
-  private final Map<String, String> parameters;
+  private final Optional<SingularityDockerParameters> parameters;
 
   @JsonCreator
   public SingularityDockerInfo(@JsonProperty("image") String image,
@@ -24,18 +24,18 @@ public class SingularityDockerInfo {
                                @JsonProperty("network") SingularityDockerNetworkType network,
                                @JsonProperty("portMappings") Optional<List<SingularityDockerPortMapping>> portMappings,
                                @JsonProperty("forcePullImage") Optional<Boolean> forcePullImage,
-                               @JsonProperty("parameters") Optional<Map<String, String>> parameters) {
+                               @JsonProperty("parameters") Optional<SingularityDockerParameters> parameters) {
     this.image = image;
     this.privileged = privileged;
     this.network = Optional.fromNullable(network);
     this.portMappings = portMappings.or(Collections.<SingularityDockerPortMapping>emptyList());
     this.forcePullImage = forcePullImage.or(false);
-    this.parameters = parameters.or(Collections.<String, String>emptyMap());
+    this.parameters = parameters;
   }
 
   @Deprecated
   public SingularityDockerInfo(String image, boolean privileged, SingularityDockerNetworkType network, Optional<List<SingularityDockerPortMapping>> portMappings) {
-    this(image, privileged, network, portMappings, Optional.<Boolean>absent(), Optional.<Map<String, String>>absent());
+    this(image, privileged, network, portMappings, Optional.<Boolean>absent(), Optional.<SingularityDockerParameters>absent());
   }
 
   public String getImage() {
@@ -80,8 +80,13 @@ public class SingularityDockerInfo {
     return forcePullImage;
   }
 
-  public Map<String, String> getParameters() {
+  public Optional<SingularityDockerParameters> getParameters() {
     return parameters;
+  }
+
+  @JsonIgnore
+  public List<SingularityDockerParameter> getParametersList() {
+    return parameters.isPresent() ? parameters.get().getParameters() : Collections.<SingularityDockerParameter>emptyList();
   }
 
   @Override

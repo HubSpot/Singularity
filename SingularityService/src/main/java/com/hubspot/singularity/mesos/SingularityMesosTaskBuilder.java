@@ -45,8 +45,10 @@ import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerNetworkType;
+import com.hubspot.mesos.SingularityDockerParameter;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityVolume;
+import com.hubspot.mesos.SingularityMesosTaskLabel;
 import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
@@ -121,9 +123,16 @@ class SingularityMesosTaskBuilder {
 
     final Builder labelsBuilder = Labels.newBuilder();
     // apply request-specific labels, if any
-    if (taskRequest.getDeploy().getLabels().isPresent() && !taskRequest.getDeploy().getLabels().get().isEmpty()) {
-      for (Map.Entry<String, String> label : taskRequest.getDeploy().getLabels().get().entrySet()) {
-        labelsBuilder.addLabels(Label.newBuilder().setKey(label.getKey()).setValue(label.getValue()).build());
+    if (!taskRequest.getDeploy().getLabelsList().isEmpty()) {
+      for (SingularityMesosTaskLabel taskLabel : taskRequest.getDeploy().getLabelsList()) {
+        final Label.Builder labelBuilder = Label.newBuilder()
+            .setKey(taskLabel.getKey());
+
+        if (taskLabel.getValue().isPresent()) {
+          labelBuilder.setValue(taskLabel.getValue().get());
+        }
+
+        labelsBuilder.addLabels(labelBuilder.build());
       }
     }
 
@@ -273,10 +282,10 @@ class SingularityMesosTaskBuilder {
         }
       }
 
-      if (!dockerInfo.get().getParameters().isEmpty()) {
+      if (!dockerInfo.get().getParametersList().isEmpty()) {
         List<Parameter> parameters = new ArrayList<>();
-        for (Map.Entry<String, String> entry : dockerInfo.get().getParameters().entrySet()) {
-          parameters.add(Parameter.newBuilder().setKey(entry.getKey()).setValue(entry.getValue()).build());
+        for (SingularityDockerParameter dockerParameter : dockerInfo.get().getParametersList()) {
+          parameters.add(Parameter.newBuilder().setKey(dockerParameter.getKey()).setValue(dockerParameter.getValue()).build());
         }
         dockerInfoBuilder.addAllParameters(parameters);
       }
