@@ -216,6 +216,7 @@ public class SingularityDeployChecker {
 
   private TaskCleanupType getCleanupType(SingularityPendingDeploy pendingDeploy, SingularityRequest request, SingularityDeployResult deployResult) {
     if (pendingDeploy.getDeployProgress().isPresent() && pendingDeploy.getDeployProgress().get().getDeployInstanceCountPerStep() != request.getInstancesSafe()) {
+      // For incremental deploys, return a special cleanup type
       if (deployResult.getDeployState() == DeployState.FAILED) {
         return TaskCleanupType.INCREMENTAL_DEPLOY_FAILED;
       } else if (deployResult.getDeployState() == DeployState.CANCELED) {
