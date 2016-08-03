@@ -47,6 +47,7 @@ import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityDeployProgress;
+import com.hubspot.singularity.SingularityDeployResult;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityKilledTaskIdRecord;
 import com.hubspot.singularity.SingularityLoadBalancerUpdate;
@@ -2843,6 +2844,23 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     deployChecker.checkDeploys();
 
     Assert.assertEquals(DeployState.OVERDUE, deployManager.getDeployResult(requestId, deployId).get().getDeployState());
+  }
+
+  @Test
+  public void testRemovedRequestData() {
+    initRequest();
+    SingularityDeployBuilder db = new SingularityDeployBuilder(requestId, firstDeployId);
+    db.setMaxTaskRetries(Optional.of(1));
+    initDeploy(db, System.currentTimeMillis());
+
+    deployChecker.checkDeploys();
+    Assert.assertEquals(DeployState.WAITING, deployManager.getPendingDeploys().get(0).getCurrentDeployState());
+
+    requestManager.deleteRequest(request, Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent());
+    deployChecker.checkDeploys();
+    SingularityDeployResult deployResult = deployManager.getDeployResult(requestId, firstDeployId).get();
+    Assert.assertEquals(DeployState.FAILED, deployResult.getDeployState());
+    Assert.assertTrue(deployResult.getMessage().get().contains("MISSING"));
   }
 
   @Test
