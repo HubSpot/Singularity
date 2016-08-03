@@ -2,13 +2,15 @@ var path = require('path');
 var webpack = require('webpack');
 
 module.exports = {
-  devtool: 'eval',
-  entry: [
-    'react-hot-loader/patch',
-    'webpack-dev-server/client?http://localhost:3223',
-    'webpack/hot/only-dev-server',
-    './example/index',
-  ],
+  devtool: 'source-map',
+  entry: {
+    'tailer': [
+      'react-hot-loader/patch',
+      'webpack-dev-server/client?http://localhost:3223',
+      'webpack/hot/only-dev-server',
+      './example/index',
+    ]
+  },
   output: {
     path: path.join(__dirname, 'dist'),
     filename: 'bundle.js',
@@ -22,6 +24,11 @@ module.exports = {
       {
         test: /\.js$/,
         loaders: ['babel'],
+        exclude: /node_modules/,
+      },
+      {
+        test: /\.test\.js$/,
+        loaders: ['mocha', 'babel'],
         exclude: /node_modules/,
       },
       {

@@ -17,6 +17,16 @@ body {
 
 .app-header {
   flex: 0 1 auto;
+
+  form {
+    display: inline-block;
+  }
+
+  a {
+    padding: 0 5px;
+  }
+
+  padding: 5px;
 }
 
 .app-content {

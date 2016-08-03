@@ -6,6 +6,7 @@ import * as Actions from '../../src/actions';
 import { List } from 'immutable';
 
 import {
+  isOverlapping,
   createMissingMarker,
   splitChunkIntoLines,
   mergeChunks,
@@ -13,6 +14,179 @@ import {
   mergeLines,
   addChunkReducer
 } from '../../src/reducers/files';
+
+describe('isOverlapping', () => {
+  describe('non-inclusive overlap', () => {
+    it('should handle two equally sized ranges', () => {
+      expect(
+        isOverlapping(
+          { start: 0, end: 10 },
+          { start: 0, end: 10 }
+        )
+      ).toEqual(true);
+
+      expect(
+        isOverlapping(
+          { start: 100, end: 1000 },
+          { start: 100, end: 1000 }
+        )
+      ).toEqual(true);
+
+      expect(
+        isOverlapping(
+          { start: -10, end: -5 },
+          { start: -10, end: -5 }
+        )
+      ).toEqual(true);
+
+      expect(
+        isOverlapping(
+          { start: -10, end: -10 },
+          { start: -10, end: -10 }
+        )
+      ).toEqual(true);
+
+      expect(
+        isOverlapping(
+          { start: -0, end: 10 },
+          { start: 0, end: 10 }
+        )
+      ).toEqual(true);
+
+      expect(
+        isOverlapping(
+          { start: -10, end: -0 },
+          { start: -10, end: 0 }
+        )
+      ).toEqual(true);
+    });
+
+    it('should return false for non-inclusive but touching ranges', () => {
+      expect(
+        isOverlapping(
+          { start: 0, end: 10 },
+          { start: 10, end: 20 }
+        )
+      ).toEqual(false);
+
+      expect(
+        isOverlapping(
+          { start: 5, end: 6 },
+          { start: 6, end: 7 }
+        )
+      ).toEqual(false);
+
+      expect(
+        isOverlapping(
+          { start: 5, end: 6 },
+          { start: 6, end: 6 }
+        )
+      ).toEqual(false);
+
+      expect(
+        isOverlapping(
+          { start: 10, end: 20 },
+          { start: 0, end: 10 }
+        )
+      ).toEqual(false);
+    });
+
+    it('should return false for non-overlapping ranges', () => {
+      expect(
+        isOverlapping(
+          { start: 0, end: 10 },
+          { start: 11, end: 20 }
+        )
+      ).toEqual(false);
+
+      expect(
+        isOverlapping(
+          { start: 5, end: 6 },
+          { start: 7, end: 8 }
+        )
+      ).toEqual(false);
+
+      expect(
+        isOverlapping(
+          { start: 5, end: 6 },
+          { start: 7, end: 7 }
+        )
+      ).toEqual(false);
+
+      expect(
+        isOverlapping(
+          { start: 10, end: 20 },
+          { start: 0, end: 9 }
+        )
+      ).toEqual(false);
+
+      expect(
+        isOverlapping(
+          { start: 10, end: 20 },
+          { start: -500, end: -10 }
+        )
+      ).toEqual(false);
+    });
+
+    it('should return true for overlapping ranges', () => {
+      expect(
+        isOverlapping(
+          { start: 10, end: 30 },
+          { start: 15, end: 20 }
+        )
+      ).toEqual(true);
+
+      expect(
+        isOverlapping(
+          { start: 15, end: 20 },
+          { start: 10, end: 30 }
+        )
+      ).toEqual(true);
+
+      expect(
+        isOverlapping(
+          { start: -10, end: 0 },
+          { start: -5, end: -1 }
+        )
+      ).toEqual(true);
+
+      expect(
+        isOverlapping(
+          { start: -5, end: -1 },
+          { start: -10, end: 0 }
+        )
+      ).toEqual(true);
+
+      expect(
+        isOverlapping(
+          { start: 0, end: 10 },
+          { start: 5, end: 20 }
+        )
+      ).toEqual(true);
+
+      expect(
+        isOverlapping(
+          { start: 5, end: 6 },
+          { start: 5, end: 7 }
+        )
+      ).toEqual(true);
+
+      expect(
+        isOverlapping(
+          { start: 5, end: 7 },
+          { start: 6, end: 6 }
+        )
+      ).toEqual(true);
+
+      expect(
+        isOverlapping(
+          { start: 10, end: 20 },
+          { start: 0, end: 11 }
+        )
+      ).toEqual(true);
+    });
+  });
+});
 
 const splitChunkIntoLinesHelper = (chunk) => {
   return splitChunkIntoLines(chunk).toArray();

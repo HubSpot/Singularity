@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { withRouter } from 'react-router';
+import { withRouter, Link } from 'react-router';
 
 import { TailerProvider } from '../src/components';
 
@@ -61,6 +61,7 @@ class App extends Component {
               Tail!
             </button>
           </form>
+          <Link to="/test">Mocha Tests</Link>
         </div>
         <div className="app-content">
           <TailerProvider getTailerState={(state) => state.tailer}>

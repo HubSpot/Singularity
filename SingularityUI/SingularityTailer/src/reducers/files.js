@@ -132,7 +132,7 @@ const getBookends = (list) => {
 };
 
 // Checks if two chunks/ranges overlap
-const isOverlapping = (c1, c2, inclusive = false) => {
+export const isOverlapping = (c1, c2, inclusive = false) => {
   const maxStart = Math.max(c1.start, c2.start);
   const minEnd = Math.min(c1.end, c2.end);
   if (inclusive) {
