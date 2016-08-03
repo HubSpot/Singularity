@@ -88,7 +88,7 @@ public class SingularityCleaner {
     this.killNonLongRunningTasksInCleanupAfterMillis = TimeUnit.SECONDS.toMillis(configuration.getKillNonLongRunningTasksInCleanupAfterSeconds());
   }
 
-  private boolean shouldKillTask(SingularityTaskCleanup taskCleanup, List<SingularityTaskId> activeTaskIds, List<SingularityTaskId> cleaningTasks, Multiset<SingularityDeployKey> incrementalBounceCleaningTasks) {
+  private boolean shouldKillTask(SingularityTaskCleanup taskCleanup, List<SingularityTaskId> activeTaskIds, List<SingularityTaskId> cleaningTasks, Multiset<SingularityDeployKey> incrementalCleaningTasks) {
     final Optional<SingularityRequestWithState> requestWithState = requestManager.getRequest(taskCleanup.getTaskId().getRequestId());
 
     if (!requestWithState.isPresent()) {
@@ -147,20 +147,21 @@ public class SingularityCleaner {
     }
 
     final String activeDeployId = deployState.get().getActiveDeploy().get().getDeployId();
+    final String matchingTasksDeployId = taskCleanup.getCleanupType() == TaskCleanupType.INCREMENTAL_DEPLOY_CANCELLED || taskCleanup.getCleanupType() == TaskCleanupType.INCREMENTAL_DEPLOY_FAILED ? activeDeployId : taskCleanup.getTaskId().getDeployId();
 
     // check to see if there are enough active tasks out there that have been active for long enough that we can safely shut this task down.
-    final List<SingularityTaskId> matchingTasks = SingularityTaskId.matchingAndNotIn(activeTaskIds, taskCleanup.getTaskId().getRequestId(), activeDeployId, cleaningTasks);
+    final List<SingularityTaskId> matchingTasks = SingularityTaskId.matchingAndNotIn(activeTaskIds, taskCleanup.getTaskId().getRequestId(), matchingTasksDeployId, cleaningTasks);
 
-    // For an incremental bounce, shut down old tasks as new ones are started
+    // For an incremental bounce or incremental deploy cleanup, shut down old tasks as new ones are started
     final SingularityDeployKey key = SingularityDeployKey.fromTaskId(taskCleanup.getTaskId());
-    if (taskCleanup.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
-      int healthyReplacementTasks = getNumHealthyTasks(request, activeDeployId, matchingTasks);
-      if (healthyReplacementTasks + incrementalBounceCleaningTasks.count(key) <= request.getInstancesSafe()) {
-        LOG.trace("Not killing a task {} yet, only {} matching out of a required {}", taskCleanup, matchingTasks.size(), request.getInstancesSafe() - incrementalBounceCleaningTasks.count(key));
+    if (isIncrementalCleanup(taskCleanup)) {
+      int healthyReplacementTasks = getNumHealthyTasks(request, matchingTasksDeployId, matchingTasks);
+      if (healthyReplacementTasks + incrementalCleaningTasks.count(key) <= request.getInstancesSafe()) {
+        LOG.trace("Not killing a task {} yet, only {} matching out of a required {}", taskCleanup, matchingTasks.size(), request.getInstancesSafe() - incrementalCleaningTasks.count(key));
         return false;
       } else {
         LOG.debug("Killing a task {}, {} replacement tasks are healthy", taskCleanup, healthyReplacementTasks);
-        incrementalBounceCleaningTasks.remove(key);
+        incrementalCleaningTasks.remove(key);
         return true;
       }
     } else {
@@ -195,8 +196,14 @@ public class SingularityCleaner {
     }
   }
 
-  private int getNumHealthyTasks(SingularityRequest request, String activeDeployId, List<SingularityTaskId> matchingTasks) {
-    Optional<SingularityDeploy> deploy = deployManager.getDeploy(request.getId(), activeDeployId);
+  private boolean isIncrementalCleanup(SingularityTaskCleanup taskCleanup) {
+    return taskCleanup.getCleanupType() == TaskCleanupType.INCREMENTAL_DEPLOY_FAILED
+      || taskCleanup.getCleanupType() == TaskCleanupType.INCREMENTAL_DEPLOY_CANCELLED
+      || taskCleanup.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE;
+  }
+
+  private int getNumHealthyTasks(SingularityRequest request, String deployId, List<SingularityTaskId> matchingTasks) {
+    Optional<SingularityDeploy> deploy = deployManager.getDeploy(request.getId(), deployId);
 
     List<SingularityTaskId> healthyTasks = deployHealthHelper.getHealthyTasks(request, deploy, matchingTasks, false);
 
@@ -449,14 +456,14 @@ public class SingularityCleaner {
       return;
     }
 
-    final Multiset<SingularityDeployKey> incrementalBounceCleaningTasks = HashMultiset.create(cleanupTasks.size());
+    final Multiset<SingularityDeployKey> incrementalCleaningTasks = HashMultiset.create(cleanupTasks.size());
     final Set<SingularityDeployKey> isBouncing = new HashSet<>(cleanupTasks.size());
 
     final List<SingularityTaskId> cleaningTasks = Lists.newArrayListWithCapacity(cleanupTasks.size());
     for (SingularityTaskCleanup cleanupTask : cleanupTasks) {
       cleaningTasks.add(cleanupTask.getTaskId());
-      if (cleanupTask.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
-        incrementalBounceCleaningTasks.add(SingularityDeployKey.fromTaskId(cleanupTask.getTaskId()));
+      if (isIncrementalCleanup(cleanupTask)) {
+        incrementalCleaningTasks.add(SingularityDeployKey.fromTaskId(cleanupTask.getTaskId()));
       }
       if (cleanupTask.getCleanupType() == TaskCleanupType.BOUNCING || cleanupTask.getCleanupType() == TaskCleanupType.INCREMENTAL_BOUNCE) {
         isBouncing.add(SingularityDeployKey.fromTaskId(cleanupTask.getTaskId()));
@@ -473,7 +480,7 @@ public class SingularityCleaner {
       if (!isValidTask(cleanupTask)) {
         LOG.info("Couldn't find a matching active task for cleanup task {}, deleting..", cleanupTask);
         taskManager.deleteCleanupTask(cleanupTask.getTaskId().getId());
-      } else if (shouldKillTask(cleanupTask, activeTaskIds, cleaningTasks, incrementalBounceCleaningTasks) && checkLBStateAndShouldKillTask(cleanupTask)) {
+      } else if (shouldKillTask(cleanupTask, activeTaskIds, cleaningTasks, incrementalCleaningTasks) && checkLBStateAndShouldKillTask(cleanupTask)) {
         driverManager.killAndRecord(cleanupTask.getTaskId(), cleanupTask.getCleanupType(), cleanupTask.getUser());
 
         taskManager.deleteCleanupTask(cleanupTask.getTaskId().getId());

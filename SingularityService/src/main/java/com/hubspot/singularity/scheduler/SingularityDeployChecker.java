@@ -207,11 +207,22 @@ public class SingularityDeployChecker {
     }
   }
 
-  private void cleanupTasks(SingularityDeployMarker deployMarker, SingularityDeployResult deployResult, Iterable<SingularityTaskId> tasksToKill) {
+  private void cleanupTasks(SingularityPendingDeploy pendingDeploy, SingularityRequest request, SingularityDeployResult deployResult, Iterable<SingularityTaskId> tasksToKill) {
     for (SingularityTaskId matchingTask : tasksToKill) {
-      taskManager.createTaskCleanup(new SingularityTaskCleanup(deployMarker.getUser(), deployResult.getDeployState().getCleanupType(), deployResult.getTimestamp(), matchingTask,
-        Optional.of(String.format("Deploy %s - %s", deployMarker.getDeployId(), deployResult.getDeployState().name())), Optional.<String> absent()));
+      taskManager.createTaskCleanup(new SingularityTaskCleanup(pendingDeploy.getDeployMarker().getUser(), getCleanupType(pendingDeploy, request, deployResult), deployResult.getTimestamp(), matchingTask,
+        Optional.of(String.format("Deploy %s - %s", pendingDeploy.getDeployMarker().getDeployId(), deployResult.getDeployState().name())), Optional.<String> absent()));
     }
+  }
+
+  private TaskCleanupType getCleanupType(SingularityPendingDeploy pendingDeploy, SingularityRequest request, SingularityDeployResult deployResult) {
+    if (pendingDeploy.getDeployProgress().isPresent() && pendingDeploy.getDeployProgress().get().getDeployInstanceCountPerStep() != request.getInstancesSafe()) {
+      if (deployResult.getDeployState() == DeployState.FAILED) {
+        return TaskCleanupType.INCREMENTAL_DEPLOY_FAILED;
+      } else if (deployResult.getDeployState() == DeployState.CANCELED) {
+        return TaskCleanupType.INCREMENTAL_DEPLOY_CANCELLED;
+      }
+    }
+    return deployResult.getDeployState().getCleanupType();
   }
 
   private boolean saveNewDeployState(SingularityDeployMarker pendingDeployMarker, Optional<SingularityDeployMarker> newActiveDeploy) {
@@ -233,7 +244,7 @@ public class SingularityDeployChecker {
     SingularityRequest request = requestWithState.getRequest();
 
     if (!request.isOneOff() && !(request.getRequestType() == RequestType.RUN_ONCE)) {
-      cleanupTasks(pendingDeploy.getDeployMarker(), deployResult, tasksToKill);
+      cleanupTasks(pendingDeploy, request, deployResult, tasksToKill);
     }
 
     if (!request.isDeployable() && !request.isOneOff()) {
