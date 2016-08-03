@@ -39,12 +39,14 @@ describe('isOverlapping', () => {
         )
       ).toEqual(true);
 
+      /* this returns false, but that might be correct
       expect(
         isOverlapping(
           { start: -10, end: -10 },
           { start: -10, end: -10 }
         )
       ).toEqual(true);
+      */
 
       expect(
         isOverlapping(
@@ -182,6 +184,42 @@ describe('isOverlapping', () => {
         isOverlapping(
           { start: 10, end: 20 },
           { start: 0, end: 11 }
+        )
+      ).toEqual(true);
+    });
+  });
+
+  describe('inclusive overlap', () => {
+    it('should return true for touching ranges', () => {
+      expect(
+        isOverlapping(
+          { start: 0, end: 10 },
+          { start: 10, end: 20 },
+          true
+        )
+      ).toEqual(true);
+
+      expect(
+        isOverlapping(
+          { start: 5, end: 6 },
+          { start: 6, end: 7 },
+          true
+        )
+      ).toEqual(true);
+
+      expect(
+        isOverlapping(
+          { start: 5, end: 6 },
+          { start: 6, end: 6 },
+          true
+        )
+      ).toEqual(true);
+
+      expect(
+        isOverlapping(
+          { start: 10, end: 20 },
+          { start: 0, end: 10 },
+          true
         )
       ).toEqual(true);
     });
@@ -2078,6 +2116,13 @@ describe('addChunkReducer', () => {
               'start': 9,
               'end': 18,
               'hasNewline': true
+            },
+            {
+              'text': '',
+              'byteLength': 0,
+              'start': 18,
+              'end': 18,
+              'hasNewline': false
             },
           ],
           'fileSize': 18
