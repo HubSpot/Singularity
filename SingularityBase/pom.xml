@@ -36,7 +36,7 @@
       <artifactId>jackson-datatype-protobuf</artifactId>
     </dependency>
 
-	  <dependency>
+    <dependency>
       <groupId>com.fasterxml.jackson.datatype</groupId>
       <artifactId>jackson-datatype-guava</artifactId>
     </dependency>
