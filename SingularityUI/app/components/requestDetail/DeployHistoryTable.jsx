@@ -51,7 +51,7 @@ const DeployHistoryTable = ({requestId, deploysAPI, fetchDeploys}) => {
           label="User"
           id="user"
           key="user"
-          cellData={({deployMarker}) => deployMarker.user.split('@')[0]}
+          cellData={({deployMarker}) => deployMarker.user && deployMarker.user.split('@')[0] || 'N/A'}
         />
         <Column
           label="Timestamp"
