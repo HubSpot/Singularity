@@ -80,7 +80,7 @@ class RunNowModal extends Component {
             {
               name: 'fileToTail',
               type: FormModal.INPUT_TYPES.STRING,
-              defaultValue: _.rest(config.runningTaskLogPath.split('/'), '1').join('/')
+              defaultValue: config.runningTaskLogPath.indexOf('/') === -1 ? config.runningTaskLogPath : _.rest(config.runningTaskLogPath.split('/'), '1').join('/')
             }
           ]}>
           <span>
