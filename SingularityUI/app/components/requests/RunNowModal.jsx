@@ -15,6 +15,7 @@ class RunNowModal extends Component {
     requestId: PropTypes.string.isRequired,
     runNow: PropTypes.func.isRequired,
     router: PropTypes.object.isRequired,
+    rerun: PropTypes.bool,
     task: PropTypes.object
   };
 
@@ -23,6 +24,10 @@ class RunNowModal extends Component {
     SANDBOX: {label: 'Wait for task to start, then browse its sandbox', value: 'SANDBOX'},
     TAIL: {label: 'Wait for task to start, then start tailing:', value: 'TAIL'}
   };
+
+  defaultCommandLineArgs() {
+    return Utils.maybe(this.props.task, ['taskRequest', 'pendingTask', 'cmdLineArgsList']);
+  }
 
   show() {
     this.refs.runNowModal.show();
@@ -55,7 +60,7 @@ class RunNowModal extends Component {
         />
         <FormModal
           ref="runNowModal"
-          action={<span><Glyphicon glyph="flash" /> {this.props.task ? 'Rerun' : 'Run'} Task</span>}
+          action={<span><Glyphicon glyph="flash" /> {this.props.rerun ? 'Rerun' : 'Run'} Task</span>}
           onConfirm={(data) => this.handleRunNow(data)}
           buttonStyle="primary"
           formElements={[
@@ -63,7 +68,7 @@ class RunNowModal extends Component {
               name: 'commandLineArgs',
               type: FormModal.INPUT_TYPES.TAGS,
               label: 'Additional command line input: (optional)',
-              defaultValue: Utils.maybe(this.props.task, ['taskRequest', 'pendingTask', 'cmdLineArgsList'])
+              defaultValue: this.defaultCommandLineArgs()
             },
             {
               name: 'message',
@@ -84,8 +89,8 @@ class RunNowModal extends Component {
             }
           ]}>
           <span>
-            <p>Are you sure you want to immediately {this.props.task ? 'rerun this task' : 'launch a task for this request'}?</p>
-            <pre>{maybeTaskId || this.props.requestId}</pre>
+            <p>Are you sure you want to immediately {this.props.rerun ? 'rerun this task' : 'launch a task for this request'}?</p>
+            <pre>{this.props.rerun && maybeTaskId || this.props.requestId}</pre>
           </span>
         </FormModal>
       </span>

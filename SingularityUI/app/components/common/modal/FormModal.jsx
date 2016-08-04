@@ -5,6 +5,7 @@ import { Modal, Button, Popover, OverlayTrigger } from 'react-bootstrap';
 import TagsInput from 'react-tagsinput';
 import Duration from '../formItems/Duration';
 import Select from 'react-select';
+import Utils from '../../../utils';
 
 const TAGS_CHARACTER_LIMIT = 75;
 
@@ -36,6 +37,12 @@ export default class FormModal extends React.Component {
     _.bindAll(this, 'hide', 'show', 'confirm');
   }
 
+  componentWillReceiveProps(newProps) {
+    if (_.isEqual(this.state.formState, getDefaultFormState(this.props))) {
+      this.setState({formState: getDefaultFormState(newProps)});
+    }
+  }
+
   static FormItem = (props) => {
     if ((props.element.dependsOn && props.formState[props.element.dependsOn]) || !props.element.dependsOn) {
       return (
@@ -65,14 +72,13 @@ export default class FormModal extends React.Component {
 
   show() {
     this.setState({
-      visible: true,
-      formState: getDefaultFormState(this.props)
+      visible: true
     });
   }
 
   handleFormChange(name, value) {
-    const formState = this.state.formState;
-    formState[name] = value; // Mutates pre-existing state, probably bad
+    const formState = Utils.deepClone(this.state.formState);
+    formState[name] = value;
     this.setState({ formState });
   }
 

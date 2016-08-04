@@ -5,9 +5,10 @@ export const getClickComponent = (component, doFirst) => (
     React.cloneElement(child, {
       onClick: () => {
         if (doFirst) {
-          return doFirst().then(() => component.refs.modal.getWrappedInstance().show());
+          doFirst().then(() => component.refs.modal.getWrappedInstance().show());
+        } else {
+          component.refs.modal.getWrappedInstance().show();
         }
-        return component.refs.modal.getWrappedInstance().show();
       }
     })
   ))
