@@ -8,17 +8,28 @@ import Select from 'react-select';
 
 const TAGS_CHARACTER_LIMIT = 75;
 
+function getDefaultFormState(props) {
+  const formState = {};
+  props.formElements.forEach((formElement) => {
+    const { defaultValue } = formElement;
+    if (defaultValue) {
+      if (Array.isArray(defaultValue)) {
+        formState[formElement.name] = defaultValue;
+      } else {
+        formState[formElement.name] = formElement.defaultValue.toString();
+      }
+    }
+  });
+  return formState;
+}
+
 export default class FormModal extends React.Component {
   constructor(props) {
     super(props);
-    const formState = {};
-    props.formElements.forEach((formElement) => {
-      formState[formElement.name] = formElement.defaultValue && formElement.defaultValue.toString();
-    });
 
     this.state = {
       visible: false,
-      formState,
+      formState: getDefaultFormState(props),
       errors: {}
     };
 
@@ -54,13 +65,14 @@ export default class FormModal extends React.Component {
 
   show() {
     this.setState({
-      visible: true
+      visible: true,
+      formState: getDefaultFormState(this.props)
     });
   }
 
   handleFormChange(name, value) {
     const formState = this.state.formState;
-    formState[name] = value;
+    formState[name] = value; // Mutates pre-existing state, probably bad
     this.setState({ formState });
   }
 
@@ -375,7 +387,7 @@ FormModal.propTypes = {
     label: React.PropTypes.string,
     isRequired: React.PropTypes.bool,
     values: React.PropTypes.array,
-    defaultValue: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.bool, React.PropTypes.number]),
+    defaultValue: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.bool, React.PropTypes.number, React.PropTypes.array]),
     validateField: React.PropTypes.func, // String -> String, return field validation error or falsey value if valid
     dependsOn: React.PropTypes.string // Only show this item if the other item (referenced by name) has a truthy value
   })).isRequired

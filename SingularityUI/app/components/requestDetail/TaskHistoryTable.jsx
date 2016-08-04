@@ -9,14 +9,14 @@ import { Link } from 'react-router';
 import Utils from '../../utils';
 
 import { FetchTaskHistoryForRequest } from '../../actions/api/history';
-
+import RunNowButton from '../requests/RunNowButton';
 import Section from '../common/Section';
 
 import UITable from '../common/table/UITable';
 import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
 
-const TaskHistoryTable = ({requestId, tasksAPI, fetchTaskHistoryForRequest}) => {
+const TaskHistoryTable = ({requestId, requestParent, tasksAPI, fetchTaskHistoryForRequest}) => {
   const tasks = tasksAPI ? tasksAPI.data : [];
   const isFetching = tasksAPI ? tasksAPI.isFetching : false;
   const emptyTableMessage = (Utils.api.isFirstLoad(tasksAPI)
@@ -45,6 +45,12 @@ const TaskHistoryTable = ({requestId, tasksAPI, fetchTaskHistoryForRequest}) => 
   const logTooltip = (
     <ToolTip id="log">
       Logs
+    </ToolTip>
+  );
+
+  const runNowTooltip = (
+    <ToolTip id="run-now">
+      Rerun This Task
     </ToolTip>
   );
 
@@ -112,6 +118,15 @@ const TaskHistoryTable = ({requestId, tasksAPI, fetchTaskHistoryForRequest}) => 
                   <Glyphicon glyph="file" />
                 </Link>
               </OverlayTrigger>
+              {Utils.request.canBeRunNow(requestParent) && (
+                <RunNowButton requestId={requestId} taskId={task.taskId.id}>
+                  <OverlayTrigger placement="top" id="view-run-now-overlay" overlay={runNowTooltip}>
+                    <a title="Rerun This Task">
+                      <Glyphicon glyph="repeat" />
+                    </a>
+                  </OverlayTrigger>
+                </RunNowButton>
+              )}
               <JSONButton object={task}>
                 {'{ }'}
               </JSONButton>
@@ -125,6 +140,7 @@ const TaskHistoryTable = ({requestId, tasksAPI, fetchTaskHistoryForRequest}) => 
 
 TaskHistoryTable.propTypes = {
   requestId: PropTypes.string.isRequired,
+  requestParent: PropTypes.object,
   tasksAPI: PropTypes.object.isRequired,
   fetchTaskHistoryForRequest: PropTypes.func.isRequired
 };
@@ -134,6 +150,7 @@ const mapDispatchToProps = (dispatch) => ({
 });
 
 const mapStateToProps = (state, ownProps) => ({
+  requestParent: Utils.maybe(state.api.request, [ownProps.requestId, 'data']),
   tasksAPI: Utils.maybe(
     state.api.taskHistoryForRequest,
     [ownProps.requestId]

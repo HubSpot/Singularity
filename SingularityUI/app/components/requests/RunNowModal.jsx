@@ -8,12 +8,14 @@ import TaskLauncher from '../common/TaskLauncher';
 import FormModal from '../common/modal/FormModal';
 
 import Messenger from 'messenger';
+import Utils from '../../utils';
 
 class RunNowModal extends Component {
   static propTypes = {
     requestId: PropTypes.string.isRequired,
     runNow: PropTypes.func.isRequired,
-    router: PropTypes.object.isRequired
+    router: PropTypes.object.isRequired,
+    task: PropTypes.object
   };
 
   static AFTER_TRIGGER = {
@@ -44,6 +46,7 @@ class RunNowModal extends Component {
   }
 
   render() {
+    const maybeTaskId = Utils.maybe(this.props.task, ['taskId', 'id']);
     return (
       <span>
         <TaskLauncher
@@ -52,14 +55,15 @@ class RunNowModal extends Component {
         />
         <FormModal
           ref="runNowModal"
-          action={<span><Glyphicon glyph="flash" /> Run Task</span>}
+          action={<span><Glyphicon glyph="flash" /> {this.props.task ? 'Rerun' : 'Run'} Task</span>}
           onConfirm={(data) => this.handleRunNow(data)}
           buttonStyle="primary"
           formElements={[
             {
               name: 'commandLineArgs',
               type: FormModal.INPUT_TYPES.TAGS,
-              label: 'Additional command line input: (optional)'
+              label: 'Additional command line input: (optional)',
+              defaultValue: Utils.maybe(this.props.task, ['taskRequest', 'pendingTask', 'cmdLineArgsList'])
             },
             {
               name: 'message',
@@ -80,8 +84,8 @@ class RunNowModal extends Component {
             }
           ]}>
           <span>
-            <p>Are you sure you want to immediately launch a task for this request?</p>
-            <pre>{this.props.requestId}</pre>
+            <p>Are you sure you want to immediately {this.props.task ? 'rerun this task' : 'launch a task for this request'}?</p>
+            <pre>{maybeTaskId || this.props.requestId}</pre>
           </span>
         </FormModal>
       </span>
