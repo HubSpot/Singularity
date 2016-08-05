@@ -1,0 +1,6 @@
+executor:
+
+  dockerAuthConfig:
+    username: dockeruser
+    password: dockerpassword
+    serverAddress: https://private.docker.registry/path
