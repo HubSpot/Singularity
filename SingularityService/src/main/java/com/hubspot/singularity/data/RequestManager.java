@@ -325,13 +325,17 @@ public class RequestManager extends CuratorAsyncManager {
     createCleanupRequest(new SingularityRequestCleanup(user, RequestCleanupType.DELETING, now, Optional.of(Boolean.TRUE), request.getId(), Optional.<String> absent(),
         Optional.<Boolean> absent(), message, actionId));
 
-    saveHistory(new SingularityRequestHistory(now, user, RequestHistoryType.DELETED, request, message));
+    saveHistory(new SingularityRequestHistory(now, user, RequestHistoryType.DELETE_REQUESTED, request, message));
 
     SingularityDeleteResult deleteResult = delete(getRequestPath(request.getId()));
 
     LOG.info("Request {} deleted ({}) by {} - {}", request.getId(), deleteResult, user, message);
 
     return deleteResult;
+  }
+
+  public SingularityCreateResult markAsDeleted(SingularityRequest request, Optional<String> user, Optional<String> message) {
+    return saveHistory(new SingularityRequestHistory(System.currentTimeMillis(), user, RequestHistoryType.DELETED, request, message));
   }
 
   public List<SingularityRequestLbCleanup> getLbCleanupRequests() {
