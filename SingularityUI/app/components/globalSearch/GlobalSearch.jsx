@@ -104,7 +104,7 @@ class GlobalSearch extends React.Component {
   }
 
   render() {
-    const options = _.map(this.props.requests, (r) => r.request.id);
+    const options = _.map(this.props.requests, (request) => request.request.id);
 
     const globalSearchClasses = classNames('global-search', {
       'global-search-active': this.props.visible

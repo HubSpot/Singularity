@@ -25,11 +25,11 @@ class Column extends Component {
     label: '',
     sortable: false,
     sortData: (cellData) => cellData,
-    sortFunc: (a, b) => {
-      if (a < b) {
+    sortFunc: (thingOne, thingTwo) => {
+      if (thingOne < thingTwo) {
         return -1;
       }
-      if (a > b) {
+      if (thingOne > thingTwo) {
         return 1;
       }
       return 0;

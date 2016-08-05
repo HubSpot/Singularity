@@ -13,10 +13,10 @@ export default createSelector([getRequests, getFilter], (requests, filter) => {
   let stateFilter = null;
   switch (filter.state) {
     case 'activeDeploy':
-      stateFilter = (r) => r.hasActiveDeploy;
+      stateFilter = (request) => request.hasActiveDeploy;
       break;
     case 'noDeploy':
-      stateFilter = (r) => !r.hasActiveDeploy;
+      stateFilter = (request) => !request.hasActiveDeploy;
       break;
     default:
       break;
@@ -27,13 +27,13 @@ export default createSelector([getRequests, getFilter], (requests, filter) => {
 
   // Filter by request type
   if (!_.contains(['pending', 'cleanup'], filter.type)) {
-    filteredRequests = _.filter(filteredRequests, (r) => r.request && _.contains(filter.subFilter, r.request.requestType));
+    filteredRequests = _.filter(filteredRequests, (request) => request.request && _.contains(filter.subFilter, request.request.requestType));
   }
 
   // Filter by glob or fuzzy string
   if (filter.searchFilter) {
-    const id = {extract: (r) => r.id || ''};
-    const user = {extract: (r) => `${r.hasActiveDeploy ? r.requestDeployState.activeDeploy.user : ''}`};
+    const id = {extract: (request) => request.id || ''};
+    const user = {extract: (request) => `${request.hasActiveDeploy ? request.requestDeployState.activeDeploy.user : ''}`};
 
     if (Utils.isGlobFilter(filter.searchFilter)) {
       const res1 = _.filter(filteredRequests, (request) => {
@@ -44,10 +44,10 @@ export default createSelector([getRequests, getFilter], (requests, filter) => {
       });
       filteredRequests = _.union(res1, res2).reverse();
     } else {
-      _.each(filteredRequests, (r) => {r.id = id.extract(r);});
+      _.each(filteredRequests, (request) => {request.id = id.extract(request);});
       const res1 = fuzzy.filter(filter.searchFilter, filteredRequests, user);
       const res2 = fuzzy.filter(filter.searchFilter, filteredRequests, id);
-      filteredRequests = _.uniq(_.pluck(_.sortBy(_.union(res1, res2), (t) => Utils.fuzzyAdjustScore(filter.searchFilter, t)), 'original').reverse());
+      filteredRequests = _.uniq(_.pluck(_.sortBy(_.union(res1, res2), (task) => Utils.fuzzyAdjustScore(filter.searchFilter, task)), 'original').reverse());
     }
   }
 

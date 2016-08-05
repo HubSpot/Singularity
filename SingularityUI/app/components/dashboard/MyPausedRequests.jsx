@@ -13,13 +13,13 @@ const MyPausedRequests = ({userRequests}) => {
     <div className="empty-table-message"><p>No paused requests</p></div>
   );
 
-  const pausedRequests = userRequests.filter((r) => r.state === 'PAUSED');
+  const pausedRequests = userRequests.filter((request) => request.state === 'PAUSED');
 
   if (pausedRequests.length > 0) {
     pausedRequestsSection = (
       <UITable
         data={pausedRequests}
-        keyGetter={(r) => r.request.id}
+        keyGetter={(request) => request.request.id}
         asyncSort={true}
         paginated={true}
         rowChunkSize={10}

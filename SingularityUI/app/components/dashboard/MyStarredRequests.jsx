@@ -17,7 +17,7 @@ const MyStarredRequests = ({starredRequests}) => {
     starredRequestsSection = (
       <UITable
         data={starredRequests}
-        keyGetter={(r) => r.request.id}
+        keyGetter={(request) => request.request.id}
         asyncSort={true}
         paginated={true}
         rowChunkSize={10}

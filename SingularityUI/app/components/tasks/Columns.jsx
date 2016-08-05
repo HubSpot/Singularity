@@ -154,7 +154,7 @@ export const CPUs = (
     id="cpus"
     key="cpus"
     cellData={
-      (rowData) => _.find(rowData.mesosTask.resources, (r) => r.name === 'cpus').scalar.value
+      (rowData) => _.find(rowData.mesosTask.resources, (resource) => resource.name === 'cpus').scalar.value
     }
     cellRender={
       (cellData) => (
@@ -171,7 +171,7 @@ export const Memory = (
     id="memory"
     key="memory"
     cellData={
-      (rowData) => _.find(rowData.mesosTask.resources, (r) => r.name === 'mem').scalar.value
+      (rowData) => _.find(rowData.mesosTask.resources, (resource) => resource.name === 'mem').scalar.value
     }
     cellRender={
       (cellData) => (

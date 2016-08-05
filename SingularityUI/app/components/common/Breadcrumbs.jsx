@@ -4,18 +4,18 @@ import { Link } from 'react-router';
 export default class Breadcrumbs extends React.Component {
 
   renderItems() {
-    return this.props.items.map((i, n) => {
-      if (i.link) {
+    return this.props.items.map((item, key) => {
+      if (item.link) {
         return (
-          <li key={n}>{i.label} <Link to={i.link}>{i.text}</Link></li>
+          <li key={key}>{item.label} <Link to={item.link}>{item.text}</Link></li>
         );
-      } else if (i.onClick) {
+      } else if (item.onClick) {
         return (
-          <li key={n}>{i.label} <a onClick={i.onClick}>{i.text}</a></li>
+          <li key={key}>{item.label} <a onClick={item.onClick}>{item.text}</a></li>
         );
       }
       return (
-        <li key={n}>{i.label} {i.text}</li>
+        <li key={key}>{item.label} {item.text}</li>
       );
     });
   }

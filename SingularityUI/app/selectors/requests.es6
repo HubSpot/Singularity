@@ -1,7 +1,6 @@
 import { createSelector } from 'reselect';
 import micromatch from 'micromatch';
 import fuzzy from 'fuzzy';
-import _ from 'underscore';
 
 import Utils from '../utils';
 
@@ -10,8 +9,8 @@ const getUserAPI = (state) => state.api.user;
 const getSearchFilter = (state) => state.ui.requestsPage;
 
 function findRequestIds(requests) {
-  return _.map(requests, (r) => {
-    return _.extend({}, r, {id: r.request ? r.request.id : r.requestId});
+  return _.map(requests, (request) => {
+    return _.extend({}, request, {id: request.request ? request.request.id : request.requestId});
   });
 }
 
@@ -21,7 +20,7 @@ export const getStarredRequests = createSelector(
   [getStarred, getRequestsAPI],
   (starredData, requestsAPI) => {
     const requests = findRequestIds(requestsAPI.data);
-    return requests.filter((r) => starredData.has(r.request.id));
+    return requests.filter((request) => starredData.has(request.request.id));
   }
 );
 
@@ -36,9 +35,9 @@ export const getUserRequests = createSelector(
 
     const requests = findRequestIds(requestsAPI.data);
 
-    return requests.filter((r) => {
+    return requests.filter((request) => {
       const activeDeployUser = Utils.maybe(
-        r,
+        request,
         ['requestDeployState', 'activeDeploy', 'user']
       );
 
@@ -49,7 +48,7 @@ export const getUserRequests = createSelector(
         }
       }
 
-      const requestOwners = r.owners;
+      const requestOwners = request.owners;
       if (requestOwners === undefined) {
         return false;
       }
@@ -78,8 +77,8 @@ export const getUserRequestTotals = createSelector(
       SERVICE: 0
     };
 
-    for (const r of userRequests) {
-      userRequestTotals[r.request.requestType] += 1;
+    for (const request of userRequests) {
+      userRequestTotals[request.request.requestType] += 1;
     }
 
     return userRequestTotals;
@@ -93,19 +92,19 @@ export const getFilteredRequests = createSelector(
 
     // filter by type
     if (searchFilter.typeFilter !== 'ALL') {
-      filteredRequests = filteredRequests.filter((r) => {
-        return searchFilter.typeFilter === r.request.requestType;
+      filteredRequests = filteredRequests.filter((request) => {
+        return searchFilter.typeFilter === request.request.requestType;
       });
     }
 
     // filter by state
-    filteredRequests = filteredRequests.filter((r) => {
-      return searchFilter.stateFilter.indexOf(r.state) > -1;
+    filteredRequests = filteredRequests.filter((request) => {
+      return searchFilter.stateFilter.indexOf(request.state) > -1;
     });
 
-    const getUser = (r) => {
-      if ('requestDeployState' in r && 'activeDeploy' in r.requestDeployState) {
-        return r.requestDeployState.activeDeploy.user || '';
+    const getUser = (request) => {
+      if ('requestDeployState' in request && 'activeDeploy' in request.requestDeployState) {
+        return request.requestDeployState.activeDeploy.user || '';
       }
       return null;
     };
@@ -116,11 +115,11 @@ export const getFilteredRequests = createSelector(
       return filteredRequests;
     }
     if (Utils.isGlobFilter(searchFilter.textFilter)) {
-      const byId = filteredRequests.filter((r) => {
-        return micromatch.any(r.request.id, `${searchFilter.textFilter}*`);
+      const byId = filteredRequests.filter((request) => {
+        return micromatch.any(request.request.id, `${searchFilter.textFilter}*`);
       });
-      const byUser = filteredRequests.filter((r) => {
-        const user = getUser(r);
+      const byUser = filteredRequests.filter((request) => {
+        const user = getUser(request);
         if (user !== null) {
           return micromatch.any(user, `${searchFilter.textFilter}*`);
         }
@@ -137,7 +136,7 @@ export const getFilteredRequests = createSelector(
         searchFilter.textFilter,
         filteredRequests,
         {
-          extract: (r) => r.request.id
+          extract: (request) => request.request.id
         }
       );
 
@@ -145,7 +144,7 @@ export const getFilteredRequests = createSelector(
         searchFilter.textFilter,
         filteredRequests,
         {
-          extract: (r) => getUser(r) || ''
+          extract: (request) => getUser(request) || ''
         }
       );
 
@@ -153,8 +152,8 @@ export const getFilteredRequests = createSelector(
         _.pluck(
           _.sortBy(
             _.union(byUser, byId),
-            (r) => {
-              return Utils.fuzzyAdjustScore(searchFilter.textFilter, r);
+            (request) => {
+              return Utils.fuzzyAdjustScore(searchFilter.textFilter, request);
             }
           ),
           'original'

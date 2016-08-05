@@ -29,7 +29,7 @@ export default class Duration extends React.Component {
             min={0}
             step={1}
             value={this.props.value ? duration.hours() : ''}
-            onChange={(e) => this.handleChange(e)}
+            onChange={(event) => this.handleChange(event)}
           />
         </div>
         <div className="form-group col-md-4">
@@ -42,7 +42,7 @@ export default class Duration extends React.Component {
             min={0}
             step={1}
             value={this.props.value ? duration.minutes() : ''}
-            onChange={(e) => this.handleChange(e)}
+            onChange={(event) => this.handleChange(event)}
           />
         </div>
         <div className="form-group col-md-4">
@@ -55,7 +55,7 @@ export default class Duration extends React.Component {
             min={0}
             step={1}
             value={this.props.value ? duration.seconds() : ''}
-            onChange={(e) => this.handleChange(e)}
+            onChange={(event) => this.handleChange(event)}
           />
         </div>
       </div>

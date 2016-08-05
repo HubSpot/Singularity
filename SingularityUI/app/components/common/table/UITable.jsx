@@ -1,7 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import Waypoint from 'react-waypoint';
 import classNames from 'classnames';
-import _ from 'underscore';
 
 import BootstrapTable from 'react-bootstrap/lib/Table';
 import { Pagination } from 'react-bootstrap';
@@ -165,10 +164,10 @@ class UITable extends Component {
     }
 
     const { cellData, sortData } = sortCol.props;
-    const sorted = data.concat().sort((a, b) => {
+    const sorted = data.concat().sort((thingOne, thingTwo) => {
       return sortCol.props.sortFunc(
-        sortData(cellData(a), a),
-        sortData(cellData(b), b)
+        sortData(cellData(thingOne), thingOne),
+        sortData(cellData(thingTwo), thingTwo)
       );
     });
 
