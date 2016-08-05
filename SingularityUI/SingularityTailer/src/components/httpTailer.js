@@ -16,8 +16,6 @@ const httpTailer = (WrappedLog, path) => {
       this.initializeFile = this.initializeFile.bind(this);
       this.loadLines = this.loadLines.bind(this);
       this.tailLog = this.tailLog.bind(this);
-
-      this.path = path;
     }
 
     initializeFile() {
@@ -82,7 +80,7 @@ const httpTailer = (WrappedLog, path) => {
     config: Selectors.getConfig(state, ownProps)
   });
 
-  const mapDispatchToProps = (dispatch, ownProps) => {
+  const mapDispatchToProps = (dispatch) => {
     return {
       fetchChunk: (start, end) => dispatch(httpFetchChunk(
         path, // tailerId

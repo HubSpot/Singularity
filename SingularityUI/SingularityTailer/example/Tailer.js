@@ -1,12 +1,14 @@
 import React, { PropTypes } from 'react';
-import { SandboxTailer } from '../src/components';
+import { Log, sandboxTailer } from '../src/components';
 
 const Tailer = ({params}) => {
   const taskId = params.taskId;
   const path = params.splat;
 
+  const SandboxTailer = sandboxTailer(Log, taskId, path);
+
   return (
-    <SandboxTailer taskId={taskId} path={path} minLines={10} />
+    <SandboxTailer />
   );
 };
 

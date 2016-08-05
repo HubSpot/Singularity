@@ -15,6 +15,7 @@ class Log extends Component {
 
     this.isRowLoaded = this.isRowLoaded.bind(this);
     this.loadMoreRows = this.loadMoreRows.bind(this);
+    this.onScroll = this.onScroll.bind(this);
   }
   componentDidMount() {
     this.props.initializeFile();
@@ -40,6 +41,17 @@ class Log extends Component {
     this.props.loadLines(startIndex, stopIndex);
   }
 
+  onScroll({clientHeight, scrollHeight, scrollTop}) {
+    console.log('onScroll', clientHeight, scrollHeight, scrollTop, scrollHeight - scrollTop - clientHeight);
+
+    // if at the bottom of the scroll window
+    if (scrollHeight - scrollTop - clientHeight === 0) {
+      if (!this.props.lines.size || this.props.lines.last().isMissingMarker) {
+
+      }
+    }
+  }
+
   render() {
     const { props } = this;
     return (
@@ -51,6 +63,7 @@ class Log extends Component {
             remoteRowCount={props.isLoaded ? props.lines.size + 1 : 0}
             isRowLoaded={this.isRowLoaded}
             loadMoreRows={this.loadMoreRows}
+            onScroll={this.onScroll}
           />
         </div>
       </section>

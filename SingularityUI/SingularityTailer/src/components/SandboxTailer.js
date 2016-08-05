@@ -3,163 +3,136 @@ import { connect } from 'react-redux';
 
 import Immutable from 'immutable';
 
+import { sandboxFetchChunk, sandboxFetchLength } from '../actions';
 import connectToTailer from './connectToTailer';
 
-import { sandboxGetLength, sandboxFetchChunk } from '../actions';
 import * as Selectors from '../selectors';
-import LogLines from './LogLines';
 
-class SandboxTailer extends Component {
-  constructor(props, context) {
-    super(props, context);
+const sandboxId = (Wrapped, taskId, path) => {
+  return (
+    <Wrapped
+      tailerId={`${taskId}/${path}`}
+      taskId={taskId}
+      path={path}
+    />
+  );
+};
 
-    this.componentDidMount = this.componentDidMount.bind(this);
-    this.isRowLoaded = this.isRowLoaded.bind(this);
-    this.loadMoreRows = this.loadMoreRows.bind(this);
-    this.onScroll = this.onScroll.bind(this);
+const sandboxTailer = (WrappedLog) => {
+  class SandboxTailer extends Component {
+    constructor() {
+      super();
 
-    this.remoteRowCount = this.remoteRowCount.bind(this);
+      this.initializeFile = this.initializeFile.bind(this);
+      this.loadLines = this.loadLines.bind(this);
+      this.tailLog = this.tailLog.bind(this);
 
-    this.sandboxMaxBytes = 65535;
-  }
+      this.sandboxMaxBytes = 65535;
+    }
 
-  componentDidMount() {
-    this.props.fetchLength();
-  }
-
-  componentDidUpdate(prevProps) {
-    if (this.props.tailerId !== prevProps.tailerId) {
+    initializeFile() {
       this.props.fetchLength();
     }
-  }
 
-  isRowLoaded({index}) {
-    return (
-      index < this.props.lines.size
-      && (
-        !this.props.lines.get(index).isMissingMarker
-        || this.props.lines.get(index).isLoading // if loading don't try again
-      )
-    );
-  }
+    loadLines(startIndex, stopIndex) {
+      const { lines, fetchChunk } = this.props;
 
-  loadMoreRows({startIndex, stopIndex}) {
-    const { lines, fetchChunk } = this.props;
+      let byteRangeStart;
+      let byteRangeEnd;
+      if (startIndex < lines.size) {
+        byteRangeStart = lines.get(startIndex).start;
+      } else if (lines.size === 0) {
+        byteRangeStart = 0;
+      } else {
+        byteRangeStart = lines.last().end;
+      }
 
-    let byteRangeStart;
-    let byteRangeEnd;
-    if (startIndex < lines.size) {
-      byteRangeStart = lines.get(startIndex).start;
-    } else {
-      byteRangeStart = lines.last().end;
-    }
+      if (stopIndex < lines.size) {
+        byteRangeEnd = lines.get(stopIndex).end;
+      } else {
+        byteRangeEnd = byteRangeStart + this.sandboxMaxBytes;
+      }
 
-    if (stopIndex < lines.size) {
-      byteRangeEnd = lines.get(stopIndex).end;
-    } else {
-      byteRangeEnd = byteRangeStart + this.sandboxMaxBytes;
-    }
-
-    // if already in flight, don't request again
-    if (!this.props.requests.has(byteRangeStart)) {
-      fetchChunk(byteRangeStart, byteRangeEnd);
-    }
-  }
-
-  onScroll({clientHeight, scrollHeight, scrollTop}) {
-    console.log('onScroll', clientHeight, scrollHeight, scrollTop, scrollHeight - scrollTop - clientHeight);
-
-    // if at the bottom of the scroll window
-    if (scrollHeight - scrollTop - clientHeight === 0) {
-      if (!this.props.lines.size || this.props.lines.last().isMissingMarker) {
-
+      // if already in flight, don't request again
+      if (!this.props.requests.has(byteRangeStart)) {
+        fetchChunk(byteRangeStart, byteRangeEnd);
       }
     }
+
+    tailLog() {
+
+    }
+
+    render() {
+      return (
+        <WrappedLog
+          tailerId={this.props.tailerId}
+          initializeFile={this.initializeFile}
+          loadLines={this.loadLines}
+          tailLog={this.tailLog}
+        />
+      );
+    }
   }
 
-  remoteRowCount() {
-    const { isLoaded, fileSize } = this.props;
-    return Math.max(
-      Math.ceil((isLoaded && fileSize || 0) / 150),
-      (isLoaded && fileSize || 0)
-    ); // real solid math
-  }
-
-  render() {
-    return (
-      <section className="log-pane">
-        <div className="log-line-wrapper" style={{minHeight: this.props.minLines * 14}}>
-          <LogLines
-            {...this.props}
-            onScroll={this.onScroll}
-            isRowLoaded={this.isRowLoaded}
-            loadMoreRows={this.loadMoreRows}
-            remoteRowCount={this.remoteRowCount()}
-          />
-        </div>
-      </section>
-    );
-  }
-}
-
-SandboxTailer.propTypes = {
-  tailerId: PropTypes.string.isRequired,
-  fetchLength: PropTypes.func.isRequired,
-  fetchChunk: PropTypes.func.isRequired,
-  isLoaded: PropTypes.bool.isRequired,
-  fileSize: PropTypes.number,
-  lines: PropTypes.instanceOf(Immutable.List),
-  requests: PropTypes.instanceOf(Immutable.Map),
-  minLines: PropTypes.number
-};
-
-SandboxTailer.defaultProps = {
-  minLines: 10
-};
-
-const mapStateToProps = (state, ownProps) => {
-  const tailerId = `${ownProps.taskId}/${ownProps.path}`;
-  const tailerState = ownProps.getTailerState(state);
-  const file = tailerState.files[tailerId];
-
-  const getLines = Selectors.makeGetEnhancedLines();
-
-  const propsPlusTailerId = {
-    ...ownProps,
-    tailerId
+  SandboxTailer.propTypes = {
+    tailerId: PropTypes.string.isRequired,
+    taskId: PropTypes.string.isRequired,
+    path: PropTypes.string.isRequired,
+    lines: PropTypes.instanceOf(Immutable.List).isRequired,
+    requests: PropTypes.instanceOf(Immutable.Map).isRequired,
+    fetchChunk: PropTypes.func.isRequired
   };
 
-  return {
-    tailerId,
-    isLoaded: !!file,
-    fileSize: file && file.fileSize,
-    lines: getLines(state, propsPlusTailerId),
-    requests: Selectors.getRequests(state, propsPlusTailerId),
-    config: tailerState.config
-  };
-};
+  const mapStateToProps = (state, ownProps) => ({
+    isLoaded: Selectors.getIsLoaded(state, ownProps),
+    fileSize: Selectors.getFileSize(state, ownProps),
+    lines: Selectors.getLines(state, ownProps),
+    requests: Selectors.getRequests(state, ownProps),
+    config: Selectors.getConfig(state, ownProps)
+  });
 
-const mapDispatchToProps = (dispatch, ownProps) => {
-  const tailerId = `${ownProps.taskId}/${ownProps.path}`;
-  return {
-    fetchLength: (config) => dispatch(sandboxGetLength(tailerId, ownProps.taskId, ownProps.path, config)),
-    fetchChunk: (start, end, config) => dispatch(
-      sandboxFetchChunk(tailerId, ownProps.taskId, ownProps.path, start, end, config)
+  const mapDispatchToProps = (dispatch, ownProps) => ({
+    fetchLength: (config) => dispatch(
+      sandboxFetchLength(
+        ownProps.tailerId,
+        ownProps.taskId,
+        ownProps.path,
+        config
+      )
     ),
-  };
-};
+    fetchChunk: (start, end, config) => dispatch(
+      sandboxFetchChunk(
+        ownProps.tailerId,
+        ownProps.taskId,
+        ownProps.path,
+        start,
+        end,
+        config
+      )
+    )
+  });
 
-const mergeProps = (stateProps, dispatchProps, ownProps) => {
-  return {
+  const mergeProps = (stateProps, dispatchProps, ownProps) => ({
     ...stateProps,
     ...ownProps,
     fetchLength: () => dispatchProps.fetchLength(stateProps.config),
-    fetchChunk: (start, end) => dispatchProps.fetchChunk(start, end, stateProps.config),
-  };
+    fetchChunk: (start, end) => dispatchProps.fetchChunk(
+      start,
+      end,
+      stateProps.config
+    ),
+  });
+
+  return connectToTailer(connect(
+    mapStateToProps,
+    mapDispatchToProps,
+    mergeProps
+  )(SandboxTailer));
 };
 
-export default connectToTailer(connect(
-  mapStateToProps,
-  mapDispatchToProps,
-  mergeProps
-)(SandboxTailer));
+export default (c, taskId, path) => () => sandboxId(
+  sandboxTailer(c),
+  taskId,
+  path
+);

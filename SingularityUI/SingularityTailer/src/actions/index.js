@@ -120,7 +120,7 @@ const SANDBOX_FETCH_LENGTH = `${frameworkName}_SANDBOX_FETCH_LENGTH`;
 export const SANDBOX_FETCH_LENGTH_STARTED = `${SANDBOX_FETCH_LENGTH}_STARTED`;
 export const SANDBOX_FETCH_LENGTH_ERROR = `${SANDBOX_FETCH_LENGTH}_ERROR`;
 
-export const sandboxGetLength = (id, taskId, path, config) => {
+export const sandboxFetchLength = (id, taskId, path, config) => {
   return (dispatch) => {
     dispatch({
       type: SANDBOX_FETCH_LENGTH_STARTED,
