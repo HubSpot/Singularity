@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import javax.ws.rs.WebApplicationException;
+
 import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.SlaveID;
 import org.apache.mesos.Protos.TaskID;
@@ -40,6 +42,7 @@ import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.RequestType;
+import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityDeployProgress;
@@ -3117,6 +3120,66 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
     scheduler.drainPendingQueue(stateCacheProvider.get());
 
     Assert.assertEquals(newScheduleQuartz, requestManager.getRequest(requestId).get().getRequest().getQuartzScheduleSafe());
+  }
+
+  @Test(expected = WebApplicationException.class)
+  public void testInvalidQuartzTimeZoneErrors() {
+    SingularityRequest req = new SingularityRequestBuilder(requestId, RequestType.SCHEDULED)
+        .setQuartzSchedule(Optional.of("*/1 * * * * ? 2020"))
+        .setScheduleType(Optional.of(ScheduleType.QUARTZ))
+        .setScheduleTimeZone(Optional.of("invalid_timezone"))
+        .build();
+
+    requestResource.postRequest(req);
+  }
+
+  @Test
+  public void testDifferentQuartzTimeZones() {
+    final Optional<String> schedule = Optional.of("* 30 14 22 3 ? 2083");
+
+    SingularityRequest requestEST = new SingularityRequestBuilder("est_id", RequestType.SCHEDULED)
+        .setSchedule(schedule)
+        .setScheduleType(Optional.of(ScheduleType.QUARTZ))
+        .setScheduleTimeZone(Optional.of("EST")) // fixed in relation to GMT
+        .build();
+
+    SingularityRequest requestGMT = new SingularityRequestBuilder("gmt_id", RequestType.SCHEDULED)
+        .setSchedule(schedule)
+        .setScheduleType(Optional.of(ScheduleType.QUARTZ))
+        .setScheduleTimeZone(Optional.of("GMT"))
+        .build();
+
+    requestResource.postRequest(requestEST);
+    requestResource.postRequest(requestGMT);
+
+    SingularityDeploy deployEST = new SingularityDeployBuilder(requestEST.getId(), "est_deploy_id")
+        .setCommand(Optional.of("sleep 1"))
+        .build();
+
+    SingularityDeploy deployGMT = new SingularityDeployBuilder(requestGMT.getId(), "gmt_deploy_id")
+        .setCommand(Optional.of("sleep 1"))
+        .build();
+
+    deployResource.deploy(new SingularityDeployRequest(deployEST, Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<SingularityRequest>absent()));
+    deployResource.deploy(new SingularityDeployRequest(deployGMT, Optional.<Boolean>absent(), Optional.<String>absent(), Optional.<SingularityRequest>absent()));
+
+    deployChecker.checkDeploys();
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+
+    final long nextRunEST;
+    final long nextRunGMT;
+    final long fiveHoursInMilliseconds = TimeUnit.HOURS.toMillis(5);
+    final List<SingularityPendingTaskId> pendingTaskIds = taskManager.getPendingTaskIds();
+    if (pendingTaskIds.get(0).getRequestId().equals(requestEST.getId())) {
+      nextRunEST = pendingTaskIds.get(0).getNextRunAt();
+      nextRunGMT = pendingTaskIds.get(1).getNextRunAt();
+    } else {
+      nextRunEST = pendingTaskIds.get(1).getNextRunAt();
+      nextRunGMT = pendingTaskIds.get(0).getNextRunAt();
+    }
+
+    // GMT happens first, so EST is a larger timestamp
+    Assert.assertEquals(nextRunEST - nextRunGMT, fiveHoursInMilliseconds);
   }
 
   @Test
