@@ -69,6 +69,10 @@ const parseJSON = (response) => {
   return response.json();
 };
 
+const parseText = (response) => {
+  return response.text();
+};
+
 /* SINGULARITY SANDBOX API */
 
 // must be used before calling a fetch
@@ -162,8 +166,8 @@ export const httpFetchChunk = (id, path, start, end) => {
 
     return fetch(path, fetchInit)
       .then(checkStatus)
-      .then(parseJSON)
-      .then(({data}) => {
+      .then(parseText)
+      .then((data) => {
         // the API lies, so let's just figure out the bytelength ourselves
         // this code can't take lies.
         const encodedData = TE.encode(data);
