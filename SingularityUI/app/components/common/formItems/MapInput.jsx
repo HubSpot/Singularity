@@ -18,7 +18,7 @@ const MapInput = (props) => {
   );
 
   const hasNoFeedback = (index, value) => {
-    if (index && (_.isEmpty(value) || (_.isEmpty(value.key) && _.isEmpty(value.value)))) {
+    if (_.isEmpty(value) || (_.isEmpty(value.key) && _.isEmpty(value.value))) {
       return true;
     }
     return !props.feedback &&

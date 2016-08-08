@@ -46,9 +46,12 @@ class RequestForm extends React.Component {
     }),
     saveApiCall: PropTypes.shape({
       isFetching: PropTypes.bool,
-      error: PropTypes.shape({
-        message: PropTypes.string
-      }),
+      error: PropTypes.oneOfType([
+        PropTypes.shape({
+          message: PropTypes.string
+        }),
+        PropTypes.string
+      ]),
       data: PropTypes.shape({
         message: PropTypes.string
       })
@@ -59,10 +62,6 @@ class RequestForm extends React.Component {
     }),
     router: PropTypes.object.isRequired
   };
-
-  componentDidMount() {
-    this.props.clearForm(FORM_ID);
-  }
 
   isEditing() {
     return this.props.request && this.props.request.request;
@@ -748,6 +747,7 @@ function refresh(props) {
     promises.push(props.clearRequestData());
   }
   promises.push(props.clearSaveRequestData());
+  promises.push(props.clearForm(FORM_ID));
 
   return Promise.all(promises);
 }
@@ -755,4 +755,4 @@ function refresh(props) {
 export default withRouter(connect(
   mapStateToProps,
   mapDispatchToProps
-)(rootComponent(RequestForm, 'New or Edit Request', refresh)));
+)(rootComponent(RequestForm, 'New or Edit Request', refresh, false)));
