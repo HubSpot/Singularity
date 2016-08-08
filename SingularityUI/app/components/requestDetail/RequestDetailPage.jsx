@@ -15,6 +15,7 @@ import {
   FetchScheduledTasksForRequest,
   FetchTaskCleanups
 } from '../../actions/api/tasks';
+import { FetchGroups } from '../../actions/api/requestGroups';
 
 import RequestHeader from './RequestHeader';
 import RequestExpiringActions from './RequestExpiringActions';
@@ -34,6 +35,7 @@ function refresh(props) {
   props.fetchDeploysForRequest(props.params.requestId, 5, 1);
   props.fetchRequestHistory(props.params.requestId, 5, 1);
   props.fetchScheduledTasksForRequest(props.params.requestId);
+  props.fetchGroups();
 }
 
 class RequestDetailPage extends Component {
@@ -89,11 +91,13 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     FetchTaskCleanups.trigger()
   ];
   return {
-    refresh: () => dispatch(RefreshActions.BeginAutoRefresh(
-      'RequestDetailPage',
-      refreshActions,
-      5000
-    )),
+    refresh: () => {
+      dispatch(RefreshActions.BeginAutoRefresh(
+        'RequestDetailPage',
+        refreshActions,
+        5000
+      ));
+    },
     cancelRefresh: () => dispatch(
       RefreshActions.CancelAutoRefresh('RequestDetailPage')
     ),
@@ -104,6 +108,7 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     fetchTaskHistoryForRequest: (requestId, count, page) => dispatch(FetchTaskHistoryForRequest.trigger(requestId, count, page)),
     fetchDeploysForRequest: (requestId, count, page) => dispatch(FetchDeploysForRequest.trigger(requestId, count, page)),
     fetchRequestHistory: (requestId, count, page) => dispatch(FetchRequestHistory.trigger(requestId, count, page)),
+    fetchGroups: () => dispatch(FetchGroups.trigger())
   };
 };
 
