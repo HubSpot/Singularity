@@ -110,6 +110,9 @@ class RequestForm extends React.Component {
         }
         return true;
       }
+      if (type.typeName === 'enum') {
+        return Utils.isIn(value, type.enumType);
+      }
     }
     if (type === 'number') {
       const numericalValue = parseInt(value, 10);
