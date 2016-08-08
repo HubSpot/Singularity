@@ -20,10 +20,6 @@ public class SingularityDeployFailure {
     return Collections.singletonList(new SingularityDeployFailure(SingularityDeployFailureReason.LOAD_BALANCER_UPDATE_FAILED));
   }
 
-  public static List<SingularityDeployFailure> cancelled() {
-    return Collections.singletonList(new SingularityDeployFailure(SingularityDeployFailureReason.DEPLOY_CANCELLED));
-  }
-
   public static List<SingularityDeployFailure> failedToSave() {
     return Collections.singletonList(new SingularityDeployFailure(SingularityDeployFailureReason.FAILED_TO_SAVE_DEPLOY_STATE));
   }
