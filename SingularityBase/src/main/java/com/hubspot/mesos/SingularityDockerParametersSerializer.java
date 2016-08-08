@@ -9,10 +9,14 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 public class SingularityDockerParametersSerializer extends JsonSerializer<SingularityDockerParameters> {
   @Override
   public void serialize(SingularityDockerParameters dockerParameters, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
-    jsonGenerator.writeStartArray();
-    for (SingularityDockerParameter parameter : dockerParameters.getParameters()) {
-      jsonGenerator.writeObject(parameter);
+    if (dockerParameters.hasDuplicateKey()) {
+      jsonGenerator.writeStartArray();
+      for (SingularityDockerParameter parameter : dockerParameters.getParameters()) {
+        jsonGenerator.writeObject(parameter);
+      }
+      jsonGenerator.writeEndArray();
+    } else {
+      jsonGenerator.writeObject(dockerParameters.toMap());
     }
-    jsonGenerator.writeEndArray();
   }
 }
