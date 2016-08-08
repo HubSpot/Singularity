@@ -105,6 +105,7 @@ class RequestForm extends React.Component {
         if (!_.isArray(value)) return false;
         for (const pair of value) {
           if (!_.isObject(pair)) return false;
+          if (!pair.key) return false;
           if (!this.validateType(type.mapFrom, pair.key)) return false;
           if (!this.validateType(type.mapTo, pair.value)) return false;
         }
