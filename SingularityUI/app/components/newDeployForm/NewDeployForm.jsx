@@ -1396,11 +1396,11 @@ class NewDeployForm extends Component {
     const errorMessage = (
       this.props.saveApiCall.error &&
         <p className="alert alert-danger">
-          There was a problem saving your request: {this.props.saveApiCall.error}
+          There was a problem saving your deploy: {this.props.saveApiCall.error}
         </p> ||
         this.props.saveApiCall.data && this.props.saveApiCall.data.message &&
         <p className="alert alert-danger">
-          There was a problem saving your request: {this.props.saveApiCall.data.message}
+          There was a problem saving your deploy: {this.props.saveApiCall.data.message}
         </p>
     );
     const successMessage = (
