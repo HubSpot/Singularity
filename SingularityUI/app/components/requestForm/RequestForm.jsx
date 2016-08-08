@@ -28,8 +28,6 @@ const FORM_ID = 'requestForm';
 
 const REQUEST_ID_REGEX = /[a-zA-Z0-9._-]*/;
 
-const REQUEST_TYPES = ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'];
-
 const timeZoneOptions = timeZones.map(zone => ({label: zone, value: zone}));
 
 class RequestForm extends React.Component {
@@ -64,10 +62,6 @@ class RequestForm extends React.Component {
 
   componentDidMount() {
     this.props.clearForm(FORM_ID);
-  }
-
-  shouldComponentUpdate(nextProps) {
-    return !_.isEqual(this.props, nextProps);
   }
 
   isEditing() {
@@ -269,7 +263,7 @@ class RequestForm extends React.Component {
     const tooltip = (
       <Tooltip id="cannotChangeRequestTypeAfterCreation">Option cannot be altered after creation</Tooltip>
     );
-    const selectors = REQUEST_TYPES.map((requestType, key) => {
+    const selectors = Utils.enums.SingularityRequestTypes.map((requestType, key) => {
       const selector = (
         <button
           key={key}
@@ -454,7 +448,7 @@ class RequestForm extends React.Component {
         value={this.getValue('requiredSlaveAttributes') || []}
         label="Required slave attributes"
         required={INDEXED_FIELDS.requiredSlaveAttributes.required}
-        feedback={this.feedback('requiredSlaveAttributes')}
+        doFeedback={true}
         keyHeader="Attribute"
         valueHeader="Value"
       />
@@ -467,7 +461,7 @@ class RequestForm extends React.Component {
         value={this.getValue('allowedSlaveAttributes') || []}
         label="Allowed slave attributes"
         required={INDEXED_FIELDS.allowedSlaveAttributes.required}
-        feedback={this.feedback('allowedSlaveAttributes')}
+        doFeedback={true}
         keyHeader="Attribute"
         valueHeader="Value"
       />
@@ -549,7 +543,7 @@ class RequestForm extends React.Component {
         renderKeyField={renderEmailTypeSelector}
         renderValueField={renderEmailDestinationSelector}
         valueDefault={[]}
-        feedback={this.feedback('emailConfigurationOverrides')}
+        doFeedback={true}
         keyHeader="Email type"
         valueHeader="Email destination(s)"
       />
@@ -761,4 +755,4 @@ function refresh(props) {
 export default withRouter(connect(
   mapStateToProps,
   mapDispatchToProps
-)(rootComponent(RequestForm, 'New Request', refresh)));
+)(rootComponent(RequestForm, 'New or Edit Request', refresh)));

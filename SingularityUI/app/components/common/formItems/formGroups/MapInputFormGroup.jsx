@@ -1,4 +1,4 @@
-import React, {PropTypes} from 'react';
+import React, { PropTypes } from 'react';
 import MapInput from '../MapInput';
 import { FormGroup, ControlLabel } from 'react-bootstrap/lib';
 

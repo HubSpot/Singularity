@@ -25,7 +25,7 @@ export const FIELDS_BY_REQUEST_TYPE = {
         arrayType: 'string'
       }
     },
-    {id: 'requestType', type: 'string', required: true},
+    {id: 'requestType', type: { typeName: 'enum', enumType: Utils.enums.SingularityRequestTypes}, required: true},
     {id: 'slavePlacement', type: 'string'},
     {
       id: 'requiredSlaveAttributes',

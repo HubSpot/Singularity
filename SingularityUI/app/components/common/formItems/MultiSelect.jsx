@@ -9,6 +9,7 @@ const MultiSelect = (props) => {
   for (const option of props.options) {
     valueToLabelMap[option.value] = option.label;
   }
+
   const addNewOption = (valueToAdd) => {
     let cleansedValueToAdd = valueToAdd;
     if (props.splits) {
@@ -31,18 +32,21 @@ const MultiSelect = (props) => {
     props.onChange(newValue);
     return true;
   };
+
   const checkInputChange = (value) => {
     if (props.splits && props.splits.indexOf(value.slice(-1)) !== -1 && addNewOption(value)) { // Side effect!
       return '';
     }
     return value;
   };
+
   const getValueAsObj = (value) => {
     if (props.isValueString) {
       return value.map(valueArrayContent => ({value: valueArrayContent, label: valueToLabelMap[valueArrayContent]}));
     }
     return value;
   };
+
   const onChange = (newValue) => {
     if (props.isValueString && newValue) {
       return props.onChange(newValue.map(valueArrayContent => valueArrayContent.value));
@@ -52,6 +56,7 @@ const MultiSelect = (props) => {
     }
     return props.onChange(newValue);
   };
+
   return (
     <Select
       id={ props.id }

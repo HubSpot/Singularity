@@ -333,6 +333,8 @@ const Utils = {
   },
 
   enums: {
+    SingularityRequestTypes: ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'],
+    SingularityEmailDestination: ['OWNERS', 'ACTION_TAKER', 'ADMINS'],
     SingularityEmailType: [
       'TASK_LOST',
       'TASK_KILLED',
@@ -351,11 +353,6 @@ const Utils = {
       'REQUEST_UNPAUSED',
       'REQUEST_SCALED',
       'TASK_FAILED_DECOMISSIONED'
-    ],
-    SingularityEmailDestination: [
-      'OWNERS',
-      'ACTION_TAKER',
-      'ADMINS'
     ]
   },
 
