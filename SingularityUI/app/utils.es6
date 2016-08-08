@@ -109,6 +109,22 @@ const Utils = {
     return fuzzyObject.score;
   },
 
+  convertMapFromObjectToArray(mapAsObj) {
+    const mapAsArray = [];
+    for (const key of _.keys(mapAsObj)) {
+      mapAsArray.push({ key, value: mapAsObj[key] });
+    }
+    return mapAsArray;
+  },
+
+  convertMapFromArrayToObject(mapAsArray) {
+    const mapAsObj = {};
+    for (const pair of mapAsArray) {
+      mapAsObj[pair.key] = pair.value;
+    }
+    return mapAsObj;
+  },
+
   getTaskDataFromTaskId(taskId) {
     const splits = taskId.split('-');
     return {

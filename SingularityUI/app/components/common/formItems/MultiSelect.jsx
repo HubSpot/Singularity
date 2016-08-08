@@ -33,12 +33,24 @@ const MultiSelect = (props) => {
     }
     return value;
   };
+  const getValueAsObj = (value) => {
+    if (props.isValueString) {
+      return value.map(valueArrayContent => ({value: valueArrayContent, label: valueArrayContent}));
+    }
+    return value;
+  };
+  const onChange = (newValue) => {
+    if (props.isValueString) {
+      return props.onChange(newValue.map(valueArrayContent => valueArrayContent.value));
+    }
+    return props.onChange(newValue);
+  };
   return (
     <Select
       id={ props.id }
-      onChange={ props.onChange }
+      onChange={ onChange }
       onInputChange={ value => checkInputChange(value) }
-      value={ props.value }
+      value={ getValueAsObj(props.value) }
       options={ props.options }
       onBlurResetsInput={ false }
       multi={ true }
@@ -63,6 +75,7 @@ MultiSelect.propTypes = {
     value: PropTypes.string
   })).isRequired,
   onChange: PropTypes.func.isRequired,
+  isValueString: PropTypes.bool,
   placeholder: PropTypes.string,
   allowCreate: PropTypes.bool,
   id: PropTypes.string.isRequired

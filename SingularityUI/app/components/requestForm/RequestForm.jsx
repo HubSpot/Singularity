@@ -79,8 +79,10 @@ class RequestForm extends React.Component {
       return this.props.form[fieldId];
     }
     if (this.isEditing() && this.props.request.request[fieldId] !== undefined) {
-      if (_.isObject(INDEXED_FIELDS[fieldId].type) && INDEXED_FIELDS[fieldId].type.typeName === 'map') {
-        return this.convertMapFromObjectToArray(this.props.request.request[fieldId]);
+      if (_.isObject(INDEXED_FIELDS[fieldId].type)) {
+        if (INDEXED_FIELDS[fieldId].type.typeName === 'map') {
+          return Utils.convertMapFromObjectToArray(this.props.request.request[fieldId]);
+        }
       }
       return this.props.request.request[fieldId];
     }
@@ -182,22 +184,6 @@ class RequestForm extends React.Component {
     return false;
   }
 
-  convertMapFromObjectToArray(mapAsObj) {
-    const mapAsArray = [];
-    for (const key of _.keys(mapAsObj)) {
-      mapAsArray.push({ key, value: mapAsObj[key] });
-    }
-    return mapAsArray;
-  }
-
-  convertMapFromArrayToObject(mapAsArray) {
-    const mapAsObj = {};
-    for (const pair of mapAsArray) {
-      mapAsObj[pair.key] = pair.value;
-    }
-    return mapAsObj;
-  }
-
   submitForm(event) {
     event.preventDefault();
     const request = {};
@@ -205,7 +191,7 @@ class RequestForm extends React.Component {
       const fieldId = field.id;
       if (this.getValue(fieldId) && fieldId !== QUARTZ_SCHEDULE && fieldId !== CRON_SCHEDULE && fieldId !== 'scheduleType') {
         if (_.isObject(field.type) && field.type.typeName === 'map') {
-          request[fieldId] = this.convertMapFromArrayToObject(this.getValue(fieldId));
+          request[fieldId] = Utils.convertMapFromArrayToObject(this.getValue(fieldId));
         } else {
           request[fieldId] = this.getValue(fieldId);
         }
@@ -227,11 +213,6 @@ class RequestForm extends React.Component {
       request.daemon = false;
     } else if (['SERVICE', 'WORKER'].indexOf(this.getValue('requestType')) !== -1) {
       request.daemon = true;
-    }
-
-
-    if (request.rackAffinity) {
-      request.rackAffinity = request.rackAffinity.map(rack => rack.value);
     }
 
     this.props.save(request);
@@ -362,6 +343,7 @@ class RequestForm extends React.Component {
           id="rack-affinity"
           onChange={ value => this.updateField('rackAffinity', value) }
           value={ this.getValue('rackAffinity') || [] }
+          isValueString={ true }
           options={rackOptions}
           splits={[',', ' ']}
         />
