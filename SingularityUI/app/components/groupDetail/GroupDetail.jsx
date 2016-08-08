@@ -17,8 +17,11 @@ class GroupDetail extends React.Component {
 }
 
 function mapStateToProps(state, ownProps) {
+  const group = _.find(state.api.requestGroups.data, (g) => g.id === ownProps.params.groupId);
   return ({
-    group: _.find(state.api.requestGroups.data, (group) => group.id === ownProps.params.groupId)
+    notFound: !state.api.requestGroups.isFetching && !group,
+    pathname: ownProps.location.pathname,
+    group
   });
 }
 
