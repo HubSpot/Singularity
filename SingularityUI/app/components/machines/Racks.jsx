@@ -230,9 +230,9 @@ function mapDispatchToProps(dispatch) {
     ]);
   }
   return {
-    decommissionRack: (rack, message) => { clear().then(dispatch(DecommissionRack.trigger(rack.id, message))).then(dispatch(FetchRacks.trigger())); },
-    removeRack: (rack, message) => { clear().then(dispatch(RemoveRack.trigger(rack.id, message))).then(dispatch(FetchRacks.trigger())); },
-    reactivateRack: (rack, message) => { clear().then(dispatch(ReactivateRack.trigger(rack.id, message))).then(dispatch(FetchRacks.trigger())); },
+    decommissionRack: (rack, message) => { clear().then(() => dispatch(DecommissionRack.trigger(rack.id, message))).then(() => dispatch(FetchRacks.trigger())); },
+    removeRack: (rack, message) => { clear().then(() => dispatch(RemoveRack.trigger(rack.id, message))).then(() => dispatch(FetchRacks.trigger())); },
+    reactivateRack: (rack, message) => { clear().then(() => dispatch(ReactivateRack.trigger(rack.id, message))).then(() => dispatch(FetchRacks.trigger())); },
     fetchRacks: () => dispatch(FetchRacks.trigger()),
     clear
   };
