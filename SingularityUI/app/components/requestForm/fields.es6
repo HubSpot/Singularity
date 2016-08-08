@@ -60,13 +60,13 @@ export const FIELDS_BY_REQUEST_TYPE = {
         typeName: 'map',
         mapFrom: {
           typeName: 'enum',
-          enumType: Utils.SingularityEmailType
+          enumType: Utils.enums.SingularityEmailType
         },
         mapTo: {
           typeName: 'array',
           arrayType: {
             typeName: 'enum',
-            enumType: Utils.SingularityEmailDestination
+            enumType: Utils.enums.SingularityEmailDestination
           }
         }
       }

@@ -5,6 +5,10 @@ import React, { PropTypes } from 'react';
 // or blurring, causes the option to be autocompleted and added.
 
 const MultiSelect = (props) => {
+  const valueToLabelMap = [];
+  for (const option of props.options) {
+    valueToLabelMap[option.value] = option.label;
+  }
   const addNewOption = (valueToAdd) => {
     let cleansedValueToAdd = valueToAdd;
     if (props.splits) {
@@ -35,13 +39,16 @@ const MultiSelect = (props) => {
   };
   const getValueAsObj = (value) => {
     if (props.isValueString) {
-      return value.map(valueArrayContent => ({value: valueArrayContent, label: valueArrayContent}));
+      return value.map(valueArrayContent => ({value: valueArrayContent, label: valueToLabelMap[valueArrayContent]}));
     }
     return value;
   };
   const onChange = (newValue) => {
-    if (props.isValueString) {
+    if (props.isValueString && newValue) {
       return props.onChange(newValue.map(valueArrayContent => valueArrayContent.value));
+    }
+    if (!newValue) {
+      return props.onChange([]);
     }
     return props.onChange(newValue);
   };

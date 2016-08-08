@@ -341,9 +341,9 @@ class RequestForm extends React.Component {
         <label htmlFor="rack-affinity">Rack affinity <span className="form-label-tip">choose any subset</span></label>
         <MultiSelect
           id="rack-affinity"
-          onChange={ value => this.updateField('rackAffinity', value) }
-          value={ this.getValue('rackAffinity') || [] }
-          isValueString={ true }
+          onChange={value => this.updateField('rackAffinity', value)}
+          value={this.getValue('rackAffinity') || []}
+          isValueString={true}
           options={rackOptions}
           splits={[',', ' ']}
         />
@@ -512,6 +512,45 @@ class RequestForm extends React.Component {
       />
     );
 
+    const renderEmailTypeSelector = (currentValue, onChange) => (
+      <SelectFormGroup
+        id="email-type-selector"
+        value={currentValue || ''}
+        onChange={newValue => onChange(newValue && newValue.value || null)}
+        options={Utils.enums.SingularityEmailType.map(emailType => ({label: Utils.humanizeText(emailType), value: emailType}))}
+        clearable={true}
+        selectorsOnly={true}
+      />
+    );
+
+    const renderEmailDestinationSelector = (currentValue, onChange) => (
+      <MultiSelect
+        id="email-destination-selector"
+        value={currentValue || []}
+        onChange={onChange}
+        options={Utils.enums.SingularityEmailDestination.map(emailDestination => ({label: Utils.humanizeText(emailDestination), value: emailDestination}))}
+        isValueString={true}
+        clearable={true}
+        splits={[',', ' ']}
+      />
+    );
+
+    const emailConfigurationOverrides = (
+      <MapInputFormGroup
+        id="email-configuration-overrides"
+        onChange={newValue => this.updateField('emailConfigurationOverrides', newValue)}
+        value={this.getValue('emailConfigurationOverrides') || []}
+        label="Email configuration overrides"
+        required={INDEXED_FIELDS.requiredSlaveAttributes.required}
+        renderKeyField={renderEmailTypeSelector}
+        renderValueField={renderEmailDestinationSelector}
+        valueDefault={[]}
+        feedback={this.feedback('emailConfigurationOverrides')}
+        keyHeader="Email type"
+        valueHeader="Email destination(s)"
+      />
+    );
+
     const bounceAfterScale = (
       <CheckboxFormGroup
         id="bounce-after-scale"
@@ -544,8 +583,9 @@ class RequestForm extends React.Component {
               { this.shouldRenderField('readOnlyGroups') && readOnlyGroups }
               { this.shouldRenderField('taskLogErrorRegex') && taskLogErrorRegex }
               { this.shouldRenderField('taskLogErrorRegexCaseSensitive') && taskLogErrorRegexCaseSensitive }
-              { this.shouldRenderField('bounceAfterScale') && bounceAfterScale }
+              { this.shouldRenderField('emailConfigurationOverrides') && emailConfigurationOverrides }
               { this.shouldRenderField('skipHealthchecks') && skipHealthchecks }
+              { this.shouldRenderField('bounceAfterScale') && bounceAfterScale }
             </fieldset>
           </div>
         )}
