@@ -110,7 +110,8 @@ class TaskDetail extends Component {
     fetchTaskStatistics: PropTypes.func.isRequired,
     fetchTaskFiles: PropTypes.func.isRequired,
     killTask: PropTypes.func.isRequired,
-    runCommandOnTask: PropTypes.func.isRequired
+    runCommandOnTask: PropTypes.func.isRequired,
+    group: PropTypes.object
   };
 
   constructor(props) {
@@ -262,28 +263,36 @@ class TaskDetail extends Component {
           <strong>Task is terminating:</strong> To issue a non-graceful termination (kill -term), click Destroy Task.
       </Alert>
     );
+    const breadcrumbs = [
+      {
+        label: 'Request',
+        text: this.props.task.task.taskId.requestId,
+        link: `request/${this.props.task.task.taskId.requestId}`
+      },
+      {
+        label: 'Deploy',
+        text: this.props.task.task.taskId.deployId,
+        link: `request/${this.props.task.task.taskId.requestId}/deploy/${this.props.task.task.taskId.deployId}`
+      },
+      {
+        label: 'Instance',
+        text: this.props.task.task.taskId.instanceNo,
+      }
+    ];
+    if (this.props.group) {
+      breadcrumbs.unshift({
+        label: 'Group',
+        text: this.props.group.id,
+        link: `group/${this.props.group.id}`
+      });
+    }
 
     return (
       <header className="detail-header">
         <div className="row">
           <div className="col-md-12">
             <Breadcrumbs
-              items={[
-                {
-                  label: 'Request',
-                  text: this.props.task.task.taskId.requestId,
-                  link: `request/${this.props.task.task.taskId.requestId}`
-                },
-                {
-                  label: 'Deploy',
-                  text: this.props.task.task.taskId.deployId,
-                  link: `request/${this.props.task.task.taskId.requestId}/deploy/${this.props.task.task.taskId.deployId}`
-                },
-                {
-                  label: 'Instance',
-                  text: this.props.task.task.taskId.instanceNo,
-                }
-              ]}
+              items={breadcrumbs}
               right={<span><strong>Hostname: </strong>{this.props.task.task.offer.hostname}</span>}
             />
           </div>
@@ -471,7 +480,8 @@ function mapStateToProps(state, ownProps) {
     s3Logs: state.api.taskS3Logs.data,
     deploy: state.api.deploy.data,
     pendingDeploys: state.api.deploys.data,
-    shellCommandResponse: state.api.taskShellCommandResponse.data
+    shellCommandResponse: state.api.taskShellCommandResponse.data,
+    group: task.task && _.first(_.filter(state.api.requestGroups.data, (g) => _.contains(g.requestIds, task.task.taskId.requestId)))
   };
 }
 
