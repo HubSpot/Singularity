@@ -10,10 +10,11 @@ import MultiInputFormGroup from '../common/formItems/formGroups/MultiInputFormGr
 import SelectFormGroup from '../common/formItems/formGroups/SelectFormGroup';
 import TextFormGroup from '../common/formItems/formGroups/TextFormGroup';
 import CheckboxFormGroup from '../common/formItems/formGroups/CheckboxFormGroup';
+import MapInputFormGroup from '../common/formItems/formGroups/MapInputFormGroup';
 import { ModifyField, ClearForm } from '../../actions/ui/form';
 import { SaveRequest, FetchRequest } from '../../actions/api/requests';
 import { OverlayTrigger, Tooltip} from 'react-bootstrap/lib';
-import { Form, Row, Col } from 'react-bootstrap';
+import { Form, Row, Col, Glyphicon } from 'react-bootstrap';
 import Utils from '../../utils';
 import timeZones from '../../timeZones';
 import classNames from 'classnames';
@@ -78,19 +79,35 @@ class RequestForm extends React.Component {
       return this.props.form[fieldId];
     }
     if (this.isEditing() && this.props.request.request[fieldId] !== undefined) {
+      if (_.isObject(INDEXED_FIELDS[fieldId].type) && INDEXED_FIELDS[fieldId].type.typeName === 'map') {
+        return this.convertMapFromObjectToArray(this.props.request.request[fieldId]);
+      }
       return this.props.request.request[fieldId];
     }
     return '';
   }
 
-  validateField(fieldId) {
-    const value = this.getValue(fieldId);
-    const {required, type} = INDEXED_FIELDS[fieldId];
-    if (required && (_.isEmpty(value))) {
-      return false;
-    }
+  validateType(type, value) {
     if (!value || _.isEmpty(value)) {
       return true;
+    }
+    if (_.isObject(type)) {
+      if (type.typeName === 'array') {
+        if (!_.isArray(value)) return false;
+        for (const subValue of value) {
+          if (!this.validateType(type.arrayType, subValue)) return false;
+        }
+        return true;
+      }
+      if (type.typeName === 'map') {
+        if (!_.isArray(value)) return false;
+        for (const pair of value) {
+          if (!_.isObject(pair)) return false;
+          if (!this.validateType(type.mapFrom, pair.key)) return false;
+          if (!this.validateType(type.mapTo, pair.value)) return false;
+        }
+        return true;
+      }
     }
     if (type === 'number') {
       const numericalValue = parseInt(value, 10);
@@ -103,7 +120,23 @@ class RequestForm extends React.Component {
         return false;
       }
     }
+    if (type === 'map') {
+      for (const element of value) {
+        if (element.split('=').length !== 2) {
+          return false;
+        }
+      }
+    }
     return true;
+  }
+
+  validateField(fieldId) {
+    const value = this.getValue(fieldId);
+    const {required, type} = INDEXED_FIELDS[fieldId];
+    if (required && (_.isEmpty(value))) {
+      return false;
+    }
+    return this.validateType(type, value);
   }
 
   feedback(fieldId) {
@@ -149,13 +182,33 @@ class RequestForm extends React.Component {
     return false;
   }
 
+  convertMapFromObjectToArray(mapAsObj) {
+    const mapAsArray = [];
+    for (const key of _.keys(mapAsObj)) {
+      mapAsArray.push({ key, value: mapAsObj[key] });
+    }
+    return mapAsArray;
+  }
+
+  convertMapFromArrayToObject(mapAsArray) {
+    const mapAsObj = {};
+    for (const pair of mapAsArray) {
+      mapAsObj[pair.key] = pair.value;
+    }
+    return mapAsObj;
+  }
+
   submitForm(event) {
     event.preventDefault();
     const request = {};
     const copyOverField = (field) => {
       const fieldId = field.id;
       if (this.getValue(fieldId) && fieldId !== QUARTZ_SCHEDULE && fieldId !== CRON_SCHEDULE && fieldId !== 'scheduleType') {
-        request[fieldId] = this.getValue(fieldId);
+        if (_.isObject(field.type) && field.type.typeName === 'map') {
+          request[fieldId] = this.convertMapFromArrayToObject(this.getValue(fieldId));
+        } else {
+          request[fieldId] = this.getValue(fieldId);
+        }
       }
     };
 
@@ -186,6 +239,9 @@ class RequestForm extends React.Component {
   }
 
   shouldRenderField(fieldId) {
+    if (_.pluck(FIELDS_BY_REQUEST_TYPE.ALL, 'id').indexOf(fieldId) !== -1) {
+      return true;
+    }
     if (!this.getValue('requestType')) {
       return false;
     }
@@ -203,7 +259,7 @@ class RequestForm extends React.Component {
   }
 
   updateField(fieldId, newValue) {
-    this.props.update(FORM_ID, fieldId, newValue);
+    this.props.update(fieldId, newValue);
   }
 
   updateTypeButtonClick(event) {
@@ -263,7 +319,7 @@ class RequestForm extends React.Component {
     const rackSensitive = (
       <CheckboxFormGroup
         id="rack-sensitive"
-        label="Rack Sensitive"
+        label="Rack sensitive"
         checked={this.getValue('rackSensitive') || false}
         onChange={(newValue) => this.updateField('rackSensitive', newValue)}
       />
@@ -271,7 +327,7 @@ class RequestForm extends React.Component {
     const hideEvenNumberAcrossRacksHint = (
       <CheckboxFormGroup
         id="hide-distribute-evenly-across-racks-hint"
-        label="Hide Distribute Evenly Across Racks Hint"
+        label="Hide distribute evenly across racks hint"
         checked={this.getValue('hideEvenNumberAcrossRacksHint') || false}
         onChange={(newValue) => this.updateField('hideEvenNumberAcrossRacksHint', newValue)}
       />
@@ -301,7 +357,7 @@ class RequestForm extends React.Component {
     const rackOptions = _.pluck(this.props.racks, 'id').map(id => ({value: id, label: id}));
     const rackAffinity = (
       <div className="form-group">
-        <label htmlFor="rack-affinity">Rack Affinity <span className="form-label-tip">choose any subset</span></label>
+        <label htmlFor="rack-affinity">Rack affinity <span className="form-label-tip">choose any subset</span></label>
         <MultiSelect
           id="rack-affinity"
           onChange={ value => this.updateField('rackAffinity', value) }
@@ -314,7 +370,7 @@ class RequestForm extends React.Component {
     const scheduleType = (
       <SelectFormGroup
         id="schedule-type"
-        label="Schedule Type"
+        label="Schedule type"
         value={this.getValue('scheduleType') || ''}
         defaultValue={CRON_SCHEDULE}
         required={INDEXED_FIELDS.scheduleType.required}
@@ -330,7 +386,7 @@ class RequestForm extends React.Component {
         id="schedule-timezone"
         onChange={newValue => this.updateField('scheduleTimeZone', newValue ? newValue.value : null)}
         value={this.getValue('scheduleTimeZone') || ''}
-        label="Schedule Timezone"
+        label="Schedule timezone"
         required={INDEXED_FIELDS.scheduleTimeZone.required}
         clearable={true}
         options={timeZoneOptions}
@@ -393,6 +449,124 @@ class RequestForm extends React.Component {
         { this.shouldRenderField('numRetriesOnFailure') && numRetriesOnFailure }
         { this.shouldRenderField('killOldNonLongRunningTasksAfterMillis') && killOldNonLongRunningTasksAfterMillis }
         { this.shouldRenderField('scheduledExpectedRuntimeMillis') && scheduledExpectedRuntimeMillis }
+      </div>
+    );
+  }
+
+  renderAdvanced() {
+    const showAdvanced = this.getValue('showAdvanced');
+    const advancedSelector = (
+      <a onClick={() => this.updateField('showAdvanced', !showAdvanced)}>
+        Advanced <Glyphicon glyph={showAdvanced ? 'chevron-down' : 'chevron-right'} />
+      </a>
+    );
+
+    const requiredSlaveAttributes = (
+      <MapInputFormGroup
+        id="required-slave-attributes"
+        onChange={newValue => this.updateField('requiredSlaveAttributes', newValue)}
+        value={this.getValue('requiredSlaveAttributes') || []}
+        label="Required slave attributes"
+        required={INDEXED_FIELDS.requiredSlaveAttributes.required}
+        feedback={this.feedback('requiredSlaveAttributes')}
+        keyHeader="Attribute"
+        valueHeader="Value"
+      />
+    );
+
+    const allowedSlaveAttributes = (
+      <MapInputFormGroup
+        id="allowed-slave-attributes"
+        onChange={newValue => this.updateField('allowedSlaveAttributes', newValue)}
+        value={this.getValue('allowedSlaveAttributes') || []}
+        label="Allowed slave attributes"
+        required={INDEXED_FIELDS.allowedSlaveAttributes.required}
+        feedback={this.feedback('allowedSlaveAttributes')}
+        keyHeader="Attribute"
+        valueHeader="Value"
+      />
+    );
+
+    const group = (
+      <TextFormGroup
+        id="group"
+        onChange={event => this.updateField('group', event.target.value)}
+        value={this.getValue('group')}
+        label="Group"
+        required={INDEXED_FIELDS.group.required}
+        feedback={this.feedback('group')}
+      />
+    );
+
+    const readOnlyGroups = (
+      <MultiInputFormGroup
+        id="read-only-groups"
+        value={this.getValue('readOnlyGroups') || []}
+        onChange={(newValue) => this.updateField('readOnlyGroups', newValue)}
+        label="Read-only groups"
+        required={INDEXED_FIELDS.readOnlyGroups.required}
+        errorIndices={INDEXED_FIELDS.readOnlyGroups.required && _.isEmpty(this.getValue('readOnlyGroups')) && [0] || []}
+        couldHaveFeedback={true}
+      />
+    );
+
+    const taskLogErrorRegex = (
+      <TextFormGroup
+        id="task-log-error-regex"
+        onChange={event => this.updateField('taskLogErrorRegex', event.target.value)}
+        value={this.getValue('taskLogErrorRegex')}
+        label="Regex that matches errors in task logs to send in emails for this request"
+        required={INDEXED_FIELDS.taskLogErrorRegex.required}
+        feedback={this.feedback('taskLogErrorRegex')}
+      />
+    );
+
+    const taskLogErrorRegexCaseSensitive = (
+      <CheckboxFormGroup
+        id="task-log-error-regex-case-sensitive"
+        label="The above task log error regex is case-sensitive"
+        checked={this.getValue('taskLogErrorRegexCaseSensitive') || false}
+        onChange={(newValue) => this.updateField('taskLogErrorRegexCaseSensitive', newValue)}
+      />
+    );
+
+    const bounceAfterScale = (
+      <CheckboxFormGroup
+        id="bounce-after-scale"
+        label="Bounce each time this request is scaled"
+        checked={this.getValue('bounceAfterScale') || false}
+        onChange={(newValue) => this.updateField('bounceAfterScale', newValue)}
+      />
+    );
+
+    const skipHealthchecks = (
+      <CheckboxFormGroup
+        id="skip-healthchecks"
+        label="Skip healthchecks"
+        checked={this.getValue('skipHealthchecks') || false}
+        onChange={(newValue) => this.updateField('skipHealthchecks', newValue)}
+      />
+    );
+
+    return (
+      <div>
+        <hr />
+        {advancedSelector}
+        {showAdvanced && (
+          <div className="well">
+            <h4>Advanced Request Options</h4>
+            <fieldset>
+              { this.shouldRenderField('requiredSlaveAttributes') && requiredSlaveAttributes }
+              { this.shouldRenderField('allowedSlaveAttributes') && allowedSlaveAttributes }
+              { this.shouldRenderField('group') && group }
+              { this.shouldRenderField('readOnlyGroups') && readOnlyGroups }
+              { this.shouldRenderField('taskLogErrorRegex') && taskLogErrorRegex }
+              { this.shouldRenderField('taskLogErrorRegexCaseSensitive') && taskLogErrorRegexCaseSensitive }
+              { this.shouldRenderField('bounceAfterScale') && bounceAfterScale }
+              { this.shouldRenderField('skipHealthchecks') && skipHealthchecks }
+            </fieldset>
+          </div>
+        )}
       </div>
     );
   }
@@ -492,6 +666,7 @@ class RequestForm extends React.Component {
             { this.isEditing() && onlyAffectsNewTasksWarning }
             { slavePlacement }
             { this.renderRequestTypeSpecificFormFields() }
+            { this.renderAdvanced() }
             { saveButton }
             { errorMessage }
           </Form>
@@ -515,8 +690,8 @@ function mapStateToProps(state, ownProps) {
 
 function mapDispatchToProps(dispatch, ownProps) {
   return {
-    update(formId, fieldId, newValue) {
-      dispatch(ModifyField(formId, fieldId, newValue));
+    update(fieldId, newValue) {
+      dispatch(ModifyField(FORM_ID, fieldId, newValue));
     },
     clearForm(formId) {
       dispatch(ClearForm(formId));

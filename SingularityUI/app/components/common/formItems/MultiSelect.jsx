@@ -51,10 +51,13 @@ const MultiSelect = (props) => {
 
 MultiSelect.propTypes = {
   splits: PropTypes.arrayOf(PropTypes.string),
-  value: PropTypes.arrayOf(PropTypes.shape({
-    label: PropTypes.string,
-    value: PropTypes.string
-  })).isRequired,
+  value: PropTypes.arrayOf(PropTypes.oneOfType([
+    PropTypes.shape({
+      label: PropTypes.string,
+      value: PropTypes.string
+    }),
+    PropTypes.string
+  ])).isRequired,
   options: PropTypes.arrayOf(PropTypes.shape({
     label: PropTypes.string,
     value: PropTypes.string
