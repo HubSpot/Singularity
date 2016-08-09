@@ -3,7 +3,6 @@ package com.hubspot.singularity.data;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -389,9 +388,7 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public Optional<SingularityExpiringBounce> getExpiringBounce(String requestId) {
-    return SingularityExpiringBounce.withDefaultExpiringMillis(
-        getExpiringObject(SingularityExpiringBounce.class, requestId),
-        TimeUnit.MINUTES.toMillis(singularityConfiguration.getDefaultBounceExpirationMinutes()));
+    return getExpiringObject(SingularityExpiringBounce.class, requestId);
   }
 
   public Optional<SingularityExpiringPause> getExpiringPause(String requestId) {
