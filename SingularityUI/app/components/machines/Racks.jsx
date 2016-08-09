@@ -144,7 +144,7 @@ const Racks = React.createClass({
           <span>
             {this.getMaybeReactivateButton(rack)}
             {this.getDecommissionOrRemoveButton(rack)}
-            <JSONButton object={rack}>
+            <JSONButton object={rack} showOverlay={true}>
               {'{ }'}
             </JSONButton>
           </span>

@@ -44,7 +44,7 @@ function TaskLbUpdates (props) {
           id="actions-column"
           key="actions-column"
           className="actions-column"
-          cellData={(loadBalancerUpdate) => <JSONButton object={loadBalancerUpdate}>{'{ }'}</JSONButton>}
+          cellData={(loadBalancerUpdate) => <JSONButton object={loadBalancerUpdate} showOverlay={true}>{'{ }'}</JSONButton>}
         />
       </UITable>
     </Section>

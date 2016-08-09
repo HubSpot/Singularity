@@ -63,7 +63,7 @@ const DeployHistoryTable = ({requestId, deploysAPI, fetchDeploys}) => {
           id="actions-column"
           key="actions-column"
           className="actions-column"
-          cellData={(deploy) => <JSONButton object={deploy}>{'{ }'}</JSONButton>}
+          cellData={(deploy) => <JSONButton object={deploy} showOverlay={true}>{'{ }'}</JSONButton>}
         />
       </UITable>
     </Section>
