@@ -1,6 +1,6 @@
 import { buildApiAction } from './base';
 
 export const FetchGroups = buildApiAction(
-  'FETCH_GROUPS',
+  'FETCH_REQUEST_GROUPS',
   {url: '/groups'}
 );
