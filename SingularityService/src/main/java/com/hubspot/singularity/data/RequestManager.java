@@ -32,7 +32,6 @@ import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularityRequestWithState;
-import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityExpiringRequestParent;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
@@ -390,31 +389,9 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public Optional<SingularityExpiringBounce> getExpiringBounce(String requestId) {
-    final Optional<SingularityExpiringBounce> maybeExpiringBounce = getExpiringObject(SingularityExpiringBounce.class, requestId);
-    if (!maybeExpiringBounce.isPresent()) {
-      return maybeExpiringBounce;
-    }
-    final SingularityExpiringBounce bounce = maybeExpiringBounce.get();
-    if (bounce.getExpiringAPIRequestObject().getDurationMillis().isPresent()) {
-      return maybeExpiringBounce;
-    }
-    final Long durationMillis = TimeUnit.MINUTES.toMillis(singularityConfiguration.getDefaultBounceExpirationMinutes());
-    return Optional.of(
-        new SingularityExpiringBounce(
-            bounce.getRequestId(),
-            bounce.getDeployId(),
-            bounce.getUser(),
-            bounce.getStartMillis(),
-            new SingularityBounceRequest(
-                bounce.getExpiringAPIRequestObject().getIncremental(),
-                bounce.getExpiringAPIRequestObject().getSkipHealthchecks(),
-                Optional.of(durationMillis),
-                bounce.getExpiringAPIRequestObject().getActionId(),
-                bounce.getExpiringAPIRequestObject().getMessage()
-            ),
-            bounce.getActionId()
-        )
-    );
+    return SingularityExpiringBounce.withDefaultExpiringMillis(
+        getExpiringObject(SingularityExpiringBounce.class, requestId),
+        TimeUnit.MINUTES.toMillis(singularityConfiguration.getDefaultBounceExpirationMinutes()));
   }
 
   public Optional<SingularityExpiringPause> getExpiringPause(String requestId) {
