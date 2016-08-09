@@ -8,8 +8,8 @@ import RequestActionButtons from './header/RequestActionButtons';
 import RequestAlerts from './header/RequestAlerts';
 import Breadcrumbs from '../common/Breadcrumbs';
 
-const RequestHeader = ({requestId, group}) => {
-  const breadcrumbs = group && (
+const RequestHeader = ({requestId, group, showBreadcrumbs = true}) => {
+  const breadcrumbs = showBreadcrumbs && group && (
     <Row>
       <Col md={12}>
         <Breadcrumbs items={[{
@@ -43,7 +43,8 @@ const RequestHeader = ({requestId, group}) => {
 
 RequestHeader.propTypes = {
   requestId: PropTypes.string.isRequired,
-  group: PropTypes.object
+  group: PropTypes.object,
+  showBreadcrumbs: PropTypes.bool
 };
 
 function mapStateToProps(state, ownProps) {

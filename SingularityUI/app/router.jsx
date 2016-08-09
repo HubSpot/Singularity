@@ -37,7 +37,7 @@ const AppRouter = (props) => {
           <Route path="requests/new" component={RequestForm} />
           <Route path="requests/edit/:requestId" component={RequestForm} />
           <Route path="requests(/:state)(/:subFilter)(/:searchFilter)" component={RequestsPage} />
-          <Route path="group/:groupId" component={Group} />
+          <Route path="group/:groupId" component={Group} store={props.store} />
           <Route path="request">
             <Route path=":requestId" component={RequestDetailPage} />
             <Route path=":requestId/task-search" component={TaskSearch} />
