@@ -1,17 +1,21 @@
 import React, { Component, PropTypes } from 'react';
+import { Link } from 'react-router';
 import { connect } from 'react-redux';
 import { Alert } from 'react-bootstrap';
 import JSONTree from 'react-json-tree';
-import { JSONTreeTheme } from '../../thirdPartyConfigurations';
+import { JSONTreeTheme } from '../../../thirdPartyConfigurations';
 
-import { SaveDeploy } from '../../actions/api/deploys';
+import { SaveDeploy } from '../../../actions/api/deploys';
 
-import FormModal from '../common/modal/FormModal';
-import Utils from '../../utils';
+import FormModal from '../modal/FormModal';
+import SimpleModal from '../modal/SimpleModal';
+import Utils from '../../../utils';
 
 class RedeployModal extends Component {
   static propTypes = {
-    unpauseRequest: PropTypes.func,
+    requestId: PropTypes.string.isRequired,
+    saveDeploy: PropTypes.func,
+    doAfterRedeploy: PropTypes.func,
     deploy: PropTypes.object
   };
 
@@ -20,15 +24,25 @@ class RedeployModal extends Component {
     this.state = {};
   }
 
+  showSuccessModal() {
+    this.refs.successModal.show();
+  }
+
   show() {
     this.refs.redeployModal.show();
   }
 
   confirmRedeploy(data) {
-    this.props.unpauseRequest(data).then((response) => {
-      if (response.statusCode !== 200) {
-        this.setState({error: response.error, errorCode: response.statusCode});
+    this.props.saveDeploy(data.deployId).then((response) => {
+      if (response.statusCode === 200) {
+        this.setState({newDeployId: data.deployId});
+        this.showSuccessModal();
+      } else {
+        this.setState({error: response.error, errorCode: response.statusCode, newDeployId: data.deployId});
         this.show();
+      }
+      if (this.props.doAfterRedeploy) {
+        this.props.doAfterRedeploy(response);
       }
     });
   }
@@ -37,6 +51,14 @@ class RedeployModal extends Component {
     const deployId = Utils.maybe(this.props.deploy, ['deployMarker', 'deployId']);
     return (
       <span>
+        <SimpleModal ref="successModal" title="Success!">
+          <p>
+            Redeployed <Link to={`request/${this.props.requestId}/deploy/${Utils.maybe(this.props.deploy, ['deploy', 'id'])}`}>{Utils.maybe(this.props.deploy, ['deploy', 'id'])}</Link>.
+          </p>
+          <p>
+            New id: <Link to={`request/${this.props.requestId}/deploy/${this.state.newDeployId}`}>{this.state.newDeployId}</Link>.
+          </p>
+        </SimpleModal>
         <FormModal
           ref="redeployModal"
           action="Redeploy"
@@ -73,7 +95,7 @@ class RedeployModal extends Component {
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  unpauseRequest: (data) => dispatch(SaveDeploy.trigger({deploy: _.extend({}, ownProps.deploy.deploy, {id: data.deployId})})),
+  saveDeploy: (deployId) => dispatch(SaveDeploy.trigger({deploy: _.extend({}, ownProps.deploy.deploy, {id: deployId})})),
 });
 
 export default connect(

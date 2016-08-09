@@ -4,11 +4,11 @@ import { Glyphicon } from 'react-bootstrap';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 
-import { getClickComponent } from '../common/modal/ModalWrapper';
-import { FetchDeployForRequest } from '../../actions/api/history';
+import { getClickComponent } from '../modal/ModalWrapper';
+import { FetchDeployForRequest } from '../../../actions/api/history';
 
 import RedeployModal from './RedeployModal';
-import Utils from '../../utils';
+import Utils from '../../../utils';
 
 const redeployTooltip = (
   <ToolTip id="redeploy">
@@ -23,6 +23,7 @@ class RedeployButton extends Component {
     requestId: PropTypes.string.isRequired,
     deployId: PropTypes.string.isRequired,
     deploy: PropTypes.object,
+    doAfterRedeploy: PropTypes.func,
     children: PropTypes.node
   };
 
@@ -40,7 +41,7 @@ class RedeployButton extends Component {
     return (
       <span>
         {getClickComponent(this, this.props.fetchDeploy)}
-        <RedeployModal ref="modal" requestId={this.props.requestId} deploy={this.props.deploy} />
+        <RedeployModal ref="modal" {...this.props} />
       </span>
     );
   }

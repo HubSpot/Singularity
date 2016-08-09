@@ -12,7 +12,7 @@ import { FetchDeploysForRequest } from '../../actions/api/history';
 import UITable from '../common/table/UITable';
 import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
-import RedeployButton from '../requests/RedeployButton';
+import RedeployButton from '../common/modalButtons/RedeployButton';
 
 const DeployHistoryTable = ({requestId, deploysAPI, fetchDeploys}) => {
   const deploys = deploysAPI ? deploysAPI.data : [];
