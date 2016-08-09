@@ -42,6 +42,7 @@ class Webhooks extends Component {
   constructor(props) {
     super(props);
     this.state = {};
+    _.bindAll(this, 'newWebhook', 'promptNewWebhook', 'deleteWebhook', 'promptDeleteWebhook');
   }
 
   checkWebhookUri(uri) {
