@@ -60,6 +60,7 @@ class RedeployModal extends Component {
           </p>
         </SimpleModal>
         <FormModal
+          name="Redeploy"
           ref="redeployModal"
           action="Redeploy"
           onConfirm={(data) => this.confirmRedeploy(data)}
