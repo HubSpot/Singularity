@@ -181,7 +181,7 @@ class Slaves extends React.Component {
             {this.getMaybeReactivateButton(slave)}
             {this.getMaybeFreezeButton(slave)}
             {this.getDecommissionOrRemoveButton(slave)}
-            <JSONButton object={slave}>
+            <JSONButton object={slave} showOverlay={true}>
               {'{ }'}
             </JSONButton>
           </span>

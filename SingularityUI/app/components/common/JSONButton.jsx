@@ -14,6 +14,7 @@ export default class JSONButton extends Component {
       PropTypes.node
     ]).isRequired,
     object: PropTypes.object.isRequired,
+    showOverlay: PropTypes.bool,
     className: PropTypes.string,
     linkClassName: PropTypes.string
   };
@@ -50,11 +51,16 @@ export default class JSONButton extends Component {
         JSON
       </ToolTip>
     );
+    const button = (
+      <a className={this.props.linkClassName} onClick={this.showJSON} alt="Show JSON">{this.props.children}</a>
+    );
     return (
       <span className={this.props.className}>
-        <OverlayTrigger placement="top" id="view-json-overlay" overlay={jsonTooltip}>
-          <a className={this.props.linkClassName} onClick={this.showJSON} alt="Show JSON">{this.props.children}</a>
-        </OverlayTrigger>
+        {this.props.showOverlay ? (
+          <OverlayTrigger placement="top" id="view-json-overlay" overlay={jsonTooltip}>
+            {button}
+          </OverlayTrigger>) : button
+        }
         <Modal show={this.state.modalOpen} onHide={this.hideJSON} bsSize="large">
           <Modal.Body>
             <div className="constrained-modal json-modal">

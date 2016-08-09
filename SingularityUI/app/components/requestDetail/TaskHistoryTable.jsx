@@ -112,7 +112,7 @@ const TaskHistoryTable = ({requestId, tasksAPI, fetchTaskHistoryForRequest}) => 
                   <Glyphicon glyph="file" />
                 </Link>
               </OverlayTrigger>
-              <JSONButton object={task}>
+              <JSONButton object={task} showOverlay={true}>
                 {'{ }'}
               </JSONButton>
             </span>

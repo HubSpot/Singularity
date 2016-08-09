@@ -222,7 +222,7 @@ export const Actions = (
             {runNow}
             {unpause}
             <RemoveButton requestId={cellData.id} />
-            <JSONButton className="inline" object={cellData}>
+            <JSONButton className="inline" object={cellData} showOverlay={true}>
               {'{ }'}
             </JSONButton>
             {edit}
