@@ -49,7 +49,7 @@ RequestHeader.propTypes = {
 
 function mapStateToProps(state, ownProps) {
   return {
-    group: _.first(_.filter(state.api.requestGroups.data, (g) => _.contains(g.requestIds, ownProps.requestId)))
+    group: _.first(_.filter(state.api.requestGroups.data, (filterGroup) => _.contains(filterGroup.requestIds, ownProps.requestId)))
   };
 }
 

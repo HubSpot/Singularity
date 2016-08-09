@@ -45,7 +45,7 @@ GroupDetail.propTypes = {
 };
 
 function mapStateToProps(state, ownProps) {
-  const group = _.find(state.api.requestGroups.data, (g) => g.id === ownProps.params.groupId);
+  const group = _.find(state.api.requestGroups.data, (filterGroup) => filterGroup.id === ownProps.params.groupId);
   return ({
     notFound: !state.api.requestGroups.isFetching && !group,
     pathname: ownProps.location.pathname,

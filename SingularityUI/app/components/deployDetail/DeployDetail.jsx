@@ -362,7 +362,7 @@ function mapStateToProps(state, ownProps) {
     deploy: state.api.deploy.data,
     taskHistory: state.api.taskHistoryForDeploy.data,
     isTaskHistoryFetching: state.api.taskHistoryForDeploy.isFetching,
-    group: state.api.deploy.data.deploy && _.first(_.filter(state.api.requestGroups.data, (g) => _.contains(g.requestIds, state.api.deploy.data.deploy.requestId))),
+    group: state.api.deploy.data.deploy && _.first(_.filter(state.api.requestGroups.data, (filterGroup) => _.contains(filterGroup.requestIds, state.api.deploy.data.deploy.requestId))),
     latestHealthchecks
   };
 }

@@ -481,7 +481,7 @@ function mapStateToProps(state, ownProps) {
     deploy: state.api.deploy.data,
     pendingDeploys: state.api.deploys.data,
     shellCommandResponse: state.api.taskShellCommandResponse.data,
-    group: task.task && _.first(_.filter(state.api.requestGroups.data, (g) => _.contains(g.requestIds, task.task.taskId.requestId)))
+    group: task.task && _.first(_.filter(state.api.requestGroups.data, (filterGroup) => _.contains(filterGroup.requestIds, task.task.taskId.requestId)))
   };
 }
 
