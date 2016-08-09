@@ -69,7 +69,7 @@ class RedeployModal extends Component {
             {
               name: 'deployId',
               type: FormModal.INPUT_TYPES.STRING,
-              label: 'New Deploy Id (Must not be the same Id as the old deploy, or any other deploy)',
+              label: 'New Deploy Id (Must be unique)',
               defaultValue: deployId,
               isRequired: true,
               validateField: (newDeployId) => newDeployId === deployId && 'New deploy id must not be the same as the old deploy id'
