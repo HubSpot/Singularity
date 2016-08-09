@@ -4,8 +4,9 @@ import rootComponent from '../../rootComponent';
 
 import { FetchGroups } from '../../actions/api/requestGroups';
 
-import { Tabs, Tab } from 'react-bootstrap';
+import { Row, Col, Tabs, Tab } from 'react-bootstrap';
 import RequestDetailPage from '../requestDetail/RequestDetailPage';
+import MetadataButton from '../common/MetadataButton';
 
 const GroupDetail = ({group, location}) => {
   const tabs = group.requestIds.map((requestId, index) => {
@@ -17,10 +18,20 @@ const GroupDetail = ({group, location}) => {
       </Tab>
     );
   });
+  const metadata = !_.isEmpty(group.metadata) && (
+    <MetadataButton title={group.id} metadata={group.metadata}>View Metadata</MetadataButton>
+  );
 
   return (
     <div>
-      <h1>{group.id}</h1>
+      <Row className="detail-header">
+        <Col md={7} lg={6}>
+          <h1>{group.id}</h1>
+        </Col>
+        <Col md={5} lg={6} className="button-container">
+          {metadata}
+        </Col>
+      </Row>
       <Tabs id="request-ids">
         {tabs}
       </Tabs>
