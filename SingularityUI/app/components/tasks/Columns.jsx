@@ -214,7 +214,7 @@ export const ActiveActions = (
     cellRender={(cellData) => (
       <div className="hidden-xs">
         <KillTaskButton taskId={cellData.taskId.id} />
-        <JSONButton className="inline" object={cellData}>
+        <JSONButton className="inline" object={cellData} showOverlay={true}>
           {'{ }'}
         </JSONButton>
       </div>
@@ -304,7 +304,7 @@ export const ScheduledActions = (
     cellRender={(cellData) => (
       <div className="hidden-xs">
         <RunNowButton requestId={cellData.pendingTask.pendingTaskId.requestId} />
-        <JSONButton className="inline" object={cellData}>
+        <JSONButton className="inline" object={cellData} showOverlay={true}>
           {'{ }'}
         </JSONButton>
       </div>
@@ -372,7 +372,7 @@ export const LogLinkAndJSON = (
             <Glyphicon glyph="file" />
           </Link>
         </OverlayTrigger>
-        <JSONButton className="inline" object={rowData}>
+        <JSONButton className="inline" object={rowData} showOverlay={true}>
           {'{ }'}
         </JSONButton>
       </div>
@@ -388,7 +388,7 @@ export const JSONAction = (
     className="actions-column"
     cellRender={(cellData) => (
       <div className="hidden-xs">
-        <JSONButton className="inline" object={cellData}>
+        <JSONButton className="inline" object={cellData} showOverlay={true}>
           {'{ }'}
         </JSONButton>
       </div>
