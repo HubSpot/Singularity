@@ -127,7 +127,7 @@ const TaskHistoryTable = ({requestId, requestParent, tasksAPI, fetchTaskHistoryF
                   </OverlayTrigger>
                 </RunNowButton>
               )}
-              <JSONButton object={task}>
+              <JSONButton object={task} showOverlay={true}>
                 {'{ }'}
               </JSONButton>
             </span>

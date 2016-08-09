@@ -50,7 +50,7 @@ const TaskAlerts = (props) => {
       alerts.push(
         <Alert key="runLong" bsStyle="warning">
           <strong>Warning: </strong>
-          This scheduled task has been running longer than <code>{threshold}</code> times the average for the request and may be stuck.
+          This scheduled task has been running longer than <code>{threshold}</code> times the average for the deploy and may be stuck.
         </Alert>
       );
     }
@@ -111,7 +111,7 @@ const TaskAlerts = (props) => {
           id="actions-column"
           key="actions-column"
           className="actions-column"
-          cellData={(healthcheckResult) => <JSONButton object={healthcheckResult}>{'{ }'}</JSONButton>}
+          cellData={(healthcheckResult) => <JSONButton object={healthcheckResult} showOverlay={true}>{'{ }'}</JSONButton>}
         />
       </UITable>
     );
