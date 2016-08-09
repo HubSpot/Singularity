@@ -1,6 +1,8 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { Alert } from 'react-bootstrap';
+import JSONTree from 'react-json-tree';
+import { JSONTreeTheme } from '../../thirdPartyConfigurations';
 
 import { SaveDeploy } from '../../actions/api/deploys';
 
@@ -58,7 +60,12 @@ class RedeployModal extends Component {
           )}
           <p>Are you sure you want to redeploy this deploy?</p>
           <pre>{deployId}</pre>
-          <p>This will create a new deploy with the same attributes as the old deploy.</p>
+          <p>This will create a new deploy with the same attributes as the old deploy:</p>
+          <JSONTree
+            data={{deploy: _.omit(Utils.maybe(this.props.deploy, ['deploy']), 'id')}}
+            hideRoot={true}
+            theme={JSONTreeTheme}
+          />
         </FormModal>
       </span>
     );
