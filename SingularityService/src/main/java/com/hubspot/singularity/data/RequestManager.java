@@ -390,13 +390,13 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public Optional<SingularityExpiringBounce> getExpiringBounce(String requestId) {
-    final Optional<SingularityExpiringBounce> optionalBounce = getExpiringObject(SingularityExpiringBounce.class, requestId);
-    if (!optionalBounce.isPresent()) {
-      return optionalBounce;
+    final Optional<SingularityExpiringBounce> maybeExpiringBounce = getExpiringObject(SingularityExpiringBounce.class, requestId);
+    if (!maybeExpiringBounce.isPresent()) {
+      return maybeExpiringBounce;
     }
-    final SingularityExpiringBounce bounce = optionalBounce.get();
+    final SingularityExpiringBounce bounce = maybeExpiringBounce.get();
     if (bounce.getExpiringAPIRequestObject().getDurationMillis().isPresent()) {
-      return optionalBounce;
+      return maybeExpiringBounce;
     }
     final Long durationMillis = TimeUnit.MINUTES.toMillis(singularityConfiguration.getDefaultBounceExpirationMinutes());
     return Optional.of(
