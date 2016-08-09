@@ -3,6 +3,7 @@ package com.hubspot.singularity.data;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -31,6 +32,7 @@ import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularityRequestWithState;
+import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityExpiringRequestParent;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
@@ -53,6 +55,7 @@ public class RequestManager extends CuratorAsyncManager {
   private final Transcoder<SingularityRequestLbCleanup> requestLbCleanupTranscoder;
 
   private final SingularityEventListener singularityEventListener;
+  private final SingularityConfiguration singularityConfiguration;
 
   private static final String REQUEST_ROOT = "/requests";
 
@@ -80,7 +83,8 @@ public class RequestManager extends CuratorAsyncManager {
   public RequestManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, SingularityEventListener singularityEventListener,
       Transcoder<SingularityRequestCleanup> requestCleanupTranscoder, Transcoder<SingularityRequestWithState> requestTranscoder, Transcoder<SingularityRequestLbCleanup> requestLbCleanupTranscoder,
       Transcoder<SingularityPendingRequest> pendingRequestTranscoder, Transcoder<SingularityRequestHistory> requestHistoryTranscoder, Transcoder<SingularityExpiringBounce> expiringBounceTranscoder,
-      Transcoder<SingularityExpiringScale> expiringScaleTranscoder,  Transcoder<SingularityExpiringPause> expiringPauseTranscoder, Transcoder<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecksTranscoder) {
+      Transcoder<SingularityExpiringScale> expiringScaleTranscoder,  Transcoder<SingularityExpiringPause> expiringPauseTranscoder, Transcoder<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecksTranscoder,
+      SingularityConfiguration singularityConfiguration) {
     super(curator, configuration, metricRegistry);
     this.requestTranscoder = requestTranscoder;
     this.requestCleanupTranscoder = requestCleanupTranscoder;
@@ -88,6 +92,7 @@ public class RequestManager extends CuratorAsyncManager {
     this.requestHistoryTranscoder = requestHistoryTranscoder;
     this.singularityEventListener = singularityEventListener;
     this.requestLbCleanupTranscoder = requestLbCleanupTranscoder;
+    this.singularityConfiguration = singularityConfiguration;
 
     this.expiringTranscoderMap = ImmutableMap.of(
         SingularityExpiringBounce.class, expiringBounceTranscoder,
@@ -385,7 +390,31 @@ public class RequestManager extends CuratorAsyncManager {
   }
 
   public Optional<SingularityExpiringBounce> getExpiringBounce(String requestId) {
-    return getExpiringObject(SingularityExpiringBounce.class, requestId);
+    final Optional<SingularityExpiringBounce> optionalBounce = getExpiringObject(SingularityExpiringBounce.class, requestId);
+    if (!optionalBounce.isPresent()) {
+      return optionalBounce;
+    }
+    final SingularityExpiringBounce bounce = optionalBounce.get();
+    if (bounce.getExpiringAPIRequestObject().getDurationMillis().isPresent()) {
+      return optionalBounce;
+    }
+    final Long durationMillis = TimeUnit.MINUTES.toMillis(singularityConfiguration.getDefaultBounceExpirationMinutes());
+    return Optional.of(
+        new SingularityExpiringBounce(
+            bounce.getRequestId(),
+            bounce.getDeployId(),
+            bounce.getUser(),
+            bounce.getStartMillis(),
+            new SingularityBounceRequest(
+                bounce.getExpiringAPIRequestObject().getIncremental(),
+                bounce.getExpiringAPIRequestObject().getSkipHealthchecks(),
+                Optional.of(durationMillis),
+                bounce.getExpiringAPIRequestObject().getActionId(),
+                bounce.getExpiringAPIRequestObject().getMessage()
+            ),
+            bounce.getActionId()
+        )
+    );
   }
 
   public Optional<SingularityExpiringPause> getExpiringPause(String requestId) {
