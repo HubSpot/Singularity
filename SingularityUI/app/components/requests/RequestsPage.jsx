@@ -24,13 +24,6 @@ import filterSelector from '../../selectors/requests/filterSelector';
 import Utils from '../../utils';
 
 class RequestsPage extends Component {
-  static propTypes = {
-    state: PropTypes.string.isRequired,
-    subFilter: PropTypes.string.isRequired,
-    searchFilter: PropTypes.string.isRequired,
-    requestsInState: PropTypes.arrayOf(PropTypes.object).isRequired,
-    fetchFilter: PropTypes.func.isRequired
-  };
 
   static propTypes = {
     requestsInState: React.PropTypes.array,
