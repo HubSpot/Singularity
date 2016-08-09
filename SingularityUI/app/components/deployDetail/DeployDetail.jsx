@@ -201,7 +201,7 @@ class DeployDetail extends React.Component {
                 <Link to={`task/${task.taskId.id}/tail/${config.finishedTaskLogPath}`}>
                   <Glyphicon glyph="file" />
                 </Link>
-                <JSONButton object={task}>{'{ }'}</JSONButton>
+                <JSONButton object={task} showOverlay={true}>{'{ }'}</JSONButton>
               </span>
             )}
           />

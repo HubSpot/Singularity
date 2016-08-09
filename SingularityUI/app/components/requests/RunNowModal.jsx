@@ -59,6 +59,7 @@ class RunNowModal extends Component {
           router={this.props.router}
         />
         <FormModal
+          name={this.props.rerun ? 'Rerun this task now' : 'Run a task for this request now'}
           ref="runNowModal"
           action={<span><Glyphicon glyph="flash" /> {this.props.rerun ? 'Rerun' : 'Run'} Task</span>}
           onConfirm={(data) => this.handleRunNow(data)}

@@ -111,9 +111,10 @@ function TaskFileBrowser (props) {
           sortData={sortData}
         />
         <Column
-          label=""
+          label="actions-column"
           id="actions-column"
           key="actions-column"
+          className="actions-column"
           cellData={(file) => !file.isDirectory && (
             <OverlayTrigger placement="left" overlay={<ToolTip id={`downloadFile${file.name}`}>Download {file.name}</ToolTip>}>
               <a href={file.downloadLink}>

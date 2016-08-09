@@ -358,9 +358,8 @@ export default class FormModal extends React.Component {
 
     return (
       <Modal show={this.state.visible} onHide={this.hide} backdrop={this.props.mustFill ? 'static' : true}>
+        {this.props.name && <Modal.Header><h3>{this.props.name}</h3></Modal.Header>}
         <Modal.Body>
-          {this.props.name && <h3>{this.props.name}</h3>}
-          {this.props.name && <hr />}
           {this.props.children}
           {this.props.children && !!this.props.formElements.length && <hr />}
           {this.renderForm()}

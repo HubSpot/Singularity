@@ -303,7 +303,7 @@ class TaskDetail extends Component {
   }
 
   renderShellCommands() {
-    return (this.props.task.isStillRunning || this.props.task.shellCommandHistory.length > 0) && (
+    return (this.props.task.isStillRunning || this.props.task.isCleaning || this.props.task.shellCommandHistory.length > 0) && (
       <CollapsableSection title="Shell commands">
         <ShellCommands
           customExecutorCmd={this.props.task.task.taskRequest.deploy.customExecutorCmd}
