@@ -474,7 +474,7 @@ public class SingularityDeployChecker {
       LOG.info("Canceling a deploy {} due to cancel request {}", pendingDeploy, cancelRequest.get());
       String userMessage = cancelRequest.get().getUser().isPresent() ? String.format(" by %s", cancelRequest.get().getUser().get()) : "";
       return new SingularityDeployResult(DeployState.CANCELED, Optional.of(String.format("Canceled due to request%s at %s", userMessage, cancelRequest.get().getTimestamp())),
-        pendingDeploy.getLastLoadBalancerUpdate(), SingularityDeployFailure.cancelled(), System.currentTimeMillis());
+        pendingDeploy.getLastLoadBalancerUpdate(), Collections.<SingularityDeployFailure>emptyList(), System.currentTimeMillis());
     }
 
     if (deployProgress.isStepComplete()) {
@@ -517,7 +517,7 @@ public class SingularityDeployChecker {
 
         if (configuration.getLoadBalancerUri() == null) {
           LOG.warn("Deploy {} required a load balancer URI but it wasn't set", pendingDeploy);
-          return new SingularityDeployResult(DeployState.FAILED, Optional.of("No valid load balancer URI was present"), Optional.<SingularityLoadBalancerUpdate>absent(), SingularityDeployFailure.lbUpdateFailed(), System.currentTimeMillis());
+          return new SingularityDeployResult(DeployState.FAILED, Optional.of("No valid load balancer URI was present"), Optional.<SingularityLoadBalancerUpdate>absent(), Collections.<SingularityDeployFailure>emptyList(), System.currentTimeMillis());
         }
 
         return enqueueAndProcessLbRequest(request, deploy, pendingDeploy, updatePendingDeployRequest, deployActiveTasks, otherActiveTasks);
@@ -676,7 +676,12 @@ public class SingularityDeployChecker {
   }
 
   private SingularityDeployResult getDeployResultWithFailures(SingularityRequest request, Optional<SingularityDeploy> deploy, SingularityPendingDeploy pendingDeploy, DeployState state, String message, Collection<SingularityTaskId> matchingTasks) {
-    return new SingularityDeployResult(state, Optional.of(message), pendingDeploy.getLastLoadBalancerUpdate(), getDeployFailures(request, deploy, pendingDeploy, state, matchingTasks), System.currentTimeMillis());
+    List<SingularityDeployFailure> deployFailures = getDeployFailures(request, deploy, pendingDeploy, state, matchingTasks);
+    if (deployFailures.size() == 1 && !deployFailures.get(0).getTaskId().isPresent()) { // Single non-task-specific failure should become the deploy result message (e.g. not enough resources to launch all tasks)
+      return new SingularityDeployResult(state, deployFailures.get(0).getMessage() , pendingDeploy.getLastLoadBalancerUpdate(), Collections.<SingularityDeployFailure>emptyList(), System.currentTimeMillis());
+    } else {
+      return new SingularityDeployResult(state, Optional.of(message), pendingDeploy.getLastLoadBalancerUpdate(), deployFailures, System.currentTimeMillis());
+    }
   }
 
   private List<SingularityDeployFailure> getDeployFailures(SingularityRequest request, Optional<SingularityDeploy> deploy, SingularityPendingDeploy pendingDeploy, DeployState state, Collection<SingularityTaskId> matchingTasks) {
