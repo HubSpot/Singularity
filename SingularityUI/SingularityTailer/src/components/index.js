@@ -3,4 +3,4 @@ export { default as Pane } from './Pane';
 export { default as connectToTailer } from './connectToTailer';
 export { default as TailerProvider } from './TailerProvider';
 export { default as SandboxTailer } from './SandboxTailer';
-export { default as httpTailer } from './httpTailer';
+export { default as HttpTailer } from './HttpTailer';

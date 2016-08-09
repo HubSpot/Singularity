@@ -17,7 +17,7 @@ const Line = ({data}) => {
       </span>
     ));
 
-    return <div className="log-row" key={`${data.start}-${data.end}`}>{data.byteLength}-{ansiStyled}</div>;
+    return <div className="log-row" key={`${data.start}-${data.end}`}>{ansiStyled}</div>;
   }
 
   return <div className="log-row" key={`${data.start}-${data.end}`}>{data.text}</div>;
