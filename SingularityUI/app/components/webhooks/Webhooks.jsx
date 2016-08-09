@@ -1,4 +1,4 @@
-import React, {PropTypes} from 'react';
+import React, { PropTypes, Component } from 'react';
 import Utils from '../../utils';
 import FormModal from '../common/modal/FormModal';
 import { Glyphicon } from 'react-bootstrap';
@@ -10,9 +10,11 @@ import Column from '../common/table/Column';
 import UITable from '../common/table/UITable';
 import rootComponent from '../../rootComponent';
 
-const Webhooks = React.createClass({
+const webhookTypes = ['REQUEST', 'DEPLOY', 'TASK'];
 
-  propTypes: {
+class Webhooks extends Component {
+
+  static propTypes = {
     api: PropTypes.shape({
       webhooks: PropTypes.shape({
         data: PropTypes.arrayOf(PropTypes.shape({
@@ -35,11 +37,12 @@ const Webhooks = React.createClass({
     fetchWebhooks: PropTypes.func.isRequired,
     newWebhook: PropTypes.func.isRequired,
     deleteWebhook: PropTypes.func.isRequired
-  },
+  };
 
-  getInitialState() { return {}; },
-
-  webhookTypes: ['REQUEST', 'DEPLOY', 'TASK'],
+  constructor(props) {
+    super(props);
+    this.state = {};
+  }
 
   checkWebhookUri(uri) {
     try {
@@ -47,24 +50,24 @@ const Webhooks = React.createClass({
     } catch (err) {
       return 'Invalid URL';
     }
-  },
+  }
 
   deleteWebhook(webhook) {
     this.props.deleteWebhook(webhook.id).then(this.props.fetchWebhooks());
-  },
+  }
 
   promptDeleteWebhook(webhookToDelete) {
     this.setState({webhookToDelete});
     this.refs.deleteModal.show();
-  },
+  }
 
   newWebhook(uri, type) {
     this.props.newWebhook(uri, type, this.props.user).then(this.props.fetchWebhooks());
-  },
+  }
 
   promptNewWebhook() {
     this.refs.newWebhookModal.show();
-  },
+  }
 
   renderDeleteWebhookLink(webhook) {
     const toolTip = <ToolTip id={`delete-${ webhook.id }`}>Delete This Webhook</ToolTip>;
@@ -75,7 +78,7 @@ const Webhooks = React.createClass({
         </a>
       </OverlayTrigger>
     );
-  },
+  }
 
   renderDeleteWebhookModal() {
     const webhookToDelete = this.state.webhookToDelete;
@@ -98,7 +101,7 @@ const Webhooks = React.createClass({
         </div>
       </FormModal>
     );
-  },
+  }
 
   renderNewWebhookModal() {
     return (
@@ -114,7 +117,7 @@ const Webhooks = React.createClass({
             name: 'type',
             label: 'Type',
             isRequired: true,
-            options: this.webhookTypes.map((type) => ({
+            options: webhookTypes.map((type) => ({
               label: Utils.humanizeText(type),
               value: type
             }))
@@ -129,7 +132,7 @@ const Webhooks = React.createClass({
         ]}
       />
     );
-  },
+  }
 
   render() {
     return (
@@ -209,7 +212,7 @@ const Webhooks = React.createClass({
       </div>
     );
   }
-});
+}
 
 function mapStateToProps(state) {
   const user = Utils.maybe(state, ['api', 'user', 'data', 'user', 'name']);
