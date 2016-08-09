@@ -1,6 +1,8 @@
 import React, { PropTypes } from 'react';
 import Immutable from 'immutable';
-import { AutoSizer, InfiniteLoader, VirtualScroll } from 'react-virtualized';
+import { AutoSizer, VirtualScroll } from 'react-virtualized';
+
+import TailerInfiniteLoader from './TailerInfiniteLoader';
 
 import Line from './Line';
 
@@ -11,17 +13,20 @@ const LogLines = (props) => {
     return <div>Not loaded</div>;
   }
 
+  const rowRenderer = (rowProps) => (
+    <Line data={props.lines.get(rowProps.index)} />
+  );
+
   return (
     <AutoSizer>
       {({width, height}) => ( // eslint-disable-line react/prop-types
-        <InfiniteLoader
-          isRowLoaded={props.isRowLoaded}
-          loadMoreRows={props.loadMoreRows}
-          rowCount={props.remoteRowCount}
+        <TailerInfiniteLoader
+          isLineLoaded={props.isLineLoaded}
+          loadLines={props.loadLines}
+          useOverscan={true}
         >
-          {({onRowsRendered, registerChild}) => ( // eslint-disable-line react/prop-types
+          {({onRowsRendered}) => ( // eslint-disable-line react/prop-types
             <VirtualScroll
-              ref={registerChild}
               width={width}
               height={height}
               tabIndex={null}
@@ -30,13 +35,10 @@ const LogLines = (props) => {
               overscanRowCount={props.overscanRowCount}
               rowCount={props.lines.size}
               rowHeight={14}
-              rowRenderer={(rowProps) => (
-                <Line data={props.lines.get(rowProps.index)} />
-              )}
-              rowClassName="log-row"
+              rowRenderer={rowRenderer}
             />
           )}
-        </InfiniteLoader>
+        </TailerInfiniteLoader>
       )}
     </AutoSizer>
   );
@@ -45,9 +47,8 @@ const LogLines = (props) => {
 LogLines.propTypes = {
   isLoaded: PropTypes.bool.isRequired,
   lines: PropTypes.instanceOf(Immutable.List).isRequired,
-  remoteRowCount: PropTypes.number.isRequired,
-  isRowLoaded: PropTypes.func.isRequired,
-  loadMoreRows: PropTypes.func.isRequired,
+  isLineLoaded: PropTypes.func.isRequired,
+  loadLines: PropTypes.func.isRequired,
   overscanRowCount: PropTypes.number,
   onScroll: PropTypes.func
 };

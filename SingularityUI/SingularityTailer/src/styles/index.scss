@@ -21,6 +21,18 @@ section.log-pane {
     height: 12px;
     padding: 0 2em;
     white-space: pre;
+
+    span:last-child {
+      padding-right: 10px;
+    }
+  }
+
+  .Grid__innerScrollContainer {
+    overflow: visible;
+  }
+
+  .Grid {
+    overflow-x: scroll !important;
   }
 
   footer {

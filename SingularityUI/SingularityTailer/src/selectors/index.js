@@ -64,7 +64,9 @@ const getEnhancedLine = (line, requests, config) => {
     enhancedLine.isLoading = requests.has(line.start);
   }
 
-  if (config.parseAnsi && !line.isMissingMarker) {
+  // don't parse ansi for long lines
+  // TODO: move magic number elsewhere
+  if (config.parseAnsi && !line.isMissingMarker && line.byteLength < 1000) {
     enhancedLine.ansi = ansiEnhancer(line);
   }
 

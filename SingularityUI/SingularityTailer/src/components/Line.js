@@ -4,7 +4,7 @@ const Line = ({data}) => {
   if (data.isMissingMarker) {
     const missingBytes = data.end - data.start;
     return (
-      <div style={{backgroundColor: data.isLoading ? 'red' : 'green' }} key={`${data.start}-${data.end}`}>
+      <div className="log-row" style={{backgroundColor: data.isLoading ? 'red' : 'green' }} key={`${data.start}-${data.end}`}>
         {missingBytes} bytes
       </div>
     );
@@ -17,10 +17,10 @@ const Line = ({data}) => {
       </span>
     ));
 
-    return <div key={`${data.start}-${data.end}`}>{ansiStyled}</div>;
+    return <div className="log-row" key={`${data.start}-${data.end}`}>{data.byteLength}-{ansiStyled}</div>;
   }
 
-  return <div key={`${data.start}-${data.end}`}>{data.text}</div>;
+  return <div className="log-row" key={`${data.start}-${data.end}`}>{data.text}</div>;
 };
 
 Line.propTypes = {
