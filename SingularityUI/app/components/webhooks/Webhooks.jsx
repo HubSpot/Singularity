@@ -1,12 +1,12 @@
 import React, { PropTypes, Component } from 'react';
 import Utils from '../../utils';
-import FormModal from '../common/modal/FormModal';
-import { FetchWebhooks, NewWebhook } from '../../actions/api/webhooks';
+import { FetchWebhooks } from '../../actions/api/webhooks';
 import { connect } from 'react-redux';
 import Column from '../common/table/Column';
 import UITable from '../common/table/UITable';
 import rootComponent from '../../rootComponent';
 import DeleteWebhookButton from './DeleteWebhookButton';
+import NewWebhookButton from './NewWebhookButton';
 
 const webhookTypes = ['REQUEST', 'DEPLOY', 'TASK'];
 
@@ -25,62 +25,8 @@ class Webhooks extends Component {
       queueSize: PropTypes.number
     })).isRequired,
     user: PropTypes.string,
-    fetchWebhooks: PropTypes.func.isRequired,
-    newWebhook: PropTypes.func.isRequired
+    fetchWebhooks: PropTypes.func.isRequired
   };
-
-  constructor(props) {
-    super(props);
-    this.state = {};
-    _.bindAll(this, 'newWebhook', 'promptNewWebhook');
-  }
-
-  checkWebhookUri(uri) {
-    try {
-      return !new URL(uri);
-    } catch (err) {
-      return 'Invalid URL';
-    }
-  }
-
-  newWebhook(uri, type) {
-    this.props.newWebhook(uri, type, this.props.user).then(this.props.fetchWebhooks());
-  }
-
-  promptNewWebhook() {
-    this.refs.newWebhookModal.show();
-  }
-
-  renderNewWebhookModal() {
-    return (
-      <FormModal
-        ref="newWebhookModal"
-        name="New Webhook"
-        action="Create Webhook"
-        buttonStyle="success"
-        onConfirm={(data) => this.newWebhook(data.uri, data.type)}
-        formElements={[
-          {
-            type: FormModal.INPUT_TYPES.SELECT,
-            name: 'type',
-            label: 'Type',
-            isRequired: true,
-            options: webhookTypes.map((type) => ({
-              label: Utils.humanizeText(type),
-              value: type
-            }))
-          },
-          {
-            type: FormModal.INPUT_TYPES.STRING,
-            name: 'uri',
-            label: 'URI',
-            isRequired: true,
-            validateField: (value) => this.checkWebhookUri(value)
-          }
-        ]}
-      />
-    );
-  }
 
   render() {
     return (
@@ -90,13 +36,14 @@ class Webhooks extends Component {
             <span className="h1">Webhooks</span>
           </div>
           <div className="col-md-2 col-xs-6 button-container">
-            <button
-              className="btn btn-success pull-right"
-              alt="Create a new webhook"
-              title="newWebhook"
-              onClick={this.promptNewWebhook}>
-              New Webhook
-            </button>
+            <NewWebhookButton>
+              <button
+                className="btn btn-success pull-right"
+                alt="Create a new webhook"
+                title="newWebhook">
+                New Webhook
+              </button>
+            </NewWebhookButton>
           </div>
         </div>
         <UITable
@@ -155,7 +102,6 @@ class Webhooks extends Component {
             cellData={(webhook) => <DeleteWebhookButton webhook={webhook.webhook} />}
           />
         </UITable>
-        {this.renderNewWebhookModal()}
       </div>
     );
   }
@@ -171,7 +117,6 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    newWebhook: (uri, type, user) => dispatch(NewWebhook.trigger(uri, type, user)),
     fetchWebhooks: () => dispatch(FetchWebhooks.trigger())
   };
 }
