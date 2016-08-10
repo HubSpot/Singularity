@@ -8,7 +8,6 @@ import static com.hubspot.singularity.WebExceptions.checkNotNullBadRequest;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -202,17 +201,10 @@ public class RequestResource extends AbstractRequestResource {
 
     requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), JavaUtils.getUserEmail(user), message);
 
-    SingularityBounceRequest defaultBounceRequest = bounceRequest.or(SingularityBounceRequest.defaultRequest());
-    if (!defaultBounceRequest.getDurationMillis().isPresent()) {
-      final Long durationMillis = TimeUnit.MINUTES.toMillis(configuration.getDefaultBounceExpirationMinutes());
-      defaultBounceRequest = defaultBounceRequest
-          .toBuilder()
-          .setDurationMillis(Optional.of(durationMillis))
-          .build();
-    }
+    final SingularityBounceRequest bounceRequestWithDurationMillis = validator.withDurationMillis(bounceRequest.or(SingularityBounceRequest.defaultRequest()));
 
     requestManager.saveExpiringObject(new SingularityExpiringBounce(requestId, deployId, JavaUtils.getUserEmail(user),
-        System.currentTimeMillis(), defaultBounceRequest, actionId.get()));
+        System.currentTimeMillis(), bounceRequestWithDurationMillis, actionId.get()));
 
     return fillEntireRequest(requestWithState);
   }
