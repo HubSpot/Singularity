@@ -25,9 +25,16 @@ class SandboxTailer extends Component {
     this.props.fetchLength();
   }
 
-  loadLines(startIndex, stopIndex, lines) {
+  fetchSafe(byteRangeStart, byteRangeEnd) {
     const { fetchChunk } = this.props;
+    // if already in flight, don't request again
+    if (!this.props.requests.has(byteRangeStart)) {
+      return fetchChunk(byteRangeStart, byteRangeEnd);
+    }
+    return undefined;
+  }
 
+  loadLines(startIndex, stopIndex, lines) {
     let byteRangeStart;
     let byteRangeEnd;
     if (startIndex < lines.size) {
@@ -47,14 +54,16 @@ class SandboxTailer extends Component {
       byteRangeEnd = byteRangeStart + this.sandboxMaxBytes;
     }
 
-    // if already in flight, don't request again
-    if (!this.props.requests.has(byteRangeStart)) {
-      fetchChunk(byteRangeStart, byteRangeEnd);
-    }
+    this.fetchSafe(byteRangeStart, byteRangeEnd);
   }
 
-  tailLog() {
-
+  tailLog(lines) {
+    if (lines.size) {
+      const lastLine = lines.last();
+      this.fetchSafe(lastLine.end, lastLine.end + this.sandboxMaxBytes);
+    } else {
+      this.fetchSafe(0, this.sandboxMaxBytes);
+    }
   }
 
   render() {

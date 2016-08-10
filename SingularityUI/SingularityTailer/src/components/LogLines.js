@@ -23,6 +23,8 @@ const LogLines = (props) => {
         <TailerInfiniteLoader
           isLineLoaded={props.isLineLoaded}
           loadLines={props.loadLines}
+          tailLog={props.tailLog}
+          isTailing={props.isTailing}
           useOverscan={true}
         >
           {({onRowsRendered}) => ( // eslint-disable-line react/prop-types
@@ -31,7 +33,6 @@ const LogLines = (props) => {
               height={height}
               tabIndex={null}
               onRowsRendered={onRowsRendered}
-              onScroll={props.onScroll}
               overscanRowCount={props.overscanRowCount}
               rowCount={props.lines.size}
               rowHeight={14}
@@ -50,7 +51,8 @@ LogLines.propTypes = {
   isLineLoaded: PropTypes.func.isRequired,
   loadLines: PropTypes.func.isRequired,
   overscanRowCount: PropTypes.number,
-  onScroll: PropTypes.func
+  isTailing: PropTypes.func.isRequired,
+  tailLog: PropTypes.func.isRequired
 };
 
 LogLines.defaultProps = {

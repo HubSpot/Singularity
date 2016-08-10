@@ -14,8 +14,9 @@ class Log extends Component {
     super();
 
     this.isLineLoaded = this.isLineLoaded.bind(this);
+    this.isTailing = this.isTailing.bind(this);
     this.loadLines = this.loadLines.bind(this);
-    this.onScroll = this.onScroll.bind(this);
+    this.tailLog = this.tailLog.bind(this);
   }
   componentDidMount() {
     this.props.initializeFile();
@@ -27,7 +28,7 @@ class Log extends Component {
     }
   }
 
-  isLineLoaded({index}) {
+  isLineLoaded(index) {
     return (
       index < this.props.lines.size
       && (
@@ -36,17 +37,16 @@ class Log extends Component {
     );
   }
 
+  isTailing(stopIndex) {
+    return stopIndex === this.props.lines.size - 1;
+  }
+
   loadLines(startIndex, stopIndex) {
     return this.props.loadLines(startIndex, stopIndex, this.props.lines);
   }
 
-  onScroll({clientHeight, scrollHeight, scrollTop}) {
-    // if at the bottom of the scroll window
-    if (scrollHeight - scrollTop - clientHeight === 0) {
-      if (!this.props.lines.size || this.props.lines.last().isMissingMarker) {
-
-      }
-    }
+  tailLog() {
+    return this.props.tailLog(this.props.lines);
   }
 
   render() {
@@ -58,8 +58,9 @@ class Log extends Component {
             isLoaded={props.isLoaded}
             lines={props.lines}
             isLineLoaded={this.isLineLoaded}
+            isTailing={this.isTailing}
             loadLines={this.loadLines}
-            onScroll={this.onScroll}
+            tailLog={this.tailLog}
           />
         </div>
       </section>

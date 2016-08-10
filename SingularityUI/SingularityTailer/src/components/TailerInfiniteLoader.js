@@ -8,6 +8,8 @@ class TailerInfiniteLoader extends Component {
     this._onRowsRendered = this._onRowsRendered.bind(this);
 
     this.state = {
+      isTailing: false,
+      tailIntervalId: undefined
     };
   }
 
@@ -26,14 +28,30 @@ class TailerInfiniteLoader extends Component {
 
   findUnloadedInRange(startIndex, stopIndex) {
     const range = new Range(startIndex, stopIndex + 1);
-    return range.filter((index) => !this.props.isLineLoaded({ index }));
+    return range.filter((index) => !this.props.isLineLoaded(index));
   }
 
   _onRowsRendered ({ startIndex, stopIndex, overscanStartIndex, overscanStopIndex }) {
     const { useOverscan } = this.props;
+
+    const isTailing = this.props.isTailing(stopIndex);
+
+    let tailIntervalId = this.state.tailIntervalId;
+
+    if (isTailing && !this.state.isTailing) {
+      // start tailing
+      tailIntervalId = setInterval(() => this.props.tailLog(), 1000);
+    } else if (!isTailing && this.state.isTailing) {
+      // stop tailing
+      clearInterval(tailIntervalId);
+      tailIntervalId = undefined;
+    }
+
     this.setState({
       startIndex: useOverscan ? overscanStartIndex : startIndex,
-      stopIndex: useOverscan ? overscanStopIndex : stopIndex
+      stopIndex: useOverscan ? overscanStopIndex : stopIndex,
+      isTailing,
+      tailIntervalId
     });
   }
 
@@ -61,8 +79,11 @@ TailerInfiniteLoader.propTypes = {
    * It should implement the following signature: ({ index: number }): boolean
    */
   isLineLoaded: PropTypes.func.isRequired,
+  isTailing: PropTypes.func.isRequired,
   loadLines: PropTypes.func.isRequired,
-  useOverscan: PropTypes.bool,
+  tailLog: PropTypes.func.isRequired,
+  scrollToIndex: PropTypes.func.isRequired,
+  useOverscan: PropTypes.bool
 };
 
 export default TailerInfiniteLoader;
