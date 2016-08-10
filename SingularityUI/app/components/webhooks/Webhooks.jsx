@@ -1,27 +1,18 @@
 import React, { PropTypes, Component } from 'react';
 import Utils from '../../utils';
 import FormModal from '../common/modal/FormModal';
-import { Glyphicon } from 'react-bootstrap';
-import { FetchWebhooks, DeleteWebhook, NewWebhook } from '../../actions/api/webhooks';
+import { FetchWebhooks, NewWebhook } from '../../actions/api/webhooks';
 import { connect } from 'react-redux';
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import ToolTip from 'react-bootstrap/lib/Tooltip';
 import Column from '../common/table/Column';
 import UITable from '../common/table/UITable';
 import rootComponent from '../../rootComponent';
+import DeleteWebhookButton from './DeleteWebhookButton';
 
 const webhookTypes = ['REQUEST', 'DEPLOY', 'TASK'];
 
 class Webhooks extends Component {
 
   static propTypes = {
-    api: PropTypes.shape({
-      webhooks: PropTypes.shape({
-        data: PropTypes.arrayOf(PropTypes.shape({
-          //
-        }))
-      }).isRequired
-    }),
     webhooks: PropTypes.arrayOf(PropTypes.shape({
       webhook: PropTypes.shape({
         uri: PropTypes.string.isRequired,
@@ -35,14 +26,13 @@ class Webhooks extends Component {
     })).isRequired,
     user: PropTypes.string,
     fetchWebhooks: PropTypes.func.isRequired,
-    newWebhook: PropTypes.func.isRequired,
-    deleteWebhook: PropTypes.func.isRequired
+    newWebhook: PropTypes.func.isRequired
   };
 
   constructor(props) {
     super(props);
     this.state = {};
-    _.bindAll(this, 'newWebhook', 'promptNewWebhook', 'deleteWebhook', 'promptDeleteWebhook');
+    _.bindAll(this, 'newWebhook', 'promptNewWebhook');
   }
 
   checkWebhookUri(uri) {
@@ -53,55 +43,12 @@ class Webhooks extends Component {
     }
   }
 
-  deleteWebhook(webhook) {
-    this.props.deleteWebhook(webhook.id).then(this.props.fetchWebhooks());
-  }
-
-  promptDeleteWebhook(webhookToDelete) {
-    this.setState({webhookToDelete});
-    this.refs.deleteModal.show();
-  }
-
   newWebhook(uri, type) {
     this.props.newWebhook(uri, type, this.props.user).then(this.props.fetchWebhooks());
   }
 
   promptNewWebhook() {
     this.refs.newWebhookModal.show();
-  }
-
-  renderDeleteWebhookLink(webhook) {
-    const toolTip = <ToolTip id={`delete-${ webhook.id }`}>Delete This Webhook</ToolTip>;
-    return (
-      <OverlayTrigger placement="top" overlay={toolTip}>
-        <a onClick={() => this.promptDeleteWebhook(webhook)}>
-          <Glyphicon glyph="trash" />
-        </a>
-      </OverlayTrigger>
-    );
-  }
-
-  renderDeleteWebhookModal() {
-    const webhookToDelete = this.state.webhookToDelete;
-    return (
-      <FormModal
-        ref="deleteModal"
-        name="Delete Webhook"
-        action="Delete Webhook"
-        onConfirm={() => this.deleteWebhook(webhookToDelete)}
-        buttonStyle="danger"
-        formElements={[]}>
-        <div>
-          {webhookToDelete &&
-            <pre>
-              ({webhookToDelete.type}) {webhookToDelete.uri}
-            </pre>}
-          <p>
-            Are you sure you want to delete this webhook?
-          </p>
-        </div>
-      </FormModal>
-    );
   }
 
   renderNewWebhookModal() {
@@ -205,11 +152,10 @@ class Webhooks extends Component {
             id="actions-column"
             key="actions-column"
             className="actions-column"
-            cellData={(webhook) => this.renderDeleteWebhookLink(webhook.webhook)}
+            cellData={(webhook) => <DeleteWebhookButton webhook={webhook.webhook} />}
           />
         </UITable>
         {this.renderNewWebhookModal()}
-        {this.renderDeleteWebhookModal()}
       </div>
     );
   }
@@ -226,7 +172,6 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch) {
   return {
     newWebhook: (uri, type, user) => dispatch(NewWebhook.trigger(uri, type, user)),
-    deleteWebhook: (id) => dispatch(DeleteWebhook.trigger(id)),
     fetchWebhooks: () => dispatch(FetchWebhooks.trigger())
   };
 }
