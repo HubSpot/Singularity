@@ -67,6 +67,8 @@ import {
 
 import { FetchWebhooks } from '../../actions/api/webhooks';
 
+import { FetchGroups } from '../../actions/api/requestGroups';
+
 const user = buildApiActionReducer(FetchUser);
 const webhooks = buildApiActionReducer(FetchWebhooks, []);
 const slaves = buildApiActionReducer(FetchSlaves, []);
@@ -108,6 +110,7 @@ const taskKill = buildApiActionReducer(KillTask);
 const task = buildKeyedApiActionReducer(FetchTaskHistory);
 const taskHistory = buildApiActionReducer(FetchTaskSearchParams, []);
 const tasks = buildApiActionReducer(FetchTasksInState, []);
+const requestGroups = buildApiActionReducer(FetchGroups, []);
 
 export default combineReducers({
   user,
@@ -150,5 +153,6 @@ export default combineReducers({
   taskShellCommandResponse,
   runningTask,
   taskKill,
-  taskHistory
+  taskHistory,
+  requestGroups
 });
