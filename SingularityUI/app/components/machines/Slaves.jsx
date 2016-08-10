@@ -11,65 +11,49 @@ import { FetchSlaves, FreezeSlave, DecommissionSlave, RemoveSlave, ReactivateSla
 import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
 
-class Slaves extends React.Component {
+const typeName = {
+  'active': 'Activated By',
+  'frozen': 'Frozen By',
+  'decommissioning': 'Decommissioned By'
+};
 
-  static propTypes = {
-    freezeSlave: PropTypes.func.isRequired,
-    decommissionSlave: PropTypes.func.isRequired,
-    removeSlave: PropTypes.func.isRequired,
-    reactivateSlave: PropTypes.func.isRequired,
-    clear: PropTypes.func.isRequired,
-    error: PropTypes.string,
-    slaves: PropTypes.arrayOf(PropTypes.shape({
-      state: PropTypes.string
-    }))
-  }
+const Slaves = (props) => {
+  const showUser = (slave) => Utils.isIn(slave.currentState.state, ['ACTIVE', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']);
 
-  componentWillUnmount() {
-    this.props.clear();
-  }
-
-  showUser(slave) {
-    return Utils.isIn(slave.currentState.state, ['ACTIVE', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']);
-  }
-
-  getMaybeReactivateButton(slave) {
-    return (Utils.isIn(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']) &&
+  const getMaybeReactivateButton = (slave) => (
+    Utils.isIn(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']) && (
       <ModalButton
         buttonChildren={<Glyphicon glyph="new-window" />}
         action="Reactivate Slave"
-        onConfirm={(data) => this.props.reactivateSlave(slave, data.message)}
+        onConfirm={(data) => props.reactivateSlave(slave, data.message)}
         tooltipText={`Reactivate ${slave.id}`}
         formElements={[messageElement]}>
         <p>Are you sure you want to cancel decommission and reactivate this slave??</p>
         <pre>{slave.id}</pre>
         <p>Reactivating a slave will cancel the decommission without erasing the slave's history and move it back to the active state.</p>
       </ModalButton>
-    );
-  }
+  ));
 
-  getMaybeFreezeButton(slave) {
-    return (slave.currentState.state === 'ACTIVE' &&
-      <ModalButton
-        buttonChildren={<Glyphicon glyph="stop" />}
-        action="Freeze Slave"
-        onConfirm={(data) => this.props.freezeSlave(slave, data.message)}
-        tooltipText={`Freeze ${slave.id}`}
-        formElements={[messageElement]}>
-        <p>Are you sure you want to freeze this slave?</p>
-        <pre>{slave.id}</pre>
-        <p>Freezing a slave will prevent new tasks from being launched. Previously running tasks will be unaffected.</p>
-      </ModalButton>
-    );
-  }
+  const getMaybeFreezeButton = (slave) => (slave.currentState.state === 'ACTIVE' &&
+    <ModalButton
+      buttonChildren={<Glyphicon glyph="stop" />}
+      action="Freeze Slave"
+      onConfirm={(data) => props.freezeSlave(slave, data.message)}
+      tooltipText={`Freeze ${slave.id}`}
+      formElements={[messageElement]}>
+      <p>Are you sure you want to freeze this slave?</p>
+      <pre>{slave.id}</pre>
+      <p>Freezing a slave will prevent new tasks from being launched. Previously running tasks will be unaffected.</p>
+    </ModalButton>
+  );
 
-  getDecommissionOrRemoveButton(slave) {
+  const getDecommissionOrRemoveButton = (slave) => {
     if (Utils.isIn(slave.currentState.state, ['ACTIVE', 'FROZEN'])) {
       return (
         <ModalButton
           buttonChildren={<Glyphicon glyph="trash" />}
           action="Decommission Slave"
-          onConfirm={(data) => this.props.decommissionSlave(slave, data.message)}
+          onConfirm={(data) => props.decommissionSlave(slave, data.message)}
           tooltipText={`Decommission ${slave.id}`}
           formElements={[messageElement]}>
           <p>Are you sure you want to decommission this slave?</p>
@@ -84,7 +68,7 @@ class Slaves extends React.Component {
       <ModalButton
         buttonChildren={<Glyphicon glyph="remove" />}
         action="Remove Slave"
-        onConfirm={(data) => this.props.removeSlave(slave, data.message)}
+        onConfirm={(data) => props.removeSlave(slave, data.message)}
         tooltipText={`Remove ${slave.id}`}
         formElements={[messageElement]}>
         <p>Are you sure you want to remove this slave?</p>
@@ -95,9 +79,9 @@ class Slaves extends React.Component {
         </p>}
       </ModalButton>
     );
-  }
+  };
 
-  getColumns(type) {
+  const getColumns = (type) => {
     const columns = [
       <Column
         label="ID"
@@ -153,15 +137,15 @@ class Slaves extends React.Component {
       />
     ];
 
-    if (this.typeName[type]) {
+    if (typeName[type]) {
       columns.push(
         <Column
-          label={this.typeName[type]}
+          label={typeName[type]}
           id="typename"
           key="typename"
           sortable={true}
           sortData={(cellData, slave) => slave.currentState.user || ''}
-          cellData={(slave) => this.showUser(slave) && slave.currentState.user}
+          cellData={(slave) => showUser(slave) && slave.currentState.user}
         />
       );
     }
@@ -178,9 +162,9 @@ class Slaves extends React.Component {
         className="actions-column"
         cellData={(slave) => (
           <span>
-            {this.getMaybeReactivateButton(slave)}
-            {this.getMaybeFreezeButton(slave)}
-            {this.getDecommissionOrRemoveButton(slave)}
+            {getMaybeReactivateButton(slave)}
+            {getMaybeFreezeButton(slave)}
+            {getDecommissionOrRemoveButton(slave)}
             <JSONButton object={slave} showOverlay={true}>
               {'{ }'}
             </JSONButton>
@@ -190,68 +174,62 @@ class Slaves extends React.Component {
     );
 
     return columns;
-  }
+  };
 
-  getActiveSlaves() {
-    return this.props.slaves.filter(({currentState}) => currentState.state === 'ACTIVE');
-  }
+  const activeSlaves = props.slaves.filter(({currentState}) => currentState.state === 'ACTIVE');
 
-  getFrozenSlaves() {
-    return this.props.slaves.filter(({currentState}) => currentState.state === 'FROZEN');
-  }
+  const frozenSlaves = props.slaves.filter(({currentState}) => currentState.state === 'FROZEN');
 
-  getDecommissioningSlaves() {
-    return this.props.slaves.filter(({currentState}) => Utils.isIn(currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']));
-  }
+  const decommissioningSlaves = props.slaves.filter(({currentState}) => Utils.isIn(currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']));
 
-  getInactiveSlaves() {
-    return this.props.slaves.filter(({currentState}) => Utils.isIn(currentState.state, ['DEAD', 'MISSING_ON_STARTUP']));
-  }
+  const inactiveSlaves = props.slaves.filter(({currentState}) => Utils.isIn(currentState.state, ['DEAD', 'MISSING_ON_STARTUP']));
 
-  getStates() {
-    return [
-      {
-        stateName: 'Active',
-        emptyMessage: 'No Active Slaves',
-        hostsInState: this.getActiveSlaves(),
-        columns: this.getColumns('active')
-      },
-      {
-        stateName: 'Frozen',
-        emptyMessage: 'No Frozen Slaves',
-        hostsInState: this.getFrozenSlaves(),
-        columns: this.getColumns('decommissioning')
-      },
-      {
-        stateName: 'Decommissioning',
-        emptyMessage: 'No Decommissioning Slaves',
-        hostsInState: this.getDecommissioningSlaves(),
-        columns: this.getColumns('decommissioning')
-      },
-      {
-        stateName: 'Inactive',
-        emptyMessage: 'No Inactive Slaves',
-        hostsInState: this.getInactiveSlaves(),
-        columns: this.getColumns('inactive')
-      }
-    ];
-  }
+  const states = [
+    {
+      stateName: 'Active',
+      emptyMessage: 'No Active Slaves',
+      hostsInState: activeSlaves,
+      columns: getColumns('active')
+    },
+    {
+      stateName: 'Frozen',
+      emptyMessage: 'No Frozen Slaves',
+      hostsInState: frozenSlaves,
+      columns: getColumns('decommissioning')
+    },
+    {
+      stateName: 'Decommissioning',
+      emptyMessage: 'No Decommissioning Slaves',
+      hostsInState: decommissioningSlaves,
+      columns: getColumns('decommissioning')
+    },
+    {
+      stateName: 'Inactive',
+      emptyMessage: 'No Inactive Slaves',
+      hostsInState: inactiveSlaves,
+      columns: getColumns('inactive')
+    }
+  ];
 
-  render() {
-    return (
+  return (
     <MachinesPage
       header = "Slaves"
-      states = {this.getStates()}
-      error = {this.props.error}
+      states = {states}
+      error = {props.error}
     />
-    );
-  }
-}
+  );
+};
 
-Slaves.prototype.typeName = {
-  'active': 'Activated By',
-  'frozen': 'Frozen By',
-  'decommissioning': 'Decommissioned By'
+Slaves.propTypes = {
+  freezeSlave: PropTypes.func.isRequired,
+  decommissionSlave: PropTypes.func.isRequired,
+  removeSlave: PropTypes.func.isRequired,
+  reactivateSlave: PropTypes.func.isRequired,
+  clear: PropTypes.func.isRequired,
+  error: PropTypes.string,
+  slaves: PropTypes.arrayOf(PropTypes.shape({
+    state: PropTypes.string
+  }))
 };
 
 function getErrorFromState(state) {
@@ -297,8 +275,15 @@ function mapDispatchToProps(dispatch) {
   };
 }
 
+function initialize(props) {
+  return Promise.all([
+    props.clear(),
+    props.fetchSlaves()
+  ]);
+}
+
 function refresh(props) {
   return props.fetchSlaves();
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Slaves, 'Slaves', refresh));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(Slaves, 'Slaves', refresh, true, true, initialize));
