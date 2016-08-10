@@ -445,7 +445,7 @@ public class SingularityValidator {
     if (defaultBounceRequest.getDurationMillis().isPresent()) {
       return defaultBounceRequest;
     }
-    final Long durationMillis = TimeUnit.MINUTES.toMillis(configuration.getDefaultBounceExpirationMinutes());
+    final long durationMillis = TimeUnit.MINUTES.toMillis(configuration.getDefaultBounceExpirationMinutes());
     return defaultBounceRequest
         .toBuilder()
         .setDurationMillis(Optional.of(durationMillis))
