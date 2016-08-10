@@ -74,7 +74,7 @@ class Header extends React.Component {
 }
 
 Header.propTypes = {
-  requestId: React.PropTypes.string.isRequired,
+  requestId: React.PropTypes.string,
   path: React.PropTypes.string.isRequired,
   multipleTasks: React.PropTypes.bool.isRequired,
   viewMode: React.PropTypes.string.isRequired,

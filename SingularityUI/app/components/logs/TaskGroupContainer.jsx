@@ -51,7 +51,7 @@ class TaskGroupContainer extends React.Component {
 TaskGroupContainer.propTypes = {
   taskGroupId: React.PropTypes.number.isRequired,
   taskGroupContainerCount: React.PropTypes.number.isRequired,
-  path: React.PropTypes.string.isRequired,
+  path: React.PropTypes.string,
   logDataLoaded: React.PropTypes.bool,
 
   initialDataLoaded: React.PropTypes.bool.isRequired,
@@ -88,4 +88,3 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = { doesFinishedLogExist };
 
 export default connect(mapStateToProps, mapDispatchToProps)(TaskGroupContainer);
-
