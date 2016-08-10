@@ -51,15 +51,17 @@ class LogLines extends React.Component {
     const initialOffset = this.props.initialOffset;
     const colorMap = this.props.colorMap;
     return this.props.logLines.map(function ({data, offset, taskId, timestamp}) {
-      return <LogLine
-        content={data}
-        key={taskId + '_' + offset}
-        offset={offset}
-        taskId={taskId}
-        timestamp={timestamp}
-        isHighlighted={offset === initialOffset}
-        color={colorMap[taskId]}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       />;
+      return (
+        <LogLine
+          content={data}
+          key={taskId + '_' + offset}
+          offset={offset}
+          taskId={taskId}
+          timestamp={timestamp}
+          isHighlighted={offset === initialOffset}
+          color={colorMap[taskId]}
+        />
+      );
     });
   }
 
