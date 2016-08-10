@@ -31,6 +31,15 @@ export const toggleAnsiColoring = () => ({
   type: TOGGLE_ANSI_COLORING
 });
 
+export const TOGGLE_FETCH_OVERSCAN = `${frameworkName}_TOGGLE_FETCH_OVERSCAN`;
+export const toggleFetchOverscan = () => ({
+  type: TOGGLE_FETCH_OVERSCAN
+});
+
+// Infinite loader actions
+// export const RENDERED_LINE_RANGE = `${frameworkName}_RENDERED_LINE_RANGE`;
+// export const 
+
 // API independent chunk fetching actions
 const FETCH_CHUNK = `${frameworkName}_FETCH_CHUNK`;
 

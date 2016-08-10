@@ -1,10 +1,12 @@
 import {
   SANDBOX_SET_API_ROOT,
-  TOGGLE_ANSI_COLORING
+  TOGGLE_ANSI_COLORING,
+  TOGGLE_FETCH_OVERSCAN
 } from '../actions';
 
 const initialState = {
-  parseAnsi: true
+  parseAnsi: true,
+  fetchOverscan: true
 };
 
 const configReducer = (state = initialState, action) => {
@@ -18,6 +20,11 @@ const configReducer = (state = initialState, action) => {
       return {
         ...state,
         parseAnsi: !state.parseAnsi
+      };
+    case TOGGLE_FETCH_OVERSCAN:
+      return {
+        ...state,
+        fetchOverscan: !state.fetchOverscan
       };
     default:
       return state;
