@@ -201,7 +201,7 @@ public class RequestResource extends AbstractRequestResource {
 
     requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), JavaUtils.getUserEmail(user), message);
 
-    final SingularityBounceRequest validatedBounceRequest = validator.validateBounceRequest(bounceRequest.or(SingularityBounceRequest.defaultRequest()));
+    final SingularityBounceRequest validatedBounceRequest = validator.checkBounceRequest(bounceRequest.or(SingularityBounceRequest.defaultRequest()));
 
     requestManager.saveExpiringObject(new SingularityExpiringBounce(requestId, deployId, JavaUtils.getUserEmail(user),
         System.currentTimeMillis(), validatedBounceRequest, actionId.get()));
