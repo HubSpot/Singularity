@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
@@ -41,6 +42,7 @@ import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.api.SingularityPriorityFreeze;
+import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
 
@@ -50,6 +52,7 @@ public class SingularityValidator {
   private static final List<Character> DEPLOY_ID_ILLEGAL_CHARACTERS = Arrays.asList('@', '-', '\\', '/', '*', '?', '%', ' ', '[', ']', '#', '$'); // Characters that make Mesos or URL bars sad
   private static final List<Character> REQUEST_ID_ILLEGAL_CHARACTERS = Arrays.asList('@', '\\', '/', '*', '?', '%', ' ', '[', ']', '#', '$'); // Characters that make Mesos or URL bars sad
 
+  private final SingularityConfiguration configuration;
   private final int maxDeployIdSize;
   private final int maxRequestIdSize;
   private final int maxCpusPerRequest;
@@ -69,6 +72,8 @@ public class SingularityValidator {
 
   @Inject
   public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager) {
+    this.configuration = configuration;
+
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
@@ -478,5 +483,16 @@ public class SingularityValidator {
     checkBadRequest(requestGroup.getId().length() < maxRequestIdSize, "Id must be less than %s characters, it is %s (%s)", maxRequestIdSize, requestGroup.getId().length(), requestGroup.getId());
 
     checkBadRequest(requestGroup.getRequestIds() != null, "requestIds cannot be null");
+  }
+
+  public SingularityBounceRequest checkBounceRequest(SingularityBounceRequest defaultBounceRequest) {
+    if (defaultBounceRequest.getDurationMillis().isPresent()) {
+      return defaultBounceRequest;
+    }
+    final long durationMillis = TimeUnit.MINUTES.toMillis(configuration.getDefaultBounceExpirationMinutes());
+    return defaultBounceRequest
+        .toBuilder()
+        .setDurationMillis(Optional.of(durationMillis))
+        .build();
   }
 }
