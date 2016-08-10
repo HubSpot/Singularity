@@ -8,12 +8,15 @@ import TaskLauncher from '../common/TaskLauncher';
 import FormModal from '../common/modal/FormModal';
 
 import Messenger from 'messenger';
+import Utils from '../../utils';
 
 class RunNowModal extends Component {
   static propTypes = {
     requestId: PropTypes.string.isRequired,
     runNow: PropTypes.func.isRequired,
-    router: PropTypes.object.isRequired
+    router: PropTypes.object.isRequired,
+    rerun: PropTypes.bool,
+    task: PropTypes.object
   };
 
   static AFTER_TRIGGER = {
@@ -21,6 +24,10 @@ class RunNowModal extends Component {
     SANDBOX: {label: 'Wait for task to start, then browse its sandbox', value: 'SANDBOX'},
     TAIL: {label: 'Wait for task to start, then start tailing:', value: 'TAIL'}
   };
+
+  defaultCommandLineArgs() {
+    return Utils.maybe(this.props.task, ['taskRequest', 'pendingTask', 'cmdLineArgsList']);
+  }
 
   show() {
     this.refs.runNowModal.show();
@@ -44,6 +51,7 @@ class RunNowModal extends Component {
   }
 
   render() {
+    const maybeTaskId = Utils.maybe(this.props.task, ['taskId', 'id']);
     return (
       <span>
         <TaskLauncher
@@ -51,15 +59,17 @@ class RunNowModal extends Component {
           router={this.props.router}
         />
         <FormModal
+          name={this.props.rerun ? 'Rerun this task now' : 'Run a task for this request now'}
           ref="runNowModal"
-          action={<span><Glyphicon glyph="flash" /> Run Task</span>}
+          action={<span><Glyphicon glyph="flash" /> {this.props.rerun ? 'Rerun' : 'Run'} Task</span>}
           onConfirm={(data) => this.handleRunNow(data)}
           buttonStyle="primary"
           formElements={[
             {
               name: 'commandLineArgs',
               type: FormModal.INPUT_TYPES.TAGS,
-              label: 'Additional command line input: (optional)'
+              label: 'Additional command line input: (optional)',
+              defaultValue: this.defaultCommandLineArgs()
             },
             {
               name: 'message',
@@ -76,12 +86,12 @@ class RunNowModal extends Component {
             {
               name: 'fileToTail',
               type: FormModal.INPUT_TYPES.STRING,
-              defaultValue: _.rest(config.runningTaskLogPath.split('/'), '1').join('/')
+              defaultValue: config.runningTaskLogPath.indexOf('/') === -1 ? config.runningTaskLogPath : _.rest(config.runningTaskLogPath.split('/'), '1').join('/')
             }
           ]}>
           <span>
-            <p>Are you sure you want to immediately launch a task for this request?</p>
-            <pre>{this.props.requestId}</pre>
+            <p>Are you sure you want to immediately {this.props.rerun ? 'rerun this task' : 'launch a task for this request'}?</p>
+            <pre>{this.props.rerun && maybeTaskId || this.props.requestId}</pre>
           </span>
         </FormModal>
       </span>
