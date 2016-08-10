@@ -53,7 +53,6 @@ public class RequestManager extends CuratorAsyncManager {
   private final Transcoder<SingularityRequestLbCleanup> requestLbCleanupTranscoder;
 
   private final SingularityEventListener singularityEventListener;
-  private final SingularityConfiguration singularityConfiguration;
 
   private static final String REQUEST_ROOT = "/requests";
 
@@ -90,7 +89,6 @@ public class RequestManager extends CuratorAsyncManager {
     this.requestHistoryTranscoder = requestHistoryTranscoder;
     this.singularityEventListener = singularityEventListener;
     this.requestLbCleanupTranscoder = requestLbCleanupTranscoder;
-    this.singularityConfiguration = singularityConfiguration;
 
     this.expiringTranscoderMap = ImmutableMap.of(
         SingularityExpiringBounce.class, expiringBounceTranscoder,
