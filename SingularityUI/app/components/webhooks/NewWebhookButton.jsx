@@ -1,4 +1,4 @@
-import React, { Component, PropTypes } from 'react';
+import React, { PropTypes } from 'react';
 
 import { Glyphicon } from 'react-bootstrap';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
@@ -14,27 +14,29 @@ const newWebhookTooltip = (
   </ToolTip>
 );
 
-export default class DeleteWebhookButton extends Component {
-  static propTypes = {
-    user: PropTypes.string
-  };
+const NewWebhookButton = ({children, user}) => {
+  const clickComponentData = {children};
+  return (
+    <span>
+      {getClickComponent(clickComponentData)}
+      <NewWebhookModal ref={(modal) => {clickComponentData.refs = {modal};}} user={user} />
+    </span>
+  );
+};
 
-  static defaultProps = {
-    children: (
-      <OverlayTrigger placement="top" id="view-bounce-overlay" overlay={newWebhookTooltip}>
-        <a>
-          <Glyphicon glyph="plus" />
-        </a>
-      </OverlayTrigger>
-    )
-  };
+NewWebhookButton.propTypes = {
+  children: PropTypes.node,
+  user: PropTypes.string
+};
 
-  render() {
-    return (
-      <span>
-        {getClickComponent(this)}
-        <NewWebhookModal ref="modal" user={this.props.user} />
-      </span>
-    );
-  }
-}
+NewWebhookButton.defaultProps = {
+  children: (
+    <OverlayTrigger placement="top" id="view-bounce-overlay" overlay={newWebhookTooltip}>
+      <a>
+        <Glyphicon glyph="plus" />
+      </a>
+    </OverlayTrigger>
+  )
+};
+
+export default NewWebhookButton;

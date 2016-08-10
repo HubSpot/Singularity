@@ -60,7 +60,7 @@ class DeleteWebhookModal extends Component {
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  newWebhook: (uri, type) => dispatch(NewWebhook.trigger(uri, type, ownProps.user)).then(() => dispatch(FetchWebhooks.trigger())),
+  newWebhook: (uri, type) => dispatch(NewWebhook.trigger(uri, type, ownProps.user)).then(() => {dispatch(FetchWebhooks.trigger());}),
 });
 
 export default connect(
