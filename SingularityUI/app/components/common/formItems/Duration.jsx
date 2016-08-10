@@ -9,13 +9,12 @@ export default class Duration extends React.Component {
     onChange: PropTypes.func
   };
 
-  handleChange(event) {
-    event.preventDefault();
-    const duration = moment.duration(`${this.refs.hours.value || 0}:${this.refs.minutes.value || 0}:${this.refs.seconds.value || 0}`);
-    this.props.onChange(duration.asMilliseconds());
-  }
-
   render() {
+    const handleChange = (event) => {
+      event.preventDefault();
+      const duration = moment.duration(`${this.refs.hours.value || 0}:${this.refs.minutes.value || 0}:${this.refs.seconds.value || 0}`);
+      this.props.onChange(duration.asMilliseconds());
+    };
     const duration = moment.duration(this.props.value);
     return (
       <div className="form-inline duration-input row">
@@ -29,7 +28,7 @@ export default class Duration extends React.Component {
             min={0}
             step={1}
             value={this.props.value ? duration.hours() : ''}
-            onChange={(event) => this.handleChange(event)}
+            onChange={handleChange}
           />
         </div>
         <div className="form-group col-md-4">
@@ -42,7 +41,7 @@ export default class Duration extends React.Component {
             min={0}
             step={1}
             value={this.props.value ? duration.minutes() : ''}
-            onChange={(event) => this.handleChange(event)}
+            onChange={handleChange}
           />
         </div>
         <div className="form-group col-md-4">
@@ -55,7 +54,7 @@ export default class Duration extends React.Component {
             min={0}
             step={1}
             value={this.props.value ? duration.seconds() : ''}
-            onChange={(event) => this.handleChange(event)}
+            onChange={handleChange}
           />
         </div>
       </div>
