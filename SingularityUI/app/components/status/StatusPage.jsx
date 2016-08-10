@@ -10,14 +10,12 @@ import StatusList from './StatusList';
 import Breakdown from './Breakdown';
 import Utils from '../../utils';
 
-class StatusPage extends React.Component {
+const StatusPage = (props) => {
+  const renderPercentage = (number, total) => number > 0 && `(${Math.round(number / total * 100)}%)`;
 
-  static propTypes = {
-    fetchStatus: React.PropTypes.func.isRequired,
-    status: React.PropTypes.object
-  }
+  const renderTaskLag = (status) => status.maxTaskLag > 0 && (<h4>Max Task Lag: {Utils.duration(status.maxTaskLag)}</h4>);
 
-  requestDetail(status) {
+  const requestDetail = (status) => {
     const totalRequests = status.activeRequests + status.pausedRequests + status.cooldownRequests + status.pendingRequests + status.cleaningRequests;
 
     const requests = [
@@ -67,9 +65,9 @@ class StatusPage extends React.Component {
       requests,
       totalRequests
     });
-  }
+  };
 
-  taskDetail(status) {
+  const taskDetail = (status) => {
     const totalTasks = status.activeTasks + status.lateTasks + status.scheduledTasks + status.cleaningTasks + status.lbCleanupTasks;
     const tasks = [
       {
@@ -118,205 +116,187 @@ class StatusPage extends React.Component {
       tasks,
       totalTasks
     });
-  }
+  };
 
-  getRequestsData(status) {
-    return status.requests.map((request) => {
-      return (
-        {
-          component: (className) => (
-            <Link to={request.link} className={className}>
-              {request.count} {request.label} {this.renderPercentage(request.count, status.totalRequests)}
-            </Link>
-          ),
-          beforeFill: request.type,
-          value: request.count,
-          id: request.type
-        }
-      );
-    });
-  }
+  const getRequestsData = (status) => status.requests.map((request) => ({
+    component: (className) => (
+      <Link to={request.link} className={className}>
+        {request.count} {request.label} {renderPercentage(request.count, status.totalRequests)}
+      </Link>
+    ),
+    beforeFill: request.type,
+    value: request.count,
+    id: request.type
+  }));
 
-  getTasksData(status) {
-    const res = status.tasks.map((task) => {
-      return (
-      {
-        component: (className) => (
-          <Link to={task.link} className={className}>
-            {task.count} {task.label} {this.renderPercentage(task.count, status.totalTasks)}
-          </Link>
-        ),
-        beforeFill: task.type,
-        value: task.count,
-        id: task.type
-      }
-      );
-    });
-    return res;
-  }
+  const getTasksData = (status) => status.tasks.map((task) => ({
+    component: (className) => (
+      <Link to={task.link} className={className}>
+        {task.count} {task.label} {renderPercentage(task.count, status.totalTasks)}
+      </Link>
+    ),
+    beforeFill: task.type,
+    value: task.count,
+    id: task.type
+  }));
 
-  renderPercentage(number, total) {
-    return number > 0 && `(${Math.round(number / total * 100)}%)`;
-  }
+  const status = Utils.deepClone(props.status);
 
-  renderTaskLag(status) {
-    return status.maxTaskLag > 0 && (<h4>Max Task Lag: {Utils.duration(status.maxTaskLag)}</h4>);
-  }
-
-  render() {
-    const status = Utils.deepClone(this.props.status);
-
-    status.isLeaderConnected = false;
-    status.hasLeader = false;
-    for (const host in status.hostStates) {
-      if (host.driverStatus === 'DRIVER_RUNNING') {
-        status.hasLeader = true;
-        if (host.mesosConnected) status.isLeaderConnected = true;
-      }
+  status.isLeaderConnected = false;
+  status.hasLeader = false;
+  for (const host in status.hostStates) {
+    if (host.driverStatus === 'DRIVER_RUNNING') {
+      status.hasLeader = true;
+      if (host.mesosConnected) status.isLeaderConnected = true;
     }
-    _.extend(status, this.requestDetail(status));
-    _.extend(status, this.taskDetail(status));
+  }
+  _.extend(status, requestDetail(status));
+  _.extend(status, taskDetail(status));
 
-    return (
-      <div>
-        <div className="row">
-          <div className="col-sm-12 col-md-6">
-            <h2>Requests</h2>
+  return (
+    <div>
+      <div className="row">
+        <div className="col-sm-12 col-md-6">
+          <h2>Requests</h2>
+          <div className="row">
+            <div className="col-md-3 col-sm-3 hidden-xs chart">
+              <Breakdown total={status.allRequests} data={status.requests} />
+            </div>
+            <div className="col-md-9 col-sm-9">
+              <StatusList data={getRequestsData(status)} />
+            </div>
+          </div>
+        </div>
+        <div className="col-sm-12 col-md-6">
+          <h2>Tasks</h2>
             <div className="row">
               <div className="col-md-3 col-sm-3 hidden-xs chart">
-                <Breakdown total={status.allRequests} data={status.requests} />
+                <Breakdown total={status.totalTasks} data={status.tasks} />
               </div>
               <div className="col-md-9 col-sm-9">
-                <StatusList data={this.getRequestsData(status)} />
+                <StatusList data={getTasksData(status)} />
+                {renderTaskLag(status)}
               </div>
-            </div>
-          </div>
-          <div className="col-sm-12 col-md-6">
-            <h2>Tasks</h2>
-              <div className="row">
-                <div className="col-md-3 col-sm-3 hidden-xs chart">
-                  <Breakdown total={status.totalTasks} data={status.tasks} />
-                </div>
-                <div className="col-md-9 col-sm-9">
-                  <StatusList data={this.getTasksData(status)} />
-                  {this.renderTaskLag(status)}
-                </div>
-            </div>
-          </div>
-        </div>
-        <div className="row">
-          <div className="col-md-4 col-sm-12">
-            <StatusList
-              header="Racks"
-              data={[
-                {
-                  component: (className) => (
-                    <Link to="racks/active" className={className}>
-                      {status.activeRacks} Active Racks
-                    </Link>
-                  ),
-                  id: 'activeracks',
-                  value: status.activeRacks
-                },
-                {
-                  component: (className) => (
-                    <Link to="racks/decommission" className={className}>
-                      {status.decomissioningRacks} Decommissioning Racks
-                    </Link>
-                  ),
-                  id: 'decomracks',
-                  value: status.decomissioningRacks
-                },
-                {
-                  component: (className) => (
-                    <Link to="racks/inactive" className={className}>
-                      {status.deadRacks} Inactive Racks
-                    </Link>
-                  ),
-                  id: 'inactiveracks',
-                  value: status.deadRacks
-                }
-              ]}
-            />
-          </div>
-          <div className="col-md-4 col-sm-12">
-            <StatusList
-              header="Slaves"
-              data={[
-                {
-                  component: (className) => (
-                    <Link to="slaves/active" className={className}>
-                      {status.activeSlaves} Active Slaves
-                    </Link>
-                  ),
-                  value: status.activeSlaves,
-                  id: 'activeslaves'
-                },
-                {
-                  component: (className) => (
-                    <Link to="slaves/decommission" className={className}>
-                      {status.decomissioningSlaves} Decommissioning Slaves
-                    </Link>
-                  ),
-                  value: status.decomissioningSlaves,
-                  id: 'decomslaves'
-                },
-                {
-                  component: (className) => (
-                    <Link to="slaves/inactive" className={className}>
-                      {status.deadSlaves} Inactive Slaves
-                    </Link>
-                  ),
-                  className: status.deadSlaves > 0 ? 'color-warning' : '',
-                  value: status.deadSlaves,
-                  id: 'deadslaves'
-                },
-                status.unknownSlaves ? {
-                  component: (className) => (
-                    <Link to="slaves/inactive" className={className}>
-                      {status.unknownSlaves} Unknown Slaves
-                    </Link>
-                  ),
-                  className: 'color-warning',
-                  value: status.unknownSlaves,
-                  id: 'unknownslaves'
-                } : null
-              ]}
-            />
-          </div>
-          <div className="col-md-4 col-sm-12">
-            <StatusList
-              header="Deploys"
-              data={[
-                {
-                  component: (className) => (
-                    <span className={classNames(className, status.numDeploys < 2 && 'text-muted')}>
-                      <strong>{status.numDeploys}</strong> Active Deploys
-                    </span>
-                  ),
-                  value: status.numDeploys,
-                  id: 'numdeploys'
-                },
-                status.oldestDeploy !== 0 ? {
-                  component: (className) => (
-                    <span className={className}>
-                      <strong>{Utils.duration(status.oldestDeploy)}</strong> since last deploy
-                    </span>
-                  )
-                } : null
-              ]}
-            />
-          </div>
-        </div>
-        <div className="row">
-          <div className="col-sm-12">
-            <HostStates hosts={status.hostStates} />
           </div>
         </div>
       </div>
-    );
-  }
-}
+      <div className="row">
+        <div className="col-md-4 col-sm-12">
+          <StatusList
+            header="Racks"
+            data={[
+              {
+                component: (className) => (
+                  <Link to="racks/active" className={className}>
+                    {status.activeRacks} Active Racks
+                  </Link>
+                ),
+                id: 'activeracks',
+                value: status.activeRacks
+              },
+              {
+                component: (className) => (
+                  <Link to="racks/decommission" className={className}>
+                    {status.decomissioningRacks} Decommissioning Racks
+                  </Link>
+                ),
+                id: 'decomracks',
+                value: status.decomissioningRacks
+              },
+              {
+                component: (className) => (
+                  <Link to="racks/inactive" className={className}>
+                    {status.deadRacks} Inactive Racks
+                  </Link>
+                ),
+                id: 'inactiveracks',
+                value: status.deadRacks
+              }
+            ]}
+          />
+        </div>
+        <div className="col-md-4 col-sm-12">
+          <StatusList
+            header="Slaves"
+            data={[
+              {
+                component: (className) => (
+                  <Link to="slaves/active" className={className}>
+                    {status.activeSlaves} Active Slaves
+                  </Link>
+                ),
+                value: status.activeSlaves,
+                id: 'activeslaves'
+              },
+              {
+                component: (className) => (
+                  <Link to="slaves/decommission" className={className}>
+                    {status.decomissioningSlaves} Decommissioning Slaves
+                  </Link>
+                ),
+                value: status.decomissioningSlaves,
+                id: 'decomslaves'
+              },
+              {
+                component: (className) => (
+                  <Link to="slaves/inactive" className={className}>
+                    {status.deadSlaves} Inactive Slaves
+                  </Link>
+                ),
+                className: status.deadSlaves > 0 ? 'color-warning' : '',
+                value: status.deadSlaves,
+                id: 'deadslaves'
+              },
+              status.unknownSlaves ? {
+                component: (className) => (
+                  <Link to="slaves/inactive" className={className}>
+                    {status.unknownSlaves} Unknown Slaves
+                  </Link>
+                ),
+                className: 'color-warning',
+                value: status.unknownSlaves,
+                id: 'unknownslaves'
+              } : null
+            ]}
+          />
+        </div>
+        <div className="col-md-4 col-sm-12">
+          <StatusList
+            header="Deploys"
+            data={[
+              {
+                component: (className) => (
+                  <span className={classNames(className, status.numDeploys < 2 && 'text-muted')}>
+                    <strong>{status.numDeploys}</strong> Active Deploys
+                  </span>
+                ),
+                value: status.numDeploys,
+                id: 'numdeploys'
+              },
+              status.oldestDeploy !== 0 ? {
+                component: (className) => (
+                  <span className={className}>
+                    <strong>{Utils.duration(status.oldestDeploy)}</strong> since last deploy
+                  </span>
+                )
+              } : null
+            ]}
+          />
+        </div>
+      </div>
+      <div className="row">
+        <div className="col-sm-12">
+          <HostStates hosts={status.hostStates} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+StatusPage.propTypes = {
+  fetchStatus: React.PropTypes.func.isRequired,
+  status: React.PropTypes.object
+};
 
 function mapDispatchToProps(dispatch) {
   return {
