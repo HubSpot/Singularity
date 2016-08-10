@@ -37,8 +37,15 @@ export const toggleFetchOverscan = () => ({
 });
 
 // Infinite loader actions
-// export const RENDERED_LINE_RANGE = `${frameworkName}_RENDERED_LINE_RANGE`;
-// export const 
+export const LOG_RENDERED_LINE_RANGE = `${frameworkName}_LOG_RENDERED_LINE_RANGE`;
+export const logRenderedLineRange = (tailerId, start, end, overscanStart, overscanEnd) => ({
+  type: LOG_RENDERED_LINE_RANGE,
+  tailerId,
+  start,
+  end,
+  overscanStart,
+  overscanEnd
+});
 
 // API independent chunk fetching actions
 const FETCH_CHUNK = `${frameworkName}_FETCH_CHUNK`;

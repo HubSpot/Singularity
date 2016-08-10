@@ -1,13 +1,19 @@
 import React, { PropTypes } from 'react';
+import classNames from 'classnames';
+
 
 const Line = ({data}) => {
+  let lineContents;
+
+  const classes = classNames({
+    'log-row': true,
+    'missing': data.isMissingMarker,
+    'loading': data.isLoading
+  });
+
   if (data.isMissingMarker) {
     const missingBytes = data.end - data.start;
-    return (
-      <div className="log-row" style={{backgroundColor: data.isLoading ? 'red' : 'green' }} key={`${data.start}-${data.end}`}>
-        {missingBytes} bytes
-      </div>
-    );
+    lineContents = <span>{missingBytes} bytes</span>;
   }
 
   if (data.ansi) {
@@ -17,10 +23,16 @@ const Line = ({data}) => {
       </span>
     ));
 
-    return <div className="log-row" key={`${data.start}-${data.end}`}>{ansiStyled}</div>;
+    lineContents = ansiStyled;
+  } else {
+    lineContents = data.text;
   }
 
-  return <div className="log-row" key={`${data.start}-${data.end}`}>{data.text}</div>;
+  return (
+    <div className={classes} key={`${data.start}-${data.end}`}>
+      {lineContents}
+    </div>
+  );
 };
 
 Line.propTypes = {
