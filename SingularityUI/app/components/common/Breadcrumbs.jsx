@@ -22,7 +22,7 @@ export default class Breadcrumbs extends React.Component {
 
   render() {
     return (
-      <ul className="breadcrumb">
+      <ul className="breadcrumb clearfix">
           {this.renderItems()}
           <span className="pull-right">{this.props.right}</span>
       </ul>

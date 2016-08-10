@@ -5,24 +5,42 @@ import { Modal, Button, Popover, OverlayTrigger } from 'react-bootstrap';
 import TagsInput from 'react-tagsinput';
 import Duration from '../formItems/Duration';
 import Select from 'react-select';
+import Utils from '../../../utils';
 
 const TAGS_CHARACTER_LIMIT = 75;
+
+function getDefaultFormState(props) {
+  const formState = {};
+  props.formElements.forEach((formElement) => {
+    const { defaultValue } = formElement;
+    if (defaultValue) {
+      if (Array.isArray(defaultValue)) {
+        formState[formElement.name] = defaultValue;
+      } else {
+        formState[formElement.name] = formElement.defaultValue.toString();
+      }
+    }
+  });
+  return formState;
+}
 
 export default class FormModal extends React.Component {
   constructor(props) {
     super(props);
-    const formState = {};
-    props.formElements.forEach((formElement) => {
-      formState[formElement.name] = formElement.defaultValue && formElement.defaultValue.toString();
-    });
 
     this.state = {
       visible: false,
-      formState,
+      formState: getDefaultFormState(props),
       errors: {}
     };
 
     _.bindAll(this, 'hide', 'show', 'confirm');
+  }
+
+  componentWillReceiveProps(newProps) {
+    if (_.isEqual(this.state.formState, getDefaultFormState(this.props))) {
+      this.setState({formState: getDefaultFormState(newProps)});
+    }
   }
 
   static FormItem = (props) => {
@@ -59,7 +77,7 @@ export default class FormModal extends React.Component {
   }
 
   handleFormChange(name, value) {
-    const formState = this.state.formState;
+    const formState = Utils.deepClone(this.state.formState);
     formState[name] = value;
     this.setState({ formState });
   }
@@ -374,7 +392,7 @@ FormModal.propTypes = {
     label: React.PropTypes.string,
     isRequired: React.PropTypes.bool,
     values: React.PropTypes.array,
-    defaultValue: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.bool, React.PropTypes.number]),
+    defaultValue: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.bool, React.PropTypes.number, React.PropTypes.array]),
     validateField: React.PropTypes.func, // String -> String, return field validation error or falsey value if valid
     dependsOn: React.PropTypes.string // Only show this item if the other item (referenced by name) has a truthy value
   })).isRequired
