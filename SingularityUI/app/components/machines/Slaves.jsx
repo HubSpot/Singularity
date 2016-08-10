@@ -181,7 +181,7 @@ class Slaves extends React.Component {
             {this.getMaybeReactivateButton(slave)}
             {this.getMaybeFreezeButton(slave)}
             {this.getDecommissionOrRemoveButton(slave)}
-            <JSONButton object={slave}>
+            <JSONButton object={slave} showOverlay={true}>
               {'{ }'}
             </JSONButton>
           </span>
@@ -289,10 +289,10 @@ function mapDispatchToProps(dispatch) {
   }
   return {
     fetchSlaves: () => dispatch(FetchSlaves.trigger()),
-    freezeSlave: (slave, message) => { clear().then(dispatch(FreezeSlave.trigger(slave.id, message)).then(dispatch(FetchSlaves.trigger()))); },
-    decommissionSlave: (slave, message) => { clear().then(dispatch(DecommissionSlave.trigger(slave.id, message)).then(dispatch(FetchSlaves.trigger()))); },
-    removeSlave: (slave, message) => { clear().then(dispatch(RemoveSlave.trigger(slave.id, message)).then(dispatch(FetchSlaves.trigger()))); },
-    reactivateSlave: (slave, message) => { clear().then(dispatch(ReactivateSlave.trigger(slave.id, message)).then(dispatch(FetchSlaves.trigger()))); },
+    freezeSlave: (slave, message) => { clear().then(() => dispatch(FreezeSlave.trigger(slave.id, message)).then(() => dispatch(FetchSlaves.trigger()))); },
+    decommissionSlave: (slave, message) => { clear().then(() => dispatch(DecommissionSlave.trigger(slave.id, message)).then(() => dispatch(FetchSlaves.trigger()))); },
+    removeSlave: (slave, message) => { clear().then(() => dispatch(RemoveSlave.trigger(slave.id, message)).then(() => dispatch(FetchSlaves.trigger()))); },
+    reactivateSlave: (slave, message) => { clear().then(() => dispatch(ReactivateSlave.trigger(slave.id, message)).then(() => dispatch(FetchSlaves.trigger()))); },
     clear
   };
 }

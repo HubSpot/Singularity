@@ -57,7 +57,7 @@ const RequestHistoryTable = ({requestId, requestEventsAPI, fetchRequestHistory})
           id="actions-column"
           key="actions-column"
           className="actions-column"
-          cellData={(requestEvent) => <JSONButton object={requestEvent}>{'{ }'}</JSONButton>}
+          cellData={(requestEvent) => <JSONButton object={requestEvent} showOverlay={true}>{'{ }'}</JSONButton>}
         />
       </UITable>
     </Section>

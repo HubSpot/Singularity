@@ -1,4 +1,4 @@
-import React, {PropTypes} from 'react';
+import React, { PropTypes, Component } from 'react';
 import MachinesPage from './MachinesPage';
 import {Glyphicon} from 'react-bootstrap';
 import ModalButton from './ModalButton';
@@ -11,9 +11,15 @@ import { Link } from 'react-router';
 import Column from '../common/table/Column';
 import JSONButton from '../common/JSONButton';
 
-const Racks = React.createClass({
+const typeName = {
+  'active': 'Activated By',
+  'frozen': 'Frozen By',
+  'decommissioning': 'Decommissioned By'
+};
 
-  propTypes: {
+class Racks extends Component {
+
+  static propTypes = {
     racks: PropTypes.arrayOf(PropTypes.shape({
       state: PropTypes.string
     })),
@@ -22,21 +28,15 @@ const Racks = React.createClass({
     reactivateRack: PropTypes.func.isRequired,
     clear: PropTypes.func.isRequired,
     error: PropTypes.string
-  },
+  };
 
   componentWillUnmount() {
     this.props.clear();
-  },
-
-  typeName: {
-    'active': 'Activated By',
-    'frozen': 'Frozen By',
-    'decommissioning': 'Decommissioned By'
-  },
+  }
 
   showUser(rack) {
     return Utils.isIn(rack.currentState.state, ['ACTIVE', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']);
-  },
+  }
 
   getMaybeReactivateButton(rack) {
     return (Utils.isIn(rack.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&
@@ -51,7 +51,7 @@ const Racks = React.createClass({
         <p>Reactivating a rack will cancel the decommission without erasing the rack's history and move it back to the active state.</p>
       </ModalButton>
     );
-  },
+  }
 
   getDecommissionOrRemoveButton(rack) {
     if (rack.currentState.state === 'ACTIVE') {
@@ -84,7 +84,7 @@ const Racks = React.createClass({
         <p>Removing a decommissioned rack will cause that rack to become active again if the mesos-rack process is still running.</p>
       </ModalButton>
     );
-  },
+  }
 
   getColumns(type) {
     const columns = ([
@@ -117,10 +117,10 @@ const Racks = React.createClass({
         cellData={(rack) => Utils.duration(Date.now() - rack.firstSeenAt)}
       />
     ]);
-    if (this.typeName[type]) {
+    if (typeName[type]) {
       columns.push(
         <Column
-          label={this.typeName[type]}
+          label={typeName[type]}
           id="typename"
           key="typename"
           sortable={true}
@@ -144,7 +144,7 @@ const Racks = React.createClass({
           <span>
             {this.getMaybeReactivateButton(rack)}
             {this.getDecommissionOrRemoveButton(rack)}
-            <JSONButton object={rack}>
+            <JSONButton object={rack} showOverlay={true}>
               {'{ }'}
             </JSONButton>
           </span>
@@ -152,19 +152,19 @@ const Racks = React.createClass({
       />
     );
     return columns;
-  },
+  }
 
   getActiveRacks() {
     return this.props.racks.filter(({currentState}) => Utils.isIn(currentState.state, ['ACTIVE']));
-  },
+  }
 
   getDecommissioningRacks() {
     return this.props.racks.filter(({currentState}) => Utils.isIn(currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']));
-  },
+  }
 
   getInactiveRacks() {
     return this.props.racks.filter(({currentState}) => Utils.isIn(currentState.state, ['DEAD', 'MISSING_ON_STARTUP']));
-  },
+  }
 
   getStates() {
     return [
@@ -187,7 +187,7 @@ const Racks = React.createClass({
         hostsInState: this.getInactiveRacks()
       }
     ];
-  },
+  }
 
   render() {
     return (
@@ -198,7 +198,7 @@ const Racks = React.createClass({
     />
     );
   }
-});
+}
 
 function getErrorFromState(state) {
   const { decommissionRack, removeRack, reactivateRack } = state.api;
@@ -230,9 +230,9 @@ function mapDispatchToProps(dispatch) {
     ]);
   }
   return {
-    decommissionRack: (rack, message) => { clear().then(dispatch(DecommissionRack.trigger(rack.id, message))).then(dispatch(FetchRacks.trigger())); },
-    removeRack: (rack, message) => { clear().then(dispatch(RemoveRack.trigger(rack.id, message))).then(dispatch(FetchRacks.trigger())); },
-    reactivateRack: (rack, message) => { clear().then(dispatch(ReactivateRack.trigger(rack.id, message))).then(dispatch(FetchRacks.trigger())); },
+    decommissionRack: (rack, message) => { clear().then(() => dispatch(DecommissionRack.trigger(rack.id, message))).then(() => dispatch(FetchRacks.trigger())); },
+    removeRack: (rack, message) => { clear().then(() => dispatch(RemoveRack.trigger(rack.id, message))).then(() => dispatch(FetchRacks.trigger())); },
+    reactivateRack: (rack, message) => { clear().then(() => dispatch(ReactivateRack.trigger(rack.id, message))).then(() => dispatch(FetchRacks.trigger())); },
     fetchRacks: () => dispatch(FetchRacks.trigger()),
     clear
   };

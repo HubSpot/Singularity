@@ -58,7 +58,7 @@ const ActiveTasksTable = ({tasks}) => (
           <Link to={`request/${task.taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${task.taskId.id}`} title="Log">
             <Glyphicon glyph="file" />
           </Link>
-          <JSONButton object={task}>
+          <JSONButton object={task} showOverlay={true}>
             {'{ }'}
           </JSONButton>
         </span>

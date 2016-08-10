@@ -37,7 +37,8 @@ class DeployDetail extends React.Component {
     fetchTaskHistoryForDeploy: PropTypes.func,
     params: PropTypes.object,
     isTaskHistoryFetching: PropTypes.bool,
-    notFound: PropTypes.bool
+    notFound: PropTypes.bool,
+    group: PropTypes.object
   }
 
   componentDidMount() {
@@ -91,22 +92,30 @@ class DeployDetail extends React.Component {
         Click to copy
       </Popover>
     );
+    const breadcrumbs = [
+      {
+        label: 'Request',
+        text: deploy.deploy.requestId,
+        link: `request/${deploy.deploy.requestId}`
+      },
+      {
+        label: 'Deploy',
+        text: deploy.deploy.id
+      }
+    ];
+    if (this.props.group) {
+      breadcrumbs.unshift({
+        label: 'Group',
+        text: this.props.group.id,
+        link: `group/${this.props.group.id}`
+      });
+    }
     return (
       <header className="detail-header">
         <div className="row">
           <div className="col-md-12">
             <Breadcrumbs
-              items={[
-                {
-                  label: 'Request',
-                  text: deploy.deploy.requestId,
-                  link: `request/${deploy.deploy.requestId}`
-                },
-                {
-                  label: 'Deploy',
-                  text: deploy.deploy.id
-                }
-              ]}
+              items={breadcrumbs}
             />
           </div>
         </div>
@@ -197,7 +206,7 @@ class DeployDetail extends React.Component {
                 <Link to={`task/${task.taskId.id}/tail/${config.finishedTaskLogPath}`}>
                   <Glyphicon glyph="file" />
                 </Link>
-                <JSONButton object={task}>{'{ }'}</JSONButton>
+                <JSONButton object={task} showOverlay={true}>{'{ }'}</JSONButton>
               </span>
             )}
           />
@@ -353,6 +362,7 @@ function mapStateToProps(state, ownProps) {
     deploy: state.api.deploy.data,
     taskHistory: state.api.taskHistoryForDeploy.data,
     isTaskHistoryFetching: state.api.taskHistoryForDeploy.isFetching,
+    group: state.api.deploy.data.deploy && _.first(_.filter(state.api.requestGroups.data, (filterGroup) => _.contains(filterGroup.requestIds, state.api.deploy.data.deploy.requestId))),
     latestHealthchecks
   };
 }
