@@ -320,13 +320,6 @@ export const ScheduledTaskId = (
     cellData={
       (rowData) => rowData.pendingTask.pendingTaskId.id
     }
-    cellRender={
-      (cellData) => (
-        <Link to={`task/${cellData}`}>
-          {cellData}
-        </Link>
-      )
-    }
     sortable={true}
     className="keep-in-check"
   />

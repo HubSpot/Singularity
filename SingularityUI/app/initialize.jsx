@@ -4,6 +4,7 @@ import FormModal from './components/common/modal/FormModal';
 import AppRouter from './router';
 import configureStore from 'store';
 import { FetchUser } from 'actions/api/auth';
+import { FetchGroups } from 'actions/api/requestGroups';
 
 // Set up third party configurations
 import 'thirdPartyConfigurations';
@@ -22,6 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // set up user
     store.dispatch(FetchUser.trigger());
+
+    // set up request groups
+    store.dispatch(FetchGroups.trigger());
 
     // Render the page content
     return ReactDOM.render(<AppRouter store={store} />, document.getElementById('root'), () => {
