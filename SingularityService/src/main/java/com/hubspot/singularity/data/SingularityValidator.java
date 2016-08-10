@@ -441,7 +441,7 @@ public class SingularityValidator {
     }
   }
 
-  public SingularityBounceRequest withDurationMillis(SingularityBounceRequest defaultBounceRequest) {
+  public SingularityBounceRequest validateBounceRequest(SingularityBounceRequest defaultBounceRequest) {
     if (defaultBounceRequest.getDurationMillis().isPresent()) {
       return defaultBounceRequest;
     }
