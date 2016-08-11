@@ -14,13 +14,17 @@ public class SingularityUser {
   private final Optional<String> name;
   private final Optional<String> email;
   private final Set<String> groups;
+  private final Optional<SingularityUserSettings> settings;
 
   @JsonCreator
-  public SingularityUser(@JsonProperty("id") String id, @JsonProperty("name") Optional<String> name, @JsonProperty("email") Optional<String> email, @JsonProperty("groups") Set<String> groups) {
+  public SingularityUser(@JsonProperty("id") String id, @JsonProperty("name") Optional<String> name,
+                         @JsonProperty("email") Optional<String> email, @JsonProperty("groups") Set<String> groups,
+                         @JsonProperty("settings") Optional<SingularityUserSettings> settings) {
     this.id = id;
     this.name = name;
     this.email = email;
     this.groups = copyOf(groups);
+    this.settings = settings;
   }
 
   public String getId() {
