@@ -14,7 +14,7 @@ class ModalButton extends React.Component {
         </OverlayTrigger>
       );
     }
-    return this.button();
+    return <a onClick={() => this.refs.modal.show()} >{this.props.buttonChildren}</a>;
   }
 
   render() {
