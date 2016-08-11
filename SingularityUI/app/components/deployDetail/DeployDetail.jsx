@@ -323,7 +323,6 @@ class DeployDetail extends React.Component {
 
   render() {
     const { deploy, activeTasks, taskHistory, latestHealthchecks } = this.props;
-    delete deploy.deploy;
     const emptyMessage = !deploy.deploy && <div className="empty-table-message">Deploy data not found</div>;
     return (
       <div>
