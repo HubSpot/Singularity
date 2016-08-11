@@ -3,18 +3,17 @@ import FormModal from '../common/modal/FormModal';
 import {OverlayTrigger, Tooltip} from 'react-bootstrap';
 
 const ModalButton = (props) => {
-  let buttonWithMaybeTooltip;
   let modal;
+  const button = <a onClick={() => modal.show()} >{props.buttonChildren}</a>;
+  let buttonWithMaybeTooltip = button;
   if (props.tooltipText) {
     buttonWithMaybeTooltip = (
       <OverlayTrigger
         placement="top"
         overlay={<Tooltip id="overlay">{props.tooltipText}</Tooltip>}>
-        <a onClick={() => modal.show()} >{props.buttonChildren}</a>
+        {button}
       </OverlayTrigger>
     );
-  } else {
-    buttonWithMaybeTooltip = <a onClick={() => modal.show()} >{props.buttonChildren}</a>;
   }
   return (
     <span>
