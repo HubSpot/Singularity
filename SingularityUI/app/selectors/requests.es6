@@ -49,7 +49,7 @@ export const getUserRequests = createSelector(
         }
       }
 
-      const requestOwners = r.owners;
+      const requestOwners = r.request.owners;
       if (requestOwners === undefined) {
         return false;
       }
