@@ -53,7 +53,7 @@ const ActiveTasksTable = ({requestId, tasksAPI}) => {
         {DeployId}
         {StartedAt}
         {UpdatedAt}
-        {LogLinkAndJSON}
+        {LogLinkAndJSON(config.runningTaskLogPath)}
       </UITable>
     </Section>
   );
