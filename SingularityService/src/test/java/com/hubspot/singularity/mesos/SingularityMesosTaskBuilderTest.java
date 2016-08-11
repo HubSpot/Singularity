@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.mesos.Protos;
@@ -27,6 +28,7 @@ import org.mockito.stubbing.Answer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
@@ -34,7 +36,6 @@ import com.hubspot.mesos.SingularityContainerType;
 import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerParameter;
-import com.hubspot.mesos.SingularityDockerParameters;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityDockerVolumeMode;
 import com.hubspot.mesos.SingularityPortMappingType;
@@ -139,7 +140,8 @@ public class SingularityMesosTaskBuilderTest {
         Optional.of(Arrays.asList(
             new SingularityVolume("/container", Optional.of("/host"), SingularityDockerVolumeMode.RW),
             new SingularityVolume("/container/${TASK_REQUEST_ID}/${TASK_DEPLOY_ID}", Optional.of("/host/${TASK_ID}"), SingularityDockerVolumeMode.RO))),
-        Optional.of(new SingularityDockerInfo("docker-image", true, SingularityDockerNetworkType.BRIDGE, Optional.of(Arrays.asList(literalMapping, offerMapping)), Optional.of(false), Optional.of(new SingularityDockerParameters(Arrays.asList(new SingularityDockerParameter("env", "var=value")))))));
+        Optional.of(new SingularityDockerInfo("docker-image", true, SingularityDockerNetworkType.BRIDGE, Optional.of(Arrays.asList(literalMapping, offerMapping)), Optional.of(false), Optional.<Map<String, String>>of(
+          ImmutableMap.of("env", "var=value")))));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
         .setContainerInfo(Optional.of(containerInfo))
         .setCommand(Optional.of("/bin/echo"))
@@ -191,7 +193,7 @@ public class SingularityMesosTaskBuilderTest {
         Optional.of(new SingularityDockerInfo("docker-image", true, SingularityDockerNetworkType.NONE,
             Optional.<List<SingularityDockerPortMapping>>absent(),
             Optional.<Boolean>absent(),
-            Optional.<SingularityDockerParameters>absent())));
+            Optional.<Map<String, String>>absent())));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
         .setContainerInfo(Optional.of(containerInfo))
         .build();
@@ -217,7 +219,7 @@ public class SingularityMesosTaskBuilderTest {
         Optional.of(new SingularityDockerInfo("docker-image", false, SingularityDockerNetworkType.BRIDGE,
             Optional.<List<SingularityDockerPortMapping>>absent(),
             Optional.<Boolean>absent(),
-            Optional.<SingularityDockerParameters>absent())));
+            Optional.<Map<String, String>>absent())));
     final SingularityDeploy deploy = new SingularityDeployBuilder("test", "1")
         .setContainerInfo(Optional.of(containerInfo))
         .build();

@@ -8,8 +8,6 @@ import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
-import com.hubspot.mesos.SingularityMesosTaskLabel;
-import com.hubspot.mesos.SingularityMesosTaskLabels;
 
 public class SingularityDeployBuilder {
 
@@ -37,7 +35,7 @@ public class SingularityDeployBuilder {
   private Optional<Map<Integer, Map<String, String>>> taskEnv;
   private Optional<List<String>> uris;
   private Optional<ExecutorData> executorData;
-  private Optional<SingularityMesosTaskLabels> labels;
+  private Optional<Map<String, String>> labels;
   private Optional<Map<Integer, Map<String, String>>> taskLabels;
 
   private Optional<String> healthcheckUri;
@@ -394,11 +392,11 @@ public class SingularityDeployBuilder {
     return this;
   }
 
-  public Optional<SingularityMesosTaskLabels> getLabels() {
+  public Optional<Map<String, String>> getLabels() {
     return labels;
   }
 
-  public SingularityDeployBuilder setLabels(Optional<SingularityMesosTaskLabels> labels) {
+  public SingularityDeployBuilder setLabels(Optional<Map<String, String>> labels) {
     this.labels = labels;
     return this;
   }

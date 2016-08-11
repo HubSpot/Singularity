@@ -123,16 +123,9 @@ class SingularityMesosTaskBuilder {
 
     final Builder labelsBuilder = Labels.newBuilder();
     // apply request-specific labels, if any
-    if (!taskRequest.getDeploy().getLabelsList().isEmpty()) {
-      for (SingularityMesosTaskLabel taskLabel : taskRequest.getDeploy().getLabelsList()) {
-        final Label.Builder labelBuilder = Label.newBuilder()
-            .setKey(taskLabel.getKey());
-
-        if (taskLabel.getValue().isPresent()) {
-          labelBuilder.setValue(taskLabel.getValue().get());
-        }
-
-        labelsBuilder.addLabels(labelBuilder.build());
+    if (taskRequest.getDeploy().getLabels().isPresent() && !taskRequest.getDeploy().getLabels().get().isEmpty()) {
+      for (Map.Entry<String, String> label : taskRequest.getDeploy().getLabels().get().entrySet()) {
+        labelsBuilder.addLabels(Label.newBuilder().setKey(label.getKey()).setValue(label.getValue()).build());
       }
     }
 
@@ -281,10 +274,10 @@ class SingularityMesosTaskBuilder {
         }
       }
 
-      if (!dockerInfo.get().getParametersList().isEmpty()) {
+      if (!dockerInfo.get().getParameters().isEmpty()) {
         List<Parameter> parameters = new ArrayList<>();
-        for (SingularityDockerParameter dockerParameter : dockerInfo.get().getParametersList()) {
-          parameters.add(Parameter.newBuilder().setKey(dockerParameter.getKey()).setValue(dockerParameter.getValue()).build());
+        for (Map.Entry<String, String> entry : dockerInfo.get().getParameters().entrySet()) {
+          parameters.add(Parameter.newBuilder().setKey(entry.getKey()).setValue(entry.getValue()).build());
         }
         dockerInfoBuilder.addAllParameters(parameters);
       }

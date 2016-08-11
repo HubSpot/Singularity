@@ -30,7 +30,6 @@ import com.hubspot.mesos.SingularityContainerType;
 import com.hubspot.mesos.SingularityDockerInfo;
 import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerParameter;
-import com.hubspot.mesos.SingularityDockerParameters;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.mesos.SingularityVolume;
@@ -2968,8 +2967,8 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
           SingularityDockerNetworkType.BRIDGE,
           Optional.of(Arrays.asList(literalMapping, offerMapping)),
           Optional.of(false),
-          Optional.of(new SingularityDockerParameters(Arrays.asList(new SingularityDockerParameter("env", "var=value"))))
-        )));
+          Optional.<Map<String, String>>of(ImmutableMap.of("env", "var=value")))
+        ));
     final SingularityDeployBuilder deployBuilder = new SingularityDeployBuilder(requestId, "test-docker-ports-deploy");
     deployBuilder.setContainerInfo(Optional.of(containerInfo)).setResources(Optional.of(new Resources(1, 64, numPorts, 0)));
     return deployBuilder;
