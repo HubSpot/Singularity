@@ -4,19 +4,16 @@ import static com.hubspot.singularity.JsonHelpers.copyOfList;
 import static com.hubspot.singularity.JsonHelpers.copyOfSet;
 import static com.hubspot.singularity.JsonHelpers.copyOfMap;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
-import com.hubspot.mesos.SingularityMesosTaskLabel;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityDeploy {
