@@ -162,7 +162,7 @@ class DeployDetail extends React.Component {
           keyGetter={(task) => task.taskId.id}
           rowChunkSize={5}
           paginated={true}
-          fetchDataFromApi={(page, numberPerPage) => this.props.fetchTaskHistoryForDeploy(deploy.deploy.requestId, deploy.deploy.id, numberPerPage, page)}
+          fetchDataFromApi={(page, numberPerPage) => this.props.fetchTaskHistoryForDeploy(this.props.params.requestId, this.props.params.deployId, numberPerPage, page)}
           isFetching={this.props.isTaskHistoryFetching}
         >
           <Column
@@ -323,18 +323,16 @@ class DeployDetail extends React.Component {
 
   render() {
     const { deploy, activeTasks, taskHistory, latestHealthchecks } = this.props;
-    const deploySections = deploy.deploy ? (
-      <div>
-        {this.renderActiveTasks(deploy, activeTasks)}
-        {this.renderTaskHistory(deploy, taskHistory)}
-        {this.renderInfo(deploy)}
-        {this.renderHealthchecks(deploy, latestHealthchecks)}
-      </div>
-    ) : <div className="empty-table-message">Deploy data not found</div>;
+    delete deploy.deploy;
+    const emptyMessage = !deploy.deploy && <div className="empty-table-message">Deploy data not found</div>;
     return (
       <div>
         {this.renderHeader(deploy)}
-        {deploySections}
+        {this.renderActiveTasks(deploy, activeTasks)}
+        {this.renderTaskHistory(deploy, taskHistory)}
+        {emptyMessage}
+        {deploy.deploy && this.renderInfo(deploy)}
+        {deploy.deploy && this.renderHealthchecks(deploy, latestHealthchecks)}
       </div>
     );
   }
