@@ -16,7 +16,8 @@ class RunNowModal extends Component {
     runNow: PropTypes.func.isRequired,
     router: PropTypes.object.isRequired,
     rerun: PropTypes.bool,
-    task: PropTypes.object
+    task: PropTypes.object,
+    then: PropTypes.func
   };
 
   static AFTER_TRIGGER = {
@@ -100,7 +101,7 @@ class RunNowModal extends Component {
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  runNow: (data) => dispatch(RunRequest.trigger(ownProps.requestId, data)),
+  runNow: (data) => dispatch(RunRequest.trigger(ownProps.requestId, data)).then(response => (ownProps.then && ownProps.then(response))),
 });
 
 export default connect(
