@@ -25,9 +25,9 @@ class LogLines extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     if (prevProps.updatedAt !== this.props.updatedAt) {
-      if (this.props.tailing) {
+      if (this.refs.tailContents && this.props.tailing) {
         this.refs.tailContents.scrollTop = this.refs.tailContents.scrollHeight;
-      } else if (this.props.prependedLineCount > 0 || this.props.linesRemovedFromTop > 0) {
+      } else if (this.refs.tailContents && (this.props.prependedLineCount > 0 || this.props.linesRemovedFromTop > 0)) {
         this.refs.tailContents.scrollTop += 20 * (this.props.prependedLineCount - this.props.linesRemovedFromTop);
       } else {
         this.handleScroll();
@@ -87,6 +87,7 @@ class LogLines extends React.Component {
 
 
   handleScroll() {
+    if (!this.refs.tailContents) return;
     const {scrollTop, scrollHeight, clientHeight} = this.refs.tailContents;
 
     if (scrollTop < clientHeight) {
