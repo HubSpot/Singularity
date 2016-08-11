@@ -19,6 +19,7 @@ class EnableHealthchecksModal extends Component {
   render() {
     return (
       <FormModal
+        name="Enable Healthchecks"
         ref="enableHealthchecksModal"
         action="Enable Healthchecks"
         onConfirm={(data) => this.props.enableHealthchecks(data)}

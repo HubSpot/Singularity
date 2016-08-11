@@ -36,6 +36,7 @@ class Slaves extends React.Component {
   getMaybeReactivateButton(slave) {
     return (Utils.isIn(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']) &&
       <ModalButton
+        name="Reactivate Slave"
         buttonChildren={<Glyphicon glyph="new-window" />}
         action="Reactivate Slave"
         onConfirm={(data) => this.props.reactivateSlave(slave, data.message)}
@@ -51,6 +52,7 @@ class Slaves extends React.Component {
   getMaybeFreezeButton(slave) {
     return (slave.currentState.state === 'ACTIVE' &&
       <ModalButton
+        name="Freeze Slave"
         buttonChildren={<Glyphicon glyph="stop" />}
         action="Freeze Slave"
         onConfirm={(data) => this.props.freezeSlave(slave, data.message)}
@@ -67,6 +69,7 @@ class Slaves extends React.Component {
     if (Utils.isIn(slave.currentState.state, ['ACTIVE', 'FROZEN'])) {
       return (
         <ModalButton
+          name="Decommission Slave"
           buttonChildren={<Glyphicon glyph="trash" />}
           action="Decommission Slave"
           onConfirm={(data) => this.props.decommissionSlave(slave, data.message)}
@@ -82,6 +85,7 @@ class Slaves extends React.Component {
     }
     return (
       <ModalButton
+        name="Remove Slave"
         buttonChildren={<Glyphicon glyph="remove" />}
         action="Remove Slave"
         onConfirm={(data) => this.props.removeSlave(slave, data.message)}

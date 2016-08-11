@@ -41,6 +41,7 @@ class Racks extends Component {
   getMaybeReactivateButton(rack) {
     return (Utils.isIn(rack.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&
       <ModalButton
+        name="Reactivate Rack"
         buttonChildren={<Glyphicon glyph="new-window" />}
         action="Reactivate Rack"
         onConfirm={(data) => this.props.reactivateRack(rack, data.message)}
@@ -57,6 +58,7 @@ class Racks extends Component {
     if (rack.currentState.state === 'ACTIVE') {
       return (
         <ModalButton
+          name="Decommission Rack"
           buttonChildren={<Glyphicon glyph="trash" />}
           action="Decommission Rack"
           onConfirm={(data) => this.props.decommissionRack(rack, data.message)}
@@ -74,6 +76,7 @@ class Racks extends Component {
     }
     return (
       <ModalButton
+        name="Remove Rack"
         buttonChildren={<Glyphicon glyph="remove" />}
         action="Remove Rack"
         onConfirm={(data) => this.props.removeRack(rack, data.message)}

@@ -18,6 +18,7 @@ class RemoveModal extends Component {
   render() {
     return (
       <FormModal
+        name="Remove Request"
         ref="removeModal"
         action="Remove Request"
         onConfirm={this.props.removeRequest}

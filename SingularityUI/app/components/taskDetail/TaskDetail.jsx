@@ -225,6 +225,7 @@ class TaskDetail extends Component {
     const removeBtn = this.props.task.isStillRunning && (
       <span>
         <FormModal
+          name={removeText}
           ref="confirmKillTask"
           action={removeText}
           onConfirm={(event) => this.killTask(event)}

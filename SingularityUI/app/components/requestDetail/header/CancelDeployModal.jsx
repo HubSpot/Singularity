@@ -20,6 +20,7 @@ class CancelDeployModal extends Component {
   render() {
     return (
       <FormModal
+        name="Cancel Deploy"
         ref="cancelModal"
         action="Cancel Deploy"
         onConfirm={() => this.props.cancelDeploy()}

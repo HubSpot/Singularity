@@ -58,6 +58,7 @@ class ScaleModal extends Component {
   render() {
     return (
       <FormModal
+        name="Scale Request"
         ref="scaleModal"
         action="Scale Request"
         onConfirm={(data) => this.handleScale(data)}
