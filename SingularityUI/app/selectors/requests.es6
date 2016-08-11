@@ -48,7 +48,7 @@ export const getUserRequests = createSelector(
         }
       }
 
-      const requestOwners = request.owners;
+      const requestOwners = request.request.owners;
       if (requestOwners === undefined) {
         return false;
       }

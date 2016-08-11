@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { Row, Col } from 'react-bootstrap';
 
 import UITable from '../common/table/UITable';
-import { Starred, RequestId, Type, LastDeploy, DeployUser, State } from '../requests/Columns';
+import { Starred, RequestId, Type, LastDeploy, State, DeployUser, Instances } from '../requests/Columns';
 
 import * as RequestsSelectors from '../../selectors/requests';
 
@@ -26,8 +26,9 @@ const MyStarredRequests = ({starredRequests}) => {
         {RequestId}
         {Type}
         {LastDeploy}
-        {DeployUser}
         {State}
+        {DeployUser}
+        {Instances}
       </UITable>
     );
   }

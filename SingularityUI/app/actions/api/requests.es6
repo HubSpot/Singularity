@@ -88,15 +88,6 @@ export const UnpauseRequest = buildJsonApiAction(
   })
 );
 
-// Remove when Unpause automatically removes the ExpiringPause
-export const UnpauseAndPersistRequest = (requestId, data) => {
-  return (dispatch) => {
-    return dispatch(UnpauseRequest.trigger(requestId, data)).then(
-      () => dispatch(PersistRequestPause.trigger(requestId))
-    );
-  };
-};
-
 export const ExitRequestCooldown = buildJsonApiAction(
   'EXIT_REQUEST_COOLDOWN',
   'POST',

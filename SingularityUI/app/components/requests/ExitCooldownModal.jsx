@@ -8,7 +8,8 @@ import FormModal from '../common/modal/FormModal';
 class ExitCooldownModal extends Component {
   static propTypes = {
     requestId: PropTypes.string.isRequired,
-    exitRequestCooldown: PropTypes.func.isRequired
+    exitRequestCooldown: PropTypes.func.isRequired,
+    then: PropTypes.func
   };
 
   show() {
@@ -42,7 +43,7 @@ class ExitCooldownModal extends Component {
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  exitRequestCooldown: (data) => dispatch(ExitRequestCooldown.trigger(ownProps.requestId, data)),
+  exitRequestCooldown: (data) => dispatch(ExitRequestCooldown.trigger(ownProps.requestId, data)).then(response => (ownProps.then && ownProps.then(response)))
 });
 
 export default connect(

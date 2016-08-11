@@ -69,7 +69,7 @@ const ACTIONS = {
 
   // Remove a task from the logger
   LOG_REMOVE_TASK(state, {taskId}) {
-    let newState = [];
+    const newState = [];
     for (let i = 0; i < state.length; i++) {
       let taskGroup = state[i];
       if (__in__(taskId, taskGroup.taskIds)) {
@@ -79,12 +79,12 @@ const ACTIONS = {
         }
 
         // remove task
-        let newTaskIds = _.without(taskGroup.taskIds, taskId);
+        const newTaskIds = _.without(taskGroup.taskIds, taskId);
 
         // remove task loglines
-        let newLogLines = taskGroup.logLines.filter(logLine => logLine.taskId !== taskId);
+        const newLogLines = taskGroup.logLines.filter(logLine => logLine.taskId !== taskId);
 
-        newState.push(Object.assign({}, taskGroup, {tasksIds: newTasksIds, logLines: newLogLines}));
+        newState.push(Object.assign({}, taskGroup, {tasksIds: newTaskIds, logLines: newLogLines}));
       } else {
         newState.push(taskGroup);
       }

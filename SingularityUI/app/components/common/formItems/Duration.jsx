@@ -12,7 +12,19 @@ export default class Duration extends React.Component {
   render() {
     const handleChange = (event) => {
       event.preventDefault();
-      const duration = moment.duration(`${this.refs.hours.value || 0}:${this.refs.minutes.value || 0}:${this.refs.seconds.value || 0}`);
+      const newHours = this.refs.hours.value || 0;
+      if (newHours >= 24) {
+        return;
+      }
+      const newMinutes = this.refs.minutes.value || 0;
+      if (newMinutes >= 60) {
+        return;
+      }
+      const newSeconds = this.refs.seconds.value || 0;
+      if (newSeconds >= 60) {
+        return;
+      }
+      const duration = moment.duration(`${newHours}:${newMinutes}:${newSeconds}`);
       this.props.onChange(duration.asMilliseconds());
     };
     const duration = moment.duration(this.props.value);

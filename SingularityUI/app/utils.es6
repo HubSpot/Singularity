@@ -206,6 +206,9 @@ const Utils = {
     if (!path.length) {
       return object;
     }
+    if (!object) {
+      return defaultValue;
+    }
     if (object.hasOwnProperty(path[0])) {
       return Utils.maybe(
         object[path[0]],
