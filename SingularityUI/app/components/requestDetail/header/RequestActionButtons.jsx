@@ -1,10 +1,13 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
+import { withRouter } from 'react-router';
 
 import { Button } from 'react-bootstrap';
 import { Link } from 'react-router';
 
 import JSONButton from '../../common/JSONButton';
+
+import { FetchRequest } from '../../../actions/api/requests';
 
 import RunNowButton from '../../requests/RunNowButton';
 import RemoveButton from '../../requests/RemoveButton';
@@ -18,7 +21,7 @@ import DisableHealthchecksButton from '../../requests/DisableHealthchecksButton'
 
 import Utils from '../../../utils';
 
-const RequestActionButtons = ({requestParent}) => {
+const RequestActionButtons = ({requestParent, fetchRequest, router}) => {
   if (!requestParent || !requestParent.request) {
     return null;
   }
@@ -38,7 +41,7 @@ const RequestActionButtons = ({requestParent}) => {
   let maybeRunNowButton;
   if (Utils.request.canBeRunNow(requestParent)) {
     maybeRunNowButton = (
-      <RunNowButton requestId={request.id}>
+      <RunNowButton requestId={request.id} then={fetchRequest}>
         <Button bsStyle="primary">
           Run now
         </Button>
@@ -49,7 +52,7 @@ const RequestActionButtons = ({requestParent}) => {
   let maybeExitCooldownButton;
   if (state === 'SYSTEM_COOLDOWN') {
     maybeExitCooldownButton = (
-      <ExitCooldownButton requestId={request.id}>
+      <ExitCooldownButton requestId={request.id} then={fetchRequest}>
         <Button bsStyle="primary">
           Exit Cooldown
         </Button>
@@ -60,7 +63,7 @@ const RequestActionButtons = ({requestParent}) => {
   let maybeScaleButton;
   if (Utils.request.canBeScaled(requestParent)) {
     maybeScaleButton = (
-      <ScaleButton requestId={request.id} currentInstances={request.instances}>
+      <ScaleButton requestId={request.id} currentInstances={request.instances} then={fetchRequest}>
         <Button bsStyle="primary" disabled={Utils.request.scaleDisabled(requestParent)}>
           Scale
         </Button>
@@ -74,7 +77,7 @@ const RequestActionButtons = ({requestParent}) => {
       // make sure the action removes the expiring pause
     }
     togglePauseButton = (
-      <UnpauseButton requestId={request.id}>
+      <UnpauseButton requestId={request.id} then={fetchRequest}>
         <Button bsStyle="primary">
           Unpause
         </Button>
@@ -82,7 +85,7 @@ const RequestActionButtons = ({requestParent}) => {
     );
   } else {
     togglePauseButton = (
-      <PauseButton requestId={request.id} isScheduled={request.requestType === 'SCHEDULED'}>
+      <PauseButton requestId={request.id} isScheduled={request.requestType === 'SCHEDULED'} then={fetchRequest}>
         <Button bsStyle="primary" disabled={Utils.request.pauseDisabled(requestParent)}>
           Pause
         </Button>
@@ -93,7 +96,7 @@ const RequestActionButtons = ({requestParent}) => {
   let maybeBounceButton;
   if (Utils.request.canBeBounced(requestParent)) {
     maybeBounceButton = (
-      <BounceButton requestId={request.id}>
+      <BounceButton requestId={request.id} then={fetchRequest}>
         <Button bsStyle="primary" disabled={Utils.request.bounceDisabled(requestParent)}>
           Bounce
         </Button>
@@ -116,7 +119,7 @@ const RequestActionButtons = ({requestParent}) => {
   if (Utils.request.canDisableHealthchecks(requestParent)) {
     if (request.skipHealthchecks) {
       maybeToggleHealthchecksButton = (
-        <EnableHealthchecksButton requestId={request.id}>
+        <EnableHealthchecksButton requestId={request.id} then={fetchRequest}>
           <Button bsStyle="warning">
             Enable Healthchecks
           </Button>
@@ -124,7 +127,7 @@ const RequestActionButtons = ({requestParent}) => {
       );
     } else {
       maybeToggleHealthchecksButton = (
-        <DisableHealthchecksButton requestId={request.id}>
+        <DisableHealthchecksButton requestId={request.id} then={fetchRequest}>
           <Button bsStyle="primary">
             Disable Healthchecks
           </Button>
@@ -133,9 +136,14 @@ const RequestActionButtons = ({requestParent}) => {
     }
   }
 
-  let removeButton;
-  removeButton = (
-    <RemoveButton requestId={request.id}>
+  const navigateAwayOnSuccess = (response) => {
+    if (response.statusCode === 200) {
+      router.push('/requests');
+    }
+  };
+
+  const removeButton = (
+    <RemoveButton requestId={request.id} then={navigateAwayOnSuccess}>
       <Button bsStyle="danger">
         Remove
       </Button>
@@ -160,13 +168,20 @@ const RequestActionButtons = ({requestParent}) => {
 
 RequestActionButtons.propTypes = {
   requestId: PropTypes.string.isRequired,
-  requestParent: PropTypes.object
+  requestParent: PropTypes.object,
+  fetchRequest: PropTypes.func.isRequired,
+  router: PropTypes.shape({push: PropTypes.func.isRequired}).isRequired
 };
 
 const mapStateToProps = (state, ownProps) => ({
   requestParent: Utils.maybe(state.api.request, [ownProps.requestId, 'data'])
 });
 
-export default connect(
-  mapStateToProps
-)(RequestActionButtons);
+const mapDispatchToProps = (dispatch, ownProps) => ({
+  fetchRequest: () => dispatch(FetchRequest.trigger(ownProps.requestId))
+});
+
+export default withRouter(connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(RequestActionButtons));
