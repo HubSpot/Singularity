@@ -18,7 +18,7 @@ import com.hubspot.singularity.SingularityTaskId;
 
 public class SingularityOfferHolder {
 
-  private static final Logger LOG = LoggerFactory.getLogger(SingularityMesosScheduler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SingularityOfferHolder.class);
 
   private final Protos.Offer offer;
   private final List<SingularityTask> acceptedTasks;

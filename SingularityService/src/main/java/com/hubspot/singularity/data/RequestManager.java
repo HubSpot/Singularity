@@ -80,7 +80,8 @@ public class RequestManager extends CuratorAsyncManager {
   public RequestManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, SingularityEventListener singularityEventListener,
       Transcoder<SingularityRequestCleanup> requestCleanupTranscoder, Transcoder<SingularityRequestWithState> requestTranscoder, Transcoder<SingularityRequestLbCleanup> requestLbCleanupTranscoder,
       Transcoder<SingularityPendingRequest> pendingRequestTranscoder, Transcoder<SingularityRequestHistory> requestHistoryTranscoder, Transcoder<SingularityExpiringBounce> expiringBounceTranscoder,
-      Transcoder<SingularityExpiringScale> expiringScaleTranscoder,  Transcoder<SingularityExpiringPause> expiringPauseTranscoder, Transcoder<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecksTranscoder) {
+      Transcoder<SingularityExpiringScale> expiringScaleTranscoder,  Transcoder<SingularityExpiringPause> expiringPauseTranscoder, Transcoder<SingularityExpiringSkipHealthchecks> expiringSkipHealthchecksTranscoder,
+      SingularityConfiguration singularityConfiguration) {
     super(curator, configuration, metricRegistry);
     this.requestTranscoder = requestTranscoder;
     this.requestCleanupTranscoder = requestCleanupTranscoder;
@@ -255,6 +256,10 @@ public class RequestManager extends CuratorAsyncManager {
 
   public SingularityCreateResult activate(SingularityRequest request, RequestHistoryType historyType, long timestamp, Optional<String> user, Optional<String> message) {
     return save(request, RequestState.ACTIVE, historyType, timestamp, user, message);
+  }
+
+  public SingularityCreateResult update(SingularityRequest request, RequestState requestState, RequestHistoryType historyType, long timestamp, Optional<String> user, Optional<String> message) {
+    return save(request, requestState, historyType, timestamp, user, message);
   }
 
   public List<SingularityPendingRequest> getPendingRequests() {

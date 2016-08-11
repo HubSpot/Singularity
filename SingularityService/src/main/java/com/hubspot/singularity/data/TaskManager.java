@@ -121,8 +121,8 @@ public class TaskManager extends CuratorAsyncManager {
       Transcoder<SingularityTaskStatusHolder> taskStatusTranscoder, Transcoder<SingularityTaskHealthcheckResult> healthcheckResultTranscoder, Transcoder<SingularityTask> taskTranscoder,
       Transcoder<SingularityTaskCleanup> taskCleanupTranscoder, Transcoder<SingularityTaskHistoryUpdate> taskHistoryUpdateTranscoder, Transcoder<SingularityPendingTask> pendingTaskTranscoder,
       Transcoder<SingularityKilledTaskIdRecord> killedTaskIdRecordTranscoder, Transcoder<SingularityTaskShellCommandRequest> taskShellCommandRequestTranscoder,
-      Transcoder<SingularityTaskShellCommandUpdate> taskShellCommandUpdateTranscoder,  Transcoder<SingularityTaskMetadata> taskMetadataTranscoder,
-      ZkCache<SingularityTask> taskCache, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId) {
+      Transcoder<SingularityTaskMetadata> taskMetadataTranscoder,
+      Transcoder<SingularityTaskShellCommandUpdate> taskShellCommandUpdateTranscoder, ZkCache<SingularityTask> taskCache, @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId) {
     super(curator, configuration, metricRegistry);
 
     this.healthcheckResultTranscoder = healthcheckResultTranscoder;

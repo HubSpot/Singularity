@@ -9,7 +9,8 @@ import AdvanceDeployModal from './AdvanceDeployModal';
 export default class AdvanceDeployButton extends Component {
   static propTypes = {
     requestId: PropTypes.string.isRequired,
-    deployId: PropTypes.string.isRequired
+    deployId: PropTypes.string.isRequired,
+    then: PropTypes.func
   };
 
   static defaultProps = {
@@ -28,6 +29,7 @@ export default class AdvanceDeployButton extends Component {
           ref="modal"
           deployId={this.props.deployId}
           requestId={this.props.requestId}
+          then={this.props.then}
         />
       </span>
     );

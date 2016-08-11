@@ -12,7 +12,8 @@ class AdvanceDeployModal extends Component {
     deployId: PropTypes.string.isRequired,
     requestId: PropTypes.string.isRequired,
     requestParent: PropTypes.object.isRequired,
-    advanceDeploy: PropTypes.func.isRequired
+    advanceDeploy: PropTypes.func.isRequired,
+    then: PropTypes.func
   };
 
   show() {
@@ -70,7 +71,7 @@ const mapDispatchToProps = (dispatch, ownProps) => ({
     ownProps.deployId,
     ownProps.requestId,
     targetActiveInstances
-  ))
+  )).then(response => (ownProps.then && ownProps.then(response)))
 });
 
 export default connect(

@@ -177,8 +177,9 @@ public class RequestResource extends AbstractRequestResource {
       checkBadRequest(currentActiveSlaveCount >= requiredSlaveCount, "Not enough active slaves to successfully complete a bounce of request %s (minimum required: %s, current: %s). Consider deploying, or changing the slave placement strategy instead.", requestId, requiredSlaveCount, currentActiveSlaveCount);
     }
 
-    final Optional<Boolean> skipHealthchecks = bounceRequest.isPresent() ? bounceRequest.get().getSkipHealthchecks() : Optional.<Boolean> absent();
+    validator.checkRequestForPriorityFreeze(requestWithState.getRequest());
 
+    final Optional<Boolean> skipHealthchecks = bounceRequest.isPresent() ? bounceRequest.get().getSkipHealthchecks() : Optional.<Boolean> absent();
     Optional<String> message = Optional.absent();
     Optional<String> actionId = Optional.absent();
 
@@ -201,8 +202,10 @@ public class RequestResource extends AbstractRequestResource {
 
     requestManager.bounce(requestWithState.getRequest(), System.currentTimeMillis(), JavaUtils.getUserEmail(user), message);
 
+    final SingularityBounceRequest validatedBounceRequest = validator.checkBounceRequest(bounceRequest.or(SingularityBounceRequest.defaultRequest()));
+
     requestManager.saveExpiringObject(new SingularityExpiringBounce(requestId, deployId, JavaUtils.getUserEmail(user),
-        System.currentTimeMillis(), bounceRequest.or(SingularityBounceRequest.defaultRequest()), actionId.get()));
+        System.currentTimeMillis(), validatedBounceRequest, actionId.get()));
 
     return fillEntireRequest(requestWithState);
   }

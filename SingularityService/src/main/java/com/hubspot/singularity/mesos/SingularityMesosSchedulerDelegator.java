@@ -227,7 +227,7 @@ public class SingularityMesosSchedulerDelegator implements Scheduler {
     } finally {
       lock.unlock();
 
-      LOG.debug("Handled status update for {} in {}", status.getTaskId().getValue(), JavaUtils.duration(start));
+      LOG.debug("Handled status update {} for {} in {}", status.getState(), status.getTaskId().getValue(), JavaUtils.duration(start));
     }
   }
 

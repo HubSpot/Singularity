@@ -18,7 +18,8 @@ export default class ExitCooldownButton extends Component {
 
   static propTypes = {
     requestId: PropTypes.string.isRequired,
-    children: PropTypes.node
+    children: PropTypes.node,
+    then: PropTypes.func
   };
 
   static defaultProps = {
@@ -36,6 +37,7 @@ export default class ExitCooldownButton extends Component {
         <ExitCooldownModal
           ref="modal"
           requestId={this.props.requestId}
+          then={this.props.then}
         />
       </span>
     );

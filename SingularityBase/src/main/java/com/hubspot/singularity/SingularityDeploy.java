@@ -4,16 +4,22 @@ import static com.hubspot.singularity.JsonHelpers.copyOfList;
 import static com.hubspot.singularity.JsonHelpers.copyOfSet;
 import static com.hubspot.singularity.JsonHelpers.copyOfMap;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
+import com.hubspot.mesos.SingularityMesosTaskLabel;
+import com.hubspot.mesos.SingularityMesosTaskLabels;
+import com.hubspot.mesos.SingularityMesosTaskLabelsDeserializer;
 import com.wordnik.swagger.annotations.ApiModelProperty;
 
 public class SingularityDeploy {
@@ -41,7 +47,8 @@ public class SingularityDeploy {
   private final Optional<Map<String, String>> env;
   private final Optional<List<String>> uris;
   private final Optional<ExecutorData> executorData;
-  private final Optional<Map<String, String>> labels;
+  private final Optional<SingularityMesosTaskLabels> labels;
+
   private final Optional<Map<Integer, Map<String, String>>> taskLabels;
   private final Optional<Map<Integer, Map<String, String>>> taskEnv;
 
@@ -66,6 +73,8 @@ public class SingularityDeploy {
   private final Optional<Set<String>> loadBalancerDomains;
   private final Optional<List<String>> loadBalancerAdditionalRoutes;
   private final Optional<String> loadBalancerTemplate;
+  private final Optional<String> loadBalancerServiceIdOverride;
+  private final Optional<String> loadBalancerUpstreamGroup;
 
   private final Optional<Integer> deployInstanceCountPerStep;
   private final Optional<Integer> deployStepWaitTimeMs;
@@ -96,7 +105,7 @@ public class SingularityDeploy {
       @JsonProperty("executorData") Optional<ExecutorData> executorData,
       @JsonProperty("version") Optional<String> version,
       @JsonProperty("timestamp") Optional<Long> timestamp,
-      @JsonProperty("labels") Optional<Map<String, String>> labels,
+      @JsonProperty("labels") Optional<SingularityMesosTaskLabels> labels,
       @JsonProperty("taskLabels") Optional<Map<Integer, Map<String, String>>> taskLabels,
       @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
       @JsonProperty("healthcheckUri") Optional<String> healthcheckUri,
@@ -113,6 +122,8 @@ public class SingularityDeploy {
       @JsonProperty("loadBalancerDomains") Optional<Set<String>> loadBalancerDomains,
       @JsonProperty("loadBalancerAdditionalRoutes") Optional<List<String>> loadBalancerAdditionalRoutes,
       @JsonProperty("loadBalancerTemplate") Optional<String> loadBalancerTemplate,
+      @JsonProperty("loadBalancerServiceIdOverride") Optional<String> loadBalancerServiceIdOverride,
+      @JsonProperty("loadBalancerUpstreamGroup") Optional<String> loadBalancerUpstreamGroup,
       @JsonProperty("skipHealthchecksOnDeploy") Optional<Boolean> skipHealthchecksOnDeploy,
       @JsonProperty("healthCheckProtocol") Optional<HealthcheckProtocol> healthcheckProtocol,
       @JsonProperty("deployInstanceCountPerStep") Optional<Integer> deployInstanceCountPerStep,
@@ -166,6 +177,8 @@ public class SingularityDeploy {
     this.loadBalancerDomains = loadBalancerDomains;
     this.loadBalancerAdditionalRoutes = loadBalancerAdditionalRoutes;
     this.loadBalancerTemplate = loadBalancerTemplate;
+    this.loadBalancerServiceIdOverride = loadBalancerServiceIdOverride;
+    this.loadBalancerUpstreamGroup = loadBalancerUpstreamGroup;
 
     this.deployInstanceCountPerStep = deployInstanceCountPerStep;
     this.deployStepWaitTimeMs = deployStepWaitTimeMs;
@@ -202,6 +215,8 @@ public class SingularityDeploy {
     .setLoadBalancerDomains(copyOfSet(loadBalancerDomains))
     .setLoadBalancerAdditionalRoutes(copyOfList(loadBalancerAdditionalRoutes))
     .setLoadBalancerTemplate(loadBalancerTemplate)
+    .setLoadBalancerUpstreamGroup(loadBalancerUpstreamGroup)
+    .setLoadBalancerServiceIdOverride(loadBalancerServiceIdOverride)
     .setMetadata(copyOfMap(metadata))
     .setVersion(version)
     .setTimestamp(timestamp)
@@ -377,9 +392,24 @@ public class SingularityDeploy {
     return loadBalancerTemplate;
   }
 
+  @ApiModelProperty(required=false, value="Name of load balancer Service ID to use instead of the Request ID")
+  public Optional<String> getLoadBalancerServiceIdOverride() {
+    return loadBalancerServiceIdOverride;
+  }
+
+  @ApiModelProperty(required=false, value="Group name to tag all upstreams with in load balancer")
+  public Optional<String> getLoadBalancerUpstreamGroup() {
+    return loadBalancerUpstreamGroup;
+  }
+
   @ApiModelProperty(required=false, value="Labels for all tasks associated with this deploy")
-  public Optional<Map<String, String>> getLabels() {
+  public Optional<SingularityMesosTaskLabels> getLabels() {
     return labels;
+  }
+
+  @JsonIgnore
+  public List<SingularityMesosTaskLabel> getLabelsList() {
+    return labels.isPresent() ? labels.get().getLabels() : Collections.<SingularityMesosTaskLabel>emptyList();
   }
 
   @ApiModelProperty(required=false, value="Labels for specific tasks associated with this deploy, indexed by instance number")
@@ -465,6 +495,8 @@ public class SingularityDeploy {
       ", loadBalancerDomain=" + loadBalancerDomains +
       ", loadBalancerAdditionalRoutes=" + loadBalancerAdditionalRoutes +
       ", loadBalancerTemplate=" + loadBalancerTemplate +
+      ", loadBalancerServiceIdOverride=" + loadBalancerServiceIdOverride +
+      ", loadBalancerUpstreamGroup=" + loadBalancerUpstreamGroup +
       ", labels=" + labels +
       ", taskLabels=" + taskLabels +
       ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +

@@ -47,6 +47,7 @@ public class SingularityTaskReconciliation {
   private final SingularityAbort abort;
   private final SingularityExceptionNotifier exceptionNotifier;
   private final SchedulerDriverSupplier schedulerDriverSupplier;
+  private long reconciliationStartedAt;
 
   @Inject
   public SingularityTaskReconciliation(SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
@@ -68,7 +69,7 @@ public class SingularityTaskReconciliation {
     this.executorService = executorServiceFactory.get(getClass().getSimpleName());
   }
 
-  enum ReconciliationState {
+  public enum ReconciliationState {
     ALREADY_RUNNING, STARTED, NO_DRIVER;
   }
 
@@ -77,7 +78,17 @@ public class SingularityTaskReconciliation {
     return isRunningReconciliation.get();
   }
 
+  public Optional<Long> getTaskReconciliationStartedAt() {
+    if (isReconciliationRunning()) {
+      return Optional.of(reconciliationStartedAt);
+    } else {
+      return Optional.absent();
+    }
+  }
+
   public ReconciliationState startReconciliation() {
+    reconciliationStartedAt = System.currentTimeMillis();
+
     if (!isRunningReconciliation.compareAndSet(false, true)) {
       LOG.info("Reconciliation is already running, NOT starting a new reconciliation process");
       return ReconciliationState.ALREADY_RUNNING;
@@ -91,7 +102,6 @@ public class SingularityTaskReconciliation {
       return ReconciliationState.NO_DRIVER;
     }
 
-    final long reconciliationStart = System.currentTimeMillis();
     final List<SingularityTaskId> activeTaskIds = taskManager.getActiveTaskIds();
 
     LOG.info("Starting a reconciliation cycle - {} current active tasks", activeTaskIds.size());
@@ -99,7 +109,7 @@ public class SingularityTaskReconciliation {
     SchedulerDriver driver = schedulerDriver.get();
     driver.reconcileTasks(Collections.<TaskStatus> emptyList());
 
-    scheduleReconciliationCheck(driver, reconciliationStart, activeTaskIds, 0);
+    scheduleReconciliationCheck(driver, reconciliationStartedAt, activeTaskIds, 0);
 
     return ReconciliationState.STARTED;
   }

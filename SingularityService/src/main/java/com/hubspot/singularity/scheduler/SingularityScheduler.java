@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -40,9 +41,9 @@ import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeployMarker;
+import com.hubspot.singularity.SingularityDeployProgress;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
-import com.hubspot.singularity.SingularityDeployProgress;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -214,7 +215,7 @@ public class SingularityScheduler {
     final ImmutableList<SingularityPendingRequest> pendingRequests = ImmutableList.copyOf(requestManager.getPendingRequests());
 
     if (pendingRequests.isEmpty()) {
-      LOG.trace("Pending queue was empty");
+      LOG.trace("Pending request queue was empty");
       return;
     }
 
@@ -251,7 +252,7 @@ public class SingularityScheduler {
         continue;
       }
 
-      final List<SingularityTaskId> matchingTaskIds = getMatchingTaskIds(stateCache, updatedRequest, pendingRequest);
+      final List<SingularityTaskId> matchingTaskIds = getMatchingTaskIds(stateCache, maybeRequest.get().getRequest(), pendingRequest);
 
       final SingularityDeployStatistics deployStatistics = getDeployStatistics(pendingRequest.getRequestId(), pendingRequest.getDeployId());
 
@@ -706,6 +707,9 @@ public class SingularityScheduler {
           } else {
             scheduleFrom = new Date(now);
             final CronExpression cronExpression = new CronExpression(request.getQuartzScheduleSafe());
+            if (request.getScheduleTimeZone().isPresent()) {
+              cronExpression.setTimeZone(TimeZone.getTimeZone(request.getScheduleTimeZone().get()));
+            }
             nextRunAtDate = cronExpression.getNextValidTimeAfter(scheduleFrom);
           }
 

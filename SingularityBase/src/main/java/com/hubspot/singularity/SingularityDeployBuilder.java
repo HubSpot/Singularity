@@ -8,6 +8,8 @@ import com.google.common.base.Optional;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
+import com.hubspot.mesos.SingularityMesosTaskLabel;
+import com.hubspot.mesos.SingularityMesosTaskLabels;
 
 public class SingularityDeployBuilder {
 
@@ -35,7 +37,7 @@ public class SingularityDeployBuilder {
   private Optional<Map<Integer, Map<String, String>>> taskEnv;
   private Optional<List<String>> uris;
   private Optional<ExecutorData> executorData;
-  private Optional<Map<String, String>> labels;
+  private Optional<SingularityMesosTaskLabels> labels;
   private Optional<Map<Integer, Map<String, String>>> taskLabels;
 
   private Optional<String> healthcheckUri;
@@ -59,6 +61,8 @@ public class SingularityDeployBuilder {
   private Optional<Set<String>> loadBalancerDomains;
   private Optional<List<String>> loadBalancerAdditionalRoutes;
   private Optional<String> loadBalancerTemplate;
+  private Optional<String> loadBalancerServiceIdOverride;
+  private Optional<String> loadBalancerUpstreamGroup;
 
   private Optional<Integer> deployInstanceCountPerStep;
   private Optional<Integer> deployStepWaitTimeMs;
@@ -104,6 +108,8 @@ public class SingularityDeployBuilder {
     this.loadBalancerDomains = Optional.absent();
     this.loadBalancerAdditionalRoutes = Optional.absent();
     this.loadBalancerTemplate = Optional.absent();
+    this.loadBalancerServiceIdOverride = Optional.absent();
+    this.loadBalancerUpstreamGroup = Optional.absent();
     this.deployInstanceCountPerStep = Optional.absent();
     this.deployStepWaitTimeMs = Optional.absent();
     this.autoAdvanceDeploySteps = Optional.absent();
@@ -115,7 +121,7 @@ public class SingularityDeployBuilder {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, customExecutorUser, resources,
       env, taskEnv, uris, metadata, executorData, version, timestamp, labels, taskLabels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
       healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, loadBalancerDomains, loadBalancerAdditionalRoutes,
-      loadBalancerTemplate, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries, shell);
+      loadBalancerTemplate, loadBalancerServiceIdOverride, loadBalancerUpstreamGroup, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries, shell);
   }
 
   public String getRequestId() {
@@ -392,11 +398,11 @@ public class SingularityDeployBuilder {
     return this;
   }
 
-  public Optional<Map<String, String>> getLabels() {
+  public Optional<SingularityMesosTaskLabels> getLabels() {
     return labels;
   }
 
-  public SingularityDeployBuilder setLabels(Optional<Map<String, String>> labels) {
+  public SingularityDeployBuilder setLabels(Optional<SingularityMesosTaskLabels> labels) {
     this.labels = labels;
     return this;
   }
@@ -491,6 +497,24 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<String> getLoadBalancerServiceIdOverride() {
+    return loadBalancerServiceIdOverride;
+  }
+
+  public SingularityDeployBuilder setLoadBalancerServiceIdOverride(Optional<String> loadBalancerServiceIdOverride) {
+    this.loadBalancerServiceIdOverride = loadBalancerServiceIdOverride;
+    return this;
+  }
+
+  public Optional<String> getLoadBalancerUpstreamGroup() {
+    return loadBalancerUpstreamGroup;
+  }
+
+  public SingularityDeployBuilder setLoadBalancerUpstreamGroup(Optional<String> loadBalancerUpstreamGroup) {
+    this.loadBalancerUpstreamGroup = loadBalancerUpstreamGroup;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeployBuilder{" +
@@ -531,6 +555,8 @@ public class SingularityDeployBuilder {
       ", loadBalancerDomains=" + loadBalancerDomains +
       ", loadBalancerAdditionalRoutes=" + loadBalancerAdditionalRoutes +
       ", loadBalancerTemplate=" + loadBalancerTemplate +
+      ", loadBalancerServiceIdOverride=" + loadBalancerServiceIdOverride +
+      ", loadBalancerUpstreamGroup=" + loadBalancerUpstreamGroup +
       ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
       ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
       ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +

@@ -42,7 +42,7 @@ class UnpauseModal extends Component {
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  unpauseRequest: (data) => dispatch(UnpauseRequest.trigger(ownProps.requestId, data)),
+  unpauseRequest: (data) => dispatch(UnpauseRequest.trigger(ownProps.requestId, data)).then((response) => ownProps.then && ownProps.then(response)),
 });
 
 export default connect(

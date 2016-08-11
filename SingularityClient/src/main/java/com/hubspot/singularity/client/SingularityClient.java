@@ -38,6 +38,7 @@ import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
+import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityS3Log;
@@ -100,6 +101,9 @@ public class SingularityClient {
   private static final String REQUESTS_GET_PENDING_FORMAT = REQUESTS_FORMAT + "/queued/pending";
   private static final String REQUESTS_GET_CLEANUP_FORMAT = REQUESTS_FORMAT + "/queued/cleanup";
 
+  private static final String REQUEST_GROUPS_FORMAT = "http://%s/%s/groups";
+  private static final String REQUEST_GROUP_FORMAT = REQUEST_GROUPS_FORMAT + "/group/%s";
+
   private static final String REQUEST_GET_FORMAT = REQUESTS_FORMAT + "/request/%s";
   private static final String REQUEST_CREATE_OR_UPDATE_FORMAT = REQUESTS_FORMAT;
   private static final String REQUEST_DELETE_ACTIVE_FORMAT = REQUESTS_FORMAT + "/request/%s";
@@ -142,6 +146,7 @@ public class SingularityClient {
   private static final TypeReference<Collection<SingularityTaskRequest>> TASKS_REQUEST_COLLECTION = new TypeReference<Collection<SingularityTaskRequest>>() {};
   private static final TypeReference<Collection<SingularityS3Log>> S3_LOG_COLLECTION = new TypeReference<Collection<SingularityS3Log>>() {};
   private static final TypeReference<Collection<SingularityRequestHistory>> REQUEST_HISTORY_COLLECTION = new TypeReference<Collection<SingularityRequestHistory>>() {};
+  private static final TypeReference<Collection<SingularityRequestGroup>> REQUEST_GROUP_COLLECTION = new TypeReference<Collection<SingularityRequestGroup>>() {};
 
   private final Random random;
   private final Provider<List<String>> hostsProvider;
@@ -213,7 +218,7 @@ public class SingularityClient {
     final long start = System.currentTimeMillis();
 
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-        .setUrl(uri);
+      .setUrl(uri);
 
     if (queryParams.isPresent()) {
       addQueryParams(requestBuilder, queryParams.get());
@@ -244,7 +249,7 @@ public class SingularityClient {
     final long start = System.currentTimeMillis();
 
     HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-        .setUrl(uri);
+      .setUrl(uri);
 
     if (queryParams.isPresent()) {
       addQueryParams(requestBuilder, queryParams.get());
@@ -277,7 +282,7 @@ public class SingularityClient {
         requestBuilder.setQueryParam(queryParamEntry.getKey()).to((Boolean) queryParamEntry.getValue());
       } else {
         throw new RuntimeException(String.format("The type '%s' of query param %s is not supported. Only String, long, int and boolean values are supported",
-            queryParamEntry.getValue().getClass().getName(), queryParamEntry.getKey()));
+          queryParamEntry.getValue().getClass().getName(), queryParamEntry.getKey()));
       }
     }
   }
@@ -539,7 +544,7 @@ public class SingularityClient {
     final String requestUri = String.format(DELETE_DEPLOY_FORMAT, getHost(), contextPath, deployId, requestId);
 
     SingularityRequestParent singularityRequestParent = delete(requestUri, "pending deploy", new SingularityDeployKey(requestId, deployId).getId(), Optional.absent(),
-        Optional.of(SingularityRequestParent.class)).get();
+      Optional.of(SingularityRequestParent.class)).get();
 
     return getAndLogRequestAndDeployStatus(singularityRequestParent);
   }
@@ -1012,4 +1017,27 @@ public class SingularityClient {
     return getCollection(requestUri, type, S3_LOG_COLLECTION);
   }
 
+  public Collection<SingularityRequestGroup> getRequestGroups() {
+    final String requestUri = String.format(REQUEST_GROUPS_FORMAT, getHost(), contextPath);
+
+    return getCollection(requestUri, "request groups", REQUEST_GROUP_COLLECTION);
+  }
+
+  public Optional<SingularityRequestGroup> getRequestGroup(String requestGroupId) {
+    final String requestUri = String.format(REQUEST_GROUP_FORMAT, getHost(), contextPath, requestGroupId);
+
+    return getSingle(requestUri, "request group", requestGroupId, SingularityRequestGroup.class);
+  }
+
+  public Optional<SingularityRequestGroup> saveRequestGroup(SingularityRequestGroup requestGroup) {
+    final String requestUri = String.format(REQUEST_GROUPS_FORMAT, getHost(), contextPath);
+
+    return post(requestUri, "request group", Optional.of(requestGroup), Optional.of(SingularityRequestGroup.class));
+  }
+
+  public void deleteRequestGroup(String requestGroupId) {
+    final String requestUri = String.format(REQUEST_GROUP_FORMAT, getHost(), contextPath, requestGroupId);
+
+    delete(requestUri, "request group", requestGroupId);
+  }
 }

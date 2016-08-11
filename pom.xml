@@ -204,7 +204,7 @@
         <artifactId>HorizonNing</artifactId>
         <version>${horizon.version}</version>
       </dependency>
-
+	
       <dependency>
         <groupId>org.apache.directory.api</groupId>
         <artifactId>api-all</artifactId>

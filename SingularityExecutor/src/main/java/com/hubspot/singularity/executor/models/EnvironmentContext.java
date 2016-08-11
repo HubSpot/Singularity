@@ -1,5 +1,6 @@
 package com.hubspot.singularity.executor.models;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.mesos.Protos;
@@ -28,6 +29,10 @@ public class EnvironmentContext {
 
   public List<Protos.Volume> getContainerVolumes() {
     return taskInfo.getContainer().getVolumesList();
+  }
+
+  public boolean isDocker() {
+    return taskInfo.hasContainer() && taskInfo.getContainer().hasDocker();
   }
 
   @Override
