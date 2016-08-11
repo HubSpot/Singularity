@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { UnpauseAndPersistRequest } from '../../actions/api/requests';
+import { UnpauseRequest } from '../../actions/api/requests';
 
 import FormModal from '../common/modal/FormModal';
 
@@ -42,7 +42,7 @@ class UnpauseModal extends Component {
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  unpauseRequest: (data) => dispatch(UnpauseAndPersistRequest(ownProps.requestId, data)),
+  unpauseRequest: (data) => dispatch(UnpauseRequest.trigger(ownProps.requestId, data)),
 });
 
 export default connect(
