@@ -30,7 +30,8 @@ class RunNowButton extends Component {
     children: PropTypes.node,
     router: PropTypes.object,
     taskId: PropTypes.string,
-    task: PropTypes.object
+    task: PropTypes.object,
+    then: PropTypes.func
   };
 
   constructor(props) {
@@ -68,7 +69,14 @@ class RunNowButton extends Component {
     return (
       <span>
         <span>{getClickComponent(this, this.doBeforeOpeningModal)}</span>
-        <RunNowModal ref="modal" requestId={this.props.requestId} task={this.props.task} rerun={!!this.props.taskId} router={this.props.router} />
+        <RunNowModal
+          ref="modal"
+          requestId={this.props.requestId}
+          task={this.props.task}
+          rerun={!!this.props.taskId}
+          router={this.props.router}
+          then={this.props.then}
+        />
       </span>
     );
   }

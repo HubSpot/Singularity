@@ -9,7 +9,8 @@ class CancelDeployModal extends Component {
   static propTypes = {
     deployId: PropTypes.string.isRequired,
     requestId: PropTypes.string.isRequired,
-    cancelDeploy: PropTypes.func.isRequired
+    cancelDeploy: PropTypes.func.isRequired,
+    then: PropTypes.func
   };
 
   show() {
@@ -32,7 +33,7 @@ class CancelDeployModal extends Component {
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  cancelDeploy: () => dispatch(CancelDeploy.trigger(ownProps.deployId, ownProps.requestId))
+  cancelDeploy: () => dispatch(CancelDeploy.trigger(ownProps.deployId, ownProps.requestId)).then(response => (ownProps.then && ownProps.then(response)))
 });
 
 export default connect(
