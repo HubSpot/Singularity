@@ -18,7 +18,8 @@ export default class UnpauseButton extends Component {
 
   static propTypes = {
     requestId: PropTypes.string.isRequired,
-    children: PropTypes.node
+    children: PropTypes.node,
+    then: PropTypes.func
   };
 
   static defaultProps = {
@@ -35,7 +36,7 @@ export default class UnpauseButton extends Component {
     return (
       <span>
         {getClickComponent(this)}
-        <UnpauseModal ref="modal" requestId={this.props.requestId} />
+        <UnpauseModal ref="modal" requestId={this.props.requestId} then={this.props.then} />
       </span>
     );
   }

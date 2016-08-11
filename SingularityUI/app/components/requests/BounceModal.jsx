@@ -71,7 +71,7 @@ class BounceModal extends Component {
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  bounceRequest: (data) => dispatch(BounceRequest.trigger(ownProps.requestId, data)),
+  bounceRequest: (data) => dispatch(BounceRequest.trigger(ownProps.requestId, data)).then(response => (ownProps.then && ownProps.then(response))),
 });
 
 export default connect(

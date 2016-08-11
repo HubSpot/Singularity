@@ -18,7 +18,8 @@ export default class ScaleButton extends Component {
   static propTypes = {
     requestId: PropTypes.string.isRequired,
     currentInstances: PropTypes.number,
-    children: PropTypes.node
+    children: PropTypes.node,
+    then: PropTypes.func
   };
 
   static defaultProps = {
@@ -39,6 +40,7 @@ export default class ScaleButton extends Component {
           ref="modal"
           requestId={this.props.requestId}
           currentInstances={this.props.currentInstances}
+          then={this.props.then}
         />
       </span>
     );
