@@ -33,38 +33,35 @@ const Racks = (props) => {
     </FormModalButton>
   );
 
-  const getDecommissionOrRemoveButton = (rack) => {
-    if (rack.currentState.state === 'ACTIVE') {
-      return (
-        <FormModalButton
-          buttonChildren={<Glyphicon glyph="trash" />}
-          action="Decommission Rack"
-          onConfirm={(data) => props.decommissionRack(rack, data.message)}
-          tooltipText={`Decommission ${rack.id}`}
-          formElements={[messageElement]}>
-          <p>Are you sure you want to decommission this rack?</p>
-          <pre>{rack.id}</pre>
-          <p>
-            Decommissioning a rack causes all tasks currently running on it to be rescheduled and executed elsewhere,
-            as new tasks will no longer consider the rack with id <code>{rack.id}</code> a valid target for execution.
-            This process may take time as replacement tasks must be considered healthy before old tasks are killed.
-          </p>
-        </FormModalButton>
-      );
-    }
-    return (
-      <FormModalButton
-        buttonChildren={<Glyphicon glyph="remove" />}
-        action="Remove Rack"
-        onConfirm={(data) => props.removeRack(rack, data.message)}
-        tooltipText={`Remove ${rack.id}`}
-        formElements={[messageElement]}>
-        <p>Are you sure you want to remove this rack??</p>
-        <pre>{rack.id}</pre>
-        <p>Removing a decommissioned rack will cause that rack to become active again if the mesos-rack process is still running.</p>
-      </FormModalButton>
-    );
-  };
+  const getMaybeDecommissionButton = (rack) => (rack.currentState.state === 'ACTIVE' && (
+    <FormModalButton
+      buttonChildren={<Glyphicon glyph="trash" />}
+      action="Decommission Rack"
+      onConfirm={(data) => props.decommissionRack(rack, data.message)}
+      tooltipText={`Decommission ${rack.id}`}
+      formElements={[messageElement]}>
+      <p>Are you sure you want to decommission this rack?</p>
+      <pre>{rack.id}</pre>
+      <p>
+        Decommissioning a rack causes all tasks currently running on it to be rescheduled and executed elsewhere,
+        as new tasks will no longer consider the rack with id <code>{rack.id}</code> a valid target for execution.
+        This process may take time as replacement tasks must be considered healthy before old tasks are killed.
+      </p>
+    </FormModalButton>
+  ));
+
+  const getMaybeRemoveButton = (rack) => (rack.currentState.state !== 'ACTIVE' && (
+    <FormModalButton
+      buttonChildren={<Glyphicon glyph="remove" />}
+      action="Remove Rack"
+      onConfirm={(data) => props.removeRack(rack, data.message)}
+      tooltipText={`Remove ${rack.id}`}
+      formElements={[messageElement]}>
+      <p>Are you sure you want to remove this rack??</p>
+      <pre>{rack.id}</pre>
+      <p>Removing a decommissioned rack will cause that rack to become active again if the mesos-rack process is still running.</p>
+    </FormModalButton>
+  ));
 
   const getColumns = (type) => {
     const columns = ([
@@ -123,7 +120,8 @@ const Racks = (props) => {
         cellData={(rack) => (
           <span>
             {getMaybeReactivateButton(rack)}
-            {getDecommissionOrRemoveButton(rack)}
+            {getMaybeDecommissionButton(rack)}
+            {getMaybeRemoveButton(rack)}
             <JSONButton object={rack} showOverlay={true}>
               {'{ }'}
             </JSONButton>
