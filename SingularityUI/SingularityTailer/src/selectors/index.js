@@ -1,9 +1,11 @@
 import { createSelector } from 'reselect';
 
-import { List, Map } from 'immutable';
+import { List, Map, Range } from 'immutable';
 
 import Anser from 'anser';
 import classNames from 'classnames';
+
+import { createMissingMarker } from '../reducers/files';
 
 const ansiEnhancer = (line) => {
   return Anser.ansiToJson(
@@ -47,6 +49,27 @@ export const getLines = (state, props) => {
   return new List();
 };
 
+// experimental
+export const getExpandedLines = (state, props) => {
+  const file = getFile(state, props);
+  if (file) {
+    const unflattened = file.lines.map((l) => {
+      if (l.isMissingMarker) {
+        const chunks = Math.ceil(l.byteLength / 65535);
+        return new Range(0, chunks).map((index) => {
+          return createMissingMarker(
+            l.start + (index * 65535),
+            Math.min(l.end, l.start + ((index + 1) * 65535))
+          );
+        });
+      }
+      return new List().push(l);
+    });
+    return unflattened.flatten();
+  }
+  return new List();
+};
+
 export const getRequests = (state, props) => (
   props.getTailerState(state).requests[props.tailerId] || new Map()
 );
@@ -81,3 +104,7 @@ export const makeGetEnhancedLines = () => {
     }
   );
 };
+
+export const getScroll = (state, props) => (
+  props.getTailerState(state).scroll[props.tailerId] || {}
+);

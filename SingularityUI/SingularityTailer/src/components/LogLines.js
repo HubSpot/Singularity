@@ -25,7 +25,14 @@ const LogLines = (props) => {
           onRowsRendered={props.onRowsRendered}
           overscanRowCount={props.overscanRowCount}
           rowCount={props.lines.size}
-          rowHeight={14}
+          rowHeight={({index}) => {
+            const line = props.lines.get(index);
+            if (line.isMissingMarker) {
+              return 80 * 14;
+              // return Math.ceil(line.byteLength / 250) * 14;
+            }
+            return 14;
+          }}
           rowRenderer={rowRenderer}
         />
       )}

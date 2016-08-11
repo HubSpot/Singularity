@@ -3,6 +3,8 @@ import { connect } from 'react-redux';
 
 import Immutable, { Range } from 'immutable';
 
+import * as Actions from '../actions';
+
 import connectToTailer from './connectToTailer';
 
 import * as Selectors from '../selectors';
@@ -34,11 +36,19 @@ class Log extends Component {
       this.props.initializeFile();
     }
 
-    if (this.state.hasOwnProperty('startIndex')) {
-      const unloaded = this.findUnloadedInRange(
-        this.state.startIndex,
-        this.state.stopIndex
-      );
+    if (this.props.scroll.hasOwnProperty('startIndex')) {
+      const { fetchOverscan } = this.props.config;
+
+      let start;
+      let stop;
+      if (fetchOverscan) {
+        start = this.props.scroll.overscanStartIndex;
+        stop = this.props.scroll.overscanStopIndex;
+      } else {
+        start = this.props.scroll.startIndex;
+        stop = this.props.scroll.stopIndex;
+      }
+      const unloaded = this.findUnloadedInRange(start, stop);
 
       unloaded.forEach((index) => {
         this.loadLines(index, index);
@@ -56,6 +66,7 @@ class Log extends Component {
   }
 
   isTailing(stopIndex) {
+    return false; // this is broken right now...
     return stopIndex === this.props.lines.size - 1;
   }
 
@@ -73,27 +84,25 @@ class Log extends Component {
   }
 
   onRowsRendered ({ startIndex, stopIndex, overscanStartIndex, overscanStopIndex }) {
-    const { fetchOverscan } = this.props.config;
-
     const isTailing = this.isTailing(stopIndex);
 
     let tailIntervalId = this.state.tailIntervalId;
 
     if (isTailing && !this.state.isTailing) {
       // start tailing
-      tailIntervalId = setInterval(() => this.tailLog(), 1000);
+      tailIntervalId = setInterval(() => this.tailLog(), 10000);
     } else if (!isTailing && this.state.isTailing) {
       // stop tailing
       clearInterval(tailIntervalId);
       tailIntervalId = undefined;
     }
 
-    this.setState({
-      startIndex: fetchOverscan ? overscanStartIndex : startIndex,
-      stopIndex: fetchOverscan ? overscanStopIndex : stopIndex,
-      isTailing,
-      tailIntervalId
-    });
+    this.props.renderedLines(
+      startIndex,
+      stopIndex,
+      overscanStartIndex,
+      overscanStopIndex
+    );
   }
 
   render() {
@@ -130,21 +139,40 @@ Log.propTypes = {
   fileSize: PropTypes.number,
   lines: PropTypes.instanceOf(Immutable.List),
   requests: PropTypes.instanceOf(Immutable.Map),
-  config: PropTypes.object.isRequired
+  config: PropTypes.object.isRequired,
+  scroll: PropTypes.object.isRequired,
+  // actions
+  renderedLines: PropTypes.func.isRequired
 };
 
-const mapStateToProps = (state, ownProps) => {
+const makeMapStateToProps = () => {
   const getEnhancedLines = Selectors.makeGetEnhancedLines();
-
-  return {
+  const mapStateToProps = (state, ownProps) => ({
     isLoaded: Selectors.getIsLoaded(state, ownProps),
     fileSize: Selectors.getFileSize(state, ownProps),
     lines: getEnhancedLines(state, ownProps),
     requests: Selectors.getRequests(state, ownProps),
-    config: Selectors.getConfig(state, ownProps)
+    config: Selectors.getConfig(state, ownProps),
+    scroll: Selectors.getScroll(state, ownProps)
+  });
+  return mapStateToProps;
+};
+
+const mapDispatchToProps = (dispatch, ownProps) => {
+  return {
+    renderedLines: (startIndex, stopIndex, overscanStartIndex, overscanStopIndex) => (
+      dispatch(Actions.renderedLines(
+        ownProps.tailerId,
+        startIndex,
+        stopIndex,
+        overscanStartIndex,
+        overscanStopIndex
+      ))
+    )
   };
 };
 
 export default connectToTailer(connect(
-  mapStateToProps
+  makeMapStateToProps,
+  mapDispatchToProps
 )(Log));

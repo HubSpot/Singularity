@@ -26,9 +26,12 @@ section.log-pane {
       padding-right: 10px;
     }
 
-    &.loading > span {
-      height: 12px;
-      background-color: rgba(255, 255, 255, 0.2);
+    &.missing {
+      background-color: rgba(255, 255, 255, 0.1)
+    }
+
+    &.loading {
+      background-color: rgba(255, 255, 255, 0.4);
     }
   }
 
