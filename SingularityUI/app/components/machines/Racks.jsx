@@ -1,7 +1,7 @@
 import React, { PropTypes } from 'react';
 import MachinesPage from './MachinesPage';
 import {Glyphicon} from 'react-bootstrap';
-import ModalButton from './ModalButton';
+import FormModalButton from '../common/modal/FormModalButton';
 import messageElement from './messageElement';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
@@ -21,7 +21,7 @@ const Racks = (props) => {
   const showUser = (rack) => Utils.isIn(rack.currentState.state, ['ACTIVE', 'DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']);
 
   const getMaybeReactivateButton = (rack) => (Utils.isIn(rack.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&
-    <ModalButton
+    <FormModalButton
       buttonChildren={<Glyphicon glyph="new-window" />}
       action="Reactivate Rack"
       onConfirm={(data) => props.reactivateRack(rack, data.message)}
@@ -30,13 +30,13 @@ const Racks = (props) => {
       <p>Are you sure you want to cancel decommission and reactivate this rack??</p>
       <pre>{rack.id}</pre>
       <p>Reactivating a rack will cancel the decommission without erasing the rack's history and move it back to the active state.</p>
-    </ModalButton>
+    </FormModalButton>
   );
 
   const getDecommissionOrRemoveButton = (rack) => {
     if (rack.currentState.state === 'ACTIVE') {
       return (
-        <ModalButton
+        <FormModalButton
           buttonChildren={<Glyphicon glyph="trash" />}
           action="Decommission Rack"
           onConfirm={(data) => props.decommissionRack(rack, data.message)}
@@ -49,11 +49,11 @@ const Racks = (props) => {
             as new tasks will no longer consider the rack with id <code>{rack.id}</code> a valid target for execution.
             This process may take time as replacement tasks must be considered healthy before old tasks are killed.
           </p>
-        </ModalButton>
+        </FormModalButton>
       );
     }
     return (
-      <ModalButton
+      <FormModalButton
         buttonChildren={<Glyphicon glyph="remove" />}
         action="Remove Rack"
         onConfirm={(data) => props.removeRack(rack, data.message)}
@@ -62,7 +62,7 @@ const Racks = (props) => {
         <p>Are you sure you want to remove this rack??</p>
         <pre>{rack.id}</pre>
         <p>Removing a decommissioned rack will cause that rack to become active again if the mesos-rack process is still running.</p>
-      </ModalButton>
+      </FormModalButton>
     );
   };
 
@@ -134,11 +134,11 @@ const Racks = (props) => {
     return columns;
   };
 
-  const activeRacks = this.props.racks.filter(({currentState}) => Utils.isIn(currentState.state, ['ACTIVE']));
+  const activeRacks = props.racks.filter(({currentState}) => Utils.isIn(currentState.state, ['ACTIVE']));
 
-  const decommissioningRacks = this.props.racks.filter(({currentState}) => Utils.isIn(currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']));
+  const decommissioningRacks = props.racks.filter(({currentState}) => Utils.isIn(currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']));
 
-  const inactiveRacks = this.props.racks.filter(({currentState}) => Utils.isIn(currentState.state, ['DEAD', 'MISSING_ON_STARTUP']));
+  const inactiveRacks = props.racks.filter(({currentState}) => Utils.isIn(currentState.state, ['DEAD', 'MISSING_ON_STARTUP']));
 
   const states = [
     {

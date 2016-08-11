@@ -1,8 +1,8 @@
 import React, { PropTypes } from 'react';
-import FormModal from '../common/modal/FormModal';
+import FormModal from './FormModal';
 import {OverlayTrigger, Tooltip} from 'react-bootstrap';
 
-const ModalButton = (props) => {
+const FormModalButton = (props) => {
   let modal;
   const button = <a onClick={() => modal.show()} >{props.buttonChildren}</a>;
   let buttonWithMaybeTooltip = button;
@@ -30,7 +30,7 @@ const ModalButton = (props) => {
   );
 };
 
-ModalButton.propTypes = {
+FormModalButton.propTypes = {
   buttonChildren: PropTypes.node.isRequired,
   action: PropTypes.string.isRequired,
   onConfirm: PropTypes.func.isRequired,
@@ -43,4 +43,4 @@ ModalButton.propTypes = {
   }))
 };
 
-export default ModalButton;
+export default FormModalButton;

@@ -1,7 +1,7 @@
 import React, {PropTypes} from 'react';
 import MachinesPage from './MachinesPage';
 import {Glyphicon} from 'react-bootstrap';
-import ModalButton from './ModalButton';
+import FormModalButton from '../common/modal/FormModalButton';
 import messageElement from './messageElement';
 import Utils from '../../utils';
 import { connect } from 'react-redux';
@@ -22,7 +22,7 @@ const Slaves = (props) => {
 
   const getMaybeReactivateButton = (slave) => (
     Utils.isIn(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']) && (
-      <ModalButton
+      <FormModalButton
         buttonChildren={<Glyphicon glyph="new-window" />}
         action="Reactivate Slave"
         onConfirm={(data) => props.reactivateSlave(slave, data.message)}
@@ -31,11 +31,11 @@ const Slaves = (props) => {
         <p>Are you sure you want to cancel decommission and reactivate this slave??</p>
         <pre>{slave.id}</pre>
         <p>Reactivating a slave will cancel the decommission without erasing the slave's history and move it back to the active state.</p>
-      </ModalButton>
+      </FormModalButton>
   ));
 
   const getMaybeFreezeButton = (slave) => (slave.currentState.state === 'ACTIVE' &&
-    <ModalButton
+    <FormModalButton
       buttonChildren={<Glyphicon glyph="stop" />}
       action="Freeze Slave"
       onConfirm={(data) => props.freezeSlave(slave, data.message)}
@@ -44,13 +44,13 @@ const Slaves = (props) => {
       <p>Are you sure you want to freeze this slave?</p>
       <pre>{slave.id}</pre>
       <p>Freezing a slave will prevent new tasks from being launched. Previously running tasks will be unaffected.</p>
-    </ModalButton>
+    </FormModalButton>
   );
 
   const getDecommissionOrRemoveButton = (slave) => {
     if (Utils.isIn(slave.currentState.state, ['ACTIVE', 'FROZEN'])) {
       return (
-        <ModalButton
+        <FormModalButton
           buttonChildren={<Glyphicon glyph="trash" />}
           action="Decommission Slave"
           onConfirm={(data) => props.decommissionSlave(slave, data.message)}
@@ -61,11 +61,11 @@ const Slaves = (props) => {
           <p>Decommissioning a slave causes all tasks currently running on it to be rescheduled and executed elsewhere,
           as new tasks will no longer consider the slave with id <code>{slave.id}</code> a valid target for execution.
           This process may take time as replacement tasks must be considered healthy before old tasks are killed.</p>
-        </ModalButton>
+        </FormModalButton>
       );
     }
     return (
-      <ModalButton
+      <FormModalButton
         buttonChildren={<Glyphicon glyph="remove" />}
         action="Remove Slave"
         onConfirm={(data) => props.removeSlave(slave, data.message)}
@@ -77,7 +77,7 @@ const Slaves = (props) => {
         <p>
           Removing a decommissioned slave will cause that slave to become active again if the mesos-slave process is still running.
         </p>}
-      </ModalButton>
+      </FormModalButton>
     );
   };
 
