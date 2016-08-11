@@ -47,39 +47,36 @@ const Slaves = (props) => {
     </FormModalButton>
   );
 
-  const getDecommissionOrRemoveButton = (slave) => {
-    if (Utils.isIn(slave.currentState.state, ['ACTIVE', 'FROZEN'])) {
-      return (
-        <FormModalButton
-          buttonChildren={<Glyphicon glyph="trash" />}
-          action="Decommission Slave"
-          onConfirm={(data) => props.decommissionSlave(slave, data.message)}
-          tooltipText={`Decommission ${slave.id}`}
-          formElements={[messageElement]}>
-          <p>Are you sure you want to decommission this slave?</p>
-          <pre>{slave.id}</pre>
-          <p>Decommissioning a slave causes all tasks currently running on it to be rescheduled and executed elsewhere,
-          as new tasks will no longer consider the slave with id <code>{slave.id}</code> a valid target for execution.
-          This process may take time as replacement tasks must be considered healthy before old tasks are killed.</p>
-        </FormModalButton>
-      );
-    }
-    return (
-      <FormModalButton
-        buttonChildren={<Glyphicon glyph="remove" />}
-        action="Remove Slave"
-        onConfirm={(data) => props.removeSlave(slave, data.message)}
-        tooltipText={`Remove ${slave.id}`}
-        formElements={[messageElement]}>
-        <p>Are you sure you want to remove this slave?</p>
-        <pre>{slave.id}</pre>
-        {Utils.isIn(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&
-        <p>
-          Removing a decommissioned slave will cause that slave to become active again if the mesos-slave process is still running.
-        </p>}
-      </FormModalButton>
-    );
-  };
+  const getMaybeDecommissionButton = (slave) => (Utils.isIn(slave.currentState.state, ['ACTIVE', 'FROZEN']) && (
+    <FormModalButton
+      buttonChildren={<Glyphicon glyph="trash" />}
+      action="Decommission Slave"
+      onConfirm={(data) => props.decommissionSlave(slave, data.message)}
+      tooltipText={`Decommission ${slave.id}`}
+      formElements={[messageElement]}>
+      <p>Are you sure you want to decommission this slave?</p>
+      <pre>{slave.id}</pre>
+      <p>Decommissioning a slave causes all tasks currently running on it to be rescheduled and executed elsewhere,
+      as new tasks will no longer consider the slave with id <code>{slave.id}</code> a valid target for execution.
+      This process may take time as replacement tasks must be considered healthy before old tasks are killed.</p>
+    </FormModalButton>
+  ));
+
+  const getMaybeRemoveButton = (slave) => (!Utils.isIn(slave.currentState.state, ['ACTIVE', 'FROZEN']) && (
+    <FormModalButton
+      buttonChildren={<Glyphicon glyph="remove" />}
+      action="Remove Slave"
+      onConfirm={(data) => props.removeSlave(slave, data.message)}
+      tooltipText={`Remove ${slave.id}`}
+      formElements={[messageElement]}>
+      <p>Are you sure you want to remove this slave?</p>
+      <pre>{slave.id}</pre>
+      {Utils.isIn(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&
+      <p>
+        Removing a decommissioned slave will cause that slave to become active again if the mesos-slave process is still running.
+      </p>}
+    </FormModalButton>
+  ));
 
   const getColumns = (type) => {
     const columns = [
@@ -164,7 +161,8 @@ const Slaves = (props) => {
           <span>
             {getMaybeReactivateButton(slave)}
             {getMaybeFreezeButton(slave)}
-            {getDecommissionOrRemoveButton(slave)}
+            {getMaybeDecommissionButton(slave)}
+            {getMaybeRemoveButton(slave)}
             <JSONButton object={slave} showOverlay={true}>
               {'{ }'}
             </JSONButton>
