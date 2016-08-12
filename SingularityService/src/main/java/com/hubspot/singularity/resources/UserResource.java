@@ -17,12 +17,10 @@ import com.hubspot.singularity.data.UserManager;
 public class UserResource {
   public static final String PATH = SingularityService.API_BASE_PATH + "/user";
 
-  private final Optional<SingularityUser> user;
   private final UserManager userManager;
 
   @Inject
-  public UserResource(Optional<SingularityUser> user, UserManager userManager) {
-    this.user = user;
+  public UserResource(UserManager userManager) {
     this.userManager = userManager;
   }
 
