@@ -29,10 +29,6 @@ public class UserManager extends CuratorManager {
     return ZKPaths.makePath(SETTINGS_ROOT, id);
   }
 
-  public void createUserSettings(String id, SingularityUserSettings userSettings) {
-    create(getUserSettingsPath(id), userSettings, settingsTranscoder);
-  }
-
   public void deleteUserSettings(String id) {
     delete(getUserSettingsPath(id));
   }
