@@ -22,7 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const store = configureStore();
 
     // set up user
-    store.dispatch(FetchUser.trigger());
+    window.app = {};
+    window.app.setupUser = () => store.dispatch(FetchUser.trigger());
+    window.app.setupUser();
 
     // set up request groups
     store.dispatch(FetchGroups.trigger());
@@ -36,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   return ReactDOM.render(
     <FormModal
+      name="Set API Root"
       action="Set API Root"
       onConfirm={(data) => setApiRoot(data)}
       buttonStyle="primary"

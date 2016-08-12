@@ -18,9 +18,10 @@ class RemoveModal extends Component {
   render() {
     return (
       <FormModal
+        name="Remove Request"
         ref="removeModal"
         action="Remove Request"
-        onConfirm={(data) => this.props.removeRequest(data)}
+        onConfirm={this.props.removeRequest}
         buttonStyle="danger"
         formElements={[
           {
@@ -38,7 +39,7 @@ class RemoveModal extends Component {
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  removeRequest: (data) => dispatch(RemoveRequest.trigger(ownProps.requestId, data)),
+  removeRequest: (data) => dispatch(RemoveRequest.trigger(ownProps.requestId, data)).then(response => (ownProps.then && ownProps.then(response)))
 });
 
 export default connect(

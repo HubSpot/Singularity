@@ -6,7 +6,7 @@ import Clipboard from 'clipboard';
 
 import Utils from '../../utils';
 import { Link } from 'react-router';
-import { OverlayTrigger, Popover, Glyphicon } from 'react-bootstrap';
+import { OverlayTrigger, Popover, Glyphicon, Button } from 'react-bootstrap';
 import {
   FetchTaskHistory,
   FetchActiveTasksForDeploy,
@@ -21,6 +21,7 @@ import JSONButton from '../common/JSONButton';
 import UITable from '../common/table/UITable';
 import Column from '../common/table/Column';
 import CollapsableSection from '../common/CollapsableSection';
+import RedeployButton from '../common/modalButtons/RedeployButton';
 
 import ActiveTasksTable from './ActiveTasksTable';
 
@@ -95,12 +96,12 @@ class DeployDetail extends React.Component {
     const breadcrumbs = [
       {
         label: 'Request',
-        text: deploy.deploy.requestId,
-        link: `request/${deploy.deploy.requestId}`
+        text: this.props.params.requestId,
+        link: `request/${this.props.params.requestId}`
       },
       {
         label: 'Deploy',
-        text: deploy.deploy.id
+        text: this.props.params.deployId
       }
     ];
     if (this.props.group) {
@@ -123,12 +124,15 @@ class DeployDetail extends React.Component {
           <div className="col-md-8">
             <h1>
               <OverlayTrigger trigger={['hover', 'focus', 'click']} placement="left" overlay={copyLinkPopover}>
-                <span className="copy-btn" data-clipboard-text={deploy.deploy.id}>{deploy.deploy.id}</span>
+                <span className="copy-btn" data-clipboard-text={this.props.params.deployId}>{this.props.params.deployId}</span>
               </OverlayTrigger>
               <DeployState state={deploy.deployResult && deploy.deployResult.deployState || 'PENDING'} />
             </h1>
           </div>
           <div className="col-md-4 button-container">
+            <RedeployButton requestId={deploy.deploy.requestId} deployId={deploy.deploy.id}>
+              <Button bsStyle="primary">Redeploy</Button>
+            </RedeployButton>
             <JSONButton object={deploy} linkClassName="btn btn-default">
               JSON
             </JSONButton>
@@ -162,7 +166,7 @@ class DeployDetail extends React.Component {
           keyGetter={(task) => task.taskId.id}
           rowChunkSize={5}
           paginated={true}
-          fetchDataFromApi={(page, numberPerPage) => this.props.fetchTaskHistoryForDeploy(deploy.deploy.requestId, deploy.deploy.id, numberPerPage, page)}
+          fetchDataFromApi={(page, numberPerPage) => this.props.fetchTaskHistoryForDeploy(this.props.params.requestId, this.props.params.deployId, numberPerPage, page)}
           isFetching={this.props.isTaskHistoryFetching}
         >
           <Column
@@ -323,13 +327,15 @@ class DeployDetail extends React.Component {
 
   render() {
     const { deploy, activeTasks, taskHistory, latestHealthchecks } = this.props;
+    const emptyMessage = !deploy.deploy && <div className="empty-table-message">Deploy data not found</div>;
     return (
       <div>
         {this.renderHeader(deploy)}
         {this.renderActiveTasks(deploy, activeTasks)}
         {this.renderTaskHistory(deploy, taskHistory)}
-        {this.renderInfo(deploy)}
-        {this.renderHealthchecks(deploy, latestHealthchecks)}
+        {emptyMessage}
+        {deploy.deploy && this.renderInfo(deploy)}
+        {deploy.deploy && this.renderHealthchecks(deploy, latestHealthchecks)}
       </div>
     );
   }

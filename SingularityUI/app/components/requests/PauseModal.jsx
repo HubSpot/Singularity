@@ -9,7 +9,8 @@ class PauseModal extends Component {
   static propTypes = {
     requestId: PropTypes.string.isRequired,
     isScheduled: PropTypes.bool.isRequired,
-    pauseRequest: PropTypes.func.isRequired
+    pauseRequest: PropTypes.func.isRequired,
+    then: PropTypes.func
   };
 
   show() {
@@ -42,6 +43,7 @@ class PauseModal extends Component {
 
     return (
       <FormModal
+        name="Pause Request"
         ref="pauseModal"
         action="Pause Request"
         onConfirm={(data) => this.props.pauseRequest(data)}
@@ -55,7 +57,7 @@ class PauseModal extends Component {
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  pauseRequest: (data) => dispatch(PauseRequest.trigger(ownProps.requestId, data)),
+  pauseRequest: (data) => dispatch(PauseRequest.trigger(ownProps.requestId, data)).then((response) => ownProps.then && ownProps.then(response)),
 });
 
 export default connect(

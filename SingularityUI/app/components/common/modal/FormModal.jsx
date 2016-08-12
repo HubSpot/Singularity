@@ -275,9 +275,11 @@ export default class FormModal extends React.Component {
             <FormModal.FormItem element={formElement} formState={this.state.formState} key={formElement.name}>
               <div className={classNames('form-group', {'has-error': !!error})}>
                 <label className="control-label" htmlFor={formElement.name}>{formElement.label}</label>
-                <Duration type="text"
+                <Duration
+                  type="text"
                   value={this.state.formState[formElement.name] || 0}
                   onChange={(value) => this.handleFormChange(formElement.name, value)}
+                  isSubForm={true}
                 />
                 {errorBlock}
                 {help}
@@ -366,7 +368,7 @@ export default class FormModal extends React.Component {
         </Modal.Body>
         <Modal.Footer>
           {cancel}
-          <Button bsStyle={this.props.buttonStyle} onClick={this.confirm}>{this.props.action}</Button>
+          <Button bsStyle={this.props.buttonStyle} onClick={this.confirm} disabled={this.props.disableSubmit}>{this.props.action}</Button>
         </Modal.Footer>
       </Modal>
     );
@@ -380,6 +382,7 @@ FormModal.propTypes = {
   name: React.PropTypes.string,
   children: React.PropTypes.node,
   mustFill: React.PropTypes.bool,
+  disableSubmit: React.PropTypes.bool,
   formElements: React.PropTypes.arrayOf(React.PropTypes.shape({
     options: React.PropTypes.arrayOf(React.PropTypes.shape({
       value: React.PropTypes.string.isRequired,

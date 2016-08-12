@@ -22,8 +22,8 @@ class Header extends React.Component {
   renderViewButtons() {
     if (this.props.multipleTasks) {
       return (<div className="btn-group" role="group" title="Select View Type">
-        <button type="button" className={classNames({btn: true, 'btn-sm': true, 'btn-default': true, 'no-margin': true, active: this.props.viewMode === 'unified'})} onClick={function () { this.props.switchViewMode('unified'); }}>Unified</button>
-        <button type="button" className={classNames({btn: true, 'btn-sm': true, 'btn-default': true, 'no-margin': true, active: this.props.viewMode === 'split'})} onClick={function () { this.props.switchViewMode('split'); }}>Split</button>
+        <button type="button" className={classNames({btn: true, 'btn-sm': true, 'btn-default': true, 'no-margin': true, active: this.props.viewMode === 'unified'})} onClick={() => { this.props.switchViewMode('unified'); }}>Unified</button>
+        <button type="button" className={classNames({btn: true, 'btn-sm': true, 'btn-default': true, 'no-margin': true, active: this.props.viewMode === 'split'})} onClick={() => { this.props.switchViewMode('split'); }}>Split</button>
       </div>);
     }
   }
@@ -74,7 +74,7 @@ class Header extends React.Component {
 }
 
 Header.propTypes = {
-  requestId: React.PropTypes.string.isRequired,
+  requestId: React.PropTypes.string,
   path: React.PropTypes.string.isRequired,
   multipleTasks: React.PropTypes.bool.isRequired,
   viewMode: React.PropTypes.string.isRequired,

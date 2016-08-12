@@ -19,7 +19,8 @@ export default class PauseButton extends Component {
   static propTypes = {
     requestId: PropTypes.string.isRequired,
     isScheduled: PropTypes.bool.isRequired,
-    children: PropTypes.node
+    children: PropTypes.node,
+    then: PropTypes.func
   };
 
   static defaultProps = {
@@ -40,6 +41,7 @@ export default class PauseButton extends Component {
           ref="modal"
           requestId={this.props.requestId}
           isScheduled={this.props.isScheduled}
+          then={this.props.then}
         />
       </span>
     );

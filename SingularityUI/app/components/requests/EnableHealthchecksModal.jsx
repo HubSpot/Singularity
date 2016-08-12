@@ -8,7 +8,8 @@ import FormModal from '../common/modal/FormModal';
 class EnableHealthchecksModal extends Component {
   static propTypes = {
     requestId: PropTypes.string.isRequired,
-    enableHealthchecks: PropTypes.func.isRequired
+    enableHealthchecks: PropTypes.func.isRequired,
+    then: PropTypes.func
   };
 
   show() {
@@ -18,6 +19,7 @@ class EnableHealthchecksModal extends Component {
   render() {
     return (
       <FormModal
+        name="Enable Healthchecks"
         ref="enableHealthchecksModal"
         action="Enable Healthchecks"
         onConfirm={(data) => this.props.enableHealthchecks(data)}
@@ -46,7 +48,7 @@ const mapDispatchToProps = (dispatch, ownProps) => ({
   enableHealthchecks: (data) => dispatch(SkipRequestHealthchecks.trigger(
     ownProps.requestId,
     {...data, skipHealthchecks: false}
-  )),
+  )).then(response => (ownProps.then && ownProps.then(response))),
 });
 
 export default connect(

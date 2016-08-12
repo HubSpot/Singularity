@@ -64,7 +64,7 @@ function HostStates(props) {
           id="millisSinceLastOffer"
           key="millisSinceLastOffer"
           cellData={(h) => h.millisSinceLastOffer}
-          cellRender={(l) => Utils.duration(l)}
+          cellRender={(l) => (l ? Utils.duration(l) : '—')}
           sortable={true}
         />
       </UITable>

@@ -1,25 +1,39 @@
 import React, { PropTypes } from 'react';
 
 import moment from 'moment';
+import classNames from 'classnames';
 
 export default class Duration extends React.Component {
 
   static propTypes = {
     value: PropTypes.number, // Duration in millis
-    onChange: PropTypes.func
+    onChange: PropTypes.func,
+    isSubForm: PropTypes.bool
   };
 
   handleChange(event) {
     event.preventDefault();
-    const duration = moment.duration(`${this.refs.hours.value || 0}:${this.refs.minutes.value || 0}:${this.refs.seconds.value || 0}`);
+    const newHours = this.refs.hours.value || 0;
+    if (newHours >= 24) {
+      return;
+    }
+    const newMinutes = this.refs.minutes.value || 0;
+    if (newMinutes >= 60) {
+      return;
+    }
+    const newSeconds = this.refs.seconds.value || 0;
+    if (newSeconds >= 60) {
+      return;
+    }
+    const duration = moment.duration(`${newHours}:${newMinutes}:${newSeconds}`);
     this.props.onChange(duration.asMilliseconds());
   }
 
   render() {
     const duration = moment.duration(this.props.value);
     return (
-      <div className="form-inline duration-input row">
-        <div className="form-group col-md-4">
+      <div className={classNames('duration-input', 'row', {'form-inline': !this.props.isSubForm})}>
+        <div className={classNames('col-md-4', {'form-group': !this.props.isSubForm})}>
           <label htmlFor="hours">Hours</label>
           <input
             id="hours"
@@ -32,7 +46,7 @@ export default class Duration extends React.Component {
             onChange={(e) => this.handleChange(e)}
           />
         </div>
-        <div className="form-group col-md-4">
+        <div className={classNames('col-md-4', {'form-group': !this.props.isSubForm})}>
           <label htmlFor="minutes">Minutes</label>
           <input
             id="minutes"
@@ -45,7 +59,7 @@ export default class Duration extends React.Component {
             onChange={(e) => this.handleChange(e)}
           />
         </div>
-        <div className="form-group col-md-4">
+        <div className={classNames('col-md-4', {'form-group': !this.props.isSubForm})}>
           <label htmlFor="seconds">Seconds</label>
           <input
             id="seconds"
