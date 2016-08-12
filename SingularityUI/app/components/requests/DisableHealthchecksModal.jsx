@@ -33,6 +33,7 @@ class DisableHealthchecksModal extends Component {
     return (
       <div style={{display: 'inline-block'}}>
         <FormModal
+          name="Disable Healthchecks"
           ref="disableHealthchecksModal"
           action="Disable Healthchecks"
           onConfirm={(data) => this.promptDisableHealthchecksDuration(data)}
