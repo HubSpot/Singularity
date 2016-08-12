@@ -48,6 +48,7 @@ class RedeployModal extends Component {
   }
 
   render() {
+    const deployToShow = _.omit(Utils.maybe(this.props.deploy, ['deploy']), 'id');
     const deployId = Utils.maybe(this.props.deploy, ['deployMarker', 'deployId']);
     return (
       <span>
@@ -65,7 +66,8 @@ class RedeployModal extends Component {
           action="Redeploy"
           onConfirm={(data) => this.confirmRedeploy(data)}
           buttonStyle="primary"
-          formElements={[
+          disableSubmit={_.isEmpty(deployToShow)}
+          formElements={_.isEmpty(deployToShow) ? [] : [
             {
               name: 'deployId',
               type: FormModal.INPUT_TYPES.STRING,
@@ -81,14 +83,22 @@ class RedeployModal extends Component {
               <p><code>{this.state.error}</code></p>
             </Alert>
           )}
-          <p>Are you sure you want to redeploy this deploy?</p>
-          <pre>{deployId}</pre>
-          <p>This will create a new deploy with the same attributes as the old deploy:</p>
-          <JSONTree
-            data={{deploy: _.omit(Utils.maybe(this.props.deploy, ['deploy']), 'id')}}
-            hideRoot={true}
-            theme={JSONTreeTheme}
-          />
+          {_.isEmpty(deployToShow) ? (
+            <Alert bsStyle="danger">
+              <p>We could not find old deploy info, and so are unable to redeploy this deploy.</p>
+            </Alert>
+          ) : (
+            <div>
+              <p>Are you sure you want to redeploy this deploy?</p>
+              <pre>{deployId}</pre>
+              <p>This will create a new deploy with the same attributes as the old deploy:</p>
+              <JSONTree
+                data={{deploy: deployToShow}}
+                hideRoot={true}
+                theme={JSONTreeTheme}
+              />
+            </div>
+          )}
         </FormModal>
       </span>
     );
