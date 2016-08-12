@@ -2,15 +2,16 @@ package com.hubspot.singularity.resources;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityService;
-import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.SingularityUserSettings;
 import com.hubspot.singularity.data.UserManager;
+import com.wordnik.swagger.annotations.ApiParam;
 
 @Path(UserResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
@@ -26,10 +27,8 @@ public class UserResource {
 
   @GET
   @Path("/settings")
-  public Optional<SingularityUserSettings> getUserSettings() {
-    if (user.isPresent()) {
-      return userManager.getUserSettings(user.get().getId());
-    }
-    return Optional.absent();
+  public Optional<SingularityUserSettings> getUserSettings(
+      @ApiParam("The user id to use") @PathParam("id") String id) {
+    return userManager.getUserSettings(id);
   }
 }
