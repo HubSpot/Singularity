@@ -1,7 +1,7 @@
 import os
 import sys
 import subprocess
-from logfetch_base import log
+from logfetch_base import log, get_timestamp
 from termcolor import colored
 
 def cat_files(args, all_logs):
@@ -9,7 +9,7 @@ def cat_files(args, all_logs):
     if all_logs:
         all_logs.sort()
         for filename in all_logs:
-            log('=> ' + colored(filename, 'cyan') + '\n', args, False)
+            log(colored(str(get_timestamp(filename)) + ' => ' + filename, 'cyan') + '\n', args, not args.show_file_info)
             if filename.endswith('.gz'):
                 cat = subprocess.Popen(['cat', filename], stdout=subprocess.PIPE)
                 content = subprocess.Popen(['zcat'], stdin=cat.stdout)
