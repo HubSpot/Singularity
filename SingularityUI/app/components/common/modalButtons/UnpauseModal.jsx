@@ -1,9 +1,9 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { UnpauseRequest } from '../../actions/api/requests';
+import { UnpauseRequest } from '../../../actions/api/requests';
 
-import FormModal from '../common/modal/FormModal';
+import FormModal from '../modal/FormModal';
 
 class UnpauseModal extends Component {
   static propTypes = {

@@ -1,13 +1,13 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { FetchWebhooks, NewWebhook } from '../../actions/api/webhooks';
+import { FetchWebhooks, NewWebhook } from '../../../actions/api/webhooks';
 
-import FormModal from '../common/modal/FormModal';
+import FormModal from '../modal/FormModal';
 
 const WEBHOOK_TYPES = ['REQUEST', 'DEPLOY', 'TASK'];
 
-import Utils from '../../utils';
+import Utils from '../../../utils';
 
 const checkWebhookUri = (uri) => {
   try {

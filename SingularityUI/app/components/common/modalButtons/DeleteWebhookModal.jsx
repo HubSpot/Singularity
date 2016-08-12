@@ -1,9 +1,9 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { DeleteWebhook, FetchWebhooks } from '../../actions/api/webhooks';
+import { DeleteWebhook, FetchWebhooks } from '../../../actions/api/webhooks';
 
-import FormModal from '../common/modal/FormModal';
+import FormModal from '../modal/FormModal';
 
 class DeleteWebhookModal extends Component {
   static propTypes = {

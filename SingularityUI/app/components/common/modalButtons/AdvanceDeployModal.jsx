@@ -5,7 +5,7 @@ import Utils from '../../../utils';
 
 import { AdvanceDeploy } from '../../../actions/api/deploys';
 
-import FormModal from '../../common/modal/FormModal';
+import FormModal from '../modal/FormModal';
 
 class AdvanceDeployModal extends Component {
   static propTypes = {

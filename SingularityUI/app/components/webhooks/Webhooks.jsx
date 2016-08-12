@@ -5,8 +5,8 @@ import { connect } from 'react-redux';
 import Column from '../common/table/Column';
 import UITable from '../common/table/UITable';
 import rootComponent from '../../rootComponent';
-import DeleteWebhookButton from './DeleteWebhookButton';
-import NewWebhookButton from './NewWebhookButton';
+import DeleteWebhookButton from '../common/modalButtons/DeleteWebhookButton';
+import NewWebhookButton from '../common/modalButtons/NewWebhookButton';
 
 const Webhooks = ({webhooks, user}) => (
   <div>

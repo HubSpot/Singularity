@@ -9,8 +9,8 @@ import classNames from 'classnames';
 import Utils from '../../utils';
 
 import JSONButton from '../common/JSONButton';
-import KillTaskButton from '../tasks/KillTaskButton';
-import RunNowButton from '../requests/RunNowButton';
+import KillTaskButton from '../common/modalButtons/KillTaskButton';
+import RunNowButton from '../common/modalButtons/RunNowButton';
 
 export const TaskId = (
   <Column

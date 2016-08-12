@@ -4,7 +4,7 @@ import { Glyphicon } from 'react-bootstrap';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 
-import { getClickComponent } from '../common/modal/ModalWrapper';
+import { getClickComponent } from '../modal/ModalWrapper';
 
 import DeleteWebhookModal from './DeleteWebhookModal';
 

@@ -1,9 +1,9 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { RemoveRequest } from '../../actions/api/requests';
+import { RemoveRequest } from '../../../actions/api/requests';
 
-import FormModal from '../common/modal/FormModal';
+import FormModal from '../modal/FormModal';
 
 class RemoveModal extends Component {
   static propTypes = {
