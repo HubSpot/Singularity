@@ -28,7 +28,7 @@ public class UserResource {
 
   @GET
   @Path("/settings")
-  public Optional<SingularityUserSettings> getUser() {
+  public Optional<SingularityUserSettings> getUserSettings() {
     if (user.isPresent()) {
       return userManager.getUserSettings(user.get().getId());
     }
