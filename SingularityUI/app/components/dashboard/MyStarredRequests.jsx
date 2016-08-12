@@ -19,8 +19,7 @@ const MyStarredRequests = ({starredRequests}) => {
         data={starredRequests}
         keyGetter={(r) => r.request.id}
         asyncSort={true}
-        paginated={true}
-        rowChunkSize={10}
+        isTruelyInfinite={true}
       >
         {Starred}
         {RequestId}
