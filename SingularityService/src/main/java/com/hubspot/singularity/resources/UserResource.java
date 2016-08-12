@@ -17,7 +17,7 @@ import com.wordnik.swagger.annotations.ApiParam;
 @Path(UserResource.PATH)
 @Produces({ MediaType.APPLICATION_JSON })
 public class UserResource {
-  public static final String PATH = SingularityService.API_BASE_PATH + "/user";
+  public static final String PATH = SingularityService.API_BASE_PATH + "/users";
 
   private final UserManager userManager;
 
