@@ -40,6 +40,7 @@ class AdvanceDeployModal extends Component {
     );
     return (
       <FormModal
+        name="Advance Deploy"
         ref="advanceModal"
         action="Advance Deploy"
         onConfirm={(data) => this.props.advanceDeploy(data.targetActiveInstances)}

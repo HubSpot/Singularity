@@ -43,6 +43,7 @@ class PauseModal extends Component {
 
     return (
       <FormModal
+        name="Pause Request"
         ref="pauseModal"
         action="Pause Request"
         onConfirm={(data) => this.props.pauseRequest(data)}

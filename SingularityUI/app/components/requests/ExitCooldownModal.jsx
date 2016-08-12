@@ -19,6 +19,7 @@ class ExitCooldownModal extends Component {
   render() {
     return (
       <FormModal
+        name="Exit Request Cooldown"
         ref="exitCooldownModal"
         action="Exit Request Cooldown"
         onConfirm={(data) => this.props.exitRequestCooldown(data)}
