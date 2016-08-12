@@ -1,7 +1,5 @@
 package com.hubspot.singularity;
 
-import static com.google.common.collect.ImmutableSet.copyOf;
-
 import java.util.Objects;
 import java.util.Set;
 
@@ -13,7 +11,7 @@ public class SingularityUserSettings {
 
   @JsonCreator
   public SingularityUserSettings(@JsonProperty Set<String> starredRequestIds) {
-    this.starredRequestIds = copyOf(starredRequestIds);
+    this.starredRequestIds = starredRequestIds;
   }
 
   public Set<String> getStarredRequestIds() {
