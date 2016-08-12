@@ -22,7 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const store = configureStore();
 
     // set up user
-    store.dispatch(FetchUser.trigger());
+    window.app = {};
+    window.app.setupUser = () => store.dispatch(FetchUser.trigger());
+    window.app.setupUser();
 
     // set up request groups
     store.dispatch(FetchGroups.trigger());
