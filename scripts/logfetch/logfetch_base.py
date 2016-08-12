@@ -28,8 +28,11 @@ def tasks_for_requests(args):
             tasks = tasks[0:args.task_count] if hasattr(args, 'task_count') else tasks
         all_tasks = all_tasks + tasks
     if not all_tasks:
-        log(colored('No tasks found, check that the request/task you are searching for exists...', 'red'), args, False)
-        exit(1)
+        if args.taskId:
+            log(colored('No tasks found, check that the request/task you are searching for exists...', 'red'), args, False)
+            exit(1)
+        else:
+            log(colored('No tasks found, will try to search at request level', 'yellow'), args, False)
     return all_tasks
 
 def log_matches(inputString, pattern):
