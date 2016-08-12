@@ -1,7 +1,5 @@
 package com.hubspot.singularity.resources;
 
-import java.util.Set;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -39,7 +37,7 @@ public class UserResource {
   @Path("/settings")
   public void setUserSettings(
       @ApiParam("The user id to use") @PathParam("id") String id,
-      @ApiParam("The new settings") @PathParam("settings") Set<String> starredRequestIds) {
-    userManager.updateUserSettings(id, new SingularityUserSettings(starredRequestIds));
+      @ApiParam("The new settings") @PathParam("settings") SingularityUserSettings settings) {
+    userManager.updateUserSettings(id, settings);
   }
 }
