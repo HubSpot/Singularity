@@ -275,9 +275,11 @@ export default class FormModal extends React.Component {
             <FormModal.FormItem element={formElement} formState={this.state.formState} key={formElement.name}>
               <div className={classNames('form-group', {'has-error': !!error})}>
                 <label className="control-label" htmlFor={formElement.name}>{formElement.label}</label>
-                <Duration type="text"
+                <Duration
+                  type="text"
                   value={this.state.formState[formElement.name] || 0}
                   onChange={(value) => this.handleFormChange(formElement.name, value)}
+                  isSubForm={true}
                 />
                 {errorBlock}
                 {help}
