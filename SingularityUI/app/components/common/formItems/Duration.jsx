@@ -1,12 +1,14 @@
 import React, { PropTypes } from 'react';
 
 import moment from 'moment';
+import classNames from 'classnames';
 
 export default class Duration extends React.Component {
 
   static propTypes = {
     value: PropTypes.number, // Duration in millis
-    onChange: PropTypes.func
+    onChange: PropTypes.func,
+    isSubForm: PropTypes.bool
   };
 
   render() {
@@ -29,8 +31,8 @@ export default class Duration extends React.Component {
     };
     const duration = moment.duration(this.props.value);
     return (
-      <div className="form-inline duration-input row">
-        <div className="form-group col-md-4">
+      <div className={classNames('duration-input', 'row', {'form-inline': !this.props.isSubForm})}>
+        <div className={classNames('col-md-4', {'form-group': !this.props.isSubForm})}>
           <label htmlFor="hours">Hours</label>
           <input
             id="hours"
@@ -43,7 +45,7 @@ export default class Duration extends React.Component {
             onChange={handleChange}
           />
         </div>
-        <div className="form-group col-md-4">
+        <div className={classNames('col-md-4', {'form-group': !this.props.isSubForm})}>
           <label htmlFor="minutes">Minutes</label>
           <input
             id="minutes"
@@ -56,7 +58,7 @@ export default class Duration extends React.Component {
             onChange={handleChange}
           />
         </div>
-        <div className="form-group col-md-4">
+        <div className={classNames('col-md-4', {'form-group': !this.props.isSubForm})}>
           <label htmlFor="seconds">Seconds</label>
           <input
             id="seconds"

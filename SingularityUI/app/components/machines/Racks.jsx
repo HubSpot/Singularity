@@ -22,6 +22,7 @@ const Racks = (props) => {
 
   const getMaybeReactivateButton = (rack) => (Utils.isIn(rack.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION']) &&
     <FormModalButton
+      name="Reactivate Rack"
       buttonChildren={<Glyphicon glyph="new-window" />}
       action="Reactivate Rack"
       onConfirm={(data) => props.reactivateRack(rack, data.message)}
@@ -35,6 +36,7 @@ const Racks = (props) => {
 
   const getMaybeDecommissionButton = (rack) => (rack.currentState.state === 'ACTIVE' && (
     <FormModalButton
+      name="Decommission Rack"
       buttonChildren={<Glyphicon glyph="trash" />}
       action="Decommission Rack"
       onConfirm={(data) => props.decommissionRack(rack, data.message)}
@@ -52,6 +54,7 @@ const Racks = (props) => {
 
   const getMaybeRemoveButton = (rack) => (rack.currentState.state !== 'ACTIVE' && (
     <FormModalButton
+      name="Remove Rack"
       buttonChildren={<Glyphicon glyph="remove" />}
       action="Remove Rack"
       onConfirm={(data) => props.removeRack(rack, data.message)}

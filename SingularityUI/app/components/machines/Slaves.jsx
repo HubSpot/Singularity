@@ -23,6 +23,7 @@ const Slaves = (props) => {
   const getMaybeReactivateButton = (slave) => (
     Utils.isIn(slave.currentState.state, ['DECOMMISSIONING', 'DECOMMISSIONED', 'STARTING_DECOMMISSION', 'FROZEN']) && (
       <FormModalButton
+        name="Reactivate Slave"
         buttonChildren={<Glyphicon glyph="new-window" />}
         action="Reactivate Slave"
         onConfirm={(data) => props.reactivateSlave(slave, data.message)}
@@ -36,6 +37,7 @@ const Slaves = (props) => {
 
   const getMaybeFreezeButton = (slave) => (slave.currentState.state === 'ACTIVE' &&
     <FormModalButton
+      name="Freeze Slave"
       buttonChildren={<Glyphicon glyph="stop" />}
       action="Freeze Slave"
       onConfirm={(data) => props.freezeSlave(slave, data.message)}
@@ -49,6 +51,7 @@ const Slaves = (props) => {
 
   const getMaybeDecommissionButton = (slave) => (Utils.isIn(slave.currentState.state, ['ACTIVE', 'FROZEN']) && (
     <FormModalButton
+      name="Decommission Slave"
       buttonChildren={<Glyphicon glyph="trash" />}
       action="Decommission Slave"
       onConfirm={(data) => props.decommissionSlave(slave, data.message)}
@@ -64,6 +67,7 @@ const Slaves = (props) => {
 
   const getMaybeRemoveButton = (slave) => (!Utils.isIn(slave.currentState.state, ['ACTIVE', 'FROZEN']) && (
     <FormModalButton
+      name="Remove Slave"
       buttonChildren={<Glyphicon glyph="remove" />}
       action="Remove Slave"
       onConfirm={(data) => props.removeSlave(slave, data.message)}

@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   return ReactDOM.render(
     <FormModal
+      name="Set API Root"
       action="Set API Root"
       onConfirm={(data) => setApiRoot(data)}
       buttonStyle="primary"

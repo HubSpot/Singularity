@@ -19,6 +19,7 @@ const FormModalButton = (props) => {
     <span>
       {buttonWithMaybeTooltip}
       <FormModal
+        name={props.name}
         ref={modalRef => { modal = modalRef; }}
         action={props.action}
         onConfirm={(data) => props.onConfirm(data)}
@@ -36,6 +37,7 @@ FormModalButton.propTypes = {
   onConfirm: PropTypes.func.isRequired,
   children: PropTypes.node.isRequired,
   tooltipText: PropTypes.string,
+  name: PropTypes.string,
   formElements: PropTypes.arrayOf(PropTypes.shape({
     name: PropTypes.string.isRequired,
     type: PropTypes.string.isRequired,
