@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import gzip
 import fnmatch
@@ -65,6 +66,13 @@ def is_in_date_range(args, timestamp):
         return False if (timstamp_datetime < args.start or timstamp_datetime > args.end) else True
     else:
         return False if timedelta.days < args.start else True
+
+def get_timestamp(filename):
+    timestamps = re.findall(r"-\d{13}-", filename)
+    if timestamps:
+        return datetime.utcfromtimestamp(int(str(timestamps[-1]).replace("-", "")[0:-3]))
+    else:
+        return ""
 
 def update_progress_bar(progress, goal, progress_type, silent):
     bar_length = 30
