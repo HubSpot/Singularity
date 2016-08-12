@@ -24,6 +24,7 @@ class KillTaskModal extends Component {
   render() {
     return (
       <FormModal
+        name="Kill Task"
         ref="confirmKillTask"
         action="Kill Task"
         onConfirm={(data) => this.props.killTask(data)}

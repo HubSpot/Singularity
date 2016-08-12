@@ -23,7 +23,7 @@ const TaskAlerts = (props) => {
             This
             {props.deploy.deployResult.deployFailures.length === 1 && ' caused ' || ' contributed to '}
             the failure of
-            <Link to={`$request/${props.deploy.deploy.requestId}/deploy/${props.deploy.deploy.id}`}>
+            <Link to={`request/${props.deploy.deploy.requestId}/deploy/${props.deploy.deploy.id}`}>
               {' '}Deploy {props.deploy.deploy.id}
             </Link>
             .

@@ -320,13 +320,6 @@ export const ScheduledTaskId = (
     cellData={
       (rowData) => rowData.pendingTask.pendingTaskId.id
     }
-    cellRender={
-      (cellData) => (
-        <Link to={`task/${cellData}`}>
-          {cellData}
-        </Link>
-      )
-    }
     sortable={true}
     className="keep-in-check"
   />
@@ -355,7 +348,7 @@ const logTooltip = (
   </ToolTip>
 );
 
-export const LogLinkAndJSON = (
+export const LogLinkAndJSON = logPath => (
   <Column
     label=""
     id="logLink"
@@ -366,7 +359,7 @@ export const LogLinkAndJSON = (
       <div className="hidden-xs">
         <OverlayTrigger placement="top" id="view-log-overlay" overlay={logTooltip}>
           <Link
-            to={`request/${taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${taskId.id}`}
+            to={`request/${taskId.requestId}/tail/${logPath}?taskIds=${taskId.id}`}
             title="Log"
           >
             <Glyphicon glyph="file" />

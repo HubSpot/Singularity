@@ -55,7 +55,7 @@ class RequestDetailPage extends Component {
     const { requestId } = this.props.params;
     return (
       <div>
-        <RequestHeader requestId={requestId} />
+        <RequestHeader requestId={requestId} showBreadcrumbs={this.props.showBreadcrumbs} />
         <RequestExpiringActions requestId={requestId} />
         <ActiveTasksTable requestId={requestId} />
         <PendingTasksTable requestId={requestId} />
@@ -70,7 +70,8 @@ class RequestDetailPage extends Component {
 RequestDetailPage.propTypes = {
   params: PropTypes.object.isRequired,
   refresh: PropTypes.func.isRequired,
-  cancelRefresh: PropTypes.func.isRequired
+  cancelRefresh: PropTypes.func.isRequired,
+  showBreadcrumbs: PropTypes.bool
 };
 
 const mapStateToProps = (state, ownProps) => {
@@ -89,13 +90,15 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     FetchTaskCleanups.trigger()
   ];
   return {
-    refresh: () => dispatch(RefreshActions.BeginAutoRefresh(
-      'RequestDetailPage',
-      refreshActions,
-      5000
-    )),
+    refresh: () => {
+      dispatch(RefreshActions.BeginAutoRefresh(
+        `RequestDetailPage-${ownProps.index}`,
+        refreshActions,
+        5000
+      ));
+    },
     cancelRefresh: () => dispatch(
-      RefreshActions.CancelAutoRefresh('RequestDetailPage')
+      RefreshActions.CancelAutoRefresh(`RequestDetailPage-${ownProps.index}`)
     ),
     fetchRequest: (requestId) => dispatch(FetchRequest.trigger(requestId, true)),
     fetchActiveTasksForRequest: (requestId) => dispatch(FetchActiveTasksForRequest.trigger(requestId)),
@@ -103,7 +106,7 @@ const mapDispatchToProps = (dispatch, ownProps) => {
     fetchTaskCleanups: () => dispatch(FetchTaskCleanups.trigger()),
     fetchTaskHistoryForRequest: (requestId, count, page) => dispatch(FetchTaskHistoryForRequest.trigger(requestId, count, page)),
     fetchDeploysForRequest: (requestId, count, page) => dispatch(FetchDeploysForRequest.trigger(requestId, count, page)),
-    fetchRequestHistory: (requestId, count, page) => dispatch(FetchRequestHistory.trigger(requestId, count, page)),
+    fetchRequestHistory: (requestId, count, page) => dispatch(FetchRequestHistory.trigger(requestId, count, page))
   };
 };
 
