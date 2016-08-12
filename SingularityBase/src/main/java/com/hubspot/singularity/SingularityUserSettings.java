@@ -10,7 +10,7 @@ public class SingularityUserSettings {
   private final Set<String> starredRequestIds;
 
   @JsonCreator
-  public SingularityUserSettings(@JsonProperty Set<String> starredRequestIds) {
+  public SingularityUserSettings(@JsonProperty("starredRequestIds") Set<String> starredRequestIds) {
     this.starredRequestIds = starredRequestIds;
   }
 
