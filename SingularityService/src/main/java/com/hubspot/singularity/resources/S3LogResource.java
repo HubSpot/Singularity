@@ -273,11 +273,19 @@ public class S3LogResource extends AbstractHistoryResource {
 
   private Optional<String> getRequestGroup(final String requestId) {
     final Optional<SingularityRequestWithState> maybeRequest = requestManager.getRequest(requestId);
-    authorizationHelper.checkForAuthorization(maybeRequest.get().getRequest(), user, SingularityAuthorizationScope.READ);
     if (maybeRequest.isPresent()) {
+      authorizationHelper.checkForAuthorization(maybeRequest.get().getRequest(), user, SingularityAuthorizationScope.READ);
       return maybeRequest.get().getRequest().getGroup();
     } else {
-      return Optional.absent();
+      Optional<SingularityRequestHistory> maybeRequestHistory = requestHistoryHelper.getLastHistory(requestId);
+      if (maybeRequestHistory.isPresent()) {
+        authorizationHelper.checkForAuthorization(maybeRequestHistory.get().getRequest(), user, SingularityAuthorizationScope.READ);
+        return maybeRequestHistory.get().getRequest().getGroup();
+      } else {
+        // Deleted requests with no history data are searchable, but only by admins since we have no auth information about them
+        authorizationHelper.checkAdminAuthorization(user);
+        return Optional.absent();
+      }
     }
   }
 
