@@ -3,8 +3,8 @@ package com.hubspot.singularity.resources;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
@@ -29,15 +29,15 @@ public class UserResource {
   @GET
   @Path("/settings")
   public Optional<SingularityUserSettings> getUserSettings(
-      @ApiParam("The user id to use") @PathParam("id") String id) {
-    return userManager.getUserSettings(id);
+      @ApiParam("The user id to use") @QueryParam("userId") String userId) {
+    return userManager.getUserSettings(userId);
   }
 
   @POST
   @Path("/settings")
   public void setUserSettings(
-      @ApiParam("The user id to use") @PathParam("id") String id,
-      @ApiParam("The new settings") @PathParam("settings") SingularityUserSettings settings) {
-    userManager.updateUserSettings(id, settings);
+      @ApiParam("The user id to use") @QueryParam("userId") String userId,
+      @ApiParam("The new settings") SingularityUserSettings settings) {
+    userManager.updateUserSettings(userId, settings);
   }
 }
