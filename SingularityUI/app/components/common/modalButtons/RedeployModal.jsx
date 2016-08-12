@@ -77,8 +77,8 @@ class RedeployModal extends Component {
           ]}>
           {this.state.error && (
             <Alert bsStyle="danger">
-              Failed to redeploy {deployId}. The server responded with a <code>HTTP {this.state.errorCode}</code> and said:
-              <pre>{this.state.error}</pre>
+              <p>Failed to redeploy {deployId}. The server responded with a <code>HTTP {this.state.errorCode}</code> and said:</p>
+              <p><code>{this.state.error}</code></p>
             </Alert>
           )}
           <p>Are you sure you want to redeploy this deploy?</p>
