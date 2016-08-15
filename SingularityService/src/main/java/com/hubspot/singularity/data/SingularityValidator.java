@@ -21,13 +21,10 @@ import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 import org.dmfs.rfc5545.recur.RecurrenceRule;
 import org.quartz.CronExpression;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
-import com.google.common.io.BaseEncoding;
 import com.google.inject.Inject;
 import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
@@ -437,12 +434,5 @@ public class SingularityValidator {
     } catch (NumberFormatException nfe) {
       return false;
     }
-  }
-
-  public static String encodeZkName(String name) {
-    checkBadRequest(!Strings.isNullOrEmpty(name), "Name must be present and non-null");
-    final String encodedName = BaseEncoding.base64Url().encode(name.getBytes(Charsets.UTF_8));
-    checkBadRequest(!encodedName.equals("zookeeper"), "Name must not encode to reserved zookeeper word");
-    return encodedName;
   }
 }
