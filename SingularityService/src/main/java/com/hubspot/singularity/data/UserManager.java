@@ -25,20 +25,20 @@ public class UserManager extends CuratorManager {
     this.settingsTranscoder = settingsTranscoder;
   }
 
-  private String getUserSettingsPath(String id) {
-    return ZKPaths.makePath(SETTINGS_ROOT, id);
+  private String getUserSettingsPath(String userId) {
+    return ZKPaths.makePath(SETTINGS_ROOT, userId);
   }
 
-  public void updateUserSettings(String id, SingularityUserSettings userSettings) {
-    save(getUserSettingsPath(id), userSettings, settingsTranscoder);
+  public void updateUserSettings(String userId, SingularityUserSettings userSettings) {
+    save(getUserSettingsPath(userId), userSettings, settingsTranscoder);
   }
 
-  public Optional<SingularityUserSettings> getUserSettings(String id) {
-    return getData(getUserSettingsPath(id), settingsTranscoder);
+  public Optional<SingularityUserSettings> getUserSettings(String userId) {
+    return getData(getUserSettingsPath(userId), settingsTranscoder);
   }
 
-  public void deleteUserSettings(String id) {
-    delete(getUserSettingsPath(id));
+  public void deleteUserSettings(String userId) {
+    delete(getUserSettingsPath(userId));
   }
 
 }
