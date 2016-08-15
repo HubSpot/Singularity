@@ -1,11 +1,12 @@
 import React, {PropTypes} from 'react';
+import { connect } from 'react-redux';
 
 import { DropdownButton, MenuItem } from 'react-bootstrap';
 import PauseButton from '../requests/PauseButton';
 import UnpauseButton from '../requests/UnpauseButton';
 import BounceButton from '../requests/BounceButton';
 
-export default class ActionDropdown extends React.Component {
+class ActionDropdown extends React.Component {
 
   static propTypes = {
     group: PropTypes.object.isRequired,
@@ -17,11 +18,13 @@ export default class ActionDropdown extends React.Component {
     this.state = {
       dropdownOpen: false
     };
-    _.bindAll(this, 'onMenuSelect');
+    _.bindAll(this, 'onMenuClick');
   }
 
-  onMenuSelect() {
-    console.log('select');
+  onMenuClick() {
+    this.setState({
+      dropdownOpen: !this.state.dropdownOpen
+    });
   }
 
   render() {
@@ -33,10 +36,11 @@ export default class ActionDropdown extends React.Component {
         title="Apply to all"
         id="action-dropdown"
         open={this.state.dropdownOpen}
-        onToggle={() => this.setState({dropdownOpen: true})}
+        onToggle={_.noop}
+        onClick={this.onMenuClick}
         >
         <PauseButton requestId={group.requestIds} isScheduled={_.any(_.keys(requests), (requestId) => requests[requestId].requestType === 'SCHEDULED')}>
-          <MenuItem eventKey="1" onSelect={this.onMenuSelect}>Pause</MenuItem>
+          <MenuItem eventKey="1">Pause</MenuItem>
         </PauseButton>
         <UnpauseButton requestId={group.requestIds}>
           <MenuItem eventKey="2">Unpause</MenuItem>
@@ -48,3 +52,12 @@ export default class ActionDropdown extends React.Component {
     );
   }
 }
+
+const mapStateToProps = (state, ownProps) => {
+  const requests = ownProps.group && _.pick({...state.api.request}, (value, key) => _.contains(ownProps.group.requestIds, key));
+  return ({
+    requests
+  });
+};
+
+export default connect(mapStateToProps, null)(ActionDropdown);

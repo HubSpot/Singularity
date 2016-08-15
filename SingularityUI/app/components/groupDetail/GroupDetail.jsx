@@ -11,13 +11,8 @@ import ActionDropdown from './ActionDropdown';
 
 class GroupDetail extends React.Component {
 
-  // shouldComponentUpdate(nextProps, nextState) {
-  //   return !_.isEqual(nextProps, this.props) && !_.isEqual(nextState, this.state);
-  // }
-
-
   render() {
-    const {group, requests, location} = this.props;
+    const {group, location} = this.props;
 
     const tabs = group.requestIds.map((requestId, index) => {
       return (
@@ -39,7 +34,7 @@ class GroupDetail extends React.Component {
             <h1>{group.id}</h1>
           </Col>
           <Col md={5} lg={6} className="button-container">
-            <ActionDropdown group={group} requests={requests} />
+            <ActionDropdown group={group} />
             {metadata}
           </Col>
         </Row>
@@ -59,11 +54,9 @@ GroupDetail.propTypes = {
 
 const mapStateToProps = (state, ownProps) => {
   const group = _.find(state.api.requestGroups.data, (filterGroup) => filterGroup.id === ownProps.params.groupId);
-  // const requests = group && {..._.pick({...state.api.request}, (value, key) => _.contains(group.requestIds, key))};
   return ({
     notFound: !state.api.requestGroups.isFetching && !group,
     pathname: ownProps.location.pathname,
-    // requests,
     group
   });
 };
