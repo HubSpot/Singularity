@@ -11,6 +11,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityUserSettings;
+import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.UserManager;
 import com.wordnik.swagger.annotations.ApiParam;
 
@@ -30,7 +31,7 @@ public class UserResource {
   @Path("/settings")
   public Optional<SingularityUserSettings> getUserSettings(
       @ApiParam("The user id to use") @QueryParam("userId") String userId) {
-    return userManager.getUserSettings(userId);
+    return userManager.getUserSettings(SingularityValidator.encodeZkName(userId));
   }
 
   @POST
@@ -38,6 +39,6 @@ public class UserResource {
   public void setUserSettings(
       @ApiParam("The user id to use") @QueryParam("userId") String userId,
       @ApiParam("The new settings") SingularityUserSettings settings) {
-    userManager.updateUserSettings(userId, settings);
+    userManager.updateUserSettings(SingularityValidator.encodeZkName(userId), settings);
   }
 }
