@@ -91,15 +91,17 @@ export default class TaskFilters extends React.Component {
   renderSearchInput() {
     return (
       <div>
-        <input
-          type="search"
-          ref="search"
-          className="big-search-box"
-          placeholder="Filter tasks"
-          value={this.props.filter.filterText}
-          onChange={(...args) => this.handleSearchChange(...args)}
-          maxLength="128"
-        />
+        <OverlayTrigger placement="bottom" rootClose={true} trigger="click" overlay={<Tooltip id="glob-reminder">* is a wildcard character</Tooltip>} delay={500}>
+          <input
+            type="search"
+            ref="search"
+            className="big-search-box"
+            placeholder="Filter tasks"
+            value={this.props.filter.filterText}
+            onChange={(...args) => this.handleSearchChange(...args)}
+            maxLength="128"
+          />
+        </OverlayTrigger>
         <div className="remove-button" onClick={() => this.clearSearch()}></div>
       </div>
     );

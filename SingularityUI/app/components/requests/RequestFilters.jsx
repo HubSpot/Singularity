@@ -3,7 +3,7 @@ import Utils from '../../utils';
 import classNames from 'classnames';
 import { Link } from 'react-router';
 
-import { Nav, NavItem, Glyphicon, Button } from 'react-bootstrap';
+import { Nav, NavItem, Glyphicon, Button, OverlayTrigger, Tooltip } from 'react-bootstrap';
 
 export default class RequestFilters extends React.Component {
 
@@ -100,15 +100,17 @@ export default class RequestFilters extends React.Component {
   renderSearchInput() {
     return (
       <div>
-        <input
-          type="search"
-          ref="search"
-          className="big-search-box"
-          placeholder="Filter requests"
-          value={this.props.filter.searchFilter}
-          onChange={(...args) => this.handleSearchChange(...args)}
-          maxLength="128"
-        />
+        <OverlayTrigger placement="bottom" rootClose={true} trigger="click" overlay={<Tooltip id="glob-reminder">* is a wildcard character</Tooltip>} delay={500}>
+          <input
+            type="search"
+            ref="search"
+            className="big-search-box"
+            placeholder="Filter requests"
+            value={this.props.filter.searchFilter}
+            onChange={(...args) => this.handleSearchChange(...args)}
+            maxLength="128"
+          />
+        </OverlayTrigger>
         <div className="remove-button" onClick={() => this.clearSearch()}></div>
       </div>
     );
@@ -117,7 +119,7 @@ export default class RequestFilters extends React.Component {
   renderRequestTypeFilter() {
     const filterItems = this.props.displayRequestTypeFilters && RequestFilters.REQUEST_TYPES.map((t, index) => {
       return (
-        <li key={index} className={_.contains(this.props.filter.subFilter, t) ? 'active' : ''}>
+        <li key={index} className={_.contains(this.props.filter.subFilter, t) && 'active'}>
           <a onClick={() => this.toggleRequestType(t)}>
             <Glyphicon glyph="ok" /> {Utils.humanizeText(t)}
           </a>
@@ -136,7 +138,7 @@ export default class RequestFilters extends React.Component {
 
   render() {
     const newRequestButton = !config.hideNewRequestButton && (
-      <Link to={'requests/new'}>
+      <Link to="requests/new">
         <Button bsStyle="success">
           <Glyphicon glyph="plus" /> New Request
         </Button>
