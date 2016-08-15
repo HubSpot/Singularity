@@ -1,13 +1,10 @@
 import { createSelector } from 'reselect';
-import micromatch from 'micromatch';
-import fuzzy from 'fuzzy';
 import _ from 'underscore';
 
 import Utils from '../utils';
 
 const getRequestsAPI = (state) => state.api.requests;
 const getUserAPI = (state) => state.api.user;
-const getSearchFilter = (state) => state.ui.requestsPage;
 
 function findRequestIds(requests) {
   return _.map(requests, (r) => {

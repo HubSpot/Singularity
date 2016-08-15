@@ -31,8 +31,8 @@ export default createSelector([getRequests, getFilter], (requests, filter) => {
 
   // Filter by glob or string match
   if (filter.searchFilter) {
-    const id = (r) => r.id || '';
-    const user = (r) => `${r.hasActiveDeploy ? r.requestDeployState.activeDeploy.user : ''}`;
+    const id = (request) => request.id || '';
+    const user = (request) => `${request.hasActiveDeploy ? request.requestDeployState.activeDeploy.user : ''}`;
 
     if (Utils.isGlobFilter(filter.searchFilter)) {
       const res1 = _.filter(filteredRequests, (request) => {
