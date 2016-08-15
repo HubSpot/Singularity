@@ -1,7 +1,5 @@
 import { createSelector } from 'reselect';
 import micromatch from 'micromatch';
-import fuzzy from 'fuzzy';
-
 import Utils from '../utils';
 
 const getTaskCleanups = (state) => state.api.taskCleanups;
@@ -49,39 +47,38 @@ export const getFilteredTasks = createSelector(
 
     // Filter by glob or fuzzy string
     if (filter.filterText) {
-      const host = {extract: (t) => `${t.taskId && t.taskId.host}`};
-      const id = {extract: (t) => `${t.taskId ? t.taskId.id : t.pendingTask.pendingTaskId.id}`};
-      const rack = {extract: (t) => `${t.taskId && t.taskId.rackId}`};
+      const host = task => `${task.taskId && task.taskId.host}`;
+      const id = task => `${task.taskId ? task.taskId.id : task.pendingTask.pendingTaskId.id}`;
+      const rack = task => `${task.taskId && task.taskId.rackId}`;
 
       if (Utils.isGlobFilter(filter.filterText)) {
         const hostMatch = _.filter(tasks, (task) => {
-          return micromatch.any(host.extract(task), `${filter.filterText}*`);
+          return micromatch.any(host(task).toLowerCase(), `*${filter.filterText.toLowerCase()}*`);
         });
         const idMatch = _.filter(tasks, (task) => {
-          return micromatch.any(id.extract(task), `${filter.filterText}*`);
+          return micromatch.any(id(task).toLowerCase(), `*${filter.filterText.toLowerCase()}*`);
         });
         const rackMatch = _.filter(tasks, (task) => {
-          return micromatch.any(rack.extract(task), `${filter.filterText}*`);
+          return micromatch.any(rack(task).toLowerCase(), `*${filter.filterText.toLowerCase()}*`);
         });
-        tasks = _.union(hostMatch, idMatch, rackMatch).reverse();
+        tasks = _.sortBy(
+          _.union(
+            rackMatch, hostMatch, idMatch
+          ),
+          task => (micromatch.any(id(task).toLowerCase(), `${filter.filterText.toLowerCase()}*`) ? 1 : 0)
+        ).reverse();
       } else {
-        _.each(tasks, (t) => {
-          t.id = id.extract(t);
-        });
-        const hostMatch = fuzzy.filter(filter.filterText.replace(/-/g, '_'), tasks, host);
-        const idMatch = fuzzy.filter(filter.filterText, tasks, id);
-        const rackMatch = fuzzy.filter(filter.filterText, tasks, rack);
+        const hostMatch = _.filter(tasks, task => host(task).toLowerCase().indexOf(filter.filterText.replace(/-/g, '_').toLowerCase()) > -1);
+        const idMatch = _.filter(tasks, task => id(task).toLowerCase().indexOf(filter.filterText.toLowerCase()) > -1);
+        const rackMatch = _.filter(tasks, task => rack(task).toLowerCase().indexOf(filter.filterText.toLowerCase()) > -1);
         tasks = _.uniq(
-          _.pluck(
-            _.sortBy(
-              _.union(
-                rackMatch, hostMatch, idMatch
-              ),
-              (t) => Utils.fuzzyAdjustScore(filter.filterText, t)
+          _.sortBy(
+            _.union(
+              rackMatch, hostMatch, idMatch
             ),
-            'original'
-          ).reverse()
-        );
+            task => (id(task).startsWith(filter.filterText.toLowerCase()) ? 1 : 0)
+          )
+        ).reverse();
       }
     }
 
