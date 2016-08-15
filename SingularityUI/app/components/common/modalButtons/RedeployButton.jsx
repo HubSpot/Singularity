@@ -1,4 +1,4 @@
-import React, { Component, PropTypes } from 'react';
+import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { Glyphicon } from 'react-bootstrap';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
@@ -16,36 +16,34 @@ const redeployTooltip = (
   </ToolTip>
 );
 
-class RedeployButton extends Component {
+const RedeployButton = (props) => {
+  const clickComponentData = {props}; // Tricks getClickComponent() into doing the right thing despite this being functional. Muahahaha
+  return (
+    <span>
+      {getClickComponent(clickComponentData, props.fetchDeploy)}
+      <RedeployModal ref={(modal) => {if (modal) clickComponentData.refs = {modal};}} {...props} />
+    </span>
+  );
+};
 
-  static propTypes = {
-    fetchDeploy: PropTypes.func.isRequired,
-    requestId: PropTypes.string.isRequired,
-    deployId: PropTypes.string.isRequired,
-    deploy: PropTypes.object,
-    doAfterRedeploy: PropTypes.func,
-    children: PropTypes.node
-  };
+RedeployButton.propTypes = {
+  fetchDeploy: PropTypes.func.isRequired,
+  requestId: PropTypes.string.isRequired,
+  deployId: PropTypes.string.isRequired,
+  deploy: PropTypes.object,
+  doAfterRedeploy: PropTypes.func,
+  children: PropTypes.node
+};
 
-  static defaultProps = {
-    children: (
-      <OverlayTrigger placement="top" id="view-redeploy-overlay" overlay={redeployTooltip}>
-        <a title="Redeploy">
-          <Glyphicon glyph="repeat" />
-        </a>
-      </OverlayTrigger>
-    )
-  }
-
-  render() {
-    return (
-      <span>
-        {getClickComponent(this, this.props.fetchDeploy)}
-        <RedeployModal ref="modal" {...this.props} />
-      </span>
-    );
-  }
-}
+RedeployButton.defaultProps = {
+  children: (
+    <OverlayTrigger placement="top" id="view-redeploy-overlay" overlay={redeployTooltip}>
+      <a title="Redeploy">
+        <Glyphicon glyph="repeat" />
+      </a>
+    </OverlayTrigger>
+  )
+};
 
 const mapStateToProps = (state) => ({
   state,
@@ -58,7 +56,5 @@ const mapDispatchToProps = (dispatch, ownProps) => ({
 
 export default connect(
   mapStateToProps,
-  mapDispatchToProps,
-  null,
-  { withRef: true }
+  mapDispatchToProps
 )(RedeployButton);

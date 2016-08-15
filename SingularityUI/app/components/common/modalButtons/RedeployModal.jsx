@@ -1,5 +1,4 @@
 import React, { Component, PropTypes } from 'react';
-import { Link } from 'react-router';
 import { connect } from 'react-redux';
 import { Alert } from 'react-bootstrap';
 import JSONTree from 'react-json-tree';
