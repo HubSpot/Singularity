@@ -3,12 +3,12 @@ import { Link } from 'react-router';
 import { connect } from 'react-redux';
 import { Alert } from 'react-bootstrap';
 import JSONTree from 'react-json-tree';
+import Messenger from 'messenger';
 import { JSONTreeTheme } from '../../../thirdPartyConfigurations';
 
 import { SaveDeploy } from '../../../actions/api/deploys';
 
 import FormModal from '../modal/FormModal';
-import SimpleModal from '../modal/SimpleModal';
 import Utils from '../../../utils';
 
 class RedeployModal extends Component {
@@ -24,8 +24,11 @@ class RedeployModal extends Component {
     this.state = {};
   }
 
-  showSuccessModal() {
-    this.refs.successModal.show();
+  showSuccessMessage() {
+    Messenger().success({
+      message: `Success! Redeployed ${Utils.maybe(this.props.deploy, ['deploy', 'id'])}. New id: ${this.state.newDeployId}`,
+      hideAfter: 10
+    });
   }
 
   show() {
@@ -36,7 +39,7 @@ class RedeployModal extends Component {
     this.props.saveDeploy(data.deployId).then((response) => {
       if (response.statusCode === 200) {
         this.setState({newDeployId: data.deployId});
-        this.showSuccessModal();
+        this.showSuccessMessage();
       } else {
         this.setState({error: response.error, errorCode: response.statusCode, newDeployId: data.deployId});
         this.show();
@@ -51,56 +54,46 @@ class RedeployModal extends Component {
     const deployToShow = _.omit(Utils.maybe(this.props.deploy, ['deploy']), 'id');
     const deployId = Utils.maybe(this.props.deploy, ['deployMarker', 'deployId']);
     return (
-      <span>
-        <SimpleModal ref="successModal" title="Success!">
-          <p>
-            Redeployed <Link to={`request/${this.props.requestId}/deploy/${Utils.maybe(this.props.deploy, ['deploy', 'id'])}`}>{Utils.maybe(this.props.deploy, ['deploy', 'id'])}</Link>.
-          </p>
-          <p>
-            New id: <Link to={`request/${this.props.requestId}/deploy/${this.state.newDeployId}`}>{this.state.newDeployId}</Link>.
-          </p>
-        </SimpleModal>
-        <FormModal
-          name="Redeploy"
-          ref="redeployModal"
-          action="Redeploy"
-          onConfirm={(data) => this.confirmRedeploy(data)}
-          buttonStyle="primary"
-          disableSubmit={_.isEmpty(deployToShow)}
-          formElements={_.isEmpty(deployToShow) ? [] : [
-            {
-              name: 'deployId',
-              type: FormModal.INPUT_TYPES.STRING,
-              label: 'New Deploy Id (Must be unique)',
-              defaultValue: deployId,
-              isRequired: true,
-              validateField: (newDeployId) => newDeployId === deployId && 'New deploy id must not be the same as the old deploy id'
-            }
-          ]}>
-          {this.state.error && (
-            <Alert bsStyle="danger">
-              <p>Failed to redeploy {deployId}. The server responded with a <code>HTTP {this.state.errorCode}</code> and said:</p>
-              <p><code>{this.state.error}</code></p>
-            </Alert>
-          )}
-          {_.isEmpty(deployToShow) ? (
-            <Alert bsStyle="danger">
-              <p>We could not find old deploy info, and so are unable to redeploy this deploy.</p>
-            </Alert>
-          ) : (
-            <div>
-              <p>Are you sure you want to redeploy this deploy?</p>
-              <pre>{deployId}</pre>
-              <p>This will create a new deploy with the same attributes as the old deploy:</p>
-              <JSONTree
-                data={{deploy: deployToShow}}
-                hideRoot={true}
-                theme={JSONTreeTheme}
-              />
-            </div>
-          )}
-        </FormModal>
-      </span>
+      <FormModal
+        name="Redeploy"
+        ref="redeployModal"
+        action="Redeploy"
+        onConfirm={(data) => this.confirmRedeploy(data)}
+        buttonStyle="primary"
+        disableSubmit={_.isEmpty(deployToShow)}
+        formElements={_.isEmpty(deployToShow) ? [] : [
+          {
+            name: 'deployId',
+            type: FormModal.INPUT_TYPES.STRING,
+            label: 'New Deploy Id (Must be unique)',
+            defaultValue: deployId,
+            isRequired: true,
+            validateField: (newDeployId) => newDeployId === deployId && 'New deploy id must not be the same as the old deploy id'
+          }
+        ]}>
+        {this.state.error && (
+          <Alert bsStyle="danger">
+            <p>Failed to redeploy {deployId}. The server responded with a <code>HTTP {this.state.errorCode}</code> and said:</p>
+            <p><code>{this.state.error}</code></p>
+          </Alert>
+        )}
+        {_.isEmpty(deployToShow) ? (
+          <Alert bsStyle="danger">
+            <p>We could not find old deploy info, and so are unable to redeploy this deploy.</p>
+          </Alert>
+        ) : (
+          <div>
+            <p>Are you sure you want to redeploy this deploy?</p>
+            <pre>{deployId}</pre>
+            <p>This will create a new deploy with the same attributes as the old deploy:</p>
+            <JSONTree
+              data={{deploy: deployToShow}}
+              hideRoot={true}
+              theme={JSONTreeTheme}
+            />
+          </div>
+        )}
+      </FormModal>
     );
   }
 }
