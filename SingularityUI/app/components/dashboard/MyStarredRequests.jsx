@@ -19,7 +19,7 @@ const MyStarredRequests = ({starredRequests}) => {
         data={starredRequests}
         keyGetter={(r) => r.request.id}
         asyncSort={true}
-        isTruelyInfinite={true}
+        renderAllRows={true}
       >
         {Starred}
         {RequestId}

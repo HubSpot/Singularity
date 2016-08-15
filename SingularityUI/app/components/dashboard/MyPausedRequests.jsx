@@ -21,7 +21,7 @@ const MyPausedRequests = ({userRequests}) => {
         data={pausedRequests}
         keyGetter={(r) => r.request.id}
         asyncSort={true}
-        isTruelyInfinite={true}
+        renderAllRows={true}
       >
         {RequestId}
         {Type}
