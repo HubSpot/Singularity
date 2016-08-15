@@ -6,9 +6,10 @@ import { PauseRequest } from '../../actions/api/requests';
 import FormModal from '../common/modal/FormModal';
 
 class PauseModal extends Component {
+
   static propTypes = {
-    requestId: PropTypes.string.isRequired,
-    isScheduled: PropTypes.bool.isRequired,
+    requestId: PropTypes.oneOfType([PropTypes.string, PropTypes.array]).isRequired,
+    isScheduled: PropTypes.bool,
     pauseRequest: PropTypes.func.isRequired,
     then: PropTypes.func
   };
@@ -17,7 +18,15 @@ class PauseModal extends Component {
     this.refs.pauseModal.show();
   }
 
+  confirm(data) {
+    const requestIds = typeof this.props.requestId === 'string' ? [this.props.requestId] : this.props.requestId;
+    for (const requestId of requestIds) {
+      this.props.pauseRequest(requestId, data, [409]);
+    }
+  }
+
   render() {
+    const requestIds = typeof this.props.requestId === 'string' ? [this.props.requestId] : this.props.requestId;
     let formElements = [
       {
         name: 'durationMillis',
@@ -46,18 +55,18 @@ class PauseModal extends Component {
         name="Pause Request"
         ref="pauseModal"
         action="Pause Request"
-        onConfirm={(data) => this.props.pauseRequest(data)}
+        onConfirm={(data) => this.confirm(data)}
         buttonStyle="primary"
         formElements={formElements}>
-        <p>Are you sure you want to pause this request?</p>
-        <pre>{this.props.requestId}</pre>
+        <p>Are you sure you want to pause {requestIds.length > 1 ? 'these' : 'this'} request{requestIds.length > 1 && 's'}?</p>
+        <pre>{requestIds.join('\n')}</pre>
       </FormModal>
     );
   }
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  pauseRequest: (data) => dispatch(PauseRequest.trigger(ownProps.requestId, data)).then((response) => ownProps.then && ownProps.then(response)),
+  pauseRequest: (requestId, data, catchStatusCodes) => dispatch(PauseRequest.trigger(requestId, data, catchStatusCodes)).then((response) => ownProps.then && ownProps.then(response)),
 });
 
 export default connect(

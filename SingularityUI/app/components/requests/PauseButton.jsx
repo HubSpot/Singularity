@@ -17,7 +17,7 @@ const pauseTooltip = (
 export default class PauseButton extends Component {
 
   static propTypes = {
-    requestId: PropTypes.string.isRequired,
+    requestId: PropTypes.oneOfType([PropTypes.string, PropTypes.array]).isRequired,
     isScheduled: PropTypes.bool.isRequired,
     children: PropTypes.node,
     then: PropTypes.func

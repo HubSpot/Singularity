@@ -7,12 +7,19 @@ import FormModal from '../common/modal/FormModal';
 
 class BounceModal extends Component {
   static propTypes = {
-    requestId: PropTypes.string.isRequired,
+    requestId: PropTypes.oneOfType([PropTypes.string, PropTypes.array]).isRequired,
     bounceRequest: PropTypes.func.isRequired
   };
 
   show() {
     this.refs.bouceModal.show();
+  }
+
+  confirm(data) {
+    const requestIds = typeof this.props.requestId === 'string' ? [this.props.requestId] : this.props.requestId;
+    for (const requestId of requestIds) {
+      this.props.bounceRequest(requestId, data);
+    }
   }
 
   static INCREMENTAL_BOUNCE_VALUE = {
@@ -27,12 +34,13 @@ class BounceModal extends Component {
   };
 
   render() {
+    const requestIds = typeof this.props.requestId === 'string' ? [this.props.requestId] : this.props.requestId;
     return (
       <FormModal
         name="Bounce Request"
         ref="bouceModal"
         action="Bounce Request"
-        onConfirm={(data) => this.props.bounceRequest(data)}
+        onConfirm={(data) => this.confirm(data)}
         buttonStyle="primary"
         formElements={[
           {
@@ -63,8 +71,8 @@ class BounceModal extends Component {
             label: 'Message (optional)'
           }
         ]}>
-        <p>Are you sure you want to bounce this request?</p>
-        <pre>{this.props.requestId}</pre>
+        <p>Are you sure you want to bounce {requestIds.length > 1 ? 'these' : 'this'} request{requestIds.length > 1 && 's'}?</p>
+        <pre>{requestIds.join('\n')}</pre>
         <p>Bouncing a request will cause replacement tasks to be scheduled and (under normal conditions) executed immediately.</p>
       </FormModal>
     );
@@ -72,7 +80,7 @@ class BounceModal extends Component {
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  bounceRequest: (data) => dispatch(BounceRequest.trigger(ownProps.requestId, data)).then(response => (ownProps.then && ownProps.then(response))),
+  bounceRequest: (requestId, data) => dispatch(BounceRequest.trigger(requestId, data)).then(response => (ownProps.then && ownProps.then(response))),
 });
 
 export default connect(

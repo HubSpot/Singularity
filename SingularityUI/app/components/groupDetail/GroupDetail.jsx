@@ -4,19 +4,17 @@ import rootComponent from '../../rootComponent';
 
 import { FetchGroups } from '../../actions/api/requestGroups';
 
-import { Row, Col, Tabs, Tab, DropdownButton, MenuItem } from 'react-bootstrap';
+import { Row, Col, Tabs, Tab } from 'react-bootstrap';
 import RequestDetailPage from '../requestDetail/RequestDetailPage';
 import MetadataButton from '../common/MetadataButton';
-import PauseButton from '../requests/PauseButton';
-import UnpauseButton from '../requests/UnpauseButton';
-import BounceButton from '../requests/BounceButton';
+import ActionDropdown from './ActionDropdown';
 
 class GroupDetail extends React.Component {
 
   // shouldComponentUpdate(nextProps, nextState) {
-  //   console.log(nextState, this.state);
-  //   return !_.isEqual(nextProps.requests, this.props.requests);
+  //   return !_.isEqual(nextProps, this.props) && !_.isEqual(nextState, this.state);
   // }
+
 
   render() {
     const {group, requests, location} = this.props;
@@ -33,20 +31,7 @@ class GroupDetail extends React.Component {
     const metadata = !_.isEmpty(group.metadata) && (
       <MetadataButton title={group.id} metadata={group.metadata}>View Metadata</MetadataButton>
     );
-    const dropdown = (
-      <DropdownButton bsStyle="primary" title="Apply to all" id="action-dropdown">
-        <PauseButton requestId={_.first(group.requestIds)} isScheduled={false}>
-          <MenuItem eventKey="1">Pause</MenuItem>
-        </PauseButton>
-        <UnpauseButton requestId={_.first(group.requestIds)} isScheduled={false}>
-          <MenuItem eventKey="2">Unpause</MenuItem>
-        </UnpauseButton>
-        <BounceButton requestId={_.first(group.requestIds)}>
-          <MenuItem eventKey="3">Bounce</MenuItem>
-        </BounceButton>
-      </DropdownButton>
-    );
-    console.log(requests);
+
     return (
       <div>
         <Row className="detail-header">
@@ -54,7 +39,7 @@ class GroupDetail extends React.Component {
             <h1>{group.id}</h1>
           </Col>
           <Col md={5} lg={6} className="button-container">
-            {dropdown}
+            <ActionDropdown group={group} requests={requests} />
             {metadata}
           </Col>
         </Row>
@@ -69,12 +54,12 @@ class GroupDetail extends React.Component {
 GroupDetail.propTypes = {
   group: PropTypes.object,
   location: PropTypes.object,
-  requests: PropTypes.array
+  requests: PropTypes.object
 };
 
 const mapStateToProps = (state, ownProps) => {
   const group = _.find(state.api.requestGroups.data, (filterGroup) => filterGroup.id === ownProps.params.groupId);
-  const requests = group && _.pick({...state.api.request}, (value, key) => _.contains(group.requestIds, key));
+  // const requests = group && {..._.pick({...state.api.request}, (value, key) => _.contains(group.requestIds, key))};
   return ({
     notFound: !state.api.requestGroups.isFetching && !group,
     pathname: ownProps.location.pathname,
