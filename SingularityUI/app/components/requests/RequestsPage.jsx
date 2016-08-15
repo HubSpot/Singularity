@@ -19,7 +19,7 @@ import UITable from '../common/table/UITable';
 import RequestFilters from './RequestFilters';
 import * as Cols from './Columns';
 
-import filterSelector from '../../selectors/requests/filterSelector';
+import filterSelector from '../../selectors/requests';
 
 import Utils from '../../utils';
 
