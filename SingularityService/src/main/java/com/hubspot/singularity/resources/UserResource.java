@@ -31,7 +31,7 @@ public class UserResource {
     this.userManager = userManager;
   }
 
-  private static String encodeZkName(String name) {
+  private static String checkAndEncodeUserId(String name) {
     checkBadRequest(!Strings.isNullOrEmpty(name), "Name must be present and non-null");
     final String encodedName = BaseEncoding.base64Url().encode(name.getBytes(Charsets.UTF_8));
     checkBadRequest(!encodedName.equals("zookeeper"), "Name must not encode to reserved zookeeper word");
@@ -42,7 +42,7 @@ public class UserResource {
   @Path("/settings")
   public Optional<SingularityUserSettings> getUserSettings(
       @ApiParam("The user id to use") @QueryParam("userId") String userId) {
-    return userManager.getUserSettings(encodeZkName(userId));
+    return userManager.getUserSettings(checkAndEncodeUserId(userId));
   }
 
   @POST
@@ -50,6 +50,6 @@ public class UserResource {
   public void setUserSettings(
       @ApiParam("The user id to use") @QueryParam("userId") String userId,
       @ApiParam("The new settings") SingularityUserSettings settings) {
-    userManager.updateUserSettings(encodeZkName(userId), settings);
+    userManager.updateUserSettings(checkAndEncodeUserId(userId), settings);
   }
 }
