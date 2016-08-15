@@ -139,7 +139,7 @@ class TasksPage extends React.Component {
       table = (
         <UITable
           data={displayTasks}
-          keyGetter={(task) => (task.taskId ? task.taskId.id : task.pendingTask.pendingTaskId.id)}
+          keyGetter={(task) => (Utils.maybe(task, ['taskId', 'id']) || Utils.maybe(task, ['pendingTask', 'pendingTaskId', 'id']) || Utils.maybe(task, ['id']))}
         >
           {this.getColumns()}
         </UITable>
