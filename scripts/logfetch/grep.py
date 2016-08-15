@@ -1,6 +1,6 @@
 import sys
 import subprocess
-from logfetch_base import log
+from logfetch_base import log, get_timestamp
 from termcolor import colored
 
 DEFAULT_GREP_COMMAND = 'grep --color=always \'{0}\''
@@ -13,7 +13,7 @@ def grep_files(args, all_logs):
             grep_cmd = grep_command(args)
             log(colored('Running grep command ({0})\n'.format(grep_cmd), 'cyan'), args, False)
             for filename in all_logs:
-                log('=> ' + colored(filename, 'cyan') + '\n', args, True)
+                log(colored(str(get_timestamp(filename)) + ' => ' + filename, 'cyan') + '\n', args, not args.show_file_info)
                 content = subprocess.Popen(['cat', filename], stdout=subprocess.PIPE)
                 if filename.endswith('.gz'):
                     zcat = subprocess.Popen('zcat', stdin=content.stdout, stdout=subprocess.PIPE)
