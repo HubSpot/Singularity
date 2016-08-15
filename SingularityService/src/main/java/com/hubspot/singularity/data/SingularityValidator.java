@@ -23,6 +23,7 @@ import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.inject.Inject;
@@ -434,5 +435,9 @@ public class SingularityValidator {
     } catch (NumberFormatException nfe) {
       return false;
     }
+  }
+
+  public static void checkUserId(String name) {
+    checkBadRequest(!Strings.isNullOrEmpty(name), "Name must be present and non-null");
   }
 }
