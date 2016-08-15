@@ -7,7 +7,7 @@ import FormModal from '../common/modal/FormModal';
 
 class EnableHealthchecksModal extends Component {
   static propTypes = {
-    requestId: PropTypes.string.isRequired,
+    requestId: PropTypes.oneOfType([PropTypes.string, PropTypes.array]).isRequired,
     enableHealthchecks: PropTypes.func.isRequired,
     then: PropTypes.func
   };
@@ -16,13 +16,21 @@ class EnableHealthchecksModal extends Component {
     this.refs.enableHealthchecksModal.show();
   }
 
+  confirm(data) {
+    const requestIds = typeof this.props.requestId === 'string' ? [this.props.requestId] : this.props.requestId;
+    for (const requestId of requestIds) {
+      this.props.enableHealthchecks(requestId, data);
+    }
+  }
+
   render() {
+    const requestIds = typeof this.props.requestId === 'string' ? [this.props.requestId] : this.props.requestId;
     return (
       <FormModal
         name="Enable Healthchecks"
         ref="enableHealthchecksModal"
         action="Enable Healthchecks"
-        onConfirm={(data) => this.props.enableHealthchecks(data)}
+        onConfirm={(data) => this.confirm(data)}
         buttonStyle="primary"
         formElements={[
           {
@@ -37,16 +45,16 @@ class EnableHealthchecksModal extends Component {
             label: 'Message (optional)'
           }
         ]}>
-        <p>Turn <strong>on</strong> healthchecks for this request.</p>
-        <pre>{this.props.requestId}</pre>
+        <p>Turn <strong>on</strong> healthchecks for {requestIds.length > 1 ? 'these' : 'this'} request{requestIds.length > 1 && 's'}.</p>
+        <pre>{requestIds.join('\n')}</pre>
       </FormModal>
     );
   }
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  enableHealthchecks: (data) => dispatch(SkipRequestHealthchecks.trigger(
-    ownProps.requestId,
+  enableHealthchecks: (requestId, data) => dispatch(SkipRequestHealthchecks.trigger(
+    requestId,
     {...data, skipHealthchecks: false}
   )).then(response => (ownProps.then && ownProps.then(response))),
 });

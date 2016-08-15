@@ -7,7 +7,7 @@ import FormModal from '../common/modal/FormModal';
 
 class DisableHealthchecksModal extends Component {
   static propTypes = {
-    requestId: PropTypes.string.isRequired,
+    requestId: PropTypes.oneOfType([PropTypes.string, PropTypes.array]).isRequired,
     disableHealthchecks: PropTypes.func.isRequired,
     then: PropTypes.func
   };
@@ -25,13 +25,21 @@ class DisableHealthchecksModal extends Component {
       this.refs.promptDisableHealthchecksDurationModal.show();
     } else {
       // if more than an hour just go with it
-      this.props.disableHealthchecks(data);
+      this.confirm(data);
+    }
+  }
+
+  confirm(data) {
+    const requestIds = typeof this.props.requestId === 'string' ? [this.props.requestId] : this.props.requestId;
+    for (const requestId of requestIds) {
+      this.props.disableHealthchecks(requestId, data);
     }
   }
 
   render() {
+    const requestIds = typeof this.props.requestId === 'string' ? [this.props.requestId] : this.props.requestId;
     return (
-      <div style={{display: 'inline-block'}}>
+      <div>
         <FormModal
           name="Disable Healthchecks"
           ref="disableHealthchecksModal"
@@ -52,17 +60,17 @@ class DisableHealthchecksModal extends Component {
             }
           ]}>
           <p>Turn <strong>off</strong> healthchecks for this request.</p>
-          <pre>{this.props.requestId}</pre>
+          <pre>{requestIds.join('\n')}</pre>
         </FormModal>
         <FormModal
           ref="promptDisableHealthchecksDurationModal"
           action="Disable Healthchecks"
-          onConfirm={() => this.props.disableHealthchecks(this.state)}
+          onConfirm={(data) => this.confirm(data)}
           buttonStyle="primary"
           formElements={[]}>
           <p><strong>Are you sure you want to disable healthchecks for less than an hour?</strong></p>
           <p>This may not be enough time for your service to get into a stable state.</p>
-          <pre>{this.props.requestId}</pre>
+          <pre>{requestIds.join('\n')}</pre>
         </FormModal>
       </div>
     );
@@ -70,8 +78,8 @@ class DisableHealthchecksModal extends Component {
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  disableHealthchecks: (data) => dispatch(SkipRequestHealthchecks.trigger(
-    ownProps.requestId,
+  disableHealthchecks: (requestId, data) => dispatch(SkipRequestHealthchecks.trigger(
+    requestId,
     {...data, skipHealthchecks: true}
   )).then(response => (ownProps.then && ownProps.then(response)))
 });

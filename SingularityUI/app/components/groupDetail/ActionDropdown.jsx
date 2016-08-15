@@ -5,6 +5,8 @@ import { DropdownButton, MenuItem } from 'react-bootstrap';
 import PauseButton from '../requests/PauseButton';
 import UnpauseButton from '../requests/UnpauseButton';
 import BounceButton from '../requests/BounceButton';
+import EnableHealthchecksButton from '../requests/EnableHealthchecksButton';
+import DisableHealthchecksButton from '../requests/DisableHealthchecksButton';
 
 class ActionDropdown extends React.Component {
 
@@ -39,14 +41,24 @@ class ActionDropdown extends React.Component {
         onToggle={_.noop}
         onClick={this.onMenuClick}
         >
+        <MenuItem header={true}>Request State</MenuItem>
         <PauseButton requestId={group.requestIds} isScheduled={_.any(_.keys(requests), (requestId) => requests[requestId].requestType === 'SCHEDULED')}>
           <MenuItem eventKey="1">Pause</MenuItem>
         </PauseButton>
         <UnpauseButton requestId={group.requestIds}>
           <MenuItem eventKey="2">Unpause</MenuItem>
         </UnpauseButton>
+        <MenuItem divider={true} />
+        <MenuItem header={true}>Healthchecks</MenuItem>
+        <EnableHealthchecksButton requestId={group.requestIds}>
+          <MenuItem eventKey="3">Enable</MenuItem>
+        </EnableHealthchecksButton>
+        <DisableHealthchecksButton requestId={group.requestIds}>
+          <MenuItem eventKey="4">Disable</MenuItem>
+        </DisableHealthchecksButton>
+        <MenuItem divider={true} />
         <BounceButton requestId={group.requestIds}>
-          <MenuItem eventKey="3">Bounce</MenuItem>
+          <MenuItem eventKey="5">Bounce</MenuItem>
         </BounceButton>
       </DropdownButton>
     );
