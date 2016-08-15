@@ -91,10 +91,10 @@ export default createSelector([getRequests, getFilter], (requests, filter) => {
   let stateFilter = null;
   switch (filter.state) {
     case 'activeDeploy':
-      stateFilter = (r) => r.hasActiveDeploy;
+      stateFilter = (request) => request.hasActiveDeploy;
       break;
     case 'noDeploy':
-      stateFilter = (r) => !r.hasActiveDeploy;
+      stateFilter = (request) => !request.hasActiveDeploy;
       break;
     default:
       break;
@@ -105,7 +105,7 @@ export default createSelector([getRequests, getFilter], (requests, filter) => {
 
   // Filter by request type
   if (!_.contains(['pending', 'cleanup'], filter.type)) {
-    filteredRequests = _.filter(filteredRequests, (r) => r.request && _.contains(filter.subFilter, r.request.requestType));
+    filteredRequests = _.filter(filteredRequests, (request) => request.request && _.contains(filter.subFilter, request.request.requestType));
   }
 
   // Filter by glob or string match
