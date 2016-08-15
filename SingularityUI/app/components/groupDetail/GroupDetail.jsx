@@ -9,42 +9,38 @@ import RequestDetailPage from '../requestDetail/RequestDetailPage';
 import MetadataButton from '../common/MetadataButton';
 import ActionDropdown from './ActionDropdown';
 
-class GroupDetail extends React.Component {
-
-  render() {
-    const {group, location} = this.props;
-
-    const tabs = group.requestIds.map((requestId, index) => {
-      return (
-        <Tab key={index} eventKey={index} title={requestId}>
-          <div className="tab-container">
-            <RequestDetailPage index={index} params={{requestId}} location={location} showBreadcrumbs={false} />
-          </div>
-        </Tab>
-      );
-    });
-    const metadata = !_.isEmpty(group.metadata) && (
-      <MetadataButton title={group.id} metadata={group.metadata}>View Metadata</MetadataButton>
-    );
-
+const GroupDetail = ({group, location}) => {
+  const tabs = group.requestIds.map((requestId, index) => {
     return (
-      <div>
-        <Row className="detail-header">
-          <Col md={7} lg={6}>
-            <h1>{group.id}</h1>
-          </Col>
-          <Col md={5} lg={6} className="button-container">
-            <ActionDropdown group={group} />
-            {metadata}
-          </Col>
-        </Row>
-        <Tabs id="request-ids">
-          {tabs}
-        </Tabs>
-      </div>
+      <Tab key={index} eventKey={index} title={requestId}>
+        <div className="tab-container">
+          <RequestDetailPage index={index} params={{requestId}} location={location} showBreadcrumbs={false} />
+        </div>
+      </Tab>
     );
-  }
-}
+  });
+  const metadata = !_.isEmpty(group.metadata) && (
+    <MetadataButton title={group.id} metadata={group.metadata}>View Metadata</MetadataButton>
+  );
+
+  return (
+    <div>
+      <Row className="detail-header">
+        <Col md={7} lg={6}>
+          <h1>{group.id}</h1>
+        </Col>
+        <Col md={5} lg={6} className="button-container">
+          <ActionDropdown group={group} />
+          {metadata}
+        </Col>
+      </Row>
+      <Tabs id="request-ids">
+        {tabs}
+      </Tabs>
+    </div>
+  );
+};
+
 
 GroupDetail.propTypes = {
   group: PropTypes.object,
