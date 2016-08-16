@@ -452,7 +452,7 @@ UITable.propTypes = {
   keyGetter: PropTypes.func.isRequired,
   children: PropTypes.arrayOf(PropTypes.node).isRequired,
   paginated: PropTypes.bool,
-  renderAllRows: PropTypes.bool, // Will render all rows even if there are 1,000,000
+  renderAllRows: PropTypes.bool,
   rowChunkSize: PropTypes.number,
   rowChunkSizeChoices: PropTypes.arrayOf(PropTypes.number),
   maxPaginationButtons: PropTypes.number,
