@@ -14,7 +14,7 @@ export const FetchUserSettings = buildApiAction(
 );
 
 export const UpdateUserSettings = buildJsonApiAction(
-  'FETCH_USER_SETTINGS',
+  'UPDATE_USER_SETTINGS',
   'POST',
   (userId, settings) => ({
     url: `/users/settings?userId=${userId}`,

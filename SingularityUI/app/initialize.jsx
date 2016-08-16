@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import FormModal from './components/common/modal/FormModal';
 import AppRouter from './router';
 import configureStore from 'store';
-import { FetchUser, FetchUserSettings } from 'actions/api/user';
+import { FetchUser, FetchUserSettings, UpdateUserSettings } from 'actions/api/user';
 import { FetchGroups } from 'actions/api/requestGroups';
 import Utils from './utils';
 
@@ -17,6 +17,21 @@ function setApiRoot(data) {
   return location.reload();
 }
 
+function maybeImportStars(store, fetchUserSettingsApiResponse, userId) {
+  if (fetchUserSettingsApiResponse.statusCode !== 200) return;
+  const locallyStarredRequests = window.localStorage.hasOwnProperty('starredRequests')
+    ? JSON.parse(window.localStorage.getItem('starredRequests'))
+    : [];
+  const apiStarredRequests = Utils.maybe(fetchUserSettingsApiResponse.data, 'starredRequestIds') || [];
+  if (_.isEmpty(_.difference(locallyStarredRequests, apiStarredRequests))) return;
+  const newSettings = Utils.changeUserSetting(
+    fetchUserSettingsApiResponse.data,
+    'starredRequestIds',
+    _.union(locallyStarredRequests, apiStarredRequests)
+  );
+  store.dispatch(UpdateUserSettings.trigger(userId, newSettings));
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   if (window.config.apiRoot) {
     // set up Redux store
@@ -27,7 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
     window.app.setupUser = () => store.dispatch(FetchUser.trigger()).then(response => {
       const userId = Utils.maybe(response.data, ['user', 'id']);
       if (response.statusCode === 200 && userId) {
-        store.dispatch(FetchUserSettings.trigger(userId));
+        store.dispatch(FetchUserSettings.trigger(userId)).then(
+          fetchUserSettingsApiResponse => maybeImportStars(store, fetchUserSettingsApiResponse, userId)
+        );
       }
     });
     window.app.setupUser();
