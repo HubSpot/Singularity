@@ -12,12 +12,6 @@ export default class RequestFilters extends React.Component {
     displayRequestTypeFilters: React.PropTypes.bool
   };
 
-  constructor(props) {
-    super(props);
-    this.state = {showWildcardModal: false};
-    _.bindAll(this, 'hideWildcardModal', 'showWildcardModal');
-  }
-
   static REQUEST_STATES = [
     {
       filterVal: 'all',
