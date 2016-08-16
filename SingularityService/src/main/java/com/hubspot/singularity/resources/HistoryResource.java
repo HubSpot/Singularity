@@ -168,7 +168,7 @@ public class HistoryResource extends AbstractHistoryResource {
 
   @GET
   @Path("/request/{requestId}/tasks/count")
-  @ApiOperation("Retrieve the history sorted by startedAt for all inactive tasks of a specific request.")
+  @ApiOperation("Retrieve the history count for all inactive tasks of a specific request.")
   public Optional<Integer> getTaskHistoryForRequestCount(
           @ApiParam("Request ID to match") @PathParam("requestId") String requestId,
           @ApiParam("Optional deploy ID to match") @QueryParam("deployId") Optional<String> deployId,
