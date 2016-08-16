@@ -100,15 +100,6 @@ const Utils = {
     return false;
   },
 
-  fuzzyAdjustScore(filter, fuzzyObject) {
-    if (fuzzyObject.original.id.toLowerCase().startsWith(filter.toLowerCase())) {
-      return fuzzyObject.score * 10;
-    } else if (fuzzyObject.original.id.toLowerCase().indexOf(filter.toLowerCase()) > -1) {
-      return fuzzyObject.score * 5;
-    }
-    return fuzzyObject.score;
-  },
-
   getTaskDataFromTaskId(taskId) {
     const splits = taskId.split('-');
     return {
