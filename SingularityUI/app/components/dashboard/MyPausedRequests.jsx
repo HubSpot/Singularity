@@ -21,8 +21,7 @@ const MyPausedRequests = ({userRequests}) => {
         data={pausedRequests}
         keyGetter={(r) => r.request.id}
         asyncSort={true}
-        paginated={true}
-        rowChunkSize={10}
+        renderAllRows={true}
       >
         {RequestId}
         {Type}
