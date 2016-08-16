@@ -51,6 +51,10 @@ public abstract class BlendedHistoryHelper<T, Q> {
     throw new IllegalStateException("Comparator requested for query which doesn't implement it");
   }
 
+  public Integer getBlendedHistoryCount(Q id) {
+    return 42;
+  }
+
   public List<T> getBlendedHistory(Q id, Integer limitStart, Integer limitCount) {
     final List<T> fromZk = getFromZk(id);
 

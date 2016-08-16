@@ -215,6 +215,16 @@ public class HistoryResource extends AbstractHistoryResource {
   }
 
   @GET
+  @Path("/request/{requestId}/deploys/count")
+  @ApiOperation("Get deploy history for a single request")
+  public Integer getDeploysCount(
+          @ApiParam("Request ID to look up") @PathParam("requestId") String requestId) {
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
+
+    return deployHistoryHelper.getBlendedHistoryCount(requestId);
+  }
+
+  @GET
   @Path("/request/{requestId}/requests")
   @ApiOperation("Get request history for a single request")
   public List<SingularityRequestHistory> getRequestHistoryForRequest(
