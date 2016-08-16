@@ -24,6 +24,7 @@ import org.quartz.CronExpression;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.hash.Hashing;
 import com.google.inject.Inject;
@@ -455,6 +456,7 @@ public class SingularityValidator {
     }
   }
 
+
   public SingularityPriorityFreeze checkSingularityPriorityFreeze(SingularityPriorityFreeze priorityFreeze) {
     checkBadRequest(priorityFreeze.getMinimumPriorityLevel() > 0 && priorityFreeze.getMinimumPriorityLevel() <= 1, "minimumPriorityLevel %s is invalid, must be greater than 0 and less than or equal to 1.", priorityFreeze.getMinimumPriorityLevel());
 
@@ -495,5 +497,9 @@ public class SingularityValidator {
         .toBuilder()
         .setDurationMillis(Optional.of(durationMillis))
         .build();
+  }
+
+  public static void checkUserId(String name) {
+    checkBadRequest(!Strings.isNullOrEmpty(name), "Name must be present and non-null");
   }
 }

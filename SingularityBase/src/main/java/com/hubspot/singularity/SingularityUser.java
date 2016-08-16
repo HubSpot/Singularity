@@ -16,7 +16,8 @@ public class SingularityUser {
   private final Set<String> groups;
 
   @JsonCreator
-  public SingularityUser(@JsonProperty("id") String id, @JsonProperty("name") Optional<String> name, @JsonProperty("email") Optional<String> email, @JsonProperty("groups") Set<String> groups) {
+  public SingularityUser(@JsonProperty("id") String id, @JsonProperty("name") Optional<String> name,
+                         @JsonProperty("email") Optional<String> email, @JsonProperty("groups") Set<String> groups) {
     this.id = id;
     this.name = name;
     this.email = email;
