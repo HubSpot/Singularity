@@ -75,14 +75,6 @@ export default class RequestFilters extends React.Component {
     this.props.onFilterChange(_.extend({}, this.props.filter, {searchFilter: ''}));
   }
 
-  showWildcardModal() {
-    this.setState({showWildcardModal: true});
-  }
-
-  hideWildcardModal() {
-    this.setState({showWildcardModal: false});
-  }
-
   renderStatusFilter() {
     const selectedIndex = _.findIndex(RequestFilters.REQUEST_STATES, (s) => s.filterVal === this.props.filter.state);
     const navItems = RequestFilters.REQUEST_STATES.map((s, index) => {
