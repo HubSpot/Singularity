@@ -41,7 +41,6 @@ const GroupDetail = ({group, location}) => {
   );
 };
 
-
 GroupDetail.propTypes = {
   group: PropTypes.object,
   location: PropTypes.object,
@@ -63,8 +62,8 @@ const mapDispatchToProps = (dispatch) => {
   };
 };
 
-function refresh(props) {
+const refresh = (props) => {
   return props.fetchGroups();
-}
+};
 
 export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(GroupDetail, (props) => `Group ${props.params.groupId}`, refresh, false));

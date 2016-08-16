@@ -50,6 +50,7 @@ class ActionDropdown extends React.Component {
         onToggle={_.noop}
         onClick={this.onMenuClick}
         >
+
         <MenuItem header={true}>Request State</MenuItem>
         <PauseButton requestId={group.requestIds} isScheduled={_.any(_.keys(requests), (requestId) => requests[requestId].requestType === 'SCHEDULED')} then={this.fetchRequests}>
           <MenuItem eventKey="1">Pause</MenuItem>
@@ -58,6 +59,7 @@ class ActionDropdown extends React.Component {
           <MenuItem eventKey="2">Unpause</MenuItem>
         </UnpauseButton>
         <MenuItem divider={true} />
+
         <MenuItem header={true}>Healthchecks</MenuItem>
         <EnableHealthchecksButton requestId={group.requestIds} then={this.fetchRequests}>
           <MenuItem eventKey="3">Enable</MenuItem>
@@ -66,9 +68,11 @@ class ActionDropdown extends React.Component {
           <MenuItem eventKey="4">Disable</MenuItem>
         </DisableHealthchecksButton>
         <MenuItem divider={true} />
+
         <BounceButton requestId={group.requestIds} then={this.fetchRequests}>
           <MenuItem eventKey="5">Bounce</MenuItem>
         </BounceButton>
+
       </DropdownButton>
     );
   }
