@@ -1,4 +1,4 @@
-import { buildApiAction } from './base';
+import { buildApiAction, buildJsonApiAction } from './base';
 
 export const FetchUser = buildApiAction(
   'FETCH_USER',
@@ -7,16 +7,17 @@ export const FetchUser = buildApiAction(
 
 export const FetchUserSettings = buildApiAction(
   'FETCH_USER_SETTINGS',
-  id => ({
-    url: `/users/settings?userId=${id}`,
+  userId => ({
+    url: `/users/settings?userId=${userId}`,
     catchStatusCodes: [404] // Remove this once the API doesn't 404 when user has nothing set
   })
 );
 
-export const UpdateUserSettings = buildApiAction(
+export const UpdateUserSettings = buildJsonApiAction(
   'FETCH_USER_SETTINGS',
-  (id, settings) => ({
-    url: '/users/settings',
-    body: { id, settings }
+  'POST',
+  (userId, settings) => ({
+    url: `/users/settings?userId=${userId}`,
+    body: settings
   })
 );
