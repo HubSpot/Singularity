@@ -17,6 +17,12 @@ function setApiRoot(data) {
   return location.reload();
 }
 
+const fetchUserSettings = (store, userId) => store.dispatch(FetchUserSettings.trigger(userId));
+
+const updateUserSettings = (store, userId, newSettings) => store.dispatch(UpdateUserSettings.trigger(userId, newSettings));
+
+const deleteLocallyStoredStarredRequests = () => window.localStorage.removeItem('starredRequests');
+
 function maybeImportStars(store, fetchUserSettingsApiResponse, userId) {
   if (fetchUserSettingsApiResponse.statusCode !== 200) return;
   const locallyStarredRequests = window.localStorage.hasOwnProperty('starredRequests')
@@ -29,7 +35,10 @@ function maybeImportStars(store, fetchUserSettingsApiResponse, userId) {
     'starredRequestIds',
     _.union(locallyStarredRequests, apiStarredRequests)
   );
-  store.dispatch(UpdateUserSettings.trigger(userId, newSettings));
+  updateUserSettings(store, userId, newSettings).then(() => {
+    deleteLocallyStoredStarredRequests();
+    fetchUserSettings(store, userId);
+  });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -42,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.app.setupUser = () => store.dispatch(FetchUser.trigger()).then(response => {
       const userId = Utils.maybe(response.data, ['user', 'id']);
       if (response.statusCode === 200 && userId) {
-        store.dispatch(FetchUserSettings.trigger(userId)).then(
+        fetchUserSettings(store, userId).then(
           fetchUserSettingsApiResponse => maybeImportStars(store, fetchUserSettingsApiResponse, userId)
         );
       }
