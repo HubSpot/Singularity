@@ -202,6 +202,17 @@ const Utils = {
     return null;
   },
 
+  changeUserSetting(oldSettings, setting, newValue) {
+    let newSettings = {};
+    if (oldSettings) newSettings = this.deepClone(oldSettings);
+    newSettings[setting] = newValue;
+    return newSettings;
+  },
+
+  getMaybeUserSetting(settings, setting) {
+    return this.maybe(settings, [setting]);
+  },
+
   maybe(object, path, defaultValue = undefined) {
     if (!path.length) {
       return object;
@@ -316,7 +327,18 @@ const Utils = {
       return expiringBounce
         ? (expiringBounce.startMillis + expiringBounce.expiringAPIRequestObject.durationMillis) > new Date().getTime()
         : false;
-    }
+    },
+    isStarred: (requestParent, settings) => _.contains(Utils.getMaybeUserSetting(settings, 'starredRequestIds') || [], requestParent.request.id),
+    addStar: (requestParent, settings) => Utils.changeUserSetting(
+      settings,
+      'starredRequestIds',
+      _.union(Utils.getMaybeUserSetting(settings, 'starredRequestIds') || [], [requestParent.request.id])
+    ),
+    removeStar: (requestParent, settings) => Utils.changeUserSetting(
+      settings,
+      'starredRequestIds',
+      _.without(Utils.getMaybeUserSetting(settings, 'starredRequestIds') || [], requestParent.request.id)
+    )
   },
 
   queryParams(source) {

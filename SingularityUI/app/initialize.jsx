@@ -3,8 +3,9 @@ import ReactDOM from 'react-dom';
 import FormModal from './components/common/modal/FormModal';
 import AppRouter from './router';
 import configureStore from 'store';
-import { FetchUser } from 'actions/api/auth';
+import { FetchUser, FetchUserSettings } from 'actions/api/user';
 import { FetchGroups } from 'actions/api/requestGroups';
+import Utils from './utils';
 
 // Set up third party configurations
 import 'thirdPartyConfigurations';
@@ -23,7 +24,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // set up user
     window.app = {};
-    window.app.setupUser = () => store.dispatch(FetchUser.trigger());
+    window.app.setupUser = () => store.dispatch(FetchUser.trigger()).then(response => {
+      const userId = Utils.maybe(response.data, ['user', 'id']);
+      if (response.statusCode === 200 && userId) {
+        store.dispatch(FetchUserSettings.trigger(userId));
+      }
+    });
     window.app.setupUser();
 
     // set up request groups

@@ -18,11 +18,9 @@ const DashboardPage = () => (
   </div>
 );
 
-function mapDispatchToProps(dispatch) {
-  return {
-    fetchRequests: () => dispatch(FetchRequests.trigger())
-  };
-}
+const mapDispatchToProps = (dispatch) => ({
+  fetchRequests: () => dispatch(FetchRequests.trigger())
+});
 
 function refresh(props) {
   return props.fetchRequests();

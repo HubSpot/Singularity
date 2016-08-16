@@ -6,6 +6,7 @@ import _ from 'underscore';
 import Utils from '../utils';
 
 const getRequestsAPI = (state) => state.api.requests;
+const getUserSettingsAPI = (state) => state.api.userSettings;
 const getUserAPI = (state) => state.api.user;
 const getSearchFilter = (state) => state.ui.requestsPage;
 
@@ -18,10 +19,10 @@ function findRequestIds(requests) {
 export const getStarred = (state) => new Set(state.ui.starred);
 
 export const getStarredRequests = createSelector(
-  [getStarred, getRequestsAPI],
-  (starredData, requestsAPI) => {
+  [getStarred, getUserSettingsAPI, getRequestsAPI],
+  (starredData, userSettingsAPI, requestsAPI) => {
     const requests = findRequestIds(requestsAPI.data);
-    return requests.filter((r) => starredData.has(r.request.id));
+    return requests.filter((requestParent) => Utils.request.isStarred(requestParent, userSettingsAPI));
   }
 );
 
