@@ -103,7 +103,6 @@ export default class RequestFilters extends React.Component {
       <div>
         <input
           type="search"
-          ref="search"
           className="big-search-box"
           placeholder="Filter requests"
           value={this.props.filter.searchFilter}
@@ -134,6 +133,7 @@ export default class RequestFilters extends React.Component {
             <ul>
               <li>Requests will be substring-matched by RequestId and last deploy user.</li>
               <li>Matches at the beginning of the RequestId are sorted above everything else.</li>
+              <li>Matches are case-insensitive.</li>
               <li><strong>You can use <code>*</code> as a wildcard character.</strong></li>
               <li>Use the request state selectors to filter by one request state.</li>
               <li>Use the request type selectors to filter by one or more reqeust types. These are not availible for pending or cleaning requests.</li>
