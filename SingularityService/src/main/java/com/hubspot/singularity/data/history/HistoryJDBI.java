@@ -74,7 +74,7 @@ public abstract class HistoryJDBI implements GetHandle {
   abstract void close();
 
   private static final String GET_TASK_ID_HISTORY_QUERY = "SELECT taskId, requestId, updatedAt, lastTaskStatus, runId FROM taskHistory";
-  private static final String GET_TASK_ID_HISTORY_COUNT_QUERY = "SELECT count(*) FROM taskHistory";
+  private static final String GET_TASK_ID_HISTORY_COUNT_QUERY = "SELECT COUNT(*) FROM taskHistory";
 
 
   private void addWhereOrAnd(StringBuilder sqlBuilder, boolean shouldUseWhere) {
