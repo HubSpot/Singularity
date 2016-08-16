@@ -167,6 +167,23 @@ public class HistoryResource extends AbstractHistoryResource {
   }
 
   @GET
+  @Path("/request/{requestId}/tasks/count")
+  @ApiOperation("Retrieve the history sorted by startedAt for all inactive tasks of a specific request.")
+  public Optional<Integer> getTaskHistoryForRequestCount(
+          @ApiParam("Request ID to match") @PathParam("requestId") String requestId,
+          @ApiParam("Optional deploy ID to match") @QueryParam("deployId") Optional<String> deployId,
+          @ApiParam("Optional host to match") @QueryParam("host") Optional<String> host,
+          @ApiParam("Optional last task status to match") @QueryParam("lastTaskStatus") Optional<ExtendedTaskState> lastTaskStatus,
+          @ApiParam("Optionally match only tasks started after") @QueryParam("startedAfter") Optional<Long> startedAfter,
+          @ApiParam("Optionally match only tasks started before") @QueryParam("startedBefore") Optional<Long> startedBefore,
+          @ApiParam("Sort direction") @QueryParam("orderDirection") Optional<OrderDirection> orderDirection) {
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
+
+    return taskHistoryHelper.getBlendedHistoryCount(new SingularityTaskHistoryQuery(Optional.of(requestId), deployId, host, lastTaskStatus, startedBefore, startedAfter,
+            orderDirection));
+  }
+
+  @GET
   @Path("/request/{requestId}/tasks")
   @ApiOperation("Retrieve the history sorted by startedAt for all inactive tasks of a specific request.")
   public List<SingularityTaskIdHistory> getTaskHistoryForRequest(
@@ -216,7 +233,7 @@ public class HistoryResource extends AbstractHistoryResource {
 
   @GET
   @Path("/request/{requestId}/deploys/count")
-  @ApiOperation("Get deploy history for a single request")
+  @ApiOperation("Get deploy history count for a single request")
   public Optional<Integer> getDeploysCount(
           @ApiParam("Request ID to look up") @PathParam("requestId") String requestId) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);

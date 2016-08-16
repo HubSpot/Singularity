@@ -30,6 +30,9 @@ public interface HistoryManager {
       Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<OrderDirection> orderDirection,
       Optional<Integer> limitStart, Integer limitCount);
 
+  int getTaskIdHistoryCount(Optional<String> requestId, Optional<String> deployId, Optional<String> host,
+      Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter);
+
   Optional<SingularityTaskHistory> getTaskHistory(String taskId);
 
   Optional<SingularityTaskHistory> getTaskHistoryByRunId(String requestId, String runId);

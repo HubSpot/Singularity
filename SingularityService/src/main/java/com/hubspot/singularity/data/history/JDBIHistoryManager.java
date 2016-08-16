@@ -45,6 +45,13 @@ public class JDBIHistoryManager implements HistoryManager {
     return history.getTaskIdHistory(requestId, deployId, host, lastTaskStatus, startedBefore, startedAfter, orderDirection, limitStart, limitCount);
   }
 
+  @Override
+  @Timed
+  public int getTaskIdHistoryCount(Optional<String> requestId, Optional<String> deployId, Optional<String> host, Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore,
+       Optional<Long> startedAfter) {
+    return history.getTaskIdHistoryCount(requestId, deployId, host, lastTaskStatus, startedBefore, startedAfter);
+  }
+
   private String getVarcharField(Optional<String> field, int maxLength) {
     if (!field.isPresent()) {
       return null;

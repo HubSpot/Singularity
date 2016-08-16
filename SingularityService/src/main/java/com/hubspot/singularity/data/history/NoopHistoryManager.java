@@ -58,6 +58,12 @@ public class NoopHistoryManager implements HistoryManager {
   }
 
   @Override
+  public int getTaskIdHistoryCount(Optional<String> requestId, Optional<String> deployId, Optional<String> host, Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore,
+        Optional<Long> startedAfter) {
+    return 0;
+  }
+
+  @Override
   public Optional<SingularityTaskHistory> getTaskHistory(String taskId) {
     return Optional.absent();
   }

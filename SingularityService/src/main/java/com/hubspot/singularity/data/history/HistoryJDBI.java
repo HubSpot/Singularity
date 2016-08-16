@@ -74,6 +74,8 @@ public abstract class HistoryJDBI implements GetHandle {
   abstract void close();
 
   private static final String GET_TASK_ID_HISTORY_QUERY = "SELECT taskId, requestId, updatedAt, lastTaskStatus, runId FROM taskHistory";
+  private static final String GET_TASK_ID_HISTORY_COUNT_QUERY = "SELECT count(*) FROM taskHistory";
+
 
   private void addWhereOrAnd(StringBuilder sqlBuilder, boolean shouldUseWhere) {
     if (shouldUseWhere) {
@@ -154,6 +156,60 @@ public abstract class HistoryJDBI implements GetHandle {
     }
 
     return query.list();
+  }
+
+  public int getTaskIdHistoryCount(Optional<String> requestId, Optional<String> deployId, Optional<String> host,
+      Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter) {
+
+    final Map<String, Object> binds = new HashMap<>();
+    final StringBuilder sqlBuilder = new StringBuilder(GET_TASK_ID_HISTORY_COUNT_QUERY);
+
+    if (requestId.isPresent()) {
+      addWhereOrAnd(sqlBuilder, binds.isEmpty());
+      sqlBuilder.append("requestId = :requestId");
+      binds.put("requestId", requestId.get());
+    }
+
+    if (deployId.isPresent()) {
+      addWhereOrAnd(sqlBuilder, binds.isEmpty());
+      sqlBuilder.append("deployId = :deployId");
+      binds.put("deployId", deployId.get());
+    }
+
+    if (host.isPresent()) {
+      addWhereOrAnd(sqlBuilder, binds.isEmpty());
+      sqlBuilder.append("host = :host");
+      binds.put("host", host.get());
+    }
+
+    if (lastTaskStatus.isPresent()) {
+      addWhereOrAnd(sqlBuilder, binds.isEmpty());
+      sqlBuilder.append("lastTaskStatus = :lastTaskStatus");
+      binds.put("lastTaskStatus", lastTaskStatus.get().name());
+    }
+
+    if (startedBefore.isPresent()) {
+      addWhereOrAnd(sqlBuilder, binds.isEmpty());
+      sqlBuilder.append("startedAt < :startedBefore");
+      binds.put("startedBefore", new Date(startedBefore.get()));
+    }
+
+    if (startedAfter.isPresent()) {
+      addWhereOrAnd(sqlBuilder, binds.isEmpty());
+      sqlBuilder.append("startedAt > :startedAfter");
+      binds.put("startedAfter", new Date(startedAfter.get()));
+    }
+
+    final String sql = sqlBuilder.toString();
+
+    LOG.trace("Generated sql for task search count: {}, binds: {}", sql, binds);
+
+    final Query<Integer> query = getHandle().createQuery(sql).mapTo(Integer.class);
+    for (Map.Entry<String, Object> entry : binds.entrySet()) {
+      query.bind(entry.getKey(), entry.getValue());
+    }
+
+    return query.first();
   }
 
 }
