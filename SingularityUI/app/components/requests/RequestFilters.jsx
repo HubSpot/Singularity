@@ -2,13 +2,20 @@ import React from 'react';
 import Utils from '../../utils';
 import classNames from 'classnames';
 import { Link } from 'react-router';
+import InfoModalButton from '../common/modal/InfoModalButton';
 
-import { Nav, NavItem, Glyphicon, Button, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Nav, NavItem, Glyphicon, Button } from 'react-bootstrap';
 
 export default class RequestFilters extends React.Component {
 
   static propTypes = {
     displayRequestTypeFilters: React.PropTypes.bool
+  };
+
+  constructor(props) {
+    super(props);
+    this.state = {showWildcardModal: false};
+    _.bindAll(this, 'hideWildcardModal', 'showWildcardModal');
   }
 
   static REQUEST_STATES = [
@@ -74,6 +81,14 @@ export default class RequestFilters extends React.Component {
     this.props.onFilterChange(_.extend({}, this.props.filter, {searchFilter: ''}));
   }
 
+  showWildcardModal() {
+    this.setState({showWildcardModal: true});
+  }
+
+  hideWildcardModal() {
+    this.setState({showWildcardModal: false});
+  }
+
   renderStatusFilter() {
     const selectedIndex = _.findIndex(RequestFilters.REQUEST_STATES, (s) => s.filterVal === this.props.filter.state);
     const navItems = RequestFilters.REQUEST_STATES.map((s, index) => {
@@ -100,17 +115,15 @@ export default class RequestFilters extends React.Component {
   renderSearchInput() {
     return (
       <div>
-        <OverlayTrigger placement="bottom" rootClose={true} trigger="click" overlay={<Tooltip id="glob-reminder">* is a wildcard character</Tooltip>} delay={500}>
-          <input
-            type="search"
-            ref="search"
-            className="big-search-box"
-            placeholder="Filter requests"
-            value={this.props.filter.searchFilter}
-            onChange={(...args) => this.handleSearchChange(...args)}
-            maxLength="128"
-          />
-        </OverlayTrigger>
+        <input
+          type="search"
+          ref="search"
+          className="big-search-box"
+          placeholder="Filter requests"
+          value={this.props.filter.searchFilter}
+          onChange={(...args) => this.handleSearchChange(...args)}
+          maxLength="128"
+        />
         <div className="remove-button" onClick={() => this.clearSearch()}></div>
       </div>
     );
@@ -131,6 +144,15 @@ export default class RequestFilters extends React.Component {
       <div className="requests-filter-container">
         <ul className="nav nav-pills nav-pills-multi-select">
           {filterItems}
+          <InfoModalButton title="Filter Requests" className="inline-button" id="filter-requests-hint">
+            <ul>
+              <li>Requests will be substring-matched by RequestId and last deploy user.</li>
+              <li>Matches at the beginning of the RequestId are sorted above everything else.</li>
+              <li><strong>You can use <code>*</code> as a wildcard character.</strong></li>
+              <li>Use the request state selectors to filter by one request state.</li>
+              <li>Use the request type selectors to filter by one or more reqeust types. These are not availible for pending or cleaning requests.</li>
+            </ul>
+          </InfoModalButton>
         </ul>
       </div>
     );
