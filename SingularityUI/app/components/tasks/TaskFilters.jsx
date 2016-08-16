@@ -1,6 +1,6 @@
 import React from 'react';
 import Utils from '../../utils';
-
+import InfoModalButton from '../common/modal/InfoModalButton';
 import { Nav, NavItem, OverlayTrigger, Tooltip, Glyphicon } from 'react-bootstrap';
 
 export default class TaskFilters extends React.Component {
@@ -122,6 +122,15 @@ export default class TaskFilters extends React.Component {
       <div className="requests-filter-container">
         <ul className="nav nav-pills nav-pills-multi-select">
           {filterItems}
+          <InfoModalButton title="Filter Tasks" className="inline-button" id="filter-tasks-hint">
+            <ul>
+              <li>Tasks will be substring-matched by task Id, host and rack.</li>
+              <li>Matches at the beginning of the task Id are sorted above everything else.</li>
+              <li><strong>You can use <code>*</code> as a wildcard character.</strong></li>
+              <li>Use the task state selectors to filter by one task state.</li>
+              <li>Use the request type selectors to filter by one or more reqeust types. These are only availible for active tasks.</li>
+            </ul>
+          </InfoModalButton>
         </ul>
       </div>
     );
