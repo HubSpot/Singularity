@@ -47,6 +47,11 @@ public class NoopHistoryManager implements HistoryManager {
   }
 
   @Override
+  public int getDeployHistoryForRequestCount(String requestId) {
+    return 0;
+  }
+
+  @Override
   public List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> host, Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore,
       Optional<Long> startedAfter, Optional<OrderDirection> orderDirection, Optional<Integer> limitStart, Integer limitCount) {
     return Collections.emptyList();

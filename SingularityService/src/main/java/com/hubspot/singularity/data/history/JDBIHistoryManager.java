@@ -99,6 +99,11 @@ public class JDBIHistoryManager implements HistoryManager {
     return history.getDeployHistoryForRequest(requestId, limitStart, limitCount);
   }
 
+  @Override
+  public int getDeployHistoryForRequestCount(String requestId) {
+    return history.getDeployHistoryForRequestCount(requestId);
+  }
+
   private String getOrderDirection(Optional<OrderDirection> orderDirection) {
     return orderDirection.or(OrderDirection.DESC).name();
   }
