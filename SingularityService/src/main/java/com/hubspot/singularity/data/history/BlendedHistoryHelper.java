@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import com.google.common.base.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,8 +52,8 @@ public abstract class BlendedHistoryHelper<T, Q> {
     throw new IllegalStateException("Comparator requested for query which doesn't implement it");
   }
 
-  public Integer getBlendedHistoryCount(Q id) {
-    return 42;
+  public Optional<Integer> getBlendedHistoryCount(Q id) {
+    return Optional.fromNullable(42);
   }
 
   public List<T> getBlendedHistory(Q id, Integer limitStart, Integer limitCount) {
