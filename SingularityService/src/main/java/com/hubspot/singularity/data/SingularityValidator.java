@@ -437,7 +437,7 @@ public class SingularityValidator {
     }
   }
 
-  public static void checkUserId(String name) {
+  public void checkUserId(String name) {
     checkBadRequest(!Strings.isNullOrEmpty(name), "Name must be present and non-null");
   }
 }
