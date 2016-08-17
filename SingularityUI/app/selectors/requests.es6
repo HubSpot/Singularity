@@ -6,7 +6,10 @@ import _ from 'underscore';
 import Utils from '../utils';
 
 const getRequestsAPI = (state) => state.api.requests;
-export const getUserSettingsAPI = (state) => state.api.userSettings;
+export const getUserSettingsAPI = (state) => {
+  if (!_.isEmpty(state.ui.temporaryUserSettings)) return state.ui.temporaryUserSettings;
+  return state.api.userSettings;
+};
 const getUserAPI = (state) => state.api.user;
 const getSearchFilter = (state) => state.ui.requestsPage;
 
