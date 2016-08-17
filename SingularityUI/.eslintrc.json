@@ -15,6 +15,6 @@
     "Promise": true
   },
   "rules": {
-    "id-length": [2, {"min": 3, "exceptions": ["id", "ui", "s3"]}]
+    "id-length": [2, {"min": 3, "exceptions": ["_", "id", "ui", "s3"]}]
   }
 }
