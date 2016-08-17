@@ -1,5 +1,6 @@
 package com.hubspot.singularity.resources;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -35,9 +36,19 @@ public class UserResource {
 
   @POST
   @Path("/settings")
-  public void setUserSettings(
-      @ApiParam("The user id to use") @QueryParam("userId") String userId,
-      @ApiParam("The new settings") SingularityUserSettings settings) {
-    userManager.updateUserSettings(userId, settings);
+  public void setUserSettings(@ApiParam("The new settings") SingularityUserSettings settings) {
+    userManager.updateUserSettings(settings.getUserId(), settings);
+  }
+
+  @POST
+  @Path("/settings/starred-requests")
+  public void addStarredRequests(@ApiParam("The new starred requests") SingularityUserSettings settings) {
+    userManager.addStarredRequestIds(settings.getUserId(), settings.getStarredRequestIds());
+  }
+
+  @DELETE
+  @Path("/settings/starred-requests")
+  public void deleteStarredRequests(@ApiParam("The new starred requests") SingularityUserSettings settings) {
+    userManager.deleteStarredRequestIds(settings.getUserId(), settings.getStarredRequestIds());
   }
 }
