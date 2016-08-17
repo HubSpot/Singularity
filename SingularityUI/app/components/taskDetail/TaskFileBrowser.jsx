@@ -73,6 +73,7 @@ function TaskFileBrowser (props) {
         rowChunkSize={50}
         paginated={true}
         emptyTableMessage="No files exist in this directory"
+        defaultSortBy="name"
       >
         <Column
           label="Name"
