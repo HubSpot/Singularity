@@ -1,6 +1,7 @@
 import { createSelector } from 'reselect';
 import micromatch from 'micromatch';
 import fuzzy from 'fuzzy';
+import _ from 'underscore';
 
 import Utils from '../utils';
 
