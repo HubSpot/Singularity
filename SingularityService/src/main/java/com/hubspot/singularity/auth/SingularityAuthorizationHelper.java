@@ -115,7 +115,7 @@ public class SingularityAuthorizationHelper {
 
     final boolean userIsAdmin = adminGroups.isEmpty() ? false : groupsIntersect(userGroups, adminGroups);
     final boolean userIsJITA = jitaGroups.isEmpty() ? false : groupsIntersect(userGroups, jitaGroups);
-    final boolean userIsRequestOwner = request.getGroup().isPresent() ? userGroups.contains(request.getGroup().get()) : true;
+    final boolean userIsRequestOwner = request.getGroup().isPresent() ? groupsIntersect(userGroups, request.getAccessGroups().get()) : true;
     final boolean userIsReadOnlyUser = groupsIntersect(userGroups, request.getReadOnlyGroups().or(defaultReadOnlyGroups));
     final boolean userIsPartOfRequiredGroups = requiredGroups.isEmpty() ? true : groupsIntersect(userGroups, requiredGroups);
 

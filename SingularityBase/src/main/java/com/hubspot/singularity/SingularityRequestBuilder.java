@@ -9,6 +9,7 @@ import java.util.Set;
 
 import com.google.common.base.Optional;
 
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class SingularityRequestBuilder {
 
   private final String id;
@@ -39,6 +40,7 @@ public class SingularityRequestBuilder {
   private Optional<Boolean> loadBalanced;
 
   private Optional<String> group;
+  private Optional<Set<String>> accessGroups;
   private Optional<Set<String>> readOnlyGroups;
   private Optional<Boolean> bounceAfterScale;
   private Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides;
@@ -66,6 +68,7 @@ public class SingularityRequestBuilder {
     this.scheduledExpectedRuntimeMillis = Optional.absent();
     this.waitAtLeastMillisAfterTaskFinishesForReschedule = Optional.absent();
     this.group = Optional.absent();
+    this.accessGroups = Optional.absent();
     this.readOnlyGroups = Optional.absent();
     this.bounceAfterScale = Optional.absent();
     this.emailConfigurationOverrides = Optional.absent();
@@ -77,7 +80,7 @@ public class SingularityRequestBuilder {
 
   public SingularityRequest build() {
     return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule, scheduleTimeZone,
-        rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readOnlyGroups,
+        rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, accessGroups, readOnlyGroups,
         bounceAfterScale, skipHealthchecks, emailConfigurationOverrides, Optional.<Boolean>absent(), hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive);
   }
 
@@ -232,6 +235,16 @@ public class SingularityRequestBuilder {
     this.group = group;
     return this;
   }
+
+  public Optional<Set<String>> getAccessGroups() {
+    return accessGroups;
+  }
+
+  public SingularityRequestBuilder setAccessGroups(Optional<Set<String>> accessGroups) {
+    this.accessGroups = accessGroups;
+    return this;
+  }
+
 
   public SingularityRequestBuilder setRequiredSlaveAttributes(Optional<Map<String, String>> requiredSlaveAttributes) {
     this.requiredSlaveAttributes = requiredSlaveAttributes;
