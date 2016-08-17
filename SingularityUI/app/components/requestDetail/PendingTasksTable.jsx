@@ -16,7 +16,7 @@ const PendingTasksTable = ({tasksAPI}) => {
   const tasks = tasksAPI ? tasksAPI.data : [];
 
   if (!tasks.length) {
-    return null;
+    return <div></div>;
   }
 
   return (
