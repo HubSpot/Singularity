@@ -67,12 +67,20 @@ const rootComponent = (Wrapped, title, refresh = _.noop, refreshInterval = true,
   }
 
   handleFocus() {
-    refresh(this.props).catch((reason) => setTimeout(() => { throw new Error(reason); }));
+    const promise = refresh(this.props);
+    if (promise) {
+      promise.catch((reason) => setTimeout(() => { throw new Error(reason); }));
+    }
     this.startRefreshInterval();
   }
 
   startRefreshInterval() {
-    this.refreshInterval = setInterval(() => refresh(this.props).catch((reason) => setTimeout(() => { throw new Error(reason); })), config.globalRefreshInterval);
+    this.refreshInterval = setInterval(() => {
+      const promise = refresh(this.props);
+      if (promise) {
+        promise.catch((reason) => setTimeout(() => { throw new Error(reason); }));
+      }
+    }, config.globalRefreshInterval);
   }
 
   stopRefreshInterval() {

@@ -17,7 +17,9 @@ const killTooltip = (
 export default class KillTaskButton extends Component {
   static propTypes = {
     taskId: PropTypes.string.isRequired,
-    children: PropTypes.node
+    shouldShowWaitForReplacementTask: PropTypes.bool,
+    children: PropTypes.node,
+    name: PropTypes.string
   };
 
   static defaultProps = {
@@ -34,7 +36,12 @@ export default class KillTaskButton extends Component {
     return (
       <span>
         {getClickComponent(this)}
-        <KillTaskModal ref="modal" taskId={this.props.taskId} />
+        <KillTaskModal
+          name={this.props.name}
+          ref="modal"
+          taskId={this.props.taskId}
+          shouldShowWaitForReplacementTask={this.props.shouldShowWaitForReplacementTask}
+        />
       </span>
     );
   }

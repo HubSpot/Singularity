@@ -213,7 +213,10 @@ export const ActiveActions = (
     className="actions-column"
     cellRender={(cellData) => (
       <div className="hidden-xs">
-        <KillTaskButton taskId={cellData.taskId.id} />
+        <KillTaskButton
+          taskId={cellData.taskId.id}
+          shouldShowWaitForReplacementTask={Utils.isIn(cellData.taskRequest.request.requestType, ['SERVICE', 'WORKER'])}
+        />
         <JSONButton className="inline" object={cellData} showOverlay={true}>
           {'{ }'}
         </JSONButton>
