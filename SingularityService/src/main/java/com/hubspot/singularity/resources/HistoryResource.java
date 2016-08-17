@@ -18,6 +18,7 @@ import com.hubspot.singularity.OrderDirection;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityDeployHistory;
 import com.hubspot.singularity.SingularityDeployKey;
+import com.hubspot.singularity.SingularityPaginatedResponse;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityTaskHistory;
@@ -169,18 +170,23 @@ public class HistoryResource extends AbstractHistoryResource {
   @GET
   @Path("/request/{requestId}/tasks/count")
   @ApiOperation("Retrieve the history count for all inactive tasks of a specific request.")
-  public Optional<Integer> getTaskHistoryForRequestCount(
+  public SingularityPaginatedResponse<SingularityTaskIdHistory> getTaskHistoryForRequestCount(
           @ApiParam("Request ID to match") @PathParam("requestId") String requestId,
           @ApiParam("Optional deploy ID to match") @QueryParam("deployId") Optional<String> deployId,
           @ApiParam("Optional host to match") @QueryParam("host") Optional<String> host,
           @ApiParam("Optional last task status to match") @QueryParam("lastTaskStatus") Optional<ExtendedTaskState> lastTaskStatus,
           @ApiParam("Optionally match only tasks started after") @QueryParam("startedAfter") Optional<Long> startedAfter,
           @ApiParam("Optionally match only tasks started before") @QueryParam("startedBefore") Optional<Long> startedBefore,
-          @ApiParam("Sort direction") @QueryParam("orderDirection") Optional<OrderDirection> orderDirection) {
+          @ApiParam("Sort direction") @QueryParam("orderDirection") Optional<OrderDirection> orderDirection,
+          @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
+          @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
-    return taskHistoryHelper.getBlendedHistoryCount(new SingularityTaskHistoryQuery(Optional.of(requestId), deployId, host, lastTaskStatus, startedBefore, startedAfter,
-            orderDirection));
+    final int dataCount = taskHistoryHelper.getBlendedHistoryCount(new SingularityTaskHistoryQuery(Optional.of(requestId), deployId, host, lastTaskStatus, startedBefore, startedAfter, orderDirection)).get();
+    final int limitCount = getLimitCount(count);
+    final List<SingularityTaskIdHistory> data = this.getTaskHistoryForRequest(requestId, deployId, host, lastTaskStatus, startedAfter, startedBefore, orderDirection, count, page);
+
+    return new SingularityPaginatedResponse<>(dataCount, (int) Math.ceil((double) dataCount / limitCount), page, data);
   }
 
   @GET
@@ -233,12 +239,18 @@ public class HistoryResource extends AbstractHistoryResource {
 
   @GET
   @Path("/request/{requestId}/deploys/count")
-  @ApiOperation("Get deploy history count for a single request")
-  public Optional<Integer> getDeploysCount(
-          @ApiParam("Request ID to look up") @PathParam("requestId") String requestId) {
+  @ApiOperation("Get deploy history with metadata for a single request")
+  public SingularityPaginatedResponse<SingularityDeployHistory> getDeploysCount(
+          @ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
+          @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
+          @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
-    return deployHistoryHelper.getBlendedHistoryCount(requestId);
+    final int dataCount = deployHistoryHelper.getBlendedHistoryCount(requestId).get();
+    final int limitCount = getLimitCount(count);
+    final List<SingularityDeployHistory> data = this.getDeploys(requestId, count, page);
+
+    return new SingularityPaginatedResponse<>(dataCount, (int) Math.ceil((double) dataCount / limitCount), page, data);
   }
 
   @GET
