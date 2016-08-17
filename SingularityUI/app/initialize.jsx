@@ -28,8 +28,11 @@ function maybeImportStars(store, fetchUserSettingsApiResponse, userId) {
   const locallyStarredRequests = window.localStorage.hasOwnProperty('starredRequests')
     ? JSON.parse(window.localStorage.getItem('starredRequests'))
     : [];
-  const apiStarredRequests = Utils.maybe(fetchUserSettingsApiResponse.data, 'starredRequestIds') || [];
-  if (_.isEmpty(_.difference(locallyStarredRequests, apiStarredRequests))) return;
+  const apiStarredRequests = Utils.maybe(fetchUserSettingsApiResponse.data, ['starredRequestIds']) || [];
+  if (_.isEmpty(_.difference(locallyStarredRequests, apiStarredRequests))) {
+    deleteLocallyStoredStarredRequests();
+    return;
+  }
   const newSettings = Utils.changeUserSetting(
     fetchUserSettingsApiResponse.data,
     'starredRequestIds',
