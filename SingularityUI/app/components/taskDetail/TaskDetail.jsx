@@ -7,7 +7,6 @@ import Utils from '../../utils';
 import { FetchTaskFiles } from '../../actions/api/sandbox';
 import {
   FetchTaskStatistics,
-  KillTask,
   RunCommandOnTask,
   FetchTaskCleanups
 } from '../../actions/api/tasks';
@@ -25,11 +24,10 @@ import { Alert } from 'react-bootstrap';
 import Breadcrumbs from '../common/Breadcrumbs';
 import JSONButton from '../common/JSONButton';
 import Section from '../common/Section';
-import FormModal from '../common/modal/FormModal';
 import CollapsableSection from '../common/CollapsableSection';
 import NotFound from '../common/NotFound';
 
-import KillTaskButton from '../tasks/KillTaskButton';
+import KillTaskButton from '../common/modalButtons/KillTaskButton';
 
 import TaskFileBrowser from './TaskFileBrowser';
 import ShellCommands from './ShellCommands';
