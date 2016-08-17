@@ -69,7 +69,7 @@ class RunNowModal extends Component {
             {
               name: 'commandLineArgs',
               type: FormModal.INPUT_TYPES.TAGS,
-              label: 'Additional command line input: (optional)',
+              label: 'Additional command line arguments: (optional)',
               defaultValue: this.defaultCommandLineArgs()
             },
             {
