@@ -288,7 +288,7 @@ class UITable extends Component {
     // infinite scrolling
     // Only render a number of rows at a time
     // check to see if we can render of everything
-    const maxVisibleRows = this.state.chunkNum * this.state.rowChunkSize;
+    const maxVisibleRows = this.props.renderAllRows ? this.state.data.length : this.state.chunkNum * this.state.rowChunkSize;
     const rows = this.state.data.slice(0, maxVisibleRows).map((row) => {
       return this.renderTableRow(row);
     });
@@ -452,6 +452,7 @@ UITable.propTypes = {
   keyGetter: PropTypes.func.isRequired,
   children: PropTypes.arrayOf(PropTypes.node).isRequired,
   paginated: PropTypes.bool,
+  renderAllRows: PropTypes.bool,
   rowChunkSize: PropTypes.number,
   rowChunkSizeChoices: PropTypes.arrayOf(PropTypes.number),
   maxPaginationButtons: PropTypes.number,

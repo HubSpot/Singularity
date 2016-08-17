@@ -29,6 +29,8 @@ import FormModal from '../common/modal/FormModal';
 import CollapsableSection from '../common/CollapsableSection';
 import NotFound from '../common/NotFound';
 
+import KillTaskButton from '../tasks/KillTaskButton';
+
 import TaskFileBrowser from './TaskFileBrowser';
 import ShellCommands from './ShellCommands';
 import TaskAlerts from './TaskAlerts';
@@ -53,6 +55,9 @@ class TaskDetail extends Component {
           instanceNo: PropTypes.number.isRequired
         }).isRequired,
         taskRequest: PropTypes.shape({
+          request: PropTypes.shape({
+            requestType: PropTypes.string.isRequired
+          }).isRequired,
           deploy: PropTypes.shape({
             customExecutorCmd: PropTypes.string
           }).isRequired
@@ -109,7 +114,6 @@ class TaskDetail extends Component {
     fetchTaskHistory: PropTypes.func.isRequired,
     fetchTaskStatistics: PropTypes.func.isRequired,
     fetchTaskFiles: PropTypes.func.isRequired,
-    killTask: PropTypes.func.isRequired,
     runCommandOnTask: PropTypes.func.isRequired,
     group: PropTypes.object
   };
@@ -169,12 +173,6 @@ class TaskDetail extends Component {
     return files;
   }
 
-  killTask(data) {
-    this.props.killTask(this.props.params.taskId, data).then(() => {
-      this.props.fetchTaskHistory(this.props.params.taskId);
-    });
-  }
-
   renderFiles(files) {
     if (!files || _.isUndefined(files.currentDirectory)) {
       return (
@@ -223,41 +221,15 @@ class TaskDetail extends Component {
       removeText = this.props.task.isCleaning ? 'Destroy task' : 'Kill Task';
     }
     const removeBtn = this.props.task.isStillRunning && (
-      <span>
-        <FormModal
-          name={removeText}
-          ref="confirmKillTask"
-          action={removeText}
-          onConfirm={(event) => this.killTask(event)}
-          buttonStyle="danger"
-          formElements={[
-            {
-              name: 'waitForReplacementTask',
-              type: FormModal.INPUT_TYPES.BOOLEAN,
-              label: 'Wait for replacement task to start before killing task',
-              defaultValue: true
-            },
-            {
-              name: 'message',
-              type: FormModal.INPUT_TYPES.STRING,
-              label: 'Message (optional)'
-            }
-          ]}>
-          <span>
-            <p>Are you sure you want to kill this task?</p>
-            <pre>{this.props.params.taskId}</pre>
-            <p>
-                Long running process will be started again instantly, scheduled
-                tasks will behave as if the task failed and may be rescheduled
-                to run in the future depending on whether or not the request
-                has <code>numRetriesOnFailure</code> set.
-            </p>
-          </span>
-        </FormModal>
-        <a className="btn btn-danger" onClick={() => this.refs.confirmKillTask.show()}>
+      <KillTaskButton
+        name={removeText}
+        taskId={this.props.params.taskId}
+        shouldShowWaitForReplacementTask={Utils.isIn(this.props.task.task.taskRequest.request.requestType, ['SERVICE', 'WORKER'])}
+      >
+        <a className="btn btn-danger">
           {removeText}
         </a>
-      </span>
+      </KillTaskButton>
     );
     const terminationAlert = this.props.task.isStillRunning && !cleanup && this.props.task.isCleaning && (
       <Alert bsStyle="warning">
@@ -489,7 +461,6 @@ function mapStateToProps(state, ownProps) {
 function mapDispatchToProps(dispatch) {
   return {
     runCommandOnTask: (taskId, commandName) => dispatch(RunCommandOnTask.trigger(taskId, commandName)),
-    killTask: (taskId, data) => dispatch(KillTask.trigger(taskId, data)),
     fetchTaskHistory: (taskId) => dispatch(FetchTaskHistory.trigger(taskId, true)),
     fetchTaskStatistics: (taskId) => dispatch(FetchTaskStatistics.trigger(taskId)),
     fetchTaskFiles: (taskId, path, catchStatusCodes = []) => dispatch(FetchTaskFiles.trigger(taskId, path, catchStatusCodes.concat([404]))),

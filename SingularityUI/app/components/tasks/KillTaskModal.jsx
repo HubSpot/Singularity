@@ -8,7 +8,9 @@ import FormModal from '../common/modal/FormModal';
 class KillTaskModal extends Component {
   static propTypes = {
     taskId: PropTypes.string.isRequired,
-    killTask: PropTypes.func.isRequired
+    shouldShowWaitForReplacementTask: PropTypes.bool,
+    killTask: PropTypes.func.isRequired,
+    name: PropTypes.string
   };
 
   constructor() {
@@ -17,31 +19,37 @@ class KillTaskModal extends Component {
     this.show = this.show.bind(this);
   }
 
+  static defaultProps = {
+    name: 'Kill Task'
+  };
+
   show() {
     this.refs.confirmKillTask.show();
   }
 
   render() {
+    let formElements = [];
+    if (this.props.shouldShowWaitForReplacementTask) {
+      formElements = [{
+        name: 'waitForReplacementTask',
+        type: FormModal.INPUT_TYPES.BOOLEAN,
+        label: 'Wait for replacement task to start before killing task',
+        defaultValue: true
+      }];
+    }
+    formElements.push({
+      name: 'message',
+      type: FormModal.INPUT_TYPES.STRING,
+      label: 'Message (optional)'
+    });
     return (
       <FormModal
-        name="Kill Task"
+        name={this.props.name}
         ref="confirmKillTask"
-        action="Kill Task"
+        action={this.props.name}
         onConfirm={(data) => this.props.killTask(data)}
         buttonStyle="danger"
-        formElements={[
-          {
-            name: 'waitForReplacementTask',
-            type: FormModal.INPUT_TYPES.BOOLEAN,
-            label: 'Wait for replacement task to start before killing task',
-            defaultValue: true
-          },
-          {
-            name: 'message',
-            type: FormModal.INPUT_TYPES.STRING,
-            label: 'Message (optional)'
-          }
-        ]}>
+        formElements={formElements}>
         <span>
           <p>Are you sure you want to kill this task?</p>
           <pre>{this.props.taskId}</pre>
