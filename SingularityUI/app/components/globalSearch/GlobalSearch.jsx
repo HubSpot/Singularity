@@ -1,25 +1,55 @@
 import React from 'react';
 import classNames from 'classnames';
+import { connect } from 'react-redux';
+import { withRouter } from 'react-router';
+import { FetchRequests } from '../../actions/api/requests';
+import { SetVisibility } from '../../actions/ui/globalSearch';
 
 import { Typeahead } from 'react-typeahead';
 import fuzzy from 'fuzzy';
+import key from 'keymaster';
 
 class GlobalSearch extends React.Component {
-  constructor(...args) {
-    super(...args);
-    this.optionSelected = this.optionSelected.bind(this);
-    this.resetSelection = this.resetSelection.bind(this);
-    this.clear = this.clear.bind(this);
-    this.focus = this.focus.bind(this);
-    this.componentDidUpdate = this.componentDidUpdate.bind(this);
-    this.render = this.render.bind(this);
+
+  static propTypes = {
+    requests: React.PropTypes.array,
+    visible: React.PropTypes.bool,
+    getRequests: React.PropTypes.func,
+    setVisibility: React.PropTypes.func,
+    router: React.PropTypes.object
   }
 
-  optionSelected(requestIdObject) {
-    const requestId = this.getValueFromOption(requestIdObject);
-    app.router.navigate(`/request/${ requestId }`, { trigger: true });
-    this.clear();
-    return this.props.onHide();
+  constructor() {
+    super();
+    _.bindAll(this, 'optionSelected', 'getValueFromOption');
+  }
+
+  componentWillMount() {
+    this.props.getRequests();
+
+    // Key events with the 'input' scope get triggered even when an input is focused
+    key.filter = (event) => {
+      const tagName = (event.target || event.srcElement).tagName;
+      key.setScope(/^(INPUT|TEXTAREA|SELECT)$/.test(tagName) ? 'input' : 'noInput');
+      return true;
+    };
+    key('t, s', 'noInput', () => {
+      this.props.setVisibility(true);
+      return false;
+    });
+    key('esc, escape', 'input', () => this.props.setVisibility(false));
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.visible && !prevProps.visible) {
+      this.focus();
+    }
+  }
+
+  componentWillUnmount() {
+    key.unbind('t', 'noInput');
+    key.unbind('s', 'noInput');
+    key.unbind('esc, escape', 'input');
   }
 
   resetSelection() {
@@ -30,12 +60,12 @@ class GlobalSearch extends React.Component {
 
   clear() {
     this.refs.typeahead.setEntryText('');
-    return this.resetSelection();
+    this.resetSelection();
   }
 
   focus() {
     this.refs.typeahead.focus();
-    return this.resetSelection();
+    this.resetSelection();
   }
 
   searchOptions(inputValue, options) {
@@ -50,65 +80,81 @@ class GlobalSearch extends React.Component {
     return searched;
   }
 
-  renderOption(option, index) {
-    // transform fuzzy string into react component
-    const bolded = option.string.map(function(matchInfo) {
-      if (matchInfo.match) {
-        return <b>{matchInfo.char}</b>;
-      } else {
-        return <span>{matchInfo.char}</span>;
-      }
-    });
-
-    return <span>{bolded}</span>;
-  }
-
   getValueFromOption(option) {
     return option.original;
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    if (this.props.visible && (this.props.visible !== prevProps.visible)) {
-      return this.focus();
-    }
+  optionSelected(requestIdObject) {
+    const requestId = this.getValueFromOption(requestIdObject);
+    this.props.router.push(`/request/${ requestId }`, { trigger: true });
+    this.clear();
+    this.props.setVisibility(false);
+  }
+
+  renderOption(option, index) {
+    // transform fuzzy string into react component
+    const bolded = option.string.map((matchInfo) => {
+      if (matchInfo.match) {
+        return <strong>{matchInfo.char}</strong>;
+      }
+      return matchInfo.char;
+    });
+
+    return <span key={index}>{bolded}</span>;
   }
 
   render() {
-    const options = _.pluck(this.props.requests.toJSON(), 'id');
+    const options = _.map(this.props.requests, (r) => r.request.id);
 
-    const globalSearchClasses = classNames({
-      'global-search': true,
+    const globalSearchClasses = classNames('global-search', {
       'global-search-active': this.props.visible
     });
 
-    return (
-      <div className={globalSearchClasses}>
-        <div className='container'>
-          <div className='close-button-container'>
-            <a onClick={this.props.onHide}>&times;</a>
-          </div>
+    if (this.props.visible) {
+      return (
+        <div className={globalSearchClasses}>
+          <div className="container">
+            <div className="close-button-container">
+              <a onClick={() => this.props.setVisibility(false)}>&times;</a>
+            </div>
 
-          <p className='hidden-xs text-muted tip'>
-            Protip: You can press <kbd>s</kbd> or <kbd>t</kbd> to open global search and <kbd>esc</kbd> to close it.
-          </p>
-          <Typeahead
-            ref='typeahead'
-            options={options}
-            maxVisible={10}
-            customClasses={{
-              input: 'big-search-box'
-            }}
-            placeholder='Search all requests'
-            onOptionSelected={this.optionSelected}
-            searchOptions={this.searchOptions}
-            displayOption={this.renderOption}
-            formInputOption={this.getValueFromOption}
-            inputDisplayOption={this.getValueFromOption}
-          />
+            <p className="hidden-xs text-muted tip">
+              Protip: You can press <kbd>s</kbd> or <kbd>t</kbd> to open global search and <kbd>esc</kbd> to close it.
+            </p>
+            <Typeahead
+              ref="typeahead"
+              options={options}
+              maxVisible={10}
+              customClasses={{
+                input: 'big-search-box'
+              }}
+              placeholder="Search all requests"
+              onOptionSelected={this.optionSelected}
+              searchOptions={this.searchOptions}
+              displayOption={this.renderOption}
+              formInputOption={this.getValueFromOption}
+              inputDisplayOption={this.getValueFromOption}
+            />
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
+    return null;
   }
 }
 
-export default GlobalSearch;
+function mapDispatchToProps(dispatch) {
+  return {
+    getRequests: () => dispatch(FetchRequests.trigger()),
+    setVisibility: (visible) => dispatch(SetVisibility(visible))
+  };
+}
+
+function mapStateToProps(state) {
+  return {
+    requests: state.api.requests.data,
+    visible: state.ui.globalSearch.visible
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(GlobalSearch));
