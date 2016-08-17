@@ -21,7 +21,7 @@ export const getStarredRequests = createSelector(
   [getStarred, getRequestsAPI],
   (starredData, requestsAPI) => {
     const requests = findRequestIds(requestsAPI.data);
-    return requests.filter((request) => starredData.has(request.request.id));
+    return requests.filter((requestParent) => starredData.has(requestParent.request.id));
   }
 );
 
@@ -36,9 +36,9 @@ export const getUserRequests = createSelector(
 
     const requests = findRequestIds(requestsAPI.data);
 
-    return requests.filter((request) => {
+    return requests.filter((requestParent) => {
       const activeDeployUser = Utils.maybe(
-        request,
+        requestParent,
         ['requestDeployState', 'activeDeploy', 'user']
       );
 
@@ -49,7 +49,7 @@ export const getUserRequests = createSelector(
         }
       }
 
-      const requestOwners = request.request.owners;
+      const requestOwners = requestParent.request.owners;
       if (requestOwners === undefined) {
         return false;
       }
@@ -78,8 +78,8 @@ export const getUserRequestTotals = createSelector(
       SERVICE: 0
     };
 
-    for (const request of userRequests) {
-      userRequestTotals[request.request.requestType] += 1;
+    for (const requestParent of userRequests) {
+      userRequestTotals[requestParent.request.requestType] += 1;
     }
 
     return userRequestTotals;
@@ -93,19 +93,19 @@ export const getFilteredRequests = createSelector(
 
     // filter by type
     if (searchFilter.typeFilter !== 'ALL') {
-      filteredRequests = filteredRequests.filter((request) => {
-        return searchFilter.typeFilter === request.request.requestType;
+      filteredRequests = filteredRequests.filter((requestParent) => {
+        return searchFilter.typeFilter === requestParent.request.requestType;
       });
     }
 
     // filter by state
-    filteredRequests = filteredRequests.filter((request) => {
-      return searchFilter.stateFilter.indexOf(request.state) > -1;
+    filteredRequests = filteredRequests.filter((requestParent) => {
+      return searchFilter.stateFilter.indexOf(requestParent.state) > -1;
     });
 
-    const getUser = (request) => {
-      if ('requestDeployState' in request && 'activeDeploy' in request.requestDeployState) {
-        return request.requestDeployState.activeDeploy.user || '';
+    const getUser = (requestParent) => {
+      if ('requestDeployState' in requestParent && 'activeDeploy' in requestParent.requestDeployState) {
+        return requestParent.requestDeployState.activeDeploy.user || '';
       }
       return null;
     };
@@ -116,11 +116,11 @@ export const getFilteredRequests = createSelector(
       return filteredRequests;
     }
     if (Utils.isGlobFilter(searchFilter.textFilter)) {
-      const byId = filteredRequests.filter((request) => {
-        return micromatch.any(request.request.id, `${searchFilter.textFilter}*`);
+      const byId = filteredRequests.filter((requestParent) => {
+        return micromatch.any(requestParent.request.id, `${searchFilter.textFilter}*`);
       });
-      const byUser = filteredRequests.filter((request) => {
-        const user = getUser(request);
+      const byUser = filteredRequests.filter((requestParent) => {
+        const user = getUser(requestParent);
         if (user !== null) {
           return micromatch.any(user, `${searchFilter.textFilter}*`);
         }
@@ -137,7 +137,7 @@ export const getFilteredRequests = createSelector(
         searchFilter.textFilter,
         filteredRequests,
         {
-          extract: (request) => request.request.id
+          extract: (requestParent) => requestParent.request.id
         }
       );
 
@@ -145,7 +145,7 @@ export const getFilteredRequests = createSelector(
         searchFilter.textFilter,
         filteredRequests,
         {
-          extract: (request) => getUser(request) || ''
+          extract: (requestParent) => getUser(requestParent) || ''
         }
       );
 
@@ -153,8 +153,8 @@ export const getFilteredRequests = createSelector(
         _.pluck(
           _.sortBy(
             _.union(byUser, byId),
-            (request) => {
-              return Utils.fuzzyAdjustScore(searchFilter.textFilter, request);
+            (requestParent) => {
+              return Utils.fuzzyAdjustScore(searchFilter.textFilter, requestParent);
             }
           ),
           'original'

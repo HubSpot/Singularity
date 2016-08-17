@@ -21,7 +21,7 @@ class RequestsTable extends Component {
     return (
       <UITable
         data={this.props.requests}
-        keyGetter={(request) => request.request.id}
+        keyGetter={(requestParent) => requestParent.request.id}
         asyncSort={true}
         paginated={true}
       >

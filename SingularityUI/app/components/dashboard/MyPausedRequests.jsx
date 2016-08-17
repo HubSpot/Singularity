@@ -19,7 +19,7 @@ const MyPausedRequests = ({userRequests}) => {
     pausedRequestsSection = (
       <UITable
         data={pausedRequests}
-        keyGetter={(request) => request.request.id}
+        keyGetter={(requestParent) => requestParent.request.id}
         asyncSort={true}
         renderAllRows={true}
       >

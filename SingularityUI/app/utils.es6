@@ -255,64 +255,64 @@ const Utils = {
   request: {
     // all of these expect a RequestParent object
     LONG_RUNNING_TYPES: new Set(['WORKER', 'SERVICE']),
-    hasActiveDeploy: (request) => {
-      return Utils.maybe(request, ['activeDeploy'], false) || Utils.maybe(request, ['requestDeployState', 'activeDeploy'], false);
+    hasActiveDeploy: (requestParent) => {
+      return Utils.maybe(requestParent, ['activeDeploy'], false) || Utils.maybe(requestParent, ['requestDeployState', 'activeDeploy'], false);
     },
-    isDeploying: (request) => {
-      return Utils.maybe(request, ['pendingDeploy'], false);
+    isDeploying: (requestParent) => {
+      return Utils.maybe(requestParent, ['pendingDeploy'], false);
     },
-    isLongRunning: (request) => {
-      return Utils.request.LONG_RUNNING_TYPES.has(request.request.requestType);
+    isLongRunning: (requestParent) => {
+      return Utils.request.LONG_RUNNING_TYPES.has(requestParent.request.requestType);
     },
-    canBeRunNow: (request) => {
-      return request.state === 'ACTIVE'
-        && new Set(['SCHEDULED', 'ON_DEMAND']).has(request.request.requestType)
-        && Utils.request.hasActiveDeploy(request);
+    canBeRunNow: (requestParent) => {
+      return requestParent.state === 'ACTIVE'
+        && new Set(['SCHEDULED', 'ON_DEMAND']).has(requestParent.request.requestType)
+        && Utils.request.hasActiveDeploy(requestParent);
     },
-    canBeBounced: (request) => {
-      return new Set(['ACTIVE', 'SYSTEM_COOLDOWN']).has(request.state)
-        && Utils.request.isLongRunning(request);
+    canBeBounced: (requestParent) => {
+      return new Set(['ACTIVE', 'SYSTEM_COOLDOWN']).has(requestParent.state)
+        && Utils.request.isLongRunning(requestParent);
     },
-    canBeScaled: (request) => {
-      return new Set(['ACTIVE', 'SYSTEM_COOLDOWN']).has(request.state)
-        && Utils.request.hasActiveDeploy(request)
-        && Utils.request.isLongRunning(request);
+    canBeScaled: (requestParent) => {
+      return new Set(['ACTIVE', 'SYSTEM_COOLDOWN']).has(requestParent.state)
+        && Utils.request.hasActiveDeploy(requestParent)
+        && Utils.request.isLongRunning(requestParent);
     },
     runningInstanceCount: (activeTasksForRequest) => {
       return activeTasksForRequest.filter(
         (task) => task.lastTaskState === 'TASK_RUNNING'
       ).length;
     },
-    deployingInstanceCount: (request, activeTasksForRequest) => {
-      if (!request.pendingDeploy) {
+    deployingInstanceCount: (requestParent, activeTasksForRequest) => {
+      if (!requestParent.pendingDeploy) {
         return 0;
       }
       return activeTasksForRequest.filter((task) => (
         task.lastTaskState === 'TASK_RUNNING'
-        && task.taskId.deployId === request.pendingDeploy.id
+        && task.taskId.deployId === requestParent.pendingDeploy.id
       )).length;
     },
     // other
-    canDisableHealthchecks: (request) => {
-      return !!request.activeDeploy
-        && !!request.activeDeploy.healthcheckUri
-        && request.state !== 'PAUSED'
-        && !request.expiringSkipHealthchecks;
+    canDisableHealthchecks: (requestParent) => {
+      return !!requestParent.activeDeploy
+        && !!requestParent.activeDeploy.healthcheckUri
+        && requestParent.state !== 'PAUSED'
+        && !requestParent.expiringSkipHealthchecks;
     },
-    pauseDisabled: (request) => {
-      const expiringPause = Utils.maybe(request, 'expiringPause');
+    pauseDisabled: (requestParent) => {
+      const expiringPause = Utils.maybe(requestParent, 'expiringPause');
       return expiringPause
         ? (expiringPause.startMillis + expiringPause.expiringAPIRequestObject.durationMillis) > new Date().getTime()
         : false;
     },
-    scaleDisabled: (request) => {
-      const expiringScale = Utils.maybe(request, 'expiringScale');
+    scaleDisabled: (requestParent) => {
+      const expiringScale = Utils.maybe(requestParent, 'expiringScale');
       return expiringScale
         ? (expiringScale.startMillis + expiringScale.expiringAPIRequestObject.durationMillis) > new Date().getTime()
         : false;
     },
-    bounceDisabled: (request) => {
-      const expiringBounce = Utils.maybe(request, 'expiringBounce');
+    bounceDisabled: (requestParent) => {
+      const expiringBounce = Utils.maybe(requestParent, 'expiringBounce');
       return expiringBounce
         ? (expiringBounce.startMillis + expiringBounce.expiringAPIRequestObject.durationMillis) > new Date().getTime()
         : false;

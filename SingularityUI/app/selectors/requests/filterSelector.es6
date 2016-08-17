@@ -13,10 +13,10 @@ export default createSelector([getRequests, getFilter], (requests, filter) => {
   let stateFilter = null;
   switch (filter.state) {
     case 'activeDeploy':
-      stateFilter = (request) => request.hasActiveDeploy;
+      stateFilter = (requestParent) => requestParent.hasActiveDeploy;
       break;
     case 'noDeploy':
-      stateFilter = (request) => !request.hasActiveDeploy;
+      stateFilter = (requestParent) => !requestParent.hasActiveDeploy;
       break;
     default:
       break;
@@ -27,24 +27,24 @@ export default createSelector([getRequests, getFilter], (requests, filter) => {
 
   // Filter by request type
   if (!_.contains(['pending', 'cleanup'], filter.type)) {
-    filteredRequests = _.filter(filteredRequests, (request) => request.request && _.contains(filter.subFilter, request.request.requestType));
+    filteredRequests = _.filter(filteredRequests, (requestParent) => requestParent.request && _.contains(filter.subFilter, requestParent.request.requestType));
   }
 
   // Filter by glob or fuzzy string
   if (filter.searchFilter) {
-    const id = {extract: (request) => request.id || ''};
-    const user = {extract: (request) => `${request.hasActiveDeploy ? request.requestDeployState.activeDeploy.user : ''}`};
+    const id = {extract: (requestParent) => requestParent.id || ''};
+    const user = {extract: (requestParent) => `${requestParent.hasActiveDeploy ? requestParent.requestDeployState.activeDeploy.user : ''}`};
 
     if (Utils.isGlobFilter(filter.searchFilter)) {
-      const res1 = _.filter(filteredRequests, (request) => {
-        return micromatch.any(user.extract(request), `${filter.searchFilter}*`);
+      const res1 = _.filter(filteredRequests, (requestParent) => {
+        return micromatch.any(user.extract(requestParent), `${filter.searchFilter}*`);
       });
-      const res2 = _.filter(filteredRequests, (request) => {
-        return micromatch.any(id.extract(request), `${filter.searchFilter}*`);
+      const res2 = _.filter(filteredRequests, (requestParent) => {
+        return micromatch.any(id.extract(requestParent), `${filter.searchFilter}*`);
       });
       filteredRequests = _.union(res1, res2).reverse();
     } else {
-      _.each(filteredRequests, (request) => {request.id = id.extract(request);});
+      _.each(filteredRequests, (requestParent) => {requestParent.id = id.extract(requestParent);});
       const res1 = fuzzy.filter(filter.searchFilter, filteredRequests, user);
       const res2 = fuzzy.filter(filter.searchFilter, filteredRequests, id);
       filteredRequests = _.uniq(_.pluck(_.sortBy(_.union(res1, res2), (task) => Utils.fuzzyAdjustScore(filter.searchFilter, task)), 'original').reverse());
