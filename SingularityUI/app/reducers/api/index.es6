@@ -5,7 +5,9 @@ import buildKeyedApiActionReducer from './keyed';
 import {
   FetchUser,
   FetchUserSettings,
-  UpdateUserSettings
+  UpdateUserSettings,
+  AddStarredRequests,
+  DeleteStarredRequests
 } from '../../actions/api/user';
 
 import {
@@ -76,7 +78,9 @@ import { FetchGroups } from '../../actions/api/requestGroups';
 
 const user = buildApiActionReducer(FetchUser);
 const userSettings = buildApiActionReducer(FetchUserSettings);
-const updateUserSettings = buildApiActionReducer(UpdateUserSettings);
+const updateUserSettings = buildApiActionReducer(UpdateUserSettings, []);
+const addStarredRequests = buildApiActionReducer(AddStarredRequests, []);
+const deleteStarredRequests = buildApiActionReducer(DeleteStarredRequests, []);
 const webhooks = buildApiActionReducer(FetchWebhooks, []);
 const slaves = buildApiActionReducer(FetchSlaves, []);
 const freezeSlave = buildApiActionReducer(FreezeSlave, []);
@@ -123,6 +127,8 @@ export default combineReducers({
   user,
   userSettings,
   updateUserSettings,
+  addStarredRequests,
+  deleteStarredRequests,
   webhooks,
   slaves,
   freezeSlave,

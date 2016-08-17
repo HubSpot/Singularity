@@ -21,3 +21,21 @@ export const UpdateUserSettings = buildJsonApiAction(
     body: settings
   })
 );
+
+export const AddStarredRequests = buildJsonApiAction(
+  'ADD_STARRED_REQUESTS',
+  'POST',
+  (userId, starredRequestIds) => ({
+    url: '/users/settings/starred-requests',
+    body: { userId, starredRequestIds }
+  })
+);
+
+export const DeleteStarredRequests = buildJsonApiAction(
+  'DELETE_STARRED_REQUESTS',
+  'DELETE',
+  (userId, starredRequestIds) => ({
+    url: '/users/settings/starred-requests',
+    body: { userId, starredRequestIds }
+  })
+);
