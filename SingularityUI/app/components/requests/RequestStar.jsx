@@ -2,7 +2,7 @@ import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 
 import { getUserSettingsAPI } from '../../selectors/requests';
-import { FetchUserSettings, UpdateUserSettings } from '../../actions/api/user';
+import { FetchUserSettings, AddStarredRequests, DeleteStarredRequests } from '../../actions/api/user';
 import { UpdateTemporaryUserSettings, ClearTemporaryUserSettings } from '../../actions/ui/temporaryUserSettings';
 import Utils from '../../utils';
 
@@ -30,10 +30,18 @@ const mapStateToProps = (state, ownProps) => ({
 const mapDispatchToProps = (dispatch) => ({
   changeStar: (requestId, userId, settings) => {
     if (userId) {
-      const newSettings = Utils.request.toggleStar(requestId, settings);
-      dispatch(UpdateTemporaryUserSettings(newSettings));
+      let temporaryUserSettings;
+      let promise;
+      if (Utils.request.isStarred(requestId, settings)) {
+        temporaryUserSettings = Utils.request.removeStar(requestId, settings);
+        promise = dispatch(DeleteStarredRequests.trigger(userId, [requestId]));
+      } else {
+        temporaryUserSettings = Utils.request.addStar(requestId, settings);
+        promise = dispatch(AddStarredRequests.trigger(userId, [requestId]));
+      }
+      dispatch(UpdateTemporaryUserSettings(temporaryUserSettings));
       const clearTemporaryUserSettings = () => dispatch(ClearTemporaryUserSettings());
-      return dispatch(UpdateUserSettings.trigger(userId, newSettings)).then(
+      return promise.then(
         () => dispatch(FetchUserSettings.trigger(userId)).then(clearTemporaryUserSettings),
         clearTemporaryUserSettings
       );
