@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.app.setupUser();
 
     // set up request groups
-    store.dispatch(FetchGroups.trigger());
+    store.dispatch(FetchGroups.trigger([404, 500]));
 
     // Render the page content
     return ReactDOM.render(<AppRouter store={store} />, document.getElementById('root'), () => {
