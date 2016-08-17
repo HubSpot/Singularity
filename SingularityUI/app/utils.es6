@@ -134,7 +134,7 @@ const Utils = {
 
   joinPath(firstPart, secondPart) {
     if (!firstPart.endsWith('/')) firstPart += '/';
-    if (secondPart.startsWith('/')) secondPart = secondPart.substring(1, secondPart.length);
+    if (secondPart.startsWith('/')) secondPart = secondPart.substring(1);
     return `${firstPart}${secondPart}`;
   },
 
