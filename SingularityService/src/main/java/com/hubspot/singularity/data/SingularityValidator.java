@@ -456,7 +456,6 @@ public class SingularityValidator {
     }
   }
 
-
   public SingularityPriorityFreeze checkSingularityPriorityFreeze(SingularityPriorityFreeze priorityFreeze) {
     checkBadRequest(priorityFreeze.getMinimumPriorityLevel() > 0 && priorityFreeze.getMinimumPriorityLevel() <= 1, "minimumPriorityLevel %s is invalid, must be greater than 0 and less than or equal to 1.", priorityFreeze.getMinimumPriorityLevel());
 
@@ -499,7 +498,7 @@ public class SingularityValidator {
         .build();
   }
 
-  public static void checkUserId(String name) {
+  public void checkUserId(String name) {
     checkBadRequest(!Strings.isNullOrEmpty(name), "Name must be present and non-null");
   }
 }

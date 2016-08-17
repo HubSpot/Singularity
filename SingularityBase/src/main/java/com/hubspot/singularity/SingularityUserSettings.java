@@ -1,27 +1,47 @@
 package com.hubspot.singularity;
 
-import java.util.Objects;
+import java.util.Collections;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Objects;
 
 public class SingularityUserSettings {
+  private final String userId;
   private final Set<String> starredRequestIds;
 
   @JsonCreator
-  public SingularityUserSettings(@JsonProperty("starredRequestIds") Set<String> starredRequestIds) {
-    this.starredRequestIds = starredRequestIds;
+  public SingularityUserSettings(
+      @JsonProperty("userId") String userId,
+      @JsonProperty("starredRequestIds") Set<String> starredRequestIds) {
+    this.userId = userId;
+    this.starredRequestIds = Objects.firstNonNull(starredRequestIds, Collections.<String>emptySet());
+  }
+
+  public String getUserId() {
+    return userId;
   }
 
   public Set<String> getStarredRequestIds() {
     return starredRequestIds;
   }
 
+  public SingularityUserSettings addStarredRequestIds(Set<String> newStarredRequestIds) {
+    starredRequestIds.addAll(newStarredRequestIds);
+    return this;
+  }
+
+  public SingularityUserSettings deleteStarredRequestIds(Set<String> oldStarredRequestIds) {
+    starredRequestIds.removeAll(oldStarredRequestIds);
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityUserSettings[" +
-        "starredRequestIds=" + starredRequestIds +
+        "userId=" + userId +
+        ", starredRequestIds=" + starredRequestIds +
         ']';
   }
 
@@ -33,12 +53,21 @@ public class SingularityUserSettings {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
+
     SingularityUserSettings that = (SingularityUserSettings) o;
-    return Objects.equals(starredRequestIds, that.starredRequestIds);
+
+    if (!Objects.equal(userId, that.userId)) {
+      return false;
+    }
+    if (!Objects.equal(starredRequestIds, that.starredRequestIds)) {
+      return false;
+    }
+
+    return true;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(starredRequestIds);
+    return Objects.hashCode(userId, starredRequestIds);
   }
 }
