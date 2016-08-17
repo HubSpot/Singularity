@@ -25,11 +25,13 @@ class Column extends Component {
     label: '',
     sortable: false,
     sortData: (cellData) => cellData,
-    sortFunc: (thingOne, thingTwo) => {
-      if (thingOne < thingTwo) {
+    /* eslint-disable id-length */ // Exception for comparator
+    sortFunc: (a, b) => {
+      /* eslint-enable id-length */
+      if (a < b) {
         return -1;
       }
-      if (thingOne > thingTwo) {
+      if (a > b) {
         return 1;
       }
       return 0;

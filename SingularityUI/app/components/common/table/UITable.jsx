@@ -164,10 +164,12 @@ class UITable extends Component {
     }
 
     const { cellData, sortData } = sortCol.props;
-    const sorted = data.concat().sort((thingOne, thingTwo) => {
+    /* eslint-disable id-length */ // Exception for comparator
+    const sorted = data.concat().sort((a, b) => {
+      /* eslint-enable id-length */
       return sortCol.props.sortFunc(
-        sortData(cellData(thingOne), thingOne),
-        sortData(cellData(thingTwo), thingTwo)
+        sortData(cellData(a), a),
+        sortData(cellData(b), b)
       );
     });
 
