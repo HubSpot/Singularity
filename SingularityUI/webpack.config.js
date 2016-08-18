@@ -1,30 +1,26 @@
 var webpack = require('webpack');
+var CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
 var path = require('path');
 
-dest = path.resolve(__dirname, 'dist');
+var dest = path.resolve(__dirname, 'dist');
 
 module.exports = {
   entry: {
-    app: './app/initialize.coffee',
+    app: './app/initialize.jsx',
     vendor: [
       'react',
       'jquery',
       'underscore',
       'clipboard',
       'select2',
-      'handlebars',
       'moment',
       'messenger',
       'bootstrap',
       'classnames',
       'react-interval',
-      'backbone-react-component',
       'react-dom',
       'fuzzy',
-      'datatables',
-      'sortable',
       'juration',
-      'backbone',
       'vex-js'
     ],
   },
@@ -36,24 +32,17 @@ module.exports = {
   devtool: 'source-map',
   module: {
     loaders: [
-      { test: /\.es6$/, exclude: /node_modules/, loader: "babel-loader" },
-      { test: /\.jsx$/, exclude: /node_modules/, loader: "babel-loader" },
-      { test: /\.cjsx$/, loaders: ['coffee', 'cjsx']},
-      { test: /\.coffee$/, loader: 'coffee'},
-      { test: /\.hbs/, loader: "handlebars-template-loader" },
-      { test: /[\/]messenger\.js$/, loader: 'exports?Messenger'},
-      { test: /[\/]sortable\.js$/, loader: 'exports?Sortable'}
+      { test: /\.es6$/, exclude: /node_modules/, loader: 'babel-loader' },
+      { test: /\.jsx$/, exclude: /node_modules/, loader: 'babel-loader' },
+      { test: /[\/]messenger\.js$/, loader: 'exports?Messenger'}
     ]
   },
   resolve: {
     root: path.resolve('./app'),
-    extensions: ['', '.js', '.es6', '.jsx', '.cjsx', '.coffee', '.hbs'],
+    extensions: ['', '.js', '.es6', '.jsx'],
     alias: {
       'vex': 'vex-js/js/vex.js',
-      'vex.dialog': 'vex-helper.coffee',
-      'handlebars': 'handlebars/runtime.js',
-      'sortable': 'sortable/js/sortable.js',
-      'datatables': 'datatables/media/js/jquery.dataTables.js',
+      'vex.dialog': 'vex-helper.es6',
       'bootstrap': 'bootstrap/dist/js/bootstrap.js'
     }
   },
@@ -64,6 +53,7 @@ module.exports = {
       jQuery: 'jquery',
       'window.jQuery': 'jquery'
     }),
-    new webpack.optimize.CommonsChunkPlugin('vendor', 'vendor.bundle.js')
+    new webpack.optimize.CommonsChunkPlugin('vendor', 'vendor.bundle.js'),
+    new CaseSensitivePathsPlugin()
   ]
 };
