@@ -122,7 +122,7 @@ class DeployDetail extends React.Component {
         <div className="row">
           <div className="col-md-8">
             <h1>
-              <OverlayTrigger trigger={['hover', 'focus', 'click']} placement="left" overlay={copyLinkPopover}>
+              <OverlayTrigger trigger={['hover', 'focus', 'click']} placement="top" overlay={copyLinkPopover}>
                 <span className="copy-btn" data-clipboard-text={this.props.params.deployId}>{this.props.params.deployId}</span>
               </OverlayTrigger>
               <DeployState state={deploy.deployResult && deploy.deployResult.deployState || 'PENDING'} />
