@@ -109,6 +109,22 @@ const Utils = {
     return fuzzyObject.score;
   },
 
+  convertMapFromObjectToArray(mapAsObj) {
+    const mapAsArray = [];
+    for (const key of _.keys(mapAsObj)) {
+      mapAsArray.push({ key, value: mapAsObj[key] });
+    }
+    return mapAsArray;
+  },
+
+  convertMapFromArrayToObject(mapAsArray) {
+    const mapAsObj = {};
+    for (const pair of mapAsArray) {
+      mapAsObj[pair.key] = pair.value;
+    }
+    return mapAsObj;
+  },
+
   getTaskDataFromTaskId(taskId) {
     const splits = taskId.split('-');
     return {
@@ -317,6 +333,30 @@ const Utils = {
         ? (expiringBounce.startMillis + expiringBounce.expiringAPIRequestObject.durationMillis) > new Date().getTime()
         : false;
     }
+  },
+
+  enums: {
+    SingularityRequestTypes: ['SERVICE', 'WORKER', 'SCHEDULED', 'ON_DEMAND', 'RUN_ONCE'],
+    SingularityEmailDestination: ['OWNERS', 'ACTION_TAKER', 'ADMINS'],
+    SingularityEmailType: [
+      'TASK_LOST',
+      'TASK_KILLED',
+      'TASK_FINISHED_SCHEDULED',
+      'TASK_FINISHED_LONG_RUNNING',
+      'TASK_FINISHED_ON_DEMAND',
+      'TASK_FINISHED_RUN_ONCE',
+      'TASK_FAILED',
+      'TASK_SCHEDULED_OVERDUE_TO_FINISH',
+      'TASK_KILLED_DECOMISSIONED',
+      'TASK_KILLED_UNHEALTHY',
+      'REQUEST_IN_COOLDOWN',
+      'SINGULARITY_ABORTING',
+      'REQUEST_REMOVED',
+      'REQUEST_PAUSED',
+      'REQUEST_UNPAUSED',
+      'REQUEST_SCALED',
+      'TASK_FAILED_DECOMISSIONED'
+    ]
   },
 
   queryParams(source) {
