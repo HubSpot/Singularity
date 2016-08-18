@@ -1,5 +1,5 @@
 import React, { PropTypes } from 'react';
-import { Panel, ProgressBar } from 'react-bootstrap';
+import { Panel, ProgressBar, Badge, OverlayTrigger, Popover } from 'react-bootstrap';
 import classNames from 'classnames';
 
 export const DeployState = (props) => {
@@ -60,4 +60,25 @@ UsageInfo.propTypes = {
   total: PropTypes.number,
   used: PropTypes.number,
   children: PropTypes.node
+};
+
+export const InfoButton = ({onClick, popoverText, popoverPlacement, popover}) => {
+  const button = <a onClick={onClick}><Badge>?</Badge></a>;
+  if (!popoverText && !popover) return button;
+  return (
+    <OverlayTrigger
+      placement={popoverPlacement}
+      trigger="click"
+      rootClose={true}
+      overlay={popover || <Popover id="info-popover">{popoverText}</Popover>}>
+      {button}
+    </OverlayTrigger>
+  );
+};
+
+InfoButton.propTypes = {
+  onClick: PropTypes.func,
+  popoverText: PropTypes.string,
+  popoverPlacement: PropTypes.string,
+  popover: PropTypes.node
 };
