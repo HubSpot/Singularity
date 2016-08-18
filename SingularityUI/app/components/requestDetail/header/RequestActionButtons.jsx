@@ -23,7 +23,7 @@ import Utils from '../../../utils';
 
 const RequestActionButtons = ({requestParent, fetchRequest, router}) => {
   if (!requestParent || !requestParent.request) {
-    return null;
+    return <div></div>;
   }
   const {request, state} = requestParent;
 
