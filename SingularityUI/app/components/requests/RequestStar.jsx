@@ -5,10 +5,11 @@ import { getUserSettingsAPI } from '../../selectors/requests';
 import { FetchUserSettings, AddStarredRequests, DeleteStarredRequests } from '../../actions/api/user';
 import { UpdateTemporaryUserSettings, ClearTemporaryUserSettings } from '../../actions/ui/temporaryUserSettings';
 import Utils from '../../utils';
+import classNames from 'classnames';
 
 
 const RequestStar = ({requestId, changeStar, starred, userId, settings}) => (
-  <a className="star" data-starred={starred} onClick={() => changeStar(requestId, userId, settings)}>
+  <a className={classNames('star', {starred})} onClick={() => changeStar(requestId, userId, settings)}>
     <span className="glyphicon glyphicon-star"></span>
   </a>
 );
@@ -23,7 +24,7 @@ RequestStar.propTypes = {
 
 const mapStateToProps = (state, ownProps) => ({
   starred: Utils.request.isStarred(ownProps.requestId, Utils.maybe(getUserSettingsAPI(state), ['data'])),
-  settings: Utils.maybe(state.api.userSettings, ['data']),
+  settings: Utils.maybe(getUserSettingsAPI(state), ['data']),
   userId: Utils.maybe(state.api.user, ['data', 'user', 'id'])
 });
 
@@ -40,10 +41,9 @@ const mapDispatchToProps = (dispatch) => ({
         promise = dispatch(AddStarredRequests.trigger(userId, [requestId]));
       }
       dispatch(UpdateTemporaryUserSettings(temporaryUserSettings));
-      const clearTemporaryUserSettings = () => dispatch(ClearTemporaryUserSettings());
       return promise.then(
-        () => dispatch(FetchUserSettings.trigger(userId)).then(clearTemporaryUserSettings),
-        clearTemporaryUserSettings
+        () => dispatch(FetchUserSettings.trigger(userId)).then(() => dispatch(ClearTemporaryUserSettings())),
+        () => dispatch(ClearTemporaryUserSettings())
       );
     }
     return Promise.resolve();
