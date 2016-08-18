@@ -62,7 +62,7 @@ function TaskHealthchecks (props) {
         />
       </UITable>
     </CollapsableSection>
-  );
+  ) || <div></div>;
 }
 
 TaskHealthchecks.propTypes = {

@@ -4,9 +4,9 @@ import { connect } from 'react-redux';
 import {
   ScaleRequest,
   BounceRequest
-} from '../../actions/api/requests';
+} from '../../../actions/api/requests';
 
-import FormModal from '../common/modal/FormModal';
+import FormModal from '../modal/FormModal';
 
 class ScaleModal extends Component {
   static propTypes = {

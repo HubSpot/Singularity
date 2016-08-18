@@ -9,7 +9,7 @@ import { Link } from 'react-router';
 import Utils from '../../utils';
 
 import { FetchTaskHistoryForRequest } from '../../actions/api/history';
-import RunNowButton from '../requests/RunNowButton';
+import RunNowButton from '../common/modalButtons/RunNowButton';
 import Section from '../common/Section';
 
 import UITable from '../common/table/UITable';

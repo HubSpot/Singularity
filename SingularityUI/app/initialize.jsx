@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.app.setupUser();
 
     // set up request groups
-    store.dispatch(FetchGroups.trigger());
+    store.dispatch(FetchGroups.trigger([404, 500]));
 
     // Render the page content
     return ReactDOM.render(<AppRouter store={store} />, document.getElementById('root'), () => {
@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
       formElements={[
         {
           name: 'apiRoot',
-          type: FormModal.INPUT_TYPES.URL,
+          type: FormModal.INPUT_TYPES.STRING,
           label: 'API Root URL',
           isRequired: true
         }
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </p>
         <p>
           This can be changed at any time in the JS console with <br />
-          <code>localStorage.setItem(&quot;apiRootOverride&quot;, &quot;http://example/singularity/api&quot;)</code>
+          <code>localStorage.setItem("apiRootOverride", "http://example/singularity/api")</code>
         </p>
       </div>
     </FormModal>, document.getElementById('root')).show();

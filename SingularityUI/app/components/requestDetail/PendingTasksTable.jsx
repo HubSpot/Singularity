@@ -16,14 +16,14 @@ const PendingTasksTable = ({tasksAPI}) => {
   const tasks = tasksAPI ? tasksAPI.data : [];
 
   if (!tasks.length) {
-    return null;
+    return <div></div>;
   }
 
   return (
     <Section id="pending-tasks" title="Scheduled &amp; pending tasks">
       <UITable
         data={tasks}
-        keyGetter={(t) => t.pendingTask.pendingTaskId.id}
+        keyGetter={(task) => task.pendingTask.pendingTaskId.id}
       >
         {ScheduledTaskId}
         {NextRun}

@@ -22,9 +22,9 @@ const taskStateOrder = [
   'TASK_ERROR'
 ];
 
-const taskStateProps = (s, num, total) => {
-  const numberString = `${num}/${total}`;
-  switch (s) {
+const taskStateProps = (state, numberInState, total) => {
+  const numberString = `${numberInState}/${total}`;
+  switch (state) {
     case 'TASK_LAUNCHED':
       return { bsStyle: 'info', label: `launched ${numberString}`, striped: true};
     case 'TASK_STAGING':
@@ -60,22 +60,22 @@ const TaskStateBreakdown = ({activeTasksForRequest, refresh}) => {
   }
 
   const instanceBreakdown = Utils.task.instanceBreakdown(activeTasksForRequest);
-  const totalInstances = taskStateOrder.reduce((last, cur) => (
-    last + (instanceBreakdown[cur] || 0)
+  const totalInstances = taskStateOrder.reduce((last, current) => (
+    last + (instanceBreakdown[current] || 0)
   ), 0);
 
   if (totalInstances === 0) {
     return null;
   }
 
-  const taskStateProgressBars = taskStateOrder.map((s) => {
-    const percentage = 100 * (instanceBreakdown[s] / totalInstances);
+  const taskStateProgressBars = taskStateOrder.map((state) => {
+    const percentage = 100 * (instanceBreakdown[state] / totalInstances);
     const progressProps = taskStateProps(
-      s,
-      instanceBreakdown[s],
+      state,
+      instanceBreakdown[state],
       totalInstances
     );
-    return <ProgressBar key={s} now={percentage} {...progressProps} />;
+    return <ProgressBar key={state} now={percentage} {...progressProps} />;
   });
 
 

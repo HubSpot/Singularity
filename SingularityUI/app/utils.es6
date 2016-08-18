@@ -132,16 +132,16 @@ const Utils = {
     }
   },
 
-  joinPath(a, b) {
-    if (!a.endsWith('/')) a += '/';
-    if (b.startsWith('/')) b = b.substring(1, b.length);
-    return a + b;
+  joinPath(firstPart, secondPart) {
+    if (!firstPart.endsWith('/')) firstPart += '/';
+    if (secondPart.startsWith('/')) secondPart = secondPart.substring(1);
+    return `${firstPart}${secondPart}`;
   },
 
   range(begin, end, interval = 1) {
     const res = [];
-    for (let i = begin; i < end; i += interval) {
-      res.push(i);
+    for (let currentValue = begin; currentValue < end; currentValue += interval) {
+      res.push(currentValue);
     }
     return res;
   },
@@ -256,8 +256,8 @@ const Utils = {
         TASK_ERROR: 0
       };
 
-      tasks.forEach((t) => {
-        taskStates[t.lastTaskState] = (taskStates[t.lastTaskState] || 0) + 1;
+      tasks.forEach((task) => {
+        taskStates[task.lastTaskState] = (taskStates[task.lastTaskState] || 0) + 1;
       });
 
       return taskStates;
@@ -266,64 +266,64 @@ const Utils = {
   request: {
     // all of these expect a RequestParent object
     LONG_RUNNING_TYPES: new Set(['WORKER', 'SERVICE']),
-    hasActiveDeploy: (r) => {
-      return Utils.maybe(r, ['activeDeploy'], false) || Utils.maybe(r, ['requestDeployState', 'activeDeploy'], false);
+    hasActiveDeploy: (requestParent) => {
+      return Utils.maybe(requestParent, ['activeDeploy'], false) || Utils.maybe(requestParent, ['requestDeployState', 'activeDeploy'], false);
     },
-    isDeploying: (r) => {
-      return Utils.maybe(r, ['pendingDeploy'], false);
+    isDeploying: (requestParent) => {
+      return Utils.maybe(requestParent, ['pendingDeploy'], false);
     },
-    isLongRunning: (r) => {
-      return Utils.request.LONG_RUNNING_TYPES.has(r.request.requestType);
+    isLongRunning: (requestParent) => {
+      return Utils.request.LONG_RUNNING_TYPES.has(requestParent.request.requestType);
     },
-    canBeRunNow: (r) => {
-      return r.state === 'ACTIVE'
-        && new Set(['SCHEDULED', 'ON_DEMAND']).has(r.request.requestType)
-        && Utils.request.hasActiveDeploy(r);
+    canBeRunNow: (requestParent) => {
+      return requestParent.state === 'ACTIVE'
+        && new Set(['SCHEDULED', 'ON_DEMAND']).has(requestParent.request.requestType)
+        && Utils.request.hasActiveDeploy(requestParent);
     },
-    canBeBounced: (r) => {
-      return new Set(['ACTIVE', 'SYSTEM_COOLDOWN']).has(r.state)
-        && Utils.request.isLongRunning(r);
+    canBeBounced: (requestParent) => {
+      return new Set(['ACTIVE', 'SYSTEM_COOLDOWN']).has(requestParent.state)
+        && Utils.request.isLongRunning(requestParent);
     },
-    canBeScaled: (r) => {
-      return new Set(['ACTIVE', 'SYSTEM_COOLDOWN']).has(r.state)
-        && Utils.request.hasActiveDeploy(r)
-        && Utils.request.isLongRunning(r);
+    canBeScaled: (requestParent) => {
+      return new Set(['ACTIVE', 'SYSTEM_COOLDOWN']).has(requestParent.state)
+        && Utils.request.hasActiveDeploy(requestParent)
+        && Utils.request.isLongRunning(requestParent);
     },
     runningInstanceCount: (activeTasksForRequest) => {
       return activeTasksForRequest.filter(
-        (t) => t.lastTaskState === 'TASK_RUNNING'
+        (task) => task.lastTaskState === 'TASK_RUNNING'
       ).length;
     },
-    deployingInstanceCount: (r, activeTasksForRequest) => {
-      if (!r.pendingDeploy) {
+    deployingInstanceCount: (requestParent, activeTasksForRequest) => {
+      if (!requestParent.pendingDeploy) {
         return 0;
       }
-      return activeTasksForRequest.filter((t) => (
-        t.lastTaskState === 'TASK_RUNNING'
-        && t.taskId.deployId === r.pendingDeploy.id
+      return activeTasksForRequest.filter((task) => (
+        task.lastTaskState === 'TASK_RUNNING'
+        && task.taskId.deployId === requestParent.pendingDeploy.id
       )).length;
     },
     // other
-    canDisableHealthchecks: (r) => {
-      return !!r.activeDeploy
-        && !!r.activeDeploy.healthcheckUri
-        && r.state !== 'PAUSED'
-        && !r.expiringSkipHealthchecks;
+    canDisableHealthchecks: (requestParent) => {
+      return !!requestParent.activeDeploy
+        && !!requestParent.activeDeploy.healthcheckUri
+        && requestParent.state !== 'PAUSED'
+        && !requestParent.expiringSkipHealthchecks;
     },
-    pauseDisabled: (r) => {
-      const expiringPause = Utils.maybe(r, 'expiringPause');
+    pauseDisabled: (requestParent) => {
+      const expiringPause = Utils.maybe(requestParent, 'expiringPause');
       return expiringPause
         ? (expiringPause.startMillis + expiringPause.expiringAPIRequestObject.durationMillis) > new Date().getTime()
         : false;
     },
-    scaleDisabled: (r) => {
-      const expiringScale = Utils.maybe(r, 'expiringScale');
+    scaleDisabled: (requestParent) => {
+      const expiringScale = Utils.maybe(requestParent, 'expiringScale');
       return expiringScale
         ? (expiringScale.startMillis + expiringScale.expiringAPIRequestObject.durationMillis) > new Date().getTime()
         : false;
     },
-    bounceDisabled: (r) => {
-      const expiringBounce = Utils.maybe(r, 'expiringBounce');
+    bounceDisabled: (requestParent) => {
+      const expiringBounce = Utils.maybe(requestParent, 'expiringBounce');
       return expiringBounce
         ? (expiringBounce.startMillis + expiringBounce.expiringAPIRequestObject.durationMillis) > new Date().getTime()
         : false;

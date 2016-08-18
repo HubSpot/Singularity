@@ -7,7 +7,6 @@ import Utils from '../../utils';
 import { FetchTaskFiles } from '../../actions/api/sandbox';
 import {
   FetchTaskStatistics,
-  KillTask,
   RunCommandOnTask,
   FetchTaskCleanups
 } from '../../actions/api/tasks';
@@ -25,11 +24,10 @@ import { Alert } from 'react-bootstrap';
 import Breadcrumbs from '../common/Breadcrumbs';
 import JSONButton from '../common/JSONButton';
 import Section from '../common/Section';
-import FormModal from '../common/modal/FormModal';
 import CollapsableSection from '../common/CollapsableSection';
 import NotFound from '../common/NotFound';
 
-import KillTaskButton from '../tasks/KillTaskButton';
+import KillTaskButton from '../common/modalButtons/KillTaskButton';
 
 import TaskFileBrowser from './TaskFileBrowser';
 import ShellCommands from './ShellCommands';
@@ -108,7 +106,7 @@ class TaskDetail extends Component {
       files: PropTypes.array,
       currentDirectory: PropTypes.string
     }),
-    filePath: PropTypes.string,
+    currentFilePath: PropTypes.string,
     taskId: PropTypes.string.isRequired,
     params: PropTypes.object,
     fetchTaskHistory: PropTypes.func.isRequired,
@@ -121,8 +119,7 @@ class TaskDetail extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      previousUsage: null,
-      currentFilePath: props.params.splat || props.params.taskId
+      previousUsage: null
     };
   }
 
@@ -192,9 +189,6 @@ class TaskDetail extends Component {
           changeDir={(path) => {
             if (path.startsWith('/')) path = path.substring(1);
             this.props.fetchTaskFiles(this.props.params.taskId, path).then(() => {
-              this.setState({
-                currentFilePath: path
-              });
               this.props.router.push(Utils.joinPath(`task/${this.props.params.taskId}/files/`, path));
             });
           }}
@@ -371,7 +365,7 @@ class TaskDetail extends Component {
     const cleanup = _.find(this.props.taskCleanups, (cleanupToTest) => {
       return cleanupToTest.taskId.id === this.props.taskId;
     });
-    const filesToDisplay = this.props.files[`${this.props.params.taskId}/${this.state.currentFilePath}`] && this.analyzeFiles(this.props.files[`${this.props.taskId}/${this.state.currentFilePath}`].data);
+    const filesToDisplay = this.props.files[`${this.props.params.taskId}/${this.props.currentFilePath}`] && this.analyzeFiles(this.props.files[`${this.props.taskId}/${this.props.currentFilePath}`].data);
 
     return (
       <div className="task-detail detail-view">
@@ -446,6 +440,7 @@ function mapStateToProps(state, ownProps) {
   return {
     task,
     taskId: ownProps.params.taskId,
+    currentFilePath: _.isUndefined(ownProps.params.splat) ? ownProps.params.taskId : ownProps.params.splat,
     taskCleanups: state.api.taskCleanups.data,
     files: state.api.taskFiles,
     resourceUsage: state.api.taskResourceUsage.data,
