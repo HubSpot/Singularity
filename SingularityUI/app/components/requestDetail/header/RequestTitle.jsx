@@ -52,7 +52,7 @@ const RequestTitle = ({requestId, requestAPI}) => {
         {maybeInfo}
       </h4>
       <h2>
-        <OverlayTrigger trigger={['hover', 'focus', 'click']} placement="left" overlay={copyLinkPopover}>
+        <OverlayTrigger trigger={['hover', 'focus', 'click']} placement="top" overlay={copyLinkPopover}>
           <span className="copy-btn" data-clipboard-text={requestId}>{requestId}</span>
         </OverlayTrigger>
       </h2>
