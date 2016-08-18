@@ -19,6 +19,7 @@ public class SingularityRequestBuilder {
 
   private Optional<String> schedule;
   private Optional<String> quartzSchedule;
+  private Optional<String> scheduleTimeZone;
   private Optional<ScheduleType> scheduleType;
 
   private Optional<Long> killOldNonLongRunningTasksAfterMillis;
@@ -57,6 +58,7 @@ public class SingularityRequestBuilder {
     this.rackSensitive = Optional.absent();
     this.loadBalanced = Optional.absent();
     this.quartzSchedule = Optional.absent();
+    this.scheduleTimeZone = Optional.absent();
     this.rackAffinity = Optional.absent();
     this.slavePlacement = Optional.absent();
     this.requiredSlaveAttributes = Optional.absent();
@@ -74,7 +76,7 @@ public class SingularityRequestBuilder {
   }
 
   public SingularityRequest build() {
-    return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule,
+    return new SingularityRequest(id, requestType, owners, numRetriesOnFailure, schedule, instances, rackSensitive, loadBalanced, killOldNonLongRunningTasksAfterMillis, scheduleType, quartzSchedule, scheduleTimeZone,
         rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, group, readOnlyGroups,
         bounceAfterScale, skipHealthchecks, emailConfigurationOverrides, Optional.<Boolean>absent(), hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive);
   }
@@ -170,6 +172,15 @@ public class SingularityRequestBuilder {
 
   public SingularityRequestBuilder setQuartzSchedule(Optional<String> quartzSchedule) {
     this.quartzSchedule = quartzSchedule;
+    return this;
+  }
+
+  public Optional<String> getScheduleTimeZone() {
+    return scheduleTimeZone;
+  }
+
+  public SingularityRequestBuilder setScheduleTimeZone(Optional<String> scheduleTimeZone) {
+    this.scheduleTimeZone = scheduleTimeZone;
     return this;
   }
 
@@ -289,6 +300,7 @@ public class SingularityRequestBuilder {
             ", numRetriesOnFailure=" + numRetriesOnFailure +
             ", schedule=" + schedule +
             ", quartzSchedule=" + quartzSchedule +
+            ", scheduleTimeZone=" + scheduleTimeZone +
             ", scheduleType=" + scheduleType +
             ", killOldNonLongRunningTasksAfterMillis=" + killOldNonLongRunningTasksAfterMillis +
             ", scheduledExpectedRuntimeMillis=" + scheduledExpectedRuntimeMillis +
@@ -326,6 +338,7 @@ public class SingularityRequestBuilder {
             Objects.equals(numRetriesOnFailure, that.numRetriesOnFailure) &&
             Objects.equals(schedule, that.schedule) &&
             Objects.equals(quartzSchedule, that.quartzSchedule) &&
+            Objects.equals(scheduleTimeZone, that.scheduleTimeZone) &&
             Objects.equals(scheduleType, that.scheduleType) &&
             Objects.equals(killOldNonLongRunningTasksAfterMillis, that.killOldNonLongRunningTasksAfterMillis) &&
             Objects.equals(scheduledExpectedRuntimeMillis, that.scheduledExpectedRuntimeMillis) &&
@@ -349,7 +362,7 @@ public class SingularityRequestBuilder {
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleType, killOldNonLongRunningTasksAfterMillis,
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleTimeZone, scheduleType, killOldNonLongRunningTasksAfterMillis,
         scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement,
         requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale, skipHealthchecks, emailConfigurationOverrides,
         hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive);
