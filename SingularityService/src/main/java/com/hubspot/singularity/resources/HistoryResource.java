@@ -93,6 +93,13 @@ public class HistoryResource extends AbstractHistoryResource {
     return limitCount * (pageParam - 1);
   }
 
+  private Optional<Integer> getPageCount(Optional<Integer> dataCount, Integer count) {
+    if (!dataCount.isPresent()) {
+      return Optional.absent();
+    }
+    return Optional.fromNullable((int) Math.ceil((double) dataCount.get() / count));
+  }
+
   @GET
   @Path("/request/{requestId}/tasks/active")
   @ApiOperation("Retrieve the history for all active tasks of a specific request.")
@@ -182,11 +189,12 @@ public class HistoryResource extends AbstractHistoryResource {
           @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
-    final int dataCount = taskHistoryHelper.getBlendedHistoryCount(new SingularityTaskHistoryQuery(Optional.of(requestId), deployId, host, lastTaskStatus, startedBefore, startedAfter, orderDirection)).get();
+    final Optional dataCount = taskHistoryHelper.getBlendedHistoryCount(new SingularityTaskHistoryQuery(Optional.of(requestId), deployId, host, lastTaskStatus, startedBefore, startedAfter, orderDirection));
     final int limitCount = getLimitCount(count);
     final List<SingularityTaskIdHistory> data = this.getTaskHistoryForRequest(requestId, deployId, host, lastTaskStatus, startedAfter, startedBefore, orderDirection, count, page);
+    final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
-    return new SingularityPaginatedResponse<>(dataCount, (int) Math.ceil((double) dataCount / limitCount), page, data);
+    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
   }
 
   @GET
@@ -246,11 +254,12 @@ public class HistoryResource extends AbstractHistoryResource {
           @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
-    final int dataCount = deployHistoryHelper.getBlendedHistoryCount(requestId).get();
+    final Optional dataCount = deployHistoryHelper.getBlendedHistoryCount(requestId);
     final int limitCount = getLimitCount(count);
     final List<SingularityDeployHistory> data = this.getDeploys(requestId, count, page);
+    final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
-    return new SingularityPaginatedResponse<>(dataCount, (int) Math.ceil((double) dataCount / limitCount), page, data);
+    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
   }
 
   @GET
