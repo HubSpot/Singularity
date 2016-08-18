@@ -1,9 +1,9 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { KillTask } from '../../actions/api/tasks';
+import { KillTask } from '../../../actions/api/tasks';
 
-import FormModal from '../common/modal/FormModal';
+import FormModal from '../modal/FormModal';
 
 class KillTaskModal extends Component {
   static propTypes = {

@@ -2,7 +2,7 @@ import React, { Component, PropTypes } from 'react';
 
 import { Button } from 'react-bootstrap';
 
-import { getClickComponent } from '../../common/modal/ModalWrapper';
+import { getClickComponent } from '../modal/ModalWrapper';
 
 import CancelDeployModal from './CancelDeployModal';
 

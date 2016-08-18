@@ -2,13 +2,13 @@ import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { Glyphicon } from 'react-bootstrap';
 
-import { RunRequest } from '../../actions/api/requests';
+import { RunRequest } from '../../../actions/api/requests';
 
-import TaskLauncher from '../common/TaskLauncher';
-import FormModal from '../common/modal/FormModal';
+import TaskLauncher from '../TaskLauncher';
+import FormModal from '../modal/FormModal';
 
 import Messenger from 'messenger';
-import Utils from '../../utils';
+import Utils from '../../../utils';
 
 class RunNowModal extends Component {
   static propTypes = {

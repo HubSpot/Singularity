@@ -4,29 +4,30 @@ import { Glyphicon } from 'react-bootstrap';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 
-import { getClickComponent } from '../common/modal/ModalWrapper';
+import { getClickComponent } from '../modal/ModalWrapper';
 
-import BounceModal from './BounceModal';
+import PauseModal from './PauseModal';
 
-const bounceTooltip = (
-  <ToolTip id="bounce">
-    Bounce Request
+const pauseTooltip = (
+  <ToolTip id="pause">
+    Pause
   </ToolTip>
 );
 
-export default class BounceButton extends Component {
+export default class PauseButton extends Component {
 
   static propTypes = {
     requestId: PropTypes.string.isRequired,
+    isScheduled: PropTypes.bool.isRequired,
     children: PropTypes.node,
     then: PropTypes.func
   };
 
   static defaultProps = {
     children: (
-      <OverlayTrigger placement="top" id="view-bounce-overlay" overlay={bounceTooltip}>
+      <OverlayTrigger placement="top" id="view-pause-overlay" overlay={pauseTooltip}>
         <a>
-          <Glyphicon glyph="refresh" />
+          <Glyphicon glyph="play" />
         </a>
       </OverlayTrigger>
     )
@@ -36,9 +37,10 @@ export default class BounceButton extends Component {
     return (
       <span>
         {getClickComponent(this)}
-        <BounceModal
+        <PauseModal
           ref="modal"
           requestId={this.props.requestId}
+          isScheduled={this.props.isScheduled}
           then={this.props.then}
         />
       </span>
