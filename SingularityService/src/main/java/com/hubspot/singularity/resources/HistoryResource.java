@@ -175,7 +175,7 @@ public class HistoryResource extends AbstractHistoryResource {
   }
 
   @GET
-  @Path("/request/{requestId}/tasks/count")
+  @Path("/request/{requestId}/tasks/withmetadata")
   @ApiOperation("Retrieve the history count for all inactive tasks of a specific request.")
   public SingularityPaginatedResponse<SingularityTaskIdHistory> getTaskHistoryForRequestCount(
           @ApiParam("Request ID to match") @PathParam("requestId") String requestId,
@@ -246,7 +246,7 @@ public class HistoryResource extends AbstractHistoryResource {
   }
 
   @GET
-  @Path("/request/{requestId}/deploys/count")
+  @Path("/request/{requestId}/deploys/withmetadata")
   @ApiOperation("Get deploy history with metadata for a single request")
   public SingularityPaginatedResponse<SingularityDeployHistory> getDeploysCount(
           @ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
