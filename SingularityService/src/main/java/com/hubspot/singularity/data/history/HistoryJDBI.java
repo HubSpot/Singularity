@@ -85,13 +85,8 @@ public abstract class HistoryJDBI implements GetHandle {
     }
   }
 
-  public List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> host,
-      Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<OrderDirection> orderDirection,
-      Optional<Integer> limitStart, Integer limitCount) {
-
-    final Map<String, Object> binds = new HashMap<>();
-    final StringBuilder sqlBuilder = new StringBuilder(GET_TASK_ID_HISTORY_QUERY);
-
+  private void applyTaskIdHistoryBaseQuery(StringBuilder sqlBuilder, Map<String, Object> binds, Optional<String> requestId, Optional<String> deployId, Optional<String> host,
+      Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter) {
     if (requestId.isPresent()) {
       addWhereOrAnd(sqlBuilder, binds.isEmpty());
       sqlBuilder.append("requestId = :requestId");
@@ -127,6 +122,16 @@ public abstract class HistoryJDBI implements GetHandle {
       sqlBuilder.append("startedAt > :startedAfter");
       binds.put("startedAfter", new Date(startedAfter.get()));
     }
+  }
+
+  public List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> host,
+      Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<OrderDirection> orderDirection,
+      Optional<Integer> limitStart, Integer limitCount) {
+
+    final Map<String, Object> binds = new HashMap<>();
+    final StringBuilder sqlBuilder = new StringBuilder(GET_TASK_ID_HISTORY_QUERY);
+
+    applyTaskIdHistoryBaseQuery(sqlBuilder, binds, requestId, deployId, host, lastTaskStatus, startedBefore, startedAfter);
 
     sqlBuilder.append(" ORDER BY startedAt ");
     sqlBuilder.append(orderDirection.or(OrderDirection.DESC).name());
@@ -164,41 +169,7 @@ public abstract class HistoryJDBI implements GetHandle {
     final Map<String, Object> binds = new HashMap<>();
     final StringBuilder sqlBuilder = new StringBuilder(GET_TASK_ID_HISTORY_COUNT_QUERY);
 
-    if (requestId.isPresent()) {
-      addWhereOrAnd(sqlBuilder, binds.isEmpty());
-      sqlBuilder.append("requestId = :requestId");
-      binds.put("requestId", requestId.get());
-    }
-
-    if (deployId.isPresent()) {
-      addWhereOrAnd(sqlBuilder, binds.isEmpty());
-      sqlBuilder.append("deployId = :deployId");
-      binds.put("deployId", deployId.get());
-    }
-
-    if (host.isPresent()) {
-      addWhereOrAnd(sqlBuilder, binds.isEmpty());
-      sqlBuilder.append("host = :host");
-      binds.put("host", host.get());
-    }
-
-    if (lastTaskStatus.isPresent()) {
-      addWhereOrAnd(sqlBuilder, binds.isEmpty());
-      sqlBuilder.append("lastTaskStatus = :lastTaskStatus");
-      binds.put("lastTaskStatus", lastTaskStatus.get().name());
-    }
-
-    if (startedBefore.isPresent()) {
-      addWhereOrAnd(sqlBuilder, binds.isEmpty());
-      sqlBuilder.append("startedAt < :startedBefore");
-      binds.put("startedBefore", new Date(startedBefore.get()));
-    }
-
-    if (startedAfter.isPresent()) {
-      addWhereOrAnd(sqlBuilder, binds.isEmpty());
-      sqlBuilder.append("startedAt > :startedAfter");
-      binds.put("startedAfter", new Date(startedAfter.get()));
-    }
+    applyTaskIdHistoryBaseQuery(sqlBuilder, binds, requestId, deployId, host, lastTaskStatus, startedBefore, startedAfter);
 
     final String sql = sqlBuilder.toString();
 
