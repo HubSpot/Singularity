@@ -46,6 +46,7 @@ Two commands exist for downloading logs.
 |-L, --skip-live|Don't search/download live logs|false|
 |-U, --use-cache|Don't redownload live logs, prefer the cached version|false|
 |--search|Run logsearch on the cache of local files (no downloading)|false|
+|-i, --show-file-info|Show the parsed timestamp and file name before printing log lines, even if not in verbose mode|false|
 |-V, --verbose|More verbose output|false|
 |--silent|No output except for log content, overrides -V|false|
 
