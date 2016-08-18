@@ -13,7 +13,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class SingularityRequest {
 
   private final String id;
@@ -44,7 +43,7 @@ public class SingularityRequest {
   private final Optional<Boolean> loadBalanced;
 
   private final Optional<String> group;
-  private final Optional<Set<String>> accessGroups;
+  private final Optional<Set<String>> readWriteGroups;
   private final Optional<Set<String>> readOnlyGroups;
   private final Optional<Boolean> bounceAfterScale;
 
@@ -66,7 +65,7 @@ public class SingularityRequest {
       @JsonProperty("slavePlacement") Optional<SlavePlacement> slavePlacement, @JsonProperty("requiredSlaveAttributes") Optional<Map<String, String>> requiredSlaveAttributes,
       @JsonProperty("allowedSlaveAttributes") Optional<Map<String, String>> allowedSlaveAttributes, @JsonProperty("scheduledExpectedRuntimeMillis") Optional<Long> scheduledExpectedRuntimeMillis,
       @JsonProperty("waitAtLeastMillisAfterTaskFinishesForReschedule") Optional<Long> waitAtLeastMillisAfterTaskFinishesForReschedule, @JsonProperty("group") Optional<String> group,
-      @JsonProperty("accessGroups") Optional<Set<String>> accessGroups, @JsonProperty("readOnlyGroups") Optional<Set<String>> readOnlyGroups,
+      @JsonProperty("readWriteGroups") Optional<Set<String>> readWriteGroups, @JsonProperty("readOnlyGroups") Optional<Set<String>> readOnlyGroups,
       @JsonProperty("bounceAfterScale") Optional<Boolean> bounceAfterScale, @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
       @JsonProperty("emailConfigurationOverrides") Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides,
       @JsonProperty("daemon") @Deprecated Optional<Boolean> daemon, @JsonProperty("taskLogErrorRegex") Optional<String> taskLogErrorRegex,
@@ -90,7 +89,7 @@ public class SingularityRequest {
     this.scheduledExpectedRuntimeMillis = scheduledExpectedRuntimeMillis;
     this.waitAtLeastMillisAfterTaskFinishesForReschedule = waitAtLeastMillisAfterTaskFinishesForReschedule;
     this.group = group;
-    this.accessGroups = accessGroups;
+    this.readWriteGroups = readWriteGroups;
     this.readOnlyGroups = readOnlyGroups;
     this.bounceAfterScale = bounceAfterScale;
     this.emailConfigurationOverrides = emailConfigurationOverrides;
@@ -125,7 +124,7 @@ public class SingularityRequest {
     .setAllowedSlaveAttributes(allowedSlaveAttributes)
     .setScheduledExpectedRuntimeMillis(scheduledExpectedRuntimeMillis)
     .setGroup(group)
-    .setAccessGroups(accessGroups)
+    .setReadWriteGroups(readWriteGroups)
     .setReadOnlyGroups(readOnlyGroups)
     .setBounceAfterScale(bounceAfterScale)
     .setEmailConfigurationOverrides(emailConfigurationOverrides)
@@ -267,8 +266,8 @@ public class SingularityRequest {
     return group;
   }
 
-  public Optional<Set<String>> getAccessGroups() {
-    return accessGroups;
+  public Optional<Set<String>> getReadWriteGroups() {
+    return readWriteGroups;
   }
 
   public Optional<Set<String>> getReadOnlyGroups() {
@@ -318,7 +317,7 @@ public class SingularityRequest {
             ", allowedSlaveAttributes=" + allowedSlaveAttributes +
             ", loadBalanced=" + loadBalanced +
             ", group=" + group +
-            ", accessGroups" + accessGroups +
+            ", readWriteGroups" + readWriteGroups +
             ", readOnlyGroups=" + readOnlyGroups +
             ", bounceAfterScale=" + bounceAfterScale +
             ", emailConfigurationOverrides=" + emailConfigurationOverrides +
@@ -357,7 +356,7 @@ public class SingularityRequest {
             Objects.equals(allowedSlaveAttributes, request.allowedSlaveAttributes) &&
             Objects.equals(loadBalanced, request.loadBalanced) &&
             Objects.equals(group, request.group) &&
-            Objects.equals(accessGroups, request.accessGroups) &&
+            Objects.equals(readWriteGroups, request.readWriteGroups) &&
             Objects.equals(readOnlyGroups, request.readOnlyGroups) &&
             Objects.equals(bounceAfterScale, request.bounceAfterScale) &&
             Objects.equals(emailConfigurationOverrides, request.emailConfigurationOverrides) &&
@@ -370,6 +369,6 @@ public class SingularityRequest {
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleTimeZone, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, accessGroups, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides, hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleTimeZone, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readWriteGroups, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides, hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive);
   }
 }
