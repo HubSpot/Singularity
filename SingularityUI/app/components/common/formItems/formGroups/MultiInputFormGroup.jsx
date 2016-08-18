@@ -6,14 +6,11 @@ const MultiInputFormGroup = (props) => (
   <FormGroup id={props.id} className={props.required && 'required'}>
     <ControlLabel>{props.label}</ControlLabel>
     <MultiInput
-      id={props.id}
       className={props.id}
       value={props.value || []}
       onChange={props.onChange}
-      required={props.required}
-      placeholder={props.placeholder}
-      errorIndices={props.errorIndices}
       doFeedback={props.couldHaveFeedback && (props.required || !_.isEmpty(props.value))}
+      {...props}
     />
   </FormGroup>
 );

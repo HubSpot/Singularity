@@ -433,7 +433,7 @@ class NewDeployForm extends Component {
     const cmdLineArguments = (
       <MultiInputFormGroup
         id="cmd-line-args"
-        value={this.props.form.arguments}
+        value={this.props.form.arguments || []}
         onChange={(newValue) => this.updateField('arguments', newValue)}
         label="Arguments"
         errorIndices={this.errorsInArrayField(INDEXED_FIELDS.arguments, () => this.props.form.arguments)}
@@ -443,7 +443,7 @@ class NewDeployForm extends Component {
     const artifacts = (
       <MultiInputFormGroup
         id="artifacts"
-        value={this.props.form.uris}
+        value={this.props.form.uris || []}
         onChange={(newValue) => this.updateField('uris', newValue)}
         label="Artifacts"
         placeholder="eg: http://s3.example/my-artifact"
@@ -589,7 +589,7 @@ class NewDeployForm extends Component {
     const extraCommandArgs = (
       <MultiInputFormGroup
         id="extra-args"
-        value={this.props.form.extraCmdLineArgs}
+        value={this.props.form.extraCmdLineArgs || []}
         onChange={(newValue) => this.updateField('extraCmdLineArgs', newValue)}
         label="Extra command args"
         placeholder="eg: -jar MyThing.jar"
@@ -620,7 +620,7 @@ class NewDeployForm extends Component {
     const successfulExitCodes = (
       <MultiInputFormGroup
         id="successful-exit-code"
-        value={this.props.form.successfulExitCodes}
+        value={this.props.form.successfulExitCodes || []}
         onChange={(newValue) => this.updateField('successfulExitCodes', newValue)}
         label="Successful exit codes"
         errorIndices={this.errorsInArrayField(INDEXED_FIELDS.successfulExitCodes, () => this.props.form.successfulExitCodes)}
@@ -648,7 +648,7 @@ class NewDeployForm extends Component {
     const loggingExtraFields = (
       <MultiInputFormGroup
         id="logging-extra-fields"
-        value={this.props.form.loggingExtraFields}
+        value={this.props.form.loggingExtraFields || []}
         onChange={(newValue) => this.updateField('loggingExtraFields', newValue)}
         label="Logging extra fields"
         placeholder="format: key=value"
@@ -973,7 +973,7 @@ class NewDeployForm extends Component {
     const parameters = (
       <MultiInputFormGroup
         id="docker-params"
-        value={this.props.form.parameters}
+        value={this.props.form.parameters || []}
         onChange={(newValue) => this.updateField('parameters', newValue)}
         label="Docker Parameters"
         placeholder="format: key=value"
@@ -1118,7 +1118,7 @@ class NewDeployForm extends Component {
     const env = (
       <MultiInputFormGroup
         id="env-vars"
-        value={this.props.form.env}
+        value={this.props.form.env || []}
         onChange={(newValue) => this.updateField('env', newValue)}
         placeholder="format: key=value"
         label="Environment variables"
@@ -1229,7 +1229,7 @@ class NewDeployForm extends Component {
     const loadBalancerGroups = (
       <MultiInputFormGroup
         id="lb-group"
-        value={this.props.form.loadBalancerGroups}
+        value={this.props.form.loadBalancerGroups || []}
         onChange={(newValue) => this.updateField('loadBalancerGroups', newValue)}
         label="Load balancer groups"
         required={true}
@@ -1240,7 +1240,7 @@ class NewDeployForm extends Component {
     const loadBalancerOptions = (
       <MultiInputFormGroup
         id="lb-option"
-        value={this.props.form.loadBalancerOptions}
+        value={this.props.form.loadBalancerOptions || []}
         onChange={(newValue) => this.updateField('loadBalancerOptions', newValue)}
         label="Load balancer options"
         placeholder="format: key=value"
