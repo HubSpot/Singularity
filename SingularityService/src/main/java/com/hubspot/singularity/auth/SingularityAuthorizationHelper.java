@@ -5,6 +5,7 @@ import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkForbidden;
 import static com.hubspot.singularity.WebExceptions.checkUnauthorized;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -112,12 +113,16 @@ public class SingularityAuthorizationHelper {
     }
 
     final Set<String> userGroups = user.get().getGroups();
+    final Set<String> readWriteGroups = request.getReadWriteGroups().or(Collections.<String>emptySet());
+    if (request.getGroup().isPresent()) {
+      readWriteGroups.add(request.getGroup().get());
+    }
 
-    final boolean userIsAdmin = adminGroups.isEmpty() ? false : groupsIntersect(userGroups, adminGroups);
-    final boolean userIsJITA = jitaGroups.isEmpty() ? false : groupsIntersect(userGroups, jitaGroups);
-    final boolean userIsRequestOwner = request.getGroup().isPresent() ? groupsIntersect(userGroups, request.getReadWriteGroups().get()) : true;
+    final boolean userIsAdmin = !adminGroups.isEmpty() && groupsIntersect(userGroups, adminGroups);
+    final boolean userIsJITA = !jitaGroups.isEmpty() && groupsIntersect(userGroups, jitaGroups);
+    final boolean userIsRequestOwner = readWriteGroups.isEmpty() || groupsIntersect(userGroups, readWriteGroups);
     final boolean userIsReadOnlyUser = groupsIntersect(userGroups, request.getReadOnlyGroups().or(defaultReadOnlyGroups));
-    final boolean userIsPartOfRequiredGroups = requiredGroups.isEmpty() ? true : groupsIntersect(userGroups, requiredGroups);
+    final boolean userIsPartOfRequiredGroups = requiredGroups.isEmpty() || groupsIntersect(userGroups, requiredGroups);
 
     if (userIsAdmin) {
       return true;  // Admins Rule Everything Around Me
@@ -138,13 +143,17 @@ public class SingularityAuthorizationHelper {
     checkUnauthorized(user.isPresent(), "user must be present");
 
     final Set<String> userGroups = user.get().getGroups();
+    final Set<String> readWriteGroups = request.getReadWriteGroups().or(Collections.<String>emptySet());
+    if (request.getGroup().isPresent()) {
+      readWriteGroups.add(request.getGroup().get());
+    }
     final Set<String> readOnlyGroups = request.getReadOnlyGroups().or(defaultReadOnlyGroups);
 
-    final boolean userIsAdmin = adminGroups.isEmpty() ? false : groupsIntersect(userGroups, adminGroups);
-    final boolean userIsJITA = jitaGroups.isEmpty() ? false : groupsIntersect(userGroups, jitaGroups);
-    final boolean userIsRequestOwner = request.getGroup().isPresent() ? groupsIntersect(userGroups, request.getReadWriteGroups().get()) : true;
+    final boolean userIsAdmin = !adminGroups.isEmpty() && groupsIntersect(userGroups, adminGroups);
+    final boolean userIsJITA = !jitaGroups.isEmpty() && groupsIntersect(userGroups, jitaGroups);
+    final boolean userIsRequestOwner = readWriteGroups.isEmpty() || groupsIntersect(userGroups, readWriteGroups);
     final boolean userIsReadOnlyUser = groupsIntersect(userGroups, readOnlyGroups);
-    final boolean userIsPartOfRequiredGroups = requiredGroups.isEmpty() ? true : groupsIntersect(userGroups, requiredGroups);
+    final boolean userIsPartOfRequiredGroups = requiredGroups.isEmpty() || groupsIntersect(userGroups, requiredGroups);
 
     if (userIsAdmin) {
       return;  // Admins Rule Everything Around Me
