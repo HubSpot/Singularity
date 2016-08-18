@@ -13,7 +13,11 @@ import AppRouter from './AppRouter';
 
 const reducers = combineReducers({ tailer: singularityTailer });
 
-const middleware = [thunk, logger()];
+const middleware = [thunk];
+
+if (localStorage.reduxLogging) {
+  middleware.push(logger());
+}
 
 const store = createStore(reducers, {}, compose(
   applyMiddleware(...middleware),

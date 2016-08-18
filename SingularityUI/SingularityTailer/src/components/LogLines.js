@@ -19,6 +19,7 @@ const LogLines = (props) => {
     <AutoSizer>
       {({width, height}) => ( // eslint-disable-line react/prop-types
         <VirtualScroll
+          ref="VirtualScroll"
           width={width}
           height={height}
           tabIndex={null}
@@ -28,7 +29,7 @@ const LogLines = (props) => {
           rowHeight={({index}) => {
             const line = props.lines.get(index);
             if (line.isMissingMarker) {
-              return 80 * 14;
+              // return 80 * 14;
               // return Math.ceil(line.byteLength / 250) * 14;
             }
             return 14;

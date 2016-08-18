@@ -8,7 +8,7 @@ import connectToTailer from './connectToTailer';
 
 import * as Selectors from '../selectors';
 
-import Log from './Log';
+import SimpleLog from './SimpleLog';
 
 class SandboxTailer extends Component {
   constructor() {
@@ -21,8 +21,12 @@ class SandboxTailer extends Component {
     this.sandboxMaxBytes = 65535;
   }
 
-  initializeFile() {
+  initializeFile(atOffset) {
     this.props.fetchLength();
+
+    if (atOffset !== undefined) {
+      this.fetchSafe(atOffset, atOffset + this.sandboxMaxBytes);
+    }
   }
 
   fetchSafe(byteRangeStart, byteRangeEnd) {
@@ -68,7 +72,7 @@ class SandboxTailer extends Component {
 
   render() {
     return (
-      <Log
+      <SimpleLog
         tailerId={this.props.tailerId}
         initializeFile={this.initializeFile}
         loadLines={this.loadLines}
@@ -82,15 +86,12 @@ SandboxTailer.propTypes = {
   tailerId: PropTypes.string.isRequired,
   taskId: PropTypes.string.isRequired,
   path: PropTypes.string.isRequired,
-  lines: PropTypes.instanceOf(Immutable.List).isRequired,
   requests: PropTypes.instanceOf(Immutable.Map).isRequired,
-  fetchChunk: PropTypes.func.isRequired
+  fetchChunk: PropTypes.func.isRequired,
+  fetchLength: PropTypes.func.isRequired
 };
 
 const mapStateToProps = (state, ownProps) => ({
-  isLoaded: Selectors.getIsLoaded(state, ownProps),
-  fileSize: Selectors.getFileSize(state, ownProps),
-  lines: Selectors.getLines(state, ownProps),
   requests: Selectors.getRequests(state, ownProps),
   config: Selectors.getConfig(state, ownProps)
 });

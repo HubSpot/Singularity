@@ -34,6 +34,11 @@ class Log extends Component {
   componentDidUpdate(prevProps) {
     if (this.props.tailerId !== prevProps.tailerId) {
       this.props.initializeFile();
+      return;
+    }
+
+    if (this.props.scrollToOffset !== prevProps.scrollToOffset) {
+      this.refs.LogLines.refs.VirtualScroll.scrollToIndex()
     }
 
     if (this.props.scroll.hasOwnProperty('startIndex')) {
@@ -50,9 +55,29 @@ class Log extends Component {
       }
       const unloaded = this.findUnloadedInRange(start, stop);
 
-      unloaded.forEach((index) => {
-        this.loadLines(index, index);
-      });
+      // unloaded.forEach((index) => {
+      //   this.loadLines(index, index);
+      // });
+      if (unloaded.last() !== undefined) {
+        this.loadLines(unloaded.last(), unloaded.last());
+      }
+    }
+
+    if (prevProps.lines.size && this.props.lines.size) {
+      const prevStart = prevProps.lines.first().start;
+      const newStart = this.props.lines.first().start;
+      if (prevStart !== newStart) {
+        // how many rows were added above it?
+        const prevStartIndex = this.props.lines.findIndex(
+          (l) => prevStart >= l.start
+        );
+
+        // TODO: actually 'measure' heights
+        const scrollDelta = prevStartIndex * 14;
+        console.log(scrollDelta);
+
+        console.log(this.refs.LogLines.refs.VirtualScroll.scrollTop);
+      }
     }
   }
 
@@ -111,6 +136,7 @@ class Log extends Component {
       <section className="log-pane">
         <div className="log-line-wrapper">
           <LogLines
+            ref="LogLines"
             isLoaded={props.isLoaded}
             lines={props.lines}
             isLineLoaded={this.isLineLoaded}

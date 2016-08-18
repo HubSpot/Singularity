@@ -1,6 +1,10 @@
 import React, { PropTypes } from 'react';
 import classNames from 'classnames';
 
+const LineLink = ({start}) => {
+
+};
+
 const Line = ({data}) => {
   let lineContents;
 
