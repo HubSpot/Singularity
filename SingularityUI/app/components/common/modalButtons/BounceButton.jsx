@@ -4,29 +4,29 @@ import { Glyphicon } from 'react-bootstrap';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 
-import { getClickComponent } from '../common/modal/ModalWrapper';
+import { getClickComponent } from '../modal/ModalWrapper';
 
-import ScaleModal from './ScaleModal';
+import BounceModal from './BounceModal';
 
-const scaleTooltip = (
-  <ToolTip id="scale">
-    Scale
+const bounceTooltip = (
+  <ToolTip id="bounce">
+    Bounce Request
   </ToolTip>
 );
 
-export default class ScaleButton extends Component {
+export default class BounceButton extends Component {
+
   static propTypes = {
     requestId: PropTypes.string.isRequired,
-    currentInstances: PropTypes.number,
     children: PropTypes.node,
     then: PropTypes.func
   };
 
   static defaultProps = {
     children: (
-      <OverlayTrigger placement="top" id="view-scale-overlay" overlay={scaleTooltip}>
-        <a title="Scale">
-          <Glyphicon glyph="signal" />
+      <OverlayTrigger placement="top" id="view-bounce-overlay" overlay={bounceTooltip}>
+        <a>
+          <Glyphicon glyph="refresh" />
         </a>
       </OverlayTrigger>
     )
@@ -36,10 +36,9 @@ export default class ScaleButton extends Component {
     return (
       <span>
         {getClickComponent(this)}
-        <ScaleModal
+        <BounceModal
           ref="modal"
           requestId={this.props.requestId}
-          currentInstances={this.props.currentInstances}
           then={this.props.then}
         />
       </span>

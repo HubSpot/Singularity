@@ -8,8 +8,8 @@ const getRequests = (state) => state.requestsInState;
 const getFilter = (state) => state.filter;
 
 function findRequestIds(requests) {
-  return _.map(requests, (r) => {
-    return _.extend({}, r, {id: r.request ? r.request.id : r.requestId});
+  return _.map(requests, (request) => {
+    return _.extend({}, request, {id: request.request ? request.request.id : request.requestId});
   });
 }
 
@@ -19,7 +19,7 @@ export const getStarredRequests = createSelector(
   [getStarred, getRequestsAPI],
   (starredData, requestsAPI) => {
     const requests = findRequestIds(requestsAPI.data);
-    return requests.filter((r) => starredData.has(r.request.id));
+    return requests.filter((requestParent) => starredData.has(requestParent.request.id));
   }
 );
 
@@ -34,9 +34,9 @@ export const getUserRequests = createSelector(
 
     const requests = findRequestIds(requestsAPI.data);
 
-    return requests.filter((r) => {
+    return requests.filter((requestParent) => {
       const activeDeployUser = Utils.maybe(
-        r,
+        requestParent,
         ['requestDeployState', 'activeDeploy', 'user']
       );
 
@@ -47,7 +47,7 @@ export const getUserRequests = createSelector(
         }
       }
 
-      const requestOwners = r.request.owners;
+      const requestOwners = requestParent.request.owners;
       if (requestOwners === undefined) {
         return false;
       }
@@ -76,8 +76,8 @@ export const getUserRequestTotals = createSelector(
       SERVICE: 0
     };
 
-    for (const r of userRequests) {
-      userRequestTotals[r.request.requestType] += 1;
+    for (const requestParent of userRequests) {
+      userRequestTotals[requestParent.request.requestType] += 1;
     }
 
     return userRequestTotals;
@@ -91,10 +91,10 @@ export default createSelector([getRequests, getFilter], (requests, filter) => {
   let stateFilter = null;
   switch (filter.state) {
     case 'activeDeploy':
-      stateFilter = (request) => request.hasActiveDeploy;
+      stateFilter = (requestParent) => requestParent.hasActiveDeploy;
       break;
     case 'noDeploy':
-      stateFilter = (request) => !request.hasActiveDeploy;
+      stateFilter = (requestParent) => !requestParent.hasActiveDeploy;
       break;
     default:
       break;
@@ -105,26 +105,26 @@ export default createSelector([getRequests, getFilter], (requests, filter) => {
 
   // Filter by request type
   if (!_.contains(['pending', 'cleanup'], filter.type)) {
-    filteredRequests = _.filter(filteredRequests, (request) => request.request && _.contains(filter.subFilter, request.request.requestType));
+    filteredRequests = _.filter(filteredRequests, (requestParent) => requestParent.request && _.contains(filter.subFilter, requestParent.request.requestType));
   }
 
   // Filter by glob or string match
   if (filter.searchFilter) {
-    const id = (request) => request.id || '';
-    const user = (request) => `${request.hasActiveDeploy ? request.requestDeployState.activeDeploy.user : ''}`;
+    const id = (requestParent) => requestParent.id || '';
+    const user = (requestParent) => `${requestParent.hasActiveDeploy ? requestParent.requestDeployState.activeDeploy.user : ''}`;
 
     if (Utils.isGlobFilter(filter.searchFilter)) {
-      const res1 = _.filter(filteredRequests, (request) => {
-        return micromatch.any(user(request).toLowerCase(), `*${filter.searchFilter.toLowerCase()}*`);
+      const res1 = _.filter(filteredRequests, (requestParent) => {
+        return micromatch.any(user(requestParent).toLowerCase(), `*${filter.searchFilter.toLowerCase()}*`);
       });
-      const res2 = _.filter(filteredRequests, (request) => {
-        return micromatch.any(id(request).toLowerCase(), `*${filter.searchFilter.toLowerCase()}*`);
+      const res2 = _.filter(filteredRequests, (requestParent) => {
+        return micromatch.any(id(requestParent).toLowerCase(), `*${filter.searchFilter.toLowerCase()}*`);
       });
-      filteredRequests = _.sortBy(_.union(res1, res2), (request) => (micromatch.any(id(request).toLowerCase(), `${filter.searchFilter.toLowerCase()}*`) ? 1 : 0)).reverse();
+      filteredRequests = _.sortBy(_.union(res1, res2), (requestParent) => (micromatch.any(id(requestParent).toLowerCase(), `${filter.searchFilter.toLowerCase()}*`) ? 1 : 0)).reverse();
     } else {
-      const res1 = _.filter(filteredRequests, request => id(request).toLowerCase().indexOf(filter.searchFilter.toLowerCase()) > -1);
-      const res2 = _.filter(filteredRequests, request => user(request).toLowerCase().indexOf(filter.searchFilter.toLowerCase()) > -1);
-      filteredRequests = _.uniq(_.sortBy(_.union(res1, res2), (request) => (id(request).toLowerCase().startsWith(filter.searchFilter.toLowerCase()) ? 1 : 0)).reverse());
+      const res1 = _.filter(filteredRequests, requestParent => id(requestParent).toLowerCase().indexOf(filter.searchFilter.toLowerCase()) > -1);
+      const res2 = _.filter(filteredRequests, requestParent => user(requestParent).toLowerCase().indexOf(filter.searchFilter.toLowerCase()) > -1);
+      filteredRequests = _.uniq(_.sortBy(_.union(res1, res2), (requestParent) => (id(requestParent).toLowerCase().startsWith(filter.searchFilter.toLowerCase()) ? 1 : 0)).reverse());
     }
   }
 

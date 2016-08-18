@@ -25,7 +25,9 @@ class Column extends Component {
     label: '',
     sortable: false,
     sortData: (cellData) => cellData,
+    /* eslint-disable id-length */ // Exception for comparator
     sortFunc: (a, b) => {
+      /* eslint-enable id-length */
       if (a < b) {
         return -1;
       }

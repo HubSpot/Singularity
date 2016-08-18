@@ -5,6 +5,11 @@ import React, { PropTypes } from 'react';
 // or blurring, causes the option to be autocompleted and added.
 
 const MultiSelect = (props) => {
+  const valueToLabelMap = [];
+  for (const option of props.options) {
+    valueToLabelMap[option.value] = option.label;
+  }
+
   const addNewOption = (valueToAdd) => {
     let cleansedValueToAdd = valueToAdd;
     if (props.splits) {
@@ -27,18 +32,37 @@ const MultiSelect = (props) => {
     props.onChange(newValue);
     return true;
   };
+
   const checkInputChange = (value) => {
     if (props.splits && props.splits.indexOf(value.slice(-1)) !== -1 && addNewOption(value)) { // Side effect!
       return '';
     }
     return value;
   };
+
+  const getValueAsObj = (value) => {
+    if (props.isValueString) {
+      return value.map(valueArrayContent => ({value: valueArrayContent, label: valueToLabelMap[valueArrayContent]}));
+    }
+    return value;
+  };
+
+  const onChange = (newValue) => {
+    if (props.isValueString && newValue) {
+      return props.onChange(newValue.map(valueArrayContent => valueArrayContent.value));
+    }
+    if (!newValue) {
+      return props.onChange([]);
+    }
+    return props.onChange(newValue);
+  };
+
   return (
     <Select
       id={ props.id }
-      onChange={ props.onChange }
+      onChange={ onChange }
       onInputChange={ value => checkInputChange(value) }
-      value={ props.value }
+      value={ getValueAsObj(props.value) }
       options={ props.options }
       onBlurResetsInput={ false }
       multi={ true }
@@ -51,15 +75,19 @@ const MultiSelect = (props) => {
 
 MultiSelect.propTypes = {
   splits: PropTypes.arrayOf(PropTypes.string),
-  value: PropTypes.arrayOf(PropTypes.shape({
-    label: PropTypes.string,
-    value: PropTypes.string
-  })).isRequired,
+  value: PropTypes.arrayOf(PropTypes.oneOfType([
+    PropTypes.shape({
+      label: PropTypes.string,
+      value: PropTypes.string
+    }),
+    PropTypes.string
+  ])).isRequired,
   options: PropTypes.arrayOf(PropTypes.shape({
     label: PropTypes.string,
     value: PropTypes.string
   })).isRequired,
   onChange: PropTypes.func.isRequired,
+  isValueString: PropTypes.bool,
   placeholder: PropTypes.string,
   allowCreate: PropTypes.bool,
   id: PropTypes.string.isRequired

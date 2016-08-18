@@ -18,10 +18,10 @@ class TaskSearchFilters extends React.Component {
     resetForm: React.PropTypes.func
   }
 
-  handleSubmit(e) {
-    e.preventDefault();
+  handleSubmit(event) {
+    event.preventDefault();
     if (this.props.valid) {
-      const result = _.mapObject(this.props.fields, (v) => v.value);
+      const result = _.mapObject(this.props.fields, (field) => field.value);
       this.props.onSearch(result);
     }
   }

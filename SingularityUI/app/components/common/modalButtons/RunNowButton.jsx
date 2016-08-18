@@ -1,14 +1,14 @@
 import React, { Component, PropTypes } from 'react';
 import { withRouter } from 'react-router';
 import { connect } from 'react-redux';
-import { FetchTaskHistory, FetchTaskHistoryForRequest } from '../../actions/api/history';
+import { FetchTaskHistory, FetchTaskHistoryForRequest } from '../../../actions/api/history';
 
 import { Glyphicon } from 'react-bootstrap';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 import RunNowModal from './RunNowModal';
-import { getClickComponent } from '../common/modal/ModalWrapper';
-import Utils from '../../utils';
+import { getClickComponent } from '../modal/ModalWrapper';
+import Utils from '../../../utils';
 
 const runNowTooltip = (
   <ToolTip id="run-now">

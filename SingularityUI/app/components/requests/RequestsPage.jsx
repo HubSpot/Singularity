@@ -24,31 +24,24 @@ import filterSelector from '../../selectors/requests';
 import Utils from '../../utils';
 
 class RequestsPage extends Component {
-  static propTypes = {
-    state: PropTypes.string.isRequired,
-    subFilter: PropTypes.string.isRequired,
-    searchFilter: PropTypes.string.isRequired,
-    requestsInState: PropTypes.arrayOf(PropTypes.object).isRequired,
-    fetchFilter: PropTypes.func.isRequired
-  };
 
   static propTypes = {
-    requestsInState: React.PropTypes.array,
-    fetchFilter: React.PropTypes.func,
-    removeRequest: React.PropTypes.func,
-    unpauseRequest: React.PropTypes.func,
-    runNow: React.PropTypes.func,
-    fetchRun: React.PropTypes.func,
-    fetchRunHistory: React.PropTypes.func,
-    fetchTaskFiles: React.PropTypes.func,
-    scaleRequest: React.PropTypes.func,
-    bounceRequest: React.PropTypes.func,
-    params: React.PropTypes.object,
-    router: React.PropTypes.object,
-    filter: React.PropTypes.shape({
-      state: React.PropTypes.string,
-      subFilter: React.PropTypes.array,
-      searchFilter: React.PropTypes.string
+    requestsInState: PropTypes.array,
+    fetchFilter: PropTypes.func,
+    removeRequest: PropTypes.func,
+    unpauseRequest: PropTypes.func,
+    runNow: PropTypes.func,
+    fetchRun: PropTypes.func,
+    fetchRunHistory: PropTypes.func,
+    fetchTaskFiles: PropTypes.func,
+    scaleRequest: PropTypes.func,
+    bounceRequest: PropTypes.func,
+    params: PropTypes.object,
+    router: PropTypes.object,
+    filter: PropTypes.shape({
+      state: PropTypes.string,
+      subFilter: PropTypes.array,
+      searchFilter: PropTypes.string
     }).isRequired
   };
 

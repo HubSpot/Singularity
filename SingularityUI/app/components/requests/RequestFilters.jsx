@@ -2,7 +2,7 @@ import React from 'react';
 import Utils from '../../utils';
 import classNames from 'classnames';
 import { Link } from 'react-router';
-import InfoModalButton from '../common/modal/InfoModalButton';
+import InfoModalButton from '../common/modalButtons/InfoModalButton';
 
 import { Nav, NavItem, Glyphicon, Button } from 'react-bootstrap';
 
@@ -53,20 +53,20 @@ export default class RequestFilters extends React.Component {
     this.props.onFilterChange(_.extend({}, this.props.filter, {state: RequestFilters.REQUEST_STATES[selectedKey].filterVal}));
   }
 
-  handleSearchChange(e) {
-    this.props.onFilterChange(_.extend({}, this.props.filter, {searchFilter: e.target.value}));
+  handleSearchChange(event) {
+    this.props.onFilterChange(_.extend({}, this.props.filter, {searchFilter: event.target.value}));
   }
 
-  toggleRequestType(t) {
+  toggleRequestType(requestType) {
     let selected = this.props.filter.subFilter;
     if (selected.length === RequestFilters.REQUEST_TYPES.length) {
-      selected = [t];
-    } else if (_.isEmpty(_.without(selected, t))) {
+      selected = [requestType];
+    } else if (_.isEmpty(_.without(selected, requestType))) {
       selected = RequestFilters.REQUEST_TYPES;
-    } else if (_.contains(selected, t)) {
-      selected = _.without(selected, t);
+    } else if (_.contains(selected, requestType)) {
+      selected = _.without(selected, requestType);
     } else {
-      selected.push(t);
+      selected.push(requestType);
     }
     this.props.onFilterChange(_.extend({}, this.props.filter, {subFilter: selected}));
   }
@@ -76,17 +76,17 @@ export default class RequestFilters extends React.Component {
   }
 
   renderStatusFilter() {
-    const selectedIndex = _.findIndex(RequestFilters.REQUEST_STATES, (s) => s.filterVal === this.props.filter.state);
-    const navItems = RequestFilters.REQUEST_STATES.map((s, index) => {
+    const selectedIndex = _.findIndex(RequestFilters.REQUEST_STATES, (requestState) => requestState.filterVal === this.props.filter.state);
+    const navItems = RequestFilters.REQUEST_STATES.map((requestState, index) => {
       return (
         <NavItem
           key={index}
           className={classNames({'separator-pill': _.contains([3, 5], index)})}
           eventKey={index}
-          title={s.tip}
+          title={requestState.tip}
           active={index === selectedIndex}
           onClick={() => this.handleStatusSelect(index)}>
-            {s.displayVal}
+            {requestState.displayVal}
         </NavItem>
       );
     });
@@ -115,11 +115,11 @@ export default class RequestFilters extends React.Component {
   }
 
   renderRequestTypeFilter() {
-    const filterItems = this.props.displayRequestTypeFilters && RequestFilters.REQUEST_TYPES.map((t, index) => {
+    const filterItems = this.props.displayRequestTypeFilters && RequestFilters.REQUEST_TYPES.map((requestType, index) => {
       return (
-        <li key={index} className={_.contains(this.props.filter.subFilter, t) && 'active'}>
-          <a onClick={() => this.toggleRequestType(t)}>
-            <Glyphicon glyph="ok" /> {Utils.humanizeText(t)}
+        <li key={index} className={_.contains(this.props.filter.subFilter, requestType) && 'active'}>
+          <a onClick={() => this.toggleRequestType(requestType)}>
+            <Glyphicon glyph="ok" /> {Utils.humanizeText(requestType)}
           </a>
         </li>
       );

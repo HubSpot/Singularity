@@ -9,8 +9,8 @@ const getCleanups = (state) => state.cleanups;
 export const getBouncesForRequest = (requestId) => createSelector(
   [getTaskCleanups],
   (taskCleanups) => (
-  taskCleanups.data || []).filter((tc) => (
-    tc.cleanupType === 'BOUNCING' || tc.cleanupType === 'INCREMENTAL_BOUNCE' && tc.taskId.requestId === requestId
+  taskCleanups.data || []).filter((cleanup) => (
+    cleanup.cleanupType === 'BOUNCING' || cleanup.cleanupType === 'INCREMENTAL_BOUNCE' && cleanup.taskId.requestId === requestId
   ))
 );
 
@@ -20,9 +20,9 @@ export const getBouncesForRequest = (requestId) => createSelector(
 export const getDecomissioningTasks = createSelector(
   [getTasks, getCleanups],
   (tasks, cleanups) => {
-    return _.without(_.map(cleanups, (c) => {
-      if (c.cleanupType === 'DECOMISSIONING') {
-        return _.find(tasks, (t) => t.taskId.id === c.taskId.id);
+    return _.without(_.map(cleanups, (cleanup) => {
+      if (cleanup.cleanupType === 'DECOMISSIONING') {
+        return _.find(tasks, (task) => task.taskId.id === cleanup.taskId.id);
       }
       return undefined;
     }), undefined);
