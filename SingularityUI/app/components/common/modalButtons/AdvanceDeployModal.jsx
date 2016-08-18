@@ -5,14 +5,15 @@ import Utils from '../../../utils';
 
 import { AdvanceDeploy } from '../../../actions/api/deploys';
 
-import FormModal from '../../common/modal/FormModal';
+import FormModal from '../modal/FormModal';
 
 class AdvanceDeployModal extends Component {
   static propTypes = {
     deployId: PropTypes.string.isRequired,
     requestId: PropTypes.string.isRequired,
     requestParent: PropTypes.object.isRequired,
-    advanceDeploy: PropTypes.func.isRequired
+    advanceDeploy: PropTypes.func.isRequired,
+    then: PropTypes.func
   };
 
   show() {
@@ -39,6 +40,7 @@ class AdvanceDeployModal extends Component {
     );
     return (
       <FormModal
+        name="Advance Deploy"
         ref="advanceModal"
         action="Advance Deploy"
         onConfirm={(data) => this.props.advanceDeploy(data.targetActiveInstances)}
@@ -70,7 +72,7 @@ const mapDispatchToProps = (dispatch, ownProps) => ({
     ownProps.deployId,
     ownProps.requestId,
     targetActiveInstances
-  ))
+  )).then(response => (ownProps.then && ownProps.then(response)))
 });
 
 export default connect(

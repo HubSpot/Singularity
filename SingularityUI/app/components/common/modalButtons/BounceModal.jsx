@@ -1,9 +1,9 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { BounceRequest } from '../../actions/api/requests';
+import { BounceRequest } from '../../../actions/api/requests';
 
-import FormModal from '../common/modal/FormModal';
+import FormModal from '../modal/FormModal';
 
 class BounceModal extends Component {
   static propTypes = {
@@ -29,6 +29,7 @@ class BounceModal extends Component {
   render() {
     return (
       <FormModal
+        name="Bounce Request"
         ref="bouceModal"
         action="Bounce Request"
         onConfirm={(data) => this.props.bounceRequest(data)}
@@ -71,7 +72,7 @@ class BounceModal extends Component {
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  bounceRequest: (data) => dispatch(BounceRequest.trigger(ownProps.requestId, data)),
+  bounceRequest: (data) => dispatch(BounceRequest.trigger(ownProps.requestId, data)).then(response => (ownProps.then && ownProps.then(response))),
 });
 
 export default connect(

@@ -1,26 +1,26 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { ExitRequestCooldown } from '../../actions/api/requests';
+import { UnpauseRequest } from '../../../actions/api/requests';
 
-import FormModal from '../common/modal/FormModal';
+import FormModal from '../modal/FormModal';
 
-class ExitCooldownModal extends Component {
+class UnpauseModal extends Component {
   static propTypes = {
     requestId: PropTypes.string.isRequired,
-    exitRequestCooldown: PropTypes.func.isRequired
+    unpauseRequest: PropTypes.func.isRequired
   };
 
   show() {
-    this.refs.exitCooldownModal.show();
+    this.refs.unpauseModal.show();
   }
 
   render() {
     return (
       <FormModal
-        ref="exitCooldownModal"
-        action="Exit Request Cooldown"
-        onConfirm={(data) => this.props.exitRequestCooldown(data)}
+        ref="unpauseModal"
+        action="Unpause Request"
+        onConfirm={(data) => this.props.unpauseRequest(data)}
         buttonStyle="primary"
         formElements={[
           {
@@ -34,7 +34,7 @@ class ExitCooldownModal extends Component {
             label: 'Message (optional)'
           }
         ]}>
-        <p>Are you sure you want to remove this request from cooldown?</p>
+        <p>Are you sure you want to unpause this request?</p>
         <pre>{this.props.requestId}</pre>
       </FormModal>
     );
@@ -42,7 +42,7 @@ class ExitCooldownModal extends Component {
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  exitRequestCooldown: (data) => dispatch(ExitRequestCooldown.trigger(ownProps.requestId, data)),
+  unpauseRequest: (data) => dispatch(UnpauseRequest.trigger(ownProps.requestId, data)).then((response) => ownProps.then && ownProps.then(response)),
 });
 
 export default connect(
@@ -50,4 +50,4 @@ export default connect(
   mapDispatchToProps,
   null,
   { withRef: true }
-)(ExitCooldownModal);
+)(UnpauseModal);

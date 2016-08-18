@@ -4,16 +4,17 @@ import { connect } from 'react-redux';
 import {
   ScaleRequest,
   BounceRequest
-} from '../../actions/api/requests';
+} from '../../../actions/api/requests';
 
-import FormModal from '../common/modal/FormModal';
+import FormModal from '../modal/FormModal';
 
 class ScaleModal extends Component {
   static propTypes = {
     requestId: PropTypes.string.isRequired,
     scaleRequest: PropTypes.func.isRequired,
     bounceRequest: PropTypes.func.isRequired,
-    currentInstances: PropTypes.number
+    currentInstances: PropTypes.number,
+    then: PropTypes.func
   };
 
   // NOTE: currentInstances
@@ -57,6 +58,7 @@ class ScaleModal extends Component {
   render() {
     return (
       <FormModal
+        name="Scale Request"
         ref="scaleModal"
         action="Scale Request"
         onConfirm={(data) => this.handleScale(data)}
@@ -102,7 +104,7 @@ class ScaleModal extends Component {
 }
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  scaleRequest: (data) => dispatch(ScaleRequest.trigger(ownProps.requestId, data)),
+  scaleRequest: (data) => dispatch(ScaleRequest.trigger(ownProps.requestId, data)).then((response) => ownProps.then && ownProps.then(response)),
   bounceRequest: (data) => dispatch(BounceRequest.trigger(ownProps.requestId, data))
 });
 

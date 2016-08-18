@@ -4,8 +4,8 @@ import Column from '../common/table/Column';
 import { Glyphicon } from 'react-bootstrap';
 import Utils from '../../utils';
 
-function getStatusTextColor(status) {
-  switch (status) {
+function getStatusTextColor(driverStatus) {
+  switch (driverStatus) {
     case 'DRIVER_RUNNING': return 'color-success';
     case 'DRIVER_NOT_STARTED': return 'text-muted';
     default: return '';
@@ -20,33 +20,33 @@ function HostStates(props) {
         data={props.hosts || []}
         paginated={true}
         rowChunkSize={100}
-        keyGetter={(h) => h.hostname}
+        keyGetter={(host) => host.hostname}
       >
         <Column
           label="Hostname"
           id="hostname"
           key="hostname"
-          cellData={(h) => h.hostname}
+          cellData={(host) => host.hostname}
           sortable={true}
         />
         <Column
           label="Driver status"
           id="driverStatus"
           key="driverStatus"
-          cellData={(h) => h.driverStatus}
-          className={(s) => getStatusTextColor(s)}
-          cellRender={(s) => Utils.humanizeText(s)}
+          cellData={(host) => host.driverStatus}
+          className={(driverStatus) => getStatusTextColor(driverStatus)}
+          cellRender={(driverStatus) => Utils.humanizeText(driverStatus)}
           sortable={true}
         />
         <Column
           label="Connected"
           id="mesosConnected"
           key="mesosConnected"
-          cellData={(h) => h.driverStatus === 'DRIVER_RUNNING' && h.mesosConnected}
-          cellRender={(c) => (
+          cellData={(host) => host.driverStatus === 'DRIVER_RUNNING' && host.mesosConnected}
+          cellRender={(mesosConnected) => (
             <Glyphicon
-              className={c ? 'color-success' : 'color-error'}
-              glyph={c ? 'ok' : 'remove'}
+              className={mesosConnected ? 'color-success' : 'color-error'}
+              glyph={mesosConnected ? 'ok' : 'remove'}
             />
           )}
           sortable={true}
@@ -55,16 +55,16 @@ function HostStates(props) {
           label="Uptime"
           id="uptime"
           key="uptime"
-          cellData={(h) => h.uptime}
-          cellRender={(u) => Utils.duration(u)}
+          cellData={(host) => host.uptime}
+          cellRender={(uptime) => Utils.duration(uptime)}
           sortable={true}
         />
         <Column
           label="Time since last offer"
           id="millisSinceLastOffer"
           key="millisSinceLastOffer"
-          cellData={(h) => h.millisSinceLastOffer}
-          cellRender={(l) => Utils.duration(l)}
+          cellData={(host) => host.millisSinceLastOffer}
+          cellRender={(millisSinceLastOffer) => (millisSinceLastOffer ? Utils.duration(millisSinceLastOffer) : '—')}
           sortable={true}
         />
       </UITable>

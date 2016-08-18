@@ -4,7 +4,7 @@ import { Glyphicon } from 'react-bootstrap';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 
-import { getClickComponent } from '../common/modal/ModalWrapper';
+import { getClickComponent } from '../modal/ModalWrapper';
 
 import ScaleModal from './ScaleModal';
 
@@ -18,7 +18,8 @@ export default class ScaleButton extends Component {
   static propTypes = {
     requestId: PropTypes.string.isRequired,
     currentInstances: PropTypes.number,
-    children: PropTypes.node
+    children: PropTypes.node,
+    then: PropTypes.func
   };
 
   static defaultProps = {
@@ -39,6 +40,7 @@ export default class ScaleButton extends Component {
           ref="modal"
           requestId={this.props.requestId}
           currentInstances={this.props.currentInstances}
+          then={this.props.then}
         />
       </span>
     );

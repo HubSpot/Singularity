@@ -4,7 +4,7 @@ import { Glyphicon } from 'react-bootstrap';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 
-import { getClickComponent } from '../common/modal/ModalWrapper';
+import { getClickComponent } from '../modal/ModalWrapper';
 
 import RemoveModal from './RemoveModal';
 
@@ -17,7 +17,8 @@ const removeTooltip = (
 export default class RemoveButton extends Component {
   static propTypes = {
     requestId: PropTypes.string.isRequired,
-    children: PropTypes.node
+    children: PropTypes.node,
+    then: PropTypes.func
   };
 
   static defaultProps = {
@@ -34,7 +35,7 @@ export default class RemoveButton extends Component {
     return (
       <span>
         {getClickComponent(this)}
-        <RemoveModal ref="modal" requestId={this.props.requestId} />
+        <RemoveModal ref="modal" requestId={this.props.requestId} then={this.props.then} />
       </span>
     );
   }

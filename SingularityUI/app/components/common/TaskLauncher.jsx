@@ -42,7 +42,7 @@ class TaskLauncher extends Component {
       promises.push(this.props.fetchRequestRun(requestId, runId, [404]));
       promises.push(this.props.fetchRequestRunHistory(requestId, runId, [404]));
       Promise.all(promises).then((responses) => {
-        const responseList = _.filter(_.pluck(responses, 'data'), (r) => !!r);
+        const responseList = _.filter(_.pluck(responses, 'data'), (response) => !!response);
         if (responseList.length) {
           this.clearIntervals();
           this.setState({
@@ -67,7 +67,7 @@ class TaskLauncher extends Component {
       this.props.fetchTaskFiles(taskId, `${taskId}${directory}`, [400]).then((response) => {
         const files = response.data && response.data.files;
         if (files) {
-          const file = _.find(files, (f) => f.name === _.last(filename.split('/')));
+          const file = _.find(files, (fileToCheck) => fileToCheck.name === _.last(filename.split('/')));
           if (file) {
             this.setState({
               fileExists: true

@@ -33,7 +33,7 @@ export const BEGIN_AUTO_REFRESH = 'BEGIN_AUTO_REFRESH';
 export const BeginAutoRefresh = (key, actions, interval = 30000, expiration = null) => {
   return (dispatch) => {
     const intervalId = setInterval(
-      () => actions.forEach((a) => dispatch(a)),
+      () => actions.forEach((action) => dispatch(action)),
       interval
     );
 

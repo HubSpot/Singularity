@@ -58,11 +58,11 @@ function TaskHealthchecks (props) {
           id="actions-column"
           key="actions-column"
           className="actions-column"
-          cellData={(healthcheckResult) => <JSONButton object={healthcheckResult}>{'{ }'}</JSONButton>}
+          cellData={(healthcheckResult) => <JSONButton object={healthcheckResult} showOverlay={true}>{'{ }'}</JSONButton>}
         />
       </UITable>
     </CollapsableSection>
-  );
+  ) || <div></div>;
 }
 
 TaskHealthchecks.propTypes = {

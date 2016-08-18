@@ -9,8 +9,8 @@ import classNames from 'classnames';
 import Utils from '../../utils';
 
 import JSONButton from '../common/JSONButton';
-import KillTaskButton from '../tasks/KillTaskButton';
-import RunNowButton from '../requests/RunNowButton';
+import KillTaskButton from '../common/modalButtons/KillTaskButton';
+import RunNowButton from '../common/modalButtons/RunNowButton';
 
 export const TaskId = (
   <Column
@@ -154,7 +154,7 @@ export const CPUs = (
     id="cpus"
     key="cpus"
     cellData={
-      (rowData) => _.find(rowData.mesosTask.resources, (r) => r.name === 'cpus').scalar.value
+      (rowData) => _.find(rowData.mesosTask.resources, (resource) => resource.name === 'cpus').scalar.value
     }
     cellRender={
       (cellData) => (
@@ -171,7 +171,7 @@ export const Memory = (
     id="memory"
     key="memory"
     cellData={
-      (rowData) => _.find(rowData.mesosTask.resources, (r) => r.name === 'mem').scalar.value
+      (rowData) => _.find(rowData.mesosTask.resources, (resource) => resource.name === 'mem').scalar.value
     }
     cellRender={
       (cellData) => (
@@ -213,8 +213,11 @@ export const ActiveActions = (
     className="actions-column"
     cellRender={(cellData) => (
       <div className="hidden-xs">
-        <KillTaskButton taskId={cellData.taskId.id} />
-        <JSONButton className="inline" object={cellData}>
+        <KillTaskButton
+          taskId={cellData.taskId.id}
+          shouldShowWaitForReplacementTask={Utils.isIn(cellData.taskRequest.request.requestType, ['SERVICE', 'WORKER'])}
+        />
+        <JSONButton className="inline" object={cellData} showOverlay={true}>
           {'{ }'}
         </JSONButton>
       </div>
@@ -304,7 +307,7 @@ export const ScheduledActions = (
     cellRender={(cellData) => (
       <div className="hidden-xs">
         <RunNowButton requestId={cellData.pendingTask.pendingTaskId.requestId} />
-        <JSONButton className="inline" object={cellData}>
+        <JSONButton className="inline" object={cellData} showOverlay={true}>
           {'{ }'}
         </JSONButton>
       </div>
@@ -319,13 +322,6 @@ export const ScheduledTaskId = (
     key="taskId"
     cellData={
       (rowData) => rowData.pendingTask.pendingTaskId.id
-    }
-    cellRender={
-      (cellData) => (
-        <Link to={`task/${cellData}`}>
-          {cellData}
-        </Link>
-      )
     }
     sortable={true}
     className="keep-in-check"
@@ -355,7 +351,7 @@ const logTooltip = (
   </ToolTip>
 );
 
-export const LogLinkAndJSON = (
+export const LogLinkAndJSON = logPath => (
   <Column
     label=""
     id="logLink"
@@ -366,13 +362,13 @@ export const LogLinkAndJSON = (
       <div className="hidden-xs">
         <OverlayTrigger placement="top" id="view-log-overlay" overlay={logTooltip}>
           <Link
-            to={`request/${taskId.requestId}/tail/${config.finishedTaskLogPath}?taskIds=${taskId.id}`}
+            to={`request/${taskId.requestId}/tail/${logPath}?taskIds=${taskId.id}`}
             title="Log"
           >
             <Glyphicon glyph="file" />
           </Link>
         </OverlayTrigger>
-        <JSONButton className="inline" object={rowData}>
+        <JSONButton className="inline" object={rowData} showOverlay={true}>
           {'{ }'}
         </JSONButton>
       </div>
@@ -388,7 +384,7 @@ export const JSONAction = (
     className="actions-column"
     cellRender={(cellData) => (
       <div className="hidden-xs">
-        <JSONButton className="inline" object={cellData}>
+        <JSONButton className="inline" object={cellData} showOverlay={true}>
           {'{ }'}
         </JSONButton>
       </div>

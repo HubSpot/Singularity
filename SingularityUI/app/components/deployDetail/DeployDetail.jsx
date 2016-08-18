@@ -37,7 +37,8 @@ class DeployDetail extends React.Component {
     fetchTaskHistoryForDeploy: PropTypes.func,
     params: PropTypes.object,
     isTaskHistoryFetching: PropTypes.bool,
-    notFound: PropTypes.bool
+    notFound: PropTypes.bool,
+    group: PropTypes.object
   }
 
   componentDidMount() {
@@ -91,22 +92,30 @@ class DeployDetail extends React.Component {
         Click to copy
       </Popover>
     );
+    const breadcrumbs = [
+      {
+        label: 'Request',
+        text: this.props.params.requestId,
+        link: `request/${this.props.params.requestId}`
+      },
+      {
+        label: 'Deploy',
+        text: this.props.params.deployId
+      }
+    ];
+    if (this.props.group) {
+      breadcrumbs.unshift({
+        label: 'Group',
+        text: this.props.group.id,
+        link: `group/${this.props.group.id}`
+      });
+    }
     return (
       <header className="detail-header">
         <div className="row">
           <div className="col-md-12">
             <Breadcrumbs
-              items={[
-                {
-                  label: 'Request',
-                  text: deploy.deploy.requestId,
-                  link: `request/${deploy.deploy.requestId}`
-                },
-                {
-                  label: 'Deploy',
-                  text: deploy.deploy.id
-                }
-              ]}
+              items={breadcrumbs}
             />
           </div>
         </div>
@@ -114,7 +123,7 @@ class DeployDetail extends React.Component {
           <div className="col-md-8">
             <h1>
               <OverlayTrigger trigger={['hover', 'focus', 'click']} placement="left" overlay={copyLinkPopover}>
-                <span className="copy-btn" data-clipboard-text={deploy.deploy.id}>{deploy.deploy.id}</span>
+                <span className="copy-btn" data-clipboard-text={this.props.params.deployId}>{this.props.params.deployId}</span>
               </OverlayTrigger>
               <DeployState state={deploy.deployResult && deploy.deployResult.deployState || 'PENDING'} />
             </h1>
@@ -153,7 +162,7 @@ class DeployDetail extends React.Component {
           keyGetter={(task) => task.taskId.id}
           rowChunkSize={5}
           paginated={true}
-          fetchDataFromApi={(page, numberPerPage) => this.props.fetchTaskHistoryForDeploy(deploy.deploy.requestId, deploy.deploy.id, numberPerPage, page)}
+          fetchDataFromApi={(page, numberPerPage) => this.props.fetchTaskHistoryForDeploy(this.props.params.requestId, this.props.params.deployId, numberPerPage, page)}
           isFetching={this.props.isTaskHistoryFetching}
         >
           <Column
@@ -197,7 +206,7 @@ class DeployDetail extends React.Component {
                 <Link to={`task/${task.taskId.id}/tail/${config.finishedTaskLogPath}`}>
                   <Glyphicon glyph="file" />
                 </Link>
-                <JSONButton object={task}>{'{ }'}</JSONButton>
+                <JSONButton object={task} showOverlay={true}>{'{ }'}</JSONButton>
               </span>
             )}
           />
@@ -314,13 +323,15 @@ class DeployDetail extends React.Component {
 
   render() {
     const { deploy, activeTasks, taskHistory, latestHealthchecks } = this.props;
+    const emptyMessage = !deploy.deploy && <div className="empty-table-message">Deploy data not found</div>;
     return (
       <div>
         {this.renderHeader(deploy)}
         {this.renderActiveTasks(deploy, activeTasks)}
         {this.renderTaskHistory(deploy, taskHistory)}
-        {this.renderInfo(deploy)}
-        {this.renderHealthchecks(deploy, latestHealthchecks)}
+        {emptyMessage}
+        {deploy.deploy && this.renderInfo(deploy)}
+        {deploy.deploy && this.renderHealthchecks(deploy, latestHealthchecks)}
       </div>
     );
   }
@@ -339,8 +350,8 @@ function mapDispatchToProps(dispatch) {
 function mapStateToProps(state, ownProps) {
   let latestHealthchecks = _.mapObject(state.api.task, (val) => {
     if (val.data && val.data.healthcheckResults && val.data.healthcheckResults.length > 0) {
-      return _.max(val.data.healthcheckResults, (hc) => {
-        return hc.timestamp;
+      return _.max(val.data.healthcheckResults, (healthcheckResult) => {
+        return healthcheckResult.timestamp;
       });
     }
     return undefined;
@@ -353,6 +364,7 @@ function mapStateToProps(state, ownProps) {
     deploy: state.api.deploy.data,
     taskHistory: state.api.taskHistoryForDeploy.data,
     isTaskHistoryFetching: state.api.taskHistoryForDeploy.isFetching,
+    group: state.api.deploy.data.deploy && _.first(_.filter(state.api.requestGroups.data, (filterGroup) => _.contains(filterGroup.requestIds, state.api.deploy.data.deploy.requestId))),
     latestHealthchecks
   };
 }
@@ -363,8 +375,8 @@ function refresh(props, promises = []) {
 
   const allPromises = Promise.all(promises);
   allPromises.then(() => {
-    for (const t of props.route.store.getState().api.activeTasksForDeploy.data) {
-      props.fetchTaskHistory(t.taskId.id);
+    for (const task of props.route.store.getState().api.activeTasksForDeploy.data) {
+      props.fetchTaskHistory(task.taskId.id);
     }
   });
   return allPromises;

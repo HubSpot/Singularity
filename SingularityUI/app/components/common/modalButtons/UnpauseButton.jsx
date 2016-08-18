@@ -4,7 +4,7 @@ import { Glyphicon } from 'react-bootstrap';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 
-import { getClickComponent } from '../common/modal/ModalWrapper';
+import { getClickComponent } from '../modal/ModalWrapper';
 
 import UnpauseModal from './UnpauseModal';
 
@@ -18,7 +18,8 @@ export default class UnpauseButton extends Component {
 
   static propTypes = {
     requestId: PropTypes.string.isRequired,
-    children: PropTypes.node
+    children: PropTypes.node,
+    then: PropTypes.func
   };
 
   static defaultProps = {
@@ -35,7 +36,7 @@ export default class UnpauseButton extends Component {
     return (
       <span>
         {getClickComponent(this)}
-        <UnpauseModal ref="modal" requestId={this.props.requestId} />
+        <UnpauseModal ref="modal" requestId={this.props.requestId} then={this.props.then} />
       </span>
     );
   }

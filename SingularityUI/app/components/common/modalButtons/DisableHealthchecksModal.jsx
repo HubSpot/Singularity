@@ -1,14 +1,15 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { SkipRequestHealthchecks } from '../../actions/api/requests';
+import { SkipRequestHealthchecks } from '../../../actions/api/requests';
 
-import FormModal from '../common/modal/FormModal';
+import FormModal from '../modal/FormModal';
 
 class DisableHealthchecksModal extends Component {
   static propTypes = {
     requestId: PropTypes.string.isRequired,
-    disableHealthchecks: PropTypes.func.isRequired
+    disableHealthchecks: PropTypes.func.isRequired,
+    then: PropTypes.func
   };
 
   show() {
@@ -32,6 +33,7 @@ class DisableHealthchecksModal extends Component {
     return (
       <div style={{display: 'inline-block'}}>
         <FormModal
+          name="Disable Healthchecks"
           ref="disableHealthchecksModal"
           action="Disable Healthchecks"
           onConfirm={(data) => this.promptDisableHealthchecksDuration(data)}
@@ -71,7 +73,7 @@ const mapDispatchToProps = (dispatch, ownProps) => ({
   disableHealthchecks: (data) => dispatch(SkipRequestHealthchecks.trigger(
     ownProps.requestId,
     {...data, skipHealthchecks: true}
-  )),
+  )).then(response => (ownProps.then && ownProps.then(response)))
 });
 
 export default connect(

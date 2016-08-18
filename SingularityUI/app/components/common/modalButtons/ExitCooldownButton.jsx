@@ -4,42 +4,40 @@ import { Glyphicon } from 'react-bootstrap';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 
-import { getClickComponent } from '../common/modal/ModalWrapper';
+import { getClickComponent } from '../modal/ModalWrapper';
 
-import PauseModal from './PauseModal';
+import ExitCooldownModal from './ExitCooldownModal';
 
-const pauseTooltip = (
-  <ToolTip id="pause">
-    Pause
+const exitCooldownTooltip = (
+  <ToolTip id="exit-cooldown">
+    Exit Cooldown
   </ToolTip>
 );
 
-export default class PauseButton extends Component {
+export default class ExitCooldownButton extends Component {
 
   static propTypes = {
     requestId: PropTypes.string.isRequired,
-    isScheduled: PropTypes.bool.isRequired,
-    children: PropTypes.node
+    children: PropTypes.node,
+    then: PropTypes.func
   };
 
   static defaultProps = {
-    children: (
-      <OverlayTrigger placement="top" id="view-pause-overlay" overlay={pauseTooltip}>
+    children: <OverlayTrigger placement="top" id="view-exit-cooldown-overlay" overlay={exitCooldownTooltip}>
         <a>
-          <Glyphicon glyph="play" />
+          <Glyphicon glyph="ice-lolly-tasted" />
         </a>
       </OverlayTrigger>
-    )
   };
 
   render() {
     return (
       <span>
         {getClickComponent(this)}
-        <PauseModal
+        <ExitCooldownModal
           ref="modal"
           requestId={this.props.requestId}
-          isScheduled={this.props.isScheduled}
+          then={this.props.then}
         />
       </span>
     );

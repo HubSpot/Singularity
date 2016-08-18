@@ -8,8 +8,8 @@ import { Link } from 'react-router';
 
 import { getBouncesForRequest } from '../../../selectors/tasks';
 
-import CancelDeployButton from './CancelDeployButton';
-import AdvanceDeployButton from './AdvanceDeployButton';
+import CancelDeployButton from '../../common/modalButtons/CancelDeployButton';
+import AdvanceDeployButton from '../../common/modalButtons/AdvanceDeployButton';
 
 const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) => {
   if (!requestAPI) {

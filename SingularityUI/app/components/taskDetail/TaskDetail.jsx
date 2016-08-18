@@ -7,7 +7,6 @@ import Utils from '../../utils';
 import { FetchTaskFiles } from '../../actions/api/sandbox';
 import {
   FetchTaskStatistics,
-  KillTask,
   RunCommandOnTask,
   FetchTaskCleanups
 } from '../../actions/api/tasks';
@@ -25,9 +24,10 @@ import { Alert } from 'react-bootstrap';
 import Breadcrumbs from '../common/Breadcrumbs';
 import JSONButton from '../common/JSONButton';
 import Section from '../common/Section';
-import FormModal from '../common/modal/FormModal';
 import CollapsableSection from '../common/CollapsableSection';
 import NotFound from '../common/NotFound';
+
+import KillTaskButton from '../common/modalButtons/KillTaskButton';
 
 import TaskFileBrowser from './TaskFileBrowser';
 import ShellCommands from './ShellCommands';
@@ -53,6 +53,9 @@ class TaskDetail extends Component {
           instanceNo: PropTypes.number.isRequired
         }).isRequired,
         taskRequest: PropTypes.shape({
+          request: PropTypes.shape({
+            requestType: PropTypes.string.isRequired
+          }).isRequired,
           deploy: PropTypes.shape({
             customExecutorCmd: PropTypes.string
           }).isRequired
@@ -103,21 +106,20 @@ class TaskDetail extends Component {
       files: PropTypes.array,
       currentDirectory: PropTypes.string
     }),
-    filePath: PropTypes.string,
+    currentFilePath: PropTypes.string,
     taskId: PropTypes.string.isRequired,
     params: PropTypes.object,
     fetchTaskHistory: PropTypes.func.isRequired,
     fetchTaskStatistics: PropTypes.func.isRequired,
     fetchTaskFiles: PropTypes.func.isRequired,
-    killTask: PropTypes.func.isRequired,
-    runCommandOnTask: PropTypes.func.isRequired
+    runCommandOnTask: PropTypes.func.isRequired,
+    group: PropTypes.object
   };
 
   constructor(props) {
     super(props);
     this.state = {
-      previousUsage: null,
-      currentFilePath: props.params.splat || props.params.taskId
+      previousUsage: null
     };
   }
 
@@ -168,12 +170,6 @@ class TaskDetail extends Component {
     return files;
   }
 
-  killTask(data) {
-    this.props.killTask(this.props.params.taskId, data).then(() => {
-      this.props.fetchTaskHistory(this.props.params.taskId);
-    });
-  }
-
   renderFiles(files) {
     if (!files || _.isUndefined(files.currentDirectory)) {
       return (
@@ -193,9 +189,6 @@ class TaskDetail extends Component {
           changeDir={(path) => {
             if (path.startsWith('/')) path = path.substring(1);
             this.props.fetchTaskFiles(this.props.params.taskId, path).then(() => {
-              this.setState({
-                currentFilePath: path
-              });
               this.props.router.push(Utils.joinPath(`task/${this.props.params.taskId}/files/`, path));
             });
           }}
@@ -222,68 +215,51 @@ class TaskDetail extends Component {
       removeText = this.props.task.isCleaning ? 'Destroy task' : 'Kill Task';
     }
     const removeBtn = this.props.task.isStillRunning && (
-      <span>
-        <FormModal
-          ref="confirmKillTask"
-          action={removeText}
-          onConfirm={(event) => this.killTask(event)}
-          buttonStyle="danger"
-          formElements={[
-            {
-              name: 'waitForReplacementTask',
-              type: FormModal.INPUT_TYPES.BOOLEAN,
-              label: 'Wait for replacement task to start before killing task',
-              defaultValue: true
-            },
-            {
-              name: 'message',
-              type: FormModal.INPUT_TYPES.STRING,
-              label: 'Message (optional)'
-            }
-          ]}>
-          <span>
-            <p>Are you sure you want to kill this task?</p>
-            <pre>{this.props.params.taskId}</pre>
-            <p>
-                Long running process will be started again instantly, scheduled
-                tasks will behave as if the task failed and may be rescheduled
-                to run in the future depending on whether or not the request
-                has <code>numRetriesOnFailure</code> set.
-            </p>
-          </span>
-        </FormModal>
-        <a className="btn btn-danger" onClick={() => this.refs.confirmKillTask.show()}>
+      <KillTaskButton
+        name={removeText}
+        taskId={this.props.params.taskId}
+        shouldShowWaitForReplacementTask={Utils.isIn(this.props.task.task.taskRequest.request.requestType, ['SERVICE', 'WORKER'])}
+      >
+        <a className="btn btn-danger">
           {removeText}
         </a>
-      </span>
+      </KillTaskButton>
     );
     const terminationAlert = this.props.task.isStillRunning && !cleanup && this.props.task.isCleaning && (
       <Alert bsStyle="warning">
           <strong>Task is terminating:</strong> To issue a non-graceful termination (kill -term), click Destroy Task.
       </Alert>
     );
+    const breadcrumbs = [
+      {
+        label: 'Request',
+        text: this.props.task.task.taskId.requestId,
+        link: `request/${this.props.task.task.taskId.requestId}`
+      },
+      {
+        label: 'Deploy',
+        text: this.props.task.task.taskId.deployId,
+        link: `request/${this.props.task.task.taskId.requestId}/deploy/${this.props.task.task.taskId.deployId}`
+      },
+      {
+        label: 'Instance',
+        text: this.props.task.task.taskId.instanceNo,
+      }
+    ];
+    if (this.props.group) {
+      breadcrumbs.unshift({
+        label: 'Group',
+        text: this.props.group.id,
+        link: `group/${this.props.group.id}`
+      });
+    }
 
     return (
       <header className="detail-header">
         <div className="row">
           <div className="col-md-12">
             <Breadcrumbs
-              items={[
-                {
-                  label: 'Request',
-                  text: this.props.task.task.taskId.requestId,
-                  link: `request/${this.props.task.task.taskId.requestId}`
-                },
-                {
-                  label: 'Deploy',
-                  text: this.props.task.task.taskId.deployId,
-                  link: `request/${this.props.task.task.taskId.requestId}/deploy/${this.props.task.task.taskId.deployId}`
-                },
-                {
-                  label: 'Instance',
-                  text: this.props.task.task.taskId.instanceNo,
-                }
-              ]}
+              items={breadcrumbs}
               right={<span><strong>Hostname: </strong>{this.props.task.task.offer.hostname}</span>}
             />
           </div>
@@ -389,7 +365,7 @@ class TaskDetail extends Component {
     const cleanup = _.find(this.props.taskCleanups, (cleanupToTest) => {
       return cleanupToTest.taskId.id === this.props.taskId;
     });
-    const filesToDisplay = this.props.files[`${this.props.params.taskId}/${this.state.currentFilePath}`] && this.analyzeFiles(this.props.files[`${this.props.taskId}/${this.state.currentFilePath}`].data);
+    const filesToDisplay = this.props.files[`${this.props.params.taskId}/${this.props.currentFilePath}`] && this.analyzeFiles(this.props.files[`${this.props.taskId}/${this.props.currentFilePath}`].data);
 
     return (
       <div className="task-detail detail-view">
@@ -464,6 +440,7 @@ function mapStateToProps(state, ownProps) {
   return {
     task,
     taskId: ownProps.params.taskId,
+    currentFilePath: _.isUndefined(ownProps.params.splat) ? ownProps.params.taskId : ownProps.params.splat,
     taskCleanups: state.api.taskCleanups.data,
     files: state.api.taskFiles,
     resourceUsage: state.api.taskResourceUsage.data,
@@ -471,14 +448,14 @@ function mapStateToProps(state, ownProps) {
     s3Logs: state.api.taskS3Logs.data,
     deploy: state.api.deploy.data,
     pendingDeploys: state.api.deploys.data,
-    shellCommandResponse: state.api.taskShellCommandResponse.data
+    shellCommandResponse: state.api.taskShellCommandResponse.data,
+    group: task.task && _.first(_.filter(state.api.requestGroups.data, (filterGroup) => _.contains(filterGroup.requestIds, task.task.taskId.requestId)))
   };
 }
 
 function mapDispatchToProps(dispatch) {
   return {
     runCommandOnTask: (taskId, commandName) => dispatch(RunCommandOnTask.trigger(taskId, commandName)),
-    killTask: (taskId, data) => dispatch(KillTask.trigger(taskId, data)),
     fetchTaskHistory: (taskId) => dispatch(FetchTaskHistory.trigger(taskId, true)),
     fetchTaskStatistics: (taskId) => dispatch(FetchTaskStatistics.trigger(taskId)),
     fetchTaskFiles: (taskId, path, catchStatusCodes = []) => dispatch(FetchTaskFiles.trigger(taskId, path, catchStatusCodes.concat([404]))),
