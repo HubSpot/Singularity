@@ -19,7 +19,9 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 import com.ning.http.client.extra.ThrottleRequestFilter;
 import com.spotify.docker.client.DefaultDockerClient;
+import com.spotify.docker.client.DefaultDockerClient.Builder;
 import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.messages.AuthConfig;
 
 public class SingularityExecutorModule extends AbstractModule {
 
@@ -99,10 +101,22 @@ public class SingularityExecutorModule extends AbstractModule {
   @Provides
   @Singleton
   public DockerClient providesDockerClient(SingularityExecutorConfiguration configuration) {
-    return DefaultDockerClient.builder()
+    Builder dockerClientBuilder = DefaultDockerClient.builder()
       .uri(URI.create("unix://localhost/var/run/docker.sock"))
-      .connectionPoolSize(configuration.getDockerClientConnectionPoolSize())
-      .build();
+      .connectionPoolSize(configuration.getDockerClientConnectionPoolSize());
+
+    if(configuration.getDockerAuthConfig().isPresent()) {
+      SingularityExecutorDockerAuthConfig authConfig = configuration.getDockerAuthConfig().get();
+
+      dockerClientBuilder.authConfig(AuthConfig.builder()
+        .email(authConfig.getEmail())
+        .username(authConfig.getUsername())
+        .password(authConfig.getPassword())
+        .serverAddress(authConfig.getServerAddress())
+        .build());
+    }
+
+    return dockerClientBuilder.build();
   }
 
   @Provides

@@ -164,6 +164,18 @@ export default class FormModal extends React.Component {
     );
   }
 
+  renderTagsInput(props) {
+    const inputProps = _.omit(props, 'className', 'placeholder', 'addTag');
+    return (
+      <div className="input-group">
+        <input type="text" ref="argValue" className="form-control" placeholder="" {...inputProps} />
+        <span className="input-group-btn">
+          <Button bsStyle="success" onClick={() => this.refs.tagsInput.accept()}>+</Button>
+        </span>
+      </div>
+    );
+  }
+
   renderForm() {
     const inputs = this.props.formElements.map((formElement) => {
       const error = this.state.errors[formElement.name];
@@ -239,11 +251,11 @@ export default class FormModal extends React.Component {
               <label style={{display: 'block', width: '100%'}}>
                 {formElement.label}
                 <TagsInput
+                  ref="tagsInput"
                   value={this.state.formState[formElement.name] || []}
                   onChange={(tags) => this.handleFormChange(formElement.name, tags)}
                   addOnBlur={true}
-                  addOnPaste={true}
-                  inputProps={{className: 'form-control input-large', placeholder: ''}}
+                  renderInput={(props) => this.renderTagsInput(props)}
                   renderTag={this.renderTag}
                 />
               </label>

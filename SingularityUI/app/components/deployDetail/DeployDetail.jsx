@@ -123,7 +123,7 @@ class DeployDetail extends React.Component {
         <div className="row">
           <div className="col-md-8">
             <h1>
-              <OverlayTrigger trigger={['hover', 'focus', 'click']} placement="left" overlay={copyLinkPopover}>
+              <OverlayTrigger trigger={['hover', 'focus', 'click']} placement="top" overlay={copyLinkPopover}>
                 <span className="copy-btn" data-clipboard-text={this.props.params.deployId}>{this.props.params.deployId}</span>
               </OverlayTrigger>
               <DeployState state={deploy.deployResult && deploy.deployResult.deployState || 'PENDING'} />
@@ -354,8 +354,8 @@ function mapDispatchToProps(dispatch) {
 function mapStateToProps(state, ownProps) {
   let latestHealthchecks = _.mapObject(state.api.task, (val) => {
     if (val.data && val.data.healthcheckResults && val.data.healthcheckResults.length > 0) {
-      return _.max(val.data.healthcheckResults, (hc) => {
-        return hc.timestamp;
+      return _.max(val.data.healthcheckResults, (healthcheckResult) => {
+        return healthcheckResult.timestamp;
       });
     }
     return undefined;
@@ -379,8 +379,8 @@ function refresh(props, promises = []) {
 
   const allPromises = Promise.all(promises);
   allPromises.then(() => {
-    for (const t of props.route.store.getState().api.activeTasksForDeploy.data) {
-      props.fetchTaskHistory(t.taskId.id);
+    for (const task of props.route.store.getState().api.activeTasksForDeploy.data) {
+      props.fetchTaskHistory(task.taskId.id);
     }
   });
   return allPromises;

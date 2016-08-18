@@ -9,8 +9,8 @@ import classNames from 'classnames';
 import Utils from '../../utils';
 
 import JSONButton from '../common/JSONButton';
-import KillTaskButton from '../tasks/KillTaskButton';
-import RunNowButton from '../requests/RunNowButton';
+import KillTaskButton from '../common/modalButtons/KillTaskButton';
+import RunNowButton from '../common/modalButtons/RunNowButton';
 
 export const TaskId = (
   <Column
@@ -154,7 +154,7 @@ export const CPUs = (
     id="cpus"
     key="cpus"
     cellData={
-      (rowData) => _.find(rowData.mesosTask.resources, (r) => r.name === 'cpus').scalar.value
+      (rowData) => _.find(rowData.mesosTask.resources, (resource) => resource.name === 'cpus').scalar.value
     }
     cellRender={
       (cellData) => (
@@ -171,7 +171,7 @@ export const Memory = (
     id="memory"
     key="memory"
     cellData={
-      (rowData) => _.find(rowData.mesosTask.resources, (r) => r.name === 'mem').scalar.value
+      (rowData) => _.find(rowData.mesosTask.resources, (resource) => resource.name === 'mem').scalar.value
     }
     cellRender={
       (cellData) => (
@@ -213,7 +213,10 @@ export const ActiveActions = (
     className="actions-column"
     cellRender={(cellData) => (
       <div className="hidden-xs">
-        <KillTaskButton taskId={cellData.taskId.id} />
+        <KillTaskButton
+          taskId={cellData.taskId.id}
+          shouldShowWaitForReplacementTask={Utils.isIn(cellData.taskRequest.request.requestType, ['SERVICE', 'WORKER'])}
+        />
         <JSONButton className="inline" object={cellData} showOverlay={true}>
           {'{ }'}
         </JSONButton>

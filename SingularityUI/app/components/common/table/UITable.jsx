@@ -1,7 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import Waypoint from 'react-waypoint';
 import classNames from 'classnames';
-import _ from 'underscore';
 
 import BootstrapTable from 'react-bootstrap/lib/Table';
 import { Pagination } from 'react-bootstrap';
@@ -165,7 +164,9 @@ class UITable extends Component {
     }
 
     const { cellData, sortData } = sortCol.props;
+    /* eslint-disable id-length */ // Exception for comparator
     const sorted = data.concat().sort((a, b) => {
+      /* eslint-enable id-length */
       return sortCol.props.sortFunc(
         sortData(cellData(a), a),
         sortData(cellData(b), b)
@@ -288,7 +289,7 @@ class UITable extends Component {
     // infinite scrolling
     // Only render a number of rows at a time
     // check to see if we can render of everything
-    const maxVisibleRows = this.state.chunkNum * this.state.rowChunkSize;
+    const maxVisibleRows = this.props.renderAllRows ? this.state.data.length : this.state.chunkNum * this.state.rowChunkSize;
     const rows = this.state.data.slice(0, maxVisibleRows).map((row) => {
       return this.renderTableRow(row);
     });
@@ -452,6 +453,7 @@ UITable.propTypes = {
   keyGetter: PropTypes.func.isRequired,
   children: PropTypes.arrayOf(PropTypes.node).isRequired,
   paginated: PropTypes.bool,
+  renderAllRows: PropTypes.bool,
   rowChunkSize: PropTypes.number,
   rowChunkSizeChoices: PropTypes.arrayOf(PropTypes.number),
   maxPaginationButtons: PropTypes.number,
