@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import FormModal from './components/common/modal/FormModal';
 import AppRouter from './router';
 import configureStore from 'store';
-import { FetchUser, FetchUserSettings, UpdateUserSettings } from 'actions/api/user';
+import { FetchUser, FetchUserSettings, AddStarredRequests } from 'actions/api/user';
 import { FetchGroups } from 'actions/api/requestGroups';
 import Utils from './utils';
 
@@ -19,9 +19,12 @@ function setApiRoot(data) {
 
 const fetchUserSettings = (store, userId) => store.dispatch(FetchUserSettings.trigger(userId));
 
-const updateUserSettings = (store, userId, newSettings) => store.dispatch(UpdateUserSettings.trigger(userId, newSettings));
-
-const deleteLocallyStoredStarredRequests = () => window.localStorage.removeItem('starredRequests');
+function importStars(store, userId, starsToImport) {
+  return store.dispatch(AddStarredRequests.trigger(userId, starsToImport)).then((response) => {
+    if (response.statusCode >= 300 || response.statusCode < 200) return;
+    window.localStorage.removeItem('starredRequests');
+  });
+}
 
 function maybeImportStars(store, fetchUserSettingsApiResponse, userId) {
   if (fetchUserSettingsApiResponse.statusCode !== 200) return;
@@ -29,19 +32,12 @@ function maybeImportStars(store, fetchUserSettingsApiResponse, userId) {
     ? JSON.parse(window.localStorage.getItem('starredRequests'))
     : [];
   const apiStarredRequests = Utils.maybe(fetchUserSettingsApiResponse.data, ['starredRequestIds']) || [];
-  if (_.isEmpty(_.difference(locallyStarredRequests, apiStarredRequests))) {
-    deleteLocallyStoredStarredRequests();
+  const starsToImport = _.difference(locallyStarredRequests, apiStarredRequests);
+  if (_.isEmpty(starsToImport)) {
+    window.localStorage.removeItem('starredRequests');
     return;
   }
-  const newSettings = Utils.changeUserSetting(
-    fetchUserSettingsApiResponse.data,
-    'starredRequestIds',
-    _.union(locallyStarredRequests, apiStarredRequests)
-  );
-  updateUserSettings(store, userId, newSettings).then(() => {
-    deleteLocallyStoredStarredRequests();
-    fetchUserSettings(store, userId);
-  });
+  importStars(store, userId, starsToImport).then(() => fetchUserSettings(store, userId, starsToImport));
 }
 
 document.addEventListener('DOMContentLoaded', () => {
