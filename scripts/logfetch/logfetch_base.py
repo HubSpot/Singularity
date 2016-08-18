@@ -29,8 +29,11 @@ def tasks_for_requests(args):
             tasks = tasks[0:args.task_count] if hasattr(args, 'task_count') else tasks
         all_tasks = all_tasks + tasks
     if not all_tasks:
-        log(colored('No tasks found, check that the request/task you are searching for exists...', 'red'), args, False)
-        exit(1)
+        if args.taskId:
+            log(colored('No tasks found, check that the request/task you are searching for exists...', 'red'), args, False)
+            exit(1)
+        else:
+            log(colored('No tasks found, will try to search at request level', 'yellow'), args, False)
     return all_tasks
 
 def log_matches(inputString, pattern):
@@ -47,7 +50,7 @@ def all_tasks_for_request(args, request):
         elif len(active_tasks) == 0:
             return historical_tasks
         else:
-            return active_tasks + [h for h in historical_tasks if is_in_date_range(args, int(str(h['updatedAt'])[0:-3]))]
+            return active_tasks + [h for h in historical_tasks if is_task_in_date_range(args, int(str(h['updatedAt'])[0:-3]), int(str(h['taskId']['startedAt'])[0:-3]))]
     else:
         return active_tasks
 
@@ -65,7 +68,29 @@ def is_in_date_range(args, timestamp):
     if args.end:
         return False if (timstamp_datetime < args.start or timstamp_datetime > args.end) else True
     else:
-        return False if timedelta.days < args.start else True
+        return False if timstamp_datetime < args.start else True
+
+def is_task_in_date_range(args, start, end):
+    start_datetime = datetime.utcfromtimestamp(start)
+    end_datetime = datetime.utcfromtimestamp(end)
+    if args.end:
+        if start_datetime > args.start and start_datetime < args.end:
+            return True
+        elif end_datetime > args.start and end_datetime < args.end:
+            return True
+        elif end_datetime > args.end and start_datetime > args.start:
+            return True
+        else:
+            return False
+    else:
+        return False if end_datetime < args.start else True
+
+def get_timestamp_string(filename):
+    timestamps = re.findall(r"-\d{13}-", filename)
+    if timestamps:
+        return str(datetime.utcfromtimestamp(int(str(timestamps[-1]).replace("-", "")[0:-3])))
+    else:
+        return ""
 
 def get_timestamp(filename):
     timestamps = re.findall(r"-\d{13}-", filename)
