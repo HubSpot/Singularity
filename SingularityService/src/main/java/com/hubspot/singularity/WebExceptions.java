@@ -51,12 +51,22 @@ public final class WebExceptions {
     return value;
   }
 
+  public static void checkDisabled(boolean condition, String messsage, Object... args) {
+    if (!condition) {
+
+    }
+  }
+
   public static WebApplicationException badRequest(String message, Object... args) {
     throw webException(Status.BAD_REQUEST.getStatusCode(), message, args);
   }
 
   public static WebApplicationException timeout(String message, Object... args) {
     throw webException(408, message, args);
+  }
+
+  public static WebApplicationException locked(String message, Object... args) {
+    throw webException(423, message, args);
   }
 
   public static WebApplicationException conflict(String message, Object... args) {

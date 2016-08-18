@@ -22,6 +22,7 @@ import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.RackManager;
+import com.hubspot.singularity.data.SingularityValidator;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -35,8 +36,8 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
 
 
   @Inject
-  public RackResource(RackManager rackManager, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user) {
-    super(rackManager, authorizationHelper, user);
+  public RackResource(RackManager rackManager, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, SingularityValidator validator) {
+    super(rackManager, authorizationHelper, user, validator);
   }
 
   @Override
