@@ -16,8 +16,7 @@ const RequestHeader = ({requestId, group, showBreadcrumbs = true}) => {
           label: 'Group',
           text: group.id,
           link: `group/${group.id}`
-        }]}
-        />
+        }]} />
       </Col>
     </Row>
   );

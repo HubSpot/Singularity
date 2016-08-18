@@ -1,9 +1,9 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { ExitRequestCooldown } from '../../actions/api/requests';
+import { ExitRequestCooldown } from '../../../actions/api/requests';
 
-import FormModal from '../common/modal/FormModal';
+import FormModal from '../modal/FormModal';
 
 class ExitCooldownModal extends Component {
   static propTypes = {

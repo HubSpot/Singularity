@@ -10,10 +10,10 @@ import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
 
 import RequestStar from './RequestStar';
-import UnpauseButton from './UnpauseButton';
-import RemoveButton from './RemoveButton';
-import RunNowButton from './RunNowButton';
-import ScaleButton from './ScaleButton';
+import UnpauseButton from '../common/modalButtons/UnpauseButton';
+import RemoveButton from '../common/modalButtons/RemoveButton';
+import RunNowButton from '../common/modalButtons/RunNowButton';
+import ScaleButton from '../common/modalButtons/ScaleButton';
 
 export const Starred = (
   <Column

@@ -1,7 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import Waypoint from 'react-waypoint';
 import classNames from 'classnames';
-import _ from 'underscore';
 
 import BootstrapTable from 'react-bootstrap/lib/Table';
 import { Pagination } from 'react-bootstrap';
@@ -165,7 +164,9 @@ class UITable extends Component {
     }
 
     const { cellData, sortData } = sortCol.props;
+    /* eslint-disable id-length */ // Exception for comparator
     const sorted = data.concat().sort((a, b) => {
+      /* eslint-enable id-length */
       return sortCol.props.sortFunc(
         sortData(cellData(a), a),
         sortData(cellData(b), b)

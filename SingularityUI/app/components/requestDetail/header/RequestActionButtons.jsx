@@ -9,15 +9,15 @@ import JSONButton from '../../common/JSONButton';
 
 import { FetchRequest } from '../../../actions/api/requests';
 
-import RunNowButton from '../../requests/RunNowButton';
-import RemoveButton from '../../requests/RemoveButton';
-import PauseButton from '../../requests/PauseButton';
-import UnpauseButton from '../../requests/UnpauseButton';
-import BounceButton from '../../requests/BounceButton';
-import ScaleButton from '../../requests/ScaleButton';
-import ExitCooldownButton from '../../requests/ExitCooldownButton';
-import EnableHealthchecksButton from '../../requests/EnableHealthchecksButton';
-import DisableHealthchecksButton from '../../requests/DisableHealthchecksButton';
+import RunNowButton from '../../common/modalButtons/RunNowButton';
+import RemoveButton from '../../common/modalButtons/RemoveButton';
+import PauseButton from '../../common/modalButtons/PauseButton';
+import UnpauseButton from '../../common/modalButtons/UnpauseButton';
+import BounceButton from '../../common/modalButtons/BounceButton';
+import ScaleButton from '../../common/modalButtons/ScaleButton';
+import ExitCooldownButton from '../../common/modalButtons/ExitCooldownButton';
+import EnableHealthchecksButton from '../../common/modalButtons/EnableHealthchecksButton';
+import DisableHealthchecksButton from '../../common/modalButtons/DisableHealthchecksButton';
 
 import Utils from '../../../utils';
 
