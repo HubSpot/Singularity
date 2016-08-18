@@ -1,9 +1,9 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { SkipRequestHealthchecks } from '../../actions/api/requests';
+import { SkipRequestHealthchecks } from '../../../actions/api/requests';
 
-import FormModal from '../common/modal/FormModal';
+import FormModal from '../modal/FormModal';
 
 class EnableHealthchecksModal extends Component {
   static propTypes = {

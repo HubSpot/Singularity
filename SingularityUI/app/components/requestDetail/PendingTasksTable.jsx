@@ -23,7 +23,7 @@ const PendingTasksTable = ({tasksAPI}) => {
     <Section id="pending-tasks" title="Scheduled &amp; pending tasks">
       <UITable
         data={tasks}
-        keyGetter={(t) => t.pendingTask.pendingTaskId.id}
+        keyGetter={(task) => task.pendingTask.pendingTaskId.id}
       >
         {ScheduledTaskId}
         {NextRun}

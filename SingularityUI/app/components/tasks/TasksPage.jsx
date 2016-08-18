@@ -110,14 +110,14 @@ class TasksPage extends React.Component {
     }
   }
 
-  getDefaultSortAttribute(t) {
+  getDefaultSortAttribute(task) {
     switch (this.props.filter.taskStatus) {
       case 'active':
       case 'decommissioning':
-        return t.taskId.startedAt;
+        return task.taskId.startedAt;
       case 'scheduled':
-        if (!t.pendingTask) return null;
-        return t.pendingTask.pendingTaskId.nextRunAt;
+        if (!task.pendingTask) return null;
+        return task.pendingTask.pendingTaskId.nextRunAt;
       default:
         return null;
     }
@@ -126,8 +126,8 @@ class TasksPage extends React.Component {
   render() {
     const displayRequestTypeFilters = this.props.filter.taskStatus === 'active';
     const displayTasks = this.props.filter.taskStatus !== 'decommissioning' ?
-      _.sortBy(getFilteredTasks({tasks: this.props.tasks, filter: this.props.filter}), (t) => this.getDefaultSortAttribute(t)) :
-      _.sortBy(getDecomissioningTasks({tasks: this.props.tasks, cleanups: this.props.cleanups}), (t) => this.getDefaultSortAttribute(t));
+      _.sortBy(getFilteredTasks({tasks: this.props.tasks, filter: this.props.filter}), (task) => this.getDefaultSortAttribute(task)) :
+      _.sortBy(getDecomissioningTasks({tasks: this.props.tasks, cleanups: this.props.cleanups}), (task) => this.getDefaultSortAttribute(task));
     if (_.contains(['active', 'decommissioning'], this.props.filter.taskStatus)) displayTasks.reverse();
 
     let table;
@@ -139,7 +139,7 @@ class TasksPage extends React.Component {
       table = (
         <UITable
           data={displayTasks}
-          keyGetter={(r) => (Utils.maybe(r, ['taskId', 'id']) || Utils.maybe(r, ['pendingTask', 'pendingTaskId', 'id']) || Utils.maybe(r, ['id']))}
+          keyGetter={(task) => (Utils.maybe(task, ['taskId', 'id']) || Utils.maybe(task, ['pendingTask', 'pendingTaskId', 'id']) || Utils.maybe(task, ['id']))}
         >
           {this.getColumns()}
         </UITable>

@@ -3,37 +3,32 @@ import { Link } from 'react-router';
 import Tooltip from 'react-bootstrap/lib/Tooltip';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 
-export default class Breakdown extends React.Component {
-
-  renderSections() {
-    return this.props.data.map((d, i) => {
-      return (
-        <Link key={i} to={d.link}>
-          <OverlayTrigger rootClose={true} placement="right" overlay={<Tooltip id={d.attribute}>{`${d.count} ${d.label}`}</Tooltip>}>
-            <span
-              data-type="column"
-              data-state-attribute={d.attribute}
-              style={{height: `${d.percent}%`}}
-              className={`chart__data-point chart-fill-${d.type}`}
-              data-original-title={`${d.count} ${d.label}`}
-            />
-          </OverlayTrigger>
-        </Link>
-      );
-    });
-  }
-
-  render() {
+const Breakdown = ({total, data}) => {
+  const sections = data.map((item, key) => {
     return (
-      <div>
-        <div className="chart__column">
-          {this.renderSections()}
-        </div>
-        <h5 className="text-center">{this.props.total} Total</h5>
-      </div>
+      <Link key={key} to={item.link}>
+        <OverlayTrigger rootClose={true} placement="right" overlay={<Tooltip id={item.attribute}>{`${item.count} ${item.label}`}</Tooltip>}>
+          <span
+            data-type="column"
+            data-state-attribute={item.attribute}
+            style={{height: `${item.percent}%`}}
+            className={`chart__data-point chart-fill-${item.type}`}
+            data-original-title={`${item.count} ${item.label}`}
+          />
+        </OverlayTrigger>
+      </Link>
     );
-  }
-}
+  });
+
+  return (
+    <div>
+      <div className="chart__column">
+        {sections}
+      </div>
+      <h5 className="text-center">{total} Total</h5>
+    </div>
+  );
+};
 
 Breakdown.propTypes = {
   total: React.PropTypes.number.isRequired,
@@ -45,3 +40,5 @@ Breakdown.propTypes = {
     percent: React.PropTypes.number.isRequired
   })).isRequired
 };
+
+export default Breakdown;
