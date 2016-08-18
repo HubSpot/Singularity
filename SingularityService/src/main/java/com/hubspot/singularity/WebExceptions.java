@@ -51,12 +51,6 @@ public final class WebExceptions {
     return value;
   }
 
-  public static void checkDisabled(boolean condition, String messsage, Object... args) {
-    if (!condition) {
-
-    }
-  }
-
   public static WebApplicationException badRequest(String message, Object... args) {
     throw webException(Status.BAD_REQUEST.getStatusCode(), message, args);
   }
