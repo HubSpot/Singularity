@@ -1,8 +1,9 @@
 import moment from 'moment';
 import Messenger from 'messenger';
 
+/* eslint-disable id-length */
 // Eat M/D/Y & 24h-time, yanks! Mwahahahahaha!
-moment.locale('en', {
+moment.updateLocale('en', {
   longDateFormat: {
     LT: 'HH:mm',
     L: 'DD/MM/YYYY',
@@ -11,6 +12,7 @@ moment.locale('en', {
     LLLL: 'dddd, D MMMM YYYY LT'
   }
 });
+/* eslint-enable id-length */
 
 // Time out requests within 10 seconds
 $.ajaxSetup(
