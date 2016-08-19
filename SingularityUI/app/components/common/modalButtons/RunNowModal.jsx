@@ -9,6 +9,10 @@ import FormModal from '../modal/FormModal';
 
 import Messenger from 'messenger';
 import Utils from '../../../utils';
+import uuid from 'node-uuid';
+
+const LOCAL_STORAGE_AFTER_TRIGGER_VALUE = 'afterRunNowTrigger';
+const LOCAL_STORAGE_TAIL_AFTER_TRIGGER_FILENAME = 'taskRunRedirectFilename';
 
 class RunNowModal extends Component {
   static propTypes = {
@@ -35,6 +39,10 @@ class RunNowModal extends Component {
   }
 
   handleRunNow(data) {
+    localStorage.setItem(LOCAL_STORAGE_AFTER_TRIGGER_VALUE, data.afterTrigger);
+    const runId = uuid.v4();
+    data.runId = runId;
+    if (data.afterTrigger === RunNowModal.AFTER_TRIGGER.TAIL.value) localStorage.setItem(LOCAL_STORAGE_TAIL_AFTER_TRIGGER_FILENAME, data.fileToTail);
     this.props.runNow(data).then((response) => {
       if (response.error) {
         Messenger().post({
@@ -42,13 +50,21 @@ class RunNowModal extends Component {
           type: 'error'
         });
       } else if (_.contains([RunNowModal.AFTER_TRIGGER.SANDBOX.value, RunNowModal.AFTER_TRIGGER.TAIL.value], data.afterTrigger)) {
+        const requestId = Utils.maybe(response, ['data', 'request', 'id']);
         this.refs.taskLauncher.getWrappedInstance().startPolling(
-          response.data.request.id,
-          response.data.pendingRequest.runId,
+          requestId,
+          runId,
           data.afterTrigger === RunNowModal.AFTER_TRIGGER.TAIL.value && data.fileToTail
         );
       }
     });
+  }
+
+  getDefaultFileToTail() {
+    const previousFile = localStorage.getItem(LOCAL_STORAGE_TAIL_AFTER_TRIGGER_FILENAME);
+    if (previousFile) return previousFile;
+    if (config.runningTaskLogPath.indexOf('/') === -1) return config.runningTaskLogPath;
+    return _.rest(config.runningTaskLogPath.split('/'), '1').join('/');
   }
 
   render() {
@@ -82,12 +98,12 @@ class RunNowModal extends Component {
               type: FormModal.INPUT_TYPES.RADIO,
               label: 'After triggering the run:',
               values: _.values(RunNowModal.AFTER_TRIGGER),
-              defaultValue: RunNowModal.AFTER_TRIGGER.SANDBOX.value
+              defaultValue: localStorage.getItem(LOCAL_STORAGE_AFTER_TRIGGER_VALUE) || RunNowModal.AFTER_TRIGGER.SANDBOX.value
             },
             {
               name: 'fileToTail',
               type: FormModal.INPUT_TYPES.STRING,
-              defaultValue: config.runningTaskLogPath.indexOf('/') === -1 ? config.runningTaskLogPath : _.rest(config.runningTaskLogPath.split('/'), '1').join('/')
+              defaultValue: this.getDefaultFileToTail()
             }
           ]}>
           <span>
