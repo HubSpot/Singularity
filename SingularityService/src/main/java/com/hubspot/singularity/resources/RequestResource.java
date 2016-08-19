@@ -33,6 +33,7 @@ import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
+import com.hubspot.singularity.SingularityDisabledAction;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -161,6 +162,7 @@ public class RequestResource extends AbstractRequestResource {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
+    validator.checkActionEnabled(SingularityDisabledAction.BOUNCE);
 
     checkBadRequest(requestWithState.getRequest().isLongRunning(), "Can not bounce a %s request (%s)", requestWithState.getRequest().getRequestType(), requestWithState);
 
@@ -528,6 +530,7 @@ public class RequestResource extends AbstractRequestResource {
     SingularityRequest request = fetchRequest(requestId);
 
     authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
+    validator.checkActionEnabled(SingularityDisabledAction.REMOVE);
 
     Optional<String> message = Optional.absent();
     Optional<String> actionId = Optional.absent();
@@ -556,6 +559,9 @@ public class RequestResource extends AbstractRequestResource {
     SingularityRequestWithState oldRequestWithState = fetchRequestWithState(requestId);
 
     SingularityRequest oldRequest = oldRequestWithState.getRequest();
+    authorizationHelper.checkForAuthorization(oldRequest, user, SingularityAuthorizationScope.WRITE);
+    validator.checkActionEnabled(SingularityDisabledAction.SCALE);
+
     SingularityRequest newRequest = oldRequest.toBuilder().setInstances(scaleRequest.getInstances()).build();
 
     checkBadRequest(oldRequest.getInstancesSafe() != newRequest.getInstancesSafe(), "Scale request has no affect on the # of instances (%s)", newRequest.getInstancesSafe());

@@ -21,6 +21,7 @@ import com.hubspot.singularity.SingularitySlave;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
+import com.hubspot.singularity.data.SingularityValidator;
 import com.hubspot.singularity.data.SlaveManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -33,8 +34,8 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   public static final String PATH = SingularityService.API_BASE_PATH + "/slaves";
 
   @Inject
-  public SlaveResource(SlaveManager slaveManager, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user) {
-    super(slaveManager, authorizationHelper, user);
+  public SlaveResource(SlaveManager slaveManager, SingularityAuthorizationHelper authorizationHelper, Optional<SingularityUser> user, SingularityValidator validator) {
+    super(slaveManager, authorizationHelper, user, validator);
   }
 
   @Override

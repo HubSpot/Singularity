@@ -3,6 +3,7 @@ package com.hubspot.singularity.data;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
+import static com.hubspot.singularity.WebExceptions.locked;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -39,6 +40,7 @@ import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
+import com.hubspot.singularity.SingularityDisabledAction;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.SingularityWebhook;
@@ -70,11 +72,11 @@ public class SingularityValidator {
   private final DeployHistoryHelper deployHistoryHelper;
   private final Resources defaultResources;
   private final PriorityManager priorityManager;
+  private final DisabledActionManager disabledActionManager;
 
   @Inject
-  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager) {
+  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager, DisabledActionManager disabledActionManager) {
     this.configuration = configuration;
-
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
@@ -95,6 +97,8 @@ public class SingularityValidator {
     this.maxMemoryMbPerInstance = configuration.getMesosConfiguration().getMaxMemoryMbPerInstance();
     this.maxMemoryMbPerRequest = configuration.getMesosConfiguration().getMaxMemoryMbPerRequest();
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
+
+    this.disabledActionManager = disabledActionManager;
   }
 
   private void checkForIllegalChanges(SingularityRequest request, SingularityRequest existingRequest) {
@@ -445,6 +449,12 @@ public class SingularityValidator {
     }
 
     return newDayOfWeekValue;
+  }
+
+  public void checkActionEnabled(SingularityDisabledAction action) {
+    if (disabledActionManager.isDisabled(action)) {
+      locked(disabledActionManager.getDisabledActionMessage(action));
+    }
   }
 
   private boolean isValidInteger(String strValue) {

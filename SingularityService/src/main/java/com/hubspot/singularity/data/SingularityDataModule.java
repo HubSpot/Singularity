@@ -26,11 +26,11 @@ public class SingularityDataModule extends AbstractModule {
     bind(SandboxManager.class).in(Scopes.SINGLETON);
     bind(SingularityValidator.class).in(Scopes.SINGLETON);
     bind(UserManager.class).in(Scopes.SINGLETON);
-
     bind(ExecutorIdGenerator.class).in(Scopes.SINGLETON);
     bind(WebhookManager.class).in(Scopes.SINGLETON);
     bind(PriorityManager.class).in(Scopes.SINGLETON);
     bind(RequestGroupManager.class).in(Scopes.SINGLETON);
+    bind(DisabledActionManager.class).in(Scopes.SINGLETON);
   }
 
   @Provides
