@@ -5,7 +5,7 @@ import static com.hubspot.singularity.WebExceptions.checkNotFound;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityDisabledAction;
+import com.hubspot.singularity.SingularityDisabledActionType;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
@@ -61,7 +61,7 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
 
   protected void decommission(String objectId, Optional<SingularityMachineChangeRequest> decomissionRequest, Optional<String> queryUser) {
     authorizationHelper.checkAdminAuthorization(user);
-    validator.checkActionEnabled(SingularityDisabledAction.DECOMMISSION);
+    validator.checkActionEnabled(SingularityDisabledActionType.DECOMMISSION);
     changeState(objectId, MachineState.STARTING_DECOMMISSION, decomissionRequest, queryUser);
   }
 

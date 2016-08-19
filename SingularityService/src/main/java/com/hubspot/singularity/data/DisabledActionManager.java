@@ -13,49 +13,57 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDisabledAction;
+import com.hubspot.singularity.SingularityDisabledActionType;
+import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.transcoders.Transcoder;
 
-public class DisabledActionManager extends CuratorManager {
+public class DisabledActionManager extends CuratorAsyncManager {
   private static final String DISABLED_ACTIONS_ROOT = "/disabled-actions";
 
   private static final String MESSAGE_FORMAT = "Cannot %s: %s";
   private static final String DEFAULT_MESSAGE = "Action is currently disabled";
 
+  private final Transcoder<SingularityDisabledAction> disabledActionTranscoder;
+
   @Inject
-  public DisabledActionManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry) {
+  public DisabledActionManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry, Transcoder<SingularityDisabledAction> disabledActionTranscoder) {
     super(curator, configuration, metricRegistry);
+    this.disabledActionTranscoder = disabledActionTranscoder;
   }
 
-  private String getActionPath(SingularityDisabledAction action) {
+  private String getActionPath(SingularityDisabledActionType action) {
     return ZKPaths.makePath(DISABLED_ACTIONS_ROOT, action.name());
   }
 
-  public boolean isDisabled(SingularityDisabledAction action) {
+  public boolean isDisabled(SingularityDisabledActionType action) {
     return exists(getActionPath(action));
   }
 
-  public String getDisabledActionMessage(SingularityDisabledAction action) {
-    Optional<String> maybeMessage = getStringData(getActionPath(action));
-    return String.format(MESSAGE_FORMAT, action, maybeMessage.or(DEFAULT_MESSAGE));
+  public SingularityDisabledAction getDisabledAction(SingularityDisabledActionType action) {
+    Optional<SingularityDisabledAction> maybeDisabledAction = getData(getActionPath(action), disabledActionTranscoder);
+    return maybeDisabledAction.or(new SingularityDisabledAction(action, String.format(MESSAGE_FORMAT, action, DEFAULT_MESSAGE), Optional.<String>absent()));
   }
 
-  public SingularityCreateResult disable(SingularityDisabledAction action, Optional<String> maybeMessage) {
-    byte[] messageBytes = maybeMessage.or(DEFAULT_MESSAGE).getBytes(StandardCharsets.UTF_8);
-    return save(getActionPath(action), Optional.of(messageBytes));
+  public SingularityCreateResult disable(SingularityDisabledActionType action, Optional<String> maybeMessage, Optional<SingularityUser> user) {
+    SingularityDisabledAction disabledAction = new SingularityDisabledAction(
+      action,
+      String.format(MESSAGE_FORMAT, action, maybeMessage.or(DEFAULT_MESSAGE)),
+      user.isPresent() ? Optional.of(user.get().getId()) : Optional.<String>absent());
+
+    return save(getActionPath(action), disabledAction, disabledActionTranscoder);
   }
 
-  public SingularityDeleteResult enable(SingularityDisabledAction action) {
+  public SingularityDeleteResult enable(SingularityDisabledActionType action) {
     return delete(getActionPath(action));
   }
 
   public List<SingularityDisabledAction> getDisabledActions() {
-    List<String> actions = getChildren(DISABLED_ACTIONS_ROOT);
-
-    List<SingularityDisabledAction> actionEnums = new ArrayList<>();
-    for (String action : actions) {
-      actionEnums.add(SingularityDisabledAction.valueOf(action));
+    List<String> paths = new ArrayList<>();
+    for (String path : getChildren(DISABLED_ACTIONS_ROOT)) {
+      paths.add(ZKPaths.makePath(DISABLED_ACTIONS_ROOT, path));
     }
 
-    return actionEnums;
+    return getAsync(DISABLED_ACTIONS_ROOT, paths, disabledActionTranscoder);
   }
 }
