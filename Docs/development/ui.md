@@ -171,6 +171,7 @@ To summarise:
 
 There are some libraries/classes in SingularityUI which you should be aware of if you plan on working on it:
 
+* [Initialize](../SingularityUI/app/initialize.jsx) sets up the Redux store, user settings, and the router. It also prompts the user for API
 * [Router](../SingularityUI/app/router.jsx) points requests to their respective components.
 * [Base](../SingularityUI/app/actions/api/base.es6) is responsible for API call behavior, including error-handling.
 * [Application](../SingularityUI/app/components/common/Application.jsx) provides the naviagtion header and global search functionality.
