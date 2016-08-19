@@ -22,7 +22,7 @@ SingularityUI is a single page webapp that relies on SingularityService for its 
 
 The app is built using Gulp (i.e. compiling ES6, etc), with npm being used to manage its dependencies (e.g. React, Bootstrap).
 
-We recommend you familiarise yourself with the following if you haven't used them before:
+We recommend you familiarize yourself with the following if you haven't used them before:
 
 * [ES6](http://es6-features.org/#Constants) is the language used for all logic.
 * [Stylus](http://learnboost.github.io/stylus/) is used instead of CSS.
@@ -142,7 +142,7 @@ localStorage.setItem('suppressRefresh', true)
 
 ## Code structure
 
-As mentioned before, SingularityUI uses [React](https://facebook.github.io/react/) and [Redux](http://redux.js.org/docs/introduction/). If you're not familiar with how it does things, please look into it and familiarise yourself with React's lifecycle and the Redux store and dispatch.
+As mentioned before, SingularityUI uses [React](https://facebook.github.io/react/) and [Redux](http://redux.js.org/docs/introduction/). If you're not familiar with how it does things, please look into it and familiarize yourself with React's lifecycle and the Redux store and dispatch.
 
 What follows is a run-down of how things work in Singularity, using the Webhooks page as an example.
 
@@ -162,7 +162,7 @@ Finally, once the API call does complete, `rootComponent` takes the props provid
 
 Everything else is standard [React](https://facebook.github.io/react/)-structured code. Please refer to the official docs for how to do things like respond to UI events, etc.
 
-To summarise:
+To summarize:
 * React Router bootstraps everything for the page.
 * All API calls necessary for rendering the page are performed in the primary component's `refresh()` or `initialize()` function.
 * Use React conventions wherever possible. Try to rely on props, not component state.
