@@ -173,8 +173,8 @@ There are some libraries/classes in SingularityUI which you should be aware of i
 
 * [Initialize](../SingularityUI/app/initialize.jsx) sets up the Redux store, user settings, and the router. It also prompts the user for API
 * [Router](../SingularityUI/app/router.jsx) points requests to their respective components.
-* [Base](../SingularityUI/app/actions/api/base.es6) is responsible for API call behavior, including error-handling.
 * [Application](../SingularityUI/app/components/common/Application.jsx) provides the naviagtion header and global search functionality.
+* [Base](../SingularityUI/app/actions/api/base.es6) is responsible for API call behavior, including error-handling.
 * [Utils](../SingularityUI/app/utils.jsx) contains a bunch of reusable static functions.
 * [UITable](../SingularityUI/app/components/common/table/UITable.jsx) is a comprehensive table component that provides sorting, pagination and other utilities. Data is provided by child [Column](../SingularityUI/app/components/common/table/Column.jsx) components.
 * [FormModal](../SingularityUI/app/components/common/modal/FormModal.jsx) provides a base for most of Singularity's modals, such as the Run Now and Pause Request modals.
