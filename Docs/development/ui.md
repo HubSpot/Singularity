@@ -142,7 +142,7 @@ localStorage.setItem('suppressRefresh', true)
 
 ## Code structure
 
-As mentioned before, SingularityUI uses [React](https://facebook.github.io/react/) and [Redux](http://redux.js.org/docs/introduction/). If you're not familiar with how it does things, please look into it and familiarise yourself with Views, Models, Collections, and the event-based interaction between them all.
+As mentioned before, SingularityUI uses [React](https://facebook.github.io/react/) and [Redux](http://redux.js.org/docs/introduction/). If you're not familiar with how it does things, please look into it and familiarise yourself with React's lifecycle and the Redux store and dispatch.
 
 What follows is a run-down of how things work in Singularity, using the Webhooks page as an example.
 
