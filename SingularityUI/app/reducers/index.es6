@@ -64,6 +64,35 @@ const showDebugInfo = (state = false, action) => {
   return state;
 };
 
+const INITIAL_TEMPORARY_STARS = {temporaryRemovedStars: [], temporaryAddedStars: []};
+const temporaryStars = (state = INITIAL_TEMPORARY_STARS, action) => {
+  if (!action.options || !action.options.body) return state;
+  if (action.type === 'ADD_STARRED_REQUESTS_STARTED') {
+    const body = JSON.parse(action.options.body);
+    const temporaryAddedStars = (state.temporaryAddedStars || []).concat(body.starredRequestIds);
+    const temporaryRemovedStars = _.difference(state.temporaryRemovedStars || [], body.starredRequestIds);
+    return {temporaryRemovedStars, temporaryAddedStars};
+  }
+  if (action.type === 'DELETE_STARRED_REQUESTS_STARTED') {
+    const body = JSON.parse(action.options.body);
+    const temporaryRemovedStars = (state.temporaryRemovedStars || []).concat(body.starredRequestIds);
+    const temporaryAddedStars = _.difference(state.temporaryAddedStars || [], body.starredRequestIds);
+    return {temporaryRemovedStars, temporaryAddedStars};
+  }
+  if (action.type === 'ADD_STARRED_REQUESTS_ERROR') {
+    const body = JSON.parse(action.options.body);
+    const temporaryAddedStars = _.difference(state.temporaryAddedStars || [], body.starredRequestIds);
+    return {temporaryRemovedStars: state.temporaryRemovedStars, temporaryAddedStars};
+  }
+  if (action.type === 'DELETE_STARRED_REQUESTS_ERROR') {
+    const body = JSON.parse(action.options.body);
+    const temporaryRemovedStars = _.difference(state.temporaryRemovedStars || [], body.starredRequestIds);
+    return {temporaryRemovedStars, temporaryAddedStars: state.temporaryAddedStars};
+  }
+  if (action.type === 'FETCH_USER_SETTINGS_SUCCESS') return INITIAL_TEMPORARY_STARS;
+  return state;
+};
+
 export default combineReducers({
   api,
   ui,
@@ -80,5 +109,6 @@ export default combineReducers({
   search,
   logRequestLength,
   maxLines,
+  temporaryStars,
   form: formReducer
 });

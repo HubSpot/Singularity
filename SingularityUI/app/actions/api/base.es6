@@ -23,12 +23,12 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
     return { type: CLEAR };
   }
 
-  function started(key = undefined) {
-    return { type: STARTED, key };
+  function started(key = undefined, options = undefined) {
+    return { type: STARTED, key, options };
   }
 
   function error(err, options, apiResponse, key = undefined) {
-    const action = { type: ERROR, error: err, key, statusCode: apiResponse.status };
+    const action = { type: ERROR, error: err, key, statusCode: apiResponse.status, options };
     if (Utils.isIn(apiResponse.status, options.catchStatusCodes) || apiResponse.status === 404 && options.renderNotFoundIf404) {
       return action;
     }
@@ -48,8 +48,8 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
     return action;
   }
 
-  function success(data, statusCode, key = undefined) {
-    return { type: SUCCESS, data, statusCode, key };
+  function success(data, statusCode, key = undefined, options) {
+    return { type: SUCCESS, data, statusCode, key, options };
   }
 
   function clearData() {
@@ -64,9 +64,9 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
       if (keyFunc) {
         key = keyFunc(...args);
       }
-      dispatch(started(key));
 
       const options = optsFunc(...args);
+      dispatch(started(key, options));
       let apiResponse;
       return fetch(config.apiRoot + options.url, _.extend({credentials: 'include'}, _.omit(options, 'url')))
         .then(response => {
@@ -81,12 +81,12 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
         })
         .then((data) => {
           if (apiResponse.status >= 200 && apiResponse.status < 300) {
-            return dispatch(success(data, apiResponse.status, key));
+            return dispatch(success(data, apiResponse.status, key, options));
           }
           if (data.message) {
-            return dispatch(error(data.message, options, apiResponse, key));
+            return dispatch(error(data.message, options, apiResponse, key, options));
           }
-          return dispatch(error(data, options, apiResponse, key));
+          return dispatch(error(data, options, apiResponse, key, options));
         });
     };
   }

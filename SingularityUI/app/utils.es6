@@ -280,6 +280,13 @@ const Utils = {
     }
   },
   request: {
+    isStarred: (requestId, settings, temporaryStars) => {
+      let starredRequests = Utils.getMaybeUserSetting(settings, 'starredRequestIds') || [];
+      starredRequests = _.union(starredRequests, temporaryStars.temporaryAddedStars);
+      starredRequests = _.difference(starredRequests, temporaryStars.temporaryRemovedStars);
+      return starredRequests.indexOf(requestId) !== -1;
+    },
+
     // all of these expect a RequestParent object
     LONG_RUNNING_TYPES: new Set(['WORKER', 'SERVICE']),
     hasActiveDeploy: (requestParent) => {
@@ -343,23 +350,7 @@ const Utils = {
       return expiringBounce
         ? (expiringBounce.startMillis + expiringBounce.expiringAPIRequestObject.durationMillis) > new Date().getTime()
         : false;
-    },
-    // These take a requestId
-    isStarred: (requestId, settings) => _.contains(Utils.getMaybeUserSetting(settings, 'starredRequestIds') || [], requestId),
-    toggleStar: (requestId, settings) => {
-      if (Utils.request.isStarred(requestId, settings)) return Utils.request.removeStar(requestId, settings);
-      return Utils.request.addStar(requestId, settings);
-    },
-    addStar: (requestId, settings) => Utils.changeUserSetting(
-      settings,
-      'starredRequestIds',
-      _.union(Utils.getMaybeUserSetting(settings, 'starredRequestIds') || [], [requestId])
-    ),
-    removeStar: (requestId, settings) => Utils.changeUserSetting(
-      settings,
-      'starredRequestIds',
-      _.without(Utils.getMaybeUserSetting(settings, 'starredRequestIds') || [], requestId)
-    )
+    }
   },
 
   enums: {
