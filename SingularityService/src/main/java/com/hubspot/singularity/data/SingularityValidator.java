@@ -40,7 +40,7 @@ import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
-import com.hubspot.singularity.SingularityDisabledAction;
+import com.hubspot.singularity.SingularityDisabledActionType;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.SingularityWebhook;
@@ -451,9 +451,9 @@ public class SingularityValidator {
     return newDayOfWeekValue;
   }
 
-  public void checkActionEnabled(SingularityDisabledAction action) {
+  public void checkActionEnabled(SingularityDisabledActionType action) {
     if (disabledActionManager.isDisabled(action)) {
-      locked(disabledActionManager.getDisabledActionMessage(action));
+      locked(disabledActionManager.getDisabledAction(action).getMessage());
     }
   }
 

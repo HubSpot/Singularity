@@ -66,11 +66,13 @@ import {
 } from '../../actions/api/tasks';
 
 import { FetchWebhooks } from '../../actions/api/webhooks';
+import { FetchDisabledActions } from '../../actions/api/disabledActions';
 
 import { FetchGroups } from '../../actions/api/requestGroups';
 
 const user = buildApiActionReducer(FetchUser);
 const webhooks = buildApiActionReducer(FetchWebhooks, []);
+const disabledActions = buildApiActionReducer(FetchDisabledActions, []);
 const slaves = buildApiActionReducer(FetchSlaves, []);
 const freezeSlave = buildApiActionReducer(FreezeSlave, []);
 const decommissionSlave = buildApiActionReducer(DecommissionSlave, []);
@@ -115,6 +117,7 @@ const requestGroups = buildApiActionReducer(FetchGroups, []);
 export default combineReducers({
   user,
   webhooks,
+  disabledActions,
   slaves,
   freezeSlave,
   decommissionSlave,

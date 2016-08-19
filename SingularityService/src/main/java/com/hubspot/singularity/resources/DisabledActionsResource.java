@@ -2,7 +2,6 @@ package com.hubspot.singularity.resources;
 
 import java.util.List;
 
-import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -14,6 +13,7 @@ import javax.ws.rs.core.MediaType;
 import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDisabledAction;
+import com.hubspot.singularity.SingularityDisabledActionType;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
@@ -45,14 +45,14 @@ public class DisabledActionsResource {
 
   @POST
   @Path("/{action}")
-  public void disableAction(@PathParam("action") SingularityDisabledAction action, String message) {
+  public void disableAction(@PathParam("action") SingularityDisabledActionType action, String message) {
     authorizationHelper.checkAdminAuthorization(user);
-    disabledActionManager.disable(action, Optional.fromNullable(message));
+    disabledActionManager.disable(action, Optional.fromNullable(message), user);
   }
 
   @DELETE
   @Path("/{action}")
-  public void enableAction(@PathParam("action") SingularityDisabledAction action) {
+  public void enableAction(@PathParam("action") SingularityDisabledActionType action) {
     authorizationHelper.checkAdminAuthorization(user);
     disabledActionManager.enable(action);
   }

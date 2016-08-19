@@ -33,7 +33,7 @@ import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityDisabledAction;
+import com.hubspot.singularity.SingularityDisabledActionType;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -162,7 +162,7 @@ public class RequestResource extends AbstractRequestResource {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
-    validator.checkActionEnabled(SingularityDisabledAction.BOUNCE);
+    validator.checkActionEnabled(SingularityDisabledActionType.BOUNCE);
 
     checkBadRequest(requestWithState.getRequest().isLongRunning(), "Can not bounce a %s request (%s)", requestWithState.getRequest().getRequestType(), requestWithState);
 
@@ -530,7 +530,7 @@ public class RequestResource extends AbstractRequestResource {
     SingularityRequest request = fetchRequest(requestId);
 
     authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
-    validator.checkActionEnabled(SingularityDisabledAction.REMOVE);
+    validator.checkActionEnabled(SingularityDisabledActionType.REMOVE);
 
     Optional<String> message = Optional.absent();
     Optional<String> actionId = Optional.absent();
@@ -560,7 +560,7 @@ public class RequestResource extends AbstractRequestResource {
 
     SingularityRequest oldRequest = oldRequestWithState.getRequest();
     authorizationHelper.checkForAuthorization(oldRequest, user, SingularityAuthorizationScope.WRITE);
-    validator.checkActionEnabled(SingularityDisabledAction.SCALE);
+    validator.checkActionEnabled(SingularityDisabledActionType.SCALE);
 
     SingularityRequest newRequest = oldRequest.toBuilder().setInstances(scaleRequest.getInstances()).build();
 
