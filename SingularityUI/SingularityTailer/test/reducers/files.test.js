@@ -39,14 +39,13 @@ describe('isOverlapping', () => {
         )
       ).toEqual(true);
 
-      /* this returns false, but that might be correct
-      expect(
-        isOverlapping(
-          { start: -10, end: -10 },
-          { start: -10, end: -10 }
-        )
-      ).toEqual(true);
-      */
+      // this would require extra logic and is not necessarily right
+      // expect(
+      //   isOverlapping(
+      //     { start: -10, end: -10 },
+      //     { start: -10, end: -10 }
+      //   )
+      // ).toEqual(true);
 
       expect(
         isOverlapping(
@@ -298,13 +297,6 @@ describe('splitChunkIntoLines', () => {
         start: 1000,
         end: 1005,
         hasNewline: true
-      },
-      {
-        text: '',
-        byteLength: 0,
-        start: 1005,
-        end: 1005,
-        hasNewline: false
       }
     ]);
   });
@@ -1989,73 +1981,73 @@ describe('addChunkReducer', () => {
     it('should handle new lines that are beyond the known eof', () => {
       expect(
         addChunkReducerHelper({
-          'tail': {
-            'chunks': [
+          tail: {
+            chunks: [
               {
-                'text': 'hit',
-                'start': 0,
-                'end': 3,
-                'byteLength': 3
+                text: 'hit',
+                start: 0,
+                end: 3,
+                byteLength: 3
               }
             ],
-            'lines': [
+            lines: [
               {
-                'text': 'hit',
-                'byteLength': 3,
-                'start': 0,
-                'end': 3,
-                'hasNewline': false
+                text: 'hit',
+                byteLength: 3,
+                start: 0,
+                end: 3,
+                hasNewline: false
               }
             ],
-            'fileSize': 3
+            fileSize: 3
           }
         },
         Actions.addFileChunk('tail', {
-          'text': 'lol',
-          'start': 10,
-          'end': 13,
-          'byteLength': 3
+          text: 'lol',
+          start: 10,
+          end: 13,
+          byteLength: 3
         }))
       ).toEqual({
-        'tail': {
-          'chunks': [
+        tail: {
+          chunks: [
             {
-              'text': 'hit',
-              'start': 0,
-              'end': 3,
-              'byteLength': 3
+              text: 'hit',
+              start: 0,
+              end: 3,
+              byteLength: 3
             },
             {
-              'text': 'lol',
-              'start': 10,
-              'end': 13,
-              'byteLength': 3
+              text: 'lol',
+              start: 10,
+              end: 13,
+              byteLength: 3
             }
           ],
-          'lines': [
+          lines: [
             {
-              'text': 'hit',
-              'byteLength': 3,
-              'start': 0,
-              'end': 3,
-              'hasNewline': false
+              text: 'hit',
+              byteLength: 3,
+              start: 0,
+              end: 3,
+              hasNewline: false
             },
             {
-              'isMissingMarker': true,
-              'byteLength': 7,
-              'start': 3,
-              'end': 10,
-              'hasNewline': false
+              isMissingMarker: true,
+              byteLength: 7,
+              start: 3,
+              end: 10,
+              hasNewline: false
             },
             {
-              'text': 'lol',
-              'byteLength': 3,
-              'start': 10,
-              'end': 13,
-              'hasNewline': false
+              text: 'lol',
+              byteLength: 3,
+              start: 10,
+              end: 13,
+              hasNewline: false
             }
           ],
-          'fileSize': 13
+          fileSize: 13
         }
       });
     });
@@ -2066,66 +2058,108 @@ describe('addChunkReducer', () => {
           addChunkReducerHelper(
             {},
             Actions.addFileChunk('tail', {
-              'text': 'what\nhit\n',
-              'start': 0,
-              'end': 9,
-              'byteLength': 9
+              text: 'what\nhit\n',
+              start: 0,
+              end: 9,
+              byteLength: 9
             })
           ),
           Actions.addFileChunk('tail', {
-            'text': 'new line\n',
-            'start': 9,
-            'end': 18,
-            'byteLength': 9
+            text: 'new line\n',
+            start: 9,
+            end: 18,
+            byteLength: 9
           })
         )
       ).toEqual({
-        'tail': {
-          'chunks': [
+        tail: {
+          chunks: [
             {
-              'text': 'what\nhit\n',
-              'start': 0,
-              'end': 9,
-              'byteLength': 9
+              text: 'what\nhit\n',
+              start: 0,
+              end: 9,
+              byteLength: 9
             },
             {
-              'text': 'new line\n',
-              'start': 9,
-              'end': 18,
-              'byteLength': 9
+              text: 'new line\n',
+              start: 9,
+              end: 18,
+              byteLength: 9
+            }
+          ],
+          lines: [
+            {
+              text: 'what',
+              byteLength: 4,
+              start: 0,
+              end: 5,
+              hasNewline: true
+            },
+            {
+              text: 'hit',
+              byteLength: 3,
+              start: 5,
+              end: 9,
+              hasNewline: true
+            },
+            {
+              text: 'new line',
+              byteLength: 8,
+              start: 9,
+              end: 18,
+              hasNewline: true
+            }
+          ],
+          fileSize: 18
+        }
+      });
+    });
+
+    it('add zero byte lines to data with zero byte lines', () => {
+      expect(
+        addChunkReducerHelper(
+          addChunkReducerHelper(
+            {},
+            Actions.addFileChunk('tail', {
+              text: '',
+              start: 9,
+              end: 9,
+              byteLength: 0
+            })
+          ),
+          Actions.addFileChunk('tail', {
+            text: 'new line\n',
+            start: 0,
+            end: 9,
+            byteLength: 9
+          })
+        )
+      ).toEqual({
+        tail: {
+          chunks: [
+            {
+              text: 'new line\n',
+              start: 0,
+              end: 9,
+              byteLength: 9
+            },
+            {
+              text: '',
+              start: 9,
+              end: 9,
+              byteLength: 0
             }
           ],
           'lines': [
             {
-              'text': 'what',
-              'byteLength': 4,
-              'start': 0,
-              'end': 5,
-              'hasNewline': true
-            },
-            {
-              'text': 'hit',
-              'byteLength': 3,
-              'start': 5,
-              'end': 9,
-              'hasNewline': true
-            },
-            {
-              'text': 'new line',
-              'byteLength': 8,
-              'start': 9,
-              'end': 18,
-              'hasNewline': true
-            },
-            {
-              'text': '',
-              'byteLength': 0,
-              'start': 18,
-              'end': 18,
-              'hasNewline': false
-            },
+              text: 'new line',
+              byteLength: 8,
+              start: 0,
+              end: 9,
+              hasNewline: true
+            }
           ],
-          'fileSize': 18
+          fileSize: 9
         }
       });
     });

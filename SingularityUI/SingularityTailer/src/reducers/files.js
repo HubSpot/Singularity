@@ -45,6 +45,14 @@ export const splitChunkIntoLines = (chunk) => {
     });
   });
 
+  // don't allow zero-byte lines
+  if (partialLines.size) {
+    const lastLine = partialLines.last();
+    if (!lastLine.hasNewline && !lastLine.byteLength) {
+      return partialLines.butLast();
+    }
+  }
+
   return partialLines;
 };
 /*
