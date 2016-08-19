@@ -150,7 +150,7 @@ First you request `/singularity/webhooks`. This triggers [our router](../Singula
 
 When the Webhooks component is called, the initial action occurs in the `connect()` function call at the bottom of the page.
 
-First, `connect()` calls `mapStateToProps()`. Though it is called with the redux state and the component's own props, the Webhooks page doesn't have props passed into it. This returns props that are obtained from the redux store, such as API calls.
+First, `connect()` calls `mapStateToProps()`. Though it is called with the redux store and the component's own props, the Webhooks page doesn't have props passed into it. This returns props that are obtained from the redux store, such as API calls.
 
 Then `connect()` calles `mapDispatchToProps()`. This is called with the redux dispatch and the component's own props, and returns props are functions which can perform actions.
 
