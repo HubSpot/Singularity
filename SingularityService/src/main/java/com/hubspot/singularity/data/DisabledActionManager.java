@@ -21,7 +21,7 @@ import com.hubspot.singularity.data.transcoders.Transcoder;
 public class DisabledActionManager extends CuratorAsyncManager {
   private static final String DISABLED_ACTIONS_ROOT = "/disabled-actions";
 
-  private static final String MESSAGE_FORMAT = "Cannot %s: %s";
+  private static final String MESSAGE_FORMAT = "Cannot perform action %s: %s";
   private static final String DEFAULT_MESSAGE = "Action is currently disabled";
 
   private final Transcoder<SingularityDisabledAction> disabledActionTranscoder;
