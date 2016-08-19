@@ -1,6 +1,6 @@
 # Singularity REST API
 
-Version: 0.9.0-SNAPSHOT
+Version: 0.10.0-SNAPSHOT
 
 Endpoints:
 - [`/api/deploys`](#endpoint-/api/deploys) - Manages Singularity Deploys for existing requests
@@ -822,6 +822,57 @@ Unpause a Singularity Request, scheduling new tasks immediately
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
 | 409    | Request is not paused | - |
+
+
+- - -
+#### **DELETE** `/api/requests/request/{requestId}/skipHealthchecks`
+
+Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks request permanent.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The Request ID | string |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 404    | No Request or expiring skipHealthchecks request for that ID | - |
+
+
+- - -
+#### **PUT** `/api/requests/request/{requestId}/skipHealthchecks`
+
+Update the skipHealthchecks field for the request, possibly temporarily
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| requestId | true | The Request ID to scale | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false | SkipHealtchecks options | [SingularitySkipHealthchecksRequest](#model-linkType)</a> |
+
+###### Response
+[SingularityRequestParent](#model-SingularityRequestParent)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 404    | No Request with that ID | - |
 
 
 - - -
@@ -2303,6 +2354,25 @@ Retrieve a list of queued deploy updates for a specific webhook.
 
 
 - - -
+#### **GET** `/api/webhooks`
+
+Retrieve a list of active webhooks.
+
+
+###### Parameters
+- No parameters
+
+###### Response
+[List[SingularityWebhook]](#model-SingularityWebhook)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **POST** `/api/webhooks`
 
 Add a new webhook.
@@ -2349,25 +2419,6 @@ string
 
 
 - - -
-#### **GET** `/api/webhooks`
-
-Retrieve a list of active webhooks.
-
-
-###### Parameters
-- No parameters
-
-###### Response
-[List[SingularityWebhook]](#model-SingularityWebhook)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
-
-
-- - -
 
 ## Data Types
 
@@ -2378,8 +2429,8 @@ Retrieve a list of active webhooks.
 | defaultInstanceForType | [Address](#model-Address) | optional |  |
 | ip | string | optional |  |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$Address&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$Address&gt;) | optional |  |
-| hostname | string | optional |  |
 | ipBytes | [ByteString](#model-ByteString) | optional |  |
+| hostname | string | optional |  |
 | initialized | boolean | optional |  |
 | serializedSize | int | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
@@ -2395,8 +2446,8 @@ Retrieve a list of active webhooks.
 | name | type | required | description |
 |------|------|----------|-------------|
 | ip | string | optional |  |
-| ipBytes | [ByteString](#model-ByteString) | optional |  |
 | hostname | string | optional |  |
+| ipBytes | [ByteString](#model-ByteString) | optional |  |
 | hostnameBytes | [ByteString](#model-ByteString) | optional |  |
 | port | int | optional |  |
 
@@ -2406,8 +2457,8 @@ Retrieve a list of active webhooks.
 | name | type | required | description |
 |------|------|----------|-------------|
 | defaultInstanceForType | [Appc](#model-Appc) | optional |  |
-| idBytes | [ByteString](#model-ByteString) | optional |  |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$Image$Appc&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$Image$Appc&gt;) | optional |  |
+| idBytes | [ByteString](#model-ByteString) | optional |  |
 | labelsOrBuilder | [LabelsOrBuilder](#model-LabelsOrBuilder) | optional |  |
 | labels | [Labels](#model-Labels) | optional |  |
 | initialized | boolean | optional |  |
@@ -2448,8 +2499,8 @@ Retrieve a list of active webhooks.
 | defaultInstanceForType | [CommandInfo](#model-CommandInfo) | optional |  |
 | urisOrBuilderList | [List[? extends org.apache.mesos.Protos$CommandInfo$URIOrBuilder]](#model-List[? extends org.apache.mesos.Protos$CommandInfo$URIOrBuilder]) | optional |  |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$CommandInfo&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$CommandInfo&gt;) | optional |  |
-| urisCount | int | optional |  |
 | argumentsCount | int | optional |  |
+| urisCount | int | optional |  |
 | argumentsList | Array[string] | optional |  |
 | user | string | optional |  |
 | value | string | optional |  |
@@ -2492,8 +2543,8 @@ Retrieve a list of active webhooks.
 | defaultInstanceForType | [ContainerInfo](#model-ContainerInfo) | optional |  |
 | networkInfosList | [List[NetworkInfo]](#model-List[NetworkInfo]) | optional |  |
 | networkInfosOrBuilderList | [List[? extends org.apache.mesos.Protos$NetworkInfoOrBuilder]](#model-List[? extends org.apache.mesos.Protos$NetworkInfoOrBuilder]) | optional |  |
-| parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$ContainerInfo&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$ContainerInfo&gt;) | optional |  |
 | type | [Type](#model-Type) | optional |  Allowable values: DOCKER, MESOS |
+| parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$ContainerInfo&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$ContainerInfo&gt;) | optional |  |
 | mesos | [MesosInfo](#model-MesosInfo) | optional |  |
 | hostname | string | optional |  |
 | mesosOrBuilder | [MesosInfoOrBuilder](#model-MesosInfoOrBuilder) | optional |  |
@@ -2587,9 +2638,9 @@ Retrieve a list of active webhooks.
 | labels | [Labels](#model-Labels) | optional |  |
 | locationBytes | [ByteString](#model-ByteString) | optional |  |
 | initialized | boolean | optional |  |
-| environment | string | optional |  |
-| name | string | optional |  |
 | nameBytes | [ByteString](#model-ByteString) | optional |  |
+| name | string | optional |  |
+| environment | string | optional |  |
 | ports | [Ports](#model-Ports) | optional |  |
 | visibility | [Visibility](#model-Visibility) | optional |  Allowable values: FRAMEWORK, CLUSTER, EXTERNAL |
 | environmentBytes | [ByteString](#model-ByteString) | optional |  |
@@ -2597,8 +2648,8 @@ Retrieve a list of active webhooks.
 | portsOrBuilder | [PortsOrBuilder](#model-PortsOrBuilder) | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
-| version | string | optional |  |
 | unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
+| version | string | optional |  |
 | initializationErrorString | string | optional |  |
 
 
@@ -2612,8 +2663,8 @@ Retrieve a list of active webhooks.
 | labels | [Labels](#model-Labels) | optional |  |
 | locationBytes | [ByteString](#model-ByteString) | optional |  |
 | name | string | optional |  |
-| nameBytes | [ByteString](#model-ByteString) | optional |  |
 | environment | string | optional |  |
+| nameBytes | [ByteString](#model-ByteString) | optional |  |
 | ports | [Ports](#model-Ports) | optional |  |
 | visibility | [Visibility](#model-Visibility) | optional |  Allowable values: FRAMEWORK, CLUSTER, EXTERNAL |
 | environmentBytes | [ByteString](#model-ByteString) | optional |  |
@@ -2818,8 +2869,8 @@ Retrieve a list of active webhooks.
 | initialized | boolean | optional |  |
 | name | string | optional |  |
 | nameBytes | [ByteString](#model-ByteString) | optional |  |
-| sourceBytes | [ByteString](#model-ByteString) | optional |  |
 | frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
+| sourceBytes | [ByteString](#model-ByteString) | optional |  |
 | command | [CommandInfo](#model-CommandInfo) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](#model-FrameworkIDOrBuilder) | optional |  |
 | executorIdOrBuilder | [ExecutorIDOrBuilder](#model-ExecutorIDOrBuilder) | optional |  |
@@ -2843,12 +2894,12 @@ Retrieve a list of active webhooks.
 | data | [ByteString](#model-ByteString) | optional |  |
 | source | string | optional |  |
 | containerOrBuilder | [ContainerInfoOrBuilder](#model-ContainerInfoOrBuilder) | optional |  |
-| executorId | [ExecutorID](#model-ExecutorID) | optional |  |
 | container | [ContainerInfo](#model-ContainerInfo) | optional |  |
+| executorId | [ExecutorID](#model-ExecutorID) | optional |  |
 | name | string | optional |  |
 | nameBytes | [ByteString](#model-ByteString) | optional |  |
-| command | [CommandInfo](#model-CommandInfo) | optional |  |
 | sourceBytes | [ByteString](#model-ByteString) | optional |  |
+| command | [CommandInfo](#model-CommandInfo) | optional |  |
 | frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](#model-FrameworkIDOrBuilder) | optional |  |
 | executorIdOrBuilder | [ExecutorIDOrBuilder](#model-ExecutorIDOrBuilder) | optional |  |
@@ -2900,16 +2951,16 @@ Retrieve a list of active webhooks.
 | javaOuterClassnameBytes | [ByteString](#model-ByteString) | optional |  |
 | initialized | boolean | optional |  |
 | javaOuterClassname | string | optional |  |
-| serializedSize | int | optional |  |
 | pyGenericServices | boolean | optional |  |
+| serializedSize | int | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
+| goPackage | string | optional |  |
 | uninterpretedOptionList | [List[UninterpretedOption]](#model-List[UninterpretedOption]) | optional |  |
 | javaPackage | string | optional |  |
-| goPackage | string | optional |  |
+| javaGenerateEqualsAndHash | boolean | optional |  |
 | unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | uninterpretedOptionOrBuilderList | [List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]](#model-List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]) | optional |  |
-| javaGenerateEqualsAndHash | boolean | optional |  |
 | initializationErrorString | string | optional |  |
 | ccGenericServices | boolean | optional |  |
 
@@ -2972,8 +3023,8 @@ Retrieve a list of active webhooks.
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| commandOrBuilder | [CommandInfoOrBuilder](#model-CommandInfoOrBuilder) | optional |  |
 | defaultInstanceForType | [HealthCheck](#model-HealthCheck) | optional |  |
+| commandOrBuilder | [CommandInfoOrBuilder](#model-CommandInfoOrBuilder) | optional |  |
 | gracePeriodSeconds | double | optional |  |
 | httpOrBuilder | [HTTPOrBuilder](#model-HTTPOrBuilder) | optional |  |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$HealthCheck&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$HealthCheck&gt;) | optional |  |
@@ -2995,8 +3046,8 @@ Retrieve a list of active webhooks.
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| gracePeriodSeconds | double | optional |  |
 | commandOrBuilder | [CommandInfoOrBuilder](#model-CommandInfoOrBuilder) | optional |  |
+| gracePeriodSeconds | double | optional |  |
 | httpOrBuilder | [HTTPOrBuilder](#model-HTTPOrBuilder) | optional |  |
 | consecutiveFailures | int | optional |  |
 | intervalSeconds | double | optional |  |
@@ -3134,8 +3185,8 @@ Retrieve a list of active webhooks.
 | serializedSize | int | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
-| uninterpretedOptionList | [List[UninterpretedOption]](#model-List[UninterpretedOption]) | optional |  |
 | messageSetWireFormat | boolean | optional |  |
+| uninterpretedOptionList | [List[UninterpretedOption]](#model-List[UninterpretedOption]) | optional |  |
 | unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | uninterpretedOptionOrBuilderList | [List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]](#model-List[? extends com.google.protobuf.DescriptorProtos$UninterpretedOptionOrBuilder]) | optional |  |
 | initializationErrorString | string | optional |  |
@@ -3159,8 +3210,8 @@ Retrieve a list of active webhooks.
 | hostname | string | optional |  |
 | attributesCount | int | optional |  |
 | initialized | boolean | optional |  |
-| idOrBuilder | [OfferIDOrBuilder](#model-OfferIDOrBuilder) | optional |  |
 | attributesList | [List[Attribute]](#model-List[Attribute]) | optional |  |
+| idOrBuilder | [OfferIDOrBuilder](#model-OfferIDOrBuilder) | optional |  |
 | frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](#model-FrameworkIDOrBuilder) | optional |  |
 | serializedSize | int | optional |  |
@@ -3232,6 +3283,7 @@ Retrieve a list of active webhooks.
 |------|------|----------|-------------|
 | numPorts | int | optional |  |
 | memoryMb | double | optional |  |
+| diskMb | double | optional |  |
 | cpus | double | optional |  |
 
 
@@ -3586,6 +3638,7 @@ Retrieve a list of active webhooks.
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| resources | [Resources](#model-Resources) | optional |  |
 | runId | string | optional |  |
 | skipHealthchecks | boolean | optional |  |
 | user | string | optional |  |
@@ -3602,6 +3655,7 @@ Retrieve a list of active webhooks.
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| resources | [Resources](#model-Resources) | optional |  |
 | runId | string | optional |  |
 | skipHealthchecks | boolean | optional |  |
 | pendingTaskId | [SingularityPendingTaskId](#model-SingularityPendingTaskId) | optional |  |
@@ -3638,8 +3692,8 @@ Retrieve a list of active webhooks.
 |------|------|----------|-------------|
 | hideEvenNumberAcrossRacksHint | boolean | optional |  |
 | readOnlyGroups | [Set](#model-Set) | optional |  |
-| schedule | string | optional |  |
 | taskLogErrorRegexCaseSensitive | boolean | optional |  |
+| schedule | string | optional |  |
 | skipHealthchecks | boolean | optional |  |
 | waitAtLeastMillisAfterTaskFinishesForReschedule | long | optional |  |
 | rackAffinity | Array[string] | optional |  |
@@ -3659,6 +3713,7 @@ Retrieve a list of active webhooks.
 | killOldNonLongRunningTasksAfterMillis | long | optional |  |
 | instances | int | optional |  |
 | scheduleType | [ScheduleType](#model-ScheduleType) | optional |  |
+| scheduleTimeZone | string | optional |  |
 | taskLogErrorRegex | string | optional |  |
 | id | string | optional |  |
 
@@ -3718,6 +3773,7 @@ Retrieve a list of active webhooks.
 
 | name | type | required | description |
 |------|------|----------|-------------|
+| resources | [Resources](#model-Resources) | optional | Override the resources from the active deploy for this run |
 | runId | string | optional | An id to associate with this request which will be associated with the corresponding launched tasks |
 | skipHealthchecks | boolean | optional | If set to true, healthchecks will be skipped for this task run |
 | commandLineArgs | Array[string] | optional | Command line arguments to be passed to the task |
@@ -3844,7 +3900,7 @@ Retrieve a list of active webhooks.
 |------|------|----------|-------------|
 | taskId | [SingularityTaskId](#model-SingularityTaskId) | optional |  |
 | user | string | optional |  |
-| cleanupType | [TaskCleanupType](#model-TaskCleanupType) | optional |  Allowable values: USER_REQUESTED, USER_REQUESTED_TASK_BOUNCE, DECOMISSIONING, SCALING_DOWN, BOUNCING, INCREMENTAL_BOUNCE, DEPLOY_FAILED, NEW_DEPLOY_SUCCEEDED, DEPLOY_STEP_FINISHED, DEPLOY_CANCELED, UNHEALTHY_NEW_TASK, OVERDUE_NEW_TASK |
+| cleanupType | [TaskCleanupType](#model-TaskCleanupType) | optional |  Allowable values: USER_REQUESTED, USER_REQUESTED_TASK_BOUNCE, DECOMISSIONING, SCALING_DOWN, BOUNCING, INCREMENTAL_BOUNCE, DEPLOY_FAILED, NEW_DEPLOY_SUCCEEDED, DEPLOY_STEP_FINISHED, DEPLOY_CANCELED, UNHEALTHY_NEW_TASK, OVERDUE_NEW_TASK, USER_REQUESTED_DESTROY |
 | message | string | optional |  |
 | timestamp | long | optional |  |
 | actionId | string | optional |  |
@@ -4082,17 +4138,17 @@ Retrieve a list of active webhooks.
 |------|------|----------|-------------|
 | commandOrBuilder | [CommandInfoOrBuilder](#model-CommandInfoOrBuilder) | optional |  |
 | defaultInstanceForType | [TaskInfo](#model-TaskInfo) | optional |  |
-| taskIdOrBuilder | [TaskIDOrBuilder](#model-TaskIDOrBuilder) | optional |  |
 | taskId | [TaskID](#model-TaskID) | optional |  |
+| taskIdOrBuilder | [TaskIDOrBuilder](#model-TaskIDOrBuilder) | optional |  |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$TaskInfo&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$TaskInfo&gt;) | optional |  |
 | slaveIdOrBuilder | [SlaveIDOrBuilder](#model-SlaveIDOrBuilder) | optional |  |
-| labelsOrBuilder | [LabelsOrBuilder](#model-LabelsOrBuilder) | optional |  |
 | resourcesOrBuilderList | [List[? extends org.apache.mesos.Protos$ResourceOrBuilder]](#model-List[? extends org.apache.mesos.Protos$ResourceOrBuilder]) | optional |  |
+| labelsOrBuilder | [LabelsOrBuilder](#model-LabelsOrBuilder) | optional |  |
 | data | [ByteString](#model-ByteString) | optional |  |
 | executor | [ExecutorInfo](#model-ExecutorInfo) | optional |  |
 | containerOrBuilder | [ContainerInfoOrBuilder](#model-ContainerInfoOrBuilder) | optional |  |
-| executorOrBuilder | [ExecutorInfoOrBuilder](#model-ExecutorInfoOrBuilder) | optional |  |
 | labels | [Labels](#model-Labels) | optional |  |
+| executorOrBuilder | [ExecutorInfoOrBuilder](#model-ExecutorInfoOrBuilder) | optional |  |
 | container | [ContainerInfo](#model-ContainerInfo) | optional |  |
 | healthCheckOrBuilder | [HealthCheckOrBuilder](#model-HealthCheckOrBuilder) | optional |  |
 | initialized | boolean | optional |  |
@@ -4106,8 +4162,8 @@ Retrieve a list of active webhooks.
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
 | discovery | [DiscoveryInfo](#model-DiscoveryInfo) | optional |  |
-| resourcesCount | int | optional |  |
 | unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
+| resourcesCount | int | optional |  |
 | initializationErrorString | string | optional |  |
 | discoveryOrBuilder | [DiscoveryInfoOrBuilder](#model-DiscoveryInfoOrBuilder) | optional |  |
 
@@ -4140,17 +4196,17 @@ Retrieve a list of active webhooks.
 |------|------|----------|-------------|
 | defaultInstanceForType | [URL](#model-URL) | optional |  |
 | queryCount | int | optional |  |
-| queryList | [List[Parameter]](#model-List[Parameter]) | optional |  |
 | queryOrBuilderList | [List[? extends org.apache.mesos.Protos$ParameterOrBuilder]](#model-List[? extends org.apache.mesos.Protos$ParameterOrBuilder]) | optional |  |
-| parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$URL&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$URL&gt;) | optional |  |
+| queryList | [List[Parameter]](#model-List[Parameter]) | optional |  |
 | fragment | string | optional |  |
+| parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$URL&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$URL&gt;) | optional |  |
 | address | [Address](#model-Address) | optional |  |
 | schemeBytes | [ByteString](#model-ByteString) | optional |  |
 | addressOrBuilder | [AddressOrBuilder](#model-AddressOrBuilder) | optional |  |
 | pathBytes | [ByteString](#model-ByteString) | optional |  |
 | scheme | string | optional |  |
-| initialized | boolean | optional |  |
 | fragmentBytes | [ByteString](#model-ByteString) | optional |  |
+| initialized | boolean | optional |  |
 | serializedSize | int | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
