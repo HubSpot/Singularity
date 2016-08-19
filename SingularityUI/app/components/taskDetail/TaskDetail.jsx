@@ -462,7 +462,7 @@ function mapDispatchToProps(dispatch) {
     fetchDeployForRequest: (taskId, deployId) => dispatch(FetchDeployForRequest.trigger(taskId, deployId)),
     fetchTaskCleanups: () => dispatch(FetchTaskCleanups.trigger()),
     fetchPendingDeploys: () => dispatch(FetchPendingDeploys.trigger()),
-    fechS3Logs: (taskId) => dispatch(FetchTaskS3Logs.trigger(taskId)),
+    fechS3Logs: (taskId) => dispatch(FetchTaskS3Logs.trigger(taskId, [404])),
   };
 }
 
