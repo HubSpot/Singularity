@@ -20,11 +20,11 @@ The compiled static files are placed in `../SingularityService/target/generated-
 
 SingularityUI is a single page webapp that relies on SingularityService for its data.
 
-The app is built using Gulp (i.e. compiling es6, etc), with npm being used to manage its dependencies (e.g. React, Bootstrap).
+The app is built using Gulp (i.e. compiling ES6, etc), with npm being used to manage its dependencies (e.g. React, Bootstrap).
 
 We recommend you familiarise yourself with the following if you haven't used them before:
 
-* [es6](http://es6-features.org/#Constants) is the language used for all logic.
+* [ES6](http://es6-features.org/#Constants) is the language used for all logic.
 * [Stylus](http://learnboost.github.io/stylus/) is used instead of CSS.
 * [React](https://facebook.github.io/react/) acts as the front-end framework and templating library.
 * [Redux](http://redux.js.org/docs/introduction/) provides state managment.
