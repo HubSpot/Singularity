@@ -92,6 +92,7 @@ class TaskDetail extends Component {
       memMappedFileBytes: PropTypes.number,
       timestamp: PropTypes.number
     }),
+    resourceUsageNotFound: PropTypes.bool.isRequired,
     taskCleanups: PropTypes.arrayOf(PropTypes.shape({
       taskId: PropTypes.shape({
         id: PropTypes.string
@@ -317,8 +318,16 @@ class TaskDetail extends Component {
       <span className="label label-danger">CPU usage > 110% allocated</span>
     );
 
-    return (
-      <CollapsableSection title="Resource Usage">
+    let maybeResourceUsage;
+
+    if (this.props.resourceUsageNotFound) {
+      maybeResourceUsage = (
+        <div className="empty-table-message">
+          Could not establish communication with the slave to find resource usage.
+        </div>
+      );
+    } else {
+      maybeResourceUsage = (
         <div className="row">
           <div className="col-md-3">
             <UsageInfo
@@ -354,6 +363,12 @@ class TaskDetail extends Component {
             </ul>
           </div>
         </div>
+      );
+    }
+
+    return (
+      <CollapsableSection title="Resource Usage">
+        {maybeResourceUsage}
       </CollapsableSection>
     );
   }
@@ -443,6 +458,7 @@ function mapStateToProps(state, ownProps) {
     currentFilePath: _.isUndefined(ownProps.params.splat) ? ownProps.params.taskId : ownProps.params.splat,
     taskCleanups: state.api.taskCleanups.data,
     files: state.api.taskFiles,
+    resourceUsageNotFound: state.api.taskResourceUsage.statusCode === 404,
     resourceUsage: state.api.taskResourceUsage.data,
     cpuTimestamp: state.api.taskResourceUsage.data.timestamp,
     s3Logs: state.api.taskS3Logs.data,
@@ -457,7 +473,7 @@ function mapDispatchToProps(dispatch) {
   return {
     runCommandOnTask: (taskId, commandName) => dispatch(RunCommandOnTask.trigger(taskId, commandName)),
     fetchTaskHistory: (taskId) => dispatch(FetchTaskHistory.trigger(taskId, true)),
-    fetchTaskStatistics: (taskId) => dispatch(FetchTaskStatistics.trigger(taskId)),
+    fetchTaskStatistics: (taskId) => dispatch(FetchTaskStatistics.trigger(taskId, [404])),
     fetchTaskFiles: (taskId, path, catchStatusCodes = []) => dispatch(FetchTaskFiles.trigger(taskId, path, catchStatusCodes.concat([404]))),
     fetchDeployForRequest: (taskId, deployId) => dispatch(FetchDeployForRequest.trigger(taskId, deployId)),
     fetchTaskCleanups: () => dispatch(FetchTaskCleanups.trigger()),
