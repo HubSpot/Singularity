@@ -38,7 +38,8 @@ class RunNowModal extends Component {
     this.refs.runNowModal.show();
   }
 
-  handleRunNow(data) {
+  handleRunNow(dataFromForm) {
+    const data = Utils.deepClone(dataFromForm);
     localStorage.setItem(LOCAL_STORAGE_AFTER_TRIGGER_VALUE, data.afterTrigger);
     const runId = uuid.v4();
     data.runId = runId;
