@@ -22,6 +22,7 @@ import NewDeployForm from './components/newDeployForm/NewDeployForm';
 import { Tail, AggregateTail } from './components/logs/Tail';
 import RequestDetailPage from './components/requestDetail/RequestDetailPage';
 import Group from './components/groupDetail/GroupDetail.jsx';
+import DisabledActions from './components/disabledActions/DisabledActions';
 
 const AppRouter = (props) => {
   const parsedUrl = parseurl({ url: config.appRoot });
@@ -56,6 +57,7 @@ const AppRouter = (props) => {
           <Route path="slaves(/:state)" component={Slaves} />
           <Route path="webhooks" component={Webhooks} />
           <Route path="task-search" component={TaskSearch} />
+          <Route path="disabled-actions" component={DisabledActions} />
           <Route path="*" component={NotFound} />
         </Route>
       </Router>

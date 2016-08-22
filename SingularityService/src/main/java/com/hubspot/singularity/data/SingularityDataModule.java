@@ -1,5 +1,7 @@
 package com.hubspot.singularity.data;
 
+import javax.ws.rs.HEAD;
+
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -30,6 +32,7 @@ public class SingularityDataModule extends AbstractModule {
     bind(WebhookManager.class).in(Scopes.SINGLETON);
     bind(PriorityManager.class).in(Scopes.SINGLETON);
     bind(RequestGroupManager.class).in(Scopes.SINGLETON);
+    bind(DisabledActionManager.class).in(Scopes.SINGLETON);
   }
 
   @Provides
