@@ -62,6 +62,8 @@ const TaskHistoryTable = ({requestId, requestParent, tasksAPI, fetchTaskHistoryF
         keyGetter={(task) => task.taskId.id}
         rowChunkSize={5}
         paginated={true}
+        shouldRefresh={true}
+        refreshInterval={10000}
         fetchDataFromApi={(page, numberPerPage) => fetchTaskHistoryForRequest(requestId, numberPerPage, page)}
         isFetching={isFetching}
       >

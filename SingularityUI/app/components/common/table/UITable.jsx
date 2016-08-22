@@ -25,6 +25,10 @@ class UITable extends Component {
       rowChunkSize
     };
 
+    if (props.shouldRefresh) {
+      this.startRefreshInterval();
+    }
+
     this.handlePageChange = this.handlePageChange.bind(this);
   }
 
@@ -43,6 +47,12 @@ class UITable extends Component {
     }
   }
 
+  componentWillUnmount() {
+    if (this.props.shouldRefresh) {
+      this.stopRefreshInterval();
+    }
+  }
+
   static SortDirection = {
     ASC: 'ASC',
     DESC: 'DESC'
@@ -58,6 +68,24 @@ class UITable extends Component {
   };
 
   state;
+
+  startRefreshInterval() {
+    this.refreshInterval = setInterval(() => {
+      const promise = this.refresh();
+      if (promise) {
+        promise.catch((reason) => setTimeout(() => { throw new Error(reason); }));
+      }
+    }, this.props.refreshInterval || config.globalRefreshInterval);
+  }
+
+  stopRefreshInterval() {
+    clearInterval(this.refreshInterval);
+  }
+
+  refresh() {
+    const { chunkNum, rowChunkSize, sortBy } = this.state;
+    this.props.fetchDataFromApi(chunkNum, rowChunkSize, sortBy);
+  }
 
   isApiPaginated() {
     return !!this.props.fetchDataFromApi;
@@ -454,6 +482,8 @@ UITable.propTypes = {
   children: PropTypes.arrayOf(PropTypes.node).isRequired,
   paginated: PropTypes.bool,
   renderAllRows: PropTypes.bool,
+  shouldRefresh: PropTypes.bool,
+  refreshInterval: PropTypes.number,
   rowChunkSize: PropTypes.number,
   rowChunkSizeChoices: PropTypes.arrayOf(PropTypes.number),
   maxPaginationButtons: PropTypes.number,
