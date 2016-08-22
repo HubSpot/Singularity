@@ -50,7 +50,7 @@ class RunNowModal extends Component {
           type: 'error'
         });
       } else if (_.contains([RunNowModal.AFTER_TRIGGER.SANDBOX.value, RunNowModal.AFTER_TRIGGER.TAIL.value], data.afterTrigger)) {
-        const requestId = undefined;
+        const requestId = Utils.maybe(response, ['data', 'request', 'id']);
         this.refs.taskLauncher.getWrappedInstance().startPolling(
           requestId,
           runId,
