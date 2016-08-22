@@ -90,4 +90,4 @@ function refresh(props) {
   return props.fetchDisabledActions();
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(DisabledActions, 'DisabledActions', refresh));
+export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(DisabledActions, 'Disabled Actions', refresh));
