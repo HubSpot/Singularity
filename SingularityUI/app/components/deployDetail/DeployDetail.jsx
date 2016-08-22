@@ -162,6 +162,8 @@ class DeployDetail extends React.Component {
           keyGetter={(task) => task.taskId.id}
           rowChunkSize={5}
           paginated={true}
+          shouldRefresh={true}
+          refreshInterval={10000}
           fetchDataFromApi={(page, numberPerPage) => this.props.fetchTaskHistoryForDeploy(this.props.params.requestId, this.props.params.deployId, numberPerPage, page)}
           isFetching={this.props.isTaskHistoryFetching}
         >
