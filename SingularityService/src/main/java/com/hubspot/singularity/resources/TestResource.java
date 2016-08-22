@@ -113,8 +113,9 @@ public class TestResource {
 
   @POST
   @Path("/reconcile")
-  @ApiOperation("Trigger a task reconciliation")
-  public SingularityTaskReconciliation.ReconciliationState reconcile() {
-    return taskReconciliation.startReconciliation();
+  @ApiOperation("Start task reconciliation")
+  public void startTaskReconciliation() throws Exception {
+    checkForbidden(configuration.isAllowTestResourceCalls(), "Test resource calls are disabled (set isAllowTestResourceCalls to true in configuration)");
+    taskReconciliation.startReconciliation();
   }
 }
