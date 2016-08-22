@@ -3,6 +3,7 @@ import { Provider } from 'react-redux';
 import { Router, Route, IndexRoute, useRouterHistory } from 'react-router';
 import { createHistory } from 'history';
 import { syncHistoryWithStore } from 'react-router-redux';
+import parseurl from 'parseurl';
 
 import Application from './components/common/Application';
 import NotFound from './components/common/NotFound';
@@ -23,8 +24,9 @@ import RequestDetailPage from './components/requestDetail/RequestDetailPage';
 import Group from './components/groupDetail/GroupDetail.jsx';
 
 const AppRouter = (props) => {
+  const parsedUrl = parseurl({ url: config.appRoot });
   let history = useRouterHistory(createHistory)({
-    basename: config.appRoot
+    basename: parsedUrl.path
   });
   history = syncHistoryWithStore(history, props.store);
 
