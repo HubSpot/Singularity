@@ -28,16 +28,16 @@ const Navigation = (props) => {
       </Navbar.Header>
       <Navbar.Collapse>
         <Nav>
-          <NavItem eventKey={1} active={fragment === ''} onClick={(event) => goTo(props.router, event, '')}>Dashboard</NavItem>
-          <NavItem eventKey={2} active={fragment === 'status'} onClick={(event) => goTo(props.router, event, 'status')}>Status</NavItem>
-          <NavItem eventKey={3} active={_.contains(['requests', 'request'], fragment)} onClick={(event) => goTo(props.router, event, 'requests')}>Requests</NavItem>
-          <NavItem eventKey={4} active={_.contains(['tasks', 'task'], fragment)} onClick={(event) => goTo(props.router, event, 'tasks')}>Tasks</NavItem>
+          <NavItem eventKey={1} active={fragment === ''} href={`${config.appRoot}/`} onClick={(event) => goTo(props.router, event, '')}>Dashboard</NavItem>
+          <NavItem eventKey={2} active={fragment === 'status'} href={`${config.appRoot}/status`} onClick={(event) => goTo(props.router, event, 'status')}>Status</NavItem>
+          <NavItem eventKey={3} active={_.contains(['requests', 'request'], fragment)} href={`${config.appRoot}/requests`} onClick={(event) => goTo(props.router, event, 'requests')}>Requests</NavItem>
+          <NavItem eventKey={4} active={_.contains(['tasks', 'task'], fragment)} href={`${config.appRoot}/tasks`} onClick={(event) => goTo(props.router, event, 'tasks')}>Tasks</NavItem>
           <NavDropdown id="admin-dropdown" eventKey={5} active={_.contains(['racks', 'slaves', 'webhooks'], fragment)} title="Admin">
-            <MenuItem eventKey={5.1} onClick={(event) => goTo(props.router, event, 'racks')}>Racks</MenuItem>
-            <MenuItem eventKey={5.2} onClick={(event) => goTo(props.router, event, 'slaves')}>Slaves</MenuItem>
-            <MenuItem eventKey={5.3} onClick={(event) => goTo(props.router, event, 'webhooks')}>Webhooks</MenuItem>
+            <MenuItem eventKey={5.1} href={`${config.appRoot}/racks`} onClick={(event) => goTo(props.router, event, 'racks')}>Racks</MenuItem>
+            <MenuItem eventKey={5.2} href={`${config.appRoot}/slaves`} onClick={(event) => goTo(props.router, event, 'slaves')}>Slaves</MenuItem>
+            <MenuItem eventKey={5.3} href={`${config.appRoot}/webhooks`} onClick={(event) => goTo(props.router, event, 'webhooks')}>Webhooks</MenuItem>
             <MenuItem divider={true} />
-            <MenuItem eventKey={5.4} onClick={(event) => goTo(props.router, event, 'task-search')}>Task search</MenuItem>
+            <MenuItem eventKey={5.4} href={`${config.appRoot}/task-search`} onClick={(event) => goTo(props.router, event, 'task-search')}>Task search</MenuItem>
           </NavDropdown>
           <NavItem eventKey={6} target="blank" href={config.apiDocs}>API Docs <small>(Beta)</small></NavItem>
           <NavItem eventKey={7} className="global-search-button" onClick={(event) => handleSearchClick(event, props.toggleGlobalSearch)}>
