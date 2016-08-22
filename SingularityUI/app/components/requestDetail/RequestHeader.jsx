@@ -8,7 +8,7 @@ import RequestActionButtons from './header/RequestActionButtons';
 import RequestAlerts from './header/RequestAlerts';
 import Breadcrumbs from '../common/Breadcrumbs';
 
-const RequestHeader = ({requestId, group, showBreadcrumbs = true}) => {
+const RequestHeader = ({requestId, group, deleted, showBreadcrumbs = true}) => {
   const breadcrumbs = showBreadcrumbs && group && (
     <Row>
       <Col md={12}>
@@ -25,7 +25,7 @@ const RequestHeader = ({requestId, group, showBreadcrumbs = true}) => {
       {breadcrumbs}
       <Row>
         <Col md={7} lg={6}>
-          <RequestTitle requestId={requestId} />
+          <RequestTitle requestId={requestId} deleted={deleted} />
         </Col>
         <Col md={5} lg={6} className="button-container">
           <RequestActionButtons requestId={requestId} />
@@ -33,7 +33,7 @@ const RequestHeader = ({requestId, group, showBreadcrumbs = true}) => {
       </Row>
       <Row>
         <Col md={12}>
-          <RequestAlerts requestId={requestId} />
+          <RequestAlerts requestId={requestId} deleted={deleted} />
         </Col>
       </Row>
     </header>
@@ -43,7 +43,8 @@ const RequestHeader = ({requestId, group, showBreadcrumbs = true}) => {
 RequestHeader.propTypes = {
   requestId: PropTypes.string.isRequired,
   group: PropTypes.object,
-  showBreadcrumbs: PropTypes.bool
+  showBreadcrumbs: PropTypes.bool,
+  deleted: PropTypes.bool
 };
 
 function mapStateToProps(state, ownProps) {

@@ -178,7 +178,7 @@ const mapStateToProps = (state, ownProps) => ({
 });
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
-  fetchRequest: () => dispatch(FetchRequest.trigger(ownProps.requestId))
+  fetchRequest: () => dispatch(FetchRequest.trigger(ownProps.requestId, true))
 });
 
 export default withRouter(connect(
