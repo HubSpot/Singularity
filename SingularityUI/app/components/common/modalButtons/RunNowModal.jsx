@@ -50,7 +50,7 @@ class RunNowModal extends Component {
           type: 'error'
         });
       } else if (_.contains([RunNowModal.AFTER_TRIGGER.SANDBOX.value, RunNowModal.AFTER_TRIGGER.TAIL.value], data.afterTrigger)) {
-        const requestId = Utils.maybe(response, ['data', 'request', 'id']);
+        const requestId = undefined;
         this.refs.taskLauncher.getWrappedInstance().startPolling(
           requestId,
           runId,
@@ -62,8 +62,8 @@ class RunNowModal extends Component {
 
   getDefaultFileToTail() {
     const previousFile = localStorage.getItem(LOCAL_STORAGE_TAIL_AFTER_TRIGGER_FILENAME);
-    if (previousFile) return previousFile;
-    if (config.runningTaskLogPath.indexOf('/') === -1) return config.runningTaskLogPath;
+    if (previousFile) { return previousFile; }
+    if (config.runningTaskLogPath.indexOf('/') === -1) { return config.runningTaskLogPath; }
     return _.rest(config.runningTaskLogPath.split('/'), '1').join('/');
   }
 
