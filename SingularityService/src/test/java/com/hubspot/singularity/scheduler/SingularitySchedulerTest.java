@@ -68,6 +68,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskRequest;
 import com.hubspot.singularity.SingularityUpdatePendingDeployRequest;
 import com.hubspot.singularity.SlavePlacement;
+import com.hubspot.singularity.TaskCleanupType;
 import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityDeleteRequestRequest;
 import com.hubspot.singularity.api.SingularityDeployRequest;
@@ -291,6 +292,46 @@ public class SingularitySchedulerTest extends SingularitySchedulerTestBase {
 
     Assert.assertEquals(2, taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).size());
     Assert.assertEquals(DeployState.SUCCEEDED, deployManager.getDeployResult(requestId, secondDeployId).get().getDeployState());
+  }
+
+  @Test
+  public void testIncrementalDeployCancel() {
+    initRequest();
+
+    // Set up incremental deploy that is partly finished
+    SingularityRequest request = requestResource.getRequest(requestId).getRequest();
+    requestResource.postRequest(request.toBuilder().setInstances(Optional.of(2)).build());
+    initFirstDeploy();
+
+    SingularityTask firstTask = launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+    launchTask(request, firstDeploy, 2, TaskState.TASK_RUNNING);
+    deploy(secondDeployId, Optional.<Boolean> absent(), Optional.of(1), Optional.<Boolean> absent(), false);
+    deployChecker.checkDeploys();
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    resourceOffers();
+    SingularityTaskId firstNewTaskId = taskManager.getActiveTaskIdsForDeploy(requestId, secondDeployId).get(0);
+    statusUpdate(taskManager.getTask(firstNewTaskId).get(), TaskState.TASK_RUNNING);
+    deployChecker.checkDeploys();
+
+    cleaner.drainCleanupQueue();
+    statusUpdate(firstTask, TaskState.TASK_KILLED);
+    deployChecker.checkDeploys();
+    scheduler.drainPendingQueue(stateCacheProvider.get());
+    resourceOffers();
+    // End in-progress incremental deploy setup
+
+    deployResource.cancelDeploy(requestId, secondDeployId);
+    deployChecker.checkDeploys();
+    Assert.assertEquals(taskManager.getCleanupTasks().get(0).getCleanupType(), TaskCleanupType.INCREMENTAL_DEPLOY_CANCELLED);
+
+    // Incremental deploy task should not be shut down while active deploy is below target instances
+    cleaner.drainCleanupQueue();
+    Assert.assertTrue(taskManager.getKilledTaskIdRecords().isEmpty());
+    Assert.assertEquals(taskManager.getCleanupTasks().get(0).getCleanupType(), TaskCleanupType.INCREMENTAL_DEPLOY_CANCELLED);
+
+    launchTask(request, firstDeploy, 1, TaskState.TASK_RUNNING);
+    cleaner.drainCleanupQueue();
+    Assert.assertFalse(taskManager.getKilledTaskIdRecords().isEmpty());
   }
 
   @Test
