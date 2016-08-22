@@ -51,7 +51,7 @@ class RunNowModal extends Component {
         });
       } else if (_.contains([RunNowModal.AFTER_TRIGGER.SANDBOX.value, RunNowModal.AFTER_TRIGGER.TAIL.value], data.afterTrigger)) {
         const requestId = Utils.maybe(response, ['data', 'request', 'id']);
-        if (requestId) { return; }
+        if (!requestId) { return; }
         this.refs.taskLauncher.getWrappedInstance().startPolling(
           requestId,
           runId,
