@@ -11,7 +11,14 @@ import { getBouncesForRequest } from '../../../selectors/tasks';
 import CancelDeployButton from '../../common/modalButtons/CancelDeployButton';
 import AdvanceDeployButton from '../../common/modalButtons/AdvanceDeployButton';
 
-const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) => {
+const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest, deleted}) => {
+  if (deleted) {
+    return (
+      <Alert bsStyle="warning">
+        <b>This request has been deleted.</b>
+      </Alert>
+    );
+  }
   if (!requestAPI) {
     return undefined;
   }
@@ -176,7 +183,8 @@ RequestAlerts.propTypes = {
   requestId: PropTypes.string.isRequired,
   requestAPI: PropTypes.object.isRequired,
   bounces: PropTypes.arrayOf(PropTypes.object).isRequired,
-  activeTasksForRequest: PropTypes.object.isRequired
+  activeTasksForRequest: PropTypes.object.isRequired,
+  deleted: PropTypes.bool
 };
 
 const mapStateToProps = (state, ownProps) => {
