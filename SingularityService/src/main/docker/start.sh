@@ -8,9 +8,6 @@ if [ ${DOCKER_HOST} ]; then
     SINGULARITY_HOSTNAME="${SINGULARITY_HOSTNAME:=$DEFAULT_HOSTNAME}"
 fi
 
-DEFAULT_URI_BASE="http://${SINGULARITY_HOSTNAME:=localhost}:${SINGULARITY_PORT:=7099}${SINGULARITY_UI_BASE:=/singularity}"
-
-
 [[ ! ${SINGULARITY_PORT:-} ]] || args+=( -Ddw.server.connector.port="$SINGULARITY_PORT" )
 [[ ! ${LOAD_BALANCER_URI:-} ]] || args+=( -Ddw.loadBalancerUri="$LOAD_BALANCER_URI")
 
@@ -19,7 +16,7 @@ args+=( -Djava.net.preferIPv4Stack=true )
 args+=( -Ddw.mesos.master="${SINGULARITY_MESOS_MASTER:=zk://localhost:2181/mesos}" )
 args+=( -Ddw.zookeeper.quorum="${SINGULARITY_ZK:=localhost:2181}" )
 args+=( -Ddw.zookeeper.zkNamespace="${SINGULARITY_ZK_NAMESPACE:=singularity}" )
-args+=( -Ddw.ui.baseUrl="${SINGULARITY_URI_BASE:=$DEFAULT_URI_BASE}" )
+args+=( -Ddw.ui.baseUrl="${SINGULARITY_UI_BASE:=/singularity}" )
 
 [[ ! ${SINGULARITY_DB_USER:-} ]] || args+=( -Ddw.database.user="${SINGULARITY_DB_USER}" )
 [[ ! ${SINGULARITY_DB_PASSWORD:-} ]] || args+=( -Ddw.database.password="${SINGULARITY_DB_PASSWORD}" )
