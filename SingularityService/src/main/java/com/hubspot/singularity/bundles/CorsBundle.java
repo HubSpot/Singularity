@@ -7,6 +7,7 @@ import java.util.Enumeration;
 import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
 import javax.servlet.FilterConfig;
+import javax.servlet.FilterRegistration;
 import javax.servlet.ServletContext;
 
 import org.eclipse.jetty.servlets.CrossOriginFilter;
@@ -65,6 +66,8 @@ public class CorsBundle implements ConfiguredBundle<SingularityConfiguration> {
       throw Throwables.propagate(e);
     }
 
-    environment.servlets().addFilter(FILTER_NAME, corsFilter).addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), false, "/*");
+    FilterRegistration.Dynamic filter = environment.servlets().addFilter(FILTER_NAME, corsFilter);
+    filter.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), false, "/*");
+    filter.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM, "GET,PUT,POST,DELETE,OPTIONS");
   }
 }
