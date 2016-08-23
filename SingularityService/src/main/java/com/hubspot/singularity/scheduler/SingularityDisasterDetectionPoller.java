@@ -3,6 +3,7 @@ package com.hubspot.singularity.scheduler;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.mesos.Protos.TaskStatus.Reason;
 import org.slf4j.Logger;
@@ -35,10 +36,11 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
   private final SlaveManager slaveManager;
   private final DisasterManager disasterManager;
   private final Multiset<Reason> taskLostReasons;
+  private final AtomicInteger activeSlavesLost;
 
   @Inject
   public SingularityDisasterDetectionPoller(SingularityConfiguration configuration,  TaskManager taskManager, SlaveManager slaveManager, DisasterManager disasterManager,
-                                            @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Reason> taskLostReasons) {
+                                            @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Reason> taskLostReasons, @Named(SingularityMesosModule.ACTIVE_SLAVES_LOST_COUNTER) AtomicInteger activeSlavesLost) {
     super(configuration.getDisasterDetection().getRunEveryMillis(), TimeUnit.MILLISECONDS);
     this.configuration = configuration;
     this.disasterConfiguration = configuration.getDisasterDetection();
@@ -46,6 +48,7 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
     this.slaveManager = slaveManager;
     this.disasterManager = disasterManager;
     this.taskLostReasons = taskLostReasons;
+    this.activeSlavesLost = activeSlavesLost;
   }
 
   @Override
@@ -100,16 +103,13 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
 
     List<SingularitySlave> slaves = slaveManager.getObjects();
     int numRunningSlaves = 0;
-    int numLostSlaves = 0;
     for (SingularitySlave slave : slaves) {
       if (slave.getCurrentState().getState() != MachineState.DEAD && slave.getCurrentState().getState() != MachineState.MISSING_ON_STARTUP) {
         numRunningSlaves++;
-      } else {
-        if (now - slave.getCurrentState().getTimestamp() < now - disasterConfiguration.getCheckLostSlavesInLastMillis()) {
-          numLostSlaves ++;
-        }
       }
     }
+
+    int numLostSlaves = activeSlavesLost.getAndSet(0);
 
     int numLostTasks = 0;
     for (Reason lostTaskReason : disasterConfiguration.getLostTaskReasons()) {
@@ -145,7 +145,13 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
   }
 
   private boolean tooManyLostSlaves(Optional<SingularityDisasterStats> lastStats, SingularityDisasterStats newStats) {
-    double lostSlavesPortion = newStats.getNumLostSlaves() / (newStats.getNumActiveSlaves() + newStats.getNumLostSlaves());
+    int effectiveLostSlaves;
+    if (disasterConfiguration.isIncludePreviousLostSlavesCount()) {
+      effectiveLostSlaves = lastStats.isPresent() ? lastStats.get().getNumLostSlaves() + newStats.getNumLostSlaves() : newStats.getNumLostSlaves();
+    } else {
+      effectiveLostSlaves = newStats.getNumLostSlaves();
+    }
+    double lostSlavesPortion = effectiveLostSlaves / (newStats.getNumActiveSlaves() + newStats.getNumLostSlaves());
     return lostSlavesPortion > disasterConfiguration.getCriticalLostSlavePortion();
   }
 

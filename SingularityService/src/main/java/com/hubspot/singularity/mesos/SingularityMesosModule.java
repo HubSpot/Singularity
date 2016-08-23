@@ -1,5 +1,6 @@
 package com.hubspot.singularity.mesos;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -17,6 +18,7 @@ public class SingularityMesosModule extends AbstractModule {
 
   public static final String SCHEDULER_LOCK_NAME = "scheduler-lock";
   public static final String TASK_LOST_REASONS_COUNTER = "task-lost-reasons";
+  public static final String ACTIVE_SLAVES_LOST_COUNTER = "active-slaves-lost";
 
   @Override
   public void configure() {
@@ -45,5 +47,12 @@ public class SingularityMesosModule extends AbstractModule {
   @Singleton
   public Multiset<Reason> provideTaskLostReasonsCounter() {
     return HashMultiset.create(Reason.getDescriptor().getValues().size());
+  }
+
+  @Provides
+  @Named(ACTIVE_SLAVES_LOST_COUNTER)
+  @Singleton
+  public AtomicInteger provideActiveSlavesLostCounter() {
+    return new AtomicInteger();
   }
 }

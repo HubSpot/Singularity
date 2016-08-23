@@ -43,7 +43,7 @@ public class DisasterDetectionConfiguration {
   private double criticalLostSlavePortion = 0.2;
 
   @JsonProperty
-  private long checkLostSlavesInLastMillis = 60000;
+  private boolean includePreviousLostSlavesCount = true;
 
   @JsonProperty
   private boolean checkLostTasks = false;
@@ -131,12 +131,12 @@ public class DisasterDetectionConfiguration {
     this.criticalLostSlavePortion = criticalLostSlavePortion;
   }
 
-  public long getCheckLostSlavesInLastMillis() {
-    return checkLostSlavesInLastMillis;
+  public boolean isIncludePreviousLostSlavesCount() {
+    return includePreviousLostSlavesCount;
   }
 
-  public void setCheckLostSlavesInLastMillis(long checkLostSlavesInLastMillis) {
-    this.checkLostSlavesInLastMillis = checkLostSlavesInLastMillis;
+  public void setIncludePreviousLostSlavesCount(boolean includePreviousLostSlavesCount) {
+    this.includePreviousLostSlavesCount = includePreviousLostSlavesCount;
   }
 
   public boolean isCheckLostTasks() {
