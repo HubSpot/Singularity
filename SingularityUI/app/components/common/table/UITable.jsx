@@ -5,6 +5,37 @@ import classNames from 'classnames';
 import BootstrapTable from 'react-bootstrap/lib/Table';
 import { Pagination } from 'react-bootstrap';
 
+/*
+  This component is large and difficult to modify.
+  That's because it's essentially three different tables
+  pushed into one component. Small modifications are doable,
+  but to do a large modification you may wish to split this
+  into smaller components as follows first:
+    UITable
+      - Provides the same API as this table, is the only
+        component anyone in the UI will use. It knows how to
+        render rows, but delegates getting rows and managing
+        pages to sub components.
+  Row Getters:
+    LocallyPaginated
+      - Provides pagination for tables, such as active tasks,
+        in which the API returns all elements of the
+        collection and the table only has to decide which to
+        render.
+    Chunked
+      - Provides chunk rendering for infinitely scrolling
+        tables such as the requests table.
+    APIPaginated
+      - Handles pagination for tables, such as historical
+        tasks, for which the UI reqeusts a specific page and
+        rows per page from the API.
+    Infinite
+      - Handles pagination for tables, such as starred
+        requests, that render all rows no matter what. This
+        may be unnecessary - it might be foldable into one
+        of the other row getters, or it may just be a no-op.
+*/
+
 class UITable extends Component {
 
   constructor(props) {
