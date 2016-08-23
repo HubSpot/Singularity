@@ -10,29 +10,24 @@ import { SetDashboardGroup } from '../../actions/ui/dashboard';
 import * as RequestsSelectors from '../../selectors/requests';
 
 const MyGroupRequests = ({groupRequests, groups, currentGroup, setCurrentGroup}) => {
-  if (groups.length == 0) {
+  if (groups.length === 0) {
     return null;
   }
 
-  let requestsSection = (
-    <div className="empty-table-message"><p>No requests</p></div>
+  const requestsSection = (
+    <UITable
+      data={groupRequests}
+      keyGetter={(requestParent) => requestParent.request.id}
+      asyncSort={true}
+      renderAllRows={true}
+      emptyTableMessage="No requests"
+    >
+      {RequestId}
+      {Type}
+      {LastDeploy}
+      {Actions}
+    </UITable>
   );
-
-  if (groupRequests.length > 0) {
-    requestsSection = (
-      <UITable
-        data={groupRequests}
-        keyGetter={(requestParent) => requestParent.request.id}
-        asyncSort={true}
-        renderAllRows={true}
-      >
-        {RequestId}
-        {Type}
-        {LastDeploy}
-        {Actions}
-      </UITable>
-    );
-  }
 
   const groupDropdown = groups.map((group, index) => (<MenuItem key={index} onClick={() => setCurrentGroup(group)}>{group}</MenuItem>));
 
@@ -53,22 +48,19 @@ const MyGroupRequests = ({groupRequests, groups, currentGroup, setCurrentGroup})
 MyGroupRequests.propTypes = {
   groupRequests: PropTypes.arrayOf(PropTypes.object).isRequired,
   groups: PropTypes.arrayOf(PropTypes.string).isRequired,
-  currentGroup: PropTypes.string
+  currentGroup: PropTypes.string,
+  setCurrentGroup: PropTypes.func.isRequired
 };
 
-const mapStateToProps = (state) => {
-  return {
-    groupRequests: RequestsSelectors.getUserGroupRequests(state),
-    groups: Utils.maybe(state.api.user, ['data', 'user', 'groups']) || [],
-    currentGroup: state.ui.dashboard.currentGroup
-  };
-};
+const mapStateToProps = (state) => ({
+  groupRequests: RequestsSelectors.getUserGroupRequests(state),
+  groups: Utils.maybe(state.api.user, ['data', 'user', 'groups']) || [],
+  currentGroup: state.ui.dashboard.currentGroup
+});
 
-const mapDispatchToProps = (dispatch) => {
-  return {
-    setCurrentGroup: (group) => dispatch(SetDashboardGroup(group))
-  };
-}
+const mapDispatchToProps = (dispatch) => ({
+  setCurrentGroup: (group) => dispatch(SetDashboardGroup(group))
+});
 
 export default connect(
   mapStateToProps,

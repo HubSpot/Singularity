@@ -14,7 +14,7 @@ const DashboardPage = () => (
   <div>
     <Header />
     <MyRequests />
-    <MyGroupRequests group={'hs-salesproduct'} />
+    <MyGroupRequests />
     <MyPausedRequests />
     <MyStarredRequests />
   </div>
