@@ -4,7 +4,7 @@ import Utils from '../../utils';
 
 const JSON_HEADERS = {'Content-Type': 'application/json', 'Accept': 'application/json'};
 
-export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
+export function buildApiAction(actionName, opts = {}, keyFunc) {
   const ACTION = actionName;
   const STARTED = `${actionName}_STARTED`;
   const ERROR = `${actionName}_ERROR`;
@@ -23,11 +23,11 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
     return { type: CLEAR };
   }
 
-  function started(key = undefined, options = undefined) {
+  function started(key, options) {
     return { type: STARTED, key, options };
   }
 
-  function error(err, options, apiResponse, key = undefined) {
+  function error(err, options, apiResponse, key) {
     const action = { type: ERROR, error: err, key, statusCode: apiResponse.status, options };
     if (Utils.isIn(apiResponse.status, options.catchStatusCodes) || apiResponse.status === 404 && options.renderNotFoundIf404) {
       return action;
@@ -48,7 +48,7 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
     return action;
   }
 
-  function success(data, statusCode, key = undefined, options) {
+  function success(data, statusCode, key, options) {
     return { type: SUCCESS, data, statusCode, key, options };
   }
 
@@ -106,7 +106,7 @@ export function buildApiAction(actionName, opts = {}, keyFunc = undefined) {
   };
 }
 
-export function buildJsonApiAction(actionName, httpMethod, opts = {}, keyField = undefined) {
+export function buildJsonApiAction(actionName, httpMethod, opts = {}, keyField) {
   const JSON_BOILERPLATE = {
     method: httpMethod,
     headers: JSON_HEADERS
