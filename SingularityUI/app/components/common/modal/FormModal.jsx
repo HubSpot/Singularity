@@ -3,7 +3,6 @@ import classNames from 'classnames';
 
 import { Modal, Button, Popover, OverlayTrigger } from 'react-bootstrap';
 import TagsInput from 'react-tagsinput';
-import Duration from '../formItems/Duration';
 import Select from 'react-select';
 import Utils from '../../../utils';
 import juration from 'juration';
