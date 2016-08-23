@@ -1,26 +1,46 @@
 import React from 'react';
 import classNames from 'classnames';
 
-import { Modal, Button } from 'react-bootstrap';
+import { Modal, Button, Popover, OverlayTrigger } from 'react-bootstrap';
 import TagsInput from 'react-tagsinput';
 import Duration from '../formItems/Duration';
 import Select from 'react-select';
+import Utils from '../../../utils';
+
+const TAGS_CHARACTER_LIMIT = 75;
+
+function getDefaultFormState(props) {
+  const formState = {};
+  props.formElements.forEach((formElement) => {
+    const { defaultValue } = formElement;
+    if (defaultValue) {
+      if (Array.isArray(defaultValue)) {
+        formState[formElement.name] = defaultValue;
+      } else {
+        formState[formElement.name] = formElement.defaultValue.toString();
+      }
+    }
+  });
+  return formState;
+}
 
 export default class FormModal extends React.Component {
   constructor(props) {
     super(props);
-    const formState = {};
-    props.formElements.forEach((formElement) => {
-      formState[formElement.name] = formElement.defaultValue && formElement.defaultValue.toString();
-    });
 
     this.state = {
       visible: false,
-      formState,
+      formState: getDefaultFormState(props),
       errors: {}
     };
 
     _.bindAll(this, 'hide', 'show', 'confirm');
+  }
+
+  componentWillReceiveProps(newProps) {
+    if (_.isEqual(this.state.formState, getDefaultFormState(this.props))) {
+      this.setState({formState: getDefaultFormState(newProps)});
+    }
   }
 
   static FormItem = (props) => {
@@ -57,7 +77,7 @@ export default class FormModal extends React.Component {
   }
 
   handleFormChange(name, value) {
-    const formState = this.state.formState;
+    const formState = Utils.deepClone(this.state.formState);
     formState[name] = value;
     this.setState({ formState });
   }
@@ -115,6 +135,45 @@ export default class FormModal extends React.Component {
         formState
       });
     }
+  }
+
+  renderTag(props) {
+    const {tag, key, onRemove, ...other} = props;
+    let tagDisplay;
+    if (tag.length > TAGS_CHARACTER_LIMIT) {
+      const tooltip = (
+        <Popover id="full-tag" className="tag-popover">{tag}</Popover>
+      );
+      tagDisplay = (
+        <OverlayTrigger
+          trigger="hover"
+          placement="left"
+          overlay={tooltip}
+        >
+          <span>{`${tag.substr(0, TAGS_CHARACTER_LIMIT)}...`}</span>
+        </OverlayTrigger>
+      );
+    } else {
+      tagDisplay = tag;
+    }
+    return (
+      <span key={key} {...other}>
+        {tagDisplay}
+        <a onClick={() => onRemove(key)} />
+      </span>
+    );
+  }
+
+  renderTagsInput(props) {
+    const inputProps = _.omit(props, 'className', 'placeholder', 'addTag');
+    return (
+      <div className="input-group">
+        <input type="text" ref="argValue" className="form-control" placeholder="" {...inputProps} />
+        <span className="input-group-btn">
+          <Button bsStyle="success" onClick={() => this.refs.tagsInput.accept()}>+</Button>
+        </span>
+      </div>
+    );
   }
 
   renderForm() {
@@ -192,11 +251,12 @@ export default class FormModal extends React.Component {
               <label style={{display: 'block', width: '100%'}}>
                 {formElement.label}
                 <TagsInput
+                  ref="tagsInput"
                   value={this.state.formState[formElement.name] || []}
                   onChange={(tags) => this.handleFormChange(formElement.name, tags)}
                   addOnBlur={true}
-                  addOnPaste={true}
-                  inputProps={{className: 'form-control input-large', placeholder: ''}}
+                  renderInput={(props) => this.renderTagsInput(props)}
+                  renderTag={this.renderTag}
                 />
               </label>
             </FormModal.FormItem>
@@ -227,9 +287,11 @@ export default class FormModal extends React.Component {
             <FormModal.FormItem element={formElement} formState={this.state.formState} key={formElement.name}>
               <div className={classNames('form-group', {'has-error': !!error})}>
                 <label className="control-label" htmlFor={formElement.name}>{formElement.label}</label>
-                <Duration type="text"
+                <Duration
+                  type="text"
                   value={this.state.formState[formElement.name] || 0}
                   onChange={(value) => this.handleFormChange(formElement.name, value)}
+                  isSubForm={true}
                 />
                 {errorBlock}
                 {help}
@@ -310,9 +372,8 @@ export default class FormModal extends React.Component {
 
     return (
       <Modal show={this.state.visible} onHide={this.hide} backdrop={this.props.mustFill ? 'static' : true}>
+        {this.props.name && <Modal.Header><h3>{this.props.name}</h3></Modal.Header>}
         <Modal.Body>
-          {this.props.name && <h3>{this.props.name}</h3>}
-          {this.props.name && <hr />}
           {this.props.children}
           {this.props.children && !!this.props.formElements.length && <hr />}
           {this.renderForm()}
@@ -345,7 +406,7 @@ FormModal.propTypes = {
     label: React.PropTypes.string,
     isRequired: React.PropTypes.bool,
     values: React.PropTypes.array,
-    defaultValue: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.bool, React.PropTypes.number]),
+    defaultValue: React.PropTypes.oneOfType([React.PropTypes.string, React.PropTypes.bool, React.PropTypes.number, React.PropTypes.array]),
     validateField: React.PropTypes.func, // String -> String, return field validation error or falsey value if valid
     dependsOn: React.PropTypes.string // Only show this item if the other item (referenced by name) has a truthy value
   })).isRequired

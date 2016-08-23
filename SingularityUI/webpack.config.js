@@ -1,4 +1,5 @@
 var webpack = require('webpack');
+var CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
 var path = require('path');
 
 var dest = path.resolve(__dirname, 'dist');
@@ -52,6 +53,7 @@ module.exports = {
       jQuery: 'jquery',
       'window.jQuery': 'jquery'
     }),
-    new webpack.optimize.CommonsChunkPlugin('vendor', 'vendor.bundle.js')
+    new webpack.optimize.CommonsChunkPlugin('vendor', 'vendor.bundle.js'),
+    new CaseSensitivePathsPlugin()
   ]
 };

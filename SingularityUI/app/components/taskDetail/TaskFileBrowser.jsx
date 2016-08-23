@@ -17,10 +17,22 @@ function makeComparator(attribute) {
     if (file2.isDirectory && !file1.isDirectory) {
       return 1;
     }
-    if (file1[attribute] === file2[attribute]) {
+    let property1;
+    let property2;
+    if (typeof file1[attribute] === 'string') {
+      property1 = file1[attribute].trim();
+    } else {
+      property1 = file1[attribute];
+    }
+    if (typeof file2[attribute] === 'string') {
+      property2 = file2[attribute].trim();
+    } else {
+      property2 = file2[attribute];
+    }
+    if (property1 === property2) {
       return 0;
     }
-    return file1[attribute] > file2[attribute] ? 1 : -1;
+    return property1 > property2 ? 1 : -1;
   };
 }
 
@@ -58,7 +70,10 @@ function TaskFileBrowser (props) {
       <UITable
         data={getFiles() || []}
         keyGetter={(file) => file.name}
+        rowChunkSize={50}
+        paginated={true}
         emptyTableMessage="No files exist in this directory"
+        defaultSortBy="name"
       >
         <Column
           label="Name"
@@ -67,12 +82,12 @@ function TaskFileBrowser (props) {
           cellData={(file) => {
             const icon = <Glyphicon glyph={file.isDirectory ? 'folder-open' : 'file'} />;
             if (file.isTailable) {
-              return <Link to={`task/${props.taskId}/tail/${file.uiPath}`}>{icon}<span className="file-name">{file.name}</span></Link>;
+              return <Link to={`task/${props.taskId}/tail/${file.uiPath}`}>{icon}<span className="file-name">{file.name.trim()}</span></Link>;
             }
             if (!file.isTailable && !file.isDirectory) {
-              return <span>{icon} {file.name}</span>;
+              return <span>{icon}<span className="file-name">{file.name.trim()}</span></span>;
             }
-            return <a onClick={() => props.changeDir(`${props.currentDirectory}/${file.name}`)}>{icon}<span className="file-name">{file.name}</span></a>;
+            return <a onClick={() => props.changeDir(`${props.currentDirectory}/${file.name}`)}>{icon}<span className="file-name">{file.name.trim()}</span></a>;
           }}
           sortable={true}
           sortFunc={makeComparator('name')}
@@ -97,9 +112,10 @@ function TaskFileBrowser (props) {
           sortData={sortData}
         />
         <Column
-          label=""
+          label="actions-column"
           id="actions-column"
           key="actions-column"
+          className="actions-column"
           cellData={(file) => !file.isDirectory && (
             <OverlayTrigger placement="left" overlay={<ToolTip id={`downloadFile${file.name}`}>Download {file.name}</ToolTip>}>
               <a href={file.downloadLink}>

@@ -27,7 +27,7 @@ Two commands exist for downloading logs.
 |-f , --conf-folder|Folder to look for configuration files|`~/.logfetch`|
 |-c , --conf-file|configuration file to use(path relative to conf_folder)|default|
 |-t , --task-id|Task Id to fetch logs for||
-|-r , --request-id|Request Id to fetch logs for||
+|-r , --request-id|Request Id pattern used to match requests to fetch logs for||
 |-T, --task-count|Max number of recent tasks (belonging to a request) to fetch live logs (on machine not s3)|20|
 |-d , --deploy-id|Deploy Id to fetch logs for (Must also specify requestId when using this option)|
 |-o, --dest|Destination folder for download output|`~/.logfetch_cache`|
@@ -46,6 +46,7 @@ Two commands exist for downloading logs.
 |-L, --skip-live|Don't search/download live logs|false|
 |-U, --use-cache|Don't redownload live logs, prefer the cached version|false|
 |--search|Run logsearch on the cache of local files (no downloading)|false|
+|-i, --show-file-info|Show the parsed timestamp and file name before printing log lines, even if not in verbose mode|false|
 |-V, --verbose|More verbose output|false|
 |--silent|No output except for log content, overrides -V|false|
 
@@ -106,7 +107,7 @@ As of `0.25.0` a grep option is no longer supported in `logtail`. it more effici
 |-f , --conf-folder|Folder to look for configuration files|`~/.logfetch`|
 |-c , --conf-file|configuration file to use(path relative to conf_folder)|default|
 |-t , --task-id|Task Id to fetch logs for||
-|-r , --request-id|Request Id to fetch logs for||
+|-r , --request-id|Request Id pattern used to match requests to fetch logs for||
 |-d , --deploy-id|Deploy Id to fetch logs for (Must also specify requestId when using this option)||
 |-u, --singularity-uri-base|Base url for singularity (e.g. `localhost:8080/singularity/v2/api`)|Must be set!|
 |-l, --logfile|Log file path to tail (ie logs/access.log)|Must be set!|
@@ -123,7 +124,7 @@ An offline version of `logfetch` that will aid in searching through your directo
 |-f , --conf-folder|Folder to look for configuration files|`~/.logfetch`|
 |-c , --conf-file|configuration file to use(path relative to conf_folder)|default|
 |-t , --task-id|Task Id to fetch logs for||
-|-r , --request-id|Request Id to fetch logs for||
+|-r , --request-id|Request Id pattern used to match requests to fetch logs for||
 |-d , --deploy-id|Deploy Id to fetch logs for (Must also specify requestId when using this option)|
 |-o, --dest|Cache folder to search|`~/.logfetch_cache`|
 |-s , --start|Search for logs no older than this, can be an integer number of days or date in format “%Y-%m-%d %H:%M:%S” or “%Y-%m-%d”, leaving off h-m-s will be inclusive for the current day (00:00:00) | 7 days ago|

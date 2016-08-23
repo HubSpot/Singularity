@@ -1,18 +1,20 @@
 import React from 'react';
-import SimpleTable from '../common/SimpleTable';
+import UITable from '../common/table/UITable';
 
 function MachinesPage (props) {
   function renderState(state, key) {
     return (
     <div key={key}>
       <h2> {state.stateName} </h2>
-      <SimpleTable
-        entries={state.hostsInState}
-        emptyMessage={state.emptyMessage}
-        headers={state.headers}
-        perPage={20}
-        renderTableRow={(machine) => machine}
-      />
+      <UITable
+        emptyTableMessage={state.emptyMessage}
+        data={state.hostsInState}
+        keyGetter={(slave) => slave.id}
+        rowChunkSize={20}
+        paginated={true}
+      >
+        {state.columns}
+      </UITable>
     </div>
     );
   }
@@ -35,9 +37,9 @@ MachinesPage.propTypes = {
   header: React.PropTypes.string.isRequired, // Eg. 'Slaves', 'Racks'
   states: React.PropTypes.arrayOf(React.PropTypes.shape({
     stateName: React.PropTypes.string.isRequired, // Eg. 'Active', 'Frozen', etc
-    headers: React.PropTypes.arrayOf(React.PropTypes.string).isRequired,
-    hostsInState: React.PropTypes.arrayOf(React.PropTypes.node).isRequired,
-    emptyMessage: React.PropTypes.string.isRequired
+    hostsInState: React.PropTypes.arrayOf(React.PropTypes.object).isRequired,
+    emptyMessage: React.PropTypes.string.isRequired,
+    columns: React.PropTypes.arrayOf(React.PropTypes.node).isRequired
   })).isRequired
 };
 

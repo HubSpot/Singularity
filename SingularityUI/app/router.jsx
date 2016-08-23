@@ -3,6 +3,7 @@ import { Provider } from 'react-redux';
 import { Router, Route, IndexRoute, useRouterHistory } from 'react-router';
 import { createHistory } from 'history';
 import { syncHistoryWithStore } from 'react-router-redux';
+import parseurl from 'parseurl';
 
 import Application from './components/common/Application';
 import NotFound from './components/common/NotFound';
@@ -20,10 +21,12 @@ import RequestForm from './components/requestForm/RequestForm';
 import NewDeployForm from './components/newDeployForm/NewDeployForm';
 import { Tail, AggregateTail } from './components/logs/Tail';
 import RequestDetailPage from './components/requestDetail/RequestDetailPage';
+import Group from './components/groupDetail/GroupDetail.jsx';
 
 const AppRouter = (props) => {
+  const parsedUrl = parseurl({ url: config.appRoot });
   let history = useRouterHistory(createHistory)({
-    basename: config.appRoot
+    basename: parsedUrl.path
   });
   history = syncHistoryWithStore(history, props.store);
 
@@ -36,9 +39,10 @@ const AppRouter = (props) => {
           <Route path="requests/new" component={RequestForm} />
           <Route path="requests/edit/:requestId" component={RequestForm} />
           <Route path="requests(/:state)(/:subFilter)(/:searchFilter)" component={RequestsPage} />
+          <Route path="group/:groupId" component={Group} />
           <Route path="request">
             <Route path=":requestId" component={RequestDetailPage} />
-            <Route path=":requestId/taskSearch" component={TaskSearch} />
+            <Route path=":requestId/task-search" component={TaskSearch} />
             <Route path=":requestId/deploy" component={NewDeployForm} />
             <Route path=":requestId/deploy/:deployId" component={DeployDetail} store={props.store} />
             <Route path=":requestId/tail/**" component={AggregateTail} />
@@ -51,7 +55,7 @@ const AppRouter = (props) => {
           <Route path="racks(/:state)" component={Racks} />
           <Route path="slaves(/:state)" component={Slaves} />
           <Route path="webhooks" component={Webhooks} />
-          <Route path="taskSearch" component={TaskSearch} />
+          <Route path="task-search" component={TaskSearch} />
           <Route path="*" component={NotFound} />
         </Route>
       </Router>

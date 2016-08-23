@@ -2,7 +2,7 @@ import { buildApiAction, buildJsonApiAction } from './base';
 
 export const FetchWebhooks = buildApiAction(
   'FETCH_WEBHOOKS',
-  {url: '/webhooks'}
+  {url: '/webhooks/summary'}
 );
 
 export const DeleteWebhook = buildJsonApiAction(

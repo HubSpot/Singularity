@@ -242,11 +242,11 @@ export const taskGroupFetchPrevious = taskGroupId =>
   function(dispatch, getState) {
     let {tasks, taskGroups, logRequestLength, maxLines} = getState();
 
-    let taskGroup = taskGroups[taskGroupId];
+    const taskGroup = taskGroups[taskGroupId];
     tasks = getTasks(taskGroup, tasks);
 
     // bail early if all tasks are at the top
-    if (_.all(tasks.map(({minOffset}) => minOffset === 0))) {
+    if (_.all(tasks.map((task) => task.minOffset === 0))) {
       return Promise.resolve();
     }
 
@@ -256,6 +256,7 @@ export const taskGroupFetchPrevious = taskGroupId =>
     }
 
     dispatch({taskGroupId, type: 'LOG_REQUEST_START'});
+    tasks = _.without(tasks, undefined);
     let promises = tasks.map(function({taskId, exists, minOffset, path, initialDataLoaded}) {
       if (minOffset > 0 && initialDataLoaded && exists !== false) {
         let xhr = fetchData(taskId, path, Math.max(minOffset - logRequestLength, 0), Math.min(logRequestLength, minOffset));

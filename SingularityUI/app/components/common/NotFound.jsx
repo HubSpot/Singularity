@@ -17,7 +17,8 @@ const NotFound = (props) => (
 );
 
 NotFound.propTypes = {
-  location: React.PropTypes.object
+  location: React.PropTypes.object.isRequired
 };
 
 export default rootComponent(NotFound, 'Not Found');
+export const NotFoundNoRoot = NotFound;

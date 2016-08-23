@@ -7,10 +7,9 @@ const ACTIONS = {
   }
 };
 
-export default function(state={}, action) {
+export default function(state = {}, action) {
   if (action.type in ACTIONS) {
     return ACTIONS[action.type](state, action);
-  } else {
-    return state;
   }
+  return state;
 }

@@ -1,6 +1,8 @@
 import React, { Component, PropTypes } from 'react';
 import Modal from 'react-bootstrap/lib/Modal';
 import Button from 'react-bootstrap/lib/Button';
+import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
+import ToolTip from 'react-bootstrap/lib/Tooltip';
 import JSONTree from 'react-json-tree';
 import { JSONTreeTheme } from '../../thirdPartyConfigurations';
 import Clipboard from 'clipboard';
@@ -12,6 +14,7 @@ export default class JSONButton extends Component {
       PropTypes.node
     ]).isRequired,
     object: PropTypes.object.isRequired,
+    showOverlay: PropTypes.bool,
     className: PropTypes.string,
     linkClassName: PropTypes.string
   };
@@ -43,9 +46,21 @@ export default class JSONButton extends Component {
   }
 
   render() {
+    const jsonTooltip = (
+      <ToolTip id="view-json-tooltip">
+        JSON
+      </ToolTip>
+    );
+    const button = (
+      <a className={this.props.linkClassName} onClick={this.showJSON} alt="Show JSON">{this.props.children}</a>
+    );
     return (
       <span className={this.props.className}>
-        <a className={this.props.linkClassName} onClick={this.showJSON} alt="Show JSON">{this.props.children}</a>
+        {this.props.showOverlay ? (
+          <OverlayTrigger placement="top" id="view-json-overlay" overlay={jsonTooltip}>
+            {button}
+          </OverlayTrigger>) : button
+        }
         <Modal show={this.state.modalOpen} onHide={this.hideJSON} bsSize="large">
           <Modal.Body>
             <div className="constrained-modal json-modal">

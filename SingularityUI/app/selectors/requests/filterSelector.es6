@@ -13,10 +13,12 @@ export default createSelector([getRequests, getFilter], (requests, filter) => {
   let stateFilter = null;
   switch (filter.state) {
     case 'activeDeploy':
-      stateFilter = (r) => r.hasActiveDeploy
+      stateFilter = (requestParent) => requestParent.hasActiveDeploy;
       break;
     case 'noDeploy':
-      stateFilter = (r) => !r.hasActiveDeploy
+      stateFilter = (requestParent) => !requestParent.hasActiveDeploy;
+      break;
+    default:
       break;
   }
   if (stateFilter) {
@@ -25,27 +27,27 @@ export default createSelector([getRequests, getFilter], (requests, filter) => {
 
   // Filter by request type
   if (!_.contains(['pending', 'cleanup'], filter.type)) {
-    filteredRequests = _.filter(filteredRequests, (r) => r.request && _.contains(filter.subFilter, r.request.requestType));
+    filteredRequests = _.filter(filteredRequests, (requestParent) => requestParent.request && _.contains(filter.subFilter, requestParent.request.requestType));
   }
 
   // Filter by glob or fuzzy string
   if (filter.searchFilter) {
-    const id = {extract: (r) => r.id || ''};
-    const user = {extract: (r) => `${r.hasActiveDeploy ? r.requestDeployState.activeDeploy.user : ''}`};
+    const id = {extract: (requestParent) => requestParent.id || ''};
+    const user = {extract: (requestParent) => `${requestParent.hasActiveDeploy ? requestParent.requestDeployState.activeDeploy.user : ''}`};
 
     if (Utils.isGlobFilter(filter.searchFilter)) {
-      let res1 = _.filter(filteredRequests, (request) => {
-        return micromatch.any(user.extract(request), filter.searchFilter + '*');
+      const res1 = _.filter(filteredRequests, (requestParent) => {
+        return micromatch.any(user.extract(requestParent), `${filter.searchFilter}*`);
       });
-      let res2 = _.filter(filteredRequests, (request) => {
-        return micromatch.any(id.extract(request), filter.searchFilter + '*');
+      const res2 = _.filter(filteredRequests, (requestParent) => {
+        return micromatch.any(id.extract(requestParent), `${filter.searchFilter}*`);
       });
       filteredRequests = _.union(res1, res2).reverse();
     } else {
-      _.each(filteredRequests, (r) => r.id = id.extract(r));
-      let res1 = fuzzy.filter(filter.searchFilter, filteredRequests, user);
-      let res2 = fuzzy.filter(filter.searchFilter, filteredRequests, id);
-      filteredRequests = _.uniq(_.pluck(_.sortBy(_.union(res1, res2), (t) => Utils.fuzzyAdjustScore(filter.searchFilter, t)), 'original').reverse());
+      _.each(filteredRequests, (requestParent) => {requestParent.id = id.extract(requestParent);});
+      const res1 = fuzzy.filter(filter.searchFilter, filteredRequests, user);
+      const res2 = fuzzy.filter(filter.searchFilter, filteredRequests, id);
+      filteredRequests = _.uniq(_.pluck(_.sortBy(_.union(res1, res2), (task) => Utils.fuzzyAdjustScore(filter.searchFilter, task)), 'original').reverse());
     }
   }
 

@@ -3,8 +3,9 @@ import Utils from '../../utils';
 
 export const FetchTaskHistory = buildApiAction(
   'FETCH_TASK_HISTORY',
-  (taskId) => ({
-    url: `/history/task/${taskId}`
+  (taskId, renderNotFoundIf404) => ({
+    url: `/history/task/${taskId}`,
+    renderNotFoundIf404
   }),
   (taskId) => taskId
 );
@@ -41,8 +42,9 @@ export const FetchTaskHistoryForDeploy = buildApiAction(
 
 export const FetchDeployForRequest = buildApiAction(
   'FETCH_DEPLOY',
-  (requestId, deployId) => ({
-    url: `/history/request/${requestId}/deploy/${deployId}`
+  (requestId, deployId, renderNotFoundIf404) => ({
+    url: `/history/request/${requestId}/deploy/${deployId}`,
+    renderNotFoundIf404
   })
 );
 
@@ -56,9 +58,8 @@ export const FetchDeploysForRequest = buildApiAction(
 
 export const FetchTaskSearchParams = buildApiAction(
   'FETCH_TASK_HISTORY',
-  ({requestId = null, deployId = null, host = null, lastTaskStatus = null, startedAfter = null, startedBefore = null, orderDirection = null, count, page}) => {
+  ({requestId = null, deployId = null, host = null, lastTaskStatus = null, startedAfter = null, startedBefore = null, orderDirection = null}, count, page) => {
     const args = {
-      requestId,
       deployId,
       host,
       lastTaskStatus,
@@ -66,9 +67,13 @@ export const FetchTaskSearchParams = buildApiAction(
       startedBefore,
       orderDirection
     };
-    return {
-      url: `/history/tasks?count=${count}&page=${page}&${Utils.queryParams(args)}`
-    };
+    let url;
+    if (requestId) {
+      url = `/history/request/${requestId}/tasks?&count=${count}&page=${page}&${Utils.queryParams(args)}`;
+    } else {
+      url = `/history/tasks?count=${count}&page=${page}&${Utils.queryParams(args)}`;
+    }
+    return { url };
   });
 
 export const FetchRequestRunHistory = buildApiAction(

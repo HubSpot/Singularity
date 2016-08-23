@@ -5,7 +5,7 @@
   <parent>
     <groupId>com.hubspot</groupId>
     <artifactId>Singularity</artifactId>
-    <version>0.8.0-SNAPSHOT</version>
+    <version>0.11.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>SingularityService</artifactId>
@@ -379,6 +379,21 @@
     <dependency>
       <groupId>org.apache.directory.api</groupId>
       <artifactId>api-all</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.dmfs</groupId>
+      <artifactId>lib-recur</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.dmfs</groupId>
+      <artifactId>rfc5545-datetime</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>joda-time</groupId>
+      <artifactId>joda-time</artifactId>
     </dependency>
 
   </dependencies>

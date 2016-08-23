@@ -8,10 +8,17 @@ import { Link } from 'react-router';
 
 import { getBouncesForRequest } from '../../../selectors/tasks';
 
-import CancelDeployButton from './CancelDeployButton';
-import AdvanceDeployButton from './AdvanceDeployButton';
+import CancelDeployButton from '../../common/modalButtons/CancelDeployButton';
+import AdvanceDeployButton from '../../common/modalButtons/AdvanceDeployButton';
 
-const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) => {
+const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest, deleted}) => {
+  if (deleted) {
+    return (
+      <Alert bsStyle="warning">
+        <b>This request has been deleted.</b>
+      </Alert>
+    );
+  }
   if (!requestAPI) {
     return undefined;
   }
@@ -20,10 +27,9 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) 
 
   const requestParent = requestAPI.data;
   if (bounces.length > 0 && requestParent.request) {
-    const runningInstanceCount = Utils.request.runningInstanceCount(activeTasksForRequest.data);
     maybeBouncing = (
       <Alert bsStyle="warning">
-        <b>Request is bouncing:</b> {runningInstanceCount} of {requestParent.request.instances} replacement tasks are currently running.
+        <b>Request is bouncing:</b> Attempting to start <b>{requestParent.request.instances}</b> replacement tasks.
       </Alert>
     );
   }
@@ -56,7 +62,7 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) 
         maybeDeployProgress = (
           <span>
             {pendingDeployProgress}
-            <p>{deployingInstanceCount === instances ? ' Waiting for new tasks to become healthy.' : ''}</p>
+            <p>{deployingInstanceCount === instances && ' Waiting for new tasks to become healthy.'}</p>
           </span>
         );
       } else {
@@ -74,14 +80,14 @@ const RequestAlerts = ({requestId, requestAPI, bounces, activeTasksForRequest}) 
           }
           maybeDeployProgress = (
             <span>
-              Finished deploying {targetActiveInstances} of {instances} total instances, {nextDeployStepRemark}
+              Finished deploying {targetActiveInstances} total instances, {nextDeployStepRemark}
             </span>
           );
         } else {
           maybeDeployProgress = (
             <span>
               {
-                `Trying to deploy ${targetActiveInstances} of ${instances}
+                `Trying to deploy ${targetActiveInstances}
                 instances, ${deployingInstanceCount} of
                 ${targetActiveInstances} new tasks are currently running.`
               }
@@ -177,7 +183,8 @@ RequestAlerts.propTypes = {
   requestId: PropTypes.string.isRequired,
   requestAPI: PropTypes.object.isRequired,
   bounces: PropTypes.arrayOf(PropTypes.object).isRequired,
-  activeTasksForRequest: PropTypes.object.isRequired
+  activeTasksForRequest: PropTypes.object.isRequired,
+  deleted: PropTypes.bool
 };
 
 const mapStateToProps = (state, ownProps) => {

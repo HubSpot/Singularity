@@ -14,7 +14,8 @@ export const FIELDS = {
       values: [
         {id: 'cpus', type: 'number', default: 1},
         {id: 'memoryMb', type: 'number', default: 128},
-        {id: 'numPorts', type: 'number', default: 0}
+        {id: 'numPorts', type: 'number', default: 0},
+        {id: 'diskMb', type: 'number'}
       ]
     }
   ],

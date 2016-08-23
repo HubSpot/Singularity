@@ -6,7 +6,8 @@ import ToolTip from 'react-bootstrap/lib/Tooltip';
 
 import ShellCommandLauncher from './ShellCommandLauncher';
 
-import SimpleTable from '../common/SimpleTable';
+import Column from '../common/table/Column';
+import UITable from '../common/table/UITable';
 import Utils from '../../utils';
 
 export default class ShellCommands extends Component {
@@ -118,41 +119,71 @@ export default class ShellCommands extends Component {
     const history = !!this.props.shellCommandHistory.length && (
       <div>
         <h3>Command History</h3>
-          <SimpleTable
-            emptyMessage="No commands run"
-            entries={this.props.shellCommandHistory}
-            perPage={5}
-            first={true}
-            last={true}
-            headers={['Timestamp', 'Command', 'User', 'Status', 'Message', '']}
-            renderTableRow={(data, index) => {
-              const updates = _.sortBy(data.shellUpdates, 'timestamp');
-              const withFilename = _.find(updates, (update) => update.outputFilename);
-              const filename = withFilename && withFilename.outputFilename;
+        <UITable
+          data={this.props.shellCommandHistory}
+          keyGetter={(historyItem) => historyItem.shellRequest.timestamp}
+          emptyTableMessage="No commands run"
+          rowChunkSize={5}
+          paginated={true}
+        >
+          <Column
+            label="Timestamp"
+            id="timestamp"
+            key="timestamp"
+            cellData={(historyItem) => Utils.absoluteTimestamp(historyItem.shellRequest.timestamp)}
+          />
+          <Column
+            label="Command"
+            id="command"
+            key="command"
+            cellData={(historyItem) => <code>{historyItem.shellRequest.shellCommand.name}</code>}
+          />
+          <Column
+            label="User"
+            id="user"
+            key="user"
+            cellData={(historyItem) => historyItem.shellRequest.user}
+          />
+          <Column
+            label="Status"
+            id="status"
+            key="status"
+            cellData={(historyItem) => {
+              const updates = _.sortBy(historyItem.shellUpdates, 'timestamp');
+              return updates.length && _.last(updates).updateType;
+            }}
+          />
+          <Column
+            label="Message"
+            id="message"
+            key="message"
+            cellData={(historyItem) => {
+              const updates = _.sortBy(historyItem.shellUpdates, 'timestamp');
               return (
-                <tr key={index}>
-                  <td>{Utils.absoluteTimestamp(data.shellRequest.timestamp)}</td>
-                  <td><code>{data.shellRequest.shellCommand.name}</code></td>
-                  <td>{data.shellRequest.user}</td>
-                  <td>{updates.length && _.last(updates).updateType}</td>
-                  <td>
-                    <ul>
-                      {updates.map((update) => {
-                        return <li key={update.timestamp}>{Utils.absoluteTimestamp(update.timestamp)}: {update.message}</li>;
-                      })}
-                    </ul>
-                  </td>
-                  <td className="actions-column">
-                    {filename && (
-                      <OverlayTrigger placement="left" overlay={<ToolTip id={filename}>View output file</ToolTip>}>
-                        <Link to={`task/${data.shellRequest.taskId.id}/tail/${data.shellRequest.taskId.id}/${filename}`}>···</Link>
-                      </OverlayTrigger>
-                    )}
-                  </td>
-                </tr>
+                <ul>
+                  {updates.map((update) => {
+                    return <li key={update.timestamp}>{Utils.absoluteTimestamp(update.timestamp)}: {update.message}</li>;
+                  })}
+                </ul>
               );
             }}
           />
+          <Column
+            label="Logs"
+            id="actions-column"
+            key="actions-column"
+            className="actions-column"
+            cellData={(historyItem) => {
+              const withFilename = _.find(historyItem.shellUpdates, (update) => update.outputFilename);
+              const filename = withFilename && withFilename.outputFilename;
+              return filename && (
+                <OverlayTrigger placement="left" overlay={<ToolTip id={filename}>View output file</ToolTip>}>
+                  <Link to={`task/${historyItem.shellRequest.taskId.id}/tail/${historyItem.shellRequest.taskId.id}/${filename}`}>view</Link>
+                </OverlayTrigger>
+              );
+            }}
+          />
+        </UITable>
       </div>
     );
 

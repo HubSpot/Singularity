@@ -13,9 +13,9 @@ import {
   PersistRequestPause
 } from '../../actions/api/requests';
 
-import UnpauseButton from '../requests/UnpauseButton';
-import EnableHealthchecksButton from '../requests/EnableHealthchecksButton';
-import DisableHealthchecksButton from '../requests/DisableHealthchecksButton';
+import UnpauseButton from '../common/modalButtons/UnpauseButton';
+import EnableHealthchecksButton from '../common/modalButtons/EnableHealthchecksButton';
+import DisableHealthchecksButton from '../common/modalButtons/DisableHealthchecksButton';
 
 import ExpiringActionNotice from './ExpiringActionNotice';
 

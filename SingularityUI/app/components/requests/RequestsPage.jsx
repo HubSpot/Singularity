@@ -19,35 +19,29 @@ import UITable from '../common/table/UITable';
 import RequestFilters from './RequestFilters';
 import * as Cols from './Columns';
 
-import Utils from '../../utils';
 import filterSelector from '../../selectors/requests/filterSelector';
 
+import Utils from '../../utils';
+
 class RequestsPage extends Component {
-  static propTypes = {
-    state: PropTypes.string.isRequired,
-    subFilter: PropTypes.string.isRequired,
-    searchFilter: PropTypes.string.isRequired,
-    requestsInState: PropTypes.arrayOf(PropTypes.object).isRequired,
-    fetchFilter: PropTypes.func.isRequired
-  };
 
   static propTypes = {
-    requestsInState: React.PropTypes.array,
-    fetchFilter: React.PropTypes.func,
-    removeRequest: React.PropTypes.func,
-    unpauseRequest: React.PropTypes.func,
-    runNow: React.PropTypes.func,
-    fetchRun: React.PropTypes.func,
-    fetchRunHistory: React.PropTypes.func,
-    fetchTaskFiles: React.PropTypes.func,
-    scaleRequest: React.PropTypes.func,
-    bounceRequest: React.PropTypes.func,
-    params: React.PropTypes.object,
-    router: React.PropTypes.object,
-    filter: React.PropTypes.shape({
-      state: React.PropTypes.string,
-      subFilter: React.PropTypes.array,
-      searchFilter: React.PropTypes.string
+    requestsInState: PropTypes.array,
+    fetchFilter: PropTypes.func,
+    removeRequest: PropTypes.func,
+    unpauseRequest: PropTypes.func,
+    runNow: PropTypes.func,
+    fetchRun: PropTypes.func,
+    fetchRunHistory: PropTypes.func,
+    fetchTaskFiles: PropTypes.func,
+    scaleRequest: PropTypes.func,
+    bounceRequest: PropTypes.func,
+    params: PropTypes.object,
+    router: PropTypes.object,
+    filter: PropTypes.shape({
+      state: PropTypes.string,
+      subFilter: PropTypes.array,
+      searchFilter: PropTypes.string
     }).isRequired
   };
 
@@ -121,7 +115,7 @@ class RequestsPage extends Component {
         <UITable
           ref="table"
           data={displayRequests}
-          keyGetter={(r) => (r.request ? r.request.id : r.requestId)}
+          keyGetter={(request) => (request.request ? request.request.id : request.requestId)}
         >
           {this.getColumns()}
         </UITable>
@@ -133,7 +127,7 @@ class RequestsPage extends Component {
         <RequestFilters
           filter={this.props.filter}
           onFilterChange={(filter) => this.handleFilterChange(filter)}
-          displayRequestTypeFilters={!_.contains(['pending', 'cleanup'], this.props.filter.state)}
+          displayRequestTypeFilters={!_.contains(['pending', 'cleaning'], this.props.filter.state)}
         />
         {table}
       </div>
@@ -143,14 +137,14 @@ class RequestsPage extends Component {
 
 function mapStateToProps(state, ownProps) {
   const requestsInState = state.api.requestsInState.data;
-  const modifiedRequests = requestsInState.map((r) => {
-    const hasActiveDeploy = !!(r.activeDeploy || (r.requestDeployState && r.requestDeployState.activeDeploy));
+  const modifiedRequests = requestsInState.map((request) => {
+    const hasActiveDeploy = !!(request.activeDeploy || (request.requestDeployState && request.requestDeployState.activeDeploy));
     return {
-      ...r,
+      ...request,
       hasActiveDeploy,
-      canBeRunNow: r.state === 'ACTIVE' && _.contains(['SCHEDULED', 'ON_DEMAND'], r.request.requestType) && hasActiveDeploy,
-      canBeScaled: _.contains(['ACTIVE', 'SYSTEM_COOLDOWN'], r.state) && hasActiveDeploy && _.contains(['WORKER', 'SERVICE'], r.request.requestType),
-      id: r.request ? r.request.id : r.requestId
+      canBeRunNow: request.state === 'ACTIVE' && _.contains(['SCHEDULED', 'ON_DEMAND'], request.request.requestType) && hasActiveDeploy,
+      canBeScaled: _.contains(['ACTIVE', 'SYSTEM_COOLDOWN'], request.state) && hasActiveDeploy && _.contains(['WORKER', 'SERVICE'], request.request.requestType),
+      id: request.request ? request.request.id : request.requestId
     };
   });
   const filter = {
@@ -158,8 +152,11 @@ function mapStateToProps(state, ownProps) {
     subFilter: !ownProps.params.subFilter || ownProps.params.subFilter === 'all' ? RequestFilters.REQUEST_TYPES : ownProps.params.subFilter.split(','),
     searchFilter: ownProps.params.searchFilter || ''
   };
+  const statusCode = Utils.maybe(state, ['api', 'requestsInState', 'statusCode']);
 
   return {
+    pathname: ownProps.location.pathname,
+    notFound: statusCode === 404,
     requestsInState: modifiedRequests,
     filter
   };
@@ -167,7 +164,7 @@ function mapStateToProps(state, ownProps) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    fetchFilter: (state) => dispatch(FetchRequestsInState.trigger(state)),
+    fetchFilter: (state) => dispatch(FetchRequestsInState.trigger(state === 'cleaning' ? 'cleanup' : state, true)),
     removeRequest: (requestid, data) => dispatch(RemoveRequest.trigger(requestid, data)),
     unpauseRequest: (requestId, data) => dispatch(UnpauseRequest.trigger(requestId, data)),
     runNow: (requestId, data) => dispatch(RunRequest.trigger(requestId, data)),

@@ -18,10 +18,10 @@ class TaskSearchFilters extends React.Component {
     resetForm: React.PropTypes.func
   }
 
-  handleSubmit(e) {
-    e.preventDefault();
+  handleSubmit(event) {
+    event.preventDefault();
     if (this.props.valid) {
-      const result = _.mapObject(this.props.fields, (v) => v.value);
+      const result = _.mapObject(this.props.fields, (field) => field.value);
       this.props.onSearch(result);
     }
   }
@@ -83,7 +83,7 @@ class TaskSearchFilters extends React.Component {
             </div>
           </div>
           <Button type="submit" bsStyle="primary" className="pull-right" disabled={!this.props.valid}>Submit</Button>
-          <Button type="button" bsStyle="default" className="pull-right" onClick={() => this.props.resetForm()}>Clear</Button>
+          <Button type="button" bsStyle="default" className="pull-right" onClick={() => this.props.resetForm()}>Clear Form</Button>
         </form>
       </Panel>
     );

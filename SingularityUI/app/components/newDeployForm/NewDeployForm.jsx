@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
-import { Link } from 'react-router';
+import { Link, withRouter } from 'react-router';
 
 import Utils from '../../utils';
 
@@ -12,7 +12,7 @@ import CheckboxFormGroup from '../common/formItems/formGroups/CheckboxFormGroup'
 
 import { ModifyField, ClearForm } from '../../actions/ui/form';
 import { SaveDeploy } from '../../actions/api/deploys';
-import { FetchRequest, SaveRequest } from '../../actions/api/requests';
+import { FetchRequest } from '../../actions/api/requests';
 
 import {
   FIELDS, ARTIFACT_FIELDS, DOCKER_PORT_MAPPING_FIELDS, DOCKER_VOLUME_FIELDS,
@@ -86,6 +86,7 @@ class NewDeployForm extends Component {
       cpus: PropTypes.string,
       memoryMb: PropTypes.string,
       numPorts: PropTypes.string,
+      diskMb: PropTypes.string,
       env: PropTypes.arrayOf(PropTypes.string),
       healthcheckUri: PropTypes.string,
       healthcheckIntervalSeconds: PropTypes.string,
@@ -123,9 +124,16 @@ class NewDeployForm extends Component {
         })
       })
     }),
+    clearForm: PropTypes.func.isRequired,
+    clearSaveDeployData: PropTypes.func.isRequired,
     update: PropTypes.func.isRequired,
     save: PropTypes.func.isRequired
   };
+
+  componentDidMount() {
+    this.props.clearForm();
+    this.props.clearSaveDeployData();
+  }
 
   updateField(fieldId, newValue) {
     this.props.update(FORM_ID, fieldId, newValue);
@@ -425,7 +433,7 @@ class NewDeployForm extends Component {
     const cmdLineArguments = (
       <MultiInputFormGroup
         id="cmd-line-args"
-        value={this.props.form.arguments}
+        value={this.props.form.arguments || []}
         onChange={(newValue) => this.updateField('arguments', newValue)}
         label="Arguments"
         errorIndices={this.errorsInArrayField(INDEXED_FIELDS.arguments, () => this.props.form.arguments)}
@@ -435,7 +443,7 @@ class NewDeployForm extends Component {
     const artifacts = (
       <MultiInputFormGroup
         id="artifacts"
-        value={this.props.form.uris}
+        value={this.props.form.uris || []}
         onChange={(newValue) => this.updateField('uris', newValue)}
         label="Artifacts"
         placeholder="eg: http://s3.example/my-artifact"
@@ -581,7 +589,7 @@ class NewDeployForm extends Component {
     const extraCommandArgs = (
       <MultiInputFormGroup
         id="extra-args"
-        value={this.props.form.extraCmdLineArgs}
+        value={this.props.form.extraCmdLineArgs || []}
         onChange={(newValue) => this.updateField('extraCmdLineArgs', newValue)}
         label="Extra command args"
         placeholder="eg: -jar MyThing.jar"
@@ -612,7 +620,7 @@ class NewDeployForm extends Component {
     const successfulExitCodes = (
       <MultiInputFormGroup
         id="successful-exit-code"
-        value={this.props.form.successfulExitCodes}
+        value={this.props.form.successfulExitCodes || []}
         onChange={(newValue) => this.updateField('successfulExitCodes', newValue)}
         label="Successful exit codes"
         errorIndices={this.errorsInArrayField(INDEXED_FIELDS.successfulExitCodes, () => this.props.form.successfulExitCodes)}
@@ -640,7 +648,7 @@ class NewDeployForm extends Component {
     const loggingExtraFields = (
       <MultiInputFormGroup
         id="logging-extra-fields"
-        value={this.props.form.loggingExtraFields}
+        value={this.props.form.loggingExtraFields || []}
         onChange={(newValue) => this.updateField('loggingExtraFields', newValue)}
         label="Logging extra fields"
         placeholder="format: key=value"
@@ -965,7 +973,7 @@ class NewDeployForm extends Component {
     const parameters = (
       <MultiInputFormGroup
         id="docker-params"
-        value={this.props.form.parameters}
+        value={this.props.form.parameters || []}
         onChange={(newValue) => this.updateField('parameters', newValue)}
         label="Docker Parameters"
         placeholder="format: key=value"
@@ -1098,10 +1106,19 @@ class NewDeployForm extends Component {
         feedback={this.formFieldFeedback(INDEXED_FIELDS.numPorts, this.props.form.numPorts)}
       />
     );
+    const diskMb = (
+      <TextFormGroup
+        id="disk-mb"
+        onChange={event => this.updateField('diskMb', event.target.value)}
+        value={this.props.form.diskMb}
+        label="Disk (MB)"
+        feedback={this.formFieldFeedback(INDEXED_FIELDS.diskMb, this.props.form.diskMb)}
+      />
+    );
     const env = (
       <MultiInputFormGroup
         id="env-vars"
-        value={this.props.form.env}
+        value={this.props.form.env || []}
         onChange={(newValue) => this.updateField('env', newValue)}
         placeholder="format: key=value"
         label="Environment variables"
@@ -1212,7 +1229,7 @@ class NewDeployForm extends Component {
     const loadBalancerGroups = (
       <MultiInputFormGroup
         id="lb-group"
-        value={this.props.form.loadBalancerGroups}
+        value={this.props.form.loadBalancerGroups || []}
         onChange={(newValue) => this.updateField('loadBalancerGroups', newValue)}
         label="Load balancer groups"
         required={true}
@@ -1223,7 +1240,7 @@ class NewDeployForm extends Component {
     const loadBalancerOptions = (
       <MultiInputFormGroup
         id="lb-option"
-        value={this.props.form.loadBalancerOptions}
+        value={this.props.form.loadBalancerOptions || []}
         onChange={(newValue) => this.updateField('loadBalancerOptions', newValue)}
         label="Load balancer options"
         placeholder="format: key=value"
@@ -1296,6 +1313,13 @@ class NewDeployForm extends Component {
             <div className="col-sm-4">
               {numPorts}
             </div>
+          </div>
+          <div className="row">
+            {config.showTaskDiskResource &&
+              <div className="col-sm-4">
+                {diskMb}
+              </div>
+            }
           </div>
         </fieldset>
       </div>
@@ -1372,11 +1396,11 @@ class NewDeployForm extends Component {
     const errorMessage = (
       this.props.saveApiCall.error &&
         <p className="alert alert-danger">
-          There was a problem saving your request: {this.props.saveApiCall.error}
+          There was a problem saving your deploy: {this.props.saveApiCall.error}
         </p> ||
         this.props.saveApiCall.data && this.props.saveApiCall.data.message &&
         <p className="alert alert-danger">
-          There was a problem saving your request: {this.props.saveApiCall.data.message}
+          There was a problem saving your deploy: {this.props.saveApiCall.data.message}
         </p>
     );
     const successMessage = (
@@ -1439,27 +1463,33 @@ class NewDeployForm extends Component {
 function mapStateToProps(state, ownProps) {
   return {
     request: Utils.maybe(state.api.request, [ownProps.params.requestId, 'data']),
+    notFound: Utils.maybe(state.api.request, [ownProps.params.requestId, 'statusCode']) === 404,
+    pathname: ownProps.location.pathname,
     form: state.ui.form[FORM_ID],
     saveApiCall: state.api.saveDeploy
   };
 }
 
-function mapDispatchToProps(dispatch) {
+function mapDispatchToProps(dispatch, ownProps) {
   return {
     update(formId, fieldId, newValue) {
       dispatch(ModifyField(formId, fieldId, newValue));
     },
     save(deployBody) {
-      dispatch(SaveDeploy.trigger(deployBody));
+      dispatch(SaveDeploy.trigger(deployBody)).then((response) => {
+        if (response.type === 'SAVE_DEPLOY_SUCCESS') {
+          ownProps.router.push(`request/${ownProps.params.requestId}/deploy/${response.data.pendingDeployState.deployMarker.deployId}`);
+        }
+      });
     },
     fetchRequest(requestId) {
-      return dispatch(FetchRequest.trigger(requestId));
+      return dispatch(FetchRequest.trigger(requestId, true));
     },
     clearForm() {
       return dispatch(ClearForm('newDeployForm'));
     },
-    clearSaveDeployDataPromise() {
-      return dispatch(SaveRequest.clearData());
+    clearSaveDeployData() {
+      return dispatch(SaveDeploy.clearData());
     }
   };
 }
@@ -1467,9 +1497,10 @@ function mapDispatchToProps(dispatch) {
 function refresh(props) {
   const promises = [];
   promises.push(props.fetchRequest(props.params.requestId));
-  promises.push(props.clearForm());
-  promises.push(props.clearSaveDeployDataPromise());
+  if (!props.form) {
+    promises.push(props.clearForm());
+  }
   return Promise.all(promises);
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(rootComponent(NewDeployForm, 'New Deploy', refresh));
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(rootComponent(NewDeployForm, 'New Deploy', refresh)));

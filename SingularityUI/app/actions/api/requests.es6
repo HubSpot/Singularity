@@ -7,20 +7,21 @@ export const FetchRequests = buildApiAction(
 
 export const FetchRequestsInState = buildApiAction(
   'FETCH_REQUESTS_IN_STATE',
-  (state) => {
+  (state, renderNotFoundIf404) => {
     if (_.contains(['pending', 'cleanup'], state)) {
-      return {url: `/requests/queued/${state}`};
+      return {url: `/requests/queued/${state}`, renderNotFoundIf404};
     } else if (_.contains(['all', 'noDeploy', 'activeDeploy'], state)) {
-      return {url: '/requests'};
+      return {url: '/requests', renderNotFoundIf404};
     }
-    return {url: `/requests/${state}`};
+    return {url: `/requests/${state}`, renderNotFoundIf404};
   }
 );
 
 export const FetchRequest = buildApiAction(
   'FETCH_REQUEST',
-  (requestId) => ({
-    url: `/requests/request/${requestId}`
+  (requestId, renderNotFoundIf404) => ({
+    url: `/requests/request/${requestId}`,
+    renderNotFoundIf404
   }),
   (requestId) => requestId
 );
@@ -87,15 +88,6 @@ export const UnpauseRequest = buildJsonApiAction(
   })
 );
 
-// Remove when Unpause automatically removes the ExpiringPause
-export const UnpauseAndPersistRequest = (requestId, data) => {
-  return (dispatch) => {
-    return dispatch(UnpauseRequest.trigger(requestId, data)).then(
-      () => dispatch(PersistRequestPause.trigger(requestId))
-    );
-  };
-};
-
 export const ExitRequestCooldown = buildJsonApiAction(
   'EXIT_REQUEST_COOLDOWN',
   'POST',
@@ -109,7 +101,7 @@ export const SkipRequestHealthchecks = buildJsonApiAction(
   'SKIP_REQUEST_HEALTHCHECKS',
   'PUT',
   (requestId, {skipHealthchecks, durationMillis, message, actionId}) => ({
-    url: `/requests/request/${requestId}/skipHealthchecks`,
+    url: `/requests/request/${requestId}/skip-healthchecks`,
     body: { skipHealthchecks, durationMillis, message, actionId }
   })
 );
@@ -118,7 +110,7 @@ export const PersistSkipRequestHealthchecks = buildJsonApiAction(
   'PERSIST_SKIP_REQUEST_HEALTHCHECKS',
   'DELETE',
   (requestId) => ({
-    url: `/requests/request/${requestId}/skipHealthchecks`
+    url: `/requests/request/${requestId}/skip-healthchecks`
   })
 );
 
