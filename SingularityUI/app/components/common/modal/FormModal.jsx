@@ -96,7 +96,7 @@ export default class FormModal extends React.Component {
           errors[formElement.name] = error;
         }
       }
-      if (formElement.type === FormModal.INPUT_TYPES.DURATION) {
+      if (formElement.type === FormModal.INPUT_TYPES.DURATION && this.state.formState[formElement.name]) {
         try {
           juration.parse(this.state.formState[formElement.name]);
         } catch (exception) {
