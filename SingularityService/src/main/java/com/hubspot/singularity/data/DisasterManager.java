@@ -23,9 +23,10 @@ import com.hubspot.singularity.data.transcoders.Transcoder;
 
 public class DisasterManager extends CuratorAsyncManager {
   private static final String DISASTERS_ROOT = "/disasters";
-  private static final String DISABLED_ACTIONS = DISASTERS_ROOT + "/disabled-actions";
-  private static final String ACTIVE_DISASTERS = DISASTERS_ROOT + "/active";
-  private static final String DISASTER_STATS = DISASTERS_ROOT + "/stats";
+  private static final String DISABLED_ACTIONS_PATH = DISASTERS_ROOT + "/disabled-actions";
+  private static final String ACTIVE_DISASTERS_PATH = DISASTERS_ROOT + "/active";
+  private static final String DISASTER_STATS_PATH = DISASTERS_ROOT + "/stats";
+  private static final String DISABLE_AUTOMATED_PATH = DISASTERS_ROOT + "/disabled";
 
   private static final String MESSAGE_FORMAT = "Cannot perform action %s: %s";
   private static final String DEFAULT_MESSAGE = "Action is currently disabled";
@@ -42,7 +43,7 @@ public class DisasterManager extends CuratorAsyncManager {
   }
 
   private String getActionPath(SingularityDisabledActionType action) {
-    return ZKPaths.makePath(DISABLED_ACTIONS, action.name());
+    return ZKPaths.makePath(DISABLED_ACTIONS_PATH, action.name());
   }
 
   public boolean isDisabled(SingularityDisabledActionType action) {
@@ -70,23 +71,23 @@ public class DisasterManager extends CuratorAsyncManager {
 
   public List<SingularityDisabledAction> getDisabledActions() {
     List<String> paths = new ArrayList<>();
-    for (String path : getChildren(DISABLED_ACTIONS)) {
-      paths.add(ZKPaths.makePath(DISABLED_ACTIONS, path));
+    for (String path : getChildren(DISABLED_ACTIONS_PATH)) {
+      paths.add(ZKPaths.makePath(DISABLED_ACTIONS_PATH, path));
     }
 
-    return getAsync(DISABLED_ACTIONS, paths, disabledActionTranscoder);
+    return getAsync(DISABLED_ACTIONS_PATH, paths, disabledActionTranscoder);
   }
 
   public void addDisaster(SingularityDisasterType disaster) {
-    create(ZKPaths.makePath(ACTIVE_DISASTERS, disaster.name()));
+    create(ZKPaths.makePath(ACTIVE_DISASTERS_PATH, disaster.name()));
   }
 
   public void removeDisaster(SingularityDisasterType disaster) {
-    delete(ZKPaths.makePath(ACTIVE_DISASTERS, disaster.name()));
+    delete(ZKPaths.makePath(ACTIVE_DISASTERS_PATH, disaster.name()));
   }
 
   public List<SingularityDisasterType> getActiveDisasters() {
-    List<String> disasterNames = getChildren(ACTIVE_DISASTERS);
+    List<String> disasterNames = getChildren(ACTIVE_DISASTERS_PATH);
     List<SingularityDisasterType> disasters = new ArrayList<>();
     for (String name : disasterNames) {
       disasters.add(SingularityDisasterType.valueOf(name));
@@ -95,10 +96,51 @@ public class DisasterManager extends CuratorAsyncManager {
   }
 
   public void saveDisasterStats(SingularityDisasterStats stats) {
-    save(DISASTER_STATS, stats, disasterStatsTranscoder);
+    save(DISASTER_STATS_PATH, stats, disasterStatsTranscoder);
   }
 
   public Optional<SingularityDisasterStats> getDisasterStats() {
-    return getData(DISASTER_STATS, disasterStatsTranscoder);
+    return getData(DISASTER_STATS_PATH, disasterStatsTranscoder);
+  }
+
+  public void updateActiveDisasters(List<SingularityDisasterType> previouslyActiveDisasters, List<SingularityDisasterType> newActiveDisasters) {
+    for (SingularityDisasterType disaster : previouslyActiveDisasters) {
+      if (!newActiveDisasters.contains(disaster)) {
+        removeDisaster(disaster);
+      }
+    }
+
+    for (SingularityDisasterType disaster : newActiveDisasters) {
+      addDisaster(disaster);
+    }
+
+
+  }
+
+  public void addDisabledActionsForDisasters(List<SingularityDisasterType> newActiveDisasters) {
+    String message = String.format("Active disasters detected: (%s)", newActiveDisasters);
+    for (SingularityDisabledActionType action : configuration.getDisasterDetection().getDisableActionsOnDisaster()) {
+      disable(action, Optional.of(message), Optional.<SingularityUser>absent(), true);
+    }
+  }
+
+  public void clearSystemGeneratedDisabledActions() {
+    for (SingularityDisabledAction disabledAction : getDisabledActions()) {
+      if (disabledAction.isSystemGenerated()) {
+        enable(disabledAction.getType());
+      }
+    }
+  }
+
+  public void disableAutomatedDisabledActions() {
+    create(DISABLE_AUTOMATED_PATH);
+  }
+
+  public void enableAutomatedDisabledActions() {
+    delete(DISABLE_AUTOMATED_PATH);
+  }
+
+  public boolean isAutomatedDisabledActionsDisabled() {
+    return exists(DISABLE_AUTOMATED_PATH);
   }
 }

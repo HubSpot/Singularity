@@ -1,5 +1,6 @@
 package com.hubspot.singularity.resources;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.ws.rs.DELETE;
@@ -11,9 +12,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDisabledAction;
 import com.hubspot.singularity.SingularityDisabledActionType;
+import com.hubspot.singularity.SingularityDisasterStats;
+import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
@@ -38,6 +42,49 @@ public class DisastersResource {
   }
 
   @GET
+  @Path("/stats")
+  public Optional<SingularityDisasterStats> disasterStats() {
+    authorizationHelper.checkAdminAuthorization(user);
+    return disasterManager.getDisasterStats();
+  }
+
+  @GET
+  @Path("/active")
+  public List<SingularityDisasterType> activeDisasters() {
+    authorizationHelper.checkAdminAuthorization(user);
+    return disasterManager.getActiveDisasters();
+  }
+
+  @POST
+  @Path("/disable")
+  public void disableAutomatedDisasterCreation() {
+    authorizationHelper.checkAdminAuthorization(user);
+    disasterManager.disableAutomatedDisabledActions();
+  }
+
+  @POST
+  @Path("/enable")
+  public void enableAutomatedDisasterCreation() {
+    authorizationHelper.checkAdminAuthorization(user);
+    disasterManager.enableAutomatedDisabledActions();
+  }
+
+  @DELETE
+  @Path("/active/{type}")
+  public void removeDisaster(@PathParam("type") SingularityDisasterType type) {
+    authorizationHelper.checkAdminAuthorization(user);
+    disasterManager.removeDisaster(type);
+  }
+
+  @POST
+  @Path("/active/{type}")
+  public void newDisaster(@PathParam("type") SingularityDisasterType type) {
+    authorizationHelper.checkAdminAuthorization(user);
+    disasterManager.addDisaster(type);
+    disasterManager.addDisabledActionsForDisasters(Collections.singletonList(type));
+  }
+
+  @GET
   @Path("/disabled-actions")
   public List<SingularityDisabledAction> disabledActions() {
     authorizationHelper.checkAdminAuthorization(user);
@@ -48,7 +95,7 @@ public class DisastersResource {
   @Path("/disabled-actions/{action}")
   public void disableAction(@PathParam("action") SingularityDisabledActionType action, String message) {
     authorizationHelper.checkAdminAuthorization(user);
-    disasterManager.disable(action, Optional.fromNullable(message), user, false);
+    disasterManager.disable(action, Strings.isNullOrEmpty(message) ? Optional.<String>absent() : Optional.of(message), user, false);
   }
 
   @DELETE

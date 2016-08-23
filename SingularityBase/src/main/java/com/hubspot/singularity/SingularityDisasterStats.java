@@ -11,7 +11,7 @@ public class SingularityDisasterStats {
   private final long timestamp;
   private final int numActiveTasks;
   private final int numPendingTasks;
-  private final int numOverdueTasks;
+  private final int numLateTasks;
   private final long avgTaskLagMillis;
   private final int numLostTasks;
   private final int numActiveSlaves;
@@ -21,7 +21,7 @@ public class SingularityDisasterStats {
   public SingularityDisasterStats(@JsonProperty("timestamp") long timestamp,
                                   @JsonProperty("numActiveTasks") int numActiveTasks,
                                   @JsonProperty("numPendingTasks") int numPendingTasks,
-                                  @JsonProperty("numOverdueTasks") int numOverdueTasks,
+                                  @JsonProperty("numLateTasks") int numLateTasks,
                                   @JsonProperty("avgTaskLagMillis") long avgTaskLagMillis,
                                   @JsonProperty("numLostTasks") int numLostTasks,
                                   @JsonProperty("numActiveSlaves") int numActiveSlaves,
@@ -29,7 +29,7 @@ public class SingularityDisasterStats {
     this.timestamp = timestamp;
     this.numActiveTasks = numActiveTasks;
     this.numPendingTasks = numPendingTasks;
-    this.numOverdueTasks = numOverdueTasks;
+    this.numLateTasks = numLateTasks;
     this.avgTaskLagMillis = avgTaskLagMillis;
     this.numLostTasks = numLostTasks;
     this.numActiveSlaves = numActiveSlaves;
@@ -48,8 +48,8 @@ public class SingularityDisasterStats {
     return numPendingTasks;
   }
 
-  public int getNumOverdueTasks() {
-    return numOverdueTasks;
+  public int getNumLateTasks() {
+    return numLateTasks;
   }
 
   public long getAvgTaskLagMillis() {
@@ -80,7 +80,7 @@ public class SingularityDisasterStats {
     return timestamp == that.timestamp &&
       numActiveTasks == that.numActiveTasks &&
       numPendingTasks == that.numPendingTasks &&
-      numOverdueTasks == that.numOverdueTasks &&
+      numLateTasks == that.numLateTasks &&
       avgTaskLagMillis == that.avgTaskLagMillis &&
       numLostTasks == that.numLostTasks &&
       numActiveSlaves == that.numActiveSlaves &&
@@ -89,7 +89,7 @@ public class SingularityDisasterStats {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(timestamp, numActiveTasks, numPendingTasks, numOverdueTasks, avgTaskLagMillis, numLostTasks, numActiveSlaves, numLostSlaves);
+    return Objects.hashCode(timestamp, numActiveTasks, numPendingTasks, numLateTasks, avgTaskLagMillis, numLostTasks, numActiveSlaves, numLostSlaves);
   }
 
   @Override
@@ -98,7 +98,7 @@ public class SingularityDisasterStats {
       .add("timestamp", timestamp)
       .add("numActiveTasks", numActiveTasks)
       .add("numPendingTasks", numPendingTasks)
-      .add("numOverdueTasks", numOverdueTasks)
+      .add("numLateTasks", numLateTasks)
       .add("avgTaskLagMillis", avgTaskLagMillis)
       .add("numLostTasks", numLostTasks)
       .add("numActiveSlaves", numActiveSlaves)

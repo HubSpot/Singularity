@@ -13,13 +13,11 @@ import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.MachineState;
-import com.hubspot.singularity.SingularityDisabledAction;
-import com.hubspot.singularity.SingularityDisabledActionType;
 import com.hubspot.singularity.SingularityDisasterStats;
 import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityPendingTask;
+import com.hubspot.singularity.SingularityScheduledTasksInfo;
 import com.hubspot.singularity.SingularitySlave;
-import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.DisasterDetectionConfiguration;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
@@ -31,7 +29,8 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
 
   private static final Logger LOG = LoggerFactory.getLogger(SingularityDisasterDetectionPoller.class);
 
-  private final DisasterDetectionConfiguration configuration;
+  private final SingularityConfiguration configuration;
+  private final DisasterDetectionConfiguration disasterConfiguration;
   private final TaskManager taskManager;
   private final SlaveManager slaveManager;
   private final DisasterManager disasterManager;
@@ -41,7 +40,8 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
   public SingularityDisasterDetectionPoller(SingularityConfiguration configuration,  TaskManager taskManager, SlaveManager slaveManager, DisasterManager disasterManager,
                                             @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Reason> taskLostReasons) {
     super(configuration.getDisasterDetection().getRunEveryMillis(), TimeUnit.MILLISECONDS);
-    this.configuration = configuration.getDisasterDetection();
+    this.configuration = configuration;
+    this.disasterConfiguration = configuration.getDisasterDetection();
     this.taskManager = taskManager;
     this.slaveManager = slaveManager;
     this.disasterManager = disasterManager;
@@ -50,7 +50,7 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
 
   @Override
   protected boolean isEnabled() {
-    return configuration.isEnabled();
+    return disasterConfiguration.isEnabled();
   }
 
   @Override
@@ -63,25 +63,32 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
     List<SingularityDisasterType> previouslyActiveDisasters = disasterManager.getActiveDisasters();
     Optional<SingularityDisasterStats> lastStats = disasterManager.getDisasterStats();
     SingularityDisasterStats newStats = collectNewStats(lastStats);
-    updateActiveDisastersAndDisabledActions(previouslyActiveDisasters, checkStats(lastStats, newStats));
+    List<SingularityDisasterType> newActiveDisasters = checkStats(lastStats, newStats);
+    disasterManager.updateActiveDisasters(previouslyActiveDisasters, checkStats(lastStats, newStats));
     disasterManager.saveDisasterStats(newStats);
+
+    if (!newActiveDisasters.isEmpty() && !disasterManager.isAutomatedDisabledActionsDisabled()) {
+      disasterManager.addDisabledActionsForDisasters(newActiveDisasters);
+    } else {
+      disasterManager.clearSystemGeneratedDisabledActions();
+    }
   }
 
   private SingularityDisasterStats collectNewStats(Optional<SingularityDisasterStats> lastStats) {
     long now = System.currentTimeMillis();
 
-    // Pending and active task data
     int numActiveTasks = taskManager.getNumActiveTasks();
     List<SingularityPendingTask> pendingTasks = taskManager.getPendingTasks();
+    SingularityScheduledTasksInfo scheduledTasksInfo = SingularityScheduledTasksInfo.getInfo(pendingTasks, configuration.getDeltaAfterWhichTasksAreLateMillis());
     int numPendingTasks = pendingTasks.size();
-    int numOverdueTasks = 0;
+    int numLateTasks = scheduledTasksInfo.getNumLateTasks();
     long totalTaskLagMillis = 0;
     int numPastDueTasks = 0;
 
     for (SingularityPendingTask pendingTask : pendingTasks) {
       long taskLagMillis = now - pendingTask.getPendingTaskId().getNextRunAt();
-      if (taskLagMillis > configuration.getConsiderOverdueAfterMillis()) {
-        numOverdueTasks++;
+      if (taskLagMillis > disasterConfiguration.getConsiderOverdueAfterMillis()) {
+        numLateTasks++;
       }
       if (taskLagMillis > 0) {
         numPastDueTasks++;
@@ -91,7 +98,6 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
 
     long avgTaskLagMillis = totalTaskLagMillis / numPastDueTasks;
 
-    // Active/Inactive slave data
     List<SingularitySlave> slaves = slaveManager.getObjects();
     int numRunningSlaves = 0;
     int numLostSlaves = 0;
@@ -99,65 +105,31 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
       if (slave.getCurrentState().getState() != MachineState.DEAD && slave.getCurrentState().getState() != MachineState.MISSING_ON_STARTUP) {
         numRunningSlaves++;
       } else {
-        if (now - slave.getCurrentState().getTimestamp() < now - configuration.getCheckLostSlavesInLastMillis()) {
+        if (now - slave.getCurrentState().getTimestamp() < now - disasterConfiguration.getCheckLostSlavesInLastMillis()) {
           numLostSlaves ++;
         }
       }
     }
 
-    // Lost task data
     int numLostTasks = 0;
-    for (Reason lostTaskReason : configuration.getLostTaskReasons()) {
+    for (Reason lostTaskReason : disasterConfiguration.getLostTaskReasons()) {
       numLostTasks += taskLostReasons.count(lostTaskReason);
     }
     taskLostReasons.clear();
 
-    return new SingularityDisasterStats(now, numActiveTasks, numPendingTasks, numOverdueTasks, avgTaskLagMillis, numLostTasks, numRunningSlaves, numLostSlaves);
-  }
-
-  private void updateActiveDisastersAndDisabledActions(List<SingularityDisasterType> previouslyActiveDisasters, List<SingularityDisasterType> newActiveDisasters) {
-    for (SingularityDisasterType disaster : previouslyActiveDisasters) {
-      if (!newActiveDisasters.contains(disaster)) {
-        disasterManager.removeDisaster(disaster);
-      }
-    }
-
-    for (SingularityDisasterType disaster : newActiveDisasters) {
-      disasterManager.addDisaster(disaster);
-    }
-
-    if (!newActiveDisasters.isEmpty()) {
-      addDisabledActions(newActiveDisasters);
-    } else {
-      clearSystemGeneratedDisabledActions();
-    }
-  }
-
-  private void addDisabledActions(List<SingularityDisasterType> newActiveDisasters) {
-    String message = String.format("Active disasters detected: (%s)", newActiveDisasters);
-    for (SingularityDisabledActionType action : configuration.getDisableActionsOnDisaster()) {
-      disasterManager.disable(action, Optional.of(message), Optional.<SingularityUser>absent(), true);
-    }
-  }
-
-  private void clearSystemGeneratedDisabledActions() {
-    for (SingularityDisabledAction disabledAction : disasterManager.getDisabledActions()) {
-      if (disabledAction.isSystemGenerated()) {
-        disasterManager.enable(disabledAction.getType());
-      }
-    }
+    return new SingularityDisasterStats(now, numActiveTasks, numPendingTasks, numLateTasks, avgTaskLagMillis, numLostTasks, numRunningSlaves, numLostSlaves);
   }
 
   private List<SingularityDisasterType> checkStats(Optional<SingularityDisasterStats> lastStats, SingularityDisasterStats newStats) {
     List<SingularityDisasterType> activeDisasters = new ArrayList<>();
 
-    if (configuration.isCheckOverdueTasks() && tooMuchTaskLag(lastStats, newStats)) {
+    if (disasterConfiguration.isCheckLateTasks() && tooMuchTaskLag(lastStats, newStats)) {
       activeDisasters.add(SingularityDisasterType.EXCESSIVE_TASK_LAG);
     }
-    if (configuration.isCheckLostSlaves() && tooManyLostSlaves(lastStats, newStats)) {
+    if (disasterConfiguration.isCheckLostSlaves() && tooManyLostSlaves(lastStats, newStats)) {
       activeDisasters.add(SingularityDisasterType.LOST_SLAVES);
     }
-    if (configuration.isCheckLostTasks() && tooManyLostTasks(lastStats, newStats)) {
+    if (disasterConfiguration.isCheckLostTasks() && tooManyLostTasks(lastStats, newStats)) {
       activeDisasters.add(SingularityDisasterType.LOST_TASKS);
     }
 
@@ -165,31 +137,27 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
   }
 
   private boolean tooMuchTaskLag(Optional<SingularityDisasterStats> lastStats, SingularityDisasterStats newStats) {
-    double overdueTaskPortion = newStats.getNumOverdueTasks() / (newStats.getNumActiveTasks() + newStats.getNumPendingTasks());
-    boolean criticalOverdueTasksPortion = overdueTaskPortion > configuration.getCriticalOverdueTaskPortion();
-    boolean criticalAvgTaskLag = newStats.getAvgTaskLagMillis() > configuration.getCriticalAvgTaskLagMillis();
+    double overdueTaskPortion = newStats.getNumLateTasks() / (newStats.getNumActiveTasks() + newStats.getNumPendingTasks());
+    boolean criticalOverdueTasksPortion = overdueTaskPortion > disasterConfiguration.getCriticalOverdueTaskPortion();
+    boolean criticalAvgTaskLag = newStats.getAvgTaskLagMillis() > disasterConfiguration.getCriticalAvgTaskLagMillis();
 
-    if (configuration.isRequireAllConditionsForOverdueTaskDisaster()) {
-      return criticalAvgTaskLag && criticalOverdueTasksPortion;
-    } else {
-      return criticalAvgTaskLag || criticalOverdueTasksPortion;
-    }
+    return criticalAvgTaskLag && criticalOverdueTasksPortion;
   }
 
   private boolean tooManyLostSlaves(Optional<SingularityDisasterStats> lastStats, SingularityDisasterStats newStats) {
     double lostSlavesPortion = newStats.getNumLostSlaves() / (newStats.getNumActiveSlaves() + newStats.getNumLostSlaves());
-    return lostSlavesPortion > configuration.getCriticalLostSlavePortion();
+    return lostSlavesPortion > disasterConfiguration.getCriticalLostSlavePortion();
   }
 
   private boolean tooManyLostTasks(Optional<SingularityDisasterStats> lastStats, SingularityDisasterStats newStats) {
     int effectiveLostTasks;
-    if (configuration.isIncludePreviousLostTaskCount()) {
+    if (disasterConfiguration.isIncludePreviousLostTaskCount()) {
       effectiveLostTasks = lastStats.isPresent() ? lastStats.get().getNumLostTasks() + newStats.getNumLostTasks() : newStats.getNumLostTasks();
     } else {
       effectiveLostTasks = newStats.getNumLostTasks();
     }
     double lostTasksPortion = effectiveLostTasks / newStats.getNumActiveTasks();
-    return lostTasksPortion > configuration.getCriticalLostTaskPortion();
+    return lostTasksPortion > disasterConfiguration.getCriticalLostTaskPortion();
   }
 
 }

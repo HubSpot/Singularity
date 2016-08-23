@@ -28,16 +28,13 @@ public class DisasterDetectionConfiguration {
     SingularityDisabledActionType.BOUNCE, SingularityDisabledActionType.DEPLOY, SingularityDisabledActionType.TASK_RECONCILIATION);
 
   @JsonProperty
-  private boolean checkOverdueTasks = false;
+  private boolean checkLateTasks = false;
 
   @JsonProperty
   private long criticalAvgTaskLagMillis = 300000L;
 
   @JsonProperty
   private double criticalOverdueTaskPortion = 0.2;
-
-  @JsonProperty
-  private boolean requireAllConditionsForOverdueTaskDisaster = true;
 
   @JsonProperty
   private boolean checkLostSlaves = false;
@@ -94,12 +91,12 @@ public class DisasterDetectionConfiguration {
     this.disableActionsOnDisaster = disableActionsOnDisaster;
   }
 
-  public boolean isCheckOverdueTasks() {
-    return checkOverdueTasks;
+  public boolean isCheckLateTasks() {
+    return checkLateTasks;
   }
 
-  public void setCheckOverdueTasks(boolean checkOverdueTasks) {
-    this.checkOverdueTasks = checkOverdueTasks;
+  public void setCheckLateTasks(boolean checkLateTasks) {
+    this.checkLateTasks = checkLateTasks;
   }
 
   public long getCriticalAvgTaskLagMillis() {
@@ -116,14 +113,6 @@ public class DisasterDetectionConfiguration {
 
   public void setCriticalOverdueTaskPortion(double criticalOverdueTaskPortion) {
     this.criticalOverdueTaskPortion = criticalOverdueTaskPortion;
-  }
-
-  public boolean isRequireAllConditionsForOverdueTaskDisaster() {
-    return requireAllConditionsForOverdueTaskDisaster;
-  }
-
-  public void setRequireAllConditionsForOverdueTaskDisaster(boolean requireAllConditionsForOverdueTaskDisaster) {
-    this.requireAllConditionsForOverdueTaskDisaster = requireAllConditionsForOverdueTaskDisaster;
   }
 
   public boolean isCheckLostSlaves() {
