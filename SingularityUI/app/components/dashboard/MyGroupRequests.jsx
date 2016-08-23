@@ -35,9 +35,10 @@ const MyGroupRequests = ({groupRequests, groups, currentGroup, setCurrentGroup})
     <Row>
       <Col md={12} className="table-staged">
         <div className="page-header">
-          <h2><ButtonGroup>
-            <DropdownButton id="groups-dropdown" title={ currentGroup }>{ groupDropdown }</DropdownButton>
-          </ButtonGroup> requests</h2>
+          <ButtonGroup className="pull-right">
+            <DropdownButton pullRight id="groups-dropdown" title={ currentGroup }>{ groupDropdown }</DropdownButton>
+          </ButtonGroup>
+          <h2>Group Requests</h2>
         </div>
         {requestsSection}
       </Col>
