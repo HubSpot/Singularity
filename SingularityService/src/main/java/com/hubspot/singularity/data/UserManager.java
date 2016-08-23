@@ -49,7 +49,7 @@ public class UserManager extends CuratorManager {
     final String path = getUserSettingsPath(userId);
     final Optional<SingularityUserSettings> settings = getData(path, settingsTranscoder);
     if (!settings.isPresent()) {
-      save(path, new SingularityUserSettings(userId, starredRequestIds), settingsTranscoder);
+      save(path, new SingularityUserSettings(starredRequestIds), settingsTranscoder);
       return;
     }
     save(path, settings.get().addStarredRequestIds(starredRequestIds), settingsTranscoder);
@@ -59,7 +59,7 @@ public class UserManager extends CuratorManager {
     final String path = getUserSettingsPath(userId);
     final Optional<SingularityUserSettings> settings = getData(path, settingsTranscoder);
     if (!settings.isPresent()) {
-      save(path, new SingularityUserSettings(userId, Collections.<String>emptySet()), settingsTranscoder);
+      save(path, new SingularityUserSettings(Collections.<String>emptySet()), settingsTranscoder);
       return;
     }
     save(path, settings.get().deleteStarredRequestIds(starredRequestIds), settingsTranscoder);
