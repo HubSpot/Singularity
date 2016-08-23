@@ -3,6 +3,7 @@ package com.hubspot.singularity.data;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hubspot.singularity.WebExceptions.badRequest;
 import static com.hubspot.singularity.WebExceptions.checkBadRequest;
+import static com.hubspot.singularity.WebExceptions.locked;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -30,13 +31,13 @@ import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityContainerType;
 import com.hubspot.mesos.SingularityDockerInfo;
-import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
+import com.hubspot.singularity.SingularityDisabledActionType;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.config.SingularityConfiguration;
@@ -63,9 +64,10 @@ public class SingularityValidator {
   private final int deployIdLength;
   private final DeployHistoryHelper deployHistoryHelper;
   private final Resources defaultResources;
+  private final DisabledActionManager disabledActionManager;
 
   @Inject
-  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, RequestManager requestManager) {
+  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, RequestManager requestManager, DisabledActionManager disabledActionManager) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
@@ -84,6 +86,8 @@ public class SingularityValidator {
     this.maxMemoryMbPerInstance = configuration.getMesosConfiguration().getMaxMemoryMbPerInstance();
     this.maxMemoryMbPerRequest = configuration.getMesosConfiguration().getMaxMemoryMbPerRequest();
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
+
+    this.disabledActionManager = disabledActionManager;
   }
 
   private void checkForIllegalChanges(SingularityRequest request, SingularityRequest existingRequest) {
@@ -426,6 +430,12 @@ public class SingularityValidator {
     }
 
     return newDayOfWeekValue;
+  }
+
+  public void checkActionEnabled(SingularityDisabledActionType action) {
+    if (disabledActionManager.isDisabled(action)) {
+      locked(disabledActionManager.getDisabledAction(action).getMessage());
+    }
   }
 
   private boolean isValidInteger(String strValue) {

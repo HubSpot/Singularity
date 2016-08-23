@@ -28,6 +28,7 @@ public class SingularityDataModule extends AbstractModule {
 
     bind(ExecutorIdGenerator.class).in(Scopes.SINGLETON);
     bind(WebhookManager.class).in(Scopes.SINGLETON);
+    bind(DisabledActionManager.class).in(Scopes.SINGLETON);
   }
 
   @Provides

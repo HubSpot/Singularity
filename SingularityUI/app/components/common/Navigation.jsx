@@ -32,12 +32,13 @@ const Navigation = (props) => {
           <NavItem eventKey={2} active={fragment === 'status'} onClick={(event) => goTo(props.router, event, 'status')}>Status</NavItem>
           <NavItem eventKey={3} active={_.contains(['requests', 'request'], fragment)} onClick={(event) => goTo(props.router, event, 'requests')}>Requests</NavItem>
           <NavItem eventKey={4} active={_.contains(['tasks', 'task'], fragment)} onClick={(event) => goTo(props.router, event, 'tasks')}>Tasks</NavItem>
-          <NavDropdown id="admin-dropdown" eventKey={5} active={_.contains(['racks', 'slaves', 'webhooks'], fragment)} title="Admin">
+          <NavDropdown id="admin-dropdown" eventKey={5} active={_.contains(['racks', 'slaves', 'webhooks', 'disabled-actions'], fragment)} title="Admin">
             <MenuItem eventKey={5.1} onClick={(event) => goTo(props.router, event, 'racks')}>Racks</MenuItem>
             <MenuItem eventKey={5.2} onClick={(event) => goTo(props.router, event, 'slaves')}>Slaves</MenuItem>
             <MenuItem eventKey={5.3} onClick={(event) => goTo(props.router, event, 'webhooks')}>Webhooks</MenuItem>
+            <MenuItem eventKey={5.4} onClick={(event) => goTo(props.router, event, 'disabled-actions')}>Disabled Actions</MenuItem>
             <MenuItem divider={true} />
-            <MenuItem eventKey={5.4} onClick={(event) => goTo(props.router, event, 'task-search')}>Task search</MenuItem>
+            <MenuItem eventKey={5.5} onClick={(event) => goTo(props.router, event, 'task-search')}>Task search</MenuItem>
           </NavDropdown>
           <NavItem eventKey={6} target="blank" href={config.apiDocs}>API Docs <small>(Beta)</small></NavItem>
           <NavItem eventKey={7} className="global-search-button" onClick={(event) => handleSearchClick(event, props.toggleGlobalSearch)}>
