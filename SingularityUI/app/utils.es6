@@ -280,10 +280,17 @@ const Utils = {
     }
   },
   request: {
-    isStarred: (requestId, settings, temporaryStars) => {
-      let starredRequests = Utils.getMaybeUserSetting(settings, 'starredRequestIds') || [];
-      starredRequests = _.union(starredRequests, temporaryStars.temporaryAddedStars);
-      starredRequests = _.difference(starredRequests, temporaryStars.temporaryRemovedStars);
+    isStarred: (requestId, state) => {
+      const settings = Utils.maybe(state.api.userSettings, ['data']);
+      let starredRequests;
+      if (!_.isEmpty(settings)) {
+        const temporaryStars = state.temporaryStars;
+        starredRequests = Utils.getMaybeUserSetting(settings, 'starredRequestIds') || [];
+        starredRequests = _.union(starredRequests, temporaryStars.temporaryAddedStars);
+        starredRequests = _.difference(starredRequests, temporaryStars.temporaryRemovedStars);
+      } else {
+        starredRequests = state.ui.localStars;
+      }
       return starredRequests.indexOf(requestId) !== -1;
     },
 

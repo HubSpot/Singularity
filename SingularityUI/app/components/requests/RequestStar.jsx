@@ -1,8 +1,8 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 
-import { getUserSettingsAPI } from '../../selectors/requests';
 import { FetchUserSettings, AddStarredRequests, DeleteStarredRequests } from '../../actions/api/users';
+import { ToggleLocalRequestStar } from '../../actions/ui/starred';
 import Utils from '../../utils';
 import classNames from 'classnames';
 
@@ -17,17 +17,19 @@ RequestStar.propTypes = {
   requestId: PropTypes.string.isRequired,
   changeStar: PropTypes.func.isRequired,
   starred: PropTypes.bool.isRequired,
-  userId: PropTypes.string.isRequired
+  userId: PropTypes.string
 };
 
 const mapStateToProps = (state, ownProps) => ({
-  starred: Utils.request.isStarred(ownProps.requestId, Utils.maybe(getUserSettingsAPI(state), ['data']), state.temporaryStars),
+  starred: Utils.request.isStarred(ownProps.requestId, state),
   userId: Utils.maybe(state.api.user, ['data', 'user', 'id'])
 });
 
 const mapDispatchToProps = (dispatch) => ({
   changeStar: (requestId, userId, wasStarred) => {
-    if (!userId) return Promise.resolve();
+    if (!userId) { // No auth, use local storage
+      return dispatch(ToggleLocalRequestStar(requestId));
+    }
     const action = wasStarred ? DeleteStarredRequests : AddStarredRequests;
     return dispatch(action.trigger(userId, [requestId])).then(() => dispatch(FetchUserSettings.trigger(userId)));
   }
