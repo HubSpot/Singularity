@@ -26,41 +26,38 @@ public class UserResource {
   private final Optional<SingularityUser> user;
 
   @Inject
-  public UserResource(Optional<SingularityUser> user,
-                      UserManager userManager) {
+  public UserResource(UserManager userManager,
+                      Optional<SingularityUser> user) {
     this.userManager = userManager;
     this.user = user;
   }
 
-  private String determineUserId(String defaultUserId) {
-    if (!user.isPresent() || !user.get().getName().isPresent()) {
-      return defaultUserId;
-    }
+  private String getAuthUserId() {
+    checkBadRequest(user.isPresent() && user.get().getName().isPresent(), "Singularity userId must be provided by auth");
     return user.get().getName().get();
   }
 
   @GET
   @Path("/settings")
   public Optional<SingularityUserSettings> getUserSettings() {
-    checkBadRequest(user.isPresent() && user.get().getName().isPresent(), "Singularity userId must be provided by auth");
-    return userManager.getUserSettings(this.user.get().getName().get());
+    return userManager.getUserSettings(getAuthUserId());
   }
 
   @POST
   @Path("/settings")
   public void setUserSettings(@ApiParam("The new settings") SingularityUserSettings settings) {
-    userManager.updateUserSettings(determineUserId(settings.getUserId()), settings);
+    userManager.updateUserSettings(getAuthUserId(), settings);
   }
 
   @POST
   @Path("/settings/starred-requests")
   public void addStarredRequests(@ApiParam("The new starred requests") SingularityUserSettings settings) {
-    userManager.addStarredRequestIds(determineUserId(settings.getUserId()), settings.getStarredRequestIds());
+    userManager.addStarredRequestIds(getAuthUserId(), settings.getStarredRequestIds());
   }
 
   @DELETE
   @Path("/settings/starred-requests")
   public void deleteStarredRequests(@ApiParam("The new starred requests") SingularityUserSettings settings) {
-    userManager.deleteStarredRequestIds(determineUserId(settings.getUserId()), settings.getStarredRequestIds());
+    userManager.deleteStarredRequestIds(getAuthUserId(), settings.getStarredRequestIds());
   }
 }

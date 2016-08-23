@@ -8,19 +8,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 
 public class SingularityUserSettings {
-  private final String userId;
   private final Set<String> starredRequestIds;
 
   @JsonCreator
   public SingularityUserSettings(
-      @JsonProperty("userId") String userId,
       @JsonProperty("starredRequestIds") Set<String> starredRequestIds) {
-    this.userId = userId;
     this.starredRequestIds = Objects.firstNonNull(starredRequestIds, Collections.<String>emptySet());
-  }
-
-  public String getUserId() {
-    return userId;
   }
 
   public Set<String> getStarredRequestIds() {
@@ -40,8 +33,7 @@ public class SingularityUserSettings {
   @Override
   public String toString() {
     return "SingularityUserSettings[" +
-        "userId=" + userId +
-        ", starredRequestIds=" + starredRequestIds +
+        "starredRequestIds=" + starredRequestIds +
         ']';
   }
 
@@ -56,9 +48,6 @@ public class SingularityUserSettings {
 
     SingularityUserSettings that = (SingularityUserSettings) o;
 
-    if (!Objects.equal(userId, that.userId)) {
-      return false;
-    }
     if (!Objects.equal(starredRequestIds, that.starredRequestIds)) {
       return false;
     }
@@ -68,6 +57,6 @@ public class SingularityUserSettings {
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(userId, starredRequestIds);
+    return Objects.hashCode(starredRequestIds);
   }
 }
