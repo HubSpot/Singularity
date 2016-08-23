@@ -13,6 +13,7 @@ public class SingularityDisasterStats {
   private final int numPendingTasks;
   private final int numOverdueTasks;
   private final long avgTaskLagMillis;
+  private final int numLostTasks;
   private final int numActiveSlaves;
   private final int numLostSlaves;
 
@@ -22,6 +23,7 @@ public class SingularityDisasterStats {
                                   @JsonProperty("numPendingTasks") int numPendingTasks,
                                   @JsonProperty("numOverdueTasks") int numOverdueTasks,
                                   @JsonProperty("avgTaskLagMillis") long avgTaskLagMillis,
+                                  @JsonProperty("numLostTasks") int numLostTasks,
                                   @JsonProperty("numActiveSlaves") int numActiveSlaves,
                                   @JsonProperty("numLostSlaves") int numLostSlaves) {
     this.timestamp = timestamp;
@@ -29,6 +31,7 @@ public class SingularityDisasterStats {
     this.numPendingTasks = numPendingTasks;
     this.numOverdueTasks = numOverdueTasks;
     this.avgTaskLagMillis = avgTaskLagMillis;
+    this.numLostTasks = numLostTasks;
     this.numActiveSlaves = numActiveSlaves;
     this.numLostSlaves = numLostSlaves;
   }
@@ -53,6 +56,10 @@ public class SingularityDisasterStats {
     return avgTaskLagMillis;
   }
 
+  public int getNumLostTasks() {
+    return numLostTasks;
+  }
+
   public int getNumActiveSlaves() {
     return numActiveSlaves;
   }
@@ -75,13 +82,14 @@ public class SingularityDisasterStats {
       numPendingTasks == that.numPendingTasks &&
       numOverdueTasks == that.numOverdueTasks &&
       avgTaskLagMillis == that.avgTaskLagMillis &&
+      numLostTasks == that.numLostTasks &&
       numActiveSlaves == that.numActiveSlaves &&
       numLostSlaves == that.numLostSlaves;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(timestamp, numActiveTasks, numPendingTasks, numOverdueTasks, avgTaskLagMillis, numActiveSlaves, numLostSlaves);
+    return Objects.hashCode(timestamp, numActiveTasks, numPendingTasks, numOverdueTasks, avgTaskLagMillis, numLostTasks, numActiveSlaves, numLostSlaves);
   }
 
   @Override
@@ -92,6 +100,7 @@ public class SingularityDisasterStats {
       .add("numPendingTasks", numPendingTasks)
       .add("numOverdueTasks", numOverdueTasks)
       .add("avgTaskLagMillis", avgTaskLagMillis)
+      .add("numLostTasks", numLostTasks)
       .add("numActiveSlaves", numActiveSlaves)
       .add("numLostSlaves", numLostSlaves)
       .toString();

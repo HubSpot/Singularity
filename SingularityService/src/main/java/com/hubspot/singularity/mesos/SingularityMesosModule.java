@@ -3,6 +3,10 @@ package com.hubspot.singularity.mesos;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.mesos.Protos.TaskStatus.Reason;
+
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
@@ -12,6 +16,7 @@ import com.google.inject.name.Named;
 public class SingularityMesosModule extends AbstractModule {
 
   public static final String SCHEDULER_LOCK_NAME = "scheduler-lock";
+  public static final String TASK_LOST_REASONS_COUNTER = "task-lost-reasons";
 
   @Override
   public void configure() {
@@ -33,5 +38,12 @@ public class SingularityMesosModule extends AbstractModule {
   @Singleton
   public Lock getSchedulerLock() {
     return new ReentrantLock();
+  }
+
+  @Provides
+  @Named(TASK_LOST_REASONS_COUNTER)
+  @Singleton
+  public Multiset<Reason> provideTaskLostReasonsCounter() {
+    return HashMultiset.create(Reason.getDescriptor().getValues().size());
   }
 }

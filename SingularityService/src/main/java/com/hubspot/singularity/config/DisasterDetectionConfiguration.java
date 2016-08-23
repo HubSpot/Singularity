@@ -5,6 +5,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.validation.constraints.NotNull;
 
+import org.apache.mesos.Protos.TaskStatus.Reason;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import com.hubspot.singularity.SingularityDisabledActionType;
@@ -22,10 +24,11 @@ public class DisasterDetectionConfiguration {
 
   @JsonProperty
   @NotNull
-  private List<SingularityDisabledActionType> disableActionsOnDisaster = ImmutableList.of(SingularityDisabledActionType.BOUNCE, SingularityDisabledActionType.DEPLOY, SingularityDisabledActionType.TASK_RECONCILIATION);
+  private List<SingularityDisabledActionType> disableActionsOnDisaster = ImmutableList.of(
+    SingularityDisabledActionType.BOUNCE, SingularityDisabledActionType.DEPLOY, SingularityDisabledActionType.TASK_RECONCILIATION);
 
   @JsonProperty
-  private boolean checkOverdueTasks = true;
+  private boolean checkOverdueTasks = false;
 
   @JsonProperty
   private long criticalAvgTaskLagMillis = 300000L;
@@ -37,13 +40,27 @@ public class DisasterDetectionConfiguration {
   private boolean requireAllConditionsForOverdueTaskDisaster = true;
 
   @JsonProperty
-  private boolean checkLostSlaves = true;
+  private boolean checkLostSlaves = false;
 
   @JsonProperty
   private double criticalLostSlavePortion = 0.2;
 
   @JsonProperty
   private long checkLostSlavesInLastMillis = 60000;
+
+  @JsonProperty
+  private boolean checkLostTasks = false;
+
+  @JsonProperty
+  @NotNull
+  private List<Reason> lostTaskReasons = ImmutableList.of(
+    Reason.REASON_INVALID_OFFERS, Reason.REASON_SLAVE_UNKNOWN, Reason.REASON_SLAVE_REMOVED, Reason.REASON_SLAVE_RESTARTED, Reason.REASON_MASTER_DISCONNECTED);
+
+  @JsonProperty
+  private double criticalLostTaskPortion = 0.1;
+
+  @JsonProperty
+  private boolean includePreviousLostTaskCount = true;
 
   public boolean isEnabled() {
     return enabled;
@@ -131,5 +148,37 @@ public class DisasterDetectionConfiguration {
 
   public void setCheckLostSlavesInLastMillis(long checkLostSlavesInLastMillis) {
     this.checkLostSlavesInLastMillis = checkLostSlavesInLastMillis;
+  }
+
+  public boolean isCheckLostTasks() {
+    return checkLostTasks;
+  }
+
+  public void setCheckLostTasks(boolean checkLostTasks) {
+    this.checkLostTasks = checkLostTasks;
+  }
+
+  public List<Reason> getLostTaskReasons() {
+    return lostTaskReasons;
+  }
+
+  public void setLostTaskReasons(List<Reason> lostTaskReasons) {
+    this.lostTaskReasons = lostTaskReasons;
+  }
+
+  public double getCriticalLostTaskPortion() {
+    return criticalLostTaskPortion;
+  }
+
+  public void setCriticalLostTaskPortion(double criticalLostTaskPortion) {
+    this.criticalLostTaskPortion = criticalLostTaskPortion;
+  }
+
+  public boolean isIncludePreviousLostTaskCount() {
+    return includePreviousLostTaskCount;
+  }
+
+  public void setIncludePreviousLostTaskCount(boolean includePreviousLostTaskCount) {
+    this.includePreviousLostTaskCount = includePreviousLostTaskCount;
   }
 }

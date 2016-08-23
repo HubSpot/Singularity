@@ -4,11 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.mesos.Protos.TaskStatus.Reason;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityDisabledAction;
 import com.hubspot.singularity.SingularityDisabledActionType;
@@ -22,6 +25,7 @@ import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
+import com.hubspot.singularity.mesos.SingularityMesosModule;
 
 public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPoller {
 
@@ -31,14 +35,17 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
   private final TaskManager taskManager;
   private final SlaveManager slaveManager;
   private final DisasterManager disasterManager;
+  private final Multiset<Reason> taskLostReasons;
 
   @Inject
-  public SingularityDisasterDetectionPoller(SingularityConfiguration configuration,  TaskManager taskManager, SlaveManager slaveManager, DisasterManager disasterManager) {
+  public SingularityDisasterDetectionPoller(SingularityConfiguration configuration,  TaskManager taskManager, SlaveManager slaveManager, DisasterManager disasterManager,
+                                            @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Reason> taskLostReasons) {
     super(configuration.getDisasterDetection().getRunEveryMillis(), TimeUnit.MILLISECONDS);
     this.configuration = configuration.getDisasterDetection();
     this.taskManager = taskManager;
     this.slaveManager = slaveManager;
     this.disasterManager = disasterManager;
+    this.taskLostReasons = taskLostReasons;
   }
 
   @Override
@@ -98,8 +105,14 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
       }
     }
 
+    // Lost task data
+    int numLostTasks = 0;
+    for (Reason lostTaskReason : configuration.getLostTaskReasons()) {
+      numLostTasks += taskLostReasons.count(lostTaskReason);
+    }
+    taskLostReasons.clear();
 
-    return new SingularityDisasterStats(now, numActiveTasks, numPendingTasks, numOverdueTasks, avgTaskLagMillis, numRunningSlaves, numLostSlaves);
+    return new SingularityDisasterStats(now, numActiveTasks, numPendingTasks, numOverdueTasks, avgTaskLagMillis, numLostTasks, numRunningSlaves, numLostSlaves);
   }
 
   private void updateActiveDisastersAndDisabledActions(List<SingularityDisasterType> previouslyActiveDisasters, List<SingularityDisasterType> newActiveDisasters) {
@@ -144,6 +157,9 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
     if (configuration.isCheckLostSlaves() && tooManyLostSlaves(lastStats, newStats)) {
       activeDisasters.add(SingularityDisasterType.LOST_SLAVES);
     }
+    if (configuration.isCheckLostTasks() && tooManyLostTasks(lastStats, newStats)) {
+      activeDisasters.add(SingularityDisasterType.LOST_TASKS);
+    }
 
     return activeDisasters;
   }
@@ -163,6 +179,17 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
   private boolean tooManyLostSlaves(Optional<SingularityDisasterStats> lastStats, SingularityDisasterStats newStats) {
     double lostSlavesPortion = newStats.getNumLostSlaves() / (newStats.getNumActiveSlaves() + newStats.getNumLostSlaves());
     return lostSlavesPortion > configuration.getCriticalLostSlavePortion();
+  }
+
+  private boolean tooManyLostTasks(Optional<SingularityDisasterStats> lastStats, SingularityDisasterStats newStats) {
+    int effectiveLostTasks;
+    if (configuration.isIncludePreviousLostTaskCount()) {
+      effectiveLostTasks = lastStats.isPresent() ? lastStats.get().getNumLostTasks() + newStats.getNumLostTasks() : newStats.getNumLostTasks();
+    } else {
+      effectiveLostTasks = newStats.getNumLostTasks();
+    }
+    double lostTasksPortion = effectiveLostTasks / newStats.getNumActiveTasks();
+    return lostTasksPortion > configuration.getCriticalLostTaskPortion();
   }
 
 }
