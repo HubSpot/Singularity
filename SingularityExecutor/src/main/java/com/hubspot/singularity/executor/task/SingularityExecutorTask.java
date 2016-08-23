@@ -10,7 +10,6 @@ import org.apache.mesos.ExecutorDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.TaskState;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.deploy.Artifact;
 import com.hubspot.deploy.ExecutorData;
 import com.hubspot.singularity.ExtendedTaskState;
@@ -42,7 +41,7 @@ public class SingularityExecutorTask {
   private final SingularityExecutorArtifactVerifier artifactVerifier;
 
   public SingularityExecutorTask(ExecutorDriver driver, ExecutorUtils executorUtils, SingularityRunnerBaseConfiguration baseConfiguration, SingularityExecutorConfiguration executorConfiguration, SingularityExecutorTaskDefinition taskDefinition, String executorPid,
-      SingularityExecutorArtifactFetcher artifactFetcher, Protos.TaskInfo taskInfo, TemplateManager templateManager, ObjectMapper objectMapper, Logger log, JsonObjectFileHelper jsonObjectFileHelper, DockerUtils dockerUtils, SingularityS3Configuration s3Configuration) {
+      SingularityExecutorArtifactFetcher artifactFetcher, Protos.TaskInfo taskInfo, TemplateManager templateManager, Logger log, JsonObjectFileHelper jsonObjectFileHelper, DockerUtils dockerUtils, SingularityS3Configuration s3Configuration) {
     this.driver = driver;
     this.taskInfo = taskInfo;
     this.log = log;

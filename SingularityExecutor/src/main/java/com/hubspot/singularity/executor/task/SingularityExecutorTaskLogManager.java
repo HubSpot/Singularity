@@ -13,9 +13,11 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.hubspot.singularity.SingularityS3FormatHelper;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 import com.hubspot.singularity.executor.TemplateManager;
 import com.hubspot.singularity.executor.config.SingularityExecutorConfiguration;
 import com.hubspot.singularity.executor.config.SingularityExecutorS3UploaderAdditionalFile;
+import com.hubspot.singularity.executor.models.LogrotateCronTemplateContext;
 import com.hubspot.singularity.executor.models.LogrotateTemplateContext;
 import com.hubspot.singularity.runner.base.configuration.SingularityRunnerBaseConfiguration;
 import com.hubspot.singularity.runner.base.shared.JsonObjectFileHelper;
@@ -33,6 +35,7 @@ public class SingularityExecutorTaskLogManager {
   private final SingularityExecutorConfiguration configuration;
   private final Logger log;
   private final JsonObjectFileHelper jsonObjectFileHelper;
+  private final SingularityExecutorLogrotateFrequency logrotateFrequency;
 
   public SingularityExecutorTaskLogManager(SingularityExecutorTaskDefinition taskDefinition, TemplateManager templateManager, SingularityRunnerBaseConfiguration baseConfiguration, SingularityExecutorConfiguration configuration, Logger log, JsonObjectFileHelper jsonObjectFileHelper) {
     this.log = log;
@@ -41,6 +44,7 @@ public class SingularityExecutorTaskLogManager {
     this.configuration = configuration;
     this.baseConfiguration = baseConfiguration;
     this.jsonObjectFileHelper = jsonObjectFileHelper;
+    this.logrotateFrequency = taskDefinition.getExecutorData().getLogrotateFrequency().or(configuration.getLogrotateFrequency());
   }
 
   public void setup() {
@@ -60,7 +64,9 @@ public class SingularityExecutorTaskLogManager {
 
     int index = 1;
     for (SingularityExecutorS3UploaderAdditionalFile additionalFile : configuration.getS3UploaderAdditionalFiles()) {
-      result = result && writeS3MetadataFile(additionalFile.getS3UploaderFilenameHint().or(String.format("extra%d", index)), logrotateDirectory, String.format("%s*.gz*", additionalFile.getFilename()), additionalFile.getS3UploaderBucket(), additionalFile.getS3UploaderKeyPattern(), finished);
+      Path directory = additionalFile.getDirectory().isPresent() ? taskDefinition.getTaskDirectoryPath().resolve(additionalFile.getDirectory().get()) : taskDefinition.getTaskDirectoryPath();
+      String fileGlob = additionalFile.getFilename() != null && additionalFile.getFilename().contains("*") ? additionalFile.getFilename() : String.format("%s*.gz*", additionalFile.getFilename());
+      result = result && writeS3MetadataFile(additionalFile.getS3UploaderFilenameHint().or(String.format("extra%d", index)), directory, fileGlob, additionalFile.getS3UploaderBucket(), additionalFile.getS3UploaderKeyPattern(), finished);
       index++;
     }
 
@@ -70,6 +76,11 @@ public class SingularityExecutorTaskLogManager {
   private void writeLogrotateFile() {
     log.info("Writing logrotate configuration file to {}", getLogrotateConfPath());
     templateManager.writeLogrotateFile(getLogrotateConfPath(), new LogrotateTemplateContext(configuration, taskDefinition));
+
+    if (logrotateFrequency.getCronSchedule().isPresent()) {
+      log.info("Writing logrotate cron entry with schedule '{}' to {}", logrotateFrequency.getCronSchedule().get(), getLogrotateCronPath());
+      templateManager.writeCronEntryForLogrotate(getLogrotateCronPath(), new LogrotateCronTemplateContext(configuration, taskDefinition, logrotateFrequency));
+    }
   }
 
   @SuppressFBWarnings
@@ -130,6 +141,10 @@ public class SingularityExecutorTaskLogManager {
     boolean deleted = false;
     try {
       deleted = Files.deleteIfExists(getLogrotateConfPath());
+      if (logrotateFrequency.getCronSchedule().isPresent()) {
+        boolean cronDeleted = Files.deleteIfExists(getLogrotateCronPath());
+        deleted = deleted || cronDeleted;
+      }
     } catch (Throwable t) {
       log.trace("Couldn't delete {}", getLogrotateConfPath(), t);
       return false;
@@ -208,6 +223,10 @@ public class SingularityExecutorTaskLogManager {
 
   public Path getLogrotateConfPath() {
     return Paths.get(configuration.getLogrotateConfDirectory()).resolve(taskDefinition.getTaskId());
+  }
+
+  public Path getLogrotateCronPath() {
+    return Paths.get(configuration.getCronDirectory()).resolve(taskDefinition.getTaskId() + ".logrotate");
   }
 
   private boolean writeS3MetadataFile(String filenameHint, Path pathToS3Directory, String globForS3Files, Optional<String> s3Bucket, Optional<String> s3KeyPattern, boolean finished) {

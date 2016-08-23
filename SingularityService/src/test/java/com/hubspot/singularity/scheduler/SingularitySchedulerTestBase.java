@@ -38,6 +38,7 @@ import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.hubspot.baragon.models.BaragonRequestState;
 import com.hubspot.mesos.MesosUtils;
+import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.LoadBalancerRequestType;
 import com.hubspot.singularity.LoadBalancerRequestType.LoadBalancerRequestId;
@@ -255,7 +256,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected SingularityPendingTask buildPendingTask(SingularityRequest request, SingularityDeploy deploy, long launchTime, int instanceNo) {
     SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(request.getId(), deploy.getId(), launchTime, instanceNo, PendingType.IMMEDIATE, launchTime);
-    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent());
+    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent());
 
     return pendingTask;
   }
@@ -496,7 +497,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
 
   protected void startDeploy(SingularityDeployMarker deployMarker, long timestamp) {
     SingularityDeployProgress startingDeployProgress = new SingularityDeployProgress(1, 1, 10, false, true, Collections.<SingularityTaskId>emptySet(), timestamp);
-    deployManager.savePendingDeploy(new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate>absent(), DeployState.WAITING, Optional.of(startingDeployProgress)));
+    deployManager.savePendingDeploy(new SingularityPendingDeploy(deployMarker, Optional.<SingularityLoadBalancerUpdate>absent(), DeployState.WAITING, Optional.of(startingDeployProgress), Optional.<SingularityRequest>absent()));
   }
 
   protected void finishDeploy(SingularityDeployMarker marker, SingularityDeploy deploy) {
@@ -575,7 +576,7 @@ public class SingularitySchedulerTestBase extends SingularityCuratorTestBase {
     SingularityPendingTaskId pendingTaskId = new SingularityPendingTaskId(requestId, deployId,
         System.currentTimeMillis() + TimeUnit.DAYS.toMillis(random.nextInt(3)), random.nextInt(10), PendingType.IMMEDIATE, System.currentTimeMillis());
 
-    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent());
+    SingularityPendingTask pendingTask = new SingularityPendingTask(pendingTaskId, Optional.<List<String>> absent(), Optional.<String> absent(), Optional.<String> absent(), Optional.<Boolean> absent(), Optional.<String> absent(), Optional.<Resources>absent());
 
     taskManager.savePendingTask(pendingTask);
 

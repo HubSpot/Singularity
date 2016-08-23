@@ -148,6 +148,8 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean deleteRemovedRequestsFromLoadBalancer = false;
 
+  private Optional<String> taskLabelForLoadBalancerUpstreamGroup = Optional.absent();
+
   private int logFetchMaxThreads = 15;
 
   private int maxDeployIdSize = 50;
@@ -1044,6 +1046,14 @@ public class SingularityConfiguration extends Configuration {
 
   public void setTaskHistoryQueryUsesZkFirst(boolean taskHistoryQueryUsesZkFirst) {
     this.taskHistoryQueryUsesZkFirst = taskHistoryQueryUsesZkFirst;
+  }
+
+  public Optional<String> getTaskLabelForLoadBalancerUpstreamGroup() {
+    return taskLabelForLoadBalancerUpstreamGroup;
+  }
+
+  public void setTaskLabelForLoadBalancerUpstreamGroup(Optional<String> taskLabelForLoadBalancerUpstreamGroup) {
+    this.taskLabelForLoadBalancerUpstreamGroup = taskLabelForLoadBalancerUpstreamGroup;
   }
 
   public double getDefaultTaskPriorityLevel() {

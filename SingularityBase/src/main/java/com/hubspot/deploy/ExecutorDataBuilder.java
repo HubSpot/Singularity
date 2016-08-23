@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Optional;
+import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
 
 public class ExecutorDataBuilder {
 
@@ -24,11 +25,12 @@ public class ExecutorDataBuilder {
   private Optional<Integer> maxOpenFiles;
   private Optional<Boolean> skipLogrotateAndCompress;
   private Optional<List<S3ArtifactSignature>> s3ArtifactSignatures;
+  private Optional<SingularityExecutorLogrotateFrequency> logrotateFrequency;
 
   public ExecutorDataBuilder(String cmd, List<EmbeddedArtifact> embeddedArtifacts, List<ExternalArtifact> externalArtifacts, List<S3Artifact> s3Artifacts, List<Integer> successfulExitCodes,
       Optional<String> runningSentinel, Optional<String> user, List<String> extraCmdLineArgs, Optional<String> loggingTag, Map<String, String> loggingExtraFields,
       Optional<Long> sigKillProcessesAfterMillis, Optional<Integer> maxTaskThreads, Optional<Boolean> preserveTaskSandboxAfterFinish, Optional<String> loggingS3Bucket,
-      Optional<Integer> maxOpenFiles, Optional<Boolean> skipLogrotateAndCompress, Optional<List<S3ArtifactSignature>> s3ArtifactSignatures) {
+      Optional<Integer> maxOpenFiles, Optional<Boolean> skipLogrotateAndCompress, Optional<List<S3ArtifactSignature>> s3ArtifactSignatures, Optional<SingularityExecutorLogrotateFrequency> logrotateFrequency) {
     this.cmd = cmd;
     this.embeddedArtifacts = embeddedArtifacts;
     this.externalArtifacts = externalArtifacts;
@@ -46,6 +48,7 @@ public class ExecutorDataBuilder {
     this.maxOpenFiles = maxOpenFiles;
     this.skipLogrotateAndCompress = skipLogrotateAndCompress;
     this.s3ArtifactSignatures = s3ArtifactSignatures;
+    this.logrotateFrequency = logrotateFrequency;
   }
 
   public ExecutorDataBuilder() {
@@ -54,7 +57,7 @@ public class ExecutorDataBuilder {
 
   public ExecutorData build() {
     return new ExecutorData(cmd, embeddedArtifacts, externalArtifacts, s3Artifacts, successfulExitCodes, user, runningSentinel, extraCmdLineArgs, loggingTag, loggingExtraFields,
-        sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, loggingS3Bucket, maxOpenFiles, skipLogrotateAndCompress, s3ArtifactSignatures);
+        sigKillProcessesAfterMillis, maxTaskThreads, preserveTaskSandboxAfterFinish, loggingS3Bucket, maxOpenFiles, skipLogrotateAndCompress, s3ArtifactSignatures, logrotateFrequency);
   }
 
   public Optional<String> getLoggingTag() {
@@ -210,6 +213,15 @@ public class ExecutorDataBuilder {
     return this;
   }
 
+  public Optional<SingularityExecutorLogrotateFrequency> getLogrotateFrequency() {
+    return logrotateFrequency;
+  }
+
+  public ExecutorDataBuilder setLogrotateFrequency(Optional<SingularityExecutorLogrotateFrequency> logrotateFrequency) {
+    this.logrotateFrequency = logrotateFrequency;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "ExecutorDataBuilder[" +
@@ -230,6 +242,7 @@ public class ExecutorDataBuilder {
             ", maxOpenFiles=" + maxOpenFiles +
             ", skipLogrotateAndCompress=" + skipLogrotateAndCompress +
             ", s3ArtifactSignatures=" + s3ArtifactSignatures +
+            ", logrotateFrequency=" + logrotateFrequency +
             ']';
   }
 }

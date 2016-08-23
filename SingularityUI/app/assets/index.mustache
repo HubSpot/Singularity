@@ -32,6 +32,7 @@
             runningTaskLogPath: "{{{ runningTaskLogPath }}}",
             finishedTaskLogPath: "{{{ finishedTaskLogPath }}}",
             commonHostnameSuffixToOmit: "{{{ commonHostnameSuffixToOmit }}}",
+            showTaskDiskResource: {{{showTaskDiskResource}}},
             taskS3LogOmitPrefix: "{{{ taskS3LogOmitPrefix }}}",
             slaveHttpPort: {{{slaveHttpPort}}},
             warnIfScheduledJobIsRunningPastNextRunPct: {{{warnIfScheduledJobIsRunningPastNextRunPct}}},
@@ -41,11 +42,15 @@
             slaveHttpsPort: {{{slaveHttpsPort}}},
             {{/slaveHttpsPort}}
             shellCommands: {{{shellCommands}}},
-            redirectOnUnauthorizedUrl: "{{{redirectOnUnauthorizedUrl}}}"
+            redirectOnUnauthorizedUrl: "{{{redirectOnUnauthorizedUrl}}}",
+            globalRefreshInterval: 60000
         };
     </script>
     <script src="{{{staticRoot}}}/js/vendor.bundle.js"></script>
     <script src="{{{staticRoot}}}/js/app.js"></script>
+    {{#extraScript}}
+    {{{extraScript}}}
+    {{/extraScript}}
 </head>
 {{#navColor}}
 <body class="env-color-{{{.}}}">
@@ -53,8 +58,8 @@
 {{^navColor}}
 <body>
 {{/navColor}}
-    <div class="page-loader fixed"></div>
-    <div id="page" class="container-fluid"></div>
+    <div id="static-loader" class="page-loader fixed"></div>
+    <div id="root"></div>
     <div style="-webkit-transform: translateZ(0)"></div>
 </body>
 </html>

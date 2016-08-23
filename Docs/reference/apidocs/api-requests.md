@@ -29,7 +29,7 @@ Unpause a Singularity Request, scheduling new tasks immediately
 
 
 - - -
-#### **PUT** `/api/requests/request/{requestId}/skipHealthchecks`
+#### **PUT** `/api/requests/request/{requestId}/skip-healthchecks`
 
 Update the skipHealthchecks field for the request, possibly temporarily
 
@@ -57,7 +57,7 @@ Update the skipHealthchecks field for the request, possibly temporarily
 
 
 - - -
-#### **DELETE** `/api/requests/request/{requestId}/skipHealthchecks`
+#### **DELETE** `/api/requests/request/{requestId}/skip-healthchecks`
 
 Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks request permanent.
 
