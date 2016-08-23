@@ -3,12 +3,13 @@ import buildApiActionReducer from './base';
 import buildKeyedApiActionReducer from './keyed';
 
 import {
-  FetchUser,
   FetchUserSettings,
   UpdateUserSettings,
   AddStarredRequests,
   DeleteStarredRequests
-} from '../../actions/api/user';
+} from '../../actions/api/users';
+
+import { FetchUser } from '../../actions/api/auth';
 
 import {
   FetchPendingDeploys,

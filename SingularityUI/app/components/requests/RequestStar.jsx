@@ -2,7 +2,7 @@ import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
 
 import { getUserSettingsAPI } from '../../selectors/requests';
-import { FetchUserSettings, AddStarredRequests, DeleteStarredRequests } from '../../actions/api/user';
+import { FetchUserSettings, AddStarredRequests, DeleteStarredRequests } from '../../actions/api/users';
 import Utils from '../../utils';
 import classNames from 'classnames';
 

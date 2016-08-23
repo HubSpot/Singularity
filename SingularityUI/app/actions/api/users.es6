@@ -1,10 +1,5 @@
 import { buildApiAction, buildJsonApiAction } from './base';
 
-export const FetchUser = buildApiAction(
-  'FETCH_USER',
-  {url: '/auth/user'}
-);
-
 export const FetchUserSettings = buildApiAction(
   'FETCH_USER_SETTINGS',
   userId => ({

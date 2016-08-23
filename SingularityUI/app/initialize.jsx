@@ -3,7 +3,8 @@ import ReactDOM from 'react-dom';
 import FormModal from './components/common/modal/FormModal';
 import AppRouter from './router';
 import configureStore from 'store';
-import { FetchUser, FetchUserSettings, AddStarredRequests } from 'actions/api/user';
+import { FetchUserSettings, AddStarredRequests } from 'actions/api/users';
+import { FetchUser } from 'actions/api/auth';
 import { FetchGroups } from 'actions/api/requestGroups';
 import Utils from './utils';
 
