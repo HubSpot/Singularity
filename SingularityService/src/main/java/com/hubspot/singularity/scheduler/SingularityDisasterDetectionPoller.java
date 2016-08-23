@@ -63,11 +63,19 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
 
   @Override
   public void runActionOnPoll() {
+    LOG.trace("Starting disaster detection");
     List<SingularityDisasterType> previouslyActiveDisasters = disasterManager.getActiveDisasters();
     Optional<SingularityDisasterStats> lastStats = disasterManager.getDisasterStats();
-    SingularityDisasterStats newStats = collectNewStats(lastStats);
+    SingularityDisasterStats newStats = collectNewStats();
+
+    LOG.debug("Collected new disaster detection stats: {}", newStats);
+
     List<SingularityDisasterType> newActiveDisasters = checkStats(lastStats, newStats);
-    disasterManager.updateActiveDisasters(previouslyActiveDisasters, checkStats(lastStats, newStats));
+    if (!newActiveDisasters.isEmpty()) {
+      LOG.warn("Detected new active disasters: {}", newActiveDisasters);
+    }
+
+    disasterManager.updateActiveDisasters(previouslyActiveDisasters, newActiveDisasters);
     disasterManager.saveDisasterStats(newStats);
 
     if (!newActiveDisasters.isEmpty() && !disasterManager.isAutomatedDisabledActionsDisabled()) {
@@ -77,7 +85,7 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
     }
   }
 
-  private SingularityDisasterStats collectNewStats(Optional<SingularityDisasterStats> lastStats) {
+  private SingularityDisasterStats collectNewStats() {
     long now = System.currentTimeMillis();
 
     int numActiveTasks = taskManager.getNumActiveTasks();

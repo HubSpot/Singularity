@@ -28,7 +28,7 @@ public class DisasterDetectionConfiguration {
     SingularityDisabledActionType.BOUNCE, SingularityDisabledActionType.DEPLOY, SingularityDisabledActionType.TASK_RECONCILIATION);
 
   @JsonProperty
-  private boolean checkLateTasks = false;
+  private boolean checkLateTasks = true;
 
   @JsonProperty
   private long criticalAvgTaskLagMillis = 300000L;
@@ -37,7 +37,7 @@ public class DisasterDetectionConfiguration {
   private double criticalOverdueTaskPortion = 0.2;
 
   @JsonProperty
-  private boolean checkLostSlaves = false;
+  private boolean checkLostSlaves = true;
 
   @JsonProperty
   private double criticalLostSlavePortion = 0.2;
@@ -46,7 +46,7 @@ public class DisasterDetectionConfiguration {
   private boolean includePreviousLostSlavesCount = true;
 
   @JsonProperty
-  private boolean checkLostTasks = false;
+  private boolean checkLostTasks = true;
 
   @JsonProperty
   @NotNull
