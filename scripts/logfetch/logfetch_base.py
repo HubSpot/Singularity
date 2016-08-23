@@ -92,6 +92,13 @@ def get_timestamp_string(filename):
     else:
         return ""
 
+def get_timestamp(filename):
+    timestamps = re.findall(r"-\d{13}-", filename)
+    if timestamps:
+        return datetime.utcfromtimestamp(int(str(timestamps[-1]).replace("-", "")[0:-3]))
+    else:
+        return ""
+
 def update_progress_bar(progress, goal, progress_type, silent):
     bar_length = 30
     percent = float(progress) / goal

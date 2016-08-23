@@ -21,3 +21,4 @@ NotFound.propTypes = {
 };
 
 export default rootComponent(NotFound, 'Not Found');
+export const NotFoundNoRoot = NotFound;

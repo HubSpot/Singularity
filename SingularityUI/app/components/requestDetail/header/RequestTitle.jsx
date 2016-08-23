@@ -17,13 +17,15 @@ const errorDescription = (requestAPI) => {
   }
 };
 
-const RequestTitle = ({requestId, requestAPI}) => {
+const RequestTitle = ({requestId, requestAPI, deleted}) => {
   let maybeInfo;
   if (Utils.api.isFirstLoad(requestAPI)) {
     maybeInfo = <em>Loading...</em>;
   } else if (requestAPI.error) {
-    const errorText = errorDescription(requestAPI);
-    maybeInfo = <p className="text-danger">{requestAPI.statusCode}: {errorText}</p>;
+    if (!deleted) {
+      const errorText = errorDescription(requestAPI);
+      maybeInfo = <p className="text-danger">{requestAPI.statusCode}: {errorText}</p>;
+    }
   } else {
     const requestParent = requestAPI.data;
     const {request, state} = requestParent;
@@ -62,7 +64,8 @@ const RequestTitle = ({requestId, requestAPI}) => {
 
 RequestTitle.propTypes = {
   requestId: PropTypes.string.isRequired,
-  requestAPI: PropTypes.object
+  requestAPI: PropTypes.object,
+  deleted: PropTypes.bool
 };
 
 const mapStateToProps = (state, ownProps) => ({
