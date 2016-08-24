@@ -203,9 +203,10 @@ class SingularitySlaveAndRackManager {
     Optional<SingularitySlave> slave = slaveManager.getObject(slaveId);
 
     if (slave.isPresent()) {
+      MachineState previousState = slave.get().getCurrentState().getState();
       slaveManager.changeState(slave.get(), MachineState.DEAD, Optional.<String> absent(), Optional.<String> absent());
       if (configuration.getDisasterDetection().isEnabled()) {
-        updateDisasterCounter(slave.get());
+        updateDisasterCounter(previousState);
       }
 
       checkRackAfterSlaveLoss(slave.get());
@@ -214,8 +215,8 @@ class SingularitySlaveAndRackManager {
     }
   }
 
-  private void updateDisasterCounter(SingularitySlave slave) {
-    if (slave.getCurrentState().getState() == MachineState.ACTIVE) {
+  private void updateDisasterCounter(MachineState previousState) {
+    if (previousState == MachineState.ACTIVE) {
       activeSlavesLost.getAndIncrement();
     }
   }
