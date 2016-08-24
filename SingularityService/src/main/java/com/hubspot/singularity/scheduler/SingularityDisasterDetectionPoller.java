@@ -145,7 +145,7 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
   }
 
   private boolean tooMuchTaskLag(Optional<SingularityDisasterStats> lastStats, SingularityDisasterStats newStats) {
-    double overdueTaskPortion = newStats.getNumLateTasks() / (double) (newStats.getNumActiveTasks() + newStats.getNumPendingTasks());
+    double overdueTaskPortion = newStats.getNumLateTasks() / (double) Math.max((newStats.getNumActiveTasks() + newStats.getNumPendingTasks()), 1);
     boolean criticalOverdueTasksPortion = overdueTaskPortion > disasterConfiguration.getCriticalOverdueTaskPortion();
     boolean criticalAvgTaskLag = newStats.getAvgTaskLagMillis() > disasterConfiguration.getCriticalAvgTaskLagMillis();
 
@@ -159,7 +159,7 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
     } else {
       effectiveLostSlaves = newStats.getNumLostSlaves();
     }
-    double lostSlavesPortion = effectiveLostSlaves / (double) (newStats.getNumActiveSlaves() + newStats.getNumLostSlaves());
+    double lostSlavesPortion = effectiveLostSlaves / (double) (Math.max(newStats.getNumActiveSlaves() + newStats.getNumLostSlaves(), 1));
     return lostSlavesPortion > disasterConfiguration.getCriticalLostSlavePortion();
   }
 
@@ -170,7 +170,7 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
     } else {
       effectiveLostTasks = newStats.getNumLostTasks();
     }
-    double lostTasksPortion = effectiveLostTasks / (double) newStats.getNumActiveTasks();
+    double lostTasksPortion = effectiveLostTasks / (double) Math.max(newStats.getNumActiveTasks(), 1);
     return lostTasksPortion > disasterConfiguration.getCriticalLostTaskPortion();
   }
 
