@@ -70,22 +70,22 @@ const Utils = {
       case 'TASK_LAUNCHED':
       case 'TASK_STARTING':
       case 'TASK_CLEANING':
-        return 'info'; // Not serving requests but no action necessary.
+        return 'info';
       case 'TASK_FINISHED':
       case 'TASK_KILLED':
-        return 'primary'; // Not serving requests, terminal.
+        return 'primary';
       case 'TASK_RUNNING':
-        return 'success'; // Currently serving requests.
+        return 'success';
       case 'TASK_LOST':
       case 'TASK_FAILED':
       case 'TASK_LOST_WHILE_DOWN':
       case 'TASK_ERROR':
-        return 'danger'; // Big problems, investigate.
+        return 'danger';
       case 'TASK_OVERDUE':
-        return 'warning'; // Small problems, they might go away on their own.
+        return 'warning';
       case 'TASK_SCHEDULED':
       case 'TASK_PENDING':
-        return 'default'; // Not relevant / things will happen on their own.
+        return 'default';
       default:
         return 'danger'; // Unknown state.
     }
