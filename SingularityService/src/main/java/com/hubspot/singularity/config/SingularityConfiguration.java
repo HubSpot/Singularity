@@ -272,6 +272,11 @@ public class SingularityConfiguration extends Configuration {
   @Max(5)
   private double schedulerPriorityWeightFactor = 1.0;
 
+  @JsonProperty("disasterDetection")
+  @NotNull
+  @Valid
+  private DisasterDetectionConfiguration disasterDetection = new DisasterDetectionConfiguration();
+
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
   }
@@ -1086,5 +1091,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setSchedulerPriorityWeightFactor(double schedulerPriorityWeightFactor) {
     this.schedulerPriorityWeightFactor = schedulerPriorityWeightFactor;
+  }
+
+  public DisasterDetectionConfiguration getDisasterDetection() {
+    return disasterDetection;
+  }
+
+  public void setDisasterDetection(DisasterDetectionConfiguration disasterDetection) {
+    this.disasterDetection = disasterDetection;
   }
 }

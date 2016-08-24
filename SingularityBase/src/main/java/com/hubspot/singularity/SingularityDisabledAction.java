@@ -9,12 +9,14 @@ public class SingularityDisabledAction {
   private final SingularityDisabledActionType type;
   private final String message;
   private final Optional<String> user;
+  private final boolean systemGenerated;
 
   @JsonCreator
-  public SingularityDisabledAction(@JsonProperty("type") SingularityDisabledActionType type, @JsonProperty("message") String message, @JsonProperty("user") Optional<String> user) {
+  public SingularityDisabledAction(@JsonProperty("type") SingularityDisabledActionType type, @JsonProperty("message") String message, @JsonProperty("user") Optional<String> user, @JsonProperty("systemGenerated") boolean systemGenerated) {
     this.type = type;
     this.message = message;
     this.user = user;
+    this.systemGenerated = systemGenerated;
   }
 
   public SingularityDisabledActionType getType() {
@@ -29,6 +31,10 @@ public class SingularityDisabledAction {
     return user;
   }
 
+  public boolean isSystemGenerated() {
+    return systemGenerated;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -38,14 +44,15 @@ public class SingularityDisabledAction {
       return false;
     }
     SingularityDisabledAction that = (SingularityDisabledAction) o;
-    return type == that.type &&
+    return systemGenerated == that.systemGenerated &&
+      type == that.type &&
       Objects.equal(message, that.message) &&
       Objects.equal(user, that.user);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(type, message, user);
+    return Objects.hashCode(type, message, user, systemGenerated);
   }
 
   @Override
@@ -54,6 +61,7 @@ public class SingularityDisabledAction {
       .add("type", type)
       .add("message", message)
       .add("user", user)
+      .add("systemGenerated", systemGenerated)
       .toString();
   }
 }
