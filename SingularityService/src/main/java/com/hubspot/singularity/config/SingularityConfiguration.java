@@ -256,6 +256,9 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean taskHistoryQueryUsesZkFirst = false;
 
+  @JsonProperty("disasterDetection")
+  @NotNull
+  @Valid
   private DisasterDetectionConfiguration disasterDetection = new DisasterDetectionConfiguration();
 
   public long getAskDriverToKillTasksAgainAfterMillis() {

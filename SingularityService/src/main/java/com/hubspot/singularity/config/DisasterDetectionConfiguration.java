@@ -13,50 +13,38 @@ import com.hubspot.singularity.SingularityDisabledActionType;
 
 public class DisasterDetectionConfiguration {
 
-  @JsonProperty
   private boolean enabled = false;
 
-  @JsonProperty
   private long runEveryMillis = TimeUnit.SECONDS.toMillis(30);
 
-  @JsonProperty
   private long considerOverdueAfterMillis = TimeUnit.MINUTES.toMillis(1);
 
-  @JsonProperty
+  @JsonProperty("disableActionsOnDisaster")
   @NotNull
   private List<SingularityDisabledActionType> disableActionsOnDisaster = ImmutableList.of(
     SingularityDisabledActionType.BOUNCE, SingularityDisabledActionType.DEPLOY, SingularityDisabledActionType.TASK_RECONCILIATION);
 
-  @JsonProperty
   private boolean checkLateTasks = true;
 
-  @JsonProperty
   private long criticalAvgTaskLagMillis = 300000L;
 
-  @JsonProperty
   private double criticalOverdueTaskPortion = 0.2;
 
-  @JsonProperty
   private boolean checkLostSlaves = true;
 
-  @JsonProperty
   private double criticalLostSlavePortion = 0.2;
 
-  @JsonProperty
   private boolean includePreviousLostSlavesCount = true;
 
-  @JsonProperty
   private boolean checkLostTasks = true;
 
-  @JsonProperty
+  @JsonProperty("lostTaskReasons")
   @NotNull
   private List<Reason> lostTaskReasons = ImmutableList.of(
     Reason.REASON_INVALID_OFFERS, Reason.REASON_SLAVE_UNKNOWN, Reason.REASON_SLAVE_REMOVED, Reason.REASON_SLAVE_RESTARTED, Reason.REASON_MASTER_DISCONNECTED);
 
-  @JsonProperty
   private double criticalLostTaskPortion = 0.1;
 
-  @JsonProperty
   private boolean includePreviousLostTaskCount = true;
 
   public boolean isEnabled() {
