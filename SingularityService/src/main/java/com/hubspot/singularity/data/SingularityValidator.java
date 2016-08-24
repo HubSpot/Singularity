@@ -49,7 +49,6 @@ public class SingularityValidator {
   private static final List<Character> DEPLOY_ID_ILLEGAL_CHARACTERS = Arrays.asList('@', '-', '\\', '/', '*', '?', '%', ' ', '[', ']', '#', '$'); // Characters that make Mesos or URL bars sad
   private static final List<Character> REQUEST_ID_ILLEGAL_CHARACTERS = Arrays.asList('@', '\\', '/', '*', '?', '%', ' ', '[', ']', '#', '$'); // Characters that make Mesos or URL bars sad
 
-  private final SingularityConfiguration configuration;
   private final int maxDeployIdSize;
   private final int maxRequestIdSize;
   private final int maxCpusPerRequest;
@@ -59,6 +58,7 @@ public class SingularityValidator {
   private final int defaultCpus;
   private final int defaultMemoryMb;
   private final int defaultDiskMb;
+  private final int defaultBounceExpirationMinutes;
   private final int maxMemoryMbPerInstance;
   private final boolean allowRequestsWithoutOwners;
   private final boolean createDeployIds;
@@ -68,8 +68,6 @@ public class SingularityValidator {
 
   @Inject
   public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, RequestManager requestManager) {
-    this.configuration = configuration;
-
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
@@ -80,6 +78,7 @@ public class SingularityValidator {
     this.defaultCpus = configuration.getMesosConfiguration().getDefaultCpus();
     this.defaultMemoryMb = configuration.getMesosConfiguration().getDefaultMemory();
     this.defaultDiskMb = configuration.getMesosConfiguration().getDefaultDisk();
+    this.defaultBounceExpirationMinutes = configuration.getDefaultBounceExpirationMinutes();
 
     defaultResources = new Resources(defaultCpus, defaultMemoryMb, 0, defaultDiskMb);
 
@@ -445,7 +444,7 @@ public class SingularityValidator {
     if (defaultBounceRequest.getDurationMillis().isPresent()) {
       return defaultBounceRequest;
     }
-    final long durationMillis = TimeUnit.MINUTES.toMillis(configuration.getDefaultBounceExpirationMinutes());
+    final long durationMillis = TimeUnit.MINUTES.toMillis(defaultBounceExpirationMinutes);
     return defaultBounceRequest
         .toBuilder()
         .setDurationMillis(Optional.of(durationMillis))
