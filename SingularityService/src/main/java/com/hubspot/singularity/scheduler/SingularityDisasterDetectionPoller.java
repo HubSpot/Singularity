@@ -192,7 +192,7 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
       return;
     }
 
-    final String body = String.format("Disasters detected: %s\nCurrent disaster stats: %s\nPrevious disaster stats: %s", disasters, stats, lastStats);
+    final String body = String.format("Disasters detected: %s%nCurrent disaster stats: %s%nPrevious disaster stats: %s", disasters, stats, lastStats);
     final String subject = String.format("Disaster(s) Detected %s", disasters);
 
     smtpSender.queueMail(configuration.getSmtpConfiguration().get().getAdmins(), ImmutableList.<String> of(), subject, body);
