@@ -17,8 +17,6 @@ public class DisasterDetectionConfiguration {
 
   private long runEveryMillis = TimeUnit.SECONDS.toMillis(30);
 
-  private long considerOverdueAfterMillis = TimeUnit.MINUTES.toMillis(1);
-
   @JsonProperty("disableActionsOnDisaster")
   @NotNull
   private List<SingularityDisabledActionType> disableActionsOnDisaster = ImmutableList.of(
@@ -26,9 +24,9 @@ public class DisasterDetectionConfiguration {
 
   private boolean checkLateTasks = true;
 
-  private long criticalAvgTaskLagMillis = 300000L;
+  private long criticalAvgTaskLagMillis = 240000L;
 
-  private double criticalOverdueTaskPortion = 0.2;
+  private double criticalOverdueTaskPortion = 0.1;
 
   private boolean checkLostSlaves = true;
 
@@ -43,7 +41,7 @@ public class DisasterDetectionConfiguration {
   private List<Reason> lostTaskReasons = ImmutableList.of(
     Reason.REASON_INVALID_OFFERS, Reason.REASON_SLAVE_UNKNOWN, Reason.REASON_SLAVE_REMOVED, Reason.REASON_SLAVE_RESTARTED, Reason.REASON_MASTER_DISCONNECTED);
 
-  private double criticalLostTaskPortion = 0.1;
+  private double criticalLostTaskPortion = 0.2;
 
   private boolean includePreviousLostTaskCount = true;
 
@@ -61,14 +59,6 @@ public class DisasterDetectionConfiguration {
 
   public void setRunEveryMillis(long runEveryMillis) {
     this.runEveryMillis = runEveryMillis;
-  }
-
-  public long getConsiderOverdueAfterMillis() {
-    return considerOverdueAfterMillis;
-  }
-
-  public void setConsiderOverdueAfterMillis(long considerOverdueAfterMillis) {
-    this.considerOverdueAfterMillis = considerOverdueAfterMillis;
   }
 
   public List<SingularityDisabledActionType> getDisableActionsOnDisaster() {
