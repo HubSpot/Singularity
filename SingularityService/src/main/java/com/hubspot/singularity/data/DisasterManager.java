@@ -86,6 +86,10 @@ public class DisasterManager extends CuratorAsyncManager {
     delete(ZKPaths.makePath(ACTIVE_DISASTERS_PATH, disaster.name()));
   }
 
+  public boolean isDisasterActive(SingularityDisasterType disaster) {
+    return exists(ZKPaths.makePath(ACTIVE_DISASTERS_PATH, disaster.name()));
+  }
+
   public List<SingularityDisasterType> getActiveDisasters() {
     List<String> disasterNames = getChildren(ACTIVE_DISASTERS_PATH);
     List<SingularityDisasterType> disasters = new ArrayList<>();
@@ -111,7 +115,9 @@ public class DisasterManager extends CuratorAsyncManager {
     }
 
     for (SingularityDisasterType disaster : newActiveDisasters) {
-      addDisaster(disaster);
+      if (!isDisasterActive(disaster)) {
+        addDisaster(disaster);
+      }
     }
 
 
