@@ -107,7 +107,7 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
       }
     }
 
-    long avgTaskLagMillis = totalTaskLagMillis / numPastDueTasks;
+    long avgTaskLagMillis = totalTaskLagMillis / Math.max(numPastDueTasks, 1);
 
     List<SingularitySlave> slaves = slaveManager.getObjects();
     int numRunningSlaves = 0;
