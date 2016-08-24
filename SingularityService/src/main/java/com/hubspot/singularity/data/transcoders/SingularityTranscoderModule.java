@@ -23,6 +23,7 @@ import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestCleanup;
 import com.hubspot.singularity.SingularityRequestDeployState;
+import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.SingularityRequestHistory;
 import com.hubspot.singularity.SingularityRequestLbCleanup;
 import com.hubspot.singularity.SingularityRequestWithState;
@@ -82,6 +83,7 @@ public class SingularityTranscoderModule implements Module {
     bindTranscoder(binder).asJson(SingularityExpiringScale.class);
     bindTranscoder(binder).asJson(SingularityExpiringSkipHealthchecks.class);
     bindTranscoder(binder).asJson(SingularityTaskDestroyFrameworkMessage.class);
+    bindTranscoder(binder).asJson(SingularityRequestGroup.class);
 
     bindTranscoder(binder).asCompressedJson(SingularityDeployHistory.class);
     bindTranscoder(binder).asCompressedJson(SingularityDeploy.class);
