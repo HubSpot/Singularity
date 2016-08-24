@@ -10,12 +10,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multiset;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityDisasterStats;
 import com.hubspot.singularity.SingularityDisasterType;
+import com.hubspot.singularity.SingularityEmailDestination;
+import com.hubspot.singularity.SingularityEmailType;
 import com.hubspot.singularity.SingularityPendingTask;
 import com.hubspot.singularity.SingularityScheduledTasksInfo;
 import com.hubspot.singularity.SingularitySlave;
@@ -25,6 +28,7 @@ import com.hubspot.singularity.data.DisasterManager;
 import com.hubspot.singularity.data.SlaveManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SingularityMesosModule;
+import com.hubspot.singularity.smtp.SingularitySmtpSender;
 
 public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPoller {
 
@@ -35,11 +39,12 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
   private final TaskManager taskManager;
   private final SlaveManager slaveManager;
   private final DisasterManager disasterManager;
+  private final SingularitySmtpSender smtpSender;
   private final Multiset<Reason> taskLostReasons;
   private final AtomicInteger activeSlavesLost;
 
   @Inject
-  public SingularityDisasterDetectionPoller(SingularityConfiguration configuration,  TaskManager taskManager, SlaveManager slaveManager, DisasterManager disasterManager,
+  public SingularityDisasterDetectionPoller(SingularityConfiguration configuration,  TaskManager taskManager, SlaveManager slaveManager, DisasterManager disasterManager, SingularitySmtpSender smtpSender,
                                             @Named(SingularityMesosModule.TASK_LOST_REASONS_COUNTER) Multiset<Reason> taskLostReasons, @Named(SingularityMesosModule.ACTIVE_SLAVES_LOST_COUNTER) AtomicInteger activeSlavesLost) {
     super(configuration.getDisasterDetection().getRunEveryMillis(), TimeUnit.MILLISECONDS);
     this.configuration = configuration;
@@ -47,6 +52,7 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
     this.taskManager = taskManager;
     this.slaveManager = slaveManager;
     this.disasterManager = disasterManager;
+    this.smtpSender = smtpSender;
     this.taskLostReasons = taskLostReasons;
     this.activeSlavesLost = activeSlavesLost;
   }
@@ -78,8 +84,11 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
     disasterManager.updateActiveDisasters(previouslyActiveDisasters, newActiveDisasters);
     disasterManager.saveDisasterStats(newStats);
 
-    if (!newActiveDisasters.isEmpty() && !disasterManager.isAutomatedDisabledActionsDisabled()) {
-      disasterManager.addDisabledActionsForDisasters(newActiveDisasters);
+    if (!newActiveDisasters.isEmpty()) {
+      if (!disasterManager.isAutomatedDisabledActionsDisabled()) {
+        disasterManager.addDisabledActionsForDisasters(newActiveDisasters);
+      }
+      queueDisasterEmail(newStats, lastStats, newActiveDisasters);
     } else {
       disasterManager.clearSystemGeneratedDisabledActions();
     }
@@ -169,6 +178,24 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
     }
     double lostTasksPortion = effectiveLostTasks / (double) Math.max(newStats.getNumActiveTasks(), 1);
     return lostTasksPortion > disasterConfiguration.getCriticalLostTaskPortion();
+  }
+
+  private void queueDisasterEmail(SingularityDisasterStats stats, Optional<SingularityDisasterStats> lastStats, List<SingularityDisasterType> disasters) {
+    if (!configuration.getSmtpConfiguration().isPresent()) {
+      LOG.warn("Couldn't send disaster detected mail because no SMTP configuration is present");
+      return;
+    }
+
+    final List<SingularityEmailDestination> emailDestination = configuration.getSmtpConfiguration().get().getEmailConfiguration().get(SingularityEmailType.DISASTER_DETECTED);
+    if (emailDestination.isEmpty() || !emailDestination.contains(SingularityEmailDestination.ADMINS)) {
+      LOG.info("Not configured to send disaster detected mail");
+      return;
+    }
+
+    final String body = String.format("Disasters detected: %s\nCurrent disaster stats: %s\nPrevious disaster stats: %s", disasters, stats, lastStats);
+    final String subject = String.format("Disaster(s) Detected %s", disasters);
+
+    smtpSender.queueMail(configuration.getSmtpConfiguration().get().getAdmins(), ImmutableList.<String> of(), subject, body);
   }
 
 }
