@@ -98,9 +98,6 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
 
     for (SingularityPendingTask pendingTask : pendingTasks) {
       long taskLagMillis = now - pendingTask.getPendingTaskId().getNextRunAt();
-      if (taskLagMillis > disasterConfiguration.getConsiderOverdueAfterMillis()) {
-        numLateTasks++;
-      }
       if (taskLagMillis > 0) {
         numPastDueTasks++;
         totalTaskLagMillis += taskLagMillis;
