@@ -239,12 +239,12 @@ public class SingularityRequest {
 
   @JsonIgnore
   public boolean isRackSensitive() {
-    return rackSensitive.or(Boolean.FALSE);
+    return rackSensitive.or(false);
   }
 
   @JsonIgnore
   public boolean isLoadBalanced() {
-    return loadBalanced.or(Boolean.FALSE);
+    return loadBalanced.or(false);
   }
 
   @JsonIgnore
