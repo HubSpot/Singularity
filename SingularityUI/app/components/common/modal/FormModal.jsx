@@ -3,6 +3,7 @@ import classNames from 'classnames';
 
 import { Modal, Button, Popover, OverlayTrigger } from 'react-bootstrap';
 import TagsInput from 'react-tagsinput';
+import MultiInput from '../formItems/MultiInput';
 import Select from 'react-select';
 import Utils from '../../../utils';
 import juration from 'juration';
@@ -59,6 +60,7 @@ export default class FormModal extends React.Component {
     STRING: 'STRING',
     RADIO: 'RADIO',
     TAGS: 'TAGS',
+    MULTIINPUT: 'MULTIINPUT',
     NUMBER: 'NUMBER',
     DURATION: 'DURATION',
     SELECT: 'SELECT'
@@ -275,6 +277,20 @@ export default class FormModal extends React.Component {
                   addOnBlur={true}
                   renderInput={(props) => this.renderTagsInput(props)}
                   renderTag={this.renderTag}
+                />
+              </label>
+            </FormModal.FormItem>
+          );
+
+        case FormModal.INPUT_TYPES.MULTIINPUT:
+          return (
+            <FormModal.FormItem element={formElement} formState={this.state.formState} key={formElement.name}>
+              <label style={{display: 'block', width: '100%'}}>
+                {formElement.label}
+                <MultiInput
+                  id={`${formElement.name}-input`}
+                  value={this.state.formState[formElement.name] || []}
+                  onChange={(values) => this.handleFormChange(formElement.name, values)}
                 />
               </label>
             </FormModal.FormItem>
