@@ -26,6 +26,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.jackson.jaxrs.PropertyFiltering;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.RequestCleanupType;
 import com.hubspot.singularity.RequestState;
@@ -43,7 +44,6 @@ import com.hubspot.singularity.SingularityRequestHistory.RequestHistoryType;
 import com.hubspot.singularity.SingularityRequestParent;
 import com.hubspot.singularity.SingularityRequestWithState;
 import com.hubspot.singularity.SingularityService;
-import com.hubspot.singularity.SingularityTask;
 import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTransformHelpers;
 import com.hubspot.singularity.SingularityUser;
@@ -243,12 +243,14 @@ public class RequestResource extends AbstractRequestResource {
     Optional<String> message = Optional.absent();
     Optional<Boolean> skipHealthchecks = Optional.absent();
     Optional<List<String>> commandLineArgs = Optional.absent();
+    Optional<Resources> resources = Optional.absent();
 
     if (runNowRequest.isPresent()) {
       message = runNowRequest.get().getMessage();
       runId = runNowRequest.get().getRunId();
       skipHealthchecks = runNowRequest.get().getSkipHealthchecks();
       commandLineArgs = runNowRequest.get().getCommandLineArgs();
+      resources = runNowRequest.get().getResources();
     }
 
     if (runId.isPresent() && runId.get().length() > 100) {
@@ -260,7 +262,7 @@ public class RequestResource extends AbstractRequestResource {
     }
 
     final SingularityPendingRequest pendingRequest = new SingularityPendingRequest(requestId, getAndCheckDeployId(requestId), System.currentTimeMillis(),
-        JavaUtils.getUserEmail(user), pendingType, commandLineArgs, runId, skipHealthchecks, message, Optional.<String> absent());
+        JavaUtils.getUserEmail(user), pendingType, commandLineArgs, runId, skipHealthchecks, message, Optional.<String> absent(), resources);
 
     SingularityCreateResult result = requestManager.addToPendingQueue(pendingRequest);
 
@@ -359,6 +361,8 @@ public class RequestResource extends AbstractRequestResource {
       message = unpauseRequest.get().getMessage();
       skipHealthchecks = unpauseRequest.get().getSkipHealthchecks();
     }
+
+    requestManager.deleteExpiringObject(SingularityExpiringPause.class, requestId);
 
     final long now = requestHelper.unpause(requestWithState.getRequest(), JavaUtils.getUserEmail(user), message, skipHealthchecks);
 
@@ -585,8 +589,19 @@ public class RequestResource extends AbstractRequestResource {
     return deleteExpiringObject(SingularityExpiringScale.class, requestId);
   }
 
+  @Deprecated
   @DELETE
   @Path("/request/{requestId}/skipHealthchecks")
+  @ApiOperation(value="Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks request permanent.", response=SingularityRequestParent.class)
+  @ApiResponses({
+      @ApiResponse(code=404, message="No Request or expiring skipHealthchecks request for that ID"),
+  })
+  public SingularityRequestParent deleteExpiringSkipHealthchecksDeprecated(@ApiParam("The Request ID") @PathParam("requestId") String requestId) {
+    return deleteExpiringSkipHealthchecks(requestId);
+  }
+
+  @DELETE
+  @Path("/request/{requestId}/skip-healthchecks")
   @ApiOperation(value="Delete/cancel the expiring skipHealthchecks. This makes the skipHealthchecks request permanent.", response=SingularityRequestParent.class)
   @ApiResponses({
     @ApiResponse(code=404, message="No Request or expiring skipHealthchecks request for that ID"),
@@ -615,8 +630,21 @@ public class RequestResource extends AbstractRequestResource {
     return deleteExpiringObject(SingularityExpiringBounce.class, requestId);
   }
 
+  @Deprecated
   @PUT
   @Path("/request/{requestId}/skipHealthchecks")
+  @Consumes({ MediaType.APPLICATION_JSON })
+  @ApiOperation(value="Update the skipHealthchecks field for the request, possibly temporarily", response=SingularityRequestParent.class)
+  @ApiResponses({
+      @ApiResponse(code=404, message="No Request with that ID"),
+  })
+  public SingularityRequestParent skipHealthchecksDeprecated(@ApiParam("The Request ID to scale") @PathParam("requestId") String requestId,
+                                                   @ApiParam("SkipHealtchecks options") SingularitySkipHealthchecksRequest skipHealthchecksRequest) {
+    return skipHealthchecks(requestId, skipHealthchecksRequest);
+  }
+
+  @PUT
+  @Path("/request/{requestId}/skip-healthchecks")
   @Consumes({ MediaType.APPLICATION_JSON })
   @ApiOperation(value="Update the skipHealthchecks field for the request, possibly temporarily", response=SingularityRequestParent.class)
   @ApiResponses({

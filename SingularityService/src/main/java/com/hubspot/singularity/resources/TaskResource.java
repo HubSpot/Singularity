@@ -292,22 +292,30 @@ public class TaskResource {
 
     final long now = System.currentTimeMillis();
 
-    final SingularityTaskCleanup taskCleanup = new SingularityTaskCleanup(JavaUtils.getUserEmail(user), cleanupType, now,
-        task.getTaskId(), message, actionId);
+    final SingularityTaskCleanup taskCleanup;
 
     if (override.isPresent() && override.get().booleanValue()) {
+      cleanupType = TaskCleanupType.USER_REQUESTED_DESTROY;
+      taskCleanup = new SingularityTaskCleanup(JavaUtils.getUserEmail(user), cleanupType, now,
+        task.getTaskId(), message, actionId);
       taskManager.saveTaskCleanup(taskCleanup);
     } else {
+      taskCleanup = new SingularityTaskCleanup(JavaUtils.getUserEmail(user), cleanupType, now,
+        task.getTaskId(), message, actionId);
       SingularityCreateResult result = taskManager.createTaskCleanup(taskCleanup);
 
-      while (result == SingularityCreateResult.EXISTED) {
-        Optional<SingularityTaskCleanup> cleanup = taskManager.getTaskCleanup(taskId);
+      if (result == SingularityCreateResult.EXISTED && userRequestedKillTakesPriority(taskId)) {
+        taskManager.saveTaskCleanup(taskCleanup);
+      } else {
+        while (result == SingularityCreateResult.EXISTED) {
+          Optional<SingularityTaskCleanup> cleanup = taskManager.getTaskCleanup(taskId);
 
-        if (cleanup.isPresent()) {
-          throw new WebApplicationException(Response.status(Status.CONFLICT).entity(cleanup.get()).type(MediaType.APPLICATION_JSON).build());
+          if (cleanup.isPresent()) {
+            throw new WebApplicationException(Response.status(Status.CONFLICT).entity(cleanup.get()).type(MediaType.APPLICATION_JSON).build());
+          }
+
+          result = taskManager.createTaskCleanup(taskCleanup);
         }
-
-        result = taskManager.createTaskCleanup(taskCleanup);
       }
     }
 
@@ -317,6 +325,14 @@ public class TaskResource {
     }
 
     return taskCleanup;
+  }
+
+  boolean userRequestedKillTakesPriority(String taskId) {
+    Optional<SingularityTaskCleanup> existingCleanup = taskManager.getTaskCleanup(taskId);
+    if (!existingCleanup.isPresent()) {
+      return true;
+    }
+    return existingCleanup.get().getCleanupType() != TaskCleanupType.USER_REQUESTED_DESTROY;
   }
 
   @Path("/commands/queued")
