@@ -18,6 +18,7 @@ import com.hubspot.singularity.SingularityDisabledAction;
 import com.hubspot.singularity.SingularityDisabledActionType;
 import com.hubspot.singularity.SingularityDisasterStats;
 import com.hubspot.singularity.SingularityDisasterType;
+import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
@@ -43,9 +44,9 @@ public class DisastersResource {
 
   @GET
   @Path("/stats")
-  public Optional<SingularityDisasterStats> disasterStats() {
+  public SingularityDisastersData disasterStats() {
     authorizationHelper.checkAdminAuthorization(user);
-    return disasterManager.getDisasterStats();
+    return disasterManager.getDisastersData();
   }
 
   @GET
