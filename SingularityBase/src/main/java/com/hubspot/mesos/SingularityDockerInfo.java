@@ -8,6 +8,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 
 public class SingularityDockerInfo {
@@ -16,7 +17,8 @@ public class SingularityDockerInfo {
   private final Optional<SingularityDockerNetworkType> network;
   private final List<SingularityDockerPortMapping> portMappings;
   private final boolean forcePullImage;
-  private final Map<String, String> parameters;
+  private final Optional<Map<String, String>> parameters;
+  private final List<SingularityDockerParameter> dockerParameters;
 
   @JsonCreator
   public SingularityDockerInfo(@JsonProperty("image") String image,
@@ -24,18 +26,29 @@ public class SingularityDockerInfo {
                                @JsonProperty("network") SingularityDockerNetworkType network,
                                @JsonProperty("portMappings") Optional<List<SingularityDockerPortMapping>> portMappings,
                                @JsonProperty("forcePullImage") Optional<Boolean> forcePullImage,
-                               @JsonProperty("parameters") Optional<Map<String, String>> parameters) {
+                               @JsonProperty("parameters") Optional<Map<String, String>> parameters,
+                               @JsonProperty("dockerParameters") Optional<List<SingularityDockerParameter>> dockerParameters) {
     this.image = image;
     this.privileged = privileged;
     this.network = Optional.fromNullable(network);
     this.portMappings = portMappings.or(Collections.<SingularityDockerPortMapping>emptyList());
     this.forcePullImage = forcePullImage.or(false);
-    this.parameters = parameters.or(Collections.<String, String>emptyMap());
+    this.parameters = parameters;
+    this.dockerParameters = dockerParameters.or(parameters.isPresent() ? SingularityDockerParameter.parametersFromMap(parameters.get()) : Collections.<SingularityDockerParameter>emptyList());
+  }
+
+  public SingularityDockerInfo(String image, boolean privileged, SingularityDockerNetworkType network, Optional<List<SingularityDockerPortMapping>> portMappings, Optional<Boolean> forcePullImage, List<SingularityDockerParameter> dockerParameters) {
+    this(image, privileged, network, portMappings, forcePullImage, Optional.<Map<String,String>>absent(), Optional.of(dockerParameters));
+  }
+
+  @Deprecated
+  public SingularityDockerInfo(String image, boolean privileged, SingularityDockerNetworkType network, Optional<List<SingularityDockerPortMapping>> portMappings, Optional<Boolean> forcePullImage, Optional<Map<String, String>> parameters) {
+    this(image, privileged, network, portMappings, forcePullImage, parameters, Optional.<List<SingularityDockerParameter>>absent());
   }
 
   @Deprecated
   public SingularityDockerInfo(String image, boolean privileged, SingularityDockerNetworkType network, Optional<List<SingularityDockerPortMapping>> portMappings) {
-    this(image, privileged, network, portMappings, Optional.<Boolean>absent(), Optional.<Map<String, String>>absent());
+    this(image, privileged, network, portMappings, Optional.<Boolean>absent(), Optional.<Map<String, String>>absent(), Optional.<List<SingularityDockerParameter>>absent());
   }
 
   public String getImage() {
@@ -80,20 +93,13 @@ public class SingularityDockerInfo {
     return forcePullImage;
   }
 
-  public Map<String, String> getParameters() {
+  @Deprecated
+  public Optional<Map<String, String>> getParameters() {
     return parameters;
   }
 
-  @Override
-  public String toString() {
-    return "SingularityDockerInfo{" +
-      "image='" + image + '\'' +
-      ", privileged=" + privileged +
-      ", network=" + network +
-      ", portMappings=" + portMappings +
-      ", forcePullImage=" + forcePullImage +
-      ", parameters=" + parameters +
-      '}';
+  public List<SingularityDockerParameter> getDockerParameters() {
+    return dockerParameters;
   }
 
   @Override
@@ -104,39 +110,31 @@ public class SingularityDockerInfo {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-
     SingularityDockerInfo that = (SingularityDockerInfo) o;
-
-    if (forcePullImage != that.forcePullImage) {
-      return false;
-    }
-    if (privileged != that.privileged) {
-      return false;
-    }
-    if (image != null ? !image.equals(that.image) : that.image != null) {
-      return false;
-    }
-    if (network != null ? !network.equals(that.network) : that.network != null) {
-      return false;
-    }
-    if (parameters != null ? !parameters.equals(that.parameters) : that.parameters != null) {
-      return false;
-    }
-    if (portMappings != null ? !portMappings.equals(that.portMappings) : that.portMappings != null) {
-      return false;
-    }
-
-    return true;
+    return privileged == that.privileged &&
+      forcePullImage == that.forcePullImage &&
+      Objects.equal(image, that.image) &&
+      Objects.equal(network, that.network) &&
+      Objects.equal(portMappings, that.portMappings) &&
+      Objects.equal(parameters, that.parameters) &&
+      Objects.equal(dockerParameters, that.dockerParameters);
   }
 
   @Override
   public int hashCode() {
-    int result = image != null ? image.hashCode() : 0;
-    result = 31 * result + (privileged ? 1 : 0);
-    result = 31 * result + (network != null ? network.hashCode() : 0);
-    result = 31 * result + (portMappings != null ? portMappings.hashCode() : 0);
-    result = 31 * result + (forcePullImage ? 1 : 0);
-    result = 31 * result + (parameters != null ? parameters.hashCode() : 0);
-    return result;
+    return Objects.hashCode(image, privileged, network, portMappings, forcePullImage, parameters, dockerParameters);
+  }
+
+  @Override
+  public String toString() {
+    return Objects.toStringHelper(this)
+      .add("image", image)
+      .add("privileged", privileged)
+      .add("network", network)
+      .add("portMappings", portMappings)
+      .add("forcePullImage", forcePullImage)
+      .add("parameters", parameters)
+      .add("dockerParameters", dockerParameters)
+      .toString();
   }
 }
