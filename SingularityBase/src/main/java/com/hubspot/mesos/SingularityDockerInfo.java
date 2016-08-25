@@ -28,9 +28,6 @@ public class SingularityDockerInfo {
                                @JsonProperty("forcePullImage") Optional<Boolean> forcePullImage,
                                @JsonProperty("parameters") Optional<Map<String, String>> parameters,
                                @JsonProperty("dockerParameters") Optional<List<SingularityDockerParameter>> dockerParameters) {
-    if (dockerParameters.isPresent() && !dockerParameters.get().isEmpty() && parameters.isPresent() && !parameters.get().isEmpty()) {
-      throw new IllegalArgumentException("Can only specify one of 'parameters' or 'dockerParameters'");
-    }
     this.image = image;
     this.privileged = privileged;
     this.network = Optional.fromNullable(network);

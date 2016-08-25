@@ -149,15 +149,9 @@ public class SingularityDeploy {
     this.taskEnv = taskEnv;
     this.uris = uris;
     this.executorData = executorData;
-    if (labels.isPresent() && !labels.get().isEmpty() && mesosLabels.isPresent() && !mesosLabels.get().isEmpty()) {
-      throw new IllegalArgumentException("Can only specify one of 'labels' or 'mesosLabels");
-    }
+
     this.labels = labels;
     this.mesosLabels = mesosLabels.or(labels.isPresent() ? Optional.of(SingularityMesosTaskLabel.labelsFromMap(labels.get())) : Optional.<List<SingularityMesosTaskLabel>>absent());
-
-    if (taskLabels.isPresent() && !taskLabels.get().isEmpty() && mesosTaskLabels.isPresent() && !mesosTaskLabels.get().isEmpty()) {
-      throw new IllegalArgumentException("Can only specify one of 'labels' or 'mesosLabels");
-    }
     this.taskLabels = taskLabels;
     this.mesosTaskLabels = mesosTaskLabels.or(taskLabels.isPresent() ? Optional.of(parseMesosTaskLabelsFromMap(taskLabels.get())) : Optional.<Map<Integer,List<SingularityMesosTaskLabel>>>absent());
 
