@@ -74,9 +74,9 @@ public class SingularityBounceRequestBuilder {
     return "SingularityBounceRequestBuilder{" +
         "durationMillis='" + durationMillis + '\'' +
         ", actionId='" + actionId + '\'' +
-        ", message=" + message + '\'' +
-        ", incremental=" + incremental + '\'' +
-        ", skipHealthchecks=" + skipHealthchecks + '\'' +
+        ", message='" + message + '\'' +
+        ", incremental='" + incremental + '\'' +
+        ", skipHealthchecks='" + skipHealthchecks + '\'' +
         "}";
   }
 }
