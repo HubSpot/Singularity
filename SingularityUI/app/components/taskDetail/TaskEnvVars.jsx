@@ -6,7 +6,7 @@ import CollapsableSection from '../common/CollapsableSection';
 function TaskEnvVars (props) {
   if (!props.executor) return null;
   let vars = [];
-  for (const variable of props.executor.command.environment.variables) {
+  for (const variable of _.sortBy(props.executor.command.environment.variables, 'name')) {
     vars.push(<InfoBox key={variable.name} copyableClassName="info-copyable" name={variable.name} value={variable.value} />);
   }
 
