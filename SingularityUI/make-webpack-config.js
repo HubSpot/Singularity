@@ -2,6 +2,7 @@ var path = require('path');
 var extend = require('extend');
 var webpack = require('webpack');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
+var CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
 var pkg = require('./package.json');
 
 var dest = path.resolve(__dirname, 'dist/static');
@@ -83,6 +84,7 @@ module.exports = function(options) {
 
     // The list of plugins for Webpack compiler
     plugins: [
+      new CaseSensitivePathsPlugin(),
       new webpack.optimize.OccurrenceOrderPlugin(),
       new webpack.DefinePlugin({
         'process.env.NODE_ENV': isDebug ? '"development"' : '"production"',
