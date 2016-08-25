@@ -3,7 +3,13 @@ import { connect } from 'react-redux';
 
 import Immutable from 'immutable';
 
-import { sandboxFetchChunk, sandboxFetchLength } from '../actions';
+import {
+  removeFileChunk,
+  sandboxFetchChunk,
+  sandboxFetchLength,
+  sandboxFetchTail,
+  SANDBOX_MAX_BYTES
+} from '../actions';
 import connectToTailer from './connectToTailer';
 
 import * as Selectors from '../selectors';
@@ -15,17 +21,21 @@ class SandboxTailer extends Component {
     super();
 
     this.initializeFile = this.initializeFile.bind(this);
-    this.loadLines = this.loadLines.bind(this);
+    this.loadLine = this.loadLine.bind(this);
     this.tailLog = this.tailLog.bind(this);
-
-    this.sandboxMaxBytes = 65535;
   }
 
   initializeFile(atOffset) {
-    this.props.fetchLength();
-
     if (atOffset !== undefined) {
-      this.fetchSafe(atOffset, atOffset + this.sandboxMaxBytes);
+      if (atOffset === -1) {
+        this.props.fetchTail();
+      } else {
+        this.props.fetchLength();
+        this.fetchSafe(atOffset, atOffset + SANDBOX_MAX_BYTES);
+      }
+    } else {
+      this.props.fetchLength();
+      this.fetchSafe(0, SANDBOX_MAX_BYTES);
     }
   }
 
@@ -35,7 +45,43 @@ class SandboxTailer extends Component {
     if (!this.props.requests.has(byteRangeStart)) {
       return fetchChunk(byteRangeStart, byteRangeEnd);
     }
-    return undefined;
+    return Promise.resolve();
+  }
+
+  loadLine(index, loadUp, lines, chunks) {
+    let byteRangeStart;
+    let byteRangeEnd;
+
+    if (index < lines.size) {
+      const lineToLoad = lines.get(index);
+
+      if (loadUp) {
+        byteRangeEnd = lineToLoad.end;
+        byteRangeStart = Math.max(0, byteRangeEnd - SANDBOX_MAX_BYTES);
+      } else {
+        byteRangeStart = lineToLoad.start;
+        // if this is the last line, and not a missing marker
+        if (index === lines.size - 1 && !lineToLoad.isMissingMarker) {
+          // we have to load from the end of this line instead of the beginning
+          byteRangeStart = lineToLoad.end;
+        }
+        byteRangeEnd = byteRangeStart + SANDBOX_MAX_BYTES;
+      }
+
+      this.fetchSafe(byteRangeStart, byteRangeEnd);
+
+      const MIN_LOADED_LINES_TO_TRIGGER_UNLOAD = 800;
+      const MIN_LOADED_CHUNKS_TO_TRIGGER_UNLOAD = 5;
+      if (lines.size >= MIN_LOADED_LINES_TO_TRIGGER_UNLOAD && chunks.size >= MIN_LOADED_CHUNKS_TO_TRIGGER_UNLOAD) {
+        if (loadUp) {
+          // remove bottom
+          this.props.removeFileChunk(-1);
+        } else {
+          // remove top
+          this.props.removeFileChunk(0);
+        }
+      }
+    }
   }
 
   loadLines(startIndex, stopIndex, lines) {
@@ -52,10 +98,10 @@ class SandboxTailer extends Component {
     if (stopIndex < lines.size) {
       byteRangeEnd = Math.min(
         lines.get(stopIndex).end,
-        byteRangeStart + this.sandboxMaxBytes
+        byteRangeStart + SANDBOX_MAX_BYTES
       );
     } else {
-      byteRangeEnd = byteRangeStart + this.sandboxMaxBytes;
+      byteRangeEnd = byteRangeStart + SANDBOX_MAX_BYTES;
     }
 
     this.fetchSafe(byteRangeStart, byteRangeEnd);
@@ -64,9 +110,9 @@ class SandboxTailer extends Component {
   tailLog(lines) {
     if (lines.size) {
       const lastLine = lines.last();
-      this.fetchSafe(lastLine.end, lastLine.end + this.sandboxMaxBytes);
+      this.fetchSafe(lastLine.end, lastLine.end + SANDBOX_MAX_BYTES);
     } else {
-      this.fetchSafe(0, this.sandboxMaxBytes);
+      this.fetchSafe(0, SANDBOX_MAX_BYTES);
     }
   }
 
@@ -75,8 +121,9 @@ class SandboxTailer extends Component {
       <SimpleLog
         tailerId={this.props.tailerId}
         initializeFile={this.initializeFile}
-        loadLines={this.loadLines}
+        loadLine={this.loadLine}
         tailLog={this.tailLog}
+        goToOffset={this.props.goToOffset}
       />
     );
   }
@@ -88,7 +135,9 @@ SandboxTailer.propTypes = {
   path: PropTypes.string.isRequired,
   requests: PropTypes.instanceOf(Immutable.Map).isRequired,
   fetchChunk: PropTypes.func.isRequired,
-  fetchLength: PropTypes.func.isRequired
+  fetchLength: PropTypes.func.isRequired,
+  removeFileChunk: PropTypes.func.isRequired,
+  goToOffset: PropTypes.number
 };
 
 const mapStateToProps = (state, ownProps) => ({
@@ -114,6 +163,20 @@ const mapDispatchToProps = (dispatch, ownProps) => ({
       end,
       config
     )
+  ),
+  fetchTail: (config) => dispatch(
+    sandboxFetchTail(
+      ownProps.tailerId,
+      ownProps.taskId,
+      ownProps.path,
+      config
+    )
+  ),
+  removeFileChunk: (index) => dispatch(
+    removeFileChunk(
+      ownProps.tailerId,
+      index
+    )
   )
 });
 
@@ -126,6 +189,8 @@ const mergeProps = (stateProps, dispatchProps, ownProps) => ({
     end,
     stateProps.config
   ),
+  fetchTail: () => dispatchProps.fetchTail(stateProps.config),
+  removeFileChunk: (start) => dispatchProps.removeFileChunk(start)
 });
 
 export default connectToTailer(connect(

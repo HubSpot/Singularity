@@ -4,6 +4,8 @@ section.log-pane {
   flex-flow: column;
   width: 100%;
 
+  overflow-y: scroll;
+
   font-family: Consolas, "Liberation Mono", Courier, monospace;
 
   header {
@@ -18,7 +20,7 @@ section.log-pane {
     white-space: nowrap;
     font-size: 12px;
     line-height: 12px;
-    height: 12px;
+    height: 14px;
     padding: 0 2em;
     white-space: pre;
 
@@ -27,7 +29,7 @@ section.log-pane {
     }
 
     &.missing {
-      background-color: rgba(255, 255, 255, 0.1)
+      background-color: rgba(255, 255, 255, 0.1);
     }
 
     &.loading {

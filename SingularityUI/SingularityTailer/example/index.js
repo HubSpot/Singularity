@@ -15,7 +15,7 @@ const reducers = combineReducers({ tailer: singularityTailer });
 
 const middleware = [thunk];
 
-if (localStorage.reduxLogging) {
+if (localStorage.enableReduxLogging && JSON.parse(localStorage.enableReduxLogging)) {
   middleware.push(logger());
 }
 

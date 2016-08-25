@@ -1,6 +1,5 @@
 import React, { PropTypes } from 'react';
 import Immutable from 'immutable';
-import { AutoSizer, VirtualScroll } from 'react-virtualized';
 
 import Line from './Line';
 
@@ -11,14 +10,13 @@ const SimpleLogLines = (props) => {
     return <div>Not loaded</div>;
   }
 
-  const rowRenderer = (rowProps) => (
-    <Line data={props.lines.get(rowProps.index)} />
-  );
-
   return (
     <div>
-      {props.lines.map((l) => {
-        return <Line data={l} />;
+      <div style={{height: props.fakeLineCount * 14}} key="fakeLine">
+        fake line.
+      </div>
+      {props.lines.map((data) => {
+        return <Line key={`${data.start}-${data.end}`} data={data} />;
       })}
     </div>
   );

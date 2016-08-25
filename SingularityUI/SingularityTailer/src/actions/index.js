@@ -18,6 +18,13 @@ export const addFileChunk = (id, chunk, requestedStart, requestedEnd) => ({
   requestedEnd
 });
 
+export const REMOVE_FILE_CHUNK = `${frameworkName}_REMOVE_FILE_CHUNK`;
+export const removeFileChunk = (id, index) => ({
+  type: REMOVE_FILE_CHUNK,
+  id,
+  index
+});
+
 export const SET_FILE_SIZE = `${frameworkName}_SET_FILE_SIZE`;
 export const setFileSize = (id, fileSize) => ({
   type: SET_FILE_SIZE,
@@ -90,6 +97,7 @@ const parseText = (response) => {
 };
 
 /* SINGULARITY SANDBOX API */
+export const SANDBOX_MAX_BYTES = 65535;
 
 // must be used before calling a fetch
 // this sets the Singularity API root
@@ -160,6 +168,27 @@ export const sandboxFetchLength = (id, taskId, path, config) => {
           message: error.message
         });
       });
+  };
+};
+
+export const SANDBOX_FETCH_TAIL = `${frameworkName}_SANDBOX_FETCH_TAIL`;
+export const sandboxFetchTail = (id, taskId, path, config) => {
+  return (dispatch) => {
+    dispatch(sandboxFetchLength(id, taskId, path, config)).then(
+      (lengthAction) => {
+        const start = Math.max(lengthAction.fileSize - SANDBOX_MAX_BYTES, 0);
+        const end = start + SANDBOX_MAX_BYTES;
+
+        return dispatch(sandboxFetchChunk(
+          id,
+          taskId,
+          path,
+          start,
+          end,
+          config
+        ));
+      }
+    );
   };
 };
 

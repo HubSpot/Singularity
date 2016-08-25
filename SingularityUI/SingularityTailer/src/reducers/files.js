@@ -3,6 +3,7 @@ import { List } from 'immutable';
 
 import {
   ADD_FILE_CHUNK,
+  REMOVE_FILE_CHUNK,
   SET_FILE_SIZE
 } from '../actions';
 
@@ -233,6 +234,7 @@ export const mergeChunks = (existing, incoming) => {
 
       if (lastBytes) {
         // oh you think you're clever don't you
+        // do some simple math to figure out where to put this
         combined.set(lastBytes, combinedByteLength - lastBytes.byteLength);
       }
 
@@ -301,7 +303,7 @@ const getBoundingRange = (...ranges) => {
   };
 };
 
-const createLinesForNewChunk = (existingLines, chunks, incomingRangeLike) => {
+const createLinesForChunk = (existingLines, chunks, incomingRangeLike) => {
   // get the full byte range of lines that the incoming chunk intersects
   const overlappingLines = getOverlap(existingLines, incomingRangeLike, true);
 
@@ -396,7 +398,7 @@ export const addChunkReducer = (state, action) => {
   // has been init and has new data
   const chunks = mergeChunks(state[id].chunks, chunk);
 
-  const incomingLines = createLinesForNewChunk(state[id].lines, chunks, chunk);
+  const incomingLines = createLinesForChunk(state[id].lines, chunks, chunk);
   const replacementRange = findOverlap(
     state[id].lines,
     getBookends(incomingLines)
@@ -416,7 +418,48 @@ export const addChunkReducer = (state, action) => {
   };
 };
 
-export const removeLogReducer = (state, action) => {
+export const removeChunkReducer = (state, action) => {
+  const { id, index } = action;
+  if (!state[id]) {
+    return state;
+  }
+
+  const existingChunks = state[id].chunks;
+
+  if (existingChunks.has(index)) {
+    const removedChunk = existingChunks.get(index);
+    const newChunks = existingChunks.delete(index);
+
+    // a new set of lines for the range that just got deleted.
+    const deletedLines = createLinesForChunk(
+      state[id].lines,
+      newChunks,
+      removedChunk
+    );
+    const replacementRange = findOverlap(
+      state[id].lines,
+      removedChunk,
+      true
+    );
+
+    return {
+      ...state,
+      [id]: {
+        chunks: newChunks,
+        lines: mergeLines(
+          state[id].lines,
+          deletedLines,
+          replacementRange
+        ),
+        fileSize: state[id].fileSize
+      }
+    };
+  }
+
+  return state;
+};
+
+export const removeFileReducer = (state, action) => {
   const { id } = action;
 
   if (state[id]) {
@@ -442,10 +485,12 @@ const filesReducer = (state = initialState, action) => {
           e
         );
         return addChunkReducer(
-          removeLogReducer(state, action),
+          removeFileReducer(state, action),
           action
         );
       }
+    case REMOVE_FILE_CHUNK:
+      return removeChunkReducer(state, action);
     case SET_FILE_SIZE:
       if (!state[action.id]) {
         return {
@@ -454,6 +499,27 @@ const filesReducer = (state = initialState, action) => {
             chunks: new List(),
             lines: new List().push(createMissingMarker(0, action.fileSize)),
             fileSize: action.fileSize
+          }
+        };
+      }
+
+      // make sure to add the missing marker if the fileSize is larger than
+      // what we knew
+      if (state[action.id].lines.size) {
+        const lines = state[action.id].lines;
+        const lastLine = lines.last();
+        let updatedLines = lines;
+        if (action.fileSize > lastLine.end) {
+          updatedLines = lines.push(
+            createMissingMarker(lastLine.end, action.fileSize)
+          );
+        }
+        return {
+          ...state,
+          [action.id]: {
+            ...state[action.id],
+            lines: updatedLines,
+            fileSize: Math.max(state[action.id].fileSize, action.fileSize)
           }
         };
       }
