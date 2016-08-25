@@ -91,7 +91,3 @@ export const makeGetEnhancedLines = () => {
     }
   );
 };
-
-export const getScroll = (state, props) => (
-  props.getTailerState(state).scroll[props.tailerId] || {}
-);

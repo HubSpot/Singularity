@@ -15,7 +15,7 @@ import connectToTailer from './connectToTailer';
 
 import * as Selectors from '../selectors';
 
-import SimpleLog from './SimpleLog';
+import Log from './Log';
 
 class SandboxTailer extends Component {
   constructor() {
@@ -120,7 +120,7 @@ class SandboxTailer extends Component {
 
   render() {
     return (
-      <SimpleLog
+      <Log
         tailerId={this.props.tailerId}
         initializeFile={this.initializeFile}
         loadLine={this.loadLine}

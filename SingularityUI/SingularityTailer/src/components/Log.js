@@ -1,149 +1,160 @@
 import React, { Component, PropTypes } from 'react';
+import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
 
-import Immutable, { Range } from 'immutable';
-
-import * as Actions from '../actions';
+import Immutable from 'immutable';
 
 import connectToTailer from './connectToTailer';
 
 import * as Selectors from '../selectors';
 
-import LogLines from './LogLines';
+import LogLines, { LOG_LINE_HEIGHT } from './LogLines';
 
 class Log extends Component {
   constructor() {
     super();
 
     this.isLineLoaded = this.isLineLoaded.bind(this);
-    this.isTailing = this.isTailing.bind(this);
-    this.loadLines = this.loadLines.bind(this);
+    this.loadLine = this.loadLine.bind(this);
     this.tailLog = this.tailLog.bind(this);
-    this.onRowsRendered = this.onRowsRendered.bind(this);
+    this.pollScroll = this.pollScroll.bind(this);
 
-    this.state = {
-      isTailing: false,
-      tailIntervalId: undefined
-    };
+    this.scrollTop = undefined;
+    this.scrollHeight = undefined;
+    this.invalidate = false;
+
+    this.fakeLineCount = 0;
+    this.scrollDelta = 0;
   }
 
   componentDidMount() {
-    this.props.initializeFile();
+    if (!this.props.isLoaded) {
+      this.props.initializeFile(this.props.goToOffset);
+    }
+
+    this.rafRequestId = window.requestAnimationFrame(this.pollScroll);
+  }
+
+  componentWillUpdate(nextProps) {
+    if (nextProps.lines !== this.props.lines) {
+      this.invalidate = true;
+    }
+
+    if (nextProps.lines.size > 1 && this.props.lines.size > 1) {
+      const oldLines = this.props.lines;
+      const newLines = nextProps.lines;
+
+      const addedToBeginning = newLines.findIndex((l) => { return l.start >= oldLines.get(0).end; }) - 1;
+      const removedFromBeginning = oldLines.findIndex((l) => { return l.end >= newLines.get(0).end; });
+
+      if (removedFromBeginning) {
+        this.fakeLineCount += removedFromBeginning - 1;
+      }
+
+      if (addedToBeginning) {
+        if (this.fakeLineCount - addedToBeginning >= 0) {
+          this.fakeLineCount -= addedToBeginning;
+        } else {
+          this.scrollDelta += LOG_LINE_HEIGHT * (addedToBeginning - this.fakeLineCount);
+          this.fakeLineCount = 0;
+        }
+      }
+    }
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.tailerId !== prevProps.tailerId) {
-      this.props.initializeFile();
-      return;
+    const idMatches = this.props.tailerId === prevProps.tailerId;
+    const offsetMatches = this.props.goToOffset === prevProps.goToOffset;
+
+    if (!idMatches || !offsetMatches) {
+      this.props.initializeFile(this.props.goToOffset);
     }
+  }
 
-    if (this.props.scrollToOffset !== prevProps.scrollToOffset) {
-      this.refs.LogLines.refs.VirtualScroll.scrollToIndex()
-    }
-
-    if (this.props.scroll.hasOwnProperty('startIndex')) {
-      const { fetchOverscan } = this.props.config;
-
-      let start;
-      let stop;
-      if (fetchOverscan) {
-        start = this.props.scroll.overscanStartIndex;
-        stop = this.props.scroll.overscanStopIndex;
-      } else {
-        start = this.props.scroll.startIndex;
-        stop = this.props.scroll.stopIndex;
-      }
-      const unloaded = this.findUnloadedInRange(start, stop);
-
-      // unloaded.forEach((index) => {
-      //   this.loadLines(index, index);
-      // });
-      if (unloaded.last() !== undefined) {
-        this.loadLines(unloaded.last(), unloaded.last());
-      }
-    }
-
-    if (prevProps.lines.size && this.props.lines.size) {
-      const prevStart = prevProps.lines.first().start;
-      const newStart = this.props.lines.first().start;
-      if (prevStart !== newStart) {
-        // how many rows were added above it?
-        const prevStartIndex = this.props.lines.findIndex(
-          (l) => prevStart >= l.start
-        );
-
-        // TODO: actually 'measure' heights
-        const scrollDelta = prevStartIndex * 14;
-        console.log(scrollDelta);
-
-        console.log(this.refs.LogLines.refs.VirtualScroll.scrollTop);
-      }
-    }
+  componentWillUnmount() {
+    window.cancelAnimationFrame(this.rafRequestId);
   }
 
   isLineLoaded(index) {
     return (
       index < this.props.lines.size
       && (
-        !this.props.lines.get(index).isMissingMarker
+        !this.props.lines.get(index).isMissingMarker &&
+        !this.props.requests.has(this.props.lines.get(index).start)
       )
     );
   }
 
-  isTailing(stopIndex) {
-    return false; // this is broken right now...
-    return stopIndex === this.props.lines.size - 1;
+  // detect when dom has changed underneath us- either scrollTop or scrollHeight (layout reflow)
+  // may have changed.
+  pollScroll () {
+    const domNode = ReactDOM.findDOMNode(this);
+
+    // let's update the scroll now, in a raf.
+    if (this.scrollDelta) {
+      domNode.scrollTop += this.scrollDelta;
+      this.scrollDelta = 0;
+    }
+
+    const { scrollTop, scrollHeight, clientHeight } = domNode;
+    if (scrollTop !== this.scrollTop || this.invalidate) {
+      this.invalidate = false;
+      const scrollLoadThreshold = LOG_LINE_HEIGHT * 300;
+      const atTop = (scrollTop - this.fakeLineCount * LOG_LINE_HEIGHT) <= scrollLoadThreshold;
+      const atBottom = scrollTop >= (scrollHeight - clientHeight - scrollLoadThreshold);
+
+      const { lines } = this.props;
+      if (atTop && atBottom && lines.size === 1) {
+        // wait until the first chunk is loaded.
+      } else {
+        // we are at the top/bottom, load some stuff.
+        if (atTop && !this.isLineLoaded(0)) {
+          this.loadLine(0, true);
+        }
+
+        if (atBottom) {
+          if (lines.size) {
+            this.loadLine(lines.size - 1, false);
+          }
+        }
+      }
+      // update the scroll position.
+      this.scrollTop = domNode.scrollTop;
+      this.scrollHeight = domNode.scrollHeight;
+    }
+    // do another raf.
+    this.rafRequestId = window.requestAnimationFrame(this.pollScroll);
   }
 
-  loadLines(startIndex, stopIndex) {
-    return this.props.loadLines(startIndex, stopIndex, this.props.lines);
+  loadLine(index, loadUp) {
+    return this.props.loadLine(
+      index,
+      loadUp,
+      this.props.lines,
+      this.props.chunks
+    );
   }
 
   tailLog() {
     return this.props.tailLog(this.props.lines);
   }
 
-  findUnloadedInRange(startIndex, stopIndex) {
-    const range = new Range(startIndex, stopIndex + 1);
-    return range.filter((index) => !this.isLineLoaded(index));
-  }
-
-  onRowsRendered ({ startIndex, stopIndex, overscanStartIndex, overscanStopIndex }) {
-    const isTailing = this.isTailing(stopIndex);
-
-    let tailIntervalId = this.state.tailIntervalId;
-
-    if (isTailing && !this.state.isTailing) {
-      // start tailing
-      tailIntervalId = setInterval(() => this.tailLog(), 10000);
-    } else if (!isTailing && this.state.isTailing) {
-      // stop tailing
-      clearInterval(tailIntervalId);
-      tailIntervalId = undefined;
-    }
-
-    this.props.renderedLines(
-      startIndex,
-      stopIndex,
-      overscanStartIndex,
-      overscanStopIndex
-    );
-  }
-
   render() {
     const { props } = this;
+
+    const linkRenderer = props.linkRenderer
+      ? (offset) => props.linkRenderer(props.tailerId, offset)
+      : undefined;
+
     return (
       <section className="log-pane">
         <div className="log-line-wrapper">
           <LogLines
-            ref="LogLines"
             isLoaded={props.isLoaded}
             lines={props.lines}
+            fakeLineCount={this.fakeLineCount}
             isLineLoaded={this.isLineLoaded}
-            isTailing={this.isTailing}
-            loadLines={this.loadLines}
-            tailLog={this.tailLog}
-            onRowsRendered={this.onRowsRendered}
+            linkRenderer={linkRenderer}
           />
         </div>
       </section>
@@ -153,22 +164,22 @@ class Log extends Component {
 
 Log.propTypes = {
   tailerId: PropTypes.string.isRequired,
+  goToOffset: PropTypes.number,
+  linkRenderer: PropTypes.func,
   // from connectToTailer HOC
   getTailerState: PropTypes.func.isRequired,
-  // from chosen tailer HOC
+  // from tailer implementation
   // actions
   initializeFile: PropTypes.func.isRequired,
-  loadLines: PropTypes.func.isRequired,
+  loadLine: PropTypes.func.isRequired,
   tailLog: PropTypes.func.isRequired,
   // from connect
   isLoaded: PropTypes.bool.isRequired,
   fileSize: PropTypes.number,
   lines: PropTypes.instanceOf(Immutable.List),
+  chunks: PropTypes.instanceOf(Immutable.List),
   requests: PropTypes.instanceOf(Immutable.Map),
-  config: PropTypes.object.isRequired,
-  scroll: PropTypes.object.isRequired,
-  // actions
-  renderedLines: PropTypes.func.isRequired
+  config: PropTypes.object.isRequired
 };
 
 const makeMapStateToProps = () => {
@@ -177,28 +188,13 @@ const makeMapStateToProps = () => {
     isLoaded: Selectors.getIsLoaded(state, ownProps),
     fileSize: Selectors.getFileSize(state, ownProps),
     lines: getEnhancedLines(state, ownProps),
+    chunks: Selectors.getChunks(state, ownProps),
     requests: Selectors.getRequests(state, ownProps),
-    config: Selectors.getConfig(state, ownProps),
-    scroll: Selectors.getScroll(state, ownProps)
+    config: Selectors.getConfig(state, ownProps)
   });
   return mapStateToProps;
 };
 
-const mapDispatchToProps = (dispatch, ownProps) => {
-  return {
-    renderedLines: (startIndex, stopIndex, overscanStartIndex, overscanStopIndex) => (
-      dispatch(Actions.renderedLines(
-        ownProps.tailerId,
-        startIndex,
-        stopIndex,
-        overscanStartIndex,
-        overscanStopIndex
-      ))
-    )
-  };
-};
-
 export default connectToTailer(connect(
-  makeMapStateToProps,
-  mapDispatchToProps
+  makeMapStateToProps
 )(Log));

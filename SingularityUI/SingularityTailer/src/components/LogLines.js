@@ -1,55 +1,45 @@
 import React, { PropTypes } from 'react';
 import Immutable from 'immutable';
-import { AutoSizer, VirtualScroll } from 'react-virtualized';
 
 import Line from './Line';
 
 import '../styles/ansi.scss';
 
-const LogLines = (props) => {
+export const LOG_LINE_HEIGHT = 14;
+
+const SimpleLogLines = (props) => {
   if (!props.isLoaded) {
     return <div>Not loaded</div>;
   }
 
-  const rowRenderer = (rowProps) => (
-    <Line data={props.lines.get(rowProps.index)} />
-  );
-
   return (
-    <AutoSizer>
-      {({width, height}) => ( // eslint-disable-line react/prop-types
-        <VirtualScroll
-          ref="VirtualScroll"
-          width={width}
-          height={height}
-          tabIndex={null}
-          onRowsRendered={props.onRowsRendered}
-          overscanRowCount={props.overscanRowCount}
-          rowCount={props.lines.size}
-          rowHeight={({index}) => {
-            const line = props.lines.get(index);
-            if (line.isMissingMarker) {
-              // return 80 * 14;
-              // return Math.ceil(line.byteLength / 250) * 14;
-            }
-            return 14;
-          }}
-          rowRenderer={rowRenderer}
-        />
-      )}
-    </AutoSizer>
+    <div>
+      <div
+        style={{height: props.fakeLineCount * LOG_LINE_HEIGHT}}
+        key="fakeLines"
+      />
+      {props.lines.map((data) => {
+        return (
+          <Line
+            key={`${data.start}-${data.end}`}
+            data={data}
+            linkRenderer={props.linkRenderer}
+          />
+        );
+      })}
+    </div>
   );
 };
 
-LogLines.propTypes = {
+SimpleLogLines.propTypes = {
   isLoaded: PropTypes.bool.isRequired,
   lines: PropTypes.instanceOf(Immutable.List).isRequired,
-  onRowsRendered: PropTypes.func,
-  overscanRowCount: PropTypes.number
+  fakeLineCount: PropTypes.number,
+  linkRenderer: PropTypes.func
 };
 
-LogLines.defaultProps = {
-  overscanRowCount: 100
+SimpleLogLines.defaultProps = {
+  fakeLineCount: 0
 };
 
-export default LogLines;
+export default SimpleLogLines;
