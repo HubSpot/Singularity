@@ -27,9 +27,7 @@ public abstract class BlendedHistoryHelper<T, Q> {
   protected abstract List<T> getFromZk(Q id);
   protected abstract List<T> getFromHistory(Q id, int historyStart, int numFromHistory);
 
-  protected Optional<Integer> getTotalCount(Q id) {
-    throw new NotImplementedException();
-  }
+  protected abstract Optional<Integer> getTotalCount(Q id);
 
   public List<SingularityTaskIdHistory> getTaskHistoriesFor(TaskManager taskManager, Collection<SingularityTaskId> taskIds) {
     Map<SingularityTaskId, SingularityTask> tasks = taskManager.getTasks(taskIds);

@@ -61,6 +61,6 @@ public class DeployHistoryHelper extends BlendedHistoryHelper<SingularityDeployH
     final int numFromZk = deployManager.getDeployIdsFor(requestId).size();
     final int numFromHistory = historyManager.getDeployHistoryForRequestCount(requestId);
 
-    return Optional.fromNullable(numFromZk + numFromHistory);
+    return Optional.of(numFromZk + numFromHistory);
   }
 }

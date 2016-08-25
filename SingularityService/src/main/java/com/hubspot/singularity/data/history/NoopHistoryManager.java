@@ -79,6 +79,11 @@ public class NoopHistoryManager implements HistoryManager {
   }
 
   @Override
+  public int getRequestHistoryCount(String requestId) {
+    return 0;
+  }
+
+  @Override
   public List<String> getRequestHistoryLike(String requestIdLike, Integer limitStart, Integer limitCount) {
     return Collections.emptyList();
   }

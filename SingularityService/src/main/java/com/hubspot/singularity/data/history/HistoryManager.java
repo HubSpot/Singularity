@@ -39,6 +39,8 @@ public interface HistoryManager {
 
   List<SingularityRequestHistory> getRequestHistory(String requestId, Optional<OrderDirection> orderDirection, Integer limitStart, Integer limitCount);
 
+  int getRequestHistoryCount(String requestId);
+
   List<String> getRequestHistoryLike(String requestIdLike, Integer limitStart, Integer limitCount);
 
   List<SingularityRequestIdCount> getRequestIdCounts(Date before);

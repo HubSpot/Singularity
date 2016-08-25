@@ -121,6 +121,11 @@ public class JDBIHistoryManager implements HistoryManager {
   }
 
   @Override
+  public int getRequestHistoryCount(String requestId) {
+    return history.getRequestHistoryCount(requestId);
+  }
+
+  @Override
   public List<String> getRequestHistoryLike(String requestIdLike, Integer limitStart, Integer limitCount) {
     return history.getRequestHistoryLike(requestIdLike, limitStart, limitCount);
   }
