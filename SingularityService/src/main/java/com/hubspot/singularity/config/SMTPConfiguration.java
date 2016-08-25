@@ -99,6 +99,7 @@ public class SMTPConfiguration {
       .put(SingularityEmailType.REQUEST_REMOVED, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
       .put(SingularityEmailType.REQUEST_UNPAUSED, ImmutableList.of(SingularityEmailDestination.OWNERS, SingularityEmailDestination.ADMINS))
       .put(SingularityEmailType.REQUEST_SCALED, ImmutableList.of(SingularityEmailDestination.OWNERS))
+      .put(SingularityEmailType.DISASTER_DETECTED, ImmutableList.of(SingularityEmailDestination.ADMINS))
       .build());
 
   public Map<SingularityEmailType, List<SingularityEmailDestination>> getEmailConfiguration() {
