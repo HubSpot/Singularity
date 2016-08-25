@@ -1,9 +1,25 @@
 import React, { PropTypes } from 'react';
+import { Link } from 'react-router';
 import { SandboxTailer } from '../src/components';
 
 const SandboxTailerPage = ({params, location: {query}}) => {
   const taskId = params.taskId;
   const path = params.splat;
+
+  const myLinkRenderer = (id, offset) => {
+    return (
+      <span className="default-tailer-link">
+        <Link to={`${taskId}/tail/${path}?goToOffset=${offset}`}>
+          @
+        </Link>
+      </span>
+    );
+  };
+
+  myLinkRenderer.propTypes = {
+    id: PropTypes.string.isRequired,
+    offset: PropTypes.number
+  };
 
   let goToOffset;
   if (query && query.goToOffset) {
@@ -16,6 +32,7 @@ const SandboxTailerPage = ({params, location: {query}}) => {
       taskId={taskId}
       path={path}
       goToOffset={goToOffset}
+      linkRenderer={myLinkRenderer}
     />
   );
 };

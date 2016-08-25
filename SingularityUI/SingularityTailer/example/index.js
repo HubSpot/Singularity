@@ -21,7 +21,7 @@ if (localStorage.enableReduxLogging && JSON.parse(localStorage.enableReduxLoggin
 
 const store = createStore(reducers, {}, compose(
   applyMiddleware(...middleware),
-  window.devToolsExtension && window.devToolsExtension()
+  window.devToolsExtension ? window.devToolsExtension() : f => f
 ));
 
 const rootEl = document.getElementById('root');

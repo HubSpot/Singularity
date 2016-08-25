@@ -3,7 +3,8 @@ import { List } from 'immutable';
 
 import {
   ADD_FILE_CHUNK,
-  REMOVE_FILE_CHUNK,
+  UNLOAD_FILE,
+  UNLOAD_FILE_CHUNK,
   SET_FILE_SIZE
 } from '../actions';
 
@@ -489,7 +490,13 @@ const filesReducer = (state = initialState, action) => {
           action
         );
       }
-    case REMOVE_FILE_CHUNK:
+    case UNLOAD_FILE:
+      { // scope
+        const newState = { ...state };
+        delete newState[action.id];
+        return newState;
+      }
+    case UNLOAD_FILE_CHUNK:
       return removeChunkReducer(state, action);
     case SET_FILE_SIZE:
       if (!state[action.id]) {

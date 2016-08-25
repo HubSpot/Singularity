@@ -4,7 +4,8 @@ import { connect } from 'react-redux';
 import Immutable from 'immutable';
 
 import {
-  removeFileChunk,
+  unloadFileChunk,
+  unloadFile,
   sandboxFetchChunk,
   sandboxFetchLength,
   sandboxFetchTail,
@@ -26,6 +27,7 @@ class SandboxTailer extends Component {
   }
 
   initializeFile(atOffset) {
+    this.props.unloadFile();
     if (atOffset !== undefined) {
       if (atOffset === -1) {
         this.props.fetchTail();
@@ -75,10 +77,10 @@ class SandboxTailer extends Component {
       if (lines.size >= MIN_LOADED_LINES_TO_TRIGGER_UNLOAD && chunks.size >= MIN_LOADED_CHUNKS_TO_TRIGGER_UNLOAD) {
         if (loadUp) {
           // remove bottom
-          this.props.removeFileChunk(-1);
+          this.props.unloadFileChunk(-1);
         } else {
           // remove top
-          this.props.removeFileChunk(0);
+          this.props.unloadFileChunk(0);
         }
       }
     }
@@ -124,6 +126,7 @@ class SandboxTailer extends Component {
         loadLine={this.loadLine}
         tailLog={this.tailLog}
         goToOffset={this.props.goToOffset}
+        linkRenderer={this.props.linkRenderer}
       />
     );
   }
@@ -134,10 +137,13 @@ SandboxTailer.propTypes = {
   taskId: PropTypes.string.isRequired,
   path: PropTypes.string.isRequired,
   requests: PropTypes.instanceOf(Immutable.Map).isRequired,
-  fetchChunk: PropTypes.func.isRequired,
   fetchLength: PropTypes.func.isRequired,
-  removeFileChunk: PropTypes.func.isRequired,
-  goToOffset: PropTypes.number
+  fetchChunk: PropTypes.func.isRequired,
+  fetchTail: PropTypes.func.isRequired,
+  unloadFile: PropTypes.func.isRequired,
+  unloadFileChunk: PropTypes.func.isRequired,
+  goToOffset: PropTypes.number,
+  linkRenderer: PropTypes.func
 };
 
 const mapStateToProps = (state, ownProps) => ({
@@ -172,8 +178,13 @@ const mapDispatchToProps = (dispatch, ownProps) => ({
       config
     )
   ),
-  removeFileChunk: (index) => dispatch(
-    removeFileChunk(
+  unloadFile: () => dispatch(
+    unloadFile(
+      ownProps.tailerId
+    )
+  ),
+  unloadFileChunk: (index) => dispatch(
+    unloadFileChunk(
       ownProps.tailerId,
       index
     )
@@ -190,7 +201,8 @@ const mergeProps = (stateProps, dispatchProps, ownProps) => ({
     stateProps.config
   ),
   fetchTail: () => dispatchProps.fetchTail(stateProps.config),
-  removeFileChunk: (start) => dispatchProps.removeFileChunk(start)
+  unloadFile: () => dispatchProps.unloadFile(),
+  unloadFileChunk: (start) => dispatchProps.unloadFileChunk(start)
 });
 
 export default connectToTailer(connect(

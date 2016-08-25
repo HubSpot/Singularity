@@ -1,10 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 import classNames from 'classnames';
 
-const LineLink = ({start}) => {
-
-};
-
 export default class Line extends Component {
   shouldComponentUpdate(nextProps) {
     return (
@@ -16,7 +12,7 @@ export default class Line extends Component {
   }
 
   render() {
-    const { data } = this.props;
+    const { data, linkRenderer } = this.props;
     let lineContents;
 
     const classes = classNames({
@@ -40,8 +36,14 @@ export default class Line extends Component {
       lineContents = data.text;
     }
 
+    let maybeLink;
+    if (linkRenderer) {
+      maybeLink = linkRenderer(data.start);
+    }
+
     return (
       <div className={classes}>
+        {maybeLink}
         {lineContents}
       </div>
     );
@@ -49,7 +51,8 @@ export default class Line extends Component {
 }
 
 Line.propTypes = {
-  data: PropTypes.object.isRequired
+  data: PropTypes.object.isRequired,
+  linkRenderer: PropTypes.func
 };
 
 export default Line;

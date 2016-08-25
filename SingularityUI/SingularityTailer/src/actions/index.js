@@ -18,9 +18,15 @@ export const addFileChunk = (id, chunk, requestedStart, requestedEnd) => ({
   requestedEnd
 });
 
-export const REMOVE_FILE_CHUNK = `${frameworkName}_REMOVE_FILE_CHUNK`;
-export const removeFileChunk = (id, index) => ({
-  type: REMOVE_FILE_CHUNK,
+export const UNLOAD_FILE = `${frameworkName}_UNLOAD_FILE`;
+export const unloadFile = (id) => ({
+  type: UNLOAD_FILE,
+  id
+});
+
+export const UNLOAD_FILE_CHUNK = `${frameworkName}_UNLOAD_FILE_CHUNK`;
+export const unloadFileChunk = (id, index) => ({
+  type: UNLOAD_FILE_CHUNK,
   id,
   index
 });

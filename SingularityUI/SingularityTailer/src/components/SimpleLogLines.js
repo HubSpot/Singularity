@@ -5,6 +5,8 @@ import Line from './Line';
 
 import '../styles/ansi.scss';
 
+export const LOG_LINE_HEIGHT = 14;
+
 const SimpleLogLines = (props) => {
   if (!props.isLoaded) {
     return <div>Not loaded</div>;
@@ -12,11 +14,18 @@ const SimpleLogLines = (props) => {
 
   return (
     <div>
-      <div style={{height: props.fakeLineCount * 14}} key="fakeLine">
-        fake line.
-      </div>
+      <div
+        style={{height: props.fakeLineCount * LOG_LINE_HEIGHT}}
+        key="fakeLines"
+      />
       {props.lines.map((data) => {
-        return <Line key={`${data.start}-${data.end}`} data={data} />;
+        return (
+          <Line
+            key={`${data.start}-${data.end}`}
+            data={data}
+            linkRenderer={props.linkRenderer}
+          />
+        );
       })}
     </div>
   );
@@ -25,12 +34,12 @@ const SimpleLogLines = (props) => {
 SimpleLogLines.propTypes = {
   isLoaded: PropTypes.bool.isRequired,
   lines: PropTypes.instanceOf(Immutable.List).isRequired,
-  onRowsRendered: PropTypes.func,
-  overscanRowCount: PropTypes.number
+  fakeLineCount: PropTypes.number,
+  linkRenderer: PropTypes.func
 };
 
 SimpleLogLines.defaultProps = {
-  overscanRowCount: 100
+  fakeLineCount: 0
 };
 
 export default SimpleLogLines;

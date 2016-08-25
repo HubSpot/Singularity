@@ -21,8 +21,41 @@ section.log-pane {
     font-size: 12px;
     line-height: 12px;
     height: 14px;
-    padding: 0 2em;
+    padding: 0;
     white-space: pre;
+
+
+    &:hover {
+      .default-tailer-link {
+        visibility: visible;
+      }
+    }
+
+    .default-tailer-link {
+      padding: 0 5px;
+      visibility: hidden;
+      transform: translateZ(0);
+
+      a {
+        text-decoration: none;
+      }
+
+      a:link {
+        color: white;
+      }
+
+      a:visited {
+        color: white;
+      }
+
+      a:hover {
+        color: gray;
+      }
+
+      a:active {
+        color: darkgray;
+      }
+    }
 
     span:last-child {
       padding-right: 10px;
