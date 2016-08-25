@@ -32,7 +32,7 @@ public class SingularityDataModule extends AbstractModule {
     bind(WebhookManager.class).in(Scopes.SINGLETON);
     bind(PriorityManager.class).in(Scopes.SINGLETON);
     bind(RequestGroupManager.class).in(Scopes.SINGLETON);
-    bind(DisabledActionManager.class).in(Scopes.SINGLETON);
+    bind(DisasterManager.class).in(Scopes.SINGLETON);
   }
 
   @Provides

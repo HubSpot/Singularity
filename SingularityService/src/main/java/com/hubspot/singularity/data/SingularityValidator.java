@@ -71,10 +71,10 @@ public class SingularityValidator {
   private final DeployHistoryHelper deployHistoryHelper;
   private final Resources defaultResources;
   private final PriorityManager priorityManager;
-  private final DisabledActionManager disabledActionManager;
+  private final DisasterManager disasterManager;
 
   @Inject
-  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager, DisabledActionManager disabledActionManager) {
+  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager, DisasterManager disasterManager) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
@@ -96,7 +96,7 @@ public class SingularityValidator {
     this.maxMemoryMbPerRequest = configuration.getMesosConfiguration().getMaxMemoryMbPerRequest();
     this.maxInstancesPerRequest = configuration.getMesosConfiguration().getMaxNumInstancesPerRequest();
 
-    this.disabledActionManager = disabledActionManager;
+    this.disasterManager = disasterManager;
   }
 
   private void checkForIllegalChanges(SingularityRequest request, SingularityRequest existingRequest) {
@@ -450,8 +450,8 @@ public class SingularityValidator {
   }
 
   public void checkActionEnabled(SingularityDisabledActionType action) {
-    if (disabledActionManager.isDisabled(action)) {
-      locked(disabledActionManager.getDisabledAction(action).getMessage());
+    if (disasterManager.isDisabled(action)) {
+      locked(disasterManager.getDisabledAction(action).getMessage());
     }
   }
 
