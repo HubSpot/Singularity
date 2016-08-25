@@ -17,6 +17,7 @@ import com.google.inject.name.Named;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityDisasterStats;
 import com.hubspot.singularity.SingularityDisasterType;
+import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityEmailDestination;
 import com.hubspot.singularity.SingularityEmailType;
 import com.hubspot.singularity.SingularityPendingTask;
@@ -83,6 +84,9 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
 
     disasterManager.updateActiveDisasters(previouslyActiveDisasters, newActiveDisasters);
     disasterManager.saveDisasterStats(newStats);
+    if (lastStats.isPresent()) {
+      disasterManager.savePreviousDisasterStats(lastStats.get());
+    }
 
     if (!newActiveDisasters.isEmpty()) {
       if (!disasterManager.isAutomatedDisabledActionsDisabled()) {
@@ -192,7 +196,9 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
       return;
     }
 
-    final String body = String.format("Disasters detected: %s%nCurrent disaster stats: %s%nPrevious disaster stats: %s", disasters, stats, lastStats);
+    SingularityDisastersData data = new SingularityDisastersData(Optional.of(stats), lastStats, disasters);
+
+    final String body = String.format("New disasters detected. Data: %s ", data);
     final String subject = String.format("Disaster(s) Detected %s", disasters);
 
     smtpSender.queueMail(configuration.getSmtpConfiguration().get().getAdmins(), ImmutableList.<String> of(), subject, body);

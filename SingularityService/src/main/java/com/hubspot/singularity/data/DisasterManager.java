@@ -17,6 +17,7 @@ import com.hubspot.singularity.SingularityDisabledAction;
 import com.hubspot.singularity.SingularityDisabledActionType;
 import com.hubspot.singularity.SingularityDisasterStats;
 import com.hubspot.singularity.SingularityDisasterType;
+import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
@@ -26,6 +27,7 @@ public class DisasterManager extends CuratorAsyncManager {
   private static final String DISABLED_ACTIONS_PATH = DISASTERS_ROOT + "/disabled-actions";
   private static final String ACTIVE_DISASTERS_PATH = DISASTERS_ROOT + "/active";
   private static final String DISASTER_STATS_PATH = DISASTERS_ROOT + "/stats";
+  private static final String PREVIOUS_DISASTER_STATS_PATH = DISASTERS_ROOT + "/previous-stats";
   private static final String DISABLE_AUTOMATED_PATH = DISASTERS_ROOT + "/disabled";
 
   private static final String MESSAGE_FORMAT = "Cannot perform action %s: %s";
@@ -105,6 +107,18 @@ public class DisasterManager extends CuratorAsyncManager {
 
   public Optional<SingularityDisasterStats> getDisasterStats() {
     return getData(DISASTER_STATS_PATH, disasterStatsTranscoder);
+  }
+
+  public void savePreviousDisasterStats(SingularityDisasterStats stats) {
+    save(PREVIOUS_DISASTER_STATS_PATH, stats, disasterStatsTranscoder);
+  }
+
+  public Optional<SingularityDisasterStats> getPreviousDisasterStats() {
+    return getData(PREVIOUS_DISASTER_STATS_PATH, disasterStatsTranscoder);
+  }
+
+  public SingularityDisastersData getDisastersData() {
+    return new SingularityDisastersData(getDisasterStats(), getPreviousDisasterStats(), getActiveDisasters());
   }
 
   public void updateActiveDisasters(List<SingularityDisasterType> previouslyActiveDisasters, List<SingularityDisasterType> newActiveDisasters) {
