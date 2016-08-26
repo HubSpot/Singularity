@@ -3,7 +3,9 @@ package com.hubspot.singularity.data;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -15,6 +17,7 @@ import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDisabledAction;
 import com.hubspot.singularity.SingularityDisabledActionType;
+import com.hubspot.singularity.SingularityDisaster;
 import com.hubspot.singularity.SingularityDisasterStats;
 import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityDisastersData;
@@ -86,6 +89,9 @@ public class DisasterManager extends CuratorAsyncManager {
 
   public void removeDisaster(SingularityDisasterType disaster) {
     delete(ZKPaths.makePath(ACTIVE_DISASTERS_PATH, disaster.name()));
+    if (getActiveDisasters().isEmpty()) {
+      clearSystemGeneratedDisabledActions();
+    }
   }
 
   public boolean isDisasterActive(SingularityDisasterType disaster) {
@@ -97,6 +103,18 @@ public class DisasterManager extends CuratorAsyncManager {
     List<SingularityDisasterType> disasters = new ArrayList<>();
     for (String name : disasterNames) {
       disasters.add(SingularityDisasterType.valueOf(name));
+    }
+    return disasters;
+  }
+
+  public List<SingularityDisaster> getAllDisasterStates() {
+    return getAllDisasterStates(getActiveDisasters());
+  }
+
+  public List<SingularityDisaster> getAllDisasterStates(List<SingularityDisasterType> activeDisasters) {
+    List<SingularityDisaster> disasters = new ArrayList<>();
+    for (SingularityDisasterType type : SingularityDisasterType.values()) {
+      disasters.add(new SingularityDisaster(type, activeDisasters.contains(type)));
     }
     return disasters;
   }
@@ -118,7 +136,7 @@ public class DisasterManager extends CuratorAsyncManager {
   }
 
   public SingularityDisastersData getDisastersData() {
-    return new SingularityDisastersData(getDisasterStats(), getPreviousDisasterStats(), getActiveDisasters());
+    return new SingularityDisastersData(getDisasterStats(), getPreviousDisasterStats(), getAllDisasterStates(), isAutomatedDisabledActionsDisabled());
   }
 
   public void updateActiveDisasters(List<SingularityDisasterType> previouslyActiveDisasters, List<SingularityDisasterType> newActiveDisasters) {

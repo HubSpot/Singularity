@@ -63,7 +63,7 @@ const Navigation = (props) => {
                 <li><Link to="/racks">Racks</Link></li>
                 <li><Link to="/slaves">Slaves</Link></li>
                 <li><Link to="/webhooks">Webhooks</Link></li>
-                <li><Link to="/disabled-actions">Disabled Actions</Link></li>
+                <li><Link to="/disasters">Disasters</Link></li>
                 <li role="separator" className="divider"></li>
                 <li><Link to="/task-search">Task Search</Link></li>
               </ul>

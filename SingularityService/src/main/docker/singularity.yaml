@@ -35,3 +35,10 @@ logging:
     "com.hubspot.singularity" : TRACE
 
 enableCorsFilter: true
+
+disasterDetection:
+  enabled: true
+  disableActionsOnDisaster:
+    - BOUNCE
+    - DEPLOY
+    - TASK_RECONCILIATION

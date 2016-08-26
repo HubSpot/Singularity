@@ -1,13 +1,11 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
-
-import { FetchDisabledActions, NewDisabledAction } from '../../../actions/api/disabledActions';
-
-import FormModal from '../modal/FormModal';
+import { FetchDisabledActions, NewDisabledAction } from '../../actions/api/disasters';
+import FormModal from '../common/modal/FormModal';
 
 const DISABLED_ACTION_TYPES = ['BOUNCE', 'DEPLOY', 'SCALE', 'REMOVE', 'DECOMMISSION'];
 
-import Utils from '../../../utils';
+import Utils from '../../utils';
 
 class DeleteDisabledActionModal extends Component {
   static propTypes = {
