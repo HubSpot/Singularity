@@ -2,6 +2,9 @@ var webpack = require('webpack');
 var WebpackDevServer = require('webpack-dev-server');
 var config = require('./webpack.config');
 var path = require('path');
+var express = require('express');
+var proxy = require('http-proxy-middleware');
+
 
 var SINGULARITY_API_ROOT = process.env.SINGULARITY_API_ROOT;
 
@@ -21,16 +24,13 @@ var server = new WebpackDevServer(webpack(config), {
   proxy: {
     '/singularity/api/*': {
       target: SINGULARITY_API_ROOT,
-      rewrite: function(req) {
-        req.url = req.url.replace(/^\/singularity\/api/, '');
+      changeOrigin: true,
+      pathRewrite: {
+        '^/singularity/api/': ''
       }
     }
   }
 });
-
-// server.use('/singularity/api', function(req, res) {
-//   res.sendFile(path.join(__dirname + '/index.html'));
-// });
 
 server.listen(3223, 'localhost', function (err, result) {
   if (err) {
