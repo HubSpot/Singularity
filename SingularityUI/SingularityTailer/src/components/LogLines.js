@@ -9,7 +9,7 @@ export const LOG_LINE_HEIGHT = 14;
 
 const GROUP_OFFSET = 5000;
 
-export default class LogLines extends Component {
+class LogLines extends Component {
   constructor() {
     super();
 
@@ -93,3 +93,5 @@ LogLines.propTypes = {
 LogLines.defaultProps = {
   fakeLineCount: 0
 };
+
+export default LogLines;

@@ -3,7 +3,7 @@ import classNames from 'classnames';
 
 import Line from './Line';
 
-export default class LineRenderGroup extends Component {
+class LineRenderGroup extends Component {
   shouldComponentUpdate(nextProps) {
     return nextProps.lines !== this.props.lines;
   }

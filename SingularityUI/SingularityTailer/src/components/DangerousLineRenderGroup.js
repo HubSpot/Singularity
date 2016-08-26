@@ -42,7 +42,7 @@ const createMarkup = (lines, hrefFunc) => {
 
 // why? React reconciliation times are way slower than just generating the html
 // and setting innerHtml
-export default class DangerousLineRenderGroup extends Component {
+class DangerousLineRenderGroup extends Component {
   shouldComponentUpdate(nextProps) {
     return nextProps.lines !== this.props.lines;
   }
@@ -62,3 +62,5 @@ DangerousLineRenderGroup.propTypes = {
   lines: PropTypes.object.isRequired,
   hrefFunc: PropTypes.func
 };
+
+export default DangerousLineRenderGroup;

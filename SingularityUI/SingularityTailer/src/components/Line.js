@@ -1,7 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import classNames from 'classnames';
 
-export default class Line extends Component {
+class Line extends Component {
   shouldComponentUpdate(nextProps) {
     return (
       this.props.data.isMissingMarker !== nextProps.data.isMissingMarker
