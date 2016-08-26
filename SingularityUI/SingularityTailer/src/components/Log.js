@@ -2,6 +2,8 @@ import React, { Component, PropTypes } from 'react';
 import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
 
+import classNames from 'classnames';
+
 import Immutable from 'immutable';
 
 import connectToTailer from './connectToTailer';
@@ -9,6 +11,9 @@ import connectToTailer from './connectToTailer';
 import * as Selectors from '../selectors';
 
 import LogLines, { LOG_LINE_HEIGHT } from './LogLines';
+
+const SCROLL_LOAD_THRESHOLD = 300;
+const TAIL_INTERVAL_MS = 5000;
 
 class Log extends Component {
   constructor() {
@@ -25,6 +30,10 @@ class Log extends Component {
 
     this.fakeLineCount = 0;
     this.scrollDelta = 0;
+
+    this.state = {
+      tailing: false
+    };
   }
 
   componentDidMount() {
@@ -35,9 +44,12 @@ class Log extends Component {
     this.rafRequestId = window.requestAnimationFrame(this.pollScroll);
   }
 
-  componentWillUpdate(nextProps) {
+  componentWillUpdate(nextProps, nextState) {
     if (nextProps.lines !== this.props.lines) {
       this.invalidate = true;
+      if (this.state.tailing) {
+        this.scrollDelta = -1;
+      }
     }
 
     if (nextProps.lines.size > 1 && this.props.lines.size > 1) {
@@ -60,6 +72,14 @@ class Log extends Component {
         }
       }
     }
+
+    if (nextState.tailing && this.tailIntervalId == null) {
+      this.tailIntervalId = setInterval(() => {
+        this.loadLine(this.props.lines.size - 1, false);
+      }, TAIL_INTERVAL_MS);
+    } else if (!nextState.tailing && this.tailIntervalId != null) {
+      clearInterval(this.tailIntervalId);
+    }
   }
 
   componentDidUpdate(prevProps) {
@@ -73,6 +93,7 @@ class Log extends Component {
 
   componentWillUnmount() {
     window.cancelAnimationFrame(this.rafRequestId);
+    clearInterval(this.tailIntervalId);
   }
 
   isLineLoaded(index) {
@@ -91,32 +112,52 @@ class Log extends Component {
     const domNode = ReactDOM.findDOMNode(this);
 
     // let's update the scroll now, in a raf.
-    if (this.scrollDelta) {
+    if (this.scrollDelta > 0) {
       domNode.scrollTop += this.scrollDelta;
+      this.scrollDelta = 0;
+    } else if (this.scrollDelta === -1) {
+      domNode.scrollTop = domNode.scrollHeight;
       this.scrollDelta = 0;
     }
 
     const { scrollTop, scrollHeight, clientHeight } = domNode;
     if (scrollTop !== this.scrollTop || this.invalidate) {
       this.invalidate = false;
-      const scrollLoadThreshold = LOG_LINE_HEIGHT * 300;
-      const atTop = (scrollTop - this.fakeLineCount * LOG_LINE_HEIGHT) <= scrollLoadThreshold;
-      const atBottom = scrollTop >= (scrollHeight - clientHeight - scrollLoadThreshold);
+      const scrollLoadThreshold = LOG_LINE_HEIGHT * SCROLL_LOAD_THRESHOLD;
+      const nearTop = (scrollTop - this.fakeLineCount * LOG_LINE_HEIGHT) <= scrollLoadThreshold;
+      const nearBottom = scrollTop >= (scrollHeight - clientHeight - scrollLoadThreshold);
+      const atBottom = scrollTop === (scrollHeight - clientHeight);
 
       const { lines } = this.props;
-      if (atTop && atBottom && lines.size === 1) {
+      if (nearTop && nearBottom && lines.size === 1) {
         // wait until the first chunk is loaded.
       } else {
         // we are at the top/bottom, load some stuff.
-        if (atTop && !this.isLineLoaded(0)) {
+        if (nearTop && !this.isLineLoaded(0)) {
+          // don't dispatch in the raf, do it later
           setTimeout(() => this.loadLine(0, true), 0);
         }
 
-        if (atBottom) {
-          if (lines.size) {
+        if (nearBottom && lines.size) {
+          // if we haven't reached the end of the file yet
+          if (lines.last().isMissingMarker) {
+            // don't dispatch in the raf, do it later
             setTimeout(() => this.loadLine(lines.size - 1, false), 0);
+          } else if (atBottom) {
+            // we're tailing here.
+            if (!this.state.tailing) {
+              this.setState({
+                tailing: true
+              });
+            }
           }
         }
+      }
+
+      if (!atBottom && this.state.tailing) {
+        this.setState({
+          tailing: false
+        });
       }
       // update the scroll position.
       this.scrollTop = domNode.scrollTop;
@@ -146,8 +187,13 @@ class Log extends Component {
       ? (offset) => props.hrefFunc(props.tailerId, offset)
       : undefined;
 
+    const logPaneClasses = classNames({
+      'log-pane': true,
+      tailing: this.state.tailing
+    });
+
     return (
-      <section className="log-pane">
+      <section className={logPaneClasses}>
         <div className="log-line-wrapper">
           <LogLines
             isLoaded={props.isLoaded}
