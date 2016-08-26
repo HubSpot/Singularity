@@ -36,6 +36,14 @@ class Log extends Component {
     };
   }
 
+  componentWillMount() {
+    if (this.props.goToOffset === -1 && !this.state.tailing) {
+      this.setState({
+        tailing: true
+      });
+    }
+  }
+
   componentDidMount() {
     if (!this.props.isLoaded) {
       this.props.initializeFile(this.props.goToOffset);
