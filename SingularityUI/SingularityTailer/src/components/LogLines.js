@@ -3,8 +3,6 @@ import { List } from 'immutable';
 
 import DangerousLineRenderGroup from './DangerousLineRenderGroup';
 
-import '../styles/ansi.scss';
-
 export const LOG_LINE_HEIGHT = 14;
 
 const GROUP_OFFSET = 5000;

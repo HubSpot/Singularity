@@ -1,8 +1,5 @@
 import React, { PropTypes } from 'react';
 
-import 'react-virtualized/styles.css';
-import '../styles/index.scss';
-
 const Pane = ({logHeader, logComponent, logFooter}) => {
   return (
     <div>

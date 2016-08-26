@@ -3,8 +3,6 @@ import Immutable from 'immutable';
 
 import Line from './Line';
 
-import '../styles/ansi.scss';
-
 export const LOG_LINE_HEIGHT = 14;
 
 const SimpleLogLines = (props) => {

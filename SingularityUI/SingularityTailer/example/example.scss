@@ -43,6 +43,9 @@ body {
   color: #839496;
   background-color: #002b36;
 
+  &.tailing {
+  }
+
   .log-row {
     &:hover {
       a.line-link {

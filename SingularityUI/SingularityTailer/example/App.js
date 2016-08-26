@@ -9,6 +9,9 @@ import { sandboxSetApiRoot } from '../src/actions';
 
 import './example.scss';
 
+import '../src/styles/ansi.scss';
+import '../src/styles/index.scss';
+
 class App extends Component {
   constructor() {
     super();
