@@ -1,6 +1,7 @@
 package com.hubspot.singularity;
 
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -10,15 +11,18 @@ import com.google.common.base.Optional;
 public class SingularityDisastersData {
   private final Optional<SingularityDisasterStats> currentStats;
   private final Optional<SingularityDisasterStats> lastStats;
-  private final List<SingularityDisasterType> activeDisasters;
+  private final List<SingularityDisaster> disasters;
+  private final boolean automatedActionDisabled;
 
   @JsonCreator
   public SingularityDisastersData(@JsonProperty("currentStats") Optional<SingularityDisasterStats> currentStats,
                                   @JsonProperty("lastStats") Optional<SingularityDisasterStats> lastStats,
-                                  @JsonProperty("activeDisasters") List<SingularityDisasterType> activeDisasters) {
+                                  @JsonProperty("disasterStates") List<SingularityDisaster> disasters,
+                                  @JsonProperty("automatedActionDisabled") boolean automatedActionDisabled) {
     this.currentStats = currentStats;
     this.lastStats = lastStats;
-    this.activeDisasters = activeDisasters;
+    this.disasters = disasters;
+    this.automatedActionDisabled = automatedActionDisabled;
   }
 
   public Optional<SingularityDisasterStats> getCurrentStats() {
@@ -29,8 +33,12 @@ public class SingularityDisastersData {
     return lastStats;
   }
 
-  public List<SingularityDisasterType> getActiveDisasters() {
-    return activeDisasters;
+  public List<SingularityDisaster> getDisasters() {
+    return disasters;
+  }
+
+  public boolean isautomatedActionsDisabled() {
+    return automatedActionDisabled;
   }
 
   @Override
@@ -42,14 +50,15 @@ public class SingularityDisastersData {
       return false;
     }
     SingularityDisastersData that = (SingularityDisastersData) o;
-    return Objects.equal(currentStats, that.currentStats) &&
+    return automatedActionDisabled == that.automatedActionDisabled &&
+      Objects.equal(currentStats, that.currentStats) &&
       Objects.equal(lastStats, that.lastStats) &&
-      Objects.equal(activeDisasters, that.activeDisasters);
+      Objects.equal(disasters, that.disasters);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(currentStats, lastStats, activeDisasters);
+    return Objects.hashCode(currentStats, lastStats, disasters, automatedActionDisabled);
   }
 
   @Override
@@ -57,7 +66,8 @@ public class SingularityDisastersData {
     return Objects.toStringHelper(this)
       .add("currentStats", currentStats)
       .add("lastStats", lastStats)
-      .add("activeDisasters", activeDisasters)
+      .add("disasters", disasters)
+      .add("automatedActionDisabled", automatedActionDisabled)
       .toString();
   }
 }

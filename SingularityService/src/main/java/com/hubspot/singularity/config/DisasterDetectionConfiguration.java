@@ -1,5 +1,6 @@
 package com.hubspot.singularity.config;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -19,8 +20,7 @@ public class DisasterDetectionConfiguration {
 
   @JsonProperty("disableActionsOnDisaster")
   @NotNull
-  private List<SingularityDisabledActionType> disableActionsOnDisaster = ImmutableList.of(
-    SingularityDisabledActionType.BOUNCE, SingularityDisabledActionType.DEPLOY, SingularityDisabledActionType.TASK_RECONCILIATION);
+  private List<SingularityDisabledActionType> disableActionsOnDisaster = Collections.emptyList();
 
   private boolean checkLateTasks = true;
 

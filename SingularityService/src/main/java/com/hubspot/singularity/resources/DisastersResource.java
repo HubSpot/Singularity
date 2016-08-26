@@ -16,7 +16,6 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDisabledAction;
 import com.hubspot.singularity.SingularityDisabledActionType;
-import com.hubspot.singularity.SingularityDisasterStats;
 import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityService;

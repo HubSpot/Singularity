@@ -2,6 +2,7 @@ package com.hubspot.singularity.scheduler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -196,7 +197,7 @@ public class SingularityDisasterDetectionPoller extends SingularityLeaderOnlyPol
       return;
     }
 
-    SingularityDisastersData data = new SingularityDisastersData(Optional.of(stats), lastStats, disasters);
+    SingularityDisastersData data = new SingularityDisastersData(Optional.of(stats), lastStats, disasterManager.getAllDisasterStates(disasters), disasterManager.isAutomatedDisabledActionsDisabled());
 
     final String body = String.format("New disasters detected. Data: %s ", data);
     final String subject = String.format("Disaster(s) Detected %s", disasters);
