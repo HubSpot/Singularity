@@ -62,5 +62,3 @@ DangerousLineRenderGroup.propTypes = {
   lines: PropTypes.object.isRequired,
   hrefFunc: PropTypes.func
 };
-
-export default DangerousLineRenderGroup;
