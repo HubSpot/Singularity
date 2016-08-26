@@ -198,6 +198,105 @@ export const sandboxFetchTail = (id, taskId, path, config) => {
   };
 };
 
+/* BLAZAR LOG API */
+export const BLAZAR_LOG_MAX_BYTES = 65535;
+
+// must be used before calling a fetch
+// this sets the Blazar API root
+export const BLAZAR_SET_API_ROOT = `${frameworkName}_BLAZAR_SET_API_ROOT`;
+export const blazarSetApiRoot = (apiRoot) => ({
+  type: BLAZAR_SET_API_ROOT,
+  apiRoot
+});
+
+export const blazarLogFetchChunk = (id, buildId, start, end, config) => {
+  return (dispatch) => {
+    if (start === end) {
+      console.log('skipping', start, end)
+      return Promise.resolve();
+    }
+
+    dispatch(
+      fetchChunkStarted('BLAZAR_LOG', id, start, end)
+    );
+
+    const apiRoot = config.blazarApiRoot;
+    const query = `?offset=${start}&length=${end - start}`;
+    const apiPath = `${apiRoot}/modules/builds/${buildId}/log${query}`;
+
+    return fetch(apiPath, {credentials: 'include'})
+      .then(checkStatus)
+      .then(parseJSON)
+      .then(({data, offset}) => {
+        // the API lies, so let's just figure out the bytelength ourselves
+        // this code can't take lies.
+        const encodedData = TE.encode(data);
+        const byteLength = encodedData.byteLength;
+        return dispatch(addFileChunk(id, {
+          text: data,
+          start: offset,
+          end: offset + byteLength,
+          byteLength
+        }, start, end));
+      }).catch((error) => {
+        return dispatch(
+          fetchChunkError('BLAZAR_LOG', id, start, end, error)
+        );
+      });
+  };
+};
+
+const BLAZAR_LOG_FETCH_LENGTH = `${frameworkName}_BLAZAR_LOG_FETCH_LENGTH`;
+
+export const BLAZAR_LOG_FETCH_LENGTH_STARTED = `${BLAZAR_LOG_FETCH_LENGTH}_STARTED`;
+export const BLAZAR_LOG_FETCH_LENGTH_ERROR = `${BLAZAR_LOG_FETCH_LENGTH}_ERROR`;
+
+export const blazarLogFetchLength = (id, buildId, config) => {
+  return (dispatch) => {
+    dispatch({
+      type: BLAZAR_LOG_FETCH_LENGTH_STARTED,
+      startedAt: Date.now(),
+      id
+    });
+
+    const apiRoot = config.blazarApiRoot;
+    const apiPath = `${apiRoot}/modules/builds/${buildId}/log/size`;
+
+    return fetch(apiPath, {credentials: 'include'})
+      .then(checkStatus)
+      .then(parseJSON)
+      .then(({size}) => {
+        return dispatch(setFileSize(id, size));
+      }).catch((error) => {
+        return dispatch({
+          type: BLAZAR_LOG_FETCH_LENGTH_ERROR,
+          name: error.name,
+          message: error.message
+        });
+      });
+  };
+};
+
+export const BLAZAR_LOG_FETCH_TAIL = `${frameworkName}_BLAZAR_LOG_FETCH_TAIL`;
+export const blazarLogFetchTail = (id, buildId, config) => {
+  return (dispatch) => {
+    dispatch(blazarLogFetchLength(id, buildId, config)).then(
+      (lengthAction) => {
+        const start = Math.max(lengthAction.fileSize - BLAZAR_LOG_MAX_BYTES, 0);
+        const end = start + BLAZAR_LOG_MAX_BYTES;
+
+        return dispatch(blazarLogFetchChunk(
+          id,
+          buildId,
+          start,
+          end,
+          config
+        ));
+      }
+    );
+  };
+};
+
 /* STANDARD HTTP API */
 export const httpFetchChunk = (id, path, start, end) => {
   return (dispatch) => {

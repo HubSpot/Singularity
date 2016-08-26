@@ -19,10 +19,10 @@ const createMarkup = (lines, hrefFunc) => {
       lineContents = `<span>${escapeHtml(missingBytes)} bytes</span>`;
     } else if (data.ansi) {
       const ansiStyled = data.ansi.map((part) => (
-        `<span ${part.classes ? escapeHtml(part.classes) : ''}>${escapeHtml(part.content)}</span>`
+        `<span class="${part.classes ? escapeHtml(part.classes) : ''}">${escapeHtml(part.content)}</span>`
       ));
 
-      lineContents = ansiStyled;
+      lineContents = ansiStyled.join('');
     } else {
       lineContents = escapeHtml(data.text);
     }

@@ -28,7 +28,7 @@ export const createMissingMarker = (start, end) => ({
 export const splitChunkIntoLines = (chunk) => {
   const { text, start } = chunk; // { end, byteLength } should also be provided
 
-  const lines = new List(text.split('\n'));
+  const lines = new List(text.split(/[\n\r]/));
   const byteLengths = lines.map((line) => TE.encode(line).byteLength);
 
   let partialLines = new List();
@@ -394,6 +394,34 @@ export const addChunkReducer = (state, action) => {
   // has been init but has no new data
   if (!chunk.byteLength) {
     return state;
+  }
+
+  // if length came back as 0 quick fix
+  if (!state[id].chunks.size) {
+    const chunks = mergeChunks(new List(), chunk);
+    const bookends = getBookends(chunks);
+    let lines = createLines(chunks);
+
+    if (bookends.start !== 0) {
+      lines = lines.unshift(
+        createMissingMarker(0, bookends.start)
+      );
+    }
+
+    if (bookends.end < state[id].fileSize) {
+      lines = lines.push(
+        createMissingMarker(bookends.end, state[id].fileSize)
+      );
+    }
+
+    return {
+      ...state,
+      [id]: {
+        chunks,
+        lines,
+        fileSize: Math.max(bookends.end, state[id].fileSize)
+      }
+    };
   }
 
   // has been init and has new data

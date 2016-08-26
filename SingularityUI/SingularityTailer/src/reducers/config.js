@@ -1,5 +1,6 @@
 import {
   SANDBOX_SET_API_ROOT,
+  BLAZAR_SET_API_ROOT,
   TOGGLE_ANSI_COLORING,
   TOGGLE_FETCH_OVERSCAN
 } from '../actions';
@@ -15,6 +16,11 @@ const configReducer = (state = initialState, action) => {
       return {
         ...state,
         singularityApiRoot: action.apiRoot
+      };
+    case BLAZAR_SET_API_ROOT:
+      return {
+        ...state,
+        blazarApiRoot: action.apiRoot
       };
     case TOGGLE_ANSI_COLORING:
       return {

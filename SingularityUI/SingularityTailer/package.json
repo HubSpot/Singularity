@@ -1,6 +1,6 @@
 {
   "name": "singularityui-tailer",
-  "version": "0.3.0",
+  "version": "0.2.0",
   "description": "A robust log tailer",
   "author": "Danny Wolf <dwolf@hubspot.com>",
   "contributors": [
@@ -29,21 +29,19 @@
     "singularity",
     "mesos",
     "log",
-    "viewer"
+    "viewer",
+    "tailer"
   ],
   "dependencies": {
     "anser": "^1.1.0",
     "babel-runtime": "^6.9.2",
     "classnames": "^2.2.5",
-    "clipboard": "^1.5.12",
     "escape-html": "^1.0.3",
     "immutable": "^3.8.1",
     "isomorphic-fetch": "^2.2.1",
     "react": "^15.2.1",
     "react-addons-shallow-compare": "^15.2.1",
-    "react-bootstrap": "^0.29.5",
     "react-redux": "^4.4.5",
-    "react-virtualized": "^7.19.0",
     "redux": "^3.5.2",
     "reselect": "^2.5.3",
     "text-encoding": "^0.6.0"
