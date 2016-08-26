@@ -126,7 +126,7 @@ class SandboxTailer extends Component {
         loadLine={this.loadLine}
         tailLog={this.tailLog}
         goToOffset={this.props.goToOffset}
-        linkRenderer={this.props.linkRenderer}
+        hrefFunc={this.props.hrefFunc}
       />
     );
   }
@@ -143,7 +143,7 @@ SandboxTailer.propTypes = {
   unloadFile: PropTypes.func.isRequired,
   unloadFileChunk: PropTypes.func.isRequired,
   goToOffset: PropTypes.number,
-  linkRenderer: PropTypes.func
+  hrefFunc: PropTypes.func
 };
 
 const mapStateToProps = (state, ownProps) => ({

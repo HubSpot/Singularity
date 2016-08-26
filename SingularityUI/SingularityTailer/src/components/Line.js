@@ -12,7 +12,7 @@ export default class Line extends Component {
   }
 
   render() {
-    const { data, linkRenderer } = this.props;
+    const { data, hrefFunc } = this.props;
     let lineContents;
 
     const classes = classNames({
@@ -37,8 +37,8 @@ export default class Line extends Component {
     }
 
     let maybeLink;
-    if (linkRenderer) {
-      maybeLink = linkRenderer(data.start);
+    if (hrefFunc) {
+      maybeLink = <a className="line-link" href={hrefFunc(data.start)}>@</a>;
     }
 
     return (
@@ -52,7 +52,7 @@ export default class Line extends Component {
 
 Line.propTypes = {
   data: PropTypes.object.isRequired,
-  linkRenderer: PropTypes.func
+  hrefFunc: PropTypes.func
 };
 
 export default Line;

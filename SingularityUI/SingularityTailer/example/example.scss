@@ -32,6 +32,7 @@ body {
 .app-content {
   flex: 1 1 auto;
   display: flex;
+  min-height: 0;
 }
 
 .app-footer {
@@ -41,4 +42,34 @@ body {
 .log-pane {
   color: #839496;
   background-color: #002b36;
+
+  .log-row {
+    &:hover {
+      a.line-link {
+        visibility: visible;
+      }
+    }
+
+    a.line-link {
+      padding: 0 5px;
+      visibility: hidden;
+      text-decoration: none;
+
+      &:link {
+        color: white;
+      }
+
+      &:visited {
+        color: white;
+      }
+
+      &:hover {
+        color: gray;
+      }
+
+      &:active {
+        color: darkgray;
+      }
+    }
+  }
 }

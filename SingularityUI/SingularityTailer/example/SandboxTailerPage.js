@@ -1,22 +1,15 @@
 import React, { PropTypes } from 'react';
-import { Link } from 'react-router';
 import { SandboxTailer } from '../src/components';
 
 const SandboxTailerPage = ({params, location: {query}}) => {
   const taskId = params.taskId;
   const path = params.splat;
 
-  const myLinkRenderer = (id, offset) => {
-    return (
-      <span className="default-tailer-link">
-        <Link to={`${taskId}/tail/${path}?goToOffset=${offset}`}>
-          @
-        </Link>
-      </span>
-    );
+  const myHrefFunc = (id, offset) => {
+    return `/${taskId}/tail/${path}?goToOffset=${offset}`;
   };
 
-  myLinkRenderer.propTypes = {
+  myHrefFunc.propTypes = {
     id: PropTypes.string.isRequired,
     offset: PropTypes.number
   };
@@ -32,7 +25,7 @@ const SandboxTailerPage = ({params, location: {query}}) => {
       taskId={taskId}
       path={path}
       goToOffset={goToOffset}
-      linkRenderer={myLinkRenderer}
+      hrefFunc={myHrefFunc}
     />
   );
 };

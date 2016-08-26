@@ -4,7 +4,9 @@ section.log-pane {
   flex-flow: column;
   width: 100%;
 
-  overflow-y: scroll;
+  overflow: scroll;
+  // will repaint on scroll if you don't put this in!!!
+  transform: translateZ(0);
 
   font-family: Consolas, "Liberation Mono", Courier, monospace;
 
@@ -14,48 +16,18 @@ section.log-pane {
 
   div.log-line-wrapper {
     flex: 1 1 auto;
+    min-height: 0; // firefox
+  }
+
+  .render-group {
   }
 
   .log-row {
-    white-space: nowrap;
     font-size: 12px;
     line-height: 12px;
     height: 14px;
     padding: 0;
     white-space: pre;
-
-
-    &:hover {
-      .default-tailer-link {
-        visibility: visible;
-      }
-    }
-
-    .default-tailer-link {
-      padding: 0 5px;
-      visibility: hidden;
-      transform: translateZ(0);
-
-      a {
-        text-decoration: none;
-      }
-
-      a:link {
-        color: white;
-      }
-
-      a:visited {
-        color: white;
-      }
-
-      a:hover {
-        color: gray;
-      }
-
-      a:active {
-        color: darkgray;
-      }
-    }
 
     span:last-child {
       padding-right: 10px;
@@ -68,14 +40,6 @@ section.log-pane {
     &.loading {
       background-color: rgba(255, 255, 255, 0.4);
     }
-  }
-
-  .Grid__innerScrollContainer {
-    overflow: visible;
-  }
-
-  .Grid {
-    overflow-x: scroll !important;
   }
 
   footer {

@@ -109,12 +109,12 @@ class Log extends Component {
       } else {
         // we are at the top/bottom, load some stuff.
         if (atTop && !this.isLineLoaded(0)) {
-          this.loadLine(0, true);
+          setTimeout(() => this.loadLine(0, true), 0);
         }
 
         if (atBottom) {
           if (lines.size) {
-            this.loadLine(lines.size - 1, false);
+            setTimeout(() => this.loadLine(lines.size - 1, false), 0);
           }
         }
       }
@@ -142,8 +142,8 @@ class Log extends Component {
   render() {
     const { props } = this;
 
-    const linkRenderer = props.linkRenderer
-      ? (offset) => props.linkRenderer(props.tailerId, offset)
+    const hrefFunc = props.hrefFunc
+      ? (offset) => props.hrefFunc(props.tailerId, offset)
       : undefined;
 
     return (
@@ -154,7 +154,7 @@ class Log extends Component {
             lines={props.lines}
             fakeLineCount={this.fakeLineCount}
             isLineLoaded={this.isLineLoaded}
-            linkRenderer={linkRenderer}
+            hrefFunc={hrefFunc}
           />
         </div>
       </section>
@@ -165,7 +165,7 @@ class Log extends Component {
 Log.propTypes = {
   tailerId: PropTypes.string.isRequired,
   goToOffset: PropTypes.number,
-  linkRenderer: PropTypes.func,
+  hrefFunc: PropTypes.func,
   // from connectToTailer HOC
   getTailerState: PropTypes.func.isRequired,
   // from tailer implementation
