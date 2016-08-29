@@ -53,11 +53,11 @@ def base_directory_files(args, task):
     files_json = get_json_response(uri, args)
     if 'files' in files_json:
         files = files_json['files']
-        return [f['name'] for f in files if valid_logfile(f)]
+        return [f['name'] for f in files if is_valid_tail_log(f)]
     else:
-        return [f['path'].rsplit('/')[-1] for f in files_json if valid_logfile(f)]
+        return [f['path'].rsplit('/')[-1] for f in files_json if is_valid_tail_log(f)]
 
-def valid_logfile(file_data):
+def is_valid_tail_log(file_data):
     not_a_directory = not file_data['mode'].startswith('d')
     is_a_logfile = fnmatch.fnmatch(file_data['name'], '*.log') or fnmatch.fnmatch(file_data['name'], '*.out') or fnmatch.fnmatch(file_data['name'], '*.err')
     return not_a_directory and is_a_logfile
