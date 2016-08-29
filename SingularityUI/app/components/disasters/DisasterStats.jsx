@@ -12,11 +12,15 @@ function DisasterStats (props) {
       </Section>
     );
   }
-  // need better way to show this
+
   let stats = [];
   for (var key in props.stats[0]) {
     if (!props.stats[0].hasOwnProperty(key)) continue;
-    stats.push(<InfoBox key={key} copyableClassName="info-copyable" name={key} value={props.stats[0][key]} />)
+    let value = props.stats[0][key];
+    if (key == 'timestamp') {
+      value = Utils.timestampFromNow(value);
+    }
+    stats.push(<InfoBox key={key} copyableClassName="info-copyable" name={key} value={value} />)
   }
   return (
     <Section title="Current Statistics">
