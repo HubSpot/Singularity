@@ -97,9 +97,7 @@ def base_directory_files(args, task, files_json):
 
 def is_valid_live_log(args, file_data):
     is_in_range = logfetch_base.is_in_date_range(args, file_data['mtime'])
-    not_a_directory = not file_data['mode'].startswith('d')
-    is_a_logfile = fnmatch.fnmatch(file_data['name'], '*.log') or fnmatch.fnmatch(file_data['name'], '*.out') or fnmatch.fnmatch(file_data['name'], '*.err')
-    return is_in_range and not_a_directory and is_a_logfile
+    return is_in_range and logfetch_base.is_valid_log(file_data)
 
 def should_download(args, filename, task):
     if args.use_cache and already_downloaded(args, filename):
