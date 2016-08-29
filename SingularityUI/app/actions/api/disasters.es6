@@ -55,6 +55,6 @@ export const NewDisabledAction = buildJsonApiAction(
   'POST',
   (type, message) => ({
     url: `/disasters/disabled-actions/${ type }`,
-    body: message
+    body: message == null ? {type: type} : {message: message, type: type}
   })
 );
