@@ -57,9 +57,9 @@ def base_directory_files(args, task):
     else:
         return [f['path'].rsplit('/')[-1] for f in files_json if valid_logfile(f)]
 
-def valid_logfile(fileData):
-    not_a_directory = not fileData['mode'].startswith('d')
-    is_a_logfile = fnmatch.fnmatch(fileData['name'], '*.log') or fnmatch.fnmatch(fileData['name'], '*.out') or fnmatch.fnmatch(fileData['name'], '*.err')
+def valid_logfile(file_data):
+    not_a_directory = not file_data['mode'].startswith('d')
+    is_a_logfile = fnmatch.fnmatch(file_data['name'], '*.log') or fnmatch.fnmatch(file_data['name'], '*.out') or fnmatch.fnmatch(file_data['name'], '*.err')
     return not_a_directory and is_a_logfile
 
 class LogStreamer(threading.Thread):
