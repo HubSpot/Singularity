@@ -116,7 +116,7 @@ public final class JavaUtils {
   }
 
   public static String durationFromMillis(final long millis) {
-    return DurationFormatUtils.formatDuration(millis, DURATION_FORMAT);
+    return DurationFormatUtils.formatDuration(Math.max(millis, 0), DURATION_FORMAT);
   }
 
   public static Thread awaitTerminationWithLatch(final CountDownLatch latch, final String threadNameSuffix, final ExecutorService service, final long millis) {
