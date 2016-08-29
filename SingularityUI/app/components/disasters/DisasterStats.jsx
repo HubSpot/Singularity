@@ -5,17 +5,18 @@ import Section from '../common/Section';
 import { InfoBox } from '../common/statelessComponents';
 
 function DisasterStats (props) {
-  if (_.isUndefined(props.currentStats)) {
+  if (_.isUndefined(props.stats) || props.stats.length == 0) {
     return (
       <Section title="Current Statistics">
         <p>Nothing to show</p>
       </Section>
     );
   }
+  // need better way to show this
   let stats = [];
-  for (var key in props.currentStats) {
-    if (!props.currentStats.hasOwnProperty(key)) continue;
-    stats.push(<InfoBox key={key} copyableClassName="info-copyable" name={key} value={props.currentStats[key]} />)
+  for (var key in props.stats[0]) {
+    if (!props.stats[0].hasOwnProperty(key)) continue;
+    stats.push(<InfoBox key={key} copyableClassName="info-copyable" name={key} value={props.stats[0][key]} />)
   }
   return (
     <Section title="Current Statistics">
@@ -27,8 +28,16 @@ function DisasterStats (props) {
 }
 
 DisasterStats.propTypes = {
-  currentStats: React.PropTypes.object,
-  lastStats:  React.PropTypes.object,
+  stats: PropTypes.arrayOf(PropTypes.shape({
+    timestamp: PropTypes.number.isRequired,
+    numActiveTasks: PropTypes.number.isRequired,
+    numPendingTasks: PropTypes.number.isRequired,
+    numLateTasks: PropTypes.number.isRequired,
+    avgTaskLagMillis: PropTypes.number.isRequired,
+    numLostTasks: PropTypes.number.isRequired,
+    numActiveSlaves: PropTypes.number.isRequired,
+    numLostSlaves: PropTypes.number.isRequired
+  }))
 };
 
 export default DisasterStats;
