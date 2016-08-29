@@ -24,9 +24,9 @@ public class MesosClient {
 
   private static final Logger LOG = LoggerFactory.getLogger(MesosClient.class);
 
-  private static final String MASTER_STATE_FORMAT = "http://%s/master/state.json";
-  private static final String MESOS_SLAVE_JSON_URL = "http://%s:5051/slave(1)/state.json";
-  private static final String MESOS_SLAVE_STATISTICS_URL = "http://%s:5051/monitor/statistics.json";
+  private static final String MASTER_STATE_FORMAT = "http://%s/master/state";
+  private static final String MESOS_SLAVE_JSON_URL = "http://%s:5051/slave(1)/state";
+  private static final String MESOS_SLAVE_STATISTICS_URL = "http://%s:5051/monitor/statistics";
 
   private static final TypeReference<List<MesosTaskMonitorObject>> TASK_MONITOR_TYPE_REFERENCE = new TypeReference<List<MesosTaskMonitorObject>>() {};
 

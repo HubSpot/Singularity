@@ -10,6 +10,7 @@ import javax.inject.Singleton;
 
 import org.apache.mesos.Protos;
 import org.apache.mesos.Protos.Offer;
+import org.apache.mesos.Protos.TaskStatus.Reason;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
@@ -87,8 +88,8 @@ public class SingularityMesosScheduler implements Scheduler {
       SingularitySchedulerPriority schedulerPriority, SingularityNewTaskChecker newTaskChecker, SingularityMesosTaskBuilder mesosTaskBuilder, SingularityLogSupport logSupport, RequestManager requestManager,
       Provider<SingularitySchedulerStateCache> stateCacheProvider, SingularityHealthchecker healthchecker, DeployManager deployManager, SingularityExceptionNotifier exceptionNotifier,SingularityMesosFrameworkMessageHandler messageHandler,
       @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId, SchedulerDriverSupplier schedulerDriverSupplier, SingularityTaskSizeOptimizer taskSizeOptimizer, final IdTranscoder<SingularityTaskId> taskIdTranscoder, CustomExecutorConfiguration customExecutorConfiguration) {
-    this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0);
-    this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0);
+    this.defaultResources = new Resources(mesosConfiguration.getDefaultCpus(), mesosConfiguration.getDefaultMemory(), 0, mesosConfiguration.getDefaultDisk());
+    this.defaultCustomExecutorResources = new Resources(customExecutorConfiguration.getNumCpus(), customExecutorConfiguration.getMemoryMb(), 0, customExecutorConfiguration.getDiskMb());
     this.taskManager = taskManager;
     this.deployManager = deployManager;
     this.schedulerPriority = schedulerPriority;
@@ -127,8 +128,8 @@ public class SingularityMesosScheduler implements Scheduler {
     LOG.info("Received {} offer(s)", offers.size());
 
     for (Offer offer : offers) {
-      LOG.debug("Received offer from {} ({}) for {} cpu(s), {} memory, and {} ports", offer.getHostname(), offer.getSlaveId().getValue(), MesosUtils.getNumCpus(offer), MesosUtils.getMemory(offer),
-          MesosUtils.getNumPorts(offer));
+      LOG.debug("Received offer ID {} from {} ({}) for {} cpu(s), {} memory, {} ports, and {} disk", offer.getId().getValue(), offer.getHostname(), offer.getSlaveId().getValue(), MesosUtils.getNumCpus(offer), MesosUtils.getMemory(offer),
+          MesosUtils.getNumPorts(offer), MesosUtils.getDisk(offer));
     }
 
     final long start = System.currentTimeMillis();
@@ -217,7 +218,7 @@ public class SingularityMesosScheduler implements Scheduler {
   private Optional<SingularityTask> match(Collection<SingularityTaskRequest> taskRequests, SingularitySchedulerStateCache stateCache, SingularityOfferHolder offerHolder) {
 
     for (SingularityTaskRequest taskRequest : taskRequests) {
-      final Resources taskResources = taskRequest.getDeploy().getResources().or(defaultResources);
+      final Resources taskResources = taskRequest.getPendingTask().getResources().or(taskRequest.getDeploy().getResources()).or(defaultResources);
 
       // only factor in executor resources if we're running a custom executor
       final Resources executorResources = taskRequest.getDeploy().getCustomExecutorCmd().isPresent() ? taskRequest.getDeploy().getCustomExecutorResources().or(defaultCustomExecutorResources) : Resources.EMPTY_RESOURCES;
@@ -305,9 +306,14 @@ public class SingularityMesosScheduler implements Scheduler {
   private Optional<String> getStatusMessage(Protos.TaskStatus status, Optional<SingularityTask> task) {
     if (status.hasMessage() && !Strings.isNullOrEmpty(status.getMessage())) {
       return Optional.of(status.getMessage());
-    } else if (status.hasReason() && status.getReason() == Protos.TaskStatus.Reason.REASON_MEMORY_LIMIT) {
+    } else if (status.hasReason() && status.getReason() == Reason.REASON_CONTAINER_LIMITATION_MEMORY) {
       if (task.isPresent() && task.get().getTaskRequest().getDeploy().getResources().isPresent()) {
-          return Optional.of(String.format("Task exceeded memory limit of %s MB", task.get().getTaskRequest().getDeploy().getResources().get().getMemoryMb()));
+        if (task.get().getTaskRequest().getDeploy().getResources().get().getDiskMb() > 0) {
+          return Optional.of(String.format("Task exceeded one or more memory limits (%s MB mem, %s MB disk).", task.get().getTaskRequest().getDeploy().getResources().get().getMemoryMb(), task.get().getTaskRequest().getDeploy().getResources().get().getDiskMb()));
+        } else {
+          return Optional.of(String.format("Task exceeded memory limit (%s MB mem).", task.get().getTaskRequest().getDeploy().getResources().get().getMemoryMb()));
+        }
+
       }
       return Optional.of("Task exceeded memory limit");
     }

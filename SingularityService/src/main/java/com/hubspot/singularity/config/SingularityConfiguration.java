@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.TimeZone;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Max;
@@ -147,6 +146,8 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean deleteRemovedRequestsFromLoadBalancer = false;
 
+  private Optional<String> taskLabelForLoadBalancerUpstreamGroup = Optional.absent();
+
   private int logFetchMaxThreads = 15;
 
   private int maxDeployIdSize = 50;
@@ -168,6 +169,10 @@ public class SingularityConfiguration extends Configuration {
   @JsonProperty("mesos")
   @Valid
   private MesosConfiguration mesosConfiguration;
+
+  @JsonProperty("network")
+  @Valid
+  private NetworkConfiguration networkConfiguration = new NetworkConfiguration();
 
   private int newTaskCheckerBaseDelaySeconds = 1;
 
@@ -523,6 +528,10 @@ public class SingularityConfiguration extends Configuration {
     return mesosConfiguration;
   }
 
+  public NetworkConfiguration getNetworkConfiguration() {
+    return networkConfiguration;
+  }
+
   public int getNewTaskCheckerBaseDelaySeconds() {
     return newTaskCheckerBaseDelaySeconds;
   }
@@ -843,6 +852,10 @@ public class SingularityConfiguration extends Configuration {
     this.mesosConfiguration = mesosConfiguration;
   }
 
+  public void setNetworkConfiguration(NetworkConfiguration networkConfiguration) {
+    this.networkConfiguration = networkConfiguration;
+  }
+
   public void setNewTaskCheckerBaseDelaySeconds(int newTaskCheckerBaseDelaySeconds) {
     this.newTaskCheckerBaseDelaySeconds = newTaskCheckerBaseDelaySeconds;
   }
@@ -1017,5 +1030,13 @@ public class SingularityConfiguration extends Configuration {
 
   public void setTaskHistoryQueryUsesZkFirst(boolean taskHistoryQueryUsesZkFirst) {
     this.taskHistoryQueryUsesZkFirst = taskHistoryQueryUsesZkFirst;
+  }
+
+  public Optional<String> getTaskLabelForLoadBalancerUpstreamGroup() {
+    return taskLabelForLoadBalancerUpstreamGroup;
+  }
+
+  public void setTaskLabelForLoadBalancerUpstreamGroup(Optional<String> taskLabelForLoadBalancerUpstreamGroup) {
+    this.taskLabelForLoadBalancerUpstreamGroup = taskLabelForLoadBalancerUpstreamGroup;
   }
 }

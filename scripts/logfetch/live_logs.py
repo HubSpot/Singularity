@@ -5,7 +5,7 @@ import callbacks
 import logfetch_base
 from termcolor import colored
 
-DOWNLOAD_FILE_FORMAT = 'http://{0}:5051/files/download.json'
+DOWNLOAD_FILE_FORMAT = 'http://{0}:5051/files/download'
 BROWSE_FOLDER_FORMAT = '{0}/sandbox/{1}/browse'
 TASK_HISTORY_FORMAT = '{0}/history/task/{1}'
 

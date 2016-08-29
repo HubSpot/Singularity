@@ -292,22 +292,30 @@ public class TaskResource {
 
     final long now = System.currentTimeMillis();
 
-    final SingularityTaskCleanup taskCleanup = new SingularityTaskCleanup(JavaUtils.getUserEmail(user), cleanupType, now,
-        task.getTaskId(), message, actionId);
+    final SingularityTaskCleanup taskCleanup;
 
     if (override.isPresent() && override.get().booleanValue()) {
+      cleanupType = TaskCleanupType.USER_REQUESTED_DESTROY;
+      taskCleanup = new SingularityTaskCleanup(JavaUtils.getUserEmail(user), cleanupType, now,
+        task.getTaskId(), message, actionId);
       taskManager.saveTaskCleanup(taskCleanup);
     } else {
+      taskCleanup = new SingularityTaskCleanup(JavaUtils.getUserEmail(user), cleanupType, now,
+        task.getTaskId(), message, actionId);
       SingularityCreateResult result = taskManager.createTaskCleanup(taskCleanup);
 
-      while (result == SingularityCreateResult.EXISTED) {
-        Optional<SingularityTaskCleanup> cleanup = taskManager.getTaskCleanup(taskId);
+      if (result == SingularityCreateResult.EXISTED && userRequestedKillTakesPriority(taskId)) {
+        taskManager.saveTaskCleanup(taskCleanup);
+      } else {
+        while (result == SingularityCreateResult.EXISTED) {
+          Optional<SingularityTaskCleanup> cleanup = taskManager.getTaskCleanup(taskId);
 
-        if (cleanup.isPresent()) {
-          throw new WebApplicationException(Response.status(Status.CONFLICT).entity(cleanup.get()).type(MediaType.APPLICATION_JSON).build());
+          if (cleanup.isPresent()) {
+            throw new WebApplicationException(Response.status(Status.CONFLICT).entity(cleanup.get()).type(MediaType.APPLICATION_JSON).build());
+          }
+
+          result = taskManager.createTaskCleanup(taskCleanup);
         }
-
-        result = taskManager.createTaskCleanup(taskCleanup);
       }
     }
 
@@ -317,6 +325,14 @@ public class TaskResource {
     }
 
     return taskCleanup;
+  }
+
+  boolean userRequestedKillTakesPriority(String taskId) {
+    Optional<SingularityTaskCleanup> existingCleanup = taskManager.getTaskCleanup(taskId);
+    if (!existingCleanup.isPresent()) {
+      return true;
+    }
+    return existingCleanup.get().getCleanupType() != TaskCleanupType.USER_REQUESTED_DESTROY;
   }
 
   @Path("/commands/queued")
@@ -339,6 +355,13 @@ public class TaskResource {
     SingularityTaskId taskIdObj = getTaskIdFromStr(taskId);
 
     authorizationHelper.checkForAuthorizationByTaskId(taskId, user, SingularityAuthorizationScope.WRITE);
+
+    WebExceptions.checkBadRequest(taskMetadataRequest.getTitle().length() < taskMetadataConfiguration.getMaxMetadataTitleLength(),
+      "Task metadata title too long, must be less than %s bytes", taskMetadataConfiguration.getMaxMetadataTitleLength());
+
+    int messageLength = taskMetadataRequest.getMessage().isPresent() ? taskMetadataRequest.getMessage().get().length() : 0;
+    WebExceptions.checkBadRequest(!taskMetadataRequest.getMessage().isPresent() || messageLength < taskMetadataConfiguration.getMaxMetadataMessageLength(),
+      "Task metadata message too long, must be less than %s bytes", taskMetadataConfiguration.getMaxMetadataMessageLength());
 
     if (taskMetadataConfiguration.getAllowedMetadataTypes().isPresent()) {
       WebExceptions.checkBadRequest(taskMetadataConfiguration.getAllowedMetadataTypes().get().contains(taskMetadataRequest.getType()), "%s is not one of the allowed metadata types %s",

@@ -411,15 +411,18 @@ public class TaskManager extends CuratorAsyncManager {
     return Maps.uniqueIndex(healthcheckResults, SingularityTaskIdHolder.getTaskIdFunction());
   }
 
-  public boolean taskHistoryUpdateExists(SingularityTaskHistoryUpdate taskHistoryUpdate) {
-    return exists(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()));
-  }
-
   @Timed
   public SingularityCreateResult saveTaskHistoryUpdate(SingularityTaskHistoryUpdate taskHistoryUpdate) {
     singularityEventListener.taskHistoryUpdateEvent(taskHistoryUpdate);
 
     return create(getUpdatePath(taskHistoryUpdate.getTaskId(), taskHistoryUpdate.getTaskState()), taskHistoryUpdate, taskHistoryUpdateTranscoder);
+  }
+
+  public SingularityDeleteResult deleteTaskHistoryUpdate(SingularityTaskId taskId, ExtendedTaskState state, Optional<SingularityTaskHistoryUpdate> previousStateUpdate) {
+    if (previousStateUpdate.isPresent()) {
+      singularityEventListener.taskHistoryUpdateEvent(previousStateUpdate.get());
+    }
+    return delete(getUpdatePath(taskId, state));
   }
 
   public boolean isActiveTask(String taskId) {

@@ -24,6 +24,36 @@ Retrieve statistics about a specific active task.
 
 
 - - -
+#### **POST** `/api/tasks/task/{taskId}/metadata`
+
+Post metadata about a task that will be persisted along with it and displayed in the UI
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true |  | string |
+**body**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| body | false |  | [SingularityTaskMetadataRequest](models.md#model-linkType)</a> |
+
+###### Response
+
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| 400    | Invalid metadata object or doesn&#39;t match allowed types | - |
+| 404    | Task doesn&#39;t exist | - |
+| 409    | Metadata with this type/timestamp already existed | - |
+
+
+- - -
 #### **POST** `/api/tasks/task/{taskId}/command`
 
 Run a configured shell command against the given task

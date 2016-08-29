@@ -12,7 +12,7 @@ public enum ExtendedTaskState {
 
   TASK_LAUNCHED("launched", false, Optional.<TaskState> absent()), TASK_STAGING("staging", false, Optional.of(TaskState.TASK_STAGING)),
   TASK_STARTING("starting", false, Optional.of(TaskState.TASK_STARTING)), TASK_RUNNING("running", false, Optional.of(TaskState.TASK_RUNNING)),
-  TASK_CLEANING("cleaning", false, Optional.<TaskState> absent()), TASK_FINISHED("finished", true, Optional.of(TaskState.TASK_FINISHED)),
+  TASK_CLEANING("cleaning", false, Optional.<TaskState> absent()), TASK_KILLING("killing", false, Optional.of(TaskState.TASK_KILLING)), TASK_FINISHED("finished", true, Optional.of(TaskState.TASK_FINISHED)),
   TASK_FAILED("failed", true, Optional.of(TaskState.TASK_FAILED)), TASK_KILLED("killed", true, Optional.of(TaskState.TASK_KILLED)),
   TASK_LOST("lost", true, Optional.of(TaskState.TASK_LOST)), TASK_LOST_WHILE_DOWN("lost", true, Optional.<TaskState> absent()), TASK_ERROR("error", true, Optional.of(TaskState.TASK_ERROR));
 

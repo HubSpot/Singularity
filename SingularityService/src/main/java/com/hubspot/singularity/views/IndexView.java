@@ -52,9 +52,13 @@ public class IndexView extends View {
 
   private final String timestampFormat;
 
+  private final boolean showTaskDiskResource;
+
   private final String timestampWithSecondsFormat;
 
   private final String redirectOnUnauthorizedUrl;
+
+  private final String extraScript;
 
   public IndexView(String singularityUriBase, String appRoot, SingularityConfiguration configuration, ObjectMapper mapper) {
     super("index.mustache");
@@ -91,6 +95,8 @@ public class IndexView extends View {
     this.runningTaskLogPath = configuration.getUiConfiguration().getRunningTaskLogPath();
     this.finishedTaskLogPath = configuration.getUiConfiguration().getFinishedTaskLogPath();
 
+    this.showTaskDiskResource = configuration.getUiConfiguration().isShowTaskDiskResource();
+
     this.commonHostnameSuffixToOmit = configuration.getCommonHostnameSuffixToOmit().or("");
 
     this.taskS3LogOmitPrefix = configuration.getUiConfiguration().getTaskS3LogOmitPrefix().or("");
@@ -109,6 +115,8 @@ public class IndexView extends View {
     this.timestampFormat = configuration.getUiConfiguration().getTimestampFormat();
 
     this.timestampWithSecondsFormat = configuration.getUiConfiguration().getTimestampWithSecondsFormat();
+
+    this.extraScript = configuration.getUiConfiguration().getExtraScript().orNull();
   }
 
   public String getAppRoot() {
@@ -195,6 +203,10 @@ public class IndexView extends View {
     return commonHostnameSuffixToOmit;
   }
 
+  public Boolean isShowTaskDiskResource() {
+    return showTaskDiskResource;
+  }
+
   public String getTaskS3LogOmitPrefix() {
     return taskS3LogOmitPrefix;
   }
@@ -213,6 +225,10 @@ public class IndexView extends View {
 
   public String getTimestampWithSecondsFormat() {
     return timestampWithSecondsFormat;
+  }
+
+  public String getExtraScript() {
+    return extraScript;
   }
 
   @Override
@@ -241,9 +257,11 @@ public class IndexView extends View {
             ", taskS3LogOmitPrefix='" + taskS3LogOmitPrefix + '\'' +
             ", warnIfScheduledJobIsRunningPastNextRunPct=" + warnIfScheduledJobIsRunningPastNextRunPct +
             ", shellCommands='" + shellCommands + '\'' +
+            ", showTaskDiskResource=" + showTaskDiskResource +
             ", timestampFormat='" + timestampFormat + '\'' +
             ", timestampWithSecondsFormat='" + timestampWithSecondsFormat + '\'' +
             ", redirectOnUnauthorizedUrl='" + redirectOnUnauthorizedUrl + '\'' +
+            ", extraScript='" + extraScript + '\'' +
             ']';
   }
 }

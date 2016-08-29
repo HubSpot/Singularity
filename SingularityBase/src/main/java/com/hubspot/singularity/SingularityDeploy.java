@@ -42,6 +42,8 @@ public class SingularityDeploy {
   private final Optional<List<String>> uris;
   private final Optional<ExecutorData> executorData;
   private final Optional<Map<String, String>> labels;
+  private final Optional<Map<Integer, Map<String, String>>> taskLabels;
+  private final Optional<Map<Integer, Map<String, String>>> taskEnv;
 
   private final Optional<String> healthcheckUri;
   private final Optional<Long> healthcheckIntervalSeconds;
@@ -69,6 +71,7 @@ public class SingularityDeploy {
   private final Optional<Integer> deployStepWaitTimeMs;
   private final Optional<Boolean> autoAdvanceDeploySteps;
   private final Optional<Integer> maxTaskRetries;
+  private final Optional<Boolean> shell;
 
   public static SingularityDeployBuilder newBuilder(String requestId, String id) {
     return new SingularityDeployBuilder(requestId, id);
@@ -87,12 +90,14 @@ public class SingularityDeploy {
       @JsonProperty("customExecutorUser") Optional<String> customExecutorUser,
       @JsonProperty("resources") Optional<Resources> resources,
       @JsonProperty("env") Optional<Map<String, String>> env,
+      @JsonProperty("taskEnv") Optional<Map<Integer, Map<String, String>>> taskEnv,
       @JsonProperty("uris") Optional<List<String>> uris,
       @JsonProperty("metadata") Optional<Map<String, String>> metadata,
       @JsonProperty("executorData") Optional<ExecutorData> executorData,
       @JsonProperty("version") Optional<String> version,
       @JsonProperty("timestamp") Optional<Long> timestamp,
       @JsonProperty("labels") Optional<Map<String, String>> labels,
+      @JsonProperty("taskLabels") Optional<Map<Integer, Map<String, String>>> taskLabels,
       @JsonProperty("deployHealthTimeoutSeconds") Optional<Long> deployHealthTimeoutSeconds,
       @JsonProperty("healthcheckUri") Optional<String> healthcheckUri,
       @JsonProperty("healthcheckIntervalSeconds") Optional<Long> healthcheckIntervalSeconds,
@@ -113,7 +118,8 @@ public class SingularityDeploy {
       @JsonProperty("deployInstanceCountPerStep") Optional<Integer> deployInstanceCountPerStep,
       @JsonProperty("deployStepWaitTimeMs") Optional<Integer> deployStepWaitTimeMs,
       @JsonProperty("autoAdvanceDeploySteps") Optional<Boolean> autoAdvanceDeploySteps,
-      @JsonProperty("maxTaskRetries") Optional<Integer> maxTaskRetries) {
+      @JsonProperty("maxTaskRetries") Optional<Integer> maxTaskRetries,
+      @JsonProperty("shell") Optional<Boolean> shell) {
     this.requestId = requestId;
 
     this.command = command;
@@ -133,9 +139,11 @@ public class SingularityDeploy {
     this.id = id;
     this.timestamp = timestamp;
     this.env = env;
+    this.taskEnv = taskEnv;
     this.uris = uris;
     this.executorData = executorData;
     this.labels = labels;
+    this.taskLabels = taskLabels;
 
     this.healthcheckUri = healthcheckUri;
     this.healthcheckIntervalSeconds = healthcheckIntervalSeconds;
@@ -163,6 +171,7 @@ public class SingularityDeploy {
     this.deployStepWaitTimeMs = deployStepWaitTimeMs;
     this.autoAdvanceDeploySteps = autoAdvanceDeploySteps;
     this.maxTaskRetries = maxTaskRetries;
+    this.shell = shell;
   }
 
   public SingularityDeployBuilder toBuilder() {
@@ -197,13 +206,16 @@ public class SingularityDeploy {
     .setVersion(version)
     .setTimestamp(timestamp)
     .setEnv(copyOfMap(env))
+    .setTaskEnv(taskEnv)
     .setUris(copyOfList(uris))
     .setExecutorData(executorData)
     .setLabels(labels)
+    .setTaskLabels(taskLabels)
     .setDeployInstanceCountPerStep(deployInstanceCountPerStep)
     .setDeployStepWaitTimeMs(deployStepWaitTimeMs)
     .setAutoAdvanceDeploySteps(autoAdvanceDeploySteps)
-    .setMaxTaskRetries(maxTaskRetries);
+    .setMaxTaskRetries(maxTaskRetries)
+    .setShell(shell);
   }
 
   @ApiModelProperty(required=false, value="Number of seconds that Singularity waits for this service to become healthy (for it to download artifacts, start running, and optionally pass healthchecks.)")
@@ -285,6 +297,11 @@ public class SingularityDeploy {
     return env;
   }
 
+  @ApiModelProperty(required=false, value="Map of environment variable overrides for specific task instances.")
+  public Optional<Map<Integer, Map<String, String>>> getTaskEnv() {
+    return taskEnv;
+  }
+
   @ApiModelProperty(required=false, value="List of URIs to download before executing the deploy command.")
   public Optional<List<String>> getUris() {
     return uris;
@@ -360,9 +377,14 @@ public class SingularityDeploy {
     return loadBalancerTemplate;
   }
 
-  @ApiModelProperty(required=false, value="Labels for tasks associated with this deploy")
+  @ApiModelProperty(required=false, value="Labels for all tasks associated with this deploy")
   public Optional<Map<String, String>> getLabels() {
     return labels;
+  }
+
+  @ApiModelProperty(required=false, value="Labels for specific tasks associated with this deploy, indexed by instance number")
+  public Optional<Map<Integer, Map<String, String>>> getTaskLabels() {
+    return taskLabels;
   }
 
   @ApiModelProperty(required=false, value="Allows skipping of health checks when deploying.")
@@ -400,6 +422,11 @@ public class SingularityDeploy {
     return maxTaskRetries;
   }
 
+  @ApiModelProperty(required=false, value="Override the shell property on the mesos task")
+  public Optional<Boolean> getShell() {
+    return shell;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeploy{" +
@@ -418,6 +445,7 @@ public class SingularityDeploy {
       ", command=" + command +
       ", arguments=" + arguments +
       ", env=" + env +
+      ", taskEnv=" + taskEnv +
       ", uris=" + uris +
       ", executorData=" + executorData +
       ", healthcheckUri=" + healthcheckUri +
@@ -438,6 +466,7 @@ public class SingularityDeploy {
       ", loadBalancerAdditionalRoutes=" + loadBalancerAdditionalRoutes +
       ", loadBalancerTemplate=" + loadBalancerTemplate +
       ", labels=" + labels +
+      ", taskLabels=" + taskLabels +
       ", deployInstanceCountPerStep=" + deployInstanceCountPerStep +
       ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
       ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +
