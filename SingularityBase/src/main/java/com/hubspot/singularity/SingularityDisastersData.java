@@ -5,32 +5,31 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
-import com.google.common.base.Optional;
 
 public class SingularityDisastersData {
-  private final Optional<SingularityDisasterStats> currentStats;
-  private final Optional<SingularityDisasterStats> lastStats;
-  private final List<SingularityDisasterType> activeDisasters;
+  private final List<SingularityDisasterDataPoint> stats;
+  private final List<SingularityDisaster> disasters;
+  private final boolean automatedActionDisabled;
 
   @JsonCreator
-  public SingularityDisastersData(@JsonProperty("currentStats") Optional<SingularityDisasterStats> currentStats,
-                                  @JsonProperty("lastStats") Optional<SingularityDisasterStats> lastStats,
-                                  @JsonProperty("activeDisasters") List<SingularityDisasterType> activeDisasters) {
-    this.currentStats = currentStats;
-    this.lastStats = lastStats;
-    this.activeDisasters = activeDisasters;
+  public SingularityDisastersData(@JsonProperty("stats") List<SingularityDisasterDataPoint> stats,
+                                  @JsonProperty("disasterStates") List<SingularityDisaster> disasters,
+                                  @JsonProperty("automatedActionDisabled") boolean automatedActionDisabled) {
+    this.stats = stats;
+    this.disasters = disasters;
+    this.automatedActionDisabled = automatedActionDisabled;
   }
 
-  public Optional<SingularityDisasterStats> getCurrentStats() {
-    return currentStats;
+  public List<SingularityDisasterDataPoint> getStats() {
+    return stats;
   }
 
-  public Optional<SingularityDisasterStats> getLastStats() {
-    return lastStats;
+  public List<SingularityDisaster> getDisasters() {
+    return disasters;
   }
 
-  public List<SingularityDisasterType> getActiveDisasters() {
-    return activeDisasters;
+  public boolean isAutomatedActionsDisabled() {
+    return automatedActionDisabled;
   }
 
   @Override
@@ -42,22 +41,22 @@ public class SingularityDisastersData {
       return false;
     }
     SingularityDisastersData that = (SingularityDisastersData) o;
-    return Objects.equal(currentStats, that.currentStats) &&
-      Objects.equal(lastStats, that.lastStats) &&
-      Objects.equal(activeDisasters, that.activeDisasters);
+    return automatedActionDisabled == that.automatedActionDisabled &&
+      Objects.equal(stats, that.stats) &&
+      Objects.equal(disasters, that.disasters);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(currentStats, lastStats, activeDisasters);
+    return Objects.hashCode(stats, disasters, automatedActionDisabled);
   }
 
   @Override
   public String toString() {
     return Objects.toStringHelper(this)
-      .add("currentStats", currentStats)
-      .add("lastStats", lastStats)
-      .add("activeDisasters", activeDisasters)
+      .add("stats", stats)
+      .add("disasters", disasters)
+      .add("automatedActionDisabled", automatedActionDisabled)
       .toString();
   }
 }

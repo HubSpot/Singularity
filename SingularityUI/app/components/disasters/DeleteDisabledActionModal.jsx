@@ -1,9 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
-
-import { DeleteDisabledAction, FetchDisabledActions } from '../../../actions/api/disabledActions';
-
-import FormModal from '../modal/FormModal';
+import { DeleteDisabledAction, FetchDisabledActions } from '../../actions/api/disasters';
+import FormModal from '../common/modal/FormModal';
 
 class DeleteDisabledActionModal extends Component {
   static propTypes = {

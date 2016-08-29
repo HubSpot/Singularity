@@ -1,11 +1,8 @@
 import React, { Component, PropTypes } from 'react';
-
 import { Glyphicon } from 'react-bootstrap';
 import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
 import ToolTip from 'react-bootstrap/lib/Tooltip';
-
-import { getClickComponent } from '../modal/ModalWrapper';
-
+import { getClickComponent } from '../common/modal/ModalWrapper';
 import DeleteDisabledActionModal from './DeleteDisabledActionModal';
 
 const deleteDisabledActionTooltip = (

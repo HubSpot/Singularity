@@ -1,13 +1,11 @@
 package com.hubspot.singularity;
 
-import java.util.Collections;
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
+import com.google.common.primitives.Longs;
 
-public class SingularityDisasterStats {
+public class SingularityDisasterDataPoint implements Comparable<SingularityDisasterDataPoint> {
   private final long timestamp;
   private final int numActiveTasks;
   private final int numPendingTasks;
@@ -18,7 +16,7 @@ public class SingularityDisasterStats {
   private final int numLostSlaves;
 
   @JsonCreator
-  public SingularityDisasterStats(@JsonProperty("timestamp") long timestamp,
+  public SingularityDisasterDataPoint(@JsonProperty("timestamp") long timestamp,
                                   @JsonProperty("numActiveTasks") int numActiveTasks,
                                   @JsonProperty("numPendingTasks") int numPendingTasks,
                                   @JsonProperty("numLateTasks") int numLateTasks,
@@ -76,7 +74,7 @@ public class SingularityDisasterStats {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    SingularityDisasterStats that = (SingularityDisasterStats) o;
+    SingularityDisasterDataPoint that = (SingularityDisasterDataPoint) o;
     return timestamp == that.timestamp &&
       numActiveTasks == that.numActiveTasks &&
       numPendingTasks == that.numPendingTasks &&
@@ -104,5 +102,10 @@ public class SingularityDisasterStats {
       .add("numActiveSlaves", numActiveSlaves)
       .add("numLostSlaves", numLostSlaves)
       .toString();
+  }
+
+  @Override
+  public int compareTo(SingularityDisasterDataPoint o) {
+    return Longs.compare(o.getTimestamp(), this.timestamp);
   }
 }

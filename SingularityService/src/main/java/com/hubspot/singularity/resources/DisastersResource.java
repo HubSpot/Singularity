@@ -16,11 +16,11 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDisabledAction;
 import com.hubspot.singularity.SingularityDisabledActionType;
-import com.hubspot.singularity.SingularityDisasterStats;
 import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularityUser;
+import com.hubspot.singularity.api.SingularityDisabledActionRequest;
 import com.hubspot.singularity.auth.SingularityAuthorizationHelper;
 import com.hubspot.singularity.data.DisasterManager;
 import com.wordnik.swagger.annotations.Api;
@@ -94,9 +94,10 @@ public class DisastersResource {
 
   @POST
   @Path("/disabled-actions/{action}")
-  public void disableAction(@PathParam("action") SingularityDisabledActionType action, String message) {
+  public void disableAction(@PathParam("action") SingularityDisabledActionType action, Optional<SingularityDisabledActionRequest> maybeRequest) {
     authorizationHelper.checkAdminAuthorization(user);
-    disasterManager.disable(action, Strings.isNullOrEmpty(message) ? Optional.<String>absent() : Optional.of(message), user, false);
+    Optional<String> message = maybeRequest.isPresent() ? maybeRequest.get().getMessage() : Optional.<String>absent();
+    disasterManager.disable(action, message, user, false);
   }
 
   @DELETE

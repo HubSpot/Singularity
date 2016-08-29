@@ -1,5 +1,6 @@
 package com.hubspot.singularity.config;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -13,26 +14,29 @@ import com.hubspot.singularity.SingularityDisabledActionType;
 
 public class DisasterDetectionConfiguration {
 
-  private boolean enabled = false;
+  private boolean enabled = true;
 
-  private long runEveryMillis = TimeUnit.SECONDS.toMillis(30);
+  private int statsHistorySize = 10;
+
+  private long runEveryMillis = TimeUnit.SECONDS.toMillis(10);
 
   @JsonProperty("disableActionsOnDisaster")
   @NotNull
-  private List<SingularityDisabledActionType> disableActionsOnDisaster = ImmutableList.of(
-    SingularityDisabledActionType.BOUNCE, SingularityDisabledActionType.DEPLOY, SingularityDisabledActionType.TASK_RECONCILIATION);
+  private List<SingularityDisabledActionType> disableActionsOnDisaster = Collections.emptyList();
 
   private boolean checkLateTasks = true;
 
-  private long criticalAvgTaskLagMillis = 240000L;
+  private long criticalAvgTaskLagMillis = TimeUnit.MINUTES.toMillis(4);
 
   private double criticalOverdueTaskPortion = 0.1;
+
+  private long triggerAfterMillisOverTaskLagThreshold = TimeUnit.SECONDS.toMillis(45);
 
   private boolean checkLostSlaves = true;
 
   private double criticalLostSlavePortion = 0.2;
 
-  private boolean includePreviousLostSlavesCount = true;
+  private long includeLostSlavesInLastMillis = TimeUnit.SECONDS.toMillis(30);
 
   private boolean checkLostTasks = true;
 
@@ -43,7 +47,7 @@ public class DisasterDetectionConfiguration {
 
   private double criticalLostTaskPortion = 0.2;
 
-  private boolean includePreviousLostTaskCount = true;
+  private long includeLostTasksInLastMillis = TimeUnit.SECONDS.toMillis(30);
 
   public boolean isEnabled() {
     return enabled;
@@ -59,6 +63,14 @@ public class DisasterDetectionConfiguration {
 
   public void setRunEveryMillis(long runEveryMillis) {
     this.runEveryMillis = runEveryMillis;
+  }
+
+  public int getStatsHistorySize() {
+    return statsHistorySize;
+  }
+
+  public void setStatsHistorySize(int statsHistorySize) {
+    this.statsHistorySize = statsHistorySize;
   }
 
   public List<SingularityDisabledActionType> getDisableActionsOnDisaster() {
@@ -93,6 +105,14 @@ public class DisasterDetectionConfiguration {
     this.criticalOverdueTaskPortion = criticalOverdueTaskPortion;
   }
 
+  public long getTriggerAfterMillisOverTaskLagThreshold() {
+    return triggerAfterMillisOverTaskLagThreshold;
+  }
+
+  public void setTriggerAfterMillisOverTaskLagThreshold(long triggerAfterMillisOverTaskLagThreshold) {
+    this.triggerAfterMillisOverTaskLagThreshold = triggerAfterMillisOverTaskLagThreshold;
+  }
+
   public boolean isCheckLostSlaves() {
     return checkLostSlaves;
   }
@@ -109,12 +129,12 @@ public class DisasterDetectionConfiguration {
     this.criticalLostSlavePortion = criticalLostSlavePortion;
   }
 
-  public boolean isIncludePreviousLostSlavesCount() {
-    return includePreviousLostSlavesCount;
+  public long getIncludeLostSlavesInLastMillis() {
+    return includeLostSlavesInLastMillis;
   }
 
-  public void setIncludePreviousLostSlavesCount(boolean includePreviousLostSlavesCount) {
-    this.includePreviousLostSlavesCount = includePreviousLostSlavesCount;
+  public void setIncludeLostSlavesInLastMillis(long includeLostSlavesInLastMillis) {
+    this.includeLostSlavesInLastMillis = includeLostSlavesInLastMillis;
   }
 
   public boolean isCheckLostTasks() {
@@ -141,11 +161,11 @@ public class DisasterDetectionConfiguration {
     this.criticalLostTaskPortion = criticalLostTaskPortion;
   }
 
-  public boolean isIncludePreviousLostTaskCount() {
-    return includePreviousLostTaskCount;
+  public long getIncludeLostTasksInLastMillis() {
+    return includeLostTasksInLastMillis;
   }
 
-  public void setIncludePreviousLostTaskCount(boolean includePreviousLostTaskCount) {
-    this.includePreviousLostTaskCount = includePreviousLostTaskCount;
+  public void setIncludeLostTasksInLastMillis(long includeLostTasksInLastMillis) {
+    this.includeLostTasksInLastMillis = includeLostTasksInLastMillis;
   }
 }
