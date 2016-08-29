@@ -84,9 +84,9 @@ def logs_folder_files(args, task):
     files_json = logfetch_base.get_json_response(uri, args, {'path' : '{0}/logs'.format(task)}, True)
     if 'files' in files_json:
         files = files_json['files']
-        return [f['name'] for f in files if logfetch_base.is_in_date_range(args, f['mtime'])]
+        return [f['name'] for f in files if valid_logfile(args, f)]
     else:
-        return [f['path'].rsplit('/')[-1] for f in files_json if logfetch_base.is_in_date_range(args, f['mtime'])]
+        return [f['path'].rsplit('/')[-1] for f in files_json if valid_logfile(args, f)]
 
 def base_directory_files(args, task, files_json):
     if 'files' in files_json:
