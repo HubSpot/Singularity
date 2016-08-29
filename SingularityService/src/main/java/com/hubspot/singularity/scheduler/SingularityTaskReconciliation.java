@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Singleton;
 
@@ -33,6 +32,7 @@ import com.hubspot.singularity.SingularityTaskId;
 import com.hubspot.singularity.SingularityTaskReconciliationStatistics;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.config.SingularityConfiguration;
+import com.hubspot.singularity.data.StateManager;
 import com.hubspot.singularity.data.TaskManager;
 import com.hubspot.singularity.mesos.SchedulerDriverSupplier;
 import com.hubspot.singularity.sentry.SingularityExceptionNotifier;
@@ -50,18 +50,19 @@ public class SingularityTaskReconciliation {
   private final SingularityAbort abort;
   private final SingularityExceptionNotifier exceptionNotifier;
   private final SchedulerDriverSupplier schedulerDriverSupplier;
-
-  private final AtomicReference<SingularityTaskReconciliationStatistics> taskReconciliationStatistics;
+  private final StateManager stateManager;
 
   @Inject
   public SingularityTaskReconciliation(SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
       SingularityExceptionNotifier exceptionNotifier,
       TaskManager taskManager,
+      StateManager stateManager,
       SingularityConfiguration configuration,
       @Named(SingularityMainModule.SERVER_ID_PROPERTY) String serverId,
       SingularityAbort abort,
       SchedulerDriverSupplier schedulerDriverSupplier) {
     this.taskManager = taskManager;
+    this.stateManager = stateManager;
     this.serverId = serverId;
 
     this.exceptionNotifier = exceptionNotifier;
@@ -71,8 +72,6 @@ public class SingularityTaskReconciliation {
 
     this.isRunningReconciliation = new AtomicBoolean(false);
     this.executorService = executorServiceFactory.get(getClass().getSimpleName());
-
-    this.taskReconciliationStatistics = new AtomicReference<>();
   }
 
   public enum ReconciliationState {
@@ -82,10 +81,6 @@ public class SingularityTaskReconciliation {
   @VisibleForTesting
   boolean isReconciliationRunning() {
     return isRunningReconciliation.get();
-  }
-
-  public Optional<SingularityTaskReconciliationStatistics> getLastTaskReconciliationStatistics() {
-    return Optional.fromNullable(taskReconciliationStatistics.get());
   }
 
   public ReconciliationState startReconciliation() {
@@ -165,7 +160,7 @@ public class SingularityTaskReconciliation {
     if (taskStatuses.isEmpty()) {
       LOG.info("Task reconciliation ended after {} checks and {}", numTimes, JavaUtils.duration(reconciliationStart));
 
-      taskReconciliationStatistics.set(new SingularityTaskReconciliationStatistics(reconciliationStart, System.currentTimeMillis() - reconciliationStart, numTimes, remainingTaskCounts));
+      stateManager.saveTaskReconciliationStatistics(new SingularityTaskReconciliationStatistics(reconciliationStart, System.currentTimeMillis() - reconciliationStart, numTimes, remainingTaskCounts));
 
       isRunningReconciliation.set(false);
 

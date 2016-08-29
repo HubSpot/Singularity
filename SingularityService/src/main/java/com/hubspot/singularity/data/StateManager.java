@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Singleton;
-import javax.ws.rs.HEAD;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.imps.CuratorFrameworkState;
@@ -22,6 +21,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.hubspot.mesos.CounterMap;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityHostState;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingTaskId;
@@ -37,7 +37,6 @@ import com.hubspot.singularity.SingularityTaskReconciliationStatistics;
 import com.hubspot.singularity.auth.datastore.SingularityAuthDatastore;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.transcoders.Transcoder;
-import com.hubspot.singularity.scheduler.SingularityTaskReconciliation;
 
 @Singleton
 public class StateManager extends CuratorManager {
@@ -46,6 +45,7 @@ public class StateManager extends CuratorManager {
 
   private static final String ROOT_PATH = "/hosts";
   private static final String STATE_PATH = "/STATE";
+  private static final String TASK_RECONCILIATION_STATISTICS_PATH = STATE_PATH + "/taskReconciliation";
 
   private final RequestManager requestManager;
   private final TaskManager taskManager;
@@ -57,12 +57,12 @@ public class StateManager extends CuratorManager {
   private final SingularityConfiguration singularityConfiguration;
   private final SingularityAuthDatastore authDatastore;
   private final PriorityManager priorityManager;
-  private final SingularityTaskReconciliation taskReconciliation;
+  private final Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder;
 
   @Inject
   public StateManager(CuratorFramework curatorFramework, SingularityConfiguration configuration, MetricRegistry metricRegistry, RequestManager requestManager, TaskManager taskManager,
       DeployManager deployManager, SlaveManager slaveManager, RackManager rackManager, Transcoder<SingularityState> stateTranscoder, Transcoder<SingularityHostState> hostStateTranscoder,
-      SingularityConfiguration singularityConfiguration, SingularityAuthDatastore authDatastore, PriorityManager priorityManager, SingularityTaskReconciliation taskReconciliation) {
+      SingularityConfiguration singularityConfiguration, SingularityAuthDatastore authDatastore, PriorityManager priorityManager, Transcoder<SingularityTaskReconciliationStatistics> taskReconciliationStatisticsTranscoder) {
     super(curatorFramework, configuration, metricRegistry);
 
     this.requestManager = requestManager;
@@ -75,7 +75,15 @@ public class StateManager extends CuratorManager {
     this.singularityConfiguration = singularityConfiguration;
     this.authDatastore = authDatastore;
     this.priorityManager = priorityManager;
-    this.taskReconciliation = taskReconciliation;
+    this.taskReconciliationStatisticsTranscoder = taskReconciliationStatisticsTranscoder;
+  }
+
+  public SingularityCreateResult saveTaskReconciliationStatistics(SingularityTaskReconciliationStatistics taskReconciliationStatistics) {
+    return save(TASK_RECONCILIATION_STATISTICS_PATH, taskReconciliationStatistics, taskReconciliationStatisticsTranscoder);
+  }
+
+  public Optional<SingularityTaskReconciliationStatistics> getTaskReconciliationStatistics() {
+    return getData(TASK_RECONCILIATION_STATISTICS_PATH, taskReconciliationStatisticsTranscoder);
   }
 
   public void save(SingularityHostState hostState) throws InterruptedException {
@@ -308,11 +316,9 @@ public class StateManager extends CuratorManager {
       minimumPriorityLevel = Optional.absent();
     }
 
-    final Optional<SingularityTaskReconciliationStatistics> lastTaskReconciliationStatistics = taskReconciliation.getLastTaskReconciliationStatistics();
-
     return new SingularityState(activeTasks, numActiveRequests, cooldownRequests, numPausedRequests, scheduledTasks, pendingRequests, lbCleanupTasks, lbCleanupRequests, cleaningRequests, activeSlaves,
         deadSlaves, decommissioningSlaves, activeRacks, deadRacks, decommissioningRacks, cleaningTasks, states, oldestDeploy, numDeploys, scheduledTasksInfo.getNumLateTasks(),
         scheduledTasksInfo.getNumFutureTasks(), scheduledTasksInfo.getMaxTaskLag(), System.currentTimeMillis(), includeRequestIds ? overProvisionedRequestIds : null,
-        includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, minimumPriorityLevel, lastTaskReconciliationStatistics);
+        includeRequestIds ? underProvisionedRequestIds : null, overProvisionedRequestIds.size(), underProvisionedRequestIds.size(), numFinishedRequests, unknownRacks, unknownSlaves, authDatastoreHealthy, minimumPriorityLevel);
   }
 }
