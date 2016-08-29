@@ -58,9 +58,7 @@ def base_directory_files(args, task):
         return [f['path'].rsplit('/')[-1] for f in files_json if is_valid_tail_log(f)]
 
 def is_valid_tail_log(file_data):
-    not_a_directory = not file_data['mode'].startswith('d')
-    is_a_logfile = fnmatch.fnmatch(file_data['name'], '*.log') or fnmatch.fnmatch(file_data['name'], '*.out') or fnmatch.fnmatch(file_data['name'], '*.err')
-    return not_a_directory and is_a_logfile
+    return logfetch_base.is_valid_log(file_data)
 
 class LogStreamer(threading.Thread):
     def __init__(self, args, task):
