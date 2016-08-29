@@ -1,11 +1,13 @@
 package com.hubspot.singularity.scheduler;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.inject.Singleton;
 
@@ -28,6 +30,7 @@ import com.hubspot.singularity.SingularityAbort.AbortReason;
 import com.hubspot.singularity.SingularityMainModule;
 import com.hubspot.singularity.SingularityManagedScheduledExecutorServiceFactory;
 import com.hubspot.singularity.SingularityTaskId;
+import com.hubspot.singularity.SingularityTaskReconciliationStatistics;
 import com.hubspot.singularity.SingularityTaskStatusHolder;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.TaskManager;
@@ -47,7 +50,8 @@ public class SingularityTaskReconciliation {
   private final SingularityAbort abort;
   private final SingularityExceptionNotifier exceptionNotifier;
   private final SchedulerDriverSupplier schedulerDriverSupplier;
-  private long reconciliationStartedAt;
+
+  private final AtomicReference<SingularityTaskReconciliationStatistics> taskReconciliationStatistics;
 
   @Inject
   public SingularityTaskReconciliation(SingularityManagedScheduledExecutorServiceFactory executorServiceFactory,
@@ -67,6 +71,8 @@ public class SingularityTaskReconciliation {
 
     this.isRunningReconciliation = new AtomicBoolean(false);
     this.executorService = executorServiceFactory.get(getClass().getSimpleName());
+
+    this.taskReconciliationStatistics = new AtomicReference<>();
   }
 
   enum ReconciliationState {
@@ -78,16 +84,12 @@ public class SingularityTaskReconciliation {
     return isRunningReconciliation.get();
   }
 
-  public Optional<Long> getTaskReconciliationStartedAt() {
-    if (isReconciliationRunning()) {
-      return Optional.of(reconciliationStartedAt);
-    } else {
-      return Optional.absent();
-    }
+  public Optional<SingularityTaskReconciliationStatistics> getLastTaskReconciliationStatistics() {
+    return Optional.fromNullable(taskReconciliationStatistics.get());
   }
 
   public ReconciliationState startReconciliation() {
-    reconciliationStartedAt = System.currentTimeMillis();
+    final long taskReconciliationStartedAt = System.currentTimeMillis();
 
     if (!isRunningReconciliation.compareAndSet(false, true)) {
       LOG.info("Reconciliation is already running, NOT starting a new reconciliation process");
@@ -109,20 +111,22 @@ public class SingularityTaskReconciliation {
     SchedulerDriver driver = schedulerDriver.get();
     driver.reconcileTasks(Collections.<TaskStatus> emptyList());
 
-    scheduleReconciliationCheck(driver, reconciliationStartedAt, activeTaskIds, 0);
+    scheduleReconciliationCheck(driver, taskReconciliationStartedAt, activeTaskIds, 0, new ArrayList<Integer>());
 
     return ReconciliationState.STARTED;
   }
 
-  private void scheduleReconciliationCheck(final SchedulerDriver driver, final long reconciliationStart, final Collection<SingularityTaskId> remainingTaskIds, final int numTimes) {
+  private void scheduleReconciliationCheck(final SchedulerDriver driver, final long reconciliationStart, final Collection<SingularityTaskId> remainingTaskIds, final int numTimes, final List<Integer> remainingTaskCounts) {
     LOG.info("Scheduling reconciliation check #{} - {} tasks left - waiting {}", numTimes + 1, remainingTaskIds.size(), JavaUtils.durationFromMillis(configuration.getCheckReconcileWhenRunningEveryMillis()));
+
+    remainingTaskCounts.add(remainingTaskIds.size());
 
     executorService.schedule(new Runnable() {
 
       @Override
       public void run() {
         try {
-          checkReconciliation(driver, reconciliationStart, remainingTaskIds, numTimes + 1);
+          checkReconciliation(driver, reconciliationStart, remainingTaskIds, numTimes + 1, remainingTaskCounts);
         } catch (Throwable t) {
           LOG.error("While checking for reconciliation tasks", t);
           exceptionNotifier.notify(t);
@@ -132,7 +136,7 @@ public class SingularityTaskReconciliation {
     }, configuration.getCheckReconcileWhenRunningEveryMillis(), TimeUnit.MILLISECONDS);
   }
 
-  private void checkReconciliation(final SchedulerDriver driver, final long reconciliationStart, final Collection<SingularityTaskId> remainingTaskIds, final int numTimes) {
+  private void checkReconciliation(final SchedulerDriver driver, final long reconciliationStart, final Collection<SingularityTaskId> remainingTaskIds, final int numTimes, final List<Integer> remainingTaskCounts) {
     final List<SingularityTaskStatusHolder> taskStatusHolders = taskManager.getLastActiveTaskStatusesFor(remainingTaskIds);
     final List<TaskStatus> taskStatuses = Lists.newArrayListWithCapacity(taskStatusHolders.size());
 
@@ -161,6 +165,8 @@ public class SingularityTaskReconciliation {
     if (taskStatuses.isEmpty()) {
       LOG.info("Task reconciliation ended after {} checks and {}", numTimes, JavaUtils.duration(reconciliationStart));
 
+      taskReconciliationStatistics.set(new SingularityTaskReconciliationStatistics(reconciliationStart, System.currentTimeMillis() - reconciliationStart, numTimes, remainingTaskCounts));
+
       isRunningReconciliation.set(false);
 
       return;
@@ -170,6 +176,6 @@ public class SingularityTaskReconciliation {
 
     driver.reconcileTasks(taskStatuses);
 
-    scheduleReconciliationCheck(driver, reconciliationStart, remainingTaskIds, numTimes);
+    scheduleReconciliationCheck(driver, reconciliationStart, remainingTaskIds, numTimes, remainingTaskCounts);
   }
 }
