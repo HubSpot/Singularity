@@ -106,6 +106,6 @@ public class SingularityDisasterDataPoint implements Comparable<SingularityDisas
 
   @Override
   public int compareTo(SingularityDisasterDataPoint o) {
-    return Longs.compare(this.timestamp, o.getTimestamp());
+    return Longs.compare(o.getTimestamp(), this.timestamp);
   }
 }
