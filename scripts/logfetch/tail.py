@@ -95,6 +95,10 @@ class LogStreamer(threading.Thread):
             except ValueError:
                 sys.stderr.write(colored('Could not tail logs for task {0}, check that the task is still active and that the slave it runs on has not been decommissioned\n'.format(task), 'red'))
                 keep_trying = False
+            except errors.NoTailDataError:
+                sys.stderr.write(colored('Could not tail logs for task {0}, no data was returned\n'.format(task), 'red'))
+                sys.stderr.flush()
+                keep_trying = False
 
     def fetch_new_log_data(self, uri, path, offset, args, task):
         params = {
@@ -102,6 +106,14 @@ class LogStreamer(threading.Thread):
             "offset" : offset
         }
         response = requests.get(uri, params=params, headers=args.headers).json()
+        if not hasattr(response, 'data'):
+            if response.status_code < 199 or response.status_code > 299:
+                raise errors.NoTailDataError()
+            else:
+                sys.stderr.write(colored('Log tail data missing, retrying...\n'.format(task), 'red'))
+                sys.stderr.flush()
+                return offset
+
         prefix = '({0}) =>\n'.format(task) if args.verbose else ''
         if len(response['data'].encode('utf-8')) > 0:
             sys.stdout.write('{0}{1}'.format(colored(prefix, 'cyan'), response['data'].encode('utf-8')))
