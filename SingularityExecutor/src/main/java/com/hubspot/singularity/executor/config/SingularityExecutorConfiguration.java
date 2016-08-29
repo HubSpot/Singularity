@@ -219,6 +219,12 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   private int dockerClientConnectionPoolSize = 5;
 
   @JsonProperty
+  private int maxDockerPullAttempts = 2;
+
+  @JsonProperty
+  private Optional<SingularityExecutorDockerAuthConfig> dockerAuthConfig = Optional.absent();
+
+  @JsonProperty
   private ThreadCheckerType threadCheckerType = ThreadCheckerType.PS;
 
   @JsonProperty
@@ -626,6 +632,22 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   public void setDockerClientConnectionPoolSize(int dockerClientConnectionPoolSize) {
     this.dockerClientConnectionPoolSize = dockerClientConnectionPoolSize;
+  }
+
+  public int getMaxDockerPullAttempts() {
+    return maxDockerPullAttempts;
+  }
+
+  public void setMaxDockerPullAttempts(int maxDockerPullAttempts) {
+    this.maxDockerPullAttempts = maxDockerPullAttempts;
+  }
+
+  public Optional<SingularityExecutorDockerAuthConfig> getDockerAuthConfig() {
+    return dockerAuthConfig;
+  }
+
+  public void setDockerAuthConfig(Optional<SingularityExecutorDockerAuthConfig> dockerAuthConfig) {
+    this.dockerAuthConfig = dockerAuthConfig;
   }
 
   public ThreadCheckerType getThreadCheckerType() {

@@ -1,5 +1,7 @@
 package com.hubspot.singularity;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -20,12 +22,7 @@ public class SingularityTaskIdHistory implements Comparable<SingularityTaskIdHis
     long updatedAt = taskId.getStartedAt();
 
     if (updates != null && !updates.isEmpty()) {
-      SingularityTaskHistoryUpdate lastUpdate = updates.get(0);
-      for (SingularityTaskHistoryUpdate update : updates.subList(1, updates.size())) {
-        if (update.getTimestamp() > lastUpdate.getTimestamp()) {
-          lastUpdate = update;
-        }
-      }
+      SingularityTaskHistoryUpdate lastUpdate = Collections.max(updates);
       lastTaskState = lastUpdate.getTaskState();
       updatedAt = lastUpdate.getTimestamp();
     }

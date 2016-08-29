@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Singleton;
@@ -31,6 +32,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
+import com.hubspot.mesos.Resources;
 import com.hubspot.singularity.DeployState;
 import com.hubspot.singularity.ExtendedTaskState;
 import com.hubspot.singularity.MachineState;
@@ -39,9 +41,9 @@ import com.hubspot.singularity.RequestType;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeployMarker;
+import com.hubspot.singularity.SingularityDeployProgress;
 import com.hubspot.singularity.SingularityDeployStatistics;
 import com.hubspot.singularity.SingularityDeployStatisticsBuilder;
-import com.hubspot.singularity.SingularityDeployProgress;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
@@ -292,6 +294,9 @@ public class SingularityScheduler {
     if (request.isDeployable() && pendingRequest.getPendingType() == PendingType.NEW_DEPLOY && !maybePendingDeploy.isPresent()) {
       return false;
     }
+    if (request.getRequestType() == RequestType.RUN_ONCE && pendingRequest.getPendingType() == PendingType.NEW_DEPLOY) {
+      return true;
+    }
 
     return isDeployInUse(maybeRequestDeployState, pendingRequest.getDeployId(), false);
   }
@@ -338,7 +343,7 @@ public class SingularityScheduler {
     for (SingularityTaskRequest taskRequest : taskRequests) {
       SingularityRequestDeployState requestDeployState = deployStates.get(taskRequest.getRequest().getId());
 
-      if (!matchesDeploy(requestDeployState, taskRequest)) {
+      if (!matchesDeploy(requestDeployState, taskRequest) && !(taskRequest.getRequest().getRequestType() == RequestType.RUN_ONCE)) {
         LOG.info("Removing stale pending task {} because the deployId did not match active/pending deploys {}", taskRequest.getPendingTask().getPendingTaskId(), requestDeployState);
         taskManager.deletePendingTask(taskRequest.getPendingTask().getPendingTaskId());
       } else {
@@ -486,10 +491,14 @@ public class SingularityScheduler {
     }
 
     PendingType pendingType = PendingType.TASK_DONE;
+    Optional<List<String>> cmdLineArgsList = Optional.absent();
 
     if (!state.isSuccess() && shouldRetryImmediately(request, deployStatistics)) {
       LOG.debug("Retrying {} because {}", request.getId(), state);
       pendingType = PendingType.RETRY;
+      if (task.isPresent()) {
+        cmdLineArgsList = task.get().getTaskRequest().getPendingTask().getCmdLineArgsList();
+      }
     } else if (!request.isAlwaysRunning()) {
       return Optional.absent();
     }
@@ -502,7 +511,8 @@ public class SingularityScheduler {
     }
 
     SingularityPendingRequest pendingRequest = new SingularityPendingRequest(request.getId(), requestDeployState.get().getActiveDeploy().get().getDeployId(),
-      System.currentTimeMillis(), Optional.<String>absent(), pendingType, Optional.<Boolean>absent(), Optional.<String>absent());
+      System.currentTimeMillis(), Optional.<String>absent(), pendingType, cmdLineArgsList, Optional.<String>absent(), Optional.<Boolean>absent(), Optional.<String>absent(),
+      Optional.<String>absent());
 
     scheduleTasks(stateCache, request, requestState, deployStatistics, pendingRequest, getMatchingTaskIds(stateCache, request, pendingRequest), maybePendingDeploy);
 
@@ -619,6 +629,8 @@ public class SingularityScheduler {
       } else {
         return 0;
       }
+    } else if (request.getRequestType() == RequestType.RUN_ONCE && pendingRequest.getPendingType() == PendingType.NEW_DEPLOY) {
+      return 1;
     }
 
     return numInstancesExpected(request, pendingRequest, maybePendingDeploy) - matchingTaskIds.size();
@@ -666,7 +678,7 @@ public class SingularityScheduler {
 
       newTasks
         .add(new SingularityPendingTask(new SingularityPendingTaskId(request.getId(), deployId, nextRunAt.get(), nextInstanceNumber, pendingRequest.getPendingType(), pendingRequest.getTimestamp()),
-          pendingRequest.getCmdLineArgsList(), pendingRequest.getUser(), pendingRequest.getRunId(), pendingRequest.getSkipHealthchecks(), pendingRequest.getMessage()));
+          pendingRequest.getCmdLineArgsList(), pendingRequest.getUser(), pendingRequest.getRunId(), pendingRequest.getSkipHealthchecks(), pendingRequest.getMessage(), pendingRequest.getResources()));
 
       nextInstanceNumber++;
     }
@@ -695,6 +707,9 @@ public class SingularityScheduler {
           } else {
             scheduleFrom = new Date(now);
             final CronExpression cronExpression = new CronExpression(request.getQuartzScheduleSafe());
+            if (request.getScheduleTimeZone().isPresent()) {
+              cronExpression.setTimeZone(TimeZone.getTimeZone(request.getScheduleTimeZone().get()));
+            }
             nextRunAtDate = cronExpression.getNextValidTimeAfter(scheduleFrom);
           }
 

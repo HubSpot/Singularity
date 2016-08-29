@@ -9,11 +9,14 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.dmfs.rfc5545.recur.InvalidRecurrenceRuleException;
 import org.dmfs.rfc5545.recur.RecurrenceRule;
@@ -28,7 +31,6 @@ import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityContainerType;
 import com.hubspot.mesos.SingularityDockerInfo;
-import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.mesos.SingularityVolume;
@@ -36,8 +38,8 @@ import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityRequest;
-import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.SingularityWebhook;
+import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
 
@@ -56,6 +58,7 @@ public class SingularityValidator {
   private final int defaultCpus;
   private final int defaultMemoryMb;
   private final int defaultDiskMb;
+  private final int defaultBounceExpirationMinutes;
   private final int maxMemoryMbPerInstance;
   private final boolean allowRequestsWithoutOwners;
   private final boolean createDeployIds;
@@ -75,6 +78,7 @@ public class SingularityValidator {
     this.defaultCpus = configuration.getMesosConfiguration().getDefaultCpus();
     this.defaultMemoryMb = configuration.getMesosConfiguration().getDefaultMemory();
     this.defaultDiskMb = configuration.getMesosConfiguration().getDefaultDisk();
+    this.defaultBounceExpirationMinutes = configuration.getDefaultBounceExpirationMinutes();
 
     defaultResources = new Resources(defaultCpus, defaultMemoryMb, 0, defaultDiskMb);
 
@@ -113,6 +117,10 @@ public class SingularityValidator {
 
     checkBadRequest(request.getId() != null && !StringUtils.containsAny(request.getId(), JOINER.join(REQUEST_ID_ILLEGAL_CHARACTERS)), "Id can not be null or contain any of the following characters: %s", REQUEST_ID_ILLEGAL_CHARACTERS);
     checkBadRequest(request.getRequestType() != null, "RequestType cannot be null or missing");
+
+    if (request.getOwners().isPresent()) {
+      checkBadRequest(!request.getOwners().get().contains(null), "Request owners cannot contain null values");
+    }
 
     if (!allowRequestsWithoutOwners) {
       checkBadRequest(request.getOwners().isPresent() && !request.getOwners().get().isEmpty(), "Request must have owners defined (this can be turned off in Singularity configuration)");
@@ -156,13 +164,19 @@ public class SingularityValidator {
           quartzSchedule = getQuartzScheduleFromCronSchedule(originalSchedule);
         }
 
-        checkBadRequest(isValidCronSchedule(quartzSchedule), "Schedule %s (from: %s) was not valid", quartzSchedule, originalSchedule);
+        checkBadRequest(isValidCronSchedule(quartzSchedule), "Schedule %s (from: %s) is not valid", quartzSchedule, originalSchedule);
       } else {
         checkForValidRFC5545Schedule(request.getSchedule().get());
       }
     } else {
       checkBadRequest(!request.getQuartzSchedule().isPresent() && !request.getSchedule().isPresent(), "Non-scheduled requests can not specify a schedule");
       checkBadRequest(!request.getScheduleType().isPresent(), "ScheduleType can only be set for scheduled requests");
+    }
+
+    if (request.getScheduleTimeZone().isPresent()) {
+      if (!ArrayUtils.contains(TimeZone.getAvailableIDs(), request.getScheduleTimeZone().get())) {
+        badRequest("scheduleTimeZone %s does not map to a valid Java TimeZone object (e.g. 'US/Eastern' or 'GMT')", request.getScheduleTimeZone().get());
+      }
     }
 
     if (!request.isLongRunning()) {
@@ -186,7 +200,7 @@ public class SingularityValidator {
     try {
       new RecurrenceRule(schedule);
     } catch (InvalidRecurrenceRuleException ex) {
-      badRequest("Schedule %s was not a valid RFC5545 schedule, error was: %s", schedule, ex);
+      badRequest("Schedule %s is not a valid RFC5545 schedule, error is: %s", schedule, ex);
     }
   }
 
@@ -197,7 +211,7 @@ public class SingularityValidator {
     try {
       new URI(webhook.getUri());
     } catch (URISyntaxException e) {
-      WebExceptions.badRequest("Invalid URI provided");
+      badRequest("Invalid URI provided");
     }
 
     return webhook;
@@ -280,11 +294,6 @@ public class SingularityValidator {
       final int numPorts = deploy.getResources().get().getNumPorts();
 
       checkBadRequest(dockerInfo.getImage() != null, "docker image may not be null");
-
-      if (!dockerInfo.getPortMappings().isEmpty()) {
-        checkBadRequest(dockerInfo.getNetwork().or(SingularityDockerNetworkType.HOST) == SingularityDockerNetworkType.BRIDGE,
-            "Docker networking type must be BRIDGE if port mappings are set");
-      }
 
       for (SingularityDockerPortMapping portMapping : dockerInfo.getPortMappings()) {
         if (portMapping.getContainerPortType() == SingularityPortMappingType.FROM_OFFER) {
@@ -415,7 +424,7 @@ public class SingularityValidator {
         newDayOfWeekValue = "SAT";
         break;
       default:
-        WebExceptions.badRequest("Schedule %s is invalid, day of week (%s) is not 0-7", schedule, dayOfWeekValue);
+        badRequest("Schedule %s is invalid, day of week (%s) is not 0-7", schedule, dayOfWeekValue);
         break;
     }
 
@@ -429,5 +438,16 @@ public class SingularityValidator {
     } catch (NumberFormatException nfe) {
       return false;
     }
+  }
+
+  public SingularityBounceRequest checkBounceRequest(SingularityBounceRequest defaultBounceRequest) {
+    if (defaultBounceRequest.getDurationMillis().isPresent()) {
+      return defaultBounceRequest;
+    }
+    final long durationMillis = TimeUnit.MINUTES.toMillis(defaultBounceExpirationMinutes);
+    return defaultBounceRequest
+        .toBuilder()
+        .setDurationMillis(Optional.of(durationMillis))
+        .build();
   }
 }

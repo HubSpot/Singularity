@@ -105,6 +105,7 @@ class LogStreamer(threading.Thread):
         prefix = '({0}) =>\n'.format(task) if args.verbose else ''
         if len(response['data'].encode('utf-8')) > 0:
             sys.stdout.write('{0}{1}'.format(colored(prefix, 'cyan'), response['data'].encode('utf-8')))
+            sys.stdout.flush()
             return offset + len(response['data'].encode('utf-8'))
         else:
             return offset

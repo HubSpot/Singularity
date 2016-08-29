@@ -8,6 +8,7 @@
         overflow hidden
         text-overflow ellipsis
         position relative
+        line-height: normal
 
         .btn.offset-link
             background #fff
@@ -27,6 +28,10 @@
 
         .btn
             margin-bottom 5px
+            margin-left 5px
+
+    .row
+      margin-bottom 0
 
     .lead
         font-size 16px
@@ -67,13 +72,14 @@
 
     .deploy-state
         text-transform lowercase
-        padding 4px .8em
+        padding 4px .5em
         line-height 27px
         font-size 18px
         border-radius 4px
         background #f3f3f3
         color #888
         margin-right .5em
+        margin-left .5em
 
         &[data-state='SUCCEEDED']
             color #519D3D
@@ -123,9 +129,9 @@
         &:hover
           opacity 0.3
     .task-state-header-label
-        display table-cell
-    .task-state-header
-        padding-top 5px
+        display inline-block
+        font-size 0.5em
+        vertical-align middle
     .breadcrumb
         margin-bottom 5px
         padding 5px 15px
@@ -145,3 +151,5 @@
 div.task-detail
     margin-top -20px
 
+.inline-header
+  display inline-block
