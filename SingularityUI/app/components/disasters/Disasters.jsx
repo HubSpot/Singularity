@@ -10,7 +10,7 @@ import DisasterStats from './DisasterStats';
 class Disasters extends Component {
   static propTypes = {
     disastersData: PropTypes.shape({
-      currentStats: PropTypes.shape({
+      stats: PropTypes.arrayOf(PropTypes.shape({
         timestamp: PropTypes.number.isRequired,
         numActiveTasks: PropTypes.number.isRequired,
         numPendingTasks: PropTypes.number.isRequired,
@@ -19,17 +19,7 @@ class Disasters extends Component {
         numLostTasks: PropTypes.number.isRequired,
         numActiveSlaves: PropTypes.number.isRequired,
         numLostSlaves: PropTypes.number.isRequired
-      }),
-      lastStats:  PropTypes.shape({
-        timestamp: PropTypes.number.isRequired,
-        numActiveTasks: PropTypes.number.isRequired,
-        numPendingTasks: PropTypes.number.isRequired,
-        numLateTasks: PropTypes.number.isRequired,
-        avgTaskLagMillis: PropTypes.number.isRequired,
-        numLostTasks: PropTypes.number.isRequired,
-        numActiveSlaves: PropTypes.number.isRequired,
-        numLostSlaves: PropTypes.number.isRequired
-      }),
+      })).isRequired,
       disasters: PropTypes.arrayOf(PropTypes.shape({
         type: PropTypes.string.isRequired,
         active: PropTypes.bool
@@ -51,7 +41,7 @@ class Disasters extends Component {
       <div>
         <DisabledActions disabledActions={this.props.disabledActions} user={this.props.user} />
         <ManageDisasters disasters={this.props.disastersData.disasters} user={this.props.user} automatedActionsDisabled={this.props.disastersData.automatedActionsDisabled} />
-        <DisasterStats currentStats={this.props.disastersData.currentStats} lastStats={this.props.disastersData.lastStats} />
+        <DisasterStats stats={this.props.disastersData.stats} />
       </div>
     );
   }

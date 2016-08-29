@@ -1,11 +1,8 @@
 package com.hubspot.singularity.data;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.utils.ZKPaths;
@@ -18,7 +15,7 @@ import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDisabledAction;
 import com.hubspot.singularity.SingularityDisabledActionType;
 import com.hubspot.singularity.SingularityDisaster;
-import com.hubspot.singularity.SingularityDisasterStats;
+import com.hubspot.singularity.SingularityDisasterDataPoints;
 import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityUser;
@@ -29,19 +26,18 @@ public class DisasterManager extends CuratorAsyncManager {
   private static final String DISASTERS_ROOT = "/disasters";
   private static final String DISABLED_ACTIONS_PATH = DISASTERS_ROOT + "/disabled-actions";
   private static final String ACTIVE_DISASTERS_PATH = DISASTERS_ROOT + "/active";
-  private static final String DISASTER_STATS_PATH = DISASTERS_ROOT + "/stats";
-  private static final String PREVIOUS_DISASTER_STATS_PATH = DISASTERS_ROOT + "/previous-stats";
+  private static final String DISASTER_STATS_PATH = DISASTERS_ROOT + "/statistics";
   private static final String DISABLE_AUTOMATED_PATH = DISASTERS_ROOT + "/disabled";
 
   private static final String MESSAGE_FORMAT = "Cannot perform action %s: %s";
   private static final String DEFAULT_MESSAGE = "Action is currently disabled";
 
   private final Transcoder<SingularityDisabledAction> disabledActionTranscoder;
-  private final Transcoder<SingularityDisasterStats> disasterStatsTranscoder;
+  private final Transcoder<SingularityDisasterDataPoints> disasterStatsTranscoder;
 
   @Inject
   public DisasterManager(CuratorFramework curator, SingularityConfiguration configuration, MetricRegistry metricRegistry,
-                         Transcoder<SingularityDisabledAction> disabledActionTranscoder, Transcoder<SingularityDisasterStats> disasterStatsTranscoder) {
+                         Transcoder<SingularityDisabledAction> disabledActionTranscoder, Transcoder<SingularityDisasterDataPoints> disasterStatsTranscoder) {
     super(curator, configuration, metricRegistry);
     this.disabledActionTranscoder = disabledActionTranscoder;
     this.disasterStatsTranscoder = disasterStatsTranscoder;
@@ -119,24 +115,18 @@ public class DisasterManager extends CuratorAsyncManager {
     return disasters;
   }
 
-  public void saveDisasterStats(SingularityDisasterStats stats) {
+  public void saveDisasterStats(SingularityDisasterDataPoints stats) {
     save(DISASTER_STATS_PATH, stats, disasterStatsTranscoder);
   }
 
-  public Optional<SingularityDisasterStats> getDisasterStats() {
-    return getData(DISASTER_STATS_PATH, disasterStatsTranscoder);
-  }
-
-  public void savePreviousDisasterStats(SingularityDisasterStats stats) {
-    save(PREVIOUS_DISASTER_STATS_PATH, stats, disasterStatsTranscoder);
-  }
-
-  public Optional<SingularityDisasterStats> getPreviousDisasterStats() {
-    return getData(PREVIOUS_DISASTER_STATS_PATH, disasterStatsTranscoder);
+  public SingularityDisasterDataPoints getDisasterStats() {
+    SingularityDisasterDataPoints stats = getData(DISASTER_STATS_PATH, disasterStatsTranscoder).or(SingularityDisasterDataPoints.empty());
+    Collections.sort(stats.getDataPoints());
+    return stats;
   }
 
   public SingularityDisastersData getDisastersData() {
-    return new SingularityDisastersData(getDisasterStats(), getPreviousDisasterStats(), getAllDisasterStates(), isAutomatedDisabledActionsDisabled());
+    return new SingularityDisastersData(getDisasterStats().getDataPoints(), getAllDisasterStates(), isAutomatedDisabledActionsDisabled());
   }
 
   public void updateActiveDisasters(List<SingularityDisasterType> previouslyActiveDisasters, List<SingularityDisasterType> newActiveDisasters) {
