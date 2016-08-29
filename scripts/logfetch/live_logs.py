@@ -95,10 +95,10 @@ def base_directory_files(args, task, files_json):
     else:
         return [f['path'].rsplit('/')[-1] for f in files_json if valid_logfile(args, f)]
 
-def valid_logfile(args, fileData):
-    is_in_range = logfetch_base.is_in_date_range(args, fileData['mtime'])
-    not_a_directory = not fileData['mode'].startswith('d')
-    is_a_logfile = fnmatch.fnmatch(fileData['name'], '*.log') or fnmatch.fnmatch(fileData['name'], '*.out') or fnmatch.fnmatch(fileData['name'], '*.err')
+def valid_logfile(args, file_data):
+    is_in_range = logfetch_base.is_in_date_range(args, file_data['mtime'])
+    not_a_directory = not file_data['mode'].startswith('d')
+    is_a_logfile = fnmatch.fnmatch(file_data['name'], '*.log') or fnmatch.fnmatch(file_data['name'], '*.out') or fnmatch.fnmatch(file_data['name'], '*.err')
     return is_in_range and not_a_directory and is_a_logfile
 
 def should_download(args, filename, task):
