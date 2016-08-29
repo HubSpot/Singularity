@@ -84,18 +84,18 @@ def logs_folder_files(args, task):
     files_json = logfetch_base.get_json_response(uri, args, {'path' : '{0}/logs'.format(task)}, True)
     if 'files' in files_json:
         files = files_json['files']
-        return [f['name'] for f in files if valid_logfile(args, f)]
+        return [f['name'] for f in files if is_valid_live_log(args, f)]
     else:
-        return [f['path'].rsplit('/')[-1] for f in files_json if valid_logfile(args, f)]
+        return [f['path'].rsplit('/')[-1] for f in files_json if is_valid_live_log(args, f)]
 
 def base_directory_files(args, task, files_json):
     if 'files' in files_json:
         files = files_json['files']
-        return [f['name'] for f in files if valid_logfile(args, f)]
+        return [f['name'] for f in files if is_valid_live_log(args, f)]
     else:
-        return [f['path'].rsplit('/')[-1] for f in files_json if valid_logfile(args, f)]
+        return [f['path'].rsplit('/')[-1] for f in files_json if is_valid_live_log(args, f)]
 
-def valid_logfile(args, file_data):
+def is_valid_live_log(args, file_data):
     is_in_range = logfetch_base.is_in_date_range(args, file_data['mtime'])
     not_a_directory = not file_data['mode'].startswith('d')
     is_a_logfile = fnmatch.fnmatch(file_data['name'], '*.log') or fnmatch.fnmatch(file_data['name'], '*.out') or fnmatch.fnmatch(file_data['name'], '*.err')
