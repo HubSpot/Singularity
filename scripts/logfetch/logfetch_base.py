@@ -131,3 +131,7 @@ def get_json_response(uri, args, params={}, skip404ErrMessage=False):
             log(colored(singularity_response.text, 'red') + '\n', args, False)
         return {}
     return singularity_response.json()
+
+
+def logfile_has_data(file_data):
+    return file_data['size'] > 0
