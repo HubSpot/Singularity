@@ -37,10 +37,12 @@ import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
+import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.SingularityWebhook;
 import com.hubspot.singularity.api.SingularityBounceRequest;
+import com.hubspot.singularity.api.SingularityPriorityFreeze;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
 
@@ -66,15 +68,17 @@ public class SingularityValidator {
   private final int deployIdLength;
   private final DeployHistoryHelper deployHistoryHelper;
   private final Resources defaultResources;
+  private final PriorityManager priorityManager;
 
   @Inject
-  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, RequestManager requestManager) {
+  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, PriorityManager priorityManager) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
     this.createDeployIds = configuration.isCreateDeployIds();
     this.deployIdLength = configuration.getDeployIdLength();
     this.deployHistoryHelper = deployHistoryHelper;
+    this.priorityManager = priorityManager;
 
     this.defaultCpus = configuration.getMesosConfiguration().getDefaultCpus();
     this.defaultMemoryMb = configuration.getMesosConfiguration().getDefaultMemory();
@@ -131,6 +135,10 @@ public class SingularityValidator {
     checkBadRequest(!request.getInstances().isPresent() || request.getInstances().get() > 0, "Instances must be greater than 0");
 
     checkBadRequest(request.getInstancesSafe() <= maxInstancesPerRequest,"Instances (%s) be greater than %s (maxInstancesPerRequest in mesos configuration)", request.getInstancesSafe(), maxInstancesPerRequest);
+
+    if (request.getTaskPriorityLevel().isPresent()) {
+      checkBadRequest(request.getTaskPriorityLevel().get() >= 0 && request.getTaskPriorityLevel().get() <= 1, "Request taskPriorityLevel %s is invalid, must be between 0 and 1 (inclusive).", request.getTaskPriorityLevel().get());
+    }
 
     if (existingRequest.isPresent()) {
       checkForIllegalChanges(request, existingRequest.get());
@@ -279,6 +287,10 @@ public class SingularityValidator {
     }
 
     checkBadRequest(deployHistoryHelper.isDeployIdAvailable(request.getId(), deployId), "Can not deploy a deploy that has already been deployed");
+
+    if (request.isDeployable()) {
+      checkRequestForPriorityFreeze(request);
+    }
 
     return deploy;
   }
@@ -441,6 +453,29 @@ public class SingularityValidator {
     }
   }
 
+  public SingularityPriorityFreeze checkSingularityPriorityFreeze(SingularityPriorityFreeze priorityFreeze) {
+    checkBadRequest(priorityFreeze.getMinimumPriorityLevel() > 0 && priorityFreeze.getMinimumPriorityLevel() <= 1, "minimumPriorityLevel %s is invalid, must be greater than 0 and less than or equal to 1.", priorityFreeze.getMinimumPriorityLevel());
+
+    // auto-generate actionId if not set
+    if (!priorityFreeze.getActionId().isPresent()) {
+      priorityFreeze = new SingularityPriorityFreeze(priorityFreeze.getMinimumPriorityLevel(), priorityFreeze.isKillTasks(), priorityFreeze.getMessage(), Optional.of(UUID.randomUUID().toString()));
+    }
+
+    return priorityFreeze;
+  }
+
+  public void checkRequestForPriorityFreeze(SingularityRequest request) {
+    final Optional<SingularityPriorityFreezeParent> maybePriorityFreeze = priorityManager.getActivePriorityFreeze();
+
+    if (!maybePriorityFreeze.isPresent()) {
+      return;
+    }
+
+    final double taskPriorityLevel = priorityManager.getTaskPriorityLevelForRequest(request);
+
+    checkBadRequest(taskPriorityLevel >= maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel(), "Priority level of request %s (%s) is lower than active priority freeze (%s)", request.getId(), taskPriorityLevel, maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel());
+  }
+
   public SingularityBounceRequest checkBounceRequest(SingularityBounceRequest defaultBounceRequest) {
     if (defaultBounceRequest.getDurationMillis().isPresent()) {
       return defaultBounceRequest;
@@ -453,7 +488,8 @@ public class SingularityValidator {
   }
 
   public void checkRequestGroup(SingularityRequestGroup requestGroup) {
-    checkBadRequest(requestGroup.getId() != null && !StringUtils.containsAny(requestGroup.getId(), JOINER.join(REQUEST_ID_ILLEGAL_CHARACTERS)), "Id can not be null or contain any of the following characters: %s", REQUEST_ID_ILLEGAL_CHARACTERS);
+    checkBadRequest(requestGroup.getId() != null && !StringUtils.containsAny(requestGroup.getId(), JOINER.join(REQUEST_ID_ILLEGAL_CHARACTERS)),
+        "Id can not be null or contain any of the following characters: %s", REQUEST_ID_ILLEGAL_CHARACTERS);
     checkBadRequest(requestGroup.getId().length() < maxRequestIdSize, "Id must be less than %s characters, it is %s (%s)", maxRequestIdSize, requestGroup.getId().length(), requestGroup.getId());
 
     checkBadRequest(requestGroup.getRequestIds() != null, "requestIds cannot be null");
