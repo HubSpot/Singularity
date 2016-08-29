@@ -133,5 +133,12 @@ def get_json_response(uri, args, params={}, skip404ErrMessage=False):
     return singularity_response.json()
 
 
+def is_valid_log(file_data):
+    not_a_directory = not file_data['mode'].startswith('d')
+    is_a_logfile = fnmatch.fnmatch(file_data['name'], '*.log') or fnmatch.fnmatch(file_data['name'], '*.out') or fnmatch.fnmatch(file_data['name'], '*.err')
+    has_data = logfile_has_data(file_data)
+    return not_a_directory and is_a_logfile and has_data
+
+
 def logfile_has_data(file_data):
     return file_data['size'] > 0
