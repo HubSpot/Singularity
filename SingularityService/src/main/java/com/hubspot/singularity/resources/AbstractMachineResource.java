@@ -5,7 +5,7 @@ import static com.hubspot.singularity.WebExceptions.checkNotFound;
 import com.google.common.base.Optional;
 import com.hubspot.singularity.MachineState;
 import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityDisabledActionType;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityMachineAbstraction;
 import com.hubspot.singularity.SingularityUser;
 import com.hubspot.singularity.api.SingularityMachineChangeRequest;
@@ -59,19 +59,21 @@ public abstract class AbstractMachineResource<T extends SingularityMachineAbstra
 
   }
 
-  protected void decommission(String objectId, Optional<SingularityMachineChangeRequest> decomissionRequest, Optional<String> queryUser) {
+  protected void decommission(String objectId, Optional<SingularityMachineChangeRequest> decomissionRequest, Optional<String> queryUser, SingularityAction action) {
     authorizationHelper.checkAdminAuthorization(user);
-    validator.checkActionEnabled(SingularityDisabledActionType.DECOMMISSION);
+    validator.checkActionEnabled(action);
     changeState(objectId, MachineState.STARTING_DECOMMISSION, decomissionRequest, queryUser);
   }
 
-  protected void freeze(String objectId, Optional<SingularityMachineChangeRequest> freezeRequest, Optional<String> queryUser) {
+  protected void freeze(String objectId, Optional<SingularityMachineChangeRequest> freezeRequest, Optional<String> queryUser, SingularityAction action) {
     authorizationHelper.checkAdminAuthorization(user);
+    validator.checkActionEnabled(action);
     changeState(objectId, MachineState.FROZEN, freezeRequest, queryUser);
   }
 
-  protected void activate(String objectId, Optional<SingularityMachineChangeRequest> activateRequest, Optional<String> queryUser) {
+  protected void activate(String objectId, Optional<SingularityMachineChangeRequest> activateRequest, Optional<String> queryUser, SingularityAction action) {
     authorizationHelper.checkAdminAuthorization(user);
+    validator.checkActionEnabled(action);
     changeState(objectId, MachineState.ACTIVE, activateRequest, queryUser);
   }
 

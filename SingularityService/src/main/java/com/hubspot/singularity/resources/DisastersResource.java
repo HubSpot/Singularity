@@ -12,10 +12,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityDisabledAction;
-import com.hubspot.singularity.SingularityDisabledActionType;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDisasterType;
 import com.hubspot.singularity.SingularityDisastersData;
 import com.hubspot.singularity.SingularityService;
@@ -94,7 +93,7 @@ public class DisastersResource {
 
   @POST
   @Path("/disabled-actions/{action}")
-  public void disableAction(@PathParam("action") SingularityDisabledActionType action, Optional<SingularityDisabledActionRequest> maybeRequest) {
+  public void disableAction(@PathParam("action") SingularityAction action, Optional<SingularityDisabledActionRequest> maybeRequest) {
     authorizationHelper.checkAdminAuthorization(user);
     Optional<String> message = maybeRequest.isPresent() ? maybeRequest.get().getMessage() : Optional.<String>absent();
     disasterManager.disable(action, message, user, false);
@@ -102,7 +101,7 @@ public class DisastersResource {
 
   @DELETE
   @Path("/disabled-actions/{action}")
-  public void enableAction(@PathParam("action") SingularityDisabledActionType action) {
+  public void enableAction(@PathParam("action") SingularityAction action) {
     authorizationHelper.checkAdminAuthorization(user);
     disasterManager.enable(action);
   }

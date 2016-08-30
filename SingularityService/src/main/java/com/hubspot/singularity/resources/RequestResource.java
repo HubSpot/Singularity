@@ -33,7 +33,7 @@ import com.hubspot.singularity.RequestState;
 import com.hubspot.singularity.SingularityAuthorizationScope;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
-import com.hubspot.singularity.SingularityDisabledActionType;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityPendingDeploy;
 import com.hubspot.singularity.SingularityPendingRequest;
 import com.hubspot.singularity.SingularityPendingRequest.PendingType;
@@ -114,6 +114,9 @@ public class RequestResource extends AbstractRequestResource {
 
     if (oldRequest.isPresent()) {
       authorizationHelper.checkForAuthorization(oldRequest.get(), user, SingularityAuthorizationScope.WRITE);
+      validator.checkActionEnabled(SingularityAction.UPDATE_REQUEST);
+    } else {
+      validator.checkActionEnabled(SingularityAction.CREATE_REQUEST);
     }
     authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
 
@@ -162,7 +165,7 @@ public class RequestResource extends AbstractRequestResource {
     SingularityRequestWithState requestWithState = fetchRequestWithState(requestId);
 
     authorizationHelper.checkForAuthorization(requestWithState.getRequest(), user, SingularityAuthorizationScope.WRITE);
-    validator.checkActionEnabled(SingularityDisabledActionType.BOUNCE);
+    validator.checkActionEnabled(SingularityAction.BOUNCE_REQUEST);
 
     checkBadRequest(requestWithState.getRequest().isLongRunning(), "Can not bounce a %s request (%s)", requestWithState.getRequest().getRequestType(), requestWithState);
 
@@ -530,7 +533,7 @@ public class RequestResource extends AbstractRequestResource {
     SingularityRequest request = fetchRequest(requestId);
 
     authorizationHelper.checkForAuthorization(request, user, SingularityAuthorizationScope.WRITE);
-    validator.checkActionEnabled(SingularityDisabledActionType.REMOVE);
+    validator.checkActionEnabled(SingularityAction.REMOVE_REQUEST);
 
     Optional<String> message = Optional.absent();
     Optional<String> actionId = Optional.absent();
@@ -560,7 +563,7 @@ public class RequestResource extends AbstractRequestResource {
 
     SingularityRequest oldRequest = oldRequestWithState.getRequest();
     authorizationHelper.checkForAuthorization(oldRequest, user, SingularityAuthorizationScope.WRITE);
-    validator.checkActionEnabled(SingularityDisabledActionType.SCALE);
+    validator.checkActionEnabled(SingularityAction.SCALE_REQUEST);
 
     SingularityRequest newRequest = oldRequest.toBuilder().setInstances(scaleRequest.getInstances()).build();
 

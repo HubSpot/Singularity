@@ -4,19 +4,19 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
-import com.hubspot.singularity.SingularityDisabledActionType;
+import com.hubspot.singularity.SingularityAction;
 
 public class SingularityDisabledActionRequest {
-  private final SingularityDisabledActionType type;
+  private final SingularityAction type;
   private final Optional<String> message;
 
   @JsonCreator
-  public SingularityDisabledActionRequest(@JsonProperty("type") SingularityDisabledActionType type, @JsonProperty("message") Optional<String> message) {
+  public SingularityDisabledActionRequest(@JsonProperty("type") SingularityAction type, @JsonProperty("message") Optional<String> message) {
     this.type = type;
     this.message = message;
   }
 
-  public SingularityDisabledActionType getType() {
+  public SingularityAction getType() {
     return type;
   }
 

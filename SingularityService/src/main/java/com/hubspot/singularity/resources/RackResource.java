@@ -15,6 +15,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularityRack;
 import com.hubspot.singularity.SingularityService;
@@ -70,21 +71,21 @@ public class RackResource extends AbstractMachineResource<SingularityRack> {
   @Path("/rack/{rackId}/decommission")
   @ApiOperation("Begin decommissioning a specific active rack")
   public void decommissionRack(@ApiParam("Active rack ID") @PathParam("rackId") String rackId, Optional<SingularityMachineChangeRequest> changeRequest) {
-    super.decommission(rackId, changeRequest, JavaUtils.getUserEmail(user));
+    super.decommission(rackId, changeRequest, JavaUtils.getUserEmail(user), SingularityAction.DECOMMISSION_RACK);
   }
 
   @POST
   @Path("/rack/{rackId}/freeze")
   @ApiOperation("Freeze a specific rack")
   public void freezeRack(@ApiParam("Rack ID") @PathParam("rackId") String rackId, Optional<SingularityMachineChangeRequest> changeRequest) {
-    super.freeze(rackId, changeRequest, JavaUtils.getUserEmail(user));
+    super.freeze(rackId, changeRequest, JavaUtils.getUserEmail(user), SingularityAction.FREEZE_RACK);
   }
 
   @POST
   @Path("/rack/{rackId}/activate")
   @ApiOperation("Activate a decomissioning rack, canceling decomission without erasing history")
-  public void activateSlave(@ApiParam("Active rackId") @PathParam("rackId") String rackId, Optional<SingularityMachineChangeRequest> changeRequest) {
-    super.activate(rackId, changeRequest, JavaUtils.getUserEmail(user));
+  public void activateRack(@ApiParam("Active rackId") @PathParam("rackId") String rackId, Optional<SingularityMachineChangeRequest> changeRequest) {
+    super.activate(rackId, changeRequest, JavaUtils.getUserEmail(user), SingularityAction.ACTIVATE_RACK);
   }
 
 }

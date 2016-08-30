@@ -10,7 +10,7 @@ import org.apache.mesos.Protos.TaskStatus.Reason;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
-import com.hubspot.singularity.SingularityDisabledActionType;
+import com.hubspot.singularity.SingularityAction;
 
 public class DisasterDetectionConfiguration {
 
@@ -22,7 +22,7 @@ public class DisasterDetectionConfiguration {
 
   @JsonProperty("disableActionsOnDisaster")
   @NotNull
-  private List<SingularityDisabledActionType> disableActionsOnDisaster = Collections.emptyList();
+  private List<SingularityAction> disableActionsOnDisaster = Collections.emptyList();
 
   private boolean checkLateTasks = true;
 
@@ -73,11 +73,11 @@ public class DisasterDetectionConfiguration {
     this.statsHistorySize = statsHistorySize;
   }
 
-  public List<SingularityDisabledActionType> getDisableActionsOnDisaster() {
+  public List<SingularityAction> getDisableActionsOnDisaster() {
     return disableActionsOnDisaster;
   }
 
-  public void setDisableActionsOnDisaster(List<SingularityDisabledActionType> disableActionsOnDisaster) {
+  public void setDisableActionsOnDisaster(List<SingularityAction> disableActionsOnDisaster) {
     this.disableActionsOnDisaster = disableActionsOnDisaster;
   }
 
