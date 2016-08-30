@@ -284,7 +284,7 @@ public class SingularityValidator {
 
     int indexMod = hasSeconds ? 1 : 0;
 
-    newSchedule.add(split[indexMod + 0]);
+    newSchedule.add(split[indexMod]);
     newSchedule.add(split[indexMod + 1]);
 
     String dayOfMonth = split[indexMod + 2];
