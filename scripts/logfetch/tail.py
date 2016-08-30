@@ -108,7 +108,7 @@ class LogStreamer(threading.Thread):
         }
         response_obj = requests.get(uri, params=params, headers=args.headers)
         response = response_obj.json()
-        if not hasattr(response, 'data'):
+        if 'data' not in response:
             if response_obj.status_code < 199 or response_obj.status_code > 299:
                 raise errors.NoTailDataError()
             else:
