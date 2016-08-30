@@ -1,3 +1,4 @@
+import errors
 import os
 import sys
 import logfetch_base
@@ -96,7 +97,7 @@ class LogStreamer(threading.Thread):
                 sys.stderr.write(colored('Could not tail logs for task {0}, check that the task is still active and that the slave it runs on has not been decommissioned\n'.format(task), 'red'))
                 keep_trying = False
             except errors.NoTailDataError:
-                sys.stderr.write(colored('Could not tail logs for task {0}, no data was returned\n'.format(task), 'red'))
+                sys.stderr.write(colored('Could not tail logs for task {0}, response had no data and was not a 2xx\n'.format(task), 'red'))
                 sys.stderr.flush()
                 keep_trying = False
 
@@ -105,9 +106,10 @@ class LogStreamer(threading.Thread):
             "path" : path,
             "offset" : offset
         }
-        response = requests.get(uri, params=params, headers=args.headers).json()
+        response_obj = requests.get(uri, params=params, headers=args.headers)
+        response = response_obj.json()
         if not hasattr(response, 'data'):
-            if response.status_code < 199 or response.status_code > 299:
+            if response_obj.status_code < 199 or response_obj.status_code > 299:
                 raise errors.NoTailDataError()
             else:
                 sys.stderr.write(colored('Log tail data missing, retrying...\n'.format(task), 'red'))
