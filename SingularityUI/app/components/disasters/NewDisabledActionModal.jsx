@@ -3,7 +3,12 @@ import { connect } from 'react-redux';
 import { FetchDisabledActions, NewDisabledAction } from '../../actions/api/disasters';
 import FormModal from '../common/modal/FormModal';
 
-const DISABLED_ACTION_TYPES = ['BOUNCE', 'DEPLOY', 'SCALE', 'REMOVE', 'DECOMMISSION'];
+const DISABLED_ACTION_TYPES = [
+  'BOUNCE_REQUEST', 'SCALE_REQUEST', 'REMOVE_REQUEST', 'CREATE_REQUEST', 'UPDATE_REQUEST','KILL_TASK', 
+  'BOUNCE_TASK', 'RUN_SHELL_COMMAND', 'ADD_METADATA', 'DEPLOY', 'CANCEL_DEPLOY', 'ADD_WEBHOOK', 'REMOVE_WEBHOOK',
+  'TASK_RECONCILIATION', 'FREEZE_SLAVE', 'ACTIVATE_SLAVE', 'DECOMMISSION_SLAVE', 'VIEW_SLAVES','FREEZE_RACK',
+  'ACTIVATE_RACK', 'DECOMMISSION_RACK', 'VIEW_RACKS'
+];
 
 import Utils from '../../utils';
 

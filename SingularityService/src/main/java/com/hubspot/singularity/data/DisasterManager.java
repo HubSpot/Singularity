@@ -13,7 +13,7 @@ import com.google.inject.Inject;
 import com.hubspot.singularity.SingularityCreateResult;
 import com.hubspot.singularity.SingularityDeleteResult;
 import com.hubspot.singularity.SingularityDisabledAction;
-import com.hubspot.singularity.SingularityDisabledActionType;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityDisaster;
 import com.hubspot.singularity.SingularityDisasterDataPoints;
 import com.hubspot.singularity.SingularityDisasterType;
@@ -43,20 +43,23 @@ public class DisasterManager extends CuratorAsyncManager {
     this.disasterStatsTranscoder = disasterStatsTranscoder;
   }
 
-  private String getActionPath(SingularityDisabledActionType action) {
+  private String getActionPath(SingularityAction action) {
     return ZKPaths.makePath(DISABLED_ACTIONS_PATH, action.name());
   }
 
-  public boolean isDisabled(SingularityDisabledActionType action) {
+  public boolean isDisabled(SingularityAction action) {
     return exists(getActionPath(action));
   }
 
-  public SingularityDisabledAction getDisabledAction(SingularityDisabledActionType action) {
+  public SingularityDisabledAction getDisabledAction(SingularityAction action) {
     Optional<SingularityDisabledAction> maybeDisabledAction = getData(getActionPath(action), disabledActionTranscoder);
     return maybeDisabledAction.or(new SingularityDisabledAction(action, String.format(MESSAGE_FORMAT, action, DEFAULT_MESSAGE), Optional.<String>absent(), false));
   }
 
-  public SingularityCreateResult disable(SingularityDisabledActionType action, Optional<String> maybeMessage, Optional<SingularityUser> user, boolean systemGenerated) {
+  public SingularityCreateResult disable(SingularityAction action, Optional<String> maybeMessage, Optional<SingularityUser> user, boolean systemGenerated) {
+    if (!action.isDisableable()) {
+      throw new IllegalArgumentException(String.format("Action %s cannot be disabled", action));
+    }
     SingularityDisabledAction disabledAction = new SingularityDisabledAction(
       action,
       String.format(MESSAGE_FORMAT, action, maybeMessage.or(DEFAULT_MESSAGE)),
@@ -66,7 +69,7 @@ public class DisasterManager extends CuratorAsyncManager {
     return save(getActionPath(action), disabledAction, disabledActionTranscoder);
   }
 
-  public SingularityDeleteResult enable(SingularityDisabledActionType action) {
+  public SingularityDeleteResult enable(SingularityAction action) {
     return delete(getActionPath(action));
   }
 
@@ -147,7 +150,7 @@ public class DisasterManager extends CuratorAsyncManager {
 
   public void addDisabledActionsForDisasters(List<SingularityDisasterType> newActiveDisasters) {
     String message = String.format("Active disasters detected: (%s)", newActiveDisasters);
-    for (SingularityDisabledActionType action : configuration.getDisasterDetection().getDisableActionsOnDisaster()) {
+    for (SingularityAction action : configuration.getDisasterDetection().getDisableActionsOnDisaster()) {
       disable(action, Optional.of(message), Optional.<SingularityUser>absent(), true);
     }
   }
