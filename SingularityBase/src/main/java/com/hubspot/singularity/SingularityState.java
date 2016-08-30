@@ -52,8 +52,6 @@ public class SingularityState {
 
   private final Optional<Double> minimumPriorityLevel;
 
-  private final Optional<SingularityTaskReconciliationStatistics> lastTaskReconciliationStatistics;
-
   @JsonCreator
   public SingularityState(@JsonProperty("activeTasks") int activeTasks, @JsonProperty("activeRequests") int activeRequests, @JsonProperty("cooldownRequests") int cooldownRequests,
       @JsonProperty("pausedRequests") int pausedRequests, @JsonProperty("scheduledTasks") int scheduledTasks, @JsonProperty("pendingRequests") int pendingRequests, @JsonProperty("lbCleanupTasks") int lbCleanupTasks,
@@ -64,7 +62,7 @@ public class SingularityState {
       @JsonProperty("overProvisionedRequestIds") List<String> overProvisionedRequestIds, @JsonProperty("underProvisionedRequestIds") List<String> underProvisionedRequestIds,
       @JsonProperty("overProvisionedRequests") int overProvisionedRequests, @JsonProperty("underProvisionedRequests") int underProvisionedRequests, @JsonProperty("finishedRequests") int finishedRequests,
       @JsonProperty("unknownRacks") int unknownRacks, @JsonProperty("unknownSlaves") int unknownSlaves, @JsonProperty("authDatastoreHealthy") Optional<Boolean> authDatastoreHealthy,
-      @JsonProperty("minimumPriorityLevel") Optional<Double> minimumPriorityLevel, @JsonProperty("lastTaskReconciliationStatistics") Optional<SingularityTaskReconciliationStatistics> lastTaskReconciliationStatistics) {
+      @JsonProperty("minimumPriorityLevel") Optional<Double> minimumPriorityLevel) {
     this.activeTasks = activeTasks;
     this.activeRequests = activeRequests;
     this.pausedRequests = pausedRequests;
@@ -97,7 +95,6 @@ public class SingularityState {
     this.underProvisionedRequestIds = underProvisionedRequestIds;
     this.authDatastoreHealthy = authDatastoreHealthy;
     this.minimumPriorityLevel = minimumPriorityLevel;
-    this.lastTaskReconciliationStatistics = lastTaskReconciliationStatistics;
   }
 
   public int getFinishedRequests() {
@@ -242,10 +239,6 @@ public class SingularityState {
     return minimumPriorityLevel;
   }
 
-  public Optional<SingularityTaskReconciliationStatistics> getLastTaskReconciliationStatistics() {
-    return lastTaskReconciliationStatistics;
-  }
-
   @Override
   public String toString() {
     return "SingularityState [activeTasks=" + activeTasks + ", pausedRequests=" + pausedRequests + ", activeRequests=" + activeRequests + ", cooldownRequests=" + cooldownRequests + ", scheduledTasks=" + scheduledTasks
@@ -254,7 +247,7 @@ public class SingularityState {
         + activeSlaves + ", deadSlaves=" + deadSlaves + ", decommissioningSlaves=" + decommissioningSlaves + ", unknownSlaves=" + unknownSlaves + ", activeRacks=" + activeRacks + ", deadRacks="
         + deadRacks + ", decommissioningRacks=" + decommissioningRacks + ", unknownRacks=" + unknownRacks + ", oldestDeploy=" + oldestDeploy + ", numDeploys=" + numDeploys + ", generatedAt="
         + generatedAt + ", hostStates=" + hostStates + ", overProvisionedRequestIds=" + overProvisionedRequestIds + ", underProvisionedRequestIds=" + underProvisionedRequestIds
-        + ", overProvisionedRequests=" + overProvisionedRequests + ", underProvisionedRequests=" + underProvisionedRequests + ", authDatastoreHealthy=" + authDatastoreHealthy + ", minimumPriorityLevel=" + minimumPriorityLevel + ", lastTaskReconciliationStatistics=" + lastTaskReconciliationStatistics + "]";
+        + ", overProvisionedRequests=" + overProvisionedRequests + ", underProvisionedRequests=" + underProvisionedRequests + ", authDatastoreHealthy=" + authDatastoreHealthy + ", minimumPriorityLevel=" + minimumPriorityLevel + "]";
   }
 
 }
