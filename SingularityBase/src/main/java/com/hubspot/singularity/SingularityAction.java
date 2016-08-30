@@ -7,8 +7,8 @@ public enum SingularityAction {
   ADD_WEBHOOK(true), REMOVE_WEBHOOK(true), VIEW_WEBHOOKS(false),
   TASK_RECONCILIATION(true),
   ADD_DISASTER(false), REMOVE_DISASTER(false), DISABLE_ACTION(false), ENABLE_ACTION(false), VIEW_DISASTERS(false),
-  FREEZE_SLAVE(true), ACTIVATE_SLAVE(true), DECOMMISSION_SLAVE(true), VIEW_SLAVES(true),
-  FREEZE_RACK(true), ACTIVATE_RACK(true), DECOMMISSION_RACK(true), VIEW_RACKS(true);
+  FREEZE_SLAVE(true), ACTIVATE_SLAVE(true), DECOMMISSION_SLAVE(true), VIEW_SLAVES(false),
+  FREEZE_RACK(true), ACTIVATE_RACK(true), DECOMMISSION_RACK(true), VIEW_RACKS(false);
 
   private final boolean disableable;
 
