@@ -54,11 +54,8 @@ public class SingularityValidator {
   private final int maxCpusPerRequest;
   private final int maxCpusPerInstance;
   private final int maxInstancesPerRequest;
-  private final int maxMemoryMbPerRequest;
-  private final int defaultCpus;
-  private final int defaultMemoryMb;
-  private final int defaultDiskMb;
   private final int defaultBounceExpirationMinutes;
+  private final int maxMemoryMbPerRequest;
   private final int maxMemoryMbPerInstance;
   private final boolean allowRequestsWithoutOwners;
   private final boolean createDeployIds;
@@ -67,7 +64,7 @@ public class SingularityValidator {
   private final Resources defaultResources;
 
   @Inject
-  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper, RequestManager requestManager) {
+  public SingularityValidator(SingularityConfiguration configuration, DeployHistoryHelper deployHistoryHelper) {
     this.maxDeployIdSize = configuration.getMaxDeployIdSize();
     this.maxRequestIdSize = configuration.getMaxRequestIdSize();
     this.allowRequestsWithoutOwners = configuration.isAllowRequestsWithoutOwners();
@@ -75,9 +72,9 @@ public class SingularityValidator {
     this.deployIdLength = configuration.getDeployIdLength();
     this.deployHistoryHelper = deployHistoryHelper;
 
-    this.defaultCpus = configuration.getMesosConfiguration().getDefaultCpus();
-    this.defaultMemoryMb = configuration.getMesosConfiguration().getDefaultMemory();
-    this.defaultDiskMb = configuration.getMesosConfiguration().getDefaultDisk();
+    int defaultCpus = configuration.getMesosConfiguration().getDefaultCpus();
+    int defaultMemoryMb = configuration.getMesosConfiguration().getDefaultMemory();
+    int defaultDiskMb = configuration.getMesosConfiguration().getDefaultDisk();
     this.defaultBounceExpirationMinutes = configuration.getDefaultBounceExpirationMinutes();
 
     defaultResources = new Resources(defaultCpus, defaultMemoryMb, 0, defaultDiskMb);
@@ -105,8 +102,7 @@ public class SingularityValidator {
 
     checkBadRequest(request.getId().length() < maxRequestIdSize, "Request id must be less than %s characters, it is %s (%s)", maxRequestIdSize, request.getId().length(), request.getId());
     checkBadRequest(!request.getInstances().isPresent() || request.getInstances().get() > 0, "Instances must be greater than 0");
-
-    checkBadRequest(request.getInstancesSafe() <= maxInstancesPerRequest,"Instances (%s) be greater than %s (maxInstancesPerRequest in mesos configuration)", request.getInstancesSafe(), maxInstancesPerRequest);
+    checkBadRequest(request.getInstancesSafe() <= maxInstancesPerRequest, "Instances (%s) be greater than %s (maxInstancesPerRequest in mesos configuration)", request.getInstancesSafe(), maxInstancesPerRequest);
 
     if (existingRequest.isPresent()) {
       checkForIllegalChanges(request, existingRequest.get());
