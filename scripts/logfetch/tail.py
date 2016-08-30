@@ -44,23 +44,21 @@ def logs_folder_files(args, task):
     files_json = get_json_response(uri, args, {'path' : '{0}/logs'.format(task)})
     if 'files' in files_json:
         files = files_json['files']
-        return [f['name'] for f in files if valid_logfile(f)]
+        return [f['name'] for f in files if is_valid_tail_log(f)]
     else:
-        return [f['path'].rsplit('/')[-1] for f in files_json if valid_logfile(f)]
+        return [f['path'].rsplit('/')[-1] for f in files_json if is_valid_tail_log(f)]
 
 def base_directory_files(args, task):
     uri = BROWSE_FOLDER_FORMAT.format(logfetch_base.base_uri(args), task)
     files_json = get_json_response(uri, args)
     if 'files' in files_json:
         files = files_json['files']
-        return [f['name'] for f in files if valid_logfile(f)]
+        return [f['name'] for f in files if is_valid_tail_log(f)]
     else:
-        return [f['path'].rsplit('/')[-1] for f in files_json if valid_logfile(f)]
+        return [f['path'].rsplit('/')[-1] for f in files_json if is_valid_tail_log(f)]
 
-def valid_logfile(fileData):
-    not_a_directory = not fileData['mode'].startswith('d')
-    is_a_logfile = fnmatch.fnmatch(fileData['name'], '*.log') or fnmatch.fnmatch(fileData['name'], '*.out') or fnmatch.fnmatch(fileData['name'], '*.err')
-    return not_a_directory and is_a_logfile
+def is_valid_tail_log(file_data):
+    return logfetch_base.is_valid_log(file_data)
 
 class LogStreamer(threading.Thread):
     def __init__(self, args, task):
