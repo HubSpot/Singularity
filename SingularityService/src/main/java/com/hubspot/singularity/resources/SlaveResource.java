@@ -15,6 +15,7 @@ import com.google.common.base.Optional;
 import com.google.inject.Inject;
 import com.hubspot.mesos.JavaUtils;
 import com.hubspot.singularity.MachineState;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.SingularityMachineStateHistoryUpdate;
 import com.hubspot.singularity.SingularityService;
 import com.hubspot.singularity.SingularitySlave;
@@ -68,21 +69,21 @@ public class SlaveResource extends AbstractMachineResource<SingularitySlave> {
   @Path("/slave/{slaveId}/decommission")
   @ApiOperation("Begin decommissioning a specific active slave")
   public void decommissionSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId, Optional<SingularityMachineChangeRequest> changeRequest) {
-    super.decommission(slaveId, changeRequest, JavaUtils.getUserEmail(user));
+    super.decommission(slaveId, changeRequest, JavaUtils.getUserEmail(user), SingularityAction.DECOMMISSION_SLAVE);
   }
 
   @POST
   @Path("/slave/{slaveId}/freeze")
   @ApiOperation("Freeze tasks on a specific slave")
   public void freezeSlave(@ApiParam("Slave ID") @PathParam("slaveId") String slaveId, Optional<SingularityMachineChangeRequest> changeRequest) {
-    super.freeze(slaveId, changeRequest, JavaUtils.getUserEmail(user));
+    super.freeze(slaveId, changeRequest, JavaUtils.getUserEmail(user), SingularityAction.FREEZE_SLAVE);
   }
 
   @POST
   @Path("/slave/{slaveId}/activate")
   @ApiOperation("Activate a decomissioning slave, canceling decomission without erasing history")
   public void activateSlave(@ApiParam("Active slaveId") @PathParam("slaveId") String slaveId, Optional<SingularityMachineChangeRequest> changeRequest) {
-    super.activate(slaveId, changeRequest, JavaUtils.getUserEmail(user));
+    super.activate(slaveId, changeRequest, JavaUtils.getUserEmail(user), SingularityAction.ACTIVATE_SLAVE);
   }
 
 }

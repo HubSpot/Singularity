@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
-import com.hubspot.singularity.SingularityDisabledActionType;
+import com.hubspot.singularity.SingularityAction;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.DisasterManager;
 
@@ -30,8 +30,8 @@ public class SingularityTaskReconciliationPoller extends SingularityLeaderOnlyPo
 
   @Override
   public void runActionOnPoll() {
-    if (disasterManager.isDisabled(SingularityDisabledActionType.TASK_RECONCILIATION)) {
-      LOG.warn("Not starting implicit task reconciliation: {}", disasterManager.getDisabledAction(SingularityDisabledActionType.TASK_RECONCILIATION).getMessage());
+    if (disasterManager.isDisabled(SingularityAction.TASK_RECONCILIATION)) {
+      LOG.warn("Not starting implicit task reconciliation: {}", disasterManager.getDisabledAction(SingularityAction.TASK_RECONCILIATION).getMessage());
     } else {
       taskReconciliation.startReconciliation();
     }
