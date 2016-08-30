@@ -68,7 +68,7 @@ public class SingularityClient {
   private static final Logger LOG = LoggerFactory.getLogger(SingularityClient.class);
 
   private static final String STATE_FORMAT = "http://%s/%s/state";
-  private static final String TASK_RECONCILIATION_FORMAT = STATE_FORMAT + "/task-reconcilation";
+  private static final String TASK_RECONCILIATION_FORMAT = STATE_FORMAT + "/task-reconciliation";
 
   private static final String RACKS_FORMAT = "http://%s/%s/racks";
   private static final String RACKS_GET_ACTIVE_FORMAT = RACKS_FORMAT + "/active";
