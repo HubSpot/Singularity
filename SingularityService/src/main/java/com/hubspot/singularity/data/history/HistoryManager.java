@@ -25,8 +25,8 @@ public interface HistoryManager {
   List<SingularityDeployHistory> getDeployHistoryForRequest(String requestId, Integer limitStart, Integer limitCount);
 
   List<SingularityTaskIdHistory> getTaskIdHistory(Optional<String> requestId, Optional<String> deployId, Optional<String> host,
-      Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<OrderDirection> orderDirection,
-      Optional<Integer> limitStart, Integer limitCount);
+      Optional<ExtendedTaskState> lastTaskStatus, Optional<Long> startedBefore, Optional<Long> startedAfter, Optional<Long> updatedBefore,
+      Optional<Long> updatedAfter, Optional<OrderDirection> orderDirection, Optional<Integer> limitStart, Integer limitCount);
 
   Optional<SingularityTaskHistory> getTaskHistory(String taskId);
 
