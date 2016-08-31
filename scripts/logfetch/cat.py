@@ -10,9 +10,12 @@ def cat_files(args, all_logs):
         all_logs.sort()
         for filename in all_logs:
             log(colored(get_timestamp_string(filename) + ' => ' + filename, 'cyan') + '\n', args, not args.show_file_info)
-            if filename.endswith('.gz'):
+            if filename.endswith('.gz') or filename.endswith('.bz2'):
                 cat = subprocess.Popen(['cat', filename], stdout=subprocess.PIPE)
-                content = subprocess.Popen(['zcat'], stdin=cat.stdout)
+                if filename.endswith('.gz'):
+                    content = subprocess.Popen(['zcat'], stdin=cat.stdout)
+                else:
+                    content = subprocess.Popen(['bzip2', '-dc'], stdin=cat.stdout)
                 content.communicate()
             else:
                 cat = subprocess.Popen(['cat', filename])

@@ -104,7 +104,7 @@ def should_download(args, filename, task):
     if args.use_cache and already_downloaded(args, filename):
         logfetch_base.log(colored('Using cached version of file {0}\n'.format(filename), 'magenta'), args, True)
         return False
-    if filename.endswith('.gz') and already_downloaded(args, filename):
+    if (filename.endswith('.gz') or filename.endswith('.bz2')) and already_downloaded(args, filename):
         logfetch_base.log(colored('Using cached version of file {0}, zipped file has not changed\n'.format(filename), 'magenta'), args, True)
         return False
     history = task_history(args, task)
@@ -120,5 +120,5 @@ def file_not_too_old(args, history, filename):
     return int(os.path.getmtime('{0}/{1}'.format(args.dest, filename))) > state_updated_at
 
 def already_downloaded(args, filename):
-    have_file = (os.path.isfile('{0}/{1}'.format(args.dest, filename.replace('.gz', '.log'))) or os.path.isfile('{0}/{1}'.format(args.dest, filename)))
+    have_file = (os.path.isfile('{0}/{1}'.format(args.dest, filename.replace('.gz', '.log').replace('.bz2', '.log'))) or os.path.isfile('{0}/{1}'.format(args.dest, filename)))
     return have_file

@@ -18,6 +18,9 @@ def grep_files(args, all_logs):
                 if filename.endswith('.gz'):
                     zcat = subprocess.Popen('zcat', stdin=content.stdout, stdout=subprocess.PIPE)
                     grep = subprocess.Popen(grep_cmd, stdin=zcat.stdout, shell=True)
+                elif filename.endswith('.bz2'):
+                    bz = subprocess.Popen(['bzip2', '-dc'], stdin=content.stdout, stdout=subprocess.PIPE)
+                    grep = subprocess.Popen(grep_cmd, stdin=bz.stdout, shell=True)
                 else:
                     grep = subprocess.Popen(grep_cmd, stdin=content.stdout, shell=True)
                 grep.communicate()
@@ -30,9 +33,3 @@ def grep_command(args):
         return args.grep
     else:
         return DEFAULT_GREP_COMMAND.format(args.grep)
-
-def cat_command(filename):
-    if filename.endswith('.gz'):
-        return 'zcat {0}'.format(filename)
-    else:
-        return 'cat {0}'.format(filename)
