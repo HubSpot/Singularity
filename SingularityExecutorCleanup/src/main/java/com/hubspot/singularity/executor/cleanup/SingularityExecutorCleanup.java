@@ -282,9 +282,9 @@ public class SingularityExecutorCleanup {
   private void checkForUncompressedLogrotatedFile(SingularityExecutorTaskDefinition taskDefinition) {
     final Iterator<Path> iterator = getUncompressedLogrotatedFileIterator(taskDefinition);
     final Set<String> emptyPaths = new HashSet<>();
-    final List<Path> unzippedFiles = new ArrayList<>();
+    final List<Path> uncompressedFiles = new ArrayList<>();
 
-    // check for matched 0 byte zipped files.. and delete/zip them
+    // check for matched 0 byte compressed files.. and delete/compress them
 
     while (iterator.hasNext()) {
       Path path = iterator.next();
@@ -303,13 +303,13 @@ public class SingularityExecutorCleanup {
           exceptionNotifier.notify(ioe, ImmutableMap.of("file", path.toString()));
         }
       } else {
-        unzippedFiles.add(path);
+        uncompressedFiles.add(path);
       }
     }
 
-    for (Path path : unzippedFiles) {
+    for (Path path : uncompressedFiles) {
       if (emptyPaths.contains(Objects.toString(path.getFileName()))) {
-        LOG.info("zipping abandoned file {}", path);
+        LOG.info("Compressing abandoned file {}", path);
         try {
           new SimpleProcessManager(LOG).runCommand(ImmutableList.<String> of(cleanupConfiguration.getCompressionType().getCommand(), path.toString()));
         } catch (InterruptedException | ProcessFailedException e) {

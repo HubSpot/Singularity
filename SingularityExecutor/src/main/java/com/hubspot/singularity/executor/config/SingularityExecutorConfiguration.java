@@ -23,7 +23,6 @@ import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandDe
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
-import com.hubspot.singularity.runner.base.shared.CompressionType;
 
 @Configuration(filename = "/etc/singularity.executor.yaml", consolidatedField = "executor")
 public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
