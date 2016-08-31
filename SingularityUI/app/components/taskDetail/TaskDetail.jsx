@@ -164,7 +164,7 @@ class TaskDetail extends Component {
         if (!file.isDirectory) {
           const regex = /(?:\.([^.]+))?$/;
           const extension = regex.exec(file.name)[1];
-          file.isTailable = !_.contains(['zip', 'gz', 'jar', 'bz2', 'so'], extension);
+          file.isTailable = !_.contains(['zip', 'gz', 'jar', 'bz2', 'so', 'png', 'jpg', 'jpeg', 'pdf'], extension);
         }
       }
     }
