@@ -17,11 +17,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
+import com.hubspot.singularity.executor.models.LogrotateCompressionSettings;
 import com.hubspot.singularity.executor.models.ThreadCheckerType;
 import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandDescriptor;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
 import com.hubspot.singularity.runner.base.configuration.Configuration;
 import com.hubspot.singularity.runner.base.constraints.DirectoryExists;
+import com.hubspot.singularity.runner.base.shared.CompressionType;
 
 @Configuration(filename = "/etc/singularity.executor.yaml", consolidatedField = "executor")
 public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
@@ -118,6 +120,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
   @NotEmpty
   @JsonProperty
   private String logrotateExtrasDateformat = "-%Y%m%d";
+
+  @NotNull
+  @JsonProperty
+  private LogrotateCompressionSettings logrotateCompressionSettings = LogrotateCompressionSettings.gzip();
 
   @NotNull
   @JsonProperty
@@ -674,6 +680,14 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
     this.cronDirectory = cronDirectory;
   }
 
+  public LogrotateCompressionSettings getLogrotateCompressionSettings() {
+    return logrotateCompressionSettings;
+  }
+
+  public void setLogrotateCompressionSettings(LogrotateCompressionSettings logrotateCompressionSettings) {
+    this.logrotateCompressionSettings = logrotateCompressionSettings;
+  }
+
   @Override
   public String toString() {
     return "SingularityExecutorConfiguration[" +
@@ -701,9 +715,10 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
             ", logrotateCount=" + logrotateCount +
             ", logrotateDateformat='" + logrotateDateformat + '\'' +
             ", logrotateExtrasDateformat='" + logrotateExtrasDateformat + '\'' +
-            ", logrotateAdditionalFiles=" + logrotateAdditionalFiles +
-            ", s3UploaderAdditionalFiles=" + s3UploaderAdditionalFiles +
-            ", tailLogLinesToSave=" + tailLogLinesToSave +
+            ", logrotateAdditionalFiles=" + logrotateAdditionalFiles + '\'' +
+            ", logrotateCompressionSettings='" + logrotateCompressionSettings + '\'' +
+            ", s3UploaderAdditionalFiles='" + s3UploaderAdditionalFiles + '\'' +
+            ", tailLogLinesToSave='" + tailLogLinesToSave + '\'' +
             ", serviceFinishedTailLog='" + serviceFinishedTailLog + '\'' +
             ", s3UploaderKeyPattern='" + s3UploaderKeyPattern + '\'' +
             ", s3UploaderBucket='" + s3UploaderBucket + '\'' +

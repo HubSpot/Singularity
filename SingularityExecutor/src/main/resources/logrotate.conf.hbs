@@ -1,5 +1,9 @@
 dateext
 compress
+{{#ifPresent compressionSettings.compressCmd}}compresscmd {{{compressionSettings.compressCmd}}}{{/ifPresent}}
+{{#ifPresent compressionSettings.uncompressCmd}}uncompresscmd {{{compressionSettings.uncompressCmd}}}{{/ifPresent}}
+{{#ifPresent compressionSettings.compressOptions}}compressoptions {{{compressionSettings.compressOptions}}}{{/ifPresent}}
+{{#ifPresent compressionSettings.compressExt}}compressext {{{compressionSettings.compressExt}}}{{/ifPresent}}
 {{{ logrotateFrequency }}}
 copytruncate
 nomail
