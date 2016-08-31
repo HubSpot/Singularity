@@ -17,7 +17,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Optional;
 import com.hubspot.mesos.MesosUtils;
 import com.hubspot.singularity.executor.SingularityExecutorLogrotateFrequency;
-import com.hubspot.singularity.executor.models.LogrotateCompressionSettings;
 import com.hubspot.singularity.executor.models.ThreadCheckerType;
 import com.hubspot.singularity.executor.shells.SingularityExecutorShellCommandDescriptor;
 import com.hubspot.singularity.runner.base.configuration.BaseRunnerConfiguration;
