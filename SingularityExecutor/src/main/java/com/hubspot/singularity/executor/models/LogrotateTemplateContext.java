@@ -48,6 +48,10 @@ public class LogrotateTemplateContext {
     return taskDefinition.getExecutorData().getLogrotateFrequency().or(configuration.getLogrotateFrequency()).getLogrotateValue();
   }
 
+  public LogrotateCompressionSettings getCompressionSettings() {
+    return configuration.getLogrotateCompressionSettings();
+  }
+
   /**
    * Extra files for logrotate to rotate. If these do not exist logrotate will continue without error.
    * @return filenames to rotate.

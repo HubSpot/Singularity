@@ -1,6 +1,6 @@
 import sys
 import subprocess
-from logfetch_base import log, get_timestamp
+from logfetch_base import log, get_timestamp_string
 from termcolor import colored
 
 DEFAULT_GREP_COMMAND = 'grep --color=always \'{0}\''
