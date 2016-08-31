@@ -49,11 +49,11 @@ public class LogrotateTemplateContext {
     return taskDefinition.getExecutorData().getLogrotateFrequency().or(configuration.getLogrotateFrequency()).getLogrotateValue();
   }
 
-  public String getCompressCommand() {
+  public String getCompressCmd() {
     return configuration.getLogrotateCompressionSettings().getCompressCmd().orNull();
   }
 
-  public String getUncompressCommand() {
+  public String getUncompressCmd() {
     return configuration.getLogrotateCompressionSettings().getUncompressCmd().orNull();
   }
 
