@@ -22,7 +22,7 @@ public class LogrotateCompressionSettings {
     this.compressExt = compressExt;
   }
 
-  public static LogrotateCompressionSettings gzip() {
+  public static LogrotateCompressionSettings empty() {
     return new LogrotateCompressionSettings(Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent(), Optional.<String>absent());
   }
 
