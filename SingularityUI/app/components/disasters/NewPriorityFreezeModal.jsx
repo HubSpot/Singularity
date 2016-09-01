@@ -35,8 +35,7 @@ class NewPriorityFreezeModal extends Component {
           {
             type: FormModal.INPUT_TYPES.BOOLEAN,
             name: 'killTasks',
-            label: 'Kill Tasks?',
-            isRequired: true,
+            label: 'Kill Tasks?'
           },
           {
             type: FormModal.INPUT_TYPES.STRING,
