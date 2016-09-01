@@ -393,6 +393,10 @@ class SingularityMesosTaskBuilder {
   private void prepareCommand(final TaskInfo.Builder bldr, final SingularityTaskId taskId, final SingularityTaskRequest task, final Protos.Offer offer, final Optional<long[]> ports) {
     CommandInfo.Builder commandBldr = CommandInfo.newBuilder();
 
+    if (task.getDeploy().getUser().isPresent()) {
+      commandBldr.setUser(task.getDeploy().getUser().get());
+    }
+
     if (task.getDeploy().getCommand().isPresent()) {
       commandBldr.setValue(task.getDeploy().getCommand().get());
     }
