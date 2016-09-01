@@ -57,8 +57,9 @@ export const FetchTaskCleanups = buildApiAction(
 
 export const FetchTaskStatistics = buildApiAction(
   'FETCH_TASK_STATISTICS',
-  (taskId) => ({
-    url: `/tasks/task/${taskId}/statistics`
+  (taskId, catchStatusCodes) => ({
+    url: `/tasks/task/${taskId}/statistics`,
+    catchStatusCodes
   })
 );
 
