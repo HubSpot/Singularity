@@ -92,13 +92,6 @@ def get_timestamp_string(filename):
     else:
         return ""
 
-def get_timestamp(filename):
-    timestamps = re.findall(r"-\d{13}-", filename)
-    if timestamps:
-        return datetime.utcfromtimestamp(int(str(timestamps[-1]).replace("-", "")[0:-3]))
-    else:
-        return ""
-
 def update_progress_bar(progress, goal, progress_type, silent):
     bar_length = 30
     percent = float(progress) / goal
@@ -131,3 +124,13 @@ def get_json_response(uri, args, params={}, skip404ErrMessage=False):
             log(colored(singularity_response.text, 'red') + '\n', args, False)
         return {}
     return singularity_response.json()
+
+
+def is_valid_log(file_data):
+    not_a_directory = not file_data['mode'].startswith('d')
+    is_a_logfile = fnmatch.fnmatch(file_data['name'], '*.log') or fnmatch.fnmatch(file_data['name'], '*.out') or fnmatch.fnmatch(file_data['name'], '*.err')
+    return not_a_directory and is_a_logfile
+
+
+def logfile_has_data(file_data):
+    return file_data['size'] > 0
