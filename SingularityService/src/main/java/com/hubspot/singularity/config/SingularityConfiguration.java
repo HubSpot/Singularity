@@ -9,6 +9,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.HEAD;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -258,6 +259,11 @@ public class SingularityConfiguration extends Configuration {
 
   private boolean taskHistoryQueryUsesZkFirst = false;
 
+  @JsonProperty("disasterDetection")
+  @NotNull
+  @Valid
+  private DisasterDetectionConfiguration disasterDetection = new DisasterDetectionConfiguration();
+
   @Min(0)
   @Max(1)
   private double defaultTaskPriorityLevel = 0.3;
@@ -271,11 +277,6 @@ public class SingularityConfiguration extends Configuration {
   @Min(0)
   @Max(5)
   private double schedulerPriorityWeightFactor = 1.0;
-
-  @JsonProperty("disasterDetection")
-  @NotNull
-  @Valid
-  private DisasterDetectionConfiguration disasterDetection = new DisasterDetectionConfiguration();
 
   public long getAskDriverToKillTasksAgainAfterMillis() {
     return askDriverToKillTasksAgainAfterMillis;
@@ -1061,6 +1062,14 @@ public class SingularityConfiguration extends Configuration {
     this.taskLabelForLoadBalancerUpstreamGroup = taskLabelForLoadBalancerUpstreamGroup;
   }
 
+  public DisasterDetectionConfiguration getDisasterDetection() {
+    return disasterDetection;
+  }
+
+  public void setDisasterDetection(DisasterDetectionConfiguration disasterDetection) {
+    this.disasterDetection = disasterDetection;
+  }
+
   public double getDefaultTaskPriorityLevel() {
     return defaultTaskPriorityLevel;
   }
@@ -1091,13 +1100,5 @@ public class SingularityConfiguration extends Configuration {
 
   public void setSchedulerPriorityWeightFactor(double schedulerPriorityWeightFactor) {
     this.schedulerPriorityWeightFactor = schedulerPriorityWeightFactor;
-  }
-
-  public DisasterDetectionConfiguration getDisasterDetection() {
-    return disasterDetection;
-  }
-
-  public void setDisasterDetection(DisasterDetectionConfiguration disasterDetection) {
-    this.disasterDetection = disasterDetection;
   }
 }

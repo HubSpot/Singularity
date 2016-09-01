@@ -42,13 +42,13 @@ import com.hubspot.mesos.SingularityVolume;
 import com.hubspot.singularity.ScheduleType;
 import com.hubspot.singularity.SingularityDeploy;
 import com.hubspot.singularity.SingularityDeployBuilder;
-import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityAction;
+import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityRequestGroup;
 import com.hubspot.singularity.SingularityWebhook;
-import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.api.SingularityPriorityFreeze;
+import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
 

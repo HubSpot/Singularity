@@ -24,7 +24,7 @@ class DeleteDisabledActionModal extends Component {
         name="Delete Disabled Action"
         action="Delete Disabled Action"
         onConfirm={this.props.deleteDisabledAction}
-        buttonStyle="danger"
+        buttonStyle="default"
         formElements={[]}>
         <div>
           <pre>

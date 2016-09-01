@@ -1,5 +1,5 @@
 import React, { PropTypes, Component } from 'react';
-import { FetchDisabledActions, FetchDisastersData } from '../../actions/api/disasters';
+import { FetchDisabledActions, FetchDisastersData, FetchPriorityFreeze } from '../../actions/api/disasters';
 import { connect } from 'react-redux';
 import rootComponent from '../../rootComponent';
 import Utils from '../../utils';
@@ -26,9 +26,20 @@ class Disasters extends Component {
       })).isRequired,
       automatedActionsDisabled: PropTypes.bool.isRequired
     }).isRequired,
+    priorityFreeze: PropTypes.shape({
+      priorityFreeze: PropTypes.shape({
+        minimumPriorityLevel: PropTypes.number.isRequired,
+        killTasks: PropTypes.bool.isRequired,
+        message: PropTypes.string,
+        actionId: PropTypes.string
+      }).isRequired,
+      timestamp: PropTypes.number.isRequired,
+      user: PropTypes.string
+    }),
     user: PropTypes.string,
     fetchDisabledActions: PropTypes.func.isRequired,
-    fetchDisastersData: PropTypes.func.isRequired
+    fetchDisastersData: PropTypes.func.isRequired,
+    fetchPriorityFreeze: PropTypes.func.isRequired
   };
 
   constructor(props) {
@@ -40,7 +51,12 @@ class Disasters extends Component {
     return (
       <div>
         <DisabledActions disabledActions={this.props.disabledActions} user={this.props.user} />
-        <ManageDisasters disasters={this.props.disastersData.disasters} user={this.props.user} automatedActionsDisabled={this.props.disastersData.automatedActionsDisabled} />
+        <ManageDisasters 
+          disasters={this.props.disastersData.disasters}
+          priorityFreeze={this.props.priorityFreeze}
+          user={this.props.user}
+          automatedActionsDisabled={this.props.disastersData.automatedActionsDisabled}
+        />
         <DisasterStats stats={this.props.disastersData.stats} />
       </div>
     );
@@ -52,14 +68,16 @@ function mapStateToProps(state) {
   return {
     user,
     disastersData: state.api.disastersData.data,
-    disabledActions: state.api.disabledActions.data
+    disabledActions: state.api.disabledActions.data,
+    priorityFreeze: state.api.priorityFreeze.data
   };
 }
 
 function mapDispatchToProps(dispatch) {
   return {
     fetchDisastersData: () => dispatch(FetchDisastersData.trigger()),
-    fetchDisabledActions: () => dispatch(FetchDisabledActions.trigger())
+    fetchDisabledActions: () => dispatch(FetchDisabledActions.trigger()),
+    fetchPriorityFreeze: () => dispatch(FetchPriorityFreeze.trigger([404]))
   };
 }
 
@@ -67,6 +85,7 @@ function refresh(props) {
 	const promises = [];
 	promises.push(props.fetchDisastersData());
 	promises.push(props.fetchDisabledActions());
+  promises.push(props.fetchPriorityFreeze());
   return Promise.all(promises);
 }
 
