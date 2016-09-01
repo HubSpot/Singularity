@@ -121,7 +121,7 @@ public class SingularityExecutorConfiguration extends BaseRunnerConfiguration {
 
   @NotNull
   @JsonProperty
-  private LogrotateCompressionSettings logrotateCompressionSettings = LogrotateCompressionSettings.gzip();
+  private LogrotateCompressionSettings logrotateCompressionSettings = LogrotateCompressionSettings.empty();
 
   @NotNull
   @JsonProperty
