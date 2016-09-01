@@ -58,3 +58,26 @@ export const NewDisabledAction = buildJsonApiAction(
     body: message == null ? {type: type} : {message: message, type: type}
   })
 );
+
+export const FetchPriorityFreeze = buildApiAction(
+  'FETCH_PRIORITY_FREEZE',
+  (catchStatusCodes) => ({
+    url: '/priority/freeze',
+    catchStatusCodes
+  })
+);
+
+export const DeletePriorityFreeze = buildJsonApiAction(
+  'DELETE_PRIORITY_FREEZE',
+  'DELETE',
+  {url: '/priority/freeze'}
+);
+
+export const NewPriorityFreeze = buildJsonApiAction(
+  'NEW_PRIORITY_FREEZE',
+  'POST',
+  (minPriority, killTasks, message) => ({
+    url: '/priority/freeze',
+    body: message == null ? {minimumPriorityLevel: minPriority, killTasks: killTasks} : {minimumPriorityLevel: minPriority, killTasks: killTasks, message: message}
+  })
+);
