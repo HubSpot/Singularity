@@ -1,6 +1,6 @@
 # Singularity REST API
 
-Version: 0.10.0-SNAPSHOT
+Version: 0.11.0-SNAPSHOT
 
 Endpoints:
 - [`/api/deploys`](#endpoint-/api/deploys) - Manages Singularity Deploys for existing requests
@@ -1790,6 +1790,29 @@ Get the cleanup object for the task, if it exists
 
 
 - - -
+#### **GET** `/api/tasks/task/{taskId}`
+
+Retrieve information about a specific active task.
+
+
+###### Parameters
+**path**
+
+| Parameter | Required | Description | Data Type |
+|-----------|----------|-------------|-----------|
+| taskId | true |  | string |
+
+###### Response
+[SingularityTask](#model-SingularityTask)
+
+
+###### Errors
+| Status Code | Reason      | Response Model |
+|-------------|-------------|----------------|
+| - | - | - |
+
+
+- - -
 #### **DELETE** `/api/tasks/task/{taskId}`
 
 Attempt to kill task, optionally overriding an existing cleanup request (that may be waiting for replacement tasks to become healthy)
@@ -1815,29 +1838,6 @@ Attempt to kill task, optionally overriding an existing cleanup request (that ma
 | Status Code | Reason      | Response Model |
 |-------------|-------------|----------------|
 | 409    | Task already has a cleanup request (can be overridden with override=true) | - |
-
-
-- - -
-#### **GET** `/api/tasks/task/{taskId}`
-
-Retrieve information about a specific active task.
-
-
-###### Parameters
-**path**
-
-| Parameter | Required | Description | Data Type |
-|-----------|----------|-------------|-----------|
-| taskId | true |  | string |
-
-###### Response
-[SingularityTask](#model-SingularityTask)
-
-
-###### Errors
-| Status Code | Reason      | Response Model |
-|-------------|-------------|----------------|
-| - | - | - |
 
 
 - - -
@@ -2429,8 +2429,8 @@ string
 | defaultInstanceForType | [Address](#model-Address) | optional |  |
 | ip | string | optional |  |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$Address&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$Address&gt;) | optional |  |
-| ipBytes | [ByteString](#model-ByteString) | optional |  |
 | hostname | string | optional |  |
+| ipBytes | [ByteString](#model-ByteString) | optional |  |
 | initialized | boolean | optional |  |
 | serializedSize | int | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
@@ -2446,8 +2446,8 @@ string
 | name | type | required | description |
 |------|------|----------|-------------|
 | ip | string | optional |  |
-| hostname | string | optional |  |
 | ipBytes | [ByteString](#model-ByteString) | optional |  |
+| hostname | string | optional |  |
 | hostnameBytes | [ByteString](#model-ByteString) | optional |  |
 | port | int | optional |  |
 
@@ -2457,8 +2457,8 @@ string
 | name | type | required | description |
 |------|------|----------|-------------|
 | defaultInstanceForType | [Appc](#model-Appc) | optional |  |
-| parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$Image$Appc&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$Image$Appc&gt;) | optional |  |
 | idBytes | [ByteString](#model-ByteString) | optional |  |
+| parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$Image$Appc&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$Image$Appc&gt;) | optional |  |
 | labelsOrBuilder | [LabelsOrBuilder](#model-LabelsOrBuilder) | optional |  |
 | labels | [Labels](#model-Labels) | optional |  |
 | initialized | boolean | optional |  |
@@ -2638,12 +2638,12 @@ string
 | labels | [Labels](#model-Labels) | optional |  |
 | locationBytes | [ByteString](#model-ByteString) | optional |  |
 | initialized | boolean | optional |  |
-| nameBytes | [ByteString](#model-ByteString) | optional |  |
 | name | string | optional |  |
 | environment | string | optional |  |
+| nameBytes | [ByteString](#model-ByteString) | optional |  |
 | ports | [Ports](#model-Ports) | optional |  |
-| visibility | [Visibility](#model-Visibility) | optional |  Allowable values: FRAMEWORK, CLUSTER, EXTERNAL |
 | environmentBytes | [ByteString](#model-ByteString) | optional |  |
+| visibility | [Visibility](#model-Visibility) | optional |  Allowable values: FRAMEWORK, CLUSTER, EXTERNAL |
 | serializedSize | int | optional |  |
 | portsOrBuilder | [PortsOrBuilder](#model-PortsOrBuilder) | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
@@ -2869,8 +2869,8 @@ string
 | initialized | boolean | optional |  |
 | name | string | optional |  |
 | nameBytes | [ByteString](#model-ByteString) | optional |  |
-| frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
 | sourceBytes | [ByteString](#model-ByteString) | optional |  |
+| frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
 | command | [CommandInfo](#model-CommandInfo) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](#model-FrameworkIDOrBuilder) | optional |  |
 | executorIdOrBuilder | [ExecutorIDOrBuilder](#model-ExecutorIDOrBuilder) | optional |  |
@@ -2879,8 +2879,8 @@ string
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
 | discovery | [DiscoveryInfo](#model-DiscoveryInfo) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
-| unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | resourcesCount | int | optional |  |
+| unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | initializationErrorString | string | optional |  |
 | discoveryOrBuilder | [DiscoveryInfoOrBuilder](#model-DiscoveryInfoOrBuilder) | optional |  |
 
@@ -2894,13 +2894,13 @@ string
 | data | [ByteString](#model-ByteString) | optional |  |
 | source | string | optional |  |
 | containerOrBuilder | [ContainerInfoOrBuilder](#model-ContainerInfoOrBuilder) | optional |  |
-| container | [ContainerInfo](#model-ContainerInfo) | optional |  |
 | executorId | [ExecutorID](#model-ExecutorID) | optional |  |
+| container | [ContainerInfo](#model-ContainerInfo) | optional |  |
 | name | string | optional |  |
 | nameBytes | [ByteString](#model-ByteString) | optional |  |
+| frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
 | sourceBytes | [ByteString](#model-ByteString) | optional |  |
 | command | [CommandInfo](#model-CommandInfo) | optional |  |
-| frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](#model-FrameworkIDOrBuilder) | optional |  |
 | executorIdOrBuilder | [ExecutorIDOrBuilder](#model-ExecutorIDOrBuilder) | optional |  |
 | resourcesList | [List[Resource]](#model-List[Resource]) | optional |  |
@@ -3046,8 +3046,8 @@ string
 
 | name | type | required | description |
 |------|------|----------|-------------|
-| commandOrBuilder | [CommandInfoOrBuilder](#model-CommandInfoOrBuilder) | optional |  |
 | gracePeriodSeconds | double | optional |  |
+| commandOrBuilder | [CommandInfoOrBuilder](#model-CommandInfoOrBuilder) | optional |  |
 | httpOrBuilder | [HTTPOrBuilder](#model-HTTPOrBuilder) | optional |  |
 | consecutiveFailures | int | optional |  |
 | intervalSeconds | double | optional |  |
@@ -3210,8 +3210,8 @@ string
 | hostname | string | optional |  |
 | attributesCount | int | optional |  |
 | initialized | boolean | optional |  |
-| attributesList | [List[Attribute]](#model-List[Attribute]) | optional |  |
 | idOrBuilder | [OfferIDOrBuilder](#model-OfferIDOrBuilder) | optional |  |
+| attributesList | [List[Attribute]](#model-List[Attribute]) | optional |  |
 | frameworkId | [FrameworkID](#model-FrameworkID) | optional |  |
 | frameworkIdOrBuilder | [FrameworkIDOrBuilder](#model-FrameworkIDOrBuilder) | optional |  |
 | serializedSize | int | optional |  |
@@ -3221,8 +3221,8 @@ string
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |
 | hostnameBytes | [ByteString](#model-ByteString) | optional |  |
 | attributesOrBuilderList | [List[? extends org.apache.mesos.Protos$AttributeOrBuilder]](#model-List[? extends org.apache.mesos.Protos$AttributeOrBuilder]) | optional |  |
-| unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | resourcesCount | int | optional |  |
+| unknownFields | [UnknownFieldSet](#model-UnknownFieldSet) | optional |  |
 | initializationErrorString | string | optional |  |
 | id | [OfferID](#model-OfferID) | optional |  |
 
@@ -3900,7 +3900,7 @@ string
 |------|------|----------|-------------|
 | taskId | [SingularityTaskId](#model-SingularityTaskId) | optional |  |
 | user | string | optional |  |
-| cleanupType | [TaskCleanupType](#model-TaskCleanupType) | optional |  Allowable values: USER_REQUESTED, USER_REQUESTED_TASK_BOUNCE, DECOMISSIONING, SCALING_DOWN, BOUNCING, INCREMENTAL_BOUNCE, DEPLOY_FAILED, NEW_DEPLOY_SUCCEEDED, DEPLOY_STEP_FINISHED, DEPLOY_CANCELED, UNHEALTHY_NEW_TASK, OVERDUE_NEW_TASK, USER_REQUESTED_DESTROY |
+| cleanupType | [TaskCleanupType](#model-TaskCleanupType) | optional |  Allowable values: USER_REQUESTED, USER_REQUESTED_TASK_BOUNCE, DECOMISSIONING, SCALING_DOWN, BOUNCING, INCREMENTAL_BOUNCE, DEPLOY_FAILED, NEW_DEPLOY_SUCCEEDED, DEPLOY_STEP_FINISHED, DEPLOY_CANCELED, UNHEALTHY_NEW_TASK, OVERDUE_NEW_TASK, USER_REQUESTED_DESTROY, INCREMENTAL_DEPLOY_FAILED, INCREMENTAL_DEPLOY_CANCELLED |
 | message | string | optional |  |
 | timestamp | long | optional |  |
 | actionId | string | optional |  |
@@ -4196,8 +4196,8 @@ string
 |------|------|----------|-------------|
 | defaultInstanceForType | [URL](#model-URL) | optional |  |
 | queryCount | int | optional |  |
-| queryOrBuilderList | [List[? extends org.apache.mesos.Protos$ParameterOrBuilder]](#model-List[? extends org.apache.mesos.Protos$ParameterOrBuilder]) | optional |  |
 | queryList | [List[Parameter]](#model-List[Parameter]) | optional |  |
+| queryOrBuilderList | [List[? extends org.apache.mesos.Protos$ParameterOrBuilder]](#model-List[? extends org.apache.mesos.Protos$ParameterOrBuilder]) | optional |  |
 | fragment | string | optional |  |
 | parserForType | [com.google.protobuf.Parser&lt;org.apache.mesos.Protos$URL&gt;](#model-com.google.protobuf.Parser&lt;org.apache.mesos.Protos$URL&gt;) | optional |  |
 | address | [Address](#model-Address) | optional |  |
@@ -4205,8 +4205,8 @@ string
 | addressOrBuilder | [AddressOrBuilder](#model-AddressOrBuilder) | optional |  |
 | pathBytes | [ByteString](#model-ByteString) | optional |  |
 | scheme | string | optional |  |
-| fragmentBytes | [ByteString](#model-ByteString) | optional |  |
 | initialized | boolean | optional |  |
+| fragmentBytes | [ByteString](#model-ByteString) | optional |  |
 | serializedSize | int | optional |  |
 | allFields | [Map[FieldDescriptor,Object]](#model-Map[FieldDescriptor,Object]) | optional |  |
 | descriptorForType | [Descriptor](#model-Descriptor) | optional |  |

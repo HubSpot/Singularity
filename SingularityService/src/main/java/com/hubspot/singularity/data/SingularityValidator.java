@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
@@ -30,7 +31,6 @@ import com.hubspot.mesos.Resources;
 import com.hubspot.mesos.SingularityContainerInfo;
 import com.hubspot.mesos.SingularityContainerType;
 import com.hubspot.mesos.SingularityDockerInfo;
-import com.hubspot.mesos.SingularityDockerNetworkType;
 import com.hubspot.mesos.SingularityDockerPortMapping;
 import com.hubspot.mesos.SingularityPortMappingType;
 import com.hubspot.mesos.SingularityVolume;
@@ -40,8 +40,8 @@ import com.hubspot.singularity.SingularityDeployBuilder;
 import com.hubspot.singularity.SingularityPriorityFreezeParent;
 import com.hubspot.singularity.SingularityRequest;
 import com.hubspot.singularity.SingularityWebhook;
-import com.hubspot.singularity.WebExceptions;
 import com.hubspot.singularity.api.SingularityPriorityFreeze;
+import com.hubspot.singularity.api.SingularityBounceRequest;
 import com.hubspot.singularity.config.SingularityConfiguration;
 import com.hubspot.singularity.data.history.DeployHistoryHelper;
 
@@ -60,6 +60,7 @@ public class SingularityValidator {
   private final int defaultCpus;
   private final int defaultMemoryMb;
   private final int defaultDiskMb;
+  private final int defaultBounceExpirationMinutes;
   private final int maxMemoryMbPerInstance;
   private final boolean allowRequestsWithoutOwners;
   private final boolean createDeployIds;
@@ -81,6 +82,7 @@ public class SingularityValidator {
     this.defaultCpus = configuration.getMesosConfiguration().getDefaultCpus();
     this.defaultMemoryMb = configuration.getMesosConfiguration().getDefaultMemory();
     this.defaultDiskMb = configuration.getMesosConfiguration().getDefaultDisk();
+    this.defaultBounceExpirationMinutes = configuration.getDefaultBounceExpirationMinutes();
 
     defaultResources = new Resources(defaultCpus, defaultMemoryMb, 0, defaultDiskMb);
 
@@ -470,6 +472,18 @@ public class SingularityValidator {
 
     final double taskPriorityLevel = priorityManager.getTaskPriorityLevelForRequest(request);
 
-    checkBadRequest(taskPriorityLevel >= maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel(), "Priority level of request %s (%s) is lower than active priority freeze (%s)", request.getId(), taskPriorityLevel, maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel());
+    checkBadRequest(taskPriorityLevel >= maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel(), "Priority level of request %s (%s) is lower than active priority freeze (%s)",
+      request.getId(), taskPriorityLevel, maybePriorityFreeze.get().getPriorityFreeze().getMinimumPriorityLevel());
+  }
+
+  public SingularityBounceRequest checkBounceRequest(SingularityBounceRequest defaultBounceRequest) {
+    if (defaultBounceRequest.getDurationMillis().isPresent()) {
+      return defaultBounceRequest;
+    }
+    final long durationMillis = TimeUnit.MINUTES.toMillis(defaultBounceExpirationMinutes);
+    return defaultBounceRequest
+        .toBuilder()
+        .setDurationMillis(Optional.of(durationMillis))
+        .build();
   }
 }
