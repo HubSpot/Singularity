@@ -70,6 +70,7 @@ public class SingularityDeployBuilder {
   private Optional<Boolean> autoAdvanceDeploySteps;
   private Optional<Integer> maxTaskRetries;
   private Optional<Boolean> shell;
+  private Optional<String> user;
 
   public SingularityDeployBuilder(String requestId, String id) {
     this.requestId = requestId;
@@ -118,13 +119,14 @@ public class SingularityDeployBuilder {
     this.autoAdvanceDeploySteps = Optional.absent();
     this.maxTaskRetries = Optional.absent();
     this.shell = Optional.absent();
+    this.user = Optional.absent();
   }
 
   public SingularityDeploy build() {
     return new SingularityDeploy(requestId, id, command, arguments, containerInfo, customExecutorCmd, customExecutorId, customExecutorSource, customExecutorResources, customExecutorUser, resources,
       env, taskEnv, uris, metadata, executorData, version, timestamp, labels, mesosLabels, taskLabels, mesosTaskLabels, deployHealthTimeoutSeconds, healthcheckUri, healthcheckIntervalSeconds, healthcheckTimeoutSeconds, healthcheckPortIndex, healthcheckMaxRetries,
       healthcheckMaxTotalTimeoutSeconds, serviceBasePath, loadBalancerGroups, loadBalancerPortIndex, considerHealthyAfterRunningForSeconds, loadBalancerOptions, loadBalancerDomains, loadBalancerAdditionalRoutes,
-      loadBalancerTemplate, loadBalancerServiceIdOverride, loadBalancerUpstreamGroup, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries, shell);
+      loadBalancerTemplate, loadBalancerServiceIdOverride, loadBalancerUpstreamGroup, skipHealthchecksOnDeploy, healthcheckProtocol, deployInstanceCountPerStep, deployStepWaitTimeMs, autoAdvanceDeploySteps, maxTaskRetries, shell, user);
   }
 
   public String getRequestId() {
@@ -540,6 +542,15 @@ public class SingularityDeployBuilder {
     return this;
   }
 
+  public Optional<String> getUser() {
+    return user;
+  }
+
+  public SingularityDeployBuilder setUser(Optional<String> user) {
+    this.user = user;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeployBuilder{" +
@@ -586,6 +597,8 @@ public class SingularityDeployBuilder {
       ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
       ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +
       ", maxTaskRetries=" + maxTaskRetries +
+      ", shell=" + shell +
+      ", user=" + user +
       '}';
   }
 

@@ -79,6 +79,7 @@ public class SingularityDeploy {
   private final Optional<Boolean> autoAdvanceDeploySteps;
   private final Optional<Integer> maxTaskRetries;
   private final Optional<Boolean> shell;
+  private final Optional<String> user;
 
   public static SingularityDeployBuilder newBuilder(String requestId, String id) {
     return new SingularityDeployBuilder(requestId, id);
@@ -130,7 +131,8 @@ public class SingularityDeploy {
       @JsonProperty("deployStepWaitTimeMs") Optional<Integer> deployStepWaitTimeMs,
       @JsonProperty("autoAdvanceDeploySteps") Optional<Boolean> autoAdvanceDeploySteps,
       @JsonProperty("maxTaskRetries") Optional<Integer> maxTaskRetries,
-      @JsonProperty("shell") Optional<Boolean> shell) {
+      @JsonProperty("shell") Optional<Boolean> shell,
+      @JsonProperty("user") Optional<String> user) {
     this.requestId = requestId;
 
     this.command = command;
@@ -188,6 +190,7 @@ public class SingularityDeploy {
     this.autoAdvanceDeploySteps = autoAdvanceDeploySteps;
     this.maxTaskRetries = maxTaskRetries;
     this.shell = shell;
+    this.user = user;
   }
 
   private static Map<Integer, List<SingularityMesosTaskLabel>> parseMesosTaskLabelsFromMap(Map<Integer, Map<String, String>> taskLabels) {
@@ -243,7 +246,8 @@ public class SingularityDeploy {
     .setDeployStepWaitTimeMs(deployStepWaitTimeMs)
     .setAutoAdvanceDeploySteps(autoAdvanceDeploySteps)
     .setMaxTaskRetries(maxTaskRetries)
-    .setShell(shell);
+    .setShell(shell)
+    .setUser(user);
   }
 
   @ApiModelProperty(required=false, value="Number of seconds that Singularity waits for this service to become healthy (for it to download artifacts, start running, and optionally pass healthchecks.)")
@@ -477,6 +481,11 @@ public class SingularityDeploy {
     return shell;
   }
 
+  @ApiModelProperty(required=false, value="Run tasks as this user")
+  public Optional<String> getUser() {
+    return user;
+  }
+
   @Override
   public String toString() {
     return "SingularityDeploy{" +
@@ -523,6 +532,8 @@ public class SingularityDeploy {
       ", deployStepWaitTimeMs=" + deployStepWaitTimeMs +
       ", autoAdvanceDeploySteps=" + autoAdvanceDeploySteps +
       ", maxTaskRetries=" + maxTaskRetries +
+      ", shell=" + shell +
+      ", user=" + user +
       '}';
   }
 
