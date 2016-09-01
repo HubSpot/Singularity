@@ -62,7 +62,7 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
   @Override
   protected List<SingularityTaskIdHistory> getFromHistory(SingularityTaskHistoryQuery query, int historyStart, int numFromHistory) {
     return historyManager.getTaskIdHistory(query.getRequestId(), query.getDeployId(), query.getHost(), query.getLastTaskStatus(), query.getStartedBefore(),
-        query.getStartedAfter(), query.getOrderDirection(), Optional.of(historyStart), numFromHistory);
+        query.getStartedAfter(), query.getUpdatedBefore(), query.getUpdatedAfter(), query.getOrderDirection(), Optional.of(historyStart), numFromHistory);
   }
 
   public Optional<SingularityTask> getTask(SingularityTaskId taskId) {
@@ -132,7 +132,7 @@ public class TaskHistoryHelper extends BlendedHistoryHelper<SingularityTaskIdHis
   protected Optional<Integer> getTotalCount(SingularityTaskHistoryQuery query) {
     final int numFromZk = Collections2.filter(getFromZk(getRequestIds(query)), query.getHistoryFilter()).size();
     final int numFromHistory = historyManager.getTaskIdHistoryCount(query.getRequestId(), query.getDeployId(), query.getHost(), query.getLastTaskStatus(), query.getStartedBefore(),
-        query.getStartedAfter());
+        query.getStartedAfter(), query.getUpdatedBefore(), query.getUpdatedAfter());
 
     return Optional.fromNullable(numFromZk + numFromHistory);
   }

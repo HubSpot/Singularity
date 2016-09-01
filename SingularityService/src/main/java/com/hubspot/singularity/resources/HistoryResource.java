@@ -166,7 +166,7 @@ public class HistoryResource extends AbstractHistoryResource {
     final List<SingularityTaskIdHistory> data = deployTaskHistoryHelper.getBlendedHistory(key, limitStart, limitCount);
     Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
-    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data)
+    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
   }
 
   @GET
@@ -177,8 +177,10 @@ public class HistoryResource extends AbstractHistoryResource {
       @ApiParam("Optional deploy ID to match") @QueryParam("deployId") Optional<String> deployId,
       @ApiParam("Optional host to match") @QueryParam("host") Optional<String> host,
       @ApiParam("Optional last task status to match") @QueryParam("lastTaskStatus") Optional<ExtendedTaskState> lastTaskStatus,
-      @ApiParam("Optionally match only tasks started after") @QueryParam("startedAfter") Optional<Long> startedAfter,
       @ApiParam("Optionally match only tasks started before") @QueryParam("startedBefore") Optional<Long> startedBefore,
+      @ApiParam("Optionally match only tasks started after") @QueryParam("startedAfter") Optional<Long> startedAfter,
+      @ApiParam("Optionally match tasks last updated before") @QueryParam("updatedBefore") Optional<Long> updatedBefore,
+      @ApiParam("Optionally match tasks last updated after") @QueryParam("updatedAfter") Optional<Long> updatedAfter,
       @ApiParam("Sort direction") @QueryParam("orderDirection") Optional<OrderDirection> orderDirection,
       @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
       @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
@@ -192,27 +194,33 @@ public class HistoryResource extends AbstractHistoryResource {
     final Integer limitStart = getLimitStart(limitCount, page);
 
     return taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(requestId, deployId, host, lastTaskStatus, startedBefore, startedAfter,
-        orderDirection), limitStart, limitCount);
+        updatedBefore, updatedAfter, orderDirection), limitStart, limitCount);
   }
 
   @GET
-  @Path("/request/{requestId}/tasks/withmetadata")
-  @ApiOperation("Retrieve the history count for all inactive tasks of a specific request.")
-  public SingularityPaginatedResponse<SingularityTaskIdHistory> getTaskHistoryForRequestWithMetadata(
-          @ApiParam("Request ID to match") @PathParam("requestId") String requestId,
-          @ApiParam("Optional deploy ID to match") @QueryParam("deployId") Optional<String> deployId,
-          @ApiParam("Optional host to match") @QueryParam("host") Optional<String> host,
-          @ApiParam("Optional last task status to match") @QueryParam("lastTaskStatus") Optional<ExtendedTaskState> lastTaskStatus,
-          @ApiParam("Optionally match only tasks started after") @QueryParam("startedAfter") Optional<Long> startedAfter,
-          @ApiParam("Optionally match only tasks started before") @QueryParam("startedBefore") Optional<Long> startedBefore,
-          @ApiParam("Sort direction") @QueryParam("orderDirection") Optional<OrderDirection> orderDirection,
-          @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
-          @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
-    authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
+  @Path("/tasks/withmetadata")
+  @ApiOperation("Retrieve the history sorted by startedAt for all inactive tasks.")
+  public SingularityPaginatedResponse<SingularityTaskIdHistory> getTaskHistoryWithMetadata(
+    @ApiParam("Optional Request ID to match") @QueryParam("requestId") Optional<String> requestId,
+    @ApiParam("Optional deploy ID to match") @QueryParam("deployId") Optional<String> deployId,
+    @ApiParam("Optional host to match") @QueryParam("host") Optional<String> host,
+    @ApiParam("Optional last task status to match") @QueryParam("lastTaskStatus") Optional<ExtendedTaskState> lastTaskStatus,
+    @ApiParam("Optionally match only tasks started before") @QueryParam("startedBefore") Optional<Long> startedBefore,
+    @ApiParam("Optionally match only tasks started after") @QueryParam("startedAfter") Optional<Long> startedAfter,
+    @ApiParam("Optionally match tasks last updated before") @QueryParam("updatedBefore") Optional<Long> updatedBefore,
+    @ApiParam("Optionally match tasks last updated after") @QueryParam("updatedAfter") Optional<Long> updatedAfter,
+    @ApiParam("Sort direction") @QueryParam("orderDirection") Optional<OrderDirection> orderDirection,
+    @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
+    @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
+    if (requestId.isPresent()) {
+      authorizationHelper.checkForAuthorizationByRequestId(requestId.get(), user, SingularityAuthorizationScope.READ);
+    } else {
+      authorizationHelper.checkAdminAuthorization(user);
+    }
 
-    final Optional<Integer> dataCount = taskHistoryHelper.getBlendedHistoryCount(new SingularityTaskHistoryQuery(Optional.of(requestId), deployId, host, lastTaskStatus, startedBefore, startedAfter, orderDirection));
+    final Optional<Integer> dataCount = taskHistoryHelper.getBlendedHistoryCount(new SingularityTaskHistoryQuery(requestId, deployId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection));
     final int limitCount = getLimitCount(count);
-    final List<SingularityTaskIdHistory> data = this.getTaskHistoryForRequest(requestId, deployId, host, lastTaskStatus, startedAfter, startedBefore, orderDirection, count, page);
+    final List<SingularityTaskIdHistory> data = this.getTaskHistory(requestId, deployId,host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page);
     final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
 
     return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
@@ -226,8 +234,10 @@ public class HistoryResource extends AbstractHistoryResource {
       @ApiParam("Optional deploy ID to match") @QueryParam("deployId") Optional<String> deployId,
       @ApiParam("Optional host to match") @QueryParam("host") Optional<String> host,
       @ApiParam("Optional last task status to match") @QueryParam("lastTaskStatus") Optional<ExtendedTaskState> lastTaskStatus,
-      @ApiParam("Optionally match only tasks started after") @QueryParam("startedAfter") Optional<Long> startedAfter,
       @ApiParam("Optionally match only tasks started before") @QueryParam("startedBefore") Optional<Long> startedBefore,
+      @ApiParam("Optionally match only tasks started after") @QueryParam("startedAfter") Optional<Long> startedAfter,
+      @ApiParam("Optionally match tasks last updated before") @QueryParam("updatedBefore") Optional<Long> updatedBefore,
+      @ApiParam("Optionally match tasks last updated after") @QueryParam("updatedAfter") Optional<Long> updatedAfter,
       @ApiParam("Sort direction") @QueryParam("orderDirection") Optional<OrderDirection> orderDirection,
       @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
       @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
@@ -237,7 +247,32 @@ public class HistoryResource extends AbstractHistoryResource {
     final Integer limitStart = getLimitStart(limitCount, page);
 
     return taskHistoryHelper.getBlendedHistory(new SingularityTaskHistoryQuery(Optional.of(requestId), deployId, host, lastTaskStatus, startedBefore, startedAfter,
-        orderDirection), limitStart, limitCount);
+        updatedBefore, updatedAfter, orderDirection), limitStart, limitCount);
+  }
+
+  @GET
+  @Path("/request/{requestId}/tasks/withmetadata")
+  @ApiOperation("Retrieve the history count for all inactive tasks of a specific request.")
+  public SingularityPaginatedResponse<SingularityTaskIdHistory> getTaskHistoryForRequestWithMetadata(
+    @ApiParam("Request ID to match") @PathParam("requestId") String requestId,
+    @ApiParam("Optional deploy ID to match") @QueryParam("deployId") Optional<String> deployId,
+    @ApiParam("Optional host to match") @QueryParam("host") Optional<String> host,
+    @ApiParam("Optional last task status to match") @QueryParam("lastTaskStatus") Optional<ExtendedTaskState> lastTaskStatus,
+    @ApiParam("Optionally match only tasks started before") @QueryParam("startedBefore") Optional<Long> startedBefore,
+    @ApiParam("Optionally match only tasks started after") @QueryParam("startedAfter") Optional<Long> startedAfter,
+    @ApiParam("Optionally match tasks last updated before") @QueryParam("updatedBefore") Optional<Long> updatedBefore,
+    @ApiParam("Optionally match tasks last updated after") @QueryParam("updatedAfter") Optional<Long> updatedAfter,
+    @ApiParam("Sort direction") @QueryParam("orderDirection") Optional<OrderDirection> orderDirection,
+    @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
+    @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
+    authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
+
+    final Optional<Integer> dataCount = taskHistoryHelper.getBlendedHistoryCount(new SingularityTaskHistoryQuery(Optional.of(requestId), deployId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection));
+    final int limitCount = getLimitCount(count);
+    final List<SingularityTaskIdHistory> data = this.getTaskHistoryForRequest(requestId, deployId, host, lastTaskStatus, startedBefore, startedAfter, updatedBefore, updatedAfter, orderDirection, count, page);
+    final Optional<Integer> pageCount = getPageCount(dataCount, limitCount);
+
+    return new SingularityPaginatedResponse<>(dataCount, pageCount, Optional.fromNullable(page), data);
   }
 
   @GET
@@ -288,7 +323,7 @@ public class HistoryResource extends AbstractHistoryResource {
   @ApiOperation("Get request history for a single request")
   public List<SingularityRequestHistory> getRequestHistoryForRequest(
       @ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
-      @ApiParam("Naximum number of items to return") @QueryParam("count") Integer count,
+      @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
       @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
@@ -303,7 +338,7 @@ public class HistoryResource extends AbstractHistoryResource {
   @ApiOperation("Get request history for a single request")
   public SingularityPaginatedResponse<SingularityRequestHistory> getRequestHistoryForRequestWithMetadata(
     @ApiParam("Request ID to look up") @PathParam("requestId") String requestId,
-    @ApiParam("Naximum number of items to return") @QueryParam("count") Integer count,
+    @ApiParam("Maximum number of items to return") @QueryParam("count") Integer count,
     @ApiParam("Which page of items to view") @QueryParam("page") Integer page) {
     authorizationHelper.checkForAuthorizationByRequestId(requestId, user, SingularityAuthorizationScope.READ);
 
