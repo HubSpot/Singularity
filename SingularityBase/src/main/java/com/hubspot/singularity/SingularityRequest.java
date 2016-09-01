@@ -53,6 +53,8 @@ public class SingularityRequest {
   private final Optional<String> taskLogErrorRegex;
   private final Optional<Boolean> taskLogErrorRegexCaseSensitive;
 
+  private final Optional<Double> taskPriorityLevel;
+
   @JsonCreator
   public SingularityRequest(@JsonProperty("id") String id, @JsonProperty("requestType") RequestType requestType, @JsonProperty("owners") Optional<List<String>> owners,
       @JsonProperty("numRetriesOnFailure") Optional<Integer> numRetriesOnFailure, @JsonProperty("schedule") Optional<String> schedule, @JsonProperty("instances") Optional<Integer> instances,
@@ -66,7 +68,8 @@ public class SingularityRequest {
       @JsonProperty("skipHealthchecks") Optional<Boolean> skipHealthchecks,
       @JsonProperty("emailConfigurationOverrides") Optional<Map<SingularityEmailType, List<SingularityEmailDestination>>> emailConfigurationOverrides,
       @JsonProperty("daemon") @Deprecated Optional<Boolean> daemon, @JsonProperty("hideEvenNumberAcrossRacks") Optional<Boolean> hideEvenNumberAcrossRacksHint,
-      @JsonProperty("taskLogErrorRegex") Optional<String> taskLogErrorRegex, @JsonProperty("taskLogErrorRegexCaseSensitive") Optional<Boolean> taskLogErrorRegexCaseSensitive) {
+      @JsonProperty("taskLogErrorRegex") Optional<String> taskLogErrorRegex, @JsonProperty("taskLogErrorRegexCaseSensitive") Optional<Boolean> taskLogErrorRegexCaseSensitive,
+      @JsonProperty("taskPriorityLevel") Optional<Double> taskPriorityLevel) {
     this.id = checkNotNull(id, "id cannot be null");
     this.owners = owners;
     this.numRetriesOnFailure = numRetriesOnFailure;
@@ -92,6 +95,7 @@ public class SingularityRequest {
     this.hideEvenNumberAcrossRacksHint = hideEvenNumberAcrossRacksHint;
     this.taskLogErrorRegex = taskLogErrorRegex;
     this.taskLogErrorRegexCaseSensitive = taskLogErrorRegexCaseSensitive;
+    this.taskPriorityLevel = taskPriorityLevel;
     if (requestType == null) {
       this.requestType = RequestType.fromDaemonAndScheduleAndLoadBalanced(schedule, daemon, loadBalanced);
     } else {
@@ -124,7 +128,8 @@ public class SingularityRequest {
     .setSkipHealthchecks(skipHealthchecks)
     .setHideEvenNumberAcrossRacksHint(hideEvenNumberAcrossRacksHint)
     .setTaskLogErrorRegex(taskLogErrorRegex)
-    .setTaskLogErrorRegexCaseSensitive(taskLogErrorRegexCaseSensitive);
+    .setTaskLogErrorRegexCaseSensitive(taskLogErrorRegexCaseSensitive)
+    .setTaskPriorityLevel(taskPriorityLevel);
   }
 
   public String getId() {
@@ -278,6 +283,10 @@ public class SingularityRequest {
 
   public Optional<Boolean> getTaskLogErrorRegexCaseSensitive() { return taskLogErrorRegexCaseSensitive; }
 
+  public Optional<Double> getTaskPriorityLevel() {
+    return taskPriorityLevel;
+  }
+
   @Override
   public String toString() {
     return "SingularityRequest[" +
@@ -306,6 +315,7 @@ public class SingularityRequest {
             ", hideEvenNumberAcrossRacksHint=" + hideEvenNumberAcrossRacksHint +
             ", taskLogErrorRegex=" + taskLogErrorRegex +
             ", taskLogErrorRegexCaseSensitive=" + taskLogErrorRegexCaseSensitive +
+            ", taskPriorityLevel=" + taskPriorityLevel +
             ']';
   }
 
@@ -342,11 +352,12 @@ public class SingularityRequest {
             Objects.equals(emailConfigurationOverrides, request.emailConfigurationOverrides) &&
             Objects.equals(hideEvenNumberAcrossRacksHint, request.hideEvenNumberAcrossRacksHint) &&
             Objects.equals(taskLogErrorRegex, request.taskLogErrorRegex) &&
-            Objects.equals(taskLogErrorRegexCaseSensitive, request.taskLogErrorRegexCaseSensitive);
+            Objects.equals(taskLogErrorRegexCaseSensitive, request.taskLogErrorRegexCaseSensitive) &&
+            Objects.equals(taskPriorityLevel, request.taskPriorityLevel);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleTimeZone, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides, hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive);
+    return Objects.hash(id, requestType, owners, numRetriesOnFailure, schedule, quartzSchedule, scheduleTimeZone, scheduleType, killOldNonLongRunningTasksAfterMillis, scheduledExpectedRuntimeMillis, waitAtLeastMillisAfterTaskFinishesForReschedule, instances, rackSensitive, rackAffinity, slavePlacement, requiredSlaveAttributes, allowedSlaveAttributes, loadBalanced, group, readOnlyGroups, bounceAfterScale, emailConfigurationOverrides, hideEvenNumberAcrossRacksHint, taskLogErrorRegex, taskLogErrorRegexCaseSensitive, taskPriorityLevel);
   }
 }
